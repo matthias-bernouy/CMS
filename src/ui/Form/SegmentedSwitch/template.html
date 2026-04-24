@@ -1,0 +1,15 @@
+<div class="switch-container" part="container">
+    <span class="label" id="group-label" part="label"></span>
+
+    <div class="switch-wrapper" part="wrapper" role="radiogroup" aria-labelledby="group-label">
+        <div class="selection-slider" part="slider"></div>
+
+        <div class="options-container" part="options">
+            <slot></slot>
+        </div>
+    </div>
+
+    <span class="error-message" id="error-text" part="error">
+        <slot name="error"></slot>
+    </span>
+</div>

@@ -1,0 +1,14 @@
+<label class="checkbox-container" part="container">
+    <span class="input-wrapper">
+        <input type="checkbox" id="native-input" part="input" />
+        <span class="custom-box" part="box" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="checkmark" part="checkmark">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span class="indeterminate-mark" part="indeterminate"></span>
+        </span>
+    </span>
+    <span class="label-text" part="label">
+        <slot></slot>
+    </span>
+</label>

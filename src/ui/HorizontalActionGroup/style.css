@@ -1,0 +1,90 @@
+:host {
+  display: inline-block;
+
+  --_toolbar-bg: var(--bg-overlay, #ffffff);
+  --_toolbar-border: var(--border-default, #e5e7eb);
+  --_toolbar-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --_toolbar-radius: 12px;
+  --_toolbar-padding: 6px;
+  --_toolbar-gap: 4px;
+
+  --_color: var(--info-contrasted, #3b82f6);
+  --_hover-color: var(--primary-contrasted, #3b82f6);
+
+  --_bg-color: var(--bg-overlay, white);
+  --_bg-hover-color: var(--primary-muted, #3b82f6);
+
+  --_border-color: var(--border-default, #e5e7eb);
+
+  touch-action: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  background: var(--_toolbar-bg);
+  border: 1px solid var(--_toolbar-border);
+  border-radius: var(--_toolbar-radius);
+  box-shadow: var(--_toolbar-shadow);
+  overflow: hidden;
+  width: fit-content;
+  padding: var(--_toolbar-padding);
+  gap: var(--_toolbar-gap);
+}
+
+:host([align="start"]) .actions { justify-content: flex-start; }
+:host([align="center"]) .actions { justify-content: center; }
+:host([align="end"]) .actions { justify-content: flex-end; }
+
+:host([fullwidth]),
+:host([fullwidth]) .actions {
+  width: 100%;
+}
+
+::slotted([hidden]) {
+  display: none !important;
+}
+
+::slotted([data-action]) {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: var(--_bg-color);
+  border: none;
+  border-radius: 8px;
+  color: var(--_color);
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+::slotted([data-action]:hover) {
+  background-color: var(--_bg-hover-color);
+  color: var(--_hover-color);
+}
+
+::slotted([data-action]:focus-visible) {
+  outline: 2px solid var(--_color);
+  outline-offset: 2px;
+}
+
+::slotted([data-action][disabled]),
+::slotted([data-action][aria-disabled="true"]) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+::slotted(.separator) {
+  width: 1px;
+  height: 1.7rem;
+  background-color: var(--_border-color);
+  margin: 0 4px;
+  align-self: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::slotted([data-action]) {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}

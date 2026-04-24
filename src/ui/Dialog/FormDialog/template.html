@@ -1,0 +1,25 @@
+<dialog part="dialog" aria-modal="true">
+    <div class="modal-wrapper" part="wrapper">
+        <form method="dialog" id="close-form"></form>
+
+        <form id="form-validation" method="get" part="form">
+            <header part="header">
+                <div class="title-area" part="title">
+                    <slot name="title">New window</slot>
+                </div>
+                <button class="close-icon" part="close" form="close-form" type="submit" aria-label="Close">&times;</button>
+            </header>
+
+            <section class="body" part="body">
+                <slot></slot>
+            </section>
+
+            <footer class="actions" part="footer">
+                <slot name="footer">
+                    <p9r-button form="close-form" type="submit" variant="ghost">Cancel</p9r-button>
+                    <p9r-button form="form-validation" type="submit" variant="filled" color="primary">Confirm</p9r-button>
+                </slot>
+            </footer>
+        </form>
+    </div>
+</dialog>

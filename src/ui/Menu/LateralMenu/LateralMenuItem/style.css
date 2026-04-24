@@ -1,0 +1,121 @@
+:host {
+    display: block;
+    width: 100%;
+    outline: none;
+    --item-color: var(--secondary-base, oklch(50% 0.02 260));
+    --item-color-active: var(--primary-base, oklch(60% 0.15 265));
+    --item-bg-active: var(--primary-muted, oklch(95% 0.02 265));
+    --item-contrasted: var(--primary-contrasted, oklch(98% 0.01 260));
+    --icon-size: 20px;
+}
+
+.menu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--item-color);
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .menu-item {
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+}
+
+.menu-item:hover {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+}
+
+:host(:focus-visible) .menu-item {
+    outline: 2px solid var(--item-color-active);
+    outline-offset: 2px;
+}
+
+.menu-item.active {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+    font-weight: 600;
+}
+
+.menu-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background-color: var(--item-color-active);
+    border-radius: 0 4px 4px 0;
+}
+
+.menu-item.active ::slotted(svg) {
+    stroke: var(--item-color-active);
+}
+
+.icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex-shrink: 0;
+}
+
+::slotted(svg), .icon-wrapper svg {
+    width: 100% !important;
+    height: 100% !important;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+
+.label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+:host([disabled]) .menu-item {
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(1);
+    background: transparent !important;
+}
+
+.badge {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.menu-item:not(.active) .badge {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--item-color-active), transparent 90%);
+}
+
+.menu-item.active .badge {
+    background-color: var(--item-color-active);
+    color: var(--item-contrasted);
+    box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
+}

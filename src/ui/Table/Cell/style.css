@@ -1,0 +1,23 @@
+:host {
+  display: table-cell;
+  padding: 12px 20px;
+  vertical-align: middle;
+  color: var(--text-body);
+  font-size: 14px;
+}
+
+:host([variant="success"]) {
+  color: var(--success-base);
+}
+
+:host([variant="danger"]) {
+  color: var(--danger-base);
+}
+
+:host([variant="info"]) {
+  color: var(--info-base);
+}
+
+:host([variant="primary"]) {
+  color: var(--primary-base);
+}
