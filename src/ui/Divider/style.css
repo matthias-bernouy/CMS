@@ -1,0 +1,83 @@
+:host {
+  display: block;
+
+  --_color: var(--border-default, #e5e7eb);
+  --_thickness: 1px;
+  --_gap: 0.75rem;
+  --_label-color: var(--text-muted, #6b7280);
+  --_label-size: 12px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--_gap);
+  width: 100%;
+}
+
+.line {
+  flex: 1;
+  background: var(--_color);
+  height: var(--_thickness);
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--_label-size);
+  color: var(--_label-color);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.label:has(slot:empty),
+.label slot:not([name]):empty {
+  display: none;
+}
+
+.label:has(slot:empty) ~ .line-end,
+.divider:not(:has(.label slot:not([name]):empty)) .line-end {
+  /* placeholder so :has fallback still renders both lines */
+}
+
+:host(:not([align="start"]):not([align="end"])) .line-start,
+:host(:not([align="start"]):not([align="end"])) .line-end {
+  flex: 1;
+}
+
+:host([align="start"]) .line-start { flex: 0 0 1.5rem; }
+:host([align="start"]) .line-end   { flex: 1; }
+:host([align="end"]) .line-start   { flex: 1; }
+:host([align="end"]) .line-end     { flex: 0 0 1.5rem; }
+
+:host([orientation="vertical"]) {
+  display: inline-block;
+  height: 100%;
+}
+
+:host([orientation="vertical"]) .divider {
+  flex-direction: column;
+  height: 100%;
+  width: var(--_thickness);
+}
+
+:host([orientation="vertical"]) .line {
+  width: var(--_thickness);
+  height: auto;
+  flex: 1;
+}
+
+:host([orientation="vertical"]) .label {
+  writing-mode: vertical-rl;
+}
+
+:host([variant="dashed"]) .line {
+  background: transparent;
+  border-top: var(--_thickness) dashed var(--_color);
+  height: 0;
+}
+
+:host([variant="dotted"]) .line {
+  background: transparent;
+  border-top: var(--_thickness) dotted var(--_color);
+  height: 0;
+}

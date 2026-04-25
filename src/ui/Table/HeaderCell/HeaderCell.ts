@@ -155,4 +155,6 @@ export class TableHeaderCell extends HTMLElement {
     }
 }
 
-customElements.define("p9r-header-cell", TableHeaderCell);
+if (!customElements.get("p9r-header-cell")) {
+    customElements.define("p9r-header-cell", TableHeaderCell);
+}

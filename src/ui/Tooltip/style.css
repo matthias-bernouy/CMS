@@ -1,0 +1,114 @@
+:host {
+  display: inline-block;
+  position: relative;
+
+  --_bg: var(--text-main, #1f2937);
+  --_color: var(--bg-surface, #fff);
+  --_radius: 6px;
+  --_padding: 6px 10px;
+  --_size: 12px;
+  --_offset: 8px;
+  --_max-w: 240px;
+  --_arrow-size: 5px;
+}
+
+.trigger {
+  display: contents;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 9999;
+  background: var(--_bg);
+  color: var(--_color);
+  padding: var(--_padding);
+  border-radius: var(--_radius);
+  font-size: var(--_size);
+  font-weight: 500;
+  line-height: 1.4;
+  max-width: var(--_max-w);
+  width: max-content;
+  pointer-events: none;
+  opacity: 0;
+  white-space: normal;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+:host([open]) .tooltip {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tooltip { transition: opacity 0.12s ease; }
+}
+
+.text:empty { display: none; }
+
+/* default position: top */
+.tooltip {
+  bottom: calc(100% + var(--_offset));
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+:host([position="bottom"]) .tooltip {
+  top: calc(100% + var(--_offset));
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+:host([position="left"]) .tooltip {
+  right: calc(100% + var(--_offset));
+  left: auto;
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+:host([position="right"]) .tooltip {
+  left: calc(100% + var(--_offset));
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* arrow */
+.tooltip::after {
+  content: "";
+  position: absolute;
+  border: var(--_arrow-size) solid transparent;
+}
+
+.tooltip::after {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: var(--_bg);
+}
+
+:host([position="bottom"]) .tooltip::after {
+  top: auto;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: transparent;
+  border-bottom-color: var(--_bg);
+}
+
+:host([position="left"]) .tooltip::after {
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  border-top-color: transparent;
+  border-left-color: var(--_bg);
+}
+
+:host([position="right"]) .tooltip::after {
+  top: 50%;
+  left: auto;
+  right: 100%;
+  transform: translateY(-50%);
+  border-top-color: transparent;
+  border-right-color: var(--_bg);
+}

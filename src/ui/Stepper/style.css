@@ -1,0 +1,23 @@
+:host {
+  display: block;
+
+  --_active: var(--primary-base, #4361ee);
+  --_completed: var(--success-base, #10b981);
+  --_pending: var(--border-default, #d1d5db);
+  --_text: var(--text-main, #1f2937);
+  --_muted: var(--text-muted, #6b7280);
+}
+
+.stepper {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+:host([orientation="vertical"]) .stepper {
+  flex-direction: column;
+  gap: 0;
+}

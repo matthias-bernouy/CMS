@@ -1,0 +1,50 @@
+:host {
+  display: inline-block;
+
+  --_size: 1.25rem;
+  --_thickness: 2px;
+  --_track: var(--border-default, #e5e7eb);
+  --_color: var(--text-main, currentColor);
+  --_speed: 0.8s;
+}
+
+:host([size="sm"]) { --_size: 0.875rem; --_thickness: 2px; }
+:host([size="md"]) { --_size: 1.25rem;  --_thickness: 2px; }
+:host([size="lg"]) { --_size: 1.75rem;  --_thickness: 3px; }
+:host([size="xl"]) { --_size: 2.5rem;   --_thickness: 4px; }
+
+:host([color="primary"]) { --_color: var(--primary-base); }
+:host([color="danger"])  { --_color: var(--danger-base); }
+:host([color="success"]) { --_color: var(--success-base); }
+:host([color="info"])    { --_color: var(--info-base); }
+:host([color="warning"]) { --_color: var(--warning-base); }
+
+.spinner {
+  width: var(--_size);
+  height: var(--_size);
+  border-radius: 50%;
+  border: var(--_thickness) solid var(--_track);
+  border-top-color: var(--_color);
+  box-sizing: border-box;
+  animation: spin var(--_speed) linear infinite;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2.4s; }
+}

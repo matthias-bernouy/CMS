@@ -1,0 +1,10 @@
+<div class="alert" part="alert" role="alert">
+    <span class="icon" part="icon" aria-hidden="true">
+        <slot name="icon"></slot>
+    </span>
+    <div class="body" part="body">
+        <strong class="title" part="title"><slot name="title"></slot></strong>
+        <div class="message" part="message"><slot></slot></div>
+    </div>
+    <button class="close" part="close" aria-label="Dismiss" hidden>&times;</button>
+</div>

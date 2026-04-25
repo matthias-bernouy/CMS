@@ -1,0 +1,27 @@
+:host {
+  display: block;
+
+  --_border: var(--border-default, #e5e7eb);
+  --_radius: 8px;
+}
+
+.accordion {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  overflow: hidden;
+}
+
+::slotted(p9r-accordion-item:not(:last-child)) {
+  border-bottom: 1px solid var(--_border);
+}
+
+:host([flush]) .accordion {
+  border: 0;
+  border-radius: 0;
+}
+
+:host([flush]) ::slotted(p9r-accordion-item) {
+  border-bottom: 1px solid var(--_border);
+}

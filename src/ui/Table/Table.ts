@@ -12,4 +12,6 @@ export class Table extends Component {
     }
 }
 
-customElements.define("p9r-table", Table);
+if (!customElements.get("p9r-table")) {
+    customElements.define("p9r-table", Table);
+}

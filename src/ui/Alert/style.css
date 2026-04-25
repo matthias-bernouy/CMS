@@ -1,0 +1,145 @@
+:host {
+  display: block;
+
+  --_bg: var(--info-muted, #eff6ff);
+  --_color: var(--info-contrasted, #1e3a8a);
+  --_accent: var(--info-base, #3b82f6);
+  --_border: var(--info-base, #3b82f6);
+  --_radius: 10px;
+  --_padding: 0.85rem 1rem;
+}
+
+:host([type="success"]) {
+  --_bg: var(--success-muted);
+  --_color: var(--success-contrasted);
+  --_accent: var(--success-base);
+  --_border: var(--success-base);
+}
+
+:host([type="warning"]) {
+  --_bg: var(--warning-muted);
+  --_color: var(--warning-contrasted);
+  --_accent: var(--warning-base);
+  --_border: var(--warning-base);
+}
+
+:host([type="error"]),
+:host([type="danger"]) {
+  --_bg: var(--danger-muted);
+  --_color: var(--danger-contrasted);
+  --_accent: var(--danger-base);
+  --_border: var(--danger-base);
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: var(--_padding);
+  background: var(--_bg);
+  color: var(--_color);
+  border-radius: var(--_radius);
+  border-left: 4px solid var(--_border);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--_accent);
+  margin-top: 1px;
+}
+
+.icon:has(slot[name="icon"]:not(:has(*))) {
+  display: none;
+}
+
+:host([icon]) .icon:has(slot[name="icon"]:not(:has(*))) {
+  display: inline-flex;
+  background-color: var(--_accent);
+  border-radius: 50%;
+  position: relative;
+}
+
+:host([icon][type="success"]) .icon::before,
+:host([type="success"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before {
+  content: "✓";
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+:host([icon][type="warning"]) .icon::before,
+:host([type="warning"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before,
+:host([icon][type="error"]) .icon::before,
+:host([type="error"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before,
+:host([icon][type="danger"]) .icon::before,
+:host([type="danger"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before {
+  content: "!";
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+:host([icon]) .icon:has(slot[name="icon"]:not(:has(*)))::before,
+:host(:not([type])) .icon:has(slot[name="icon"]:not(:has(*)))::before,
+:host([type="info"]) .icon:has(slot[name="icon"]:not(:has(*)))::before {
+  content: "i";
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.title:has(slot[name="title"]:not(:has(*))) {
+  display: none;
+}
+
+.message slot:empty {
+  display: none;
+}
+
+.close {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.close:hover { opacity: 1; }
+
+:host([dismissible]) .close {
+  display: inline-block;
+}
+
+:host([leaving]) {
+  animation: alert-out 160ms ease-in forwards;
+}
+
+@keyframes alert-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
+}

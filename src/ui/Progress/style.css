@@ -1,0 +1,79 @@
+:host {
+  display: block;
+
+  --_height: 8px;
+  --_radius: 999px;
+  --_track: var(--bg-base, #f1f5f9);
+  --_color: var(--primary-base, #4361ee);
+  --_value: 0%;
+  --_label-size: 12px;
+}
+
+:host([size="sm"]) { --_height: 4px; }
+:host([size="md"]) { --_height: 8px; }
+:host([size="lg"]) { --_height: 12px; }
+
+:host([color="danger"])  { --_color: var(--danger-base); }
+:host([color="success"]) { --_color: var(--success-base); }
+:host([color="info"])    { --_color: var(--info-base); }
+:host([color="warning"]) { --_color: var(--warning-base); }
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.track {
+  flex: 1;
+  height: var(--_height);
+  background: var(--_track);
+  border-radius: var(--_radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.bar {
+  height: 100%;
+  width: var(--_value);
+  background: var(--_color);
+  border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bar { transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+}
+
+:host([indeterminate]) .bar {
+  width: 40%;
+  position: absolute;
+  inset-block: 0;
+  animation: progress-indeterminate 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes progress-indeterminate {
+  0%   { left: -40%; }
+  100% { left: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([indeterminate]) .bar {
+    animation-duration: 3s;
+  }
+}
+
+.label {
+  font-size: var(--_label-size);
+  color: var(--text-muted, #6b7280);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.label:has(slot:not(:has(*))) {
+  display: none;
+}
+
+:host([show-value]) .label::before {
+  content: attr(data-value-text);
+  display: inline;
+}
