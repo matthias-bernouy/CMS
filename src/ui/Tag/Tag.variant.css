@@ -1,0 +1,35 @@
+:host([color="info"]) {
+    --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
+    --_tag-color: var(--info-base, oklch(65% 0.12 230));
+    --_tag-border: var(--info-contrasted, oklch(25% 0.08 230));
+}
+
+:host([color="danger"]) {
+    --_tag-bg: var(--danger-muted, oklch(95% 0.02 20));
+    --_tag-color: var(--danger-base, oklch(65% 0.12 20));
+    --_tag-border: var(--danger-contrasted, oklch(25% 0.08 20));
+}
+
+:host([color="success"]) {
+    --_tag-bg: var(--success-muted, oklch(95% 0.02 120));
+    --_tag-color: var(--success-base, oklch(65% 0.12 120));
+    --_tag-border: var(--success-contrasted, oklch(25% 0.08 120));
+}
+
+:host([color="warning"]) {
+    --_tag-bg: var(--warning-muted, oklch(95% 0.02 50));
+    --_tag-color: var(--warning-base, oklch(65% 0.12 50));
+    --_tag-border: var(--warning-contrasted, oklch(25% 0.08 50));
+}
+
+:host([color="primary"]) {
+    --_tag-bg: var(--primary-muted, oklch(95% 0.02 265));
+    --_tag-color: var(--primary-base, oklch(65% 0.12 265));
+    --_tag-border: var(--primary-contrasted, oklch(25% 0.08 265));
+}
+
+:host([color="secondary"]) {
+    --_tag-bg: var(--secondary-muted, oklch(95% 0.02 265));
+    --_tag-color: var(--secondary-base, oklch(65% 0.12 265));
+    --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
+}

@@ -1,0 +1,46 @@
+:host([sort]) .label-section {
+  cursor: pointer;
+}
+
+.label-section:focus-visible,
+.filter-trigger:focus-visible,
+#filter-input:focus-visible {
+  outline: 2px solid var(--primary-base);
+  outline-offset: 2px;
+}
+
+:host([sort]) .sort-icon {
+  display: inline;
+}
+
+:host([aria-sort="ascending"]) .sort-icon::before {
+  content: "\2191";
+}
+
+:host([aria-sort="descending"]) .sort-icon::before {
+  content: "\2193";
+}
+
+:host([aria-sort="ascending"]) .sort-icon,
+:host([aria-sort="descending"]) .sort-icon {
+  font-size: 0;
+}
+
+:host([aria-sort="ascending"]) .sort-icon::before,
+:host([aria-sort="descending"]) .sort-icon::before {
+  font-size: 14px;
+}
+
+:host([data-has-filter]) .filter-trigger {
+  color: var(--primary-base, #007bff);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .filter-trigger {
+    transition: background 0.2s;
+  }
+}
+
+.filter-trigger:hover {
+  background: var(--bg-base, #eee);
+}

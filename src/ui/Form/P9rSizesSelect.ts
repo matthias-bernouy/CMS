@@ -1,4 +1,4 @@
-import "./P9rSelect";
+import "./P9rSelect/P9rSelect";
 
 /**
  * <p9r-sizes-select name="size" label="Size"></p9r-sizes-select>

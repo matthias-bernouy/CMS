@@ -1,7 +1,9 @@
 import { Component } from "../../../base/Component";
 
 import template from './template.html' with { type: 'text' };
-import css from './style.css' with { type: 'text' };
+import baseCss from './base.css' with { type: 'text' };
+import variantCss from './variant.css' with { type: 'text' };
+const css = baseCss + variantCss;
 
 export class Button extends Component {
     static formAssociated = true;

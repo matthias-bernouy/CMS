@@ -1,0 +1,75 @@
+:host([color="primary"]) {
+  --_accent-base: var(--primary-base);
+  --_accent-muted: var(--primary-muted);
+  --_accent-contrast: oklch(100% 0 0);
+}
+
+:host([color="danger"]) {
+  --_accent-base: var(--danger-base);
+  --_accent-muted: var(--danger-muted);
+}
+
+:host([color="success"]) {
+  --_accent-base: var(--success-base);
+  --_accent-muted: var(--success-muted);
+}
+
+:host([color="info"]) {
+  --_accent-base: var(--info-base);
+  --_accent-muted: var(--info-muted);
+}
+
+:host([variant="filled"]) {
+  --_btn-bg: var(--_accent-base);
+  --_btn-text: var(--_accent-contrast);
+  --_btn-border: transparent;
+  --_btn-hover-bg: var(--_accent-base);
+  --_btn-hover-opacity: 0.9;
+  border-color: transparent;
+}
+
+:host([variant="outlined"]) {
+  --_btn-bg: transparent;
+  --_btn-border: var(--_accent-base);
+  --_btn-text: var(--_accent-base);
+  --_btn-hover-bg: var(--_accent-muted);
+}
+
+:host([variant="ghost"]) {
+  --_btn-bg: transparent;
+  --_btn-border: transparent;
+  --_btn-text: var(--_accent-base);
+  --_btn-hover-bg: var(--_accent-muted);
+}
+
+:host([fullwidth]), :host([fullwidth]) .button {
+  width: 100%;
+}
+
+:host([align="left"]) .button {
+  justify-content: start;
+}
+
+:host([align="right"]) .button {
+  justify-content: end;
+}
+
+:host([disabled]) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .button:active {
+    transform: translateY(0) scale(0.98);
+  }
+}

@@ -1,0 +1,75 @@
+:host {
+  display: block;
+
+  --_border: var(--border-default, #e5e7eb);
+  --_active: var(--primary-base, #4361ee);
+  --_text: var(--text-body, #4b5563);
+  --_text-active: var(--primary-base, #4361ee);
+  --_pad-y: 0.6rem;
+  --_pad-x: 1rem;
+  --_size: 13px;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+}
+
+.tablist {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--_border);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tab {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: var(--_pad-y) var(--_pad-x);
+  font: inherit;
+  font-size: var(--_size);
+  font-weight: 500;
+  color: var(--_text);
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+}
+
+.tab[aria-selected="true"] {
+  color: var(--_text-active);
+}
+
+.tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--_active);
+}
+
+.tab:hover:not([aria-selected="true"]) {
+  color: var(--text-main, #1f2937);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--_active);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.tab[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.panels {
+  padding-top: 1rem;
+  flex: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tab { transition: color 0.15s; }
+}

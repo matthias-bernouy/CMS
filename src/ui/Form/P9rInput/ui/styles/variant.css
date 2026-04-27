@@ -1,0 +1,35 @@
+.input:hover:not(:disabled) {
+    border-color: var(--text-muted, #94a3b8);
+}
+
+.input:focus-visible {
+    border-color: var(--primary-base, #4361ee);
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+}
+
+.input[aria-invalid="true"] {
+    border-color: var(--danger-base, #ef4444);
+}
+
+.input[aria-invalid="true"]:focus-visible {
+    box-shadow: 0 0 0 3px rgb(239 68 68 / 0.15);
+}
+
+.input:disabled {
+    background: var(--bg-base, #f1f5f9);
+    color: var(--text-muted, #94a3b8);
+    cursor: not-allowed;
+}
+
+.hint[data-level="error"] {
+    color: var(--danger-base, #ef4444);
+}
+
+.hint[data-level="success"] {
+    color: var(--success-base, #10b981);
+}
+
+.counter[data-over="true"] {
+    color: var(--danger-base, #ef4444);
+    font-weight: 600;
+}

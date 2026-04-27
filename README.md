@@ -65,6 +65,8 @@ Two tag prefixes are currently in use across the library: `p9r-` (majority) and 
 | --- | --- | --- |
 | `FormDialog` | `<p9r-form-dialog>` | Modal dialog wrapping a form. |
 | `LateralDialog` | `<w13c-lateral-dialog>` | Slide-in lateral dialog panel. |
+| `Modal` | `<p9r-modal>` | Centered overlay modal with backdrop, controlled via `open` attribute. |
+| `OpenModal` | `<p9r-open-modal>` | Trigger wrapper that opens a target `<p9r-modal>` by id on click. |
 
 ### Form
 
@@ -94,6 +96,7 @@ Two tag prefixes are currently in use across the library: `p9r-` (majority) and 
 | `Divider` | `<p9r-divider>` | Horizontal / vertical separator with optional label. |
 | `HorizontalActionGroup` | `<p9r-horizontal-action-group>` | Horizontal group of action buttons. |
 | `LeftMenuLayout` | `<w13c-left-menu-layout>` | Page layout with a left menu. |
+| `Stack` | `<p9r-stack>` | Flex container with token-based `gap`, `direction`, `align`/`justify`, `wrap`, optional `divider` between children. |
 
 ### Menu
 

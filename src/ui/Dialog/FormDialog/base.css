@@ -1,0 +1,69 @@
+:host {
+    --_modal-width: 500px;
+    --_modal-radius: 12px;
+    --_modal-bg: var(--bg-surface);
+    --_modal-border: var(--border-default);
+}
+
+dialog {
+    border: 1px solid var(--_modal-border);
+    border-radius: var(--_modal-radius);
+    background: var(--_modal-bg);
+    padding: 0;
+    width: min(90vw, var(--_modal-width));
+    max-height: 80vh;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    opacity: 0;
+}
+
+dialog[open] {
+    opacity: 1;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+}
+
+dialog[open]::backdrop {
+    opacity: 1;
+}
+
+.modal-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--border-default);
+}
+
+.title-area {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+}
+
+.body {
+    padding: 1.5rem;
+    color: var(--text-body);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-y: auto;
+}
+
+footer.actions {
+    padding: 1rem 1.5rem;
+    background: var(--bg-base);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    border-top: 1px solid var(--border-default);
+}

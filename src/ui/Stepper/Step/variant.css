@@ -1,0 +1,60 @@
+:host([data-state="active"], [state="active"]) {
+  --_color: var(--_active);
+  --_label-color: var(--_text);
+}
+
+:host([data-state="completed"], [state="completed"]) {
+  --_color: var(--_completed);
+  --_label-color: var(--_text);
+}
+
+:host([orientation="vertical"]) .step {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+:host(:not([orientation="vertical"])) .indicator {
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+}
+
+:host([data-state="active"], [state="active"]) .bullet {
+  background: var(--_color);
+  color: var(--_bg);
+}
+
+:host([data-state="completed"], [state="completed"]) .bullet {
+  background: var(--_color);
+  color: var(--_bg);
+  border-color: var(--_color);
+}
+
+:host([data-state="completed"], [state="completed"]) .number { display: none; }
+:host([data-state="completed"], [state="completed"]) .check  { display: flex; }
+
+:host(:not([orientation="vertical"])) .connector {
+  height: 2px;
+  margin-inline: 0.4rem;
+  min-width: 1rem;
+}
+
+:host([orientation="vertical"]) .connector {
+  width: 2px;
+  margin-block: 0.4rem;
+  min-height: 1.5rem;
+  align-self: stretch;
+}
+
+:host([last]) .connector {
+  display: none;
+}
+
+:host(:not([orientation="vertical"])) .step {
+  flex-direction: column;
+}
+
+:host(:not([orientation="vertical"])) .body {
+  text-align: center;
+  margin-top: 0.4rem;
+}

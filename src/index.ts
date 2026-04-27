@@ -24,6 +24,8 @@ export { Card } from "./ui/Card/Card";
 // Dialog
 export { FormDialog } from "./ui/Dialog/FormDialog/FormDialog";
 export { LateralDialog } from "./ui/Dialog/LateralDialog/LateralDialog";
+export { Modal } from "./ui/Dialog/Modal/Modal";
+export { OpenModal } from "./ui/Dialog/OpenModal/OpenModal";
 
 // Divider
 export { Divider } from "./ui/Divider/Divider";
@@ -31,12 +33,12 @@ export { Divider } from "./ui/Divider/Divider";
 // Form
 export { Button } from "./ui/Form/Button/Button";
 export { Checkbox } from "./ui/Form/Checkbox/Checkbox";
-export { FormSection } from "./ui/Form/FormSection";
+export { FormSection } from "./ui/Form/FormSection/FormSection";
 export { IconButton } from "./ui/Form/IconButton/IconButton";
 export { InputFile } from "./ui/Form/InputFile/InputFile";
-export { P9rInput } from "./ui/Form/P9rInput";
-export { P9rRange } from "./ui/Form/P9rRange";
-export { P9rSelect } from "./ui/Form/P9rSelect";
+export { P9rInput } from "./ui/Form/P9rInput/P9rInput";
+export { P9rRange } from "./ui/Form/P9rRange/P9rRange";
+export { P9rSelect } from "./ui/Form/P9rSelect/P9rSelect";
 export { P9rSizesSelect } from "./ui/Form/P9rSizesSelect";
 export { Radio } from "./ui/Form/Radio/Radio";
 export { RadioGroup } from "./ui/Form/RadioGroup/RadioGroup";
@@ -47,7 +49,9 @@ export { Textarea } from "./ui/Form/Textarea/Textarea";
 
 // Layout
 export { HorizontalActionGroup } from "./ui/HorizontalActionGroup/HorizontalActionGroup";
+export { Container } from "./ui/Layout/Container/Container";
 export { LeftMenuLayout } from "./ui/Layout/LeftMenuLayout/LeftMenuLayout";
+export { Stack } from "./ui/Layout/Stack/Stack";
 
 // Menu
 export { LateralMenu } from "./ui/Menu/LateralMenu/LateralMenu";
@@ -83,8 +87,14 @@ export { TabPanel } from "./ui/Tabs/TabPanel/TabPanel";
 export { Tag } from "./ui/Tag/Tag";
 
 // Toast
-export { Toast } from "./ui/Toast/Toast";
-export { ToastStack } from "./ui/Toast/ToastStack";
+export { Toast } from "./ui/Toast/Toast/Toast";
+export { ToastStack, showToast } from "./ui/Toast/ToastStack/ToastStack";
 
 // Tooltip
 export { Tooltip } from "./ui/Tooltip/Tooltip";
+
+
+
+
+export { Form } from "./logicalComponents/Form/Form";
+export { FetchComponent } from "./logicalComponents/data/fetch/FetchComponent";

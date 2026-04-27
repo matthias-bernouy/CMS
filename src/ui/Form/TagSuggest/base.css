@@ -1,0 +1,67 @@
+:host {
+    display: block;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+:host([disabled]) {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+input {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-main, #1e293b);
+    font-family: inherit;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background-color: var(--bg-surface, #fff);
+    outline: none;
+    box-sizing: border-box;
+}
+
+input::placeholder {
+    color: var(--text-muted, #94a3b8);
+    font-weight: 400;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    input {
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+}

@@ -1,158 +1,58 @@
-export class TableHeaderCell extends HTMLElement {
-    static get observedAttributes() {
-        return ['sort', 'direction', 'active', 'filter-name', 'filter-type'];
-    }
+import { Component } from "../../../base/Component";
+
+import template from './template.html' with { type: 'text' };
+import baseCss from './base.css' with { type: 'text' };
+import variantCss from './variant.css' with { type: 'text' };
+const css = baseCss + variantCss;
+
+import { syncFilterState } from './compute';
+import {
+    handleSortClick, handleFilterToggle, handleFilterEnter, closeFilterPopover,
+} from './listener';
+
+export class TableHeaderCell extends Component {
+    private _sortTrigger: HTMLElement | null;
+    private _filterBtn: HTMLElement | null;
+    private _filterPopover: HTMLElement | null;
+    private _filterInput: HTMLInputElement | null;
+
+    static get observedAttributes() { return ['sort', 'filter-name']; }
 
     constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
+        super({ css, template: template as unknown as string });
+        this._sortTrigger = this.shadowRoot?.querySelector('#sort-trigger') ?? null;
+        this._filterBtn = this.shadowRoot?.querySelector('#filter-btn') ?? null;
+        this._filterPopover = this.shadowRoot?.querySelector('#filter-popover') ?? null;
+        this._filterInput = this.shadowRoot?.querySelector('#filter-input') ?? null;
     }
 
-    connectedCallback() {
-        // Listen for click to handle sorting
-        this.addEventListener('click', this.handleSort);
-        this.render();
+    override connectedCallback() {
+        syncFilterState(this, this._filterBtn, this._filterInput);
+
+        this._sortTrigger?.addEventListener('click', this._onSort);
+        this._filterBtn?.addEventListener('click', this._onFilterToggle);
+        this._filterPopover?.addEventListener('click', this._stopPropagation);
+        this._filterInput?.addEventListener('keydown', this._onFilterKey);
+        window.addEventListener('click', this._onWindowClick);
     }
 
-    private handleSort = (e: Event) => {
-        // Skip sorting if the filter input was clicked
-        if (e.composedPath().some(el => el instanceof HTMLInputElement)) return;
-
-        const sortKey = this.getAttribute('sort');
-        if (!sortKey) return;
-
-        const url = new URL(window.location.href);
-        const currentSort = url.searchParams.get('sort');
-        const currentDir = url.searchParams.get('direction');
-
-        const newDir = (currentSort === sortKey && currentDir === 'asc') ? 'desc' : 'asc';
-
-        url.searchParams.set('sort', sortKey);
-        url.searchParams.set('direction', newDir);
-        window.location.href = url.toString();
+    disconnectedCallback() {
+        this._sortTrigger?.removeEventListener('click', this._onSort);
+        this._filterBtn?.removeEventListener('click', this._onFilterToggle);
+        this._filterPopover?.removeEventListener('click', this._stopPropagation);
+        this._filterInput?.removeEventListener('keydown', this._onFilterKey);
+        window.removeEventListener('click', this._onWindowClick);
     }
 
-
-    render() {
-        const filterName = this.getAttribute('filter-name');
-        const url = new URL(window.location.href);
-        const currentFilterValue = url.searchParams.get(`f_${filterName}`) || '';
-        const hasFilter = currentFilterValue.length > 0;
-
-        if (this.shadowRoot) {
-            this.shadowRoot.innerHTML = `
-            <style>
-                :host {
-                    display: table-cell;
-                    padding: 12px 20px;
-                    border-bottom: 2px solid var(--border-light);
-                    position: relative; /* For popover positioning */
-                }
-                .header-wrapper {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-                .label-section {
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 5px;
-                }
-                .filter-trigger {
-                    cursor: pointer;
-                    padding: 4px;
-                    border-radius: 4px;
-                    transition: background 0.2s;
-                    color: ${hasFilter ? 'var(--primary-base, #007bff)' : '#ccc'};
-                }
-                .filter-trigger:hover { background: #eee; }
-
-                /* Filter popover */
-                .filter-popover {
-                    display: none;
-                    position: absolute;
-                    top: 100%;
-                    left: 0;
-                    z-index: 10;
-                    background: white;
-                    border: 1px solid #ddd;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                    padding: 10px;
-                    border-radius: 6px;
-                    min-width: 150px;
-                }
-                .filter-popover.open { display: block; }
-                
-                input {
-                    width: 100%;
-                    padding: 6px;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    font-size: 13px;
-                }
-            </style>
-            
-            <div class="header-wrapper">
-                <div class="label-section" id="sort-trigger">
-                    <slot></slot>
-                    <span class="sort-icon">...</span>
-                </div>
-
-                ${filterName ? `
-                    <div class="filter-trigger" id="filter-btn">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                        </svg>
-                    </div>
-                    <div class="filter-popover" id="filter-popover">
-                        <input type="text" placeholder="Filter..." value="${currentFilterValue}" id="filter-input">
-                    </div>
-                ` : ''}
-            </div>
-        `;
-
-            this.setupEvents();
-        }
+    attributeChangedCallback() {
+        syncFilterState(this, this._filterBtn, this._filterInput);
     }
 
-    private setupEvents() {
-        const filterBtn = this.shadowRoot?.querySelector('#filter-btn');
-        const popover = this.shadowRoot?.querySelector('#filter-popover');
-        const input = this.shadowRoot?.querySelector('#filter-input') as HTMLInputElement;
-        const sortTrigger = this.shadowRoot?.querySelector('#sort-trigger');
-
-        // Toggle filter popover
-        filterBtn?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            popover?.classList.toggle('open');
-            if (popover?.classList.contains('open')) input?.focus();
-        });
-
-        // Close when clicking outside
-        window.addEventListener('click', () => popover?.classList.remove('open'));
-        popover?.addEventListener('click', (e) => e.stopPropagation());
-
-        // Sort (only on label click)
-        sortTrigger?.addEventListener('click', (e) => this.handleSort(e));
-
-        // Apply filter on Enter
-        input?.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                this.applyFilter(input.value);
-            }
-        });
-    }
-
-    private applyFilter(value: string) {
-        const filterName = this.getAttribute('filter-name');
-        const url = new URL(window.location.href);
-
-        if (value) url.searchParams.set(`f_${filterName}`, value);
-        else url.searchParams.delete(`f_${filterName}`);
-
-        window.location.href = url.toString();
-    }
+    private _onSort = (e: Event) => handleSortClick(this, e);
+    private _onFilterToggle = (e: Event) => handleFilterToggle(e, this._filterBtn, this._filterPopover, this._filterInput);
+    private _onFilterKey = (e: KeyboardEvent) => handleFilterEnter(this, this._filterInput, e);
+    private _onWindowClick = () => closeFilterPopover(this._filterBtn, this._filterPopover);
+    private _stopPropagation = (e: Event) => e.stopPropagation();
 }
 
 if (!customElements.get("p9r-header-cell")) {

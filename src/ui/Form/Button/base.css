@@ -1,0 +1,57 @@
+:host {
+  display: inline-block;
+
+  --_btn-padding-y: 0.6rem;
+  --_btn-padding-x: 1.2rem;
+  --_btn-font-size: 13px;
+  --_btn-line-height: 1;
+
+  --_btn-bg: var(--bg-surface);
+  --_btn-text: var(--text-main);
+  --_btn-border: var(--border-default);
+  --_btn-hover-bg: var(--bg-base);
+
+  --_accent-base: var(--text-main);
+  --_accent-muted: var(--bg-base);
+  --_accent-contrast: oklch(100% 0 0);
+
+  --_btn-radius: 8px;
+  --_btn-font: inherit;
+}
+
+.button {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  padding: var(--_btn-padding-y) var(--_btn-padding-x);
+
+  font-family: var(--_btn-font);
+  font-size: var(--_btn-font-size);
+  font-weight: 600;
+  line-height: var(--_btn-line-height);
+  letter-spacing: -0.015em;
+
+  border-radius: var(--_btn-radius);
+  border: 1.5px solid var(--_btn-border);
+  background-color: var(--_btn-bg);
+  color: var(--_btn-text);
+
+  white-space: nowrap;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--_accent-base);
+  outline-offset: 2px;
+}
+
+.button:hover {
+  background-color: var(--_btn-hover-bg);
+  opacity: var(--_btn-hover-opacity, 1);
+}
+
+::slotted(svg) {
+  width: 1.2rem;
+}

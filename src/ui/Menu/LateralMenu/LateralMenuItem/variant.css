@@ -1,0 +1,49 @@
+.menu-item:hover {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+}
+
+:host(:focus-visible) .menu-item {
+    outline: 2px solid var(--item-color-active);
+    outline-offset: 2px;
+}
+
+.menu-item.active {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+    font-weight: 600;
+}
+
+.menu-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background-color: var(--item-color-active);
+    border-radius: 0 4px 4px 0;
+}
+
+.menu-item.active ::slotted(svg) {
+    stroke: var(--item-color-active);
+}
+
+:host([disabled]) .menu-item {
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(1);
+    background: transparent !important;
+}
+
+.menu-item:not(.active) .badge {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--item-color-active), transparent 90%);
+}
+
+.menu-item.active .badge {
+    background-color: var(--item-color-active);
+    color: var(--item-contrasted);
+    box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
+}

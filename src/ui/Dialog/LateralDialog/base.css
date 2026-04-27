@@ -1,0 +1,51 @@
+:host {
+    --drawer-width: 400px;
+    --drawer-bg: #ffffff;
+    --transition-speed: 0.4s;
+    --transition-curve: cubic-bezier(0.4, 0, 0.2, 1);
+
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+dialog {
+    display: flex;
+    flex-direction: column;
+    margin-right: 0;
+    margin-left: auto;
+    height: 100dvh;
+    width: var(--drawer-width);
+    max-width: 100vw;
+    border: none;
+    padding: 0;
+    background: var(--drawer-bg);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+
+    max-height: unset;
+}
+
+dialog[open] {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+}
+
+dialog[open]::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+}
+
+dialog > * {
+    pointer-events: auto;
+}
