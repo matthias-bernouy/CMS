@@ -30,7 +30,7 @@ export function defineMetaTags(
     head: HTMLElement,
     page: TPage,
     settings: TSystem,
-    cmsPathPrefix: string,
+    defaultFaviconUrl: string,
 ): void {
     const title = document.createElement("title");
     title.textContent = page.title;
@@ -43,7 +43,7 @@ export function defineMetaTags(
 
     const favicon = document.createElement("link");
     favicon.setAttribute("rel", "icon");
-    const rawFavicon = settings.site?.favicon?.trim() || `${cmsPathPrefix}/assets/favicon`;
+    const rawFavicon = settings.site?.favicon?.trim() || defaultFaviconUrl;
     favicon.setAttribute("href", normalizeFaviconHref(rawFavicon));
     head.appendChild(favicon);
 

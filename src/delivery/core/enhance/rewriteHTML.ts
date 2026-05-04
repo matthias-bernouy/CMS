@@ -1,5 +1,4 @@
 import { parseHTML } from "linkedom";
-import type { MediaUrlBuilder } from "@bernouy/socle";
 
 export type ImageRewrite = {
     /** Index in document order — must align with `document.querySelectorAll('img')`. */
@@ -22,20 +21,28 @@ export type ImageRewrite = {
 };
 
 /**
+ * Translates a rewrite slot into the actual variant URL emitted in `srcset`.
+ * The runtime path injects a resolver that returns a resize-on-demand URL
+ * built from `MediaUrlBuilder.formatImageUrl`; the build pipeline injects a
+ * resolver that returns the CDN `absoluteURL` of the pre-uploaded variant.
+ */
+export type VariantUrlResolver = (originalSrc: string, width: number) => string;
+
+/**
  * Take the rendered page HTML and inject `srcset` / `sizes` on every
  * `<img>` whose index has a matching rewrite. Other `<img>` tags are left
  * exactly as-is. Returns the serialized HTML.
  *
- * Variant URLs are built through Socle's `MediaUrlBuilder.formatImageUrl`,
- * passing the original `<img src>` as the source URL. The provider decides
- * how to encode width parameters. Images whose src is external, a data URI,
- * or a likely-SVG are skipped (srcset only makes sense when the media
- * backend can return real raster variants).
+ * Variant URLs are produced by the injected resolver, so this function
+ * stays agnostic of where the bytes actually live (resize-on-demand
+ * backend vs pre-uploaded CDN slot). Images whose src is external, a data
+ * URI, or a likely-SVG are skipped (srcset only makes sense when the
+ * resolver can produce real raster variants).
  */
 export function rewriteHTML(
     html: string,
     rewrites: readonly ImageRewrite[],
-    media: MediaUrlBuilder,
+    resolveVariantUrl: VariantUrlResolver,
 ): string {
     if (rewrites.length === 0) return html;
 
@@ -51,7 +58,7 @@ export function rewriteHTML(
             const src = img.getAttribute("src");
             if (src && isOptimizable(src)) {
                 const srcset = rw.widths
-                    .map(w => `${media.formatImageUrl({ url: src, width: w }).toString()} ${w}w`)
+                    .map(w => `${resolveVariantUrl(src, w)} ${w}w`)
                     .join(", ");
                 img.setAttribute("srcset", srcset);
                 if (rw.sizes) img.setAttribute("sizes", rw.sizes);
@@ -74,8 +81,7 @@ export function rewriteHTML(
  * Decide whether an `<img src>` can be srcset-optimized. Excludes data URIs
  * (no backend to resize them) and likely-SVG URLs (rasterizing SVGs through
  * a width ladder is pointless — the browser renders them at any size). Any
- * remaining URL, including external ones, is handed to `formatImageUrl` and
- * the provider decides what to do with it.
+ * remaining URL, including external ones, is handed to the resolver.
  */
 export function isOptimizable(src: string): boolean {
     if (!src) return false;

@@ -13,7 +13,7 @@ export default async function StyleServer(req: Request, delivery: DeliveryCms) {
         req,
         P9R_CACHE.STYLE,
         delivery.cache,
-        () => generateStyleEntry(delivery),
+        () => generateStyleEntry(delivery.repository),
         publicAssetCacheControl(req),
     );
 }

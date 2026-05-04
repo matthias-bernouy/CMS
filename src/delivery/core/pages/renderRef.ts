@@ -1,5 +1,6 @@
 import type DeliveryCms from "src/delivery/DeliveryCms";
 import { renderPage } from "src/delivery/core/html/renderPage";
+import { makeRuntimeRenderContext } from "src/delivery/core/html/runtimeContext";
 
 /**
  * Render the configured fallback page for `site.notFound` / `site.serverError`
@@ -25,7 +26,7 @@ export async function renderRef(
         if (ref) {
             const page = await delivery.repository.getPage(ref.path);
             if (page) {
-                const entry  = await renderPage(page, delivery);
+                const entry  = await renderPage(page, makeRuntimeRenderContext(delivery));
                 const accept = req.headers.get("accept-encoding") || "";
                 if (accept.includes("br")) {
                     return new Response(entry.brotli as BodyInit, {

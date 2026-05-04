@@ -1,4 +1,4 @@
-import type DeliveryCms from "src/delivery/DeliveryCms";
+import type { DeliveryRepository } from "src/delivery/interfaces/DeliveryRepository";
 import type { CacheEntry } from "src/socle/interfaces/Cache";
 import { compress } from "src/socle/server/compression";
 
@@ -8,7 +8,7 @@ import { compress } from "src/socle/server/compression";
  * augmentation (runtime tokens, inlined critical CSS, etc.) belongs here
  * rather than in the endpoint handler.
  */
-export async function generateStyleEntry(delivery: DeliveryCms): Promise<CacheEntry> {
-    const settings = await delivery.repository.getSystem();
+export async function generateStyleEntry(repository: DeliveryRepository): Promise<CacheEntry> {
+    const settings = await repository.getSystem();
     return compress(settings.site?.theme || "", "text/css");
 }

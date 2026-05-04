@@ -14,7 +14,7 @@ export default async function BlocServer(req: Request, delivery: DeliveryCms){
         req,
         P9R_CACHE.bloc(tag),
         delivery.cache,
-        () => generateBlocEntry(tag, delivery),
+        () => generateBlocEntry(tag, delivery.repository),
         publicAssetCacheControl(req),
     ).catch(() => Response.error());
 

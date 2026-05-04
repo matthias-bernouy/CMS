@@ -14,19 +14,21 @@ import { P9R_CACHE } from "src/socle/constants/p9r-constants";
 export type AssetsManifest = {
     componentUrl: string;
     styleUrl:     string;
-    /** Parallel array with the `usedTags` passed in to `resolveAssets`. */
+    /** Parallel array with the `usedTags` passed in. */
     blocUrls:     string[];
     /** `[componentUrl, ...blocUrls]` — convenience for emission in order. */
     scriptUrls:   string[];
 };
 
 /**
- * Resolve every asset entry through the delivery cache (warming on miss)
- * and produce the hashed public URLs that go into `<head>`. Parallel
- * resolution is a no-op on the warm path and only pays when the process
- * just started.
+ * Runtime asset resolution: warms the delivery cache on miss and produces
+ * hashed URLs under `<cmsPathPrefix>/`. Used by the live serving path; the
+ * build pipeline has its own resolver that uploads to the CDN instead.
+ *
+ * Parallel resolution is a no-op on the warm path and only pays when the
+ * process just started.
  */
-export async function resolveAssets(
+export async function resolveRuntimeAssets(
     delivery: DeliveryCms,
     usedTags: string[],
 ): Promise<AssetsManifest> {
@@ -36,9 +38,9 @@ export async function resolveAssets(
 
     const [componentEntry, styleEntry, ...blocEntries] = await Promise.all([
         getOrGenerateEntryAsync(componentJsCacheKey, delivery.cache, generateComponentJsEntry),
-        getOrGenerateEntryAsync(P9R_CACHE.STYLE,     delivery.cache, () => generateStyleEntry(delivery)),
+        getOrGenerateEntryAsync(P9R_CACHE.STYLE,     delivery.cache, () => generateStyleEntry(delivery.repository)),
         ...usedTags.map(tag => getOrGenerateEntryAsync(
-            P9R_CACHE.bloc(tag), delivery.cache, () => generateBlocEntry(tag, delivery),
+            P9R_CACHE.bloc(tag), delivery.cache, () => generateBlocEntry(tag, delivery.repository),
         )),
     ]);
 

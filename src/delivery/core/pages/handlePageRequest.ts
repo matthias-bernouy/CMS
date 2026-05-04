@@ -2,6 +2,7 @@ import type DeliveryCms from "src/delivery/DeliveryCms";
 import type { TPage } from "src/socle/interfaces/models";
 import { cachedResponseAsync } from "src/socle/server/compression";
 import { renderPage } from "src/delivery/core/html/renderPage";
+import { makeRuntimeRenderContext } from "src/delivery/core/html/runtimeContext";
 import { renderRef } from "src/delivery/core/pages/renderRef";
 import { P9R_CACHE } from "src/socle/constants/p9r-constants";
 
@@ -50,7 +51,7 @@ async function renderWithFallbacks(
             req,
             cacheKey,
             delivery.cache,
-            () => renderPage(page, delivery),
+            () => renderPage(page, makeRuntimeRenderContext(delivery)),
         );
 
         if (wasCached) return firstResponse;
@@ -66,7 +67,7 @@ async function renderWithFallbacks(
             req,
             cacheKey,
             delivery.cache,
-            () => renderPage(page, delivery),
+            () => renderPage(page, makeRuntimeRenderContext(delivery)),
         );
     } catch (err) {
         console.error(`Failed to render page ${cachePath}:`, err);

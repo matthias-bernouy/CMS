@@ -1,21 +1,20 @@
 import { parseHTML } from "linkedom";
-import type DeliveryCms from "src/delivery/DeliveryCms";
 import type { TPage } from "src/socle/interfaces/models";
 import type { CacheEntry } from "src/socle/interfaces/Cache";
 import { compress } from "src/socle/server/compression";
 import { expandSnippets } from "src/delivery/core/html/expandSnippets";
 import { findUsedBlocTags } from "src/delivery/core/blocs/findUsedBlocs";
-import { resolveAssets } from "src/delivery/core/assets/resolveAssets";
 import { buildHtmlBasics } from "src/delivery/core/head/buildHtmlBasics";
 import { buildAssetPreloads, buildFoucShell, buildStylesheetLink } from "src/delivery/core/head/buildAssets";
 import { buildPreconnect } from "src/delivery/core/head/buildPreconnect";
 import { buildScriptTags } from "src/delivery/core/head/buildScriptTags";
 import { defineMetaTags } from "src/delivery/core/seo/defineMetaTags";
+import type { RenderContext } from "src/delivery/core/html/RenderContext";
 
 /**
  * Render a page to a compressed CacheEntry. Thin orchestrator — every piece
  * of `<head>` construction lives in a dedicated helper; this function only
- * fixes document order and wires the repository calls.
+ * fixes document order and wires the repository / context calls.
  *
  * <head> layout: preloads are emitted early so the browser starts
  * downloading the runtime + theme before reaching the deferred `<script>`
@@ -23,21 +22,21 @@ import { defineMetaTags } from "src/delivery/core/seo/defineMetaTags";
  * document order: `component.js` runs before any bloc IIFE, and the parser
  * is never blocked.
  *
- * Returns a CacheEntry (not a Response) because `cachedResponseAsync` is
- * the only caller and it expects the pre-compressed bytes.
+ * `ctx.resolveAssets` is the strategy seam — runtime serves through the
+ * cache, build pre-uploads to the CDN. The renderer doesn't care.
  */
-export async function renderPage(page: TPage, delivery: DeliveryCms): Promise<CacheEntry> {
+export async function renderPage(page: TPage, ctx: RenderContext): Promise<CacheEntry> {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     const head = document.head;
 
-    const settings = await delivery.repository.getSystem();
+    const settings = await ctx.repository.getSystem();
 
-    const expandedContent = await expandSnippets(page.content, delivery.repository);
+    const expandedContent = await expandSnippets(page.content, ctx.repository);
     document.body.innerHTML = expandedContent;
 
-    const blocList = await delivery.repository.getBlocsList();
+    const blocList = await ctx.repository.getBlocsList();
     const usedTags = findUsedBlocTags(expandedContent, blocList);
-    const assets   = await resolveAssets(delivery, usedTags);
+    const assets   = await ctx.resolveAssets(usedTags);
 
     // <head> assembly, in exact document order. Consumer-supplied head
     // injectors run right after the document basics so they land before any
@@ -46,11 +45,11 @@ export async function renderPage(page: TPage, delivery: DeliveryCms): Promise<Ca
     // observability agent that must monkeypatch `customElements.define`
     // before any deferred bloc IIFE registers its tag).
     buildHtmlBasics    (document, head, settings);
-    for (const inject of delivery.headInjectors) inject({ document, head, usedTags });
+    for (const inject of ctx.headInjectors) inject({ document, head, usedTags });
     buildPreconnect    (document, head);
     buildAssetPreloads (document, head, assets);
     buildFoucShell     (document, head, usedTags);
-    defineMetaTags     (document, head, page, settings, delivery.cmsPathPrefix);
+    defineMetaTags     (document, head, page, settings, ctx.defaultFaviconUrl);
     buildStylesheetLink(document, head, assets);
     buildScriptTags    (document, head, assets);
 

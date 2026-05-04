@@ -1,10 +1,11 @@
 import { describe, test, expect } from "bun:test";
 import { renderPage } from "src/delivery/core/html/renderPage";
+import { makeRuntimeRenderContext } from "src/delivery/core/html/runtimeContext";
 import { makeDelivery, page, testRepository } from "./helpers";
 
 async function renderToString(p: Parameters<typeof page>[0], opts: Parameters<typeof makeDelivery>[0] = {}) {
     const delivery = makeDelivery(opts);
-    const entry = await renderPage(page(p), delivery);
+    const entry = await renderPage(page(p), makeRuntimeRenderContext(delivery));
     return new TextDecoder().decode(entry.raw);
 }
 
