@@ -1,49 +1,30 @@
 {
-    "name": "@bernouy/socle",
-    "version": "0.1.0",
-    "description": "",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "files": [
-        "dist/"
+    "name": "@bernouy/socle-monorepo",
+    "private": true,
+    "workspaces": [
+        "packages/*"
     ],
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.js"
-        }
-    },
     "scripts": {
-        "bun:build": "bun build.ts",
-        "test": "bun test"
+        "build":     "tsc --build",
+        "clean":     "tsc --build --clean",
+        "typecheck": "tsc --build",
+        "test":      "bun test"
     },
     "devDependencies": {
         "@types/bun": "latest",
         "bun-types": "^1.3.6",
-        "image-size": "^2.0.2",
+        "typescript": "^5.9.3",
         "mongodb": "^7.1.0",
-        "nodemailer": "^6.9.16"
-    },
-    "peerDependencies": {
         "image-size": "^2.0.2",
-        "mongodb": "^7.1.0",
         "nodemailer": "^6.9.16",
-        "typescript": "^5.9.3"
-    },
-    "peerDependenciesMeta": {
-        "image-size": {
-            "optional": true
-        },
-        "mongodb": {
-            "optional": true
-        },
-        "nodemailer": {
-            "optional": true
-        }
-    },
-    "dependencies": {
         "jose": "^6.2.1",
-        "sharp": "^0.34.5",
-        "@bernouy/webcomponents": "link:@bernouy/webcomponents"
+        "@bernouy/core":          "workspace:*",
+        "@bernouy/runner-bun":    "workspace:*",
+        "@bernouy/auth-token":    "workspace:*",
+        "@bernouy/auth-keycloak": "workspace:*",
+        "@bernouy/auth-composite":"workspace:*",
+        "@bernouy/mailer-console":"workspace:*",
+        "@bernouy/mailer-smtp":   "workspace:*",
+        "@bernouy/cdn":           "workspace:*"
     }
 }

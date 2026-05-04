@@ -1,5 +1,17 @@
+# Dependencies
 node_modules/
+
+# TypeScript build output (per-package `dist/`)
+dist/
+*.tsbuildinfo
+
+# Stale top-level build artifacts (pre-monorepo build.ts)
 build/
+
+# Environment + secrets
 .env
 .env.*
-dist
+
+# OS / editor cruft
+.DS_Store
+*.log

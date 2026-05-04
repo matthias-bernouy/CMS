@@ -1,64 +1,55 @@
 import { MongoClient } from "mongodb";
-import { BunRunner, type Authentication } from "@bernouy/socle";
-import { MongoBucketRepository, type BucketDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoBucketRepository";
-import { StorageProvider } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/exports/StorageProvider";
-import { LocalBlobStorage } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/LocalBlobStorage";
-import { MongoBucketCredentialRepository, type BucketCredentialDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoBucketCredentialRepository";
-import { MongoStoredFileRepository, type StoredFileDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoStoredFileRepository";
-import { MongoStoredFolderRepository, type StoredFolderDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoStoredFolderRepository";
-import { MongoPreSignedTokenRepository, type PreSignedTokenDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoPreSignedTokenRepository";
-import { MongoAliasRepository, type AliasDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoAliasRepository";
-import { StorageTokenBroker } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/exports/StorageTokenBroker";
+import { BunRunner } from "@bernouy/runner-bun";
+import type { Authentication } from "@bernouy/core";
+import {
+    StorageProvider, StorageTokenBroker,
+    LocalBlobStorage,
+    MongoBucketRepository,           type BucketDocument,
+    MongoBucketCredentialRepository, type BucketCredentialDocument,
+    MongoPreSignedTokenRepository,   type PreSignedTokenDocument,
+    MongoAliasRepository,            type AliasDocument,
+    MongoStoredFolderRepository,     type StoredFolderDocument,
+    MongoStoredFileRepository,       type StoredFileDocument,
+} from "@bernouy/cdn";
 
 const mongo = new MongoClient("mongodb://localhost:27017");
 await mongo.connect();
-
-const collection = mongo.db("basic_storage_b").collection<BucketDocument>("buckets");
+const db = mongo.db("basic_storage_b");
 
 const runner = new BunRunner();
 
 const devAuth: Authentication = {
-    loginUrl: "/login",
-    logoutUrl: "/logout",
-    profileUrl: "/profile",
-    buildLoginUrl: (r) => `/login?returnTo=${encodeURIComponent(r)}`,
+    loginUrl:       "/login",
+    logoutUrl:      "/logout",
+    profileUrl:     "/profile",
+    buildLoginUrl:  (r) => `/login?returnTo=${encodeURIComponent(r)}`,
     buildLogoutUrl: (r) => `/logout?returnTo=${encodeURIComponent(r)}`,
-    getSubject: async () => ({ identifier: "dev", role: "admin", displayName: "Dev" }),
+    getSubject:     async () => ({ identifier: "dev", role: "admin", displayName: "Dev" }),
 };
-
-
-const credColl = mongo.db("basic_storage_b").collection<BucketCredentialDocument>("bucket_credentials");
-
-const folderColl = mongo.db("basic_storage_b").collection<StoredFolderDocument>("stored_folders");
-const fileColl = mongo.db("basic_storage_b").collection<StoredFileDocument>("stored_files");
-const tokenColl = mongo.db("basic_storage_b").collection<PreSignedTokenDocument>("pre_signed_tokens");
-const aliasColl = mongo.db("basic_storage_b").collection<AliasDocument>("aliases");
 
 new StorageProvider({
     runner,
-    authentication: devAuth,
-    storedFolderRepo: new MongoStoredFolderRepository(folderColl),
-    storedFileRepo: new MongoStoredFileRepository(fileColl),
-    bucketCredentialRepo: new MongoBucketCredentialRepository(credColl),
-    preSignedTokenRepo: new MongoPreSignedTokenRepository(tokenColl),
-    aliasRepo: new MongoAliasRepository(aliasColl),
-    bucketRepo: new MongoBucketRepository(collection),
-    blobStorage: new LocalBlobStorage("/tmp/basic-storage-buckets"),
+    authentication:       devAuth,
+    bucketRepo:           new MongoBucketRepository          (db.collection<BucketDocument>           ("buckets")),
+    bucketCredentialRepo: new MongoBucketCredentialRepository(db.collection<BucketCredentialDocument> ("bucket_credentials")),
+    preSignedTokenRepo:   new MongoPreSignedTokenRepository  (db.collection<PreSignedTokenDocument>   ("pre_signed_tokens")),
+    aliasRepo:            new MongoAliasRepository           (db.collection<AliasDocument>            ("aliases")),
+    storedFolderRepo:     new MongoStoredFolderRepository    (db.collection<StoredFolderDocument>     ("stored_folders")),
+    storedFileRepo:       new MongoStoredFileRepository      (db.collection<StoredFileDocument>       ("stored_files")),
+    blobStorage:          new LocalBlobStorage("/tmp/basic-storage-buckets"),
     config: {
         nginx: {
             cacheControlsPath: "/etc/nginx/conf.d/basic-storage/generated/cacheControls.conf",
-            binary: "sudo /usr/sbin/nginx",  // or your noop script
+            binary:            "sudo /usr/sbin/nginx",
         },
         publicHost: (bucketId) => `http://${bucketId}.cdn.localhost`,
     },
 });
 
+new StorageTokenBroker({
+    runner,
+    providerOrigin:  "http://cdn.localhost:3005",
+    credentialToken: "bsp_nJep_BncaJD86dJDI1QTf2r_NIjv0Mt0XNrbkLALFgE",
+});
 
- new StorageTokenBroker({                                  
-      runner,                                                                                                                 
-      providerOrigin: "http://cdn.localhost:3005",          
-      credentialToken: "bsp_nJep_BncaJD86dJDI1QTf2r_NIjv0Mt0XNrbkLALFgE",                                                                                    
-  });                                                                                                                         
-  
-  
 runner.start(3005);
