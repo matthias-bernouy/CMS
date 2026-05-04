@@ -21,8 +21,10 @@ export * from "./default-implementation/AuthProvider/TokenAuthentication/default
 export * from "./default-implementation/MailerProvider/ConsoleMailer";
 export * from "./default-implementation/MailerProvider/SmtpMailer";
 
+
 // Interfaces
-export * from "./interfaces/Media";
+// export * from "./interfaces/Media";
+export * from "./interfaces/CDN";
 export * from "./interfaces/Mailer";
 export * from "./interfaces/Authentication";
 export * from "./interfaces/Runner";

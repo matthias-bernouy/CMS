@@ -1,0 +1,1 @@
+READ rules in [base.md](.claude/rules/base.md).

@@ -40,3 +40,9 @@ Cette architecture repose sur le package `@bernouy/socle`. L'objectif est une s�
 
 - Tout ajout d'un nouveau service doit commencer par la création de son interface dans `interfaces/`.
 - Chaque endpoint dans `api/` doit exporter une fonction compatible avec le handler de `renderApiFolder`.
+
+## 4. Limites
+
+- Un fichier ne doit pas faire plus de 120 lignes. Si c'est le cas, une refactorisation est nécessaire pour extraire des sous-modules.
+- Un dossier ne doit pas contenir plus de 8 fichiers ou sous-dossiers. Si c'est le cas, il faut envisager une réorganisation.
+- Un dossier ne doit pas contenir plus de 4 niveaux de profondeur ( à partir de src/ ). Si c'est le cas, il faut envisager une réorganisation.
