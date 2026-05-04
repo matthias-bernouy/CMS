@@ -35,3 +35,42 @@ export { getRequestIP } from "./utilities/requestIP";
 
 export * from "./serve/serveApiFolder"
  export { default as serveStaticFolder } from "./serve/serveStaticFolder/serveStaticFolder";
+
+
+// ─── Storage — BasicStorageProvider ────────────────────────────────────────────
+
+// Public classes
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/exports/StorageProvider";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/exports/StorageTokenBroker";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/exports/StorageBrowser";
+
+// Repository implementations (Mongo)
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoBucketRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoBucketCredentialRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoPreSignedTokenRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoAliasRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoStoredFolderRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoStoredFileRepository";
+
+// Blob storage implementation
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/LocalBlobStorage";
+
+// Repository contracts
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/repositories/BucketRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/repositories/BucketCredentialRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/repositories/PreSignedTokenRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/repositories/AliasRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/repositories/StoredFolderRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/repositories/StoredFileRepository";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/BlobStorage";
+
+// Entities
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/entities/Bucket";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/entities/BucketCredential";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/entities/PreSignedToken";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/entities/Alias";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/entities/StoredFolder";
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/entities/StoredFile";
+
+// Wire envelope (admin / broker shared response shape)
+export * from "./default-implementation/StorageProvider/BasicStorageProvider/src/interfaces/wire/AdminResponse";

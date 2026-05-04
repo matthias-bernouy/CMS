@@ -6,6 +6,9 @@ import { LocalBlobStorage } from "src/default-implementation/StorageProvider/Bas
 import { MongoBucketCredentialRepository, type BucketCredentialDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoBucketCredentialRepository";
 import { MongoStoredFileRepository, type StoredFileDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoStoredFileRepository";
 import { MongoStoredFolderRepository, type StoredFolderDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoStoredFolderRepository";
+import { MongoPreSignedTokenRepository, type PreSignedTokenDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoPreSignedTokenRepository";
+import { MongoAliasRepository, type AliasDocument } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/default-implementation/mongo/MongoAliasRepository";
+import { StorageTokenBroker } from "src/default-implementation/StorageProvider/BasicStorageProvider/src/exports/StorageTokenBroker";
 
 const mongo = new MongoClient("mongodb://localhost:27017");
 await mongo.connect();
@@ -28,6 +31,8 @@ const credColl = mongo.db("basic_storage_b").collection<BucketCredentialDocument
 
 const folderColl = mongo.db("basic_storage_b").collection<StoredFolderDocument>("stored_folders");
 const fileColl = mongo.db("basic_storage_b").collection<StoredFileDocument>("stored_files");
+const tokenColl = mongo.db("basic_storage_b").collection<PreSignedTokenDocument>("pre_signed_tokens");
+const aliasColl = mongo.db("basic_storage_b").collection<AliasDocument>("aliases");
 
 new StorageProvider({
     runner,
@@ -35,6 +40,8 @@ new StorageProvider({
     storedFolderRepo: new MongoStoredFolderRepository(folderColl),
     storedFileRepo: new MongoStoredFileRepository(fileColl),
     bucketCredentialRepo: new MongoBucketCredentialRepository(credColl),
+    preSignedTokenRepo: new MongoPreSignedTokenRepository(tokenColl),
+    aliasRepo: new MongoAliasRepository(aliasColl),
     bucketRepo: new MongoBucketRepository(collection),
     blobStorage: new LocalBlobStorage("/tmp/basic-storage-buckets"),
     config: {
@@ -46,4 +53,12 @@ new StorageProvider({
     },
 });
 
+
+ new StorageTokenBroker({                                  
+      runner,                                                                                                                 
+      providerOrigin: "http://cdn.localhost:3005",          
+      credentialToken: "bsp_nJep_BncaJD86dJDI1QTf2r_NIjv0Mt0XNrbkLALFgE",                                                                                    
+  });                                                                                                                         
+  
+  
 runner.start(3005);

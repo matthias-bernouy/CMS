@@ -4,8 +4,8 @@ import { assertValidItemName } from "../validation/content/name";
 import { mimeMatches } from "../validation/upload/mimeType";
 import { assertValidPublicPath } from "../validation/upload/publicPath";
 import { generateId } from "../ids";
-import { mimeToFileType } from "./mimeToFileType";
-import { inspectImage } from "./inspectImage";
+import { extractExtension } from "./helpers";
+import { buildStoredFile } from "./buildStoredFile";
 
 export type AdminUploadOptions = {
     name:           string;
@@ -15,6 +15,10 @@ export type AdminUploadOptions = {
     /** Optional URL-safe slug; when set the file is also reachable at
      *  `<publicHost>/<publicPath>` via a symlink in the blob layer. */
     publicPath?:    string;
+    /** Optional cap below `bucket.limits.maxFileSize`. Set by the broker via a
+     *  pre-signed token to enforce a per-upload ceiling tighter than the
+     *  bucket-wide one. */
+    maxSize?:       number;
 };
 
 /**
@@ -61,9 +65,12 @@ export async function uploadFile(
 
     const { size, sha256 } = await provider.blobStorage.write(bucketId, storagePath, opts.body);
 
-    if (size > bucket.limits.maxFileSize) {
+    const sizeCap = opts.maxSize !== undefined
+        ? Math.min(opts.maxSize, bucket.limits.maxFileSize)
+        : bucket.limits.maxFileSize;
+    if (size > sizeCap) {
         await provider.blobStorage.delete(bucketId, storagePath).catch(() => {});
-        throw new Error(`file_too_large: ${size} > ${bucket.limits.maxFileSize}.`);
+        throw new Error(`file_too_large: ${size} > ${sizeCap}.`);
     }
 
     const usage = await provider.storedFileRepo.sumSize(bucketId);
@@ -72,39 +79,13 @@ export async function uploadFile(
         throw new Error("quota_exceeded: bucket would exceed its size or file-count quota.");
     }
 
-    const publicKey = opts.publicPath ?? storagePath;
-    const fileType = mimeToFileType(opts.mimeType);
-    const now = new Date();
-    const absoluteURL = buildPublicURL(provider, bucketId, publicKey);
-
-    const base = {
-        id:             fileId,
-        bucketId,
+    const file = await buildStoredFile(provider, {
+        fileId, bucketId, storagePath, size, sha256,
         name:           opts.name,
         parentFolderID: opts.parentFolderID,
-        createdAt:      now,
-        updatedAt:      now,
-        size,
         mimeType:       opts.mimeType,
-        absoluteURL,
-        sha256,
-        storagePath,
         ...(opts.publicPath !== undefined ? { publicPath: opts.publicPath } : {}),
-    };
-
-    let file: StoredFile;
-    if (fileType === "image") {
-        const dims = await inspectImage(provider, bucketId, storagePath);
-        if (dims) {
-            file = { ...base, type: "image", imageInfo: dims };
-        } else {
-            // image-size couldn't parse it — fall back to "other" rather than
-            // claiming dimensions we don't have.
-            file = { ...base, type: "other" };
-        }
-    } else {
-        file = { ...base, type: fileType };
-    }
+    });
 
     if (opts.publicPath !== undefined) {
         try {
@@ -119,13 +100,3 @@ export async function uploadFile(
     return file;
 }
 
-function extractExtension(name: string): string | null {
-    const dot = name.lastIndexOf(".");
-    if (dot <= 0 || dot === name.length - 1) return null;
-    return name.slice(dot + 1).toLowerCase();
-}
-
-function buildPublicURL(provider: StorageProvider, bucketId: string, key: string): string {
-    const host = provider.config.publicHost?.(bucketId) ?? `https://${bucketId}.cdn.bernouy.com`;
-    return `${host}/${key}`;
-}

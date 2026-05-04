@@ -79,6 +79,45 @@
     <p9r-card>
         <span slot="header">
             <p9r-stack direction="row" justify="space-between" align="center">
+                <span>Aliases</span>
+                <p9r-open-modal modal-target="create-alias-modal">
+                    <p9r-button color="primary">+ New alias</p9r-button>
+                </p9r-open-modal>
+            </p9r-stack>
+        </span>
+
+        <p9r-table>
+            <p9r-row slot="header">
+                <p9r-header-cell>domain</p9r-header-cell>
+                <p9r-header-cell>created</p9r-header-cell>
+                <p9r-header-cell></p9r-header-cell>
+            </p9r-row>
+
+            <w13c-fetch url="{{BASE_PATH}}/api/aliases/list" reload-on="alias:created alias:deleted">
+                <template for="data">
+                    <p9r-row>
+                        <p9r-cell><code>{{ domain }}</code></p9r-cell>
+                        <p9r-cell>{{ createdAt }}</p9r-cell>
+                        <p9r-cell>
+                            <w13c-form target="{{BASE_PATH}}/api/aliases?domain={{domain}}" method="DELETE" emit="alias:deleted">
+                                <p9r-button variant="ghost" color="danger" type="submit">Delete</p9r-button>
+                            </w13c-form>
+                        </p9r-cell>
+                    </p9r-row>
+                </template>
+                <template slot="empty">
+                    <p9r-row><p9r-cell colspan="3"><em>No aliases yet.</em></p9r-cell></p9r-row>
+                </template>
+                <template slot="error">
+                    <p9r-row><p9r-cell colspan="3"><p9r-alert type="error">Failed to load aliases.</p9r-alert></p9r-cell></p9r-row>
+                </template>
+            </w13c-fetch>
+        </p9r-table>
+    </p9r-card>
+
+    <p9r-card>
+        <span slot="header">
+            <p9r-stack direction="row" justify="space-between" align="center">
                 <span>Files &amp; folders</span>
                 <p9r-stack direction="row" gap="s">
                     <p9r-open-modal modal-target="create-folder-modal">
@@ -171,6 +210,19 @@
         <p9r-stack gap="m">
             <p9r-input name="label" label="label (optional)" placeholder="prod-broker"></p9r-input>
             <p9r-input name="expiresAt" type="datetime-local" label="expiresAt (optional)"></p9r-input>
+            <p9r-button color="primary" type="submit" fullWidth>Create</p9r-button>
+        </p9r-stack>
+    </w13c-form>
+</p9r-modal>
+
+<p9r-modal id="create-alias-modal" aria-label="Create alias">
+    <span slot="title">New alias</span>
+    <w13c-form target="{{BASE_PATH}}/api/aliases" emit="alias:created">
+        <p9r-stack gap="m">
+            <p9r-input name="domain" label="Domain" placeholder="cdn.partner.tld" required></p9r-input>
+            <p>
+                <small>The TLS cert at the configured path (default <code>/etc/lego/certificates/&lt;domain&gt;.crt|.key</code>) MUST already exist — otherwise the nginx reload will fail and the alias is rolled back.</small>
+            </p>
             <p9r-button color="primary" type="submit" fullWidth>Create</p9r-button>
         </p9r-stack>
     </w13c-form>

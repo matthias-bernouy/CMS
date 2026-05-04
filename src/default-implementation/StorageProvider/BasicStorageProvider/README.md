@@ -42,9 +42,13 @@ same Nginx.
 - Folder hierarchy (admin organisation) — independent from public URLs.
 - `publicPath` — optional URL-safe slug per file (`blog/post.html`),
   served via Nginx symlinks. The id-based URL keeps working in parallel.
-- Pre-signed upload tokens for direct browser→provider uploads
-  *(broker-side flow, not yet wired)*.
-- Custom domain aliases per bucket *(not yet wired)*.
+- Pre-signed upload tokens for direct browser→provider uploads via
+  `StorageTokenBroker` (frontier A) + `StorageBrowser` (browser-deployable
+  CDN client, hydrated via `<script src="…/_storage/hydration.js">`).
+- Custom domain aliases per bucket — admin UI + cascade-on-bucket-delete,
+  `aliases.conf` / `aliasesServers.conf` regenerated on every change. TLS
+  cert is expected to already exist on disk; automatic `lego` issuance is
+  still TODO.
 
 ## Documentation
 
@@ -55,6 +59,10 @@ same Nginx.
   production setup: real domain, wildcard TLS via `lego` (DNS-01),
   dedicated system user, systemd unit, sudoers for `nginx -s reload`,
   backups, manual alias workflow until aliases are wired.
+- **[docs/tests/local-scenario.md](./docs/tests/local-scenario.md)** —
+  end-to-end runbook: admin UI, broker frontier A, `/upload` (frontier C),
+  `StorageBrowser` hydration, alias lifecycle. Walk through after every
+  meaningful change.
 - **`nginx/`** — Nginx skeleton consumed by both guides above.
 
 ## Layout
@@ -80,19 +88,18 @@ src/                                The Bun app
   components/                       custom web components (UploadForm, CredentialResultDialog)
 
 docs/dev/                           dev guides
+docs/prod/                          production setup
+docs/tests/                         end-to-end runbooks
 ```
 
 ## Things still to do
 
-These exist in scaffolding (interfaces / nginx templates / validators) but
-aren't wired into the admin UI yet:
-
-- **Aliases** — `MongoAliasRepository` + `core/alias/` + cert orchestration
-  with `lego` + regen of `aliases.conf` / `aliasesServers.conf`.
-- **`updateItem`** — rename / move / change `publicPath` after creation.
-  Contract is in `CDN.ts`; not implemented in core.
-- **Pre-signed token broker** — the bucket-credential auth path for browser
-  uploads via a third-party app's TokenBroker. Repos and entities exist;
-  service + endpoints don't.
-- **`StorageBrowser`** — the third class shipped in `exports/`, a serializable
-  `CDN`-implementing client for browser hydration.
+- **Lego cert orchestration** — `createAlias` currently expects the cert at
+  `aliasCertPath(domain)` to already be on disk. A helper to drive `lego`
+  programmatically (HTTP-01 / DNS-01) and to renew on a schedule is still
+  missing.
+- **`updateItem` admin UI** — the core / API are in place, but the admin
+  bucket detail page doesn't yet expose rename / move / publicPath edits.
+- **Standalone components build script** — `components/build-components.ts`
+  is referenced in the layout but the runtime build inside `StorageProvider`
+  is what's actually consumed today.
