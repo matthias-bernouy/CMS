@@ -1,4 +1,4 @@
-import type { CDN } from "@bernouy/socle";
+import type { CDN } from "@bernouy/core";
 import type { TPage } from "src/socle/interfaces/models";
 import type { DeliveryRepository } from "src/delivery/interfaces/DeliveryRepository";
 import type { HeadInjector } from "src/delivery/interfaces/HeadInjector";

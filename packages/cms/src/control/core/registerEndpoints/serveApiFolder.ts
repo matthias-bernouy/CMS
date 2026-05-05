@@ -1,4 +1,4 @@
-import type { Runner } from "@bernouy/socle";
+import type { Runner } from "@bernouy/core";
 import { basename, dirname, join } from "node:path";
 
 type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";

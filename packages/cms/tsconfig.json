@@ -1,51 +1,26 @@
 {
-	"compilerOptions": {
-		"lib": ["ESNext", "DOM"],
-		"target": "ESNext",
-		"module": "Preserve",
-		"moduleDetection": "force",
-		"moduleResolution": "bundler",
-
-		"allowJs": true,
-		"verbatimModuleSyntax": true,
-		"esModuleInterop": true,
-
-		"strict": true,
-		"skipLibCheck": true,
-		"noFallthroughCasesInSwitch": true,
-		"noUncheckedIndexedAccess": true,
-		"noImplicitOverride": true,
-
-		"declaration": true,
-		"emitDeclarationOnly": true,
-		"declarationMap": false,
-
-		"experimentalDecorators": true,
-
-		"outDir": "dist",
-		"rootDir": ".",
-		"baseUrl": ".",
-
-		"paths": {
-			"@bernouy/cms":           ["index.ts"],
-			"@bernouy/cms/component": ["component.ts"],
-			"@bernouy/cms/editor":    ["editor.ts"]
-		}
-
-	},
-
-	"include": [
-		"src/**/*.ts",
-        "App.ts",
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir":   "dist",
+        "rootDir":  ".",
+        "baseUrl":  ".",
+        "paths": {
+            "@bernouy/cms":           ["index.ts"],
+            "@bernouy/cms/component": ["component.ts"],
+            "@bernouy/cms/editor":    ["editor.ts"]
+        }
+    },
+    "include": [
+        "src/**/*.ts",
         "index.ts",
+        "component.ts",
+        "editor.ts",
         "build.ts",
-        "src/cli/CLI_importBloc.ts",
-		"types/**/*.d.ts",
-		"tests/**/*.ts"
-, "types/HTMLElements.ts"	],
-
-	"exclude": [
-		"tests/perf/**/*"
-	]
-
+        "types/**/*.ts",
+        "tests/**/*.ts"
+    ],
+    "references": [
+        { "path": "../core" },
+        { "path": "../runner-bun" }
+    ]
 }

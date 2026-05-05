@@ -1,4 +1,4 @@
-import type { CDN, FileMetadata } from "@bernouy/socle";
+import type { CDN, FileMetadata } from "@bernouy/core";
 import { MANIFEST_FILENAME, type DeployManifest } from "src/delivery/interfaces/DeployManifest";
 import type { GeneratedVariant } from "src/delivery/interfaces/VariantGenerator";
 import { pageBucketName, pagePublicPath } from "src/delivery/build/pathSlug";

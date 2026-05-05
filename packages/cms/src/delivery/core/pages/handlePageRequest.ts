@@ -41,28 +41,8 @@ async function renderWithFallbacks(
     delivery: DeliveryCms,
 ): Promise<Response> {
     const cacheKey = P9R_CACHE.page(cachePath);
-    const wasCached = delivery.cache.get(cacheKey) !== null;
 
     try {
-        // First call populates the cache with the un-enhanced render (no-op
-        // on cache hit). We throw its Response away on cold path below —
-        // the second call serves whatever is in cache after enhancement.
-        const firstResponse = await cachedResponseAsync(
-            req,
-            cacheKey,
-            delivery.cache,
-            () => renderPage(page, makeRuntimeRenderContext(delivery)),
-        );
-
-        if (wasCached) return firstResponse;
-
-        // Cold path — wait for enhancement, then re-serve from cache so the
-        // caller gets the srcset-rewritten bytes rather than the first
-        // render. `enhance` is safe to await even when Playwright is
-        // disabled; it resolves fast and leaves the cache untouched.
-        const origin = new URL(req.url).origin;
-        await delivery.enhancer.enhance(cachePath, origin);
-
         return await cachedResponseAsync(
             req,
             cacheKey,

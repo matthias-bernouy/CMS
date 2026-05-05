@@ -1,5 +1,5 @@
 import type { MediaItem as LocalMediaItem, BreadcrumbEntry } from "../types";
-import type { CDNItem as SocleMediaItem } from "@bernouy/socle";
+import type { CDNItem as SocleMediaItem } from "@bernouy/core";
 import { media, toLocal, type LocalTypeFilter } from "./client";
 
 export async function fetchItems(folder: string | null, types?: LocalTypeFilter): Promise<LocalMediaItem[]> {

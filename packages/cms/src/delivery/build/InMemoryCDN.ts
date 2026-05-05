@@ -1,9 +1,4 @@
-import type {
-    CDN, CDNGetItemsOptions, CDNUploadFileOptions, CDNCreateFolderOptions,
-    CDNUpdateItemOptions, CDNDeleteItemOptions, CDNItem, CDNResponse, CDNItemsPage,
-    FileMetadata, FolderMetadata,
-} from "@bernouy/socle";
-
+import type { CDN, CDNGetItemsOptions, CDNUploadFileOptions, CDNCreateFolderOptions, CDNUpdateItemOptions, CDNDeleteItemOptions, CDNItem, CDNResponse, CDNItemsPage, FileMetadata, FolderMetadata } from "@bernouy/core";
 /**
  * In-memory `CDN` implementation for tests and local development. Honours
  * the public contract (limits / quotas / cacheControl, conflict semantics

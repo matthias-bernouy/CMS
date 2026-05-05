@@ -1,4 +1,4 @@
-import type { Runner } from "@bernouy/socle";
+import type { Runner } from "@bernouy/core";
 import { scanStaticFolder } from "./scanStaticFolder";
 import prepareHtml from "./prepareHtml";
 

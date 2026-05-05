@@ -1,4 +1,4 @@
-import type { Runner } from "@bernouy/socle";
+import type { Runner } from "@bernouy/core";
 import type { HeadInjector } from "src/delivery/interfaces/HeadInjector";
 import { buildDiagnosticScript } from "src/diagnostic/buildDiagnosticScript";
 

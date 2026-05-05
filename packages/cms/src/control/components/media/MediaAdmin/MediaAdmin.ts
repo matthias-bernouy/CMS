@@ -1,4 +1,4 @@
-import type { CDN } from "@bernouy/socle";
+import type { CDN } from "@bernouy/core";
 import type { GridMedia } from "../GridMedia/GridMedia";
 import BubblesEvent from "../../../core/dom/BubblesEvent";
 import template from "./MediaAdmin.html" with { type: "text" };

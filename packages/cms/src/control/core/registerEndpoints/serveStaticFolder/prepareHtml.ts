@@ -1,4 +1,4 @@
-import type { Runner } from "@bernouy/socle";
+import type { Runner } from "@bernouy/core";
 import replaceBasePath from "./replaceBasePath";
 
 import template from "./template.html" with { type: "text" }

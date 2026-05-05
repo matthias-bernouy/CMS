@@ -2,7 +2,7 @@ import type { EditorManager } from "src/control/core/editorSystem/runtime/Editor
 import type { Editor } from "src/control/core/editorSystem/Editor/Editor";
 import type { Component } from "src/control/core/editorSystem/Component";
 import type { registerEditor, registerEditor_opaque } from "src/control/core/editorSystem/registerEditor";
-import type { Media } from "@bernouy/socle";
+import type { CDN } from "@bernouy/core";
 import { P9R_ATTR } from "src/socle/constants/editorAttributes";
 import { P9R_CACHE, P9R_EVENT, P9R_ID, P9R_MODE } from "src/socle/constants/p9r-constants";
 
@@ -43,7 +43,7 @@ declare global {
      */
     interface Window {
         _cms?: {
-            Media?: Media;
+            Media?: CDN;
         };
     }
 

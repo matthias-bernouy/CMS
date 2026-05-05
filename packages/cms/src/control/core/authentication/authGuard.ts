@@ -1,4 +1,4 @@
-import type { Middleware } from "@bernouy/socle";
+import type { Middleware } from "@bernouy/core";
 import type { ControlCms } from "src/control/ControlCms";
 
 export const createAuthGuard = (cms: ControlCms): Middleware => {

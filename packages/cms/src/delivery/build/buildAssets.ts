@@ -1,4 +1,4 @@
-import type { CDN } from "@bernouy/socle";
+import type { CDN } from "@bernouy/core";
 import type { DeliveryRepository } from "src/delivery/interfaces/DeliveryRepository";
 import type { AssetsManifest } from "src/delivery/core/assets/resolveAssets";
 import { generateBlocEntry } from "src/delivery/core/blocs/buildBloc";

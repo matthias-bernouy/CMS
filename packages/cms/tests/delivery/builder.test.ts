@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import type { CDN } from "@bernouy/socle";
+import type { CDN } from "@bernouy/core";
 import { DeliveryBuilder } from "src/delivery/build/DeliveryBuilder";
 import { InMemoryCDN, makeCdnFetcher } from "src/delivery/build/InMemoryCDN";
 import type { BuildAssetsContext } from "src/delivery/build/buildAssets";

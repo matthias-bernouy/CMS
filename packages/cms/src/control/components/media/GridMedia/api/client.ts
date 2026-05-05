@@ -1,6 +1,5 @@
 import type { MediaItem as LocalMediaItem } from "../types";
-import type { CDNItem as SocleMediaItem, CDN } from "@bernouy/socle";
-
+import type { CDNItem as SocleMediaItem, CDN } from "@bernouy/core";
 /**
  * Filter expressed in the admin-UI's compact vocabulary (`folder` / `image`
  * / `other`). `other` stands in for every non-folder non-image file type in

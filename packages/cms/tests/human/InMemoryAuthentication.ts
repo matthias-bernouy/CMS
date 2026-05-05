@@ -1,5 +1,4 @@
-import type { Authentication, DefaultRole, Subject } from "@bernouy/socle";
-
+import type { Authentication, DefaultRole, Subject } from "@bernouy/core";
 type InMemoryAuthConfig<Role extends string> = {
     role: Role;
     identifier?: string;

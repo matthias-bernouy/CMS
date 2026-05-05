@@ -1,24 +1,14 @@
-import { type Runner, type MediaUrlBuilder, BunRunner } from "@bernouy/socle";
+import type { Runner } from "@bernouy/core";
+import { BunRunner } from "@bernouy/runner-bun";
 import type { Cache } from "src/socle/interfaces/Cache";
 import { DeliveryCache } from "src/delivery/core/DeliveryCache";
-import { PageEnhancer } from "src/delivery/core/enhance/PageEnhancer";
-import { PlaywrightSession } from "src/delivery/core/enhance/PlaywrightSession";
 import type { DeliveryRepository } from "./interfaces/DeliveryRepository";
 import type { HeadInjector } from "./interfaces/HeadInjector";
 
 export type DeliveryCmsConfig = {
     runner?:     Runner;
-    media:       MediaUrlBuilder;
     repository:  DeliveryRepository;
     cache?:      Cache;
-    /**
-     * Shared Playwright session used by the page enhancer. Optional — when
-     * absent, this instance creates and owns its own. Sharing one session
-     * across many `DeliveryCms` instances (multi-tenant) is the expected
-     * way to amortize the Chromium launch cost: passing the same
-     * `PlaywrightSession` keeps a single browser process for every tenant.
-     */
-    playwrightSession?: PlaywrightSession;
     /**
      * Extension hook called by `renderPage` for each rendered document.
      * Each injector receives the linkedom document/head and the page's
@@ -44,6 +34,11 @@ export type DeliveryCmsConfig = {
  * repository; Delivery does not maintain a route registry, so new pages
  * written admin-side are visible immediately (subject to cache invalidation).
  *
+ * Image variants + srcset rewrites are produced at **build time** by
+ * `DeliveryBuilder` (see `src/delivery/build/`), which uploads variant
+ * bytes to the CDN and ships pre-enhanced HTML. Runtime Delivery only
+ * serves the cached output.
+ *
  * Path layout for one Delivery instance:
  *   <basePath>/                — user pages, served by the default endpoint
  *   <basePath>/.cms/*          — Delivery's own assets
@@ -51,53 +46,24 @@ export type DeliveryCmsConfig = {
  *   <basePath>/sitemap.xml     — tenant-level sitemap
  *
  * `basePath` comes from `runner.basePath`. In single-tenant setups the
- * consumer can just pass a root runner (`basePath === "/"`). For multi-
- * tenant, scope the runner first:
- *
- *   const session = new PlaywrightSession();
- *   rootRunner.group("/tenant-1", (scoped) => {
- *       const delivery = new DeliveryCms({
- *           runner: scoped, playwrightSession: session, ...
- *       });
- *       registerDeliveryEndpoints(delivery);
- *   });
- *
- * Same server, N tenants, one shared Chromium.
+ * consumer can just pass a root runner (`basePath === "/"`).
  */
 export default class DeliveryCms {
 
     private _runner:             Runner;
-    private _media:              MediaUrlBuilder;
     private _repository:         DeliveryRepository;
     private _cache:              Cache;
-    private _playwrightSession:  PlaywrightSession;
-    private _ownsSession:        boolean;
-    private _enhancer:           PageEnhancer;
     private _headInjectors:      readonly HeadInjector[];
 
     constructor(config: DeliveryCmsConfig){
         this._runner             = config.runner || new BunRunner();
-        this._media              = config.media;
         this._repository         = config.repository;
         this._cache              = config.cache || new DeliveryCache();
         this._headInjectors      = config.headInjectors ?? [];
-
-        if (config.playwrightSession) {
-            this._playwrightSession = config.playwrightSession;
-            this._ownsSession       = false;
-        } else {
-            this._playwrightSession = new PlaywrightSession();
-            this._ownsSession       = true;
-        }
-        this._enhancer = new PageEnhancer(this, this._playwrightSession);
     }
 
     get runner(){
         return this._runner;
-    }
-
-    get media(){
-        return this._media;
     }
 
     get repository(){
@@ -106,10 +72,6 @@ export default class DeliveryCms {
 
     get cache(){
         return this._cache;
-    }
-
-    get enhancer(){
-        return this._enhancer;
     }
 
     get headInjectors(){
@@ -134,16 +96,6 @@ export default class DeliveryCms {
      */
     get cmsPathPrefix(){
         return this.basePath + "/.cms";
-    }
-
-    /**
-     * Graceful shutdown — closes the Playwright browser used by the page
-     * enhancer only if it's owned by this instance. When the session was
-     * injected (multi-tenant setup), closing is the consumer's
-     * responsibility.
-     */
-    async close(): Promise<void> {
-        if (this._ownsSession) await this._playwrightSession.close();
     }
 
 }

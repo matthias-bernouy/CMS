@@ -41,10 +41,11 @@
         "build": "bun run build.ts",
         "typecheck": "bun x tsc --noEmit",
         "test": "bun test",
-        "perf": "bun run tests/perf/run.ts",
         "prepublishOnly": "bun run build"
     },
     "devDependencies": {
+        "@bernouy/auth-composite":     "workspace:*",
+        "@bernouy/auth-token":         "workspace:*",
         "@happy-dom/global-registrator": "^20.8.9",
         "@types/bun": "latest",
         "happy-dom": "^20.8.9",
@@ -55,8 +56,9 @@
         "mongodb": "^7.2.0"
     },
     "dependencies": {
-        "@bernouy/socle": "link:@bernouy/socle",
-        "@bernouy/webcomponents": "link:@bernouy/webcomponents",
+        "@bernouy/core":         "workspace:*",
+        "@bernouy/runner-bun":   "workspace:*",
+        "@bernouy/webcomponents": "workspace:*",
         "linkedom": "^0.18.12",
         "playwright": "^1.59.1"
     },

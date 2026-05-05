@@ -1,4 +1,4 @@
-import type { Runner } from "@bernouy/socle";
+import type { Runner } from "@bernouy/core";
 import { basename, dirname, join } from "node:path";
 import type { ControlCms } from "src/control/ControlCms";
 import { cachedResponseAsync, compress, SECURITY_HEADERS } from "src/socle/server/compression";

@@ -1,4 +1,4 @@
-import type { Authentication, CDN, Runner } from "@bernouy/socle";
+import type { Authentication, CDN, Runner } from "@bernouy/core";
 import type { CmsRepository } from "../socle/interfaces/CmsRepository";
 import type { Cache } from "../socle/interfaces/Cache";
 import { InMemoryCache } from "../socle/default-implementation/Cache/memory";
