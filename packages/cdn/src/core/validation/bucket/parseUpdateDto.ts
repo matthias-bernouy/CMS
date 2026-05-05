@@ -2,6 +2,7 @@ import type { BucketLimits, BucketQuotas } from "../../../interfaces/entities/Bu
 import { assertValidCacheControl } from "./cacheControl";
 import { assertValidBucketQuotas } from "./quotas";
 import { assertValidBucketLimits } from "./limits";
+import { parseAllowedUploadOrigins } from "./allowedUploadOrigins";
 
 // Flat wire shape (same reasoning as `parseCreateDto`). `id` is always pulled
 // from the URL query, never the body. `quotas` and `limits` are atomic — both
@@ -10,6 +11,7 @@ export type BucketUpdateDto = {
     cacheControl?: string;
     quotas?: BucketQuotas;
     limits?: BucketLimits;
+    allowedUploadOrigins?: string[];
 };
 
 export function parseBucketUpdateDto(body: Record<string, unknown>): BucketUpdateDto {
@@ -36,6 +38,10 @@ export function parseBucketUpdateDto(body: Record<string, unknown>): BucketUpdat
         };
         assertValidBucketLimits(limits);
         dto.limits = limits;
+    }
+
+    if (body.allowedUploadOrigins !== undefined) {
+        dto.allowedUploadOrigins = parseAllowedUploadOrigins(body.allowedUploadOrigins);
     }
 
     return dto;

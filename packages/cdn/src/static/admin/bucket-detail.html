@@ -16,7 +16,14 @@
                     <p><strong>maxTotalSize:</strong> {{ data.quotas.maxTotalSize }}</p>
                     <p><strong>maxFileCount:</strong> {{ data.quotas.maxFileCount }}</p>
                     <p><strong>MIME:</strong> <code>{{ data.limits.acceptedMimeTypes }}</code></p>
+                    <p><strong>allowedUploadOrigins:</strong> <code>{{ data.allowedUploadOrigins }}</code></p>
                     <p><strong>created:</strong> {{ data.createdAt }}</p>
+                    <w13c-form target="{{BASE_PATH}}/api/buckets?bucketId={{ data.id }}" method="PATCH" emit="bucket:updated">
+                        <p9r-stack direction="row" gap="s" align="end">
+                            <p9r-input name="allowedUploadOrigins" label="Set allowedUploadOrigins (comma-separated, * for any)" placeholder="https://app.example.com" value="{{ data.allowedUploadOrigins }}"></p9r-input>
+                            <p9r-button type="submit" variant="ghost">Save</p9r-button>
+                        </p9r-stack>
+                    </w13c-form>
                 </p9r-stack>
             </template>
             <template slot="error">

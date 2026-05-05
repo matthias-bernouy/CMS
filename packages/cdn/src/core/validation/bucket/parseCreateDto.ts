@@ -3,6 +3,7 @@ import { assertValidBucketId } from "./id";
 import { assertValidCacheControl } from "./cacheControl";
 import { assertValidBucketQuotas } from "./quotas";
 import { assertValidBucketLimits } from "./limits";
+import { parseAllowedUploadOrigins } from "./allowedUploadOrigins";
 
 // Wire shape is flat (matches what `<w13c-form>` submits — `Object.fromEntries`
 // doesn't nest). The parser reshapes into the canonical nested entity here.
@@ -11,6 +12,7 @@ export type BucketCreateDto = {
     cacheControl: string;
     quotas: BucketQuotas;
     limits: BucketLimits;
+    allowedUploadOrigins: string[];
 };
 
 export function parseBucketCreateDto(body: Record<string, unknown>): BucketCreateDto {
@@ -29,7 +31,9 @@ export function parseBucketCreateDto(body: Record<string, unknown>): BucketCreat
     assertValidBucketQuotas(quotas);
     assertValidBucketLimits(limits);
 
-    return { id, cacheControl, quotas, limits };
+    const allowedUploadOrigins = parseAllowedUploadOrigins(body.allowedUploadOrigins);
+
+    return { id, cacheControl, quotas, limits, allowedUploadOrigins };
 }
 
 function parseAcceptedMimeTypes(value: unknown): string[] | "*" {

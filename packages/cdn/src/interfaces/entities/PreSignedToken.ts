@@ -17,4 +17,9 @@ export type PreSignedToken = {
     expiresAt: Date;
     createdAt: Date;
     consumedAt?: Date;
+    /** Snapshot of `bucket.allowedUploadOrigins` at mint time. The `/upload`
+     *  endpoint compares the request's `Origin` header against this list so
+     *  changing the bucket's origins later doesn't retro-authorize tokens
+     *  already minted. Empty / missing = no cross-origin uploads. */
+    allowedOrigins?: string[];
 };

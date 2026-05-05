@@ -9,12 +9,13 @@ export async function createBucket(provider: StorageProvider, dto: BucketCreateD
 
     const now = new Date();
     const bucket: Bucket = {
-        id:           dto.id,
-        createdAt:    now,
-        updatedAt:    now,
-        cacheControl: dto.cacheControl,
-        quotas:       dto.quotas,
-        limits:       dto.limits,
+        id:                   dto.id,
+        createdAt:            now,
+        updatedAt:            now,
+        cacheControl:         dto.cacheControl,
+        quotas:               dto.quotas,
+        limits:               dto.limits,
+        allowedUploadOrigins: dto.allowedUploadOrigins,
     };
 
     // Disk first: if it fails (perms, no space) we never wrote a metadata row to roll back.

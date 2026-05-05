@@ -55,6 +55,7 @@ export async function mintToken(
         createdAt:      now,
         ...(dto.contentType !== undefined ? { contentType: dto.contentType } : {}),
         ...(dto.publicPath  !== undefined ? { publicPath:  dto.publicPath  } : {}),
+        ...(bucket.allowedUploadOrigins ? { allowedOrigins: [...bucket.allowedUploadOrigins] } : {}),
     };
 
     await provider.preSignedTokenRepo.create(token);
