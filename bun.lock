@@ -23,16 +23,6 @@
         "typescript": "^5.9.3",
       },
     },
-    "../WebComponents": {
-      "name": "@bernouy/webcomponents",
-      "version": "0.1.2",
-      "devDependencies": {
-        "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
     "packages/auth-composite": {
       "name": "@bernouy/auth-composite",
       "version": "0.1.0",
@@ -131,6 +121,16 @@
         "@bernouy/core": "workspace:*",
       },
     },
+    "packages/webcomponents": {
+      "name": "@bernouy/webcomponents",
+      "version": "0.1.2",
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
   },
   "packages": {
     "@bernouy/auth-composite": ["@bernouy/auth-composite@workspace:packages/auth-composite"],
@@ -151,7 +151,7 @@
 
     "@bernouy/runner-bun": ["@bernouy/runner-bun@workspace:packages/runner-bun"],
 
-    "@bernouy/webcomponents": ["@bernouy/webcomponents@workspace:../WebComponents"],
+    "@bernouy/webcomponents": ["@bernouy/webcomponents@workspace:packages/webcomponents"],
 
     "@happy-dom/global-registrator": ["@happy-dom/global-registrator@20.9.0", "", { "dependencies": { "@types/node": ">=20.0.0", "happy-dom": "^20.9.0" } }, "sha512-lBW6/m5BIFl3pMuWPNN0lIOYw9LMCmPfix53ExS3FBi4E+NELEljQ3xH6aAV9IYiQRfn9YIIgzzMrD0vIcD7tw=="],
 

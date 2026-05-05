@@ -34,10 +34,8 @@ export class SnippetEditor extends Editor {
                     const res = await fetch(apiUrl);
                     if (!res.ok) return;
                     const snippet = await res.json() as { id: string };
-                    const base = getMetaBasePath() ?? "/";
-                    const root = base === "/" ? "" : base.replace(/\/$/, "");
                     window.open(
-                        `${root}/editor/snippet?id=${encodeURIComponent(snippet.id)}`,
+                        `${getMetaBasePath()}/editor/snippet?id=${encodeURIComponent(snippet.id)}`,
                         "_blank"
                     );
                 } catch { /* ignore */ }

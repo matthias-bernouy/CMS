@@ -3,13 +3,12 @@
     "private": true,
     "workspaces": [
         "packages/*",
-        "!packages/cms-control-mt",
-        "../WebComponents"
+        "!packages/cms-control-mt"
     ],
     "scripts": {
-        "build":     "tsc --build",
-        "clean":     "tsc --build --clean",
+        "build":     "bun run build.ts",
         "typecheck": "tsc --build",
+        "clean":     "tsc --build --clean",
         "test":      "bun test"
     },
     "devDependencies": {

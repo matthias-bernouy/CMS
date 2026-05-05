@@ -24,9 +24,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN groupadd -r cms \
  && useradd -r -g cms -d /home/cms -s /usr/sbin/nologin -m cms
 
-# 3. Vendor @bernouy/webcomponents (sibling workspace package, not on npm).
-COPY --from=webcomponents . /WebComponents/
-
 # 4. Build the workspace once at image build time.
 #    `prebuildControl` regenerates `control-components.js` cleanly — without
 #    this, ControlCms's runtime `appendFile` of dev hydrations stays in the
@@ -34,9 +31,8 @@ COPY --from=webcomponents . /WebComponents/
 WORKDIR /socle
 COPY package.json bun.lock tsconfig.base.json tsconfig.json ./
 COPY packages ./packages
-RUN bun install \
- && cd /socle/packages/cms && bun -e 'import("./src/control/prebuildControl").then(m => m.default()).catch(e => { console.error(e); process.exit(1); })' && cd /socle \
- && bunx tsc --build
+COPY build.ts ./
+RUN bun install && bun run build
 
 # 5. App layout — symlink to workspace node_modules so server.ts can import
 #    @bernouy/{core,cdn,cms,runner-bun,auth-keycloak} + mongodb directly.

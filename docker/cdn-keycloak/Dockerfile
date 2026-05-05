@@ -38,17 +38,12 @@ RUN groupadd -r cdn \
  && useradd -r -g cdn -d /home/cdn -s /usr/sbin/nologin -m cdn \
  && usermod -a -G cdn www-data
 
-# 3. Vendor @bernouy/webcomponents (sibling workspace package, not yet on npm).
-#    Pass via `docker buildx build --build-context webcomponents=/path/to/WebComponents`.
-#    Mounted at /WebComponents to match the workspace path in socle's
-#    package.json (`workspaces: ["packages/*", "../WebComponents"]`).
-COPY --from=webcomponents . /WebComponents/
-
 # 4. Build the workspace once at image build time.
 WORKDIR /socle
 COPY package.json bun.lock tsconfig.base.json tsconfig.json ./
 COPY packages ./packages
-RUN bun install && bunx tsc --build
+COPY build.ts ./
+RUN bun install && bun run build
 
 # 4. App layout — symlink to the workspace node_modules so server.ts can
 #    import @bernouy/{core,cdn,runner-bun,auth-keycloak} + mongodb without

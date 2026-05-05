@@ -1,5 +1,5 @@
 (() => {
-  // ../../../WebComponents/dist/ui.js
+  // ../webcomponents/dist/ui.js
   (() => {
     var { defineProperty: Nt, getOwnPropertyNames: za, getOwnPropertyDescriptor: Sa } = Object, Ia = Object.prototype.hasOwnProperty;
     var Te = new WeakMap, Pa = (t) => {
@@ -9701,20 +9701,15 @@ p9r-tag:hover {
   // src/control/core/dom/meta/getMetaBasePath.ts
   function getMetaBasePath() {
     const meta = document.querySelector('meta[name="basePath"]');
-    if (!meta)
-      return "/";
-    if (meta && (meta.getAttribute("content") === "" || meta.getAttribute("content") === undefined))
-      return "/";
-    else
-      return meta.getAttribute("content");
+    const content = meta?.getAttribute("content") ?? "";
+    if (!content || content === "/")
+      return "";
+    return content.replace(/\/+$/, "");
   }
 
   // src/control/core/dom/meta/getMetaApiPath.ts
   function getMetaApiPath() {
-    const base = getMetaBasePath();
-    if (base === undefined || base === null || base === "")
-      return "/api";
-    return base.endsWith("/") ? base + "api" : base + "/api";
+    return `${getMetaBasePath()}/api`;
   }
 
   // src/control/core/dom/meta/resolveApiUrl.ts
@@ -10960,7 +10955,7 @@ p9r-tag:hover {
     customElements.define("p9r-config-panel", SyncPanel);
   }
 
-  // ../../../WebComponents/dist/blocs/horizontal-action-group.mjs
+  // ../webcomponents/dist/blocs/horizontal-action-group.mjs
   var l = `<div class="actions" role="toolbar" part="toolbar">
     <slot></slot>
 </div>
@@ -14030,9 +14025,7 @@ form[method="dialog"] {
             if (!res.ok)
               return;
             const snippet = await res.json();
-            const base = getMetaBasePath() ?? "/";
-            const root2 = base === "/" ? "" : base.replace(/\/$/, "");
-            window.open(`${root2}/editor/snippet?id=${encodeURIComponent(snippet.id)}`, "_blank");
+            window.open(`${getMetaBasePath()}/editor/snippet?id=${encodeURIComponent(snippet.id)}`, "_blank");
           } catch {}
         }
       });
@@ -14740,7 +14733,7 @@ button span {
           return;
         switch (btn.dataset.action) {
           case "dashboard":
-            window.location.href = getMetaBasePath() + "admin/pages";
+            window.location.href = getMetaBasePath() + "/admin/pages";
             break;
           case "switch-mode":
             EditorSystem.switchMode();

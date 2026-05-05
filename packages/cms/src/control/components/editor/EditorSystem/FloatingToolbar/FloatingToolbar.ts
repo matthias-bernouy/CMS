@@ -30,7 +30,7 @@ export class FloatingToolbar extends Component {
             const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
             if (!btn) return;
             switch (btn.dataset.action) {
-                case 'dashboard':     window.location.href = getMetaBasePath() + "admin/pages"; break;
+                case 'dashboard':     window.location.href = getMetaBasePath() + "/admin/pages"; break;
                 case 'switch-mode':   EditorSystem.switchMode(); break;
                 case 'configuration': EditorSystem.openConfig(); break;
             }
