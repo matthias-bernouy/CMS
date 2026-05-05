@@ -2,8 +2,7 @@
     "name": "@bernouy/socle-monorepo",
     "private": true,
     "workspaces": [
-        "packages/*",
-        "!packages/cms-control-mt"
+        "packages/*"
     ],
     "scripts": {
         "build":     "bun run build.ts",
@@ -27,6 +26,7 @@
         "@bernouy/mailer-console":"workspace:*",
         "@bernouy/mailer-smtp":   "workspace:*",
         "@bernouy/cdn":           "workspace:*",
-        "@bernouy/cms":           "workspace:*"
+        "@bernouy/cms":           "workspace:*",
+        "@bernouy/mt-cms-control":"workspace:*"
     }
 }

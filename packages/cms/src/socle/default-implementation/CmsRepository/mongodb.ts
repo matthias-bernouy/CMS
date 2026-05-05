@@ -24,9 +24,25 @@ import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/inter
  *   - System is a singleton: a single document with `_id: "singleton"`,
  *     created lazily on first read.
  */
+export type MongoCmsRepositoryConfig = {
+    /**
+     * Prefix prepended to every collection name (`pages`, `blocs`, …).
+     * Used by multi-tenant deployments to isolate one tenant's data per
+     * collection set in a shared Db. Default `""` (single-tenant).
+     */
+    collectionPrefix?: string;
+};
+
 export class MongoCmsRepository implements CmsRepository {
 
-    constructor(private readonly db: Db) {}
+    private readonly _prefix: string;
+
+    constructor(
+        private readonly db: Db,
+        config: MongoCmsRepositoryConfig = {},
+    ) {
+        this._prefix = config.collectionPrefix ?? "";
+    }
 
     /**
      * Create the unique indexes the contract relies on. Idempotent — safe
@@ -43,11 +59,11 @@ export class MongoCmsRepository implements CmsRepository {
 
     // ── Collections ──
 
-    private get blocs():     Collection<BlocDoc>     { return this.db.collection<BlocDoc>("blocs"); }
-    private get pages():     Collection<PageDoc>     { return this.db.collection<PageDoc>("pages"); }
-    private get snippets():  Collection<SnippetDoc>  { return this.db.collection<SnippetDoc>("snippets"); }
-    private get templates(): Collection<TemplateDoc> { return this.db.collection<TemplateDoc>("templates"); }
-    private get system():    Collection<SystemDoc>   { return this.db.collection<SystemDoc>("system"); }
+    private get blocs():     Collection<BlocDoc>     { return this.db.collection<BlocDoc>     (this._prefix + "blocs"); }
+    private get pages():     Collection<PageDoc>     { return this.db.collection<PageDoc>     (this._prefix + "pages"); }
+    private get snippets():  Collection<SnippetDoc>  { return this.db.collection<SnippetDoc>  (this._prefix + "snippets"); }
+    private get templates(): Collection<TemplateDoc> { return this.db.collection<TemplateDoc> (this._prefix + "templates"); }
+    private get system():    Collection<SystemDoc>   { return this.db.collection<SystemDoc>   (this._prefix + "system"); }
 
     // ── Blocs ──
 

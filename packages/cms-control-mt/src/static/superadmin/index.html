@@ -1,0 +1,70 @@
+<p9r-stack gap="m" style="padding: 1.5rem 2rem;">
+
+    <p9r-stack direction="row" justify="space-between" align="center">
+        <h1>Tenants</h1>
+        <p9r-open-modal modal-target="create-tenant-modal">
+            <p9r-button color="primary">+ New tenant</p9r-button>
+        </p9r-open-modal>
+    </p9r-stack>
+
+    <p9r-table>
+        <p9r-row slot="header">
+            <p9r-header-cell>id</p9r-header-cell>
+            <p9r-header-cell>name</p9r-header-cell>
+            <p9r-header-cell>keycloak issuer</p9r-header-cell>
+            <p9r-header-cell>cdn</p9r-header-cell>
+            <p9r-header-cell>created</p9r-header-cell>
+            <p9r-header-cell></p9r-header-cell>
+        </p9r-row>
+
+        <w13c-fetch url="{{BASE_PATH}}/api/tenants" reload-on="tenant:created tenant:deleted">
+            <template for="data">
+                <p9r-row>
+                    <p9r-cell><code>{{ id }}</code></p9r-cell>
+                    <p9r-cell>{{ name }}</p9r-cell>
+                    <p9r-cell><code>{{ keycloak.issuer }}</code></p9r-cell>
+                    <p9r-cell><code>{{ assetsCdn.url }}</code></p9r-cell>
+                    <p9r-cell>{{ createdAt }}</p9r-cell>
+                    <p9r-cell>
+                        <p9r-stack direction="row" gap="s">
+                            <a href="/cms/{{id}}/admin/pages" target="_blank"><p9r-button variant="ghost">Open</p9r-button></a>
+                            <w13c-form target="{{BASE_PATH}}/api/tenants?id={{id}}" method="DELETE" emit="tenant:deleted">
+                                <p9r-button variant="ghost" color="danger" type="submit">Delete</p9r-button>
+                            </w13c-form>
+                        </p9r-stack>
+                    </p9r-cell>
+                </p9r-row>
+            </template>
+            <template slot="empty">
+                <p9r-row><p9r-cell colspan="6"><em>No tenants yet — create the first one to get started.</em></p9r-cell></p9r-row>
+            </template>
+            <template slot="error">
+                <p9r-row><p9r-cell colspan="6"><p9r-alert type="error">Failed to load tenants.</p9r-alert></p9r-cell></p9r-row>
+            </template>
+        </w13c-fetch>
+    </p9r-table>
+</p9r-stack>
+
+<p9r-modal id="create-tenant-modal" aria-label="Create tenant">
+    <span slot="title">New tenant</span>
+    <w13c-form target="{{BASE_PATH}}/api/tenants" emit="tenant:created" content-type="application/json">
+        <p9r-stack gap="m">
+            <p9r-input name="id" label="id (URL slug, [a-z0-9-])" placeholder="acme" required></p9r-input>
+            <p9r-input name="name" label="display name" placeholder="ACME Corp" required></p9r-input>
+
+            <h4 style="margin-top: 1rem;">Keycloak (per tenant)</h4>
+            <p9r-input name="keycloak.issuer" label="issuer" placeholder="https://auth.example.com/realms/acme" required></p9r-input>
+            <p9r-input name="keycloak.clientId" label="clientId (web)" placeholder="cms" required></p9r-input>
+            <p9r-input name="keycloak.clientSecret" label="clientSecret (web)" type="password" required></p9r-input>
+            <p9r-input name="keycloak.sessionSecret" label="sessionSecret (32+ random hex)" type="password" required></p9r-input>
+            <p9r-input name="keycloak.adminRole" label="adminRole" placeholder="admin" value="admin" required></p9r-input>
+            <p9r-input name="keycloak.cliClientId" label="cliClientId (optional, for p9r device flow)" placeholder="cms-cli"></p9r-input>
+
+            <h4 style="margin-top: 1rem;">CDN (assets bucket)</h4>
+            <p9r-input name="assetsCdn.url" label="cdn url" placeholder="https://cdn.example.com" required></p9r-input>
+            <p9r-input name="assetsCdn.bucketCredential" label="bucket credential" type="password" required></p9r-input>
+
+            <p9r-button color="primary" type="submit" fullWidth>Create</p9r-button>
+        </p9r-stack>
+    </w13c-form>
+</p9r-modal>

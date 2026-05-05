@@ -2,9 +2,21 @@ import type { Runner } from "@bernouy/core";
 import { scanStaticFolder } from "./scanStaticFolder";
 import prepareHtml from "./prepareHtml";
 
-export default async function serveStaticFolder(runner: Runner) {
+export type ServeStaticFolderOptions = {
+    /**
+     * Inline `<script>` body injected before the bundled custom-element
+     * script, used to set up `window._cms.CDN` synchronously so the first
+     * `connectedCallback` of an admin page already sees a hydrated CDN.
+     * Empty string (default) skips the inline script — useful for tests
+     * or pages that don't need the CDN consumer.
+     */
+    hydrationScript?: string;
+};
+
+export default async function serveStaticFolder(runner: Runner, options: ServeStaticFolderOptions = {}) {
 
     const files = await scanStaticFolder();
+    const hydrationScript = options.hydrationScript ?? "";
 
     for (const file of files) {
 
@@ -19,7 +31,7 @@ export default async function serveStaticFolder(runner: Runner) {
             const finalRoute = routePath.startsWith("/") ? routePath : `/${routePath}`;
 
             runner.get(finalRoute, async () => {
-                const htmlContent = await prepareHtml(file.absolutePath, runner);
+                const htmlContent = await prepareHtml(file.absolutePath, runner, hydrationScript);
 
                 return new Response(htmlContent, {
                     headers: {

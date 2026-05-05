@@ -7,7 +7,6 @@ import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveS
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path"
 import { buildMediaHydrationScript } from "./core/authentication/buildMediaHydrationScript";
-import { appendFile } from "node:fs/promises";
 import { createAuthGuard } from "./core/authentication/authGuard";
 
 type Configuration = {
@@ -70,13 +69,17 @@ export class ControlCms {
         this._media = media;
         this._cache = cache || new InMemoryCache();
 
-        const hydration = buildMediaHydrationScript(this["_media"]);
-        appendFile(join(__dirname, "./static/assets/control-components.js"), hydration);
-
+        // Hydration is inlined in the served HTML page (template's
+        // {{HYDRATION}} token), NOT appended to the shared static bundle.
+        // This is the only way `window._cms.CDN` is in scope before the
+        // bundle's first `connectedCallback` runs, AND it lets each
+        // ControlCms instance ship its own hydration in a multi-tenant
+        // deployment without the tenants stomping on each other.
+        const hydrationScript = buildMediaHydrationScript(this["_media"]);
         const authGuard = createAuthGuard(this);
 
         runner.group("/", (staticRunner) => {
-            serveStaticFolder(staticRunner);
+            serveStaticFolder(staticRunner, { hydrationScript });
         }, [authGuard]);
 
         runner.group("/api", (apiRunner) => {

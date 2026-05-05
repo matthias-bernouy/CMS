@@ -9,6 +9,7 @@
         { "path": "packages/mailer-console" },
         { "path": "packages/mailer-smtp" },
         { "path": "packages/cdn" },
-        { "path": "packages/cms" }
+        { "path": "packages/cms" },
+        { "path": "packages/cms-control-mt" }
     ]
 }
