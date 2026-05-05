@@ -27,6 +27,7 @@
         "@bernouy/mailer-smtp":   "workspace:*",
         "@bernouy/cdn":           "workspace:*",
         "@bernouy/cms":           "workspace:*",
-        "@bernouy/mt-cms-control":"workspace:*"
+        "@bernouy/mt-cms-control":"workspace:*",
+        "@bernouy/mt-delivery-cms":"workspace:*"
     }
 }

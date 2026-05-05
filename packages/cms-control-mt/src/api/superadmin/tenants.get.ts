@@ -14,6 +14,15 @@ export default async function handleListTenants(_req: Request, mt: MtControlCms)
             adminRole: t.keycloak.adminRole,
         },
         assetsCdn: { url: t.assetsCdn.url },
+        // Public-safe view of delivery — never exposes the bucketCredential.
+        delivery: t.delivery
+            ? {
+                publicCdn: { url: t.delivery.publicCdn.url },
+                ...(t.delivery.alias   ? { alias:   t.delivery.alias   } : {}),
+                enabled: !!t.delivery.enabled,
+                hasCredential: true,
+            }
+            : null,
     }));
     return Response.json({ ok: true, data: safe });
 }

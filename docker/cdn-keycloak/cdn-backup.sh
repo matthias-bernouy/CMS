@@ -27,9 +27,17 @@ mkdir -p "${BACKUP_DIR}"
 
 echo "[backup] ${DATE} starting…"
 
-# 1. Mongo dump (streamed straight to a gzipped archive on the volume).
-echo "[backup] mongodump → ${MONGO_FILE}"
-mongodump --quiet --gzip --archive="${BACKUP_DIR}/${MONGO_FILE}" --db=cdn
+# 1. Mongo dump via MONGO_URL (external — Atlas / self-hosted). Skip when
+#    BACKUP_SKIP_MONGO=true; the typical case is Atlas, which already runs
+#    its own snapshots and makes the local dump redundant.
+if [ "${BACKUP_SKIP_MONGO:-false}" != "true" ]; then
+    : "${MONGO_URL:?MONGO_URL is required to run mongodump (set BACKUP_SKIP_MONGO=true to skip).}"
+    MONGO_DB_NAME=${MONGO_DB_NAME:-cdn}
+    echo "[backup] mongodump (db=${MONGO_DB_NAME}) → ${MONGO_FILE}"
+    mongodump --quiet --gzip --archive="${BACKUP_DIR}/${MONGO_FILE}" --uri="${MONGO_URL}" --db="${MONGO_DB_NAME}"
+else
+    echo "[backup] mongodump skipped (BACKUP_SKIP_MONGO=true)"
+fi
 
 # 2. Buckets snapshot. tar directly on the live tree — files are
 #    written-once + immutable, so this is consistent without locking.

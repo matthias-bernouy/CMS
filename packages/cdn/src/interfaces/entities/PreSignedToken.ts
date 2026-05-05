@@ -22,4 +22,7 @@ export type PreSignedToken = {
      *  changing the bucket's origins later doesn't retro-authorize tokens
      *  already minted. Empty / missing = no cross-origin uploads. */
     allowedOrigins?: string[];
+    /** Authorizes replacing an existing file with the same name (snapshot
+     *  from mint). Folder clashes always still throw. */
+    overwrite?: boolean;
 };

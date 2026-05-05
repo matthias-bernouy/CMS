@@ -14,6 +14,19 @@ map $bucket_id $cache_control {
     include /etc/nginx/conf.d/cdn/generated/cacheControls.conf;
 }
 
+map $bucket_id $bucket_notfound {
+    default "";
+    include /etc/nginx/conf.d/cdn/generated/notFoundPaths.conf;
+}
+
+# HTML responses always bypass caches — page content changes whenever an
+# admin saves and we want next visitors to see it. Hashed assets keep the
+# bucket's default Cache-Control (typically `immutable`).
+map $uri $effective_cache_control {
+    default     $cache_control;
+    "~\.html$"  "no-store";
+}
+
 upstream cdn_app {
     server 127.0.0.1:3000;
     keepalive 32;

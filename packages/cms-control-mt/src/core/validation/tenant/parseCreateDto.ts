@@ -1,4 +1,4 @@
-import type { Tenant, TenantCdnBucket, TenantKeycloak } from "src/interfaces/Tenant";
+import type { Tenant, TenantCdnBucket, TenantDelivery, TenantKeycloak } from "src/interfaces/Tenant";
 import { assertValidTenantId } from "src/core/validation/tenant/id";
 
 // Wire shape is flat (matches what `<w13c-form>` submits — `Object.fromEntries`
@@ -12,8 +12,31 @@ export function parseTenantCreateDto(body: Record<string, unknown>): TenantCreat
 
     const keycloak = parseKeycloak(body);
     const assetsCdn = parseCdnBucket(body, "assetsCdn");
+    const delivery = parseDelivery(body);
 
-    return { id, name: name.trim(), keycloak, assetsCdn };
+    return {
+        id,
+        name: name.trim(),
+        keycloak,
+        assetsCdn,
+        ...(delivery ? { delivery } : {}),
+    };
+}
+
+function parseDelivery(body: Record<string, unknown>): TenantDelivery | undefined {
+    const url = optionalString(body, "delivery.publicCdn.url");
+    const cred = optionalString(body, "delivery.publicCdn.bucketCredential");
+    if (!url && !cred) return undefined;
+    if (!url || !cred) {
+        throw new TypeError("delivery.publicCdn requires both url and bucketCredential when set.");
+    }
+    const out: TenantDelivery = { publicCdn: { url, bucketCredential: cred } };
+    const alias = optionalString(body, "delivery.alias");
+    if (alias) out.alias = alias;
+    if (body["delivery.enabled"] === "true" || body["delivery.enabled"] === true) {
+        out.enabled = true;
+    }
+    return out;
 }
 
 function requireString(body: Record<string, unknown>, key: string): string {

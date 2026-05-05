@@ -19,6 +19,9 @@ export type AdminUploadOptions = {
      *  pre-signed token to enforce a per-upload ceiling tighter than the
      *  bucket-wide one. */
     maxSize?:       number;
+    /** Replace an existing file with the same name in the same parent
+     *  folder. Folder collisions still throw. */
+    overwrite?:     boolean;
 };
 
 /**
@@ -51,12 +54,15 @@ export async function uploadFile(
 
     const folderClash = await provider.storedFolderRepo.getByName(bucketId, opts.parentFolderID, opts.name);
     if (folderClash) throw new Error(`Name "${opts.name}" already taken (folder).`);
+
     const fileClash = await provider.storedFileRepo.getByName(bucketId, opts.parentFolderID, opts.name);
-    if (fileClash) throw new Error(`Name "${opts.name}" already taken (file).`);
+    if (fileClash && !opts.overwrite) throw new Error(`Name "${opts.name}" already taken (file).`);
 
     if (opts.publicPath !== undefined) {
         const slugClash = await provider.storedFileRepo.getByPublicPath(bucketId, opts.publicPath);
-        if (slugClash) throw new Error(`publicPath "${opts.publicPath}" already taken.`);
+        if (slugClash && (!opts.overwrite || slugClash.id !== fileClash?.id)) {
+            throw new Error(`publicPath "${opts.publicPath}" already taken.`);
+        }
     }
 
     const fileId = generateId();
@@ -73,8 +79,13 @@ export async function uploadFile(
         throw new Error(`file_too_large: ${size} > ${sizeCap}.`);
     }
 
+    // Replacing? subtract the old footprint from the quota check.
+    const replacingSize  = fileClash?.size ?? 0;
+    const replacingCount = fileClash ? 1 : 0;
     const usage = await provider.storedFileRepo.sumSize(bucketId);
-    if (usage.totalSize + size > bucket.quotas.maxTotalSize || usage.fileCount + 1 > bucket.quotas.maxFileCount) {
+    const newTotal = usage.totalSize + size - replacingSize;
+    const newCount = usage.fileCount + 1 - replacingCount;
+    if (newTotal > bucket.quotas.maxTotalSize || newCount > bucket.quotas.maxFileCount) {
         await provider.blobStorage.delete(bucketId, storagePath).catch(() => {});
         throw new Error("quota_exceeded: bucket would exceed its size or file-count quota.");
     }
@@ -93,6 +104,17 @@ export async function uploadFile(
         } catch (err) {
             await provider.blobStorage.delete(bucketId, storagePath).catch(() => {});
             throw err;
+        }
+    }
+
+    // Delete the predecessor BEFORE creating the new record so the unique
+    // (bucketId, parentFolderID, name) index in the repo can't reject the
+    // insert. Best-effort blob cleanup — losing track of an orphan blob is
+    // tolerable, the GC pass will mop up later.
+    if (fileClash) {
+        await provider.storedFileRepo.delete(fileClash.id);
+        if (fileClash.storagePath !== storagePath) {
+            await provider.blobStorage.delete(bucketId, fileClash.storagePath).catch(() => null);
         }
     }
 

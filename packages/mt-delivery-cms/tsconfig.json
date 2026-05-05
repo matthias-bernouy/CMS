@@ -1,0 +1,15 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir":  "dist",
+        "rootDir": ".",
+        "baseUrl": "."
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../core" },
+        { "path": "../cdn" },
+        { "path": "../cms" },
+        { "path": "../cms-control-mt" }
+    ]
+}

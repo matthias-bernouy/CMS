@@ -2,6 +2,7 @@
 export * from "./exports/StorageProvider";
 export * from "./exports/StorageTokenBroker";
 export * from "./exports/StorageBrowser";
+export * from "./exports/StorageDirectClient";
 
 // Repository implementations (Mongo)
 export * from "./default-implementation/mongo/MongoBucketRepository";

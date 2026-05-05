@@ -36,11 +36,14 @@ const KEYCLOAK_ADMIN_ROLE      = env("KEYCLOAK_ADMIN_ROLE", "admin");
 
 const PORT = Number(process.env.PORT ?? 3000);
 
-// MongoDB runs in the same container on 127.0.0.1:27017 (no auth — only
-// reachable via loopback, never exposed off-container).
-const mongo = new MongoClient("mongodb://127.0.0.1:27017");
+// MongoDB is external (Atlas / self-hosted). MONGO_URL is required by the
+// entrypoint; MONGO_DB_NAME defaults to `cdn`.
+const MONGO_URL     = required("MONGO_URL");
+const MONGO_DB_NAME = process.env.MONGO_DB_NAME ?? "cdn";
+
+const mongo = new MongoClient(MONGO_URL);
 await mongo.connect();
-const db = mongo.db("cdn");
+const db = mongo.db(MONGO_DB_NAME);
 
 const runner = new BunRunner();
 
@@ -62,7 +65,7 @@ const auth = new KeycloakConsumer(runner, {
     },
 });
 
-new StorageProvider({
+const provider = new StorageProvider({
     runner,
     authentication:       auth,
     bucketRepo:           new MongoBucketRepository          (db.collection<BucketDocument>           ("buckets")),
@@ -75,6 +78,7 @@ new StorageProvider({
     config: {
         nginx: {
             cacheControlsPath:        "/etc/nginx/conf.d/cdn/generated/cacheControls.conf",
+            notFoundPathsPath:        "/etc/nginx/conf.d/cdn/generated/notFoundPaths.conf",
             aliasesPath:              "/etc/nginx/conf.d/cdn/generated/aliases.conf",
             aliasesServersPath:       "/etc/nginx/conf.d/cdn/generated/aliasesServers.conf",
             bucketServingIncludePath: "/etc/nginx/conf.d/cdn/bucketServing.conf",
@@ -97,6 +101,13 @@ new StorageProvider({
         },
     },
 });
+
+// Repaint every nginx fragment from DB state. The generated/* files live
+// inside the image (not the volume), so a fresh container boots with empty
+// fragments — without this call the wildcard cert would still work but
+// alias servers + per-bucket maps would be missing until something
+// triggers a write.
+await provider.regenerateAllNginx();
 
 runner.start(PORT);
 console.log(`✅ cdn-keycloak listening on :${PORT} (auth: ${KEYCLOAK_ISSUER})`);

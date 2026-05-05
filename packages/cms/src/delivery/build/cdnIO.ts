@@ -1,7 +1,56 @@
+import { brotliCompressSync, constants as zlibConstants } from "node:zlib";
 import type { CDN, FileMetadata } from "@bernouy/core";
 import { MANIFEST_FILENAME, type DeployManifest } from "src/delivery/interfaces/DeployManifest";
 import type { GeneratedVariant } from "src/delivery/interfaces/VariantGenerator";
 import { pageBucketName, pagePublicPath } from "src/delivery/build/pathSlug";
+
+/**
+ * MIME types that benefit from brotli/gzip pre-compression. Binary media
+ * formats are excluded — they are already compressed and the algorithms
+ * waste CPU + storage for ~0% gain.
+ */
+function isCompressibleMime(mime: string): boolean {
+    return /^(text\/|application\/(json|javascript|xml|xhtml\+xml|wasm)|image\/svg\+xml)/i.test(mime);
+}
+
+function brotli11(bytes: Uint8Array): Uint8Array {
+    return new Uint8Array(brotliCompressSync(bytes, {
+        params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 11 },
+    }));
+}
+
+/**
+ * Upload `.br` + `.gz` siblings of a file the bucket already has. nginx's
+ * `brotli_static on` / `gzip_static on` directives serve them based on the
+ * client's Accept-Encoding header — the original file is served when
+ * neither sibling matches. Failures are swallowed: a missed precompression
+ * just means the un-compressed file is sent, never breaks delivery.
+ */
+async function uploadCompressedSiblings(
+    bucket: CDN,
+    base: { bucketName: string; publicPath?: string; bytes: Uint8Array; mimeType: string },
+): Promise<void> {
+    if (!isCompressibleMime(base.mimeType)) return;
+
+    const strict = new Uint8Array(base.bytes);
+    const variants: Array<{ ext: ".br" | ".gz"; bytes: Uint8Array }> = [
+        { ext: ".br", bytes: brotli11(strict) },
+        { ext: ".gz", bytes: Bun.gzipSync(strict) },
+    ];
+
+    await Promise.all(variants.map(async ({ ext, bytes }) => {
+        const res = await bucket.uploadFile({
+            data:       bytes,
+            name:       base.bucketName + ext,
+            mimeType:   base.mimeType,
+            overwrite:  true,
+            ...(base.publicPath ? { publicPath: base.publicPath + ext } : {}),
+        });
+        if (!res.ok) {
+            console.warn(`[cms] precompress ${base.bucketName}${ext}: ${res.error.message}`);
+        }
+    }));
+}
 
 /**
  * CDN read/write primitives used by `DeliveryBuilder.runOnce()`. Each helper
@@ -30,13 +79,19 @@ export async function loadManifest(
 }
 
 export async function uploadManifest(htmlBucket: CDN, manifest: DeployManifest): Promise<void> {
+    const bytes = new TextEncoder().encode(JSON.stringify(manifest));
     const res = await htmlBucket.uploadFile({
-        data: new TextEncoder().encode(JSON.stringify(manifest)),
+        data: bytes,
         name: MANIFEST_FILENAME,
         mimeType: "application/json",
         overwrite: true,
     });
     if (!res.ok) throw new Error(`Failed to upload manifest: ${res.error.message}`);
+    await uploadCompressedSiblings(htmlBucket, {
+        bucketName: MANIFEST_FILENAME,
+        bytes,
+        mimeType: "application/json",
+    });
 }
 
 export type HashedAssetInput = {
@@ -67,7 +122,14 @@ export async function putHashedAsset(
         mimeType: asset.contentType,
         overwrite: false,
     });
-    if (res.ok) return { absoluteURL: res.data.absoluteURL, fresh: true };
+    if (res.ok) {
+        await uploadCompressedSiblings(assetsBucket, {
+            bucketName: name,
+            bytes:      asset.bytes,
+            mimeType:   asset.contentType,
+        });
+        return { absoluteURL: res.data.absoluteURL, fresh: true };
+    }
 
     if (res.error.code === "conflict") {
         const list = await assetsBucket.getItems({ search: name });
@@ -89,14 +151,21 @@ export function uploadVariant(
 }
 
 export async function uploadHtml(htmlBucket: CDN, pagePath: string, html: string): Promise<void> {
+    const bytes      = new TextEncoder().encode(html);
+    const bucketName = pageBucketName(pagePath);
+    const publicPath = pagePublicPath(pagePath);
     const res = await htmlBucket.uploadFile({
-        data: new TextEncoder().encode(html),
-        name: pageBucketName(pagePath),
-        publicPath: pagePublicPath(pagePath),
+        data: bytes,
+        name: bucketName,
+        publicPath,
         mimeType: "text/html; charset=utf-8",
         overwrite: true,
     });
     if (!res.ok) throw new Error(`Failed to upload page ${pagePath}: ${res.error.message}`);
+    await uploadCompressedSiblings(htmlBucket, {
+        bucketName, publicPath, bytes,
+        mimeType: "text/html; charset=utf-8",
+    });
 }
 
 /**

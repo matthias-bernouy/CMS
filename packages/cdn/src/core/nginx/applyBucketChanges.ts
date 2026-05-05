@@ -1,5 +1,6 @@
 import type { StorageProvider } from "../../exports/StorageProvider";
 import { regenerateCacheControls } from "./regenerateCacheControls";
+import { regenerateNotFoundPaths } from "./regenerateNotFoundPaths";
 import { reload } from "./reload";
 
 /**
@@ -12,5 +13,8 @@ export async function applyBucketChanges(provider: StorageProvider): Promise<voi
     if (!cfg) return;
     const allBuckets = await provider.bucketRepo.list();
     await regenerateCacheControls(allBuckets, cfg.cacheControlsPath);
+    if (cfg.notFoundPathsPath) {
+        await regenerateNotFoundPaths(allBuckets, cfg.notFoundPathsPath);
+    }
     await reload(cfg.binary);
 }

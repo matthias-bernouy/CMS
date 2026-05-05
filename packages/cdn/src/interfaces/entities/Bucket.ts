@@ -19,4 +19,8 @@ export type Bucket = {
      *  Embedded in the upload token at mint time + checked on `POST /upload`
      *  so the CDN can emit the matching `Access-Control-Allow-Origin`. */
     allowedUploadOrigins?: string[];
+    /** Path within the bucket served as the 404 fallback. When set, nginx
+     *  maps unmatched URLs to this file. Empty / missing = nginx returns
+     *  its default 404. Example: `"404.html"`. */
+    notFoundPath?: string;
 };

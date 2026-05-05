@@ -1,15 +1,15 @@
 #!/bin/bash
-# cdn-keycloak all-in-one entrypoint:
-#   1. Ensure /var/lib/cdn/{mongo,buckets,lego} exist + ownership.
+# cdn-keycloak entrypoint (external MongoDB):
+#   1. Ensure /var/lib/cdn/{buckets,lego} exist + ownership.
 #   2. Render nginx.conf from the template using ${MAIN_DOMAIN}.
-#   3. Start mongod (background) and wait for it to accept connections.
-#   4. Provision the wildcard cert via lego (DNS-01) on first boot if missing.
-#   5. nginx -t, then start nginx + bun. On any of the 3 dying, kill the rest.
+#   3. Provision the wildcard cert via lego (DNS-01) on first boot if missing.
+#   4. nginx -t, then start nginx + bun. On either dying, kill the rest.
 
 set -e
 
 : "${MAIN_DOMAIN:?MAIN_DOMAIN is required (e.g. cdn.example.com)}"
 : "${LEGO_EMAIL:?LEGO_EMAIL is required}"
+: "${MONGO_URL:?MONGO_URL is required (e.g. mongodb+srv://user:pass@cluster.mongodb.net/)}"
 : "${KEYCLOAK_ISSUER:?KEYCLOAK_ISSUER is required}"
 : "${KEYCLOAK_CLIENT_ID:?KEYCLOAK_CLIENT_ID is required}"
 : "${KEYCLOAK_CLIENT_SECRET:?KEYCLOAK_CLIENT_SECRET is required}"
@@ -32,31 +32,17 @@ fi
 # 1. Volume layout — first boot may have an empty volume.
 #    `lego/webroot` is the HTTP-01 challenge dir written to by lego (alias
 #    cert issuance) and read by nginx on :80.
-mkdir -p "$DATA/mongo" "$DATA/buckets" \
+mkdir -p "$DATA/buckets" \
          "$DATA/lego/certificates" "$DATA/lego/accounts" \
          "$DATA/lego/webroot/.well-known/acme-challenge"
-chown -R mongodb:mongodb "$DATA/mongo"
-chown -R cdn:cdn         "$DATA/buckets" "$DATA/lego"
-chmod 0750               "$DATA/buckets"
+chown -R cdn:cdn "$DATA/buckets" "$DATA/lego"
+chmod 0750       "$DATA/buckets"
 
 # 2. Render nginx config.
 echo "[cdn] Rendering nginx config for MAIN_DOMAIN=${MAIN_DOMAIN}…"
 envsubst '${MAIN_DOMAIN}' < "${NGINX_CONF}.template" > "${NGINX_CONF}"
 
-# 3. Start mongod (background) and wait for it.
-echo "[cdn] Starting mongod (loopback, no auth)…"
-mongod --config /etc/mongod.conf --fork --logpath "$DATA/mongo/mongod.log"
-for i in $(seq 1 30); do
-    if mongosh --quiet --eval 'db.runCommand({ping:1}).ok' >/dev/null 2>&1; then
-        echo "[cdn] mongod ready."
-        break
-    fi
-    [ "$i" = "30" ] && { echo "[cdn] mongod failed to start"; cat "$DATA/mongo/mongod.log" | tail -50; exit 1; }
-    sleep 1
-done
-MONGO_PID=$(pgrep -f 'mongod --config' | head -1)
-
-# 4. Wildcard cert (DNS-01 — only path that issues wildcards).
+# 3. Wildcard cert (DNS-01 — only path that issues wildcards).
 WILDCARD_CRT="$DATA/lego/certificates/${MAIN_DOMAIN}.crt"
 if [ ! -f "${WILDCARD_CRT}" ]; then
     : "${LEGO_DNS_PROVIDER:?LEGO_DNS_PROVIDER is required for the first-boot wildcard provisioning. Or pre-mount an existing cert at ${WILDCARD_CRT}.}"
@@ -68,7 +54,7 @@ fi
 
 nginx -t
 
-echo "[cdn] Starting nginx + bun + keeping mongod…"
+echo "[cdn] Starting nginx + bun…"
 nginx -g 'daemon off;' &
 NGINX_PID=$!
 
@@ -121,7 +107,7 @@ fi
 
 cleanup() {
     echo "[cdn] Caught signal, shutting down…"
-    kill -TERM $NGINX_PID $APP_PID $MONGO_PID $RENEW_PID $BACKUP_PID 2>/dev/null || true
+    kill -TERM $NGINX_PID $APP_PID $RENEW_PID $BACKUP_PID 2>/dev/null || true
     wait
 }
 trap cleanup INT TERM
@@ -129,6 +115,6 @@ trap cleanup INT TERM
 wait -n
 EXIT=$?
 echo "[cdn] Child exited with ${EXIT}, tearing down the rest…"
-kill -TERM $NGINX_PID $APP_PID $MONGO_PID $RENEW_PID $BACKUP_PID 2>/dev/null || true
+kill -TERM $NGINX_PID $APP_PID $RENEW_PID $BACKUP_PID 2>/dev/null || true
 wait
 exit "${EXIT}"

@@ -16,7 +16,9 @@ export async function updateBucket(
     const updatedAt = new Date();
     await provider.bucketRepo.update(id, { ...dto, updatedAt });
 
-    if (dto.cacheControl !== undefined && dto.cacheControl !== existing.cacheControl) {
+    const cacheChanged    = dto.cacheControl !== undefined && dto.cacheControl !== existing.cacheControl;
+    const notFoundChanged = dto.notFoundPath !== undefined && dto.notFoundPath !== existing.notFoundPath;
+    if (cacheChanged || notFoundChanged) {
         await applyBucketChanges(provider);
     }
 

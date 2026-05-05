@@ -12,6 +12,7 @@ export type BucketUpdateDto = {
     quotas?: BucketQuotas;
     limits?: BucketLimits;
     allowedUploadOrigins?: string[];
+    notFoundPath?: string;
 };
 
 export function parseBucketUpdateDto(body: Record<string, unknown>): BucketUpdateDto {
@@ -44,7 +45,22 @@ export function parseBucketUpdateDto(body: Record<string, unknown>): BucketUpdat
         dto.allowedUploadOrigins = parseAllowedUploadOrigins(body.allowedUploadOrigins);
     }
 
+    if (body.notFoundPath !== undefined) {
+        dto.notFoundPath = parseNotFoundPath(body.notFoundPath);
+    }
+
     return dto;
+}
+
+function parseNotFoundPath(value: unknown): string | undefined {
+    if (value === null || value === "") return undefined;
+    if (typeof value !== "string") throw new TypeError("notFoundPath must be a string.");
+    const v = value.trim().replace(/^\/+/, "");
+    if (!v) return undefined;
+    if (/[\\\s\x00]/.test(v) || v.includes("..")) {
+        throw new TypeError(`invalid notFoundPath: "${value}".`);
+    }
+    return v;
 }
 
 function parseAcceptedMimeTypes(value: unknown): string[] | "*" {

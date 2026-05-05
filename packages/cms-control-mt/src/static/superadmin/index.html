@@ -11,29 +11,45 @@
         <p9r-row slot="header">
             <p9r-header-cell>id</p9r-header-cell>
             <p9r-header-cell>name</p9r-header-cell>
-            <p9r-header-cell>keycloak issuer</p9r-header-cell>
+            <p9r-header-cell>keycloak</p9r-header-cell>
             <p9r-header-cell>cdn</p9r-header-cell>
-            <p9r-header-cell>created</p9r-header-cell>
+            <p9r-header-cell>delivery</p9r-header-cell>
             <p9r-header-cell></p9r-header-cell>
         </p9r-row>
 
-        <w13c-fetch url="{{BASE_PATH}}/api/tenants" reload-on="tenant:created tenant:deleted">
+        <w13c-fetch url="{{BASE_PATH}}/api/tenants" reload-on="tenant:created tenant:deleted tenant:updated">
             <template for="data">
                 <p9r-row>
                     <p9r-cell><code>{{ id }}</code></p9r-cell>
                     <p9r-cell>{{ name }}</p9r-cell>
                     <p9r-cell><code>{{ keycloak.issuer }}</code></p9r-cell>
                     <p9r-cell><code>{{ assetsCdn.url }}</code></p9r-cell>
-                    <p9r-cell>{{ createdAt }}</p9r-cell>
+                    <p9r-cell><code>{{ delivery.enabled }}</code></p9r-cell>
                     <p9r-cell>
                         <p9r-stack direction="row" gap="s">
                             <a href="/cms/{{id}}/admin/pages" target="_blank"><p9r-button variant="ghost">Open</p9r-button></a>
+                            <p9r-open-modal modal-target="edit-delivery-{{id}}">
+                                <p9r-button variant="ghost">Edit delivery</p9r-button>
+                            </p9r-open-modal>
                             <w13c-form target="{{BASE_PATH}}/api/tenants?id={{id}}" method="DELETE" emit="tenant:deleted">
                                 <p9r-button variant="ghost" color="danger" type="submit">Delete</p9r-button>
                             </w13c-form>
                         </p9r-stack>
                     </p9r-cell>
                 </p9r-row>
+
+                <p9r-modal id="edit-delivery-{{id}}" aria-label="Edit delivery for {{name}}">
+                    <span slot="title">Delivery — {{name}} <small><code>{{id}}</code></small></span>
+                    <w13c-form target="{{BASE_PATH}}/api/tenants?id={{id}}" method="PATCH" emit="tenant:updated" content-type="application/json">
+                        <p9r-stack gap="m">
+                            <p9r-input name="delivery.publicCdn.url" label="public cdn url" placeholder="https://cdn.example.com" value="{{delivery.publicCdn.url}}"></p9r-input>
+                            <p9r-input name="delivery.publicCdn.bucketCredential" label="public bucket credential (leave blank to keep existing)" type="password"></p9r-input>
+                            <p9r-input name="delivery.alias" label="public alias domain" placeholder="acme.com" value="{{delivery.alias}}"></p9r-input>
+                            <p9r-input name="delivery.enabled" label="enabled (true/false)" placeholder="false" value="{{delivery.enabled}}"></p9r-input>
+                            <p9r-button color="primary" type="submit" fullWidth>Save delivery</p9r-button>
+                        </p9r-stack>
+                    </w13c-form>
+                </p9r-modal>
             </template>
             <template slot="empty">
                 <p9r-row><p9r-cell colspan="6"><em>No tenants yet — create the first one to get started.</em></p9r-cell></p9r-row>
@@ -63,6 +79,12 @@
             <h4 style="margin-top: 1rem;">CDN (assets bucket)</h4>
             <p9r-input name="assetsCdn.url" label="cdn url" placeholder="https://cdn.example.com" required></p9r-input>
             <p9r-input name="assetsCdn.bucketCredential" label="bucket credential" type="password" required></p9r-input>
+
+            <h4 style="margin-top: 1rem;">Delivery (optional — fillable later)</h4>
+            <p9r-input name="delivery.publicCdn.url" label="public cdn url" placeholder="https://cdn.example.com"></p9r-input>
+            <p9r-input name="delivery.publicCdn.bucketCredential" label="public bucket credential" type="password"></p9r-input>
+            <p9r-input name="delivery.alias" label="public alias domain (optional)" placeholder="acme.com"></p9r-input>
+            <p9r-input name="delivery.enabled" label="enabled (true/false)" placeholder="false"></p9r-input>
 
             <p9r-button color="primary" type="submit" fullWidth>Create</p9r-button>
         </p9r-stack>

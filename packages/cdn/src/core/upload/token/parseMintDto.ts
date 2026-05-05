@@ -9,6 +9,9 @@ export type MintTokenDto = {
     publicPath?:    string;
     /** Time-to-live in seconds. Bounded between MIN_TTL_SEC and MAX_TTL_SEC. */
     ttlSec:         number;
+    /** Replace an existing file with the same name (in the same parent
+     *  folder). Folder collisions still throw. */
+    overwrite?:     boolean;
 };
 
 export const MIN_TTL_SEC     = 60;
@@ -29,8 +32,8 @@ export function parseMintTokenDto(body: Record<string, unknown>): MintTokenDto {
         parentFolderID = body.parentFolderID;
     }
 
-    if (typeof body.maxSize !== "number" || !Number.isFinite(body.maxSize) || body.maxSize <= 0) {
-        throw new TypeError("maxSize must be a positive number (bytes).");
+    if (typeof body.maxSize !== "number" || !Number.isFinite(body.maxSize) || body.maxSize < 0) {
+        throw new TypeError("maxSize must be a non-negative number (bytes).");
     }
     if (!Number.isInteger(body.maxSize)) throw new TypeError("maxSize must be an integer number of bytes.");
 
@@ -61,6 +64,8 @@ export function parseMintTokenDto(body: Record<string, unknown>): MintTokenDto {
         }
         dto.ttlSec = body.ttlSec;
     }
+
+    if (body.overwrite === true || body.overwrite === "true") dto.overwrite = true;
 
     return dto;
 }

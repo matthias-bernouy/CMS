@@ -10,6 +10,7 @@
         { "path": "packages/mailer-smtp" },
         { "path": "packages/cdn" },
         { "path": "packages/cms" },
-        { "path": "packages/cms-control-mt" }
+        { "path": "packages/cms-control-mt" },
+        { "path": "packages/mt-delivery-cms" }
     ]
 }

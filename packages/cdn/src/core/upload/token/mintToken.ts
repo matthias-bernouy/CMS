@@ -36,10 +36,12 @@ export async function mintToken(
 
     const folderClash = await provider.storedFolderRepo.getByName(bucketId, dto.parentFolderID, dto.name);
     if (folderClash) throw new Error(`Name "${dto.name}" already taken (folder).`);
-    const fileClash = await provider.storedFileRepo.getByName(bucketId, dto.parentFolderID, dto.name);
-    if (fileClash) throw new Error(`Name "${dto.name}" already taken (file).`);
+    if (!dto.overwrite) {
+        const fileClash = await provider.storedFileRepo.getByName(bucketId, dto.parentFolderID, dto.name);
+        if (fileClash) throw new Error(`Name "${dto.name}" already taken (file).`);
+    }
 
-    if (dto.publicPath !== undefined) {
+    if (dto.publicPath !== undefined && !dto.overwrite) {
         const slugClash = await provider.storedFileRepo.getByPublicPath(bucketId, dto.publicPath);
         if (slugClash) throw new Error(`publicPath "${dto.publicPath}" already taken.`);
     }
@@ -55,6 +57,7 @@ export async function mintToken(
         createdAt:      now,
         ...(dto.contentType !== undefined ? { contentType: dto.contentType } : {}),
         ...(dto.publicPath  !== undefined ? { publicPath:  dto.publicPath  } : {}),
+        ...(dto.overwrite                  ? { overwrite:    true            } : {}),
         ...(bucket.allowedUploadOrigins ? { allowedOrigins: [...bucket.allowedUploadOrigins] } : {}),
     };
 

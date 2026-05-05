@@ -14,6 +14,8 @@ import type { BlobStorage } from "../interfaces/BlobStorage";
 import { createAdminGuard } from "../core/authentication/createAdminGuard";
 import { createBrokerGuard } from "../core/authentication/createBrokerGuard";
 import { mountAdminSurface } from "../core/admin/mountAdminSurface";
+import { applyBucketChanges } from "../core/nginx/applyBucketChanges";
+import { applyAliasChanges } from "../core/nginx/applyAliasChanges";
 import handleUpload from "../api/upload.post";
 import handleUploadOptions from "../api/upload.options";
 import { cdnPackageRoot } from "../constants";
@@ -24,6 +26,9 @@ export type StorageProviderConfig = {
      *  isn't running. */
     nginx?: {
         cacheControlsPath: string;
+        /** Path to the `notFoundPaths.conf` map fragment (`<bucketId> "<file>";`),
+         *  consumed by an outer `map $bucket_id $bucket_notfound { … }` block. */
+        notFoundPathsPath?: string;
         /** Path to the `aliases.conf` map fragment (`<host> <bucketId>;`). */
         aliasesPath?: string;
         /** Path to the `aliasesServers.conf` per-alias `server { … }` fragment. */
@@ -100,4 +105,16 @@ export class StorageProvider {
     get storedFileRepo()       { return this._storedFileRepo; }
     get blobStorage()          { return this._blobStorage; }
     get config()               { return this._config; }
+
+    /**
+     * Regenerate every nginx fragment from the current DB state and reload
+     * nginx. Idempotent. Use case: container restart — the generated/*
+     * files live inside the image (not the volume), so a fresh container
+     * boots with empty fragments until something rewrites them. Call this
+     * once at startup to repaint everything.
+     */
+    async regenerateAllNginx(): Promise<void> {
+        await applyBucketChanges(this);
+        await applyAliasChanges(this);
+    }
 }

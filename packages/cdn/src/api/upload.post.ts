@@ -27,27 +27,30 @@ export default async function handleUploadPost(req: Request, provider: StoragePr
         }
 
         const contentLength = parseInt(req.headers.get("content-length") ?? "", 10);
-        if (!Number.isFinite(contentLength) || contentLength <= 0) {
+        if (!Number.isFinite(contentLength) || contentLength < 0) {
             return jsonError(400, "validation_error", "Missing or invalid Content-Length header.", origin, token.allowedOrigins);
         }
         if (contentLength > token.maxSize) {
             return jsonError(400, "validation_error", `file_too_large: ${contentLength} > ${token.maxSize}.`, origin, token.allowedOrigins);
-        }
-        if (!req.body) {
-            return jsonError(400, "validation_error", "Empty request body.", origin, token.allowedOrigins);
         }
 
         const mimeType = token.contentType
             ?? req.headers.get("content-type")
             ?? "application/octet-stream";
 
+        // contentLength=0 is legal (empty CSS, empty JS bundles). Synthesize
+        // an empty stream rather than rejecting; downstream `uploadFile` can
+        // chase a `ReadableStream<Uint8Array>` and writes 0 bytes cleanly.
+        const body = req.body ?? new Blob([]).stream();
+
         const stored = await uploadFile(provider, token.bucketId, {
             name:           token.name,
             mimeType,
-            body:           req.body,
+            body,
             parentFolderID: token.parentFolderID,
             maxSize:        token.maxSize,
             ...(token.publicPath !== undefined ? { publicPath: token.publicPath } : {}),
+            ...(token.overwrite               ? { overwrite:    true              } : {}),
         });
 
         return Response.json({ ok: true, data: stored }, {
