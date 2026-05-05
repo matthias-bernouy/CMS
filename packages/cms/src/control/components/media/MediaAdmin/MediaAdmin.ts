@@ -7,7 +7,7 @@ type FormFieldEl = HTMLElement & { value: string };
 
 /**
  * `<cms-media-admin>` — full media admin page: layout, header buttons,
- * and direct calls to `window._cms.Media`. Renders into light DOM so the
+ * and direct calls to `window._cms.CDN`. Renders into light DOM so the
  * embedded `<p9r-grid-media>` keeps using its existing API surface.
  *
  * Header buttons bypass `<cms-form>` because the `Media` consumer (e.g.
@@ -79,8 +79,8 @@ export class MediaAdmin extends HTMLElement {
     }
 
     private _media(): CDN {
-        const m = window._cms?.Media;
-        if (!m) throw new Error("window._cms.Media missing — admin must load /<basePath>/_cms/media.js first");
+        const m = window._cms?.CDN;
+        if (!m) throw new Error("window._cms.CDN missing — admin must load /<basePath>/_cms/media.js first");
         return m;
     }
 }

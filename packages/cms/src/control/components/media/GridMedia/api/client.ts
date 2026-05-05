@@ -9,10 +9,10 @@ import type { CDNItem as SocleMediaItem, CDN } from "@bernouy/core";
 export type LocalTypeFilter = ("folder" | "image" | "other")[];
 
 export function media(): CDN {
-    const m = window._cms?.Media;
+    const m = window._cms?.CDN;
     if (!m) {
         throw new Error(
-            "window._cms.Media is not available. Check that the admin page loaded /<basePath>/_cms/media.js.",
+            "window._cms.CDN is not available. Check that the admin page loaded /<basePath>/_cms/media.js.",
         );
     }
     return m;

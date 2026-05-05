@@ -87,7 +87,7 @@ CLI source lives in `src/cli/`.
 - `TPage` is keyed by `path` alone. No `identifier` — one page per path.
 - `TPageRef = { path } | null` — used for `system.site.notFound` / `system.site.serverError`.
 - **Repository providers**: only `src/socle/providers/memory/CmsRepositoryInMemory.ts` ships in-tree today. A Mongo provider may be re-added; until then the in-memory store is the canonical implementation, used by `tests/human/human.ts` and `p9r new`.
-- **Media providers**: `tests/human/InMemoryMediaServer.ts` (server-side store + endpoints) paired with `tests/human/HttpMedia.ts` (browser-side `Media` consumer). The consumer follows the `Media` portability contract (no module-level helpers, browser-only globals, serializable via `constructor.toString()` for hydration on the client as `window._cms.Media`).
+- **Media providers**: `tests/human/InMemoryMediaServer.ts` (server-side store + endpoints) paired with `tests/human/HttpMedia.ts` (browser-side `Media` consumer). The consumer follows the `Media` portability contract (no module-level helpers, browser-only globals, serializable via `constructor.toString()` for hydration on the client as `window._cms.CDN`).
 
 ## API endpoint convention
 
@@ -118,7 +118,7 @@ Building blocks consumed by every admin page:
 - `<cms-fetch>` — fetches JSON, stamps a `<template>` against the response, inserts as siblings. Slots: `default` (data), `loading`, `error`, `empty`. `reload-on="event-name"` listens on `document` for refresh triggers; `cms-fetch:reload` is built-in. Public `el.reload()`.
 - `<cms-form>` — wraps an inner `<form>`, posts JSON to `target` URL on submit, dispatches `form:success` / `form:failed` (bubbles + composed via `BubblesEvent`). `emit="some:event"` re-dispatches on success so `<cms-fetch reload-on>` receives it.
 - `<cms-validate>` — display-transparent (`display: contents`) wrapper. Reads child `[name]` values, POSTs to `url`, applies `setCustomValidity` per field from `{ valid, message?, errors? }` response.
-- `<cms-media-admin>` — media admin page in a single tag. Header buttons (`+ New folder`, `Upload`) call `window._cms.Media.uploadFile()` / `createFolder()` directly (no form post) and refresh the embedded `<p9r-grid-media>`.
+- `<cms-media-admin>` — media admin page in a single tag. Header buttons (`+ New folder`, `Upload`) call `window._cms.CDN.uploadFile()` / `createFolder()` directly (no form post) and refresh the embedded `<p9r-grid-media>`.
 - `<cms-editor-system>` — editor root, mounted on every editor page (page / template / snippet flavor). Handles the editor's shadow DOM, initial bloc registration, and orchestrates `ObserverManager`, `DragManager`, `BlocActions`, `BlocLibrary`.
 
 ### Admin UI dependencies — `@bernouy/socle` vs `@bernouy/webcomponents`

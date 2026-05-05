@@ -39,11 +39,11 @@ declare global {
      * CMS-scoped globals the active providers may install on `window`. Only
      * the shape is declared here — the actual runtime binding is the
      * provider's responsibility (e.g. the Media implementation is expected
-     * to set `window._cms.Media` before the admin UI uses it).
+     * to set `window._cms.CDN` before the admin UI uses it).
      */
     interface Window {
         _cms?: {
-            Media?: CDN;
+            CDN?: CDN;
         };
     }
 

@@ -2,7 +2,7 @@ import type { ControlCms } from "src/control/ControlCms";
 
 /**
  * Serialize the Media instance to a browser-side script that reconstructs it
- * and binds to `window._cms.Media`. Relies on `constructor.toString()` for
+ * and binds to `window._cms.CDN`. Relies on `constructor.toString()` for
  * the class body and a tagged-JSON replacer for the instance state.
  *
  * Limitations worth knowing:
@@ -39,7 +39,7 @@ export function buildMediaHydrationScript(media: ControlCms["media"]): string {
     const instance = Object.create(Klass.prototype);
     Object.assign(instance, state);
     window._cms = window._cms || {};
-    window._cms.Media = instance;
+    window._cms.CDN = instance;
     if (${JSON.stringify(className)} && !(instance instanceof Klass)) {
         console.warn("[cms] hydrated Media instance is not an instance of", ${JSON.stringify(className)});
     }

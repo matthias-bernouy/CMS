@@ -79,7 +79,7 @@ function toRouteKey(filePath: string, suffix: string): string {
 /**
  * Inserts `<script src="<basePath>/_cms/media.js"></script>` right after the
  * `<head>` opening tag — synchronous, non-deferred, first script executed on
- * the page — so `window._cms.Media` is guaranteed to be available before any
+ * the page — so `window._cms.CDN` is guaranteed to be available before any
  * subsequent admin script reads it. The Media bootstrap has no dependencies
  * of its own, so blocking parsing for its fetch is cheap and worth the
  * simplicity. Runs once at HTML build time for static pages (cached); runs
