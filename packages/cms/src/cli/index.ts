@@ -5,6 +5,7 @@ import CLI_init from "./CLI_init";
 import CLI_new from "./CLI_new";
 import CLI_installSkill from "./CLI_installSkill";
 import CLI_listBlocs from "./CLI_listBlocs";
+import CLI_login, { CLI_logout } from "./CLI_login";
 
 const [command, ...rest] = process.argv.slice(2);
 
@@ -24,6 +25,11 @@ Usage:
   p9r install-skill [--force]      Install the bloc-creator Claude Code skill
                                    into ./.claude/skills/ so Claude can scaffold
                                    blocs on request in this project
+  p9r login [--url=...]            Authenticate against a remote CMS via the
+                                   Keycloak Device Authorization Grant flow.
+                                   Stores tokens in ~/.config/p9r/credentials.json
+                                   so subsequent commands run without prompts.
+  p9r logout [--url=...]           Remove stored credentials for the CMS URL.
   p9r dev                          Run the local editor against a remote CMS
   p9r import [flags]               Scan the current folder and push new blocs
                                    to the remote CMS via its admin API
@@ -44,7 +50,8 @@ Behaviour of 'p9r import':
 Env (loaded from .env or the environment):
   P9R_URL      Base URL of the remote Cms CMS
                e.g. http://localhost:4999/cms
-  P9R_TOKEN    Bearer token used to authenticate as an admin
+  P9R_TOKEN    Optional fallback bearer token (legacy static-token mode).
+               Prefer \`p9r login\` for the Keycloak device flow.
 `);
 }
 
@@ -58,6 +65,12 @@ try {
             break;
         case "install-skill":
             await CLI_installSkill(rest);
+            break;
+        case "login":
+            await CLI_login(rest);
+            break;
+        case "logout":
+            await CLI_logout(rest);
             break;
         case "dev":
             await CLI_dev(rest);

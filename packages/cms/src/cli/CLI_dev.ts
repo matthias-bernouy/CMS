@@ -4,6 +4,7 @@ import { buildAllDevBlocs } from "./dev-server/build";
 import { startDevServer } from "./dev-server/server";
 import { createReloadEmitter, createBlocRegistry } from "./dev-server/watch";
 import { fetchRemoteBlocs } from "./dev-server/shell";
+import { getAccessToken } from "./credentials";
 
 function parseFlags(args: string[]): { port: number; host: string } {
     let port = 5000;
@@ -16,15 +17,11 @@ function parseFlags(args: string[]): { port: number; host: string } {
 }
 
 export default async function CLI_dev(args: string[]) {
-    const token = Bun.env.P9R_TOKEN;
     const rawUrl = Bun.env.P9R_URL;
 
-    if (!token || !rawUrl) {
-        console.error("✖ P9R_TOKEN and P9R_URL must be set (in .env or the environment).");
-        console.error("");
-        console.error("Example .env:");
-        console.error("  P9R_URL=http://localhost:4999/cms");
-        console.error("  P9R_TOKEN=your-admin-bearer-token");
+    if (!rawUrl) {
+        console.error("✖ P9R_URL must be set (in .env or the environment).");
+        console.error("  Then run `p9r login` to authenticate (or set P9R_TOKEN for static-token mode).");
         console.error("");
         console.error("P9R_URL must include the admin path prefix (e.g. /cms).");
         console.error("The public origin (for /bloc?tag=...) is derived automatically.");
@@ -34,6 +31,12 @@ export default async function CLI_dev(args: string[]) {
     if (!/^https?:\/\//i.test(rawUrl)) {
         console.error(`✖ P9R_URL must start with http:// or https:// (got "${rawUrl}")`);
         console.error(`  Example: P9R_URL=http://localhost:4999/cms`);
+        process.exit(1);
+    }
+
+    const token = await getAccessToken(rawUrl.replace(/\/+$/, ""));
+    if (!token) {
+        console.error(`✖ No credentials for ${rawUrl}. Run \`p9r login --url=${rawUrl}\`.`);
         process.exit(1);
     }
 

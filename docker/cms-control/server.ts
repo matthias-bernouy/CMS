@@ -3,7 +3,8 @@
 import { MongoClient } from "mongodb";
 import { BunRunner } from "@bernouy/runner-bun";
 import type { Middleware, Subject } from "@bernouy/core";
-import { KeycloakConsumer } from "@bernouy/auth-keycloak";
+import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
+import { CompositeAuthentication } from "@bernouy/auth-composite";
 import { Cms as ControlCms, MongoCmsRepository } from "@bernouy/cms";
 import { StorageTokenBroker, StorageBrowser } from "@bernouy/cdn";
 
@@ -24,6 +25,7 @@ const KEYCLOAK_SESSION_SECRET  = required("KEYCLOAK_SESSION_SECRET");
 const KEYCLOAK_ADMIN_ROLE      = process.env.KEYCLOAK_ADMIN_ROLE ?? "admin";
 const KEYCLOAK_TOKENS_URL      = process.env.KEYCLOAK_TOKENS_URL
     ?? `${KEYCLOAK_ISSUER}/account/`;
+const KEYCLOAK_CLI_CLIENT_ID   = process.env.KEYCLOAK_CLI_CLIENT_ID ?? "cms-cli";
 
 const CDN_URL                  = required("CDN_URL");
 const CDN_BUCKET_CREDENTIAL    = required("CDN_BUCKET_CREDENTIAL");
@@ -42,21 +44,40 @@ const runner = new BunRunner();
 
 type CmsRole = "admin" | "user";
 
-const auth = new KeycloakConsumer<CmsRole>(runner, {
+// Shared mapping so cookie sessions and CLI bearer tokens produce identical
+// Subjects. Both consumers point at the same realm; only the credential
+// surface differs (cookie set by /auth callback vs Authorization: Bearer).
+const claimsToSubject = (claims: Record<string, unknown>): Subject<CmsRole> => {
+    const realmRoles = ((claims as { realm_access?: { roles?: string[] } }).realm_access?.roles) ?? [];
+    const role: CmsRole = realmRoles.includes(KEYCLOAK_ADMIN_ROLE) ? "admin" : "user";
+    return {
+        identifier:  String(claims.sub ?? ""),
+        displayName: String(claims.preferred_username ?? claims.email ?? "user"),
+        role,
+    };
+};
+
+const cookieAuth = new KeycloakConsumer<CmsRole>(runner, {
     issuer:        KEYCLOAK_ISSUER,
     clientId:      KEYCLOAK_CLIENT_ID,
     clientSecret:  KEYCLOAK_CLIENT_SECRET,
     appBaseUrl:    APP_BASE_URL,
     sessionSecret: KEYCLOAK_SESSION_SECRET,
-    claimsToSubject: (claims): Subject<CmsRole> => {
-        const realmRoles = ((claims as { realm_access?: { roles?: string[] } }).realm_access?.roles) ?? [];
-        const role: CmsRole = realmRoles.includes(KEYCLOAK_ADMIN_ROLE) ? "admin" : "user";
-        return {
-            identifier:  String(claims.sub ?? ""),
-            displayName: String(claims.preferred_username ?? claims.email ?? "user"),
-            role,
-        };
-    },
+    claimsToSubject,
+});
+
+const bearerAuth = new KeycloakBearerConsumer<CmsRole>({
+    issuer: KEYCLOAK_ISSUER,
+    claimsToSubject,
+});
+
+// Bearer first → API/CLI clients short-circuit cookie lookup. Cookie second
+// with `displayName` so the chooser falls through to it for browser hits.
+const auth = new CompositeAuthentication<CmsRole>(runner, {
+    children: [
+        { auth: bearerAuth },
+        { auth: cookieAuth, displayName: "Keycloak" },
+    ],
 });
 
 // Broker — mounted at /cms/_storage with an admin guard so only signed-in
@@ -91,6 +112,16 @@ const cdn = new StorageBrowser({
 });
 
 runner.group("/cms", (cmsRunner) => {
+    // Public discovery endpoint — registered BEFORE ControlCms so it
+    // shadows the guarded /api/* routes added by ControlCms's group. Tells
+    // the CLI which Keycloak realm and client to use for the device flow.
+    cmsRunner.get("/api/auth/discovery", () =>
+        Response.json({
+            issuer:   KEYCLOAK_ISSUER,
+            clientId: KEYCLOAK_CLI_CLIENT_ID,
+            grant:    "urn:ietf:params:oauth:grant-type:device_code",
+        }),
+    );
     new ControlCms(cmsRunner, repo, auth, cdn, { tokensUrl: KEYCLOAK_TOKENS_URL });
 });
 

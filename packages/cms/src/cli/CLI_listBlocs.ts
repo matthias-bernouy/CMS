@@ -1,3 +1,5 @@
+import { getAccessToken } from "./credentials";
+
 type RemoteBlocMeta = {
     id:          string;
     name:        string;
@@ -17,20 +19,22 @@ function parseFlags(args: string[]): Flags {
     return { json };
 }
 
-function resolveAdminBase(): { adminBase: URL; token: string } {
-    const token  = Bun.env.P9R_TOKEN;
+async function resolveAdminBase(): Promise<{ adminBase: URL; token: string }> {
     const rawUrl = Bun.env.P9R_URL;
 
-    if (!token || !rawUrl) {
-        console.error("✖ P9R_TOKEN and P9R_URL must be set (in .env or the environment).");
-        console.error("");
-        console.error("Example .env:");
-        console.error("  P9R_URL=http://localhost:4999/cms");
-        console.error("  P9R_TOKEN=your-admin-bearer-token");
+    if (!rawUrl) {
+        console.error("✖ P9R_URL must be set (in .env or the environment).");
+        console.error("  Then run `p9r login` to authenticate (or set P9R_TOKEN for static-token mode).");
         process.exit(1);
     }
     if (!/^https?:\/\//i.test(rawUrl)) {
         console.error(`✖ P9R_URL must start with http:// or https:// (got "${rawUrl}")`);
+        process.exit(1);
+    }
+
+    const token = await getAccessToken(rawUrl.replace(/\/+$/, ""));
+    if (!token) {
+        console.error(`✖ No credentials for ${rawUrl}. Run \`p9r login --url=${rawUrl}\`.`);
         process.exit(1);
     }
     try {
@@ -42,7 +46,7 @@ function resolveAdminBase(): { adminBase: URL; token: string } {
 }
 
 async function fetchBlocs(adminBase: URL, token: string): Promise<RemoteBlocMeta[]> {
-    const url = new URL("api/blocs-list", adminBase).href;
+    const url = new URL("api/bloc/list", adminBase).href;
     let res: Response;
     try {
         res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
@@ -51,7 +55,7 @@ async function fetchBlocs(adminBase: URL, token: string): Promise<RemoteBlocMeta
         process.exit(1);
     }
     if (res.status === 401 || res.status === 403) {
-        console.error(`✖ Remote refused the P9R_TOKEN (HTTP ${res.status}). Check your credentials.`);
+        console.error(`✖ Remote refused the credentials (HTTP ${res.status}). Run \`p9r login\` again.`);
         process.exit(1);
     }
     if (!res.ok) {
@@ -104,7 +108,7 @@ function printHuman(blocs: RemoteBlocMeta[], adminBase: URL) {
 
 export default async function CLI_listBlocs(args: string[]) {
     const flags = parseFlags(args);
-    const { adminBase, token } = resolveAdminBase();
+    const { adminBase, token } = await resolveAdminBase();
 
     const blocs = await fetchBlocs(adminBase, token);
 
