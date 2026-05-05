@@ -9,6 +9,7 @@
         "@bernouy/auth-keycloak": "workspace:*",
         "@bernouy/auth-token": "workspace:*",
         "@bernouy/cdn": "workspace:*",
+        "@bernouy/cms": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/mailer-console": "workspace:*",
         "@bernouy/mailer-smtp": "workspace:*",

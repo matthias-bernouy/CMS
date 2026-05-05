@@ -1,0 +1,5 @@
+{
+    "name":    "cms-control-runtime",
+    "private": true,
+    "type":    "module"
+}

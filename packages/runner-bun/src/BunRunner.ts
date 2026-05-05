@@ -49,7 +49,11 @@ export class BunRunner implements Runner {
 
     group(prefix: string, callback: (runner: Runner) => void, middlewares: Middleware[] = []) {
 
-        const currentPrefix = urlJoin(prefix);
+        // normalize: strip trailing "/" so nested groups (e.g. parent="/cms"
+        // + child="/" → "/cms/") don't leak the slash into basePath, which
+        // would propagate into `{{BASE_PATH}}` substitutions and produce
+        // double-slash asset URLs like `/cms//assets/foo.css`.
+        const currentPrefix = normalizePath(urlJoin(prefix));
         const currentMiddlewares = middlewares;
 
         const scopedRunner: Runner = {

@@ -3,6 +3,7 @@
     "private": true,
     "workspaces": [
         "packages/*",
+        "!packages/cms-control-mt",
         "../WebComponents"
     ],
     "scripts": {
@@ -26,6 +27,7 @@
         "@bernouy/auth-composite":"workspace:*",
         "@bernouy/mailer-console":"workspace:*",
         "@bernouy/mailer-smtp":   "workspace:*",
-        "@bernouy/cdn":           "workspace:*"
+        "@bernouy/cdn":           "workspace:*",
+        "@bernouy/cms":           "workspace:*"
     }
 }

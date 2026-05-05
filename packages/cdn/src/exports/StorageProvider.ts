@@ -15,6 +15,7 @@ import { createAdminGuard } from "../core/authentication/createAdminGuard";
 import { createBrokerGuard } from "../core/authentication/createBrokerGuard";
 import { mountAdminSurface } from "../core/admin/mountAdminSurface";
 import handleUpload from "../api/upload.post";
+import handleUploadOptions from "../api/upload.options";
 import { cdnPackageRoot } from "../constants";
 
 export type StorageProviderConfig = {
@@ -85,7 +86,8 @@ export class StorageProvider {
 
         this._runner.group("/admin", (admin) => mountAdminSurface(admin, this), [adminGuard]);
         this._runner.group("/api",   (api)   => serveApi(api, join(cdnPackageRoot, "src/api/broker"), this), [brokerGuard]);
-        this._runner.post("/upload", (req) => handleUpload(req, this));
+        this._runner.post       ("/upload", (req) => handleUpload(req, this));
+        this._runner.addEndpoint("OPTIONS", "/upload", (req) => handleUploadOptions(req, this));
     }
 
     get runner()               { return this._runner; }
