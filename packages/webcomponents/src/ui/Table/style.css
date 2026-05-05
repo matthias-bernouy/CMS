@@ -1,0 +1,33 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.table-container {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.p9r-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Le reste ne bouge pas : le header et les hover */
+::slotted(p9r-row[slot="header"]) {
+  background-color: var(--_header-bg);
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+::slotted(p9r-row:not(:last-child)) {
+  border-bottom: 1px solid var(--border-default);
+}
+
+::slotted(p9r-row:not(:first-child):hover) {
+  background-color: var(--bg-base);
+}

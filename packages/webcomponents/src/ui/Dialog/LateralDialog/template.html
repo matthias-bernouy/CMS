@@ -1,0 +1,16 @@
+<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
+    <header part="header">
+        <div id="title" part="title">
+            <slot name="title">Dialog</slot>
+        </div>
+        <button id="close-btn" part="close" type="button" aria-label="Close">&times;</button>
+    </header>
+
+    <section class="content" part="content">
+        <slot></slot>
+    </section>
+
+    <footer part="footer">
+        <slot name="footer"></slot>
+    </footer>
+</dialog>

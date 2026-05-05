@@ -1,0 +1,32 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+
+  --_color: var(--text-muted, #6b7280);
+  --_color-current: var(--text-main, #1f2937);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  list-style: none;
+}
+
+.link {
+  color: var(--_color);
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: var(--_color-current);
+}
+
+:host([current]) .link {
+  color: var(--_color-current);
+  font-weight: 600;
+  cursor: default;
+  pointer-events: none;
+}

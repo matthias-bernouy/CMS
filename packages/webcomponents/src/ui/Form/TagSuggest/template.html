@@ -1,0 +1,38 @@
+<div class="container" part="container">
+    <label for="main-input" part="label">
+        <slot name="label">Tags</slot>
+    </label>
+    <div class="input-wrapper" part="input-wrapper">
+        <input
+            id="main-input"
+            part="input"
+            type="text"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-haspopup="listbox"
+            autocomplete="off"
+            spellcheck="false"
+        />
+        <div
+            id="suggestions"
+            class="suggestions"
+            part="listbox"
+            role="listbox"
+            hidden
+        ></div>
+    </div>
+    <div
+        id="tags-display"
+        class="tags-list"
+        part="chips"
+        role="list"
+        aria-label="Selected tags"
+    ></div>
+    <div
+        id="live-region"
+        class="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+    ></div>
+</div>

@@ -1,0 +1,5 @@
+@media (prefers-reduced-motion: no-preference) {
+    .input-wrap { transition: border-color 0.15s; }
+    .fill { transition: width 0.05s ease; }
+    .slider::-webkit-slider-thumb { transition: transform 0.1s; }
+}

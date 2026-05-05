@@ -1,0 +1,42 @@
+:host([leaving]) {
+    animation: toast-out 160ms ease-in forwards;
+}
+
+:host([type="success"]) {
+    --_accent: var(--success-base, #10b981);
+}
+
+:host([type="error"]) {
+    --_accent: var(--danger-base, #ef4444);
+}
+
+:host([type="warning"]) {
+    --_accent: var(--warning-base, #f59e0b);
+}
+
+:host([type="info"]) {
+    --_accent: var(--info-base, #3b82f6);
+}
+
+:host([type="success"]) .icon::before {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+}
+
+:host([type="error"]) .icon::before,
+:host([type="warning"]) .icon::before {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>');
+}
+
+:host([type="info"]) .icon::before {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg>');
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(-20px); }
+}

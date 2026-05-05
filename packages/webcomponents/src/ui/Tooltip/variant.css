@@ -1,0 +1,47 @@
+:host([position="bottom"]) .tooltip {
+  top: calc(100% + var(--_offset));
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+:host([position="left"]) .tooltip {
+  right: calc(100% + var(--_offset));
+  left: auto;
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+:host([position="right"]) .tooltip {
+  left: calc(100% + var(--_offset));
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+:host([position="bottom"]) .tooltip::after {
+  top: auto;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: transparent;
+  border-bottom-color: var(--_bg);
+}
+
+:host([position="left"]) .tooltip::after {
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  border-top-color: transparent;
+  border-left-color: var(--_bg);
+}
+
+:host([position="right"]) .tooltip::after {
+  top: 50%;
+  left: auto;
+  right: 100%;
+  transform: translateY(-50%);
+  border-top-color: transparent;
+  border-right-color: var(--_bg);
+}

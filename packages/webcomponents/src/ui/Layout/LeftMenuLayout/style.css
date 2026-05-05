@@ -1,0 +1,84 @@
+:host {
+    display: block;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+
+    --_sidebar-width: 260px;
+    --_sidebar-collapsed-width: 0px;
+    --_sidebar-bg: #f4f4f4;
+    --_sidebar-border: #ddd;
+    --_content-bg: #ffffff;
+    --_content-padding: 2rem;
+    --_focus-ring: var(--primary-base, #2563eb);
+}
+
+.app-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.skip-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0.5rem 1rem;
+    background: var(--_content-bg);
+    color: var(--_focus-ring);
+    text-decoration: none;
+    border: 2px solid var(--_focus-ring);
+    border-radius: 4px;
+    z-index: 1000;
+    transform: translateY(-150%);
+}
+
+.skip-link:focus-visible {
+    transform: translateY(0);
+    outline: 2px solid var(--_focus-ring);
+    outline-offset: 2px;
+}
+
+.app-sidebar {
+    flex-shrink: 0;
+    height: 100%;
+    width: var(--_sidebar-width);
+    background-color: var(--_sidebar-bg);
+    border-right: 1px solid var(--_sidebar-border);
+    overflow: hidden;
+}
+
+.app-nav {
+    height: 100%;
+    overflow-y: auto;
+}
+
+:host([collapsed]) .app-sidebar {
+    width: var(--_sidebar-collapsed-width);
+    border-right-width: 0;
+}
+
+.app-content {
+    flex-grow: 1;
+    height: 100%;
+    overflow-y: auto;
+    padding: var(--_content-padding);
+    box-sizing: border-box;
+    background-color: var(--_content-bg);
+}
+
+.app-content:focus-visible {
+    outline: 2px solid var(--_focus-ring);
+    outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .app-sidebar {
+        transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                    border-right-width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .skip-link {
+        transition: transform 0.2s ease-out;
+    }
+}

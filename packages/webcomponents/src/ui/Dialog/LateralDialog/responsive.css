@@ -1,0 +1,45 @@
+@media (prefers-reduced-motion: no-preference) {
+    dialog {
+        transition:
+            transform var(--transition-speed) var(--transition-curve),
+            opacity var(--transition-speed) var(--transition-curve),
+            display var(--transition-speed) var(--transition-curve) allow-discrete,
+            overlay var(--transition-speed) var(--transition-curve) allow-discrete;
+    }
+
+    @starting-style {
+        dialog[open] {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+
+    dialog::backdrop {
+        transition:
+            background-color var(--transition-speed) var(--transition-curve),
+            backdrop-filter var(--transition-speed) var(--transition-curve),
+            display var(--transition-speed) var(--transition-curve) allow-discrete,
+            overlay var(--transition-speed) var(--transition-curve) allow-discrete;
+    }
+
+    @starting-style {
+        dialog[open]::backdrop {
+            background: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+        }
+    }
+
+    header,
+    footer,
+    .content {
+        transition: transform var(--transition-speed) var(--transition-curve);
+    }
+
+    #close-btn {
+        transition: background-color 0.2s, color 0.2s;
+    }
+
+    footer slot[name="footer"]::slotted(button) {
+        transition: all 0.2s;
+    }
+}

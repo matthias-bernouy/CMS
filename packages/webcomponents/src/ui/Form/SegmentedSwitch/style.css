@@ -1,0 +1,88 @@
+:host {
+  --active-index: 0;
+  --total-options: 1;
+  display: block;
+}
+
+.label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 4px;
+}
+
+.label:empty {
+  display: none;
+}
+
+.options-container {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--total-options), 1fr);
+}
+
+::slotted(option) {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::slotted(option) {
+    transition: color 0.2s;
+  }
+}
+
+::slotted(option:focus-visible) {
+  outline: 2px solid var(--primary-base);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+.switch-wrapper {
+  position: relative;
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.selection-slider {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc((100% - 4px) / var(--total-options));
+  background-color: var(--bg-surface);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transform: translateX(calc(var(--active-index) * 100%));
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .selection-slider {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+::slotted([aria-checked="true"]) {
+  color: var(--primary-base) !important;
+  font-weight: 600;
+}
+
+:host([disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}

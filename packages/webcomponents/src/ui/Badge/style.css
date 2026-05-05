@@ -1,0 +1,66 @@
+:host {
+  display: inline-flex;
+
+  --_bg: var(--secondary-muted, #f1f5f9);
+  --_text: var(--text-main, #1f2937);
+  --_border: transparent;
+  --_padding-y: 0.15rem;
+  --_padding-x: 0.5rem;
+  --_radius: 999px;
+  --_size: 11px;
+  --_dot-color: var(--text-muted, #94a3b8);
+}
+
+:host([color="primary"]) { --_bg: var(--primary-muted); --_text: var(--primary-contrasted); --_dot-color: var(--primary-base); }
+:host([color="danger"])  { --_bg: var(--danger-muted);  --_text: var(--danger-contrasted);  --_dot-color: var(--danger-base); }
+:host([color="success"]) { --_bg: var(--success-muted); --_text: var(--success-contrasted); --_dot-color: var(--success-base); }
+:host([color="info"])    { --_bg: var(--info-muted);    --_text: var(--info-contrasted);    --_dot-color: var(--info-base); }
+:host([color="warning"]) { --_bg: var(--warning-muted); --_text: var(--warning-contrasted); --_dot-color: var(--warning-base); }
+
+:host([variant="filled"][color="primary"]) { --_bg: var(--primary-base); --_text: white; }
+:host([variant="filled"][color="danger"])  { --_bg: var(--danger-base);  --_text: white; }
+:host([variant="filled"][color="success"]) { --_bg: var(--success-base); --_text: white; }
+:host([variant="filled"][color="info"])    { --_bg: var(--info-base);    --_text: white; }
+:host([variant="filled"][color="warning"]) { --_bg: var(--warning-base); --_text: white; }
+
+:host([variant="outlined"]) {
+  --_bg: transparent;
+}
+:host([variant="outlined"][color="primary"]) { --_border: var(--primary-base); --_text: var(--primary-base); }
+:host([variant="outlined"][color="danger"])  { --_border: var(--danger-base);  --_text: var(--danger-base); }
+:host([variant="outlined"][color="success"]) { --_border: var(--success-base); --_text: var(--success-base); }
+:host([variant="outlined"][color="info"])    { --_border: var(--info-base);    --_text: var(--info-base); }
+:host([variant="outlined"][color="warning"]) { --_border: var(--warning-base); --_text: var(--warning-base); }
+
+:host([size="sm"]) { --_size: 10px; --_padding-y: 0.1rem; --_padding-x: 0.4rem; }
+:host([size="md"]) { --_size: 11px; --_padding-y: 0.15rem; --_padding-x: 0.5rem; }
+:host([size="lg"]) { --_size: 13px; --_padding-y: 0.25rem; --_padding-x: 0.7rem; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: var(--_padding-y) var(--_padding-x);
+  background: var(--_bg);
+  color: var(--_text);
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  font-size: var(--_size);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.dot {
+  display: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--_dot-color);
+  flex-shrink: 0;
+}
+
+:host([dot]) .dot {
+  display: inline-block;
+}

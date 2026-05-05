@@ -1,0 +1,11 @@
+<dialog part="dialog">
+    <form method="dialog" id="m-close"></form>
+    <div class="panel" part="panel">
+        <header class="header" part="header">
+            <div class="title" part="title"><slot name="title"></slot></div>
+            <button class="close" part="close" type="submit" form="m-close" aria-label="Close">&times;</button>
+        </header>
+        <section class="body" part="body"><slot></slot></section>
+        <footer class="footer" part="footer"><slot name="footer"></slot></footer>
+    </div>
+</dialog>

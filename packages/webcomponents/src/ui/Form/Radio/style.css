@@ -1,0 +1,78 @@
+:host {
+  display: inline-block;
+
+  --_size: 18px;
+  --_border: var(--border-default, #d1d5db);
+  --_active: var(--primary-base, #4361ee);
+  --_bg: var(--bg-surface, #fff);
+  --_text: var(--text-main, #1f2937);
+  --_focus-ring: color-mix(in oklab, var(--_active) 20%, transparent);
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+}
+
+input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+}
+
+.custom {
+  position: relative;
+  width: var(--_size);
+  height: var(--_size);
+  border-radius: 50%;
+  border: 2px solid var(--_border);
+  background: var(--_bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.dot {
+  width: 50%;
+  height: 50%;
+  background: var(--_active);
+  border-radius: 50%;
+  transform: scale(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .custom { transition: border-color 0.15s, box-shadow 0.15s; }
+  .dot    { transition: transform 0.15s; }
+}
+
+input:checked ~ .custom {
+  border-color: var(--_active);
+}
+
+input:checked ~ .custom .dot {
+  transform: scale(1);
+}
+
+input:focus-visible ~ .custom {
+  box-shadow: 0 0 0 3px var(--_focus-ring);
+}
+
+.label {
+  font-size: 14px;
+  color: var(--_text);
+}
+
+.label:has(slot:not(:has(*))) { display: none; }
+
+:host([disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}

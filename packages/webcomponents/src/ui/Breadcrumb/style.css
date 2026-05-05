@@ -1,0 +1,31 @@
+:host {
+  display: block;
+
+  --_separator: "/";
+  --_color: var(--text-muted, #6b7280);
+  --_color-current: var(--text-main, #1f2937);
+  --_size: 13px;
+  --_gap: 0.4rem;
+}
+
+.breadcrumb {
+  font-size: var(--_size);
+  color: var(--_color);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--_gap);
+}
+
+::slotted(p9r-breadcrumb-item:not(:last-child))::after {
+  content: var(--_separator);
+  color: var(--_color);
+  margin-left: var(--_gap);
+  display: inline;
+}

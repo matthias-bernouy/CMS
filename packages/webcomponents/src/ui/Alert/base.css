@@ -1,0 +1,71 @@
+:host {
+  display: block;
+
+  --_bg: var(--info-muted, #eff6ff);
+  --_color: var(--info-contrasted, #1e3a8a);
+  --_accent: var(--info-base, #3b82f6);
+  --_border: var(--info-base, #3b82f6);
+  --_radius: 10px;
+  --_padding: 0.85rem 1rem;
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: var(--_padding);
+  background: var(--_bg);
+  color: var(--_color);
+  border-radius: var(--_radius);
+  border-left: 4px solid var(--_border);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--_accent);
+  margin-top: 1px;
+}
+
+.icon:has(slot[name="icon"]:not(:has(*))) {
+  display: none;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.title:has(slot[name="title"]:not(:has(*))) {
+  display: none;
+}
+
+.message slot:empty {
+  display: none;
+}
+
+.close {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.close:hover { opacity: 1; }

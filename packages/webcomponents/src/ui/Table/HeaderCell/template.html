@@ -1,0 +1,29 @@
+<div class="header-wrapper" part="wrapper">
+  <button
+    type="button"
+    class="label-section"
+    id="sort-trigger"
+    part="sort-trigger"
+  >
+    <slot></slot>
+    <span class="sort-icon" id="sort-icon" part="sort-icon" aria-hidden="true">...</span>
+  </button>
+
+  <button
+    type="button"
+    class="filter-trigger"
+    id="filter-btn"
+    part="filter-trigger"
+    aria-haspopup="dialog"
+    aria-expanded="false"
+    hidden
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+    </svg>
+  </button>
+
+  <div class="filter-popover" id="filter-popover" part="filter-popover" role="dialog" hidden>
+    <input type="text" placeholder="Filter..." id="filter-input" part="filter-input" />
+  </div>
+</div>

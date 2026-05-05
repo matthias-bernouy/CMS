@@ -1,0 +1,22 @@
+<div class="field-header" part="header">
+    <slot name="label"></slot>
+</div>
+
+<div class="drop-zone" part="drop-zone">
+    <input type="file" id="file-native" part="input">
+    <label for="file-native" part="trigger">
+        <span class="icon" part="icon">
+            <slot name="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+            </slot>
+        </span>
+        <span class="text" part="text">
+            <slot name="text"><strong>Click to upload</strong> or drag a file</slot>
+        </span>
+        <span class="file-info" part="file-info">No file selected</span>
+    </label>
+</div>
+
+<div class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
