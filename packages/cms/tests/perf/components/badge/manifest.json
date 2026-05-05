@@ -1,0 +1,10 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "default-tag": "perf-badge",
+    "default-group": "Perf",
+    "meta": {
+        "title": "Badge",
+        "description": "Simple inline pill label — no editor."
+    }
+}

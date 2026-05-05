@@ -1,0 +1,54 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Snippets</span>
+    <p9r-open-modal modal-target="create-snippet-modal" slot="action">
+        <p9r-button color="primary">+ New snippet</p9r-button>
+    </p9r-open-modal>
+
+    <p9r-table>
+        <p9r-row slot="header">
+            <p9r-cell><strong>Tag</strong></p9r-cell>
+            <p9r-cell><strong>Name</strong></p9r-cell>
+            <p9r-cell><strong>Category</strong></p9r-cell>
+            <p9r-cell><strong>Updated</strong></p9r-cell>
+            <p9r-cell></p9r-cell>
+        </p9r-row>
+
+        <cms-fetch url="{{BASE_PATH}}/api/snippet/list" reload-on="new:snippet">
+            <template for=".">
+                <p9r-row href="{{BASE_PATH}}/editor/snippet?id={{id}}">
+                    <p9r-cell><code>{{ identifier }}</code></p9r-cell>
+                    <p9r-cell>{{ name }}</p9r-cell>
+                    <p9r-cell>{{ category }}</p9r-cell>
+                    <p9r-cell>{{ updatedAt }}</p9r-cell>
+                    <p9r-cell></p9r-cell>
+                </p9r-row>
+            </template>
+            <template slot="empty">
+                <cms-empty-state>
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="m18 16 4-4-4-4"/>
+                        <path d="m6 8-4 4 4 4"/>
+                        <path d="m14.5 4-5 16"/>
+                    </svg>
+                    <p slot="title">No snippets yet</p>
+                    <p slot="hint">Create your first snippet to reuse content blocks across pages.</p>
+                </cms-empty-state>
+            </template>
+        </cms-fetch>
+    </p9r-table>
+</w13c-fixed-admin-layout>
+
+<p9r-modal id="create-snippet-modal" aria-label="Create a new snippet">
+    <span slot="title">Snippet creation</span>
+    <cms-form target="{{BASE_PATH}}/api/snippet" emit="new:snippet">
+        <p9r-stack gap="m">
+            <p9r-input name="identifier" label="Tag" placeholder="hero-section"
+                hint="Lowercase letters, numbers and dashes. Immutable after creation."></p9r-input>
+            <p9r-input name="name" label="Name" placeholder="My hero section"></p9r-input>
+            <p9r-tag-suggest name="category" mode="single" resource="snippets" api="{{BASE_PATH}}/api/tags" placeholder="hero, layout, cta…">
+                <span slot="label">Category</span>
+            </p9r-tag-suggest>
+            <p9r-button color="primary" fullWidth type="submit">Create new snippet</p9r-button>
+        </p9r-stack>
+    </cms-form>
+</p9r-modal>

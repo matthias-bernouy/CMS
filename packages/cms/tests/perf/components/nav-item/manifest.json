@@ -1,0 +1,8 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "perf-nav-item",
+    "default-group": "Perf",
+    "meta": { "title": "Nav item", "description": "Navigation link with page-link picker." }
+}

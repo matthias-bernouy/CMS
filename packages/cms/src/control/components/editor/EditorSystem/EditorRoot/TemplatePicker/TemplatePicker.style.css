@@ -1,0 +1,84 @@
+:host { display: contents; }
+
+dialog {
+    width: clamp(400px, 50vw, 640px);
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 64px);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 16px;
+    padding: 0;
+    box-shadow: 0 12px 40px rgb(0 0 0 / 0.18);
+    background: var(--bg-surface, #fff);
+    color: var(--text-main, #1e293b);
+    overflow: hidden;
+}
+dialog::backdrop {
+    background: rgb(0 0 0 / 0.4);
+    backdrop-filter: blur(2px);
+}
+
+.head {
+    padding: 24px 24px 12px;
+    text-align: center;
+}
+.title { font-size: 1.125rem; font-weight: 600; }
+.subtitle { font-size: 0.875rem; color: var(--text-muted, #94a3b8); margin-top: 4px; }
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 12px;
+    background: var(--bg-surface, #fff);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s, border-color 0.12s, transform 0.08s;
+}
+.card:hover {
+    background: var(--bg-base, #f8fafc);
+    border-color: var(--primary-base, #4361ee);
+}
+.card:active { transform: scale(0.99); }
+
+.icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: var(--primary-muted, rgb(67 97 238 / 0.12));
+    color: var(--primary-base, #4361ee);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.icon svg { width: 22px; height: 22px; }
+.name { font-size: 0.9375rem; font-weight: 500; }
+
+.foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-default, #e2e8f0);
+}
+.skip {
+    background: transparent;
+    border: 0;
+    padding: 8px 14px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    border-radius: 8px;
+}
+.skip:hover { color: var(--text-main, #1e293b); background: var(--bg-base, #f8fafc); }

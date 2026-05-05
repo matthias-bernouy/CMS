@@ -1,0 +1,5 @@
+:host { display: block; }
+.testimonial { margin: 0; padding: 24px; border-left: 4px solid #4f46e5; background: #f8fafc; border-radius: 8px; }
+.quote { margin: 0 0 16px; font-style: italic; color: #1e293b; }
+.author { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #475569; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }

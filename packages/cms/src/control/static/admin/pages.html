@@ -1,0 +1,53 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Pages</span>
+    <p9r-open-modal modal-target="create-page-modal" slot="action">
+        <p9r-button color="primary">+ New page</p9r-button>
+    </p9r-open-modal>
+
+    <p9r-table>
+        <p9r-row slot="header">
+            <p9r-cell><strong>Page title</strong></p9r-cell>
+            <p9r-cell><strong>Path</strong></p9r-cell>
+            <p9r-cell><strong>Tags</strong></p9r-cell>
+            <p9r-cell><strong>Visibility</strong></p9r-cell>
+        </p9r-row>
+
+        <cms-fetch url="{{BASE_PATH}}/api/page/list" reload-on="new:page">
+            <template for=".">
+                <p9r-row href="{{BASE_PATH}}/editor/page?id={{ id }}">
+                    <p9r-cell><strong>{{ title }}</strong></p9r-cell>
+                    <p9r-cell><p9r-tag>{{ path }}</p9r-tag></p9r-cell>
+                    <p9r-cell>
+                        <template for="tags">
+                            <p9r-tag>{{value}}</p9r-tag>
+                        </template>
+                    </p9r-cell>
+                    <p9r-cell><p9r-tag color="{{ visibleColor }}">{{ visibleLabel }}</p9r-tag></p9r-cell>
+                </p9r-row>
+            </template>
+            <template slot="empty">
+                <cms-empty-state>
+                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="8" y1="13" x2="16" y2="13"/>
+                        <line x1="8" y1="17" x2="13" y2="17"/>
+                    </svg>
+                    <p slot="title">Your website is empty for now</p>
+                    <p slot="hint">Create your first page to get started.</p>
+                </cms-empty-state>
+            </template>
+        </cms-fetch>
+    </p9r-table>
+</w13c-fixed-admin-layout>
+
+<p9r-modal id="create-page-modal" aria-label="Create a new page">
+    <span slot="title">Page creation</span>
+    <cms-form target="{{BASE_PATH}}/api/page" emit="new:page">
+        <p9r-stack gap="m">
+            <p9r-input name="title" label="Name" placeholder="My Beautiful Article"></p9r-input>
+            <p9r-input name="path" label="Path" placeholder="/article"></p9r-input>
+            <p9r-button color="primary" fullWidth type="submit">Create new page</p9r-button>
+        </p9r-stack>
+    </cms-form>
+</p9r-modal>

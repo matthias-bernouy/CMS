@@ -1,0 +1,51 @@
+<cms-fetch url="{{BASE_PATH}}/api/page">
+
+    <template>
+
+        <cms-editor-system>
+
+            <link slot="style" rel="stylesheet" href="{{BASE_PATH}}/api/editor/style.css">
+            <script slot="script" src="{{BASE_PATH}}/api/editor/script.js"></script>
+
+            <cms-editor-configuration url="{{BASE_PATH}}/api/page" slot="configuration">
+
+                <span slot="title">Page</span>
+
+                <p9r-section data-title="SEO">
+                    <p9r-input value="{{title}}" name="title" label="Title" placeholder="A beautiful title"
+                        hint="Used as &lt;title&gt; and SEO heading." max-count="50"></p9r-input>
+
+                    <p9r-input value="{{description}}" name="description" label="Description" placeholder="A beautiful description"
+                        hint="Used as meta description." max-count="120"></p9r-input>
+                </p9r-section>
+
+                <p9r-section data-title="URL">
+                    <div class="field">
+                        <p9r-input value="{{path}}" id="path-input" name="path" label="Path" placeholder="/article"
+                            hint='Letters, numbers, "-" and "/" allowed.'></p9r-input>
+                    </div>
+                </p9r-section>
+
+                <p9r-section data-title="Taxonomy">
+                    <p9r-tag-suggest value="{{tags}}" name="tags" mode="multiple" resource="pages" api="../api/tags"
+                        placeholder="Add a tag…">
+                        <span slot="label">Tags</span>
+                    </p9r-tag-suggest>
+                </p9r-section>
+
+                <p9r-section data-title="Publication">
+                    <p9r-select value="{{visible}}" name="visible" label="Status">
+                        <option value="on">Published</option>
+                        <option value="off">Draft</option>
+                    </p9r-select>
+                </p9r-section>
+            </cms-editor-configuration>
+
+            <inner-html>{{content}}</inner-html>
+
+
+        </cms-editor-system>
+
+    </template>
+
+</cms-fetch>

@@ -1,0 +1,74 @@
+:host {
+    display: block;
+    width: max-content;
+    max-width: 420px;
+    font-family: system-ui, sans-serif;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+:host(:not([data-has-items])) { display: none; }
+
+.pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--toolbar-bg, #fff);
+    border: 1px solid var(--toolbar-border, #e5e7eb);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    overflow: visible;
+    position: relative;
+}
+
+.parent {
+    color: var(--text-muted, #94a3b8);
+    font: inherit;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+}
+
+.parent:hover, .parent:focus-visible {
+    color: var(--text-main, #1e293b);
+    background: var(--bg-base, #f1f5f9);
+    outline: none;
+}
+
+.ellipsis { color: var(--text-muted, #94a3b8); padding: 0 2px; cursor: default; }
+.sep { color: var(--border-default, #cbd5e1); }
+
+.current {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--primary-muted, rgba(67, 97, 238, 0.1));
+    color: var(--primary-base, #4361ee);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+/* Hover bridge — covers the gap between BAG and the breadcrumb. */
+.bridge {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 6px;
+}
+
+:host-context([data-v-anchor="bottom"]) .bridge { top: auto; bottom: 100%; }
+
+:host([data-inline]) .bridge {
+    top: 0 !important;
+    bottom: 0;
+    width: 8px;
+    height: auto !important;
+}
+
+:host([data-inline="left"]) .bridge { left: 100% !important; right: auto !important; }
+:host([data-inline="right"]) .bridge { right: 100% !important; left: auto !important; }

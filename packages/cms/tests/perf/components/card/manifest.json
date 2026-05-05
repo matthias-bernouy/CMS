@@ -1,0 +1,8 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "perf-card",
+    "default-group": "Perf",
+    "meta": { "title": "Card", "description": "Cover + title + body + multi-action footer." }
+}

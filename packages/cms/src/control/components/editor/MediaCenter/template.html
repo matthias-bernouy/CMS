@@ -1,0 +1,65 @@
+<dialog>
+    <div class="modal-container">
+        <header class="modal-header">
+            <h2>Media Center</h2>
+            <div class="toolbar">
+                <button class="btn-tool" id="btnCreateFolder" title="New folder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+                    </svg>
+                    New folder
+                </button>
+                <button class="btn-tool btn-tool-primary" id="btnUpload" title="Upload">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Upload
+                </button>
+            </div>
+            <button class="btn-close" id="btnClose">&times;</button>
+        </header>
+
+        <div class="breadcrumb-bar">
+            <div class="breadcrumb" id="breadcrumb">
+                <span class="bc-current">Root</span>
+            </div>
+        </div>
+
+        <div class="media-grid" id="grid"></div>
+
+        <div class="empty-state" id="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/>
+            </svg>
+            <p>This folder is empty</p>
+        </div>
+
+        <div class="drop-overlay" id="drop-overlay">
+            <span>Drop files to upload</span>
+        </div>
+
+        <footer class="modal-footer">
+            <span class="path-info" id="pathDisplay"></span>
+            <div class="footer-actions">
+                <button class="btn btn-secondary" id="btnCancel">Cancel</button>
+                <button class="btn btn-primary" id="btnSelect" disabled>Select</button>
+            </div>
+        </footer>
+
+        <!-- New folder popover -->
+        <div class="nf-backdrop" id="nf-backdrop">
+            <div class="nf-popover">
+                <label class="nf-label">New folder</label>
+                <input type="text" class="nf-input" id="nf-input" placeholder="Folder name…" autocomplete="off">
+                <div class="nf-actions">
+                    <button class="nf-cancel" id="nf-cancel">Cancel</button>
+                    <button class="nf-confirm" id="nf-confirm">Create</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="file" id="file-input" hidden multiple accept="image/*,video/*,audio/*,.pdf,.zip,.svg">
+    </div>
+</dialog>

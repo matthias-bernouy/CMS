@@ -1,0 +1,11 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "perf-button",
+    "default-group": "Perf",
+    "meta": {
+        "title": "Button",
+        "description": "Action button with variant / size / page-link."
+    }
+}

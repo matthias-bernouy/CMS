@@ -1,0 +1,26 @@
+:host {
+    display: contents;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 48px 24px;
+    color: var(--text-secondary, #666);
+    text-align: center;
+}
+
+::slotted(svg) {
+    width: 40px;
+    height: 40px;
+    opacity: 0.3;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 13px;
+}

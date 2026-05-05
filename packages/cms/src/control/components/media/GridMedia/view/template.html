@@ -1,0 +1,59 @@
+<div class="toolbar">
+    <div class="breadcrumb" id="breadcrumb">
+        <span class="bc-current">Root</span>
+    </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="empty" id="empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/>
+    </svg>
+    <p>This folder is empty</p>
+</div>
+
+<div class="drop-overlay" id="drop-overlay">
+    <span>Drop files to upload</span>
+</div>
+
+<!-- New folder popover -->
+<div class="nf-backdrop" id="nf-backdrop">
+    <div class="nf-popover">
+        <label class="nf-label">New folder</label>
+        <input type="text" class="nf-input" id="nf-input" placeholder="Folder name…" autocomplete="off">
+        <div class="nf-actions">
+            <button class="nf-cancel" id="nf-cancel">Cancel</button>
+            <button class="nf-confirm" id="nf-confirm">Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- Context menu -->
+<div class="ctx-menu" id="ctx-menu">
+    <button class="ctx-item" data-action="rename">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+        Rename
+    </button>
+    <button class="ctx-item ctx-danger" data-action="delete">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        Delete
+    </button>
+</div>
+
+<!-- Rename popover -->
+<div class="nf-backdrop" id="rename-backdrop">
+    <div class="nf-popover">
+        <label class="nf-label">Rename</label>
+        <input type="text" class="nf-input" id="rename-input" placeholder="New name…" autocomplete="off">
+        <div class="nf-actions">
+            <button class="nf-cancel" id="rename-cancel">Cancel</button>
+            <button class="nf-confirm" id="rename-confirm">Rename</button>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="file-input" hidden multiple accept="image/*,video/*,audio/*,.pdf,.zip,.svg">
+
+<p9r-detail-media id="detail"></p9r-detail-media>
+<p9r-crop-system id="crop"></p9r-crop-system>

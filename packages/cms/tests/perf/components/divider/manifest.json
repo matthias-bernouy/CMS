@@ -1,0 +1,10 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "default-tag": "perf-divider",
+    "default-group": "Perf",
+    "meta": {
+        "title": "Divider",
+        "description": "Opaque horizontal rule — no editor."
+    }
+}

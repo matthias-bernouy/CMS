@@ -1,0 +1,58 @@
+:host {
+    position: absolute;
+    left: 0;
+    top: 0;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    padding: 8px 32px 8px 16px;
+    z-index: 10000;
+    will-change: transform, opacity;
+    transition: opacity 0.1s ease-out;
+}
+
+::slotted([data-action="pin-state"][data-active]) {
+    background: var(--primary-muted, #eef2ff) !important;
+    color: var(--primary-base, #4361ee) !important;
+}
+
+:host([data-variant="snippet"]) {
+    --_color: #007aff;
+    --_hover-color: #005bb5;
+    --_bg-color: #f0f7ff;
+    --_bg-hover-color: rgba(0, 122, 255, 0.15);
+    --_border-color: rgba(0, 122, 255, 0.3);
+    --toolbar-bg: #f0f7ff;
+    --toolbar-border: rgba(0, 122, 255, 0.3);
+}
+
+/* ── Breadcrumb host position (relative to BAG) ─────────────────────
+   The pill internals + hover-bridge live in cms-bag-breadcrumb's own
+   stylesheet — here we only place the host element relative to BAG. */
+
+cms-bag-breadcrumb {
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 16px;
+}
+
+:host([data-v-anchor="bottom"]) cms-bag-breadcrumb {
+    bottom: auto;
+    top: calc(100% + 2px);
+}
+
+cms-bag-breadcrumb[data-inline="left"] {
+    top: 50% !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: calc(100% + 4px);
+    transform: translate(16px, -50%);
+}
+
+cms-bag-breadcrumb[data-inline="right"] {
+    top: 50% !important;
+    bottom: auto !important;
+    left: calc(100% + 4px) !important;
+    right: auto;
+    transform: translate(-32px, -50%);
+}

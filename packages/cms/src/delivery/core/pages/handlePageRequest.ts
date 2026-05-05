@@ -1,0 +1,76 @@
+import type DeliveryCms from "src/delivery/DeliveryCms";
+import type { TPage } from "src/socle/interfaces/models";
+import { cachedResponseAsync } from "src/socle/server/compression";
+import { renderPage } from "src/delivery/core/html/renderPage";
+import { makeRuntimeRenderContext } from "src/delivery/core/html/runtimeContext";
+import { renderRef } from "src/delivery/core/pages/renderRef";
+import { P9R_CACHE } from "src/socle/constants/p9r-constants";
+
+/**
+ * Shared entry point for every dynamic page GET registered by Delivery.
+ * Looks the page up by URL path, renders through the cache, and falls back
+ * to `site.notFound` / `site.serverError` on miss or render failure.
+ *
+ * On a cold cache hit the request blocks on page enhancement before
+ * returning — Playwright measures the page at every viewport, rewrites
+ * `<img>` tags, and replaces the cached entry. The caller (often a CDN)
+ * therefore sees the enhanced HTML on its very first fetch rather than
+ * caching the un-enhanced first pass for the duration of its TTL.
+ */
+export async function handlePageRequest(req: Request, delivery: DeliveryCms): Promise<Response> {
+    const pathname = new URL(req.url).pathname;
+
+    // Short-circuit unknown asset URLs under Delivery's own prefix: they
+    // reach the default handler because no specific route matched, and a
+    // DB lookup would always miss.
+    const prefix = delivery.cmsPathPrefix;
+    if (pathname === prefix || pathname.startsWith(prefix + "/")) {
+        return new Response("Not Found", { status: 404 });
+    }
+
+    const page = await delivery.repository.getPage(pathname);
+    if (!page) return renderRef(req, delivery, "notFound", 404, "Page not found");
+
+    return renderWithFallbacks(req, page, pathname, delivery);
+}
+
+async function renderWithFallbacks(
+    req: Request,
+    page: TPage,
+    cachePath: string,
+    delivery: DeliveryCms,
+): Promise<Response> {
+    const cacheKey = P9R_CACHE.page(cachePath);
+    const wasCached = delivery.cache.get(cacheKey) !== null;
+
+    try {
+        // First call populates the cache with the un-enhanced render (no-op
+        // on cache hit). We throw its Response away on cold path below —
+        // the second call serves whatever is in cache after enhancement.
+        const firstResponse = await cachedResponseAsync(
+            req,
+            cacheKey,
+            delivery.cache,
+            () => renderPage(page, makeRuntimeRenderContext(delivery)),
+        );
+
+        if (wasCached) return firstResponse;
+
+        // Cold path — wait for enhancement, then re-serve from cache so the
+        // caller gets the srcset-rewritten bytes rather than the first
+        // render. `enhance` is safe to await even when Playwright is
+        // disabled; it resolves fast and leaves the cache untouched.
+        const origin = new URL(req.url).origin;
+        await delivery.enhancer.enhance(cachePath, origin);
+
+        return await cachedResponseAsync(
+            req,
+            cacheKey,
+            delivery.cache,
+            () => renderPage(page, makeRuntimeRenderContext(delivery)),
+        );
+    } catch (err) {
+        console.error(`Failed to render page ${cachePath}:`, err);
+        return renderRef(req, delivery, "serverError", 500, "Internal server error");
+    }
+}

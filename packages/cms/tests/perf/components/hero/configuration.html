@@ -1,0 +1,24 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Layout">
+        <p9r-select name="align" label="Alignment">
+            <option selected value="center">Center</option>
+            <option value="left">Left</option>
+        </p9r-select>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Background">
+    <p9r-image-sync slotTarget="bg" label="Background image" default="https://placehold.co/1200x400"></p9r-image-sync>
+</p9r-section>
+
+<p9r-section data-title="Content">
+    <p9r-comp-sync>
+        <h1>Hero title</h1>
+    </p9r-comp-sync>
+    <p9r-comp-sync>
+        <p slot="subtitle">A punchy subtitle...</p>
+    </p9r-comp-sync>
+    <p9r-comp-sync allow-multiple optionnal>
+        <perf-button slot="ctas">Get started</perf-button>
+    </p9r-comp-sync>
+</p9r-section>

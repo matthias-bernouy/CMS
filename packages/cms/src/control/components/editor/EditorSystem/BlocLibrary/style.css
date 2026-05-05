@@ -1,0 +1,204 @@
+:host {
+    --bg-main: rgba(255, 255, 255, 0.95);
+    --bg-card: #ffffff;
+
+    --text-primary: #1a1a1a;
+    --text-secondary: #666;
+
+    --accent: #007aff;
+    --border: rgba(0, 0, 0, 0.06);
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+    --sidebar-width: 200px;
+
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#dialog {
+    padding: 0;
+    border: none;
+    background: transparent;
+    overflow: visible;
+    animation: dialogFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes dialogFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+#dialog::backdrop {
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+.container {
+    width: 90vw;
+    max-width: 1000px;
+    height: 70vh;
+    background: var(--bg-main);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.header {
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    height: 54px;
+    flex-shrink: 0;
+}
+
+.search-wrap {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.search-input {
+    all: unset;
+    width: 100%;
+    max-width: 360px;
+    box-sizing: border-box;
+    padding: 7px 12px;
+    font-size: 13px;
+    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    transition: all 0.15s;
+}
+
+.search-input:focus {
+    background: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.search-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.tab {
+    all: unset;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+}
+
+.tab:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-primary);
+}
+
+.tab.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+form[method="dialog"] {
+    display: flex;
+    align-items: center;
+}
+
+.default-close {
+    all: unset;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-secondary);
+    font-size: 1.4rem;
+    transition: all 0.2s;
+}
+
+.default-close:hover {
+    background: rgba(255, 59, 48, 0.1);
+    color: #ff3b30;
+    transform: rotate(90deg);
+}
+
+.content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.groups-sidebar {
+    width: var(--sidebar-width);
+    padding: 16px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar-item {
+    all: unset;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+}
+
+.sidebar-item:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-primary);
+}
+
+.sidebar-item.active {
+    background: rgba(0, 122, 255, 0.08);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.blocs-grid {
+    flex: 1;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    overflow-y: auto;
+    align-content: start;
+}
+
+.section-header {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    padding: 6px 4px 2px;
+    margin-top: 4px;
+}
+
+.section-header:first-child {
+    margin-top: 0;
+}

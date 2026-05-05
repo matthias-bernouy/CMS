@@ -1,0 +1,8 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "perf-feature-grid",
+    "default-group": "Perf",
+    "meta": { "title": "Feature grid", "description": "Responsive grid of feature items (allow-multiple)." }
+}

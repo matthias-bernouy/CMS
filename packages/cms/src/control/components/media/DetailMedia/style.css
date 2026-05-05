@@ -1,0 +1,207 @@
+:host {
+    --modal-bg: var(--bg-surface, #fff);
+    --modal-border: var(--border-default, #e2e8f0);
+    --modal-radius: 16px;
+    --modal-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+    --modal-width: 680px;
+    --backdrop-bg: rgba(0, 0, 0, 0.45);
+    --header-color: var(--text-main, #1e293b);
+    --close-color: var(--text-muted, #94a3b8);
+    --tool-bg: var(--bg-base, #f8fafc);
+    --tool-border: var(--border-default, #e2e8f0);
+    --tool-color: var(--text-muted, #94a3b8);
+    --tag-bg: var(--bg-surface, #fff);
+
+    display: none;
+}
+
+:host([open]) {
+    display: block;
+}
+
+/* ── Backdrop ── */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+    background: var(--backdrop-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Modal ── */
+.modal {
+    background: var(--modal-bg);
+    border-radius: var(--modal-radius);
+    box-shadow: var(--modal-shadow);
+    width: var(--modal-width);
+    max-width: 92vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.2s ease;
+}
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--modal-border);
+    flex-shrink: 0;
+}
+
+.header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--header-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--close-color);
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.close-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--header-color);
+}
+
+/* ── Body ── */
+.body {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── Left column ── */
+.left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.preview {
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image:
+        linear-gradient(45deg, #eee 25%, transparent 25%),
+        linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%),
+        linear-gradient(-45deg, transparent 75%, #eee 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid var(--modal-border);
+}
+
+::slotted([slot="preview"]) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* ── Tools ── */
+.tools {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tool {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border: 1px solid var(--tool-border);
+    border-radius: 8px;
+    background: var(--tool-bg);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--tool-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.tool:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.tool:not(:disabled):hover {
+    border-color: var(--header-color);
+    color: var(--header-color);
+}
+
+.tool svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.tag {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--tag-bg);
+    border: 1px solid var(--tool-border);
+    border-radius: 4px;
+    padding: 1px 4px;
+    color: var(--tool-color);
+}
+
+/* ── Right column ── */
+.right {
+    width: 260px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+::slotted([slot="fields"]) {
+    display: block;
+}
+
+::slotted([slot="actions"]) {
+    display: block;
+    margin-top: auto;
+    padding-top: 16px;
+}

@@ -1,0 +1,56 @@
+<style>
+    .profil-hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 56px 24px 36px;
+        border-radius: 16px;
+        background: linear-gradient(180deg,
+            color-mix(in srgb, var(--primary-base, #4361ee) 12%, var(--bg-surface, #fff)) 0%,
+            var(--bg-surface, #fff) 100%);
+        border: 1px solid var(--border-default, #e2e8f0);
+    }
+    .profil-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-main, #1e293b);
+        line-height: 1.2;
+    }
+    .profil-hint {
+        font-size: 0.875rem;
+        color: var(--text-muted, #94a3b8);
+        text-align: center;
+        max-width: 44ch;
+        line-height: 1.5;
+        margin: 0;
+    }
+</style>
+
+<w13c-fixed-admin-layout>
+    <span slot="title">Profile</span>
+
+    <cms-fetch url="{{BASE_PATH}}/api/profil">
+        <template>
+            <a slot="action" href="{{ tokensUrl }}" target="_blank" rel="noopener">
+                <p9r-button>Manage tokens</p9r-button>
+            </a>
+            <a slot="action" href="{{ logoutUrl }}">
+                <p9r-button color="danger">Log out</p9r-button>
+            </a>
+        </template>
+    </cms-fetch>
+
+    <p9r-container size="md">
+        <div class="profil-hero">
+            <p9r-avatar size="xl" color="primary" name="Administrator"></p9r-avatar>
+            <p9r-stack gap="xs" align="center">
+                <span class="profil-name">Administrator</span>
+                <p9r-tag color="primary">Admin</p9r-tag>
+            </p9r-stack>
+            <p class="profil-hint">
+                User details — display name, role, last login, active sessions — will surface here in a later iteration.
+            </p>
+        </div>
+    </p9r-container>
+</w13c-fixed-admin-layout>

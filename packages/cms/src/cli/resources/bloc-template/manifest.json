@@ -1,0 +1,23 @@
+{
+    "runtime": "0.0.1",
+    "editor": "./BlocEditor.ts",
+    "bloc": "./Bloc.ts",
+
+    "default-tag": "tag-name",
+    "default-group": "Group name",
+
+    "meta": {
+        "author": "Mr Smith",
+        "title": "A beautiful bloc",
+        "description": "...",
+        "categories": [
+            "category-1",
+            "category-2",
+            "category-3"
+        ],
+        "thumbnail": "./assets/thumbnail.svg",
+        "images": [
+            "./assets/image-1.svg"
+        ]
+    }
+}

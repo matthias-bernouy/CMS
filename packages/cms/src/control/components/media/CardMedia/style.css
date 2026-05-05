@@ -1,0 +1,119 @@
+:host {
+    --card-bg: var(--bg-surface, #fff);
+    --card-border: var(--border-default, #e2e8f0);
+    --card-radius: 12px;
+    --card-hover-border: var(--primary-base, #4361ee);
+    --card-hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --preview-bg: var(--bg-base, #f8fafc);
+    --label-color: var(--text-main, #1e293b);
+    --placeholder-color: var(--text-muted, #94a3b8);
+    --folder-color: var(--primary-base, #4361ee);
+
+    display: block;
+    cursor: pointer;
+}
+
+.card {
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    background: var(--card-bg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.card:hover {
+    border-color: var(--card-hover-border);
+    box-shadow: var(--card-hover-shadow);
+}
+
+/* ── Folder variant ── */
+:host([type="folder"]) .card {
+    border-style: dashed;
+    border-color: var(--card-border);
+}
+
+:host([type="folder"]) .card:hover {
+    border-color: var(--folder-color);
+}
+
+:host([type="folder"]) .preview {
+    background: var(--preview-bg);
+    background-image: none;
+}
+
+:host([type="folder"]) .placeholder-img {
+    display: none;
+}
+
+:host([type="folder"]) .placeholder-folder {
+    display: block;
+    color: var(--folder-color);
+    opacity: 0.6;
+}
+
+:host([type="folder"]) .card:hover .placeholder-folder {
+    opacity: 1;
+}
+
+/* ── Preview ── */
+.preview {
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--preview-bg);
+    background-image:
+        linear-gradient(45deg, #eee 25%, transparent 25%),
+        linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%),
+        linear-gradient(-45deg, transparent 75%, #eee 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    overflow: hidden;
+    position: relative;
+}
+
+::slotted([slot="image"]) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.placeholder {
+    color: var(--placeholder-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--preview-bg);
+}
+
+.placeholder svg {
+    width: 40px;
+    height: 40px;
+    opacity: 0.4;
+}
+
+.placeholder-folder {
+    display: none;
+    width: 48px;
+    height: 48px;
+}
+
+/* ── Info ── */
+.info {
+    padding: 10px 12px;
+    border-top: 1px solid var(--card-border);
+}
+
+.label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--label-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}

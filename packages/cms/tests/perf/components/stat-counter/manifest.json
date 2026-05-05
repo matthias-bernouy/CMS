@@ -1,0 +1,8 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "perf-stat",
+    "default-group": "Perf",
+    "meta": { "title": "Stat counter", "description": "Big number + label." }
+}

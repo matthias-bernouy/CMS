@@ -1,0 +1,19059 @@
+(() => {
+  // ../WebComponents/dist/ui.js
+  (() => {
+    var { defineProperty: Nt, getOwnPropertyNames: za, getOwnPropertyDescriptor: Sa } = Object, Ia = Object.prototype.hasOwnProperty;
+    var Te = new WeakMap, Pa = (t) => {
+      var e = Te.get(t), r;
+      if (e)
+        return e;
+      if (e = Nt({}, "__esModule", { value: true }), t && typeof t === "object" || typeof t === "function")
+        za(t).map((i) => !Ia.call(e, i) && Nt(e, i, { get: () => t[i], enumerable: !(r = Sa(t, i)) || r.enumerable }));
+      return Te.set(t, e), e;
+    };
+    var Ra = (t, e) => {
+      for (var r in e)
+        Nt(t, r, { get: e[r], enumerable: true, configurable: true, set: (i) => e[r] = () => i });
+    };
+    var Sl = {};
+    Ra(Sl, { showToast: () => xa, Tooltip: () => Rt, ToastStack: () => Pt, Toast: () => It, Textarea: () => ht, TagSuggest: () => pt, Tag: () => st, Tabs: () => St, TableRow: () => Ct, TableHeaderCell: () => Mt, TableCell: () => Tt, Table: () => Ht, TabPanel: () => zt, Switch: () => ot, Stepper: () => Lt, Step: () => At, Stack: () => ft, Spinner: () => Et, Skeleton: () => kt, SegmentedSwitch: () => at, RadioGroup: () => rt, Radio: () => tt, Progress: () => wt, Pagination: () => yt, P9rSizesSelect: () => Q, P9rSelect: () => J, P9rRange: () => G, P9rInput: () => W, OpenModal: () => N, Modal: () => O, LeftMenuLayout: () => gt, LateralMenuItem: () => vt, LateralMenu: () => _t, LateralDialog: () => F, InputFile: () => Z, IconButton: () => Y, HorizontalActionGroup: () => bt, FormSection: () => U, FormDialog: () => D, Form: () => jt, FetchComponent: () => Ot, Divider: () => V, Container: () => mt, Component: () => o, Checkbox: () => $, Card: () => j, Button: () => K, BreadcrumbItem: () => q, Breadcrumb: () => B, Badge: () => R, Avatar: () => P, Alert: () => I, AccordionItem: () => z, Accordion: () => S });
+
+    class o extends HTMLElement {
+      constructor(t) {
+        super();
+        let e = this.attachShadow({ mode: "open" });
+        if (t) {
+          let r = document.createElement("style");
+          r.innerHTML = t.css, e.appendChild(r);
+          let i = document.createElement("template");
+          i.innerHTML = t.template, e.appendChild(i.content.cloneNode(true));
+        }
+      }
+      connectedCallback() {}
+    }
+    var Me = `<div class="accordion" part="accordion">
+    <slot></slot>
+</div>
+`;
+    var He = `:host {
+  display: block;
+
+  --_border: var(--border-default, #e5e7eb);
+  --_radius: 8px;
+}
+
+.accordion {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  overflow: hidden;
+}
+
+::slotted(p9r-accordion-item:not(:last-child)) {
+  border-bottom: 1px solid var(--_border);
+}
+
+:host([flush]) .accordion {
+  border: 0;
+  border-radius: 0;
+}
+
+:host([flush]) ::slotted(p9r-accordion-item) {
+  border-bottom: 1px solid var(--_border);
+}
+`;
+    var ze = `<div class="item" part="item">
+    <button class="header" part="header" type="button" aria-expanded="false">
+        <span class="title" part="title"><slot name="header"></slot></span>
+        <span class="chevron" part="chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </span>
+    </button>
+    <div class="panel" part="panel" role="region">
+        <div class="content" part="content">
+            <slot></slot>
+        </div>
+    </div>
+</div>
+`;
+    var Se = `:host {
+  display: block;
+
+  --_text: var(--text-main, #1f2937);
+  --_muted: var(--text-muted, #6b7280);
+  --_bg: transparent;
+  --_hover-bg: var(--bg-base, #f8fafc);
+  --_padding-y: 0.85rem;
+  --_padding-x: 1rem;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: var(--_padding-y) var(--_padding-x);
+  background: var(--_bg);
+  border: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--_text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.header:hover { background: var(--_hover-bg); }
+
+.header:focus-visible {
+  outline: 2px solid var(--primary-base, #4361ee);
+  outline-offset: -2px;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+}
+
+.chevron {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  color: var(--_muted);
+}
+
+.chevron svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chevron { transition: transform 0.18s ease; }
+  .panel { transition: grid-template-rows 0.18s ease; }
+}
+
+:host([open]) .chevron {
+  transform: rotate(180deg);
+}
+
+.panel {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+
+:host([open]) .panel {
+  grid-template-rows: 1fr;
+}
+
+.content {
+  overflow: hidden;
+  padding: 0 var(--_padding-x);
+  font-size: 14px;
+  color: var(--_text);
+}
+
+:host([open]) .content {
+  padding-bottom: var(--_padding-y);
+}
+
+:host([disabled]) .header {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+`;
+
+    class z extends o {
+      _header;
+      static get observedAttributes() {
+        return ["open", "disabled"];
+      }
+      constructor() {
+        super({ css: Se, template: ze });
+        this._header = this.shadowRoot?.querySelector(".header") ?? null;
+      }
+      connectedCallback() {
+        for (let t of ["open", "disabled"])
+          this._upgradeProperty(t);
+        this._header?.addEventListener("click", this._toggle), this._syncAria();
+      }
+      disconnectedCallback() {
+        this._header?.removeEventListener("click", this._toggle);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "open" || t === "disabled")
+          this._syncAria();
+      }
+      _toggle = () => {
+        if (this.hasAttribute("disabled"))
+          return;
+        let t = !this.hasAttribute("open");
+        if (t)
+          this.setAttribute("open", "");
+        else
+          this.removeAttribute("open");
+        this.dispatchEvent(new CustomEvent("accordion-item-toggle", { bubbles: true, detail: { open: t } }));
+      };
+      _syncAria() {
+        if (!this._header)
+          return;
+        if (this._header.setAttribute("aria-expanded", String(this.hasAttribute("open"))), this.hasAttribute("disabled"))
+          this._header.setAttribute("disabled", "");
+        else
+          this._header.removeAttribute("disabled");
+      }
+      _upgradeProperty(t) {
+        if (Object.prototype.hasOwnProperty.call(this, t)) {
+          let e = this[t];
+          delete this[t], this[t] = e;
+        }
+      }
+      get open() {
+        return this.hasAttribute("open");
+      }
+      set open(t) {
+        if (t)
+          this.setAttribute("open", "");
+        else
+          this.removeAttribute("open");
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        if (t)
+          this.setAttribute("disabled", "");
+        else
+          this.removeAttribute("disabled");
+      }
+    }
+    if (!customElements.get("p9r-accordion-item"))
+      customElements.define("p9r-accordion-item", z);
+
+    class S extends o {
+      constructor() {
+        super({ css: He, template: Me });
+      }
+      connectedCallback() {
+        this.addEventListener("accordion-item-toggle", this._handleItemToggle);
+      }
+      disconnectedCallback() {
+        this.removeEventListener("accordion-item-toggle", this._handleItemToggle);
+      }
+      _items() {
+        return Array.from(this.querySelectorAll("p9r-accordion-item"));
+      }
+      _handleItemToggle = (t) => {
+        if (this.hasAttribute("multiple"))
+          return;
+        if (!t.detail.open)
+          return;
+        let e = t.target;
+        for (let r of this._items())
+          if (r !== e)
+            r.removeAttribute("open");
+      };
+    }
+    if (!customElements.get("p9r-accordion"))
+      customElements.define("p9r-accordion", S);
+    var Ie = `<div class="alert" part="alert" role="alert">
+    <span class="icon" part="icon" aria-hidden="true">
+        <slot name="icon"></slot>
+    </span>
+    <div class="body" part="body">
+        <strong class="title" part="title"><slot name="title"></slot></strong>
+        <div class="message" part="message"><slot></slot></div>
+    </div>
+    <button class="close" part="close" aria-label="Dismiss" hidden>&times;</button>
+</div>
+`;
+    var Pe = `:host {
+  display: block;
+
+  --_bg: var(--info-muted, #eff6ff);
+  --_color: var(--info-contrasted, #1e3a8a);
+  --_accent: var(--info-base, #3b82f6);
+  --_border: var(--info-base, #3b82f6);
+  --_radius: 10px;
+  --_padding: 0.85rem 1rem;
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: var(--_padding);
+  background: var(--_bg);
+  color: var(--_color);
+  border-radius: var(--_radius);
+  border-left: 4px solid var(--_border);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--_accent);
+  margin-top: 1px;
+}
+
+.icon:has(slot[name="icon"]:not(:has(*))) {
+  display: none;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.title:has(slot[name="title"]:not(:has(*))) {
+  display: none;
+}
+
+.message slot:empty {
+  display: none;
+}
+
+.close {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.6;
+}
+
+.close:hover { opacity: 1; }
+`;
+    var Re = `:host([type="success"]) {
+  --_bg: var(--success-muted);
+  --_color: var(--success-contrasted);
+  --_accent: var(--success-base);
+  --_border: var(--success-base);
+}
+
+:host([type="warning"]) {
+  --_bg: var(--warning-muted);
+  --_color: var(--warning-contrasted);
+  --_accent: var(--warning-base);
+  --_border: var(--warning-base);
+}
+
+:host([type="error"]),
+:host([type="danger"]) {
+  --_bg: var(--danger-muted);
+  --_color: var(--danger-contrasted);
+  --_accent: var(--danger-base);
+  --_border: var(--danger-base);
+}
+
+:host([icon]) .icon:has(slot[name="icon"]:not(:has(*))) {
+  display: inline-flex;
+  background-color: var(--_accent);
+  border-radius: 50%;
+  position: relative;
+}
+
+:host([icon][type="success"]) .icon::before,
+:host([type="success"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before {
+  content: "✓";
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+:host([icon][type="warning"]) .icon::before,
+:host([type="warning"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before,
+:host([icon][type="error"]) .icon::before,
+:host([type="error"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before,
+:host([icon][type="danger"]) .icon::before,
+:host([type="danger"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before {
+  content: "!";
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+:host([icon]) .icon:has(slot[name="icon"]:not(:has(*)))::before,
+:host(:not([type])) .icon:has(slot[name="icon"]:not(:has(*)))::before,
+:host([type="info"]) .icon:has(slot[name="icon"]:not(:has(*)))::before {
+  content: "i";
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+:host([dismissible]) .close {
+  display: inline-block;
+}
+
+:host([leaving]) {
+  animation: alert-out 160ms ease-in forwards;
+}
+
+@keyframes alert-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+`;
+    var Va = Pe + Re;
+
+    class I extends o {
+      _close;
+      static get observedAttributes() {
+        return ["dismissible"];
+      }
+      constructor() {
+        super({ css: Va, template: Ie });
+        this._close = this.shadowRoot?.querySelector(".close") ?? null;
+      }
+      connectedCallback() {
+        this._syncDismissible(), this._close?.addEventListener("click", this._handleClose);
+      }
+      disconnectedCallback() {
+        this._close?.removeEventListener("click", this._handleClose);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "dismissible")
+          this._syncDismissible();
+      }
+      _syncDismissible() {
+        if (!this._close)
+          return;
+        this._close.hidden = !this.hasAttribute("dismissible");
+      }
+      _handleClose = () => {
+        if (!this.dispatchEvent(new CustomEvent("dismiss", { bubbles: true, cancelable: true })))
+          return;
+        this.setAttribute("leaving", ""), this.addEventListener("animationend", () => this.remove(), { once: true });
+      };
+      dismiss() {
+        this._handleClose();
+      }
+    }
+    if (!customElements.get("p9r-alert"))
+      customElements.define("p9r-alert", I);
+    var qe = `<div class="avatar" part="avatar">
+    <img class="image" part="image" alt="" hidden />
+    <span class="initials" part="initials" aria-hidden="true"></span>
+    <span class="fallback" part="fallback"><slot></slot></span>
+</div>
+`;
+    var Be = `:host {
+  display: inline-block;
+
+  --_size: 2.5rem;
+  --_radius: 50%;
+  --_bg: var(--secondary-muted, #e5e7eb);
+  --_color: var(--text-main, #1f2937);
+  --_border: 0px solid transparent;
+  --_font-size: calc(var(--_size) * 0.4);
+}
+
+:host([size="xs"]) { --_size: 1.25rem; }
+:host([size="sm"]) { --_size: 1.75rem; }
+:host([size="md"]) { --_size: 2.5rem; }
+:host([size="lg"]) { --_size: 3.5rem; }
+:host([size="xl"]) { --_size: 5rem; }
+
+:host([shape="square"]) { --_radius: 6px; }
+:host([shape="rounded"]) { --_radius: 12px; }
+
+:host([color="primary"]) { --_bg: var(--primary-muted); --_color: var(--primary-contrasted); }
+:host([color="danger"])  { --_bg: var(--danger-muted);  --_color: var(--danger-contrasted); }
+:host([color="success"]) { --_bg: var(--success-muted); --_color: var(--success-contrasted); }
+:host([color="info"])    { --_bg: var(--info-muted);    --_color: var(--info-contrasted); }
+:host([color="warning"]) { --_bg: var(--warning-muted); --_color: var(--warning-contrasted); }
+
+:host([bordered]) {
+  --_border: 2px solid var(--bg-surface, #fff);
+}
+
+.avatar {
+  position: relative;
+  width: var(--_size);
+  height: var(--_size);
+  border-radius: var(--_radius);
+  background: var(--_bg);
+  color: var(--_color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: var(--_border);
+  box-sizing: border-box;
+  font-size: var(--_font-size);
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.image[hidden] { display: none; }
+
+.initials:empty { display: none; }
+
+.avatar:has(.image:not([hidden])) .initials,
+.avatar:has(.image:not([hidden])) .fallback {
+  display: none;
+}
+
+.fallback:has(slot:not(:has(*))) { display: none; }
+
+::slotted(svg) {
+  width: 60%;
+  height: 60%;
+}
+`;
+
+    class P extends o {
+      _img;
+      _initials;
+      static get observedAttributes() {
+        return ["src", "alt", "name", "initials"];
+      }
+      constructor() {
+        super({ css: Be, template: qe });
+        this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
+      }
+      connectedCallback() {
+        if (this._img)
+          this._img.addEventListener("error", this._handleImageError);
+        this._syncImage(), this._syncInitials();
+      }
+      disconnectedCallback() {
+        if (this._img)
+          this._img.removeEventListener("error", this._handleImageError);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "src" || t === "alt")
+          this._syncImage();
+        if (t === "name" || t === "initials")
+          this._syncInitials();
+      }
+      _syncImage() {
+        if (!this._img)
+          return;
+        let t = this.getAttribute("src"), e = this.getAttribute("alt") ?? this.getAttribute("name") ?? "";
+        if (t)
+          this._img.src = t, this._img.alt = e, this._img.hidden = false;
+        else
+          this._img.hidden = true, this._img.removeAttribute("src");
+      }
+      _syncInitials() {
+        if (!this._initials)
+          return;
+        let t = this.getAttribute("initials");
+        if (t) {
+          this._initials.textContent = t;
+          return;
+        }
+        let e = this.getAttribute("name");
+        if (!e) {
+          this._initials.textContent = "";
+          return;
+        }
+        this._initials.textContent = e.split(/\s+/).filter(Boolean).slice(0, 2).map((r) => r[0]).join("").toUpperCase();
+      }
+      _handleImageError = () => {
+        if (this._img)
+          this._img.hidden = true;
+      };
+    }
+    if (!customElements.get("p9r-avatar"))
+      customElements.define("p9r-avatar", P);
+    var je = `<span class="badge" part="badge">
+    <span class="dot" part="dot" aria-hidden="true"></span>
+    <span class="content" part="content"><slot></slot></span>
+</span>
+`;
+    var De = `:host {
+  display: inline-flex;
+
+  --_bg: var(--secondary-muted, #f1f5f9);
+  --_text: var(--text-main, #1f2937);
+  --_border: transparent;
+  --_padding-y: 0.15rem;
+  --_padding-x: 0.5rem;
+  --_radius: 999px;
+  --_size: 11px;
+  --_dot-color: var(--text-muted, #94a3b8);
+}
+
+:host([color="primary"]) { --_bg: var(--primary-muted); --_text: var(--primary-contrasted); --_dot-color: var(--primary-base); }
+:host([color="danger"])  { --_bg: var(--danger-muted);  --_text: var(--danger-contrasted);  --_dot-color: var(--danger-base); }
+:host([color="success"]) { --_bg: var(--success-muted); --_text: var(--success-contrasted); --_dot-color: var(--success-base); }
+:host([color="info"])    { --_bg: var(--info-muted);    --_text: var(--info-contrasted);    --_dot-color: var(--info-base); }
+:host([color="warning"]) { --_bg: var(--warning-muted); --_text: var(--warning-contrasted); --_dot-color: var(--warning-base); }
+
+:host([variant="filled"][color="primary"]) { --_bg: var(--primary-base); --_text: white; }
+:host([variant="filled"][color="danger"])  { --_bg: var(--danger-base);  --_text: white; }
+:host([variant="filled"][color="success"]) { --_bg: var(--success-base); --_text: white; }
+:host([variant="filled"][color="info"])    { --_bg: var(--info-base);    --_text: white; }
+:host([variant="filled"][color="warning"]) { --_bg: var(--warning-base); --_text: white; }
+
+:host([variant="outlined"]) {
+  --_bg: transparent;
+}
+:host([variant="outlined"][color="primary"]) { --_border: var(--primary-base); --_text: var(--primary-base); }
+:host([variant="outlined"][color="danger"])  { --_border: var(--danger-base);  --_text: var(--danger-base); }
+:host([variant="outlined"][color="success"]) { --_border: var(--success-base); --_text: var(--success-base); }
+:host([variant="outlined"][color="info"])    { --_border: var(--info-base);    --_text: var(--info-base); }
+:host([variant="outlined"][color="warning"]) { --_border: var(--warning-base); --_text: var(--warning-base); }
+
+:host([size="sm"]) { --_size: 10px; --_padding-y: 0.1rem; --_padding-x: 0.4rem; }
+:host([size="md"]) { --_size: 11px; --_padding-y: 0.15rem; --_padding-x: 0.5rem; }
+:host([size="lg"]) { --_size: 13px; --_padding-y: 0.25rem; --_padding-x: 0.7rem; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: var(--_padding-y) var(--_padding-x);
+  background: var(--_bg);
+  color: var(--_text);
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  font-size: var(--_size);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.dot {
+  display: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--_dot-color);
+  flex-shrink: 0;
+}
+
+:host([dot]) .dot {
+  display: inline-block;
+}
+`;
+
+    class R extends o {
+      constructor() {
+        super({ css: De, template: je });
+      }
+    }
+    if (!customElements.get("p9r-badge"))
+      customElements.define("p9r-badge", R);
+    var Fe = `<nav class="breadcrumb" part="breadcrumb" aria-label="Breadcrumb">
+    <ol class="list" part="list">
+        <slot></slot>
+    </ol>
+</nav>
+`;
+    var Oe = `:host {
+  display: block;
+
+  --_separator: "/";
+  --_color: var(--text-muted, #6b7280);
+  --_color-current: var(--text-main, #1f2937);
+  --_size: 13px;
+  --_gap: 0.4rem;
+}
+
+.breadcrumb {
+  font-size: var(--_size);
+  color: var(--_color);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--_gap);
+}
+
+::slotted(p9r-breadcrumb-item:not(:last-child))::after {
+  content: var(--_separator);
+  color: var(--_color);
+  margin-left: var(--_gap);
+  display: inline;
+}
+`;
+    var Ne = `<li class="item" part="item">
+    <a class="link" part="link"><slot></slot></a>
+</li>
+`;
+    var Ve = `:host {
+  display: inline-flex;
+  align-items: center;
+
+  --_color: var(--text-muted, #6b7280);
+  --_color-current: var(--text-main, #1f2937);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  list-style: none;
+}
+
+.link {
+  color: var(--_color);
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: var(--_color-current);
+}
+
+:host([current]) .link {
+  color: var(--_color-current);
+  font-weight: 600;
+  cursor: default;
+  pointer-events: none;
+}
+`;
+
+    class q extends o {
+      _link;
+      static get observedAttributes() {
+        return ["href", "current"];
+      }
+      constructor() {
+        super({ css: Ve, template: Ne });
+        this._link = this.shadowRoot?.querySelector(".link") ?? null;
+      }
+      connectedCallback() {
+        this._syncHref(), this._syncCurrent();
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "href")
+          this._syncHref();
+        if (t === "current")
+          this._syncCurrent();
+      }
+      _syncHref() {
+        if (!this._link)
+          return;
+        let t = this.getAttribute("href");
+        if (t)
+          this._link.setAttribute("href", t);
+        else
+          this._link.removeAttribute("href");
+      }
+      _syncCurrent() {
+        if (!this._link)
+          return;
+        if (this.hasAttribute("current"))
+          this._link.setAttribute("aria-current", "page");
+        else
+          this._link.removeAttribute("aria-current");
+      }
+    }
+    if (!customElements.get("p9r-breadcrumb-item"))
+      customElements.define("p9r-breadcrumb-item", q);
+
+    class B extends o {
+      static get observedAttributes() {
+        return ["separator"];
+      }
+      constructor() {
+        super({ css: Oe, template: Fe });
+      }
+      connectedCallback() {
+        this._syncSeparator(), this._markCurrent();
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "separator")
+          this._syncSeparator();
+      }
+      _syncSeparator() {
+        let t = this.getAttribute("separator") ?? "/";
+        this.style.setProperty("--_separator", `"${t.replace(/"/g, "\\\"")}"`);
+      }
+      _markCurrent() {
+        let t = Array.from(this.querySelectorAll("p9r-breadcrumb-item")), e = t[t.length - 1];
+        if (e && !e.hasAttribute("current"))
+          e.setAttribute("current", "");
+      }
+    }
+    if (!customElements.get("p9r-breadcrumb"))
+      customElements.define("p9r-breadcrumb", B);
+    var Ke = `<article class="card" part="card">
+    <header class="header" part="header">
+        <slot name="header"></slot>
+    </header>
+    <section class="body" part="body">
+        <slot></slot>
+    </section>
+    <footer class="footer" part="footer">
+        <slot name="footer"></slot>
+    </footer>
+</article>
+`;
+    var $e = `:host {
+  display: block;
+
+  --_bg: var(--bg-surface, #ffffff);
+  --_border-color: var(--border-default, #e5e7eb);
+  --_border-width: 1px;
+  --_radius: 12px;
+  --_shadow: none;
+  --_padding: 1.25rem;
+  --_gap: 0.75rem;
+  --_text: var(--text-main, #1f2937);
+}
+
+:host([variant="outlined"]) {
+  --_bg: var(--bg-surface);
+  --_shadow: none;
+}
+
+:host([variant="elevated"]) {
+  --_border-width: 0;
+  --_shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+:host([variant="filled"]) {
+  --_bg: var(--bg-base, #f8fafc);
+  --_border-width: 0;
+  --_shadow: none;
+}
+
+:host([padding="none"]) { --_padding: 0; }
+:host([padding="sm"])   { --_padding: 0.75rem; }
+:host([padding="md"])   { --_padding: 1.25rem; }
+:host([padding="lg"])   { --_padding: 2rem; }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--_bg);
+  color: var(--_text);
+  border: var(--_border-width) solid var(--_border-color);
+  border-radius: var(--_radius);
+  box-shadow: var(--_shadow);
+  overflow: hidden;
+}
+
+.header,
+.body,
+.footer {
+  padding: var(--_padding);
+}
+
+.header { border-bottom: 1px solid var(--_border-color); }
+.footer { border-top: 1px solid var(--_border-color); }
+
+.body { flex: 1; }
+
+.header:has(slot[name="header"]:not(:has(*))),
+.footer:has(slot[name="footer"]:not(:has(*))) {
+  display: none;
+}
+
+:host([interactive]) {
+  cursor: pointer;
+}
+
+:host([interactive]) .card {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host([interactive]) .card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+}
+`;
+
+    class j extends o {
+      constructor() {
+        super({ css: $e, template: Ke });
+      }
+    }
+    if (!customElements.get("p9r-card"))
+      customElements.define("p9r-card", j);
+    var Ue = `<dialog part="dialog" aria-modal="true">
+    <div class="modal-wrapper" part="wrapper">
+        <form method="dialog" id="close-form"></form>
+
+        <form id="form-validation" method="get" part="form">
+            <header part="header">
+                <div class="title-area" part="title">
+                    <slot name="title">New window</slot>
+                </div>
+                <button class="close-icon" part="close" form="close-form" type="submit" aria-label="Close">&times;</button>
+            </header>
+
+            <section class="body" part="body">
+                <slot></slot>
+            </section>
+
+            <footer class="actions" part="footer">
+                <slot name="footer">
+                    <p9r-button form="close-form" type="submit" variant="ghost">Cancel</p9r-button>
+                    <p9r-button form="form-validation" type="submit" variant="filled" color="primary">Confirm</p9r-button>
+                </slot>
+            </footer>
+        </form>
+    </div>
+</dialog>
+`;
+    var Ye = `:host {
+    --_modal-width: 500px;
+    --_modal-radius: 12px;
+    --_modal-bg: var(--bg-surface);
+    --_modal-border: var(--border-default);
+}
+
+dialog {
+    border: 1px solid var(--_modal-border);
+    border-radius: var(--_modal-radius);
+    background: var(--_modal-bg);
+    padding: 0;
+    width: min(90vw, var(--_modal-width));
+    max-height: 80vh;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    opacity: 0;
+}
+
+dialog[open] {
+    opacity: 1;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+}
+
+dialog[open]::backdrop {
+    opacity: 1;
+}
+
+.modal-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--border-default);
+}
+
+.title-area {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+}
+
+.body {
+    padding: 1.5rem;
+    color: var(--text-body);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-y: auto;
+}
+
+footer.actions {
+    padding: 1rem 1.5rem;
+    background: var(--bg-base);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    border-top: 1px solid var(--border-default);
+}
+`;
+    var Xe = `.close-icon {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    line-height: 1;
+    padding: 8px;
+    border-radius: 6px;
+    aspect-ratio: 1/1;
+}
+
+.close-icon:hover {
+    background: var(--bg-base);
+    color: var(--text-main);
+}
+
+.close-icon:focus-visible {
+    outline: 2px solid var(--primary-base, currentColor);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    dialog {
+        transform: scale(0.95);
+        transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                    display 0.2s allow-discrete,
+                    overlay 0.2s allow-discrete;
+    }
+
+    dialog[open] {
+        transform: scale(1);
+    }
+
+    dialog::backdrop {
+        transition: opacity 0.2s allow-discrete;
+    }
+
+    @starting-style {
+        dialog[open] {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        dialog[open]::backdrop {
+            opacity: 0;
+        }
+    }
+
+    .close-icon {
+        transition: background 0.2s, color 0.2s;
+    }
+}
+`;
+    var Ze = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    };
+    var We = (t) => {
+      t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
+    }, Ge = (t) => {
+      t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+    };
+    var Je = (t, e) => {
+      let r = t.shadowRoot?.querySelector("dialog");
+      if (!r)
+        return;
+      if (e.target !== r)
+        return;
+      let i = r.getBoundingClientRect();
+      if (!(i.top <= e.clientY && e.clientY <= i.top + i.height && i.left <= e.clientX && e.clientX <= i.left + i.width))
+        t.close();
+    }, Qe = (t, e) => {
+      t.querySelectorAll("[name]").forEach((i) => {
+        let n = i.getAttribute("name"), a = i.value;
+        if (n && a !== undefined && a !== null && a !== "")
+          e.formData.append(n, String(a));
+      });
+    };
+    var io = Ye + Xe;
+
+    class D extends o {
+      _dialog;
+      _form;
+      _previouslyFocused = null;
+      static get observedAttributes() {
+        return ["action", "method", "enctype"];
+      }
+      constructor() {
+        super({ css: io, template: Ue });
+        this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._form = this.shadowRoot?.querySelector("#form-validation") ?? null;
+      }
+      connectedCallback() {
+        for (let t of ["action", "method", "enctype"])
+          Ze(this, t);
+        this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("close", this._onClose), this._form?.addEventListener("formdata", this._onFormData);
+      }
+      disconnectedCallback() {
+        this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("close", this._onClose), this._form?.removeEventListener("formdata", this._onFormData);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._form)
+          return;
+        if (t === "action")
+          this._form.action = r ?? "";
+        if (t === "method")
+          this._form.method = r ?? "get";
+        if (t === "enctype")
+          this._form.enctype = r ?? "application/x-www-form-urlencoded";
+      }
+      _onBackdrop = (t) => Je(this, t);
+      _onFormData = (t) => Qe(this, t);
+      _onClose = () => {
+        if (this._previouslyFocused instanceof HTMLElement)
+          this._previouslyFocused.focus();
+        this._previouslyFocused = null, Ge(this);
+      };
+      showModal() {
+        if (!this._dialog)
+          return;
+        this._previouslyFocused = document.activeElement, this._dialog.showModal(), We(this);
+      }
+      close() {
+        this._dialog?.close();
+      }
+      get action() {
+        return this.getAttribute("action") ?? "";
+      }
+      set action(t) {
+        t ? this.setAttribute("action", t) : this.removeAttribute("action");
+      }
+      get method() {
+        return this.getAttribute("method") ?? "get";
+      }
+      set method(t) {
+        t ? this.setAttribute("method", t) : this.removeAttribute("method");
+      }
+      get enctype() {
+        return this.getAttribute("enctype") ?? "application/x-www-form-urlencoded";
+      }
+      set enctype(t) {
+        t ? this.setAttribute("enctype", t) : this.removeAttribute("enctype");
+      }
+    }
+    if (!customElements.get("p9r-form-dialog"))
+      customElements.define("p9r-form-dialog", D);
+    var tr = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
+    <header part="header">
+        <div id="title" part="title">
+            <slot name="title">Dialog</slot>
+        </div>
+        <button id="close-btn" part="close" type="button" aria-label="Close">&times;</button>
+    </header>
+
+    <section class="content" part="content">
+        <slot></slot>
+    </section>
+
+    <footer part="footer">
+        <slot name="footer"></slot>
+    </footer>
+</dialog>
+`;
+    var er = `:host {
+    --drawer-width: 400px;
+    --drawer-bg: #ffffff;
+    --transition-speed: 0.4s;
+    --transition-curve: cubic-bezier(0.4, 0, 0.2, 1);
+
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+dialog {
+    display: flex;
+    flex-direction: column;
+    margin-right: 0;
+    margin-left: auto;
+    height: 100dvh;
+    width: var(--drawer-width);
+    max-width: 100vw;
+    border: none;
+    padding: 0;
+    background: var(--drawer-bg);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+
+    max-height: unset;
+}
+
+dialog[open] {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+}
+
+dialog[open]::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+}
+
+dialog > * {
+    pointer-events: auto;
+}
+`;
+    var rr = `header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    background-color: var(--drawer-bg);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+header slot[name="title"]::slotted(*) {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: -0.01em;
+}
+
+#close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    line-height: 0;
+}
+
+#close-btn:hover {
+    background-color: #f3f4f6;
+    color: #000;
+}
+
+#close-btn:focus-visible {
+    outline: 2px solid #1a1a1a;
+    outline-offset: 2px;
+}
+
+.content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+footer {
+    padding: 1.25rem 1.5rem;
+    background-color: #f9fafb;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+footer slot[name="footer"]::slotted(button) {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #d1d5db;
+    background: white;
+}
+
+footer slot[name="footer"]::slotted(button[primary]) {
+    background: #000;
+    color: white;
+    border-color: #000;
+}
+
+footer slot[name="footer"]::slotted(button:hover) {
+    filter: brightness(0.9);
+}
+`;
+    var ir = `@media (prefers-reduced-motion: no-preference) {
+    dialog {
+        transition:
+            transform var(--transition-speed) var(--transition-curve),
+            opacity var(--transition-speed) var(--transition-curve),
+            display var(--transition-speed) var(--transition-curve) allow-discrete,
+            overlay var(--transition-speed) var(--transition-curve) allow-discrete;
+    }
+
+    @starting-style {
+        dialog[open] {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+
+    dialog::backdrop {
+        transition:
+            background-color var(--transition-speed) var(--transition-curve),
+            backdrop-filter var(--transition-speed) var(--transition-curve),
+            display var(--transition-speed) var(--transition-curve) allow-discrete,
+            overlay var(--transition-speed) var(--transition-curve) allow-discrete;
+    }
+
+    @starting-style {
+        dialog[open]::backdrop {
+            background: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+        }
+    }
+
+    header,
+    footer,
+    .content {
+        transition: transform var(--transition-speed) var(--transition-curve);
+    }
+
+    #close-btn {
+        transition: background-color 0.2s, color 0.2s;
+    }
+
+    footer slot[name="footer"]::slotted(button) {
+        transition: all 0.2s;
+    }
+}
+`;
+    var nr = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    };
+    var ar = (t) => {
+      t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
+    }, or = (t) => {
+      t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+    };
+    var sr = (t, e) => {
+      let r = t.shadowRoot?.querySelector("dialog");
+      if (e.target === r)
+        t.close();
+    }, lr = (t, e) => {
+      e.preventDefault(), t.close();
+    }, dr = (t, e) => {
+      e.preventDefault(), t.close();
+    }, cr = (t) => {
+      if (t.hasAttribute("open"))
+        t.removeAttribute("open");
+      or(t);
+    };
+    var lo = er + rr + ir;
+
+    class F extends o {
+      _dialog;
+      _closeBtn;
+      static get observedAttributes() {
+        return ["open"];
+      }
+      constructor() {
+        super({ css: lo, template: tr });
+        this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._closeBtn = this.shadowRoot?.querySelector("#close-btn") ?? null;
+      }
+      connectedCallback() {
+        nr(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this._closeBtn?.addEventListener("click", this._onCloseClick);
+      }
+      disconnectedCallback() {
+        this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this._closeBtn?.removeEventListener("click", this._onCloseClick);
+      }
+      attributeChangedCallback(t) {
+        if (!this._dialog)
+          return;
+        if (t === "open") {
+          let e = this.hasAttribute("open");
+          if (e && !this._dialog.open)
+            this._dialog.showModal();
+          else if (!e && this._dialog.open)
+            this._dialog.close();
+        }
+      }
+      _onBackdrop = (t) => sr(this, t);
+      _onCloseClick = (t) => lr(this, t);
+      _onCancel = (t) => dr(this, t);
+      _onClose = () => cr(this);
+      get open() {
+        return this.hasAttribute("open");
+      }
+      set open(t) {
+        if (t)
+          this.setAttribute("open", "");
+        else
+          this.removeAttribute("open");
+      }
+      show() {
+        if (!this._dialog)
+          return;
+        if (!this._dialog.open)
+          this._dialog.showModal();
+        if (!this.hasAttribute("open"))
+          this.setAttribute("open", "");
+        ar(this);
+      }
+      showModal() {
+        this.show();
+      }
+      close() {
+        if (!this._dialog)
+          return;
+        if (this._dialog.open)
+          this._dialog.close();
+      }
+    }
+    if (!customElements.get("w13c-lateral-dialog"))
+      customElements.define("w13c-lateral-dialog", F);
+    var ur = (t, e) => {
+      if (e.target === e.currentTarget)
+        t.hide();
+    }, pr = (t, e) => {
+      e.preventDefault(), t.hide();
+    }, hr = (t) => {
+      if (t.hasAttribute("open"))
+        t.removeAttribute("open");
+      t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+    };
+    var br = `<dialog part="dialog">
+    <form method="dialog" id="m-close"></form>
+    <div class="panel" part="panel">
+        <header class="header" part="header">
+            <div class="title" part="title"><slot name="title"></slot></div>
+            <button class="close" part="close" type="submit" form="m-close" aria-label="Close">&times;</button>
+        </header>
+        <section class="body" part="body"><slot></slot></section>
+        <footer class="footer" part="footer"><slot name="footer"></slot></footer>
+    </div>
+</dialog>
+`;
+    var mr = `:host {
+    --modal-width: var(--p9r-modal-width, 520px);
+    --modal-radius: var(--p9r-modal-radius, 12px);
+    --modal-bg: var(--p9r-modal-bg, var(--bg-surface, #ffffff));
+    --modal-border: var(--p9r-modal-border, var(--border-default, rgba(0,0,0,0.1)));
+    --modal-pad: var(--p9r-modal-padding, 24px);
+    --modal-shadow: var(--p9r-modal-shadow,
+        0 20px 25px -5px rgba(0,0,0,0.1),
+        0 10px 10px -5px rgba(0,0,0,0.04));
+}
+
+dialog {
+    border: 1px solid var(--modal-border);
+    border-radius: var(--modal-radius);
+    background: transparent;
+    padding: 0;
+    width: min(90vw, var(--modal-width));
+    max-height: 85vh;
+    overflow: visible;
+    opacity: 0;
+}
+
+dialog[open] { opacity: 1; }
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+}
+
+dialog[open]::backdrop { opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+    dialog {
+        transform: scale(0.95) translateY(-8px);
+        transition:
+            opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+            transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+            display 0.2s allow-discrete,
+            overlay 0.2s allow-discrete;
+    }
+    dialog[open] { transform: scale(1) translateY(0); }
+    dialog::backdrop { transition: opacity 0.2s allow-discrete, display 0.2s allow-discrete, overlay 0.2s allow-discrete; }
+    @starting-style {
+        dialog[open] { opacity: 0; transform: scale(0.95) translateY(-8px); }
+        dialog[open]::backdrop { opacity: 0; }
+    }
+}
+
+.panel {
+    background: var(--modal-bg);
+    border-radius: var(--modal-radius);
+    box-shadow: var(--modal-shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+}
+
+.header, .footer { display: none; align-items: center; padding: 14px var(--modal-pad); }
+.header { justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--modal-border); }
+.footer { justify-content: flex-end; gap: 8px; border-top: 1px solid var(--modal-border); }
+
+:host(:has(> [slot="title"])) .header,
+:host(:not([no-close])) .header { display: flex; }
+:host(:has(> [slot="footer"])) .footer { display: flex; }
+
+.title { font-weight: 600; font-size: 1.05rem; }
+
+.close {
+    background: transparent; border: 0; cursor: pointer;
+    font-size: 1.5rem; line-height: 1; padding: 2px 8px;
+    color: inherit; border-radius: 6px;
+}
+.close:hover { background: rgba(0,0,0,0.06); }
+:host([no-close]) .close { display: none; }
+
+.body { padding: var(--modal-pad); overflow: auto; }
+`;
+
+    class O extends o {
+      _dialog = null;
+      _onBackdrop = (t) => ur(this, t);
+      _onCancel = (t) => pr(this, t);
+      _onClose = () => hr(this);
+      static get observedAttributes() {
+        return ["open", "aria-label"];
+      }
+      constructor() {
+        super({ css: mr, template: br });
+      }
+      connectedCallback() {
+        this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null, this._upgradeProperty("open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this.addEventListener("form:success", this.hide), this._syncLabel(), this._syncOpen();
+      }
+      disconnectedCallback() {
+        this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this.removeEventListener("form:success", this.hide);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (e === r || !this.isConnected)
+          return;
+        if (t === "aria-label")
+          this._syncLabel();
+        else if (t === "open")
+          this._syncOpen();
+      }
+      _syncLabel() {
+        let t = this.getAttribute("aria-label");
+        if (t)
+          this._dialog?.setAttribute("aria-label", t);
+        else
+          this._dialog?.removeAttribute("aria-label");
+      }
+      _syncOpen() {
+        if (!this._dialog)
+          return;
+        let t = this.hasAttribute("open");
+        if (t && !this._dialog.open)
+          this._dialog.showModal(), this.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
+        else if (!t && this._dialog.open)
+          this._dialog.close();
+      }
+      _upgradeProperty(t) {
+        if (Object.prototype.hasOwnProperty.call(this, t)) {
+          let e = this[t];
+          delete this[t], this[t] = e;
+        }
+      }
+      get open() {
+        return this.hasAttribute("open");
+      }
+      set open(t) {
+        t ? this.setAttribute("open", "") : this.removeAttribute("open");
+      }
+      show() {
+        if (!this.hasAttribute("open"))
+          this.setAttribute("open", "");
+      }
+      showModal() {
+        this.show();
+      }
+      hide() {
+        if (this.hasAttribute("open"))
+          this.removeAttribute("open");
+      }
+      toggle() {
+        if (this.open)
+          this.hide();
+        else
+          this.show();
+      }
+    }
+    if (!customElements.get("p9r-modal"))
+      customElements.define("p9r-modal", O);
+    var gr = `<slot></slot>
+`;
+    var fr = `:host {
+    display: contents;
+    cursor: pointer;
+}
+`;
+
+    class N extends o {
+      constructor() {
+        super({ css: fr, template: gr });
+      }
+      connectedCallback() {
+        if (!this.hasAttribute("role"))
+          this.setAttribute("role", "button");
+        if (!this.hasAttribute("tabindex"))
+          this.setAttribute("tabindex", "0");
+        this.addEventListener("click", this._open), this.addEventListener("keydown", this._handleKeydown);
+      }
+      disconnectedCallback() {
+        this.removeEventListener("click", this._open), this.removeEventListener("keydown", this._handleKeydown);
+      }
+      _handleKeydown = (t) => {
+        if (t.key !== "Enter" && t.key !== " ")
+          return;
+        t.preventDefault(), this._open();
+      };
+      _open = () => {
+        let t = this.getAttribute("modal-target");
+        if (!t)
+          return;
+        let e = this.getRootNode(), r = e.getElementById ? e.getElementById(t) : e.querySelector(`#${CSS.escape(t)}`);
+        if (!r)
+          return;
+        if (typeof r.show === "function")
+          r.show();
+        else
+          r.setAttribute("open", "");
+      };
+      get modalTarget() {
+        return this.getAttribute("modal-target") ?? "";
+      }
+      set modalTarget(t) {
+        if (t)
+          this.setAttribute("modal-target", t);
+        else
+          this.removeAttribute("modal-target");
+      }
+    }
+    if (!customElements.get("p9r-open-modal"))
+      customElements.define("p9r-open-modal", N);
+    var vr = `<div class="divider" part="divider" role="separator">
+    <span class="line line-start" part="line"></span>
+    <span class="label" part="label"><slot></slot></span>
+    <span class="line line-end" part="line"></span>
+</div>
+`;
+    var _r = `:host {
+  display: block;
+
+  --_color: var(--border-default, #e5e7eb);
+  --_thickness: 1px;
+  --_gap: 0.75rem;
+  --_label-color: var(--text-muted, #6b7280);
+  --_label-size: 12px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--_gap);
+  width: 100%;
+}
+
+.line {
+  flex: 1;
+  background: var(--_color);
+  height: var(--_thickness);
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--_label-size);
+  color: var(--_label-color);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.label:has(slot:empty),
+.label slot:not([name]):empty {
+  display: none;
+}
+
+.label:has(slot:empty) ~ .line-end,
+.divider:not(:has(.label slot:not([name]):empty)) .line-end {
+  /* placeholder so :has fallback still renders both lines */
+}
+
+:host(:not([align="start"]):not([align="end"])) .line-start,
+:host(:not([align="start"]):not([align="end"])) .line-end {
+  flex: 1;
+}
+
+:host([align="start"]) .line-start { flex: 0 0 1.5rem; }
+:host([align="start"]) .line-end   { flex: 1; }
+:host([align="end"]) .line-start   { flex: 1; }
+:host([align="end"]) .line-end     { flex: 0 0 1.5rem; }
+
+:host([orientation="vertical"]) {
+  display: inline-block;
+  height: 100%;
+}
+
+:host([orientation="vertical"]) .divider {
+  flex-direction: column;
+  height: 100%;
+  width: var(--_thickness);
+}
+
+:host([orientation="vertical"]) .line {
+  width: var(--_thickness);
+  height: auto;
+  flex: 1;
+}
+
+:host([orientation="vertical"]) .label {
+  writing-mode: vertical-rl;
+}
+
+:host([variant="dashed"]) .line {
+  background: transparent;
+  border-top: var(--_thickness) dashed var(--_color);
+  height: 0;
+}
+
+:host([variant="dotted"]) .line {
+  background: transparent;
+  border-top: var(--_thickness) dotted var(--_color);
+  height: 0;
+}
+`;
+
+    class V extends o {
+      static get observedAttributes() {
+        return ["orientation"];
+      }
+      constructor() {
+        super({ css: _r, template: vr });
+      }
+      connectedCallback() {
+        this._syncAria();
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "orientation")
+          this._syncAria();
+      }
+      _syncAria() {
+        let t = this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal";
+        this.setAttribute("aria-orientation", t);
+      }
+    }
+    if (!customElements.get("p9r-divider"))
+      customElements.define("p9r-divider", V);
+    var xr = `<button id="btn" class="button" part="button">
+    <slot name="icon-left"></slot>
+    <span class="label">
+        <slot>Button</slot>
+    </span>
+    <slot name="icon-right"></slot>
+</button>
+`;
+    var yr = `:host {
+  display: inline-block;
+
+  --_btn-padding-y: 0.6rem;
+  --_btn-padding-x: 1.2rem;
+  --_btn-font-size: 13px;
+  --_btn-line-height: 1;
+
+  --_btn-bg: var(--bg-surface);
+  --_btn-text: var(--text-main);
+  --_btn-border: var(--border-default);
+  --_btn-hover-bg: var(--bg-base);
+
+  --_accent-base: var(--text-main);
+  --_accent-muted: var(--bg-base);
+  --_accent-contrast: oklch(100% 0 0);
+
+  --_btn-radius: 8px;
+  --_btn-font: inherit;
+}
+
+.button {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  padding: var(--_btn-padding-y) var(--_btn-padding-x);
+
+  font-family: var(--_btn-font);
+  font-size: var(--_btn-font-size);
+  font-weight: 600;
+  line-height: var(--_btn-line-height);
+  letter-spacing: -0.015em;
+
+  border-radius: var(--_btn-radius);
+  border: 1.5px solid var(--_btn-border);
+  background-color: var(--_btn-bg);
+  color: var(--_btn-text);
+
+  white-space: nowrap;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--_accent-base);
+  outline-offset: 2px;
+}
+
+.button:hover {
+  background-color: var(--_btn-hover-bg);
+  opacity: var(--_btn-hover-opacity, 1);
+}
+
+::slotted(svg) {
+  width: 1.2rem;
+}
+`;
+    var wr = `:host([color="primary"]) {
+  --_accent-base: var(--primary-base);
+  --_accent-muted: var(--primary-muted);
+  --_accent-contrast: oklch(100% 0 0);
+}
+
+:host([color="danger"]) {
+  --_accent-base: var(--danger-base);
+  --_accent-muted: var(--danger-muted);
+}
+
+:host([color="success"]) {
+  --_accent-base: var(--success-base);
+  --_accent-muted: var(--success-muted);
+}
+
+:host([color="info"]) {
+  --_accent-base: var(--info-base);
+  --_accent-muted: var(--info-muted);
+}
+
+:host([variant="filled"]) {
+  --_btn-bg: var(--_accent-base);
+  --_btn-text: var(--_accent-contrast);
+  --_btn-border: transparent;
+  --_btn-hover-bg: var(--_accent-base);
+  --_btn-hover-opacity: 0.9;
+  border-color: transparent;
+}
+
+:host([variant="outlined"]) {
+  --_btn-bg: transparent;
+  --_btn-border: var(--_accent-base);
+  --_btn-text: var(--_accent-base);
+  --_btn-hover-bg: var(--_accent-muted);
+}
+
+:host([variant="ghost"]) {
+  --_btn-bg: transparent;
+  --_btn-border: transparent;
+  --_btn-text: var(--_accent-base);
+  --_btn-hover-bg: var(--_accent-muted);
+}
+
+:host([fullwidth]), :host([fullwidth]) .button {
+  width: 100%;
+}
+
+:host([align="left"]) .button {
+  justify-content: start;
+}
+
+:host([align="right"]) .button {
+  justify-content: end;
+}
+
+:host([disabled]) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .button:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+`;
+    var _o = yr + wr;
+
+    class K extends o {
+      static formAssociated = true;
+      _internals;
+      _btn;
+      constructor() {
+        super({ css: _o, template: xr });
+        this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
+      }
+      static get observedAttributes() {
+        return ["type", "disabled"];
+      }
+      connectedCallback() {
+        for (let t of ["type", "disabled"])
+          this._upgradeProperty(t);
+        if (!this.hasAttribute("type"))
+          this.setAttribute("type", "button");
+        if (!this.hasAttribute("variant"))
+          this.setAttribute("variant", "filled");
+        this.addEventListener("click", this._handleClick);
+      }
+      disconnectedCallback() {
+        this.removeEventListener("click", this._handleClick);
+      }
+      _handleClick = (t) => {
+        if (this.hasAttribute("disabled")) {
+          t.stopImmediatePropagation();
+          return;
+        }
+        let e = this._internals.form;
+        if (!e)
+          return;
+        let r = this.getAttribute("type");
+        if (r === "submit")
+          e.requestSubmit();
+        if (r === "reset")
+          e.reset();
+      };
+      _upgradeProperty(t) {
+        if (this.hasOwnProperty(t)) {
+          let e = this[t];
+          delete this[t], this[t] = e;
+        }
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._btn)
+          return;
+        if (t === "type")
+          this._btn.type = r ?? "button";
+        if (t === "disabled")
+          this._btn.disabled = this.hasAttribute("disabled");
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        if (t)
+          this.setAttribute("disabled", "");
+        else
+          this.removeAttribute("disabled");
+      }
+    }
+    if (!customElements.get("p9r-button"))
+      customElements.define("p9r-button", K);
+    var kr = `<label class="checkbox-container" part="container">
+    <span class="input-wrapper">
+        <input type="checkbox" id="native-input" part="input" />
+        <span class="custom-box" part="box" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="checkmark" part="checkmark">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span class="indeterminate-mark" part="indeterminate"></span>
+        </span>
+    </span>
+    <span class="label-text" part="label">
+        <slot></slot>
+    </span>
+</label>
+`;
+    var Er = `:host {
+  display: inline-block;
+  --cb-size: 20px;
+  --cb-border: var(--border-default, #d1d5db);
+  --cb-bg: var(--bg-surface, #ffffff);
+  --cb-active-bg: var(--primary-base, #000000);
+  --cb-active-border: var(--primary-base, #000000);
+  --cb-focus-ring: color-mix(in oklab, var(--cb-active-bg) 20%, transparent);
+  --cb-text: var(--text-main, #374151);
+  --cb-hover-border: var(--text-muted, #9ca3af);
+}
+
+.checkbox-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+}
+
+.input-wrapper {
+  position: relative;
+  display: inline-block;
+  width: var(--cb-size);
+  height: var(--cb-size);
+  flex-shrink: 0;
+}
+
+input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: inherit;
+  width: 100%;
+  height: 100%;
+}
+
+.custom-box {
+  position: absolute;
+  inset: 0;
+  background-color: var(--cb-bg);
+  border: 2px solid var(--cb-border);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.checkmark {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--cb-check-color, #ffffff);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+}
+
+.indeterminate-mark {
+  position: absolute;
+  width: 10px;
+  height: 2px;
+  background-color: var(--cb-check-color, #ffffff);
+  border-radius: 1px;
+  opacity: 0;
+}
+
+.label-text {
+  font-size: 0.95rem;
+  color: var(--cb-text);
+}
+
+.label-text:has(slot:empty),
+.label-text slot:not([name]):empty {
+  display: none;
+}
+`;
+    var Ar = `input:checked ~ .custom-box {
+  background-color: var(--cb-active-bg);
+  border-color: var(--cb-active-border);
+}
+
+input:checked ~ .custom-box .checkmark {
+  stroke-dashoffset: 0;
+}
+
+:host([indeterminate]) .custom-box {
+  background-color: var(--cb-active-bg);
+  border-color: var(--cb-active-border);
+}
+
+:host([indeterminate]) .checkmark {
+  opacity: 0;
+}
+
+:host([indeterminate]) .indeterminate-mark {
+  opacity: 1;
+}
+
+input:focus-visible ~ .custom-box {
+  box-shadow: 0 0 0 3px var(--cb-focus-ring);
+  border-color: var(--cb-active-border);
+  outline: none;
+}
+
+.checkbox-container:hover input:not(:checked):not(:disabled) ~ .custom-box {
+  border-color: var(--cb-hover-border);
+}
+
+:host([disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .custom-box {
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .checkmark {
+    transition: stroke-dashoffset 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .indeterminate-mark {
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+`;
+    var Lr = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, f = (t, e, r) => {
+      let i = e?.checked ?? t.hasAttribute("checked");
+      r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
+    }, Cr = (t, e) => {
+      if (!e)
+        return;
+      if (e.checked = t.hasAttribute("checked"), e.disabled = t.hasAttribute("disabled"), e.indeterminate = t.hasAttribute("indeterminate"), t.hasAttribute("name"))
+        e.name = t.getAttribute("name") ?? "";
+      if (t.hasAttribute("value"))
+        e.value = t.getAttribute("value") ?? "";
+    }, Tr = (t, e, r, i, n) => {
+      if (!e)
+        return;
+      if (i === "checked")
+        e.checked = n !== null, f(t, e, r);
+      else if (i === "disabled")
+        e.disabled = n !== null;
+      else if (i === "indeterminate")
+        e.indeterminate = n !== null;
+      else if (i === "name")
+        e.name = n ?? "";
+      else if (i === "value")
+        e.value = n ?? "", f(t, e, r);
+    };
+    var Mr = (t, e, r) => {
+      if (e?.checked ?? false)
+        t.setAttribute("checked", "");
+      else
+        t.removeAttribute("checked");
+      if (e && e.indeterminate === false && t.hasAttribute("indeterminate"))
+        t.removeAttribute("indeterminate");
+      f(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
+    }, Hr = (t, e) => {
+      if (t.hasAttribute("disabled"))
+        e.preventDefault(), e.stopImmediatePropagation();
+    };
+    var ko = Er + Ar;
+
+    class $ extends o {
+      static formAssociated = true;
+      _internals;
+      _input;
+      _defaultChecked = false;
+      _defaultIndeterminate = false;
+      _defaultsCaptured = false;
+      static get observedAttributes() {
+        return ["checked", "disabled", "name", "value", "indeterminate"];
+      }
+      constructor() {
+        super({ css: ko, template: kr });
+        this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null;
+      }
+      connectedCallback() {
+        if (!this._defaultsCaptured)
+          this._defaultChecked = this.hasAttribute("checked"), this._defaultIndeterminate = this.hasAttribute("indeterminate"), this._defaultsCaptured = true;
+        ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => Lr(this, t)), Cr(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), f(this, this._input, this._internals);
+      }
+      disconnectedCallback() {
+        this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
+      }
+      formResetCallback() {
+        this.indeterminate = this._defaultIndeterminate, this.checked = this._defaultChecked;
+      }
+      attributeChangedCallback(t, e, r) {
+        Tr(this, this._input, this._internals, t, r);
+      }
+      _onChange = () => Mr(this, this._input, this._internals);
+      _onClick = (t) => Hr(this, t);
+      get checked() {
+        return this.hasAttribute("checked");
+      }
+      set checked(t) {
+        t ? this.setAttribute("checked", "") : this.removeAttribute("checked");
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      get indeterminate() {
+        return this._input?.indeterminate ?? this.hasAttribute("indeterminate");
+      }
+      set indeterminate(t) {
+        if (t ? this.setAttribute("indeterminate", "") : this.removeAttribute("indeterminate"), this._input)
+          this._input.indeterminate = t;
+      }
+      get name() {
+        return this.getAttribute("name") ?? "";
+      }
+      set name(t) {
+        this.setAttribute("name", t);
+      }
+      get value() {
+        return this.getAttribute("value") ?? "on";
+      }
+      set value(t) {
+        this.setAttribute("value", t);
+      }
+      get form() {
+        return this._internals.form;
+      }
+      click() {
+        this._input?.click();
+      }
+    }
+    if (!customElements.get("w13c-checkbox"))
+      customElements.define("w13c-checkbox", $);
+    var zr = `<section class="section-container" part="container">
+    <header id="toggle" part="header" role="button" tabindex="0" aria-expanded="true">
+        <div class="accent-bar" part="accent"></div>
+        <div class="title-wrapper" part="title"></div>
+        <svg class="chevron" part="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"/>
+        </svg>
+    </header>
+    <main class="content" id="content" part="content">
+        <slot></slot>
+    </main>
+</section>
+`;
+    var Sr = `:host {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.section-container {
+    border-radius: 10px;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e5e7eb);
+}
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+}
+
+header:hover {
+    background: var(--bg-base, #f9fafb);
+}
+
+header:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--primary-base, #6366f1);
+    border-radius: 10px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    header { transition: background 0.15s; }
+    .chevron { transition: transform 0.2s ease; }
+}
+
+.accent-bar {
+    width: 3px;
+    height: 14px;
+    background: var(--primary-base, #6366f1);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.title-wrapper {
+    flex: 1;
+    color: var(--text-main, #111827);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted, #9ca3af);
+    flex-shrink: 0;
+}
+
+:host([collapsed]) .chevron {
+    transform: rotate(-90deg);
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 1px solid var(--border-default, #e5e7eb);
+    padding: 1rem;
+}
+
+:host([collapsed]) .content {
+    display: none;
+}
+
+.content ::slotted(*) {
+    width: 100%;
+}
+`;
+    var Ir = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, Vt = (t, e) => {
+      if (e)
+        e.textContent = t.getAttribute("data-title") ?? "";
+    }, Kt = (t, e, r) => {
+      if (!e)
+        return;
+      let i = t.hasAttribute("collapsed");
+      if (e.setAttribute("aria-expanded", String(!i)), r)
+        r.hidden = i;
+    };
+    var Pr = (t, e) => {
+      t.dispatchEvent(new CustomEvent("toggle", { detail: { collapsed: e }, bubbles: true, composed: true }));
+    };
+    var $t = (t) => {
+      t.collapsed = !t.collapsed, Pr(t, t.collapsed);
+    }, Rr = (t, e) => {
+      if (e.key !== "Enter" && e.key !== " ")
+        return;
+      e.preventDefault(), $t(t);
+    };
+
+    class U extends o {
+      static get observedAttributes() {
+        return ["collapsed", "data-title"];
+      }
+      _toggle;
+      _title;
+      _content;
+      constructor() {
+        super({ css: Sr, template: zr });
+        this._toggle = this.shadowRoot?.getElementById("toggle") ?? null, this._title = this.shadowRoot?.querySelector(".title-wrapper") ?? null, this._content = this.shadowRoot?.getElementById("content") ?? null;
+      }
+      connectedCallback() {
+        if (Ir(this, "collapsed"), this.hasAttribute("data-collapsed") && !this.hasAttribute("collapsed"))
+          this.setAttribute("collapsed", "");
+        Vt(this, this._title), Kt(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
+      }
+      disconnectedCallback() {
+        this._toggle?.removeEventListener("click", this._onClick), this._toggle?.removeEventListener("keydown", this._onKey);
+      }
+      attributeChangedCallback(t) {
+        if (t === "collapsed")
+          Kt(this, this._toggle, this._content);
+        if (t === "data-title")
+          Vt(this, this._title);
+      }
+      get collapsed() {
+        return this.hasAttribute("collapsed");
+      }
+      set collapsed(t) {
+        t ? this.setAttribute("collapsed", "") : this.removeAttribute("collapsed");
+      }
+      _onClick = () => $t(this);
+      _onKey = (t) => Rr(this, t);
+    }
+    if (!customElements.get("p9r-section"))
+      customElements.define("p9r-section", U);
+    var qr = `<button id="btn" class="icon-button" part="button">
+    <slot></slot>
+</button>
+`;
+    var Br = `:host {
+  display: inline-block;
+
+  --_size: 2.25rem;
+  --_radius: 8px;
+  --_bg: transparent;
+  --_color: var(--text-main, #1f2937);
+  --_border: 1.5px solid transparent;
+  --_hover-bg: var(--bg-base, #f1f5f9);
+  --_accent: var(--text-main);
+}
+
+:host([size="sm"]) { --_size: 1.75rem; --_radius: 6px; }
+:host([size="md"]) { --_size: 2.25rem; --_radius: 8px; }
+:host([size="lg"]) { --_size: 2.75rem; --_radius: 10px; }
+
+:host([color="primary"]) { --_accent: var(--primary-base); }
+:host([color="danger"])  { --_accent: var(--danger-base); }
+:host([color="success"]) { --_accent: var(--success-base); }
+:host([color="info"])    { --_accent: var(--info-base); }
+:host([color="warning"]) { --_accent: var(--warning-base); }
+
+:host([variant="filled"]) {
+  --_bg: var(--_accent);
+  --_color: white;
+  --_hover-bg: var(--_accent);
+}
+
+:host([variant="outlined"]) {
+  --_border: 1.5px solid var(--_accent);
+  --_color: var(--_accent);
+  --_hover-bg: color-mix(in oklab, var(--_accent) 10%, transparent);
+}
+
+:host([variant="ghost"]) {
+  --_color: var(--_accent);
+  --_hover-bg: color-mix(in oklab, var(--_accent) 10%, transparent);
+}
+
+:host([round]) { --_radius: 999px; }
+
+.icon-button {
+  width: var(--_size);
+  height: var(--_size);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--_bg);
+  color: var(--_color);
+  border: var(--_border);
+  border-radius: var(--_radius);
+  cursor: pointer;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.icon-button:hover {
+  background: var(--_hover-bg);
+  opacity: var(--_hover-opacity, 1);
+}
+
+:host([variant="filled"]) .icon-button:hover {
+  --_hover-opacity: 0.9;
+}
+
+.icon-button:focus-visible {
+  outline: 2px solid var(--_accent);
+  outline-offset: 2px;
+}
+
+:host([disabled]) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+::slotted(svg) {
+  width: 55%;
+  height: 55%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .icon-button { transition: background-color 0.15s, color 0.15s, opacity 0.15s; }
+  .icon-button:active { transform: scale(0.95); }
+}
+`;
+
+    class Y extends o {
+      static formAssociated = true;
+      _internals;
+      _btn;
+      static get observedAttributes() {
+        return ["type", "disabled", "aria-label"];
+      }
+      constructor() {
+        super({ css: Br, template: qr });
+        this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
+      }
+      connectedCallback() {
+        for (let t of ["type", "disabled"])
+          this._upgradeProperty(t);
+        if (!this.hasAttribute("type"))
+          this.setAttribute("type", "button");
+        if (!this.hasAttribute("variant"))
+          this.setAttribute("variant", "ghost");
+        this.addEventListener("click", this._handleClick), this._syncAriaLabel();
+      }
+      disconnectedCallback() {
+        this.removeEventListener("click", this._handleClick);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._btn)
+          return;
+        if (t === "type")
+          this._btn.type = r ?? "button";
+        if (t === "disabled")
+          this._btn.disabled = this.hasAttribute("disabled");
+        if (t === "aria-label")
+          this._syncAriaLabel();
+      }
+      _syncAriaLabel() {
+        if (!this._btn)
+          return;
+        let t = this.getAttribute("aria-label");
+        if (t)
+          this._btn.setAttribute("aria-label", t);
+        else
+          this._btn.removeAttribute("aria-label");
+      }
+      _handleClick = (t) => {
+        if (this.hasAttribute("disabled")) {
+          t.stopImmediatePropagation();
+          return;
+        }
+        let e = this._internals.form;
+        if (!e)
+          return;
+        let r = this.getAttribute("type");
+        if (r === "submit")
+          e.requestSubmit();
+        if (r === "reset")
+          e.reset();
+      };
+      _upgradeProperty(t) {
+        if (Object.prototype.hasOwnProperty.call(this, t)) {
+          let e = this[t];
+          delete this[t], this[t] = e;
+        }
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        if (t)
+          this.setAttribute("disabled", "");
+        else
+          this.removeAttribute("disabled");
+      }
+    }
+    if (!customElements.get("p9r-icon-button"))
+      customElements.define("p9r-icon-button", Y);
+    var jr = `<div class="field-header" part="header">
+    <slot name="label"></slot>
+</div>
+
+<div class="drop-zone" part="drop-zone">
+    <input type="file" id="file-native" part="input">
+    <label for="file-native" part="trigger">
+        <span class="icon" part="icon">
+            <slot name="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+            </slot>
+        </span>
+        <span class="text" part="text">
+            <slot name="text"><strong>Click to upload</strong> or drag a file</slot>
+        </span>
+        <span class="file-info" part="file-info">No file selected</span>
+    </label>
+</div>
+
+<div class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
+`;
+    var Dr = `:host {
+    display: block;
+    width: 100%;
+    margin: 1.25rem 0;
+}
+
+:host([disabled]) {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.drop-zone {
+    border: 2px dashed var(--border-default);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: var(--bg-surface);
+    cursor: pointer;
+    position: relative;
+}
+
+:host([dragging]) .drop-zone {
+    border-color: var(--color-primary);
+    background: color-mix(in oklch, var(--color-primary), transparent 90%);
+}
+
+label {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.icon {
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    display: inline-flex;
+}
+
+.text {
+    font-size: 14px;
+    color: var(--text-body);
+}
+
+.text strong {
+    color: var(--color-primary);
+}
+
+.file-info {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    font-family: monospace;
+}
+
+input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+input[type="file"]:focus-visible + label {
+    outline: 2px solid var(--color-primary, currentColor);
+    outline-offset: 2px;
+    border-radius: 8px;
+}
+
+.field-header {
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-label, #4b5563);
+}
+
+.sr-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .drop-zone {
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+}
+`;
+    var Fr = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, Or = (t) => {
+      if (t < 1024)
+        return `${t} B`;
+      if (t < 1048576)
+        return `${(t / 1024).toFixed(1)} KB`;
+      return `${(t / 1048576).toFixed(1)} MB`;
+    }, Ut = (t, e) => {
+      if (t)
+        t.textContent = e;
+    };
+    var Yt = (t, e) => {
+      t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { files: e } }));
+    };
+    var X = (t, e, r, i, n) => {
+      let a = e?.files;
+      if (!a || a.length === 0) {
+        if (r)
+          r.textContent = "No file selected";
+        n.setFormValue(null), Ut(i, "No file selected"), Yt(t, null);
+        return;
+      }
+      let s = a.length === 1 && a[0] ? `${a[0].name} (${Or(a[0].size)})` : `${a.length} files selected`;
+      if (r)
+        r.textContent = s;
+      if (a.length === 1 && a[0])
+        n.setFormValue(a[0]);
+      else {
+        let l = new FormData, d = t.getAttribute("name") ?? "";
+        for (let c = 0;c < a.length; c++) {
+          let u = a.item(c);
+          if (u)
+            l.append(d, u);
+        }
+        n.setFormValue(l);
+      }
+      Ut(i, `Selected: ${s}`), Yt(t, a);
+    };
+    var Nr = (t, e) => {
+      if (e.preventDefault(), t.hasAttribute("disabled"))
+        return;
+      t.toggleAttribute("dragging", true);
+    }, Vr = (t, e) => {
+      e.preventDefault(), t.toggleAttribute("dragging", false);
+    }, Kr = (t, e, r, i, n, a) => {
+      let s = a;
+      if (s.preventDefault(), t.removeAttribute("dragging"), t.hasAttribute("disabled"))
+        return;
+      if (s.dataTransfer?.files && e)
+        e.files = s.dataTransfer.files, X(t, e, r, i, n);
+    };
+
+    class Z extends o {
+      static formAssociated = true;
+      _internals;
+      _input;
+      _preview;
+      _dropZone;
+      _liveRegion;
+      constructor() {
+        super({ css: Dr, template: jr });
+        this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector('input[type="file"]') ?? null, this._preview = this.shadowRoot?.querySelector(".file-info") ?? null, this._dropZone = this.shadowRoot?.querySelector(".drop-zone") ?? null, this._liveRegion = this.shadowRoot?.querySelector(".sr-live") ?? null;
+      }
+      static get observedAttributes() {
+        return ["accept", "multiple", "name", "disabled", "required"];
+      }
+      connectedCallback() {
+        for (let t of ["accept", "multiple", "name", "disabled", "required"])
+          Fr(this, t);
+        this._input?.addEventListener("change", this._onChange), this._dropZone?.addEventListener("dragover", this._onDragOver), this._dropZone?.addEventListener("dragleave", this._onDragLeave), this._dropZone?.addEventListener("drop", this._onDrop);
+      }
+      disconnectedCallback() {
+        this._input?.removeEventListener("change", this._onChange), this._dropZone?.removeEventListener("dragover", this._onDragOver), this._dropZone?.removeEventListener("dragleave", this._onDragLeave), this._dropZone?.removeEventListener("drop", this._onDrop);
+      }
+      formResetCallback() {
+        if (this._input)
+          this._input.value = "";
+        if (this._internals.setFormValue(null), this._preview)
+          this._preview.textContent = "No file selected";
+        this.removeAttribute("dragging");
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._input)
+          return;
+        switch (t) {
+          case "accept":
+            if (r === null)
+              this._input.removeAttribute("accept");
+            else
+              this._input.setAttribute("accept", r);
+            break;
+          case "multiple":
+            this._input.multiple = this.hasAttribute("multiple");
+            break;
+          case "name":
+            if (r === null)
+              this._input.removeAttribute("name");
+            else
+              this._input.setAttribute("name", r);
+            break;
+          case "disabled":
+            this._input.disabled = this.hasAttribute("disabled");
+            break;
+          case "required":
+            this._input.required = this.hasAttribute("required");
+            break;
+        }
+      }
+      _onChange = () => X(this, this._input, this._preview, this._liveRegion, this._internals);
+      _onDragOver = (t) => Nr(this, t);
+      _onDragLeave = (t) => Vr(this, t);
+      _onDrop = (t) => Kr(this, this._input, this._preview, this._liveRegion, this._internals, t);
+      get name() {
+        return this.getAttribute("name") ?? "";
+      }
+      set name(t) {
+        this.setAttribute("name", t);
+      }
+      get accept() {
+        return this.getAttribute("accept") ?? "";
+      }
+      set accept(t) {
+        t ? this.setAttribute("accept", t) : this.removeAttribute("accept");
+      }
+      get multiple() {
+        return this.hasAttribute("multiple");
+      }
+      set multiple(t) {
+        t ? this.setAttribute("multiple", "") : this.removeAttribute("multiple");
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      get required() {
+        return this.hasAttribute("required");
+      }
+      set required(t) {
+        t ? this.setAttribute("required", "") : this.removeAttribute("required");
+      }
+      get files() {
+        return this._input?.files ?? null;
+      }
+      get value() {
+        return this._input?.files?.[0] ?? null;
+      }
+      get form() {
+        return this._internals.form;
+      }
+    }
+    if (!customElements.get("w13c-input-file"))
+      customElements.define("w13c-input-file", Z);
+    var $r = `<div class="field" part="field">
+    <label class="label" part="label"></label>
+    <input class="input" part="input" type="text" />
+    <div class="meta" part="meta" hidden>
+        <small class="hint" part="hint"></small>
+        <small class="counter" part="counter" hidden data-over="false"><span class="count">0</span>/<span class="max">0</span></small>
+    </div>
+</div>
+`;
+    var Ur = `:host {
+    display: block;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+}
+
+.label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+}
+
+.label[hidden] {
+    display: none;
+}
+
+.input {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-main, #1e293b);
+    font-family: inherit;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.input::placeholder {
+    color: var(--text-muted, #94a3b8);
+    font-weight: 400;
+}
+
+.meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.meta[hidden] {
+    display: none;
+}
+
+.hint {
+    font-size: 11px;
+    color: var(--text-muted, #94a3b8);
+    line-height: 1.4;
+    flex: 1;
+    min-width: 0;
+}
+
+.counter {
+    font-size: 11px;
+    color: var(--text-muted, #94a3b8);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.counter[hidden] {
+    display: none;
+}
+`;
+    var Yr = `.input:hover:not(:disabled) {
+    border-color: var(--text-muted, #94a3b8);
+}
+
+.input:focus-visible {
+    border-color: var(--primary-base, #4361ee);
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+}
+
+.input[aria-invalid="true"] {
+    border-color: var(--danger-base, #ef4444);
+}
+
+.input[aria-invalid="true"]:focus-visible {
+    box-shadow: 0 0 0 3px rgb(239 68 68 / 0.15);
+}
+
+.input:disabled {
+    background: var(--bg-base, #f1f5f9);
+    color: var(--text-muted, #94a3b8);
+    cursor: not-allowed;
+}
+
+.hint[data-level="error"] {
+    color: var(--danger-base, #ef4444);
+}
+
+.hint[data-level="success"] {
+    color: var(--success-base, #10b981);
+}
+
+.counter[data-over="true"] {
+    color: var(--danger-base, #ef4444);
+    font-weight: 600;
+}
+`;
+    var Xr = `@media (prefers-reduced-motion: no-preference) {
+    .input { transition: border-color 0.15s, box-shadow 0.15s; }
+}
+`;
+    var Zr = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, Xt = (t) => {
+      let e = t.getAttribute("max-count");
+      if (e === null)
+        return null;
+      let r = parseInt(e, 10);
+      return Number.isFinite(r) && r > 0 ? r : null;
+    }, v = (t, e, r, i) => {
+      if (!e || !r || !i)
+        return;
+      let n = Xt(t);
+      if (n === null)
+        return;
+      let a = e.value.length;
+      i.textContent = String(a), r.dataset.over = String(a > n);
+    }, Zt = (t, e, r) => {
+      if (!t || !e || !r)
+        return;
+      let i = (t.textContent ?? "").length > 0, n = !e.hidden;
+      r.hidden = !i && !n;
+    }, Po = 0, Wr = () => `p9r-input-label-${++Po}`;
+    var Wt = (t, e) => {
+      if (!e)
+        return;
+      let r = t.getAttribute("label") ?? "";
+      e.textContent = r, e.hidden = r === "";
+    }, Ro = (t, e) => {
+      if (!e)
+        return;
+      let r = t.getAttribute("placeholder");
+      if (r === null)
+        e.removeAttribute("placeholder");
+      else
+        e.setAttribute("placeholder", r);
+    }, qo = (t, e) => {
+      if (!e)
+        return;
+      e.setAttribute("type", t.getAttribute("type") ?? "text");
+    }, Bo = (t, e) => {
+      if (e)
+        e.disabled = t.hasAttribute("disabled");
+    }, jo = (t, e) => {
+      if (!e)
+        return;
+      let r = t.hasAttribute("required");
+      if (e.required = r, r)
+        e.setAttribute("aria-required", "true");
+      else
+        e.removeAttribute("aria-required");
+    }, Do = (t, e, r, i) => {
+      if (!e)
+        return;
+      e.textContent = t.getAttribute("hint") ?? "", Zt(e, r, i);
+    }, Fo = (t, e) => {
+      if (!e)
+        return;
+      e.dataset.level = t.getAttribute("hint-level") ?? "info";
+    }, Oo = (t, e) => {
+      if (!e)
+        return;
+      if (t.hasAttribute("invalid"))
+        e.setAttribute("aria-invalid", "true");
+      else
+        e.removeAttribute("aria-invalid");
+    }, Gt = (t, e, r, i, n) => {
+      if (!e || !r)
+        return;
+      let a = Xt(t);
+      if (a === null)
+        e.hidden = true;
+      else
+        e.hidden = false, r.textContent = String(a);
+      Zt(i, e, n);
+    }, Jt = (t, e, r, i, n, a, s) => {
+      Wt(t, r), Ro(t, e), qo(t, e), Bo(t, e), jo(t, e), Do(t, i, a, n), Fo(t, i), Oo(t, e), Gt(t, a, s, i, n);
+    };
+    var Gr = (t, e, r, i, n) => {
+      if (!e)
+        return;
+      r.setFormValue(e.value), v(t, e, i, n);
+    }, Jr = (t, e) => {
+      if (!t)
+        return;
+      e.setFormValue(t.value);
+    };
+    var No = Ur + Yr + Xr;
+
+    class W extends o {
+      static formAssociated = true;
+      static get observedAttributes() {
+        return ["value", "label", "placeholder", "type", "hint", "hint-level", "max-count", "invalid", "disabled", "required"];
+      }
+      _internals;
+      _input;
+      _labelEl;
+      _hintEl;
+      _metaEl;
+      _counterEl;
+      _countEl;
+      _maxEl;
+      _defaultValue = "";
+      _defaultsCaptured = false;
+      constructor() {
+        super({ css: No, template: $r });
+        this._internals = this.attachInternals();
+        let t = this.shadowRoot;
+        this._labelEl = t.querySelector(".label"), this._input = t.querySelector(".input"), this._hintEl = t.querySelector(".hint"), this._metaEl = t.querySelector(".meta"), this._counterEl = t.querySelector(".counter"), this._countEl = t.querySelector(".count"), this._maxEl = t.querySelector(".max");
+        let e = Wr();
+        if (this._labelEl && this._input)
+          this._labelEl.id = e, this._input.setAttribute("aria-labelledby", e);
+      }
+      connectedCallback() {
+        if (!this._defaultsCaptured)
+          this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
+        ["value", "disabled", "required"].forEach((e) => Zr(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), Jt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+        let t = this.getAttribute("value");
+        if (t !== null)
+          this.value = t;
+        else
+          v(this, this._input, this._counterEl, this._countEl);
+      }
+      disconnectedCallback() {
+        this._input?.removeEventListener("input", this._onInput), this._input?.removeEventListener("change", this._onChange);
+      }
+      formResetCallback() {
+        this.value = this._defaultValue;
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._input)
+          return;
+        if (t === "value" && r !== null)
+          this.value = r;
+        else if (t === "label")
+          Wt(this, this._labelEl);
+        else if (t === "max-count")
+          Gt(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), v(this, this._input, this._counterEl, this._countEl);
+        else
+          Jt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+      }
+      get value() {
+        return this._input?.value ?? "";
+      }
+      set value(t) {
+        if (!this._input)
+          return;
+        this._input.value = t, this._internals.setFormValue(t), v(this, this._input, this._counterEl, this._countEl);
+      }
+      get name() {
+        return this.getAttribute("name") ?? "";
+      }
+      get disabled() {
+        return this._input?.disabled ?? false;
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      get required() {
+        return this.hasAttribute("required");
+      }
+      set required(t) {
+        t ? this.setAttribute("required", "") : this.removeAttribute("required");
+      }
+      focus() {
+        this._input?.focus();
+      }
+      _onInput = () => Gr(this, this._input, this._internals, this._counterEl, this._countEl);
+      _onChange = () => Jr(this._input, this._internals);
+    }
+    if (!customElements.get("p9r-input"))
+      customElements.define("p9r-input", W);
+    var Qr = `<div class="field" part="field">
+    <div class="header" part="header">
+        <span class="label" part="label"></span>
+        <div class="input-wrap" part="input-wrap">
+            <input class="number" part="number-input" type="number">
+            <span class="unit" part="unit" hidden></span>
+        </div>
+    </div>
+    <div class="track-container" part="track-container">
+        <div class="track" part="track">
+            <div class="fill" part="fill"></div>
+        </div>
+        <input class="slider" part="slider" type="range">
+    </div>
+    <div class="bounds" part="bounds">
+        <span class="min-bound"></span>
+        <span class="max-bound"></span>
+    </div>
+</div>
+`;
+    var ti = `:host {
+    display: block;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+}
+
+.label[hidden] {
+    display: none;
+}
+
+.input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+
+.number {
+    width: 36px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-main, #1e293b);
+    text-align: right;
+    font-family: inherit;
+    -moz-appearance: textfield;
+}
+
+.number::-webkit-inner-spin-button,
+.number::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.unit {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted, #94a3b8);
+}
+
+.unit[hidden] {
+    display: none;
+}
+
+.bounds {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-muted, #94a3b8);
+    margin-top: -2px;
+}
+`;
+    var ei = `:host([disabled]) {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.input-wrap:focus-within {
+    border-color: var(--primary-base, #4361ee);
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+}
+
+.track-container {
+    position: relative;
+    height: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--border-default, #e2e8f0);
+    border-radius: 4px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.fill {
+    height: 100%;
+    background: var(--primary-base, #4361ee);
+    border-radius: 4px;
+}
+
+.slider {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    z-index: 1;
+    outline: none;
+}
+
+.slider:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.25));
+}
+
+.slider:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.25));
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary-base, #4361ee);
+    border: 2px solid var(--bg-surface, #fff);
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
+    cursor: grab;
+}
+
+.slider::-webkit-slider-thumb:active {
+    transform: scale(1.2);
+    cursor: grabbing;
+}
+
+.slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary-base, #4361ee);
+    border: 2px solid var(--bg-surface, #fff);
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
+    cursor: grab;
+}
+
+.slider::-moz-range-track {
+    background: transparent;
+    border: none;
+}
+`;
+    var ri = `@media (prefers-reduced-motion: no-preference) {
+    .input-wrap { transition: border-color 0.15s; }
+    .fill { transition: width 0.05s ease; }
+    .slider::-webkit-slider-thumb { transition: transform 0.1s; }
+}
+`;
+    var ii = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, A = (t, e) => {
+      if (!t)
+        return e;
+      let r = Number(t.min), i = Number(t.max);
+      if (!Number.isFinite(e))
+        return r;
+      if (e < r)
+        return r;
+      if (e > i)
+        return i;
+      return e;
+    }, _ = (t, e) => {
+      if (!t || !e)
+        return;
+      let r = Number(t.min), i = Number(t.max), n = Number(t.value), a = i === r ? 0 : (n - r) / (i - r) * 100;
+      e.style.width = `${a}%`;
+    };
+    var Qt = (t, e, r, i, n) => {
+      if (!e || !r || !i || !n)
+        return;
+      let a = t.getAttribute("min") ?? "0", s = t.getAttribute("max") ?? "100", l = t.getAttribute("step") ?? "1";
+      e.min = a, e.max = s, e.step = l, r.min = a, r.max = s, r.step = l, i.textContent = a, n.textContent = s;
+    }, te = (t, e, r, i) => {
+      if (!e || !r || !i)
+        return;
+      let n = t.getAttribute("label") ?? t.getAttribute("name") ?? "";
+      if (e.textContent = n, e.hidden = n === "", n)
+        r.setAttribute("aria-label", n), i.setAttribute("aria-label", n);
+    }, ee = (t, e) => {
+      if (!e)
+        return;
+      let r = t.getAttribute("unit") ?? "";
+      e.textContent = r, e.hidden = r === "";
+    }, re = (t, e, r) => {
+      if (!e || !r)
+        return;
+      let i = t.hasAttribute("disabled");
+      e.disabled = i, r.disabled = i;
+    }, L = (t, e, r, i, n) => {
+      if (!t || !e)
+        return;
+      let a = A(t, Number(n));
+      t.value = String(a), e.value = String(a), i.setFormValue(t.value), _(t, r);
+    };
+    var ni = (t, e, r, i, n) => {
+      if (!e || !r)
+        return;
+      r.value = e.value, n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    }, ai = (t, e, r) => {
+      if (!e)
+        return;
+      r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    }, oi = (t, e, r, i, n) => {
+      if (!e || !r)
+        return;
+      if (r.value === "")
+        return;
+      let a = A(e, Number(r.value));
+      e.value = String(a), n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    }, si = (t, e, r, i, n) => {
+      if (!e || !r)
+        return;
+      let a = A(e, Number(r.value));
+      e.value = String(a), r.value = String(a), n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    }, li = (t, e) => {
+      if (!t || !e)
+        return;
+      e.value = t.value;
+    };
+    var Yo = ti + ei + ri;
+
+    class G extends o {
+      static formAssociated = true;
+      static get observedAttributes() {
+        return ["value", "label", "min", "max", "step", "unit", "disabled"];
+      }
+      _internals;
+      _slider;
+      _input;
+      _fill;
+      _labelEl;
+      _unitEl;
+      _minEl;
+      _maxEl;
+      _defaultValue = "";
+      _defaultsCaptured = false;
+      constructor() {
+        super({ css: Yo, template: Qr });
+        this._internals = this.attachInternals();
+        let t = this.shadowRoot;
+        this._slider = t.querySelector(".slider"), this._input = t.querySelector(".number"), this._fill = t.querySelector(".fill"), this._labelEl = t.querySelector(".label"), this._unitEl = t.querySelector(".unit"), this._minEl = t.querySelector(".min-bound"), this._maxEl = t.querySelector(".max-bound");
+      }
+      connectedCallback() {
+        ["value", "disabled"].forEach((e) => ii(this, e)), te(this, this._labelEl, this._slider, this._input), Qt(this, this._slider, this._input, this._minEl, this._maxEl), ee(this, this._unitEl), re(this, this._slider, this._input);
+        let t = this.getAttribute("value") ?? this.getAttribute("min") ?? "0";
+        if (!this._defaultsCaptured)
+          this._defaultValue = t, this._defaultsCaptured = true;
+        L(this._slider, this._input, this._fill, this._internals, t), this._wire("addEventListener");
+      }
+      disconnectedCallback() {
+        this._wire("removeEventListener");
+      }
+      formResetCallback() {
+        L(this._slider, this._input, this._fill, this._internals, this._defaultValue);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._slider || !this._input)
+          return;
+        if (t === "value" && r !== null)
+          L(this._slider, this._input, this._fill, this._internals, r);
+        else if (t === "label")
+          te(this, this._labelEl, this._slider, this._input);
+        else if (t === "min" || t === "max" || t === "step")
+          Qt(this, this._slider, this._input, this._minEl, this._maxEl);
+        else if (t === "unit")
+          ee(this, this._unitEl);
+        else if (t === "disabled")
+          re(this, this._slider, this._input);
+      }
+      get value() {
+        return this._slider?.value ?? "";
+      }
+      set value(t) {
+        L(this._slider, this._input, this._fill, this._internals, String(t));
+      }
+      get name() {
+        return this.getAttribute("name") ?? "";
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      focus() {
+        this._slider?.focus();
+      }
+      _wire(t) {
+        this._slider?.[t]("input", this._onSliderInput), this._slider?.[t]("change", this._onSliderChange), this._input?.[t]("input", this._onNumberInput), this._input?.[t]("change", this._onNumberChange), this._input?.[t]("blur", this._onNumberBlur);
+      }
+      _onSliderInput = () => ni(this, this._slider, this._input, this._fill, this._internals);
+      _onSliderChange = () => ai(this, this._slider, this._internals);
+      _onNumberInput = () => oi(this, this._slider, this._input, this._fill, this._internals);
+      _onNumberChange = () => si(this, this._slider, this._input, this._fill, this._internals);
+      _onNumberBlur = () => li(this._slider, this._input);
+    }
+    if (!customElements.get("p9r-range"))
+      customElements.define("p9r-range", G);
+    var di = `<div class="field">
+    <span class="label"></span>
+    <button class="trigger" type="button" tabindex="0"
+            popovertarget="panel" popovertargetaction="toggle">
+        <span class="value"></span>
+        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 9 6 6 6-6"/>
+        </svg>
+    </button>
+    <div id="panel" class="panel" popover>
+        <ul class="list"></ul>
+    </div>
+</div>
+<div hidden><slot></slot></div>
+`;
+    var ci = `:host {
+    display: block;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+}
+
+.label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+}
+
+.trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+}
+
+.value {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-main, #1e293b);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chevron {
+    flex-shrink: 0;
+    color: var(--text-muted, #94a3b8);
+    transition: transform 0.2s ease;
+}
+
+.list {
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.option {
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-main, #1e293b);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+`;
+    var ui = `.trigger:hover {
+    border-color: var(--text-muted, #94a3b8);
+}
+
+.trigger:focus-visible {
+    border-color: var(--primary-base, #4361ee);
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+}
+
+.field:has(.panel:popover-open) .trigger {
+    border-color: var(--primary-base, #4361ee);
+}
+
+.field:has(.panel:popover-open) .trigger .chevron {
+    transform: rotate(180deg);
+    color: var(--primary-base, #4361ee);
+}
+
+.panel {
+    /* \`[popover]\` puts us in the browser top-layer when shown — escapes
+     * \`overflow: hidden|auto\` ancestors, and the containing block for our
+     * \`position: fixed\` is the viewport regardless of any transformed
+     * ancestor (a \`<w13c-lateral-dialog>\` slides via \`transform\`, which
+     * would otherwise hijack the containing block). \`top\`, \`left\`, \`width\`
+     * set inline by the host on \`toggle\`. */
+    position: fixed;
+    margin: 0;
+    padding: 0;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+    overflow: hidden;
+}
+
+.option:hover {
+    background: var(--bg-base, #f1f5f9);
+}
+
+.option.selected {
+    background: var(--primary-muted, rgb(67 97 238 / 0.1));
+    color: var(--primary-base, #4361ee);
+    font-weight: 600;
+}
+`;
+    var pi = (t, e) => {
+      t.forEach((r) => r.classList.toggle("selected", r.dataset.value === e));
+    }, hi = (t, e) => {
+      if (!t)
+        return;
+      t.textContent = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
+    };
+    var bi = (t, e, r) => {
+      let i = Array.from(t.querySelectorAll("option"));
+      if (e)
+        e.innerHTML = "";
+      let n = [], a = "", s = "";
+      if (i.forEach((l) => {
+        let d = document.createElement("li");
+        if (d.className = "option", d.textContent = l.textContent, d.dataset.value = l.value, d.addEventListener("click", () => r(l.value, l.textContent ?? "")), e?.appendChild(d), n.push(d), l.hasAttribute("selected") && !a)
+          a = l.value, s = l.textContent ?? "";
+      }), !a && i.length > 0)
+        a = i[0].value, s = i[0].textContent ?? "";
+      return { options: n, initialValue: a, initialLabel: s };
+    }, mi = (t, e, r, i) => {
+      if (e)
+        e.textContent = i;
+      pi(t, r);
+    };
+    var Go = ci + ui;
+
+    class J extends o {
+      static formAssociated = true;
+      _internals;
+      _trigger;
+      _display;
+      _list;
+      _panel;
+      _options = [];
+      _value = "";
+      _isOpen = false;
+      constructor() {
+        super({ css: Go, template: di });
+        this._internals = this.attachInternals(), this._trigger = this.shadowRoot.querySelector(".trigger"), this._display = this.shadowRoot.querySelector(".value"), this._list = this.shadowRoot.querySelector(".list"), this._panel = this.shadowRoot.querySelector(".panel");
+      }
+      connectedCallback() {
+        hi(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
+      }
+      disconnectedCallback() {
+        if (this.shadowRoot.querySelector("slot")?.removeEventListener("slotchange", this._onSlot), this._panel?.removeEventListener("beforetoggle", this._onBeforeToggle), this._panel?.removeEventListener("toggle", this._onToggle), this._isOpen)
+          this._panel?.hidePopover?.();
+        this._unbindReposition();
+      }
+      _syncFromSlot = () => {
+        let { options: t, initialValue: e, initialLabel: r } = bi(this, this._list, (n, a) => this._select(n, a));
+        this._options = t;
+        let i = this.getAttribute("value");
+        if (i !== null) {
+          let n = t.find((a) => a.dataset.value === i);
+          if (n) {
+            this._setValue(i, n.textContent ?? "");
+            return;
+          }
+        }
+        if (e)
+          this._setValue(e, r);
+      };
+      _select(t, e) {
+        this._setValue(t, e), this._panel?.hidePopover?.(), this.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      _setValue(t, e) {
+        this._value = t, this._internals.setFormValue(t), mi(this._options, this._display, t, e);
+      }
+      _onBeforeToggle = (t) => {
+        if (t.newState === "open")
+          this._reposition();
+      };
+      _onToggle = (t) => {
+        if (this._isOpen = t.newState === "open", this._isOpen)
+          window.addEventListener("scroll", this._reposition, { capture: true, passive: true }), window.addEventListener("resize", this._reposition);
+        else
+          this._unbindReposition();
+      };
+      _unbindReposition() {
+        window.removeEventListener("scroll", this._reposition, { capture: true }), window.removeEventListener("resize", this._reposition);
+      }
+      _reposition = () => {
+        if (!this._trigger || !this._panel)
+          return;
+        let t = this._trigger.getBoundingClientRect();
+        this._panel.style.top = `${t.bottom + 4}px`, this._panel.style.left = `${t.left}px`, this._panel.style.width = `${t.width}px`;
+      };
+      get value() {
+        return this._value;
+      }
+      set value(t) {
+        let e = this._options.find((r) => r.dataset.value === t);
+        if (e)
+          this._setValue(t, e.textContent ?? "");
+      }
+      get name() {
+        return this.getAttribute("name");
+      }
+      _onSlot = () => this._syncFromSlot();
+    }
+    if (!customElements.get("p9r-select"))
+      customElements.define("p9r-select", J);
+
+    class Q extends HTMLElement {
+      connectedCallback() {
+        let t = this.getAttribute("label") || "Size", e = this.getAttribute("name") || "size", r = document.createElement("p9r-select");
+        r.setAttribute("label", t), r.setAttribute("name", e), [{ value: "none", label: "NONE" }, { value: "xs", label: "XS" }, { value: "sm", label: "S" }, { value: "md", label: "M", selected: true }, { value: "lg", label: "L" }, { value: "xl", label: "XL" }].forEach((n) => {
+          let a = document.createElement("option");
+          if (a.value = n.value, a.textContent = n.label, n.selected)
+            a.setAttribute("selected", "");
+          r.appendChild(a);
+        }), this.replaceWith(r);
+      }
+      get name() {
+        return this.getAttribute("name");
+      }
+      get value() {
+        return "";
+      }
+    }
+    if (!customElements.get("p9r-sizes-select"))
+      customElements.define("p9r-sizes-select", Q);
+    var gi = `<label class="radio" part="container">
+    <input type="radio" id="native-input" part="input" />
+    <span class="custom" part="circle" aria-hidden="true">
+        <span class="dot" part="dot"></span>
+    </span>
+    <span class="label" part="label"><slot></slot></span>
+</label>
+`;
+    var fi = `:host {
+  display: inline-block;
+
+  --_size: 18px;
+  --_border: var(--border-default, #d1d5db);
+  --_active: var(--primary-base, #4361ee);
+  --_bg: var(--bg-surface, #fff);
+  --_text: var(--text-main, #1f2937);
+  --_focus-ring: color-mix(in oklab, var(--_active) 20%, transparent);
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+}
+
+input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+}
+
+.custom {
+  position: relative;
+  width: var(--_size);
+  height: var(--_size);
+  border-radius: 50%;
+  border: 2px solid var(--_border);
+  background: var(--_bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.dot {
+  width: 50%;
+  height: 50%;
+  background: var(--_active);
+  border-radius: 50%;
+  transform: scale(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .custom { transition: border-color 0.15s, box-shadow 0.15s; }
+  .dot    { transition: transform 0.15s; }
+}
+
+input:checked ~ .custom {
+  border-color: var(--_active);
+}
+
+input:checked ~ .custom .dot {
+  transform: scale(1);
+}
+
+input:focus-visible ~ .custom {
+  box-shadow: 0 0 0 3px var(--_focus-ring);
+}
+
+.label {
+  font-size: 14px;
+  color: var(--_text);
+}
+
+.label:has(slot:not(:has(*))) { display: none; }
+
+:host([disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+`;
+
+    class tt extends o {
+      _input;
+      static get observedAttributes() {
+        return ["checked", "disabled", "value", "name"];
+      }
+      constructor() {
+        super({ css: fi, template: gi });
+        this._input = this.shadowRoot?.querySelector("input") ?? null;
+      }
+      connectedCallback() {
+        for (let t of ["checked", "disabled", "value"])
+          this._upgradeProperty(t);
+        if (this._input) {
+          if (this._input.checked = this.hasAttribute("checked"), this._input.disabled = this.hasAttribute("disabled"), this._input.value = this.getAttribute("value") ?? "", this.hasAttribute("name"))
+            this._input.name = this.getAttribute("name") ?? "";
+          this._input.addEventListener("change", this._onChange), this._input.addEventListener("click", this._onClick);
+        }
+        if (this.setAttribute("role", "radio"), this.setAttribute("aria-checked", String(this.hasAttribute("checked"))), !this.hasAttribute("tabindex"))
+          this.setAttribute("tabindex", this.hasAttribute("checked") ? "0" : "-1");
+      }
+      disconnectedCallback() {
+        this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._input)
+          return;
+        if (t === "checked")
+          this._input.checked = r !== null, this.setAttribute("aria-checked", String(r !== null));
+        else if (t === "disabled")
+          this._input.disabled = r !== null;
+        else if (t === "value")
+          this._input.value = r ?? "";
+        else if (t === "name")
+          this._input.name = r ?? "";
+      }
+      _onChange = () => {
+        if (this._input?.checked ?? false)
+          this.setAttribute("checked", "");
+        else
+          this.removeAttribute("checked");
+        this.dispatchEvent(new Event("change", { bubbles: true }));
+      };
+      _onClick = (t) => {
+        if (this.hasAttribute("disabled"))
+          t.preventDefault(), t.stopImmediatePropagation();
+      };
+      _upgradeProperty(t) {
+        if (Object.prototype.hasOwnProperty.call(this, t)) {
+          let e = this[t];
+          delete this[t], this[t] = e;
+        }
+      }
+      get checked() {
+        return this.hasAttribute("checked");
+      }
+      set checked(t) {
+        if (t)
+          this.setAttribute("checked", "");
+        else
+          this.removeAttribute("checked");
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        if (t)
+          this.setAttribute("disabled", "");
+        else
+          this.removeAttribute("disabled");
+      }
+      get value() {
+        return this.getAttribute("value") ?? "";
+      }
+      set value(t) {
+        this.setAttribute("value", t);
+      }
+    }
+    if (!customElements.get("p9r-radio"))
+      customElements.define("p9r-radio", tt);
+    var vi = `<fieldset class="group" part="group">
+    <legend class="label" part="label"></legend>
+    <div class="options" part="options">
+        <slot></slot>
+    </div>
+</fieldset>
+`;
+    var _i = `:host {
+  display: block;
+}
+
+.group {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #94a3b8);
+  padding: 0;
+  margin-bottom: 0.4rem;
+}
+
+.label:empty { display: none; }
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+:host([orientation="horizontal"]) .options {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+:host([disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+`;
+    var xi = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, x = (t) => {
+      if (!t)
+        return [];
+      return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-RADIO");
+    }, rs = 0, yi = () => `radiogroup-${rs++}`, wi = (t, e, r) => {
+      t.forEach((i) => {
+        let n = e !== null && i.getAttribute("value") === e;
+        if (n)
+          i.setAttribute("checked", "");
+        else
+          i.removeAttribute("checked");
+        i.setAttribute("tabindex", n ? "0" : "-1");
+      }), r.setFormValue(e ?? null);
+    }, ie = (t, e) => {
+      if (t)
+        t.textContent = e ?? "";
+    }, et = (t, e) => {
+      if (!e)
+        return;
+      t.forEach((r) => r.setAttribute("disabled", ""));
+    };
+    var ne = (t, e) => {
+      t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: e } }));
+    };
+    var ae = (t, e, r) => {
+      let i = x(e), n = t.getAttribute("name") ?? yi(), a = t.getAttribute("value");
+      if (i.forEach((s) => {
+        s.setAttribute("name", n);
+        let l = a !== null && s.getAttribute("value") === a;
+        if (l)
+          s.setAttribute("checked", "");
+        else
+          s.removeAttribute("checked");
+        s.setAttribute("tabindex", l ? "0" : "-1");
+      }), a === null && i.length > 0)
+        i[0]?.setAttribute("tabindex", "0");
+      et(i, t.hasAttribute("disabled")), r.setFormValue(a ?? null);
+    }, ki = (t, e) => {
+      let r = e.target;
+      if (r.tagName !== "P9R-RADIO")
+        return;
+      let i = r.getAttribute("value") ?? "";
+      if (i !== t.getAttribute("value"))
+        t.setAttribute("value", i), ne(t, i);
+    }, Ei = (t, e, r) => {
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
+        return;
+      let n = x(e).filter((u) => !u.hasAttribute("disabled"));
+      if (n.length === 0)
+        return;
+      let a = n.findIndex((u) => u === document.activeElement), s = a === -1 ? 0 : a, l = s;
+      switch (r.key) {
+        case "ArrowLeft":
+        case "ArrowUp":
+          l = (s - 1 + n.length) % n.length;
+          break;
+        case "ArrowRight":
+        case "ArrowDown":
+          l = (s + 1) % n.length;
+          break;
+        case "Home":
+          l = 0;
+          break;
+        case "End":
+          l = n.length - 1;
+          break;
+      }
+      r.preventDefault();
+      let d = n[l];
+      if (!d)
+        return;
+      let c = d.getAttribute("value") ?? "";
+      t.setAttribute("value", c), d.focus(), ne(t, c);
+    };
+
+    class rt extends o {
+      static formAssociated = true;
+      _internals;
+      _label;
+      _slot;
+      _defaultValue = null;
+      _defaultsCaptured = false;
+      static get observedAttributes() {
+        return ["value", "label", "name", "disabled"];
+      }
+      constructor() {
+        super({ css: _i, template: vi });
+        this._internals = this.attachInternals(), this._label = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
+      }
+      connectedCallback() {
+        if (!this._defaultsCaptured)
+          this._defaultValue = this.getAttribute("value"), this._defaultsCaptured = true;
+        for (let t of ["value", "name", "disabled"])
+          xi(this, t);
+        this.setAttribute("role", "radiogroup"), ie(this._label, this.getAttribute("label")), this._slot?.addEventListener("slotchange", this._onSlotChange), this.addEventListener("change", this._onChange), this.addEventListener("keydown", this._onKey), ae(this, this._slot, this._internals);
+      }
+      disconnectedCallback() {
+        this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("change", this._onChange), this.removeEventListener("keydown", this._onKey);
+      }
+      formResetCallback() {
+        if (this._defaultValue === null)
+          this.removeAttribute("value");
+        else
+          this.setAttribute("value", this._defaultValue);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "value")
+          wi(x(this._slot), r, this._internals);
+        else if (t === "label")
+          ie(this._label, r);
+        else if (t === "disabled")
+          et(x(this._slot), this.hasAttribute("disabled"));
+      }
+      get value() {
+        return this.getAttribute("value") ?? "";
+      }
+      set value(t) {
+        this.setAttribute("value", t);
+      }
+      get name() {
+        return this.getAttribute("name") ?? "";
+      }
+      set name(t) {
+        t ? this.setAttribute("name", t) : this.removeAttribute("name");
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      _onSlotChange = () => ae(this, this._slot, this._internals);
+      _onChange = (t) => ki(this, t);
+      _onKey = (t) => Ei(this, this._slot, t);
+    }
+    if (!customElements.get("p9r-radio-group"))
+      customElements.define("p9r-radio-group", rt);
+    var Ai = `<div class="switch-container" part="container">
+    <span class="label" id="group-label" part="label"></span>
+
+    <div class="switch-wrapper" part="wrapper" role="radiogroup" aria-labelledby="group-label">
+        <div class="selection-slider" part="slider"></div>
+
+        <div class="options-container" part="options">
+            <slot></slot>
+        </div>
+    </div>
+
+    <span class="error-message" id="error-text" part="error">
+        <slot name="error"></slot>
+    </span>
+</div>
+`;
+    var Li = `:host {
+  --active-index: 0;
+  --total-options: 1;
+  display: block;
+}
+
+.label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 4px;
+}
+
+.label:empty {
+  display: none;
+}
+
+.options-container {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--total-options), 1fr);
+}
+
+::slotted(option) {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::slotted(option) {
+    transition: color 0.2s;
+  }
+}
+
+::slotted(option:focus-visible) {
+  outline: 2px solid var(--primary-base);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+.switch-wrapper {
+  position: relative;
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.selection-slider {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc((100% - 4px) / var(--total-options));
+  background-color: var(--bg-surface);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transform: translateX(calc(var(--active-index) * 100%));
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .selection-slider {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+::slotted([aria-checked="true"]) {
+  color: var(--primary-base) !important;
+  font-weight: 600;
+}
+
+:host([disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+`;
+    var Ci = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, C = (t) => {
+      if (!t)
+        return [];
+      return t.assignedElements().filter((e) => e.tagName === "OPTION");
+    }, oe = (t, e) => {
+      if (t)
+        t.textContent = e;
+    }, it = (t, e, r) => {
+      let i = e.findIndex((n) => n.getAttribute("value") === r);
+      if (i === -1)
+        return;
+      t.style.setProperty("--active-index", i.toString()), e.forEach((n, a) => {
+        let s = a === i;
+        n.setAttribute("aria-checked", s.toString()), n.setAttribute("tabindex", s ? "0" : "-1");
+      });
+    }, nt = (t, e) => {
+      t.forEach((r) => {
+        if (r.getAttribute("value") === e)
+          r.setAttribute("selected", "");
+        else
+          r.removeAttribute("selected");
+      });
+    };
+    var se = (t, e) => {
+      let r = C(e);
+      t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, n) => {
+        if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
+          i.setAttribute("tabindex", n === 0 ? "0" : "-1");
+        i.onclick = () => {
+          if (t.disabled)
+            return;
+          t.value = i.getAttribute("value") ?? "", i.focus();
+        };
+      }), it(t, r, t.value), nt(r, t.value);
+    }, Ti = (t, e, r) => {
+      if (t.disabled)
+        return;
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
+        return;
+      let n = C(e);
+      if (n.length === 0)
+        return;
+      let a = n.findIndex((c) => c.getAttribute("value") === t.value), s = a === -1 ? 0 : a, l = s;
+      switch (r.key) {
+        case "ArrowLeft":
+        case "ArrowUp":
+          l = (s - 1 + n.length) % n.length;
+          break;
+        case "ArrowRight":
+        case "ArrowDown":
+          l = (s + 1) % n.length;
+          break;
+        case "Home":
+          l = 0;
+          break;
+        case "End":
+          l = n.length - 1;
+          break;
+      }
+      r.preventDefault();
+      let d = n[l];
+      if (!d)
+        return;
+      t.value = d.getAttribute("value") ?? "", d.focus();
+    };
+
+    class at extends o {
+      static formAssociated = true;
+      _internals;
+      _labelEl;
+      _slot;
+      _defaultValue = "";
+      _defaultsCaptured = false;
+      _silentValueChange = false;
+      static get observedAttributes() {
+        return ["value", "disabled", "name", "label"];
+      }
+      constructor() {
+        super({ css: Li, template: Ai });
+        this._internals = this.attachInternals(), this._labelEl = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot:not([name])") ?? null;
+      }
+      connectedCallback() {
+        if (!this._defaultsCaptured)
+          this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
+        for (let t of ["value", "disabled", "name", "label"])
+          Ci(this, t);
+        if (this._slot)
+          this._slot.addEventListener("slotchange", this._onSlotChange), se(this, this._slot);
+        this.addEventListener("keydown", this._onKey), oe(this._labelEl, this.getAttribute("label") ?? "");
+      }
+      disconnectedCallback() {
+        this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("keydown", this._onKey);
+      }
+      formResetCallback() {
+        this._silentValueChange = true;
+        try {
+          this.value = this._defaultValue;
+        } finally {
+          this._silentValueChange = false;
+        }
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this.shadowRoot)
+          return;
+        if (t === "value")
+          this.value = r ?? "";
+        else if (t === "label")
+          oe(this._labelEl, r ?? "");
+      }
+      get value() {
+        return this.getAttribute("value") ?? "";
+      }
+      set value(t) {
+        if (this.getAttribute("value") !== t)
+          this.setAttribute("value", t);
+        this._internals.setFormValue(t);
+        let e = C(this._slot);
+        if (it(this, e, t), nt(e, t), !this._silentValueChange)
+          this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: t } }));
+      }
+      get name() {
+        return this.getAttribute("name") ?? "";
+      }
+      set name(t) {
+        t ? this.setAttribute("name", t) : this.removeAttribute("name");
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      get label() {
+        return this.getAttribute("label") ?? "";
+      }
+      set label(t) {
+        t ? this.setAttribute("label", t) : this.removeAttribute("label");
+      }
+      _onSlotChange = () => se(this, this._slot);
+      _onKey = (t) => Ti(this, this._slot, t);
+    }
+    if (!customElements.get("p9r-segmented-switch"))
+      customElements.define("p9r-segmented-switch", at);
+    var Mi = `<label class="switch" part="container">
+    <input type="checkbox" id="native-input" part="input" />
+    <span class="track" part="track">
+        <span class="thumb" part="thumb"></span>
+    </span>
+    <span class="label" part="label"><slot></slot></span>
+</label>
+`;
+    var Hi = `:host {
+  display: inline-block;
+
+  --_track-w: 36px;
+  --_track-h: 20px;
+  --_thumb: 14px;
+  --_gap: 3px;
+  --_off-bg: var(--border-default, #d1d5db);
+  --_on-bg: var(--primary-base, #4361ee);
+  --_thumb-bg: var(--bg-surface, #fff);
+  --_text: var(--text-main, #1f2937);
+  --_focus-ring: color-mix(in oklab, var(--_on-bg) 20%, transparent);
+}
+
+:host([size="sm"]) {
+  --_track-w: 28px;
+  --_track-h: 16px;
+  --_thumb: 11px;
+}
+
+:host([size="lg"]) {
+  --_track-w: 48px;
+  --_track-h: 26px;
+  --_thumb: 20px;
+}
+
+:host([color="danger"])  { --_on-bg: var(--danger-base); }
+:host([color="success"]) { --_on-bg: var(--success-base); }
+:host([color="info"])    { --_on-bg: var(--info-base); }
+:host([color="warning"]) { --_on-bg: var(--warning-base); }
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+}
+
+input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  pointer-events: none;
+}
+
+.track {
+  position: relative;
+  width: var(--_track-w);
+  height: var(--_track-h);
+  background: var(--_off-bg);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.thumb {
+  position: absolute;
+  top: var(--_gap);
+  left: var(--_gap);
+  width: var(--_thumb);
+  height: var(--_thumb);
+  background: var(--_thumb-bg);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+input:checked ~ .track {
+  background: var(--_on-bg);
+}
+
+input:checked ~ .track .thumb {
+  left: calc(100% - var(--_thumb) - var(--_gap));
+}
+
+input:focus-visible ~ .track {
+  box-shadow: 0 0 0 3px var(--_focus-ring);
+}
+
+.label {
+  font-size: 14px;
+  color: var(--_text);
+}
+
+.label:has(slot:not(:has(*))) { display: none; }
+
+:host([disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .track, .thumb {
+    transition: background-color 0.18s ease, left 0.18s ease, box-shadow 0.18s ease;
+  }
+}
+`;
+    var zi = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, y = (t, e, r) => {
+      let i = e?.checked ?? t.hasAttribute("checked");
+      r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
+    };
+    var Si = (t, e, r) => {
+      if (e?.checked ?? false)
+        t.setAttribute("checked", "");
+      else
+        t.removeAttribute("checked");
+      y(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
+    }, Ii = (t, e) => {
+      if (t.hasAttribute("disabled"))
+        e.preventDefault(), e.stopImmediatePropagation();
+    };
+
+    class ot extends o {
+      static formAssociated = true;
+      _internals;
+      _input;
+      _defaultChecked = false;
+      _defaultsCaptured = false;
+      static get observedAttributes() {
+        return ["checked", "disabled", "name", "value"];
+      }
+      constructor() {
+        super({ css: Hi, template: Mi });
+        this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null;
+      }
+      connectedCallback() {
+        if (!this._defaultsCaptured)
+          this._defaultChecked = this.hasAttribute("checked"), this._defaultsCaptured = true;
+        for (let t of ["checked", "disabled", "name", "value"])
+          zi(this, t);
+        if (this._input) {
+          if (this._input.checked = this.hasAttribute("checked"), this._input.disabled = this.hasAttribute("disabled"), this.hasAttribute("name"))
+            this._input.name = this.getAttribute("name") ?? "";
+          if (this.hasAttribute("value"))
+            this._input.value = this.getAttribute("value") ?? "";
+          this._input.addEventListener("change", this._onChange), this._input.addEventListener("click", this._onClick);
+        }
+        this.setAttribute("role", "switch"), this.setAttribute("aria-checked", String(this.hasAttribute("checked"))), y(this, this._input, this._internals);
+      }
+      disconnectedCallback() {
+        this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
+      }
+      formResetCallback() {
+        this.checked = this._defaultChecked;
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._input)
+          return;
+        if (t === "checked")
+          this._input.checked = r !== null, this.setAttribute("aria-checked", String(r !== null)), y(this, this._input, this._internals);
+        else if (t === "disabled")
+          this._input.disabled = r !== null;
+        else if (t === "name")
+          this._input.name = r ?? "";
+        else if (t === "value")
+          this._input.value = r ?? "", y(this, this._input, this._internals);
+      }
+      _onChange = () => Si(this, this._input, this._internals);
+      _onClick = (t) => Ii(this, t);
+      get checked() {
+        return this.hasAttribute("checked");
+      }
+      set checked(t) {
+        t ? this.setAttribute("checked", "") : this.removeAttribute("checked");
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      get name() {
+        return this.getAttribute("name") ?? "";
+      }
+      set name(t) {
+        this.setAttribute("name", t);
+      }
+      get value() {
+        return this.getAttribute("value") ?? "on";
+      }
+      set value(t) {
+        this.setAttribute("value", t);
+      }
+      get form() {
+        return this._internals.form;
+      }
+      click() {
+        this._input?.click();
+      }
+    }
+    if (!customElements.get("p9r-switch"))
+      customElements.define("p9r-switch", ot);
+    var Pi = `<div class="container" part="container">
+    <label for="main-input" part="label">
+        <slot name="label">Tags</slot>
+    </label>
+    <div class="input-wrapper" part="input-wrapper">
+        <input
+            id="main-input"
+            part="input"
+            type="text"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-haspopup="listbox"
+            autocomplete="off"
+            spellcheck="false"
+        />
+        <div
+            id="suggestions"
+            class="suggestions"
+            part="listbox"
+            role="listbox"
+            hidden
+        ></div>
+    </div>
+    <div
+        id="tags-display"
+        class="tags-list"
+        part="chips"
+        role="list"
+        aria-label="Selected tags"
+    ></div>
+    <div
+        id="live-region"
+        class="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+    ></div>
+</div>
+`;
+    var Ri = `:host {
+    display: block;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+:host([disabled]) {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+input {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-main, #1e293b);
+    font-family: inherit;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background-color: var(--bg-surface, #fff);
+    outline: none;
+    box-sizing: border-box;
+}
+
+input::placeholder {
+    color: var(--text-muted, #94a3b8);
+    font-weight: 400;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    input {
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+}
+`;
+    var qi = `input:hover:not(:disabled) {
+    border-color: var(--text-muted, #94a3b8);
+}
+
+input:focus-visible {
+    border-color: var(--primary-base, #4361ee);
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+}
+
+input:disabled {
+    cursor: not-allowed;
+    background-color: var(--bg-base, #f1f5f9);
+}
+
+.suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    z-index: 1000;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.suggestion {
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .suggestion { transition: background 0.1s; }
+    p9r-tag { transition: filter 0.2s; }
+}
+
+.suggestion[data-active="true"],
+.suggestion:hover {
+    background: var(--bg-base, #f1f5f9);
+}
+
+.suggestion .name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-main, #1e293b);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.tags-list:empty {
+    display: none;
+}
+
+p9r-tag {
+    cursor: pointer;
+}
+
+p9r-tag:hover {
+    filter: brightness(0.92);
+}
+`;
+    var Bi = `<span class="label" part="label"><slot></slot></span>
+<button type="button" class="remove" part="remove" aria-label="Remove" hidden>&times;</button>
+`;
+    var ji = `:host {
+    --_tag-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
+    --_tag-color: var(--text-body, oklch(45% 0.02 265));
+    --_tag-border: var(--border-default, oklch(90% 0.02 265));
+
+    --_tag-fs: 12px;
+    --_tag-padding: 2px 8px;
+    --_tag-radius: 6px;
+    --_tag-gap: 4px;
+
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--_tag-gap);
+
+    font-family: var(--_tag-font-family);
+    background-color: var(--_tag-bg);
+    color: var(--_tag-color);
+
+    font-size: var(--_tag-fs);
+    padding: var(--_tag-padding);
+    border-radius: var(--_tag-radius);
+}
+
+:host([border]) {
+    border: 1px solid var(--_tag-border);
+}
+
+.label {
+    display: inline-flex;
+    align-items: center;
+}
+
+.remove {
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    line-height: 1;
+    padding: 0 2px;
+    margin: 0;
+    cursor: pointer;
+    opacity: 0.6;
+    font-size: 14px;
+}
+
+.remove:hover {
+    opacity: 1;
+}
+
+.remove:focus-visible {
+    outline: 2px solid var(--_tag-color);
+    outline-offset: 1px;
+    border-radius: 2px;
+}
+
+.remove[hidden] {
+    display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .remove {
+        transition: opacity 0.15s ease;
+    }
+}
+`;
+    var Di = `:host([color="info"]) {
+    --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
+    --_tag-color: var(--info-base, oklch(65% 0.12 230));
+    --_tag-border: var(--info-contrasted, oklch(25% 0.08 230));
+}
+
+:host([color="danger"]) {
+    --_tag-bg: var(--danger-muted, oklch(95% 0.02 20));
+    --_tag-color: var(--danger-base, oklch(65% 0.12 20));
+    --_tag-border: var(--danger-contrasted, oklch(25% 0.08 20));
+}
+
+:host([color="success"]) {
+    --_tag-bg: var(--success-muted, oklch(95% 0.02 120));
+    --_tag-color: var(--success-base, oklch(65% 0.12 120));
+    --_tag-border: var(--success-contrasted, oklch(25% 0.08 120));
+}
+
+:host([color="warning"]) {
+    --_tag-bg: var(--warning-muted, oklch(95% 0.02 50));
+    --_tag-color: var(--warning-base, oklch(65% 0.12 50));
+    --_tag-border: var(--warning-contrasted, oklch(25% 0.08 50));
+}
+
+:host([color="primary"]) {
+    --_tag-bg: var(--primary-muted, oklch(95% 0.02 265));
+    --_tag-color: var(--primary-base, oklch(65% 0.12 265));
+    --_tag-border: var(--primary-contrasted, oklch(25% 0.08 265));
+}
+
+:host([color="secondary"]) {
+    --_tag-bg: var(--secondary-muted, oklch(95% 0.02 265));
+    --_tag-color: var(--secondary-base, oklch(65% 0.12 265));
+    --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
+}
+`;
+    var hs = ji + Di;
+
+    class st extends o {
+      _removeBtn;
+      static get observedAttributes() {
+        return ["removable"];
+      }
+      constructor() {
+        super({ css: hs, template: Bi });
+        this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
+      }
+      connectedCallback() {
+        for (let t of ["removable"])
+          this._upgradeProperty(t);
+        this._syncRemovable(), this._removeBtn?.addEventListener("click", this._handleRemoveClick);
+      }
+      disconnectedCallback() {
+        this._removeBtn?.removeEventListener("click", this._handleRemoveClick);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._removeBtn)
+          return;
+        if (t === "removable")
+          this._syncRemovable();
+      }
+      _syncRemovable() {
+        if (!this._removeBtn)
+          return;
+        this._removeBtn.hidden = !this.hasAttribute("removable");
+      }
+      _handleRemoveClick = (t) => {
+        if (t.stopPropagation(), !this.dispatchEvent(new CustomEvent("remove", { bubbles: true, cancelable: true, detail: { value: this.getAttribute("value") ?? this.textContent?.trim() ?? "" } })))
+          return;
+        this.remove();
+      };
+      _upgradeProperty(t) {
+        if (this.hasOwnProperty(t)) {
+          let e = this[t];
+          delete this[t], this[t] = e;
+        }
+      }
+      get removable() {
+        return this.hasAttribute("removable");
+      }
+      set removable(t) {
+        if (t)
+          this.setAttribute("removable", "");
+        else
+          this.removeAttribute("removable");
+      }
+    }
+    if (!customElements.get("p9r-tag"))
+      customElements.define("p9r-tag", st);
+    var Fi = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, lt = (t, e) => {
+      if (!t)
+        return;
+      t.textContent = "", window.setTimeout(() => {
+        if (t)
+          t.textContent = e;
+      }, 10);
+    };
+    var le = async (t) => {
+      let e = t.getAttribute("resource");
+      if (!e)
+        return null;
+      let r = t.getAttribute("api") || "../api/tags", i = new URL(r, window.location.href);
+      i.searchParams.set("resource", e);
+      try {
+        let n = await fetch(i);
+        if (!n.ok)
+          return null;
+        return await n.json();
+      } catch {
+        return null;
+      }
+    };
+    var Oi = (t, e, r, i) => {
+      if (!t)
+        return;
+      if (t.innerHTML = "", e !== "multiple")
+        return;
+      r.forEach((n, a) => {
+        let s = document.createElement("p9r-tag");
+        s.setAttribute("color", "primary"), s.setAttribute("part", "chip"), s.setAttribute("role", "listitem"), s.textContent = n, s.title = `Remove ${n}`, s.setAttribute("aria-label", `Remove ${n}`), s.addEventListener("click", () => i(a)), t.appendChild(s);
+      });
+    }, Ni = (t, e, r, i, n, a) => {
+      if (!t || !e)
+        return;
+      if (r.length === 0) {
+        de(t, e);
+        return;
+      }
+      if (t.innerHTML = "", r.forEach((s, l) => {
+        let d = document.createElement("div");
+        d.className = "suggestion", d.id = `${n}-opt-${l}`, d.setAttribute("role", "option"), d.setAttribute("part", "option");
+        let c = l === i;
+        d.dataset.active = String(c), d.setAttribute("aria-selected", String(c));
+        let u = document.createElement("span");
+        u.className = "name", u.textContent = s.value, d.appendChild(u);
+        let m = document.createElement("p9r-tag");
+        m.setAttribute("color", "secondary"), m.setAttribute("part", "count"), m.textContent = String(s.count), d.appendChild(m), d.addEventListener("mousedown", (p) => {
+          p.preventDefault(), a(s.value);
+        }), t.appendChild(d);
+      }), t.hidden = false, e.setAttribute("aria-expanded", "true"), i >= 0)
+        e.setAttribute("aria-activedescendant", `${n}-opt-${i}`);
+      else
+        e.removeAttribute("aria-activedescendant");
+    }, de = (t, e) => {
+      if (t)
+        t.hidden = true;
+      if (e)
+        e.setAttribute("aria-expanded", "false"), e.removeAttribute("aria-activedescendant");
+    };
+    var Vi = (t, e, r) => {
+      let i = t.filter((n) => !e.includes(n.value));
+      if (r === "")
+        return i.slice(0, 8);
+      return i.filter((n) => n.value.toLowerCase().includes(r)).slice(0, 8);
+    }, Ki = (t, e) => {
+      if (t === "multiple")
+        return e.join(",");
+      return e[0] ?? "";
+    }, $i = (t, e) => {
+      if (t === "multiple")
+        return e ? e.split(",").map((r) => r.trim()).filter((r) => r !== "") : [];
+      return e ? [e.trim()] : [];
+    };
+    var h = (t) => t, T = (t, e) => {
+      let r = h(t), i = t.getAttribute("mode") || "multiple", n = e.trim();
+      if (!n || !r._input)
+        return;
+      if (i === "multiple") {
+        if (!r._tags.includes(n))
+          r._tags.push(n), lt(r._liveRegion, `${n} added`);
+        r._input.value = "";
+      } else
+        r._tags = [n], r._input.value = n, lt(r._liveRegion, `${n} selected`);
+      r._activeIndex = -1, dt(t), ut(t);
+    }, Ui = (t, e) => {
+      let r = h(t), i = e.trim();
+      if (r._tags = i ? [i] : [], r._internals.setFormValue(r.value), r._silent)
+        return;
+      t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: r.value, tags: [...r._tags] } }));
+    }, Yi = (t, e) => {
+      let r = h(t), i = r._tags[e];
+      if (i === undefined)
+        return;
+      r._tags.splice(e, 1), lt(r._liveRegion, `${i} removed`), dt(t), r._input?.focus();
+    }, Xi = (t) => {
+      let e = h(t);
+      if (e._tags.length === 0)
+        return;
+      Yi(t, e._tags.length - 1);
+    }, dt = (t) => {
+      let e = h(t);
+      if (ce(t), e._internals.setFormValue(e.value), e._silent)
+        return;
+      t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e.value, tags: [...e._tags] } }));
+    }, ce = (t) => {
+      let e = h(t);
+      Oi(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => Yi(t, r));
+    }, ue = (t, e) => {
+      let r = h(t), n = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
+      r._suggestions = Vi(r._allSuggestions, n, e), r._activeIndex = -1, ct(t);
+    }, ct = (t) => {
+      let e = h(t);
+      Ni(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => T(t, r));
+    }, ut = (t) => {
+      let e = h(t);
+      de(e._suggestionsEl, e._input), e._activeIndex = -1;
+    };
+    var Zi = (t, e) => {
+      if (!e)
+        return;
+      ue(t, e.value.trim().toLowerCase());
+    }, Wi = (t) => {
+      setTimeout(() => ut(t), 150);
+    }, Gi = (t, e) => {
+      if (!e)
+        return;
+      if (ue(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
+        Ui(t, e.value);
+    }, Ji = (t, e, r) => {
+      if (!e)
+        return;
+      let i = t.getAttribute("mode") || "multiple", n = t;
+      if (r.key === "ArrowDown") {
+        if (r.preventDefault(), n._suggestions.length === 0)
+          return;
+        n._activeIndex = Math.min(n._activeIndex + 1, n._suggestions.length - 1), ct(t);
+      } else if (r.key === "ArrowUp") {
+        if (r.preventDefault(), n._suggestions.length === 0)
+          return;
+        n._activeIndex = Math.max(n._activeIndex - 1, -1), ct(t);
+      } else if (r.key === "Enter") {
+        r.preventDefault();
+        let a = n._activeIndex >= 0 ? n._suggestions[n._activeIndex] : undefined;
+        if (a)
+          T(t, a.value);
+        else {
+          let s = e.value.trim();
+          if (s)
+            T(t, s);
+        }
+      } else if (r.key === "Escape")
+        r.preventDefault(), ut(t);
+      else if (r.key === "Backspace" && e.value === "" && i === "multiple")
+        Xi(t);
+      else if (r.key === "," && i === "multiple") {
+        r.preventDefault();
+        let a = e.value.trim();
+        if (a)
+          T(t, a);
+      }
+    };
+    var bs = Ri + qi;
+
+    class pt extends o {
+      static formAssociated = true;
+      static get observedAttributes() {
+        return ["placeholder", "mode", "resource", "api", "disabled", "value"];
+      }
+      _internals;
+      _tags = [];
+      _suggestions = [];
+      _activeIndex = -1;
+      _input;
+      _display;
+      _suggestionsEl;
+      _liveRegion;
+      _allSuggestions = [];
+      _uid;
+      _defaultValue = "";
+      _defaultsCaptured = false;
+      _silent = false;
+      constructor() {
+        super({ css: bs, template: Pi });
+        this._internals = this.attachInternals();
+        let t = this.shadowRoot;
+        if (this._input = t.querySelector("#main-input"), this._display = t.querySelector("#tags-display"), this._suggestionsEl = t.querySelector("#suggestions"), this._liveRegion = t.querySelector("#live-region"), this._uid = `ts-${Math.random().toString(36).slice(2, 9)}`, this._suggestionsEl)
+          this._suggestionsEl.id = `${this._uid}-listbox`;
+        if (this._input)
+          this._input.setAttribute("aria-controls", `${this._uid}-listbox`);
+      }
+      connectedCallback() {
+        if (!this._defaultsCaptured)
+          this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
+        ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => Fi(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), le(this).then((t) => {
+          if (t)
+            this._allSuggestions = t;
+        });
+      }
+      disconnectedCallback() {
+        this._input?.removeEventListener("input", this._onInput), this._input?.removeEventListener("keydown", this._onKeyDown), this._input?.removeEventListener("focus", this._onFocus), this._input?.removeEventListener("blur", this._onBlur);
+      }
+      formResetCallback() {
+        this._silent = true;
+        try {
+          this.value = this._defaultValue;
+        } finally {
+          this._silent = false;
+        }
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._input)
+          return;
+        if (t === "placeholder")
+          this._input.placeholder = r ?? "";
+        else if (t === "disabled")
+          this._input.disabled = this.hasAttribute("disabled");
+        else if (t === "resource" || t === "api")
+          this._allSuggestions = [], le(this).then((i) => {
+            if (i)
+              this._allSuggestions = i;
+          });
+        else if (t === "mode")
+          ce(this);
+        else if (t === "value")
+          this.value = r ?? "";
+      }
+      _onFocus = () => Zi(this, this._input);
+      _onBlur = () => Wi(this);
+      _onInput = () => Gi(this, this._input);
+      _onKeyDown = (t) => Ji(this, this._input, t);
+      get value() {
+        return Ki(this.getAttribute("mode") || "multiple", this._tags);
+      }
+      set value(t) {
+        let e = this.getAttribute("mode") || "multiple";
+        if (this._tags = $i(e, t), this._input)
+          this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
+        dt(this);
+      }
+      get name() {
+        return this.getAttribute("name") || "";
+      }
+      get placeholder() {
+        return this.getAttribute("placeholder") || "";
+      }
+      set placeholder(t) {
+        t ? this.setAttribute("placeholder", t) : this.removeAttribute("placeholder");
+      }
+      get mode() {
+        return this.getAttribute("mode") || "multiple";
+      }
+      set mode(t) {
+        t ? this.setAttribute("mode", t) : this.removeAttribute("mode");
+      }
+      get resource() {
+        return this.getAttribute("resource") || "";
+      }
+      set resource(t) {
+        t ? this.setAttribute("resource", t) : this.removeAttribute("resource");
+      }
+      get api() {
+        return this.getAttribute("api") || "";
+      }
+      set api(t) {
+        t ? this.setAttribute("api", t) : this.removeAttribute("api");
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      get tags() {
+        return [...this._tags];
+      }
+    }
+    if (!customElements.get("p9r-tag-suggest"))
+      customElements.define("p9r-tag-suggest", pt);
+    var Qi = `<div class="field" part="field">
+    <label class="label" part="label" for="ta"></label>
+    <textarea id="ta" class="textarea" part="textarea"></textarea>
+    <div class="meta" part="meta" hidden>
+        <small class="hint" part="hint"></small>
+        <small class="counter" part="counter" hidden data-over="false"><span class="count">0</span>/<span class="max">0</span></small>
+    </div>
+</div>
+`;
+    var tn = `:host {
+  display: block;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #94a3b8);
+}
+
+.label[hidden] { display: none; }
+
+.textarea {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main, #1e293b);
+  font-family: inherit;
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 8px;
+  background: var(--bg-surface, #fff);
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 4.5em;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .textarea { transition: border-color 0.15s, box-shadow 0.15s; }
+}
+
+.textarea::placeholder {
+  color: var(--text-muted, #94a3b8);
+  font-weight: 400;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta[hidden] { display: none; }
+`;
+    var en = `:host([resize="none"]) .textarea       { resize: none; }
+:host([resize="horizontal"]) .textarea { resize: horizontal; }
+:host([resize="vertical"]) .textarea   { resize: vertical; }
+:host([resize="both"]) .textarea       { resize: both; }
+:host([autosize]) .textarea            { resize: none; overflow: hidden; }
+
+.textarea:hover:not(:disabled) {
+  border-color: var(--text-muted, #94a3b8);
+}
+
+.textarea:focus-visible {
+  border-color: var(--primary-base, #4361ee);
+  box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+}
+
+.textarea[aria-invalid="true"] {
+  border-color: var(--danger-base, #ef4444);
+}
+
+.textarea[aria-invalid="true"]:focus-visible {
+  box-shadow: 0 0 0 3px rgb(239 68 68 / 0.15);
+}
+
+.textarea:disabled {
+  background: var(--bg-base, #f1f5f9);
+  color: var(--text-muted, #94a3b8);
+  cursor: not-allowed;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+
+.hint[data-level="error"]   { color: var(--danger-base, #ef4444); }
+.hint[data-level="success"] { color: var(--success-base, #10b981); }
+
+.counter {
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.counter[hidden] { display: none; }
+
+.counter[data-over="true"] {
+  color: var(--danger-base, #ef4444);
+  font-weight: 600;
+}
+`;
+    var rn = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, pe = (t) => {
+      let e = t.getAttribute("max-count");
+      if (e === null)
+        return null;
+      let r = parseInt(e, 10);
+      return Number.isFinite(r) && r > 0 ? r : null;
+    }, w = (t, e, r, i) => {
+      if (!e || !r || !i)
+        return;
+      let n = pe(t);
+      if (n === null)
+        return;
+      let a = e.value.length;
+      i.textContent = String(a), r.dataset.over = String(a > n);
+    }, he = (t, e, r) => {
+      if (!t || !e || !r)
+        return;
+      let i = (t.textContent ?? "").length > 0, n = !e.hidden;
+      r.hidden = !i && !n;
+    }, M = (t, e) => {
+      if (!e || !t.hasAttribute("autosize"))
+        return;
+      e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
+    };
+    var vs = (t, e) => {
+      if (!e)
+        return;
+      let r = t.getAttribute("label") ?? "";
+      e.textContent = r, e.hidden = r === "";
+    }, _s = (t, e) => {
+      if (!e)
+        return;
+      let r = t.getAttribute("placeholder");
+      if (r === null)
+        e.removeAttribute("placeholder");
+      else
+        e.setAttribute("placeholder", r);
+    }, xs = (t, e) => {
+      if (!e)
+        return;
+      let r = t.getAttribute("rows");
+      if (r)
+        e.rows = Number(r) || 3;
+    }, ys = (t, e) => {
+      if (!e)
+        return;
+      let r = t.getAttribute("maxlength");
+      if (r === null)
+        e.removeAttribute("maxlength");
+      else
+        e.setAttribute("maxlength", r);
+    }, ws = (t, e) => {
+      if (e)
+        e.disabled = t.hasAttribute("disabled");
+    }, ks = (t, e) => {
+      if (!e)
+        return;
+      let r = t.hasAttribute("required");
+      if (e.required = r, r)
+        e.setAttribute("aria-required", "true");
+      else
+        e.removeAttribute("aria-required");
+    }, Es = (t, e, r, i) => {
+      if (!e)
+        return;
+      e.textContent = t.getAttribute("hint") ?? "", he(e, r, i);
+    }, As = (t, e) => {
+      if (!e)
+        return;
+      e.dataset.level = t.getAttribute("hint-level") ?? "info";
+    }, Ls = (t, e) => {
+      if (!e)
+        return;
+      if (t.hasAttribute("invalid"))
+        e.setAttribute("aria-invalid", "true");
+      else
+        e.removeAttribute("aria-invalid");
+    }, be = (t, e, r, i, n) => {
+      if (!e || !r)
+        return;
+      let a = pe(t);
+      if (a === null)
+        e.hidden = true;
+      else
+        e.hidden = false, r.textContent = String(a);
+      he(i, e, n);
+    }, me = (t, e, r, i, n, a, s) => {
+      vs(t, r), _s(t, e), xs(t, e), ys(t, e), ws(t, e), ks(t, e), Es(t, i, a, n), As(t, i), Ls(t, e), be(t, a, s, i, n);
+    };
+    var nn = (t, e, r, i, n) => {
+      if (!e)
+        return;
+      r.setFormValue(e.value), w(t, e, i, n), M(t, e);
+    }, an = (t, e) => {
+      if (!t)
+        return;
+      e.setFormValue(t.value);
+    };
+    var Cs = tn + en;
+
+    class ht extends o {
+      static formAssociated = true;
+      static get observedAttributes() {
+        return ["value", "label", "placeholder", "rows", "maxlength", "max-count", "hint", "hint-level", "invalid", "disabled", "required", "autosize"];
+      }
+      _internals;
+      _textarea;
+      _label;
+      _hint;
+      _meta;
+      _counter;
+      _count;
+      _max;
+      _defaultValue = "";
+      _defaultsCaptured = false;
+      constructor() {
+        super({ css: Cs, template: Qi });
+        this._internals = this.attachInternals();
+        let t = this.shadowRoot;
+        this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
+      }
+      connectedCallback() {
+        if (!this._defaultsCaptured)
+          this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
+        ["value", "disabled", "required"].forEach((e) => rn(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), me(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+        let t = this.getAttribute("value");
+        if (t !== null)
+          this.value = t;
+        else
+          w(this, this._textarea, this._counter, this._count);
+      }
+      disconnectedCallback() {
+        this._textarea?.removeEventListener("input", this._onInput), this._textarea?.removeEventListener("change", this._onChange);
+      }
+      formResetCallback() {
+        this.value = this._defaultValue;
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._textarea)
+          return;
+        if (t === "value" && r !== null)
+          this.value = r;
+        else if (t === "max-count")
+          be(this, this._counter, this._max, this._hint, this._meta), w(this, this._textarea, this._counter, this._count);
+        else if (t === "autosize")
+          M(this, this._textarea);
+        else
+          me(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+      }
+      get value() {
+        return this._textarea?.value ?? "";
+      }
+      set value(t) {
+        if (!this._textarea)
+          return;
+        this._textarea.value = t, this._internals.setFormValue(t), w(this, this._textarea, this._counter, this._count), M(this, this._textarea);
+      }
+      get name() {
+        return this.getAttribute("name") ?? "";
+      }
+      get disabled() {
+        return this._textarea?.disabled ?? false;
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      get required() {
+        return this.hasAttribute("required");
+      }
+      set required(t) {
+        t ? this.setAttribute("required", "") : this.removeAttribute("required");
+      }
+      focus() {
+        this._textarea?.focus();
+      }
+      _onInput = () => nn(this, this._textarea, this._internals, this._counter, this._count);
+      _onChange = () => an(this._textarea, this._internals);
+    }
+    if (!customElements.get("p9r-textarea"))
+      customElements.define("p9r-textarea", ht);
+    var on = `<div class="actions" role="toolbar" part="toolbar">
+    <slot></slot>
+</div>
+`;
+    var sn = `:host {
+  display: inline-block;
+
+  --_toolbar-bg: var(--bg-overlay, #ffffff);
+  --_toolbar-border: var(--border-default, #e5e7eb);
+  --_toolbar-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --_toolbar-radius: 12px;
+  --_toolbar-padding: 6px;
+  --_toolbar-gap: 4px;
+
+  --_color: var(--info-contrasted, #3b82f6);
+  --_hover-color: var(--primary-contrasted, #3b82f6);
+
+  --_bg-color: var(--bg-overlay, white);
+  --_bg-hover-color: var(--primary-muted, #3b82f6);
+
+  --_border-color: var(--border-default, #e5e7eb);
+
+  touch-action: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  background: var(--_toolbar-bg);
+  border: 1px solid var(--_toolbar-border);
+  border-radius: var(--_toolbar-radius);
+  box-shadow: var(--_toolbar-shadow);
+  overflow: hidden;
+  width: fit-content;
+  padding: var(--_toolbar-padding);
+  gap: var(--_toolbar-gap);
+}
+
+:host([align="start"]) .actions { justify-content: flex-start; }
+:host([align="center"]) .actions { justify-content: center; }
+:host([align="end"]) .actions { justify-content: flex-end; }
+
+:host([fullwidth]),
+:host([fullwidth]) .actions {
+  width: 100%;
+}
+
+::slotted([hidden]) {
+  display: none !important;
+}
+
+::slotted([data-action]) {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: var(--_bg-color);
+  border: none;
+  border-radius: 8px;
+  color: var(--_color);
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+::slotted([data-action]:hover) {
+  background-color: var(--_bg-hover-color);
+  color: var(--_hover-color);
+}
+
+::slotted([data-action]:focus-visible) {
+  outline: 2px solid var(--_color);
+  outline-offset: 2px;
+}
+
+::slotted([data-action][disabled]),
+::slotted([data-action][aria-disabled="true"]) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+::slotted(.separator) {
+  width: 1px;
+  height: 1.7rem;
+  background-color: var(--_border-color);
+  margin: 0 4px;
+  align-self: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::slotted([data-action]) {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}
+`;
+
+    class bt extends o {
+      static _event = "action-click";
+      _toolbar;
+      constructor() {
+        super({ css: sn, template: on });
+        this._toolbar = this.shadowRoot?.querySelector(".actions") ?? null;
+      }
+      static get observedAttributes() {
+        return ["label"];
+      }
+      connectedCallback() {
+        for (let t of ["label"])
+          this._upgradeProperty(t);
+        if (this._toolbar && !this._toolbar.hasAttribute("aria-label")) {
+          let t = this.getAttribute("label");
+          if (t)
+            this._toolbar.setAttribute("aria-label", t);
+        }
+        this.addEventListener("click", this._handleClick);
+      }
+      disconnectedCallback() {
+        this.removeEventListener("click", this._handleClick);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._toolbar)
+          return;
+        if (t === "label")
+          if (r === null)
+            this._toolbar.removeAttribute("aria-label");
+          else
+            this._toolbar.setAttribute("aria-label", r);
+      }
+      _handleClick = (t) => {
+        let r = t.composedPath().find((n) => n instanceof Element && n.hasAttribute("data-action"));
+        if (!r)
+          return;
+        t.stopPropagation();
+        let i = r.getAttribute("data-action");
+        this._dispatchAction(i, r, t);
+      };
+      _dispatchAction(t, e, r) {
+        this.dispatchEvent(new CustomEvent("action-click", { detail: { action: t, originalEvent: r, target: e }, bubbles: true, composed: true }));
+      }
+      _upgradeProperty(t) {
+        if (this.hasOwnProperty(t)) {
+          let e = this[t];
+          delete this[t], this[t] = e;
+        }
+      }
+      get label() {
+        return this.getAttribute("label");
+      }
+      set label(t) {
+        if (t === null)
+          this.removeAttribute("label");
+        else
+          this.setAttribute("label", t);
+      }
+    }
+    if (!customElements.get("p9r-horizontal-action-group"))
+      customElements.define("p9r-horizontal-action-group", bt);
+    var ln = `<slot></slot>
+`;
+    var dn = `:host {
+    --max-width: var(--p9r-container-md, 768px);
+    display: block;
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline-start: 0;
+    margin-inline-end: auto;
+}
+
+:host([size="xs"])   { --max-width: var(--p9r-container-xs, 480px); }
+:host([size="sm"])   { --max-width: var(--p9r-container-sm, 640px); }
+:host([size="md"])   { --max-width: var(--p9r-container-md, 768px); }
+:host([size="lg"])   { --max-width: var(--p9r-container-lg, 1024px); }
+:host([size="xl"])   { --max-width: var(--p9r-container-xl, 1280px); }
+:host([size="full"]) { --max-width: 100%; }
+
+:host([align="start"])  { margin-inline-start: 0;    margin-inline-end: auto; }
+:host([align="center"]) { margin-inline-start: auto; margin-inline-end: auto; }
+:host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }
+`;
+
+    class mt extends o {
+      constructor() {
+        super({ css: dn, template: ln });
+      }
+    }
+    if (!customElements.get("p9r-container"))
+      customElements.define("p9r-container", mt);
+    var cn = `<div class="app-container" part="container">
+    <a class="skip-link" part="skip-link" href="#main-content">
+        <slot name="skip-link">Skip to main content</slot>
+    </a>
+
+    <aside class="app-sidebar" part="sidebar" aria-label="Primary">
+        <nav class="app-nav" part="nav" aria-label="Main navigation">
+            <slot name="sidebar"></slot>
+        </nav>
+    </aside>
+
+    <main id="main-content" class="app-content" part="content" tabindex="-1">
+        <slot></slot>
+    </main>
+</div>
+`;
+    var un = `:host {
+    display: block;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+
+    --_sidebar-width: 260px;
+    --_sidebar-collapsed-width: 0px;
+    --_sidebar-bg: #f4f4f4;
+    --_sidebar-border: #ddd;
+    --_content-bg: #ffffff;
+    --_content-padding: 2rem;
+    --_focus-ring: var(--primary-base, #2563eb);
+}
+
+.app-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.skip-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0.5rem 1rem;
+    background: var(--_content-bg);
+    color: var(--_focus-ring);
+    text-decoration: none;
+    border: 2px solid var(--_focus-ring);
+    border-radius: 4px;
+    z-index: 1000;
+    transform: translateY(-150%);
+}
+
+.skip-link:focus-visible {
+    transform: translateY(0);
+    outline: 2px solid var(--_focus-ring);
+    outline-offset: 2px;
+}
+
+.app-sidebar {
+    flex-shrink: 0;
+    height: 100%;
+    width: var(--_sidebar-width);
+    background-color: var(--_sidebar-bg);
+    border-right: 1px solid var(--_sidebar-border);
+    overflow: hidden;
+}
+
+.app-nav {
+    height: 100%;
+    overflow-y: auto;
+}
+
+:host([collapsed]) .app-sidebar {
+    width: var(--_sidebar-collapsed-width);
+    border-right-width: 0;
+}
+
+.app-content {
+    flex-grow: 1;
+    height: 100%;
+    overflow-y: auto;
+    padding: var(--_content-padding);
+    box-sizing: border-box;
+    background-color: var(--_content-bg);
+}
+
+.app-content:focus-visible {
+    outline: 2px solid var(--_focus-ring);
+    outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .app-sidebar {
+        transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                    border-right-width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .skip-link {
+        transition: transform 0.2s ease-out;
+    }
+}
+`;
+
+    class gt extends o {
+      _sidebar;
+      _content;
+      constructor() {
+        super({ css: un, template: cn });
+        this._sidebar = this.shadowRoot?.querySelector(".app-sidebar") ?? null, this._content = this.shadowRoot?.querySelector(".app-content") ?? null;
+      }
+      static get observedAttributes() {
+        return ["collapsed"];
+      }
+      connectedCallback() {
+        for (let t of ["collapsed"])
+          this._upgradeProperty(t);
+        this._syncAriaState();
+      }
+      disconnectedCallback() {}
+      _upgradeProperty(t) {
+        if (this.hasOwnProperty(t)) {
+          let e = this[t];
+          delete this[t], this[t] = e;
+        }
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._sidebar)
+          return;
+        if (e === r)
+          return;
+        if (t === "collapsed")
+          this._syncAriaState(), this.dispatchEvent(new CustomEvent("w13c-left-menu-collapse", { bubbles: true, composed: true, detail: { collapsed: r !== null } }));
+      }
+      _syncAriaState() {
+        if (!this._sidebar)
+          return;
+        let t = this.hasAttribute("collapsed");
+        this._sidebar.setAttribute("aria-expanded", String(!t)), this._sidebar.setAttribute("aria-hidden", String(t));
+      }
+      get collapsed() {
+        return this.hasAttribute("collapsed");
+      }
+      set collapsed(t) {
+        if (t)
+          this.setAttribute("collapsed", "");
+        else
+          this.removeAttribute("collapsed");
+      }
+      toggle() {
+        this.collapsed = !this.collapsed;
+      }
+      focusContent() {
+        this._content?.focus();
+      }
+    }
+    if (!customElements.get("w13c-left-menu-layout"))
+      customElements.define("w13c-left-menu-layout", gt);
+    var pn = `<slot></slot>
+`;
+    var hn = `:host {
+    --gap: var(--p9r-space-md, 16px);
+    --divider-color: var(--p9r-stack-divider, var(--border-default, rgba(0,0,0,0.1)));
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+}
+
+:host([gap="none"]) { --gap: 0; }
+:host([gap="xs"])   { --gap: var(--p9r-space-xs, 4px); }
+:host([gap="sm"])   { --gap: var(--p9r-space-sm, 8px); }
+:host([gap="md"])   { --gap: var(--p9r-space-md, 16px); }
+:host([gap="lg"])   { --gap: var(--p9r-space-lg, 24px); }
+:host([gap="xl"])   { --gap: var(--p9r-space-xl, 32px); }
+
+:host([direction="row"]) { flex-direction: row; }
+:host([wrap]) { flex-wrap: wrap; }
+
+:host([align="start"])    { align-items: flex-start; }
+:host([align="center"])   { align-items: center; }
+:host([align="end"])      { align-items: flex-end; }
+:host([align="stretch"])  { align-items: stretch; }
+
+:host([justify="start"])   { justify-content: flex-start; }
+:host([justify="center"])  { justify-content: center; }
+:host([justify="end"])     { justify-content: flex-end; }
+:host([justify="between"]) { justify-content: space-between; }
+:host([justify="around"])  { justify-content: space-around; }
+:host([justify="evenly"])  { justify-content: space-evenly; }
+
+:host([divider]) { gap: 0; }
+
+:host([divider]:not([direction="row"])) ::slotted(*:not(:first-child)) {
+    border-block-start: 1px solid var(--divider-color);
+    margin-block-start: var(--gap);
+    padding-block-start: var(--gap);
+}
+
+:host([divider][direction="row"]) ::slotted(*:not(:first-child)) {
+    border-inline-start: 1px solid var(--divider-color);
+    margin-inline-start: var(--gap);
+    padding-inline-start: var(--gap);
+}
+`;
+
+    class ft extends o {
+      constructor() {
+        super({ css: hn, template: pn });
+      }
+    }
+    if (!customElements.get("p9r-stack"))
+      customElements.define("p9r-stack", ft);
+    var bn = `<a class="menu-item" part="item" tabindex="-1">
+    <span class="icon-wrapper" part="icon">
+        <slot name="icon"></slot>
+    </span>
+    <span class="label" part="label">
+        <slot></slot>
+    </span>
+    <span class="badge" part="badge" id="badge-element"></span>
+</a>
+`;
+    var mn = `:host {
+    display: block;
+    width: 100%;
+    outline: none;
+    --item-color: var(--secondary-base, oklch(50% 0.02 260));
+    --item-color-active: var(--primary-base, oklch(60% 0.15 265));
+    --item-bg-active: var(--primary-muted, oklch(95% 0.02 265));
+    --item-contrasted: var(--primary-contrasted, oklch(98% 0.01 260));
+    --icon-size: 20px;
+}
+
+.menu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--item-color);
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .menu-item {
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+}
+
+.icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex-shrink: 0;
+}
+
+::slotted(svg), .icon-wrapper svg {
+    width: 100% !important;
+    height: 100% !important;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+
+.label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.badge {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+`;
+    var gn = `.menu-item:hover {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+}
+
+:host(:focus-visible) .menu-item {
+    outline: 2px solid var(--item-color-active);
+    outline-offset: 2px;
+}
+
+.menu-item.active {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+    font-weight: 600;
+}
+
+.menu-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background-color: var(--item-color-active);
+    border-radius: 0 4px 4px 0;
+}
+
+.menu-item.active ::slotted(svg) {
+    stroke: var(--item-color-active);
+}
+
+:host([disabled]) .menu-item {
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(1);
+    background: transparent !important;
+}
+
+.menu-item:not(.active) .badge {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--item-color-active), transparent 90%);
+}
+
+.menu-item.active .badge {
+    background-color: var(--item-color-active);
+    color: var(--item-contrasted);
+    box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
+}
+`;
+    var fn = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, ge = (t, e) => {
+      if (!t)
+        return;
+      if (e)
+        t.setAttribute("href", e);
+      else
+        t.removeAttribute("href");
+    }, fe = (t, e) => {
+      if (!t)
+        return;
+      if (e)
+        t.textContent = e, t.style.display = "inline-flex";
+      else
+        t.textContent = "", t.style.display = "none";
+    }, ve = (t, e) => {
+      if (!e || !t.hasAttribute("href"))
+        return;
+      let r = t.getAttribute("href");
+      if (!r)
+        return;
+      try {
+        let i = new URL(r, window.location.href), a = new URL(window.location.href).pathname, s = i.pathname;
+        if (s === "/" ? a === "/" : a === s || a.startsWith(s + "/"))
+          t.setAttribute("active", ""), t.setAttribute("aria-current", "page"), e.classList.add("active");
+        else
+          t.removeAttribute("active"), t.removeAttribute("aria-current"), e.classList.remove("active");
+      } catch {
+        console.warn("Invalid href in LateralMenuItem:", r);
+      }
+    };
+    var vn = (t, e, r) => {
+      if (t.hasAttribute("disabled"))
+        return;
+      if (r.key !== "Enter" && r.key !== " ")
+        return;
+      if (r.target !== t)
+        return;
+      r.preventDefault(), e?.click();
+    };
+    var Ds = mn + gn;
+
+    class vt extends o {
+      _anchor;
+      _badgeEl;
+      constructor() {
+        super({ css: Ds, template: bn });
+        this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
+      }
+      static get observedAttributes() {
+        return ["href", "badge", "disabled"];
+      }
+      connectedCallback() {
+        for (let t of ["href", "badge", "disabled"])
+          fn(this, t);
+        if (!this.hasAttribute("role"))
+          this.setAttribute("role", "listitem");
+        if (!this.hasAttribute("tabindex"))
+          this.setAttribute("tabindex", "0");
+        ge(this._anchor, this.getAttribute("href")), fe(this._badgeEl, this.getAttribute("badge")), ve(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
+      }
+      disconnectedCallback() {
+        window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (!this._anchor)
+          return;
+        if (t === "href")
+          ge(this._anchor, r);
+        if (t === "badge")
+          fe(this._badgeEl, r);
+        if (t === "disabled") {
+          let i = this.hasAttribute("disabled");
+          this.setAttribute("aria-disabled", i ? "true" : "false"), this.setAttribute("tabindex", i ? "-1" : "0");
+        }
+      }
+      get href() {
+        return this.getAttribute("href");
+      }
+      set href(t) {
+        t == null ? this.removeAttribute("href") : this.setAttribute("href", t);
+      }
+      get badge() {
+        return this.getAttribute("badge");
+      }
+      set badge(t) {
+        t == null ? this.removeAttribute("badge") : this.setAttribute("badge", t);
+      }
+      get disabled() {
+        return this.hasAttribute("disabled");
+      }
+      set disabled(t) {
+        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+      }
+      _onPopstate = () => ve(this, this._anchor);
+      _onKey = (t) => vn(this, this._anchor, t);
+    }
+    if (!customElements.get("w13c-lateral-menu-item"))
+      customElements.define("w13c-lateral-menu-item", vt);
+    var _n = `<aside class="sidebar" part="sidebar">
+    <div class="sidebar-header" part="header">
+        <slot name="header">
+            <h3>Menu</h3>
+        </slot>
+    </div>
+
+    <nav class="sidebar-nav" part="nav">
+        <slot></slot>
+    </nav>
+
+    <div class="sidebar-footer" part="footer">
+        <slot name="footer"></slot>
+    </div>
+</aside>
+`;
+    var xn = `:host {
+    display: flex;
+    flex-direction: column;
+    width: 260px;
+    height: 100vh;
+    background-color: #ffffff;
+    border-right: 1px solid var(--secondary-muted);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    box-sizing: border-box;
+}
+
+:host([collapsed]) {
+    width: 72px;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    :host {
+        transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+.sidebar-header {
+    padding: 2.5rem 1.5rem 1.5rem 1.5rem;
+}
+
+::slotted([slot="header"]) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--secondary-contrasted);
+    letter-spacing: -0.04em;
+}
+
+::slotted([slot="header"]) span {
+    color: var(--primary-base);
+}
+
+::slotted([slot="header"])::after {
+    content: "";
+    width: 4px;
+    height: 4px;
+    margin-top: 8px;
+    background-color: var(--primary-base);
+    border-radius: 50%;
+}
+
+.sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 0.75rem;
+}
+
+.sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0.75rem;
+    margin-top: auto;
+    border-top: 1px solid var(--secondary-muted);
+}
+
+::slotted(w13c-lateral-menu-item) {
+    --item-color: var(--secondary-base);
+    --item-color-active: var(--primary-base);
+    --item-bg-hover: var(--primary-muted);
+}
+`;
+    var yn = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, wn = (t) => {
+      if (!t)
+        return [];
+      return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled"));
+    };
+    var kn = (t, e) => {
+      let r = t.shadowRoot?.querySelector("slot:not([name])"), i = wn(r);
+      if (i.length === 0)
+        return;
+      let n = document.activeElement, a = i.findIndex((d) => d === n || d.contains(n)), s = -1;
+      switch (e.key) {
+        case "ArrowDown":
+          s = a < 0 ? 0 : (a + 1) % i.length;
+          break;
+        case "ArrowUp":
+          s = a < 0 ? i.length - 1 : (a - 1 + i.length) % i.length;
+          break;
+        case "Home":
+          s = 0;
+          break;
+        case "End":
+          s = i.length - 1;
+          break;
+        default:
+          return;
+      }
+      e.preventDefault();
+      let l = i[s];
+      if (l)
+        l.focus();
+    };
+
+    class _t extends o {
+      _sidebar;
+      constructor() {
+        super({ css: xn, template: _n });
+        this._sidebar = this.shadowRoot?.querySelector(".sidebar") ?? null;
+      }
+      static get observedAttributes() {
+        return ["collapsed"];
+      }
+      connectedCallback() {
+        if (yn(this, "collapsed"), !this.hasAttribute("aria-label"))
+          this.setAttribute("aria-label", "Main navigation");
+        this.addEventListener("keydown", this._onKey);
+      }
+      disconnectedCallback() {
+        this.removeEventListener("keydown", this._onKey);
+      }
+      attributeChangedCallback(t) {
+        if (!this._sidebar)
+          return;
+        if (t === "collapsed")
+          this._sidebar.classList.toggle("collapsed", this.hasAttribute("collapsed"));
+      }
+      toggle() {
+        this.collapsed = !this.collapsed;
+      }
+      get collapsed() {
+        return this.hasAttribute("collapsed");
+      }
+      set collapsed(t) {
+        if (t)
+          this.setAttribute("collapsed", "");
+        else
+          this.removeAttribute("collapsed");
+      }
+      _onKey = (t) => kn(this, t);
+    }
+    if (!customElements.get("w13c-lateral-menu"))
+      customElements.define("w13c-lateral-menu", _t);
+    var En = `<nav class="pagination" part="pagination" aria-label="Pagination">
+    <button class="prev" part="prev" type="button" aria-label="Previous page">
+        <slot name="prev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </slot>
+    </button>
+    <ul class="pages" part="pages"></ul>
+    <button class="next" part="next" type="button" aria-label="Next page">
+        <slot name="next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </slot>
+    </button>
+</nav>
+`;
+    var An = `:host {
+  display: inline-block;
+
+  --_size: 32px;
+  --_radius: 6px;
+  --_color: var(--text-body, #4b5563);
+  --_active-bg: var(--primary-base, #4361ee);
+  --_active-color: white;
+  --_hover-bg: var(--bg-base, #f1f5f9);
+  --_border: var(--border-default, #e5e7eb);
+  --_font-size: 13px;
+}
+
+.pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pages {
+  display: inline-flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 0.25rem;
+}
+
+.page,
+.prev,
+.next {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--_border);
+  color: var(--_color);
+  cursor: pointer;
+  min-width: var(--_size);
+  height: var(--_size);
+  padding: 0 0.5rem;
+  border-radius: var(--_radius);
+  font: inherit;
+  font-size: var(--_font-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+  box-sizing: border-box;
+}
+
+.page:hover:not([aria-current="page"]):not(:disabled),
+.prev:hover:not(:disabled),
+.next:hover:not(:disabled) {
+  background: var(--_hover-bg);
+}
+
+.page[aria-current="page"] {
+  background: var(--_active-bg);
+  color: var(--_active-color);
+  border-color: var(--_active-bg);
+  font-weight: 600;
+}
+
+.page:disabled,
+.prev:disabled,
+.next:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--_size);
+  height: var(--_size);
+  color: var(--text-muted, #9ca3af);
+  user-select: none;
+}
+
+.prev svg,
+.next svg {
+  width: 14px;
+  height: 14px;
+}
+
+.prev:focus-visible,
+.next:focus-visible,
+.page:focus-visible {
+  outline: 2px solid var(--_active-bg);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page, .prev, .next { transition: background-color 0.15s, color 0.15s; }
+}
+`;
+    var g = (t, e, r) => {
+      let i = parseInt(t.getAttribute(e) ?? "", 10);
+      return Number.isFinite(i) && i > 0 ? i : r;
+    }, Ln = (t, e, r, i) => {
+      let n = [], a = Math.max(1, t - r), s = Math.min(e, t + r), l = Array.from({ length: Math.min(i, e) }, (p, E) => E + 1), d = Array.from({ length: Math.min(i, e) }, (p, E) => e - E).reverse(), c = [];
+      for (let p = a;p <= s; p++)
+        c.push(p);
+      let u = Array.from(new Set([...l, ...c, ...d])).sort((p, E) => p - E), m = 0;
+      for (let p of u) {
+        if (m > 0 && p - m > 1)
+          n.push("…");
+        n.push(p), m = p;
+      }
+      return n;
+    };
+    var Cn = (t, e, r, i) => {
+      if (!e)
+        return;
+      let n = g(t, "page", 1), a = g(t, "total", 1), s = g(t, "siblings", 1), l = g(t, "boundary", 1);
+      e.innerHTML = "";
+      for (let d of Ln(n, a, s, l))
+        if (d === "…") {
+          let c = document.createElement("span");
+          c.className = "ellipsis", c.setAttribute("part", "ellipsis"), c.textContent = "…", e.appendChild(c);
+        } else {
+          let c = document.createElement("li"), u = document.createElement("button");
+          if (u.type = "button", u.className = "page", u.setAttribute("part", "page"), u.dataset.page = String(d), u.textContent = String(d), d === n)
+            u.setAttribute("aria-current", "page");
+          c.appendChild(u), e.appendChild(c);
+        }
+      if (r)
+        r.disabled = n <= 1;
+      if (i)
+        i.disabled = n >= a;
+    };
+    var xt = (t, e, r) => {
+      if (r === e)
+        return;
+      if (!t.dispatchEvent(new CustomEvent("page-change", { bubbles: true, cancelable: true, detail: { page: r } })))
+        return;
+      t.setAttribute("page", String(r));
+    };
+    var Tn = (t, e) => {
+      if (e <= 1)
+        return;
+      xt(t, e, e - 1);
+    }, Mn = (t, e, r) => {
+      if (e >= r)
+        return;
+      xt(t, e, e + 1);
+    }, Hn = (t, e, r) => {
+      let i = r.target.closest(".page");
+      if (!i)
+        return;
+      let n = Number(i.dataset.page);
+      if (Number.isFinite(n))
+        xt(t, e, n);
+    };
+
+    class yt extends o {
+      _pages;
+      _prev;
+      _next;
+      static get observedAttributes() {
+        return ["page", "total", "siblings", "boundary"];
+      }
+      constructor() {
+        super({ css: An, template: En });
+        this._pages = this.shadowRoot?.querySelector(".pages") ?? null, this._prev = this.shadowRoot?.querySelector(".prev") ?? null, this._next = this.shadowRoot?.querySelector(".next") ?? null;
+      }
+      connectedCallback() {
+        this._prev?.addEventListener("click", this._onPrev), this._next?.addEventListener("click", this._onNext), this._pages?.addEventListener("click", this._onPageClick), this._render();
+      }
+      disconnectedCallback() {
+        this._prev?.removeEventListener("click", this._onPrev), this._next?.removeEventListener("click", this._onNext), this._pages?.removeEventListener("click", this._onPageClick);
+      }
+      attributeChangedCallback() {
+        this._render();
+      }
+      get page() {
+        return g(this, "page", 1);
+      }
+      set page(t) {
+        this.setAttribute("page", String(t));
+      }
+      get total() {
+        return g(this, "total", 1);
+      }
+      set total(t) {
+        this.setAttribute("total", String(t));
+      }
+      _render() {
+        Cn(this, this._pages, this._prev, this._next);
+      }
+      _onPrev = () => Tn(this, this.page);
+      _onNext = () => Mn(this, this.page, this.total);
+      _onPageClick = (t) => Hn(this, this.page, t);
+    }
+    if (!customElements.get("p9r-pagination"))
+      customElements.define("p9r-pagination", yt);
+    var zn = `<div class="progress" part="progress" role="progressbar">
+    <div class="track" part="track">
+        <div class="bar" part="bar"></div>
+    </div>
+    <span class="label" part="label"><slot></slot></span>
+</div>
+`;
+    var Sn = `:host {
+  display: block;
+
+  --_height: 8px;
+  --_radius: 999px;
+  --_track: var(--bg-base, #f1f5f9);
+  --_color: var(--primary-base, #4361ee);
+  --_value: 0%;
+  --_label-size: 12px;
+}
+
+:host([size="sm"]) { --_height: 4px; }
+:host([size="md"]) { --_height: 8px; }
+:host([size="lg"]) { --_height: 12px; }
+
+:host([color="danger"])  { --_color: var(--danger-base); }
+:host([color="success"]) { --_color: var(--success-base); }
+:host([color="info"])    { --_color: var(--info-base); }
+:host([color="warning"]) { --_color: var(--warning-base); }
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.track {
+  flex: 1;
+  height: var(--_height);
+  background: var(--_track);
+  border-radius: var(--_radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.bar {
+  height: 100%;
+  width: var(--_value);
+  background: var(--_color);
+  border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bar { transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+}
+
+:host([indeterminate]) .bar {
+  width: 40%;
+  position: absolute;
+  inset-block: 0;
+  animation: progress-indeterminate 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes progress-indeterminate {
+  0%   { left: -40%; }
+  100% { left: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([indeterminate]) .bar {
+    animation-duration: 3s;
+  }
+}
+
+.label {
+  font-size: var(--_label-size);
+  color: var(--text-muted, #6b7280);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.label:has(slot:not(:has(*))) {
+  display: none;
+}
+
+:host([show-value]) .label::before {
+  content: attr(data-value-text);
+  display: inline;
+}
+`;
+
+    class wt extends o {
+      _bar;
+      _label;
+      _root;
+      static get observedAttributes() {
+        return ["value", "max", "indeterminate"];
+      }
+      constructor() {
+        super({ css: Sn, template: zn });
+        this._bar = this.shadowRoot?.querySelector(".bar") ?? null, this._label = this.shadowRoot?.querySelector(".label") ?? null, this._root = this.shadowRoot?.querySelector(".progress") ?? null;
+      }
+      connectedCallback() {
+        for (let t of ["value", "max"])
+          this._upgradeProperty(t);
+        this._sync();
+      }
+      attributeChangedCallback(t, e, r) {
+        this._sync();
+      }
+      _sync() {
+        let t = this.hasAttribute("indeterminate"), e = this._parseNumber(this.getAttribute("max"), 100), r = this._parseNumber(this.getAttribute("value"), 0), i = Math.max(0, Math.min(r, e)), n = e > 0 ? i / e * 100 : 0;
+        if (t)
+          this._root?.removeAttribute("aria-valuenow"), this._root?.setAttribute("aria-valuemin", "0"), this._root?.setAttribute("aria-valuemax", "100");
+        else
+          this._root?.setAttribute("aria-valuenow", String(i)), this._root?.setAttribute("aria-valuemin", "0"), this._root?.setAttribute("aria-valuemax", String(e)), this.style.setProperty("--_value", `${n}%`);
+        if (this._label)
+          this._label.dataset.valueText = `${Math.round(n)}%`;
+      }
+      _parseNumber(t, e) {
+        if (t === null)
+          return e;
+        let r = Number(t);
+        return Number.isFinite(r) ? r : e;
+      }
+      _upgradeProperty(t) {
+        if (Object.prototype.hasOwnProperty.call(this, t)) {
+          let e = this[t];
+          delete this[t], this[t] = e;
+        }
+      }
+      get value() {
+        return this._parseNumber(this.getAttribute("value"), 0);
+      }
+      set value(t) {
+        this.setAttribute("value", String(t));
+      }
+      get max() {
+        return this._parseNumber(this.getAttribute("max"), 100);
+      }
+      set max(t) {
+        this.setAttribute("max", String(t));
+      }
+      get indeterminate() {
+        return this.hasAttribute("indeterminate");
+      }
+      set indeterminate(t) {
+        if (t)
+          this.setAttribute("indeterminate", "");
+        else
+          this.removeAttribute("indeterminate");
+      }
+    }
+    if (!customElements.get("p9r-progress"))
+      customElements.define("p9r-progress", wt);
+    var In = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
+`;
+    var Pn = `:host {
+  display: block;
+
+  --_bg: var(--bg-base, #f1f5f9);
+  --_highlight: var(--border-light, #e5e7eb);
+  --_radius: 6px;
+  --_height: 1em;
+  --_width: 100%;
+}
+
+:host([shape="circle"]) {
+  --_radius: 50%;
+  --_height: 2.5rem;
+  --_width: 2.5rem;
+  display: inline-block;
+}
+
+:host([shape="rect"]) {
+  --_radius: 8px;
+  --_height: 8rem;
+}
+
+:host([shape="text"]) {
+  --_height: 0.85em;
+  --_radius: 4px;
+}
+
+.skeleton {
+  width: var(--_width);
+  height: var(--_height);
+  border-radius: var(--_radius);
+  background: linear-gradient(90deg, var(--_bg) 0%, var(--_highlight) 50%, var(--_bg) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--_bg);
+  }
+}
+`;
+
+    class kt extends o {
+      static get observedAttributes() {
+        return ["width", "height"];
+      }
+      constructor() {
+        super({ css: Pn, template: In });
+      }
+      connectedCallback() {
+        this._syncSize();
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "width" || t === "height")
+          this._syncSize();
+      }
+      _syncSize() {
+        let t = this.getAttribute("width"), e = this.getAttribute("height");
+        if (t !== null)
+          this.style.setProperty("--_width", this._normalize(t));
+        else
+          this.style.removeProperty("--_width");
+        if (e !== null)
+          this.style.setProperty("--_height", this._normalize(e));
+        else
+          this.style.removeProperty("--_height");
+      }
+      _normalize(t) {
+        return /^\d+(\.\d+)?$/.test(t) ? `${t}px` : t;
+      }
+    }
+    if (!customElements.get("p9r-skeleton"))
+      customElements.define("p9r-skeleton", kt);
+    var Rn = `<div class="spinner" part="spinner" role="status" aria-live="polite">
+    <span class="visually-hidden"><slot>Loading…</slot></span>
+</div>
+`;
+    var qn = `:host {
+  display: inline-block;
+
+  --_size: 1.25rem;
+  --_thickness: 2px;
+  --_track: var(--border-default, #e5e7eb);
+  --_color: var(--text-main, currentColor);
+  --_speed: 0.8s;
+}
+
+:host([size="sm"]) { --_size: 0.875rem; --_thickness: 2px; }
+:host([size="md"]) { --_size: 1.25rem;  --_thickness: 2px; }
+:host([size="lg"]) { --_size: 1.75rem;  --_thickness: 3px; }
+:host([size="xl"]) { --_size: 2.5rem;   --_thickness: 4px; }
+
+:host([color="primary"]) { --_color: var(--primary-base); }
+:host([color="danger"])  { --_color: var(--danger-base); }
+:host([color="success"]) { --_color: var(--success-base); }
+:host([color="info"])    { --_color: var(--info-base); }
+:host([color="warning"]) { --_color: var(--warning-base); }
+
+.spinner {
+  width: var(--_size);
+  height: var(--_size);
+  border-radius: 50%;
+  border: var(--_thickness) solid var(--_track);
+  border-top-color: var(--_color);
+  box-sizing: border-box;
+  animation: spin var(--_speed) linear infinite;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2.4s; }
+}
+`;
+
+    class Et extends o {
+      constructor() {
+        super({ css: qn, template: Rn });
+      }
+    }
+    if (!customElements.get("p9r-spinner"))
+      customElements.define("p9r-spinner", Et);
+    var Bn = `<ol class="stepper" part="stepper">
+    <slot></slot>
+</ol>
+`;
+    var jn = `:host {
+  display: block;
+
+  --_active: var(--primary-base, #4361ee);
+  --_completed: var(--success-base, #10b981);
+  --_pending: var(--border-default, #d1d5db);
+  --_text: var(--text-main, #1f2937);
+  --_muted: var(--text-muted, #6b7280);
+}
+
+.stepper {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+:host([orientation="vertical"]) .stepper {
+  flex-direction: column;
+  gap: 0;
+}
+`;
+    var Dn = `<li class="step" part="step">
+    <div class="indicator" part="indicator">
+        <span class="bullet" part="bullet">
+            <span class="number"></span>
+            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </span>
+        <span class="connector" part="connector"></span>
+    </div>
+    <div class="body" part="body">
+        <span class="label" part="label"></span>
+        <span class="description" part="description">
+            <slot></slot>
+        </span>
+    </div>
+</li>
+`;
+    var Fn = `:host {
+  display: flex;
+  flex: 1;
+
+  --_size: 28px;
+  --_active: var(--primary-base, #4361ee);
+  --_completed: var(--success-base, #10b981);
+  --_pending: var(--border-default, #d1d5db);
+  --_text: var(--text-main, #1f2937);
+  --_muted: var(--text-muted, #6b7280);
+  --_bg: var(--bg-surface, #fff);
+  --_color: var(--_pending);
+  --_label-color: var(--_muted);
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  flex: 1;
+  list-style: none;
+}
+
+.indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.bullet {
+  width: var(--_size);
+  height: var(--_size);
+  border-radius: 50%;
+  border: 2px solid var(--_color);
+  background: var(--_bg);
+  color: var(--_color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.number,
+.check {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check {
+  width: 60%;
+  height: 60%;
+  margin: auto;
+  inset: auto;
+  display: none;
+}
+
+.connector {
+  background: var(--_color);
+  flex: 1;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--_label-color);
+}
+
+.label:empty { display: none; }
+
+.description {
+  font-size: 12px;
+  color: var(--_muted);
+}
+
+.description slot:empty,
+.description:has(slot:not(:has(*))) { display: none; }
+`;
+    var On = `:host([data-state="active"], [state="active"]) {
+  --_color: var(--_active);
+  --_label-color: var(--_text);
+}
+
+:host([data-state="completed"], [state="completed"]) {
+  --_color: var(--_completed);
+  --_label-color: var(--_text);
+}
+
+:host([orientation="vertical"]) .step {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+:host(:not([orientation="vertical"])) .indicator {
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+}
+
+:host([data-state="active"], [state="active"]) .bullet {
+  background: var(--_color);
+  color: var(--_bg);
+}
+
+:host([data-state="completed"], [state="completed"]) .bullet {
+  background: var(--_color);
+  color: var(--_bg);
+  border-color: var(--_color);
+}
+
+:host([data-state="completed"], [state="completed"]) .number { display: none; }
+:host([data-state="completed"], [state="completed"]) .check  { display: flex; }
+
+:host(:not([orientation="vertical"])) .connector {
+  height: 2px;
+  margin-inline: 0.4rem;
+  min-width: 1rem;
+}
+
+:host([orientation="vertical"]) .connector {
+  width: 2px;
+  margin-block: 0.4rem;
+  min-height: 1.5rem;
+  align-self: stretch;
+}
+
+:host([last]) .connector {
+  display: none;
+}
+
+:host(:not([orientation="vertical"])) .step {
+  flex-direction: column;
+}
+
+:host(:not([orientation="vertical"])) .body {
+  text-align: center;
+  margin-top: 0.4rem;
+}
+`;
+    var el = Fn + On;
+
+    class At extends o {
+      _label;
+      _number;
+      static get observedAttributes() {
+        return ["label", "data-index"];
+      }
+      constructor() {
+        super({ css: el, template: Dn });
+        this._label = this.shadowRoot?.querySelector(".label") ?? null, this._number = this.shadowRoot?.querySelector(".number") ?? null;
+      }
+      connectedCallback() {
+        this._sync();
+      }
+      attributeChangedCallback(t, e, r) {
+        this._sync();
+      }
+      _sync() {
+        if (this._label)
+          this._label.textContent = this.getAttribute("label") ?? "";
+        if (this._number)
+          this._number.textContent = this.getAttribute("data-index") ?? "";
+      }
+    }
+    if (!customElements.get("p9r-step"))
+      customElements.define("p9r-step", At);
+
+    class Lt extends o {
+      static get observedAttributes() {
+        return ["current", "orientation"];
+      }
+      constructor() {
+        super({ css: jn, template: Bn });
+      }
+      connectedCallback() {
+        this._sync();
+      }
+      attributeChangedCallback(t, e, r) {
+        this._sync();
+      }
+      get current() {
+        let t = parseInt(this.getAttribute("current") ?? "", 10);
+        return Number.isFinite(t) ? t : 0;
+      }
+      set current(t) {
+        this.setAttribute("current", String(t));
+      }
+      _steps() {
+        return Array.from(this.querySelectorAll("p9r-step"));
+      }
+      _sync() {
+        let t = this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal", e = this.current, r = this._steps();
+        r.forEach((i, n) => {
+          if (i.setAttribute("data-index", String(n + 1)), i.setAttribute("orientation", t), n === r.length - 1)
+            i.setAttribute("last", "");
+          else
+            i.removeAttribute("last");
+          if (i.hasAttribute("state"))
+            return;
+          if (n < e)
+            i.setAttribute("data-state", "completed");
+          else if (n === e)
+            i.setAttribute("data-state", "active");
+          else
+            i.setAttribute("data-state", "pending");
+        });
+      }
+    }
+    if (!customElements.get("p9r-stepper"))
+      customElements.define("p9r-stepper", Lt);
+    var Nn = `<div class="table-container">
+  <div class="p9r-table">
+    <slot name="header"></slot>
+    <slot></slot>
+  </div>
+</div>`;
+    var Vn = `:host {
+  display: block;
+  width: 100%;
+}
+
+.table-container {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.p9r-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Le reste ne bouge pas : le header et les hover */
+::slotted(p9r-row[slot="header"]) {
+  background-color: var(--_header-bg);
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+::slotted(p9r-row:not(:last-child)) {
+  border-bottom: 1px solid var(--border-default);
+}
+
+::slotted(p9r-row:not(:first-child):hover) {
+  background-color: var(--bg-base);
+}`;
+    var Kn = `<slot></slot>
+`;
+    var $n = `:host {
+  display: table-row;
+}
+
+:host([href]) {
+  cursor: pointer;
+}
+
+:host(:focus-visible) {
+  outline: 2px inset var(--primary-base);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host {
+    transition: background-color 0.15s ease;
+  }
+}
+`;
+    var _e = (t) => {
+      let e = t.getAttribute("href");
+      if (!e)
+        return;
+      let r = t.getAttribute("target"), i = new CustomEvent("p9r-row-click", { detail: { href: e, target: r }, bubbles: true, composed: true, cancelable: true });
+      if (!t.dispatchEvent(i))
+        return;
+      if (r === "_blank")
+        window.open(e, "_blank", "noopener,noreferrer");
+      else
+        window.location.href = e;
+    };
+    var Un = (t) => {
+      if (!t.hasAttribute("href"))
+        return;
+      _e(t);
+    }, Yn = (t, e) => {
+      if (!t.hasAttribute("href"))
+        return;
+      if (e.key === "Enter" || e.key === " ")
+        e.preventDefault(), _e(t);
+    };
+    var Xn = (t, e) => {
+      if (Object.prototype.hasOwnProperty.call(t, e)) {
+        let r = t[e];
+        delete t[e], t[e] = r;
+      }
+    }, xe = (t) => {
+      if (t.hasAttribute("href")) {
+        if (!t.hasAttribute("tabindex"))
+          t.setAttribute("tabindex", "0");
+        if (!t.hasAttribute("role"))
+          t.setAttribute("role", "link");
+      } else {
+        if (t.getAttribute("role") === "link")
+          t.removeAttribute("role");
+        if (t.getAttribute("tabindex") === "0")
+          t.removeAttribute("tabindex");
+        if (!t.hasAttribute("role"))
+          t.setAttribute("role", "row");
+      }
+    };
+
+    class Ct extends o {
+      static get observedAttributes() {
+        return ["href"];
+      }
+      constructor() {
+        super({ css: $n, template: Kn });
+      }
+      connectedCallback() {
+        for (let t of ["href", "target"])
+          Xn(this, t);
+        this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), xe(this);
+      }
+      disconnectedCallback() {
+        this.removeEventListener("click", this._onClick), this.removeEventListener("keydown", this._onKey);
+      }
+      attributeChangedCallback(t) {
+        if (t === "href")
+          xe(this);
+      }
+      _onClick = () => Un(this);
+      _onKey = (t) => Yn(this, t);
+      get href() {
+        return this.getAttribute("href");
+      }
+      set href(t) {
+        if (t === null)
+          this.removeAttribute("href");
+        else
+          this.setAttribute("href", t);
+      }
+      get target() {
+        return this.getAttribute("target");
+      }
+      set target(t) {
+        if (t === null)
+          this.removeAttribute("target");
+        else
+          this.setAttribute("target", t);
+      }
+    }
+    if (!customElements.get("p9r-row"))
+      customElements.define("p9r-row", Ct);
+    var Zn = `<slot></slot>
+`;
+    var Wn = `:host {
+  display: table-cell;
+  padding: 12px 20px;
+  vertical-align: middle;
+  color: var(--text-body);
+  font-size: 14px;
+}
+
+:host([variant="success"]) {
+  color: var(--success-base);
+}
+
+:host([variant="danger"]) {
+  color: var(--danger-base);
+}
+
+:host([variant="info"]) {
+  color: var(--info-base);
+}
+
+:host([variant="primary"]) {
+  color: var(--primary-base);
+}
+`;
+
+    class Tt extends o {
+      constructor() {
+        super({ css: Wn, template: Zn });
+      }
+      connectedCallback() {
+        if (!this.hasAttribute("role"))
+          this.setAttribute("role", "cell");
+      }
+    }
+    if (!customElements.get("p9r-cell"))
+      customElements.define("p9r-cell", Tt);
+    var Gn = `<div class="header-wrapper" part="wrapper">
+  <button
+    type="button"
+    class="label-section"
+    id="sort-trigger"
+    part="sort-trigger"
+  >
+    <slot></slot>
+    <span class="sort-icon" id="sort-icon" part="sort-icon" aria-hidden="true">...</span>
+  </button>
+
+  <button
+    type="button"
+    class="filter-trigger"
+    id="filter-btn"
+    part="filter-trigger"
+    aria-haspopup="dialog"
+    aria-expanded="false"
+    hidden
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+    </svg>
+  </button>
+
+  <div class="filter-popover" id="filter-popover" part="filter-popover" role="dialog" hidden>
+    <input type="text" placeholder="Filter..." id="filter-input" part="filter-input" />
+  </div>
+</div>
+`;
+    var Jn = `:host {
+  display: table-cell;
+  padding: 12px 20px;
+  border-bottom: 2px solid var(--border-light);
+  position: relative;
+  vertical-align: middle;
+}
+
+.header-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.label-section {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+}
+
+.sort-icon {
+  display: none;
+}
+
+.filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  border-radius: 4px;
+  color: #ccc;
+}
+
+.filter-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  background: var(--bg-surface, white);
+  border: 1px solid var(--border-default, #ddd);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: 6px;
+  min-width: 150px;
+}
+
+.filter-popover[hidden] {
+  display: none;
+}
+
+#filter-input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--border-default, #ddd);
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+`;
+    var Qn = `:host([sort]) .label-section {
+  cursor: pointer;
+}
+
+.label-section:focus-visible,
+.filter-trigger:focus-visible,
+#filter-input:focus-visible {
+  outline: 2px solid var(--primary-base);
+  outline-offset: 2px;
+}
+
+:host([sort]) .sort-icon {
+  display: inline;
+}
+
+:host([aria-sort="ascending"]) .sort-icon::before {
+  content: "\\2191";
+}
+
+:host([aria-sort="descending"]) .sort-icon::before {
+  content: "\\2193";
+}
+
+:host([aria-sort="ascending"]) .sort-icon,
+:host([aria-sort="descending"]) .sort-icon {
+  font-size: 0;
+}
+
+:host([aria-sort="ascending"]) .sort-icon::before,
+:host([aria-sort="descending"]) .sort-icon::before {
+  font-size: 14px;
+}
+
+:host([data-has-filter]) .filter-trigger {
+  color: var(--primary-base, #007bff);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .filter-trigger {
+    transition: background 0.2s;
+  }
+}
+
+.filter-trigger:hover {
+  background: var(--bg-base, #eee);
+}
+`;
+    var ul = (t) => {
+      let e = t.getAttribute("filter-name");
+      if (!e)
+        return "";
+      return new URL(window.location.href).searchParams.get(`f_${e}`) ?? "";
+    }, ye = (t, e, r) => {
+      let i = t.getAttribute("filter-name");
+      if (!e)
+        return;
+      if (!i) {
+        e.setAttribute("hidden", ""), t.removeAttribute("data-has-filter");
+        return;
+      }
+      e.removeAttribute("hidden");
+      let n = ul(t);
+      if (r)
+        r.value = n;
+      if (n)
+        t.setAttribute("data-has-filter", "");
+      else
+        t.removeAttribute("data-has-filter");
+    };
+    var ta = (t) => {
+      let e = t.getAttribute("sort");
+      if (!e)
+        return;
+      let r = new URL(window.location.href), i = r.searchParams.get("sort"), n = r.searchParams.get("direction"), a = i === e && n === "asc" ? "desc" : "asc";
+      r.searchParams.set("sort", e), r.searchParams.set("direction", a), window.location.href = r.toString();
+    }, ea = (t, e) => {
+      let r = t.getAttribute("filter-name");
+      if (!r)
+        return;
+      let i = new URL(window.location.href);
+      if (e)
+        i.searchParams.set(`f_${r}`, e);
+      else
+        i.searchParams.delete(`f_${r}`);
+      window.location.href = i.toString();
+    };
+    var ra = (t, e) => {
+      if (e.composedPath().some((r) => r instanceof HTMLInputElement))
+        return;
+      ta(t);
+    }, ia = (t, e, r, i) => {
+      if (t.stopPropagation(), !r || !e)
+        return;
+      if (r.hasAttribute("hidden"))
+        r.removeAttribute("hidden"), e.setAttribute("aria-expanded", "true"), i?.focus();
+      else
+        r.setAttribute("hidden", ""), e.setAttribute("aria-expanded", "false");
+    }, na = (t, e, r) => {
+      if (r.key !== "Enter" || !e)
+        return;
+      ea(t, e.value);
+    }, aa = (t, e) => {
+      e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
+    };
+    var pl = Jn + Qn;
+
+    class Mt extends o {
+      _sortTrigger;
+      _filterBtn;
+      _filterPopover;
+      _filterInput;
+      static get observedAttributes() {
+        return ["sort", "filter-name"];
+      }
+      constructor() {
+        super({ css: pl, template: Gn });
+        this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
+      }
+      connectedCallback() {
+        ye(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
+      }
+      disconnectedCallback() {
+        this._sortTrigger?.removeEventListener("click", this._onSort), this._filterBtn?.removeEventListener("click", this._onFilterToggle), this._filterPopover?.removeEventListener("click", this._stopPropagation), this._filterInput?.removeEventListener("keydown", this._onFilterKey), window.removeEventListener("click", this._onWindowClick);
+      }
+      attributeChangedCallback() {
+        ye(this, this._filterBtn, this._filterInput);
+      }
+      _onSort = (t) => ra(this, t);
+      _onFilterToggle = (t) => ia(t, this._filterBtn, this._filterPopover, this._filterInput);
+      _onFilterKey = (t) => na(this, this._filterInput, t);
+      _onWindowClick = () => aa(this._filterBtn, this._filterPopover);
+      _stopPropagation = (t) => t.stopPropagation();
+    }
+    if (!customElements.get("p9r-header-cell"))
+      customElements.define("p9r-header-cell", Mt);
+
+    class Ht extends o {
+      constructor() {
+        super({ css: Vn, template: Nn });
+      }
+    }
+    if (!customElements.get("p9r-table"))
+      customElements.define("p9r-table", Ht);
+    var oa = `<div class="tabs" part="tabs">
+    <div class="tablist" part="tablist" role="tablist"></div>
+    <div class="panels" part="panels">
+        <slot></slot>
+    </div>
+</div>
+`;
+    var sa = `:host {
+  display: block;
+
+  --_border: var(--border-default, #e5e7eb);
+  --_active: var(--primary-base, #4361ee);
+  --_text: var(--text-body, #4b5563);
+  --_text-active: var(--primary-base, #4361ee);
+  --_pad-y: 0.6rem;
+  --_pad-x: 1rem;
+  --_size: 13px;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+}
+
+.tablist {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--_border);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tab {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: var(--_pad-y) var(--_pad-x);
+  font: inherit;
+  font-size: var(--_size);
+  font-weight: 500;
+  color: var(--_text);
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+}
+
+.tab[aria-selected="true"] {
+  color: var(--_text-active);
+}
+
+.tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--_active);
+}
+
+.tab:hover:not([aria-selected="true"]) {
+  color: var(--text-main, #1f2937);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--_active);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.tab[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.panels {
+  padding-top: 1rem;
+  flex: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tab { transition: color 0.15s; }
+}
+`;
+    var la = `:host([variant="pills"]) .tablist {
+  border-bottom: 0;
+  gap: 0.4rem;
+  padding: 0.25rem;
+  background: var(--bg-base, #f1f5f9);
+  border-radius: 8px;
+  width: max-content;
+}
+
+:host([orientation="vertical"]) .tabs {
+  flex-direction: row;
+  gap: 1rem;
+}
+
+:host([orientation="vertical"]) .tablist {
+  flex-direction: column;
+  border-bottom: 0;
+  border-right: 1px solid var(--_border);
+}
+
+:host([variant="pills"]) .tab[aria-selected="true"]::after {
+  display: none;
+}
+
+:host([variant="pills"]) .tab {
+  border-radius: 6px;
+}
+
+:host([variant="pills"]) .tab[aria-selected="true"] {
+  background: var(--bg-surface, #fff);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  color: var(--text-main);
+}
+
+:host([orientation="vertical"]) .panels {
+  padding-top: 0;
+  padding-left: 1rem;
+}
+`;
+    var da = `<div class="panel" part="panel">
+    <slot></slot>
+</div>
+`;
+    var ca = `:host {
+  display: block;
+}
+
+:host([hidden]) { display: none; }
+
+.panel {
+  outline: none;
+}
+`;
+
+    class zt extends o {
+      constructor() {
+        super({ css: ca, template: da });
+      }
+    }
+    if (!customElements.get("p9r-tab-panel"))
+      customElements.define("p9r-tab-panel", zt);
+    var we = (t) => {
+      if (!t)
+        return [];
+      return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
+    }, vl = 0, ua = () => `tabpanel-${vl++}`;
+    var pa = (t, e) => {
+      t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
+    };
+    var ke = (t, e, r) => {
+      if (!e)
+        return;
+      e.innerHTML = "";
+      let i = we(r), n = t.getAttribute("active");
+      if (!n && i.length > 0)
+        n = i[0]?.getAttribute("id") ?? null;
+      if (i.forEach((a, s) => {
+        let l = a.getAttribute("id") ?? ua();
+        if (!a.id)
+          a.id = l;
+        let d = a.getAttribute("label") ?? `Tab ${s + 1}`, c = document.createElement("button");
+        if (c.type = "button", c.className = "tab", c.setAttribute("part", "tab"), c.setAttribute("role", "tab"), c.setAttribute("id", `tab-${l}`), c.setAttribute("aria-controls", l), c.dataset.target = l, c.textContent = d, a.hasAttribute("disabled"))
+          c.setAttribute("disabled", "");
+        e.appendChild(c), a.setAttribute("role", "tabpanel"), a.setAttribute("aria-labelledby", `tab-${l}`);
+      }), n)
+        k(t, e, r, n);
+    }, k = (t, e, r, i) => {
+      let n = we(r), a = Array.from(e?.querySelectorAll(".tab") ?? []), s = false;
+      if (n.forEach((l) => {
+        let d = l.id === i;
+        if (d)
+          s = true;
+        l.toggleAttribute("hidden", !d);
+      }), a.forEach((l) => {
+        let d = l.dataset.target === i;
+        l.setAttribute("aria-selected", String(d)), l.setAttribute("tabindex", d ? "0" : "-1");
+      }), s && t.getAttribute("active") !== i)
+        t.setAttribute("active", i), pa(t, i);
+    };
+    var ha = (t, e, r, i) => {
+      let n = i.target.closest(".tab");
+      if (!n || n.hasAttribute("disabled"))
+        return;
+      let a = n.dataset.target;
+      if (a)
+        k(t, e, r, a);
+    }, ba = (t, e, r, i) => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
+        return;
+      let n = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
+      if (n.length === 0)
+        return;
+      let a = n.findIndex((u) => u === document.activeElement), s = a === -1 ? 0 : a, l = s;
+      if (i.key === "ArrowLeft")
+        l = (s - 1 + n.length) % n.length;
+      if (i.key === "ArrowRight")
+        l = (s + 1) % n.length;
+      if (i.key === "Home")
+        l = 0;
+      if (i.key === "End")
+        l = n.length - 1;
+      i.preventDefault();
+      let d = n[l];
+      if (!d)
+        return;
+      let c = d.dataset.target;
+      if (c)
+        k(t, e, r, c);
+      d.focus();
+    };
+    var _l = sa + la;
+
+    class St extends o {
+      _tablist;
+      _slot;
+      static get observedAttributes() {
+        return ["active"];
+      }
+      constructor() {
+        super({ css: _l, template: oa });
+        this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
+      }
+      connectedCallback() {
+        this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), ke(this, this._tablist, this._slot);
+      }
+      disconnectedCallback() {
+        this._slot?.removeEventListener("slotchange", this._onRebuild), this._tablist?.removeEventListener("click", this._onClick), this._tablist?.removeEventListener("keydown", this._onKey);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "active" && r !== null)
+          k(this, this._tablist, this._slot, r);
+      }
+      get active() {
+        return this.getAttribute("active") ?? "";
+      }
+      set active(t) {
+        this.setAttribute("active", t);
+      }
+      _onRebuild = () => ke(this, this._tablist, this._slot);
+      _onClick = (t) => ha(this, this._tablist, this._slot, t);
+      _onKey = (t) => ba(this, this._tablist, this._slot, t);
+    }
+    if (!customElements.get("p9r-tabs"))
+      customElements.define("p9r-tabs", St);
+    var ma = `<div class="icon" part="icon"></div>
+<div class="content">
+    <span class="message"><slot></slot></span>
+</div>
+<button class="close" aria-label="Dismiss">&times;</button>
+`;
+    var ga = `:host {
+    --_bg: var(--bg-surface, #ffffff);
+    --_color: var(--text-main, #1f2937);
+    --_border: var(--border-default, #e5e7eb);
+    --_accent: var(--info-base, #3b82f6);
+
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 280px;
+    max-width: 420px;
+    padding: 12px 14px;
+    background: var(--_bg);
+    color: var(--_color);
+    border: 1px solid var(--_border);
+    border-left: 4px solid var(--_accent);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 4px 10px -3px rgba(0, 0, 0, 0.08);
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+
+    animation: toast-in 180ms ease-out;
+}
+
+.icon {
+    flex: 0 0 20px;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: var(--_accent);
+    position: relative;
+    margin-top: 1px;
+}
+
+.icon::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: no-repeat center / 12px 12px;
+}
+
+.content {
+    flex: 1;
+    min-width: 0;
+    padding-top: 1px;
+}
+
+.message {
+    display: block;
+    word-wrap: break-word;
+}
+
+.close {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    color: var(--_color);
+    opacity: 0.5;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    margin-top: -2px;
+}
+
+.close:hover {
+    opacity: 1;
+}
+`;
+    var fa = `:host([leaving]) {
+    animation: toast-out 160ms ease-in forwards;
+}
+
+:host([type="success"]) {
+    --_accent: var(--success-base, #10b981);
+}
+
+:host([type="error"]) {
+    --_accent: var(--danger-base, #ef4444);
+}
+
+:host([type="warning"]) {
+    --_accent: var(--warning-base, #f59e0b);
+}
+
+:host([type="info"]) {
+    --_accent: var(--info-base, #3b82f6);
+}
+
+:host([type="success"]) .icon::before {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+}
+
+:host([type="error"]) .icon::before,
+:host([type="warning"]) .icon::before {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>');
+}
+
+:host([type="info"]) .icon::before {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg>');
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(-20px); }
+}
+`;
+    var kl = ga + fa;
+
+    class It extends o {
+      _timer = null;
+      constructor() {
+        super({ css: kl, template: ma });
+      }
+      connectedCallback() {
+        this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
+        let e = Number(this.getAttribute("duration") ?? 3500);
+        if (e > 0)
+          this._timer = setTimeout(() => this.dismiss(), e);
+      }
+      disconnectedCallback() {
+        if (this._timer)
+          clearTimeout(this._timer);
+      }
+      dismiss() {
+        if (this.hasAttribute("leaving"))
+          return;
+        if (this.setAttribute("leaving", ""), this._timer)
+          clearTimeout(this._timer);
+        this.addEventListener("animationend", () => {
+          this.dispatchEvent(new CustomEvent("toast-dismissed", { bubbles: true })), this.remove();
+        }, { once: true });
+      }
+    }
+    if (!customElements.get("p9r-toast"))
+      customElements.define("p9r-toast", It);
+    var va = `<slot></slot>
+`;
+    var _a = `:host {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    right: auto;
+    bottom: auto;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    overflow: visible;
+    width: auto;
+    height: auto;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+:host(:popover-open) {
+    display: flex;
+}
+
+:host([position="top-right"]) {
+    top: 24px;
+    right: 24px;
+    left: auto;
+}
+
+:host([position="bottom-right"]) {
+    bottom: 24px;
+    right: 24px;
+    top: auto;
+    left: auto;
+    flex-direction: column-reverse;
+}
+
+:host([position="bottom-left"]) {
+    bottom: 24px;
+    left: 24px;
+    top: auto;
+    flex-direction: column-reverse;
+}
+
+::slotted(p9r-toast) {
+    pointer-events: auto;
+}
+`;
+
+    class Pt extends o {
+      constructor() {
+        super({ css: _a, template: va });
+      }
+      connectedCallback() {
+        if (!this.hasAttribute("popover"))
+          this.setAttribute("popover", "manual");
+        try {
+          this.showPopover?.();
+        } catch {}
+      }
+      push(t, e = {}) {
+        let r = document.createElement("p9r-toast");
+        if (r.setAttribute("type", e.type ?? "info"), e.duration !== undefined)
+          r.setAttribute("duration", String(e.duration));
+        return r.textContent = t, this.appendChild(r), r;
+      }
+    }
+    if (!customElements.get("p9r-toast-stack"))
+      customElements.define("p9r-toast-stack", Pt);
+    var b = null;
+    function Ll() {
+      if (b && b.isConnected)
+        return b;
+      if (b = document.querySelector("p9r-toast-stack"), b)
+        return b;
+      return b = document.createElement("p9r-toast-stack"), document.body.appendChild(b), b;
+    }
+    function xa(t, e = {}) {
+      return Ll().push(t, e);
+    }
+    var ya = `<div class="trigger" part="trigger">
+    <slot></slot>
+</div>
+<div class="tooltip" part="tooltip" role="tooltip" aria-hidden="true">
+    <slot name="content"></slot>
+    <span class="text"></span>
+</div>
+`;
+    var wa = `:host {
+  display: inline-block;
+  position: relative;
+
+  --_bg: var(--text-main, #1f2937);
+  --_color: var(--bg-surface, #fff);
+  --_radius: 6px;
+  --_padding: 6px 10px;
+  --_size: 12px;
+  --_offset: 8px;
+  --_max-w: 240px;
+  --_arrow-size: 5px;
+}
+
+.trigger {
+  display: contents;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 9999;
+  background: var(--_bg);
+  color: var(--_color);
+  padding: var(--_padding);
+  border-radius: var(--_radius);
+  font-size: var(--_size);
+  font-weight: 500;
+  line-height: 1.4;
+  max-width: var(--_max-w);
+  width: max-content;
+  pointer-events: none;
+  opacity: 0;
+  white-space: normal;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+:host([open]) .tooltip {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tooltip { transition: opacity 0.12s ease; }
+}
+
+.text:empty { display: none; }
+
+.tooltip {
+  bottom: calc(100% + var(--_offset));
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  border: var(--_arrow-size) solid transparent;
+}
+
+.tooltip::after {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: var(--_bg);
+}
+`;
+    var ka = `:host([position="bottom"]) .tooltip {
+  top: calc(100% + var(--_offset));
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+:host([position="left"]) .tooltip {
+  right: calc(100% + var(--_offset));
+  left: auto;
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+:host([position="right"]) .tooltip {
+  left: calc(100% + var(--_offset));
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+:host([position="bottom"]) .tooltip::after {
+  top: auto;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: transparent;
+  border-bottom-color: var(--_bg);
+}
+
+:host([position="left"]) .tooltip::after {
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  border-top-color: transparent;
+  border-left-color: var(--_bg);
+}
+
+:host([position="right"]) .tooltip::after {
+  top: 50%;
+  left: auto;
+  right: 100%;
+  transform: translateY(-50%);
+  border-top-color: transparent;
+  border-right-color: var(--_bg);
+}
+`;
+    var Hl = wa + ka;
+
+    class Rt extends o {
+      _tooltip;
+      _text;
+      _showTimer = null;
+      _hideTimer = null;
+      static get observedAttributes() {
+        return ["text"];
+      }
+      constructor() {
+        super({ css: Hl, template: ya });
+        this._tooltip = this.shadowRoot?.querySelector(".tooltip") ?? null, this._text = this.shadowRoot?.querySelector(".text") ?? null;
+      }
+      connectedCallback() {
+        this._syncText(), this.addEventListener("mouseenter", this._show), this.addEventListener("mouseleave", this._hide), this.addEventListener("focusin", this._show), this.addEventListener("focusout", this._hide);
+      }
+      disconnectedCallback() {
+        if (this.removeEventListener("mouseenter", this._show), this.removeEventListener("mouseleave", this._hide), this.removeEventListener("focusin", this._show), this.removeEventListener("focusout", this._hide), this._showTimer)
+          clearTimeout(this._showTimer);
+        if (this._hideTimer)
+          clearTimeout(this._hideTimer);
+      }
+      attributeChangedCallback(t, e, r) {
+        if (t === "text")
+          this._syncText();
+      }
+      _syncText() {
+        if (this._text)
+          this._text.textContent = this.getAttribute("text") ?? "";
+      }
+      _show = () => {
+        if (this._hideTimer)
+          clearTimeout(this._hideTimer), this._hideTimer = null;
+        let t = Number(this.getAttribute("delay") ?? 100);
+        this._showTimer = setTimeout(() => {
+          this.setAttribute("open", ""), this._tooltip?.setAttribute("aria-hidden", "false");
+        }, t);
+      };
+      _hide = () => {
+        if (this._showTimer)
+          clearTimeout(this._showTimer), this._showTimer = null;
+        this._hideTimer = setTimeout(() => {
+          this.removeAttribute("open"), this._tooltip?.setAttribute("aria-hidden", "true");
+        }, 80);
+      };
+    }
+    if (!customElements.get("p9r-tooltip"))
+      customElements.define("p9r-tooltip", Rt);
+    function Ee(t, e) {
+      if (t.key !== "Enter")
+        return;
+      if (t.target.tagName === "TEXTAREA")
+        return;
+      t.preventDefault(), e.requestSubmit();
+    }
+    function qt(t) {
+      let e = new URL(t, window.location.href);
+      for (let [r, i] of new URLSearchParams(window.location.search))
+        e.searchParams.append(r, i);
+      return e;
+    }
+    async function Bt(t, e) {
+      t.preventDefault();
+      let r = t.target, i = new FormData(r), n = Object.fromEntries(i.entries()), a = await fetch(qt(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(n) }), s = await a.json().catch(() => null), l = { status: a.status, body: s };
+      if (a.ok) {
+        if (r.reset(), e.dispatchEvent(new CustomEvent("form:success", { bubbles: true, composed: true, detail: l })), e.emit)
+          document.dispatchEvent(new CustomEvent(e.emit, { bubbles: true, composed: true, detail: l }));
+        if (e.redirect)
+          window.location.href = e.redirect;
+      } else
+        e.dispatchEvent(new CustomEvent("form:failed", { bubbles: true, composed: true, detail: l }));
+    }
+
+    class jt extends HTMLElement {
+      _nativeForm = null;
+      static get observedAttributes() {
+        return ["redirect", "target", "method", "emit"];
+      }
+      _handleInternalSubmit = (t) => {
+        Bt(t, this);
+      };
+      connectedCallback() {
+        requestAnimationFrame(() => {
+          if (this._nativeForm)
+            return;
+          this._nativeForm = document.createElement("form");
+          let t = this.getAttribute("id");
+          if (t)
+            this._nativeForm.id = t, this.removeAttribute("id");
+          while (this.firstChild)
+            this._nativeForm.appendChild(this.firstChild);
+          this.appendChild(this._nativeForm), this._nativeForm.addEventListener("submit", this._handleInternalSubmit), this.addEventListener("keydown", (e) => Ee(e, this._nativeForm));
+        });
+      }
+      disconnectedCallback() {
+        this.removeEventListener("submit", (t) => Bt(t, this)), this.removeEventListener("keydown", (t) => Ee(t, this._nativeForm));
+      }
+      attributeChangedCallback(t, e, r) {}
+      get redirect() {
+        return this.getAttribute("redirect");
+      }
+      get target() {
+        let t = this.getAttribute("target");
+        if (!t)
+          throw Error("CmsForm target attribute should be set");
+        return t;
+      }
+      get method() {
+        return this.getAttribute("method");
+      }
+      get emit() {
+        return this.getAttribute("emit");
+      }
+    }
+    if (!customElements.get("w13c-form"))
+      customElements.define("w13c-form", jt);
+    function Ea(t) {
+      let e = {};
+      for (let r of Array.from(t.children)) {
+        if (r.tagName !== "TEMPLATE")
+          continue;
+        let i = r.getAttribute("slot") || "default";
+        if (!e[i])
+          e[i] = r;
+      }
+      return e;
+    }
+    function Aa(t) {
+      if (t === null || t === undefined)
+        return true;
+      if (Array.isArray(t))
+        return t.length === 0;
+      if (typeof t === "object")
+        return Object.keys(t).length === 0;
+      return false;
+    }
+    async function La(t, e) {
+      try {
+        let r = qt(t), i = await fetch(r, { headers: { Accept: "application/json" }, signal: e });
+        if (!i.ok)
+          return { kind: "error", error: Error(`HTTP ${i.status}`) };
+        return { kind: "success", data: await i.json() };
+      } catch (r) {
+        if (r.name === "AbortError")
+          return { kind: "aborted" };
+        return { kind: "error", error: r };
+      }
+    }
+    function H(t, e) {
+      return e.split(".").reduce((r, i) => r != null ? r[i] : undefined, t);
+    }
+    function Dt(t) {
+      return String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+    function Ae(t, e) {
+      if (t.nodeType === Node.TEXT_NODE) {
+        let r = t.textContent ?? "", i = Ca(r, e);
+        if (i !== r)
+          t.textContent = i;
+        return;
+      }
+      if (t.nodeType === Node.ELEMENT_NODE) {
+        let r = t;
+        if (r.tagName === "TEMPLATE")
+          return;
+        if (r.tagName === "INNER-HTML" && zl(r, e))
+          return;
+        for (let i of Array.from(r.attributes)) {
+          let n = Ca(i.value, e);
+          if (n !== i.value)
+            r.setAttribute(i.name, n);
+        }
+      }
+      for (let r of Array.from(t.childNodes))
+        Ae(r, e);
+    }
+    function zl(t, e) {
+      let i = (t.textContent?.trim() ?? "").match(/^\{\{\s*([\w.]+)\s*\}\}$/);
+      if (!i)
+        return false;
+      return t.innerHTML = String(H(e, i[1]) ?? ""), t.replaceWith(...Array.from(t.childNodes)), true;
+    }
+    function Ca(t, e) {
+      return t.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (r, i) => {
+        if (i === "value") {
+          if (e !== null && typeof e === "object" && "value" in e)
+            return Dt(e.value);
+          return Dt(e);
+        }
+        return Dt(H(e, i));
+      });
+    }
+    function Le(t, e) {
+      let r = t.getAttribute("for"), i = document.createDocumentFragment();
+      if (r === null) {
+        let a = t.content.cloneNode(true);
+        return Ta(a, e), i.appendChild(a), i;
+      }
+      let n = r === "." ? e : H(e, r);
+      if (!Array.isArray(n))
+        return console.warn(`cms-fetch: <template for="${r}"> expected an array, got`, n), i;
+      for (let a of n) {
+        let s = t.content.cloneNode(true);
+        Ta(s, a), i.appendChild(s);
+      }
+      return i;
+    }
+    function Ta(t, e) {
+      let r = [];
+      Ma(t, r);
+      for (let i of r)
+        i.parentNode?.replaceChild(Le(i, e), i);
+      Ae(t, e);
+    }
+    function Ma(t, e) {
+      for (let r of Array.from(t.childNodes)) {
+        if (r.nodeType !== Node.ELEMENT_NODE)
+          continue;
+        let i = r;
+        if (i.tagName === "TEMPLATE")
+          e.push(i);
+        else
+          Ma(i, e);
+      }
+    }
+    function Ha(t, e, r, i) {
+      Ce(i);
+      let n = t.parentNode;
+      if (!n)
+        return [];
+      let a = Le(e, r), s = Array.from(a.childNodes);
+      return n.insertBefore(a, t), s;
+    }
+    function Ce(t) {
+      for (let e of t)
+        e.parentNode?.removeChild(e);
+    }
+
+    class Ft extends Event {
+      constructor(t) {
+        super(t, { bubbles: true, composed: true });
+      }
+    }
+
+    class Ot extends HTMLElement {
+      static get observedAttributes() {
+        return ["url", "reload-on"];
+      }
+      _templates = {};
+      _stamped = [];
+      _reloadEvents = [];
+      _abort = null;
+      _onReloadEvent = () => {
+        if (this.isConnected)
+          this.reload();
+      };
+      connectedCallback() {
+        if (this._refreshReloadListeners(), document.addEventListener("cms-fetch:reload", this._onReloadEvent), this._templates.default) {
+          this.reload();
+          return;
+        }
+        if (document.readyState === "loading")
+          document.addEventListener("DOMContentLoaded", () => this._init(), { once: true });
+        else
+          this._init();
+      }
+      disconnectedCallback() {
+        Ce(this._stamped), this._stamped = [];
+        for (let t of this._reloadEvents)
+          document.removeEventListener(t, this._onReloadEvent);
+        document.removeEventListener("cms-fetch:reload", this._onReloadEvent), this._reloadEvents = [], this._abort?.abort(), this._abort = null;
+      }
+      attributeChangedCallback(t, e, r) {
+        if (e === r)
+          return;
+        if (t === "reload-on") {
+          this._refreshReloadListeners();
+          return;
+        }
+        if (this.isConnected)
+          this.reload();
+      }
+      reload() {
+        this._run();
+      }
+      _init() {
+        if (this._templates = Ea(this), !this._templates.default) {
+          console.warn("cms-fetch: missing <template> child (default slot)");
+          return;
+        }
+        this.reload();
+      }
+      _refreshReloadListeners() {
+        for (let t of this._reloadEvents)
+          document.removeEventListener(t, this._onReloadEvent);
+        this._reloadEvents = (this.getAttribute("reload-on") || "").split(/\s+/).filter(Boolean);
+        for (let t of this._reloadEvents)
+          document.addEventListener(t, this._onReloadEvent);
+      }
+      async _run() {
+        let t = this.getAttribute("url");
+        if (!t || !this._templates.default)
+          return;
+        this._abort?.abort(), this._abort = new AbortController;
+        let e = this._abort.signal;
+        this._renderSlot("loading", null), this.dispatchEvent(new Ft("fetch:loading"));
+        let r = await La(t, e);
+        if (e.aborted || r.kind === "aborted")
+          return;
+        if (r.kind === "success") {
+          let i = Aa(r.data) && this._templates.empty ? "empty" : "default";
+          this._renderSlot(i, r.data), this.dispatchEvent(new CustomEvent("fetch:data", { bubbles: true, composed: true, detail: r.data }));
+        } else
+          this._renderSlot("error", r.error), this.dispatchEvent(new CustomEvent("fetch:error", { bubbles: true, composed: true, detail: r.error }));
+      }
+      _renderSlot(t, e) {
+        let r = this._templates[t];
+        if (!r)
+          return;
+        this._stamped = Ha(this, r, e, this._stamped);
+      }
+    }
+    customElements.define("w13c-fetch", Ot);
+  })();
+
+  // src/control/core/editorSystem/Component.ts
+  class Component extends HTMLElement {
+    _rawStyles = "";
+    _styles = null;
+    _template = null;
+    constructor(metadata) {
+      super();
+      const shadow = this.attachShadow({ mode: "open" });
+      if (metadata) {
+        this._rawStyles = metadata.css;
+        this._styles = document.createElement("style");
+        this._styles.innerHTML = metadata.css;
+        shadow.appendChild(this._styles);
+        this._template = document.createElement("template");
+        this._template.innerHTML = metadata ? metadata.template : "";
+        shadow.appendChild(this._template.content.cloneNode(true));
+      }
+    }
+    registerCSSVariables(items) {
+      if (!this._styles)
+        return;
+      let src = this._rawStyles;
+      Object.entries(items).forEach(([key, value]) => {
+        src = src.replaceAll("var(--" + key + ")", value);
+      });
+      this._styles.innerHTML = src;
+    }
+    connectedCallback() {}
+  }
+  // src/control/errors/NearestElementRequire.ts
+  class NearestElementRequire extends Error {
+    constructor(ele, target) {
+      super("The element " + ele.tagName + " should be placed under <" + target + ">");
+    }
+  }
+
+  // src/control/core/dom/editor/getClosestEditorSystem.ts
+  function getClosestEditorSystem(ele) {
+    let current = ele;
+    while (current) {
+      if (current instanceof Element) {
+        const editorManager = current.closest("cms-editor-system");
+        if (editorManager)
+          return editorManager;
+      }
+      if (current instanceof ShadowRoot) {
+        current = current.host;
+      } else {
+        current = current.parentNode;
+      }
+    }
+    throw new NearestElementRequire(ele, "cms-editor-system");
+  }
+
+  // src/control/components/icons.ts
+  var ICON_SNIPPET = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w13c-icon-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m18 16 4-4-4-4"/>
+    <path d="m6 8-4 4 4 4"/>
+    <path d="m14.5 4-5 16"/>
+</svg>
+`;
+  var ICON_SNIPPET_MUTED = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m18 16 4-4-4-4"/>
+    <path d="m6 8-4 4 4 4"/>
+    <path d="m14.5 4-5 16"/>
+</svg>
+`;
+  var ICON_TEMPLATE = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w13c-icon-svg" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M3 9h18" stroke="currentColor" stroke-width="1.5" fill="none"/>
+    <path d="M9 21V9" stroke="currentColor" stroke-width="1.5" fill="none"/>
+</svg>
+`;
+  var ICON_TEMPLATE_MUTED = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="2"/>
+    <path d="M3 9h18"/>
+    <path d="M9 21V9"/>
+</svg>
+`;
+  var ICON_COMPONENT = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w13c-icon-svg" aria-hidden="true">
+    <rect x="2" y="2" width="20" height="20" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <rect x="6" y="6" width="12" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <rect x="6" y="14" width="5" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <rect x="13" y="14" width="5" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+`;
+  var ICON_UPLOAD = `
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="2"/>
+    <circle cx="8.5" cy="8.5" r="1.5"/>
+    <path d="m21 15-5-5L5 21"/>
+</svg>
+`;
+  var ICON_PARENT = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polyline points="18 15 12 9 6 15"></polyline>
+</svg>
+`;
+  var ICON_PIN = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 17v5"/>
+    <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>
+</svg>
+`;
+
+  // src/control/core/editorSystem/Editor/PinMode.ts
+  class PinMode {
+    _target;
+    _stateSyncs;
+    _onUnpinAll;
+    static _stylesInjected = false;
+    _btn = null;
+    _resizeObs = null;
+    _reflow = () => this._position();
+    _rafId = 0;
+    _lastRect = null;
+    constructor(_target, _stateSyncs, _onUnpinAll) {
+      this._target = _target;
+      this._stateSyncs = _stateSyncs;
+      this._onUnpinAll = _onUnpinAll;
+    }
+    get active() {
+      return this._btn !== null;
+    }
+    enter() {
+      PinMode._injectStyles();
+      if (this._btn) {
+        this._position();
+        return;
+      }
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "p9r-unpin-btn";
+      btn.title = "Unpin state";
+      btn.innerHTML = `${ICON_PIN}<span>Unpin</span>`;
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._onUnpinAll();
+      });
+      this._btn = btn;
+      document.body.appendChild(btn);
+      window.addEventListener("scroll", this._reflow, { passive: true, capture: true });
+      window.addEventListener("resize", this._reflow);
+      this._resizeObs = new ResizeObserver(this._reflow);
+      this._resizeObs.observe(this._target);
+      this._resizeObs.observe(document.body);
+      this._startRectWatch();
+      this._position();
+    }
+    exit() {
+      if (!this._btn)
+        return;
+      this._btn.remove();
+      this._btn = null;
+      window.removeEventListener("scroll", this._reflow, { capture: true });
+      window.removeEventListener("resize", this._reflow);
+      this._resizeObs?.disconnect();
+      this._resizeObs = null;
+      if (this._rafId) {
+        cancelAnimationFrame(this._rafId);
+        this._rafId = 0;
+      }
+      this._lastRect = null;
+    }
+    _startRectWatch() {
+      const tick = () => {
+        if (!this._btn)
+          return;
+        const r = this._target.getBoundingClientRect();
+        const last = this._lastRect;
+        if (!last || last.x !== r.left || last.y !== r.top || last.w !== r.width || last.h !== r.height) {
+          this._lastRect = { x: r.left, y: r.top, w: r.width, h: r.height };
+          this._position();
+        }
+        this._rafId = requestAnimationFrame(tick);
+      };
+      this._rafId = requestAnimationFrame(tick);
+    }
+    _position() {
+      if (!this._btn)
+        return;
+      const rect = this._target.getBoundingClientRect();
+      const placement = this._stateSyncs.find((s) => s.isPinned)?.placement ?? "left";
+      const gap = 8;
+      const bw = this._btn.offsetWidth;
+      const bh = this._btn.offsetHeight;
+      let x = 0, y = 0;
+      switch (placement) {
+        case "right":
+          x = rect.right + gap;
+          y = rect.top + rect.height / 2 - bh / 2;
+          break;
+        case "top":
+          x = rect.left + rect.width / 2 - bw / 2;
+          y = rect.top - bh - gap;
+          break;
+        case "bottom":
+          x = rect.left + rect.width / 2 - bw / 2;
+          y = rect.bottom + gap;
+          break;
+        default:
+          x = rect.left - bw - gap;
+          y = rect.top + rect.height / 2 - bh / 2;
+      }
+      x = Math.max(4, Math.min(x, window.innerWidth - bw - 4));
+      y = Math.max(4, Math.min(y, window.innerHeight - bh - 4));
+      this._btn.style.left = `${x}px`;
+      this._btn.style.top = `${y}px`;
+    }
+    static _injectStyles() {
+      if (PinMode._stylesInjected)
+        return;
+      const style = document.createElement("style");
+      style.textContent = `
+.p9r-unpin-btn {
+    position: fixed;
+    z-index: 10002;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 14px;
+    border: 1px solid var(--primary-base, #4361ee);
+    background: var(--bg-surface, #fff);
+    color: var(--primary-base, #4361ee);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.p9r-unpin-btn svg { width: 14px; height: 14px; }
+.p9r-unpin-btn:hover { background: var(--primary-base, #4361ee); color: #fff; }
+`;
+      document.head.appendChild(style);
+      PinMode._stylesInjected = true;
+    }
+  }
+
+  // src/control/core/editorSystem/Editor/panel.ts
+  var SYNC_SELECTORS = "p9r-comp-sync, p9r-image-sync, p9r-attr-sync, p9r-state-sync";
+
+  class PanelConfig {
+    editor;
+    _config = null;
+    _fragment = null;
+    _syncs = [];
+    constructor(editor, html) {
+      this.editor = editor;
+      if (html)
+        this._initFromHTML(html);
+    }
+    get hasPanel() {
+      return this._config != null || this._fragment != null;
+    }
+    get configPanel() {
+      return this._config;
+    }
+    queryChildren(selector) {
+      if (this._config)
+        return Array.from(this._config.querySelectorAll(selector));
+      if (this._fragment)
+        return Array.from(this._fragment.querySelectorAll(selector));
+      return [];
+    }
+    propagateIdentifier(identifier) {
+      if (!this._config)
+        return;
+      this._config.querySelectorAll("*").forEach((el) => el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, identifier));
+    }
+    notifySyncs(opts) {
+      if (this._config) {
+        this._config.init(opts);
+        return;
+      }
+      for (const sync of this._syncs)
+        sync.init?.(opts);
+    }
+    show() {
+      this._ensureBuilt();
+      this._config?.show();
+    }
+    dispose() {
+      this._config?.remove();
+      this._config = null;
+      this._fragment = null;
+      this._syncs = [];
+    }
+    _ensureBuilt() {
+      if (this._config || !this._fragment)
+        return;
+      this._config = document.createElement("p9r-config-panel");
+      this._config.appendChild(this._fragment);
+      this._fragment = null;
+      getClosestEditorSystem(this.editor.target).editorDOM.append(this._config);
+    }
+    _initFromHTML(html) {
+      this._fragment = document.createRange().createContextualFragment(html);
+      try {
+        customElements.upgrade(this._fragment);
+      } catch {}
+      const id = this.editor.identifier;
+      this._fragment.querySelectorAll("*").forEach((el) => el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, id));
+      this._syncs = Array.from(this._fragment.querySelectorAll(SYNC_SELECTORS));
+      for (const sync of this._syncs) {
+        sync.prepare?.(this.editor.target, this.editor);
+      }
+    }
+  }
+
+  // src/control/core/editorSystem/Editor/hoverBinding.ts
+  class HoverBinding {
+    editor;
+    _hoverElement = null;
+    _handler = (e) => this._onHover(e);
+    constructor(editor) {
+      this.editor = editor;
+    }
+    bind() {
+      this.unbind();
+      this._hoverElement = this.editor.getActionBarAnchor() ?? this.editor.target;
+      this._hoverElement.addEventListener("mouseenter", this._handler);
+    }
+    unbind() {
+      if (!this._hoverElement)
+        return;
+      this._hoverElement.removeEventListener("mouseenter", this._handler);
+      this._hoverElement = null;
+    }
+    _onHover(e) {
+      const editorSystem = getClosestEditorSystem(this.editor.target);
+      editorSystem.blocActions.setEditor(this.editor);
+      editorSystem.blocActions.open(e.clientX, e.clientY);
+    }
+  }
+
+  // src/control/core/editorSystem/Editor/modeBinding.ts
+  var EVENT_NAME = "editor-system-switch-mode";
+
+  class ModeBinding {
+    _root;
+    _handler;
+    constructor(target, callbacks) {
+      this._root = getClosestEditorSystem(target);
+      this._handler = (e) => {
+        const mode = e.detail;
+        if (mode === "editor")
+          callbacks.onEditorMode();
+        else if (mode === "view")
+          callbacks.onViewMode();
+        callbacks.afterSwitch?.(mode);
+      };
+      this._root.addEventListener(EVENT_NAME, this._handler);
+    }
+    dispose() {
+      this._root.removeEventListener(EVENT_NAME, this._handler);
+    }
+  }
+
+  // src/control/core/editorSystem/Editor/bodyStyle.ts
+  var registry = new Map;
+  function acquireBodyStyle(tag, el) {
+    let entry = registry.get(tag);
+    if (!entry) {
+      document.body.append(el);
+      entry = { el, count: 0 };
+      registry.set(tag, entry);
+    }
+    entry.count++;
+  }
+  function releaseBodyStyle(tag) {
+    const entry = registry.get(tag);
+    if (!entry)
+      return;
+    entry.count--;
+    if (entry.count <= 0) {
+      entry.el.remove();
+      registry.delete(tag);
+    }
+  }
+
+  // src/control/core/editorSystem/Editor/actionBarFeatures.ts
+  function defaultActionBarFeatures() {
+    return new Map([
+      ["delete", true],
+      ["duplicate", true],
+      ["addBefore", false],
+      ["addAfter", false],
+      ["changeComponent", false],
+      ["saveAsTemplate", false]
+    ]);
+  }
+  function syncActionBarFeaturesFromAttrs(target, features) {
+    features.set("delete", target.getAttribute(p9r.attr.ACTION.DISABLE_DELETE) !== "true");
+    features.set("duplicate", target.getAttribute(p9r.attr.ACTION.DISABLE_DUPLICATE) !== "true");
+    features.set("addBefore", target.getAttribute(p9r.attr.ACTION.DISABLE_ADD_BEFORE) !== "true");
+    features.set("addAfter", target.getAttribute(p9r.attr.ACTION.DISABLE_ADD_AFTER) !== "true");
+    features.set("changeComponent", target.getAttribute(p9r.attr.ACTION.DISABLE_CHANGE_COMPONENT) !== "true");
+    features.set("saveAsTemplate", target.getAttribute(p9r.attr.ACTION.DISABLE_SAVE_AS_TEMPLATE) !== "true");
+  }
+
+  // src/control/core/editorSystem/Editor/Editor.ts
+  class Editor {
+    target;
+    variant = "default";
+    customActions = [];
+    stateSyncs = [];
+    _identifier;
+    _styleElement;
+    _holdsBodyStyle = false;
+    _panel;
+    _hover;
+    _mode;
+    _pinMode;
+    _actionBarFeatures = defaultActionBarFeatures();
+    constructor(target, styles, editor) {
+      this.target = target;
+      this._styleElement = document.createElement("style");
+      this._styleElement.innerHTML = styles;
+      this._identifier = crypto.randomUUID();
+      this.target.setAttribute(p9r.attr.EDITOR.IDENTIFIER, this._identifier);
+      if (!document.compIdentifierToEditor)
+        document.compIdentifierToEditor = new Map;
+      document.compIdentifierToEditor.set(this._identifier, this);
+      this._panel = new PanelConfig(this, editor);
+      this._hover = new HoverBinding(this);
+      this._pinMode = new PinMode(this.target, this.stateSyncs, () => {
+        this.stateSyncs.forEach((s) => s.unpin());
+        this.notifyPinStateChanged();
+      });
+      this._mode = new ModeBinding(this.target, {
+        onEditorMode: () => this.viewEditor(),
+        onViewMode: () => this.viewClient(),
+        afterSwitch: (mode) => this.onSwitchMode(mode)
+      });
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.target.removeAttribute(p9r.attr.EDITOR.IS_CREATING);
+        });
+      });
+      getClosestEditorSystem(this.target).blocActions.close();
+    }
+    viewEditor() {
+      this._panel.propagateIdentifier(this._identifier);
+      this._panel.notifySyncs();
+      this.init();
+      if (!this.target.shadowRoot) {
+        this._acquireBodyStyle();
+      } else {
+        this.target.shadowRoot.append(this._styleElement);
+      }
+      this.target.setAttribute(p9r.attr.ACTION.DISABLE_SAVE_AS_TEMPLATE, "true");
+      this.target.setAttribute(p9r.attr.EDITOR.IDENTIFIER, this._identifier);
+      this.target.classList.add("editor-block");
+      this.target.setAttribute(p9r.attr.EDITOR.IS_EDITOR, "true");
+      if (this.target.hasAttribute(p9r.attr.ACTION.DISABLE_DRAGGING)) {
+        this.target.setAttribute("draggable", "false");
+      } else {
+        this.target.draggable = true;
+      }
+      this.target.style.setProperty("pointer-events", "auto", "important");
+      this.refreshActionBarFeatures();
+      this._hover.unbind();
+      if (this._hasInteractiveFeatures())
+        this._hover.bind();
+    }
+    viewClient() {
+      this.stateSyncs.forEach((s) => s.unpin());
+      this._pinMode.exit();
+      this.restore();
+      this._hover.unbind();
+      this.target.style.removeProperty("pointer-events");
+      if (this.target.getAttribute("style") === "") {
+        this.target.removeAttribute("style");
+      }
+      this._releaseBodyStyle();
+      if (this.target.shadowRoot)
+        this._styleElement.remove();
+      this.target.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
+      this.target.classList.remove("editor-block");
+      this.target.removeAttribute("draggable");
+      if (this.target.getAttribute("class") === "") {
+        this.target.removeAttribute("class");
+      }
+      this.target.removeAttribute(p9r.attr.ACTION.DISABLE_DELETE);
+      this.target.removeAttribute(p9r.attr.ACTION.DISABLE_DUPLICATE);
+      this.target.removeAttribute(p9r.attr.ACTION.DISABLE_ADD_BEFORE);
+      this.target.removeAttribute(p9r.attr.ACTION.DISABLE_ADD_AFTER);
+      this.target.removeAttribute(p9r.attr.ACTION.DISABLE_CHANGE_COMPONENT);
+      this.target.removeAttribute(p9r.attr.ACTION.DISABLE_SAVE_AS_TEMPLATE);
+      this.target.removeAttribute(p9r.attr.ACTION.INLINE_ADDING);
+      this.target.removeAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE);
+      this.target.removeAttribute(p9r.attr.ACTION.DISABLE_DRAGGING);
+      this.target.removeAttribute(p9r.attr.TEXT.BLOC_MANAGEMENT);
+      this.target.removeAttribute(p9r.attr.EDITOR.IDENTIFIER);
+      this.target.removeAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+    }
+    onSwitchMode(_mode) {}
+    dispose() {
+      document.compIdentifierToEditor?.delete(this._identifier);
+      this._hover.unbind();
+      this._mode.dispose();
+      this._pinMode.exit();
+      this._panel.dispose();
+      this._releaseBodyStyle();
+      this._styleElement.remove();
+    }
+    registerStateSync(sync) {
+      if (!this.stateSyncs.includes(sync))
+        this.stateSyncs.push(sync);
+    }
+    unregisterStateSync(sync) {
+      const i = this.stateSyncs.indexOf(sync);
+      if (i >= 0)
+        this.stateSyncs.splice(i, 1);
+    }
+    getActionBarAnchor() {
+      return null;
+    }
+    notifyPinStateChanged(stateSync) {
+      const anyPinned = this.stateSyncs.some((s) => s.isPinned);
+      if (anyPinned) {
+        this._hover.unbind();
+        getClosestEditorSystem(this.target).blocActions.close();
+        this._pinMode.enter();
+      } else {
+        this._pinMode.exit();
+        if (this._hasInteractiveFeatures())
+          this._hover.bind();
+      }
+      this.onEditorPinState?.(anyPinned, stateSync);
+    }
+    refreshActionBarFeatures() {
+      syncActionBarFeaturesFromAttrs(this.target, this._actionBarFeatures);
+    }
+    get actionBarConfiguration() {
+      return this._actionBarFeatures;
+    }
+    addCustomAction(action) {
+      this.customActions.push(action);
+    }
+    _hasInteractiveFeatures() {
+      return this._actionBarFeatures.values().some((v) => v === true) || this.stateSyncs.length > 0 || this.customActions.length > 0;
+    }
+    get hasConfigPanel() {
+      return this._panel.hasPanel;
+    }
+    queryPanelChildren(selector) {
+      return this._panel.queryChildren(selector);
+    }
+    showConfigPanel() {
+      this._panel.show();
+    }
+    get _panelConfig() {
+      return this._panel.configPanel;
+    }
+    onChildrenRemoved(removedNode) {
+      this._panel.notifySyncs({ removed: removedNode });
+    }
+    onChildrenAdded(addedNode) {
+      this._panel.notifySyncs({ added: addedNode });
+    }
+    get identifier() {
+      return this._identifier;
+    }
+    get ensurePersistentIdentifier() {
+      if (!this.target.hasAttribute(p9r.attr.EDITOR.PERSISTENT_IDENTIFIER)) {
+        const generatedId = "ID-" + crypto.randomUUID();
+        this.target.setAttribute(p9r.attr.EDITOR.PERSISTENT_IDENTIFIER, generatedId);
+      }
+      return this.target.getAttribute(p9r.attr.EDITOR.PERSISTENT_IDENTIFIER);
+    }
+    get persistentIdentifierAttrName() {
+      return p9r.attr.EDITOR.PERSISTENT_IDENTIFIER;
+    }
+    _acquireBodyStyle() {
+      if (this._holdsBodyStyle)
+        return;
+      acquireBodyStyle(this.target.tagName, this._styleElement);
+      this._holdsBodyStyle = true;
+    }
+    _releaseBodyStyle() {
+      if (!this._holdsBodyStyle)
+        return;
+      this._holdsBodyStyle = false;
+      releaseBodyStyle(this.target.tagName);
+    }
+  }
+  // src/control/core/editorSystem/registerEditor.ts
+  class EmptyEditor extends Editor {
+    constructor(target) {
+      super(target, "");
+    }
+    init() {}
+    restore() {}
+  }
+  function registerEditor(props) {
+    if (!document.editors)
+      document.editors = [];
+    document.editors.push({
+      tag: props.tag + (props.suffix || ""),
+      cl: props.cl || EmptyEditor,
+      label: props.label + (props.suffix || ""),
+      group: props.group
+    });
+  }
+  function registerEditor_opaque(props) {
+    if (!document.editors)
+      document.editors = [];
+    document.editors.push({
+      tag: props.tag,
+      cl: EmptyEditor,
+      label: props.label,
+      group: props.group
+    });
+  }
+  // src/socle/constants/editorAttributes.ts
+  var P9R_ATTR = {
+    ACTION: {
+      DISABLE_DELETE: "p9r-action-disable-delete",
+      DISABLE_ADD_BEFORE: "p9r-action-disable-add-before",
+      DISABLE_ADD_AFTER: "p9r-action-disable-add-after",
+      DISABLE_DRAGGING: "p9r-action-disable-dragging",
+      DISABLE_DUPLICATE: "p9r-action-disable-duplicate",
+      DISABLE_SAVE_AS_TEMPLATE: "p9r-action-disable-save-as-template",
+      DISABLE_CHANGE_COMPONENT: "p9r-action-disable-change-component",
+      INLINE_ADDING: "inline-adding",
+      ALLOW_RESIZE_IMAGE: "p9r-allow-resize-image"
+    },
+    TEXT: {
+      DISABLE_TYPE: "p9r-text-disable-type",
+      DISABLE_EDITING: "p9r-text-disable-editing",
+      DISABLE_BOLD: "p9r-text-disable-bold",
+      DISABLE_ITALIC: "p9r-text-disable-italic",
+      DISABLE_UNDERLINE: "p9r-text-disable-underline",
+      DISABLE_OVERLINE: "p9r-text-disable-overline",
+      DISABLE_LINE_THROUGH: "p9r-text-disable-line-through",
+      EDITABLE: "p9r-text-editable",
+      BLOC_MANAGEMENT: "p9r-text-bloc-management",
+      PLACEHOLDER: "p9r-text-placeholder"
+    },
+    EDITOR: {
+      IDENTIFIER: "p9r-identifier",
+      PARENT_IDENTIFIER: "p9r-parent-identifier",
+      IS_EDITOR: "p9r-is-editor",
+      OPAQUE: "p9r-opaque",
+      IS_CREATING: "p9r-is-creating",
+      PERSISTENT_IDENTIFIER: "p9r-persistent-identifier"
+    }
+  };
+
+  // src/control/components/globals.ts
+  window.p9r = {
+    attr: P9R_ATTR,
+    Component,
+    Editor,
+    registerEditor,
+    registerEditor_opaque
+  };
+
+  // src/control/components/admin/AdminLayout/template.html
+  var template_default = `<w13c-left-menu-layout>
+
+    <w13c-lateral-menu slot="sidebar">
+        <h2 slot="header">Page Builder</h2>
+
+        <w13c-lateral-menu-item href="./media">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21" />
+            </svg>
+            Media
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item href="./pages">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <path d="M12 11h4" />
+                <path d="M12 16h4" />
+                <path d="M8 11h.01" />
+                <path d="M8 16h.01" />
+            </svg>
+            Pages
+        </w13c-lateral-menu-item>
+        <w13c-lateral-menu-item href="./snippets">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="m18 16 4-4-4-4" />
+                <path d="m6 8-4 4 4 4" />
+                <path d="m14.5 4-5 16" />
+            </svg>
+            Snippets
+        </w13c-lateral-menu-item>
+        <w13c-lateral-menu-item href="./templates">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18" />
+                <path d="M9 21V9" />
+            </svg>
+            Templates
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item disabled href="./analytics" badge="upcoming">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            Analytics
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item disabled href="./components" badge="upcoming">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 3H3v7h7V3Z" />
+                <path d="M21 3h-7v7h7V3Z" />
+                <path d="M10 14H3v7h7v-7Z" />
+                <path d="M21 14h-7v7h7v-7Z" />
+            </svg>
+            Blocks
+        </w13c-lateral-menu-item>
+
+
+
+        <w13c-lateral-menu-item disabled href="./components" badge="upcoming">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+                <path
+                    d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.75-.13 2.5-.35 1.1-.33 1.5-1.65.9-2.65-.6-1-1.4-1.5-1.4-2.5 0-1.1.9-2 2-2h4c1.1 0 2-.9 2-2 0-5.5-4.5-10-10-10Z" />
+            </svg>
+            Theme
+        </w13c-lateral-menu-item>
+
+
+        <w13c-lateral-menu-item href="./settings" slot="footer">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                <circle cx="12" cy="12" r="3" />
+            </svg>
+            Settings
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item data-role="profil" href="./profil" slot="footer">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
+            Profil
+        </w13c-lateral-menu-item>
+    </w13c-lateral-menu>
+
+    <div>
+
+        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
+            <h1 style="margin: 0; line-height: 1;">
+                <slot name="title"></slot>
+            </h1>
+
+            <div style="display: flex; align-items: center; gap: 0.75rem;padding-top: 4px">
+                <slot name="action"></slot>
+            </div>
+        </div>
+        <slot></slot>
+
+    </div>
+
+</w13c-left-menu-layout>`;
+
+  // src/control/components/admin/AdminLayout/AdminLayout.ts
+  class FixedAdminLayout extends Component {
+    constructor() {
+      super({
+        css: "",
+        template: template_default
+      });
+    }
+  }
+  customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
+
+  // src/control/components/admin/EmptyState/template.html
+  var template_default2 = `<div class="cell">
+    <slot name="icon"></slot>
+    <slot name="title"></slot>
+    <slot name="hint"></slot>
+</div>
+`;
+
+  // src/control/components/admin/EmptyState/style.css
+  var style_default = `:host {
+    display: table-row;
+    position: relative;
+    height: 320px;
+}
+
+.cell {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+::slotted([slot="icon"]) {
+    width: 48px;
+    height: 48px;
+    opacity: 0.35;
+    color: var(--text-muted);
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+::slotted([slot="hint"]) {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+`;
+
+  // src/control/components/admin/EmptyState/EmptyState.ts
+  class EmptyState extends Component {
+    constructor() {
+      super({
+        css: style_default,
+        template: template_default2
+      });
+    }
+  }
+  if (!customElements.get("cms-empty-state")) {
+    customElements.define("cms-empty-state", EmptyState);
+  }
+
+  // src/control/components/admin/OpenDialog/OpenDialog.ts
+  class OpenDialog extends HTMLElement {
+    connectedCallback() {
+      this.addEventListener("click", this.handleClick);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this.handleClick);
+    }
+    handleClick = () => {
+      const target = this.getAttribute("target");
+      if (!target)
+        return;
+      const dialog = document.getElementById(target);
+      dialog?.showModal?.();
+    };
+  }
+  customElements.define("w13c-open-dialog", OpenDialog);
+
+  // src/control/components/editor/componentSync/PageLink/PageLink.css
+  var PageLink_default = `:host {
+    display: block;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+}
+
+.label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+}
+
+.input-row {
+    display: flex;
+    gap: 4px;
+}
+
+/* ── Trigger ── */
+
+.trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+}
+
+.trigger:hover {
+    border-color: var(--text-muted, #94a3b8);
+}
+
+.trigger:focus-visible {
+    border-color: var(--primary-base, #4361ee);
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+}
+
+.trigger.open {
+    border-color: var(--primary-base, #4361ee);
+}
+
+.trigger.has-value {
+    border-color: var(--primary-base, #4361ee);
+    background: var(--primary-muted, rgb(67 97 238 / 0.06));
+}
+
+.link-icon {
+    flex-shrink: 0;
+    color: var(--text-muted, #94a3b8);
+}
+
+.trigger.has-value .link-icon {
+    color: var(--primary-base, #4361ee);
+}
+
+.value {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-main, #1e293b);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chevron {
+    flex-shrink: 0;
+    color: var(--text-muted, #94a3b8);
+    transition: transform 0.2s ease;
+}
+
+.trigger.open .chevron {
+    transform: rotate(180deg);
+    color: var(--primary-base, #4361ee);
+}
+
+/* ── Clear button ── */
+
+.clear-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    flex-shrink: 0;
+}
+
+.clear-btn:hover {
+    color: var(--danger-base, #ef4444);
+    border-color: var(--danger-base, #ef4444);
+    background: color-mix(in srgb, var(--danger-base, #ef4444) 6%, transparent);
+}
+
+/* ── Panel ── */
+
+.panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+    z-index: 50;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.15s, visibility 0.15s, transform 0.15s;
+    overflow: hidden;
+}
+
+.panel.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* ── Tabs ── */
+
+.tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--border-default, #e2e8f0);
+    background: var(--bg-base, #f8fafc);
+}
+
+.tab {
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, background 0.15s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.tab:hover {
+    color: var(--text-main, #1e293b);
+}
+
+.tab.active {
+    color: var(--primary-base, #4361ee);
+    border-bottom-color: var(--primary-base, #4361ee);
+    background: var(--bg-surface, #fff);
+}
+
+/* ── External input ── */
+
+.external-section {
+    padding: 8px;
+}
+
+.external-input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 6px;
+    background: var(--bg-base, #f8fafc);
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--text-main, #1e293b);
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+
+.external-input:focus {
+    border-color: var(--primary-base, #4361ee);
+}
+
+.external-input::placeholder {
+    color: var(--text-muted, #94a3b8);
+}
+
+/* ── Media section ── */
+
+.media-section {
+    padding: 8px;
+}
+
+.media-pick-btn {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px dashed var(--border-default, #e2e8f0);
+    border-radius: 6px;
+    background: var(--bg-base, #f8fafc);
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--text-main, #1e293b);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.media-pick-btn:hover {
+    border-color: var(--primary-base, #4361ee);
+    color: var(--primary-base, #4361ee);
+    background: var(--primary-muted, rgb(67 97 238 / 0.06));
+}
+
+.media-current {
+    display: none;
+    margin-top: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--primary-muted, rgb(67 97 238 / 0.08));
+    font-size: 11px;
+    color: var(--text-main, #1e293b);
+    word-break: break-all;
+    font-family: monospace;
+}
+
+.media-current.has-value {
+    display: block;
+}
+
+/* ── Search ── */
+
+.search-wrap {
+    padding: 6px 6px 2px;
+}
+
+.search {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 6px;
+    background: var(--bg-base, #f8fafc);
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--text-main, #1e293b);
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+
+.search:focus {
+    border-color: var(--primary-base, #4361ee);
+}
+
+.search::placeholder {
+    color: var(--text-muted, #94a3b8);
+}
+
+/* ── List ── */
+
+.list {
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.empty {
+    display: none;
+    padding: 12px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted, #94a3b8);
+}
+
+/* ── Option ── */
+
+.option {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.option:hover {
+    background: var(--bg-base, #f1f5f9);
+}
+
+.option.selected {
+    background: var(--primary-muted, rgb(67 97 238 / 0.1));
+}
+
+.option-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main, #1e293b);
+}
+
+.option.selected .option-title {
+    color: var(--primary-base, #4361ee);
+}
+
+.option-path {
+    font-size: 10px;
+    color: var(--text-muted, #94a3b8);
+    font-family: monospace;
+}
+`;
+
+  // src/control/components/editor/componentSync/PageLink/template.ts
+  function buildShadow(host, label) {
+    const shadow = host.attachShadow({ mode: "open" });
+    shadow.innerHTML = `
+        <style>${PageLink_default}</style>
+        <div class="field">
+            ${label ? `<span class="label">${label}</span>` : ""}
+            <div class="input-row">
+                <button class="trigger" type="button" tabindex="0">
+                    <svg class="link-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
+                    <span class="value">No link</span>
+                    <svg class="chevron" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                </button>
+                <button class="clear-btn" type="button" title="Remove link">
+                    <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="panel">
+                <div class="tabs">
+                    <button type="button" class="tab tab-page" data-mode="page">Page</button>
+                    <button type="button" class="tab tab-external" data-mode="external">External URL</button>
+                    <button type="button" class="tab tab-media" data-mode="media">Media</button>
+                </div>
+                <div class="page-section">
+                    <div class="search-wrap"><input class="search" type="text" placeholder="Search for a page..."></div>
+                    <ul class="list"></ul>
+                    <div class="empty">No pages found</div>
+                </div>
+                <div class="external-section"><input class="external-input" type="url" placeholder="https://example.com" spellcheck="false"></div>
+                <div class="media-section">
+                    <button type="button" class="media-pick-btn">Choose a media file…</button>
+                    <div class="media-current"></div>
+                </div>
+            </div>
+        </div>
+        <div hidden><slot></slot></div>
+    `;
+    return {
+      trigger: shadow.querySelector(".trigger"),
+      display: shadow.querySelector(".value"),
+      list: shadow.querySelector(".list"),
+      panel: shadow.querySelector(".panel"),
+      empty: shadow.querySelector(".empty"),
+      clearBtn: shadow.querySelector(".clear-btn"),
+      pageSection: shadow.querySelector(".page-section"),
+      externalSection: shadow.querySelector(".external-section"),
+      mediaSection: shadow.querySelector(".media-section"),
+      externalInput: shadow.querySelector(".external-input"),
+      mediaPickBtn: shadow.querySelector(".media-pick-btn"),
+      mediaCurrent: shadow.querySelector(".media-current"),
+      tabPage: shadow.querySelector(".tab-page"),
+      tabExternal: shadow.querySelector(".tab-external"),
+      tabMedia: shadow.querySelector(".tab-media"),
+      search: shadow.querySelector(".search")
+    };
+  }
+
+  // src/control/components/editor/componentSync/PageLink/detect.ts
+  function isExternal(v) {
+    return /^(https?:|mailto:|tel:|\/\/)/i.test(v);
+  }
+  function isMedia(v) {
+    return /(^|\/)media\?id=/.test(v);
+  }
+  function mediaLabel(src) {
+    const m = src.match(/id=([^&]+)/);
+    return m ? `Media ${m[1]}` : src;
+  }
+
+  // src/control/core/dom/meta/getMetaBasePath.ts
+  function getMetaBasePath() {
+    const meta = document.querySelector('meta[name="basePath"]');
+    if (!meta)
+      return "/";
+    if (meta && (meta.getAttribute("content") === "" || meta.getAttribute("content") === undefined))
+      return "/";
+    else
+      return meta.getAttribute("content");
+  }
+
+  // src/control/core/dom/meta/getMetaApiPath.ts
+  function getMetaApiPath() {
+    const base = getMetaBasePath();
+    if (base === undefined || base === null || base === "")
+      return "/api";
+    return base.endsWith("/") ? base + "api" : base + "/api";
+  }
+
+  // src/control/core/dom/meta/resolveApiUrl.ts
+  function resolveApiUrl(path) {
+    const apiPath = getMetaApiPath();
+    const base = /^https?:\/\//.test(apiPath) ? apiPath : new URL(apiPath, window.location.origin).href;
+    const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+    const cleanPath = path.startsWith("/") ? path : "/" + path;
+    return new URL(cleanBase + cleanPath);
+  }
+
+  // src/control/components/editor/componentSync/PageLink/parts/flows.ts
+  async function fetchPages() {
+    try {
+      const res = await fetch(resolveApiUrl("page/links"));
+      return await res.json();
+    } catch (e) {
+      console.warn("P9rLink: failed to fetch pages", e);
+      return [];
+    }
+  }
+  function openMediaCenter(host, onPick) {
+    const mediaCenter = document.createElement("cms-media-center");
+    const editorSystem = getClosestEditorSystem(host);
+    editorSystem.editorDOM.append(mediaCenter);
+    requestAnimationFrame(() => {
+      const handler = (e) => {
+        mediaCenter.removeEventListener("select-item", handler);
+        const src = e.detail?.src;
+        if (!src)
+          return;
+        onPick(src);
+        mediaCenter.remove();
+      };
+      mediaCenter.addEventListener("select-item", handler);
+      mediaCenter.show(["folder", "image", "other"]);
+    });
+  }
+
+  // src/control/components/editor/componentSync/PageLink/PageLink.picker.ts
+  function filterPages(pages, query) {
+    const q = query.toLowerCase();
+    return pages.filter((p) => p.title.toLowerCase().includes(q) || p.path.toLowerCase().includes(q));
+  }
+  function buildOptionList(listEl, emptyEl, pages, onSelect) {
+    listEl.innerHTML = "";
+    if (pages.length === 0) {
+      emptyEl.style.display = "block";
+      return [];
+    }
+    emptyEl.style.display = "none";
+    const options = [];
+    for (const page of pages) {
+      const li = document.createElement("li");
+      li.className = "option";
+      li.dataset.value = page.path;
+      const title = document.createElement("span");
+      title.className = "option-title";
+      title.textContent = page.title;
+      const path = document.createElement("span");
+      path.className = "option-path";
+      path.textContent = page.path;
+      li.append(title, path);
+      li.addEventListener("click", () => onSelect(page));
+      listEl.appendChild(li);
+      options.push(li);
+    }
+    return options;
+  }
+
+  // src/control/components/editor/componentSync/PageLink/parts/controller.ts
+  function applyMode(host) {
+    const { _refs: r, _mode: m } = host;
+    r.pageSection.style.display = m === "page" ? "" : "none";
+    r.externalSection.style.display = m === "external" ? "" : "none";
+    r.mediaSection.style.display = m === "media" ? "" : "none";
+    r.tabPage.classList.toggle("active", m === "page");
+    r.tabExternal.classList.toggle("active", m === "external");
+    r.tabMedia.classList.toggle("active", m === "media");
+  }
+  function setMode(host, m) {
+    host._mode = m;
+    applyMode(host);
+    if (m === "external")
+      requestAnimationFrame(() => host._refs.externalInput.focus());
+  }
+  function refresh(host, pages) {
+    host._options = buildOptionList(host._refs.list, host._refs.empty, pages, (p) => select(host, p.path, p.title));
+    host._options.forEach((li) => li.classList.toggle("selected", li.dataset.value === host._value));
+  }
+  function select(host, v, label) {
+    setValue(host, v, label);
+    closePanel(host);
+    host.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function setValue(host, v, label) {
+    host._value = v;
+    const r = host._refs;
+    r.display.textContent = v ? label : "No link";
+    r.trigger.classList.toggle("has-value", !!v);
+    r.clearBtn.style.display = v ? "flex" : "none";
+    host._options.forEach((li) => li.classList.toggle("selected", li.dataset.value === v));
+    const m = isMedia(v);
+    r.mediaCurrent.textContent = m ? v : "";
+    r.mediaCurrent.classList.toggle("has-value", m);
+  }
+  function openPanel(host) {
+    document.querySelectorAll("p9r-link, p9r-select").forEach((el) => {
+      if (el !== host && "_close" in el)
+        el._close();
+    });
+    host._isOpen = true;
+    host._refs.panel.classList.add("open");
+    host._refs.trigger.classList.add("open");
+    host._refs.search.value = "";
+    refresh(host, host._pages);
+    requestAnimationFrame(() => {
+      if (host._mode === "page")
+        host._refs.search.focus();
+      else if (host._mode === "external")
+        host._refs.externalInput.focus();
+    });
+  }
+  function closePanel(host) {
+    host._isOpen = false;
+    host._refs.panel.classList.remove("open");
+    host._refs.trigger.classList.remove("open");
+  }
+
+  // src/control/components/editor/componentSync/PageLink/parts/wiring.ts
+  function wire(host) {
+    const r = host._refs;
+    const fire = () => host.dispatchEvent(new Event("change", { bubbles: true }));
+    r.search.addEventListener("input", () => refresh(host, filterPages(host._pages, r.search.value)));
+    r.clearBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      select(host, "", "No link");
+    });
+    r.tabPage.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setMode(host, "page");
+    });
+    r.tabExternal.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setMode(host, "external");
+    });
+    r.tabMedia.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setMode(host, "media");
+    });
+    r.externalInput.addEventListener("input", () => {
+      const url = r.externalInput.value.trim();
+      setValue(host, url, url || "No link");
+      fire();
+    });
+    r.externalInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        closePanel(host);
+      } else if (e.key === "Escape")
+        closePanel(host);
+    });
+    r.mediaPickBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openMediaCenter(host, (src) => {
+        setValue(host, src, mediaLabel(src));
+        fire();
+      });
+    });
+    applyMode(host);
+  }
+
+  // src/control/components/editor/componentSync/PageLink/PageLink.ts
+  class PageLink extends HTMLElement {
+    _refs;
+    _options = [];
+    _pages = [];
+    _isOpen = false;
+    _value = "";
+    _mode = "page";
+    _pagesFetched = false;
+    _onWindowClick = (e) => {
+      if (this._isOpen && !this.contains(e.target))
+        this._close();
+    };
+    _onTriggerClick = (e) => {
+      e.stopPropagation();
+      this._isOpen ? this._close() : this._open();
+    };
+    _onKey = (e) => {
+      if (e.key === "Escape")
+        this._close();
+      else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this._isOpen ? this._close() : this._open();
+      }
+    };
+    constructor() {
+      super();
+      this._refs = buildShadow(this, this.getAttribute("label"));
+      wire(this);
+    }
+    connectedCallback() {
+      if (!this._pagesFetched) {
+        this._pagesFetched = true;
+        this._loadPages();
+      }
+      this._refs.trigger.addEventListener("click", this._onTriggerClick);
+      this._refs.trigger.addEventListener("keydown", this._onKey);
+      window.addEventListener("click", this._onWindowClick);
+    }
+    disconnectedCallback() {
+      this._refs.trigger.removeEventListener("click", this._onTriggerClick);
+      this._refs.trigger.removeEventListener("keydown", this._onKey);
+      window.removeEventListener("click", this._onWindowClick);
+    }
+    _open() {
+      openPanel(this);
+    }
+    _close() {
+      closePanel(this);
+    }
+    async _loadPages() {
+      this._pages = await fetchPages();
+      refresh(this, this._pages);
+      const v = this.getAttribute("value") || "";
+      if (v)
+        this.value = v;
+    }
+    get value() {
+      return this._value;
+    }
+    set value(v) {
+      if (isMedia(v)) {
+        this._mode = "media";
+        setValue(this, v, mediaLabel(v));
+      } else if (isExternal(v)) {
+        this._mode = "external";
+        this._refs.externalInput.value = v;
+        setValue(this, v, v);
+      } else {
+        this._mode = "page";
+        const m = this._pages.find((p) => p.path === v);
+        setValue(this, v, m ? m.title : v || "No link");
+      }
+      applyMode(this);
+    }
+    get name() {
+      return this.getAttribute("name");
+    }
+  }
+  if (!customElements.get("p9r-link"))
+    customElements.define("p9r-link", PageLink);
+
+  // src/control/components/editor/componentSync/sync/AttrSync.ts
+  class AttrSync extends HTMLElement {
+    _component = null;
+    _prepared = false;
+    connectedCallback() {
+      const componentIdentifier = this.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      if (componentIdentifier && !this._component) {
+        this._component = document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${componentIdentifier}"]`);
+      }
+      requestAnimationFrame(() => {
+        if (!this._prepared)
+          this._sync();
+        this.addEventListener("change", (e) => this.onChange(e));
+      });
+    }
+    prepare(component) {
+      this._component = component;
+      this._sync();
+      this._prepared = true;
+    }
+    onChange(event) {
+      const target = event.target;
+      if (target && target.name) {
+        if (target.value === "" || target.value == null) {
+          this._component?.removeAttribute(target.name);
+        } else {
+          this._component?.setAttribute(target.name, target.value);
+        }
+      }
+    }
+    _sync() {
+      const inputs = Array.from(this.querySelectorAll("[name]"));
+      inputs.forEach((input) => {
+        const val = this._component?.getAttribute(input.name);
+        if (val) {
+          input.value = val;
+        } else {
+          if (input.value) {
+            this._component?.setAttribute(input.name, input.value);
+          }
+        }
+      });
+    }
+  }
+  if (!customElements.get("p9r-attr-sync")) {
+    customElements.define("p9r-attr-sync", AttrSync);
+  }
+
+  // src/control/components/editor/componentSync/sync/CompSync.ts
+  class CompSync extends HTMLElement {
+    _component = null;
+    _root;
+    _listEl;
+    _titleEl;
+    _countEl;
+    _addBtn;
+    _prepared = false;
+    constructor() {
+      super();
+      this._root = this.attachShadow({ mode: "open" });
+      this._root.innerHTML = `
+            <style>${CompSync._css}</style>
+            <div class="panel">
+                <div class="header">
+                    <span class="title"></span>
+                    <span class="count"></span>
+                </div>
+                <ul class="items"></ul>
+                <button class="add" type="button" hidden>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    <span>Add</span>
+                </button>
+            </div>
+        `;
+      this._listEl = this._root.querySelector(".items");
+      this._titleEl = this._root.querySelector(".title");
+      this._countEl = this._root.querySelector(".count");
+      this._addBtn = this._root.querySelector(".add");
+      this._addBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._add();
+      });
+    }
+    connectedCallback() {
+      const componentIdentifier = this.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      if (componentIdentifier && !this._component) {
+        this._component = document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${componentIdentifier}"]`);
+      }
+      requestAnimationFrame(() => {
+        if (!this._prepared) {
+          this._sync();
+          console.debug(this._component);
+          this._component?.connectedCallback();
+        }
+        this.init();
+      });
+    }
+    prepare(component) {
+      this._component = component;
+      this._sync();
+      this._component?.connectedCallback();
+      this.init();
+      this._prepared = true;
+    }
+    _sync() {
+      const child = this.firstElementChild;
+      if (!child) {
+        throw new Error("p9r-comp-sync require a child");
+      }
+      const slotName = child.getAttribute("slot");
+      const selector = slotName ? `[slot="${slotName}"]` : ":not([slot])";
+      if (!this._component?.querySelector(selector)) {
+        if (!this.isCreating && this.optionnal)
+          return;
+        const toAppend = child.cloneNode(true);
+        toAppend.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
+        this._component?.append(toAppend);
+      }
+    }
+    init(opts) {
+      const child = this.firstElementChild;
+      const slotName = child?.getAttribute("slot");
+      if (!child) {
+        throw new Error("p9r-comp-sync require a child with attribute 'slot'");
+      }
+      const selector = slotName ? `:scope > [slot="${slotName}"]` : `:scope > :not([slot])`;
+      let slots = Array.from(this._component?.querySelectorAll(selector));
+      if (opts?.removed) {
+        if (this.isConnected) {
+          this._removePanelItem(opts.removed);
+          this._updatePanelCount(slots.length);
+          this._refreshAddBtn(slots.length);
+        }
+        if (this.isMultiple && slots.length === this.min) {
+          slots.forEach((slot) => {
+            if (!this.optionnal) {
+              slot.setAttribute(p9r.attr.ACTION.DISABLE_DELETE, "true");
+            }
+            slot.setAttribute(p9r.attr.ACTION.DISABLE_DRAGGING, "true");
+            const id = slot.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+            if (id)
+              document.compIdentifierToEditor.get(id)?.viewEditor();
+          });
+        }
+        return;
+      }
+      const addedNode = opts?.added;
+      const toProcess = addedNode && slots.includes(addedNode) ? [addedNode] : slots;
+      toProcess.forEach((slot) => {
+        const slotEditor = document.compIdentifierToEditor.get(slot.getAttribute(p9r.attr.EDITOR.IDENTIFIER));
+        slot.setAttribute(p9r.attr.ACTION.DISABLE_DUPLICATE, "true");
+        slot.setAttribute(p9r.attr.ACTION.DISABLE_ADD_AFTER, "true");
+        slot.setAttribute(p9r.attr.ACTION.DISABLE_ADD_BEFORE, "true");
+        slot.setAttribute(p9r.attr.ACTION.DISABLE_DRAGGING, "true");
+        if (this.disableOthersComponents) {
+          slot.setAttribute(p9r.attr.ACTION.DISABLE_CHANGE_COMPONENT, "true");
+        } else {
+          slot.removeAttribute(p9r.attr.ACTION.DISABLE_CHANGE_COMPONENT);
+        }
+        if (this.optionnal) {
+          slot.removeAttribute(p9r.attr.ACTION.DISABLE_DELETE);
+        } else {
+          slot.setAttribute(p9r.attr.ACTION.DISABLE_DELETE, "true");
+        }
+        slot.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, this.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER));
+        if (this.isMultiple) {
+          if (this.inlineAdding) {
+            slot.setAttribute(p9r.attr.ACTION.INLINE_ADDING, "true");
+          } else {
+            slot.removeAttribute(p9r.attr.ACTION.INLINE_ADDING);
+          }
+          slot.removeAttribute(p9r.attr.ACTION.DISABLE_DUPLICATE);
+          slot.removeAttribute(p9r.attr.ACTION.DISABLE_DELETE);
+          slot.removeAttribute(p9r.attr.ACTION.DISABLE_DRAGGING);
+          slot.removeAttribute(p9r.attr.ACTION.DISABLE_ADD_AFTER);
+          slot.removeAttribute(p9r.attr.ACTION.DISABLE_ADD_BEFORE);
+          if (slots.length == this.min) {
+            if (!this.optionnal) {
+              slot.setAttribute(p9r.attr.ACTION.DISABLE_DELETE, "true");
+            }
+            slot.setAttribute(p9r.attr.ACTION.DISABLE_DRAGGING, "true");
+          }
+        } else {}
+        slotEditor?.viewEditor();
+      });
+      if (!this.isConnected)
+        return;
+      if (addedNode && slots.includes(addedNode)) {
+        this._appendPanelItem(addedNode, slots.length - 1);
+        this._updatePanelCount(slots.length);
+        this._refreshAddBtn(slots.length);
+      } else {
+        this._renderPanel(slots);
+      }
+    }
+    _renderPanel(slots) {
+      this._titleEl.textContent = this._titleLabel();
+      this._updatePanelCount(slots.length);
+      this._listEl.innerHTML = "";
+      slots.forEach((slot, index) => this._appendPanelItem(slot, index));
+      this._refreshAddBtn(slots.length);
+    }
+    _refreshAddBtn(count) {
+      const optionalEmptySingle = this.optionnal && !this.isMultiple && count === 0;
+      const canAddMultiple = this.isMultiple && count < this.max;
+      this._addBtn.hidden = !(this.isMultiple || optionalEmptySingle);
+      this._addBtn.disabled = !(canAddMultiple || optionalEmptySingle);
+    }
+    _updatePanelCount(total) {
+      if (this.isMultiple) {
+        const max = this.max === Infinity ? "∞" : String(this.max);
+        this._countEl.textContent = `${total} / ${max}`;
+        this._countEl.hidden = false;
+      } else {
+        this._countEl.textContent = "";
+        this._countEl.hidden = true;
+      }
+    }
+    _appendPanelItem(slot, index) {
+      const li = document.createElement("li");
+      li._slot = slot;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "item";
+      btn.innerHTML = `
+            <span class="item-index">#${index + 1}</span>
+            <span class="item-label"></span>
+        `;
+      btn.querySelector(".item-label").textContent = this._slotLabel(slot);
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._focus(slot);
+      });
+      li.append(btn);
+      this._listEl.append(li);
+    }
+    _removePanelItem(removed) {
+      const lis = Array.from(this._listEl.children);
+      for (const li of lis) {
+        if (li._slot === removed) {
+          li.remove();
+          break;
+        }
+      }
+      Array.from(this._listEl.children).forEach((li, i) => {
+        const idx = li.querySelector(".item-index");
+        if (idx)
+          idx.textContent = `#${i + 1}`;
+      });
+    }
+    _titleLabel() {
+      const custom = this.getAttribute("label");
+      if (custom)
+        return custom;
+      const child = this.firstElementChild;
+      const slotName = child?.getAttribute("slot");
+      return slotName || "Default slot";
+    }
+    _slotLabel(slot) {
+      const text = (slot.textContent || "").trim().replace(/\s+/g, " ");
+      if (text.length > 0) {
+        return text.length > 40 ? text.slice(0, 40) + "…" : text;
+      }
+      return `<${slot.tagName.toLowerCase()}>`;
+    }
+    _focus(slot) {
+      this.closest("p9r-config-panel")?.close?.();
+      slot.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (!slot.hasAttribute("tabindex"))
+        slot.setAttribute("tabindex", "-1");
+      try {
+        slot.focus({ preventScroll: true });
+      } catch {}
+    }
+    _add() {
+      if (!this._component)
+        return;
+      const template = this.firstElementChild;
+      if (!template)
+        return;
+      const current = this._countSlots();
+      if (this.isMultiple) {
+        if (current >= this.max)
+          return;
+      } else {
+        if (!this.optionnal || current > 0)
+          return;
+      }
+      const clone = template.cloneNode(true);
+      clone.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
+      this._component.append(clone);
+    }
+    _countSlots() {
+      if (!this._component)
+        return 0;
+      const child = this.firstElementChild;
+      const slotName = child?.getAttribute("slot");
+      const selector = slotName ? `:scope > [slot="${slotName}"]` : `:scope > :not([slot])`;
+      return this._component.querySelectorAll(selector).length;
+    }
+    get isMultiple() {
+      return this.hasAttribute("allow-multiple");
+    }
+    get optionnal() {
+      return this.hasAttribute("optionnal");
+    }
+    get min() {
+      const raw = this.getAttribute("data-min") ?? this.getAttribute("min");
+      const n = raw != null ? parseInt(raw, 10) : NaN;
+      return Number.isFinite(n) && n >= 0 ? n : 1;
+    }
+    get max() {
+      const raw = this.getAttribute("data-max") ?? this.getAttribute("max");
+      const n = raw != null ? parseInt(raw, 10) : NaN;
+      return Number.isFinite(n) && n >= 1 ? n : Infinity;
+    }
+    get inlineAdding() {
+      return this.hasAttribute(p9r.attr.ACTION.INLINE_ADDING);
+    }
+    get disableOthersComponents() {
+      return this.hasAttribute("disable-others-components");
+    }
+    get isCreating() {
+      return this._component?.getAttribute(p9r.attr.EDITOR.IS_CREATING) === "true";
+    }
+    static _css = `
+        :host {
+            display: block;
+            margin: 8px 0;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 10px 12px;
+            border: 1px solid var(--border-default, #e2e8f0);
+            border-radius: 10px;
+            background: var(--bg-surface, #fff);
+        }
+
+        .header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted, #94a3b8);
+        }
+
+        .count {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted, #94a3b8);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .items {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .items:empty {
+            display: none;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid var(--border-default, #e2e8f0);
+            border-radius: 8px;
+            background: var(--bg-surface, #fff);
+            color: var(--text-main, #1e293b);
+            font-size: 12px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+            outline: none;
+        }
+
+        .item:hover {
+            border-color: var(--primary-base, #4361ee);
+            background: var(--primary-muted, rgb(67 97 238 / 0.08));
+        }
+
+        .item:focus-visible {
+            border-color: var(--primary-base, #4361ee);
+            box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+        }
+
+        .item-index {
+            flex-shrink: 0;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted, #94a3b8);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .item-label {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 7px 10px;
+            margin-top: 2px;
+            border: 1px dashed var(--border-default, #e2e8f0);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-muted, #94a3b8);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s, background 0.15s;
+            outline: none;
+        }
+
+        .add:hover:not(:disabled) {
+            border-color: var(--primary-base, #4361ee);
+            color: var(--primary-base, #4361ee);
+            background: var(--primary-muted, rgb(67 97 238 / 0.08));
+        }
+
+        .add:focus-visible {
+            border-color: var(--primary-base, #4361ee);
+            box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15));
+        }
+
+        .add:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    `;
+  }
+  if (!customElements.get("p9r-comp-sync")) {
+    customElements.define("p9r-comp-sync", CompSync);
+  }
+
+  // src/control/components/editor/componentSync/sync/ImageSync/ImageSync.style.css
+  var ImageSync_style_default = `:host {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.image-sync-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+}
+
+.image-sync-card {
+    position: relative;
+    border: 1px dashed var(--border-default, #e2e8f0);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    background: var(--bg-base, #f8fafc);
+}
+
+.image-sync-card:hover {
+    border-color: var(--primary-base, #4361ee);
+}
+
+.image-sync-card.has-image {
+    border-style: solid;
+    padding: 1rem;
+}
+
+/* ── Preview image ── */
+
+.image-sync-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* ── Empty state ── */
+
+.image-sync-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 20px;
+    aspect-ratio: 16 / 9;
+}
+
+.image-sync-empty svg {
+    color: var(--text-muted, #94a3b8);
+    opacity: 0.5;
+}
+
+.image-sync-empty span {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted, #94a3b8);
+}
+
+/* ── Overlay actions ── */
+
+.image-sync-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgb(0 0 0 / 0);
+    transition: background 0.15s;
+    opacity: 0;
+}
+
+.image-sync-card:hover .image-sync-overlay {
+    opacity: 1;
+    background: rgb(0 0 0 / 0.4);
+}
+
+.image-sync-overlay button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.1s;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.image-sync-overlay button:active {
+    transform: scale(0.95);
+}
+
+.image-sync-overlay .btn-change {
+    background: rgb(255 255 255 / 0.9);
+    color: var(--text-main, #1e293b);
+}
+
+.image-sync-overlay .btn-remove {
+    background: rgb(255 255 255 / 0.15);
+    color: #fff;
+}
+
+.image-sync-overlay .btn-remove:hover {
+    background: var(--danger-base, #ef4444);
+}
+`;
+
+  // src/control/components/editor/componentSync/sync/ImageSync/lock.ts
+  var LOCKED_ACTIONS = [
+    "DISABLE_DELETE",
+    "DISABLE_DUPLICATE",
+    "DISABLE_ADD_BEFORE",
+    "DISABLE_ADD_AFTER",
+    "DISABLE_CHANGE_COMPONENT",
+    "DISABLE_DRAGGING",
+    "DISABLE_SAVE_AS_TEMPLATE"
+  ];
+  function lockActions(target) {
+    if (!target)
+      return;
+    let changed = false;
+    for (const key of LOCKED_ACTIONS) {
+      const attr = p9r.attr.ACTION[key];
+      if (target.getAttribute(attr) !== "true") {
+        target.setAttribute(attr, "true");
+        changed = true;
+      }
+    }
+    if (!changed)
+      return;
+    const id = target.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+    if (id) {
+      const editor = document.compIdentifierToEditor?.get(id);
+      editor?.viewEditor();
+    }
+  }
+
+  // src/control/components/editor/componentSync/sync/ImageSync/target.ts
+  function resolveTarget(host) {
+    const component = host._component;
+    if (!component)
+      return null;
+    const slot = host.slotName;
+    if (!slot)
+      return component.querySelector("img");
+    return component.querySelector(`img[slot="${slot}"]`);
+  }
+  function ensureTarget(host) {
+    let target = resolveTarget(host);
+    if (target)
+      return target;
+    target = document.createElement("img");
+    const slot = host.slotName;
+    if (slot)
+      target.setAttribute("slot", slot);
+    lockActions(target);
+    if (host.allowResize)
+      target.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
+    host._component.appendChild(target);
+    return target;
+  }
+  function syncDefault(host) {
+    const defaultSrc = host.getAttribute("default");
+    if (!defaultSrc)
+      return;
+    if (resolveTarget(host))
+      return;
+    if (host.optionnal && !host.isCreating)
+      return;
+    const img = document.createElement("img");
+    const slot = host.slotName;
+    if (slot)
+      img.setAttribute("slot", slot);
+    img.setAttribute("src", defaultSrc);
+    lockActions(img);
+    if (host.allowResize)
+      img.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
+    host._component?.appendChild(img);
+  }
+
+  // src/control/components/editor/componentSync/sync/ImageSync/view.ts
+  function render(host) {
+    host._target = resolveTarget(host);
+    lockActions(host._target);
+    watchTarget(host);
+    const label = host.getAttribute("label") || "Image";
+    const currentValue = host._target?.getAttribute("src") || "";
+    const shadow = host.shadowRoot;
+    Array.from(shadow.children).forEach((c) => {
+      if (c.tagName !== "STYLE")
+        c.remove();
+    });
+    const labelEl = document.createElement("span");
+    labelEl.className = "image-sync-label";
+    labelEl.textContent = label;
+    const card = document.createElement("div");
+    card.className = "image-sync-card";
+    host._previewImg = document.createElement("img");
+    host._emptyState = document.createElement("div");
+    host._emptyState.className = "image-sync-empty";
+    host._emptyState.innerHTML = `${ICON_UPLOAD}<span>Click to choose an image</span>`;
+    host._overlay = document.createElement("div");
+    host._overlay.className = "image-sync-overlay";
+    const btnChange = document.createElement("button");
+    btnChange.className = "btn-change";
+    btnChange.textContent = "Change";
+    btnChange.addEventListener("click", (e) => {
+      e.stopPropagation();
+      host.openMediaCenter();
+    });
+    const btnRemove = document.createElement("button");
+    btnRemove.className = "btn-remove";
+    btnRemove.textContent = "Remove";
+    btnRemove.addEventListener("click", (e) => {
+      e.stopPropagation();
+      host.clearTarget();
+    });
+    host._overlay.appendChild(btnChange);
+    host._overlay.appendChild(btnRemove);
+    card.appendChild(host._previewImg);
+    card.appendChild(host._emptyState);
+    card.appendChild(host._overlay);
+    card.addEventListener("click", () => host.openMediaCenter());
+    shadow.appendChild(labelEl);
+    shadow.appendChild(card);
+    updatePreview(host, currentValue);
+  }
+  function updatePreview(host, src) {
+    if (!host._previewImg || !host._emptyState || !host._overlay)
+      return;
+    const card = host._previewImg.parentElement;
+    if (src) {
+      host._previewImg.src = src;
+      host._previewImg.style.display = "block";
+      host._emptyState.style.display = "none";
+      host._overlay.style.display = "flex";
+      card.classList.add("has-image");
+    } else {
+      host._previewImg.style.display = "none";
+      host._emptyState.style.display = "flex";
+      host._overlay.style.display = "none";
+      card.classList.remove("has-image");
+    }
+  }
+  function watchTarget(host) {
+    host._targetObserver?.disconnect();
+    host._targetObserver = null;
+    const target = host._target;
+    if (!target)
+      return;
+    host._targetObserver = new MutationObserver(() => {
+      updatePreview(host, target.getAttribute("src") || "");
+    });
+    host._targetObserver.observe(target, { attributes: true, attributeFilter: ["src"] });
+  }
+
+  // src/control/components/editor/componentSync/sync/ImageSync/mediaCenter.ts
+  function openMediaCenter2(host) {
+    const acceptRaw = host.getAttribute("accept") || "image";
+    const types = ["folder", ...acceptRaw.split(",").map((t) => t.trim())];
+    const mediaCenter = document.createElement("cms-media-center");
+    document.body.appendChild(mediaCenter);
+    requestAnimationFrame(() => {
+      const handler = (e) => {
+        mediaCenter.removeEventListener("select-item", handler);
+        const src = e.detail?.src;
+        if (src) {
+          host._target = ensureTarget(host);
+          lockActions(host._target);
+          watchTarget(host);
+          host._target.setAttribute("src", src);
+          updatePreview(host, src);
+        }
+        mediaCenter.remove();
+      };
+      mediaCenter.addEventListener("select-item", handler);
+      mediaCenter.show(types);
+    });
+  }
+  function clearTarget(host) {
+    if (host._target) {
+      host._target.remove();
+      host._target = null;
+    }
+    watchTarget(host);
+    updatePreview(host, "");
+  }
+
+  // src/control/components/editor/componentSync/sync/ImageSync/ImageSync.ts
+  class ImageSync extends HTMLElement {
+    _component = null;
+    _target = null;
+    _previewImg = null;
+    _emptyState = null;
+    _overlay = null;
+    _targetObserver = null;
+    _prepared = false;
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).innerHTML = `<style>${ImageSync_style_default}</style>`;
+    }
+    connectedCallback() {
+      const componentIdentifier = this.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      if (componentIdentifier && !this._component) {
+        this._component = document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${componentIdentifier}"]`);
+      }
+      requestAnimationFrame(() => {
+        if (!this._prepared)
+          syncDefault(this);
+        render(this);
+      });
+    }
+    disconnectedCallback() {
+      this._targetObserver?.disconnect();
+      this._targetObserver = null;
+    }
+    prepare(component) {
+      this._component = component;
+      syncDefault(this);
+      this._target = resolveTarget(this);
+      lockActions(this._target);
+      watchTarget(this);
+      if (this._target && this.allowResize) {
+        this._target.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
+      }
+      this._prepared = true;
+    }
+    init(opts) {
+      const target = resolveTarget(this);
+      if (opts?.added && opts.added !== target)
+        return;
+      if (opts?.removed && opts.removed !== this._target && opts.removed !== target)
+        return;
+      this._target = target;
+      lockActions(this._target);
+      watchTarget(this);
+      if (this._target && this.allowResize) {
+        this._target.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
+      }
+      updatePreview(this, this._target?.getAttribute("src") || "");
+    }
+    openMediaCenter() {
+      openMediaCenter2(this);
+    }
+    clearTarget() {
+      clearTarget(this);
+    }
+    get slotName() {
+      return this.getAttribute("slotTarget") || "";
+    }
+    get isMultiSelect() {
+      return this.hasAttribute("multi-select");
+    }
+    get allowResize() {
+      return this.hasAttribute("allow-resize");
+    }
+    get optionnal() {
+      return this.hasAttribute("optionnal");
+    }
+    get isCreating() {
+      return this._component?.getAttribute(p9r.attr.EDITOR.IS_CREATING) === "true";
+    }
+  }
+  if (!customElements.get("p9r-image-sync")) {
+    customElements.define("p9r-image-sync", ImageSync);
+  }
+
+  // src/control/components/editor/componentSync/sync/StateSync.ts
+  class StateSync extends HTMLElement {
+    _component = null;
+    _editor = null;
+    _pinned = false;
+    _observer = null;
+    _prepared = false;
+    get targetSelector() {
+      return this.getAttribute("target") || "";
+    }
+    get attrName() {
+      return this.getAttribute("attr") || "";
+    }
+    get attrValue() {
+      return this.getAttribute("value") || "";
+    }
+    get label() {
+      return this.getAttribute("label") || this.attrValue || this.attrName;
+    }
+    get placement() {
+      const v = this.getAttribute("placement");
+      return v === "right" || v === "top" || v === "bottom" ? v : "left";
+    }
+    get isPinned() {
+      return this._pinned;
+    }
+    connectedCallback() {
+      if (this._prepared)
+        return;
+      const componentIdentifier = this.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      if (!componentIdentifier)
+        return;
+      this._component = document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${componentIdentifier}"]`);
+      this._editor = document.compIdentifierToEditor?.get(componentIdentifier) ?? null;
+      this._editor?.registerStateSync(this);
+    }
+    prepare(component, editor) {
+      this._component = component;
+      this._editor = editor;
+      editor.registerStateSync(this);
+      this._prepared = true;
+    }
+    disconnectedCallback() {
+      this.unpin();
+      this._editor?.unregisterStateSync(this);
+    }
+    _targets() {
+      const root = this._component?.shadowRoot;
+      if (!root || !this.targetSelector)
+        return [];
+      return Array.from(root.querySelectorAll(this.targetSelector));
+    }
+    _apply(el) {
+      if (this.attrName === "class") {
+        if (this.attrValue)
+          el.classList.add(this.attrValue);
+      } else {
+        el.setAttribute(this.attrName, this.attrValue);
+      }
+    }
+    _clear(el) {
+      if (this.attrName === "class") {
+        if (this.attrValue)
+          el.classList.remove(this.attrValue);
+      } else {
+        el.removeAttribute(this.attrName);
+      }
+    }
+    _isApplied(el) {
+      if (this.attrName === "class") {
+        return !!this.attrValue && el.classList.contains(this.attrValue);
+      }
+      return el.getAttribute(this.attrName) === this.attrValue;
+    }
+    pin() {
+      if (this._pinned)
+        return;
+      const targets = this._targets();
+      if (targets.length === 0)
+        return;
+      targets.forEach((el) => this._apply(el));
+      this._observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          const el = m.target;
+          if (!this._isApplied(el))
+            this._apply(el);
+        }
+      });
+      const attrFilter = this.attrName === "class" ? ["class"] : [this.attrName];
+      targets.forEach((el) => this._observer.observe(el, { attributes: true, attributeFilter: attrFilter }));
+      this._pinned = true;
+    }
+    unpin() {
+      if (!this._pinned)
+        return;
+      this._observer?.disconnect();
+      this._observer = null;
+      this._targets().forEach((el) => this._clear(el));
+      this._pinned = false;
+    }
+    toggle() {
+      if (this._pinned)
+        this.unpin();
+      else
+        this.pin();
+    }
+  }
+  if (!customElements.get("p9r-state-sync")) {
+    customElements.define("p9r-state-sync", StateSync);
+  }
+
+  // src/control/components/editor/componentSync/SyncPanel.ts
+  class SyncPanel extends Component {
+    dialog = null;
+    constructor() {
+      super({
+        css: "",
+        template: `
+            <w13c-lateral-dialog>
+                <slot></slot>
+                <span slot="title">Element Configuration</span>
+            </w13c-lateral-dialog>
+            `
+      });
+    }
+    connectedCallback() {
+      this.dialog = this.shadowRoot?.querySelector("w13c-lateral-dialog");
+    }
+    show() {
+      this.dialog?.show();
+    }
+    close() {
+      this.dialog?.close();
+    }
+    init(opts) {
+      const elements = Array.from(this.querySelectorAll("*"));
+      for (const element of elements) {
+        if (element.init)
+          element.init(opts);
+      }
+    }
+  }
+  if (!customElements.get("p9r-config-panel")) {
+    customElements.define("p9r-config-panel", SyncPanel);
+  }
+
+  // ../WebComponents/dist/blocs/horizontal-action-group.mjs
+  var l = `<div class="actions" role="toolbar" part="toolbar">
+    <slot></slot>
+</div>
+`;
+  var n = `:host {
+  display: inline-block;
+
+  --_toolbar-bg: var(--bg-overlay, #ffffff);
+  --_toolbar-border: var(--border-default, #e5e7eb);
+  --_toolbar-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --_toolbar-radius: 12px;
+  --_toolbar-padding: 6px;
+  --_toolbar-gap: 4px;
+
+  --_color: var(--info-contrasted, #3b82f6);
+  --_hover-color: var(--primary-contrasted, #3b82f6);
+
+  --_bg-color: var(--bg-overlay, white);
+  --_bg-hover-color: var(--primary-muted, #3b82f6);
+
+  --_border-color: var(--border-default, #e5e7eb);
+
+  touch-action: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  background: var(--_toolbar-bg);
+  border: 1px solid var(--_toolbar-border);
+  border-radius: var(--_toolbar-radius);
+  box-shadow: var(--_toolbar-shadow);
+  overflow: hidden;
+  width: fit-content;
+  padding: var(--_toolbar-padding);
+  gap: var(--_toolbar-gap);
+}
+
+:host([align="start"]) .actions { justify-content: flex-start; }
+:host([align="center"]) .actions { justify-content: center; }
+:host([align="end"]) .actions { justify-content: flex-end; }
+
+:host([fullwidth]),
+:host([fullwidth]) .actions {
+  width: 100%;
+}
+
+::slotted([hidden]) {
+  display: none !important;
+}
+
+::slotted([data-action]) {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background: var(--_bg-color);
+  border: none;
+  border-radius: 8px;
+  color: var(--_color);
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+::slotted([data-action]:hover) {
+  background-color: var(--_bg-hover-color);
+  color: var(--_hover-color);
+}
+
+::slotted([data-action]:focus-visible) {
+  outline: 2px solid var(--_color);
+  outline-offset: 2px;
+}
+
+::slotted([data-action][disabled]),
+::slotted([data-action][aria-disabled="true"]) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+::slotted(.separator) {
+  width: 1px;
+  height: 1.7rem;
+  background-color: var(--_border-color);
+  margin: 0 4px;
+  align-self: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::slotted([data-action]) {
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}
+`;
+
+  class a extends HTMLElement {
+    constructor(t) {
+      super();
+      let r = this.attachShadow({ mode: "open" });
+      if (t) {
+        let o = document.createElement("style");
+        o.innerHTML = t.css, r.appendChild(o);
+        let e = document.createElement("template");
+        e.innerHTML = t.template, r.appendChild(e.content.cloneNode(true));
+      }
+    }
+    connectedCallback() {}
+  }
+
+  class s extends a {
+    static _event = "action-click";
+    _toolbar;
+    constructor() {
+      super({ css: n, template: l });
+      this._toolbar = this.shadowRoot?.querySelector(".actions") ?? null;
+    }
+    static get observedAttributes() {
+      return ["label"];
+    }
+    connectedCallback() {
+      for (let t of ["label"])
+        this._upgradeProperty(t);
+      if (this._toolbar && !this._toolbar.hasAttribute("aria-label")) {
+        let t = this.getAttribute("label");
+        if (t)
+          this._toolbar.setAttribute("aria-label", t);
+      }
+      this.addEventListener("click", this._handleClick);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._handleClick);
+    }
+    attributeChangedCallback(t, r, o) {
+      if (!this._toolbar)
+        return;
+      if (t === "label")
+        if (o === null)
+          this._toolbar.removeAttribute("aria-label");
+        else
+          this._toolbar.setAttribute("aria-label", o);
+    }
+    _handleClick = (t) => {
+      let o = t.composedPath().find((i) => i instanceof Element && i.hasAttribute("data-action"));
+      if (!o)
+        return;
+      t.stopPropagation();
+      let e = o.getAttribute("data-action");
+      this._dispatchAction(e, o, t);
+    };
+    _dispatchAction(t, r, o) {
+      this.dispatchEvent(new CustomEvent("action-click", { detail: { action: t, originalEvent: o, target: r }, bubbles: true, composed: true }));
+    }
+    _upgradeProperty(t) {
+      if (this.hasOwnProperty(t)) {
+        let r = this[t];
+        delete this[t], this[t] = r;
+      }
+    }
+    get label() {
+      return this.getAttribute("label");
+    }
+    set label(t) {
+      if (t === null)
+        this.removeAttribute("label");
+      else
+        this.setAttribute("label", t);
+    }
+  }
+  if (!customElements.get("p9r-horizontal-action-group"))
+    customElements.define("p9r-horizontal-action-group", s);
+
+  // src/control/components/editor/EditorSystem/BlocActions/view/style.css
+  var style_default2 = `:host {
+    position: absolute;
+    left: 0;
+    top: 0;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    padding: 8px 32px 8px 16px;
+    z-index: 10000;
+    will-change: transform, opacity;
+    transition: opacity 0.1s ease-out;
+}
+
+::slotted([data-action="pin-state"][data-active]) {
+    background: var(--primary-muted, #eef2ff) !important;
+    color: var(--primary-base, #4361ee) !important;
+}
+
+:host([data-variant="snippet"]) {
+    --_color: #007aff;
+    --_hover-color: #005bb5;
+    --_bg-color: #f0f7ff;
+    --_bg-hover-color: rgba(0, 122, 255, 0.15);
+    --_border-color: rgba(0, 122, 255, 0.3);
+    --toolbar-bg: #f0f7ff;
+    --toolbar-border: rgba(0, 122, 255, 0.3);
+}
+
+/* ── Breadcrumb host position (relative to BAG) ─────────────────────
+   The pill internals + hover-bridge live in cms-bag-breadcrumb's own
+   stylesheet — here we only place the host element relative to BAG. */
+
+cms-bag-breadcrumb {
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 16px;
+}
+
+:host([data-v-anchor="bottom"]) cms-bag-breadcrumb {
+    bottom: auto;
+    top: calc(100% + 2px);
+}
+
+cms-bag-breadcrumb[data-inline="left"] {
+    top: 50% !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: calc(100% + 4px);
+    transform: translate(16px, -50%);
+}
+
+cms-bag-breadcrumb[data-inline="right"] {
+    top: 50% !important;
+    bottom: auto !important;
+    left: calc(100% + 4px) !important;
+    right: auto;
+    transform: translate(-32px, -50%);
+}
+`;
+
+  // src/control/components/editor/EditorSystem/BlocActions/compute/ancestorChain.ts
+  function findParentEditor(target) {
+    const parentId = target.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+    if (!parentId)
+      return null;
+    return document.compIdentifierToEditor?.get(parentId) ?? null;
+  }
+  function ancestorChain(editor) {
+    const chain = [editor];
+    let el = editor.target;
+    for (let i = 0;i < 20; i++) {
+      const pid = el.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      if (!pid)
+        break;
+      const pEd = document.compIdentifierToEditor?.get(pid);
+      if (!pEd)
+        break;
+      chain.unshift(pEd);
+      el = pEd.target;
+    }
+    return chain;
+  }
+  function collapseChain(items) {
+    if (items.length <= 5)
+      return items;
+    return [items[0], null, items[items.length - 3], items[items.length - 2], items[items.length - 1]];
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/view/template.html
+  var template_default3 = `<button data-action="edit" title="Edit">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+</button>
+
+<button data-action="duplicate" title="Duplicate">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+</button>
+
+<button data-action="changeComponent" title="Change component">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+</button>
+
+<div class="separator" data-group="delete"></div>
+
+<button data-action="delete" class="danger" title="Delete">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+</button>
+`;
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/actionBarButtons.ts
+  function buildSelectParentButton() {
+    const btn = document.createElement("button");
+    btn.setAttribute("data-action", "select-parent");
+    btn.setAttribute("title", "Select parent");
+    btn.innerHTML = ICON_PARENT;
+    return btn;
+  }
+  function buildCustomActionButton(action) {
+    const btn = document.createElement("button");
+    btn.setAttribute("data-action", action.action);
+    btn.setAttribute("title", action.title);
+    btn.innerHTML = action.icon;
+    return btn;
+  }
+  function buildPinButton(stateSyncCount, firstLabel) {
+    const btn = document.createElement("button");
+    btn.setAttribute("data-action", "pin-state");
+    btn.setAttribute("title", stateSyncCount === 1 && firstLabel ? `Pin: ${firstLabel}` : "Pin state");
+    btn.innerHTML = ICON_PIN;
+    return btn;
+  }
+  function toggleActionButton(host, action, show) {
+    host.querySelector(`[data-action="${action}"]`)?.toggleAttribute("hidden", !show);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/renderActionBar.ts
+  function renderActionBar(host, editor, parentEditor, previousConfigKey) {
+    const config = editor.actionBarConfiguration;
+    const hasConfig = editor.hasConfigPanel;
+    const customActions = editor.customActions;
+    const stateSyncCount = editor.stateSyncs.length;
+    const variant = editor.variant;
+    const hasAnyButton = hasConfig || !!config.get("duplicate") || !!config.get("delete") || !!config.get("changeComponent") || customActions.length > 0 || stateSyncCount > 0;
+    const showSelectParent = !!parentEditor && hasAnyButton;
+    const configKey = JSON.stringify(Array.from(config.entries())) + hasConfig + variant + customActions.map((a2) => a2.action).join(",") + "|s=" + stateSyncCount + "|p=" + showSelectParent;
+    if (previousConfigKey === configKey)
+      return null;
+    host.setAttribute("data-variant", variant);
+    host.innerHTML = template_default3;
+    const separator = host.querySelector('[data-group="delete"]');
+    if (showSelectParent)
+      host.insertBefore(buildSelectParentButton(), host.firstChild);
+    toggleActionButton(host, "edit", hasConfig);
+    toggleActionButton(host, "duplicate", !!config.get("duplicate"));
+    toggleActionButton(host, "changeComponent", !!config.get("changeComponent"));
+    toggleActionButton(host, "delete", !!config.get("delete"));
+    for (const action of customActions) {
+      host.insertBefore(buildCustomActionButton(action), separator);
+    }
+    if (stateSyncCount > 0) {
+      host.insertBefore(buildPinButton(stateSyncCount, editor.stateSyncs[0]?.label), separator);
+    }
+    const hasLeftButtons = hasConfig || !!config.get("duplicate") || !!config.get("changeComponent") || customActions.length > 0 || stateSyncCount > 0;
+    separator?.toggleAttribute("hidden", !config.get("delete") || !hasLeftButtons);
+    return { configKey, hasAnyButton };
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/refreshPinButton.ts
+  function refreshPinButton(host, editor) {
+    const btn = host.querySelector('[data-action="pin-state"]');
+    if (!btn)
+      return;
+    const anyPinned = editor?.stateSyncs.some((s2) => s2.isPinned) ?? false;
+    btn.toggleAttribute("data-active", anyPinned);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/template.html
+  var template_default4 = `<div class="pill" id="pill"></div>
+<div class="bridge"></div>
+`;
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/style.css
+  var style_default3 = `:host {
+    display: block;
+    width: max-content;
+    max-width: 420px;
+    font-family: system-ui, sans-serif;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+:host(:not([data-has-items])) { display: none; }
+
+.pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--toolbar-bg, #fff);
+    border: 1px solid var(--toolbar-border, #e5e7eb);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    overflow: visible;
+    position: relative;
+}
+
+.parent {
+    color: var(--text-muted, #94a3b8);
+    font: inherit;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+}
+
+.parent:hover, .parent:focus-visible {
+    color: var(--text-main, #1e293b);
+    background: var(--bg-base, #f1f5f9);
+    outline: none;
+}
+
+.ellipsis { color: var(--text-muted, #94a3b8); padding: 0 2px; cursor: default; }
+.sep { color: var(--border-default, #cbd5e1); }
+
+.current {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--primary-muted, rgba(67, 97, 238, 0.1));
+    color: var(--primary-base, #4361ee);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+/* Hover bridge — covers the gap between BAG and the breadcrumb. */
+.bridge {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 6px;
+}
+
+:host-context([data-v-anchor="bottom"]) .bridge { top: auto; bottom: 100%; }
+
+:host([data-inline]) .bridge {
+    top: 0 !important;
+    bottom: 0;
+    width: 8px;
+    height: auto !important;
+}
+
+:host([data-inline="left"]) .bridge { left: 100% !important; right: auto !important; }
+:host([data-inline="right"]) .bridge { right: 100% !important; left: auto !important; }
+`;
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/items.ts
+  function renderBreadcrumbItem(item, cb) {
+    if (item.type === "ellipsis") {
+      const span = document.createElement("span");
+      span.className = "ellipsis";
+      span.textContent = "…";
+      return span;
+    }
+    if (item.type === "current") {
+      const span = document.createElement("span");
+      span.className = "current";
+      span.textContent = item.label;
+      return span;
+    }
+    return renderParentButton(item.key, item.label, cb);
+  }
+  function renderParentButton(key, label, cb) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "parent";
+    btn.textContent = label;
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      cb.onPick(key);
+    });
+    btn.addEventListener("mouseenter", () => cb.onHover(key, true));
+    btn.addEventListener("mouseleave", () => cb.onHover(key, false));
+    return btn;
+  }
+  function renderSeparator() {
+    const sep = document.createElement("span");
+    sep.className = "sep";
+    sep.textContent = "›";
+    return sep;
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/Breadcrumb.ts
+  var Metadata = { css: style_default3, template: template_default4 };
+
+  class Breadcrumb extends Component {
+    _pill;
+    constructor() {
+      super(Metadata);
+      this._pill = this.shadowRoot.getElementById("pill");
+    }
+    static create() {
+      return document.createElement("cms-bag-breadcrumb");
+    }
+    setItems(items, cb) {
+      this._pill.innerHTML = "";
+      if (items.length === 0) {
+        this.removeAttribute("data-has-items");
+        return;
+      }
+      this.setAttribute("data-has-items", "");
+      items.forEach((item, idx) => {
+        this._pill.appendChild(renderBreadcrumbItem(item, cb));
+        if (idx < items.length - 1)
+          this._pill.appendChild(renderSeparator());
+      });
+    }
+    clear() {
+      this._pill.innerHTML = "";
+      this.removeAttribute("data-has-items");
+      this.removeAttribute("data-inline");
+    }
+    refinePosition(barRect) {
+      this.removeAttribute("data-inline");
+      if (!this._pill.children.length)
+        return;
+      const margin = 4;
+      const ownRect = this.getBoundingClientRect();
+      if (ownRect.width === 0 && ownRect.height === 0)
+        return;
+      const fitsVertically = ownRect.top >= margin && ownRect.bottom <= window.innerHeight - margin;
+      if (fitsVertically)
+        return;
+      const leftSpace = barRect.left - margin;
+      const rightSpace = window.innerWidth - barRect.right - margin;
+      const side = leftSpace >= ownRect.width || leftSpace >= rightSpace ? "left" : "right";
+      this.setAttribute("data-inline", side);
+    }
+  }
+  if (!customElements.get("cms-bag-breadcrumb")) {
+    customElements.define("cms-bag-breadcrumb", Breadcrumb);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/compute/breadcrumbBuilder.ts
+  function buildBreadcrumb(editor, editorSystem) {
+    const observer = editorSystem.observer;
+    const labelled = ancestorChain(editor).map((ed) => {
+      const label = observer?.getLabel(ed.target.tagName.toLowerCase());
+      return label ? { editor: ed, label } : null;
+    }).filter((it) => it !== null);
+    if (labelled.length === 0)
+      return { items: [], editorByKey: new Map };
+    const collapsed = collapseChain(labelled);
+    const editorByKey = new Map;
+    const items = collapsed.map((it, idx) => {
+      const isLast = idx === collapsed.length - 1;
+      if (it === null)
+        return { type: "ellipsis" };
+      if (isLast)
+        return { type: "current", label: it.label };
+      const key = it.editor.identifier;
+      editorByKey.set(key, it.editor);
+      return { type: "parent", key, label: it.label };
+    });
+    return { items, editorByKey };
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/BreadcrumbController.ts
+  class BreadcrumbController {
+    _host;
+    _onSwitch;
+    _el;
+    constructor(_host, _onSwitch) {
+      this._host = _host;
+      this._onSwitch = _onSwitch;
+      this._el = Breadcrumb.create();
+      const sr = this._host.shadowRoot;
+      sr.insertBefore(this._el, sr.querySelector("nav"));
+    }
+    update(editor) {
+      const editorSystem = getClosestEditorSystem(this._host);
+      const { items, editorByKey } = buildBreadcrumb(editor, editorSystem);
+      if (items.length === 0) {
+        this._el.clear();
+        return;
+      }
+      this._el.setItems(items, {
+        onPick: (key) => {
+          const ed = editorByKey.get(key);
+          if (ed)
+            this._onSwitch(ed);
+        },
+        onHover: (key, hovered) => {
+          editorByKey.get(key)?.target.classList.toggle("p9r-breadcrumb-hover", hovered);
+        }
+      });
+    }
+    refinePosition(barRect) {
+      this._el.refinePosition(barRect);
+    }
+    clear() {
+      this._el.clear();
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/template.html
+  var template_default5 = `<button class="btn" type="button">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+</button>
+`;
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/style.css
+  var style_default4 = `:host {
+    position: absolute;
+    z-index: 10001;
+    display: none;
+    width: 24px;
+    height: 24px;
+}
+
+:host([data-visible]) {
+    display: block;
+}
+
+.btn {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid var(--primary-base, #4361ee);
+    background: var(--bg-surface, #fff);
+    color: var(--primary-base, #4361ee);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    pointer-events: auto;
+}
+
+:host([data-position="before"]) .btn::before {
+    bottom: 0;
+}
+
+:host([data-position="after"]) .btn::before {
+    top: 0;
+}
+
+:host([data-position="before"][data-inline]) .btn::before {
+    bottom: -10px;
+    right: 0;
+}
+
+:host([data-position="after"][data-inline]) .btn::before {
+    top: -10px;
+    left: 0;
+}
+
+.btn:hover {
+    background: var(--primary-base, #4361ee);
+    color: #fff;
+    transform: scale(1.15);
+}
+`;
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/InsertButton.ts
+  var Metadata2 = {
+    css: style_default4,
+    template: template_default5
+  };
+
+  class InsertButton extends Component {
+    constructor() {
+      super(Metadata2);
+      this.shadowRoot.querySelector(".btn").addEventListener("click", () => {
+        this.dispatchEvent(new CustomEvent("insert-pick", { bubbles: true, composed: true }));
+      });
+    }
+    static create(position, onPick) {
+      const btn = document.createElement("cms-bag-insert-button");
+      btn.dataset.position = position;
+      btn.addEventListener("insert-pick", onPick);
+      return btn;
+    }
+    setVisible(visible) {
+      this.toggleAttribute("data-visible", visible);
+    }
+    setInline(inline) {
+      this.toggleAttribute("data-inline", inline);
+    }
+    setLocation(left, top) {
+      this.style.left = `${left}px`;
+      this.style.top = `${top}px`;
+    }
+  }
+  if (!customElements.get("cms-bag-insert-button")) {
+    customElements.define("cms-bag-insert-button", InsertButton);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/compute/insertButtonPosition.ts
+  function positionInsertButtons(btnBefore, btnAfter, rect, inline, show) {
+    btnBefore.setInline(inline);
+    btnAfter.setInline(inline);
+    if (!show.before && !show.after)
+      return;
+    const sx = window.scrollX;
+    const sy = window.scrollY;
+    if (inline) {
+      const cy = rect.top + sy + rect.height / 2 - 12;
+      if (show.before) {
+        btnBefore.setLocation(rect.left + sx - 12, cy);
+        btnBefore.setVisible(true);
+      }
+      if (show.after) {
+        btnAfter.setLocation(rect.right + sx - 12, cy);
+        btnAfter.setVisible(true);
+      }
+    } else {
+      const cx = rect.left + sx + rect.width / 2 - 12;
+      if (show.before) {
+        btnBefore.setLocation(cx, rect.top + sy - 12);
+        btnBefore.setVisible(true);
+      }
+      if (show.after) {
+        btnAfter.setLocation(cx, rect.bottom + sy - 12);
+        btnAfter.setVisible(true);
+      }
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/compute/anchor.ts
+  function resolveActionBarAnchor(target, editor) {
+    const element = editor?.getActionBarAnchor?.() ?? target;
+    return { rect: element.getBoundingClientRect(), element };
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/insertBlankSibling.ts
+  function resolveSiblingTemplate(target) {
+    const parentId = target.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+    if (!parentId)
+      return null;
+    const parentEditor = document.compIdentifierToEditor?.get(parentId);
+    if (!parentEditor)
+      return null;
+    const slotName = target.getAttribute("slot");
+    const compSyncs = parentEditor.queryPanelChildren("p9r-comp-sync");
+    for (const cs of compSyncs) {
+      const template = cs.firstElementChild;
+      if (!template)
+        continue;
+      const tSlot = template.getAttribute("slot");
+      if ((slotName ?? null) === (tSlot ?? null)) {
+        return template;
+      }
+    }
+    return null;
+  }
+  function insertBlankSibling(target, position) {
+    const template = resolveSiblingTemplate(target);
+    const fresh = template ? template.cloneNode(true) : document.createElement("p");
+    const parentId = target.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+    if (parentId)
+      fresh.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, parentId);
+    const slot = target.getAttribute("slot");
+    if (slot)
+      fresh.setAttribute("slot", slot);
+    fresh.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
+    if (position === "before")
+      target.before(fresh);
+    else
+      target.after(fresh);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/InsertButtonsController.ts
+  class InsertButtonsController {
+    _btnBefore;
+    _btnAfter;
+    _target = null;
+    _editor = null;
+    _show = { before: false, after: false };
+    constructor(onPick) {
+      this._btnBefore = InsertButton.create("before", () => onPick("before"));
+      this._btnAfter = InsertButton.create("after", () => onPick("after"));
+    }
+    get elements() {
+      return [this._btnBefore, this._btnAfter];
+    }
+    attachTo(parent) {
+      parent?.appendChild(this._btnBefore);
+      parent?.appendChild(this._btnAfter);
+    }
+    resolveTarget(editor) {
+      let ed = editor;
+      let target = editor.target;
+      while (ed && target) {
+        const cfg = ed.actionBarConfiguration;
+        if (cfg.get("addBefore") || cfg.get("addAfter")) {
+          this._target = target;
+          this._editor = ed;
+          this._show = { before: !!cfg.get("addBefore"), after: !!cfg.get("addAfter") };
+          return;
+        }
+        const parentEd = findParentEditor(target);
+        if (!parentEd)
+          break;
+        ed = parentEd;
+        target = parentEd.target;
+      }
+      this._target = editor.target;
+      this._editor = editor;
+      this._show = { before: false, after: false };
+    }
+    position() {
+      if (!this._target)
+        return;
+      const { rect } = resolveActionBarAnchor(this._target, this._editor);
+      const isInline = this._target.hasAttribute(p9r.attr.ACTION.INLINE_ADDING);
+      positionInsertButtons(this._btnBefore, this._btnAfter, rect, isInline, this._show);
+    }
+    hide() {
+      this._btnBefore.setVisible(false);
+      this._btnAfter.setVisible(false);
+    }
+    insertBlank(position) {
+      if (!this._target)
+        return;
+      insertBlankSibling(this._target, position);
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/template.html
+  var template_default6 = `<div class="menu" id="menu">
+    <div class="title">Pin state</div>
+    <div class="items" id="items"></div>
+</div>
+`;
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/style.css
+  var style_default5 = `:host {
+    position: absolute;
+    z-index: 10001;
+    display: block;
+}
+
+.menu {
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 10px;
+    padding: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 200px;
+    font: inherit;
+    color: var(--text-main, #1e293b);
+}
+
+.title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: color-mix(in srgb, currentColor 55%, transparent);
+    padding: 8px 10px 6px;
+}
+
+.items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    padding: 8px 10px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    font: inherit;
+    color: inherit;
+    width: 100%;
+}
+
+.item:hover {
+    background: var(--primary-muted, #eef2ff);
+}
+
+.item[data-active] {
+    background: var(--primary-muted, #eef2ff);
+    color: var(--primary-base, #4361ee);
+    font-weight: 600;
+}
+
+.icon {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    opacity: 0.45;
+    flex-shrink: 0;
+}
+
+.icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.item[data-active] .icon {
+    opacity: 1;
+}
+
+.label {
+    flex: 1;
+}
+`;
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinMenu.ts
+  var Metadata3 = {
+    css: style_default5,
+    template: template_default6
+  };
+
+  class PinMenu extends Component {
+    _items;
+    constructor() {
+      super(Metadata3);
+      this._items = this.shadowRoot.getElementById("items");
+    }
+    static create(items) {
+      const menu = document.createElement("cms-bag-pin-menu");
+      menu.setItems(items);
+      return menu;
+    }
+    setItems(items) {
+      this._items.innerHTML = "";
+      for (const item of items) {
+        this._items.appendChild(this._renderItem(item));
+      }
+    }
+    setPosition(left, top) {
+      this.style.left = `${left}px`;
+      this.style.top = `${top}px`;
+    }
+    _renderItem(item) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "item";
+      btn.innerHTML = `<span class="icon">${ICON_PIN}</span><span class="label"></span>`;
+      btn.querySelector(".label").textContent = item.label;
+      const setActive = () => btn.toggleAttribute("data-active", item.isPinned);
+      setActive();
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        item.onToggle();
+        setActive();
+      });
+      return btn;
+    }
+  }
+  if (!customElements.get("cms-bag-pin-menu")) {
+    customElements.define("cms-bag-pin-menu", PinMenu);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinController.ts
+  class PinController {
+    _host;
+    _getEditor;
+    _menu = null;
+    constructor(_host, _getEditor) {
+      this._host = _host;
+      this._getEditor = _getEditor;
+    }
+    get menu() {
+      return this._menu;
+    }
+    handleClick() {
+      const editor = this._getEditor();
+      const syncs = editor?.stateSyncs ?? [];
+      if (syncs.length === 0)
+        return;
+      if (syncs.length === 1) {
+        this._toggle(syncs[0]);
+        refreshPinButton(this._host, editor);
+        return;
+      }
+      this._toggleMenu(syncs);
+    }
+    close() {
+      this._menu?.remove();
+      this._menu = null;
+    }
+    _toggle(sync) {
+      sync.toggle();
+      this._getEditor()?.notifyPinStateChanged(sync);
+    }
+    _toggleMenu(syncs) {
+      if (this._menu) {
+        this.close();
+        return;
+      }
+      const btn = this._host.querySelector('[data-action="pin-state"]');
+      if (!btn)
+        return;
+      const menu = PinMenu.create(syncs.map((sync) => ({
+        label: sync.label,
+        isPinned: sync.isPinned,
+        onToggle: () => {
+          this._toggle(sync);
+          refreshPinButton(this._host, this._getEditor());
+        }
+      })));
+      const rect = btn.getBoundingClientRect();
+      menu.setPosition(rect.left, rect.bottom);
+      document.body.appendChild(menu);
+      this._menu = menu;
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/events/actionDispatcher.ts
+  function createActionDispatcher(deps) {
+    return (e) => {
+      switch (e.detail.action) {
+        case "delete":
+          return deps.onDelete();
+        case "edit":
+          return deps.onEdit();
+        case "duplicate":
+          return deps.onDuplicate();
+        case "changeComponent":
+          return deps.onChangeComponent();
+        case "pin-state":
+          return deps.onPinClick();
+        case "select-parent":
+          return deps.onSelectParent();
+        default: {
+          const custom = deps.editor()?.customActions.find((a2) => a2.action === e.detail.action);
+          custom?.handler();
+        }
+      }
+    };
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/events/keyboardHandler.ts
+  function createKeyDownHandler(deps) {
+    return (e) => {
+      if (e.key === "Escape") {
+        deps.onClose();
+        return;
+      }
+      if (e.key !== "Delete" && e.key !== "Backspace")
+        return;
+      const target = deps.target();
+      if (!target)
+        return;
+      const active = document.activeElement;
+      if (active && active.isContentEditable)
+        return;
+      if (!deps.canDelete())
+        return;
+      e.preventDefault();
+      target.remove();
+      deps.onClose();
+    };
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/events/pointerHandlers.ts
+  function createPointerHandlers(deps) {
+    let lastX = 0;
+    let lastY = 0;
+    let raf = null;
+    const onMouseMove = (e) => {
+      lastX = e.clientX;
+      lastY = e.clientY;
+      if (raf !== null)
+        return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        deps.onReflow();
+      });
+    };
+    const onClickOutside = (e) => {
+      const t = e.target;
+      if (deps.host.contains(t))
+        return;
+      if (deps.pinMenu()?.contains(t))
+        return;
+      if (deps.insertButtons().includes(t))
+        return;
+      if (deps.target()?.contains(t))
+        return;
+      deps.onClose();
+    };
+    const onLeave = (e) => {
+      const to = e.relatedTarget;
+      if (deps.host.contains(to))
+        return;
+      if (deps.pinMenu()?.contains(to))
+        return;
+      if (deps.insertButtons().includes(to))
+        return;
+      if (deps.host.matches(":hover"))
+        return;
+      if (deps.pinMenu()?.matches(":hover"))
+        return;
+      if (deps.insertButtons().some((b) => b.matches(":hover")))
+        return;
+      const parentEditor = to?.closest?.(`[${p9r.attr.EDITOR.IS_EDITOR}]`);
+      const tgt = deps.target();
+      if (parentEditor && tgt && parentEditor.contains(tgt)) {
+        parentEditor.dispatchEvent(new MouseEvent("mouseenter", {
+          clientX: e.clientX,
+          clientY: e.clientY,
+          bubbles: false
+        }));
+        return;
+      }
+      deps.onClose();
+    };
+    return {
+      onLeave,
+      onMouseMove,
+      onClickOutside,
+      lastMouse: () => ({ x: lastX, y: lastY }),
+      cancelPendingReflow: () => {
+        if (raf !== null) {
+          cancelAnimationFrame(raf);
+          raf = null;
+        }
+      }
+    };
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/events/EventManager.ts
+  class EventManager {
+    deps;
+    _attached = false;
+    _onKeyDown;
+    _onActionClick;
+    _pointer;
+    constructor(deps) {
+      this.deps = deps;
+      this._onKeyDown = createKeyDownHandler(deps);
+      this._onActionClick = createActionDispatcher(deps);
+      this._pointer = createPointerHandlers(deps);
+    }
+    attach() {
+      if (this._attached)
+        return;
+      this.deps.host.addEventListener("action-click", this._onActionClick);
+      this.deps.host.addEventListener("mouseleave", this._pointer.onLeave);
+      this.deps.hoverEl()?.addEventListener("mouseleave", this._pointer.onLeave);
+      this.deps.hoverEl()?.addEventListener("mousemove", this._pointer.onMouseMove);
+      window.addEventListener("keydown", this._onKeyDown);
+      window.addEventListener("click", this._pointer.onClickOutside);
+      this._attached = true;
+    }
+    detach() {
+      if (!this._attached)
+        return;
+      this.deps.host.removeEventListener("action-click", this._onActionClick);
+      this.deps.host.removeEventListener("mouseleave", this._pointer.onLeave);
+      this.deps.hoverEl()?.removeEventListener("mouseleave", this._pointer.onLeave);
+      this.deps.hoverEl()?.removeEventListener("mousemove", this._pointer.onMouseMove);
+      window.removeEventListener("keydown", this._onKeyDown);
+      window.removeEventListener("click", this._pointer.onClickOutside);
+      this._pointer.cancelPendingReflow();
+      this._attached = false;
+    }
+    lastMouse() {
+      return this._pointer.lastMouse();
+    }
+    rebindHover(prev) {
+      if (!this._attached)
+        return;
+      prev?.removeEventListener("mouseleave", this._pointer.onLeave);
+      prev?.removeEventListener("mousemove", this._pointer.onMouseMove);
+      const next = this.deps.hoverEl();
+      next?.addEventListener("mouseleave", this._pointer.onLeave);
+      next?.addEventListener("mousemove", this._pointer.onMouseMove);
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/duplicateSibling.ts
+  function duplicateSibling(target, position) {
+    const clone = target.cloneNode(true);
+    clone.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
+    clone.classList.remove("p9r-active");
+    clone.querySelectorAll(`[${p9r.attr.EDITOR.IS_EDITOR}]`).forEach((el) => {
+      el.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
+      el.classList.remove("p9r-active");
+    });
+    if (position === "before")
+      target.before(clone);
+    else
+      target.after(clone);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/openChangeComponentPicker.ts
+  function inherit(source, dest) {
+    const parentId = source.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+    if (parentId)
+      dest.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, parentId);
+    const slot = source.getAttribute("slot");
+    if (slot)
+      dest.setAttribute("slot", slot);
+  }
+  function openChangeComponentPicker(target, onDone) {
+    const library = getClosestEditorSystem(target).blocLibrary;
+    library.open();
+    library.addEventListener("insert", (e) => {
+      const detail = e.detail;
+      if (detail.type === "template") {
+        const fragment = document.createRange().createContextualFragment(detail.html);
+        Array.from(fragment.children).forEach((el) => {
+          el.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
+        });
+        target.replaceWith(fragment);
+      } else if (detail.type === "snippet") {
+        const newEl = document.createElement("w13c-snippet");
+        newEl.setAttribute("identifier", detail.identifier);
+        inherit(target, newEl);
+        newEl.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
+        target.replaceWith(newEl);
+      } else {
+        const newEl = document.createElement(detail.id);
+        inherit(target, newEl);
+        newEl.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
+        target.replaceWith(newEl);
+      }
+      onDone();
+    }, { once: true });
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/events/buildEventManager.ts
+  function buildEventManager(host, accessors, pin, insertBtns, cb) {
+    return new EventManager({
+      host,
+      target: accessors.target,
+      editor: accessors.editor,
+      hoverEl: accessors.hoverEl,
+      pinMenu: () => pin.menu,
+      insertButtons: () => insertBtns.elements,
+      canDelete: () => !!accessors.editor()?.actionBarConfiguration.get("delete"),
+      onClose: cb.onClose,
+      onReflow: cb.onReflow,
+      onDelete: () => {
+        accessors.target()?.remove();
+        cb.onClose();
+      },
+      onEdit: () => accessors.editor()?.showConfigPanel(),
+      onDuplicate: () => {
+        const t = accessors.target();
+        if (t)
+          cb.withCooldown(() => duplicateSibling(t, "after"));
+      },
+      onChangeComponent: () => {
+        const t = accessors.target();
+        if (t)
+          openChangeComponentPicker(t, cb.onClose);
+      },
+      onPinClick: () => pin.handleClick(),
+      onSelectParent: cb.onSelectParent
+    });
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/navigate.ts
+  function switchToEditor(c, target) {
+    const t = c.host.style.transform;
+    const va = c.host.getAttribute("data-v-anchor");
+    c.positionLocked = true;
+    c.setEditor(target);
+    c.open();
+    c.host.style.transform = t;
+    if (va !== null) {
+      c.host.setAttribute("data-v-anchor", va);
+      c.lastVAnchor = va;
+      c.breadcrumb.refinePosition(c.host.getBoundingClientRect());
+    }
+  }
+  function selectParent(c) {
+    if (!c.target)
+      return;
+    const p = findParentEditor(c.target);
+    if (p)
+      switchToEditor(c, p);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/compute/groupPosition.ts
+  function computeGroupPosition(input) {
+    const { rect, barWidth, barHeight, mouseX, mouseY } = input;
+    const margin = 8;
+    const centerY = rect.top + rect.height / 2;
+    let vAnchor = mouseY < centerY ? "top" : "bottom";
+    if (vAnchor === "top" && rect.top - barHeight < margin && rect.bottom + barHeight <= window.innerHeight - margin) {
+      vAnchor = "bottom";
+    } else if (vAnchor === "bottom" && rect.bottom + barHeight > window.innerHeight - margin && rect.top - barHeight >= margin) {
+      vAnchor = "top";
+    }
+    const halfWidth = barWidth / 2;
+    let x = mouseX + window.scrollX - halfWidth;
+    const minRectX = rect.left + window.scrollX;
+    const maxRectX = rect.right + window.scrollX - barWidth;
+    x = Math.max(minRectX, Math.min(maxRectX, x));
+    const minViewX = window.scrollX + margin;
+    const maxViewX = window.scrollX + window.innerWidth - barWidth - margin;
+    x = Math.max(minViewX, Math.min(maxViewX, x));
+    let y = vAnchor === "top" ? rect.top + window.scrollY - barHeight : rect.bottom + window.scrollY;
+    const minViewY = window.scrollY + margin;
+    const maxViewY = window.scrollY + window.innerHeight - barHeight - margin;
+    y = Math.max(minViewY, Math.min(maxViewY, y));
+    return { x, y, vAnchor };
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/compute/applyBagPosition.ts
+  function applyBagPosition(bag, target, editor, mouseX, mouseY, lastVAnchor) {
+    const { rect, element } = resolveActionBarAnchor(target, editor);
+    const my = mouseY ?? (lastVAnchor === "top" ? rect.top : rect.bottom);
+    const { x, y, vAnchor } = computeGroupPosition({
+      rect,
+      barWidth: bag.offsetWidth,
+      barHeight: bag.offsetHeight,
+      mouseX,
+      mouseY: my
+    });
+    bag.setAttribute("data-v-anchor", vAnchor);
+    bag.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    bag.style.visibility = "visible";
+    bag.style.opacity = "1";
+    bag.style.pointerEvents = "auto";
+    return { vAnchor, anchorEl: element };
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/reflow.ts
+  function reflow(c) {
+    if (!c.target)
+      return;
+    if (!c.positionLocked) {
+      const m = c.events.lastMouse();
+      const r = applyBagPosition(c.host, c.target, c.editor, m.x, m.y, c.lastVAnchor);
+      c.lastVAnchor = r.vAnchor;
+      c.hoverEl = r.anchorEl;
+    }
+    c.insertBtns.hide();
+    c.insertBtns.position();
+    c.breadcrumb.refinePosition(c.host.getBoundingClientRect());
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/open.ts
+  function open(c, mouseX, mouseY) {
+    if (!c.editor || !c.target || c.cooldown)
+      return;
+    c.renderBar();
+    c.breadcrumb.update(c.editor);
+    const r = applyBagPosition(c.host, c.target, c.editor, mouseX ?? c.events.lastMouse().x, mouseY ?? null, c.lastVAnchor);
+    c.lastVAnchor = r.vAnchor;
+    c.hoverEl = r.anchorEl;
+    c.insertBtns.position();
+    c.ro.disconnect();
+    c.ro.observe(c.target);
+    if (r.anchorEl !== c.target)
+      c.ro.observe(r.anchorEl);
+    c.target.classList.add("p9r-active");
+    c.events.attach();
+    c.breadcrumb.refinePosition(c.host.getBoundingClientRect());
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/isInteractive.ts
+  function isInteractive(editor) {
+    const someEnabled = Array.from(editor.actionBarConfiguration.values()).some((v) => v);
+    return someEnabled || editor.customActions.length > 0 || editor.stateSyncs.length > 0 || editor.hasConfigPanel;
+  }
+
+  // src/control/components/editor/EditorSystem/Highlight.ts
+  var ROOT_ID = "p9r-editor-highlight-root";
+  var root = null;
+  var active = new Set;
+  var onScrollOrResize = null;
+  function ensureRoot() {
+    if (root)
+      return root;
+    root = document.createElement("div");
+    root.id = ROOT_ID;
+    root.style.cssText = "position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999;";
+    document.body.appendChild(root);
+    return root;
+  }
+  function attachGlobal() {
+    if (onScrollOrResize)
+      return;
+    onScrollOrResize = () => active.forEach((h) => h.update());
+    window.addEventListener("scroll", onScrollOrResize, { capture: true, passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+  }
+  function detachGlobal() {
+    if (!onScrollOrResize)
+      return;
+    window.removeEventListener("scroll", onScrollOrResize, { capture: true });
+    window.removeEventListener("resize", onScrollOrResize);
+    onScrollOrResize = null;
+  }
+
+  class Highlight {
+    _target;
+    _box;
+    _ro;
+    constructor(target, options = {}) {
+      this._target = target;
+      const r = ensureRoot();
+      this._box = document.createElement("div");
+      const color = options.color ?? "#3b82f6";
+      const thickness = options.thickness ?? 2;
+      const radius = options.radius ?? 0;
+      this._box.style.cssText = `position:absolute;left:0;top:0;border:${thickness}px solid ${color};` + `border-radius:${radius}px;box-sizing:border-box;pointer-events:none;`;
+      r.appendChild(this._box);
+      this._ro = new ResizeObserver(() => this.update());
+      this._ro.observe(target);
+      active.add(this);
+      attachGlobal();
+      this.update();
+    }
+    update() {
+      const rect = this._target.getBoundingClientRect();
+      const s2 = this._box.style;
+      s2.transform = `translate(${rect.left}px, ${rect.top}px)`;
+      s2.width = `${rect.width}px`;
+      s2.height = `${rect.height}px`;
+      s2.display = rect.width === 0 && rect.height === 0 ? "none" : "block";
+    }
+    setColor(color) {
+      this._box.style.borderColor = color;
+    }
+    dispose() {
+      this._ro.disconnect();
+      this._box.remove();
+      active.delete(this);
+      if (active.size === 0)
+        detachGlobal();
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/BagController.ts
+  class BagController {
+    host;
+    target = null;
+    editor = null;
+    hoverEl = null;
+    cooldown = false;
+    positionLocked = false;
+    lastVAnchor = "bottom";
+    lastConfigKey = "";
+    breadcrumb;
+    insertBtns;
+    pin;
+    events;
+    ro;
+    highlight = null;
+    constructor(host) {
+      this.host = host;
+      const s2 = document.createElement("style");
+      s2.textContent = style_default2;
+      host.shadowRoot.appendChild(s2);
+      this.breadcrumb = new BreadcrumbController(host, (ed) => switchToEditor(this, ed));
+      this.insertBtns = new InsertButtonsController((pos) => this.withCooldown(() => this.insertBtns.insertBlank(pos)));
+      this.pin = new PinController(host, () => this.editor);
+      this.ro = new ResizeObserver(() => reflow(this));
+      this.events = buildEventManager(host, { target: () => this.target, editor: () => this.editor, hoverEl: () => this.hoverEl }, this.pin, this.insertBtns, {
+        onClose: () => this.close(),
+        onReflow: () => reflow(this),
+        withCooldown: (fn) => this.withCooldown(fn),
+        onSelectParent: () => selectParent(this)
+      });
+    }
+    setEditor(editor) {
+      if (!isInteractive(editor)) {
+        this.close();
+        this.editor = null;
+        this.target = null;
+        return;
+      }
+      const prev = this.hoverEl;
+      this.target?.classList.remove("p9r-active");
+      this.editor = editor;
+      this.target = editor.target;
+      this.hoverEl = editor.getActionBarAnchor?.() ?? editor.target;
+      this.highlight?.dispose();
+      this.highlight = new Highlight(this.target, { color: "var(--primary-base, #3b82f6)" });
+      this.events.rebindHover(prev);
+      this.insertBtns.resolveTarget(editor);
+    }
+    open(mouseX, mouseY) {
+      open(this, mouseX, mouseY);
+    }
+    close() {
+      this.pin.close();
+      this.highlight?.dispose();
+      this.highlight = null;
+      this.target?.classList.remove("p9r-active");
+      document.querySelectorAll(".p9r-breadcrumb-hover").forEach((el) => el.classList.remove("p9r-breadcrumb-hover"));
+      this.host.style.cssText = "visibility:hidden;opacity:0;pointer-events:none;";
+      this.insertBtns.hide();
+      this.ro.disconnect();
+      this.events.detach();
+      this.positionLocked = false;
+    }
+    renderBar() {
+      if (!this.editor)
+        return;
+      const r = renderActionBar(this.host, this.editor, findParentEditor(this.target), this.lastConfigKey);
+      if (r) {
+        this.lastConfigKey = r.configKey;
+        refreshPinButton(this.host, this.editor);
+      }
+    }
+    withCooldown(fn) {
+      fn();
+      this.close();
+      this.cooldown = true;
+      requestAnimationFrame(() => {
+        this.cooldown = false;
+      });
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/BlocActions.ts
+  class BlocActions extends s {
+    _ctrl;
+    constructor() {
+      super();
+      this._ctrl = new BagController(this);
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      this._ctrl.insertBtns.attachTo(this.parentElement);
+    }
+    setEditor(editor) {
+      this._ctrl.setEditor(editor);
+    }
+    open(mouseX, mouseY) {
+      this._ctrl.open(mouseX, mouseY);
+    }
+    close() {
+      this._ctrl.close();
+    }
+  }
+  if (!customElements.get("cms-bloc-actions"))
+    customElements.define("cms-bloc-actions", BlocActions);
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/template.html
+  var template_default7 = `<dialog id="dialog">
+    <div class="container">
+        <header class="header">
+            <nav class="tabs" id="tabs">
+                <button class="tab active" data-section="blocs">Blocs</button>
+                <button class="tab" data-section="templates">Templates</button>
+                <button class="tab" data-section="snippets">Snippets</button>
+            </nav>
+            <div class="search-wrap">
+                <input id="search" class="search-input" type="search" placeholder="Search blocs, templates, snippets…" autocomplete="off" />
+            </div>
+            <form method="dialog">
+                <button class="default-close">&times;</button>
+            </form>
+        </header>
+        <div class="content">
+            <nav class="groups-sidebar" id="sidebar"></nav>
+            <main class="blocs-grid" id="grid"></main>
+        </div>
+    </div>
+</dialog>
+`;
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/style.css
+  var style_default6 = `:host {
+    --bg-main: rgba(255, 255, 255, 0.95);
+    --bg-card: #ffffff;
+
+    --text-primary: #1a1a1a;
+    --text-secondary: #666;
+
+    --accent: #007aff;
+    --border: rgba(0, 0, 0, 0.06);
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+    --sidebar-width: 200px;
+
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#dialog {
+    padding: 0;
+    border: none;
+    background: transparent;
+    overflow: visible;
+    animation: dialogFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes dialogFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+#dialog::backdrop {
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+.container {
+    width: 90vw;
+    max-width: 1000px;
+    height: 70vh;
+    background: var(--bg-main);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.header {
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    height: 54px;
+    flex-shrink: 0;
+}
+
+.search-wrap {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.search-input {
+    all: unset;
+    width: 100%;
+    max-width: 360px;
+    box-sizing: border-box;
+    padding: 7px 12px;
+    font-size: 13px;
+    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    transition: all 0.15s;
+}
+
+.search-input:focus {
+    background: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.search-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.tab {
+    all: unset;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+}
+
+.tab:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-primary);
+}
+
+.tab.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+form[method="dialog"] {
+    display: flex;
+    align-items: center;
+}
+
+.default-close {
+    all: unset;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-secondary);
+    font-size: 1.4rem;
+    transition: all 0.2s;
+}
+
+.default-close:hover {
+    background: rgba(255, 59, 48, 0.1);
+    color: #ff3b30;
+    transform: rotate(90deg);
+}
+
+.content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.groups-sidebar {
+    width: var(--sidebar-width);
+    padding: 16px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar-item {
+    all: unset;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+}
+
+.sidebar-item:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-primary);
+}
+
+.sidebar-item.active {
+    background: rgba(0, 122, 255, 0.08);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.blocs-grid {
+    flex: 1;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    overflow-y: auto;
+    align-content: start;
+}
+
+.section-header {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    padding: 6px 4px 2px;
+    margin-top: 4px;
+}
+
+.section-header:first-child {
+    margin-top: 0;
+}
+`;
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/api.ts
+  async function fetchJson(path, fallback) {
+    try {
+      const res = await fetch(resolveApiUrl(path));
+      if (!res.ok)
+        return fallback;
+      return await res.json();
+    } catch (e) {
+      console.log(e);
+      return fallback;
+    }
+  }
+  var fetchTemplates = () => fetchJson("template/list", []);
+  var fetchSnippets = () => fetchJson("snippet/list", []);
+  var fetchTemplateContent = async (id) => {
+    try {
+      const res = await fetch(resolveApiUrl(`template?id=${encodeURIComponent(id)}`));
+      if (!res.ok)
+        return "";
+      const tpl = await res.json();
+      return tpl.content ?? "";
+    } catch (e) {
+      console.log(e);
+      return "";
+    }
+  };
+  async function fetchBlocMeta() {
+    const list = await fetchJson("bloc/list", []);
+    return new Map(list.map((b) => [b.id, { description: b.description }]));
+  }
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/components/Card/template.html
+  var template_default8 = `<button type="button" class="card">
+    <span class="icon"><slot name="icon"></slot></span>
+    <span class="text">
+        <span class="title"><slot name="title"></slot></span>
+        <span class="description"><slot name="description"></slot></span>
+    </span>
+</button>
+`;
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/components/Card/style.css
+  var style_default7 = `:host {
+    display: contents;
+}
+
+.card {
+    all: unset;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 12px 14px;
+    min-height: 72px;
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: 0.15s;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent, #007aff);
+}
+
+::slotted(svg) {
+    width: 28px;
+    height: 28px;
+}
+
+.card:hover {
+    border-color: var(--accent, #007aff);
+    background: #f8fbff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary, #1a1a1a);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.description {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-secondary, #666);
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.description:not(:has(::slotted(*))) {
+    display: none;
+}
+`;
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/components/Card/Card.ts
+  var Metadata4 = {
+    css: style_default7,
+    template: template_default8
+  };
+
+  class Card extends Component {
+    constructor() {
+      super(Metadata4);
+    }
+    static create(opts) {
+      const card = document.createElement("cms-bloc-library-card");
+      const iconFragment = document.createRange().createContextualFragment(opts.icon);
+      const iconRoot = iconFragment.firstElementChild;
+      if (iconRoot) {
+        iconRoot.setAttribute("slot", "icon");
+        card.appendChild(iconRoot);
+      }
+      const titleSpan = document.createElement("span");
+      titleSpan.slot = "title";
+      titleSpan.textContent = opts.title;
+      card.appendChild(titleSpan);
+      if (opts.description) {
+        const descSpan = document.createElement("span");
+        descSpan.slot = "description";
+        descSpan.textContent = opts.description;
+        card.appendChild(descSpan);
+      }
+      return card;
+    }
+  }
+  if (!customElements.get("cms-bloc-library-card")) {
+    customElements.define("cms-bloc-library-card", Card);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/sections/renderBlocs.ts
+  function renderBlocs({ grid, items, blocMeta, onPick }) {
+    for (const item of items) {
+      const card = Card.create({
+        icon: ICON_COMPONENT,
+        title: item.label,
+        description: blocMeta.get(item.tag)?.description
+      });
+      card.addEventListener("click", () => onPick({ type: "bloc", id: item.tag }));
+      grid.appendChild(card);
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/components/EmptyState/template.html
+  var template_default9 = `<div class="empty-state">
+    <slot name="icon"></slot>
+    <p><slot name="message"></slot></p>
+</div>
+`;
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/components/EmptyState/style.css
+  var style_default8 = `:host {
+    display: contents;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 48px 24px;
+    color: var(--text-secondary, #666);
+    text-align: center;
+}
+
+::slotted(svg) {
+    width: 40px;
+    height: 40px;
+    opacity: 0.3;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 13px;
+}
+`;
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/components/EmptyState/EmptyState.ts
+  var Metadata5 = {
+    css: style_default8,
+    template: template_default9
+  };
+
+  class EmptyState2 extends Component {
+    constructor() {
+      super(Metadata5);
+    }
+    static create(opts) {
+      const el = document.createElement("cms-bloc-library-empty-state");
+      const iconFragment = document.createRange().createContextualFragment(opts.icon);
+      const iconRoot = iconFragment.firstElementChild;
+      if (iconRoot) {
+        iconRoot.setAttribute("slot", "icon");
+        el.appendChild(iconRoot);
+      }
+      const messageSpan = document.createElement("span");
+      messageSpan.slot = "message";
+      messageSpan.textContent = opts.message;
+      el.appendChild(messageSpan);
+      return el;
+    }
+  }
+  if (!customElements.get("cms-bloc-library-empty-state")) {
+    customElements.define("cms-bloc-library-empty-state", EmptyState2);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/sections/renderTemplates.ts
+  function renderTemplates({ grid, templates, category, onPick }) {
+    const filtered = templates.filter((t) => (t.category || "Default") === category);
+    if (filtered.length === 0) {
+      grid.appendChild(EmptyState2.create({
+        icon: ICON_TEMPLATE_MUTED,
+        message: "No templates in this category"
+      }));
+      return;
+    }
+    for (const tpl of filtered) {
+      const card = Card.create({
+        icon: ICON_TEMPLATE,
+        title: tpl.name,
+        description: tpl.description
+      });
+      card.addEventListener("click", async () => {
+        const html = await fetchTemplateContent(tpl.id);
+        onPick({ type: "template", html });
+      });
+      grid.appendChild(card);
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/sections/renderSnippets.ts
+  function renderSnippets({ grid, snippets, category, onPick }) {
+    const filtered = snippets.filter((s2) => (s2.category || "Default") === category);
+    if (filtered.length === 0) {
+      grid.appendChild(EmptyState2.create({
+        icon: ICON_SNIPPET_MUTED,
+        message: "No snippets in this category"
+      }));
+      return;
+    }
+    for (const snippet of filtered) {
+      const card = Card.create({
+        icon: ICON_SNIPPET,
+        title: snippet.name,
+        description: snippet.description
+      });
+      card.addEventListener("click", () => onPick({ type: "snippet", identifier: snippet.identifier }));
+      grid.appendChild(card);
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/sections/renderSearch.ts
+  function renderSearch({ grid, query, blocs, blocMeta, templates, snippets, onPick }) {
+    const q = query.trim().toLowerCase();
+    const matchingBlocs = blocs.filter((b) => {
+      const desc = blocMeta.get(b.tag)?.description ?? "";
+      return b.label.toLowerCase().includes(q) || b.tag.toLowerCase().includes(q) || desc.toLowerCase().includes(q);
+    });
+    const matchingTemplates = templates.filter((t) => t.name.toLowerCase().includes(q) || (t.description ?? "").toLowerCase().includes(q) || (t.category ?? "").toLowerCase().includes(q));
+    const matchingSnippets = snippets.filter((s2) => s2.name.toLowerCase().includes(q) || (s2.description ?? "").toLowerCase().includes(q) || s2.identifier.toLowerCase().includes(q) || (s2.category ?? "").toLowerCase().includes(q));
+    const total = matchingBlocs.length + matchingTemplates.length + matchingSnippets.length;
+    if (total === 0) {
+      grid.appendChild(EmptyState2.create({
+        icon: ICON_COMPONENT,
+        message: `No results for "${query}"`
+      }));
+      return;
+    }
+    if (matchingBlocs.length > 0) {
+      appendSectionHeader(grid, "Blocs");
+      for (const item of matchingBlocs) {
+        const card = Card.create({
+          icon: ICON_COMPONENT,
+          title: item.label,
+          description: blocMeta.get(item.tag)?.description
+        });
+        card.addEventListener("click", () => onPick({ type: "bloc", id: item.tag }));
+        grid.appendChild(card);
+      }
+    }
+    if (matchingTemplates.length > 0) {
+      appendSectionHeader(grid, "Templates");
+      for (const tpl of matchingTemplates) {
+        const card = Card.create({
+          icon: ICON_TEMPLATE,
+          title: tpl.name,
+          description: tpl.description
+        });
+        card.addEventListener("click", async () => {
+          const html = await fetchTemplateContent(tpl.id);
+          onPick({ type: "template", html });
+        });
+        grid.appendChild(card);
+      }
+    }
+    if (matchingSnippets.length > 0) {
+      appendSectionHeader(grid, "Snippets");
+      for (const snippet of matchingSnippets) {
+        const card = Card.create({
+          icon: ICON_SNIPPET,
+          title: snippet.name,
+          description: snippet.description
+        });
+        card.addEventListener("click", () => onPick({ type: "snippet", identifier: snippet.identifier }));
+        grid.appendChild(card);
+      }
+    }
+  }
+  function appendSectionHeader(grid, label) {
+    const header = document.createElement("div");
+    header.className = "section-header";
+    header.textContent = label;
+    grid.appendChild(header);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocLibrary/BlocLibrary.ts
+  var Metadata6 = {
+    css: style_default6,
+    template: template_default7
+  };
+
+  class BlocLibrary extends Component {
+    _dialog;
+    _section = "blocs";
+    _activeGroup = null;
+    _query = "";
+    _templates = [];
+    _snippets = [];
+    _blocMeta = new Map;
+    _dataLoaded = false;
+    constructor() {
+      super(Metadata6);
+    }
+    connectedCallback() {
+      const s2 = this.shadowRoot;
+      this._dialog = s2.querySelector("#dialog");
+      this._dialog.addEventListener("click", (e) => {
+        if (e.target === this._dialog)
+          this.close();
+      });
+      s2.getElementById("tabs").addEventListener("click", (e) => this._onTabClick(e));
+      s2.getElementById("sidebar").addEventListener("click", (e) => this._onSidebarClick(e));
+      s2.getElementById("search").addEventListener("input", (e) => this._onSearchInput(e));
+    }
+    open() {
+      this._dialog.showModal();
+      this._refresh();
+    }
+    close() {
+      this._dialog.close();
+    }
+    async _refresh() {
+      if (!this._dataLoaded) {
+        const [templates, snippets, blocMeta] = await Promise.all([
+          fetchTemplates(),
+          fetchSnippets(),
+          fetchBlocMeta()
+        ]);
+        this._templates = templates;
+        this._snippets = snippets;
+        this._blocMeta = blocMeta;
+        this._dataLoaded = true;
+      }
+      if (!this._activeGroup && this._section === "blocs") {
+        const groups = Array.from(getClosestEditorSystem(this).observer.getGroups());
+        if (groups.length > 0)
+          this._activeGroup = groups[0];
+      }
+      this._render();
+      this.shadowRoot.getElementById("search").focus();
+    }
+    _onTabClick(e) {
+      const tab = e.target.closest(".tab");
+      if (!tab || !tab.dataset.section)
+        return;
+      this._section = tab.dataset.section;
+      this._activeGroup = null;
+      this._render();
+    }
+    _onSidebarClick(e) {
+      const item = e.target.closest(".sidebar-item");
+      if (!item)
+        return;
+      this._activeGroup = item.dataset.group ?? null;
+      this._render();
+    }
+    _onSearchInput(e) {
+      this._query = e.target.value;
+      this._render();
+    }
+    _render() {
+      const searching = this._query.trim().length > 0;
+      this._renderTabs(searching);
+      this._renderSidebar(searching);
+      this._renderGrid(searching);
+    }
+    _renderTabs(searching) {
+      this.shadowRoot.querySelectorAll(".tab").forEach((tab) => {
+        tab.classList.toggle("active", !searching && tab.dataset.section === this._section);
+      });
+    }
+    _renderSidebar(searching) {
+      const sidebar = this.shadowRoot.getElementById("sidebar");
+      sidebar.innerHTML = "";
+      sidebar.style.display = searching ? "none" : "";
+      if (searching)
+        return;
+      const groups = this._getGroups();
+      if (this._activeGroup === null && groups.length > 0) {
+        this._activeGroup = groups[0];
+      }
+      for (const group of groups) {
+        const btn = document.createElement("button");
+        btn.className = `sidebar-item ${group === this._activeGroup ? "active" : ""}`;
+        btn.dataset.group = group;
+        btn.textContent = group;
+        sidebar.appendChild(btn);
+      }
+    }
+    _renderGrid(searching) {
+      const editorSystem = getClosestEditorSystem(this);
+      const grid = this.shadowRoot.getElementById("grid");
+      grid.innerHTML = "";
+      const onPick = (detail) => this._emitInsert(detail);
+      if (searching) {
+        renderSearch({
+          grid,
+          query: this._query,
+          blocs: Array.from(editorSystem.observer.getItems()),
+          blocMeta: this._blocMeta,
+          templates: this._templates,
+          snippets: this._snippets,
+          onPick
+        });
+        return;
+      }
+      if (this._section === "blocs") {
+        if (!this._activeGroup)
+          return;
+        renderBlocs({
+          grid,
+          items: Array.from(editorSystem.observer.getItemsByGroup(this._activeGroup)),
+          blocMeta: this._blocMeta,
+          onPick
+        });
+      } else if (this._section === "templates") {
+        renderTemplates({ grid, templates: this._templates, category: this._activeGroup, onPick });
+      } else {
+        renderSnippets({ grid, snippets: this._snippets, category: this._activeGroup, onPick });
+      }
+    }
+    _getGroups() {
+      const editorSystem = getClosestEditorSystem(this);
+      if (this._section === "blocs")
+        return Array.from(editorSystem.observer.getGroups());
+      if (this._section === "templates")
+        return Array.from(new Set(this._templates.map((t) => t.category || "Default")));
+      return Array.from(new Set(this._snippets.map((s2) => s2.category || "Default")));
+    }
+    _emitInsert(detail) {
+      this.dispatchEvent(new CustomEvent("insert", { detail, bubbles: true, composed: true }));
+      this.close();
+    }
+  }
+  if (!customElements.get("cms-bloc-library")) {
+    customElements.define("cms-bloc-library", BlocLibrary);
+  }
+
+  // src/control/components/editor/EditorSystem/DragManager.ts
+  var DRAG_PILL_WIDTH = 180;
+  var DRAG_PILL_HEIGHT = 32;
+
+  class DragManager {
+    draggedElement = null;
+    _originalDisplay = "";
+    _ghost = null;
+    _indicator = null;
+    _dropTarget = null;
+    _dropPosition = null;
+    _onDragStart = (e) => this.handleDragStart(e);
+    _onDragOver = (e) => this.handleDragOver(e);
+    _onDrop = (e) => this.handleDrop(e);
+    _onDragEnd = () => this.handleDragEnd();
+    _container;
+    constructor(container) {
+      this._container = container;
+      container.addEventListener("dragstart", this._onDragStart);
+      container.addEventListener("dragover", this._onDragOver);
+      container.addEventListener("drop", this._onDrop);
+      container.addEventListener("dragend", this._onDragEnd);
+    }
+    dispose() {
+      this._container.removeEventListener("dragstart", this._onDragStart);
+      this._container.removeEventListener("dragover", this._onDragOver);
+      this._container.removeEventListener("drop", this._onDrop);
+      this._container.removeEventListener("dragend", this._onDragEnd);
+      this._finalize();
+    }
+    handleDragStart(e) {
+      this.draggedElement = e.target.closest(".editor-block");
+      if (!this.draggedElement)
+        return;
+      e.dataTransfer?.setData("text/plain", "");
+      this._setGhostImage(e);
+      this.draggedElement.classList.add("dragging");
+      const root2 = this._container.getRootNode();
+      root2.querySelector("cms-bloc-actions")?.close();
+      root2.querySelector("cms-richtextbar")?.hide();
+      this._originalDisplay = this.draggedElement.style.display;
+      const toHide = this.draggedElement;
+      setTimeout(() => {
+        if (this.draggedElement === toHide)
+          toHide.style.display = "none";
+      }, 0);
+      this._createIndicator();
+    }
+    handleDragOver(e) {
+      e.preventDefault();
+      if (!this.draggedElement)
+        return;
+      const target = this._pickTarget(e);
+      if (!target) {
+        this._hideIndicator();
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      const horizontal = this._isHorizontalFlow(target);
+      const after = horizontal ? (e.clientX - rect.left) / (rect.right - rect.left) > 0.5 : (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+      this._dropTarget = target;
+      this._dropPosition = after ? "after" : "before";
+      this._showIndicator(target, after, horizontal);
+    }
+    _isHorizontalFlow(target) {
+      const parent = target.parentElement;
+      if (!parent)
+        return false;
+      const cs = getComputedStyle(parent);
+      const display = cs.display;
+      if (display.includes("inline"))
+        return true;
+      if (display.endsWith("flex")) {
+        return cs.flexDirection.startsWith("row");
+      }
+      if (display.endsWith("grid")) {
+        return true;
+      }
+      return false;
+    }
+    _pickTarget(e) {
+      const el = e.target?.closest?.(".editor-block");
+      if (!el)
+        return null;
+      if (el === this.draggedElement)
+        return null;
+      if (this.draggedElement && el.contains(this.draggedElement))
+        return null;
+      if (el.getAttribute(p9r.attr.ACTION.DISABLE_DRAGGING) === "true")
+        return null;
+      return el;
+    }
+    handleDrop(e) {
+      e.preventDefault();
+      this._commitDrop();
+      this._finalize();
+    }
+    handleDragEnd() {
+      this._finalize();
+    }
+    _commitDrop() {
+      if (!this.draggedElement || !this._dropTarget || !this._dropPosition)
+        return;
+      this._matchSlot(this._dropTarget.getAttribute("slot"));
+      const parent = this._dropTarget.parentElement;
+      if (!parent)
+        return;
+      if (this._dropPosition === "after") {
+        parent.insertBefore(this.draggedElement, this._dropTarget.nextSibling);
+      } else {
+        parent.insertBefore(this.draggedElement, this._dropTarget);
+      }
+    }
+    _matchSlot(slotName) {
+      if (!this.draggedElement)
+        return;
+      const current = this.draggedElement.getAttribute("slot");
+      if (slotName === current)
+        return;
+      if (slotName) {
+        this.draggedElement.setAttribute("slot", slotName);
+      } else {
+        this.draggedElement.removeAttribute("slot");
+      }
+    }
+    _setGhostImage(e) {
+      if (!e.dataTransfer || !this.draggedElement)
+        return;
+      const ghost = document.createElement("div");
+      ghost.className = "p9r-drag-ghost";
+      Object.assign(ghost.style, {
+        position: "fixed",
+        top: "-9999px",
+        left: "-9999px",
+        width: `${DRAG_PILL_WIDTH}px`,
+        height: `${DRAG_PILL_HEIGHT}px`,
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        padding: "0 12px",
+        boxSizing: "border-box",
+        background: "rgba(30, 41, 59, 0.95)",
+        color: "#fff",
+        border: "1px solid rgba(67, 97, 238, 0.8)",
+        borderRadius: "999px",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        fontSize: "12px",
+        fontWeight: "600",
+        lineHeight: "1",
+        pointerEvents: "none",
+        overflow: "hidden",
+        whiteSpace: "nowrap"
+      });
+      ghost.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 style="flex-shrink:0;opacity:0.8">
+                <circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/>
+                <circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/>
+            </svg>
+            <span style="overflow:hidden;text-overflow:ellipsis"></span>
+        `;
+      ghost.querySelector("span").textContent = `<${this.draggedElement.tagName.toLowerCase()}>`;
+      document.body.appendChild(ghost);
+      e.dataTransfer.setDragImage(ghost, 16, DRAG_PILL_HEIGHT / 2);
+      this._ghost = ghost;
+    }
+    _createIndicator() {
+      const ind = document.createElement("div");
+      ind.className = "p9r-drop-indicator";
+      Object.assign(ind.style, {
+        position: "fixed",
+        height: "3px",
+        background: "rgba(67, 97, 238, 1)",
+        borderRadius: "2px",
+        boxShadow: "0 0 8px rgba(67, 97, 238, 0.6)",
+        pointerEvents: "none",
+        zIndex: "999999",
+        opacity: "0",
+        left: "0",
+        top: "0",
+        width: "0"
+      });
+      document.body.appendChild(ind);
+      this._indicator = ind;
+    }
+    _showIndicator(target, after, horizontal) {
+      if (!this._indicator)
+        return;
+      const r = target.getBoundingClientRect();
+      if (horizontal) {
+        const x = (after ? r.right : r.left) - 1.5;
+        this._indicator.style.left = `${x}px`;
+        this._indicator.style.top = `${r.top}px`;
+        this._indicator.style.width = "3px";
+        this._indicator.style.height = `${r.height}px`;
+      } else {
+        const y = (after ? r.bottom : r.top) - 1.5;
+        this._indicator.style.left = `${r.left}px`;
+        this._indicator.style.top = `${y}px`;
+        this._indicator.style.width = `${r.width}px`;
+        this._indicator.style.height = "3px";
+      }
+      this._indicator.style.opacity = "1";
+    }
+    _hideIndicator() {
+      if (this._indicator)
+        this._indicator.style.opacity = "0";
+      this._dropTarget = null;
+      this._dropPosition = null;
+    }
+    _finalize() {
+      if (this.draggedElement) {
+        this.draggedElement.style.display = this._originalDisplay;
+        this.draggedElement.classList.remove("dragging");
+      }
+      this._ghost?.remove();
+      this._ghost = null;
+      this._indicator?.remove();
+      this._indicator = null;
+      this._dropTarget = null;
+      this._dropPosition = null;
+      this.draggedElement = null;
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/EditorRoot/template.html
+  var template_default10 = `<div>
+    <slot name="style"></slot>
+    <slot name="script"></slot>
+    <div id="workingElement">
+        <slot>
+            <p></p>
+        </slot>
+    </div>
+    <div id="editorSystem">
+        <cms-floating-toolbar></cms-floating-toolbar>
+        <cms-richtextbar></cms-richtextbar>
+        <cms-bloc-actions></cms-bloc-actions>
+        <cms-bloc-library></cms-bloc-library>
+
+        <slot name="configuration"></slot>
+    </div>
+</div>`;
+
+  // src/control/core/isToggable.ts
+  function isToggable(el) {
+    return "open" in el && typeof el.open === "function";
+  }
+
+  // src/control/core/editorSystem/defaultEditors/ImageEditor/ResizeInstance.ts
+  class ResizeInstance {
+    isResizing = false;
+    hasMoved = false;
+    isPending = false;
+    originX = 0;
+    originY = 0;
+    lastMouseX = 0;
+    lastMouseY = 0;
+    startWidth = 0;
+    startHeight = 0;
+    aspectRatio = 1;
+    static MOVE_THRESHOLD = 4;
+    target;
+    onResizeCallback;
+    constructor(target, onResize) {
+      this.target = target;
+      this.onResizeCallback = onResize;
+      this.target.style.position = "relative";
+    }
+    start() {
+      this.target.style.cursor = "nwse-resize";
+      this.target.addEventListener("mousedown", this.onMouseDown);
+      this.target.addEventListener("click", this.preventClickIfResizing, true);
+    }
+    stop() {
+      this.target.style.cursor = "default";
+      this.target.removeEventListener("mousedown", this.onMouseDown);
+      this.target.removeEventListener("click", this.preventClickIfResizing, true);
+      this.onMouseUp();
+    }
+    onMouseDown = (e) => {
+      if (e.target === this.target) {
+        this.isPending = true;
+        this.isResizing = false;
+        this.hasMoved = false;
+        this.originX = e.clientX;
+        this.originY = e.clientY;
+        this.lastMouseX = e.clientX;
+        this.lastMouseY = e.clientY;
+        this.startWidth = this.target.offsetWidth;
+        this.startHeight = this.target.offsetHeight;
+        this.aspectRatio = this.startWidth / this.startHeight;
+        document.addEventListener("mousemove", this.onMouseMove);
+        document.addEventListener("mouseup", this.onMouseUp);
+        e.preventDefault();
+      }
+    };
+    onMouseMove = (e) => {
+      if (!this.isPending && !this.isResizing)
+        return;
+      if (this.isPending && !this.isResizing) {
+        const dx = Math.abs(e.clientX - this.originX);
+        const dy = Math.abs(e.clientY - this.originY);
+        if (dx < ResizeInstance.MOVE_THRESHOLD && dy < ResizeInstance.MOVE_THRESHOLD)
+          return;
+        this.isPending = false;
+        this.isResizing = true;
+      }
+      this.hasMoved = true;
+      const deltaX = e.clientX - this.lastMouseX;
+      const deltaY = e.clientY - this.lastMouseY;
+      let newWidth = this.target.offsetWidth + deltaX;
+      let newHeight = this.target.offsetHeight + deltaY;
+      if (!e.shiftKey) {
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          newHeight = newWidth / this.aspectRatio;
+        } else {
+          newWidth = newHeight * this.aspectRatio;
+        }
+      }
+      newWidth = Math.max(10, newWidth);
+      newHeight = Math.max(10, newHeight);
+      this.onResizeCallback(newWidth, newHeight);
+      this.lastMouseX = e.clientX;
+      this.lastMouseY = e.clientY;
+    };
+    onMouseUp = () => {
+      this.isPending = false;
+      setTimeout(() => {
+        this.isResizing = false;
+      }, 0);
+      document.removeEventListener("mousemove", this.onMouseMove);
+      document.removeEventListener("mouseup", this.onMouseUp);
+    };
+    preventClickIfResizing = (e) => {
+      if (this.hasMoved) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        this.hasMoved = false;
+      }
+    };
+  }
+
+  // src/control/core/editorSystem/defaultEditors/ImageEditor/ImageEditor.ts
+  var cssStyle = `
+    img:hover {
+        opacity: 0.5;
+        cursor: nwse-resize;
+    }
+`;
+
+  class ImageEditor extends Editor {
+    _mediaCenter = null;
+    resizeInstance;
+    onClick = (e) => this.handleClick(e);
+    onSelectMedia = (e) => this.handleSelectMedia(e);
+    constructor(target) {
+      super(target, cssStyle);
+      if (!this.target.getAttribute("src"))
+        this.target.setAttribute("src", "https://picsum.photos/200");
+      this.resizeInstance = new ResizeInstance(this.target, (w, h) => {
+        this.target.style.width = `${w}px`;
+        this.target.style.height = `${h}px`;
+      });
+    }
+    init() {
+      this.target.removeEventListener("click", this.onClick);
+      this.target.addEventListener("click", this.onClick);
+      const insideComponent = this.target.parentElement?.closest(`[${p9r.attr.EDITOR.IS_EDITOR}]`);
+      const allowResize = !insideComponent || this.target.hasAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE);
+      if (allowResize)
+        this.resizeInstance.start();
+    }
+    handleSelectMedia(e) {
+      this.target.setAttribute("src", e.detail.src);
+      this.target.setAttribute("alt", e.detail.alt);
+      this._mediaCenter?.removeEventListener("select-item", this.onSelectMedia);
+      this._mediaCenter?.remove();
+    }
+    handleClick(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const mediaCenter = document.createElement("cms-media-center");
+      document.body.append(mediaCenter);
+      requestAnimationFrame(() => {
+        this._mediaCenter = mediaCenter;
+        mediaCenter.removeEventListener("select-item", this.onSelectMedia);
+        mediaCenter.addEventListener("select-item", this.onSelectMedia);
+        mediaCenter.show(["folder", "image"]);
+      });
+    }
+    restore() {
+      this.target.removeEventListener("click", this.onClick);
+      this._mediaCenter?.removeEventListener("select-item", this.onSelectMedia);
+      this._mediaCenter?.remove();
+      this.resizeInstance.stop();
+    }
+  }
+
+  // src/control/core/editorSystem/defaultEditors/TextEditor.ts
+  var cssStyle2 = `
+:is(h1, h2, h3, h4, h5, h6, p, span, blockquote, a):empty::before {
+    content: attr(p9r-text-placeholder);
+    color: var(--text-muted, #aaa);
+    pointer-events: none;
+    display: block;
+    font-style: italic;
+    font-weight: 300;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+    :is(h1, h2, h3, h4, h5, h6, p, span, blockquote):empty {
+        display: flex
+    }
+`;
+  var textTags = new Set(["p", "span", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "a", "b", "i", "u"]);
+
+  class TextEditor extends Editor {
+    onKeyDown = (e) => this.handleKeyDown(e);
+    onInput = (e) => this.handleInput(e);
+    onPaste = (e) => this.handlePaste(e);
+    isInitializing = false;
+    constructor(target) {
+      super(target, cssStyle2);
+      this.observeAttributes();
+    }
+    attrObserver;
+    observeAttributes() {
+      this.attrObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          if (mutation.type === "attributes" && mutation.attributeName?.startsWith("p9r-")) {
+            if (getClosestEditorSystem(this.target).mode === "editor") {
+              if (!this.isInitializing) {
+                this.isInitializing = true;
+                this.init();
+              }
+            }
+          }
+        }
+      });
+    }
+    onSwitchMode(mode) {
+      super.onSwitchMode(mode);
+      if (!this.attrObserver)
+        return;
+      if (mode === "editor") {
+        this.attrObserver.observe(this.target, {
+          attributes: true,
+          attributeFilter: [p9r.attr.TEXT.BLOC_MANAGEMENT, p9r.attr.TEXT.EDITABLE]
+        });
+      } else {
+        this.isInitializing = false;
+        this.attrObserver.disconnect();
+      }
+    }
+    handlePaste(e) {
+      e.preventDefault();
+      const text = e.clipboardData?.getData("text/plain") || "";
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount)
+        return;
+      selection.deleteFromDocument();
+      const textNode = document.createTextNode(text);
+      const range = selection.getRangeAt(0);
+      range.insertNode(textNode);
+      range.setStartAfter(textNode);
+      range.setEndAfter(textNode);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+    static _editorAttrs = new Set([
+      "contenteditable",
+      "tabindex",
+      "draggable"
+    ]);
+    createElement(tag) {
+      const element = document.createElement(tag);
+      Array.from(this.target.attributes).forEach((attr) => {
+        if (attr.name.startsWith("p9r-"))
+          return;
+        if (attr.name === "class")
+          return;
+        if (TextEditor._editorAttrs.has(attr.name))
+          return;
+        element.setAttribute(attr.name, attr.value);
+      });
+      const parentId = this.target.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      if (parentId)
+        element.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, parentId);
+      element.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
+      return element;
+    }
+    handleKeyDown(e) {
+      if (e.key === "Enter") {
+        if (e.shiftKey)
+          return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (this.isAddAfterDisabled)
+          return;
+        const nextEl = this.createElement("p");
+        nextEl.contentEditable = "true";
+        nextEl.tabIndex = 0;
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount && sel.anchorNode && this.target.contains(sel.anchorNode) && this.target.lastChild) {
+          const range = sel.getRangeAt(0);
+          if (!range.collapsed)
+            range.deleteContents();
+          const tail = range.cloneRange();
+          tail.setEndAfter(this.target.lastChild);
+          const fragment = tail.extractContents();
+          nextEl.appendChild(fragment);
+        }
+        this.target.after(nextEl);
+        const observer = getClosestEditorSystem(this.target).observer;
+        if (observer) {
+          observer.make_it_editor(nextEl);
+        } else {
+          const e2 = new TextEditor(nextEl);
+          e2.viewEditor();
+        }
+        this._focusWithCaret(nextEl, "start");
+      }
+      if (e.key === "Backspace" && this.target.innerHTML === "" && !this.isDeleteDisabled) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.restore();
+        const previous = this.target.previousElementSibling;
+        const next = this.target.nextElementSibling;
+        if (previous)
+          previous.focus();
+        if (!previous && next)
+          next.focus();
+        this.target.remove();
+      }
+      if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const isUp = e.key === "ArrowUp";
+        const onEdge = isUp ? this._isCaretOnFirstLine() : this._isCaretOnLastLine();
+        if (!onEdge)
+          return;
+        const adjacent = this._findAdjacentTextEditor(isUp ? "prev" : "next");
+        if (!adjacent)
+          return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this._focusWithCaret(adjacent, isUp ? "end" : "start");
+      }
+    }
+    _isCaretOnFirstLine() {
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount)
+        return false;
+      if (this.target.innerHTML === "")
+        return true;
+      const range = sel.getRangeAt(0);
+      const rects = range.getClientRects();
+      const targetTop = this.target.getBoundingClientRect().top;
+      const first = rects[0];
+      if (!first) {
+        return true;
+      }
+      return Math.abs(first.top - targetTop) < 5;
+    }
+    _isCaretOnLastLine() {
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount)
+        return false;
+      if (this.target.innerHTML === "")
+        return true;
+      const range = sel.getRangeAt(0);
+      const rects = range.getClientRects();
+      const targetBottom = this.target.getBoundingClientRect().bottom;
+      const last = rects[rects.length - 1];
+      if (!last)
+        return true;
+      return Math.abs(last.bottom - targetBottom) < 5;
+    }
+    _findAdjacentTextEditor(direction) {
+      const selector = Array.from(textTags).map((t) => `${t}[contenteditable="true"]`).join(",");
+      const all = Array.from(document.querySelectorAll(selector));
+      const idx = all.indexOf(this.target);
+      if (idx === -1)
+        return null;
+      return direction === "prev" ? all[idx - 1] ?? null : all[idx + 1] ?? null;
+    }
+    _focusWithCaret(el, position) {
+      el.focus();
+      const sel = window.getSelection();
+      if (!sel)
+        return;
+      const range = document.createRange();
+      if (el.innerHTML === "") {
+        range.setStart(el, 0);
+        range.collapse(true);
+      } else if (position === "start") {
+        range.selectNodeContents(el);
+        range.collapse(true);
+      } else {
+        range.selectNodeContents(el);
+        range.collapse(false);
+      }
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    handleInput(e) {
+      const editorRoot = getClosestEditorSystem(this.target);
+      if (this.target.innerHTML === "<br>") {
+        this.target.innerHTML = "";
+      }
+      if (this.target.innerText === "/" && this.isBlocManagementEnabled && !this.isChangeComponentDisabled) {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        const blocLibrary = editorRoot.blocLibrary;
+        const actionbar = blocLibrary.open();
+        blocLibrary.addEventListener("insert", (e2) => {
+          if (e2.detail.type === "template") {
+            const fragment = document.createRange().createContextualFragment(e2.detail.html);
+            this.target.replaceWith(fragment);
+          } else if (e2.detail.type === "snippet") {
+            const new_node = document.createElement("w13c-snippet");
+            new_node.setAttribute("identifier", e2.detail.identifier);
+            this.target.replaceWith(new_node);
+          } else {
+            const new_node = this.createElement(e2.detail.id);
+            this.target.replaceWith(new_node);
+          }
+        }, { once: true });
+      }
+    }
+    init() {
+      this.target.removeEventListener("keydown", this.onKeyDown);
+      this.target.removeEventListener("input", this.onInput);
+      this.target.removeEventListener("paste", this.onPaste);
+      this.target.addEventListener("keydown", this.onKeyDown);
+      this.target.addEventListener("input", this.onInput);
+      this.target.addEventListener("paste", this.onPaste);
+      if (this.isTextEditable) {
+        this.target.tabIndex = 0;
+        this.target.contentEditable = "true";
+        if (this.isBlocManagementEnabled && !this.isChangeComponentDisabled) {
+          this.target.setAttribute(p9r.attr.TEXT.PLACEHOLDER, "Type / or write text");
+        } else {
+          this.target.setAttribute(p9r.attr.TEXT.PLACEHOLDER, "Type text");
+        }
+        requestAnimationFrame(() => {
+          if (this.target.isConnected) {
+            this.target.focus();
+          }
+        });
+      }
+    }
+    get isDeleteDisabled() {
+      const deleteAttr = this.target.getAttribute(p9r.attr.ACTION.DISABLE_DELETE);
+      return deleteAttr ? deleteAttr === "true" : false;
+    }
+    refreshActionBarFeatures() {
+      super.refreshActionBarFeatures();
+      this._actionBarFeatures.set("addBefore", false);
+      this._actionBarFeatures.set("addAfter", false);
+      this._actionBarFeatures.set("changeComponent", false);
+      this._actionBarFeatures.set("delete", false);
+      this._actionBarFeatures.set("duplicate", false);
+    }
+    get isAddAfterDisabled() {
+      return this.target.getAttribute(p9r.attr.ACTION.DISABLE_ADD_AFTER) === "true";
+    }
+    get isChangeComponentDisabled() {
+      return this.target.getAttribute(p9r.attr.ACTION.DISABLE_CHANGE_COMPONENT) === "true";
+    }
+    get isBlocManagementEnabled() {
+      const blocManagementAttr = this.target.getAttribute(p9r.attr.TEXT.BLOC_MANAGEMENT);
+      return blocManagementAttr ? blocManagementAttr === "true" : true;
+    }
+    get isTextEditable() {
+      const textEditableAttr = this.target.getAttribute(p9r.attr.TEXT.EDITABLE);
+      return textEditableAttr ? textEditableAttr === "true" : true;
+    }
+    restore() {
+      this.target.removeAttribute("tabIndex");
+      this.target.removeAttribute("contentEditable");
+      this.target.removeAttribute(p9r.attr.TEXT.PLACEHOLDER);
+      this.target.removeAttribute(p9r.attr.TEXT.BLOC_MANAGEMENT);
+      this.target.removeAttribute(p9r.attr.TEXT.EDITABLE);
+      this.target.removeEventListener("keydown", this.onKeyDown);
+      this.target.removeEventListener("input", this.onInput);
+      this.target.removeEventListener("paste", this.onPaste);
+    }
+    dispose() {
+      this.attrObserver?.disconnect();
+      this.attrObserver = undefined;
+      this.target.removeEventListener("keydown", this.onKeyDown);
+      this.target.removeEventListener("input", this.onInput);
+      this.target.removeEventListener("paste", this.onPaste);
+      super.dispose();
+    }
+  }
+
+  // src/control/core/editorSystem/defaultEditors/ListEditor.ts
+  var cssStyle3 = `
+    li:empty::before{
+        content: attr(p9r-text-placeholder);
+        color: #aaa;
+        pointer-events: none;
+        display: block;
+        font-style: italic;
+        font-weight: 300;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+`;
+
+  class ListEditor extends Editor {
+    onKeyDown = (e) => this.handleKeyDown(e);
+    onInput = (e) => this.handleInput(e);
+    constructor(target) {
+      super(target, cssStyle3);
+      let li = this.target.querySelector("li");
+      if (!li) {
+        li = document.createElement("li");
+        this.target.append(li);
+      }
+      requestAnimationFrame(() => {
+        li.focus();
+      });
+    }
+    handleKeyDown(e) {
+      const item = e.target;
+      if (e.key === "Enter") {
+        if (e.shiftKey)
+          return;
+        e.preventDefault();
+        const elem = document.createElement("li");
+        if (item.innerHTML === "") {
+          const p = document.createElement("p");
+          this.target.after(p);
+        } else {
+          item.after(elem);
+          this.init();
+          requestAnimationFrame(() => {
+            elem.focus();
+          });
+        }
+      }
+      if (e.key === "Backspace" && e.target) {
+        const item2 = e.target;
+        if (item2.innerHTML === "") {
+          item2.remove();
+          item2.removeEventListener("keydown", this.onKeyDown);
+          item2.removeEventListener("input", this.onInput);
+          if (!this.target.querySelector("li")) {
+            this.target.remove();
+          }
+        }
+      }
+    }
+    handleInput(e) {
+      const item = e.target;
+      if (item.innerHTML === "<br>") {
+        item.innerHTML = "";
+      }
+    }
+    init() {
+      const items = this.target.querySelectorAll("li");
+      items.forEach((item) => {
+        item.removeEventListener("keydown", this.onKeyDown);
+        item.removeEventListener("input", this.onInput);
+        item.contentEditable = "true";
+        item.setAttribute(p9r.attr.TEXT.PLACEHOLDER, "Type text");
+        item.addEventListener("keydown", this.onKeyDown);
+        item.addEventListener("input", this.onInput);
+      });
+    }
+    restore() {
+      const items = this.target.querySelectorAll("li");
+      items.forEach((item) => {
+        item.contentEditable = "false";
+        item.removeEventListener("keydown", this.onKeyDown);
+        item.removeEventListener("input", this.onInput);
+      });
+    }
+  }
+
+  // src/control/core/editorSystem/defaultEditors/SnippetEditor.ts
+  var EDIT_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+
+  class SnippetEditor extends Editor {
+    constructor(target) {
+      super(target, "");
+      target.setAttribute(p9r.attr.ACTION.DISABLE_DUPLICATE, "true");
+      this.variant = "snippet";
+      this.addCustomAction({
+        action: "editSnippet",
+        title: "Edit snippet",
+        icon: EDIT_ICON,
+        handler: async () => {
+          const identifier = target.getAttribute("identifier");
+          if (!identifier)
+            return;
+          try {
+            const apiUrl = resolveApiUrl("snippet");
+            apiUrl.searchParams.set("identifier", identifier);
+            const res = await fetch(apiUrl);
+            if (!res.ok)
+              return;
+            const snippet = await res.json();
+            const base = getMetaBasePath() ?? "/";
+            const root2 = base === "/" ? "" : base.replace(/\/$/, "");
+            window.open(`${root2}/editor/snippet?id=${encodeURIComponent(snippet.id)}`, "_blank");
+          } catch {}
+        }
+      });
+    }
+    init() {}
+    restore() {}
+  }
+
+  // src/control/components/editor/EditorSystem/ObserverManager.ts
+  class ObserverManager {
+    workingElement;
+    observer;
+    editors = new Map;
+    groups = new Set(["default"]);
+    opaqueTags = new Set;
+    constructor(slot) {
+      const root2 = slot.getRootNode();
+      if (!(root2 instanceof ShadowRoot)) {
+        throw new Error("ObserverManager: slot must live in a ShadowRoot");
+      }
+      const host = root2.host;
+      this.workingElement = host;
+      this._registerEditors();
+      const initialAssigned = slot.assignedElements({ flatten: true });
+      initialAssigned.forEach((el) => {
+        this.make_it_editor(el);
+        el.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
+      });
+      const callback = (mutationsList) => {
+        const allAdded = new Set;
+        for (const mutation of mutationsList) {
+          for (const node of Array.from(mutation.addedNodes)) {
+            allAdded.add(node);
+          }
+        }
+        for (const mutation of mutationsList) {
+          for (const removeNode of Array.from(mutation.removedNodes)) {
+            const node = removeNode;
+            if (!node.getAttribute)
+              continue;
+            const identifier = node.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+            if (!identifier)
+              continue;
+            const componentParent = node.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+            if (allAdded.has(node)) {
+              document.compIdentifierToEditor.get(componentParent)?.onChildrenRemoved(node);
+              continue;
+            }
+            document.compIdentifierToEditor.get(componentParent)?.onChildrenRemoved(node);
+            this._disposeSubtree(node);
+            document.compIdentifierToEditor.get(identifier)?.dispose();
+          }
+          if (mutation.type === "childList") {
+            mutation.addedNodes.forEach((node) => {
+              if (!(node instanceof HTMLElement))
+                return;
+              if (node.getAttribute(p9r.attr.EDITOR.IS_EDITOR)) {
+                const newParentId = node.parentElement?.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+                if (newParentId) {
+                  document.compIdentifierToEditor.get(newParentId)?.onChildrenAdded(node);
+                }
+                return;
+              }
+              this.make_it_editor(node);
+              node.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
+            });
+          }
+        }
+      };
+      this.observer = new MutationObserver(callback);
+      this.observer.observe(host, {
+        childList: true,
+        subtree: true
+      });
+      slot.addEventListener("slotchange", () => {
+        const current = slot.assignedElements({ flatten: true });
+        current.forEach((el) => {
+          if (el.getAttribute(p9r.attr.EDITOR.IS_EDITOR))
+            return;
+          this.make_it_editor(el);
+          el.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
+        });
+      });
+    }
+    _registerEditors() {
+      textTags.forEach((tag) => {
+        if (["span", "a"].includes(tag)) {
+          this.register_editor({
+            tag,
+            cl: TextEditor,
+            visible: false,
+            label: tag
+          });
+        } else {
+          this.register_editor({
+            tag,
+            label: tag,
+            cl: TextEditor
+          });
+        }
+      });
+      this.register_editor({
+        tag: "img",
+        label: "image",
+        cl: ImageEditor
+      });
+      this.register_editor({
+        tag: "ul",
+        cl: ListEditor,
+        label: "ul"
+      });
+      this.register_editor({
+        tag: "ol",
+        cl: ListEditor,
+        label: "ol"
+      });
+      this.register_editor({
+        tag: "w13c-snippet",
+        cl: SnippetEditor,
+        label: "snippet",
+        visible: false
+      });
+      if (document.editors) {
+        for (const editor of document.editors) {
+          if (editor.cl instanceof EmptyEditor) {
+            this.register_editor_opaque(editor);
+          } else {
+            this.register_editor(editor);
+          }
+        }
+      }
+    }
+    dispose() {
+      this.observer?.disconnect();
+      this.observer = undefined;
+      const map = document.compIdentifierToEditor;
+      if (!map)
+        return;
+      const descendants = this.workingElement.querySelectorAll(`[${p9r.attr.EDITOR.IDENTIFIER}]`);
+      descendants.forEach((node) => {
+        const id = node.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+        if (id)
+          map.get(id)?.dispose();
+      });
+    }
+    _disposeSubtree(root2) {
+      if (!root2.querySelectorAll)
+        return;
+      const descendants = root2.querySelectorAll(`[${p9r.attr.EDITOR.IDENTIFIER}]`);
+      descendants.forEach((node) => {
+        const id = node.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+        if (id)
+          document.compIdentifierToEditor?.get(id)?.dispose();
+      });
+    }
+    getGroups() {
+      return this.groups;
+    }
+    getItemsByGroup(group) {
+      return this.editors.values().filter((v) => v.visible && v.group === group);
+    }
+    getItems() {
+      return this.editors.values().filter((v) => v.visible);
+    }
+    getLabel(tag) {
+      return this.editors.get(tag)?.label;
+    }
+    register_editor(element) {
+      this.editors.set(element.tag, {
+        ...element,
+        group: element.group || "default",
+        visible: element.visible ?? true
+      });
+      this.groups.add(element.group || "default");
+      const existingElements = this.workingElement.querySelectorAll(element.tag);
+      existingElements.forEach((el) => this.make_it_editor(el));
+    }
+    register_editor_opaque(element) {
+      this.opaqueTags.add(element.tag);
+      this.register_editor(element);
+      const roots = this.workingElement.querySelectorAll(element.tag);
+      roots.forEach((root2) => this._sealOpaqueSubtree(root2));
+    }
+    _sealOpaqueSubtree(root2) {
+      const descendants = root2.querySelectorAll(`[${p9r.attr.EDITOR.IDENTIFIER}]`);
+      descendants.forEach((node) => {
+        const id = node.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+        if (!id)
+          return;
+        const editor = document.compIdentifierToEditor?.get(id);
+        if (editor) {
+          editor.viewClient();
+          editor.dispose();
+        }
+      });
+    }
+    register_sub_components(tag) {
+      tag.forEach((t) => {
+        this.editors.set(t, {
+          cl: EmptyEditor,
+          tag: t,
+          label: t,
+          visible: false
+        });
+        const existingElements = this.workingElement.querySelectorAll(t);
+        existingElements.forEach((el) => this.make_it_editor(el));
+      });
+    }
+    make_it_editor(node) {
+      if (node.getAttribute(p9r.attr.EDITOR.IS_EDITOR))
+        return;
+      if (node.parentElement?.closest(`[${p9r.attr.EDITOR.OPAQUE}]`))
+        return;
+      const tag = node.tagName.toLowerCase();
+      if (!this.editors.has(tag))
+        return;
+      const cl = this.editors.get(tag)?.cl;
+      if (cl) {
+        const editor = new cl(node);
+        editor.viewEditor();
+      }
+      if (this.opaqueTags.has(tag)) {
+        node.setAttribute(p9r.attr.EDITOR.OPAQUE, "true");
+      }
+      const parentComponent = node.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      if (parentComponent) {
+        document.compIdentifierToEditor.get(parentComponent)?.onChildrenAdded(node);
+      }
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/EditorRoot/waitForScripts.ts
+  async function waitForScripts(ele) {
+    const scriptSlot = ele.shadowRoot?.querySelector('slot[name="script"]');
+    const scripts = scriptSlot.assignedElements();
+    const loaders = scripts.map((s2) => {
+      if (!s2.src || s2.dataset.loaded)
+        return Promise.resolve(true);
+      return new Promise((resolve) => {
+        const done = () => {
+          s2.dataset.loaded = "true";
+          resolve(true);
+        };
+        s2.addEventListener("load", done, { once: true });
+        s2.addEventListener("error", () => resolve(false), { once: true });
+        if (performance.getEntriesByName(s2.src).length > 0)
+          done();
+      });
+    });
+    await Promise.all(loaders);
+  }
+
+  // src/control/components/editor/EditorSystem/EditorRoot/EditorRoot.ts
+  class EditorRoot extends HTMLElement {
+    _mode = "editor";
+    _observer = null;
+    _dragmanager = null;
+    _blocActions = null;
+    _blocLibrary = null;
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" });
+      const template = document.createElement("template");
+      template.innerHTML = template_default10;
+      this.shadowRoot?.append(template.content.cloneNode(true));
+    }
+    connectedCallback() {
+      requestAnimationFrame(() => {
+        const workingElement = this.shadowRoot?.querySelector("#workingElement");
+        workingElement.style.visibility = "hidden";
+        this._blocActions = this.shadowRoot?.querySelector("cms-bloc-actions");
+        const slot = this.shadowRoot.querySelector("#workingElement slot");
+        if (!slot)
+          throw new Error("Working slot not found in shadow DOM");
+        waitForScripts(this).then(async () => {
+          this._observer = new ObserverManager(slot);
+          this._dragmanager = new DragManager(workingElement);
+          this._blocLibrary = this.shadowRoot?.querySelector("cms-bloc-library");
+          if (this._isWorkingEmpty())
+            await this._maybePickTemplate();
+          workingElement.style.visibility = "visible";
+        });
+      });
+    }
+    _isWorkingEmpty() {
+      const slot = this.shadowRoot.querySelector("#workingElement slot");
+      const nodes = slot.assignedNodes({ flatten: true }).filter((n2) => n2.nodeType === Node.ELEMENT_NODE || n2.nodeType === Node.TEXT_NODE && (n2.textContent ?? "").trim() !== "");
+      if (nodes.length === 0)
+        return true;
+      if (nodes.length !== 1 || nodes[0].nodeType !== Node.ELEMENT_NODE)
+        return false;
+      const el = nodes[0];
+      if (el.tagName !== "P")
+        return false;
+      const text = (el.textContent ?? "").trim();
+      if (text !== "")
+        return false;
+      const onlyBr = el.children.length === 1 && el.children[0].tagName === "BR";
+      return el.children.length === 0 || onlyBr;
+    }
+    async _maybePickTemplate() {
+      const picker = document.createElement("cms-template-picker");
+      this.shadowRoot.appendChild(picker);
+      const html = await picker.open();
+      picker.remove();
+      if (!html)
+        return;
+      Array.from(this.children).forEach((c) => {
+        if (!c.hasAttribute("slot"))
+          c.remove();
+      });
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = html;
+      while (wrapper.firstChild)
+        this.appendChild(wrapper.firstChild);
+    }
+    save() {
+      const ele = this.shadowRoot?.querySelector("#workingElement");
+      const content = ele.innerHTML;
+      this.dispatchEvent(new CustomEvent("editor-system-save", {
+        bubbles: true,
+        detail: content
+      }));
+    }
+    openConfig() {
+      const slot = this.shadowRoot?.querySelector('slot[name="configuration"]');
+      const ele = slot?.assignedElements()[0];
+      if (!ele || !isToggable(ele)) {
+        throw new Error("Configuration element must implement open()");
+      }
+      ele.open();
+    }
+    switchMode(mode) {
+      const newMode = this._mode === "editor" ? "view" : "editor";
+      this.dispatchEvent(new CustomEvent("editor-system-switch-mode", {
+        bubbles: true,
+        detail: mode ?? newMode
+      }));
+      this._mode = mode ?? newMode;
+    }
+    get observer() {
+      if (!this._observer)
+        throw new Error("You try to get observer before his initialization");
+      return this._observer;
+    }
+    get dragManager() {
+      if (!this._dragmanager)
+        throw new Error("You try to get dragManager before his initialization");
+      return this._dragmanager;
+    }
+    get blocActions() {
+      if (!this._blocActions)
+        throw new Error("You try to get blocActions before his initialization");
+      return this._blocActions;
+    }
+    get editorDOM() {
+      const ele = this.shadowRoot?.querySelector("#editorSystem");
+      if (!ele)
+        throw new Error("You try to get editorSystem before his initialization");
+      return ele;
+    }
+    get blocLibrary() {
+      if (!this._blocLibrary)
+        throw new Error("You try to get _blocLibrary before his initialization");
+      return this._blocLibrary;
+    }
+    get mode() {
+      return this._mode;
+    }
+    get pageContent() {
+      this.switchMode("view");
+      const slot = this.shadowRoot.querySelector("#workingElement slot");
+      const nodes = slot.assignedNodes({ flatten: true });
+      const html = nodes.filter((n2) => n2.nodeName !== "#text").map((n2) => n2 instanceof Element ? n2.outerHTML : n2.textContent ?? "").join("");
+      this.switchMode("editor");
+      return html;
+    }
+  }
+  if (!customElements.get("cms-editor-system")) {
+    customElements.define("cms-editor-system", EditorRoot);
+  }
+
+  // src/control/components/editor/EditorSystem/EditorRoot/TemplatePicker/TemplatePicker.style.css
+  var TemplatePicker_style_default = `:host { display: contents; }
+
+dialog {
+    width: clamp(400px, 50vw, 640px);
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 64px);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 16px;
+    padding: 0;
+    box-shadow: 0 12px 40px rgb(0 0 0 / 0.18);
+    background: var(--bg-surface, #fff);
+    color: var(--text-main, #1e293b);
+    overflow: hidden;
+}
+dialog::backdrop {
+    background: rgb(0 0 0 / 0.4);
+    backdrop-filter: blur(2px);
+}
+
+.head {
+    padding: 24px 24px 12px;
+    text-align: center;
+}
+.title { font-size: 1.125rem; font-weight: 600; }
+.subtitle { font-size: 0.875rem; color: var(--text-muted, #94a3b8); margin-top: 4px; }
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 12px;
+    background: var(--bg-surface, #fff);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s, border-color 0.12s, transform 0.08s;
+}
+.card:hover {
+    background: var(--bg-base, #f8fafc);
+    border-color: var(--primary-base, #4361ee);
+}
+.card:active { transform: scale(0.99); }
+
+.icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: var(--primary-muted, rgb(67 97 238 / 0.12));
+    color: var(--primary-base, #4361ee);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.icon svg { width: 22px; height: 22px; }
+.name { font-size: 0.9375rem; font-weight: 500; }
+
+.foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-default, #e2e8f0);
+}
+.skip {
+    background: transparent;
+    border: 0;
+    padding: 8px 14px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    border-radius: 8px;
+}
+.skip:hover { color: var(--text-main, #1e293b); background: var(--bg-base, #f8fafc); }
+`;
+
+  // src/control/components/editor/EditorSystem/EditorRoot/TemplatePicker/TemplatePicker.ts
+  var ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
+
+  class TemplatePicker extends HTMLElement {
+    _dialog = null;
+    _resolve = null;
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).innerHTML = `<style>${TemplatePicker_style_default}</style>`;
+    }
+    async open() {
+      const category = await this._fetchLayoutCategory();
+      if (!category)
+        return null;
+      const templates = await this._fetchTemplates(category);
+      if (templates.length === 0)
+        return null;
+      this._render(templates);
+      return new Promise((resolve) => {
+        this._resolve = resolve;
+      });
+    }
+    async _fetchLayoutCategory() {
+      try {
+        const res = await fetch(resolveApiUrl("system/settings"));
+        if (!res.ok)
+          return null;
+        const data = await res.json();
+        return data?.editor?.layoutCategory || null;
+      } catch {
+        return null;
+      }
+    }
+    async _fetchTemplates(category) {
+      try {
+        const res = await fetch(resolveApiUrl("template/list"));
+        if (!res.ok)
+          return [];
+        const all = await res.json();
+        return all.filter((t) => t.category === category);
+      } catch {
+        return [];
+      }
+    }
+    async _fetchContent(id) {
+      try {
+        const res = await fetch(resolveApiUrl(`template?id=${encodeURIComponent(id)}`));
+        if (!res.ok)
+          return null;
+        const tpl = await res.json();
+        return tpl.content ?? null;
+      } catch {
+        return null;
+      }
+    }
+    _render(items) {
+      const dialog = document.createElement("dialog");
+      dialog.innerHTML = `
+            <div class="head">
+                <div class="title">Pick a starting template</div>
+                <div class="subtitle">Choose a layout for your new page, or start from scratch.</div>
+            </div>
+            <div class="list">
+                ${items.map((t) => `
+                    <button type="button" class="card" data-id="${t.id}">
+                        <span class="icon">${ICON}</span>
+                        <span class="name">${escapeHtml(t.name)}</span>
+                    </button>
+                `).join("")}
+            </div>
+            <div class="foot">
+                <button type="button" class="skip">Start from scratch</button>
+            </div>
+        `;
+      dialog.querySelectorAll(".card").forEach((btn) => {
+        btn.addEventListener("click", () => this._pick(btn.dataset.id));
+      });
+      dialog.querySelector(".skip").addEventListener("click", () => this._close(null));
+      dialog.addEventListener("cancel", () => this._close(null));
+      dialog.addEventListener("click", (e) => {
+        if (e.target === dialog)
+          this._close(null);
+      });
+      this.shadowRoot.appendChild(dialog);
+      this._dialog = dialog;
+      dialog.showModal();
+    }
+    async _pick(id) {
+      const html = await this._fetchContent(id);
+      this._close(html);
+    }
+    _close(html) {
+      this._dialog?.close();
+      this._dialog?.remove();
+      this._dialog = null;
+      const r = this._resolve;
+      this._resolve = null;
+      r?.(html);
+    }
+  }
+  function escapeHtml(s2) {
+    return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  if (!customElements.get("cms-template-picker")) {
+    customElements.define("cms-template-picker", TemplatePicker);
+  }
+
+  // src/control/components/editor/EditorSystem/FloatingToolbar/template.html
+  var template_default11 = `<div id="toolbar-container">
+    <div id="drag-handle" title="Move">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path
+                d="M8.5 10a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm5 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm5 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm-10 4a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm5 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm5 0a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+        </svg>
+    </div>
+    <nav class="actions">
+        <button data-action="dashboard" title="Dashboard">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="20" height="20"
+                stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+            </svg>
+        </button>
+        <button data-action="switch-mode" title="View">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" width="20" height="20" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+        </button>
+        <button data-action="configuration" title="Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+        </button>
+    </nav>
+</div>`;
+
+  // src/control/components/editor/EditorSystem/FloatingToolbar/style.css
+  var style_default9 = `:host {
+  --toolbar-bg: #ffffff;
+  --toolbar-border: #e5e7eb;
+  --toolbar-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --accent-color: #3b82f6;
+
+  position: fixed;
+  top: 100px;
+  right: 20px; /* Default position on the right */
+  z-index: 9999;
+  touch-action: none; /* Prevent scrolling during drag on mobile */
+}
+
+#toolbar-container {
+  display: flex;
+  flex-direction: column;
+  background: var(--toolbar-bg);
+  border: 1px solid var(--toolbar-border);
+  border-radius: 12px;
+  box-shadow: var(--toolbar-shadow);
+  overflow: hidden;
+  min-width: 48px;
+}
+
+#drag-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+  background: #f9fafb;
+  cursor: grab;
+  color: #9ca3af;
+  border-bottom: 1px solid var(--toolbar-border);
+}
+
+#drag-handle:active {
+  cursor: grabbing;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  gap: 4px;
+}
+
+/* Style for buttons injected via slot */
+button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+button:hover {
+  background-color: #eff6ff;
+  color: var(--accent-color);
+}
+
+/* Hide text if the toolbar is too narrow (optional) */
+button span {
+  display: inline-block;
+}`;
+
+  // src/control/components/editor/EditorSystem/FloatingToolbar/FloatingToolbar.ts
+  class FloatingToolbar extends Component {
+    _startX = 0;
+    _startY = 0;
+    constructor() {
+      super({
+        css: style_default9,
+        template: template_default11
+      });
+      this._onPointerMove = this._onPointerMove.bind(this);
+      this._onPointerUp = this._onPointerUp.bind(this);
+    }
+    connectedCallback() {
+      const EditorSystem = getClosestEditorSystem(this);
+      const handle = this.shadowRoot?.getElementById("drag-handle");
+      handle?.addEventListener("pointerdown", this._onPointerDown.bind(this));
+      this.shadowRoot?.querySelector(".actions")?.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-action]");
+        if (!btn)
+          return;
+        switch (btn.dataset.action) {
+          case "dashboard":
+            window.location.href = getMetaBasePath() + "admin/pages";
+            break;
+          case "switch-mode":
+            EditorSystem.switchMode();
+            break;
+          case "configuration":
+            EditorSystem.openConfig();
+            break;
+        }
+      });
+    }
+    _onPointerDown(e) {
+      this._startX = e.clientX - this.offsetLeft;
+      this._startY = e.clientY - this.offsetTop;
+      e.target.setPointerCapture(e.pointerId);
+      window.addEventListener("pointermove", this._onPointerMove);
+      window.addEventListener("pointerup", this._onPointerUp);
+    }
+    _onPointerMove(e) {
+      let newX = e.clientX - this._startX;
+      let newY = e.clientY - this._startY;
+      newX = Math.max(0, Math.min(newX, window.innerWidth - this.offsetWidth));
+      newY = Math.max(0, Math.min(newY, window.innerHeight - this.offsetHeight));
+      this.style.left = `${newX}px`;
+      this.style.top = `${newY}px`;
+      this.style.right = "auto";
+    }
+    _onPointerUp(e) {
+      window.removeEventListener("pointermove", this._onPointerMove);
+      window.removeEventListener("pointerup", this._onPointerUp);
+    }
+  }
+  if (!customElements.get("cms-floating-toolbar")) {
+    customElements.define("cms-floating-toolbar", FloatingToolbar);
+  }
+
+  // src/control/components/editor/MediaCenter/template.html
+  var template_default12 = `<dialog>
+    <div class="modal-container">
+        <header class="modal-header">
+            <h2>Media Center</h2>
+            <div class="toolbar">
+                <button class="btn-tool" id="btnCreateFolder" title="New folder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+                    </svg>
+                    New folder
+                </button>
+                <button class="btn-tool btn-tool-primary" id="btnUpload" title="Upload">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Upload
+                </button>
+            </div>
+            <button class="btn-close" id="btnClose">&times;</button>
+        </header>
+
+        <div class="breadcrumb-bar">
+            <div class="breadcrumb" id="breadcrumb">
+                <span class="bc-current">Root</span>
+            </div>
+        </div>
+
+        <div class="media-grid" id="grid"></div>
+
+        <div class="empty-state" id="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/>
+            </svg>
+            <p>This folder is empty</p>
+        </div>
+
+        <div class="drop-overlay" id="drop-overlay">
+            <span>Drop files to upload</span>
+        </div>
+
+        <footer class="modal-footer">
+            <span class="path-info" id="pathDisplay"></span>
+            <div class="footer-actions">
+                <button class="btn btn-secondary" id="btnCancel">Cancel</button>
+                <button class="btn btn-primary" id="btnSelect" disabled>Select</button>
+            </div>
+        </footer>
+
+        <!-- New folder popover -->
+        <div class="nf-backdrop" id="nf-backdrop">
+            <div class="nf-popover">
+                <label class="nf-label">New folder</label>
+                <input type="text" class="nf-input" id="nf-input" placeholder="Folder name…" autocomplete="off">
+                <div class="nf-actions">
+                    <button class="nf-cancel" id="nf-cancel">Cancel</button>
+                    <button class="nf-confirm" id="nf-confirm">Create</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="file" id="file-input" hidden multiple accept="image/*,video/*,audio/*,.pdf,.zip,.svg">
+    </div>
+</dialog>
+`;
+
+  // src/control/components/editor/MediaCenter/style.css
+  var style_default10 = `:host {
+    --mc-bg: #ffffff;
+    --mc-border: #e2e8f0;
+    --mc-text: #1e293b;
+    --mc-text-muted: #64748b;
+    --mc-primary: #2563eb;
+    --mc-primary-hover: #1d4ed8;
+    --mc-radius: 16px;
+    --mc-selected-border: var(--mc-primary);
+    --mc-selected-bg: #eff6ff;
+
+    font-family: system-ui, -apple-system, sans-serif;
+    display: block;
+}
+
+/* ── Dialog ── */
+
+dialog {
+    border: none;
+    border-radius: var(--mc-radius);
+    padding: 0;
+    width: 90vw;
+    max-width: 900px;
+    height: 80vh;
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--mc-bg);
+}
+
+/* ── Header ── */
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--mc-border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--mc-text);
+    white-space: nowrap;
+}
+
+.toolbar {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.btn-tool {
+    all: unset;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--mc-text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--mc-border);
+}
+
+.btn-tool svg {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-tool:hover {
+    background: #f1f5f9;
+    color: var(--mc-text);
+}
+
+.btn-tool-primary {
+    background: var(--mc-primary);
+    border-color: var(--mc-primary);
+    color: #ffffff;
+}
+
+.btn-tool-primary:hover {
+    background: var(--mc-primary-hover);
+    color: #ffffff;
+}
+
+.btn-close {
+    all: unset;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--mc-text-muted);
+    font-size: 1.4rem;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.btn-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* ── Breadcrumb ── */
+
+.breadcrumb-bar {
+    padding: 10px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--mc-border);
+    flex-shrink: 0;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    min-height: 24px;
+}
+
+.bc-item {
+    color: var(--mc-primary);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+.bc-item:hover {
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.bc-sep {
+    color: var(--mc-text-muted);
+    opacity: 0.4;
+    user-select: none;
+}
+
+.bc-current {
+    color: var(--mc-text);
+    font-weight: 600;
+    padding: 2px 6px;
+}
+
+/* ── Grid ── */
+
+.media-grid {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 20px;
+    align-content: start;
+}
+
+.media-grid:empty {
+    display: none;
+}
+
+.media-grid:empty ~ .empty-state {
+    display: flex;
+}
+
+/* ── Selected state on cards ── */
+
+.media-grid p9r-card-media.selected {
+    outline: 2px solid var(--mc-selected-border);
+    outline-offset: -2px;
+    border-radius: 12px;
+    background: var(--mc-selected-bg);
+}
+
+/* ── Empty state ── */
+
+.empty-state {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--mc-text-muted);
+}
+
+.empty-state svg {
+    width: 48px;
+    height: 48px;
+    opacity: 0.3;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* ── Drop overlay ── */
+
+.drop-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(37, 99, 235, 0.08);
+    border: 3px dashed var(--mc-primary);
+    border-radius: var(--mc-radius);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.drop-overlay span {
+    background: var(--mc-primary);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.drop-overlay.active {
+    display: flex;
+}
+
+/* ── Footer ── */
+
+.modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--mc-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.path-info {
+    font-size: 12px;
+    color: var(--mc-text-muted);
+}
+
+.footer-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    border: none;
+    transition: all 0.15s;
+}
+
+.btn-primary {
+    background: var(--mc-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--mc-primary-hover);
+}
+
+.btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #f1f5f9;
+    color: var(--mc-text);
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+/* ── New folder popover ── */
+
+.nf-backdrop {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--mc-radius);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+}
+
+.nf-backdrop.open {
+    display: flex;
+}
+
+.nf-popover {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    width: 320px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    animation: nf-pop 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes nf-pop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.nf-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--mc-text);
+}
+
+.nf-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--mc-border);
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.nf-input:focus {
+    border-color: var(--mc-primary);
+}
+
+.nf-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.nf-cancel, .nf-confirm {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.nf-cancel {
+    background: #f1f5f9;
+    color: var(--mc-text);
+}
+
+.nf-cancel:hover {
+    background: #e2e8f0;
+}
+
+.nf-confirm {
+    background: var(--mc-primary);
+    color: white;
+}
+
+.nf-confirm:hover {
+    background: var(--mc-primary-hover);
+}
+`;
+
+  // src/control/components/media/CardMedia/template.html
+  var template_default13 = `<div class="card">
+    <div class="preview">
+        <slot name="image">
+            <span class="placeholder">
+                <svg class="placeholder-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="18" x="3" y="3" rx="2"/>
+                    <circle cx="9" cy="9" r="2"/>
+                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                </svg>
+                <svg class="placeholder-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/>
+                </svg>
+            </span>
+        </slot>
+    </div>
+    <div class="info">
+        <span class="label"><slot name="label"></slot></span>
+    </div>
+</div>
+`;
+
+  // src/control/components/media/CardMedia/style.css
+  var style_default11 = `:host {
+    --card-bg: var(--bg-surface, #fff);
+    --card-border: var(--border-default, #e2e8f0);
+    --card-radius: 12px;
+    --card-hover-border: var(--primary-base, #4361ee);
+    --card-hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --preview-bg: var(--bg-base, #f8fafc);
+    --label-color: var(--text-main, #1e293b);
+    --placeholder-color: var(--text-muted, #94a3b8);
+    --folder-color: var(--primary-base, #4361ee);
+
+    display: block;
+    cursor: pointer;
+}
+
+.card {
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    background: var(--card-bg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.card:hover {
+    border-color: var(--card-hover-border);
+    box-shadow: var(--card-hover-shadow);
+}
+
+/* ── Folder variant ── */
+:host([type="folder"]) .card {
+    border-style: dashed;
+    border-color: var(--card-border);
+}
+
+:host([type="folder"]) .card:hover {
+    border-color: var(--folder-color);
+}
+
+:host([type="folder"]) .preview {
+    background: var(--preview-bg);
+    background-image: none;
+}
+
+:host([type="folder"]) .placeholder-img {
+    display: none;
+}
+
+:host([type="folder"]) .placeholder-folder {
+    display: block;
+    color: var(--folder-color);
+    opacity: 0.6;
+}
+
+:host([type="folder"]) .card:hover .placeholder-folder {
+    opacity: 1;
+}
+
+/* ── Preview ── */
+.preview {
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--preview-bg);
+    background-image:
+        linear-gradient(45deg, #eee 25%, transparent 25%),
+        linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%),
+        linear-gradient(-45deg, transparent 75%, #eee 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    overflow: hidden;
+    position: relative;
+}
+
+::slotted([slot="image"]) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.placeholder {
+    color: var(--placeholder-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--preview-bg);
+}
+
+.placeholder svg {
+    width: 40px;
+    height: 40px;
+    opacity: 0.4;
+}
+
+.placeholder-folder {
+    display: none;
+    width: 48px;
+    height: 48px;
+}
+
+/* ── Info ── */
+.info {
+    padding: 10px 12px;
+    border-top: 1px solid var(--card-border);
+}
+
+.label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--label-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+}
+`;
+
+  // src/control/components/media/CardMedia/CardMedia.ts
+  class CardMedia extends Component {
+    constructor() {
+      super({
+        css: style_default11,
+        template: template_default13
+      });
+    }
+  }
+  if (!customElements.get("p9r-card-media")) {
+    customElements.define("p9r-card-media", CardMedia);
+  }
+
+  // src/control/components/media/GridMedia/api/client.ts
+  function media() {
+    const m = window._cms?.Media;
+    if (!m) {
+      throw new Error("window._cms.Media is not available. Check that the admin page loaded /<basePath>/_cms/media.js.");
+    }
+    return m;
+  }
+  function toLocal(item) {
+    const local = {
+      id: item.id,
+      type: item.type === "folder" ? "folder" : item.type === "image" ? "image" : "other",
+      label: item.name
+    };
+    if (item.type !== "folder") {
+      local.mimetype = item.mimeType;
+      local.size = item.size;
+      local.absoluteURL = item.absoluteURL;
+    }
+    if (item.type === "image") {
+      local.width = item.imageInfo.width;
+      local.height = item.imageInfo.height;
+    }
+    return local;
+  }
+
+  // src/control/components/media/GridMedia/api/read.ts
+  async function fetchItems(folder, types) {
+    const res = await media().getItems({
+      folderID: folder ?? undefined,
+      accept: expandAccept(types),
+      pagination: { page: 1, limit: 1e4 },
+      sortBy: "name"
+    });
+    if (!res.ok)
+      return [];
+    const items = res.data.items.map(toLocal);
+    items.sort((a2, b) => {
+      if (a2.type === "folder" && b.type !== "folder")
+        return -1;
+      if (a2.type !== "folder" && b.type === "folder")
+        return 1;
+      return a2.label.localeCompare(b.label);
+    });
+    return items;
+  }
+  function expandAccept(types) {
+    const all = [
+      "folder",
+      "image",
+      "video",
+      "audio",
+      "pdf",
+      "document",
+      "text",
+      "archive",
+      "other"
+    ];
+    if (!types || types.length === 0)
+      return all;
+    const out = [];
+    if (types.includes("folder"))
+      out.push("folder");
+    if (types.includes("image"))
+      out.push("image");
+    if (types.includes("other"))
+      out.push("video", "audio", "pdf", "document", "text", "archive", "other");
+    return out;
+  }
+  async function resolveBreadcrumbTrail(id) {
+    const trail = [];
+    let currentId = id;
+    while (currentId) {
+      const res = await media().getItem(currentId);
+      if (!res.ok)
+        break;
+      const item = res.data;
+      trail.unshift({ id: item.id, label: item.name });
+      currentId = item.parentFolderID;
+    }
+    return trail;
+  }
+  // src/control/components/media/GridMedia/api/write.ts
+  async function renameItem(id, label) {
+    const res = await media().updateItem({ id, name: label });
+    return res.ok;
+  }
+  async function deleteItem(id) {
+    const res = await media().deleteItem({ id, recursive: true });
+    return res.ok;
+  }
+  async function createFolder(label, parent) {
+    const res = await media().createFolder({
+      name: label,
+      ...parent ? { parentFolderID: parent } : {}
+    });
+    return res.ok;
+  }
+  async function uploadFiles(files, folder) {
+    for (let i = 0;i < files.length; i++) {
+      const file = files.item(i);
+      if (!file)
+        continue;
+      await media().uploadFile({
+        data: file,
+        name: file.name,
+        mimeType: file.type || "application/octet-stream",
+        size: file.size,
+        ...folder ? { folderID: folder } : {}
+      });
+    }
+  }
+  async function saveItemMetadata(id, data) {
+    const patch = {};
+    if (typeof data["label"] === "string")
+      patch.name = data["label"];
+    if (typeof data["parent"] === "string")
+      patch.parentFolderID = data["parent"];
+    if (Object.keys(patch).length === 0)
+      return true;
+    const res = await media().updateItem({ id, ...patch });
+    return res.ok;
+  }
+  // src/control/components/media/GridMedia/types.ts
+  function formatSize(bytes) {
+    if (bytes < 1024)
+      return bytes + " B";
+    if (bytes < 1024 * 1024)
+      return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  }
+  function escapeHtml2(s2) {
+    return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function escapeAttr(s2) {
+    return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function variantUrl(item, width, height) {
+    if (!item.absoluteURL)
+      return "";
+    const media2 = window._cms?.Media;
+    if (!media2)
+      return item.absoluteURL;
+    return media2.formatImageUrl({
+      url: item.absoluteURL,
+      ...width !== undefined ? { width } : {},
+      ...height !== undefined ? { height } : {}
+    }).toString();
+  }
+
+  // src/control/components/media/GridMedia/view/render.ts
+  function renderGrid(grid, items) {
+    grid.innerHTML = "";
+    for (const item of items) {
+      const card = document.createElement("p9r-card-media");
+      card.setAttribute("data-id", item.id);
+      card.setAttribute("data-type", item.type);
+      if (item.type === "folder") {
+        card.setAttribute("type", "folder");
+      } else {
+        appendMediaPreview(card, item);
+      }
+      const label = document.createElement("span");
+      label.slot = "label";
+      label.textContent = item.label;
+      card.appendChild(label);
+      grid.appendChild(card);
+    }
+  }
+  function appendMediaPreview(card, item) {
+    const isImage = item.type === "image";
+    const isSvg = item.mimetype === "image/svg+xml";
+    if (isImage || isSvg) {
+      const img = document.createElement("img");
+      img.slot = "image";
+      img.src = isSvg ? item.absoluteURL ?? "" : variantUrl(item, 400, 300);
+      img.alt = item.alt || item.label;
+      img.loading = "lazy";
+      card.appendChild(img);
+    } else {
+      const ext = item.label.split(".").pop()?.toUpperCase() || "FILE";
+      const icon = document.createElement("span");
+      icon.slot = "image";
+      icon.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">${ext}</span>
+        `;
+      icon.style.cssText = "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;color:var(--text-muted,#94a3b8);";
+      card.appendChild(icon);
+    }
+  }
+  function renderBreadcrumb(container, folder, breadcrumb) {
+    if (!folder) {
+      container.innerHTML = `<span class="bc-current">Root</span>`;
+      return;
+    }
+    let html = `<span class="bc-item" data-folder="" data-index="-1">Root</span>`;
+    for (let i = 0;i < breadcrumb.length; i++) {
+      const crumb = breadcrumb[i];
+      const isLast = i === breadcrumb.length - 1;
+      html += `<span class="bc-sep">/</span>`;
+      if (isLast) {
+        html += `<span class="bc-current">${escapeHtml2(crumb.label)}</span>`;
+      } else {
+        html += `<span class="bc-item" data-folder="${escapeAttr(crumb.id)}" data-index="${i}">${escapeHtml2(crumb.label)}</span>`;
+      }
+    }
+    container.innerHTML = html;
+  }
+
+  // src/control/components/editor/MediaCenter/MediaCenter.ts
+  class MediaCenter extends Component {
+    _dialog = null;
+    _grid = null;
+    _btnSelect = null;
+    _folder = null;
+    _breadcrumb = [];
+    _items = [];
+    _selectedItem = null;
+    _types = [];
+    _dragCounter = 0;
+    constructor() {
+      super({
+        css: style_default10,
+        template: template_default12
+      });
+    }
+    connectedCallback() {
+      const s2 = this.shadowRoot;
+      this._dialog = s2.querySelector("dialog");
+      this._grid = s2.getElementById("grid");
+      this._btnSelect = s2.getElementById("btnSelect");
+      s2.getElementById("btnClose").addEventListener("click", () => this._dialog?.close());
+      s2.getElementById("btnCancel").addEventListener("click", () => this._dialog?.close());
+      this._dialog.addEventListener("click", (e) => {
+        if (e.target === this._dialog)
+          this._dialog?.close();
+      });
+      s2.getElementById("btnCreateFolder").addEventListener("click", () => this._openNewFolder());
+      const nfBackdrop = s2.getElementById("nf-backdrop");
+      const nfInput = s2.getElementById("nf-input");
+      s2.getElementById("nf-cancel").addEventListener("click", () => nfBackdrop.classList.remove("open"));
+      s2.getElementById("nf-confirm").addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
+      nfInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter")
+          this._createFolder(nfInput, nfBackdrop);
+        if (e.key === "Escape")
+          nfBackdrop.classList.remove("open");
+      });
+      const fileInput = s2.getElementById("file-input");
+      s2.getElementById("btnUpload").addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", async () => {
+        if (!fileInput.files?.length)
+          return;
+        await uploadFiles(fileInput.files, this._folder);
+        fileInput.value = "";
+        this._refresh();
+      });
+      this._btnSelect.addEventListener("click", () => this._confirmSelection());
+      this._grid.addEventListener("click", (e) => {
+        const card = e.target.closest("p9r-card-media");
+        if (!card)
+          return;
+        const id = card.dataset.id;
+        const type = card.dataset.type;
+        if (type === "folder") {
+          const folder = this._items.find((i) => i.id === id);
+          this._navigateTo(id, folder?.label);
+        } else {
+          this._select(card, id);
+        }
+      });
+      this._grid.addEventListener("dblclick", (e) => {
+        const card = e.target.closest("p9r-card-media");
+        if (!card || card.dataset.type === "folder")
+          return;
+        this._confirmSelection();
+      });
+      s2.getElementById("breadcrumb").addEventListener("click", (e) => {
+        const target = e.target;
+        if (!target.classList.contains("bc-item"))
+          return;
+        const folder = target.dataset.folder || null;
+        const index = parseInt(target.dataset.index || "-1");
+        this._breadcrumb = this._breadcrumb.slice(0, index + 1);
+        this._navigateTo(folder);
+      });
+      const container = s2.querySelector(".modal-container");
+      const overlay = s2.getElementById("drop-overlay");
+      container.addEventListener("dragenter", (e) => {
+        if (e.dataTransfer?.types.includes("Files")) {
+          e.preventDefault();
+          this._dragCounter++;
+          overlay.classList.add("active");
+        }
+      });
+      container.addEventListener("dragleave", () => {
+        this._dragCounter--;
+        if (this._dragCounter <= 0) {
+          this._dragCounter = 0;
+          overlay.classList.remove("active");
+        }
+      });
+      container.addEventListener("dragover", (e) => e.preventDefault());
+      container.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        this._dragCounter = 0;
+        overlay.classList.remove("active");
+        if (e.dataTransfer?.files.length) {
+          await uploadFiles(e.dataTransfer.files, this._folder);
+          this._refresh();
+        }
+      });
+    }
+    show(types) {
+      this._types = types ?? ["folder", "image", "other"];
+      this._folder = null;
+      this._breadcrumb = [];
+      this._selectedItem = null;
+      this._updateSelectButton();
+      this._dialog?.showModal();
+      this._refresh();
+    }
+    async _refresh() {
+      this._items = await this._fetchItems();
+      this._selectedItem = null;
+      this._updateSelectButton();
+      this._render();
+    }
+    async _fetchItems() {
+      return fetchItems(this._folder, this._types);
+    }
+    _render() {
+      renderGrid(this._grid, this._items);
+      renderBreadcrumb(this.shadowRoot.getElementById("breadcrumb"), this._folder, this._breadcrumb);
+      const empty = this.shadowRoot.getElementById("empty");
+      empty.style.display = this._items.length === 0 ? "flex" : "none";
+      const pathDisplay = this.shadowRoot.getElementById("pathDisplay");
+      if (this._breadcrumb.length > 0) {
+        pathDisplay.textContent = this._breadcrumb.map((b) => b.label).join(" / ");
+      } else {
+        pathDisplay.textContent = "Root";
+      }
+    }
+    _select(card, id) {
+      this._grid.querySelectorAll("p9r-card-media.selected").forEach((el) => el.classList.remove("selected"));
+      card.classList.add("selected");
+      this._selectedItem = this._items.find((i) => i.id === id) || null;
+      this._updateSelectButton();
+    }
+    _updateSelectButton() {
+      if (this._btnSelect) {
+        this._btnSelect.disabled = !this._selectedItem;
+      }
+    }
+    _confirmSelection() {
+      if (!this._selectedItem)
+        return;
+      const src = this._selectedItem.absoluteURL ?? "";
+      this.dispatchEvent(new CustomEvent("select-item", {
+        detail: { src, alt: this._selectedItem.label },
+        bubbles: true,
+        composed: true
+      }));
+      this._dialog?.close();
+    }
+    _navigateTo(folderId, label) {
+      this._folder = folderId;
+      if (!folderId) {
+        this._breadcrumb = [];
+      } else if (label) {
+        this._breadcrumb.push({ id: folderId, label });
+      }
+      this._refresh();
+    }
+    _openNewFolder() {
+      const s2 = this.shadowRoot;
+      const backdrop = s2.getElementById("nf-backdrop");
+      const input = s2.getElementById("nf-input");
+      input.value = "";
+      backdrop.classList.add("open");
+      setTimeout(() => input.focus(), 50);
+    }
+    async _createFolder(input, backdrop) {
+      const name = input.value.trim();
+      if (!name)
+        return;
+      await createFolder(name, this._folder);
+      backdrop.classList.remove("open");
+      this._refresh();
+    }
+  }
+  customElements.define("cms-media-center", MediaCenter);
+
+  // src/control/components/editor/RichTextBar/template.html
+  var template_default14 = `<div class="toolbar">
+    <!-- Format -->
+    <button data-command="bold" title="Bold">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+            <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+        </svg>
+    </button>
+
+    <button data-command="italic" title="Italic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="4" x2="10" y2="4"></line>
+            <line x1="14" y1="20" x2="5" y2="20"></line>
+            <line x1="15" y1="4" x2="9" y2="20"></line>
+        </svg>
+    </button>
+
+    <button data-command="underline" title="Underline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
+            <line x1="4" y1="21" x2="20" y2="21"></line>
+        </svg>
+    </button>
+
+    <button data-command="strikeThrough" title="Overline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H8"></path>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+        </svg>
+    </button>
+
+    <div class="separator"></div>
+
+    <!-- Size -->
+    <div class="size-group">
+        <button data-action="size-down" title="Decrease Font Size">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+        <span class="size-display">16</span>
+        <button data-action="size-up" title="Increase Font Size">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- Color -->
+    <div class="color-group">
+        <button data-action="color" class="color-trigger" title="Text Color">
+            <span class="color-swatch-current"></span>
+        </button>
+        <div class="color-panel">
+            <button data-color="inherit" class="color-swatch swatch-reset" title="Default"></button>
+            <button data-color="#0f172a" class="color-swatch" title="Black" style="--swatch:#0f172a"></button>
+            <button data-color="#475569" class="color-swatch" title="Grey" style="--swatch:#475569"></button>
+            <button data-color="#dc2626" class="color-swatch" title="Red" style="--swatch:#dc2626"></button>
+            <button data-color="#ea580c" class="color-swatch" title="Orange" style="--swatch:#ea580c"></button>
+            <button data-color="#16a34a" class="color-swatch" title="Green" style="--swatch:#16a34a"></button>
+            <button data-color="#2563eb" class="color-swatch" title="Blue" style="--swatch:#2563eb"></button>
+            <button data-color="#7c3aed" class="color-swatch" title="Violet" style="--swatch:#7c3aed"></button>
+        </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- Align -->
+    <button data-command="justifyLeft" title="Left align">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="17" y1="10" x2="3" y2="10"></line>
+            <line x1="21" y1="6" x2="3" y2="6"></line>
+            <line x1="21" y1="14" x2="3" y2="14"></line>
+            <line x1="17" y1="18" x2="3" y2="18"></line>
+        </svg>
+    </button>
+
+    <button data-command="justifyCenter" title="Center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="10" x2="6" y2="10"></line>
+            <line x1="21" y1="6" x2="3" y2="6"></line>
+            <line x1="21" y1="14" x2="3" y2="14"></line>
+            <line x1="18" y1="18" x2="6" y2="18"></line>
+        </svg>
+    </button>
+
+    <button data-command="justifyRight" title="Right align">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="21" y1="10" x2="7" y2="10"></line>
+            <line x1="21" y1="6" x2="3" y2="6"></line>
+            <line x1="21" y1="14" x2="3" y2="14"></line>
+            <line x1="21" y1="18" x2="7" y2="18"></line>
+        </svg>
+    </button>
+
+    <div class="separator"></div>
+
+    <!-- Lists -->
+    <button data-action="list-ul" title="Bulleted list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <circle cx="4" cy="6" r="1" fill="currentColor"></circle>
+            <circle cx="4" cy="12" r="1" fill="currentColor"></circle>
+            <circle cx="4" cy="18" r="1" fill="currentColor"></circle>
+        </svg>
+    </button>
+
+    <button data-action="list-ol" title="Numbered list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="10" y1="6" x2="21" y2="6"></line>
+            <line x1="10" y1="12" x2="21" y2="12"></line>
+            <line x1="10" y1="18" x2="21" y2="18"></line>
+            <text x="3" y="7" font-size="6" fill="currentColor" font-weight="bold" font-family="system-ui">1</text>
+            <text x="3" y="13" font-size="6" fill="currentColor" font-weight="bold" font-family="system-ui">2</text>
+            <text x="3" y="19" font-size="6" fill="currentColor" font-weight="bold" font-family="system-ui">3</text>
+        </svg>
+    </button>
+
+    <div class="separator"></div>
+
+    <!-- Link -->
+    <button data-action="link" title="Link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+    </button>
+</div>
+
+<!-- Link sub-bar -->
+<div class="link-bar">
+    <div class="link-type-toggle">
+        <button class="link-type-btn active" data-link-type="external">Externe</button>
+        <button class="link-type-btn" data-link-type="internal">Interne</button>
+    </div>
+    <div class="link-field" data-link-field="external">
+        <input class="link-input" type="url" placeholder="https://...">
+    </div>
+    <div class="link-field" data-link-field="internal" style="display:none">
+        <div class="link-pages-wrap"></div>
+    </div>
+    <button class="link-apply" title="Apply">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+    </button>
+    <button class="link-unlink" title="Delete link">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    </button>
+</div>
+`;
+
+  // src/control/components/editor/RichTextBar/style.css
+  var style_default12 = `:host {
+    position: absolute;
+    z-index: 9999999999;
+    display: none;
+
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+
+    transition: opacity 0.15s ease;
+    overflow: visible;
+}
+
+:host(.visible) {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ── Main toolbar row ── */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+}
+
+/* ── Buttons ── */
+
+button {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    color: #1e293b;
+    position: relative;
+    font-family: system-ui, sans-serif;
+}
+
+button:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+button:active {
+    transform: scale(0.92);
+}
+
+button svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+}
+
+button.active {
+    background: #2563eb;
+    color: #fff;
+}
+
+button.active svg {
+    stroke: #fff;
+}
+
+/* ── Separator ── */
+
+.separator {
+    width: 1px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.08);
+    margin: 0 2px;
+    flex-shrink: 0;
+}
+
+/* ── Size group ── */
+
+.size-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 10px;
+    padding: 2px;
+}
+
+.size-group button {
+    padding: 6px;
+    border-radius: 8px;
+}
+
+.size-group button svg {
+    width: 14px;
+    height: 14px;
+}
+
+.size-display {
+    font-size: 11px;
+    font-weight: 600;
+    color: #334155;
+    min-width: 24px;
+    text-align: center;
+    font-family: system-ui, sans-serif;
+    user-select: none;
+}
+
+/* ── Color group ── */
+
+.color-group {
+    position: relative;
+}
+
+.color-trigger {
+    padding: 6px;
+}
+
+.color-swatch-current {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #1e293b;
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    transition: background 0.15s ease;
+}
+
+.color-panel {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 148px;
+}
+
+.color-panel.open {
+    display: flex;
+}
+
+.color-panel.below {
+    bottom: auto;
+    top: 100%;
+    margin-bottom: 0;
+    margin-top: 8px;
+}
+
+.color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--swatch);
+    border: 2px solid transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.color-swatch:hover {
+    transform: scale(1.15);
+    border-color: rgba(0, 0, 0, 0.15);
+    background: var(--swatch);
+}
+
+.color-swatch.active {
+    border-color: #2563eb;
+    background: var(--swatch);
+}
+
+.swatch-reset {
+    background: linear-gradient(135deg, #fff 40%, #e2e8f0 40%, #e2e8f0 60%, #fff 60%);
+    border: 2px solid #e2e8f0;
+}
+
+.swatch-reset:hover {
+    background: linear-gradient(135deg, #fff 40%, #e2e8f0 40%, #e2e8f0 60%, #fff 60%);
+}
+
+/* ── Link bar ── */
+
+.link-bar {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.link-bar.open {
+    display: flex;
+}
+
+.link-type-toggle {
+    display: flex;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+    padding: 2px;
+    flex-shrink: 0;
+}
+
+.link-type-btn {
+    padding: 4px 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.link-type-btn.active {
+    background: #fff;
+    color: #1e293b;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.link-type-btn:hover:not(.active) {
+    color: #64748b;
+}
+
+.link-field {
+    flex: 1;
+    min-width: 0;
+}
+
+.link-input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: system-ui, sans-serif;
+    outline: none;
+    background: #fff;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+    color: #1e293b;
+}
+
+.link-input:focus {
+    border-color: #2563eb;
+}
+
+.link-pages-wrap {
+    min-width: 180px;
+}
+
+.link-apply,
+.link-unlink {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 8px;
+}
+
+.link-apply {
+    background: #2563eb;
+    color: #fff;
+}
+
+.link-apply:hover {
+    background: #1d4ed8;
+}
+
+.link-apply svg {
+    stroke: #fff;
+}
+
+.link-unlink {
+    background: rgba(0, 0, 0, 0.04);
+    color: #94a3b8;
+}
+
+.link-unlink:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+}
+`;
+
+  // src/control/components/editor/RichTextBar/selection.ts
+  class SelectionTracker {
+    savedRange = null;
+    save() {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        this.savedRange = sel.getRangeAt(0).cloneRange();
+      }
+    }
+    restore() {
+      if (!this.savedRange)
+        return;
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(this.savedRange);
+      }
+    }
+    get range() {
+      return this.savedRange;
+    }
+  }
+
+  // src/control/components/editor/RichTextBar/commands.ts
+  function focusElement() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0)
+      return null;
+    const node = sel.focusNode;
+    if (!node)
+      return null;
+    return node.nodeType === 1 ? node : node.parentElement;
+  }
+  function wrapWithElement(wrapper) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0)
+      return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed)
+      return;
+    try {
+      const contents = range.extractContents();
+      wrapper.appendChild(contents);
+      range.insertNode(wrapper);
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(wrapper);
+      sel.addRange(newRange);
+    } catch (e) {
+      console.warn("Selection spans complex markup", e);
+    }
+  }
+  function toggleFormat(tag) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0)
+      return;
+    const el = focusElement();
+    const existingTag = el?.closest(tag);
+    if (existingTag) {
+      const parent = existingTag.parentNode;
+      const frag = document.createDocumentFragment();
+      while (existingTag.firstChild) {
+        frag.appendChild(existingTag.firstChild);
+      }
+      const firstNode = frag.firstChild;
+      const lastNode = frag.lastChild;
+      parent?.replaceChild(frag, existingTag);
+      if (firstNode && lastNode) {
+        const newRange = document.createRange();
+        newRange.setStartBefore(firstNode);
+        newRange.setEndAfter(lastNode);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      }
+    } else {
+      wrapWithElement(document.createElement(tag));
+    }
+  }
+  function applyBlockAlignment(align) {
+    const el = focusElement();
+    const block = el?.closest("p, div, h1, h2, h3, h4, h5, h6, li");
+    if (block)
+      block.style.textAlign = align;
+  }
+  function applyInlineStyle(prop, value) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed)
+      return;
+    const el = focusElement();
+    if (el && el.tagName === "SPAN" && el.textContent === sel.toString()) {
+      el.style[prop] = value;
+      return;
+    }
+    const span = document.createElement("span");
+    span.style[prop] = value;
+    wrapWithElement(span);
+  }
+  function removeInlineStyle(prop) {
+    const el = focusElement();
+    const span = el?.closest("span");
+    if (!span)
+      return;
+    span.style[prop] = "";
+    if (span.style.length === 0) {
+      const parent = span.parentNode;
+      while (span.firstChild)
+        parent?.insertBefore(span.firstChild, span);
+      parent?.removeChild(span);
+    }
+  }
+  function queryCommandState(cmd) {
+    const el = focusElement();
+    if (!el)
+      return false;
+    const style = window.getComputedStyle(el);
+    switch (cmd) {
+      case "bold":
+        return style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700 || !!el.closest("b, strong");
+      case "italic":
+        return style.fontStyle === "italic" || !!el.closest("i, em");
+      case "underline":
+        return style.textDecorationLine.includes("underline") || !!el.closest("u");
+      case "strikeThrough":
+        return style.textDecorationLine.includes("line-through") || !!el.closest("s, strike");
+      case "justifyLeft":
+        return style.textAlign === "left" || style.textAlign === "start";
+      case "justifyCenter":
+        return style.textAlign === "center";
+      case "justifyRight":
+        return style.textAlign === "right";
+      default:
+        return false;
+    }
+  }
+  function getCurrentFontSize() {
+    const el = focusElement();
+    if (!el)
+      return 16;
+    return Math.round(parseFloat(window.getComputedStyle(el).fontSize));
+  }
+  function getCurrentColor() {
+    const el = focusElement();
+    if (!el)
+      return null;
+    return window.getComputedStyle(el).color;
+  }
+  function insertList(tag) {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0)
+      return;
+    const el = focusElement();
+    if (!el)
+      return;
+    const editable = el.closest("[contenteditable]");
+    if (!editable)
+      return;
+    const list = document.createElement(tag);
+    const li = document.createElement("li");
+    list.appendChild(li);
+    editable.replaceWith(list);
+    selection.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(li);
+    selection.addRange(newRange);
+  }
+  function applyLinkUrl(url) {
+    if (!url)
+      return;
+    const a2 = document.createElement("a");
+    a2.href = url;
+    wrapWithElement(a2);
+  }
+  function removeLinkAtSelection() {
+    const el = focusElement();
+    const a2 = el?.closest("a");
+    if (!a2)
+      return;
+    const parent = a2.parentNode;
+    while (a2.firstChild)
+      parent?.insertBefore(a2.firstChild, a2);
+    parent?.removeChild(a2);
+  }
+  function getExistingLink(range) {
+    const r = range || window.getSelection()?.getRangeAt(0);
+    if (!r)
+      return null;
+    const node = r.startContainer;
+    const el = node.nodeType === 1 ? node : node.parentElement;
+    return el?.closest("a")?.getAttribute("href") || null;
+  }
+
+  // src/control/components/editor/RichTextBar/state.ts
+  var FORMAT_COMMANDS = ["bold", "italic", "underline", "strikeThrough"];
+  var ALIGN_COMMANDS = ["justifyLeft", "justifyCenter", "justifyRight"];
+  var ACTIVE_COMMANDS = [...FORMAT_COMMANDS, ...ALIGN_COMMANDS];
+  function updateState(self) {
+    for (const cmd of ACTIVE_COMMANDS) {
+      const btn = self.shadowRoot.querySelector(`button[data-command="${cmd}"]`);
+      if (btn)
+        btn.classList.toggle("active", queryCommandState(cmd));
+    }
+    const linkBtn = self.shadowRoot.querySelector('[data-action="link"]');
+    if (linkBtn)
+      linkBtn.classList.toggle("active", !!getExistingLink(self.selection.range));
+    updateSizeDisplay(self);
+    updateColorState(self);
+  }
+  function updateSizeDisplay(self, size) {
+    const display = self.shadowRoot.querySelector(".size-display");
+    if (display)
+      display.textContent = String(size ?? getCurrentFontSize());
+  }
+  function updateColorState(self) {
+    const trigger = self.shadowRoot.querySelector(".color-swatch-current");
+    if (!trigger)
+      return;
+    const color = getCurrentColor();
+    if (color)
+      trigger.style.background = color;
+  }
+
+  // src/control/components/editor/RichTextBar/actions.ts
+  function runCommand(cmd) {
+    switch (cmd) {
+      case "bold":
+        return toggleFormat("b");
+      case "italic":
+        return toggleFormat("i");
+      case "underline":
+        return toggleFormat("u");
+      case "strikeThrough":
+        return toggleFormat("s");
+      case "justifyLeft":
+        return applyBlockAlignment("left");
+      case "justifyCenter":
+        return applyBlockAlignment("center");
+      case "justifyRight":
+        return applyBlockAlignment("right");
+    }
+  }
+  function changeSize(self, delta) {
+    self.selection.restore();
+    const next = Math.max(8, Math.min(96, getCurrentFontSize() + delta));
+    applyInlineStyle("fontSize", `${next}px`);
+    self.selection.save();
+    updateSizeDisplay(self, next);
+  }
+  function toggleColorPanel(self) {
+    const panel = self.shadowRoot.querySelector(".color-panel");
+    const isOpen = panel.classList.toggle("open");
+    closeLinkBar(self);
+    if (isOpen)
+      placeColorPanel(self, panel);
+  }
+  function placeColorPanel(self, panel) {
+    const trigger = self.shadowRoot.querySelector(".color-trigger");
+    if (!trigger)
+      return;
+    const gap = 8;
+    const triggerRect = trigger.getBoundingClientRect();
+    const panelHeight = panel.offsetHeight;
+    panel.classList.toggle("below", triggerRect.top < panelHeight + gap);
+  }
+  function applyColor(self, color) {
+    self.selection.restore();
+    if (color === "inherit") {
+      removeInlineStyle("color");
+    } else {
+      applyInlineStyle("color", color);
+    }
+    self.selection.save();
+    self.shadowRoot.querySelector(".color-panel").classList.remove("open");
+    updateColorState(self);
+  }
+  function toggleLinkBar(self) {
+    const bar = self.shadowRoot.querySelector(".link-bar");
+    const isOpen = bar.classList.contains("open");
+    self.shadowRoot.querySelector(".color-panel")?.classList.remove("open");
+    if (isOpen) {
+      closeLinkBar(self);
+      return;
+    }
+    const existing = getExistingLink(self.selection.range);
+    const input = self.shadowRoot.querySelector(".link-input");
+    input.value = existing || "";
+    if (self.pageLink && existing) {
+      self.pageLink.value = existing;
+    }
+    bar.classList.add("open");
+  }
+  function closeLinkBar(self) {
+    self.shadowRoot.querySelector(".link-bar")?.classList.remove("open");
+  }
+  function switchLinkType(self, type) {
+    const root2 = self.shadowRoot;
+    root2.querySelectorAll(".link-type-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.linkType === type));
+    root2.querySelectorAll(".link-field").forEach((f) => {
+      f.style.display = f.dataset.linkField === type ? "" : "none";
+    });
+  }
+  function applyLink(self) {
+    self.selection.restore();
+    const activeType = self.shadowRoot.querySelector(".link-type-btn.active");
+    const type = activeType?.dataset.linkType || "external";
+    let url = "";
+    if (type === "external") {
+      url = self.shadowRoot.querySelector(".link-input").value.trim();
+    } else if (type === "internal" && self.pageLink) {
+      url = self.pageLink.value || "";
+    }
+    applyLinkUrl(url);
+    self.selection.save();
+    closeLinkBar(self);
+    updateState(self);
+  }
+  function removeLink(self) {
+    self.selection.restore();
+    removeLinkAtSelection();
+    self.selection.save();
+    closeLinkBar(self);
+    updateState(self);
+  }
+  function insertListAction(self, tag) {
+    self.selection.restore();
+    insertList(tag);
+    self.hide();
+  }
+
+  // src/control/components/editor/RichTextBar/listener.ts
+  function handleClick(self, e) {
+    const target = e.target;
+    const btn = target.closest("button");
+    if (!btn)
+      return;
+    const command = btn.dataset.command;
+    if (command) {
+      self.selection.restore();
+      runCommand(command);
+      self.selection.save();
+      updateState(self);
+      return;
+    }
+    const action = btn.dataset.action;
+    if (action === "size-up")
+      return changeSize(self, 2);
+    if (action === "size-down")
+      return changeSize(self, -2);
+    if (action === "color")
+      return toggleColorPanel(self);
+    if (action === "link")
+      return toggleLinkBar(self);
+    if (action === "list-ul")
+      return insertListAction(self, "ul");
+    if (action === "list-ol")
+      return insertListAction(self, "ol");
+    const color = btn.dataset.color;
+    if (color !== undefined)
+      return applyColor(self, color);
+    const linkType = btn.dataset.linkType;
+    if (linkType)
+      return switchLinkType(self, linkType);
+    if (btn.classList.contains("link-apply"))
+      return applyLink(self);
+    if (btn.classList.contains("link-unlink"))
+      return removeLink(self);
+  }
+  function handleSelection(self) {
+    if (self.interacting)
+      return;
+    const activeEl = self.shadowRoot.activeElement;
+    if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName.includes("-"))) {
+      return;
+    }
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.toString().trim() === "") {
+      self.hide();
+      return;
+    }
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    self.selection.save();
+    self.show(rect);
+    updateState(self);
+  }
+  function handleRootMousedown(self, e) {
+    const target = e.target;
+    self.interacting = true;
+    if (target.tagName === "INPUT" || target.tagName.includes("-") || target.closest("p9r-link")) {
+      return;
+    }
+    e.preventDefault();
+  }
+  function handleRootMouseup(self) {
+    setTimeout(() => {
+      self.interacting = false;
+    }, 50);
+  }
+  function handleOutsideMouseDown(self, e) {
+    if (!self.classList.contains("visible"))
+      return;
+    const path = e.composedPath();
+    if (path.includes(self) || path.includes(self.shadowRoot))
+      return;
+    const range = self.selection.range;
+    if (range) {
+      const anchor = range.commonAncestorContainer;
+      const el = anchor.nodeType === 1 ? anchor : anchor.parentElement;
+      const editable = el?.closest?.('[contenteditable="true"]');
+      if (editable && path.includes(editable))
+        return;
+    }
+    self.hide();
+  }
+
+  // src/control/components/editor/RichTextBar/RichTextBar.ts
+  class RichTextBar extends Component {
+    selection = new SelectionTracker;
+    interacting = false;
+    pageLink = null;
+    _onRootMousedown = (e) => handleRootMousedown(this, e);
+    _onRootMouseup = () => handleRootMouseup(this);
+    _onRootClick = (e) => handleClick(this, e);
+    _onSelectionChange = () => handleSelection(this);
+    _onOutsideMousedown = (e) => handleOutsideMouseDown(this, e);
+    _rootListenersAttached = false;
+    constructor() {
+      super({
+        css: style_default12,
+        template: template_default14
+      });
+    }
+    connectedCallback() {
+      const root2 = this.shadowRoot;
+      if (!this._rootListenersAttached) {
+        root2.addEventListener("mousedown", this._onRootMousedown);
+        root2.addEventListener("mouseup", this._onRootMouseup);
+        root2.addEventListener("click", this._onRootClick);
+        this._rootListenersAttached = true;
+      }
+      document.addEventListener("selectionchange", this._onSelectionChange);
+      document.addEventListener("mousedown", this._onOutsideMousedown);
+      if (!this.pageLink) {
+        this.pageLink = document.createElement("p9r-link");
+        this.pageLink.setAttribute("label", "");
+        this.pageLink.setAttribute("name", "href");
+        root2.querySelector(".link-pages-wrap").appendChild(this.pageLink);
+      }
+    }
+    disconnectedCallback() {
+      document.removeEventListener("selectionchange", this._onSelectionChange);
+      document.removeEventListener("mousedown", this._onOutsideMousedown);
+    }
+    show(rect) {
+      this.classList.add("visible");
+      this.shadowRoot.querySelector(".color-panel")?.classList.remove("open");
+      closeLinkBar(this);
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
+      const gap = 10;
+      const barWidth = this.offsetWidth;
+      const barHeight = this.offsetHeight;
+      let top;
+      if (rect.top < barHeight + gap) {
+        top = rect.bottom + scrollY + gap;
+      } else {
+        top = rect.top + scrollY - barHeight - gap;
+      }
+      let left = rect.left + scrollX + (rect.width - barWidth) / 2;
+      const minLeft = scrollX + gap;
+      const maxLeft = scrollX + window.innerWidth - barWidth - gap;
+      left = Math.max(minLeft, Math.min(maxLeft, left));
+      this.style.top = `${top}px`;
+      this.style.left = `${left}px`;
+    }
+    hide() {
+      this.classList.remove("visible");
+      this.shadowRoot.querySelector(".color-panel")?.classList.remove("open");
+      closeLinkBar(this);
+    }
+  }
+  customElements.define("cms-richtextbar", RichTextBar);
+
+  // src/control/components/CustomHTMLElement.ts
+  class CustomHTMLElement extends HTMLElement {
+    constructor(html, css, shadow) {
+      super();
+      if (shadow) {
+        const ele = this.attachShadow({ mode: "open" });
+        ele.innerHTML = `<style>${css ?? ""}</style>${html ?? ""}`;
+      }
+    }
+    static get observedAttributes() {
+      return [];
+    }
+  }
+
+  // src/control/components/editor/configurations/Configuration/template.html
+  var template_default15 = `<w13c-lateral-dialog>
+
+    <h3 slot="title"><slot name="title"></slot></h3>
+
+    <form>
+
+        <slot></slot>
+
+
+        <p9r-button id="save-btn" fullwidth type="submit" variant="filled" color="primary">Save</p9r-button>
+
+    </form>
+
+</w13c-lateral-dialog>`;
+
+  // src/control/components/editor/configurations/Configuration/style.css
+  var style_default13 = `form{
+    display: flex;
+    flex-direction: column;
+}`;
+
+  // src/control/core/dom/getFormData.ts
+  function getFormData(formEle, slotTarget) {
+    const formData = new FormData(formEle);
+    const elements = slotTarget?.assignedElements();
+    if (!elements)
+      return formData;
+    for (const element of elements) {
+      const name = element.getAttribute("name");
+      const value = element.value;
+      if (name && value !== undefined && value !== "") {
+        formData.append(name, value);
+      }
+      const nestedInputs = element.querySelectorAll("[name]");
+      for (const input of nestedInputs) {
+        if (!input.name || !input.value)
+          continue;
+        formData.set(input.name, input.value);
+      }
+    }
+    return formData;
+  }
+
+  // src/control/components/editor/configurations/Configuration/EditorConfiguration.ts
+  class EditorConfiguration extends CustomHTMLElement {
+    static get observedAttributes() {
+      return ["url", "method"];
+    }
+    constructor() {
+      super(template_default15, style_default13, true);
+    }
+    _handleSubmit = (e) => {
+      e.preventDefault();
+      const editorSystem = getClosestEditorSystem(this);
+      const content = editorSystem.pageContent;
+      const id = new URL(window.location.href).searchParams.get("id");
+      if (!id)
+        throw new Error("Id is missing");
+      const formData = getFormData(e.target, this.shadowRoot?.querySelector("form slot"));
+      const data = Object.fromEntries(formData.entries());
+      fetch(this.url, {
+        method: this.method,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ ...data, content, id })
+      });
+    };
+    connectedCallback() {
+      requestAnimationFrame(() => {
+        const form = this.shadowRoot?.querySelector("form");
+        form.addEventListener("submit", this._handleSubmit);
+      });
+    }
+    disconnectedCallback() {
+      const form = this.shadowRoot?.querySelector("form");
+      form.addEventListener("submit", this._handleSubmit);
+    }
+    attributeChangedCallback(name, oldValue, newValue) {}
+    open() {
+      const dialog = this.shadowRoot?.querySelector("w13c-lateral-dialog");
+      dialog.showModal();
+    }
+    get url() {
+      const url = this.getAttribute("url");
+      if (!url)
+        throw new Error("url should be set");
+      return url;
+    }
+    get method() {
+      return this.getAttribute("method") || "PUT";
+    }
+  }
+  if (!customElements.get("cms-editor-configuration")) {
+    customElements.define("cms-editor-configuration", EditorConfiguration);
+  }
+
+  // src/control/components/editor/snippet/Snippet/template.html
+  var template_default16 = `<div class="snippet-root"></div>
+`;
+
+  // src/control/components/editor/snippet/Snippet/style.css
+  var style_default14 = `:host {
+    display: block;
+    position: relative;
+    min-height: 40px;
+}
+
+.snippet-content {
+    position: relative;
+}
+
+.snippet-label {
+    position: absolute;
+    top: -10px;
+    left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 122, 255, 0.25);
+    color: #007aff;
+    padding: 2px 8px 2px 6px;
+    border-radius: 999px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 2;
+}
+
+.snippet-label svg {
+    width: 10px;
+    height: 10px;
+}
+
+.snippet-label code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+:host {
+    outline: 1px dashed rgba(0, 122, 255, 0.0);
+    outline-offset: 2px;
+    transition: outline-color 0.15s;
+}
+
+:host(:hover) {
+    outline-color: rgba(0, 122, 255, 0.5);
+}
+
+:host(:hover) .snippet-label {
+    opacity: 1;
+}
+
+.snippet-loading,
+.snippet-error {
+    padding: 16px;
+    border: 1px dashed rgba(100, 116, 139, 0.4);
+    border-radius: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    color: #64748b;
+    text-align: center;
+}
+
+.snippet-error {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+}
+`;
+
+  // src/control/components/editor/snippet/Snippet/Snippet.ts
+  var SnippetMetadata = {
+    css: style_default14,
+    template: template_default16
+  };
+
+  class Snippet extends Component {
+    _root;
+    constructor() {
+      super(SnippetMetadata);
+    }
+    connectedCallback() {
+      this._root = this.shadowRoot.querySelector(".snippet-root");
+      const identifier = this.getAttribute("identifier");
+      if (!identifier) {
+        this._renderError("Missing identifier attribute");
+        return;
+      }
+      const preExpanded = this.innerHTML.trim();
+      if (preExpanded) {
+        this._render(preExpanded, identifier);
+        this.innerHTML = "";
+        return;
+      }
+      this._renderLoading();
+      this._fetch(identifier);
+    }
+    async _fetch(identifier) {
+      try {
+        const url = resolveApiUrl("snippet");
+        url.searchParams.set("identifier", identifier);
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(res.status === 404 ? `Snippet "${identifier}" not found` : await res.text());
+        }
+        const snippet = await res.json();
+        this._render(snippet.content, identifier);
+      } catch (e) {
+        this._renderError(e?.message || "Failed to load snippet");
+      }
+    }
+    _render(content, identifier) {
+      this._root.innerHTML = `
+            <div class="snippet-label">
+                ${ICON_SNIPPET}
+                <code>${identifier}</code>
+            </div>
+            <div class="snippet-content">${content}</div>
+        `;
+    }
+    _renderLoading() {
+      this._root.innerHTML = `<div class="snippet-loading">Loading snippet…</div>`;
+    }
+    _renderError(msg) {
+      this._root.innerHTML = `<div class="snippet-error">⚠ ${msg}</div>`;
+    }
+  }
+  if (!customElements.get("w13c-snippet")) {
+    customElements.define("w13c-snippet", Snippet);
+  }
+
+  // src/control/components/media/CropSystem/template.html
+  var template_default17 = `<div class="backdrop" id="backdrop">
+    <div class="modal">
+        <div class="header">
+            <h3>Crop image</h3>
+            <button class="close-btn" id="close-btn" title="Close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="body">
+            <div class="canvas-area">
+                <slot name="image"></slot>
+            </div>
+            <div class="sidebar">
+                <div class="field">
+                    <label>Aspect ratio</label>
+                    <div class="ratio-buttons">
+                        <button class="ratio-btn active" data-ratio="free">Free</button>
+                        <button class="ratio-btn" data-ratio="1:1">1:1</button>
+                        <button class="ratio-btn" data-ratio="4:3">4:3</button>
+                        <button class="ratio-btn" data-ratio="16:9">16:9</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Output size</label>
+                    <span class="value" id="output-size">—</span>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <button class="btn-cancel" id="btn-cancel">Cancel</button>
+            <button class="btn-apply" id="btn-apply">Apply crop</button>
+        </div>
+    </div>
+</div>
+`;
+
+  // src/control/components/media/CropSystem/style.css
+  var style_default15 = `:host {
+    --modal-bg: var(--bg-surface, #fff);
+    --modal-border: var(--border-default, #e2e8f0);
+    --modal-radius: 16px;
+    --modal-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+    --backdrop-bg: rgba(0, 0, 0, 0.55);
+    --header-color: var(--text-main, #1e293b);
+    --close-color: var(--text-muted, #94a3b8);
+    --label-color: var(--text-muted, #94a3b8);
+    --value-color: var(--text-body, #475569);
+    --primary: var(--primary-base, #4361ee);
+    --primary-hover: var(--primary-contrasted, #3451c7);
+    --canvas-bg: #1a1a1a;
+
+    display: none;
+}
+
+:host([open]) {
+    display: block;
+}
+
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 700;
+    background: var(--backdrop-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal {
+    background: var(--modal-bg);
+    border-radius: var(--modal-radius);
+    box-shadow: var(--modal-shadow);
+    width: 800px;
+    max-width: 94vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--modal-border);
+}
+
+.header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--header-color);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--close-color);
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.close-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--header-color);
+}
+
+.body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.canvas-area {
+    flex: 1;
+    background: var(--canvas-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    position: relative;
+}
+
+::slotted([slot="image"]) {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.sidebar {
+    width: 200px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-left: 1px solid var(--modal-border);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--label-color);
+}
+
+.value {
+    font-size: 13px;
+    color: var(--value-color);
+}
+
+.ratio-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.ratio-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--modal-border);
+    border-radius: 6px;
+    background: none;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--value-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.ratio-btn:hover {
+    border-color: var(--primary);
+}
+
+.ratio-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--modal-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-cancel {
+    padding: 8px 16px;
+    background: none;
+    border: 1px solid var(--modal-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--close-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-cancel:hover {
+    color: var(--header-color);
+    border-color: var(--header-color);
+}
+
+.btn-apply {
+    padding: 8px 16px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.btn-apply:hover {
+    background: var(--primary-hover);
+}
+`;
+
+  // src/control/components/media/CropSystem/CropSystem.ts
+  class CropSystem extends Component {
+    constructor() {
+      super({
+        css: style_default15,
+        template: template_default17
+      });
+    }
+    connectedCallback() {
+      const backdrop = this.shadowRoot.getElementById("backdrop");
+      const closeBtn = this.shadowRoot.getElementById("close-btn");
+      const cancelBtn = this.shadowRoot.getElementById("btn-cancel");
+      const applyBtn = this.shadowRoot.getElementById("btn-apply");
+      closeBtn.addEventListener("click", () => this.close());
+      cancelBtn.addEventListener("click", () => this.close());
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop)
+          this.close();
+      });
+      applyBtn.addEventListener("click", () => {
+        this.dispatchEvent(new CustomEvent("crop", { detail: {} }));
+        this.close();
+      });
+      const ratioButtons = this.shadowRoot.querySelectorAll(".ratio-btn");
+      ratioButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          ratioButtons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+        });
+      });
+    }
+    open() {
+      this.setAttribute("open", "");
+    }
+    close() {
+      this.removeAttribute("open");
+      this.dispatchEvent(new CustomEvent("close"));
+    }
+  }
+  customElements.define("p9r-crop-system", CropSystem);
+
+  // src/control/components/media/DetailMedia/template.html
+  var template_default18 = `<div class="backdrop" id="backdrop">
+    <div class="modal">
+        <div class="header">
+            <h3 id="title">File details</h3>
+            <button class="close-btn" id="close-btn" title="Close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="body">
+            <div class="left">
+                <div class="preview">
+                    <slot name="preview"></slot>
+                </div>
+                <div class="tools">
+                    <button class="tool" disabled title="Coming soon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download
+                    </button>
+                    <button class="tool" disabled title="Coming soon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                        Replace
+                        <span class="tag">Soon</span>
+                    </button>
+                    <button class="tool" disabled title="Coming soon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                        Crop
+                        <span class="tag">Soon</span>
+                    </button>
+                </div>
+            </div>
+            <div class="right">
+                <slot name="fields"></slot>
+                <slot name="actions"></slot>
+            </div>
+        </div>
+    </div>
+</div>
+`;
+
+  // src/control/components/media/DetailMedia/style.css
+  var style_default16 = `:host {
+    --modal-bg: var(--bg-surface, #fff);
+    --modal-border: var(--border-default, #e2e8f0);
+    --modal-radius: 16px;
+    --modal-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+    --modal-width: 680px;
+    --backdrop-bg: rgba(0, 0, 0, 0.45);
+    --header-color: var(--text-main, #1e293b);
+    --close-color: var(--text-muted, #94a3b8);
+    --tool-bg: var(--bg-base, #f8fafc);
+    --tool-border: var(--border-default, #e2e8f0);
+    --tool-color: var(--text-muted, #94a3b8);
+    --tag-bg: var(--bg-surface, #fff);
+
+    display: none;
+}
+
+:host([open]) {
+    display: block;
+}
+
+/* ── Backdrop ── */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+    background: var(--backdrop-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Modal ── */
+.modal {
+    background: var(--modal-bg);
+    border-radius: var(--modal-radius);
+    box-shadow: var(--modal-shadow);
+    width: var(--modal-width);
+    max-width: 92vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.2s ease;
+}
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--modal-border);
+    flex-shrink: 0;
+}
+
+.header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--header-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--close-color);
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.close-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--header-color);
+}
+
+/* ── Body ── */
+.body {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── Left column ── */
+.left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.preview {
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image:
+        linear-gradient(45deg, #eee 25%, transparent 25%),
+        linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%),
+        linear-gradient(-45deg, transparent 75%, #eee 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid var(--modal-border);
+}
+
+::slotted([slot="preview"]) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* ── Tools ── */
+.tools {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tool {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border: 1px solid var(--tool-border);
+    border-radius: 8px;
+    background: var(--tool-bg);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--tool-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.tool:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.tool:not(:disabled):hover {
+    border-color: var(--header-color);
+    color: var(--header-color);
+}
+
+.tool svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.tag {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--tag-bg);
+    border: 1px solid var(--tool-border);
+    border-radius: 4px;
+    padding: 1px 4px;
+    color: var(--tool-color);
+}
+
+/* ── Right column ── */
+.right {
+    width: 260px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+::slotted([slot="fields"]) {
+    display: block;
+}
+
+::slotted([slot="actions"]) {
+    display: block;
+    margin-top: auto;
+    padding-top: 16px;
+}
+`;
+
+  // src/control/components/media/DetailMedia/DetailMedia.ts
+  class DetailMedia extends Component {
+    constructor() {
+      super({
+        css: style_default16,
+        template: template_default18
+      });
+    }
+    connectedCallback() {
+      const backdrop = this.shadowRoot.getElementById("backdrop");
+      const closeBtn = this.shadowRoot.getElementById("close-btn");
+      closeBtn.addEventListener("click", () => this.close());
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop)
+          this.close();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && this.hasAttribute("open"))
+          this.close();
+      });
+    }
+    open(label) {
+      if (label) {
+        this.shadowRoot.getElementById("title").textContent = label;
+      }
+      this.setAttribute("open", "");
+    }
+    close() {
+      this.removeAttribute("open");
+      this.dispatchEvent(new CustomEvent("close"));
+    }
+  }
+  if (!customElements.get("p9r-detail-media")) {
+    customElements.define("p9r-detail-media", DetailMedia);
+  }
+
+  // src/control/components/media/GridMedia/view/template.html
+  var template_default19 = `<div class="toolbar">
+    <div class="breadcrumb" id="breadcrumb">
+        <span class="bc-current">Root</span>
+    </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="empty" id="empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"/>
+    </svg>
+    <p>This folder is empty</p>
+</div>
+
+<div class="drop-overlay" id="drop-overlay">
+    <span>Drop files to upload</span>
+</div>
+
+<!-- New folder popover -->
+<div class="nf-backdrop" id="nf-backdrop">
+    <div class="nf-popover">
+        <label class="nf-label">New folder</label>
+        <input type="text" class="nf-input" id="nf-input" placeholder="Folder name…" autocomplete="off">
+        <div class="nf-actions">
+            <button class="nf-cancel" id="nf-cancel">Cancel</button>
+            <button class="nf-confirm" id="nf-confirm">Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- Context menu -->
+<div class="ctx-menu" id="ctx-menu">
+    <button class="ctx-item" data-action="rename">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+        Rename
+    </button>
+    <button class="ctx-item ctx-danger" data-action="delete">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        Delete
+    </button>
+</div>
+
+<!-- Rename popover -->
+<div class="nf-backdrop" id="rename-backdrop">
+    <div class="nf-popover">
+        <label class="nf-label">Rename</label>
+        <input type="text" class="nf-input" id="rename-input" placeholder="New name…" autocomplete="off">
+        <div class="nf-actions">
+            <button class="nf-cancel" id="rename-cancel">Cancel</button>
+            <button class="nf-confirm" id="rename-confirm">Rename</button>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="file-input" hidden multiple accept="image/*,video/*,audio/*,.pdf,.zip,.svg">
+
+<p9r-detail-media id="detail"></p9r-detail-media>
+<p9r-crop-system id="crop"></p9r-crop-system>
+`;
+
+  // src/control/components/media/GridMedia/view/style.css
+  var style_default17 = `:host {
+    --grid-gap: 16px;
+    --grid-min-col: 180px;
+    --empty-color: var(--text-muted, #94a3b8);
+    --border: var(--border-default, #e2e8f0);
+    --bg: var(--bg-base, #f8fafc);
+    --bg-surface: var(--bg-surface, #fff);
+    --text: var(--text-main, #1e293b);
+    --text-muted: var(--text-muted, #94a3b8);
+    --primary: var(--primary-base, #4361ee);
+    --primary-hover: var(--primary-contrasted, #3451c7);
+    --danger: var(--danger-base, #ef4444);
+
+    display: block;
+    position: relative;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-muted);
+    min-width: 0;
+}
+
+.bc-item {
+    cursor: pointer;
+    color: var(--primary);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.bc-item:hover {
+    text-decoration: underline;
+}
+
+.bc-sep {
+    color: var(--text-muted);
+}
+
+.bc-current {
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── New folder popover ── */
+.nf-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: rgba(0, 0, 0, 0.25);
+    align-items: center;
+    justify-content: center;
+    animation: nfFadeIn 0.12s ease;
+}
+
+.nf-backdrop.visible {
+    display: flex;
+}
+
+@keyframes nfFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes nfPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.nf-popover {
+    background: var(--bg-surface);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+    padding: 20px;
+    width: 320px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: nfPop 0.15s ease;
+}
+
+.nf-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+.nf-input {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.nf-input:focus {
+    border-color: var(--primary);
+}
+
+.nf-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.nf-cancel {
+    padding: 7px 14px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.nf-cancel:hover {
+    color: var(--text);
+    border-color: var(--text);
+}
+
+.nf-confirm {
+    padding: 7px 14px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.nf-confirm:hover {
+    background: var(--primary-hover);
+}
+
+/* ── Context menu ── */
+.ctx-menu {
+    display: none;
+    position: fixed;
+    z-index: 800;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 4px;
+    min-width: 140px;
+    flex-direction: column;
+}
+
+.ctx-menu.visible {
+    display: flex;
+}
+
+.ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border: none;
+    border-radius: 7px;
+    background: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s;
+}
+
+.ctx-item:hover {
+    background: var(--bg);
+}
+
+.ctx-item.ctx-danger:hover {
+    background: rgba(239, 68, 68, 0.06);
+    color: var(--danger);
+}
+
+.ctx-item svg {
+    flex-shrink: 0;
+}
+
+/* ── Grid ── */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--grid-min-col), 1fr));
+    gap: var(--grid-gap);
+}
+
+.grid:empty + .empty {
+    display: flex;
+}
+
+/* ── Empty state ── */
+.empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 64px 24px;
+    color: var(--empty-color);
+    text-align: center;
+}
+
+.empty svg {
+    width: 48px;
+    height: 48px;
+    opacity: 0.4;
+}
+
+.empty p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* ── Drop overlay ── */
+.drop-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(67, 97, 238, 0.08);
+    border: 3px dashed var(--primary);
+    border-radius: 16px;
+    margin: 16px;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.drop-overlay.visible {
+    display: flex;
+}
+
+.drop-overlay span {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* ── Detail fields (injected into detail-media slot) ── */
+.detail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.detail-field:last-child {
+    margin-bottom: 0;
+}
+
+.detail-field label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.detail-field input,
+.detail-field textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.15s;
+    resize: vertical;
+}
+
+.detail-field input:focus,
+.detail-field textarea:focus {
+    border-color: var(--primary);
+}
+
+.detail-value {
+    font-size: 13px;
+    color: var(--text-body, #475569);
+    word-break: break-all;
+}
+
+.detail-value.mono {
+    font-family: monospace;
+    font-size: 12px;
+    background: var(--bg);
+    padding: 6px 8px;
+    border-radius: 6px;
+    user-select: all;
+}
+
+.detail-meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* ── URL row with copy ── */
+.url-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.url-row .detail-value {
+    flex: 1;
+    min-width: 0;
+}
+
+.btn-copy {
+    flex-shrink: 0;
+    padding: 4px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-copy:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* ── Detail actions ── */
+.detail-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-save {
+    padding: 7px 14px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.btn-save:hover {
+    background: var(--primary-hover);
+}
+
+.btn-delete {
+    padding: 7px 14px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.btn-delete:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.04);
+}
+`;
+
+  // src/control/components/media/GridMedia/features/context-menu.ts
+  function setupContextMenu(s2, callbacks) {
+    const menu = s2.getElementById("ctx-menu");
+    let activeItem = null;
+    menu.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-action]");
+      if (!btn || !activeItem)
+        return;
+      const action = btn.dataset.action;
+      if (action === "rename")
+        callbacks.onRename(activeItem);
+      else if (action === "delete")
+        callbacks.onDelete(activeItem.id);
+      menu.classList.remove("visible");
+    });
+    document.addEventListener("click", () => menu.classList.remove("visible"));
+    return {
+      show(e, item) {
+        activeItem = item;
+        menu.style.left = e.clientX + "px";
+        menu.style.top = e.clientY + "px";
+        menu.classList.add("visible");
+      }
+    };
+  }
+
+  // src/control/components/media/GridMedia/features/rename.ts
+  function setupRename(s2, callbacks) {
+    const backdrop = s2.getElementById("rename-backdrop");
+    const input = s2.getElementById("rename-input");
+    const confirmBtn = s2.getElementById("rename-confirm");
+    const cancelBtn = s2.getElementById("rename-cancel");
+    let currentItem = null;
+    const hide = () => {
+      backdrop.classList.remove("visible");
+      currentItem = null;
+    };
+    const apply = () => {
+      const name = input.value.trim();
+      if (!name || !currentItem)
+        return;
+      const id = currentItem.id;
+      hide();
+      callbacks.onApply(id, name);
+    };
+    confirmBtn.addEventListener("click", apply);
+    cancelBtn.addEventListener("click", hide);
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop)
+        hide();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter")
+        apply();
+      if (e.key === "Escape")
+        hide();
+    });
+    return {
+      open(item) {
+        currentItem = item;
+        input.value = item.label;
+        backdrop.classList.add("visible");
+        requestAnimationFrame(() => {
+          input.focus();
+          input.select();
+        });
+      }
+    };
+  }
+
+  // src/control/components/media/GridMedia/features/new-folder.ts
+  function setupNewFolder(host, s2, callbacks) {
+    const backdrop = s2.getElementById("nf-backdrop");
+    const input = s2.getElementById("nf-input");
+    const confirmBtn = s2.getElementById("nf-confirm");
+    const cancelBtn = s2.getElementById("nf-cancel");
+    const hide = () => backdrop.classList.remove("visible");
+    const show = () => {
+      input.value = "";
+      backdrop.classList.add("visible");
+      requestAnimationFrame(() => input.focus());
+    };
+    const create = () => {
+      const name = input.value.trim();
+      if (!name)
+        return;
+      hide();
+      callbacks.onCreate(name);
+    };
+    host.addEventListener("new-folder", show);
+    confirmBtn.addEventListener("click", create);
+    cancelBtn.addEventListener("click", hide);
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop)
+        hide();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter")
+        create();
+      if (e.key === "Escape")
+        hide();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && backdrop.classList.contains("visible")) {
+        hide();
+      }
+    });
+  }
+
+  // src/control/components/media/GridMedia/features/drag-drop.ts
+  function setupDragDrop(s2, callbacks) {
+    const fileInput = s2.getElementById("file-input");
+    const dropOverlay = s2.getElementById("drop-overlay");
+    let dragCounter = 0;
+    let internalDrag = false;
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files?.length)
+        callbacks.onFiles(fileInput.files);
+    });
+    s2.getElementById("grid").addEventListener("dragstart", () => {
+      internalDrag = true;
+    });
+    document.addEventListener("dragend", () => {
+      internalDrag = false;
+    });
+    document.addEventListener("dragenter", (e) => {
+      e.preventDefault();
+      if (internalDrag)
+        return;
+      dragCounter++;
+      if (dragCounter === 1)
+        dropOverlay.classList.add("visible");
+    });
+    document.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      if (internalDrag)
+        return;
+      dragCounter--;
+      if (dragCounter === 0)
+        dropOverlay.classList.remove("visible");
+    });
+    document.addEventListener("dragover", (e) => e.preventDefault());
+    document.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dragCounter = 0;
+      dropOverlay.classList.remove("visible");
+      if (internalDrag) {
+        internalDrag = false;
+        return;
+      }
+      if (e.dataTransfer?.files.length)
+        callbacks.onFiles(e.dataTransfer.files);
+    });
+    return {
+      trigger() {
+        fileInput.click();
+      }
+    };
+  }
+
+  // src/control/components/media/GridMedia/features/detail/builders.ts
+  var ICON_COPY = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+  var ICON_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  function buildPreview(item) {
+    const isImage = item.type === "image" || item.mimetype === "image/svg+xml";
+    if (!isImage)
+      return null;
+    const isSvg = item.mimetype === "image/svg+xml";
+    const img = document.createElement("img");
+    img.slot = "preview";
+    img.src = isSvg ? item.absoluteURL ?? "" : variantUrl(item, 800, 600);
+    img.alt = item.alt || item.label;
+    return img;
+  }
+  function buildFields(item) {
+    const isImage = item.type === "image" || item.mimetype === "image/svg+xml";
+    const size = item.size ? formatSize(item.size) : "";
+    const dims = item.width && item.height ? `${item.width}×${item.height}` : "";
+    const mediaUrl = item.absoluteURL ?? "";
+    const el = document.createElement("div");
+    el.slot = "fields";
+    el.innerHTML = `
+        <div class="detail-field">
+            <label>Name</label>
+            <input type="text" id="detail-label" value="${escapeAttr(item.label)}">
+        </div>
+        ${isImage ? `
+        <div class="detail-field">
+            <label>Alt text</label>
+            <textarea id="detail-alt" rows="2">${escapeHtml2(item.alt || "")}</textarea>
+        </div>` : ""}
+        <div class="detail-meta-row">
+            <div class="detail-field">
+                <label>Type</label>
+                <span class="detail-value">${escapeHtml2(item.mimetype || item.type)}</span>
+            </div>
+            <div class="detail-field">
+                <label>Size</label>
+                <span class="detail-value">${size || "—"}</span>
+            </div>
+        </div>
+        ${dims ? `
+        <div class="detail-field">
+            <label>Dimensions</label>
+            <span class="detail-value">${escapeHtml2(dims)}</span>
+        </div>` : ""}
+        <div class="detail-field">
+            <label>URL</label>
+            <div class="url-row">
+                <span class="detail-value mono">${escapeHtml2(mediaUrl)}</span>
+                <button class="btn-copy" id="btn-copy" title="Copy URL">${ICON_COPY}</button>
+            </div>
+        </div>
+    `;
+    const copyBtn = el.querySelector("#btn-copy");
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(mediaUrl);
+      copyBtn.innerHTML = ICON_CHECK;
+      setTimeout(() => {
+        copyBtn.innerHTML = ICON_COPY;
+      }, 1500);
+    });
+    return el;
+  }
+  function buildActions() {
+    const el = document.createElement("div");
+    el.slot = "actions";
+    el.innerHTML = `
+        <div class="detail-actions">
+            <button class="btn-save" id="btn-save">Save</button>
+            <button class="btn-delete" id="btn-delete">Delete</button>
+        </div>
+    `;
+    return el;
+  }
+
+  // src/control/components/media/GridMedia/features/detail/setup.ts
+  function setupDetail(detail, callbacks) {
+    detail.addEventListener("close", () => callbacks.onClose());
+    return {
+      open(item) {
+        detail.innerHTML = "";
+        const preview = buildPreview(item);
+        if (preview)
+          detail.appendChild(preview);
+        const fields = buildFields(item);
+        detail.appendChild(fields);
+        const actions = buildActions();
+        detail.appendChild(actions);
+        actions.querySelector("#btn-save").addEventListener("click", () => {
+          callbacks.onSave(item.id, readFields(detail));
+        });
+        actions.querySelector("#btn-delete").addEventListener("click", () => {
+          callbacks.onDelete(item.id);
+        });
+        fields.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            callbacks.onSave(item.id, readFields(detail));
+          }
+        });
+        detail.open(item.label);
+      }
+    };
+  }
+  function readFields(detail) {
+    const labelInput = detail.querySelector("#detail-label");
+    const altInput = detail.querySelector("#detail-alt");
+    const data = { label: labelInput.value };
+    if (altInput)
+      data.alt = altInput.value;
+    return data;
+  }
+
+  // src/control/components/media/GridMedia/features/setup.ts
+  function setupFeatures(host, s2) {
+    const refresh2 = () => host._refresh();
+    const ctxMenu = setupContextMenu(s2, {
+      onRename: (item) => rename.open(item),
+      onDelete: (id) => host._confirmDelete(id)
+    });
+    const rename = setupRename(s2, {
+      onApply: async (id, name) => {
+        await renameItem(id, name);
+        refresh2();
+      }
+    });
+    setupNewFolder(host, s2, {
+      onCreate: async (name) => {
+        await createFolder(name, host._folder);
+        refresh2();
+      }
+    });
+    const dragDrop = setupDragDrop(s2, {
+      onFiles: async (files) => {
+        await uploadFiles(files, host._folder);
+        refresh2();
+      }
+    });
+    const detail = setupDetail(host.detail, {
+      onSave: async (id, data) => {
+        if (await saveItemMetadata(id, data))
+          host.detail.close();
+      },
+      onDelete: async (id) => {
+        if (!confirm("Delete this file?"))
+          return;
+        if (await deleteItem(id)) {
+          host.detail.close();
+          refresh2();
+        }
+      },
+      onClose: refresh2
+    });
+    return { ctxMenu, dragDrop, detail };
+  }
+
+  // src/control/components/media/GridMedia/events/grid.ts
+  function wireGrid(host, s2, ctxMenu, detail) {
+    const grid = s2.getElementById("grid");
+    grid.addEventListener("click", (e) => {
+      const card = e.target.closest("p9r-card-media");
+      if (!card)
+        return;
+      const id = card.dataset.id;
+      if (card.dataset.type === "folder") {
+        const folder = host._items.find((i) => i.id === id);
+        host._navigateTo(id, folder?.label);
+      } else {
+        const item = host._items.find((i) => i.id === id);
+        if (item)
+          detail.open(item);
+      }
+    });
+    grid.addEventListener("contextmenu", (e) => {
+      const card = e.target.closest("p9r-card-media");
+      if (!card)
+        return;
+      const item = host._items.find((i) => i.id === card.dataset.id);
+      if (!item)
+        return;
+      e.preventDefault();
+      ctxMenu.show(e, item);
+    });
+  }
+
+  // src/control/components/media/GridMedia/events/breadcrumb.ts
+  function wireBreadcrumb(host, s2) {
+    s2.getElementById("breadcrumb").addEventListener("click", (e) => {
+      const target = e.target;
+      if (!target.classList.contains("bc-item"))
+        return;
+      const folder = target.dataset.folder || null;
+      const index = parseInt(target.dataset.index || "-1");
+      host._breadcrumb = host._breadcrumb.slice(0, index + 1);
+      host._navigateTo(folder);
+    });
+  }
+
+  // src/control/components/media/GridMedia/GridMedia.ts
+  class GridMedia extends Component {
+    _folder = null;
+    _breadcrumb = [];
+    _items = [];
+    constructor() {
+      super({
+        css: style_default17,
+        template: template_default19
+      });
+    }
+    get detail() {
+      return this.shadowRoot.getElementById("detail");
+    }
+    get crop() {
+      return this.shadowRoot.getElementById("crop");
+    }
+    connectedCallback() {
+      const s2 = this.shadowRoot;
+      this._folder = new URL(window.location.href).searchParams.get("folder");
+      const f = setupFeatures(this, s2);
+      wireGrid(this, s2, f.ctxMenu, f.detail);
+      wireBreadcrumb(this, s2);
+      this.upload = () => f.dragDrop.trigger();
+      if (this._folder) {
+        resolveBreadcrumbTrail(this._folder).then((trail) => {
+          this._breadcrumb = trail;
+          this._render();
+        });
+      }
+      this._refresh();
+    }
+    upload() {}
+    refresh() {
+      this._refresh();
+    }
+    async _refresh() {
+      this._items = await fetchItems(this._folder);
+      this._render();
+    }
+    _render() {
+      renderGrid(this.shadowRoot.getElementById("grid"), this._items);
+      renderBreadcrumb(this.shadowRoot.getElementById("breadcrumb"), this._folder, this._breadcrumb);
+    }
+    _navigateTo(folderId, label) {
+      const url = new URL(window.location.href);
+      if (folderId)
+        url.searchParams.set("folder", folderId);
+      else
+        url.searchParams.delete("folder");
+      window.history.pushState({}, "", url.toString());
+      this._folder = folderId;
+      if (!folderId)
+        this._breadcrumb = [];
+      else if (label)
+        this._breadcrumb.push({ id: folderId, label });
+      this._refresh();
+    }
+    async _confirmDelete(id) {
+      if (!confirm("Delete this item?"))
+        return;
+      if (await deleteItem(id))
+        this._refresh();
+    }
+  }
+  if (!customElements.get("p9r-grid-media")) {
+    customElements.define("p9r-grid-media", GridMedia);
+  }
+
+  // src/control/core/dom/BubblesEvent.ts
+  class BubblesEvent extends Event {
+    constructor(type) {
+      super(type, {
+        bubbles: true,
+        composed: true
+      });
+    }
+  }
+
+  // src/control/components/media/MediaAdmin/MediaAdmin.html
+  var MediaAdmin_default = `<w13c-fixed-admin-layout>
+    <span slot="title">Media</span>
+    <p9r-open-modal slot="action" modal-target="cms-media-new-folder">
+        <p9r-button>+ New folder</p9r-button>
+    </p9r-open-modal>
+    <p9r-button slot="action" color="primary" data-action="upload">Upload files</p9r-button>
+    <p9r-grid-media></p9r-grid-media>
+    <input type="file" multiple data-role="file-input" hidden>
+</w13c-fixed-admin-layout>
+
+<p9r-modal id="cms-media-new-folder" aria-label="Create folder">
+    <span slot="title">New folder</span>
+    <p9r-stack gap="m">
+        <p9r-input data-role="folder-name" label="Name" placeholder="My folder"></p9r-input>
+        <p9r-button color="primary" fullWidth data-action="create-folder">Create</p9r-button>
+    </p9r-stack>
+</p9r-modal>
+`;
+
+  // src/control/components/media/MediaAdmin/MediaAdmin.ts
+  class MediaAdmin extends HTMLElement {
+    _grid = null;
+    _fileInput = null;
+    _wired = false;
+    connectedCallback() {
+      if (!this.firstElementChild)
+        this._render();
+      if (!this._wired) {
+        this._wire();
+        this._wired = true;
+      }
+    }
+    _render() {
+      this.innerHTML = MediaAdmin_default;
+    }
+    _wire() {
+      this._grid = this.querySelector("p9r-grid-media");
+      this._fileInput = this.querySelector('[data-role="file-input"]');
+      this.querySelector('[data-action="upload"]')?.addEventListener("click", () => this._fileInput?.click());
+      this._fileInput?.addEventListener("change", () => this._handleUpload());
+      this.querySelector('[data-action="create-folder"]')?.addEventListener("click", () => this._handleCreateFolder());
+      this.querySelector('[data-role="folder-name"]')?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this._handleCreateFolder();
+        }
+      });
+    }
+    async _handleUpload() {
+      const files = this._fileInput?.files;
+      if (!files || files.length === 0)
+        return;
+      const folder = this._currentFolder();
+      for (const f of Array.from(files)) {
+        await this._media().uploadFile({
+          data: f,
+          name: f.name,
+          mimeType: f.type || "application/octet-stream",
+          size: f.size,
+          ...folder ? { folderID: folder } : {}
+        });
+      }
+      if (this._fileInput)
+        this._fileInput.value = "";
+      this._grid?.refresh();
+    }
+    async _handleCreateFolder() {
+      const button = this.querySelector('[data-action="create-folder"]');
+      const input = this.querySelector('[data-role="folder-name"]');
+      const name = input?.value?.trim();
+      if (!name)
+        return;
+      const folder = this._currentFolder();
+      const res = await this._media().createFolder({
+        name,
+        ...folder ? { parentFolderID: folder } : {}
+      });
+      if (!res.ok)
+        return;
+      if (input)
+        input.value = "";
+      button?.dispatchEvent(new BubblesEvent("form:success"));
+      this._grid?.refresh();
+    }
+    _currentFolder() {
+      return new URL(window.location.href).searchParams.get("folder");
+    }
+    _media() {
+      const m = window._cms?.Media;
+      if (!m)
+        throw new Error("window._cms.Media missing — admin must load /<basePath>/_cms/media.js first");
+      return m;
+    }
+  }
+  if (!customElements.get("cms-media-admin"))
+    customElements.define("cms-media-admin", MediaAdmin);
+
+  // src/control/components/form/Form/events/onKeyboardEvent.ts
+  function onKeyboardEvent(e, nativeForm) {
+    if (e.key !== "Enter")
+      return;
+    const target = e.target;
+    if (target.tagName === "TEXTAREA")
+      return;
+    e.preventDefault();
+    nativeForm.requestSubmit();
+  }
+
+  // src/control/core/dom/buildRequestUrl.ts
+  function buildRequestUrl(target) {
+    const u = new URL(target, window.location.href);
+    for (const [k, v] of new URLSearchParams(window.location.search))
+      u.searchParams.append(k, v);
+    return u;
+  }
+
+  // src/control/components/form/Form/events/onSubmit.ts
+  function onSubmit(e, me) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    fetch(buildRequestUrl(me.target), {
+      method: me.method || "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    }).then((res) => {
+      if (res.ok) {
+        form.reset();
+        me.dispatchEvent(new BubblesEvent("form:success"));
+        if (me.emit) {
+          document.dispatchEvent(new BubblesEvent(me.emit));
+        }
+      } else {
+        me.dispatchEvent(new BubblesEvent("form:failed"));
+      }
+    });
+  }
+
+  // src/control/components/form/Form/Form.ts
+  class CmsForm extends CustomHTMLElement {
+    _nativeForm = null;
+    static get observedAttributes() {
+      return ["redirect", "target", "method", "emit"];
+    }
+    _handleInternalSubmit = (e) => {
+      onSubmit(e, this);
+    };
+    connectedCallback() {
+      requestAnimationFrame(() => {
+        if (this._nativeForm)
+          return;
+        this._nativeForm = document.createElement("form");
+        const id = this.getAttribute("id");
+        if (id) {
+          this._nativeForm.id = id;
+          this.removeAttribute("id");
+        }
+        while (this.firstChild) {
+          this._nativeForm.appendChild(this.firstChild);
+        }
+        this.appendChild(this._nativeForm);
+        this._nativeForm.addEventListener("submit", this._handleInternalSubmit);
+        this.addEventListener("keydown", (e) => onKeyboardEvent(e, this._nativeForm));
+      });
+    }
+    disconnectedCallback() {
+      this.removeEventListener("submit", (e) => onSubmit(e, this));
+      this.removeEventListener("keydown", (e) => onKeyboardEvent(e, this._nativeForm));
+    }
+    attributeChangedCallback(name, oldValue, newValue) {}
+    get redirect() {
+      return this.getAttribute("redirect");
+    }
+    get target() {
+      const val = this.getAttribute("target");
+      if (!val)
+        throw new Error("CmsForm target attribute should be set");
+      return val;
+    }
+    get method() {
+      return this.getAttribute("method");
+    }
+    get emit() {
+      return this.getAttribute("emit");
+    }
+  }
+  if (!customElements.get("cms-form")) {
+    customElements.define("cms-form", CmsForm);
+  }
+
+  // src/control/components/form/Validate/Validate.ts
+  class CmsValidate extends CustomHTMLElement {
+    _abort = null;
+    _debounceId = null;
+    static get observedAttributes() {
+      return ["url", "on", "method", "debounce"];
+    }
+    connectedCallback() {
+      this.style.display = "contents";
+      this.addEventListener(this._trigger, this._onTriggered);
+    }
+    disconnectedCallback() {
+      this.removeEventListener(this._trigger, this._onTriggered);
+      this._abort?.abort();
+      if (this._debounceId !== null)
+        clearTimeout(this._debounceId);
+    }
+    attributeChangedCallback() {}
+    get _trigger() {
+      return this.getAttribute("on") || "change";
+    }
+    _onTriggered = () => {
+      const wait = Number(this.getAttribute("debounce") ?? 200);
+      if (this._debounceId !== null)
+        clearTimeout(this._debounceId);
+      this._debounceId = window.setTimeout(() => this._validate(), wait);
+    };
+    _fields() {
+      return Array.from(this.querySelectorAll("[name]")).filter((el) => typeof el.value === "string");
+    }
+    async _validate() {
+      const url = this.getAttribute("url");
+      if (!url)
+        return;
+      const fields = this._fields();
+      const payload = {};
+      for (const f of fields)
+        payload[f.name] = f.value;
+      this._abort?.abort();
+      this._abort = new AbortController;
+      let result;
+      try {
+        const res = await fetch(url, {
+          method: this.getAttribute("method") || "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: this._abort.signal
+        });
+        if (!res.ok)
+          return;
+        result = await res.json();
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          this.dispatchEvent(new CustomEvent("validate-error", { bubbles: true, detail: err }));
+        }
+        return;
+      }
+      this._applyResult(result, fields);
+    }
+    _applyResult(result, fields) {
+      if (result.valid) {
+        for (const f of fields)
+          this._setValidity(f, "");
+      } else if (result.errors) {
+        for (const f of fields)
+          this._setValidity(f, result.errors[f.name] ?? "");
+      } else if (result.message) {
+        for (const f of fields)
+          this._setValidity(f, "");
+        const first = fields[0];
+        if (first)
+          this._setValidity(first, result.message);
+      }
+      this.dispatchEvent(new CustomEvent("validate-result", {
+        bubbles: true,
+        detail: result
+      }));
+    }
+    _setValidity(el, msg) {
+      const fn = el.setCustomValidity;
+      if (typeof fn === "function")
+        fn.call(el, msg);
+    }
+  }
+  if (!customElements.get("cms-validate")) {
+    customElements.define("cms-validate", CmsValidate);
+  }
+
+  // src/control/components/data/fetch/templates.ts
+  function collectTemplates(host) {
+    const map = {};
+    for (const child of Array.from(host.children)) {
+      if (child.tagName !== "TEMPLATE")
+        continue;
+      const slot = child.getAttribute("slot") || "default";
+      if (!map[slot])
+        map[slot] = child;
+    }
+    return map;
+  }
+
+  // src/control/components/data/fetch/state.ts
+  function isEmpty(data) {
+    if (data === null || data === undefined)
+      return true;
+    if (Array.isArray(data))
+      return data.length === 0;
+    if (typeof data === "object")
+      return Object.keys(data).length === 0;
+    return false;
+  }
+
+  // src/control/components/data/fetch/fetcher.ts
+  async function runFetch(url, signal) {
+    try {
+      const u = buildRequestUrl(url);
+      const res = await fetch(u, { headers: { Accept: "application/json" }, signal });
+      if (!res.ok)
+        return { kind: "error", error: new Error(`HTTP ${res.status}`) };
+      const data = await res.json();
+      return { kind: "success", data };
+    } catch (error) {
+      if (error.name === "AbortError")
+        return { kind: "aborted" };
+      return { kind: "error", error };
+    }
+  }
+
+  // src/control/components/data/fetch/pathHelpers.ts
+  function resolve(obj, path) {
+    return path.split(".").reduce((acc, k) => acc != null ? acc[k] : undefined, obj);
+  }
+  function escape(value) {
+    return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  // src/control/components/data/fetch/interpolate.ts
+  function interpolateNode(node, context) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const original = node.textContent ?? "";
+      const replaced = interpolateString(original, context);
+      if (replaced !== original)
+        node.textContent = replaced;
+      return;
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node;
+      if (el.tagName === "TEMPLATE")
+        return;
+      if (el.tagName === "INNER-HTML" && tryRawHtmlInject(el, context))
+        return;
+      for (const attr of Array.from(el.attributes)) {
+        const replaced = interpolateString(attr.value, context);
+        if (replaced !== attr.value)
+          el.setAttribute(attr.name, replaced);
+      }
+    }
+    for (const child of Array.from(node.childNodes)) {
+      interpolateNode(child, context);
+    }
+  }
+  function tryRawHtmlInject(el, context) {
+    const text = el.textContent?.trim() ?? "";
+    const m = text.match(/^\{\{\s*([\w.]+)\s*\}\}$/);
+    if (!m)
+      return false;
+    el.innerHTML = String(resolve(context, m[1]) ?? "");
+    el.replaceWith(...Array.from(el.childNodes));
+    return true;
+  }
+  function interpolateString(str, context) {
+    return str.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, path) => {
+      if (path === "value") {
+        if (context !== null && typeof context === "object" && "value" in context) {
+          return escape(context.value);
+        }
+        return escape(context);
+      }
+      return escape(resolve(context, path));
+    });
+  }
+
+  // src/control/components/data/fetch/render.ts
+  function processTemplate(tpl, context) {
+    const forKey = tpl.getAttribute("for");
+    const out = document.createDocumentFragment();
+    if (forKey === null) {
+      const clone = tpl.content.cloneNode(true);
+      renderFragment(clone, context);
+      out.appendChild(clone);
+      return out;
+    }
+    const items = forKey === "." ? context : resolve(context, forKey);
+    if (!Array.isArray(items)) {
+      console.warn(`cms-fetch: <template for="${forKey}"> expected an array, got`, items);
+      return out;
+    }
+    for (const item of items) {
+      const clone = tpl.content.cloneNode(true);
+      renderFragment(clone, item);
+      out.appendChild(clone);
+    }
+    return out;
+  }
+  function renderFragment(root2, context) {
+    const templates = [];
+    collectDirectTemplates(root2, templates);
+    for (const tpl of templates) {
+      tpl.parentNode?.replaceChild(processTemplate(tpl, context), tpl);
+    }
+    interpolateNode(root2, context);
+  }
+  function collectDirectTemplates(root2, out) {
+    for (const child of Array.from(root2.childNodes)) {
+      if (child.nodeType !== Node.ELEMENT_NODE)
+        continue;
+      const el = child;
+      if (el.tagName === "TEMPLATE")
+        out.push(el);
+      else
+        collectDirectTemplates(el, out);
+    }
+  }
+
+  // src/control/components/data/fetch/stamp.ts
+  function stampSiblingsOf(host, tpl, context, previous) {
+    clearStamped(previous);
+    const parent = host.parentNode;
+    if (!parent)
+      return [];
+    const fragment = processTemplate(tpl, context);
+    const newNodes = Array.from(fragment.childNodes);
+    parent.insertBefore(fragment, host);
+    return newNodes;
+  }
+  function clearStamped(nodes) {
+    for (const n2 of nodes)
+      n2.parentNode?.removeChild(n2);
+  }
+
+  // src/control/components/data/fetch/FetchComponent.ts
+  class FetchComponent extends HTMLElement {
+    static get observedAttributes() {
+      return ["url", "reload-on"];
+    }
+    _templates = {};
+    _stamped = [];
+    _reloadEvents = [];
+    _abort = null;
+    _onReloadEvent = () => {
+      if (this.isConnected)
+        this.reload();
+    };
+    connectedCallback() {
+      this._refreshReloadListeners();
+      document.addEventListener("cms-fetch:reload", this._onReloadEvent);
+      if (this._templates.default) {
+        this.reload();
+        return;
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => this._init(), { once: true });
+      } else {
+        this._init();
+      }
+    }
+    disconnectedCallback() {
+      clearStamped(this._stamped);
+      this._stamped = [];
+      for (const ev of this._reloadEvents)
+        document.removeEventListener(ev, this._onReloadEvent);
+      document.removeEventListener("cms-fetch:reload", this._onReloadEvent);
+      this._reloadEvents = [];
+      this._abort?.abort();
+      this._abort = null;
+    }
+    attributeChangedCallback(name, oldVal, newVal) {
+      if (oldVal === newVal)
+        return;
+      if (name === "reload-on") {
+        this._refreshReloadListeners();
+        return;
+      }
+      if (this.isConnected)
+        this.reload();
+    }
+    reload() {
+      this._run();
+    }
+    _init() {
+      this._templates = collectTemplates(this);
+      if (!this._templates.default) {
+        console.warn("cms-fetch: missing <template> child (default slot)");
+        return;
+      }
+      this.reload();
+    }
+    _refreshReloadListeners() {
+      for (const ev of this._reloadEvents)
+        document.removeEventListener(ev, this._onReloadEvent);
+      this._reloadEvents = (this.getAttribute("reload-on") || "").split(/\s+/).filter(Boolean);
+      for (const ev of this._reloadEvents)
+        document.addEventListener(ev, this._onReloadEvent);
+    }
+    async _run() {
+      const urlAttr = this.getAttribute("url");
+      if (!urlAttr || !this._templates.default)
+        return;
+      this._abort?.abort();
+      this._abort = new AbortController;
+      const signal = this._abort.signal;
+      this._renderSlot("loading", null);
+      this.dispatchEvent(new BubblesEvent("fetch:loading"));
+      const outcome = await runFetch(urlAttr, signal);
+      if (signal.aborted || outcome.kind === "aborted")
+        return;
+      if (outcome.kind === "success") {
+        const slot = isEmpty(outcome.data) && this._templates.empty ? "empty" : "default";
+        this._renderSlot(slot, outcome.data);
+        this.dispatchEvent(new CustomEvent("fetch:data", { bubbles: true, composed: true, detail: outcome.data }));
+      } else {
+        this._renderSlot("error", outcome.error);
+        this.dispatchEvent(new CustomEvent("fetch:error", { bubbles: true, composed: true, detail: outcome.error }));
+      }
+    }
+    _renderSlot(slot, context) {
+      const tpl = this._templates[slot];
+      if (!tpl)
+        return;
+      this._stamped = stampSiblingsOf(this, tpl, context, this._stamped);
+    }
+  }
+  customElements.define("cms-fetch", FetchComponent);
+})();
+(() => {
+    const __src = "class MtMediaConsumer {\n  limits = {\n    maxFileSize: 52428800,\n    acceptedMimeTypes: \"*\"\n  };\n  imageConfig = {\n    maxWidth: 3840,\n    maxHeight: 3840,\n    ladderWidths: [320, 640, 960, 1280, 1920],\n    ladderFormats: [\"webp\"],\n    defaultQuality: 80,\n    allowedFormats: [\"webp\", \"avif\", \"jpeg\", \"png\"],\n    allowedQualities: [50, 65, 80, 90],\n    formatQualities: { webp: 80, avif: 65, jpeg: 85 }\n  };\n  _providerUrl;\n  _bucketID;\n  _tokenUrl;\n  constructor(config) {\n    this._providerUrl = config.providerUrl.replace(/\\/+$/, \"\");\n    this._bucketID = config.bucketID;\n    this._tokenUrl = config.tokenUrl ?? \"/.mediahub/tokens\";\n    if (config.limits)\n      this.limits = config.limits;\n    if (config.imageConfig)\n      this.imageConfig = { ...this.imageConfig, ...config.imageConfig };\n  }\n  static async fromProvider(config) {\n    const base = config.providerUrl.replace(/\\/+$/, \"\");\n    let limits, serverImageConfig;\n    try {\n      const res = await fetch(`${base}/bucket?bucket=${encodeURIComponent(config.bucketID)}`);\n      if (res.ok) {\n        const body = await res.json();\n        if (body.ok && body.data && typeof body.data.maxFileSize === \"number\" && body.data.acceptedMimeTypes !== void 0)\n          limits = {\n            maxFileSize: body.data.maxFileSize,\n            acceptedMimeTypes: body.data.acceptedMimeTypes\n          };\n        const ic = body.ok && body.data?.imageConfig;\n        if (ic && typeof ic === \"object\" && typeof ic.maxWidth === \"number\" && typeof ic.maxHeight === \"number\" && Array.isArray(ic.allowedWidths) && Array.isArray(ic.allowedFormats) && typeof ic.formatQualities === \"object\" && !Array.isArray(ic.formatQualities) && ic.formatQualities !== null) {\n          const fq = ic.formatQualities, baseConfig = {\n            maxWidth: ic.maxWidth,\n            maxHeight: ic.maxHeight,\n            ladderWidths: ic.allowedWidths,\n            ladderFormats: ic.allowedFormats,\n            defaultQuality: typeof fq.webp === \"number\" ? fq.webp : 80\n          }, allowedFormats = Array.isArray(ic.allowedFormats) ? ic.allowedFormats : [\"webp\", \"avif\", \"jpeg\", \"png\"], allowedQualities = Array.isArray(ic.allowedQualities) ? ic.allowedQualities : [50, 65, 80, 90], formatQualities = typeof ic.formatQualities === \"object\" && !Array.isArray(ic.formatQualities) && ic.formatQualities !== null ? ic.formatQualities : { webp: 80, avif: 65, jpeg: 85 };\n          serverImageConfig = {\n            ...baseConfig,\n            allowedFormats,\n            allowedQualities,\n            formatQualities\n          };\n        }\n      }\n    } catch {}\n    const init = {\n      providerUrl: config.providerUrl,\n      bucketID: config.bucketID\n    };\n    if (config.tokenUrl)\n      init.tokenUrl = config.tokenUrl;\n    if (config.imageConfig)\n      init.imageConfig = config.imageConfig;\n    else if (serverImageConfig)\n      init.imageConfig = serverImageConfig;\n    if (limits)\n      init.limits = limits;\n    return new MtMediaConsumer(init);\n  }\n  _snapWidth(n) {\n    const ladder = this.imageConfig.ladderWidths, max = this.imageConfig.maxWidth;\n    let snapped = ladder[ladder.length - 1] ?? n;\n    for (const v of ladder)\n      if (v >= n) {\n        snapped = v;\n        break;\n      }\n    return Math.min(snapped, max);\n  }\n  _snapQuality(n) {\n    const ladder = this.imageConfig.allowedQualities;\n    let snapped = ladder[ladder.length - 1] ?? n;\n    for (const v of ladder)\n      if (v >= n) {\n        snapped = v;\n        break;\n      }\n    return snapped;\n  }\n  formatImageUrl(opts) {\n    const origin = globalThis.location?.origin ?? \"http://localhost\", u = new URL(opts.url, origin);\n    if (opts.width !== void 0)\n      u.searchParams.set(\"w\", String(this._snapWidth(opts.width)));\n    if (opts.height !== void 0)\n      u.searchParams.set(\"h\", String(opts.height));\n    if (opts.fit !== void 0)\n      u.searchParams.set(\"fit\", opts.fit);\n    if (opts.format !== void 0) {\n      const allowed = this.imageConfig.allowedFormats;\n      if (!allowed.includes(opts.format))\n        throw Error(`MtMediaConsumer.formatImageUrl: format \"${opts.format}\" is not in allowedFormats (${allowed.join(\", \")}).`);\n      u.searchParams.set(\"fmt\", opts.format);\n    }\n    if (opts.quality !== void 0)\n      u.searchParams.set(\"q\", String(this._snapQuality(opts.quality)));\n    return u;\n  }\n  async getItems(opts = {}) {\n    const params = new URLSearchParams;\n    params.set(\"bucket\", this._bucketID);\n    if (opts.folderID)\n      params.set(\"folderID\", opts.folderID);\n    if (opts.accept)\n      params.set(\"accept\", opts.accept.join(\",\"));\n    if (opts.search)\n      params.set(\"search\", opts.search);\n    if (opts.sortBy)\n      params.set(\"sortBy\", opts.sortBy);\n    if (opts.sortOrder)\n      params.set(\"sortOrder\", opts.sortOrder);\n    if (opts.recursive)\n      params.set(\"recursive\", \"1\");\n    if (opts.pagination) {\n      params.set(\"page\", String(opts.pagination.page));\n      params.set(\"limit\", String(opts.pagination.limit));\n    }\n    const res = await this._json(`${this._providerUrl}/items?${params}`);\n    if (res.ok)\n      res.data.items.forEach((i) => this._reviveItemDates(i));\n    return res;\n  }\n  async getItem(id) {\n    const url = `${this._providerUrl}/item?bucket=${encodeURIComponent(this._bucketID)}&id=${encodeURIComponent(id)}`, res = await this._json(url);\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async uploadFile(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const form = new FormData, blob = opts.data instanceof Blob ? opts.data : new Blob([opts.data], opts.mimeType ? { type: opts.mimeType } : void 0);\n    form.append(\"file\", blob, opts.name);\n    if (opts.folderID)\n      form.append(\"folderID\", opts.folderID);\n    if (opts.mimeType)\n      form.append(\"mimeType\", opts.mimeType);\n    if (opts.overwrite)\n      form.append(\"overwrite\", \"1\");\n    const init = {\n      method: \"POST\",\n      body: form,\n      headers: { Authorization: `MtMedia ${token}` }\n    };\n    if (opts.signal)\n      init.signal = opts.signal;\n    const res = await this._json(`${this._providerUrl}/file?bucket=${encodeURIComponent(this._bucketID)}`, init);\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async createFolder(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const res = await this._json(`${this._providerUrl}/folder?bucket=${encodeURIComponent(this._bucketID)}`, {\n      method: \"POST\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n        Authorization: `MtMedia ${token}`\n      },\n      body: JSON.stringify(opts)\n    });\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async updateItem(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const { id, ...patch } = opts, res = await this._json(`${this._providerUrl}/item?bucket=${encodeURIComponent(this._bucketID)}&id=${encodeURIComponent(id)}`, {\n      method: \"PATCH\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n        Authorization: `MtMedia ${token}`\n      },\n      body: JSON.stringify(patch)\n    });\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async deleteItem(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const params = new URLSearchParams;\n    params.set(\"bucket\", this._bucketID);\n    params.set(\"id\", opts.id);\n    if (opts.recursive)\n      params.set(\"recursive\", \"1\");\n    return this._json(`${this._providerUrl}/item?${params}`, {\n      method: \"DELETE\",\n      headers: { Authorization: `MtMedia ${token}` }\n    });\n  }\n  async _fetchToken() {\n    try {\n      const res = await fetch(this._tokenUrl, { method: \"GET\" });\n      if (!res.ok)\n        return null;\n      const body = await res.json();\n      return typeof body.token === \"string\" && body.token.length > 0 ? body.token : null;\n    } catch {\n      return null;\n    }\n  }\n  async _json(url, init) {\n    try {\n      const res = await fetch(url, init);\n      if (!res.ok) {\n        try {\n          const body = await res.json();\n          if (body && typeof body === \"object\" && \"ok\" in body)\n            return body;\n        } catch {}\n        return { ok: !1, error: { code: \"storage_unavailable\", message: `HTTP ${res.status}` } };\n      }\n      return await res.json();\n    } catch (e) {\n      return { ok: !1, error: { code: \"storage_unavailable\", message: e instanceof Error ? e.message : String(e) } };\n    }\n  }\n  _reviveItemDates(item) {\n    if (typeof item.createdAt === \"string\")\n      item.createdAt = new Date(item.createdAt);\n    if (typeof item.updatedAt === \"string\")\n      item.updatedAt = new Date(item.updatedAt);\n  }\n  _tokenErr() {\n    return { ok: !1, error: { code: \"unauthorized\", message: \"Failed to obtain MtMedia token\" } };\n  }\n}";
+    const Klass = (0, eval)("(" + __src + ")");
+    const revive = (_k, v) => {
+        if (v && typeof v === "object" && v.__cms_type) {
+            if (v.__cms_type === "Date")       return new Date(v.v);
+            if (v.__cms_type === "Map")        return new Map(v.v);
+            if (v.__cms_type === "Set")        return new Set(v.v);
+            if (v.__cms_type === "Uint8Array") return new Uint8Array(v.v);
+        }
+        return v;
+    };
+    const state = JSON.parse("{\"limits\":{\"maxFileSize\":52428800,\"acceptedMimeTypes\":\"*\"},\"imageConfig\":{\"maxWidth\":3000,\"maxHeight\":3000,\"ladderWidths\":[32,64,96,128,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000],\"ladderFormats\":[\"webp\",\"avif\",\"jpeg\",\"png\"],\"defaultQuality\":80,\"allowedFormats\":[\"webp\",\"avif\",\"jpeg\",\"png\"],\"allowedQualities\":[50,65,80,90],\"formatQualities\":{\"webp\":80,\"avif\":65,\"jpeg\":85}},\"_providerUrl\":\"http://media.bernouy.local:8082\",\"_bucketID\":\"bc56bb2b-b991-4aef-a6ac-39b1ed65963d\",\"_tokenUrl\":\"/tokens\"}", revive);
+    const instance = Object.create(Klass.prototype);
+    Object.assign(instance, state);
+    window._cms = window._cms || {};
+    window._cms.Media = instance;
+    if ("MtMediaConsumer" && !(instance instanceof Klass)) {
+        console.warn("[cms] hydrated Media instance is not an instance of", "MtMediaConsumer");
+    }
+})();(() => {
+    const __src = "class MtMediaConsumer {\n  limits = {\n    maxFileSize: 52428800,\n    acceptedMimeTypes: \"*\"\n  };\n  imageConfig = {\n    maxWidth: 3840,\n    maxHeight: 3840,\n    ladderWidths: [320, 640, 960, 1280, 1920],\n    ladderFormats: [\"webp\"],\n    defaultQuality: 80,\n    allowedFormats: [\"webp\", \"avif\", \"jpeg\", \"png\"],\n    allowedQualities: [50, 65, 80, 90],\n    formatQualities: { webp: 80, avif: 65, jpeg: 85 }\n  };\n  _providerUrl;\n  _bucketID;\n  _tokenUrl;\n  constructor(config) {\n    this._providerUrl = config.providerUrl.replace(/\\/+$/, \"\");\n    this._bucketID = config.bucketID;\n    this._tokenUrl = config.tokenUrl ?? \"/.mediahub/tokens\";\n    if (config.limits)\n      this.limits = config.limits;\n    if (config.imageConfig)\n      this.imageConfig = { ...this.imageConfig, ...config.imageConfig };\n  }\n  static async fromProvider(config) {\n    const base = config.providerUrl.replace(/\\/+$/, \"\");\n    let limits, serverImageConfig;\n    try {\n      const res = await fetch(`${base}/bucket?bucket=${encodeURIComponent(config.bucketID)}`);\n      if (res.ok) {\n        const body = await res.json();\n        if (body.ok && body.data && typeof body.data.maxFileSize === \"number\" && body.data.acceptedMimeTypes !== void 0)\n          limits = {\n            maxFileSize: body.data.maxFileSize,\n            acceptedMimeTypes: body.data.acceptedMimeTypes\n          };\n        const ic = body.ok && body.data?.imageConfig;\n        if (ic && typeof ic === \"object\" && typeof ic.maxWidth === \"number\" && typeof ic.maxHeight === \"number\" && Array.isArray(ic.allowedWidths) && Array.isArray(ic.allowedFormats) && typeof ic.formatQualities === \"object\" && !Array.isArray(ic.formatQualities) && ic.formatQualities !== null) {\n          const fq = ic.formatQualities, baseConfig = {\n            maxWidth: ic.maxWidth,\n            maxHeight: ic.maxHeight,\n            ladderWidths: ic.allowedWidths,\n            ladderFormats: ic.allowedFormats,\n            defaultQuality: typeof fq.webp === \"number\" ? fq.webp : 80\n          }, allowedFormats = Array.isArray(ic.allowedFormats) ? ic.allowedFormats : [\"webp\", \"avif\", \"jpeg\", \"png\"], allowedQualities = Array.isArray(ic.allowedQualities) ? ic.allowedQualities : [50, 65, 80, 90], formatQualities = typeof ic.formatQualities === \"object\" && !Array.isArray(ic.formatQualities) && ic.formatQualities !== null ? ic.formatQualities : { webp: 80, avif: 65, jpeg: 85 };\n          serverImageConfig = {\n            ...baseConfig,\n            allowedFormats,\n            allowedQualities,\n            formatQualities\n          };\n        }\n      }\n    } catch {}\n    const init = {\n      providerUrl: config.providerUrl,\n      bucketID: config.bucketID\n    };\n    if (config.tokenUrl)\n      init.tokenUrl = config.tokenUrl;\n    if (config.imageConfig)\n      init.imageConfig = config.imageConfig;\n    else if (serverImageConfig)\n      init.imageConfig = serverImageConfig;\n    if (limits)\n      init.limits = limits;\n    return new MtMediaConsumer(init);\n  }\n  _snapWidth(n) {\n    const ladder = this.imageConfig.ladderWidths, max = this.imageConfig.maxWidth;\n    let snapped = ladder[ladder.length - 1] ?? n;\n    for (const v of ladder)\n      if (v >= n) {\n        snapped = v;\n        break;\n      }\n    return Math.min(snapped, max);\n  }\n  _snapQuality(n) {\n    const ladder = this.imageConfig.allowedQualities;\n    let snapped = ladder[ladder.length - 1] ?? n;\n    for (const v of ladder)\n      if (v >= n) {\n        snapped = v;\n        break;\n      }\n    return snapped;\n  }\n  formatImageUrl(opts) {\n    const origin = globalThis.location?.origin ?? \"http://localhost\", u = new URL(opts.url, origin);\n    if (opts.width !== void 0)\n      u.searchParams.set(\"w\", String(this._snapWidth(opts.width)));\n    if (opts.height !== void 0)\n      u.searchParams.set(\"h\", String(opts.height));\n    if (opts.fit !== void 0)\n      u.searchParams.set(\"fit\", opts.fit);\n    if (opts.format !== void 0) {\n      const allowed = this.imageConfig.allowedFormats;\n      if (!allowed.includes(opts.format))\n        throw Error(`MtMediaConsumer.formatImageUrl: format \"${opts.format}\" is not in allowedFormats (${allowed.join(\", \")}).`);\n      u.searchParams.set(\"fmt\", opts.format);\n    }\n    if (opts.quality !== void 0)\n      u.searchParams.set(\"q\", String(this._snapQuality(opts.quality)));\n    return u;\n  }\n  async getItems(opts = {}) {\n    const params = new URLSearchParams;\n    params.set(\"bucket\", this._bucketID);\n    if (opts.folderID)\n      params.set(\"folderID\", opts.folderID);\n    if (opts.accept)\n      params.set(\"accept\", opts.accept.join(\",\"));\n    if (opts.search)\n      params.set(\"search\", opts.search);\n    if (opts.sortBy)\n      params.set(\"sortBy\", opts.sortBy);\n    if (opts.sortOrder)\n      params.set(\"sortOrder\", opts.sortOrder);\n    if (opts.recursive)\n      params.set(\"recursive\", \"1\");\n    if (opts.pagination) {\n      params.set(\"page\", String(opts.pagination.page));\n      params.set(\"limit\", String(opts.pagination.limit));\n    }\n    const res = await this._json(`${this._providerUrl}/items?${params}`);\n    if (res.ok)\n      res.data.items.forEach((i) => this._reviveItemDates(i));\n    return res;\n  }\n  async getItem(id) {\n    const url = `${this._providerUrl}/item?bucket=${encodeURIComponent(this._bucketID)}&id=${encodeURIComponent(id)}`, res = await this._json(url);\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async uploadFile(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const form = new FormData, blob = opts.data instanceof Blob ? opts.data : new Blob([opts.data], opts.mimeType ? { type: opts.mimeType } : void 0);\n    form.append(\"file\", blob, opts.name);\n    if (opts.folderID)\n      form.append(\"folderID\", opts.folderID);\n    if (opts.mimeType)\n      form.append(\"mimeType\", opts.mimeType);\n    if (opts.overwrite)\n      form.append(\"overwrite\", \"1\");\n    const init = {\n      method: \"POST\",\n      body: form,\n      headers: { Authorization: `MtMedia ${token}` }\n    };\n    if (opts.signal)\n      init.signal = opts.signal;\n    const res = await this._json(`${this._providerUrl}/file?bucket=${encodeURIComponent(this._bucketID)}`, init);\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async createFolder(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const res = await this._json(`${this._providerUrl}/folder?bucket=${encodeURIComponent(this._bucketID)}`, {\n      method: \"POST\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n        Authorization: `MtMedia ${token}`\n      },\n      body: JSON.stringify(opts)\n    });\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async updateItem(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const { id, ...patch } = opts, res = await this._json(`${this._providerUrl}/item?bucket=${encodeURIComponent(this._bucketID)}&id=${encodeURIComponent(id)}`, {\n      method: \"PATCH\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n        Authorization: `MtMedia ${token}`\n      },\n      body: JSON.stringify(patch)\n    });\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async deleteItem(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const params = new URLSearchParams;\n    params.set(\"bucket\", this._bucketID);\n    params.set(\"id\", opts.id);\n    if (opts.recursive)\n      params.set(\"recursive\", \"1\");\n    return this._json(`${this._providerUrl}/item?${params}`, {\n      method: \"DELETE\",\n      headers: { Authorization: `MtMedia ${token}` }\n    });\n  }\n  async _fetchToken() {\n    try {\n      const res = await fetch(this._tokenUrl, { method: \"GET\" });\n      if (!res.ok)\n        return null;\n      const body = await res.json();\n      return typeof body.token === \"string\" && body.token.length > 0 ? body.token : null;\n    } catch {\n      return null;\n    }\n  }\n  async _json(url, init) {\n    try {\n      const res = await fetch(url, init);\n      if (!res.ok) {\n        try {\n          const body = await res.json();\n          if (body && typeof body === \"object\" && \"ok\" in body)\n            return body;\n        } catch {}\n        return { ok: !1, error: { code: \"storage_unavailable\", message: `HTTP ${res.status}` } };\n      }\n      return await res.json();\n    } catch (e) {\n      return { ok: !1, error: { code: \"storage_unavailable\", message: e instanceof Error ? e.message : String(e) } };\n    }\n  }\n  _reviveItemDates(item) {\n    if (typeof item.createdAt === \"string\")\n      item.createdAt = new Date(item.createdAt);\n    if (typeof item.updatedAt === \"string\")\n      item.updatedAt = new Date(item.updatedAt);\n  }\n  _tokenErr() {\n    return { ok: !1, error: { code: \"unauthorized\", message: \"Failed to obtain MtMedia token\" } };\n  }\n}";
+    const Klass = (0, eval)("(" + __src + ")");
+    const revive = (_k, v) => {
+        if (v && typeof v === "object" && v.__cms_type) {
+            if (v.__cms_type === "Date")       return new Date(v.v);
+            if (v.__cms_type === "Map")        return new Map(v.v);
+            if (v.__cms_type === "Set")        return new Set(v.v);
+            if (v.__cms_type === "Uint8Array") return new Uint8Array(v.v);
+        }
+        return v;
+    };
+    const state = JSON.parse("{\"limits\":{\"maxFileSize\":52428800,\"acceptedMimeTypes\":\"*\"},\"imageConfig\":{\"maxWidth\":3000,\"maxHeight\":3000,\"ladderWidths\":[32,64,96,128,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000],\"ladderFormats\":[\"webp\",\"avif\",\"jpeg\",\"png\"],\"defaultQuality\":80,\"allowedFormats\":[\"webp\",\"avif\",\"jpeg\",\"png\"],\"allowedQualities\":[50,65,80,90],\"formatQualities\":{\"webp\":80,\"avif\":65,\"jpeg\":85}},\"_providerUrl\":\"http://media.bernouy.local:8082\",\"_bucketID\":\"bc56bb2b-b991-4aef-a6ac-39b1ed65963d\",\"_tokenUrl\":\"/tokens\"}", revive);
+    const instance = Object.create(Klass.prototype);
+    Object.assign(instance, state);
+    window._cms = window._cms || {};
+    window._cms.Media = instance;
+    if ("MtMediaConsumer" && !(instance instanceof Klass)) {
+        console.warn("[cms] hydrated Media instance is not an instance of", "MtMediaConsumer");
+    }
+})();(() => {
+    const __src = "class MtMediaConsumer {\n  limits = {\n    maxFileSize: 52428800,\n    acceptedMimeTypes: \"*\"\n  };\n  imageConfig = {\n    maxWidth: 3840,\n    maxHeight: 3840,\n    ladderWidths: [320, 640, 960, 1280, 1920],\n    ladderFormats: [\"webp\"],\n    defaultQuality: 80,\n    allowedFormats: [\"webp\", \"avif\", \"jpeg\", \"png\"],\n    allowedQualities: [50, 65, 80, 90],\n    formatQualities: { webp: 80, avif: 65, jpeg: 85 }\n  };\n  _providerUrl;\n  _bucketID;\n  _tokenUrl;\n  constructor(config) {\n    this._providerUrl = config.providerUrl.replace(/\\/+$/, \"\");\n    this._bucketID = config.bucketID;\n    this._tokenUrl = config.tokenUrl ?? \"/.mediahub/tokens\";\n    if (config.limits)\n      this.limits = config.limits;\n    if (config.imageConfig)\n      this.imageConfig = { ...this.imageConfig, ...config.imageConfig };\n  }\n  static async fromProvider(config) {\n    const base = config.providerUrl.replace(/\\/+$/, \"\");\n    let limits, serverImageConfig;\n    try {\n      const res = await fetch(`${base}/bucket?bucket=${encodeURIComponent(config.bucketID)}`);\n      if (res.ok) {\n        const body = await res.json();\n        if (body.ok && body.data && typeof body.data.maxFileSize === \"number\" && body.data.acceptedMimeTypes !== void 0)\n          limits = {\n            maxFileSize: body.data.maxFileSize,\n            acceptedMimeTypes: body.data.acceptedMimeTypes\n          };\n        const ic = body.ok && body.data?.imageConfig;\n        if (ic && typeof ic === \"object\" && typeof ic.maxWidth === \"number\" && typeof ic.maxHeight === \"number\" && Array.isArray(ic.allowedWidths) && Array.isArray(ic.allowedFormats) && typeof ic.formatQualities === \"object\" && !Array.isArray(ic.formatQualities) && ic.formatQualities !== null) {\n          const fq = ic.formatQualities, baseConfig = {\n            maxWidth: ic.maxWidth,\n            maxHeight: ic.maxHeight,\n            ladderWidths: ic.allowedWidths,\n            ladderFormats: ic.allowedFormats,\n            defaultQuality: typeof fq.webp === \"number\" ? fq.webp : 80\n          }, allowedFormats = Array.isArray(ic.allowedFormats) ? ic.allowedFormats : [\"webp\", \"avif\", \"jpeg\", \"png\"], allowedQualities = Array.isArray(ic.allowedQualities) ? ic.allowedQualities : [50, 65, 80, 90], formatQualities = typeof ic.formatQualities === \"object\" && !Array.isArray(ic.formatQualities) && ic.formatQualities !== null ? ic.formatQualities : { webp: 80, avif: 65, jpeg: 85 };\n          serverImageConfig = {\n            ...baseConfig,\n            allowedFormats,\n            allowedQualities,\n            formatQualities\n          };\n        }\n      }\n    } catch {}\n    const init = {\n      providerUrl: config.providerUrl,\n      bucketID: config.bucketID\n    };\n    if (config.tokenUrl)\n      init.tokenUrl = config.tokenUrl;\n    if (config.imageConfig)\n      init.imageConfig = config.imageConfig;\n    else if (serverImageConfig)\n      init.imageConfig = serverImageConfig;\n    if (limits)\n      init.limits = limits;\n    return new MtMediaConsumer(init);\n  }\n  _snapWidth(n) {\n    const ladder = this.imageConfig.ladderWidths, max = this.imageConfig.maxWidth;\n    let snapped = ladder[ladder.length - 1] ?? n;\n    for (const v of ladder)\n      if (v >= n) {\n        snapped = v;\n        break;\n      }\n    return Math.min(snapped, max);\n  }\n  _snapQuality(n) {\n    const ladder = this.imageConfig.allowedQualities;\n    let snapped = ladder[ladder.length - 1] ?? n;\n    for (const v of ladder)\n      if (v >= n) {\n        snapped = v;\n        break;\n      }\n    return snapped;\n  }\n  formatImageUrl(opts) {\n    const origin = globalThis.location?.origin ?? \"http://localhost\", u = new URL(opts.url, origin);\n    if (opts.width !== void 0)\n      u.searchParams.set(\"w\", String(this._snapWidth(opts.width)));\n    if (opts.height !== void 0)\n      u.searchParams.set(\"h\", String(opts.height));\n    if (opts.fit !== void 0)\n      u.searchParams.set(\"fit\", opts.fit);\n    if (opts.format !== void 0) {\n      const allowed = this.imageConfig.allowedFormats;\n      if (!allowed.includes(opts.format))\n        throw Error(`MtMediaConsumer.formatImageUrl: format \"${opts.format}\" is not in allowedFormats (${allowed.join(\", \")}).`);\n      u.searchParams.set(\"fmt\", opts.format);\n    }\n    if (opts.quality !== void 0)\n      u.searchParams.set(\"q\", String(this._snapQuality(opts.quality)));\n    return u;\n  }\n  async getItems(opts = {}) {\n    const params = new URLSearchParams;\n    params.set(\"bucket\", this._bucketID);\n    if (opts.folderID)\n      params.set(\"folderID\", opts.folderID);\n    if (opts.accept)\n      params.set(\"accept\", opts.accept.join(\",\"));\n    if (opts.search)\n      params.set(\"search\", opts.search);\n    if (opts.sortBy)\n      params.set(\"sortBy\", opts.sortBy);\n    if (opts.sortOrder)\n      params.set(\"sortOrder\", opts.sortOrder);\n    if (opts.recursive)\n      params.set(\"recursive\", \"1\");\n    if (opts.pagination) {\n      params.set(\"page\", String(opts.pagination.page));\n      params.set(\"limit\", String(opts.pagination.limit));\n    }\n    const res = await this._json(`${this._providerUrl}/items?${params}`);\n    if (res.ok)\n      res.data.items.forEach((i) => this._reviveItemDates(i));\n    return res;\n  }\n  async getItem(id) {\n    const url = `${this._providerUrl}/item?bucket=${encodeURIComponent(this._bucketID)}&id=${encodeURIComponent(id)}`, res = await this._json(url);\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async uploadFile(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const form = new FormData, blob = opts.data instanceof Blob ? opts.data : new Blob([opts.data], opts.mimeType ? { type: opts.mimeType } : void 0);\n    form.append(\"file\", blob, opts.name);\n    if (opts.folderID)\n      form.append(\"folderID\", opts.folderID);\n    if (opts.mimeType)\n      form.append(\"mimeType\", opts.mimeType);\n    if (opts.overwrite)\n      form.append(\"overwrite\", \"1\");\n    const init = {\n      method: \"POST\",\n      body: form,\n      headers: { Authorization: `MtMedia ${token}` }\n    };\n    if (opts.signal)\n      init.signal = opts.signal;\n    const res = await this._json(`${this._providerUrl}/file?bucket=${encodeURIComponent(this._bucketID)}`, init);\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async createFolder(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const res = await this._json(`${this._providerUrl}/folder?bucket=${encodeURIComponent(this._bucketID)}`, {\n      method: \"POST\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n        Authorization: `MtMedia ${token}`\n      },\n      body: JSON.stringify(opts)\n    });\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async updateItem(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const { id, ...patch } = opts, res = await this._json(`${this._providerUrl}/item?bucket=${encodeURIComponent(this._bucketID)}&id=${encodeURIComponent(id)}`, {\n      method: \"PATCH\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n        Authorization: `MtMedia ${token}`\n      },\n      body: JSON.stringify(patch)\n    });\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async deleteItem(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const params = new URLSearchParams;\n    params.set(\"bucket\", this._bucketID);\n    params.set(\"id\", opts.id);\n    if (opts.recursive)\n      params.set(\"recursive\", \"1\");\n    return this._json(`${this._providerUrl}/item?${params}`, {\n      method: \"DELETE\",\n      headers: { Authorization: `MtMedia ${token}` }\n    });\n  }\n  async _fetchToken() {\n    try {\n      const res = await fetch(this._tokenUrl, { method: \"GET\" });\n      if (!res.ok)\n        return null;\n      const body = await res.json();\n      return typeof body.token === \"string\" && body.token.length > 0 ? body.token : null;\n    } catch {\n      return null;\n    }\n  }\n  async _json(url, init) {\n    try {\n      const res = await fetch(url, init);\n      if (!res.ok) {\n        try {\n          const body = await res.json();\n          if (body && typeof body === \"object\" && \"ok\" in body)\n            return body;\n        } catch {}\n        return { ok: !1, error: { code: \"storage_unavailable\", message: `HTTP ${res.status}` } };\n      }\n      return await res.json();\n    } catch (e) {\n      return { ok: !1, error: { code: \"storage_unavailable\", message: e instanceof Error ? e.message : String(e) } };\n    }\n  }\n  _reviveItemDates(item) {\n    if (typeof item.createdAt === \"string\")\n      item.createdAt = new Date(item.createdAt);\n    if (typeof item.updatedAt === \"string\")\n      item.updatedAt = new Date(item.updatedAt);\n  }\n  _tokenErr() {\n    return { ok: !1, error: { code: \"unauthorized\", message: \"Failed to obtain MtMedia token\" } };\n  }\n}";
+    const Klass = (0, eval)("(" + __src + ")");
+    const revive = (_k, v) => {
+        if (v && typeof v === "object" && v.__cms_type) {
+            if (v.__cms_type === "Date")       return new Date(v.v);
+            if (v.__cms_type === "Map")        return new Map(v.v);
+            if (v.__cms_type === "Set")        return new Set(v.v);
+            if (v.__cms_type === "Uint8Array") return new Uint8Array(v.v);
+        }
+        return v;
+    };
+    const state = JSON.parse("{\"limits\":{\"maxFileSize\":52428800,\"acceptedMimeTypes\":\"*\"},\"imageConfig\":{\"maxWidth\":3000,\"maxHeight\":3000,\"ladderWidths\":[32,64,96,128,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000],\"ladderFormats\":[\"webp\",\"avif\",\"jpeg\",\"png\"],\"defaultQuality\":80,\"allowedFormats\":[\"webp\",\"avif\",\"jpeg\",\"png\"],\"allowedQualities\":[50,65,80,90],\"formatQualities\":{\"webp\":80,\"avif\":65,\"jpeg\":85}},\"_providerUrl\":\"http://media.bernouy.local:8082\",\"_bucketID\":\"bc56bb2b-b991-4aef-a6ac-39b1ed65963d\",\"_tokenUrl\":\"/tokens\"}", revive);
+    const instance = Object.create(Klass.prototype);
+    Object.assign(instance, state);
+    window._cms = window._cms || {};
+    window._cms.Media = instance;
+    if ("MtMediaConsumer" && !(instance instanceof Klass)) {
+        console.warn("[cms] hydrated Media instance is not an instance of", "MtMediaConsumer");
+    }
+})();(() => {
+    const __src = "class MtMediaConsumer {\n  limits = {\n    maxFileSize: 52428800,\n    acceptedMimeTypes: \"*\"\n  };\n  imageConfig = {\n    maxWidth: 3840,\n    maxHeight: 3840,\n    ladderWidths: [320, 640, 960, 1280, 1920],\n    ladderFormats: [\"webp\"],\n    defaultQuality: 80,\n    allowedFormats: [\"webp\", \"avif\", \"jpeg\", \"png\"],\n    allowedQualities: [50, 65, 80, 90],\n    formatQualities: { webp: 80, avif: 65, jpeg: 85 }\n  };\n  _providerUrl;\n  _bucketID;\n  _tokenUrl;\n  constructor(config) {\n    this._providerUrl = config.providerUrl.replace(/\\/+$/, \"\");\n    this._bucketID = config.bucketID;\n    this._tokenUrl = config.tokenUrl ?? \"/.mediahub/tokens\";\n    if (config.limits)\n      this.limits = config.limits;\n    if (config.imageConfig)\n      this.imageConfig = { ...this.imageConfig, ...config.imageConfig };\n  }\n  static async fromProvider(config) {\n    const base = config.providerUrl.replace(/\\/+$/, \"\");\n    let limits, serverImageConfig;\n    try {\n      const res = await fetch(`${base}/bucket?bucket=${encodeURIComponent(config.bucketID)}`);\n      if (res.ok) {\n        const body = await res.json();\n        if (body.ok && body.data && typeof body.data.maxFileSize === \"number\" && body.data.acceptedMimeTypes !== void 0)\n          limits = {\n            maxFileSize: body.data.maxFileSize,\n            acceptedMimeTypes: body.data.acceptedMimeTypes\n          };\n        const ic = body.ok && body.data?.imageConfig;\n        if (ic && typeof ic === \"object\" && typeof ic.maxWidth === \"number\" && typeof ic.maxHeight === \"number\" && Array.isArray(ic.allowedWidths) && Array.isArray(ic.allowedFormats) && typeof ic.formatQualities === \"object\" && !Array.isArray(ic.formatQualities) && ic.formatQualities !== null) {\n          const fq = ic.formatQualities, baseConfig = {\n            maxWidth: ic.maxWidth,\n            maxHeight: ic.maxHeight,\n            ladderWidths: ic.allowedWidths,\n            ladderFormats: ic.allowedFormats,\n            defaultQuality: typeof fq.webp === \"number\" ? fq.webp : 80\n          }, allowedFormats = Array.isArray(ic.allowedFormats) ? ic.allowedFormats : [\"webp\", \"avif\", \"jpeg\", \"png\"], allowedQualities = Array.isArray(ic.allowedQualities) ? ic.allowedQualities : [50, 65, 80, 90], formatQualities = typeof ic.formatQualities === \"object\" && !Array.isArray(ic.formatQualities) && ic.formatQualities !== null ? ic.formatQualities : { webp: 80, avif: 65, jpeg: 85 };\n          serverImageConfig = {\n            ...baseConfig,\n            allowedFormats,\n            allowedQualities,\n            formatQualities\n          };\n        }\n      }\n    } catch {}\n    const init = {\n      providerUrl: config.providerUrl,\n      bucketID: config.bucketID\n    };\n    if (config.tokenUrl)\n      init.tokenUrl = config.tokenUrl;\n    if (config.imageConfig)\n      init.imageConfig = config.imageConfig;\n    else if (serverImageConfig)\n      init.imageConfig = serverImageConfig;\n    if (limits)\n      init.limits = limits;\n    return new MtMediaConsumer(init);\n  }\n  _snapWidth(n) {\n    const ladder = this.imageConfig.ladderWidths, max = this.imageConfig.maxWidth;\n    let snapped = ladder[ladder.length - 1] ?? n;\n    for (const v of ladder)\n      if (v >= n) {\n        snapped = v;\n        break;\n      }\n    return Math.min(snapped, max);\n  }\n  _snapQuality(n) {\n    const ladder = this.imageConfig.allowedQualities;\n    let snapped = ladder[ladder.length - 1] ?? n;\n    for (const v of ladder)\n      if (v >= n) {\n        snapped = v;\n        break;\n      }\n    return snapped;\n  }\n  formatImageUrl(opts) {\n    const origin = globalThis.location?.origin ?? \"http://localhost\", u = new URL(opts.url, origin);\n    if (opts.width !== void 0)\n      u.searchParams.set(\"w\", String(this._snapWidth(opts.width)));\n    if (opts.height !== void 0)\n      u.searchParams.set(\"h\", String(opts.height));\n    if (opts.fit !== void 0)\n      u.searchParams.set(\"fit\", opts.fit);\n    if (opts.format !== void 0) {\n      const allowed = this.imageConfig.allowedFormats;\n      if (!allowed.includes(opts.format))\n        throw Error(`MtMediaConsumer.formatImageUrl: format \"${opts.format}\" is not in allowedFormats (${allowed.join(\", \")}).`);\n      u.searchParams.set(\"fmt\", opts.format);\n    }\n    if (opts.quality !== void 0)\n      u.searchParams.set(\"q\", String(this._snapQuality(opts.quality)));\n    return u;\n  }\n  async getItems(opts = {}) {\n    const params = new URLSearchParams;\n    params.set(\"bucket\", this._bucketID);\n    if (opts.folderID)\n      params.set(\"folderID\", opts.folderID);\n    if (opts.accept)\n      params.set(\"accept\", opts.accept.join(\",\"));\n    if (opts.search)\n      params.set(\"search\", opts.search);\n    if (opts.sortBy)\n      params.set(\"sortBy\", opts.sortBy);\n    if (opts.sortOrder)\n      params.set(\"sortOrder\", opts.sortOrder);\n    if (opts.recursive)\n      params.set(\"recursive\", \"1\");\n    if (opts.pagination) {\n      params.set(\"page\", String(opts.pagination.page));\n      params.set(\"limit\", String(opts.pagination.limit));\n    }\n    const res = await this._json(`${this._providerUrl}/items?${params}`);\n    if (res.ok)\n      res.data.items.forEach((i) => this._reviveItemDates(i));\n    return res;\n  }\n  async getItem(id) {\n    const url = `${this._providerUrl}/item?bucket=${encodeURIComponent(this._bucketID)}&id=${encodeURIComponent(id)}`, res = await this._json(url);\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async uploadFile(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const form = new FormData, blob = opts.data instanceof Blob ? opts.data : new Blob([opts.data], opts.mimeType ? { type: opts.mimeType } : void 0);\n    form.append(\"file\", blob, opts.name);\n    if (opts.folderID)\n      form.append(\"folderID\", opts.folderID);\n    if (opts.mimeType)\n      form.append(\"mimeType\", opts.mimeType);\n    if (opts.overwrite)\n      form.append(\"overwrite\", \"1\");\n    const init = {\n      method: \"POST\",\n      body: form,\n      headers: { Authorization: `MtMedia ${token}` }\n    };\n    if (opts.signal)\n      init.signal = opts.signal;\n    const res = await this._json(`${this._providerUrl}/file?bucket=${encodeURIComponent(this._bucketID)}`, init);\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async createFolder(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const res = await this._json(`${this._providerUrl}/folder?bucket=${encodeURIComponent(this._bucketID)}`, {\n      method: \"POST\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n        Authorization: `MtMedia ${token}`\n      },\n      body: JSON.stringify(opts)\n    });\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async updateItem(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const { id, ...patch } = opts, res = await this._json(`${this._providerUrl}/item?bucket=${encodeURIComponent(this._bucketID)}&id=${encodeURIComponent(id)}`, {\n      method: \"PATCH\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n        Authorization: `MtMedia ${token}`\n      },\n      body: JSON.stringify(patch)\n    });\n    if (res.ok)\n      this._reviveItemDates(res.data);\n    return res;\n  }\n  async deleteItem(opts) {\n    const token = await this._fetchToken();\n    if (!token)\n      return this._tokenErr();\n    const params = new URLSearchParams;\n    params.set(\"bucket\", this._bucketID);\n    params.set(\"id\", opts.id);\n    if (opts.recursive)\n      params.set(\"recursive\", \"1\");\n    return this._json(`${this._providerUrl}/item?${params}`, {\n      method: \"DELETE\",\n      headers: { Authorization: `MtMedia ${token}` }\n    });\n  }\n  async _fetchToken() {\n    try {\n      const res = await fetch(this._tokenUrl, { method: \"GET\" });\n      if (!res.ok)\n        return null;\n      const body = await res.json();\n      return typeof body.token === \"string\" && body.token.length > 0 ? body.token : null;\n    } catch {\n      return null;\n    }\n  }\n  async _json(url, init) {\n    try {\n      const res = await fetch(url, init);\n      if (!res.ok) {\n        try {\n          const body = await res.json();\n          if (body && typeof body === \"object\" && \"ok\" in body)\n            return body;\n        } catch {}\n        return { ok: !1, error: { code: \"storage_unavailable\", message: `HTTP ${res.status}` } };\n      }\n      return await res.json();\n    } catch (e) {\n      return { ok: !1, error: { code: \"storage_unavailable\", message: e instanceof Error ? e.message : String(e) } };\n    }\n  }\n  _reviveItemDates(item) {\n    if (typeof item.createdAt === \"string\")\n      item.createdAt = new Date(item.createdAt);\n    if (typeof item.updatedAt === \"string\")\n      item.updatedAt = new Date(item.updatedAt);\n  }\n  _tokenErr() {\n    return { ok: !1, error: { code: \"unauthorized\", message: \"Failed to obtain MtMedia token\" } };\n  }\n}";
+    const Klass = (0, eval)("(" + __src + ")");
+    const revive = (_k, v) => {
+        if (v && typeof v === "object" && v.__cms_type) {
+            if (v.__cms_type === "Date")       return new Date(v.v);
+            if (v.__cms_type === "Map")        return new Map(v.v);
+            if (v.__cms_type === "Set")        return new Set(v.v);
+            if (v.__cms_type === "Uint8Array") return new Uint8Array(v.v);
+        }
+        return v;
+    };
+    const state = JSON.parse("{\"limits\":{\"maxFileSize\":52428800,\"acceptedMimeTypes\":\"*\"},\"imageConfig\":{\"maxWidth\":3000,\"maxHeight\":3000,\"ladderWidths\":[32,64,96,128,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000],\"ladderFormats\":[\"webp\",\"avif\",\"jpeg\",\"png\"],\"defaultQuality\":80,\"allowedFormats\":[\"webp\",\"avif\",\"jpeg\",\"png\"],\"allowedQualities\":[50,65,80,90],\"formatQualities\":{\"webp\":80,\"avif\":65,\"jpeg\":85}},\"_providerUrl\":\"http://media.bernouy.local:8082\",\"_bucketID\":\"bc56bb2b-b991-4aef-a6ac-39b1ed65963d\",\"_tokenUrl\":\"/tokens\"}", revive);
+    const instance = Object.create(Klass.prototype);
+    Object.assign(instance, state);
+    window._cms = window._cms || {};
+    window._cms.Media = instance;
+    if ("MtMediaConsumer" && !(instance instanceof Klass)) {
+        console.warn("[cms] hydrated Media instance is not an instance of", "MtMediaConsumer");
+    }
+})();

@@ -1,0 +1,8 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "perf-hero",
+    "default-group": "Perf",
+    "meta": { "title": "Hero", "description": "Full-width hero with background + title + CTAs." }
+}

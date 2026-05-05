@@ -1,0 +1,38 @@
+:host {
+    display: table-row;
+    position: relative;
+    height: 320px;
+}
+
+.cell {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+::slotted([slot="icon"]) {
+    width: 48px;
+    height: 48px;
+    opacity: 0.35;
+    color: var(--text-muted);
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+::slotted([slot="hint"]) {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}

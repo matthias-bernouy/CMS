@@ -1,0 +1,63 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Settings</span>
+    <p9r-button slot="action" id="save-btn" form="settings-form" type="submit" color="primary">Save</p9r-button>
+
+    <p9r-container size="md">
+        <cms-fetch url="{{BASE_PATH}}/api/system/settings" reload-on="settings:saved">
+            <template>
+                <cms-form id="settings-form" target="{{BASE_PATH}}/api/system/settings" emit="settings:saved">
+                    <p9r-stack gap="lg">
+                        <p9r-card>
+                            <span slot="header">Site</span>
+                            <p9r-stack gap="md">
+                                <p9r-input name="site.name"    label="Site name"   value="{{ site.name }}"    placeholder="My Website"></p9r-input>
+                                <p9r-input name="site.host"    label="Host"        value="{{ site.host }}"    placeholder="https://example.com"></p9r-input>
+                                <p9r-input name="site.favicon" label="Favicon URL" value="{{ site.favicon }}" placeholder="https://..."></p9r-input>
+                                <p9r-select name="site.language" label="Language" value="{{ site.language }}">
+                                    <option value="">— Default —</option>
+                                    <option value="en">English</option>
+                                    <option value="fr">Français</option>
+                                    <option value="de">Deutsch</option>
+                                    <option value="es">Español</option>
+                                    <option value="pt">Português</option>
+                                    <option value="it">Italiano</option>
+                                    <option value="nl">Nederlands</option>
+                                    <option value="pl">Polski</option>
+                                    <option value="ja">日本語</option>
+                                    <option value="zh">中文</option>
+                                </p9r-select>
+                                <p9r-select name="site.notFound" label="404 page" value="{{ site.notFound.path }}">
+                                    <option value="">— None —</option>
+                                    <template for="pages">
+                                        <option value="{{ path }}">{{ title }}</option>
+                                    </template>
+                                </p9r-select>
+                                <p9r-select name="site.serverError" label="500 page" value="{{ site.serverError.path }}">
+                                    <option value="">— None —</option>
+                                    <template for="pages">
+                                        <option value="{{ path }}">{{ title }}</option>
+                                    </template>
+                                </p9r-select>
+                            </p9r-stack>
+                        </p9r-card>
+
+                        <p9r-card>
+                            <span slot="header">Editor</span>
+                            <p9r-select name="editor.layoutCategory" label="Layout category" value="{{ editor.layoutCategory }}">
+                                <option value="">— None —</option>
+                                <template for="layoutCategories">
+                                    <option value="{{value}}">{{value}}</option>
+                                </template>
+                            </p9r-select>
+                        </p9r-card>
+
+                        <p9r-card>
+                            <span slot="header">Theme CSS</span>
+                            <p9r-textarea name="site.theme" rows="16" autosize value="{{ site.theme }}" placeholder="/* your CSS */"></p9r-textarea>
+                        </p9r-card>
+                    </p9r-stack>
+                </cms-form>
+            </template>
+        </cms-fetch>
+    </p9r-container>
+</w13c-fixed-admin-layout>

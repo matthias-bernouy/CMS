@@ -1,0 +1,21 @@
+<dialog id="dialog">
+    <div class="container">
+        <header class="header">
+            <nav class="tabs" id="tabs">
+                <button class="tab active" data-section="blocs">Blocs</button>
+                <button class="tab" data-section="templates">Templates</button>
+                <button class="tab" data-section="snippets">Snippets</button>
+            </nav>
+            <div class="search-wrap">
+                <input id="search" class="search-input" type="search" placeholder="Search blocs, templates, snippets…" autocomplete="off" />
+            </div>
+            <form method="dialog">
+                <button class="default-close">&times;</button>
+            </form>
+        </header>
+        <div class="content">
+            <nav class="groups-sidebar" id="sidebar"></nav>
+            <main class="blocs-grid" id="grid"></main>
+        </div>
+    </div>
+</dialog>

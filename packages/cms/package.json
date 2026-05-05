@@ -1,0 +1,66 @@
+{
+    "name": "@bernouy/cms",
+    "version": "0.0.1",
+    "description": "Modular CMS built on Web Components with an inline visual editing system.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./index.ts",
+    "types": "./dist/index.d.ts",
+    "bin": {
+        "p9r": "./src/cli/index.ts"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "bun": "./index.ts",
+            "default": "./index.ts"
+        },
+        "./component": {
+            "bun": "./component.ts",
+            "default": "./component.ts"
+        },
+        "./editor": {
+            "bun": "./editor.ts",
+            "default": "./editor.ts"
+        }
+    },
+    "files": [
+        "index.ts",
+        "component.ts",
+        "editor.ts",
+        "build.ts",
+        "src/",
+        "types/",
+        "dist/",
+        ".claude/skills/",
+        "tsconfig.json",
+        "README.md",
+        "CLAUDE.md"
+    ],
+    "scripts": {
+        "build": "bun run build.ts",
+        "typecheck": "bun x tsc --noEmit",
+        "test": "bun test",
+        "perf": "bun run tests/perf/run.ts",
+        "prepublishOnly": "bun run build"
+    },
+    "devDependencies": {
+        "@happy-dom/global-registrator": "^20.8.9",
+        "@types/bun": "latest",
+        "happy-dom": "^20.8.9",
+        "typescript": "^5.9.3"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3",
+        "mongodb": "^7.2.0"
+    },
+    "dependencies": {
+        "@bernouy/socle": "link:@bernouy/socle",
+        "@bernouy/webcomponents": "link:@bernouy/webcomponents",
+        "linkedom": "^0.18.12",
+        "playwright": "^1.59.1"
+    },
+    "engines": {
+        "bun": ">=1.3.0"
+    }
+}

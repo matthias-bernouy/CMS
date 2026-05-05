@@ -1,0 +1,17 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Media</span>
+    <p9r-open-modal slot="action" modal-target="cms-media-new-folder">
+        <p9r-button>+ New folder</p9r-button>
+    </p9r-open-modal>
+    <p9r-button slot="action" color="primary" data-action="upload">Upload files</p9r-button>
+    <p9r-grid-media></p9r-grid-media>
+    <input type="file" multiple data-role="file-input" hidden>
+</w13c-fixed-admin-layout>
+
+<p9r-modal id="cms-media-new-folder" aria-label="Create folder">
+    <span slot="title">New folder</span>
+    <p9r-stack gap="m">
+        <p9r-input data-role="folder-name" label="Name" placeholder="My folder"></p9r-input>
+        <p9r-button color="primary" fullWidth data-action="create-folder">Create</p9r-button>
+    </p9r-stack>
+</p9r-modal>
