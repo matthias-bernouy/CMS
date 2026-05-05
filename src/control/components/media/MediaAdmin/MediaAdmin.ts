@@ -1,4 +1,4 @@
-import type { Media } from "@bernouy/socle";
+import type { CDN } from "@bernouy/socle";
 import type { GridMedia } from "../GridMedia/GridMedia";
 import BubblesEvent from "../../../core/dom/BubblesEvent";
 import template from "./MediaAdmin.html" with { type: "text" };
@@ -78,7 +78,7 @@ export class MediaAdmin extends HTMLElement {
         return new URL(window.location.href).searchParams.get("folder");
     }
 
-    private _media(): Media {
+    private _media(): CDN {
         const m = window._cms?.Media;
         if (!m) throw new Error("window._cms.Media missing — admin must load /<basePath>/_cms/media.js first");
         return m;

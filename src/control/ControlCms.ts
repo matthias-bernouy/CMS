@@ -1,4 +1,4 @@
-import type { Authentication, Media, Runner } from "@bernouy/socle";
+import type { Authentication, CDN, Runner } from "@bernouy/socle";
 import type { CmsRepository } from "../socle/interfaces/CmsRepository";
 import type { Cache } from "../socle/interfaces/Cache";
 import { InMemoryCache } from "../socle/default-implementation/Cache/memory";
@@ -52,14 +52,14 @@ export class ControlCms {
     private _repository:      CmsRepository;
     private _runner:          Runner;
     private _auth:            Authentication;
-    private _media:           Media;
+    private _media:           CDN;
     private _cache:           Cache;
 
     constructor(
         runner: Runner,
         repository: CmsRepository,
         auth: Authentication<CMS_ROLES>,
-        media: Media,
+        media: CDN,
         configuration: Configuration,
         cache?: Cache
     ){

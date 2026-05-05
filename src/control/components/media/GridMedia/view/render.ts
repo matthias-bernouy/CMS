@@ -31,8 +31,9 @@ function appendMediaPreview(card: HTMLElement, item: MediaItem) {
     if (isImage || isSvg) {
         const img = document.createElement("img");
         img.slot = "image";
-        // SVG doesn't need resizing; rasters get a 400×300 variant via
-        // `window._cms.Media.formatImageUrl` (provider decides the URL shape).
+        // CDN doesn't expose a URL builder; admin always renders the raw
+        // `absoluteURL`. Width/height args to `variantUrl` are kept for
+        // signature compatibility but currently ignored.
         img.src = isSvg ? (item.absoluteURL ?? "") : variantUrl(item, 400, 300);
         img.alt = item.alt || item.label;
         img.loading = "lazy";

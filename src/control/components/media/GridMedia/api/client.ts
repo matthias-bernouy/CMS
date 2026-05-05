@@ -1,5 +1,5 @@
 import type { MediaItem as LocalMediaItem } from "../types";
-import type { MediaItem as SocleMediaItem, Media } from "@bernouy/socle";
+import type { CDNItem as SocleMediaItem, CDN } from "@bernouy/socle";
 
 /**
  * Filter expressed in the admin-UI's compact vocabulary (`folder` / `image`
@@ -9,7 +9,7 @@ import type { MediaItem as SocleMediaItem, Media } from "@bernouy/socle";
  */
 export type LocalTypeFilter = ("folder" | "image" | "other")[];
 
-export function media(): Media {
+export function media(): CDN {
     const m = window._cms?.Media;
     if (!m) {
         throw new Error(
