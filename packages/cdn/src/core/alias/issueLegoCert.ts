@@ -17,20 +17,28 @@ export type LegoIssuerConfig = {
     /** Webroot to use when `challenge === "http"`, instead of `lego`'s built-in
      *  listener. Avoids port-80 conflicts when Nginx is already there. */
     httpWebroot?: string;
+    /** ACME directory URL override. Default is lego's built-in (Let's Encrypt
+     *  prod). Set to e.g. `https://acme-staging-v02.api.letsencrypt.org/directory`
+     *  for staging tests so you don't burn the prod quota. */
+    server?: string;
 };
 
 /** Issue a fresh certificate for `domain`. Idempotent in practice — re-running
  *  on a freshly-issued cert is a fast no-op since lego won't re-issue. */
 export async function issueLegoCert(domain: string, cfg: LegoIssuerConfig): Promise<void> {
-    await runLego(["run", ...baseArgs(domain, cfg)], cfg);
+    await runLego([...baseArgs(domain, cfg), "run"], cfg);
 }
 
 /** Run `lego renew` for `domain`. lego decides whether the cert is close
  *  enough to expiry to warrant a new one — fast no-op otherwise. */
 export async function renewLegoCert(domain: string, cfg: LegoIssuerConfig): Promise<void> {
-    await runLego(["renew", ...baseArgs(domain, cfg)], cfg);
+    await runLego([...baseArgs(domain, cfg), "renew"], cfg);
 }
 
+// lego CLI: `lego [global options] command [command options]`. All our flags
+// here are globals, so the subcommand MUST come last. Putting globals after
+// `run`/`renew` causes lego to silently ignore them — notably `--path`,
+// which falls back to `./.lego` and explodes on permission errors.
 function baseArgs(domain: string, cfg: LegoIssuerConfig): string[] {
     const args = [
         "--accept-tos",
@@ -38,6 +46,7 @@ function baseArgs(domain: string, cfg: LegoIssuerConfig): string[] {
         "--domains", domain,
         "--path", cfg.storePath ?? "/etc/lego",
     ];
+    if (cfg.server) args.push("--server", cfg.server);
     if (cfg.challenge === "http") {
         if (cfg.httpWebroot) args.push("--http", "--http.webroot", cfg.httpWebroot);
         else                 args.push("--http");

@@ -16,6 +16,12 @@ export default wrapAdmin(async (req, provider) => {
 });
 
 function buildUploadUrl(req: Request, tokenId: string): string {
-    const url = new URL(req.url);
-    return `${url.origin}/upload?token=${encodeURIComponent(tokenId)}`;
+    // Behind a reverse proxy (typically nginx terminating TLS), `req.url` is
+    // the internal HTTP URL. Trust the `X-Forwarded-{Proto,Host}` headers
+    // when set so the URL handed back to clients matches what they used to
+    // reach us.
+    const url   = new URL(req.url);
+    const proto = req.headers.get("x-forwarded-proto") ?? url.protocol.replace(":", "");
+    const host  = req.headers.get("x-forwarded-host")  ?? url.host;
+    return `${proto}://${host}/upload?token=${encodeURIComponent(tokenId)}`;
 }

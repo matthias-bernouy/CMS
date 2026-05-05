@@ -74,6 +74,12 @@ export class MongoBucketCredentialRepository implements BucketCredentialReposito
         await this._ready();
         await this._collection.deleteOne({ _id: id });
     }
+
+    async deleteByBucket(bucketId: string): Promise<number> {
+        await this._ready();
+        const result = await this._collection.deleteMany({ bucketId });
+        return result.deletedCount ?? 0;
+    }
 }
 
 function toCredential(doc: BucketCredentialDocument): BucketCredential {

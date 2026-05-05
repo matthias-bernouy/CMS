@@ -27,6 +27,8 @@ export interface StoredFileRepository {
     getByPublicPath(bucketId: string, publicPath: string): Promise<StoredFile | null>;
     update(id: string, patch: Partial<Pick<StoredFile, "name" | "parentFolderID" | "updatedAt" | "publicPath" | "absoluteURL">>): Promise<void>;
     delete(id: string): Promise<void>;
+    /** Bulk delete used by bucket cascade. Returns the row count removed. */
+    deleteByBucket(bucketId: string): Promise<number>;
     list(opts: StoredFileListOptions): Promise<StoredFileListResult>;
     /** Aggregate over a bucket — used by quota checks. */
     sumSize(bucketId: string): Promise<{ totalSize: number; fileCount: number }>;

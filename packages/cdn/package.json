@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "@bernouy/core": "workspace:*",
-        "@bernouy/webcomponents": "link:@bernouy/webcomponents"
+        "@bernouy/webcomponents": "workspace:*"
     },
     "peerDependencies": {
         "image-size": "^2.0.2",

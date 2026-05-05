@@ -20,11 +20,17 @@ RUN addgroup -S cdn \
  && adduser -S -G cdn cdn \
  && addgroup nginx cdn
 
-# 1. Copy the workspace + build (TS project refs emit dist/ for every package).
+# 1. Vendor @bernouy/webcomponents (sibling workspace package, not yet on npm).
+#    Pass via `docker buildx build --build-context webcomponents=/path/to/WebComponents`.
+#    Mounted at /WebComponents to match the workspace path declared in
+#    socle's package.json (`workspaces: ["packages/*", "../WebComponents"]`).
+COPY --from=webcomponents . /WebComponents/
+
+# 2. Copy the workspace + build (TS project refs emit dist/ for every package).
 WORKDIR /socle
 COPY package.json bun.lock tsconfig.base.json tsconfig.json ./
 COPY packages ./packages
-RUN bun install --frozen-lockfile && bunx tsc --build
+RUN bun install && bunx tsc --build
 
 # 2. Set up the user app dir with the cdn libs already resolved.
 WORKDIR /app

@@ -8,4 +8,6 @@ export interface BucketCredentialRepository {
     listByBucket(bucketId: string): Promise<BucketCredential[]>;
     update(id: string, patch: Partial<Pick<BucketCredential, "label" | "expiresAt" | "revokedAt">>): Promise<void>;
     delete(id: string): Promise<void>;
+    /** Bulk delete used by bucket cascade. Returns the row count removed. */
+    deleteByBucket(bucketId: string): Promise<number>;
 }

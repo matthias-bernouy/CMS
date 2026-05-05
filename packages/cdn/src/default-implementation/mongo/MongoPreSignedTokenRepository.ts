@@ -65,6 +65,12 @@ export class MongoPreSignedTokenRepository implements PreSignedTokenRepository {
         const result = await this._collection.deleteMany({ expiresAt: { $lt: new Date() } });
         return result.deletedCount ?? 0;
     }
+
+    async deleteByBucket(bucketId: string): Promise<number> {
+        await this._ready();
+        const result = await this._collection.deleteMany({ bucketId });
+        return result.deletedCount ?? 0;
+    }
 }
 
 function toToken(doc: PreSignedTokenDocument): PreSignedToken {

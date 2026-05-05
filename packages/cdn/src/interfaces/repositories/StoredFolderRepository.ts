@@ -25,5 +25,7 @@ export interface StoredFolderRepository {
     getByName(bucketId: string, parentFolderID: string | null, name: string): Promise<StoredFolder | null>;
     update(id: string, patch: Partial<Pick<StoredFolder, "name" | "parentFolderID" | "updatedAt" | "itemCount">>): Promise<void>;
     delete(id: string): Promise<void>;
+    /** Bulk delete used by bucket cascade. Returns the row count removed. */
+    deleteByBucket(bucketId: string): Promise<number>;
     list(opts: StoredFolderListOptions): Promise<StoredFolderListResult>;
 }

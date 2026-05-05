@@ -98,6 +98,12 @@ export class MongoStoredFileRepository implements StoredFileRepository {
         await this._collection.deleteOne({ _id: id });
     }
 
+    async deleteByBucket(bucketId: string): Promise<number> {
+        await this._ready();
+        const result = await this._collection.deleteMany({ bucketId });
+        return result.deletedCount ?? 0;
+    }
+
     async list(opts: StoredFileListOptions): Promise<StoredFileListResult> {
         await this._ready();
         const filter: Record<string, unknown> = { bucketId: opts.bucketId, parentFolderID: opts.parentFolderID };

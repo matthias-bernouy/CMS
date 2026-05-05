@@ -12,4 +12,6 @@ export interface PreSignedTokenRepository {
     tryConsume(id: string): Promise<PreSignedToken | null>;
     /** Cleanup hook for a periodic task. Returns the number of rows removed. */
     deleteExpired(): Promise<number>;
+    /** Bulk delete used by bucket cascade. Returns the row count removed. */
+    deleteByBucket(bucketId: string): Promise<number>;
 }

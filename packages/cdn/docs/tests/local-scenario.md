@@ -1,12 +1,13 @@
 # Local end-to-end test scenario
 
-End-to-end smoke run covering every surface of `BasicStorageProvider`:
+End-to-end smoke run covering every surface of `@bernouy/cdn`:
 admin UI, frontier B (broker→provider API), frontier C (`/upload`),
 frontier A (browser→broker), the `StorageBrowser` hydration script, and the
-alias workflow — exercised from a **consumer package** that links
-`@bernouy/socle` (i.e. how a real host app would integrate).
+alias workflow — exercised from a **consumer package** that links the
+relevant Socle workspace packages (i.e. how a real host app would integrate).
 
-Assumes Bun + MongoDB installed.
+Assumes Bun + MongoDB installed. Repo is the new monorepo layout
+(`packages/{core,runner-bun,cdn,…}`).
 
 This file is the **runbook** to walk through after every meaningful change
 to verify nothing is broken end to end.
@@ -37,16 +38,16 @@ server blocks.
 
 ---
 
-## 1. Build + link `@bernouy/socle`
+## 1. Build + link the workspace packages
 
 From this repo's root:
 
 ```bash
-# Build dist/index.{js,d.ts} (runs tsc + Bun.build)
-bun run build.ts
+# Type-check + emit dist/ for every workspace package (one tsc --build run).
+bun run build
 
-# Register this package as a global link target
-bun link
+# Register every workspace package as a global link target.
+for pkg in packages/*/; do (cd "$pkg" && bun link); done
 ```
 
 ---
@@ -56,19 +57,22 @@ bun link
 In a **separate** directory (anywhere outside this repo):
 
 ```bash
-mkdir -p ~/socle-consumer && cd ~/socle-consumer
+mkdir -p ~/cdn-consumer && cd ~/cdn-consumer
 bun init -y
 bun add mongodb
-bun link @bernouy/socle
+bun link @bernouy/core
+bun link @bernouy/runner-bun
+bun link @bernouy/cdn
 ```
 
-Drop a `tests/CDN.ts` (or whatever entrypoint suits the consumer). Every
-class, repo, entity and contract comes from a single import path:
+Drop a `tests/CDN.ts` (or whatever entrypoint suits the consumer). Imports
+come from focused packages:
 
 ```ts
 import { MongoClient } from "mongodb";
+import { BunRunner } from "@bernouy/runner-bun";
+import type { Authentication } from "@bernouy/core";
 import {
-    BunRunner, type Authentication,
     StorageProvider, StorageTokenBroker,
     LocalBlobStorage,
     MongoBucketRepository,           type BucketDocument,
@@ -77,7 +81,7 @@ import {
     MongoAliasRepository,            type AliasDocument,
     MongoStoredFolderRepository,     type StoredFolderDocument,
     MongoStoredFileRepository,       type StoredFileDocument,
-} from "@bernouy/socle";
+} from "@bernouy/cdn";
 
 const mongo = new MongoClient("mongodb://localhost:27017");
 await mongo.connect();
@@ -134,8 +138,10 @@ Expect `Server started on port 3005`. The first request to `/admin/...`
 triggers the components bundle build — you should see one log line for it
 on the first hit, none after.
 
-> When iterating on the Socle source itself: re-run `bun run build.ts` and
-> restart the consumer to pick up the changes — `bun link` reads `dist/`.
+> When iterating on the Socle source itself: each package's `package.json`
+> uses `"main": "src/index.ts"`, so `bun link` resolves directly to source
+> — no rebuild needed for runtime changes. Re-run `bun run build` only to
+> refresh the `dist/*.d.ts` for type-only consumers.
 
 ---
 
@@ -247,11 +253,11 @@ Run from **both** sides — the Socle source and the consumer package —
 since linked packages don't share `tsconfig`:
 
 ```bash
-# Socle source repo
-bunx tsc --noEmit
+# Socle monorepo (typechecks every workspace package)
+bun run typecheck
 
 # Consumer package
-cd ~/socle-consumer && bunx tsc --noEmit
+cd ~/cdn-consumer && bunx tsc --noEmit
 ```
 
 Both must exit `0`.
