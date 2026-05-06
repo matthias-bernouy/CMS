@@ -1,5 +1,6 @@
 import { readdir, stat, readFile } from "node:fs/promises";
-import { join, basename } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, join, basename } from "node:path";
 
 export type BlocManifest = {
     runtime?: string;
@@ -25,6 +26,12 @@ export type DevBloc = {
     description: string;
     entry: string;
     editorEntry?: string;
+    /** Convention: `template.html` next to the bloc entry. Absent when the
+     *  bloc renders without a shadow template. */
+    templatePath?: string;
+    /** Convention: `configuration.html` next to the editor entry. Absent
+     *  for opaque blocs (no editor). */
+    configurationPath?: string;
 };
 
 const EXCLUDED = new Set([
@@ -91,6 +98,12 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
     const blocRel = manifest.bloc || "./Bloc.ts";
     const editorRel = manifest.editor;
 
+    const entry = join(folder, blocRel);
+    const editorEntry = editorRel ? join(folder, editorRel) : undefined;
+
+    const templatePath      = join(dirname(entry), "template.html");
+    const configurationPath = editorEntry ? join(dirname(editorEntry), "configuration.html") : undefined;
+
     return {
         folder,
         manifest,
@@ -98,7 +111,9 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         label: manifest.meta?.title || basename(folder),
         group: manifest["default-group"] || "Uncategorized",
         description: manifest.meta?.description || "",
-        entry: join(folder, blocRel),
-        editorEntry: editorRel ? join(folder, editorRel) : undefined,
+        entry,
+        ...(editorEntry                                ? { editorEntry }                              : {}),
+        ...(existsSync(templatePath)                   ? { templatePath }                             : {}),
+        ...(configurationPath && existsSync(configurationPath) ? { configurationPath }                : {}),
     };
 }

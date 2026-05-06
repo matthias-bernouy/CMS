@@ -1,6 +1,6 @@
 import type { ControlCms } from "src/control/ControlCms";
 import { prepare_bloc } from "src/socle/blocs/prepare_bloc";
-import { isValidCustomElementTag } from "src/socle/utils/validation";
+import { validateBloc } from "src/socle/blocs/validateBloc";
 import { P9R_CACHE } from "src/socle/constants/p9r-constants";
 import { invalidatePagesReferencingBloc } from "src/control/core/server/cache/invalidation";
 
@@ -15,17 +15,26 @@ export default async function importBloc(req: Request, cms: ControlCms) {
     const viewFile = formData.get("viewJS") as File;
     const editorEntry = formData.get("editorJS");
     const editorFile = editorEntry instanceof File ? editorEntry : null;
+    const templateHtml = (formData.get("templateHtml") as string | null) || undefined;
+    const configurationHtml = (formData.get("configurationHtml") as string | null) || undefined;
     const force = formData.get("force") === "true";
 
     if (!name || !viewFile || !tag) {
         return new Response("Missing argument (name, tag, viewJS required)", { status: 400 });
     }
 
-    if (!isValidCustomElementTag(tag)) {
-        return new Response(
-            `Invalid tag "${tag}" — must be a lowercase custom-element name (e.g. "my-card").`,
-            { status: 400 },
-        );
+    const viewSource = await viewFile.text();
+    const editorSource = editorFile ? await editorFile.text() : undefined;
+
+    const validation = validateBloc({
+        tag,
+        viewSource,
+        ...(editorSource      !== undefined ? { editorSource }      : {}),
+        ...(templateHtml      !== undefined ? { templateHtml }      : {}),
+        ...(configurationHtml !== undefined ? { configurationHtml } : {}),
+    });
+    if (validation.errors.length > 0) {
+        return new Response(validation.errors.join("\n"), { status: 400 });
     }
 
     const existing = await cms.repository.getBlocViewJS(tag);

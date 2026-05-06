@@ -149,4 +149,81 @@ describe("bloc.post", () => {
         );
         expect(createBlocCalls[0]?.bloc.description).toBe("");
     });
+
+    test("400 when tag uses reserved prefix w13c-*", async () => {
+        const { cms, createBlocCalls } = makeSystem();
+        const res = await importBloc(
+            makeRequest({ name: "My", tag: "w13c-foo", group: "g", viewJS: viewFile() }),
+            cms
+        );
+        expect(res.status).toBe(400);
+        expect(await res.text()).toMatch(/reserved prefix/);
+        expect(createBlocCalls).toHaveLength(0);
+    });
+
+    test("400 when tag uses reserved prefix p9r-*", async () => {
+        const { cms } = makeSystem();
+        const res = await importBloc(
+            makeRequest({ name: "My", tag: "p9r-foo", group: "g", viewJS: viewFile() }),
+            cms
+        );
+        expect(res.status).toBe(400);
+    });
+
+    test("400 when source has hardcoded customElements.define", async () => {
+        const { cms, createBlocCalls } = makeSystem();
+        const bad = new File(
+            [`customElements.define("rogue-tag", X);`],
+            "Bloc.js",
+            { type: "application/javascript" },
+        );
+        const res = await importBloc(
+            makeRequest({ name: "My", tag: "my-bloc", group: "g", viewJS: bad }),
+            cms
+        );
+        expect(res.status).toBe(400);
+        expect(await res.text()).toMatch(/customElements\.define/);
+        expect(createBlocCalls).toHaveLength(0);
+    });
+
+    test("400 when configurationHtml has empty p9r-comp-sync", async () => {
+        const { cms } = makeSystem();
+        const res = await importBloc(
+            makeRequest({
+                name: "My", tag: "my-bloc", group: "g", viewJS: viewFile(),
+                configurationHtml: `<p9r-comp-sync></p9r-comp-sync>`,
+            }),
+            cms
+        );
+        expect(res.status).toBe(400);
+        expect(await res.text()).toMatch(/at least one child element/);
+    });
+
+    test("400 when slot referenced in config is missing from template", async () => {
+        const { cms } = makeSystem();
+        const res = await importBloc(
+            makeRequest({
+                name: "My", tag: "my-bloc", group: "g", viewJS: viewFile(),
+                templateHtml: `<slot></slot>`,
+                configurationHtml: `<p9r-image-sync slotTarget="ghost" label="L"></p9r-image-sync>`,
+            }),
+            cms
+        );
+        expect(res.status).toBe(400);
+        expect(await res.text()).toMatch(/slotTarget="ghost"/);
+    });
+
+    test("happy path with valid HTML pieces", async () => {
+        const { cms, createBlocCalls } = makeSystem();
+        const res = await importBloc(
+            makeRequest({
+                name: "My", tag: "my-bloc", group: "g", viewJS: viewFile(),
+                templateHtml: `<slot name="icon-left"></slot><slot></slot>`,
+                configurationHtml: `<p9r-comp-sync><span>Click me</span></p9r-comp-sync><p9r-image-sync slotTarget="icon-left" label="L"></p9r-image-sync>`,
+            }),
+            cms
+        );
+        expect(res.status).toBe(200);
+        expect(createBlocCalls).toHaveLength(1);
+    });
 });

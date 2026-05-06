@@ -3,7 +3,7 @@
     "bloc": "./Bloc.ts",
     "editor": "./BlocEditor.ts",
 
-    "default-tag": "p9r-horizontal-navbar",
+    "default-tag": "hub-horizontal-navbar",
     "default-group": "Navigation",
 
     "meta": {
