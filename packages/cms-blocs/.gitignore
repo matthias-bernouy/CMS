@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.p9r-dev/
+.env
+.env.local
+.env.*.local
+tmp/

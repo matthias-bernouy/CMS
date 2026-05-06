@@ -28,6 +28,7 @@
         "@bernouy/cdn":           "workspace:*",
         "@bernouy/cdn-origin":    "workspace:*",
         "@bernouy/cms":           "workspace:*",
+        "@bernouy/cms-blocs":     "workspace:*",
         "@bernouy/mt-cms-control":"workspace:*",
         "@bernouy/mt-delivery-cms":"workspace:*"
     }

@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-card",
+    "default-group": "Hub",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Card",
+        "description": "Content card with optional image, title, description and actions.",
+        "categories": ["content"]
+    }
+}

@@ -1,0 +1,72 @@
+:host {
+    --ta-bg: #ffffff;
+    --ta-fg: #0f172a;
+    --ta-border: #cbd5e1;
+    --ta-border-focus: var(--primary, #4f46e5);
+    --ta-placeholder: #94a3b8;
+    --ta-radius: 8px;
+    --ta-pad-y: 0.6rem;
+    --ta-pad-x: 0.8rem;
+    --ta-font: 0.95rem;
+    --ta-rows: 4;
+    --ta-duration: 160ms;
+    --ta-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    display: block;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ta-fg);
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.input {
+    all: unset;
+    display: block;
+    width: 100%;
+    min-height: calc(var(--ta-rows) * 1.6em + var(--ta-pad-y) * 2);
+    padding: var(--ta-pad-y) var(--ta-pad-x);
+    font-size: var(--ta-font);
+    font-family: inherit;
+    color: var(--ta-fg);
+    background: var(--ta-bg);
+    border: 1px solid var(--ta-border);
+    border-radius: var(--ta-radius);
+    box-sizing: border-box;
+    cursor: text;
+    resize: vertical;
+    line-height: 1.5;
+    transition: border-color var(--ta-duration) var(--ta-ease),
+                box-shadow var(--ta-duration) var(--ta-ease);
+}
+
+.input::placeholder { color: var(--ta-placeholder); }
+.input:hover { border-color: color-mix(in srgb, var(--ta-border) 70%, black); }
+.input:focus {
+    border-color: var(--ta-border-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ta-border-focus) 18%, transparent);
+}
+.input:disabled { opacity: 0.55; cursor: not-allowed; background: color-mix(in srgb, currentColor 5%, transparent); }
+.input:read-only:not(:disabled) { background: color-mix(in srgb, currentColor 4%, transparent); }
+.input:user-invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #dc2626 15%, transparent);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:host([resize="none"]) .input { resize: none; }
+:host([resize="both"]) .input { resize: both; }
+:host([resize="horizontal"]) .input { resize: horizontal; }
+:host([autogrow]) .input { resize: none; overflow: hidden; }
+
+:host([size="sm"]) { --ta-pad-y: 0.4rem; --ta-pad-x: 0.65rem; --ta-font: 0.85rem; }
+:host([size="lg"]) { --ta-pad-y: 0.85rem; --ta-pad-x: 1rem; --ta-font: 1.05rem; }
+
+@media (prefers-reduced-motion: reduce) { :host { --ta-duration: 0ms; } }

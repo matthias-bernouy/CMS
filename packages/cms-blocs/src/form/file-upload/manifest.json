@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-file-upload",
+    "default-group": "Form",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "File upload",
+        "description": "File input with drag-and-drop zone.",
+        "categories": ["form", "input"]
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-checkbox",
+    "default-group": "Form",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Checkbox",
+        "description": "Styled checkbox with inline label.",
+        "categories": ["form", "input"]
+    }
+}

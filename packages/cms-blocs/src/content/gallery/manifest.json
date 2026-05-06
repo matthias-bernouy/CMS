@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-gallery",
+    "default-group": "Hub",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Gallery",
+        "description": "Image gallery with grid / masonry layouts and built-in lightbox.",
+        "categories": ["content"]
+    }
+}

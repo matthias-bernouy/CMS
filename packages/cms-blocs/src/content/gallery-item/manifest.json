@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-gallery-item",
+    "default-group": "Hub",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Gallery item",
+        "description": "Single gallery tile with optional label overlay.",
+        "categories": ["content"]
+    }
+}

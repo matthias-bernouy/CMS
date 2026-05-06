@@ -1,0 +1,44 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-select name="variant" label="Variant">
+            <option selected value="default">Soft</option>
+            <option value="filled">Filled</option>
+            <option value="outlined">Outlined</option>
+            <option value="ghost">Ghost</option>
+        </p9r-select>
+        <p9r-select name="color" label="Color">
+            <option selected value="auto">Auto (from label)</option>
+            <option value="indigo">Indigo</option>
+            <option value="sky">Sky</option>
+            <option value="emerald">Emerald</option>
+            <option value="amber">Amber</option>
+            <option value="rose">Rose</option>
+            <option value="violet">Violet</option>
+            <option value="pink">Pink</option>
+            <option value="teal">Teal</option>
+            <option value="slate">Slate</option>
+        </p9r-select>
+        <p9r-segmented-switch name="size" label="Size" value="md">
+            <option value="sm">S</option>
+            <option selected value="md">M</option>
+            <option value="lg">L</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="shape" label="Shape" value="pill">
+            <option selected value="pill">Pill</option>
+            <option value="rounded">Rounded</option>
+            <option value="square">Square</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Leading icon">
+    <p9r-comp-sync disable-others-components optionnal>
+        <span slot="leading">●</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Label">
+    <p9r-comp-sync disable-others-components>
+        <span>Badge</span>
+    </p9r-comp-sync>
+</p9r-section>

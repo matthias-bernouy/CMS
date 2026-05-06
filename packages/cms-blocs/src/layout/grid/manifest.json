@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-grid",
+    "default-group": "Hub",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Grid",
+        "description": "Responsive grid layout — drop cards or any blocs inside.",
+        "categories": ["layout"]
+    }
+}

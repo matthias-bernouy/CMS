@@ -1,0 +1,130 @@
+:host {
+    --navbar-bg: var(--bg-surface, #ffffff);
+    --navbar-fg: var(--text-main, #0f172a);
+    --navbar-border: var(--border-subtle, #e2e8f0);
+    --navbar-accent: var(--primary, #4f46e5);
+    --navbar-padding-y: 0.75rem;
+    --navbar-padding-x: 1.25rem;
+    --navbar-gap: 1.5rem;
+
+    display: block;
+    width: 100%;
+    background: var(--navbar-bg);
+    color: var(--navbar-fg);
+    border-bottom: 1px solid var(--navbar-border);
+    font-family: system-ui, -apple-system, sans-serif;
+
+}
+
+:host([variant="dark"]) {
+    --navbar-bg: #0f172a;
+    --navbar-fg: #f8fafc;
+    --navbar-border: #1e293b;
+}
+
+:host([sticky="yes"]) {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar {
+    display: flex;
+    align-items: center;
+    gap: var(--navbar-gap);
+    padding: var(--navbar-padding-y) var(--navbar-padding-x);
+    max-width: 1280px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    container-type: inline-size;
+}
+
+.brand {
+    font-weight: 700;
+    font-size: 1.15rem;
+    flex: 0 0 auto;
+}
+
+.links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.cta {
+    display: flex;
+    gap: 1rem;
+}
+
+.panel {
+    display: contents;
+}
+
+.burger-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--navbar-border);
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.burger-toggle span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: var(--navbar-fg);
+    border-radius: 2px;
+}
+
+@container (max-width: var(--navbar-breakpoint)) {
+    .links {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .cta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .burger-toggle {
+        display: flex;
+    }
+
+    .panel {
+        display: none;
+        flex-direction: column;
+        flex-basis: 100%;
+        align-items: stretch;
+        gap: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--navbar-border);
+        margin-top: 0.75rem;
+    }
+
+    :host([open]) .panel {
+        display: flex;
+    }
+
+    ::slotted([slot="cta"]),
+    ::slotted(*) {
+        width: fit-content;
+    }
+}
+
+::slotted([slot="logo"]) {
+    width: 10rem;
+    height: auto;
+    max-height: 5rem;
+    object-fit: contain;
+}
+

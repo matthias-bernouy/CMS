@@ -1,0 +1,24 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-select name="variant" label="Variant">
+            <option selected value="default">Default</option>
+            <option value="minimal">Minimal</option>
+            <option value="card">Card</option>
+        </p9r-select>
+        <p9r-segmented-switch name="size" label="Size" value="md">
+            <option value="sm">S</option>
+            <option selected value="md">M</option>
+            <option value="lg">L</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="shortcut" label="Show ⌘K shortcut">
+            <option selected value="false">No</option>
+            <option value="true">Yes</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Placeholder">
+    <p9r-comp-sync disable-others-components optionnal>
+        <span slot="placeholder">Search documentation...</span>
+    </p9r-comp-sync>
+</p9r-section>

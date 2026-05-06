@@ -1,0 +1,29 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Layout">
+        <p9r-select name="width" label="Max width">
+            <option value="sm">Small (720px)</option>
+            <option value="md">Medium (960px)</option>
+            <option selected value="lg">Large (1200px)</option>
+            <option value="xl">Extra large (1440px)</option>
+            <option value="full">Full width</option>
+        </p9r-select>
+        <p9r-select name="padding" label="Padding">
+            <option value="none">None</option>
+            <option value="sm">Small</option>
+            <option selected value="md">Medium</option>
+            <option value="lg">Large</option>
+        </p9r-select>
+        <p9r-select name="bg" label="Background">
+            <option selected value="none">None</option>
+            <option value="surface">Surface</option>
+            <option value="accent">Accent</option>
+            <option value="dark">Dark</option>
+        </p9r-select>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Content">
+    <p9r-comp-sync allow-multiple>
+        <hub-grid></hub-grid>
+    </p9r-comp-sync>
+</p9r-section>

@@ -1,0 +1,30 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Embed">
+        <p9r-select name="provider" label="Provider">
+            <option selected value="auto">Auto detect</option>
+            <option value="youtube">YouTube</option>
+            <option value="vimeo">Vimeo</option>
+            <option value="codepen">CodePen</option>
+            <option value="figma">Figma</option>
+            <option value="generic">Generic iframe</option>
+        </p9r-select>
+        <p9r-select name="ratio" label="Aspect ratio">
+            <option selected value="16/9">16 / 9</option>
+            <option value="4/3">4 / 3</option>
+            <option value="1/1">1 / 1</option>
+            <option value="3/4">3 / 4</option>
+        </p9r-select>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Source URL">
+    <p9r-comp-sync disable-others-components>
+        <span slot="src">https://www.youtube.com/watch?v=dQw4w9WgXcQ</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components optionnal>
+        <span slot="title">Introduction video</span>
+    </p9r-comp-sync>
+</p9r-section>

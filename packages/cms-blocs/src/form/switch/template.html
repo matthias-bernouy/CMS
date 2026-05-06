@@ -1,0 +1,13 @@
+<label class="wrap" part="wrap">
+    <input class="native" type="checkbox" role="switch" part="input" />
+    <span class="track" part="track" aria-hidden="true">
+        <span class="thumb" part="thumb"></span>
+    </span>
+    <span class="label" part="label">
+        <slot></slot>
+    </span>
+</label>
+<div class="sr-only" aria-hidden="true">
+    <slot name="field-name"></slot>
+    <slot name="field-value"></slot>
+</div>

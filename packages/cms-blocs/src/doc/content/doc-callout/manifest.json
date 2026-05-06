@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-callout",
+    "default-group": "Doc Callout",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Callout",
+        "description": "Highlighted admonition box (info, tip, warning, danger, note).",
+        "categories": ["content"]
+    }
+}

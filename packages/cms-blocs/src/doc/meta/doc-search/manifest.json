@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-search",
+    "default-group": "Doc Meta",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Search bar",
+        "description": "Documentation search input with optional keyboard shortcut.",
+        "categories": ["content"]
+    }
+}

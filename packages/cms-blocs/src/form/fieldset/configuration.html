@@ -1,0 +1,25 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-select name="variant" label="Variant">
+            <option selected value="bordered">Bordered</option>
+            <option value="plain">Plain</option>
+        </p9r-select>
+        <p9r-sizes-select name="gap" label="Gap"></p9r-sizes-select>
+        <p9r-segmented-switch name="disabled" label="Disabled">
+            <option selected value="">No</option>
+            <option value="true">Yes</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Legend">
+    <p9r-comp-sync>
+        <span slot="legend">Section title</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Fields">
+    <p9r-comp-sync allow-multiple optionnal>
+        <hub-form-field></hub-form-field>
+    </p9r-comp-sync>
+</p9r-section>

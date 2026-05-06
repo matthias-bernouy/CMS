@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-steps",
+    "default-group": "Doc Content",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Steps",
+        "description": "Numbered step-by-step instructions container.",
+        "categories": ["content"]
+    }
+}

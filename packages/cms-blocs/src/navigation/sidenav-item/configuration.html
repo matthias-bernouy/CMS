@@ -1,0 +1,31 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Link">
+        <p9r-link name="href" label="Target page"></p9r-link>
+        <p9r-select name="target" label="Open in">
+            <option selected value="_self">Same tab</option>
+            <option value="_blank">New tab</option>
+        </p9r-select>
+        <p9r-select name="match" label="Mark as current when">
+            <option selected value="exact">URL matches exactly</option>
+            <option value="prefix">URL matches or is a sub-page</option>
+        </p9r-select>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Label">
+    <p9r-comp-sync disable-others-components>
+        <span>Item</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Icon" data-collapsed>
+    <p9r-comp-sync optionnal>
+        <span slot="icon">&#9679;</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Badge" data-collapsed>
+    <p9r-comp-sync optionnal disable-others-components>
+        <span slot="badge">3</span>
+    </p9r-comp-sync>
+</p9r-section>

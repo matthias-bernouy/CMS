@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-updated",
+    "default-group": "Doc Meta",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Last updated",
+        "description": "Display the date when the page was last updated.",
+        "categories": ["content"]
+    }
+}

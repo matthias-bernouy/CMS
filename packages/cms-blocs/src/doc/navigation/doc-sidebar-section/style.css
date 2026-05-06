@@ -1,0 +1,14 @@
+:host {
+    display: block;
+    margin: 0 0 1rem;
+}
+.title {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: color-mix(in srgb, currentColor 55%, transparent);
+    padding: .5rem .6rem .35rem;
+}
+.title ::slotted(*) { margin: 0; font: inherit; color: inherit; }
+.items { display: flex; flex-direction: column; gap: 2px; }

@@ -1,0 +1,34 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-select name="variant" label="Variant">
+            <option selected value="info">Info</option>
+            <option value="tip">Tip</option>
+            <option value="warning">Warning</option>
+            <option value="danger">Danger</option>
+            <option value="note">Note</option>
+        </p9r-select>
+        <p9r-select name="icon" label="Icon">
+            <option selected value="auto">Auto (from variant)</option>
+            <option value="custom">Custom</option>
+            <option value="none">None</option>
+        </p9r-select>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Custom icon">
+    <p9r-comp-sync disable-others-components optionnal>
+        <span slot="icon">&starf;</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components optionnal>
+        <span slot="title">Good to know</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Content">
+    <p9r-comp-sync allow-multiple>
+        <p>Useful information for the reader goes here.</p>
+    </p9r-comp-sync>
+</p9r-section>

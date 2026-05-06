@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-api-params",
+    "default-group": "Doc API",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "API parameters",
+        "description": "Table of parameters (path, query, body, header, response).",
+        "categories": ["content"]
+    }
+}

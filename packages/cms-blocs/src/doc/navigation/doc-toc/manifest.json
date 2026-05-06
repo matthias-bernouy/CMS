@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-toc",
+    "default-group": "Doc Navigation",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Table of contents",
+        "description": "Auto-generated table of contents from page headings.",
+        "categories": ["content"]
+    }
+}

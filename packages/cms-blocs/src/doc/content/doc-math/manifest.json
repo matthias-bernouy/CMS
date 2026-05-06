@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-math",
+    "default-group": "Doc Content",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Math formula",
+        "description": "LaTeX formula (requires KaTeX for full rendering).",
+        "categories": ["content"]
+    }
+}

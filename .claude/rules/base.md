@@ -20,3 +20,5 @@ For the file structures, see the documentation of [the project structure](struct
 For the static folder, see the documentation of [the static folder](static-folder.md).
 For the api folder, see the documentation of [the api folder](api-folder.md).
 For the import rules, see the documentation of [the import rules](import-rules.md).
+
+For cms blocs developement, see the documentation of [the cms blocs developement](cms-bloc-development.md).

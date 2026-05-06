@@ -1,0 +1,27 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-segmented-switch name="align" label="Alignment" value="center">
+            <option value="left">Left</option>
+            <option selected value="center">Center</option>
+            <option value="right">Right</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="bordered" label="Bordered">
+            <option selected value="false">No</option>
+            <option value="true">Yes</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="zoom" label="Zoom on click">
+            <option selected value="false">Off</option>
+            <option value="true">On</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Image">
+    <p9r-image-sync slotTarget="image" label="Figure image"></p9r-image-sync>
+</p9r-section>
+
+<p9r-section data-title="Caption">
+    <p9r-comp-sync disable-others-components optionnal>
+        <p slot="caption">Figure 1. Descriptive caption explains what the image shows.</p>
+    </p9r-comp-sync>
+</p9r-section>

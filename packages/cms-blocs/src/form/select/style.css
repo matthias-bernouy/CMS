@@ -1,0 +1,89 @@
+:host {
+    --sel-bg: #ffffff;
+    --sel-fg: #0f172a;
+    --sel-border: #cbd5e1;
+    --sel-border-focus: var(--primary, #4f46e5);
+    --sel-radius: 8px;
+    --sel-pad-y: 0.55rem;
+    --sel-pad-x: 0.8rem;
+    --sel-font: 0.95rem;
+    --sel-duration: 160ms;
+    --sel-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    display: block;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--sel-fg);
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.wrap {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.input {
+    all: unset;
+    display: block;
+    width: 100%;
+    padding: var(--sel-pad-y) 2.3rem var(--sel-pad-y) var(--sel-pad-x);
+    font-size: var(--sel-font);
+    font-family: inherit;
+    color: var(--sel-fg);
+    background: var(--sel-bg);
+    border: 1px solid var(--sel-border);
+    border-radius: var(--sel-radius);
+    box-sizing: border-box;
+    cursor: pointer;
+    appearance: none;
+    transition: border-color var(--sel-duration) var(--sel-ease),
+                box-shadow var(--sel-duration) var(--sel-ease);
+}
+
+.input:hover { border-color: color-mix(in srgb, var(--sel-border) 70%, black); }
+
+.input:focus {
+    border-color: var(--sel-border-focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sel-border-focus) 18%, transparent);
+}
+
+.input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: color-mix(in srgb, currentColor 5%, transparent);
+}
+
+.caret {
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1em;
+    height: 1em;
+    color: color-mix(in srgb, currentColor 60%, transparent);
+    pointer-events: none;
+}
+
+.caret svg { width: 100%; height: 100%; display: block; }
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:host([size="sm"]) { --sel-pad-y: 0.35rem; --sel-pad-x: 0.65rem; --sel-font: 0.85rem; --sel-radius: 6px; }
+:host([size="lg"]) { --sel-pad-y: 0.8rem; --sel-pad-x: 1rem; --sel-font: 1.05rem; --sel-radius: 10px; }
+
+:host([variant="ghost"]) .input {
+    background: transparent;
+    border-color: transparent;
+    border-bottom: 1px solid var(--sel-border);
+    border-radius: 0;
+}
+
+@media (prefers-reduced-motion: reduce) { :host { --sel-duration: 0ms; } }

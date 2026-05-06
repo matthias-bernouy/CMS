@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-select",
+    "default-group": "Form",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Select",
+        "description": "Dropdown select — holds Select option children.",
+        "categories": ["form", "input"]
+    }
+}

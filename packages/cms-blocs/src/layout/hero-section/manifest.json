@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-hero-section",
+    "default-group": "Hub",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Hero Section",
+        "description": "Hero with rich content on one side and an image on the other.",
+        "categories": ["layout", "content"]
+    }
+}

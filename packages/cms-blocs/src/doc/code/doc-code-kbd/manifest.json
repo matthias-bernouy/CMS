@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-code-kbd",
+    "default-group": "Doc Code",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Keyboard shortcut",
+        "description": "Keyboard shortcut display (e.g. Ctrl + C).",
+        "categories": ["content"]
+    }
+}

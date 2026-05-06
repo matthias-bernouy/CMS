@@ -1,0 +1,20 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-segmented-switch name="layout" label="Layout" value="side-by-side">
+            <option selected value="side-by-side">Side by side</option>
+            <option value="unified">Unified</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Before">
+    <p9r-comp-sync disable-others-components allow-multiple>
+        <span slot="before">let name = user.name;</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="After">
+    <p9r-comp-sync disable-others-components allow-multiple>
+        <span slot="after">const name = user.name ?? "Guest";</span>
+    </p9r-comp-sync>
+</p9r-section>

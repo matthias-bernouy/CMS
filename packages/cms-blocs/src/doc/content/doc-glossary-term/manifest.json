@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-glossary-term",
+    "default-group": "Doc Content",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Glossary term",
+        "description": "Inline term with tooltip definition on hover or focus.",
+        "categories": ["content"]
+    }
+}

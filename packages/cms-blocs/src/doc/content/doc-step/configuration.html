@@ -1,0 +1,22 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-select name="status" label="Status">
+            <option selected value="default">Default</option>
+            <option value="pending">Pending</option>
+            <option value="current">Current</option>
+            <option value="done">Done</option>
+        </p9r-select>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components>
+        <span slot="title">Install the package</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Content">
+    <p9r-comp-sync allow-multiple>
+        <p>Run the command below to add the library to your project.</p>
+    </p9r-comp-sync>
+</p9r-section>

@@ -1,0 +1,15 @@
+<div class="field" part="field">
+    <label class="label" part="label">
+        <slot name="label"></slot>
+        <span class="required-mark" aria-hidden="true">*</span>
+    </label>
+    <div class="control" part="control">
+        <slot name="control"></slot>
+    </div>
+    <div class="help" part="help">
+        <slot name="help"></slot>
+    </div>
+    <div class="error" part="error" role="alert">
+        <slot name="error"></slot>
+    </div>
+</div>

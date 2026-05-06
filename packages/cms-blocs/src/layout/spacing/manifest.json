@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-spacing",
+    "default-group": "Hub",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Spacing",
+        "description": "Vertical spacer to separate blocks (XS / S / M / L / XL).",
+        "categories": ["layout"]
+    }
+}

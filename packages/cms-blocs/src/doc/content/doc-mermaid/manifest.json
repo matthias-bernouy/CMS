@@ -1,0 +1,13 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "doc-mermaid",
+    "default-group": "Doc Content",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Mermaid diagram",
+        "description": "Mermaid diagram source (requires mermaid.js for rendering).",
+        "categories": ["content"]
+    }
+}

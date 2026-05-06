@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-input-tel",
+    "default-group": "Form",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Phone input",
+        "description": "Telephone number input.",
+        "categories": ["form", "input"]
+    }
+}

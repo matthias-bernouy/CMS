@@ -1,0 +1,24 @@
+<p9r-attr-sync>
+    <p9r-section data-title="State">
+        <p9r-segmented-switch name="open" label="Open by default">
+            <option selected value="">False</option>
+            <option value="true">True</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="disabled" label="Disabled">
+            <option selected value="">False</option>
+            <option value="true">True</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components>
+        <span slot="title">Question title</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Content">
+    <p9r-comp-sync allow-multiple>
+        <p slot="content">Answer content goes here.</p>
+    </p9r-comp-sync>
+</p9r-section>

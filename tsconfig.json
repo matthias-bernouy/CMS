@@ -11,6 +11,7 @@
         { "path": "packages/cdn" },
         { "path": "packages/cdn-origin" },
         { "path": "packages/cms" },
+        { "path": "packages/cms-blocs" },
         { "path": "packages/cms-control-mt" },
         { "path": "packages/mt-delivery-cms" }
     ]

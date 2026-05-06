@@ -1,0 +1,13 @@
+<article class="card" part="card">
+    <div class="media" part="media">
+        <slot name="image" id="image-slot"></slot>
+    </div>
+    <div class="body" part="body">
+        <span class="eyebrow" part="eyebrow"><slot name="eyebrow"></slot></span>
+        <div class="title" part="title"><slot name="title"></slot></div>
+        <div class="description" part="description"><slot name="description"></slot></div>
+        <div class="actions" part="actions">
+            <slot name="actions"></slot>
+        </div>
+    </div>
+</article>

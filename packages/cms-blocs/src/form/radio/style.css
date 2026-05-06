@@ -1,0 +1,90 @@
+:host {
+    --rd-size: 1.15rem;
+    --rd-border: #cbd5e1;
+    --rd-bg: #ffffff;
+    --rd-fg: #0f172a;
+    --rd-accent: var(--primary, #4f46e5);
+    --rd-gap: 0.55rem;
+    --rd-duration: 140ms;
+    --rd-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    display: inline-block;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--rd-fg);
+    font-size: 0.95rem;
+}
+
+.wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--rd-gap);
+    cursor: pointer;
+    user-select: none;
+    line-height: 1.35;
+}
+
+.native {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0; height: 0;
+}
+
+.box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--rd-size);
+    height: var(--rd-size);
+    border: 1px solid var(--rd-border);
+    border-radius: 50%;
+    background: var(--rd-bg);
+    flex: 0 0 auto;
+    transition: border-color var(--rd-duration) var(--rd-ease),
+                box-shadow var(--rd-duration) var(--rd-ease);
+}
+
+.dot {
+    width: 55%;
+    height: 55%;
+    border-radius: 50%;
+    background: var(--rd-accent);
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity var(--rd-duration) var(--rd-ease),
+                transform var(--rd-duration) var(--rd-ease);
+}
+
+.native:checked + .box {
+    border-color: var(--rd-accent);
+}
+
+.native:checked + .box .dot {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.native:focus-visible + .box {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--rd-accent) 25%, transparent);
+    border-color: var(--rd-accent);
+}
+
+.label { display: inline-block; }
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:host(:hover) .box { border-color: color-mix(in srgb, var(--rd-border) 60%, black); }
+
+:host([disabled]) .wrap { opacity: 0.55; cursor: not-allowed; }
+
+:host([size="sm"]) { --rd-size: 0.95rem; font-size: 0.85rem; }
+:host([size="lg"]) { --rd-size: 1.35rem; font-size: 1.05rem; }
+
+@media (prefers-reduced-motion: reduce) { :host { --rd-duration: 0ms; } }

@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "hub-input-search",
+    "default-group": "Form",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Search input",
+        "description": "Search field with clear control.",
+        "categories": ["form", "input"]
+    }
+}

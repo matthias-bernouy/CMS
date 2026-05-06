@@ -1,0 +1,27 @@
+:host {
+    --bc-fg: #0f172a;
+    --bc-muted: #64748b;
+    --bc-accent: var(--primary, #4f46e5);
+    --bc-sep: "/";
+    display: block;
+    font-family: system-ui, sans-serif;
+    font-size: .88rem;
+}
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; color: var(--bc-muted); }
+::slotted(*) {
+    display: inline-flex;
+    align-items: center;
+    color: var(--bc-muted);
+    text-decoration: none;
+    transition: color 160ms ease;
+}
+::slotted(a:hover) { color: var(--bc-accent); }
+::slotted(*:last-child) { color: var(--bc-fg); font-weight: 600; }
+::slotted(*) + ::slotted(*)::before {
+    content: var(--bc-sep);
+    margin-right: .4rem;
+    color: var(--bc-muted);
+    opacity: .6;
+}
+:host([separator="chevron"]) { --bc-sep: "\203A"; }
+:host([separator="dot"]) { --bc-sep: "\2022"; }

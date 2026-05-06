@@ -1,0 +1,18 @@
+:host {
+    --math-fg: #0f172a;
+    display: inline;
+    font-family: "Cambria Math", "Latin Modern Math", "STIX Two Math", "Georgia", serif;
+    font-style: italic;
+    color: var(--math-fg);
+}
+.math { font-family: inherit; font-style: inherit; }
+.math ::slotted(*) { margin: 0; font: inherit; color: inherit; }
+:host([display="block"]) {
+    display: block;
+    text-align: center;
+    font-size: 1.15rem;
+    margin: 1.25rem 0;
+    padding: .75rem 0;
+    border-top: 1px dashed #e2e8f0;
+    border-bottom: 1px dashed #e2e8f0;
+}

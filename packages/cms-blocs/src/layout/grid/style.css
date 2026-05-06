@@ -1,0 +1,41 @@
+:host {
+    --grid-min-item: 260px;
+    --grid-max-item: 1fr;
+    --grid-gap: 1.5rem;
+
+    display: block;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-item), var(--grid-max-item)));
+    gap: var(--grid-gap);
+    justify-content: center;
+}
+
+.grid ::slotted(*) {
+    min-width: 0;
+}
+
+/* Min item width presets */
+
+:host([min="xs"]) { --grid-min-item: 160px; }
+:host([min="sm"]) { --grid-min-item: 200px; }
+:host([min="md"]) { --grid-min-item: 260px; }
+:host([min="lg"]) { --grid-min-item: 340px; }
+:host([min="xl"]) { --grid-min-item: 420px; }
+
+/* Max item width presets (optional — caps the column size) */
+
+:host([max="sm"]) { --grid-max-item: 240px; }
+:host([max="md"]) { --grid-max-item: 320px; }
+:host([max="lg"]) { --grid-max-item: 400px; }
+:host([max="xl"]) { --grid-max-item: 500px; }
+
+/* Gap presets */
+
+:host([gap="xs"]) { --grid-gap: 0.5rem; }
+:host([gap="sm"]) { --grid-gap: 1rem; }
+:host([gap="md"]) { --grid-gap: 1.5rem; }
+:host([gap="lg"]) { --grid-gap: 2rem; }
+:host([gap="xl"]) { --grid-gap: 3rem; }

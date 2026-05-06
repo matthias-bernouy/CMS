@@ -1,0 +1,54 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Layout">
+        <p9r-segmented-switch name="layout" label="Layout" value="grid">
+            <option selected value="grid">Grid</option>
+            <option value="masonry">Masonry</option>
+        </p9r-segmented-switch>
+        <p9r-select name="col-min" label="Column min width">
+            <option value="sm">Small (160px)</option>
+            <option selected value="md">Medium (220px)</option>
+            <option value="lg">Large (280px)</option>
+            <option value="xl">Extra large (360px)</option>
+        </p9r-select>
+        <p9r-select name="col-max" label="Column max width">
+            <option selected value="">Fill (1fr)</option>
+            <option value="sm">Small (240px)</option>
+            <option value="md">Medium (320px)</option>
+            <option value="lg">Large (420px)</option>
+            <option value="xl">Extra large (520px)</option>
+        </p9r-select>
+        <p9r-select name="gap" label="Gap">
+            <option value="xs">Extra small</option>
+            <option value="sm">Small</option>
+            <option selected value="md">Medium</option>
+            <option value="lg">Large</option>
+        </p9r-select>
+        <p9r-select name="ratio" label="Image ratio">
+            <option selected value="1/1">1 / 1</option>
+            <option value="4/3">4 / 3</option>
+            <option value="3/2">3 / 2</option>
+            <option value="16/9">16 / 9</option>
+            <option value="3/4">3 / 4</option>
+            <option value="auto">Auto</option>
+        </p9r-select>
+        <p9r-segmented-switch name="shape" label="Shape" value="rounded">
+            <option value="square">Square</option>
+            <option selected value="rounded">Rounded</option>
+            <option value="pill">Pill</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+    <p9r-section data-title="Behavior">
+        <p9r-segmented-switch name="lightbox" label="Lightbox on click" value="on">
+            <option selected value="on">On</option>
+            <option value="off">Off</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Items">
+    <p9r-comp-sync allow-multiple>
+        <hub-gallery-item>
+            <span slot="label">Caption</span>
+        </hub-gallery-item>
+    </p9r-comp-sync>
+</p9r-section>

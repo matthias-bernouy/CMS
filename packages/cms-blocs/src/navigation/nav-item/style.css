@@ -1,0 +1,100 @@
+:host {
+    --navitem-fg: var(--text-main, #0f172a);
+    --navitem-accent: var(--primary, #4f46e5);
+    --navitem-panel-bg: var(--bg-surface, #ffffff);
+    --navitem-panel-border: var(--border-subtle, #e2e8f0);
+    --navitem-panel-radius: 10px;
+    --navitem-panel-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+
+    display: inline-block;
+    position: relative;
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 100%;
+    min-width: 0;
+    color: inherit;
+}
+
+.item {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: inherit;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.35rem 0.25rem;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 120ms ease, border-color 120ms ease;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.label:hover {
+    color: var(--navitem-accent);
+    border-bottom-color: var(--navitem-accent);
+}
+
+.chevron {
+    display: none;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid currentColor;
+    transition: transform 120ms ease;
+    flex: 0 0 auto;
+}
+
+:host([data-has-dropdown="true"]) .chevron {
+    display: inline-block;
+}
+
+.item.is-open .chevron {
+    transform: rotate(180deg);
+}
+
+.dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: auto;
+    width: max-content;
+    min-width: 160px;
+    max-width: min(100vw - 16px, 280px);
+    background: var(--navitem-panel-bg);
+    color: var(--navitem-fg);
+    border-radius: var(--navitem-panel-radius);
+    box-shadow: var(--navitem-panel-shadow);
+    z-index: 50;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.item.is-open .dropdown {
+    display: flex;
+}
+
+::slotted([slot="items"]) {
+    color: inherit;
+}
+
+::slotted([slot="items"]) {
+    border-radius: unset;
+}
+
+::slotted([slot="items"]:first-of-type) {
+    border-top-left-radius: var(--navitem-panel-radius);
+    border-top-right-radius: var(--navitem-panel-radius);
+}
+
+::slotted([slot="items"]:last-of-type) {
+    border-bottom-left-radius: var(--navitem-panel-radius);
+    border-bottom-right-radius: var(--navitem-panel-radius);
+}
