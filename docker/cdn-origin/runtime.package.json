@@ -1,0 +1,5 @@
+{
+    "name": "cdn-origin-app",
+    "private": true,
+    "type": "module"
+}
