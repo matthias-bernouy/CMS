@@ -13556,6 +13556,76 @@ form[method="dialog"] {
     </div>
 </div>`;
 
+  // src/control/components/editor/EditorSystem/EditorRoot/EditorRoot.style.css
+  var EditorRoot_style_default = `/*
+ * Admin design tokens + typography, scoped to #editorSystem.
+ *
+ * The chrome elements inside the editor shadow (cms-bloc-actions,
+ * cms-bloc-library, cms-floating-toolbar, cms-richtextbar, …) inherit
+ * these tokens via the cascade. #workingElement is intentionally left
+ * out so the user's preview content sees only the theme.css that the
+ * editor template loads at document scope — no admin pollution.
+ *
+ * Mirrors \`static/assets/control-styles.css\` for parity with the admin
+ * pages; keep the two in sync when adding new tokens.
+ */
+
+#editorSystem {
+    /* Surfaces */
+    --bg-base:    oklch(98% 0.004 265);
+    --bg-surface: oklch(100% 0 0);
+    --bg-overlay: oklch(100% 0 0);
+
+    /* Text */
+    --text-main:  oklch(22% 0.02 265);
+    --text-body:  oklch(38% 0.02 265);
+    --text-muted: oklch(60% 0.01 265);
+    --text-label: oklch(45% 0.02 265);
+
+    /* Borders */
+    --border-default: oklch(92% 0.006 265);
+    --border-light:   oklch(96% 0.004 265);
+
+    /* Accents — base / muted / contrasted */
+    --primary-base:       oklch(60% 0.18 265);
+    --primary-muted:      oklch(96% 0.03 265);
+    --primary-contrasted: oklch(30% 0.12 265);
+
+    --secondary-base:       oklch(50% 0.02 265);
+    --secondary-muted:      oklch(94% 0.008 265);
+    --secondary-contrasted: oklch(25% 0.03 265);
+
+    --danger-base:        oklch(60% 0.20 25);
+    --danger-muted:       oklch(96% 0.03 25);
+    --danger-contrasted:  oklch(30% 0.12 25);
+
+    --success-base:       oklch(62% 0.15 150);
+    --success-muted:      oklch(96% 0.03 150);
+    --success-contrasted: oklch(30% 0.10 150);
+
+    --info-base:          oklch(65% 0.12 225);
+    --info-muted:         oklch(96% 0.02 225);
+    --info-contrasted:    oklch(30% 0.08 225);
+
+    --warning-base:       oklch(72% 0.15 70);
+    --warning-muted:      oklch(96% 0.03 70);
+    --warning-contrasted: oklch(35% 0.10 70);
+
+    --color-primary: var(--primary-base);
+
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        system-ui,
+        sans-serif;
+    color: var(--text-main);
+    font-size: 14px;
+    line-height: 1.5;
+}
+`;
+
   // src/control/core/isToggable.ts
   function isToggable(el) {
     return "open" in el && typeof el.open === "function";
@@ -14432,6 +14502,9 @@ form[method="dialog"] {
     constructor() {
       super();
       this.attachShadow({ mode: "open" });
+      const style = document.createElement("style");
+      style.textContent = EditorRoot_style_default;
+      this.shadowRoot?.append(style);
       const template = document.createElement("template");
       template.innerHTML = template_default10;
       this.shadowRoot?.append(template.content.cloneNode(true));

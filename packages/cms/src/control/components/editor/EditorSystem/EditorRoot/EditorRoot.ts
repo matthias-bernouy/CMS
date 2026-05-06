@@ -1,4 +1,5 @@
 import html from "./template.html" with { type: "text" }
+import css from "./EditorRoot.style.css" with { type: "text" }
 import { isToggable } from "src/control/core/isToggable";
 import type { EDITOR_SYSTEM_MODE } from "types/w13c/EditorSystem";
 import { ObserverManager } from "src/control/components/editor/EditorSystem/ObserverManager";
@@ -21,6 +22,9 @@ export default class EditorRoot extends HTMLElement {
     constructor(){
         super();
         this.attachShadow({ mode: "open"} );
+        const style = document.createElement("style");
+        style.textContent = css as unknown as string;
+        this.shadowRoot?.append(style);
         const template = document.createElement("template");
         template.innerHTML = html as unknown as string;
         this.shadowRoot?.append(template.content.cloneNode(true));
