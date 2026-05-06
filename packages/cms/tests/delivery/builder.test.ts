@@ -36,6 +36,7 @@ function mutableRepo(initial: TPage[] = []): DeliveryRepository & {
         getBlocViewJS:  async () => null,
         getSystem:      async () => system,
         getSnippetByIdentifier: async (_id: string): Promise<TSnippet | null> => null,
+        getAllSnippets:         async (): Promise<TSnippet[]> => [],
         set: (next: TPage[]) => { pages = [...next]; },
         edit: (path: string, patch: Partial<TPage>) => {
             pages = pages.map(p => p.path === path ? { ...p, ...patch } : p);

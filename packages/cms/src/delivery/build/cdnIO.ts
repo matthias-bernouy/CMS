@@ -116,15 +116,20 @@ export async function putHashedAsset(
     asset: HashedAssetInput,
 ): Promise<{ absoluteURL: string; fresh: boolean }> {
     const name = asset.hash + asset.extension;
+    // `publicPath = name` so the asset is reachable at `<publicHost>/<name>`
+    // and the symlink layer places it next to its `.br`/`.gz` siblings on
+    // disk — required for nginx's `brotli_static` / `gzip_static` to match.
     const res = await assetsBucket.uploadFile({
         data: asset.bytes,
         name,
+        publicPath: name,
         mimeType: asset.contentType,
         overwrite: false,
     });
     if (res.ok) {
         await uploadCompressedSiblings(assetsBucket, {
             bucketName: name,
+            publicPath: name,
             bytes:      asset.bytes,
             mimeType:   asset.contentType,
         });

@@ -8,6 +8,7 @@ import { SelectionTracker } from "./selection";
 import { closeLinkBar } from "./actions";
 import {
     handleClick,
+    handleCustomColorInput,
     handleOutsideMouseDown,
     handleRootMousedown,
     handleRootMouseup,
@@ -27,6 +28,7 @@ export class RichTextBar extends Component {
     private _onRootMousedown    = (e: Event)      => handleRootMousedown(this, e);
     private _onRootMouseup      = ()              => handleRootMouseup(this);
     private _onRootClick        = (e: Event)      => handleClick(this, e as MouseEvent);
+    private _onRootChange       = (e: Event)      => handleCustomColorInput(this, e);
     private _onSelectionChange  = ()              => handleSelection(this);
     private _onOutsideMousedown = (e: MouseEvent) => handleOutsideMouseDown(this, e);
     private _rootListenersAttached = false;
@@ -47,6 +49,7 @@ export class RichTextBar extends Component {
             root.addEventListener("mousedown", this._onRootMousedown);
             root.addEventListener("mouseup", this._onRootMouseup);
             root.addEventListener("click", this._onRootClick);
+            root.addEventListener("change", this._onRootChange);
             this._rootListenersAttached = true;
         }
         document.addEventListener("selectionchange", this._onSelectionChange);

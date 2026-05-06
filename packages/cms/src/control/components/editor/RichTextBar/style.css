@@ -142,9 +142,9 @@ button.active svg {
     backdrop-filter: blur(16px);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    flex-direction: column;
     gap: 6px;
-    flex-wrap: wrap;
-    width: 148px;
+    width: 192px;
 }
 
 .color-panel.open {
@@ -158,20 +158,26 @@ button.active svg {
     margin-top: 8px;
 }
 
+.color-row {
+    display: flex;
+    gap: 6px;
+}
+
 .color-swatch {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: var(--swatch);
-    border: 2px solid transparent;
+    border: 2px solid rgba(0, 0, 0, 0.06);
     padding: 0;
     cursor: pointer;
     transition: transform 0.15s ease, border-color 0.15s ease;
+    flex: 1 0 24px;
 }
 
 .color-swatch:hover {
     transform: scale(1.15);
-    border-color: rgba(0, 0, 0, 0.15);
+    border-color: rgba(0, 0, 0, 0.2);
     background: var(--swatch);
 }
 
@@ -187,6 +193,45 @@ button.active svg {
 
 .swatch-reset:hover {
     background: linear-gradient(135deg, #fff 40%, #e2e8f0 40%, #e2e8f0 60%, #fff 60%);
+}
+
+.color-custom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    font-size: 10px;
+    color: #94a3b8;
+    cursor: pointer;
+    user-select: none;
+}
+
+.color-custom-input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.color-custom-input::-webkit-color-swatch-wrapper {
+    padding: 0;
+    border-radius: 50%;
+}
+
+.color-custom-input::-webkit-color-swatch {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 50%;
+}
+
+.color-custom-input::-moz-color-swatch {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 50%;
 }
 
 /* ── Link bar ── */

@@ -1,5 +1,6 @@
 import type { Editor } from '@bernouy/cms/editor';
 import template from '../view/template.html' with { type: 'text' };
+import { isLastRootBloc } from '../compute/isLastRootBloc';
 import {
     buildCustomActionButton,
     buildPinButton,
@@ -22,6 +23,7 @@ export function renderActionBar(
     host: HTMLElement,
     editor: Editor,
     parentEditor: Editor | null,
+    target: HTMLElement,
     previousConfigKey: string,
 ): SmartRenderResult | null {
     const config = editor.actionBarConfiguration;
@@ -29,10 +31,11 @@ export function renderActionBar(
     const customActions = editor.customActions;
     const stateSyncCount = editor.stateSyncs.length;
     const variant = editor.variant;
+    const canDelete = !!config.get('delete') && !isLastRootBloc(target);
 
     const hasAnyButton = hasConfig
         || !!config.get('duplicate')
-        || !!config.get('delete')
+        || canDelete
         || !!config.get('changeComponent')
         || customActions.length > 0
         || stateSyncCount > 0;
@@ -40,7 +43,7 @@ export function renderActionBar(
 
     const configKey = JSON.stringify(Array.from(config.entries()))
         + hasConfig + variant + customActions.map(a => a.action).join(',')
-        + '|s=' + stateSyncCount + '|p=' + showSelectParent;
+        + '|s=' + stateSyncCount + '|p=' + showSelectParent + '|d=' + canDelete;
 
     if (previousConfigKey === configKey) return null;
 
@@ -53,7 +56,7 @@ export function renderActionBar(
     toggleActionButton(host, 'edit', hasConfig);
     toggleActionButton(host, 'duplicate', !!config.get('duplicate'));
     toggleActionButton(host, 'changeComponent', !!config.get('changeComponent'));
-    toggleActionButton(host, 'delete', !!config.get('delete'));
+    toggleActionButton(host, 'delete', canDelete);
 
     for (const action of customActions) {
         host.insertBefore(buildCustomActionButton(action), separator);
@@ -68,7 +71,7 @@ export function renderActionBar(
         || !!config.get('changeComponent')
         || customActions.length > 0
         || stateSyncCount > 0;
-    separator?.toggleAttribute('hidden', !config.get('delete') || !hasLeftButtons);
+    separator?.toggleAttribute('hidden', !canDelete || !hasLeftButtons);
 
     return { configKey, hasAnyButton };
 }

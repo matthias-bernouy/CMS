@@ -83,7 +83,7 @@ export class BagController {
 
     renderBar() {
         if (!this.editor) return;
-        const r = renderActionBar(this.host, this.editor, findParentEditor(this.target!), this.lastConfigKey);
+        const r = renderActionBar(this.host, this.editor, findParentEditor(this.target!), this.target!, this.lastConfigKey);
         if (r) { this.lastConfigKey = r.configKey; refreshPinButton(this.host, this.editor); }
     }
 

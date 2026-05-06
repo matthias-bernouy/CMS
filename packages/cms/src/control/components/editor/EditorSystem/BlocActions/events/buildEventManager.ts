@@ -2,6 +2,7 @@ import type { Editor } from '@bernouy/cms/editor';
 import { EventManager } from './EventManager';
 import { duplicateSibling } from '../domain/duplicateSibling';
 import { openChangeComponentPicker } from '../domain/openChangeComponentPicker';
+import { isLastRootBloc } from '../compute/isLastRootBloc';
 import type { PinController } from '../sub/PinMenu/PinController';
 import type { InsertButtonsController } from '../sub/InsertButton/InsertButtonsController';
 
@@ -36,10 +37,19 @@ export function buildEventManager(
         hoverEl: accessors.hoverEl,
         pinMenu: () => pin.menu,
         insertButtons: () => insertBtns.elements,
-        canDelete: () => !!accessors.editor()?.actionBarConfiguration.get('delete'),
+        canDelete: () => {
+            if (!accessors.editor()?.actionBarConfiguration.get('delete')) return false;
+            const t = accessors.target();
+            return !!t && !isLastRootBloc(t);
+        },
         onClose: cb.onClose,
         onReflow: cb.onReflow,
-        onDelete: () => { accessors.target()?.remove(); cb.onClose(); },
+        onDelete: () => {
+            const t = accessors.target();
+            if (!t || isLastRootBloc(t)) { cb.onClose(); return; }
+            t.remove();
+            cb.onClose();
+        },
         onEdit: () => accessors.editor()?.showConfigPanel(),
         onDuplicate: () => {
             const t = accessors.target();

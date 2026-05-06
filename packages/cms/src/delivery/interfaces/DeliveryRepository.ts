@@ -27,5 +27,6 @@ export interface DeliveryRepository {
 
     // SNIPPET (for expandSnippets during render)
     getSnippetByIdentifier(identifier: string): Promise<TSnippet | null>;
+    getAllSnippets(): Promise<TSnippet[]>;
 
 }

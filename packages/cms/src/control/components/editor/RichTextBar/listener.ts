@@ -17,6 +17,12 @@ import {
 import { updateState } from "./state";
 import type { RichTextBar } from "./RichTextBar";
 
+export function handleCustomColorInput(self: RichTextBar, e: Event): void {
+    const input = e.target as HTMLInputElement;
+    if (!input.classList.contains("color-custom-input")) return;
+    applyColor(self, input.value);
+}
+
 export function handleClick(self: RichTextBar, e: MouseEvent): void {
     const target = e.target as HTMLElement;
     const btn = target.closest("button") as HTMLElement | null;

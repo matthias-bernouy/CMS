@@ -55,14 +55,41 @@
             <span class="color-swatch-current"></span>
         </button>
         <div class="color-panel">
-            <button data-color="inherit" class="color-swatch swatch-reset" title="Default"></button>
-            <button data-color="#0f172a" class="color-swatch" title="Black" style="--swatch:#0f172a"></button>
-            <button data-color="#475569" class="color-swatch" title="Grey" style="--swatch:#475569"></button>
-            <button data-color="#dc2626" class="color-swatch" title="Red" style="--swatch:#dc2626"></button>
-            <button data-color="#ea580c" class="color-swatch" title="Orange" style="--swatch:#ea580c"></button>
-            <button data-color="#16a34a" class="color-swatch" title="Green" style="--swatch:#16a34a"></button>
-            <button data-color="#2563eb" class="color-swatch" title="Blue" style="--swatch:#2563eb"></button>
-            <button data-color="#7c3aed" class="color-swatch" title="Violet" style="--swatch:#7c3aed"></button>
+            <div class="color-row">
+                <button data-color="inherit" class="color-swatch swatch-reset" title="Default"></button>
+                <button data-color="var(--text-main)" class="color-swatch" title="Text main" style="--swatch:var(--text-main)"></button>
+                <button data-color="var(--text-body)" class="color-swatch" title="Text body" style="--swatch:var(--text-body)"></button>
+                <button data-color="var(--text-muted)" class="color-swatch" title="Text muted" style="--swatch:var(--text-muted)"></button>
+                <button data-color="var(--text-label)" class="color-swatch" title="Text label" style="--swatch:var(--text-label)"></button>
+            </div>
+            <div class="color-row">
+                <button data-color="var(--primary-base)" class="color-swatch" title="Primary" style="--swatch:var(--primary-base)"></button>
+                <button data-color="var(--primary-muted)" class="color-swatch" title="Primary muted" style="--swatch:var(--primary-muted)"></button>
+                <button data-color="var(--primary-contrasted)" class="color-swatch" title="Primary contrasted" style="--swatch:var(--primary-contrasted)"></button>
+                <button data-color="var(--secondary-base)" class="color-swatch" title="Secondary" style="--swatch:var(--secondary-base)"></button>
+                <button data-color="var(--secondary-muted)" class="color-swatch" title="Secondary muted" style="--swatch:var(--secondary-muted)"></button>
+                <button data-color="var(--secondary-contrasted)" class="color-swatch" title="Secondary contrasted" style="--swatch:var(--secondary-contrasted)"></button>
+            </div>
+            <div class="color-row">
+                <button data-color="var(--danger-base)" class="color-swatch" title="Danger" style="--swatch:var(--danger-base)"></button>
+                <button data-color="var(--danger-muted)" class="color-swatch" title="Danger muted" style="--swatch:var(--danger-muted)"></button>
+                <button data-color="var(--danger-contrasted)" class="color-swatch" title="Danger contrasted" style="--swatch:var(--danger-contrasted)"></button>
+                <button data-color="var(--success-base)" class="color-swatch" title="Success" style="--swatch:var(--success-base)"></button>
+                <button data-color="var(--success-muted)" class="color-swatch" title="Success muted" style="--swatch:var(--success-muted)"></button>
+                <button data-color="var(--success-contrasted)" class="color-swatch" title="Success contrasted" style="--swatch:var(--success-contrasted)"></button>
+            </div>
+            <div class="color-row">
+                <button data-color="var(--info-base)" class="color-swatch" title="Info" style="--swatch:var(--info-base)"></button>
+                <button data-color="var(--info-muted)" class="color-swatch" title="Info muted" style="--swatch:var(--info-muted)"></button>
+                <button data-color="var(--info-contrasted)" class="color-swatch" title="Info contrasted" style="--swatch:var(--info-contrasted)"></button>
+                <button data-color="var(--warning-base)" class="color-swatch" title="Warning" style="--swatch:var(--warning-base)"></button>
+                <button data-color="var(--warning-muted)" class="color-swatch" title="Warning muted" style="--swatch:var(--warning-muted)"></button>
+                <button data-color="var(--warning-contrasted)" class="color-swatch" title="Warning contrasted" style="--swatch:var(--warning-contrasted)"></button>
+            </div>
+            <label class="color-custom" title="Custom color">
+                <input class="color-custom-input" type="color" value="#000000">
+                <span class="color-custom-label">Custom</span>
+            </label>
         </div>
     </div>
 
