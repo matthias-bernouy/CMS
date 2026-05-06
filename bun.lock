@@ -9,6 +9,7 @@
         "@bernouy/auth-keycloak": "workspace:*",
         "@bernouy/auth-token": "workspace:*",
         "@bernouy/cdn": "workspace:*",
+        "@bernouy/cdn-origin": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/mailer-console": "workspace:*",
@@ -66,6 +67,21 @@
       },
       "optionalPeers": [
         "image-size",
+        "mongodb",
+      ],
+    },
+    "packages/cdn-origin": {
+      "name": "@bernouy/cdn-origin",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cdn": "workspace:*",
+        "@bernouy/core": "workspace:*",
+        "@bernouy/webcomponents": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.1.0",
+      },
+      "optionalPeers": [
         "mongodb",
       ],
     },
@@ -175,6 +191,8 @@
     "@bernouy/auth-token": ["@bernouy/auth-token@workspace:packages/auth-token"],
 
     "@bernouy/cdn": ["@bernouy/cdn@workspace:packages/cdn"],
+
+    "@bernouy/cdn-origin": ["@bernouy/cdn-origin@workspace:packages/cdn-origin"],
 
     "@bernouy/cms": ["@bernouy/cms@workspace:packages/cms"],
 
