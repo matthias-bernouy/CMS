@@ -1,0 +1,63 @@
+:host {
+    --fc-bg:      var(--bg-surface, #ffffff);
+    --fc-fg:      var(--text-main, #1a1108);
+    --fc-muted:   var(--text-muted, #6b5642);
+    --fc-border:  var(--border-subtle, #ebe1d0);
+    --fc-radius:  var(--radius-lg, 16px);
+    --fc-pad:     1.5rem;
+    --fc-gap:     1.25rem;
+
+    display: block;
+}
+
+.card {
+    background: var(--fc-bg);
+    color: var(--fc-fg);
+    border: 1px solid var(--fc-border);
+    border-radius: var(--fc-radius);
+    padding: var(--fc-pad);
+}
+
+.head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: var(--fc-gap);
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--font-display, Georgia, serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--fc-fg);
+}
+
+::slotted([slot="description"]) {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--fc-muted);
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+:host(:not(:has([slot="title"]))) .head { display: none; }
+
+/* Density */
+:host([density="dense"])    { --fc-pad: 1rem;   --fc-gap: 0.75rem; }
+:host([density="spacious"]) { --fc-pad: 2rem;   --fc-gap: 1.5rem;  }
+
+/* Tone */
+:host([tone="muted"]) {
+    --fc-bg: var(--brand-cream-100, #f6efe2);
+}
+:host([tone="dark"]) {
+    --fc-bg:     var(--brand-ink-900, #1a1108);
+    --fc-fg:     #ffffff;
+    --fc-muted:  rgba(255, 255, 255, 0.7);
+    --fc-border: transparent;
+}

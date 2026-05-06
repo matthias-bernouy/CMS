@@ -1,0 +1,40 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Layout">
+        <p9r-segmented-switch name="variant" label="Variant" value="inline">
+            <option value="inline">Inline</option>
+            <option value="card">Card</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="size" label="Size" value="md">
+            <option value="md">Medium</option>
+            <option value="lg">Large</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="align" label="Alignment" value="center">
+            <option value="center">Center</option>
+            <option value="left">Left</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Icon">
+    <p9r-comp-sync optionnal disable-others-components>
+        <span slot="icon">📭</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components>
+        <h3 slot="title">Nothing here yet.</h3>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Description">
+    <p9r-comp-sync optionnal allow-multiple disable-others-components>
+        <p slot="description">A short message that explains why the area is empty.</p>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Action">
+    <p9r-comp-sync optionnal allow-multiple>
+        <base-button slot="action"></base-button>
+    </p9r-comp-sync>
+</p9r-section>

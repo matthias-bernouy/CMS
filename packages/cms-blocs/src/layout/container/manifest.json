@@ -3,8 +3,8 @@
     "bloc": "./Bloc.ts",
     "editor": "./BlocEditor.ts",
 
-    "default-tag": "hub-container",
-    "default-group": "Hub",
+    "default-tag": "base-container",
+    "default-group": "Layout",
 
     "meta": {
         "author": "Be5 Solutions",

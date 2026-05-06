@@ -26,7 +26,7 @@
         "@bernouy/runner-bun":     "workspace:*",
         "@bernouy/auth-keycloak":  "workspace:*",
         "@bernouy/auth-composite": "workspace:*",
-        "@bernouy/cdn":            "workspace:*",
+        "@bernouy/cdn-buckets":    "workspace:*",
         "@bernouy/cms":            "workspace:*"
     },
     "engines": {

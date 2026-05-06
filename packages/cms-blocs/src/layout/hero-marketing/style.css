@@ -1,0 +1,100 @@
+:host {
+    --hero-bg:       var(--brand-orange-500, #a85432);
+    --hero-fg:       #ffffff;
+    --hero-muted:    rgba(255, 255, 255, 0.85);
+    --hero-accent:   var(--brand-lime-300, #c9e44d);
+    --hero-pad-y:    6rem;
+    --hero-pad-x:    1.5rem;
+    --hero-max:      72rem;
+
+    display: block;
+    background: var(--hero-bg);
+    color: var(--hero-fg);
+}
+
+.hero {
+    padding: var(--hero-pad-y) var(--hero-pad-x);
+}
+
+.content {
+    max-width: var(--hero-max);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--hero-accent);
+}
+
+.dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--hero-accent);
+    display: inline-block;
+}
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--font-display, Georgia, serif);
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--hero-fg);
+    max-width: 14ch;
+}
+
+/* Author can wrap parts of the title in <em> for italic accent color */
+::slotted([slot="title"]) em,
+::slotted([slot="title"]) i {
+    font-style: italic;
+    color: var(--hero-accent);
+    font-weight: 700;
+}
+
+::slotted([slot="lead"]) {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: var(--hero-muted);
+    max-width: 38rem;
+}
+
+::slotted([slot="lead"]) em,
+::slotted([slot="lead"]) i {
+    color: var(--hero-accent);
+    font-style: italic;
+    font-weight: 600;
+}
+
+.actions {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+:host(:not(:has([slot="actions"]))) .actions { display: none; }
+
+/* Alignment */
+:host([align="center"]) .content {
+    align-items: center;
+    text-align: center;
+}
+:host([align="center"]) ::slotted([slot="title"]) {
+    max-width: 18ch;
+}
+
+/* Density */
+:host([density="compact"])  { --hero-pad-y: 4rem; }
+:host([density="spacious"]) { --hero-pad-y: 8rem; }

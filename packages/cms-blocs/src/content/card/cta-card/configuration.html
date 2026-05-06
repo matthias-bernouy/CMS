@@ -1,0 +1,27 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-segmented-switch name="tone" label="Tone" value="default">
+            <option value="default">Default</option>
+            <option value="muted">Muted (cream)</option>
+            <option value="primary">Primary (orange)</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components>
+        <h3 slot="title">Call to action</h3>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Description">
+    <p9r-comp-sync optionnal allow-multiple disable-others-components>
+        <p slot="description">A short paragraph that supports the action.</p>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Actions">
+    <p9r-comp-sync allow-multiple inline-adding>
+        <base-button slot="actions"></base-button>
+    </p9r-comp-sync>
+</p9r-section>

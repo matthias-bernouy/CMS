@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-step-section",
+    "default-group": "Content",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Step section",
+        "description": "Numbered step wrapper (number badge + title + body slot). Used in /vendre flow.",
+        "categories": ["layout"]
+    }
+}

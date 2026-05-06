@@ -1,4 +1,5 @@
 import { resolve, escape } from './pathHelpers';
+import { FILTERS } from './filters';
 
 /**
  * Walks text nodes and attributes under `node`, substituting `{{path}}`
@@ -41,18 +42,22 @@ function tryRawHtmlInject(el: Element, context: unknown): boolean {
 }
 
 /**
- * Substitute `{{path}}` tokens in `str`. Special-case: `{{value}}` refers
- * to the current context itself when the context is a primitive — useful
- * for arrays-of-primitives templates.
+ * Substitute `{{path}}` (or `{{path | filter}}`) tokens in `str`.
+ * Special-case: `{{value}}` refers to the current context itself when
+ * the context is a primitive — useful for arrays-of-primitives
+ * templates. The optional `| filterName` suffix routes the resolved
+ * value through one of the registered filters in `./filters.ts`
+ * (`date`, `datetime`, `ago`, `bytes`, `number`, `percent`, `bool`).
+ * Unknown filter names fall through with the raw value.
  */
 export function interpolateString(str: string, context: unknown): string {
-    return str.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, path: string) => {
-        if (path === 'value') {
-            if (context !== null && typeof context === 'object' && 'value' in context) {
-                return escape((context as Record<string, unknown>).value);
-            }
-            return escape(context);
-        }
-        return escape(resolve(context, path));
+    return str.replace(/\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g, (_m, path: string, filter?: string) => {
+        const raw = path === 'value'
+            ? (context !== null && typeof context === 'object' && 'value' in context
+                ? (context as Record<string, unknown>).value
+                : context)
+            : resolve(context, path);
+        const value = filter && FILTERS[filter] ? FILTERS[filter](raw) : raw;
+        return escape(value);
     });
 }

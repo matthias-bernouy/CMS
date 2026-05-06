@@ -1,0 +1,32 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-segmented-switch name="variant" label="Variant" value="default">
+            <option value="default">Default</option>
+            <option value="accent">Accent border</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Number">
+    <p9r-comp-sync disable-others-components>
+        <span slot="number">01</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Icon">
+    <p9r-comp-sync optionnal disable-others-components>
+        <span slot="icon">📷</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components>
+        <h3 slot="title">Step title</h3>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Description">
+    <p9r-comp-sync optionnal allow-multiple disable-others-components>
+        <p slot="description">A short description of this step.</p>
+    </p9r-comp-sync>
+</p9r-section>

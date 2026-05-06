@@ -1,7 +1,7 @@
 import type { Db } from "mongodb";
 import type { Tenant } from "@bernouy/mt-cms-control";
 import { MongoCmsRepository, DeliveryBuilder, BuildEnhancer, HttpVariantGenerator, PlaywrightSession, pageBucketName } from "@bernouy/cms";
-import { StorageDirectClient } from "@bernouy/cdn";
+import { StorageDirectClient } from "@bernouy/cdn-buckets";
 
 export type BuildTenantOptions = {
     /** Shared Playwright session (Chromium launched once per Delivery). */

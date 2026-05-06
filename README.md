@@ -16,7 +16,7 @@ socle/
 │   ├── auth-composite/                      @bernouy/auth-composite — host-based router across multiple auths
 │   ├── mailer-console/                      @bernouy/mailer-console — Mailer that logs (dev / tests)
 │   ├── mailer-smtp/                         @bernouy/mailer-smtp    — Mailer over `nodemailer`
-│   └── cdn/                                 @bernouy/cdn            — single-bucket CDN provider, broker, browser
+│   └── cdn/                                 @bernouy/cdn-buckets            — single-bucket CDN provider, broker, browser
 │
 ├── docker/                                  # deployment artefacts
 │   ├── cdn/                                 base image (Bun + nginx + lego, BYO bootstrap)
@@ -55,23 +55,13 @@ Each package's `package.json` declares `"main": "src/index.ts"` so consumers
 that link via `bun link` resolve directly to source — no rebuild needed for
 runtime changes.
 
-## Docker images
-
-- **`docker/cdn/`** — base image (alpine, no DB, no auth, no bootstrap).
-  Designed to be extended: `FROM bernouy/cdn-base`, `COPY server.ts`,
-  done. See [`docker/cdn/README.md`](./docker/cdn/README.md).
-
-- **`docker/cdn-keycloak/`** — all-in-one image bundling MongoDB, Nginx,
-  lego, Bun and a Keycloak-wired bootstrap. Just set env vars and
-  `docker run`. See [`docker/cdn-keycloak/README.md`](./docker/cdn-keycloak/README.md).
-
 ## Documentation
 
 - Root → packages → docs:
-  - [`packages/cdn/README.md`](./packages/cdn/README.md)
-  - [`packages/cdn/docs/dev/getting-started.md`](./packages/cdn/docs/dev/getting-started.md) — local dev path A (no Nginx) + path B (Nginx-enabled).
-  - [`packages/cdn/docs/prod/getting-started.md`](./packages/cdn/docs/prod/getting-started.md) — production setup, lego cert orchestration.
-  - [`packages/cdn/docs/tests/local-scenario.md`](./packages/cdn/docs/tests/local-scenario.md) — end-to-end runbook from a consumer package perspective.
+  - [`packages/cdn-buckets/README.md`](./packages/cdn-buckets/README.md)
+  - [`packages/cdn-buckets/docs/dev/getting-started.md`](./packages/cdn-buckets/docs/dev/getting-started.md) — local dev path A (no Nginx) + path B (Nginx-enabled).
+  - [`packages/cdn-buckets/docs/prod/getting-started.md`](./packages/cdn-buckets/docs/prod/getting-started.md) — production setup, lego cert orchestration.
+  - [`packages/cdn-buckets/docs/tests/local-scenario.md`](./packages/cdn-buckets/docs/tests/local-scenario.md) — end-to-end runbook from a consumer package perspective.
 - Per-package `README.md` for the auth / mailer / runner libs (where they
   carry one).
 

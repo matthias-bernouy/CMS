@@ -8,8 +8,8 @@
         "@bernouy/auth-composite": "workspace:*",
         "@bernouy/auth-keycloak": "workspace:*",
         "@bernouy/auth-token": "workspace:*",
-        "@bernouy/cdn": "workspace:*",
-        "@bernouy/cdn-origin": "workspace:*",
+        "@bernouy/cdn-buckets": "workspace:*",
+        "@bernouy/cdn-node": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/core": "workspace:*",
@@ -55,8 +55,8 @@
         "mongodb",
       ],
     },
-    "packages/cdn": {
-      "name": "@bernouy/cdn",
+    "packages/cdn-buckets": {
+      "name": "@bernouy/cdn-buckets",
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/core": "workspace:*",
@@ -71,11 +71,11 @@
         "mongodb",
       ],
     },
-    "packages/cdn-origin": {
-      "name": "@bernouy/cdn-origin",
+    "packages/cdn-node": {
+      "name": "@bernouy/cdn-node",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/cdn": "workspace:*",
+        "@bernouy/cdn-buckets": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/webcomponents": "workspace:*",
       },
@@ -132,7 +132,7 @@
       "dependencies": {
         "@bernouy/auth-composite": "workspace:*",
         "@bernouy/auth-keycloak": "workspace:*",
-        "@bernouy/cdn": "workspace:*",
+        "@bernouy/cdn-buckets": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
@@ -170,7 +170,7 @@
       "name": "@bernouy/mt-delivery-cms",
       "version": "0.0.1",
       "dependencies": {
-        "@bernouy/cdn": "workspace:*",
+        "@bernouy/cdn-buckets": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/mt-cms-control": "workspace:*",
@@ -205,9 +205,9 @@
 
     "@bernouy/auth-token": ["@bernouy/auth-token@workspace:packages/auth-token"],
 
-    "@bernouy/cdn": ["@bernouy/cdn@workspace:packages/cdn"],
+    "@bernouy/cdn-buckets": ["@bernouy/cdn-buckets@workspace:packages/cdn-buckets"],
 
-    "@bernouy/cdn-origin": ["@bernouy/cdn-origin@workspace:packages/cdn-origin"],
+    "@bernouy/cdn-node": ["@bernouy/cdn-node@workspace:packages/cdn-node"],
 
     "@bernouy/cms": ["@bernouy/cms@workspace:packages/cms"],
 

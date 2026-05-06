@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-brands-row",
+    "default-group": "Content",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Brands row",
+        "description": "Centered list of brand names (or logos) with a small caps caption above.",
+        "categories": ["content"]
+    }
+}

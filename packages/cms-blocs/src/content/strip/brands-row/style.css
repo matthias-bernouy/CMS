@@ -1,0 +1,48 @@
+:host {
+    --br-bg:      var(--brand-cream-100, #f6efe2);
+    --br-fg:      var(--text-main, #1a1108);
+    --br-muted:   var(--text-muted, #6b5642);
+    --br-pad:     2.5rem 1.5rem;
+
+    display: block;
+    background: var(--br-bg);
+}
+
+.row {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: var(--br-pad);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.caption {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--br-muted);
+}
+
+.items {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+::slotted(*) {
+    font-family: var(--font-display, Georgia, serif);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--br-muted);
+    transition: color 160ms var(--ease, ease-out);
+}
+
+::slotted(*:hover) {
+    color: var(--br-fg);
+}

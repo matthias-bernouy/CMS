@@ -1,0 +1,28 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-segmented-switch name="number-shape" label="Number shape" value="square">
+            <option value="square">Square</option>
+            <option value="circle">Circle</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="accent" label="Accent color" value="primary">
+            <option value="primary">Primary (orange)</option>
+            <option value="lime">Lime</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Number">
+    <p9r-comp-sync disable-others-components>
+        <span slot="number">1</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components>
+        <h2 slot="title">Step title</h2>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Body">
+    <p9r-comp-sync allow-multiple inline-adding></p9r-comp-sync>
+</p9r-section>

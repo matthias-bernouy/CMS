@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-navbar-actions",
+    "default-group": "Navigation",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Navbar actions",
+        "description": "Composition slot meant to live on the right side of the navbar — primary CTA, notifications and user menu.",
+        "categories": ["navigation"]
+    }
+}

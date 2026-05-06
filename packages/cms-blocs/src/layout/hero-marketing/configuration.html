@@ -1,0 +1,37 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-segmented-switch name="align" label="Alignment" value="left">
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="density" label="Padding" value="default">
+            <option value="compact">Compact</option>
+            <option value="default">Default</option>
+            <option value="spacious">Spacious</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Eyebrow">
+    <p9r-comp-sync optionnal disable-others-components>
+        <span slot="eyebrow">EYEBROW</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Title (use &lt;em&gt; for accent words)">
+    <p9r-comp-sync disable-others-components>
+        <h1 slot="title">Headline with <em>accent</em> words.</h1>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Lead">
+    <p9r-comp-sync optionnal allow-multiple disable-others-components>
+        <p slot="lead">A short lead paragraph supporting the title.</p>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Actions">
+    <p9r-comp-sync optionnal allow-multiple inline-adding>
+        <base-button slot="actions"></base-button>
+    </p9r-comp-sync>
+</p9r-section>

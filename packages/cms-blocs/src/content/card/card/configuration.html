@@ -1,0 +1,74 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-select name="variant" label="Variant">
+            <option selected value="default">Default</option>
+            <option value="outlined">Outlined</option>
+            <option value="elevated">Elevated</option>
+            <option value="ghost">Ghost</option>
+        </p9r-select>
+        <p9r-select name="theme" label="Theme">
+            <option selected value="light">Light</option>
+            <option value="dark">Dark</option>
+        </p9r-select>
+        <p9r-select name="density" label="Density">
+            <option value="compact">Compact</option>
+            <option selected value="regular">Regular</option>
+            <option value="spacious">Spacious</option>
+        </p9r-select>
+    </p9r-section>
+    <p9r-section data-title="Image">
+        <p9r-segmented-switch name="layout" label="Layout" value="vertical">
+            <option selected value="vertical">Top</option>
+            <option value="horizontal">Left</option>
+        </p9r-segmented-switch>
+        <p9r-select name="fit" label="Image fit">
+            <option selected value="cover">Cover</option>
+            <option value="contain">Contain</option>
+            <option value="fill">Fill</option>
+            <option value="none">None</option>
+            <option value="scale-down">Scale down</option>
+        </p9r-select>
+        <p9r-select name="ratio" label="Image ratio">
+            <option selected value="16/9">16 / 9</option>
+            <option value="4/3">4 / 3</option>
+            <option value="3/2">3 / 2</option>
+            <option value="1/1">1 / 1</option>
+            <option value="3/4">3 / 4</option>
+        </p9r-select>
+    </p9r-section>
+    <p9r-section data-title="Link">
+        <p9r-link name="href" label="Target page"></p9r-link>
+        <p9r-select name="target" label="Open in">
+            <option selected value="_self">Same tab</option>
+            <option value="_blank">New tab</option>
+        </p9r-select>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Image">
+    <p9r-image-sync slotTarget="image" label="Card image" optionnal default="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450' preserveAspectRatio='xMidYMid slice'><defs><linearGradient id='b' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%234f46e5' stop-opacity='0.15'/><stop offset='100%25' stop-color='%234f46e5' stop-opacity='0.45'/></linearGradient><linearGradient id='f' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%234f46e5' stop-opacity='0.6'/><stop offset='100%25' stop-color='%234f46e5' stop-opacity='0.9'/></linearGradient></defs><rect width='800' height='450' fill='url(%23b)'/><circle cx='620' cy='120' r='80' fill='url(%23f)'/><path d='M0 340 Q 200 260 400 310 T 800 280 L 800 450 L 0 450 Z' fill='url(%23f)' opacity='0.6'/><path d='M0 380 Q 220 320 420 360 T 800 340 L 800 450 L 0 450 Z' fill='%234f46e5' opacity='0.35'/></svg>"></p9r-image-sync>
+</p9r-section>
+
+<p9r-section data-title="Eyebrow">
+    <p9r-comp-sync disable-others-components optionnal>
+        <span slot="eyebrow">Category</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components>
+        <h3 slot="title">Card title</h3>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Description">
+    <p9r-comp-sync disable-others-components allow-multiple>
+        <p slot="description">A short supporting description that explains what this card is about.</p>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Actions">
+    <p9r-comp-sync allow-multiple>
+        <base-button slot="actions"></base-button>
+    </p9r-comp-sync>
+</p9r-section>

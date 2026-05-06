@@ -3,8 +3,8 @@
     "bloc": "./Bloc.ts",
     "editor": "./BlocEditor.ts",
 
-    "default-tag": "hub-accordion",
-    "default-group": "Hub",
+    "default-tag": "base-accordion",
+    "default-group": "Interactive",
 
     "meta": {
         "author": "Be5 Solutions",

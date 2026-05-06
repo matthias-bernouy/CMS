@@ -1,0 +1,84 @@
+:host {
+    --cb-fg:        var(--text-main, #1a1108);
+    --cb-border:    var(--border-subtle, #ebe1d0);
+    --cb-accent:    var(--brand-orange-500, #a85432);
+    --cb-size:      1.05rem;
+
+    --grade-color:   var(--grade-ace-fg, #16a34a);
+    --grade-surface: var(--grade-ace-bg, #d8f1e0);
+
+    display: block;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.92rem;
+    color: var(--cb-fg);
+    cursor: pointer;
+    user-select: none;
+}
+
+input {
+    appearance: none;
+    -webkit-appearance: none;
+    width: var(--cb-size);
+    height: var(--cb-size);
+    border: 1.5px solid var(--cb-border);
+    border-radius: 4px;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background 160ms var(--ease, ease-out),
+                border-color 160ms var(--ease, ease-out);
+}
+
+input:checked {
+    background: var(--cb-accent);
+    border-color: var(--cb-accent);
+}
+
+input:checked + .label::before {
+    content: "";
+}
+
+.label {
+    flex: 1 1 auto;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--grade-surface);
+    color: var(--grade-color);
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex: 0 0 auto;
+}
+
+.dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--grade-color);
+    flex: 0 0 auto;
+}
+
+:host(:not(:has([slot="badge"]))) .badge { display: none; }
+
+/* Grade variants drive the badge colors */
+:host([grade="ace"]) {
+    --grade-color:   var(--grade-ace-fg, #16a34a);
+    --grade-surface: var(--grade-ace-bg, #d8f1e0);
+}
+:host([grade="break"]) {
+    --grade-color:   var(--grade-break-fg, #dc6024);
+    --grade-surface: var(--grade-break-bg, #fde2d4);
+}
+:host([grade="coup-droit"]) {
+    --grade-color:   var(--grade-coup-droit-fg, #8b6f4a);
+    --grade-surface: var(--grade-coup-droit-bg, #ece1cc);
+}

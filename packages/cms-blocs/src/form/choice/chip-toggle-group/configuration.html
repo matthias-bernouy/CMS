@@ -1,0 +1,28 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Behavior">
+        <p9r-segmented-switch name="mode" label="Selection" value="single">
+            <option value="single">Single</option>
+            <option value="multi">Multiple</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+
+    <p9r-section data-title="Layout">
+        <p9r-segmented-switch name="align" label="Alignment" value="left">
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Legend">
+    <p9r-comp-sync optionnal disable-others-components>
+        <span slot="legend">Legend</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Chips">
+    <p9r-comp-sync allow-multiple inline-adding>
+        <base-chip-toggle></base-chip-toggle>
+    </p9r-comp-sync>
+</p9r-section>

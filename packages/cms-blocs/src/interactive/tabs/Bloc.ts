@@ -26,7 +26,7 @@ export class Bloc extends Component {
         this._resizeObs = new ResizeObserver(() => this._moveIndicator());
         if (this._triggers) this._resizeObs.observe(this._triggers);
 
-        // Watch label text changes inside child hub-tab elements.
+        // Watch label text changes inside child base-tab elements.
         this._mutationObs = new MutationObserver(this._rebuild);
         this._mutationObs.observe(this, { subtree: true, childList: true, characterData: true });
 
@@ -42,7 +42,7 @@ export class Bloc extends Component {
     }
 
     private _items(): HTMLElement[] {
-        return Array.from(this.querySelectorAll(':scope > hub-tab')) as HTMLElement[];
+        return Array.from(this.querySelectorAll(':scope > base-tab')) as HTMLElement[];
     }
 
     private _labelOf(item: HTMLElement, index: number): string {

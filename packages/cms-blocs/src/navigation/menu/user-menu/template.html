@@ -1,0 +1,25 @@
+<div class="wrap" part="wrap">
+    <button class="trigger" part="trigger" type="button">
+        <span class="avatar" part="avatar"><slot name="initials">?</slot></span>
+        <span class="name" part="name"><slot name="name"></slot></span>
+        <span class="caret" part="caret" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </span>
+    </button>
+
+    <div class="panel" part="panel" role="menu">
+        <header class="head" part="head">
+            <span class="caption" part="caption"><slot name="caption">Logged in as</slot></span>
+            <span class="display-name" part="display-name"><slot name="display-name"></slot></span>
+            <span class="role" part="role"><slot name="role"></slot></span>
+        </header>
+        <nav class="items" part="items">
+            <slot name="items"></slot>
+        </nav>
+        <footer class="foot" part="foot">
+            <slot name="logout"></slot>
+        </footer>
+    </div>
+</div>

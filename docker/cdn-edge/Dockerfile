@@ -1,28 +1,27 @@
 # `bernouy/cdn-edge` — public-serving node of a CDN cluster.
 #
-# Headless on purpose: just nginx (with brotli) + sshd. No app, no DB, no
-# Keycloak. Authority is "whatever the origin pushes via lsyncd" + the
-# operator's static config (DNS, env vars).
-#
-# The origin issues all certs (DNS-01 wildcard for *.MAIN_DOMAIN
-# + HTTP-01 per-alias). The edge serves them as-is from
-# `/var/lib/cdn/lego/certificates/`. ACME HTTP-01 challenges are
-# proxy_pass'd back to the origin so lego-on-origin owns the issuance.
+# Headless on purpose: nginx + sshd. NO lego, NO app, NO DB. The cert
+# for ${PUBLIC_DOMAIN} (and per-alias certs) are minted by the origin
+# via lego HTTP-01 — validation challenges hit any edge, get
+# proxy_pass'd back to origin which serves the file. Issued certs are
+# pushed to every edge via lsyncd. inotify-tools watches the cert dir
+# and reloads nginx whenever a new cert lands.
 #
 # Build:
 #   docker build \
 #       -f docker/cdn-edge/Dockerfile \
-#       -t bernouy/cdn-edge:0.1.0 \
+#       -t bernouy/cdn-edge:0.2.0 \
 #       docker/cdn-edge
 
 FROM debian:bookworm-slim
 
-# 1. System deps. nginx with brotli for matching the origin's Cache-Control
-#    + pre-compressed sibling behaviour. openssh-server so the origin can
-#    rsync into the volume. inotify-tools for the cert-reload watcher.
+# 1. System deps. nginx with brotli for matching the origin's
+#    Cache-Control + pre-compressed sibling behaviour. openssh-server so
+#    the origin can rsync into the volume. inotify-tools for the
+#    cert-reload watcher.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static \
-        openssh-server rsync inotify-tools \
+        openssh-server rsync inotify-tools logrotate \
         ca-certificates curl gettext-base sudo procps \
  && rm -rf /var/lib/apt/lists/*
 
@@ -47,12 +46,16 @@ RUN sed -i \
  && echo "AllowUsers cdn-sync" >> /etc/ssh/sshd_config \
  && rm -f /etc/ssh/ssh_host_*
 
-# 4. nginx skeleton (rendered at boot using ${MAIN_DOMAIN}). Runs as
-#    www-data (default) reading blobs from /var/lib/cdn/buckets/.
+# 4. nginx skeleton (rendered at boot using ${PUBLIC_DOMAIN} + ${ORIGIN_HOST} + ${EDGE_ID}).
 COPY bucketServing.conf  /etc/nginx/conf.d/cdn/bucketServing.conf
 COPY nginx.conf.template /etc/nginx/conf.d/cdn/nginx.conf.template
 RUN echo "include /etc/nginx/conf.d/cdn/nginx.conf;" > /etc/nginx/conf.d/cdn-include.conf \
  && rm -f /etc/nginx/sites-enabled/default
+
+# 4b. logrotate config — hourly rotation of the JSON access log, gzip,
+#     keep 168 files (7 days). Runs from the entrypoint's hourly loop.
+COPY logrotate.conf /etc/logrotate.d/cdn-edge-access
+RUN chmod 0644 /etc/logrotate.d/cdn-edge-access
 
 # 5. Sudoers — the cert-reload watcher (running as cdn-sync) needs to
 #    `nginx -s reload` whenever certs / configs change. Restricted to
@@ -70,7 +73,7 @@ VOLUME ["/var/lib/cdn"]
 EXPOSE 22 80 443
 
 # Healthcheck — nginx must accept on :80 (which serves the redirect /
-# ACME proxy). 200/301/302 all count as healthy.
+# ACME proxy). 200/301/302/404 all count as healthy.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1/ | grep -E '^(200|301|302|404)$' || exit 1
 

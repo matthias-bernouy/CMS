@@ -1,0 +1,89 @@
+<style>
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+.summary-grid p9r-card { padding: 1rem; }
+.summary-grid .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
+.summary-grid .value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; margin-top: 0.25rem; }
+.summary-grid .sub   { font-size: 0.8rem; opacity: 0.6; margin-top: 0.25rem; }
+
+.code-block {
+    overflow: auto;
+    background: var(--secondary-muted, #f5f5f5);
+    border: 1px solid var(--secondary-base, #ddd);
+    padding: 0.75rem;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: ui-monospace, monospace;
+    font-size: 0.85rem;
+    margin: 0;
+}
+</style>
+
+<p9r-stack gap="m" style="padding: 1.5rem 2rem;">
+
+    <h1 style="margin: 0;">Origin</h1>
+    <p style="margin: 0; opacity: 0.75;">
+        Authoritative source for every bucket. Pushes to edges via lsyncd-over-SSH and pulls each
+        edge's access logs every 15 min. Manage your <a href="{{BASE_PATH}}/edges">edges</a> or
+        review <a href="{{BASE_PATH}}/logs">access logs</a>.
+    </p>
+
+    <w13c-fetch url="{{BASE_PATH}}/api/status" reload-on="edge:added edge:removed edge:probed cluster:kicked">
+        <template>
+            <p9r-stack gap="m">
+
+                <div class="summary-grid">
+                    <p9r-card>
+                        <div class="label">Edges</div>
+                        <div class="value">{{ data.edges.length }}</div>
+                        <div class="sub"><a href="{{BASE_PATH}}/edges">manage</a></div>
+                    </p9r-card>
+                    <p9r-card>
+                        <div class="label">lsyncd</div>
+                        <div class="value">
+                            <span data-flag="{{ data.lsyncd.statusPresent | bool }}" class="flag-pill">{{ data.lsyncd.statusPresent | bool }}</span>
+                        </div>
+                        <div class="sub">{{ data.lsyncd.statusMtimeMs | ago }}</div>
+                    </p9r-card>
+                </div>
+
+                <h2 style="margin-bottom: 0;">SSH public key</h2>
+                <p style="margin-top: 0; opacity: 0.75;">
+                    Paste this line into <code>~/.ssh/authorized_keys</code> of the
+                    <code>cdn-sync</code> user on every edge server.
+                </p>
+                <pre class="code-block">{{ data.sshPubkey }}</pre>
+
+                <h2 style="margin-bottom: 0;">lsyncd</h2>
+                <p9r-stack gap="s">
+                    <div>config &nbsp;&nbsp;&nbsp;<code>{{ data.lsyncd.configPath }}</code></div>
+                    <div>status&nbsp;&nbsp;&nbsp;<code>{{ data.lsyncd.statusPath }}</code></div>
+                    <details>
+                        <summary>Status excerpt</summary>
+                        <pre class="code-block" style="max-height: 300px;">{{ data.lsyncd.statusExcerpt }}</pre>
+                    </details>
+                </p9r-stack>
+            </p9r-stack>
+        </template>
+        <template slot="error">
+            <p9r-alert type="error">Failed to load origin status.</p9r-alert>
+        </template>
+    </w13c-fetch>
+
+</p9r-stack>
+
+<style>
+.flag-pill {
+    display: inline-block;
+    padding: 0.125rem 0.625rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #9ca3af;
+    color: white;
+}
+.flag-pill[data-flag="yes"] { background: #16a34a; }
+.flag-pill[data-flag="no"]  { background: #dc2626; }
+</style>

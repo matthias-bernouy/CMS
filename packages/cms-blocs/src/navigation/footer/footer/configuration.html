@@ -1,0 +1,37 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-select name="theme" label="Theme">
+            <option selected value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="accent">Accent</option>
+        </p9r-select>
+        <p9r-select name="width" label="Max width">
+            <option value="md">Medium (960px)</option>
+            <option selected value="lg">Large (1200px)</option>
+            <option value="xl">Extra large (1440px)</option>
+            <option value="full">Full width</option>
+        </p9r-select>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Content">
+    <p9r-comp-sync allow-multiple>
+        <base-grid min="md" gap="lg">
+            <base-footer-column></base-footer-column>
+            <base-footer-column></base-footer-column>
+            <base-footer-column></base-footer-column>
+        </base-grid>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Copyright">
+    <p9r-comp-sync disable-others-components optionnal>
+        <span slot="copyright">© 2026 Your company. All rights reserved.</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Legal links">
+    <p9r-comp-sync allow-multiple optionnal>
+        <div slot="legal"></div>
+    </p9r-comp-sync>
+</p9r-section>

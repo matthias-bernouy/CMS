@@ -8,7 +8,7 @@
     "include": ["src/**/*.ts"],
     "references": [
         { "path": "../core" },
-        { "path": "../cdn" },
+        { "path": "../cdn-buckets" },
         { "path": "../cms" },
         { "path": "../cms-control-mt" }
     ]

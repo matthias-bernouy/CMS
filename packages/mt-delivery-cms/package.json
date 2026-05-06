@@ -13,7 +13,7 @@
     },
     "dependencies": {
         "@bernouy/core":            "workspace:*",
-        "@bernouy/cdn":             "workspace:*",
+        "@bernouy/cdn-buckets":     "workspace:*",
         "@bernouy/cms":             "workspace:*",
         "@bernouy/mt-cms-control":  "workspace:*"
     },

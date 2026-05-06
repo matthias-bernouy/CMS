@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-chip-toggle-group",
+    "default-group": "Form",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Chip toggle group",
+        "description": "Group of chip-toggle pills with single or multiple selection.",
+        "categories": ["form", "layout"]
+    }
+}

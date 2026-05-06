@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-page-header-actions",
+    "default-group": "Header",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Page header with actions",
+        "description": "Page title (and optional subtitle) on the left, primary actions on the right.",
+        "categories": ["layout", "navigation"]
+    }
+}

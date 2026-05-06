@@ -1,15 +1,25 @@
 # cdn-edge — nginx skeleton (rendered at container start).
-# Only ${MAIN_DOMAIN} and ${ORIGIN_HOST} are substituted by envsubst;
-# every other `$variable` stays literal.
+# Only ${PUBLIC_DOMAIN}, ${ORIGIN_HOST} and ${EDGE_ID} are substituted
+# by envsubst; every other `$variable` stays literal.
 #
-# Includes synced fragments (`/var/lib/cdn/nginx-generated/*`) for the
-# per-bucket `cacheControl`, per-bucket `notFound`, and alias mappings
-# pushed by the origin.
+# Path-based bucket routing on `${PUBLIC_DOMAIN}`: a request
+# `/<bucket>/<file>` extracts `<bucket>` via regex, sets `$bucket_id`,
+# then serves files from `/var/lib/cdn/buckets/<bucket>/<file>`.
+#
+# All certs (PUBLIC_DOMAIN + per-alias) are minted by the origin via
+# HTTP-01 webroot. ACME challenges that hit any edge get proxy_pass'd
+# back to origin so validation works no matter which edge LE picks
+# (round-robin DNS friendly).
 
+# Host → bucket_id map (alias domains only). Origin's `aliases.conf`
+# generator emits one line per registered alias: `<host> <bucketId>;`.
+# For requests to ${PUBLIC_DOMAIN}, this map sets `$bucket_id` to "" —
+# the path-based regex location below then overrides it from the URL's
+# first path segment. For alias hostnames, the map sets `$bucket_id` to
+# the bound bucket; the alias `server { … }` block (lsynced from origin
+# in `aliasesServers.conf`) consumes that via `bucketServing.conf`.
 map $host $bucket_id {
-    hostnames;
     default "";
-    ~^(?<sub>[^.]+)\.${MAIN_DOMAIN}$ $sub;
     include /var/lib/cdn/nginx-generated/aliases.conf;
 }
 
@@ -24,23 +34,41 @@ map $bucket_id $bucket_notfound {
 }
 
 # HTML responses always bypass caches — page content changes whenever an
-# admin saves and we want next visitors to see it. Hashed assets keep
-# the bucket's default Cache-Control (typically `immutable`).
+# admin saves and we want the next visitor to see it. Hashed assets
+# keep the bucket's default Cache-Control (typically `immutable`).
 map $uri $effective_cache_control {
     default     $cache_control;
     "~\.html$"  "no-store";
 }
 
+# JSON-Lines access log: one event per line, structured for downstream
+# parsing (origin pulls these via SSH+rsync). `escape=json` makes nginx
+# json-quote string values, so a raw newline / quote in user-agent or
+# referer doesn't break the line. ${EDGE_ID} is baked in at boot.
+log_format json_access escape=json
+    '{"fulldate":"$time_iso8601",'
+    '"edge_id":"${EDGE_ID}",'
+    '"hostname":"$host",'
+    '"ip":"$remote_addr",'
+    '"method":"$request_method",'
+    '"path":"$request_uri",'
+    '"status":$status,'
+    '"bytes":$body_bytes_sent,'
+    '"request_time":$request_time,'
+    '"bucket_id":"$bucket_id",'
+    '"content_encoding":"$sent_http_content_encoding",'
+    '"referer":"$http_referer",'
+    '"ua":"$http_user_agent"}';
+
+access_log /var/lib/cdn/access-logs/access.log json_access;
+
+# Port 80 — catch any host. ACME challenges proxy back to origin (this
+# is how LE validates ${PUBLIC_DOMAIN} AND per-alias certs); everything
+# else is redirected to HTTPS.
 server {
     listen 80 default_server;
     server_name _;
 
-    # ACME HTTP-01 challenges → proxy back to the origin. The origin
-    # writes the challenge file to its own /var/lib/cdn/lego/webroot/
-    # and lsyncd does NOT push that dir; instead Let's Encrypt fetches
-    # `<alias>/.well-known/acme-challenge/<token>`, hits this edge
-    # (because the alias DNS points here), and we proxy_pass it back to
-    # the origin to serve the challenge content.
     location ^~ /.well-known/acme-challenge/ {
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
@@ -54,16 +82,44 @@ server {
     }
 }
 
+# Port 443 — main bucket-serving host. Path-based routing.
 server {
     listen 443 ssl http2;
-    server_name *.${MAIN_DOMAIN};
+    server_name ${PUBLIC_DOMAIN};
 
-    ssl_certificate     /var/lib/cdn/lego/certificates/${MAIN_DOMAIN}.crt;
-    ssl_certificate_key /var/lib/cdn/lego/certificates/${MAIN_DOMAIN}.key;
+    ssl_certificate     /var/lib/cdn/lego/certificates/${PUBLIC_DOMAIN}.crt;
+    ssl_certificate_key /var/lib/cdn/lego/certificates/${PUBLIC_DOMAIN}.key;
 
-    include /etc/nginx/conf.d/cdn/bucketServing.conf;
+    # `$bucket_id` is declared by the `map $host …` block above. We
+    # capture the path's first segment into a fresh `$path_bucket` and
+    # `set $bucket_id` from it — using the same name in a regex named
+    # group would conflict with the map declaration and silently leave
+    # `$bucket_id` empty for these requests.
+    location ~ "^/(?<path_bucket>[a-z0-9_-]+)(/(?<rest>.*))?$" {
+        set $bucket_id $path_bucket;
+        root /var/lib/cdn/buckets/$bucket_id;
+
+        add_header Cache-Control                $effective_cache_control always;
+        add_header Access-Control-Allow-Origin  "*"                      always;
+
+        brotli_static on;
+        gzip_static   on;
+
+        error_page 404 = @bucket_notfound;
+        try_files /$rest /$rest.html /$rest/index.html =404;
+    }
+
+    location @bucket_notfound {
+        internal;
+        try_files /$bucket_notfound =404;
+    }
+
+    location = / {
+        return 200 "cdn-edge\n";
+    }
 }
 
-# Per-alias `server { … }` blocks (one per alias domain, generated by
-# the origin and synced via lsyncd).
+# Per-alias `server { … }` blocks (one per alias domain — each block
+# does `set $bucket_id "..."` and `include bucketServing.conf`). lsynced
+# from the origin.
 include /var/lib/cdn/nginx-generated/aliasesServers.conf;

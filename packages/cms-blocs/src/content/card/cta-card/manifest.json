@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-cta-card",
+    "default-group": "Content",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "CTA card",
+        "description": "Centered call-to-action card with title, optional description and primary action.",
+        "categories": ["action", "content"]
+    }
+}

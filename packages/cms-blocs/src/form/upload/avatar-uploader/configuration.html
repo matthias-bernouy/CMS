@@ -1,0 +1,31 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-segmented-switch name="size" label="Size" value="md">
+            <option value="sm">Small</option>
+            <option value="md">Medium</option>
+            <option value="lg">Large</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Image">
+    <p9r-image-sync slotTarget="image" label="Avatar image" optionnal></p9r-image-sync>
+</p9r-section>
+
+<p9r-section data-title="Initials (fallback)">
+    <p9r-comp-sync disable-others-components>
+        <span slot="initials">MA</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Name">
+    <p9r-comp-sync disable-others-components>
+        <span slot="name">User name</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Email">
+    <p9r-comp-sync optionnal disable-others-components>
+        <span slot="email">user@example.com</span>
+    </p9r-comp-sync>
+</p9r-section>

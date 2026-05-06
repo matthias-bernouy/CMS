@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-stat-counter",
+    "default-group": "Content",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Stat counter",
+        "description": "Animated numeric stat with label and optional trend.",
+        "categories": ["content"]
+    }
+}

@@ -123,8 +123,8 @@
 
 /* ---------- Panels ---------- */
 
-.panels ::slotted(hub-tab) { display: none; }
-.panels ::slotted(hub-tab[active]) { display: block; }
+.panels ::slotted(base-tab) { display: none; }
+.panels ::slotted(base-tab[active]) { display: block; }
 
 @media (prefers-reduced-motion: reduce) {
     :host { --tabs-duration: 0ms; }

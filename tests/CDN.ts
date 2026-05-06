@@ -10,7 +10,7 @@ import {
     MongoAliasRepository,            type AliasDocument,
     MongoStoredFolderRepository,     type StoredFolderDocument,
     MongoStoredFileRepository,       type StoredFileDocument,
-} from "@bernouy/cdn";
+} from "@bernouy/cdn-buckets";
 
 const mongo = new MongoClient("mongodb://localhost:27017");
 await mongo.connect();

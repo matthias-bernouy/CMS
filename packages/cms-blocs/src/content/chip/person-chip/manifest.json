@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-person-chip",
+    "default-group": "Content",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Person chip",
+        "description": "Compact person card with an initials avatar (or image) and name.",
+        "categories": ["content"]
+    }
+}

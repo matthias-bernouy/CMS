@@ -1,0 +1,24 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Behavior">
+        <p9r-segmented-switch name="collapsible" label="Collapsible">
+            <option selected value="">No</option>
+            <option value="true">Yes</option>
+        </p9r-segmented-switch>
+        <p9r-segmented-switch name="open" label="Open by default">
+            <option value="">No</option>
+            <option selected value="true">Yes</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync optionnal disable-others-components>
+        <span slot="title">Section</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Items">
+    <p9r-comp-sync allow-multiple>
+        <base-sidenav-item></base-sidenav-item>
+    </p9r-comp-sync>
+</p9r-section>

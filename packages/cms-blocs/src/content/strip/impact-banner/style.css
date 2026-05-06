@@ -1,0 +1,96 @@
+:host {
+    --banner-bg:      var(--brand-orange-500, #a85432);
+    --banner-fg:      #ffffff;
+    --banner-muted:   rgba(255, 255, 255, 0.82);
+    --banner-accent:  var(--brand-lime-300, #c9e44d);
+    --banner-radius:  var(--radius-lg, 16px);
+    --banner-pad-y:   3rem;
+    --banner-pad-x:   2rem;
+    --banner-max:     72rem;
+
+    display: block;
+}
+
+.banner {
+    background: var(--banner-bg);
+    color: var(--banner-fg);
+    border-radius: var(--banner-radius);
+    padding: var(--banner-pad-y) var(--banner-pad-x);
+}
+
+.content {
+    max-width: var(--banner-max);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--banner-accent);
+}
+
+.icon {
+    display: inline-flex;
+    line-height: 0;
+    font-size: 1.2em;
+}
+
+:host(:not(:has([slot="icon"]))) .icon { display: none; }
+:host(:not(:has([slot="eyebrow"])):not(:has([slot="icon"]))) .eyebrow { display: none; }
+
+::slotted([slot="title"]) {
+    margin: 0;
+    font-family: var(--font-display, Georgia, serif);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--banner-fg);
+}
+
+::slotted([slot="text"]) {
+    margin: 0;
+    color: var(--banner-muted);
+    font-size: 1rem;
+    line-height: 1.55;
+    max-width: 56rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 1.25rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    padding-top: 1.5rem;
+}
+
+:host(:not(:has([slot="stats"]))) .stats { display: none; }
+
+/* Layout — inline (icon + text on one row, no card) */
+:host([variant="inline"]) {
+    --banner-radius: 0;
+    --banner-pad-y:  1.25rem;
+}
+:host([variant="inline"]) .content {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+}
+:host([variant="inline"]) .head { flex-direction: row; align-items: center; }
+:host([variant="inline"]) ::slotted([slot="title"]) { font-size: 1rem; }
+:host([variant="inline"]) .stats { display: none; }

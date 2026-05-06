@@ -1,0 +1,38 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Style">
+        <p9r-segmented-switch name="variant" label="Variant" value="card">
+            <option value="card">Card</option>
+            <option value="inline">Inline (slim)</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Icon">
+    <p9r-comp-sync optionnal disable-others-components>
+        <span slot="icon">🌱</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Eyebrow">
+    <p9r-comp-sync optionnal disable-others-components>
+        <span slot="eyebrow">IMPACT</span>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Title">
+    <p9r-comp-sync disable-others-components>
+        <h2 slot="title">Banner title</h2>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Text">
+    <p9r-comp-sync optionnal allow-multiple disable-others-components>
+        <p slot="text">A short paragraph explaining the message.</p>
+    </p9r-comp-sync>
+</p9r-section>
+
+<p9r-section data-title="Stats">
+    <p9r-comp-sync optionnal allow-multiple inline-adding>
+        <base-stat-tile slot="stats" tone="inverted"></base-stat-tile>
+    </p9r-comp-sync>
+</p9r-section>

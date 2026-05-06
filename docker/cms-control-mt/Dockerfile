@@ -1,5 +1,4 @@
-# Multi-tenant CMS Control. Same shape as `docker/cms-control` but wires
-# `MtControlCms` instead of single-tenant `ControlCms`. External MongoDB.
+# Multi-tenant CMS Control. Wires `MtControlCms`. External MongoDB.
 # TLS embedded (lego HTTP-01) — single host, single domain.
 
 FROM debian:bookworm-slim

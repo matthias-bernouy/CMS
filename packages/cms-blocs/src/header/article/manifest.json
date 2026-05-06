@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-article-header",
+    "default-group": "Header",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Article header",
+        "description": "Article title, lead, optional hero image and meta row.",
+        "categories": ["content"]
+    }
+}

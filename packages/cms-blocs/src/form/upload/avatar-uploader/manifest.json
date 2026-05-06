@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-avatar-uploader",
+    "default-group": "Form",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Avatar uploader",
+        "description": "Circular avatar with a camera-icon overlay button to upload a new image, plus name + email aside.",
+        "categories": ["form", "content"]
+    }
+}

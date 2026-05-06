@@ -3,7 +3,7 @@ import type { Runner, Subject } from "@bernouy/core";
 import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
 import { CompositeAuthentication } from "@bernouy/auth-composite";
 import { Cms as ControlCms, MongoCmsRepository } from "@bernouy/cms";
-import { StorageTokenBroker, StorageBrowser } from "@bernouy/cdn";
+import { StorageTokenBroker, StorageBrowser } from "@bernouy/cdn-buckets";
 import type { Tenant } from "src/interfaces/Tenant";
 
 export type TenantRole = "admin" | "user";

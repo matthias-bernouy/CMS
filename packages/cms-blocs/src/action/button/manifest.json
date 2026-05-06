@@ -1,0 +1,15 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+
+    "default-tag": "base-button",
+    "default-group": "Action",
+
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Button",
+        "description": "Reusable action button with primary / secondary / ghost variants.",
+        "categories": ["action"]
+    }
+}
