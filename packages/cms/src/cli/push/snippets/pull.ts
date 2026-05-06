@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { serializeFrontmatter } from "../shared/frontmatterWrite";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
@@ -46,15 +47,10 @@ async function fetchOne(adminBase: URL, token: string, identifier: string): Prom
 
 async function writeSnippet(siteDir: string, s: RemoteSnippet): Promise<void> {
     const file = join(siteDir, "snippets", `${s.identifier}.html`);
-    const fm = [
-        "---",
-        `name: ${quote(s.name)}`,
-        `description: ${quote(s.description)}`,
-        `category: ${quote(s.category)}`,
-        "---",
-        "",
-    ].join("\n");
+    const fm = serializeFrontmatter({
+        name:        s.name        ?? "",
+        description: s.description ?? "",
+        category:    s.category    ?? "",
+    });
     await writeFile(file, fm + (s.content ?? ""), "utf-8");
 }
-
-function quote(v: string): string { return `"${(v ?? "").replace(/"/g, '\\"')}"`; }

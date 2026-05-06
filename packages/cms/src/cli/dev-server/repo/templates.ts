@@ -1,0 +1,82 @@
+import { existsSync } from "node:fs";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import type { TTemplate } from "src/socle/interfaces/models";
+import { scanTemplates } from "src/cli/push/templates/scan";
+import { serializeFrontmatter } from "src/cli/push/shared/frontmatterWrite";
+
+const FROZEN_DATE = new Date(0);
+
+/**
+ * Filesystem-backed template store. ID = identifier (filename) — stable
+ * across dev restarts. createdAt is frozen.
+ */
+export class TemplatesStore {
+    constructor(private readonly siteDir: string) {}
+
+    async getAll(): Promise<TTemplate[]> {
+        const local = await scanTemplates(this.siteDir);
+        return local.map(t => this._toTTemplate(t.identifier, t.meta, t.content));
+    }
+
+    async getByIdentifier(identifier: string): Promise<TTemplate | null> {
+        return (await this.getAll()).find(t => t.identifier === identifier) ?? null;
+    }
+
+    async getById(id: string): Promise<TTemplate | null> {
+        return this.getByIdentifier(id);
+    }
+
+    async create(template: Omit<TTemplate, "id">): Promise<TTemplate> {
+        const file = this._fileFor(template.identifier);
+        if (existsSync(file)) throw new Error(`Template "${template.identifier}" already exists`);
+        await this._write(file, template.name, template.description ?? "", template.category ?? "", template.content ?? "<p></p>");
+        return { ...template, id: template.identifier };
+    }
+
+    async update(id: string, data: Partial<TTemplate>): Promise<TTemplate | null> {
+        const existing = await this.getById(id);
+        if (!existing) return null;
+        const merged: TTemplate = { ...existing, ...data, id: existing.id, identifier: existing.identifier };
+        await this._write(this._fileFor(existing.identifier), merged.name, merged.description, merged.category, merged.content);
+        return merged;
+    }
+
+    async delete(id: string): Promise<void> {
+        const existing = await this.getById(id);
+        if (!existing) return;
+        const file = this._fileFor(existing.identifier);
+        if (existsSync(file)) await unlink(file);
+    }
+
+    async categories(): Promise<string[]> {
+        const set = new Set<string>();
+        for (const t of await this.getAll()) if (t.category) set.add(t.category);
+        return [...set].sort();
+    }
+
+    async metadata(): Promise<{ id: string; identifier: string; name: string; category: string; createdAt: string }[]> {
+        return (await this.getAll()).map(t => ({
+            id: t.id, identifier: t.identifier, name: t.name, category: t.category,
+            createdAt: t.createdAt.toDateString(),
+        }));
+    }
+
+    private _toTTemplate(identifier: string, meta: { name: string; description: string; category: string }, content: string): TTemplate {
+        return {
+            id: identifier, identifier,
+            name: meta.name, description: meta.description, category: meta.category,
+            content,
+            createdAt: FROZEN_DATE,
+        };
+    }
+
+    private _fileFor(identifier: string): string {
+        return join(this.siteDir, "templates", `${identifier}.html`);
+    }
+
+    private async _write(file: string, name: string, description: string, category: string, content: string): Promise<void> {
+        await mkdir(join(this.siteDir, "templates"), { recursive: true });
+        await writeFile(file, serializeFrontmatter({ name, description, category }) + content, "utf-8");
+    }
+}

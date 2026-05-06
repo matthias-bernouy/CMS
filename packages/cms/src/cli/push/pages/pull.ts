@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { serializeFrontmatter } from "../shared/frontmatterWrite";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
@@ -57,15 +58,12 @@ async function writePage(siteDir: string, urlPath: string, page: RemotePage): Pr
     const visible = page.visible === true || page.visible === "on";
     const tags    = Array.isArray(page.tags) ? page.tags : (page.tags ? page.tags.split(",").filter(Boolean) : []);
 
-    const fm = [
-        "---",
-        `title: ${quote(page.title)}`,
-        `description: ${quote(page.description)}`,
-        `visible: ${visible}`,
-        `tags: [${tags.map(quote).join(", ")}]`,
-        "---",
-        "",
-    ].join("\n");
+    const fm = serializeFrontmatter({
+        title:       page.title       ?? "",
+        description: page.description ?? "",
+        visible,
+        tags,
+    });
 
     await writeFile(file, fm + (page.content ?? ""), "utf-8");
 }
@@ -74,5 +72,3 @@ function urlPathToFile(p: string): string {
     if (p === "/") return "index.html";
     return p.replace(/^\//, "") + ".html";
 }
-
-function quote(v: string): string { return `"${(v ?? "").replace(/"/g, '\\"')}"`; }

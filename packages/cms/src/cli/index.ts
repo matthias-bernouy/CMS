@@ -24,7 +24,9 @@ Usage:
   p9r login  [--url=...]           Keycloak Device Auth flow (cached in
                                    ~/.config/p9r/credentials.json).
   p9r logout [--url=...]           Drop stored credentials for the URL.
-  p9r dev                          Run the local editor against a remote CMS.
+  p9r dev [--port=N --host=H]      Run the editor 100% locally against site/.
+                                   No remote calls, no auth. Run \`p9r pull\`
+                                   first to bootstrap site/ from a tenant.
   p9r push [flags]                 Push system/blocs/site/{snippets,templates,
                                    pages} in that order to the remote CMS.
       --type=<one>|*               One of: system, blocs, snippets, templates,
