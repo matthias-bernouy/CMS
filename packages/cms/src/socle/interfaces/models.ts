@@ -5,6 +5,13 @@ export type TBloc = {
     description: string;
     viewJS: string;
     editorJS: string;
+    /**
+     * Author-side source folder, base64-encoded per relative path.
+     * Optional — legacy blocs uploaded before PR 5 don't carry this and
+     * `p9r pull` skips them with a warning. Lets a fresh checkout
+     * reconstruct the editable bloc tree in `site/blocs/<tag>/`.
+     */
+    source?: Record<string, string>;
 }
 
 export type TPage = {
@@ -20,6 +27,8 @@ export type TPage = {
 
 export type TTemplate = {
     id: string;
+    /** Stable slug — primary handle for the CLI / file-system mapping. Immutable. */
+    identifier: string;
     name: string;
     description: string;
     content: string;

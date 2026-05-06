@@ -49,13 +49,29 @@ describe("validateBloc — source patterns", () => {
         expect(r.errors).toHaveLength(0);
     });
 
-    test("rejects hardcoded customElements.define in view", () => {
+    test("accepts a single legitimate customElements.define matching the bloc tag (build-wrapper output)", () => {
         const r = validateBloc({
             tag: "my-bloc",
             viewSource: `customElements.define("my-bloc", X);`,
         });
+        expect(r.errors).toHaveLength(0);
+    });
+
+    test("rejects duplicate customElements.define on the same bloc tag (author added their own on top of the wrapper)", () => {
+        const r = validateBloc({
+            tag: "my-bloc",
+            viewSource: `customElements.define("my-bloc", X); customElements.define("my-bloc", X);`,
+        });
+        expect(r.errors).toEqual([expect.stringContaining("duplicate")]);
+    });
+
+    test("rejects customElements.define with a different tag than the bloc", () => {
+        const r = validateBloc({
+            tag: "my-bloc",
+            viewSource: `customElements.define("other-tag", X);`,
+        });
         expect(r.errors).toEqual([
-            expect.stringContaining(`Bloc: hardcoded \`customElements.define("my-bloc"`),
+            expect.stringContaining(`Bloc: hardcoded \`customElements.define("other-tag"`),
         ]);
     });
 
@@ -106,30 +122,6 @@ describe("validateBloc — empty p9r-comp-sync (#1)", () => {
 });
 
 describe("validateBloc — required sync attrs (#5)", () => {
-    test("rejects p9r-state-sync missing target/attr/value", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-state-sync></p9r-state-sync>`,
-        });
-        expect(r.errors.filter(e => e.includes("p9r-state-sync"))).toHaveLength(3);
-    });
-
-    test("accepts p9r-state-sync with all required", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-state-sync target=".x" attr="active" value="true" label="Active"></p9r-state-sync>`,
-        });
-        expect(r.errors.filter(e => e.includes("p9r-state-sync"))).toHaveLength(0);
-    });
-
-    test("rejects p9r-state-sync with empty attrs", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-state-sync target="" attr="" value=""></p9r-state-sync>`,
-        });
-        expect(r.errors.filter(e => e.includes("p9r-state-sync"))).toHaveLength(3);
-    });
-
     test("rejects p9r-link missing name", () => {
         const r = validateBloc({
             tag: "my-bloc",

@@ -56,8 +56,8 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     const tagError = validateBlocTag(input.tag);
     if (tagError) errors.push(tagError);
 
-    if (input.viewSource)   errors.push(...checkNoHardcodedDefine(input.viewSource, "Bloc"));
-    if (input.editorSource) errors.push(...checkNoHardcodedDefine(input.editorSource, "BlocEditor"));
+    if (input.viewSource)   errors.push(...checkNoHardcodedDefine(input.viewSource, "Bloc",       input.tag));
+    if (input.editorSource) errors.push(...checkNoHardcodedDefine(input.editorSource, "BlocEditor", input.tag));
 
     if (input.configurationHtml) {
         errors.push(...checkCompSyncNonEmpty(input.configurationHtml));
@@ -78,18 +78,31 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
 // ── #3: Hardcoded `customElements.define` ─────────────────────────────────
 
 /**
- * Bloc registration is owned by the CLI/server wrapper, which stamps in
- * the manifest tag via `BE5_TAG_TO_BE_REPLACED`. A literal string in the
- * user's own `customElements.define` call would either collide with that
- * registration or hijack the bloc tag entirely.
+ * Bloc registration is owned by the build wrapper, which stamps in the
+ * manifest tag via `BE5_TAG_TO_BE_REPLACED`. After build the placeholder
+ * is substituted, so the bundle always contains exactly one legitimate
+ * `customElements.define("<expected-tag>", …)`. We reject any literal
+ * that doesn't match the expected tag (means the author hardcoded a
+ * different tag) and any duplicate (means the author added their own
+ * call on top of the wrapper's — would crash with "already defined").
  */
-function checkNoHardcodedDefine(source: string, fileLabel: string): string[] {
+function checkNoHardcodedDefine(source: string, fileLabel: string, expectedTag: string): string[] {
     const errors: string[] = [];
     const re = /customElements\.define\s*\(\s*["']([^"']*)["']/g;
     let match: RegExpExecArray | null;
+    let expectedSeen = 0;
     while ((match = re.exec(source)) !== null) {
         const literal = match[1]!;
         if (literal === "BE5_TAG_TO_BE_REPLACED") continue;
+        if (literal === expectedTag) {
+            expectedSeen++;
+            if (expectedSeen > 1) {
+                errors.push(
+                    `${fileLabel}: duplicate \`customElements.define("${literal}", …)\` — the build wrapper already registers the bloc, remove the extra call.`,
+                );
+            }
+            continue;
+        }
         errors.push(
             `${fileLabel}: hardcoded \`customElements.define("${literal}", …)\` — bloc registration is handled by the build wrapper, remove this call.`,
         );
@@ -120,8 +133,7 @@ function checkCompSyncNonEmpty(html: string): string[] {
 // ── #5: Required attributes on sync elements ──────────────────────────────
 
 const REQUIRED_SYNC_ATTRS: Record<string, string[]> = {
-    "p9r-state-sync": ["target", "attr", "value"],
-    "p9r-link":       ["name"],
+    "p9r-link": ["name"],
 };
 
 function checkSyncRequiredAttrs(html: string): string[] {

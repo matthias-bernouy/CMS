@@ -21,6 +21,8 @@ export interface CmsRepository {
     getBlocsJS(): Promise<{ id: string, editorJS: string, viewJS: string }[]>;
     getBlocsList(): Promise<BlocListItemResponse[]>;
     getBlocViewJS(htmlTag: string): Promise<string | null>;
+    /** Author-side source map for `p9r pull`. Returns null when the bloc has no source bundle (legacy push). */
+    getBlocSource(htmlTag: string): Promise<Record<string, string> | null>;
 
 
     // PAGE
@@ -31,7 +33,7 @@ export interface CmsRepository {
     updatePage(page: Partial<TPage>): Promise<void>;
     getLinks(): Promise<PageLink[]>
     getPagesMetadata(): Promise<{id: string, path: string, title: string, tags: string[], visible: boolean}[]>
-    getTemplatesMetadata(): Promise<{id: string, name: string, category: string, createdAt: string}[]>
+    getTemplatesMetadata(): Promise<{id: string, identifier: string, name: string, category: string, createdAt: string}[]>
 
 
     // SYSTEM
@@ -41,6 +43,7 @@ export interface CmsRepository {
     // TEMPLATE
     createTemplate(template: Omit<TTemplate, 'id'>): Promise<TTemplate>;
     getTemplateById(id: string): Promise<TTemplate | null>;
+    getTemplateByIdentifier(identifier: string): Promise<TTemplate | null>;
     getAllTemplates(): Promise<TTemplate[]>;
     /** Distinct, sorted, non-empty `category` values across every template. */
     getTemplateCategories(): Promise<string[]>;

@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import CLI_importBloc from "./CLI_importBloc";
+import CLI_push from "./CLI_push";
+import CLI_pull from "./CLI_pull";
 import CLI_dev from "./CLI_dev";
 import CLI_init from "./CLI_init";
 import CLI_new from "./CLI_new";
@@ -13,39 +14,31 @@ function printHelp() {
     console.log(`p9r — Cms CLI
 
 Usage:
-  p9r init <folder> [--force]      Scaffold a new bloc in <folder> from the
-                                   base template (manifest.json, Bloc.ts,
-                                   BlocEditor.ts, template.html, style.css,
-                                   configuration.html, assets/)
-  p9r new <folder> [flags]         Scaffold a new CMS app (Control + Delivery
-                                   co-hosted, in-memory providers, basic auth)
-                                   into <folder>
-      --template=full              Template to use (default: full)
-      --force | -f                 Allow a non-empty target folder
-  p9r install-skill [--force]      Install the bloc-creator Claude Code skill
-                                   into ./.claude/skills/ so Claude can scaffold
-                                   blocs on request in this project
-  p9r login [--url=...]            Authenticate against a remote CMS via the
-                                   Keycloak Device Authorization Grant flow.
-                                   Stores tokens in ~/.config/p9r/credentials.json
-                                   so subsequent commands run without prompts.
-  p9r logout [--url=...]           Remove stored credentials for the CMS URL.
-  p9r dev                          Run the local editor against a remote CMS
-  p9r import [flags]               Scan the current folder and push new blocs
-                                   to the remote CMS via its admin API
-      --dry-run                    Scan, build, and show what would be pushed
-      --only=tag1,tag2             Only consider the listed manifest tags
+  p9r init <folder> [--force]      Scaffold a new bloc folder.
+  p9r new <folder> [flags]         Scaffold a CMS app (Control + Delivery,
+                                   in-memory providers, basic auth).
+      --template=full              Template (default: full)
+      --force | -f                 Allow a non-empty target.
+  p9r install-skill [--force]      Install the bloc-creator Claude skill
+                                   into ./.claude/skills/.
+  p9r login  [--url=...]           Keycloak Device Auth flow (cached in
+                                   ~/.config/p9r/credentials.json).
+  p9r logout [--url=...]           Drop stored credentials for the URL.
+  p9r dev                          Run the local editor against a remote CMS.
+  p9r push [flags]                 Push system/blocs/site/{snippets,templates,
+                                   pages} in that order to the remote CMS.
+      --type=<one>|*               One of: system, blocs, snippets, templates,
+                                   pages (default *: full pipeline).
+      --dry-run                    Show what would be uploaded, no writes.
+      --yes | -y                   Skip the [y/N] prompt.
+      --force | -f                 Bypass conflict + cross-ref validation.
+      --only=tag1,tag2             Filter blocs by manifest tag.
+  p9r pull [flags]                 Inverse of push: materialize remote into
+                                   site/. Same --type set; --yes / --force
+                                   to skip the overwrite confirmation.
   p9r list-blocs [--json]          List blocs registered on the remote CMS
-                                   (id, name, group, description) so agents
-                                   know what tags already exist
+                                   (id, name, group, description).
   p9r help                         Show this help
-
-Behaviour of 'p9r import':
-  • Scans the cwd for folders containing a manifest.json
-  • Builds each bloc (view + editor; opaque wrapper if no editor file)
-  • Fetches the remote bloc list and skips any tag that already exists
-  • Uploads new blocs via multipart POST to {P9R_URL}/api/bloc
-  • Existing blocs are never overwritten — delete them from the admin UI first
 
 Env (loaded from .env or the environment):
   P9R_URL      Base URL of the remote Cms CMS
@@ -75,9 +68,15 @@ try {
         case "dev":
             await CLI_dev(rest);
             break;
+        case "push":
+            await CLI_push(rest);
+            break;
+        case "pull":
+            await CLI_pull(rest);
+            break;
         case "import":
-            await CLI_importBloc(rest);
-            console.log("Done.");
+            console.error("✖ `p9r import` has been removed — use `p9r push --type=blocs` (or just `p9r push` for blocs + pages).");
+            process.exit(1);
             break;
         case "list-blocs":
             await CLI_listBlocs(rest);

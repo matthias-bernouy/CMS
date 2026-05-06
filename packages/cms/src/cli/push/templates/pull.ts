@@ -1,0 +1,64 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+
+const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
+
+export type PullTemplatesResult = { pulled: string[]; skipped: { reason: string }[]; failed: { identifier: string; error: string }[] };
+
+type RemoteTemplate = {
+    identifier?: string;
+    name:        string;
+    description: string;
+    category:    string;
+    content:     string;
+};
+
+export async function pullTemplates(adminBase: URL, token: string, siteDir: string): Promise<PullTemplatesResult> {
+    const out: PullTemplatesResult = { pulled: [], skipped: [], failed: [] };
+    const list = await fetchList(adminBase, token);
+    await mkdir(join(siteDir, "templates"), { recursive: true });
+
+    for (const meta of list) {
+        if (!meta.identifier) {
+            out.skipped.push({ reason: `template "${meta.name}" has no identifier — skipped (legacy template, manage it via the admin UI)` });
+            continue;
+        }
+        try {
+            const t = await fetchOne(adminBase, token, meta.id);
+            await writeTemplate(siteDir, meta.identifier, t);
+            out.pulled.push(meta.identifier);
+        } catch (err) {
+            out.failed.push({ identifier: meta.identifier, error: err instanceof Error ? err.message : String(err) });
+        }
+    }
+    return out;
+}
+
+async function fetchList(adminBase: URL, token: string): Promise<{ id: string; identifier?: string; name: string }[]> {
+    const url = new URL("api/template/list", adminBase).href;
+    const res = await fetch(url, { headers: HEADERS(token) });
+    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
+    return await res.json() as { id: string; identifier?: string; name: string }[];
+}
+
+async function fetchOne(adminBase: URL, token: string, id: string): Promise<RemoteTemplate> {
+    const url = new URL(`api/template?id=${encodeURIComponent(id)}`, adminBase).href;
+    const res = await fetch(url, { headers: HEADERS(token) });
+    if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
+    return await res.json() as RemoteTemplate;
+}
+
+async function writeTemplate(siteDir: string, identifier: string, t: RemoteTemplate): Promise<void> {
+    const file = join(siteDir, "templates", `${identifier}.html`);
+    const fm = [
+        "---",
+        `name: ${quote(t.name)}`,
+        `description: ${quote(t.description)}`,
+        `category: ${quote(t.category)}`,
+        "---",
+        "",
+    ].join("\n");
+    await writeFile(file, fm + (t.content ?? ""), "utf-8");
+}
+
+function quote(v: string): string { return `"${(v ?? "").replace(/"/g, '\\"')}"`; }

@@ -51,9 +51,17 @@ export class MongoCmsRepository implements CmsRepository {
      * identifier through.
      */
     async init(): Promise<void> {
+        // Backfill before indexing — legacy templates created prior to PR 2
+        // have no `identifier` field, which collides on the unique index.
+        // Default the identifier to the doc id (UUID, already kebab-shaped).
+        await this.templates.updateMany(
+            { $or: [{ identifier: { $exists: false } }, { identifier: null }, { identifier: "" }] } as never,
+            [{ $set: { identifier: "$_id" } }] as never,
+        );
         await Promise.all([
-            this.pages.createIndex({ path: 1 }, { unique: true }),
-            this.snippets.createIndex({ identifier: 1 }, { unique: true }),
+            this.pages.createIndex    ({ path: 1 },       { unique: true }),
+            this.snippets.createIndex ({ identifier: 1 }, { unique: true }),
+            this.templates.createIndex({ identifier: 1 }, { unique: true }),
         ]);
     }
 
@@ -108,6 +116,14 @@ export class MongoCmsRepository implements CmsRepository {
             { projection: { viewJS: 1 } },
         );
         return doc?.viewJS ?? null;
+    }
+
+    async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {
+        const doc = await this.blocs.findOne(
+            { _id: htmlTag },
+            { projection: { source: 1 } },
+        );
+        return doc?.source ?? null;
     }
 
     // ── Pages ──
@@ -168,16 +184,17 @@ export class MongoCmsRepository implements CmsRepository {
         }));
     }
 
-    async getTemplatesMetadata(): Promise<{ id: string; name: string; category: string; createdAt: string }[]> {
+    async getTemplatesMetadata(): Promise<{ id: string; identifier: string; name: string; category: string; createdAt: string }[]> {
         const docs = await this.templates.find(
             {},
-            { projection: { name: 1, category: 1, createdAt: 1 } },
+            { projection: { identifier: 1, name: 1, category: 1, createdAt: 1 } },
         ).toArray();
         return docs.map(d => ({
-            id:        d._id,
-            name:      d.name,
-            category:  d.category,
-            createdAt: d.createdAt.toDateString(),
+            id:         d._id,
+            identifier: d.identifier,
+            name:       d.name,
+            category:   d.category,
+            createdAt:  d.createdAt.toDateString(),
         }));
     }
 
@@ -234,6 +251,11 @@ export class MongoCmsRepository implements CmsRepository {
         return fromTemplateDoc(doc);
     }
 
+    async getTemplateByIdentifier(identifier: string): Promise<TTemplate | null> {
+        const doc = await this.templates.findOne({ identifier });
+        return fromTemplateDoc(doc);
+    }
+
     async getAllTemplates(): Promise<TTemplate[]> {
         const docs = await this.templates.find().toArray();
         return docs.map(d => fromTemplateDoc(d)!);
@@ -247,7 +269,8 @@ export class MongoCmsRepository implements CmsRepository {
     }
 
     async updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null> {
-        const { id: _id, ...rest } = data;
+        // Strip immutable fields so callers can't rewrite them.
+        const { id: _id, identifier: _ident, createdAt: _ca, ...rest } = data;
         const doc = await this.templates.findOneAndUpdate(
             { _id: id },
             { $set: rest },

@@ -58,6 +58,11 @@ export class InMemoryCmsRepository implements CmsRepository {
         return this._blocs.get(htmlTag)?.viewJS ?? null;
     }
 
+    async getBlocSource(htmlTag: string): Promise<Record<string, string> | null> {
+        const source = this._blocs.get(htmlTag)?.source;
+        return source ? { ...source } : null;
+    }
+
     // ── Pages ──
 
     async getPage(path: string): Promise<TPage | null> {
@@ -118,12 +123,13 @@ export class InMemoryCmsRepository implements CmsRepository {
         }));
     }
 
-    async getTemplatesMetadata(): Promise<{ id: string; name: string; category: string; createdAt: string }[]> {
+    async getTemplatesMetadata(): Promise<{ id: string; identifier: string; name: string; category: string; createdAt: string }[]> {
         return Array.from(this._templates.values()).map(t => ({
-            id:        t.id,
-            name:      t.name,
-            category:  t.category,
-            createdAt: t.createdAt.toDateString(),
+            id:         t.id,
+            identifier: t.identifier,
+            name:       t.name,
+            category:   t.category,
+            createdAt:  t.createdAt.toDateString(),
         }));
     }
 
@@ -160,6 +166,12 @@ export class InMemoryCmsRepository implements CmsRepository {
     // ── Templates ──
 
     async createTemplate(template: Omit<TTemplate, "id">): Promise<TTemplate> {
+        // Identifier uniqueness — same constraint as snippets.
+        for (const t of this._templates.values()) {
+            if (t.identifier === template.identifier) {
+                throw new Error(`Template with identifier "${template.identifier}" already exists`);
+            }
+        }
         const stored: TTemplate = { ...template, id: randomUUIDv7() };
         this._templates.set(stored.id, stored);
         return { ...stored };
@@ -168,6 +180,13 @@ export class InMemoryCmsRepository implements CmsRepository {
     async getTemplateById(id: string): Promise<TTemplate | null> {
         const found = this._templates.get(id);
         return found ? { ...found } : null;
+    }
+
+    async getTemplateByIdentifier(identifier: string): Promise<TTemplate | null> {
+        for (const t of this._templates.values()) {
+            if (t.identifier === identifier) return { ...t };
+        }
+        return null;
     }
 
     async getAllTemplates(): Promise<TTemplate[]> {
@@ -185,7 +204,8 @@ export class InMemoryCmsRepository implements CmsRepository {
     async updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null> {
         const existing = this._templates.get(id);
         if (!existing) return null;
-        const { id: _, ...rest } = data;
+        // Strip immutable fields so callers can't rewrite them.
+        const { id: _, identifier: __, createdAt: ___, ...rest } = data;
         const updated: TTemplate = { ...existing, ...rest };
         this._templates.set(id, updated);
         return { ...updated };

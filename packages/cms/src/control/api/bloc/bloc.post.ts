@@ -17,6 +17,8 @@ export default async function importBloc(req: Request, cms: ControlCms) {
     const editorFile = editorEntry instanceof File ? editorEntry : null;
     const templateHtml = (formData.get("templateHtml") as string | null) || undefined;
     const configurationHtml = (formData.get("configurationHtml") as string | null) || undefined;
+    const sourceRaw = formData.get("source");
+    const source = parseSourceMap(sourceRaw);
     const force = formData.get("force") === "true";
 
     if (!name || !viewFile || !tag) {
@@ -42,7 +44,7 @@ export default async function importBloc(req: Request, cms: ControlCms) {
         return new Response(`Bloc with tag "${tag}" already exists`, { status: 409 });
     }
 
-    const bloc = await prepare_bloc(viewFile, editorFile, name, group, description, tag);
+    const bloc = await prepare_bloc(viewFile, editorFile, name, group, description, tag, source);
 
     try {
         if (force) await cms.repository.replaceBloc(bloc);
@@ -67,4 +69,25 @@ export default async function importBloc(req: Request, cms: ControlCms) {
     await invalidatePagesReferencingBloc(cms, bloc.id);
 
     return new Response("Bloc imported");
+}
+
+/**
+ * Parse the optional `source` multipart field (JSON object: relative path →
+ * base64 content). Returns `undefined` when absent or empty so legacy CLI
+ * versions (no source bundle) keep working unchanged.
+ */
+function parseSourceMap(raw: FormDataEntryValue | null): Record<string, string> | undefined {
+    if (raw === null || raw === "") return undefined;
+    if (typeof raw !== "string") return undefined;
+    try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return undefined;
+        const out: Record<string, string> = {};
+        for (const [k, v] of Object.entries(parsed)) {
+            if (typeof v === "string") out[k] = v;
+        }
+        return Object.keys(out).length > 0 ? out : undefined;
+    } catch {
+        return undefined;
+    }
 }

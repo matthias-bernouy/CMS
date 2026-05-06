@@ -4,6 +4,7 @@ import type { TemplateCreateDto } from '../validation/template/parseCreateDto';
 
 export async function createTemplate(cms: ControlCms, dto: TemplateCreateDto): Promise<void> {
     await cms.repository.createTemplate({
+        identifier: dto.identifier,
         name: dto.name,
         category: dto.category,
         description: '',

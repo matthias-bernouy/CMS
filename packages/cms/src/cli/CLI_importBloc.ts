@@ -1,6 +1,7 @@
 import { relative } from "node:path";
 import { scanDevBlocs, type DevBloc } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
+import { bundleBlocSource } from "./push/blocs/bundle";
 import { getAccessToken } from "./credentials";
 
 type Flags = {
@@ -51,7 +52,7 @@ async function resolveAdminBase(): Promise<{ adminBase: URL; token: string }> {
     }
 }
 
-export default async function CLI_importBloc(args: string[]) {
+export default async function CLI_importBloc(args: string[]): Promise<number> {
     const { adminBase, token } = await resolveAdminBase();
     const flags = parseFlags(args);
     const cwd = process.cwd();
@@ -70,7 +71,7 @@ export default async function CLI_importBloc(args: string[]) {
     const blocs = await scanDevBlocs(cwd);
     if (blocs.length === 0) {
         console.warn("⚠ No blocs found (looking for folders containing manifest.json).");
-        process.exit(0);
+        return 0;
     }
 
     const candidates = flags.only
@@ -81,7 +82,7 @@ export default async function CLI_importBloc(args: string[]) {
         console.error(`✖ --only matched no blocs.`);
         console.error(`  Requested: ${[...flags.only].join(", ")}`);
         console.error(`  Available: ${blocs.map(b => b.tag).join(", ")}`);
-        process.exit(1);
+        return 1;
     }
 
     console.log(`→ Found ${candidates.length} bloc(s):`);
@@ -121,7 +122,7 @@ export default async function CLI_importBloc(args: string[]) {
     if (toBuild.length === 0) {
         console.log("");
         console.log("→ Nothing to push.");
-        process.exit(0);
+        return 0;
     }
 
     console.log("");
@@ -130,7 +131,7 @@ export default async function CLI_importBloc(args: string[]) {
 
     if (built.size === 0) {
         console.error("✖ All builds failed. See errors above.");
-        process.exit(1);
+        return 1;
     }
     const buildFailures = toBuild.length - built.size;
     if (buildFailures > 0) {
@@ -145,7 +146,7 @@ export default async function CLI_importBloc(args: string[]) {
             const editorKb = b.editorJS ? (b.editorJS.length / 1024).toFixed(1) + "kb" : "—";
             console.log(`    • ${tag.padEnd(28)} view=${viewKb}kb  editor=${editorKb}`);
         }
-        process.exit(buildFailures > 0 ? 1 : 0);
+        return buildFailures > 0 ? 1 : 0;
     }
 
     console.log("");
@@ -165,7 +166,7 @@ export default async function CLI_importBloc(args: string[]) {
 
     console.log("");
     console.log(`→ Done. ${ok} imported, ${skipped.length} skipped, ${fail + buildFailures} failed.`);
-    process.exit(fail + buildFailures > 0 ? 1 : 0);
+    return fail + buildFailures > 0 ? 1 : 0;
 }
 
 async function fetchRemoteTags(adminBase: URL, token: string): Promise<Set<string>> {
@@ -214,6 +215,9 @@ async function pushBloc(adminBase: URL, token: string, bloc: BuiltBloc, force: b
     }
     if (bloc.templateHtml      !== undefined) form.append("templateHtml",      bloc.templateHtml);
     if (bloc.configurationHtml !== undefined) form.append("configurationHtml", bloc.configurationHtml);
+
+    const source = await bundleBlocSource(bloc.folder);
+    if (Object.keys(source).length > 0) form.append("source", JSON.stringify(source));
 
     const res = await fetch(url, {
         method: "POST",

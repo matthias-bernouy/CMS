@@ -21,7 +21,11 @@ registerEditor_opaque();
  * imports don't race on the same `./tmp/<blocId>.js` files, and so we
  * never depend on the process cwd being writable.
  */
-export async function prepare_bloc(fileView: File, fileEditor: File | null, label: string, group: string, description: string, blocId: string) {
+export async function prepare_bloc(
+    fileView: File, fileEditor: File | null,
+    label: string, group: string, description: string, blocId: string,
+    source: Record<string, string> | undefined = undefined,
+) {
     const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));
 
     try {
@@ -61,6 +65,7 @@ export async function prepare_bloc(fileView: File, fileEditor: File | null, labe
             name: label,
             group: group,
             description: description,
+            ...(source ? { source } : {}),
         };
     } finally {
         await rm(tempDir, { recursive: true, force: true }).catch(() => null);
