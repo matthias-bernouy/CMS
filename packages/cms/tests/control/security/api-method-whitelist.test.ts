@@ -1,12 +1,13 @@
 import { describe, test, expect } from "bun:test";
 
-// registerAPIFolder uses `parts[1]?.toUpperCase()` as the HTTP method without
-// any whitelist — a filename like `foo.typo.ts` would silently register a
-// handler under an arbitrary method, bypassing any method-keyed auth or
-// write-guard logic. Assert the routing code guards against this.
+// `serveApi` uses the second-to-last `.`-delimited segment of each filename
+// as the HTTP method. Without a whitelist, a typo like `foo.typo.ts` would
+// silently register a handler under an arbitrary method, bypassing any
+// method-keyed auth or write-guard logic. Assert the router guards against
+// this — either via a literal allow-list or by skipping unknown methods.
 describe("API routing guards HTTP methods", () => {
-    test("routing.ts whitelists HTTP methods", async () => {
-        const src = await Bun.file("src/control/core/server/routing.ts").text();
+    test("serveApiFolder whitelists HTTP methods", async () => {
+        const src = await Bun.file("src/control/core/registerEndpoints/serveApiFolder.ts").text();
 
         // Either a whitelist literal appears, or the code throws on unknown.
         const hasWhitelist =

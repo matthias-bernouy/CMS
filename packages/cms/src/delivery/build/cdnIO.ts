@@ -189,12 +189,21 @@ export async function deleteOrphanPages(
         const name = pageBucketName(oldPath);
         const list = await htmlBucket.getItems({ search: name });
         if (!list.ok) continue;
-        const file = list.data.items.find(
-            (i): i is FileMetadata => i.type !== "folder" && i.name === name,
+        // The page itself plus its `.br` / `.gz` siblings written by
+        // `uploadCompressedSiblings` — wipe all three together so a deleted
+        // page doesn't leave compressed orphans in the bucket.
+        const targets = list.data.items.filter(
+            (i): i is FileMetadata =>
+                i.type !== "folder" &&
+                (i.name === name || i.name === `${name}.br` || i.name === `${name}.gz`),
         );
-        if (!file) continue;
-        const res = await htmlBucket.deleteItem({ id: file.id });
-        if (res.ok) deleted++;
+        if (targets.length === 0) continue;
+        let pageDeleted = false;
+        for (const file of targets) {
+            const res = await htmlBucket.deleteItem({ id: file.id });
+            if (res.ok && file.name === name) pageDeleted = true;
+        }
+        if (pageDeleted) deleted++;
     }
     return deleted;
 }

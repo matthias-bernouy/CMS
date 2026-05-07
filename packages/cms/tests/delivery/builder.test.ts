@@ -141,8 +141,10 @@ describe("DeliveryBuilder.runOnce — basic lifecycle", () => {
         expect(r.sharedAssetsUploaded).toBe(3); // component, style, favicon
         expect(r.assetsDeleted).toBe(0);
         // /about + index + manifest in html bucket; 3 shared assets in assets bucket.
-        expect(html.size()).toBe(3);
-        expect(assets.size()).toBe(3);
+        // `sizeStripped()` ignores the `.br`/`.gz` siblings written by the
+        // upload pipeline so the assertion stays about logical entries.
+        expect(html.sizeStripped()).toBe(3);
+        expect(assets.sizeStripped()).toBe(3);
     });
 
     test("rerun without repo change short-circuits", async () => {
@@ -184,13 +186,23 @@ describe("DeliveryBuilder.runOnce — basic lifecycle", () => {
         const builder = makeBuilder({ html, assets, repository: repo });
 
         await builder.runOnce();
-        const beforeHtml = html.size();
+        const beforeHtml = html.sizeStripped();
         repo.remove("/contact");
         const r2 = await builder.runOnce();
 
         expect(r2.pagesDeleted).toBe(1);
-        // /about + index? no — only the two pages, so removing one drops bucket count.
-        expect(html.size()).toBe(beforeHtml - 1);
+        // Logical entry count drops by one (the deleted page); the `.br` /
+        // `.gz` siblings of that page are wiped alongside the raw file by
+        // `deleteOrphanPages`, so no compressed orphans linger.
+        expect(html.sizeStripped()).toBe(beforeHtml - 1);
+        // Defense-in-depth: assert the bucket no longer contains anything
+        // matching `/contact` — neither raw nor compressed.
+        const orphan = (await html.getItems({ search: "contact" }));
+        if (orphan.ok) {
+            for (const item of orphan.data.items) {
+                expect(item.name.startsWith("contact.html")).toBe(false);
+            }
+        }
     });
 });
 

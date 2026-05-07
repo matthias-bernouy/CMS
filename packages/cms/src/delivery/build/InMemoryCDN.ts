@@ -131,6 +131,20 @@ export class InMemoryCDN implements CDN {
     /** Test helper: how many files are currently stored. */
     size(): number { return this._files.size; }
 
+    /**
+     * Test helper: count of "logical" entries — the raw files only,
+     * ignoring the `.br` / `.gz` siblings that `uploadCompressedSiblings`
+     * writes alongside each compressible upload. Use this when a test
+     * cares about the number of distinct objects, not the on-disk total.
+     */
+    sizeStripped(): number {
+        let n = 0;
+        for (const f of this._files.values()) {
+            if (!/\.(br|gz)$/.test(f.name)) n++;
+        }
+        return n;
+    }
+
     private async _toBytes(data: Blob | Uint8Array | ReadableStream<Uint8Array>): Promise<Uint8Array> {
         if (data instanceof Uint8Array) return data;
         if (data instanceof Blob)       return new Uint8Array(await data.arrayBuffer());

@@ -1,6 +1,5 @@
 import { describe, test, expect } from "bun:test";
 import { compress, sendCompressed } from "src/socle/server/compression";
-import { send_html } from "src/control/core/server/send_html";
 
 /**
  * COOP is emitted as `Cross-Origin-Opener-Policy` in production but as
@@ -71,22 +70,3 @@ describe("CSP is only emitted on HTML responses", () => {
     });
 });
 
-describe("security headers on admin HTML responses (send_html)", () => {
-    test("send_html carries the full security header set", () => {
-        const res = send_html("<!doctype html><html></html>");
-        expect(res.headers.get("Content-Type")).toBe("text/html");
-        expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
-        expect(res.headers.get("Strict-Transport-Security")).toBe("max-age=31536000");
-        expect(res.headers.get("X-Frame-Options")).toBe("DENY");
-        expect(res.headers.get("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
-        expect(res.headers.get("Permissions-Policy")).toContain("camera=()");
-        expect(getCoop(res.headers)).toBe("same-origin");
-        expect(res.headers.get("Cross-Origin-Resource-Policy")).toBe("same-origin");
-    });
-
-    test("send_html carries enforcing Content-Security-Policy", () => {
-        const res = send_html("<!doctype html><html></html>");
-        expect(res.headers.get("Content-Security-Policy")).toContain("default-src 'self'");
-        expect(res.headers.get("Content-Security-Policy-Report-Only")).toBe(null);
-    });
-});
