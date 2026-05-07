@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { serializeFrontmatter } from "../shared/frontmatterWrite";
+import { serializeFrontmatter } from "src/cli/push/shared/frontmatterWrite";
+import { categoryToFolder } from "src/cli/push/shared/categoryFolder";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
@@ -17,7 +18,6 @@ type RemoteTemplate = {
 export async function pullTemplates(adminBase: URL, token: string, siteDir: string): Promise<PullTemplatesResult> {
     const out: PullTemplatesResult = { pulled: [], skipped: [], failed: [] };
     const list = await fetchList(adminBase, token);
-    await mkdir(join(siteDir, "templates"), { recursive: true });
 
     for (const meta of list) {
         if (!meta.identifier) {
@@ -50,11 +50,12 @@ async function fetchOne(adminBase: URL, token: string, id: string): Promise<Remo
 }
 
 async function writeTemplate(siteDir: string, identifier: string, t: RemoteTemplate): Promise<void> {
-    const file = join(siteDir, "templates", `${identifier}.html`);
+    const folder = categoryToFolder(t.category ?? "");
+    const dir    = join(siteDir, "templates", folder);
+    await mkdir(dir, { recursive: true });
     const fm = serializeFrontmatter({
         name:        t.name        ?? "",
         description: t.description ?? "",
-        category:    t.category    ?? "",
     });
-    await writeFile(file, fm + (t.content ?? ""), "utf-8");
+    await writeFile(join(dir, `${identifier}.html`), fm + (t.content ?? ""), "utf-8");
 }

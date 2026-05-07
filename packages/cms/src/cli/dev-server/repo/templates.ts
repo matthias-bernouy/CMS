@@ -1,15 +1,18 @@
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { TTemplate } from "src/socle/interfaces/models";
 import { scanTemplates } from "src/cli/push/templates/scan";
 import { serializeFrontmatter } from "src/cli/push/shared/frontmatterWrite";
+import { categoryToFolder } from "src/cli/push/shared/categoryFolder";
 
 const FROZEN_DATE = new Date(0);
 
 /**
  * Filesystem-backed template store. ID = identifier (filename) — stable
- * across dev restarts. createdAt is frozen.
+ * across dev restarts. createdAt is frozen. Files live under
+ * `templates/<category>/<identifier>.html`; category renames move the
+ * file across folders.
  */
 export class TemplatesStore {
     constructor(private readonly siteDir: string) {}
@@ -28,9 +31,10 @@ export class TemplatesStore {
     }
 
     async create(template: Omit<TTemplate, "id">): Promise<TTemplate> {
-        const file = this._fileFor(template.identifier);
+        const category = template.category ?? "";
+        const file = this._fileFor(template.identifier, category);
         if (existsSync(file)) throw new Error(`Template "${template.identifier}" already exists`);
-        await this._write(file, template.name, template.description ?? "", template.category ?? "", template.content ?? "<p></p>");
+        await this._write(file, template.name, template.description ?? "", template.content ?? "<p></p>");
         return { ...template, id: template.identifier };
     }
 
@@ -38,14 +42,17 @@ export class TemplatesStore {
         const existing = await this.getById(id);
         if (!existing) return null;
         const merged: TTemplate = { ...existing, ...data, id: existing.id, identifier: existing.identifier };
-        await this._write(this._fileFor(existing.identifier), merged.name, merged.description, merged.category, merged.content);
+        const oldFile = this._fileFor(existing.identifier, existing.category);
+        const newFile = this._fileFor(merged.identifier,  merged.category);
+        if (oldFile !== newFile && existsSync(oldFile)) await unlink(oldFile);
+        await this._write(newFile, merged.name, merged.description, merged.content);
         return merged;
     }
 
     async delete(id: string): Promise<void> {
         const existing = await this.getById(id);
         if (!existing) return;
-        const file = this._fileFor(existing.identifier);
+        const file = this._fileFor(existing.identifier, existing.category);
         if (existsSync(file)) await unlink(file);
     }
 
@@ -71,12 +78,12 @@ export class TemplatesStore {
         };
     }
 
-    private _fileFor(identifier: string): string {
-        return join(this.siteDir, "templates", `${identifier}.html`);
+    private _fileFor(identifier: string, category: string): string {
+        return join(this.siteDir, "templates", categoryToFolder(category), `${identifier}.html`);
     }
 
-    private async _write(file: string, name: string, description: string, category: string, content: string): Promise<void> {
-        await mkdir(join(this.siteDir, "templates"), { recursive: true });
-        await writeFile(file, serializeFrontmatter({ name, description, category }) + content, "utf-8");
+    private async _write(file: string, name: string, description: string, content: string): Promise<void> {
+        await mkdir(dirname(file), { recursive: true });
+        await writeFile(file, serializeFrontmatter({ name, description }) + content, "utf-8");
     }
 }

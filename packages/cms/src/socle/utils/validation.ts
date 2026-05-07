@@ -42,3 +42,16 @@ export function isValidCustomElementTag(tag: string): boolean {
     if (!tag || typeof tag !== "string") return false;
     return /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(tag);
 }
+
+/**
+ * Folder name used by `p9r pull/push` to carry a snippet/template category.
+ * One filesystem segment, no separators, no traversal, no hidden files.
+ * Permissive otherwise — the category itself is human-authored and may
+ * already contain spaces/accents on existing sites.
+ */
+export function isValidCategoryFolder(name: string): boolean {
+    if (!name || typeof name !== "string") return false;
+    if (name === "." || name === "..")     return false;
+    if (name.startsWith("."))              return false;
+    return !/[/\\\0]/.test(name);
+}

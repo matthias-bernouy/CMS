@@ -1,16 +1,19 @@
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { TPage, TSnippet } from "src/socle/interfaces/models";
 import { scanSnippets } from "src/cli/push/snippets/scan";
 import { serializeFrontmatter } from "src/cli/push/shared/frontmatterWrite";
+import { categoryToFolder } from "src/cli/push/shared/categoryFolder";
 
 const FROZEN_DATE = new Date(0);
 
 /**
  * Filesystem-backed snippet store. ID = identifier (filename) — stable
  * across dev restarts. createdAt/updatedAt are frozen since FS doesn't
- * carry useful editorial timestamps for our purposes.
+ * carry useful editorial timestamps for our purposes. Files live under
+ * `snippets/<category>/<identifier>.html`; category renames move the
+ * file across folders.
  */
 export class SnippetsStore {
     constructor(private readonly siteDir: string) {}
@@ -29,9 +32,10 @@ export class SnippetsStore {
     }
 
     async create(snippet: Omit<TSnippet, "id">): Promise<TSnippet> {
-        const file = this._fileFor(snippet.identifier);
+        const category = snippet.category ?? "";
+        const file = this._fileFor(snippet.identifier, category);
         if (existsSync(file)) throw new Error(`Snippet "${snippet.identifier}" already exists`);
-        await this._write(file, snippet.name, snippet.description ?? "", snippet.category ?? "", snippet.content ?? "<p></p>");
+        await this._write(file, snippet.name, snippet.description ?? "", snippet.content ?? "<p></p>");
         return { ...snippet, id: snippet.identifier };
     }
 
@@ -39,14 +43,17 @@ export class SnippetsStore {
         const existing = await this.getById(id);
         if (!existing) return null;
         const merged: TSnippet = { ...existing, ...data, id: existing.id, identifier: existing.identifier };
-        await this._write(this._fileFor(existing.identifier), merged.name, merged.description, merged.category, merged.content);
+        const oldFile = this._fileFor(existing.identifier, existing.category);
+        const newFile = this._fileFor(merged.identifier,  merged.category);
+        if (oldFile !== newFile && existsSync(oldFile)) await unlink(oldFile);
+        await this._write(newFile, merged.name, merged.description, merged.content);
         return merged;
     }
 
     async delete(id: string): Promise<void> {
         const existing = await this.getById(id);
         if (!existing) return;
-        const file = this._fileFor(existing.identifier);
+        const file = this._fileFor(existing.identifier, existing.category);
         if (existsSync(file)) await unlink(file);
     }
 
@@ -72,13 +79,13 @@ export class SnippetsStore {
         };
     }
 
-    private _fileFor(identifier: string): string {
-        return join(this.siteDir, "snippets", `${identifier}.html`);
+    private _fileFor(identifier: string, category: string): string {
+        return join(this.siteDir, "snippets", categoryToFolder(category), `${identifier}.html`);
     }
 
-    private async _write(file: string, name: string, description: string, category: string, content: string): Promise<void> {
-        await mkdir(join(this.siteDir, "snippets"), { recursive: true });
-        await writeFile(file, serializeFrontmatter({ name, description, category }) + content, "utf-8");
+    private async _write(file: string, name: string, description: string, content: string): Promise<void> {
+        await mkdir(dirname(file), { recursive: true });
+        await writeFile(file, serializeFrontmatter({ name, description }) + content, "utf-8");
     }
 }
 

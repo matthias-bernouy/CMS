@@ -1,13 +1,13 @@
 import { readdir, stat, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
+import { folderToCategory } from "src/cli/push/shared/categoryFolder";
 
 export type BlocManifest = {
     runtime?: string;
     editor?: string;
     bloc?: string;
     "default-tag"?: string;
-    "default-group"?: string;
     meta?: {
         author?: string;
         title?: string;
@@ -77,7 +77,16 @@ async function walk(dir: string, results: DevBloc[], options: ScanOptions) {
 async function parseManifest(path: string, options: ScanOptions): Promise<BlocManifest | null> {
     try {
         const raw = await readFile(path, "utf-8");
-        return JSON.parse(raw) as BlocManifest;
+        const parsed = JSON.parse(raw) as BlocManifest & { "default-group"?: string };
+        if ("default-group" in parsed) {
+            throw new Error(
+                `manifest.json field "default-group" is no longer supported — ` +
+                `the group is derived from the parent folder name. ` +
+                `Drop the line and place the bloc under blocs/<group>/<tag>/ ` +
+                `(re-running \`p9r pull\` does both automatically).`,
+            );
+        }
+        return parsed;
     } catch (e) {
         if (!options.quiet) console.warn(`[scan] Failed to parse ${path}: ${e instanceof Error ? e.message : e}`);
         return null;
@@ -95,6 +104,17 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         return null;
     }
 
+    const parentName = basename(dirname(folder));
+    if (parentName === "blocs") {
+        if (!options.quiet) {
+            console.warn(
+                `[scan] Skipping ${folder}: loose bloc at the root of blocs/ — ` +
+                `move it under blocs/<group>/<tag>/ (or blocs/_uncategorized/<tag>/).`,
+            );
+        }
+        return null;
+    }
+
     const blocRel = manifest.bloc || "./Bloc.ts";
     const editorRel = manifest.editor;
 
@@ -109,7 +129,7 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         manifest,
         tag,
         label: manifest.meta?.title || basename(folder),
-        group: manifest["default-group"] || "Uncategorized",
+        group: folderToCategory(parentName),
         description: manifest.meta?.description || "",
         entry,
         ...(editorEntry                                ? { editorEntry }                              : {}),

@@ -7,11 +7,16 @@ import { classifySnippets } from "src/cli/push/snippets/classify";
 import type { LocalSnippet } from "src/cli/push/snippets/scan";
 import type { PushState } from "src/cli/push/shared/state";
 
+/** Pass `{ "<category>/<file.html>": content }`; mirrors the on-disk layout. */
 function makeSite(files: Record<string, string>): string {
     const root = mkdtempSync(join(tmpdir(), "p9r-test-"));
     mkdirSync(join(root, "snippets"));
-    for (const [name, content] of Object.entries(files)) {
-        writeFileSync(join(root, "snippets", name), content);
+    for (const [rel, content] of Object.entries(files)) {
+        const [category, name] = rel.split("/");
+        if (!category || !name) throw new Error(`fixture key "${rel}" must be "<category>/<file>"`);
+        const dir = join(root, "snippets", category);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, name), content);
     }
     return root;
 }
@@ -19,7 +24,7 @@ function makeSite(files: Record<string, string>): string {
 function snippet(identifier: string, hash: string): LocalSnippet {
     return {
         identifier,
-        file:    `snippets${sep}${identifier}.html`,
+        file:    `snippets${sep}_uncategorized${sep}${identifier}.html`,
         meta:    { name: identifier, description: "", category: "" },
         content: "",
         hash,
@@ -29,15 +34,14 @@ function snippet(identifier: string, hash: string): LocalSnippet {
 const emptyState = (): PushState => ({ tenant: "", lastPulled: "", entities: {} });
 
 describe("scanSnippets", () => {
-    test("derives identifier from filename and parses frontmatter", async () => {
+    test("derives identifier from filename and category from parent folder", async () => {
         const dir = makeSite({
-            "header.html": `---
+            "Layout/header.html": `---
 name: "Header global"
 description: "Top nav"
-category: "Layout"
 ---
 <nav></nav>`,
-            "raw.html": "<footer></footer>",
+            "_uncategorized/raw.html": "<footer></footer>",
         });
         const snippets = await scanSnippets(dir);
         expect(snippets.map(s => s.identifier).sort()).toEqual(["header", "raw"]);
@@ -54,6 +58,13 @@ category: "Layout"
     test("returns empty list when site/snippets/ is missing", async () => {
         const dir = mkdtempSync(join(tmpdir(), "p9r-empty-"));
         expect(await scanSnippets(dir)).toEqual([]);
+    });
+
+    test("rejects loose .html at the root", async () => {
+        const root = mkdtempSync(join(tmpdir(), "p9r-loose-"));
+        mkdirSync(join(root, "snippets"));
+        writeFileSync(join(root, "snippets", "loose.html"), "<x></x>");
+        await expect(scanSnippets(root)).rejects.toThrow(/Loose snippet/);
     });
 });
 

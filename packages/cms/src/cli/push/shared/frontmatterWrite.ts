@@ -25,7 +25,7 @@ export function serializeFrontmatter(fm: Frontmatter): string {
  * order is split into "intro" + "scalars" + "tags last".
  */
 function orderedEntries(fm: Frontmatter): [string, unknown][] {
-    const KEY_ORDER = ["title", "name", "description", "category", "visible", "tags"] as const;
+    const KEY_ORDER = ["title", "name", "description", "visible", "tags"] as const;
     const out: [string, unknown][] = [];
     for (const k of KEY_ORDER) {
         if (fm[k as keyof Frontmatter] !== undefined) out.push([k, fm[k as keyof Frontmatter]]);

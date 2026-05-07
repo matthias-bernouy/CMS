@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { serializeFrontmatter } from "../shared/frontmatterWrite";
+import { serializeFrontmatter } from "src/cli/push/shared/frontmatterWrite";
+import { categoryToFolder } from "src/cli/push/shared/categoryFolder";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
@@ -17,7 +18,6 @@ type RemoteSnippet = {
 export async function pullSnippets(adminBase: URL, token: string, siteDir: string): Promise<PullSnippetsResult> {
     const out: PullSnippetsResult = { pulled: [], failed: [] };
     const list = await fetchList(adminBase, token);
-    await mkdir(join(siteDir, "snippets"), { recursive: true });
 
     for (const { identifier } of list) {
         try {
@@ -46,11 +46,12 @@ async function fetchOne(adminBase: URL, token: string, identifier: string): Prom
 }
 
 async function writeSnippet(siteDir: string, s: RemoteSnippet): Promise<void> {
-    const file = join(siteDir, "snippets", `${s.identifier}.html`);
+    const folder = categoryToFolder(s.category ?? "");
+    const dir    = join(siteDir, "snippets", folder);
+    await mkdir(dir, { recursive: true });
     const fm = serializeFrontmatter({
         name:        s.name        ?? "",
         description: s.description ?? "",
-        category:    s.category    ?? "",
     });
-    await writeFile(file, fm + (s.content ?? ""), "utf-8");
+    await writeFile(join(dir, `${s.identifier}.html`), fm + (s.content ?? ""), "utf-8");
 }

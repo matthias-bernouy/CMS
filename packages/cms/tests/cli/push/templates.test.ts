@@ -7,11 +7,20 @@ import { classifyTemplates } from "src/cli/push/templates/classify";
 import type { LocalTemplate } from "src/cli/push/templates/scan";
 import type { PushState } from "src/cli/push/shared/state";
 
+/**
+ * Create a fixture site whose `templates/` tree mirrors the production
+ * layout: each top-level entry is a category folder, files live inside.
+ * Pass `{ "<category>/<file.html>": content }`.
+ */
 function makeSite(files: Record<string, string>): string {
     const root = mkdtempSync(join(tmpdir(), "p9r-test-"));
     mkdirSync(join(root, "templates"));
-    for (const [name, content] of Object.entries(files)) {
-        writeFileSync(join(root, "templates", name), content);
+    for (const [rel, content] of Object.entries(files)) {
+        const [category, name] = rel.split("/");
+        if (!category || !name) throw new Error(`fixture key "${rel}" must be "<category>/<file>"`);
+        const dir = join(root, "templates", category);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, name), content);
     }
     return root;
 }
@@ -19,7 +28,7 @@ function makeSite(files: Record<string, string>): string {
 function template(identifier: string, hash: string): LocalTemplate {
     return {
         identifier,
-        file:    `templates${sep}${identifier}.html`,
+        file:    `templates${sep}_uncategorized${sep}${identifier}.html`,
         meta:    { name: identifier, description: "", category: "" },
         content: "",
         hash,
@@ -29,12 +38,11 @@ function template(identifier: string, hash: string): LocalTemplate {
 const emptyState = (): PushState => ({ tenant: "", lastPulled: "", entities: {} });
 
 describe("scanTemplates", () => {
-    test("derives identifier from filename and parses frontmatter", async () => {
+    test("derives identifier from filename and category from parent folder", async () => {
         const dir = makeSite({
-            "step-section-3.html": `---
+            "Sections/step-section-3.html": `---
 name: "Section 3 étapes"
 description: "Trio of cards"
-category: "Sections"
 ---
 <cs-step-section></cs-step-section>`,
         });
@@ -43,6 +51,22 @@ category: "Sections"
         expect(templates[0]?.identifier).toBe("step-section-3");
         expect(templates[0]?.meta.name).toBe("Section 3 étapes");
         expect(templates[0]?.meta.category).toBe("Sections");
+    });
+
+    test("maps _uncategorized/ folder to empty category", async () => {
+        const dir = makeSite({
+            "_uncategorized/raw.html": "<footer></footer>",
+        });
+        const templates = await scanTemplates(dir);
+        expect(templates).toHaveLength(1);
+        expect(templates[0]?.meta.category).toBe("");
+    });
+
+    test("rejects loose .html at the root", async () => {
+        const root = mkdtempSync(join(tmpdir(), "p9r-loose-"));
+        mkdirSync(join(root, "templates"));
+        writeFileSync(join(root, "templates", "loose.html"), "<x></x>");
+        await expect(scanTemplates(root)).rejects.toThrow(/Loose template/);
     });
 });
 

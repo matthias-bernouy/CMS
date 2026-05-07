@@ -57,9 +57,10 @@ export default async function CLI_init(args: string[]) {
     console.log("");
     console.log("Next steps:");
     console.log(`  1. cd ${folder}`);
-    console.log(`  2. Edit manifest.json — set "default-tag" and "default-group"`);
-    console.log(`  3. Customize Bloc.ts, template.html, style.css`);
-    console.log(`  4. Customize BlocEditor.ts + configuration.html (or delete them for an opaque bloc)`);
-    console.log(`  5. From the parent folder: p9r dev   (to preview)`);
-    console.log(`     or:                     p9r import (to push to the remote CMS)`);
+    console.log(`  2. Edit manifest.json — set "default-tag"`);
+    console.log(`  3. Move the folder under blocs/<group>/<tag>/ (or blocs/_uncategorized/<tag>/)`);
+    console.log(`  4. Customize Bloc.ts, template.html, style.css`);
+    console.log(`  5. Customize BlocEditor.ts + configuration.html (or delete them for an opaque bloc)`);
+    console.log(`  6. From the site root: p9r dev    (to preview)`);
+    console.log(`     or:                 p9r import (to push to the remote CMS)`);
 }

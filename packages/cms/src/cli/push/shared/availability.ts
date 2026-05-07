@@ -35,12 +35,17 @@ export async function scanLocalBlocs(siteDir: string): Promise<Set<string>> {
 export async function scanLocalSnippets(siteDir: string): Promise<Set<string>> {
     const root = join(siteDir, "snippets");
     if (!existsSync(root)) return new Set();
-    const entries = await readdir(root);
-    return new Set(
-        entries
-            .filter(e => e.endsWith(".html") && !e.startsWith("."))
-            .map(e => e.slice(0, -".html".length)),
-    );
+    const out = new Set<string>();
+    const folders = await readdir(root, { withFileTypes: true });
+    for (const f of folders) {
+        if (!f.isDirectory()) continue;
+        const files = await readdir(join(root, f.name));
+        for (const file of files) {
+            if (!file.endsWith(".html") || file.startsWith(".")) continue;
+            out.add(file.slice(0, -".html".length));
+        }
+    }
+    return out;
 }
 
 export type Availability = {

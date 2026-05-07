@@ -26,19 +26,22 @@ tags: [public, "marketing", 'top']
         expect(content).toBe("<bloc-card></bloc-card>");
     });
 
-    test("parses snippet/template keys (name, category) — same vocabulary", () => {
+    test("parses snippet/template keys (name, description) — same vocabulary", () => {
         const raw = `---
 name: "Header global"
 description: "Navbar shared across pages"
-category: "Layout"
 ---
 <nav></nav>`;
         const { frontmatter } = parseFrontmatter(raw);
         expect(frontmatter).toEqual({
             name:        "Header global",
             description: "Navbar shared across pages",
-            category:    "Layout",
         });
+    });
+
+    test("rejects category — derived from the parent folder name", () => {
+        const raw = `---\nname: "X"\ncategory: "Layout"\n---\n`;
+        expect(() => parseFrontmatter(raw)).toThrow(/category.*derived from the parent folder/);
     });
 
     test("ignores blank lines and # comments", () => {

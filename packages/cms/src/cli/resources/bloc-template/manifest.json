@@ -4,7 +4,6 @@
     "bloc": "./Bloc.ts",
 
     "default-tag": "tag-name",
-    "default-group": "Group name",
 
     "meta": {
         "author": "Mr Smith",

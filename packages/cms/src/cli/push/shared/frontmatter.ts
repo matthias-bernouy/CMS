@@ -1,14 +1,14 @@
 /**
  * Frontmatter shape shared by every push'able resource. Each type only uses
  * the subset it cares about (pages: title/description/visible/tags ;
- * snippets/templates: name/description/category) — the parser accepts the
- * whole vocabulary and the caller picks.
+ * snippets/templates: name/description) — the parser accepts the whole
+ * vocabulary and the caller picks. `category` is intentionally absent: it
+ * is derived from the parent folder name (see `categoryFolder.ts`).
  */
 export type Frontmatter = {
     title?:       string;
     name?:        string;
     description?: string;
-    category?:    string;
     visible?:     boolean;
     tags?:        string[];
 };
@@ -45,9 +45,14 @@ export function parseFrontmatter(raw: string): ParsedDoc {
             case "title":       fm.title       = unquote(value); break;
             case "name":        fm.name        = unquote(value); break;
             case "description": fm.description = unquote(value); break;
-            case "category":    fm.category    = unquote(value); break;
             case "visible":     fm.visible     = parseBool(value, key); break;
             case "tags":        fm.tags        = parseTags(value); break;
+            case "category":
+                throw new Error(
+                    `Frontmatter key "category" is no longer supported — ` +
+                    `categories are derived from the parent folder name. ` +
+                    `Drop the line and place the file under "<resource>/<category>/".`,
+                );
             default:            throw new Error(`Unknown frontmatter key "${key}"`);
         }
     }
