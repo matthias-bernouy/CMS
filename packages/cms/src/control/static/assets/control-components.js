@@ -11018,6 +11018,257 @@ p9r-tag:hover {
     customElements.define("p9r-config-panel", SyncPanel);
   }
 
+  // src/control/components/editor/componentSync/sync/SvgSync/SvgSync.style.css
+  var SvgSync_style_default = `:host {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+}
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px dashed var(--border-default, #e2e8f0);
+    border-radius: 10px;
+    background: var(--bg-base, #f8fafc);
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+.card:hover { border-color: var(--primary-base, #4361ee); }
+
+.preview {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    color: var(--text-main, #0f172a);
+}
+.preview svg { width: 100%; height: 100%; display: block; }
+
+.empty {
+    width: 32px;
+    height: 32px;
+    border: 1px dashed var(--border-default, #cbd5e1);
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.action {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text-body, #334155);
+}
+
+.error {
+    font-size: 11px;
+    color: var(--danger-base, #ef4444);
+    margin-top: 2px;
+}
+`;
+
+  // src/control/components/editor/componentSync/sync/SvgSync/sanitize.ts
+  var ALLOWED_TAGS = new Set([
+    "svg",
+    "g",
+    "defs",
+    "symbol",
+    "use",
+    "title",
+    "desc",
+    "path",
+    "circle",
+    "rect",
+    "line",
+    "polyline",
+    "polygon",
+    "ellipse",
+    "clippath",
+    "mask",
+    "marker",
+    "lineargradient",
+    "radialgradient",
+    "stop",
+    "pattern",
+    "text",
+    "tspan",
+    "filter",
+    "feblend",
+    "fecolormatrix",
+    "fecomponenttransfer",
+    "fecomposite",
+    "feconvolvematrix",
+    "fediffuselighting",
+    "fedisplacementmap",
+    "fedistantlight",
+    "feflood",
+    "fefunca",
+    "fefuncb",
+    "fefuncg",
+    "fefuncr",
+    "fegaussianblur",
+    "feimage",
+    "femerge",
+    "femergenode",
+    "femorphology",
+    "feoffset",
+    "fepointlight",
+    "fespecularlighting",
+    "fespotlight",
+    "fetile",
+    "feturbulence"
+  ]);
+  function sanitizeSvg(raw) {
+    const doc = new DOMParser().parseFromString(raw, "image/svg+xml");
+    if (doc.querySelector("parsererror")) {
+      throw new Error("Invalid SVG: failed to parse.");
+    }
+    const root = doc.documentElement;
+    if (!root || root.tagName.toLowerCase() !== "svg") {
+      throw new Error(`Expected <svg> root element, got <${root?.tagName ?? "null"}>.`);
+    }
+    walk(root);
+    return new XMLSerializer().serializeToString(root);
+  }
+  function walk(el) {
+    if (!ALLOWED_TAGS.has(el.tagName.toLowerCase())) {
+      el.remove();
+      return;
+    }
+    for (const attr of Array.from(el.attributes)) {
+      const name = attr.name.toLowerCase();
+      if (name.startsWith("on")) {
+        el.removeAttribute(attr.name);
+        continue;
+      }
+      if (name === "href" || name === "xlink:href") {
+        const v = attr.value.trim().toLowerCase();
+        const safe = v.startsWith("#") || v.startsWith("/") || v.startsWith("./") || v.startsWith("../") || v.startsWith("http:") || v.startsWith("https:");
+        if (!safe)
+          el.removeAttribute(attr.name);
+      }
+    }
+    for (const child of Array.from(el.children))
+      walk(child);
+  }
+
+  // src/control/components/editor/componentSync/sync/SvgSync/SvgSync.ts
+  class SvgSync extends HTMLElement {
+    _component = null;
+    _preview = null;
+    _error = null;
+    constructor() {
+      super();
+      const root = this.attachShadow({ mode: "open" });
+      root.innerHTML = `
+            <style>${SvgSync_style_default}</style>
+            <span class="label"></span>
+            <div class="card" part="card">
+                <div class="preview" part="preview"></div>
+                <span class="action">Click to swap…</span>
+            </div>
+            <div class="error" part="error" hidden></div>
+        `;
+    }
+    connectedCallback() {
+      const componentIdentifier = this.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      if (componentIdentifier && !this._component) {
+        this._component = document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${componentIdentifier}"]`);
+      }
+      const root = this.shadowRoot;
+      root.querySelector(".label").textContent = this.getAttribute("label") || "Icon";
+      this._preview = root.querySelector(".preview");
+      this._error = root.querySelector(".error");
+      root.querySelector(".card").addEventListener("click", () => this._openPicker());
+      this._refreshPreview();
+    }
+    _resolveTarget() {
+      const sel = this.getAttribute("target");
+      if (!sel)
+        return null;
+      return this._component?.shadowRoot?.querySelector(sel) ?? null;
+    }
+    _refreshPreview() {
+      const target = this._resolveTarget();
+      if (!this._preview)
+        return;
+      this._preview.innerHTML = "";
+      if (target instanceof SVGElement) {
+        this._preview.appendChild(target.cloneNode(true));
+      } else {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        this._preview.appendChild(empty);
+      }
+    }
+    _showError(msg) {
+      if (!this._error)
+        return;
+      this._error.textContent = msg;
+      this._error.hidden = false;
+    }
+    _clearError() {
+      if (!this._error)
+        return;
+      this._error.textContent = "";
+      this._error.hidden = true;
+    }
+    _openPicker() {
+      this._clearError();
+      const mc = document.createElement("cms-media-center");
+      document.body.appendChild(mc);
+      const handler = async (e) => {
+        mc.removeEventListener("select-item", handler);
+        const src = e.detail?.src;
+        mc.remove();
+        if (!src)
+          return;
+        if (!/\.svg($|\?)/i.test(src)) {
+          this._showError("Please pick an SVG file (.svg).");
+          return;
+        }
+        try {
+          const svgText = await fetch(src).then((r) => r.text());
+          const cleaned = sanitizeSvg(svgText);
+          this._injectInto(cleaned);
+        } catch (err) {
+          this._showError(err instanceof Error ? err.message : String(err));
+        }
+      };
+      mc.addEventListener("select-item", handler);
+      requestAnimationFrame(() => mc.show(["folder", "image"]));
+    }
+    _injectInto(svgMarkup) {
+      const target = this._resolveTarget();
+      if (!target) {
+        this._showError("Target SVG not found in bloc.");
+        return;
+      }
+      const parsed = new DOMParser().parseFromString(svgMarkup, "image/svg+xml");
+      const fresh = parsed.documentElement;
+      if (!(fresh instanceof SVGElement)) {
+        this._showError("Sanitized markup is not a valid SVG.");
+        return;
+      }
+      const cls = target.getAttribute("class");
+      if (cls)
+        fresh.setAttribute("class", cls);
+      target.replaceWith(fresh);
+      this._refreshPreview();
+    }
+  }
+  if (!customElements.get("p9r-svg-sync")) {
+    customElements.define("p9r-svg-sync", SvgSync);
+  }
+
   // ../webcomponents/dist/blocs/horizontal-action-group.mjs
   var l = `<div class="actions" role="toolbar" part="toolbar">
     <slot></slot>
@@ -13781,8 +14032,68 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/core/editorSystem/defaultEditors/TextEditor.ts
+  // src/control/core/editorSystem/defaultEditors/SvgEditor.ts
   var cssStyle2 = `
+    svg:hover {
+        opacity: 0.5;
+        cursor: pointer;
+    }
+`;
+
+  class SvgEditor extends Editor {
+    _mediaCenter = null;
+    onClick = (e) => this.handleClick(e);
+    onSelectMedia = (e) => this.handleSelectMedia(e);
+    constructor(target) {
+      super(target, cssStyle2);
+    }
+    init() {
+      this.target.removeEventListener("click", this.onClick);
+      this.target.addEventListener("click", this.onClick);
+    }
+    restore() {
+      this.target.removeEventListener("click", this.onClick);
+      this._mediaCenter?.removeEventListener("select-item", this.onSelectMedia);
+      this._mediaCenter?.remove();
+      this._mediaCenter = null;
+    }
+    handleClick(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const mediaCenter = document.createElement("cms-media-center");
+      document.body.append(mediaCenter);
+      requestAnimationFrame(() => {
+        this._mediaCenter = mediaCenter;
+        mediaCenter.removeEventListener("select-item", this.onSelectMedia);
+        mediaCenter.addEventListener("select-item", this.onSelectMedia);
+        mediaCenter.show(["folder", "image"]);
+      });
+    }
+    async handleSelectMedia(e) {
+      const src = e.detail?.src;
+      this._mediaCenter?.removeEventListener("select-item", this.onSelectMedia);
+      this._mediaCenter?.remove();
+      this._mediaCenter = null;
+      if (!src || !/\.svg($|\?)/i.test(src))
+        return;
+      try {
+        const svgText = await fetch(src).then((r) => r.text());
+        const cleaned = sanitizeSvg(svgText);
+        const parsed = new DOMParser().parseFromString(cleaned, "image/svg+xml");
+        const fresh = parsed.documentElement;
+        if (!(fresh instanceof SVGElement))
+          return;
+        const cls = this.target.getAttribute("class");
+        if (cls)
+          fresh.setAttribute("class", cls);
+        this.target.replaceWith(fresh);
+        this.target = fresh;
+      } catch {}
+    }
+  }
+
+  // src/control/core/editorSystem/defaultEditors/TextEditor.ts
+  var cssStyle3 = `
 :is(h1, h2, h3, h4, h5, h6, p, span, blockquote, a):empty::before {
     content: attr(p9r-text-placeholder);
     color: var(--text-muted, #aaa);
@@ -13807,7 +14118,7 @@ form[method="dialog"] {
     onPaste = (e) => this.handlePaste(e);
     isInitializing = false;
     constructor(target) {
-      super(target, cssStyle2);
+      super(target, cssStyle3);
       this.observeAttributes();
     }
     attrObserver;
@@ -14082,7 +14393,7 @@ form[method="dialog"] {
   }
 
   // src/control/core/editorSystem/defaultEditors/ListEditor.ts
-  var cssStyle3 = `
+  var cssStyle4 = `
     li:empty::before{
         content: attr(p9r-text-placeholder);
         color: #aaa;
@@ -14101,7 +14412,7 @@ form[method="dialog"] {
     onKeyDown = (e) => this.handleKeyDown(e);
     onInput = (e) => this.handleInput(e);
     constructor(target) {
-      super(target, cssStyle3);
+      super(target, cssStyle4);
       let li = this.target.querySelector("li");
       if (!li) {
         li = document.createElement("li");
@@ -14345,6 +14656,11 @@ form[method="dialog"] {
         tag: "img",
         label: "image",
         cl: ImageEditor
+      });
+      this.register_editor({
+        tag: "svg",
+        label: "svg",
+        cl: SvgEditor
       });
       this.register_editor({
         tag: "ul",

@@ -1,5 +1,6 @@
 
 import { ImageEditor } from "src/control/core/editorSystem/defaultEditors/ImageEditor/ImageEditor";
+import { SvgEditor } from "src/control/core/editorSystem/defaultEditors/SvgEditor";
 import type { Editor } from "../../../core/editorSystem/Editor/Editor";
 import { EmptyEditor } from "../../../core/editorSystem/registerEditor";
 import { TextEditor, textTags } from "src/control/core/editorSystem/defaultEditors/TextEditor";
@@ -131,6 +132,12 @@ export class ObserverManager {
             tag: "img",
             label: "image",
             cl: ImageEditor
+        });
+
+        this.register_editor({
+            tag: "svg",
+            label: "svg",
+            cl: SvgEditor as unknown as new (node: HTMLElement) => Editor,
         });
 
         this.register_editor({
