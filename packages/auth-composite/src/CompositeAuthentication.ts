@@ -6,8 +6,8 @@ export type CompositeChild<Role extends string = DefaultRole> = {
 
     /**
      * Label shown on the login chooser page. When omitted, the child is
-     * still consulted by `getSubject` (useful for bearer-only providers
-     * like `TokenAuthentication`) but never appears as a clickable option.
+     * still consulted by `getSubject` (useful for bearer-only providers)
+     * but never appears as a clickable option.
      */
     displayName?: string;
 };

@@ -12,9 +12,7 @@ socle/
 │   ├── core/                                @bernouy/core           — interfaces + serve helpers + utilities
 │   ├── runner-bun/                          @bernouy/runner-bun     — Runner backed by `Bun.serve`
 │   ├── auth-keycloak/                       @bernouy/auth-keycloak  — Keycloak / OIDC consumer
-│   ├── auth-token/                          @bernouy/auth-token     — bearer-token auth + admin tokens UI
 │   ├── auth-composite/                      @bernouy/auth-composite — host-based router across multiple auths
-│   ├── mailer-console/                      @bernouy/mailer-console — Mailer that logs (dev / tests)
 │   ├── mailer-smtp/                         @bernouy/mailer-smtp    — Mailer over `nodemailer`
 │   └── cdn/                                 @bernouy/cdn-buckets            — single-bucket CDN provider, broker, browser
 │
