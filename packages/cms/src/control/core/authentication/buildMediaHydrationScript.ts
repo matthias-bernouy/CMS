@@ -20,12 +20,13 @@ export function buildMediaHydrationScript(media: ControlCms["media"]): string {
     const className   = media.constructor.name;
     const classSource = media.constructor.toString();
     const state       = JSON.stringify(media, taggedReplacer);
-    // `(0, eval)` runs in the global scope so the class declaration is
-    // parsed as an expression and returned. Wrapping the source in `(…)`
-    // forces expression context for `class X { … }`.
+    // The class body is inlined as a class/function expression — no `eval`
+    // needed, so a strict `default-src 'self'` CSP without `unsafe-eval`
+    // still admits this script. `(${classSource})` parses as either
+    // `(class X { … })` or `(function X() { … })` depending on the
+    // constructor shape; both are valid expressions.
     return `(() => {
-    const __src = ${JSON.stringify(classSource)};
-    const Klass = (0, eval)("(" + __src + ")");
+    const Klass = (${classSource});
     const revive = (_k, v) => {
         if (v && typeof v === "object" && v.__cms_type) {
             if (v.__cms_type === "Date")       return new Date(v.v);

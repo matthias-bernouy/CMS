@@ -1,22 +1,42 @@
 import type { Runner } from "@bernouy/core";
+import { extname } from "node:path";
+import type { Cache } from "src/socle/interfaces/Cache";
+import {
+    cachedResponseAsync,
+    compress,
+    publicAssetCacheControl,
+    SECURITY_HEADERS,
+} from "src/socle/server/compression";
 import { scanStaticFolder } from "./scanStaticFolder";
 import prepareHtml from "./prepareHtml";
 
 export type ServeStaticFolderOptions = {
-    /**
-     * Inline `<script>` body injected before the bundled custom-element
-     * script, used to set up `window._cms.CDN` synchronously so the first
-     * `connectedCallback` of an admin page already sees a hydrated CDN.
-     * Empty string (default) skips the inline script — useful for tests
-     * or pages that don't need the CDN consumer.
-     */
-    hydrationScript?: string;
+    /** Process-shared cache used to memoize compressed bytes per route. */
+    cache: Cache;
 };
 
-export default async function serveStaticFolder(runner: Runner, options: ServeStaticFolderOptions = {}) {
+/**
+ * Map of file extensions whose payload benefits from gzip/brotli (text-y
+ * formats — JS, CSS, SVG, JSON). Anything not listed falls through to a
+ * raw `Bun.file` response, since pre-compressed binaries (woff2, png,
+ * jpg, …) gain nothing from a second compression pass and brotli would
+ * actually inflate them slightly.
+ */
+const COMPRESSIBLE_TYPES: Record<string, string> = {
+    ".js":   "text/javascript; charset=utf-8",
+    ".mjs":  "text/javascript; charset=utf-8",
+    ".css":  "text/css; charset=utf-8",
+    ".svg":  "image/svg+xml; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".txt":  "text/plain; charset=utf-8",
+    ".xml":  "application/xml; charset=utf-8",
+    ".map":  "application/json; charset=utf-8",
+};
+
+export default async function serveStaticFolder(runner: Runner, options: ServeStaticFolderOptions) {
 
     const files = await scanStaticFolder();
-    const hydrationScript = options.hydrationScript ?? "";
+    const cache = options.cache;
 
     for (const file of files) {
 
@@ -27,29 +47,42 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
             } else if (routePath.endsWith("/index")) {
                 routePath = routePath.slice(0, -5);
             }
-
             const finalRoute = routePath.startsWith("/") ? routePath : `/${routePath}`;
+            const cacheKey = `static-html:${finalRoute}`;
 
-            runner.get(finalRoute, async () => {
-                const htmlContent = await prepareHtml(file.absolutePath, runner, hydrationScript);
-
-                return new Response(htmlContent, {
-                    headers: {
-                        "Content-Type": "text/html; charset=utf-8"
-                    }
-                });
+            runner.get(finalRoute, async (req: Request) => {
+                return cachedResponseAsync(req, cacheKey, cache, async () => {
+                    const html = await prepareHtml(file.absolutePath, runner);
+                    return compress(html, "text/html; charset=utf-8");
+                }, publicAssetCacheControl(req));
             });
 
             continue;
         }
 
+        const ext = extname(file.relativePath).toLowerCase();
+        const compressType = COMPRESSIBLE_TYPES[ext];
 
-        // All cases
-        runner.get(file.relativePath, () => {
-            return new Response(Bun.file(file.absolutePath))
-        })
+        if (compressType) {
+            const cacheKey = `static-asset:${file.relativePath}`;
+            runner.get(file.relativePath, async (req: Request) => {
+                return cachedResponseAsync(req, cacheKey, cache, async () => {
+                    const bytes = new Uint8Array(await Bun.file(file.absolutePath).arrayBuffer());
+                    return compress(bytes, compressType);
+                }, publicAssetCacheControl(req));
+            });
+            continue;
+        }
 
-
+        // Pre-compressed binary (woff2, png, jpg, ico, …) — passthrough
+        // with cache-control + security headers, no second compression pass.
+        runner.get(file.relativePath, (req: Request) => {
+            return new Response(Bun.file(file.absolutePath), {
+                headers: {
+                    ...SECURITY_HEADERS,
+                    "Cache-Control": publicAssetCacheControl(req),
+                },
+            });
+        });
     }
-
 }

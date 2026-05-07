@@ -16,7 +16,6 @@ const TEMPLATE_FILE = "_template.html";
 export default async function prepareHtml(
     path: string,
     runner: Runner,
-    hydrationScript: string = "",
 ){
     const templatePath = findTemplateFor(path);
     if (!templatePath) {
@@ -27,7 +26,6 @@ export default async function prepareHtml(
 
     let temp = await Bun.file(templatePath).text();
     temp = replaceBasePath(temp, runner.basePath);
-    temp = temp.replace("{{HYDRATION}}", hydrationScript);
     temp = temp.replace("{{CONTENT}}", content);
 
     return temp;
