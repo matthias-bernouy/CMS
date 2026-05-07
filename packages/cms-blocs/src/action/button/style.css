@@ -36,7 +36,23 @@
     overflow-wrap: anywhere;
     box-sizing: border-box;
     vertical-align: middle;
+    position: relative;
 }
+
+/* Native <a> overlay — fills the host, owns navigation. Visual styling
+   stays on `:host(...)`; the overlay carries href/target/rel and catches
+   the click for the browser to follow. Authors must NEVER drive this
+   from JS (rule 9): assigning `location.href` slips past the editor. */
+.link {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    text-decoration: none;
+    color: inherit;
+    cursor: inherit;
+}
+.link:focus { outline: none; }
+.link[aria-disabled="true"] { pointer-events: none; }
 
 /* Sizes */
 
@@ -153,7 +169,7 @@
     transform: translateY(1px);
 }
 
-:host(:focus-visible) {
+:host(:focus-within) {
     outline: 2px solid var(--primary, #4f46e5);
     outline-offset: 2px;
 }

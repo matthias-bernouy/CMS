@@ -6,6 +6,7 @@ import { installNavigationGuard } from "src/control/core/editorSystem/navigation
 import { installLinkInterceptor } from "src/control/core/editorSystem/installLinkInterceptor";
 import { watchForDirty, isDirty } from "src/control/core/editorSystem/dirtyState";
 import { resolveTargetForLink } from "./linkNavigation";
+import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
 import type { EDITOR_SYSTEM_MODE } from "types/w13c/EditorSystem";
 import { ObserverManager } from "src/control/components/editor/EditorSystem/ObserverManager";
 import { DragManager } from "src/control/components/editor/EditorSystem/DragManager";
@@ -90,15 +91,17 @@ export default class EditorRoot extends HTMLElement {
         // failure (offline, auth) — link classification still works for
         // anchors/external/mailto and falls back to "page" for same-origin
         // paths, which is the right default.
-        const apiBase = document.querySelector("meta[name='p9r-api-base']")?.getAttribute("content") || "/api/";
-        fetch(`${apiBase}page/list`).then(r => r.ok ? r.json() : []).then((list: unknown) => {
+        fetch(`${getMetaBasePath()}/api/page/list`).then(r => r.ok ? r.json() : []).then((list: unknown) => {
             if (!Array.isArray(list)) return;
             const paths = new Set<string>();
+            const ids   = new Map<string, string>();
             for (const item of list) {
-                const p = (item as { path?: unknown }).path;
+                const p  = (item as { path?: unknown }).path;
+                const id = (item as { id?:   unknown }).id;
                 if (typeof p === "string") paths.add(p);
+                if (typeof p === "string" && typeof id === "string") ids.set(p, id);
             }
-            setEditorContext({ knownPagePaths: paths });
+            setEditorContext({ knownPagePaths: paths, pageIdByPath: ids });
         }).catch(() => { /* offline / auth — keep empty set */ });
     }
 

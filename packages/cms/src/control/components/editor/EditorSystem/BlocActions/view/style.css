@@ -56,3 +56,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     right: auto;
     transform: translate(-32px, -50%);
 }
+
+/* The link section's styles live inside the section element itself
+   (mountLinkSection.ts) — slotted light-DOM children can't be reached
+   from this shadow stylesheet beyond the wrapper itself. */

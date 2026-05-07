@@ -1,4 +1,5 @@
-import type { NavigationRequest } from "src/control/core/editorSystem/editorContext";
+import { getEditorContext, type NavigationRequest } from "src/control/core/editorSystem/editorContext";
+import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
 
 /**
  * Default `requestNavigation` handler wired by EditorRoot. Routes each
@@ -14,7 +15,12 @@ export function resolveTargetForLink(req: NavigationRequest): void {
 
     switch (cls.kind) {
         case "page": {
-            const dest = `/editor/page?id=${encodeURIComponent(cls.target)}`;
+            // Editor URL keys pages by `id`, but link hrefs are paths.
+            // Resolve via the editor context's path→id map (populated by
+            // EditorRoot from `/api/page/list`); fall back to the path
+            // itself for in-memory dev where id === path.
+            const id = getEditorContext().pageIdByPath.get(cls.target) ?? cls.target;
+            const dest = `${getMetaBasePath()}/editor/page?id=${encodeURIComponent(id)}`;
             window.location.href = dest;
             return;
         }

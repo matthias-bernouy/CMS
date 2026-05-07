@@ -3,6 +3,8 @@ import css from '../../view/style.css' with { type: 'text' };
 import type { VAnchor } from '../../compute/groupPosition';
 import { findParentEditor } from '../../compute/ancestorChain';
 import { renderActionBar } from '../renderActionBar';
+import { mountLinkSection } from '../mountLinkSection';
+import { onActiveLinkChange } from 'src/control/core/editorSystem/editorContext';
 import { refreshPinButton } from '../../sub/PinMenu/refreshPinButton';
 import { BreadcrumbController } from '../../sub/Breadcrumb/BreadcrumbController';
 import { InsertButtonsController } from '../../sub/InsertButton/InsertButtonsController';
@@ -35,6 +37,7 @@ export class BagController {
     events: EventManager;
     ro: ResizeObserver;
     highlight: Highlight | null = null;
+    private _unsubLink: (() => void) | null = null;
 
     constructor(public host: HTMLElement) {
         const s = document.createElement('style');
@@ -49,6 +52,52 @@ export class BagController {
             this.pin, this.insertBtns,
             { onClose: () => this.close(), onReflow: () => reflow(this),
               withCooldown: (fn) => this.withCooldown(fn), onSelectParent: () => selectParent(this) });
+        // Active-link wiring: when a link gets clicked we either refresh
+        // the in-bar section (BAG already shown via an editor) or pop BAG
+        // open in a link-only mode anchored to the link itself.
+        this._unsubLink = onActiveLinkChange((link) => this._onActiveLinkChange(link));
+    }
+
+    private _onActiveLinkChange(link: HTMLAnchorElement | null) {
+        if (link && this.editor) {
+            // Editor already managing BAG — just refresh the section.
+            mountLinkSection(this.host);
+            return;
+        }
+        if (link && !this.editor) {
+            this._openForLink(link);
+            return;
+        }
+        // link cleared — drop the section first, then close BAG if it was
+        // opened only for the link (no editor backing it).
+        mountLinkSection(this.host);
+        if (!this.editor) this.close();
+    }
+
+    /**
+     * Open BAG in "link-only" mode — no bloc actions, no breadcrumb, just
+     * the link section anchored to the clicked `<a>`. Used when the click
+     * landed on a link that doesn't activate any TextEditor / SvgEditor
+     * (e.g. an `<a>` deep inside a bloc shadow), so the user still gets
+     * the navigate-to-target affordance.
+     */
+    private _openForLink(anchor: HTMLAnchorElement) {
+        this.host.innerHTML = '';
+        this.lastConfigKey = '';
+        mountLinkSection(this.host);
+
+        const r = anchor.getBoundingClientRect();
+        // Prefer above the link; fall back below if not enough room. Clamp
+        // inside the viewport so off-screen rects (e.g. user just scrolled
+        // past) still surface BAG.
+        const above = r.top - 50;
+        const below = r.bottom + 6;
+        const raw   = above >= 8 ? above : below;
+        const top   = Math.max(8, Math.min(window.innerHeight - 60, raw));
+        const left  = Math.max(8, Math.min(window.innerWidth  - 320, r.left));
+        this.host.style.cssText =
+            `position:fixed;top:${top}px;left:${left}px;` +
+            `visibility:visible;opacity:1;pointer-events:auto;`;
     }
 
     setEditor(editor: Editor) {
@@ -85,6 +134,7 @@ export class BagController {
         if (!this.editor) return;
         const r = renderActionBar(this.host, this.editor, findParentEditor(this.target!), this.target!, this.lastConfigKey);
         if (r) { this.lastConfigKey = r.configKey; refreshPinButton(this.host, this.editor); }
+        mountLinkSection(this.host);
     }
 
     withCooldown(fn: () => void) {

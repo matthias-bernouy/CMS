@@ -24,6 +24,14 @@ export type NavigationRequest = {
 
 type Ctx = {
     knownPagePaths: Set<string>;
+    /**
+     * Maps a page path to the page record's `id`. Editor-shell URLs use
+     * `?id=<page-id>` (see `pages.html`), but link hrefs in user content
+     * are paths — we resolve one to the other here. Empty until the pages
+     * list fetch resolves; in dev with a path-keyed repository, callers
+     * can fall back to using the path as id.
+     */
+    pageIdByPath: Map<string, string>;
     isDirty: () => boolean;
     requestNavigation: (req: NavigationRequest) => void;
 };
@@ -32,6 +40,7 @@ const noop = (): void => {};
 
 const _ctx: Ctx = {
     knownPagePaths: new Set(),
+    pageIdByPath:   new Map(),
     isDirty: () => false,
     requestNavigation: noop,
 };
@@ -45,9 +54,37 @@ export function getEditorContext(): Ctx {
     return _ctx;
 }
 
+// ── Active link ────────────────────────────────────────────────────────────
+
+/**
+ * The `<a>` element the user most-recently clicked in the editor preview.
+ * Drives the floating `<cms-link-bar>` and any UI that wants to surface
+ * link-aware actions. `null` means "no link selected right now".
+ *
+ * Cross-module pubsub via a tiny emitter — avoids passing the link
+ * reference through three layers of editor classes.
+ */
+let _activeLink: HTMLAnchorElement | null = null;
+const _linkListeners = new Set<(link: HTMLAnchorElement | null) => void>();
+
+export function getActiveLink(): HTMLAnchorElement | null { return _activeLink; }
+
+export function setActiveLink(link: HTMLAnchorElement | null): void {
+    if (_activeLink === link) return;
+    _activeLink = link;
+    for (const fn of _linkListeners) try { fn(link); } catch {}
+}
+
+export function onActiveLinkChange(fn: (link: HTMLAnchorElement | null) => void): () => void {
+    _linkListeners.add(fn);
+    return () => { _linkListeners.delete(fn); };
+}
+
 /** Reset the context — useful in tests + when an EditorRoot disconnects. */
 export function clearEditorContext(): void {
     _ctx.knownPagePaths = new Set();
+    _ctx.pageIdByPath   = new Map();
     _ctx.isDirty = () => false;
     _ctx.requestNavigation = noop;
+    setActiveLink(null);
 }

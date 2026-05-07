@@ -11501,6 +11501,10 @@ cms-bag-breadcrumb[data-inline="right"] {
     right: auto;
     transform: translate(-32px, -50%);
 }
+
+/* The link section's styles live inside the section element itself
+   (mountLinkSection.ts) — slotted light-DOM children can't be reached
+   from this shadow stylesheet beyond the wrapper itself. */
 `;
 
   // src/control/components/editor/EditorSystem/BlocActions/compute/ancestorChain.ts
@@ -11630,6 +11634,189 @@ cms-bag-breadcrumb[data-inline="right"] {
     const hasLeftButtons = hasConfig || !!config.get("duplicate") || !!config.get("changeComponent") || customActions.length > 0 || stateSyncCount > 0;
     separator?.toggleAttribute("hidden", !canDelete || !hasLeftButtons);
     return { configKey, hasAnyButton };
+  }
+
+  // src/control/core/editorSystem/classifyLink.ts
+  var SPECIAL_SCHEMES = ["mailto:", "tel:", "sms:"];
+  var ASSET_PREFIXES = ["/uploads/", "/assets/", "/api/", "/.cms/", "/_storage/"];
+  function classifyLink(href, currentOrigin, knownPagePaths) {
+    const trimmed = href.trim();
+    if (!trimmed || trimmed === "#" || /^javascript:/i.test(trimmed)) {
+      return { kind: "empty", target: trimmed };
+    }
+    if (trimmed.startsWith("#")) {
+      return { kind: "anchor", target: trimmed.slice(1) };
+    }
+    if (SPECIAL_SCHEMES.some((s2) => trimmed.toLowerCase().startsWith(s2))) {
+      return { kind: "mailto", target: trimmed };
+    }
+    let url;
+    try {
+      url = new URL(trimmed, currentOrigin);
+    } catch {
+      return { kind: "empty", target: trimmed };
+    }
+    const sameOrigin = url.origin === currentOrigin;
+    if (!sameOrigin) {
+      return { kind: "external", target: url.href };
+    }
+    const path = url.pathname;
+    if (knownPagePaths.has(path)) {
+      return { kind: "page", target: path };
+    }
+    if (ASSET_PREFIXES.some((p) => path.startsWith(p))) {
+      return { kind: "asset", target: url.href };
+    }
+    return { kind: "page", target: path };
+  }
+
+  // src/control/core/editorSystem/editorContext.ts
+  var noop = () => {};
+  var _ctx = {
+    knownPagePaths: new Set,
+    pageIdByPath: new Map,
+    isDirty: () => false,
+    requestNavigation: noop
+  };
+  function setEditorContext(patch) {
+    Object.assign(_ctx, patch);
+  }
+  function getEditorContext() {
+    return _ctx;
+  }
+  var _activeLink = null;
+  var _linkListeners = new Set;
+  function getActiveLink() {
+    return _activeLink;
+  }
+  function setActiveLink(link) {
+    if (_activeLink === link)
+      return;
+    _activeLink = link;
+    for (const fn of _linkListeners)
+      try {
+        fn(link);
+      } catch {}
+  }
+  function onActiveLinkChange(fn) {
+    _linkListeners.add(fn);
+    return () => {
+      _linkListeners.delete(fn);
+    };
+  }
+  function clearEditorContext() {
+    _ctx.knownPagePaths = new Set;
+    _ctx.pageIdByPath = new Map;
+    _ctx.isDirty = () => false;
+    _ctx.requestNavigation = noop;
+    setActiveLink(null);
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/domain/mountLinkSection.ts
+  var SECTION_CLASS = "bag-link-section";
+  function mountLinkSection(host) {
+    const link = getActiveLink();
+    const existing = host.querySelector(`.${SECTION_CLASS}`);
+    if (!link) {
+      existing?.remove();
+      return;
+    }
+    const href = link.getAttribute("href") || "";
+    if (existing?.dataset["href"] === href)
+      return;
+    const cls = classifyLink(href, location.origin, getEditorContext().knownPagePaths);
+    const node = renderSection(href, cls);
+    if (existing)
+      existing.replaceWith(node);
+    else
+      host.appendChild(node);
+  }
+  function renderSection(href, cls) {
+    const root = document.createElement("div");
+    root.className = SECTION_CLASS;
+    root.dataset["href"] = href;
+    const styleEl = document.createElement("style");
+    styleEl.textContent = SECTION_CSS;
+    root.appendChild(styleEl);
+    const { label, icon } = primaryActionLabel(cls);
+    const iconEl = document.createElement("span");
+    iconEl.className = "icon";
+    iconEl.setAttribute("aria-hidden", "true");
+    iconEl.textContent = "\uD83D\uDD17";
+    const hrefEl = document.createElement("span");
+    hrefEl.className = "href";
+    hrefEl.textContent = href || "(empty)";
+    hrefEl.title = href;
+    const action = document.createElement("button");
+    action.type = "button";
+    action.textContent = `${icon} ${label}`;
+    action.dataset["kind"] = cls.kind;
+    action.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const ctx = getEditorContext();
+      const c = classifyLink(href, location.origin, ctx.knownPagePaths);
+      ctx.requestNavigation({ href, classification: c, via: "popover-action" });
+    });
+    root.append(iconEl, hrefEl, action);
+    return root;
+  }
+  var SECTION_CSS = `
+.${SECTION_CLASS} {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
+    padding-left: 10px;
+    border-left: 1px solid var(--border-default, #e2e8f0);
+    font-size: 12px;
+    vertical-align: middle;
+}
+.${SECTION_CLASS} > .icon {
+    color: var(--primary-base, #4361ee);
+    font-size: 13px;
+    line-height: 1;
+}
+.${SECTION_CLASS} > .href {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-body, #334155);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+}
+.${SECTION_CLASS} > button {
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: var(--primary-muted, #eef2ff);
+    color: var(--primary-base, #4361ee);
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    line-height: 1.2;
+}
+.${SECTION_CLASS} > button:hover {
+    border-color: var(--primary-base, #4361ee);
+}
+`;
+  function primaryActionLabel(cls) {
+    switch (cls.kind) {
+      case "page":
+        return { label: "Edit page", icon: "↗" };
+      case "anchor":
+        return { label: "Scroll", icon: "↓" };
+      case "asset":
+        return { label: "Open in new tab", icon: "↗" };
+      case "external":
+        return { label: "Open in new tab", icon: "↗" };
+      case "mailto":
+        return { label: "Open", icon: "↗" };
+      case "empty":
+        return { label: "—", icon: "" };
+    }
   }
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/refreshPinButton.ts
@@ -12748,6 +12935,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     events;
     ro;
     highlight = null;
+    _unsubLink = null;
     constructor(host) {
       this.host = host;
       const s2 = document.createElement("style");
@@ -12763,6 +12951,32 @@ cms-bag-breadcrumb[data-inline="right"] {
         withCooldown: (fn) => this.withCooldown(fn),
         onSelectParent: () => selectParent(this)
       });
+      this._unsubLink = onActiveLinkChange((link) => this._onActiveLinkChange(link));
+    }
+    _onActiveLinkChange(link) {
+      if (link && this.editor) {
+        mountLinkSection(this.host);
+        return;
+      }
+      if (link && !this.editor) {
+        this._openForLink(link);
+        return;
+      }
+      mountLinkSection(this.host);
+      if (!this.editor)
+        this.close();
+    }
+    _openForLink(anchor) {
+      this.host.innerHTML = "";
+      this.lastConfigKey = "";
+      mountLinkSection(this.host);
+      const r = anchor.getBoundingClientRect();
+      const above = r.top - 50;
+      const below = r.bottom + 6;
+      const raw = above >= 8 ? above : below;
+      const top = Math.max(8, Math.min(window.innerHeight - 60, raw));
+      const left = Math.max(8, Math.min(window.innerWidth - 320, r.left));
+      this.host.style.cssText = `position:fixed;top:${top}px;left:${left}px;` + `visibility:visible;opacity:1;pointer-events:auto;`;
     }
     setEditor(editor) {
       if (!isInteractive(editor)) {
@@ -12804,6 +13018,7 @@ cms-bag-breadcrumb[data-inline="right"] {
         this.lastConfigKey = r.configKey;
         refreshPinButton(this.host, this.editor);
       }
+      mountLinkSection(this.host);
     }
     withCooldown(fn) {
       fn();
@@ -13882,59 +14097,6 @@ form[method="dialog"] {
     return "open" in el && typeof el.open === "function";
   }
 
-  // src/control/core/editorSystem/editorContext.ts
-  var noop = () => {};
-  var _ctx = {
-    knownPagePaths: new Set,
-    isDirty: () => false,
-    requestNavigation: noop
-  };
-  function setEditorContext(patch) {
-    Object.assign(_ctx, patch);
-  }
-  function getEditorContext() {
-    return _ctx;
-  }
-  function clearEditorContext() {
-    _ctx.knownPagePaths = new Set;
-    _ctx.isDirty = () => false;
-    _ctx.requestNavigation = noop;
-  }
-
-  // src/control/core/editorSystem/classifyLink.ts
-  var SPECIAL_SCHEMES = ["mailto:", "tel:", "sms:"];
-  var ASSET_PREFIXES = ["/uploads/", "/assets/", "/api/", "/.cms/", "/_storage/"];
-  function classifyLink(href, currentOrigin, knownPagePaths) {
-    const trimmed = href.trim();
-    if (!trimmed || trimmed === "#" || /^javascript:/i.test(trimmed)) {
-      return { kind: "empty", target: trimmed };
-    }
-    if (trimmed.startsWith("#")) {
-      return { kind: "anchor", target: trimmed.slice(1) };
-    }
-    if (SPECIAL_SCHEMES.some((s2) => trimmed.toLowerCase().startsWith(s2))) {
-      return { kind: "mailto", target: trimmed };
-    }
-    let url;
-    try {
-      url = new URL(trimmed, currentOrigin);
-    } catch {
-      return { kind: "empty", target: trimmed };
-    }
-    const sameOrigin = url.origin === currentOrigin;
-    if (!sameOrigin) {
-      return { kind: "external", target: url.href };
-    }
-    const path = url.pathname;
-    if (knownPagePaths.has(path)) {
-      return { kind: "page", target: path };
-    }
-    if (ASSET_PREFIXES.some((p) => path.startsWith(p))) {
-      return { kind: "asset", target: url.href };
-    }
-    return { kind: "page", target: path };
-  }
-
   // src/control/core/editorSystem/navigationGuard.ts
   function installNavigationGuard() {
     const origPushState = history.pushState.bind(history);
@@ -13964,14 +14126,11 @@ form[method="dialog"] {
 
   // src/control/core/editorSystem/installLinkInterceptor.ts
   function installLinkInterceptor() {
-    let popover = null;
-    const ensurePopover = () => {
-      if (popover)
-        return popover;
-      const el = document.createElement("cms-link-popover");
-      document.body.appendChild(el);
-      popover = el;
-      return el;
+    const ensureLinkBar = () => {
+      if (document.querySelector("cms-link-bar"))
+        return;
+      const bar = document.createElement("cms-link-bar");
+      document.body.appendChild(bar);
     };
     const findAnchor = (e) => {
       for (const n2 of e.composedPath()) {
@@ -13982,8 +14141,10 @@ form[method="dialog"] {
     };
     const onClick = (e) => {
       const anchor = findAnchor(e);
-      if (!anchor)
+      if (!anchor) {
+        setActiveLink(null);
         return;
+      }
       const href = anchor.getAttribute("href") || "";
       if (e.ctrlKey || e.metaKey || e.shiftKey) {
         e.preventDefault();
@@ -13994,13 +14155,14 @@ form[method="dialog"] {
         return;
       }
       e.preventDefault();
-      ensurePopover().attachTo(anchor);
+      ensureLinkBar();
+      setActiveLink(anchor);
     };
     document.addEventListener("click", onClick, true);
     return () => {
       document.removeEventListener("click", onClick, true);
-      popover?.remove();
-      popover = null;
+      document.querySelector("cms-link-bar")?.remove();
+      setActiveLink(null);
     };
   }
 
@@ -14035,7 +14197,8 @@ form[method="dialog"] {
     const { classification: cls, href } = req;
     switch (cls.kind) {
       case "page": {
-        const dest = `/editor/page?id=${encodeURIComponent(cls.target)}`;
+        const id = getEditorContext().pageIdByPath.get(cls.target) ?? cls.target;
+        const dest = `${getMetaBasePath()}/editor/page?id=${encodeURIComponent(id)}`;
         window.location.href = dest;
         return;
       }
@@ -15036,17 +15199,20 @@ form[method="dialog"] {
       this._navGuardOff = installNavigationGuard();
       this._dirtyWatchOff = watchForDirty(workingElement);
       this._linkIntercptOff = installLinkInterceptor();
-      const apiBase = document.querySelector("meta[name='p9r-api-base']")?.getAttribute("content") || "/api/";
-      fetch(`${apiBase}page/list`).then((r) => r.ok ? r.json() : []).then((list) => {
+      fetch(`${getMetaBasePath()}/api/page/list`).then((r) => r.ok ? r.json() : []).then((list) => {
         if (!Array.isArray(list))
           return;
         const paths = new Set;
+        const ids = new Map;
         for (const item of list) {
           const p = item.path;
+          const id = item.id;
           if (typeof p === "string")
             paths.add(p);
+          if (typeof p === "string" && typeof id === "string")
+            ids.set(p, id);
         }
-        setEditorContext({ knownPagePaths: paths });
+        setEditorContext({ knownPagePaths: paths, pageIdByPath: ids });
       }).catch(() => {});
     }
     _isWorkingEmpty() {
@@ -15506,169 +15672,6 @@ button span {
   }
   if (!customElements.get("cms-floating-toolbar")) {
     customElements.define("cms-floating-toolbar", FloatingToolbar);
-  }
-
-  // src/control/components/editor/EditorSystem/LinkPopover/LinkPopover.style.css
-  var LinkPopover_style_default = `:host {
-    position: fixed;
-    z-index: 10000;
-    display: none;
-    pointer-events: auto;
-    font-family:
-        "Inter",
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        system-ui,
-        sans-serif;
-    font-size: 12px;
-}
-:host(.open) { display: block; }
-
-.bar {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 6px;
-    background: var(--bg-surface, #ffffff);
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 6px;
-    box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.18);
-    white-space: nowrap;
-}
-
-.href {
-    max-width: 240px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--text-muted, #64748b);
-    padding: 0 4px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px;
-}
-
-button {
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: var(--text-main, #0f172a);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-button:hover { background: var(--bg-base, #f1f5f9); }
-button.primary { color: var(--primary-base, #4361ee); }
-
-.divider {
-    width: 1px;
-    height: 16px;
-    background: var(--border-light, #f1f5f9);
-}
-`;
-
-  // src/control/components/editor/EditorSystem/LinkPopover/LinkPopover.ts
-  class LinkPopover extends HTMLElement {
-    _bar = null;
-    _href = null;
-    _action = null;
-    _target = null;
-    _onDocClick = (e) => this._maybeCloseOnOutsideClick(e);
-    _onKey = (e) => {
-      if (e.key === "Escape")
-        this.close();
-    };
-    constructor() {
-      super();
-      const root2 = this.attachShadow({ mode: "open" });
-      root2.innerHTML = `
-            <style>${LinkPopover_style_default}</style>
-            <div class="bar" part="bar">
-                <span class="href"></span>
-                <span class="divider"></span>
-                <button type="button" class="primary action"></button>
-            </div>
-        `;
-      this._bar = root2.querySelector(".bar");
-      this._href = root2.querySelector(".href");
-      this._action = root2.querySelector(".action");
-      this._action.addEventListener("click", (e) => this._onActionClick(e));
-    }
-    attachTo(anchor) {
-      this._target = anchor;
-      const href = anchor.getAttribute("href") || "";
-      const cls = classifyLink(href, location.origin, getEditorContext().knownPagePaths);
-      if (this._href) {
-        this._href.textContent = href || "(empty)";
-        this._href.title = href;
-      }
-      if (this._action) {
-        const { label, icon } = primaryActionLabel(cls);
-        this._action.textContent = `${icon} ${label}`;
-        this._action.dataset["kind"] = cls.kind;
-      }
-      this.classList.add("open");
-      requestAnimationFrame(() => this._reposition());
-      document.addEventListener("click", this._onDocClick, true);
-      document.addEventListener("keydown", this._onKey);
-    }
-    close() {
-      this.classList.remove("open");
-      this._target = null;
-      document.removeEventListener("click", this._onDocClick, true);
-      document.removeEventListener("keydown", this._onKey);
-    }
-    _reposition() {
-      if (!this._target || !this._bar)
-        return;
-      const r = this._target.getBoundingClientRect();
-      const barH = this._bar.getBoundingClientRect().height;
-      const above = r.top - barH - 6;
-      if (above >= 0) {
-        this.style.top = `${above}px`;
-      } else {
-        this.style.top = `${r.bottom + 6}px`;
-      }
-      this.style.left = `${Math.max(8, r.left)}px`;
-    }
-    _maybeCloseOnOutsideClick(e) {
-      const path = e.composedPath();
-      if (path.includes(this) || this._target && path.includes(this._target))
-        return;
-      this.close();
-    }
-    _onActionClick(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!this._target)
-        return;
-      const href = this._target.getAttribute("href") || "";
-      const ctx = getEditorContext();
-      const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
-      ctx.requestNavigation({ href, classification: cls, via: "popover-action" });
-    }
-  }
-  function primaryActionLabel(cls) {
-    switch (cls.kind) {
-      case "page":
-        return { label: "Edit page", icon: "↗" };
-      case "anchor":
-        return { label: "Scroll", icon: "↓" };
-      case "asset":
-        return { label: "Open in new tab", icon: "↗" };
-      case "external":
-        return { label: "Open in new tab", icon: "↗" };
-      case "mailto":
-        return { label: "Open", icon: "↗" };
-      case "empty":
-        return { label: "—", icon: "" };
-    }
-  }
-  if (!customElements.get("cms-link-popover")) {
-    customElements.define("cms-link-popover", LinkPopover);
   }
 
   // src/control/components/editor/MediaCenter/template.html
