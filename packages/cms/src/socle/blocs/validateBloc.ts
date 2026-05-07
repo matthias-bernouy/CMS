@@ -56,8 +56,14 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     const tagError = validateBlocTag(input.tag);
     if (tagError) errors.push(tagError);
 
-    if (input.viewSource)   errors.push(...checkNoHardcodedDefine(input.viewSource, "Bloc",       input.tag));
-    if (input.editorSource) errors.push(...checkNoHardcodedDefine(input.editorSource, "BlocEditor", input.tag));
+    if (input.viewSource) {
+        errors.push(...checkNoHardcodedDefine(input.viewSource, "Bloc",       input.tag));
+        errors.push(...checkNoLocationMutation(input.viewSource, "Bloc"));
+    }
+    if (input.editorSource) {
+        errors.push(...checkNoHardcodedDefine(input.editorSource, "BlocEditor", input.tag));
+        errors.push(...checkNoLocationMutation(input.editorSource, "BlocEditor"));
+    }
 
     if (input.configurationHtml) {
         errors.push(...checkCompSyncNonEmpty(input.configurationHtml));
@@ -106,6 +112,39 @@ function checkNoHardcodedDefine(source: string, fileLabel: string, expectedTag: 
         errors.push(
             `${fileLabel}: hardcoded \`customElements.define("${literal}", …)\` — bloc registration is handled by the build wrapper, remove this call.`,
         );
+    }
+    return errors;
+}
+
+// ── #6: Direct `Location` mutation ────────────────────────────────────────
+
+/**
+ * `Location.prototype` members are `[[LegacyUnforgeable]]` per WebIDL — the
+ * browser refuses every runtime override of `location.assign`,
+ * `location.replace` and `location.href` setter. The editor consequently
+ * has no way to intercept blocs that mutate `location.*` directly: such
+ * blocs navigate away mid-edit, losing the user's work.
+ *
+ * We reject the mutation patterns at push time and steer authors toward
+ * `<a href>` (static nav) or `history.pushState` (SPA-style transitions),
+ * both of which the editor DOES intercept. See cms-bloc-development.md
+ * rule 9 for the full pattern guide.
+ */
+function checkNoLocationMutation(source: string, fileLabel: string): string[] {
+    const PATTERNS: { name: string; re: RegExp }[] = [
+        { name: "location.href = …",         re: /\blocation\s*\.\s*href\s*=/g },
+        { name: "window.location.href = …",  re: /\bwindow\s*\.\s*location\s*\.\s*href\s*=/g },
+        { name: "location.assign(…)",        re: /\blocation\s*\.\s*assign\s*\(/g },
+        { name: "location.replace(…)",       re: /\blocation\s*\.\s*replace\s*\(/g },
+        { name: "window.location = …",       re: /\bwindow\s*\.\s*location\s*=(?!=)/g },
+    ];
+    const errors: string[] = [];
+    for (const { name, re } of PATTERNS) {
+        if (re.test(source)) {
+            errors.push(
+                `${fileLabel}: \`${name}\` detected — Location mutations bypass the editor (browser blocks our intercept). Use \`<a href="…">\` for static navigation or \`history.pushState(...)\` for SPA-style transitions.`,
+            );
+        }
     }
     return errors;
 }

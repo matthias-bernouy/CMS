@@ -139,6 +139,57 @@ describe("validateBloc — required sync attrs (#5)", () => {
     });
 });
 
+describe("validateBloc — Location mutations (#6)", () => {
+    test("rejects `location.href = …` in viewSource", () => {
+        const r = validateBloc({
+            tag: "my-bloc",
+            viewSource: `customElements.define("my-bloc", class { go() { location.href = "/x"; } });`,
+        });
+        expect(r.errors).toEqual([expect.stringContaining("location.href = …")]);
+    });
+
+    test("rejects `window.location = …` in editorSource", () => {
+        const r = validateBloc({
+            tag: "my-bloc",
+            editorSource: `customElements.define("my-bloc", class { go() { window.location = "/x"; } });`,
+        });
+        expect(r.errors).toEqual([expect.stringContaining("window.location = …")]);
+    });
+
+    test("rejects `location.assign(...)` and `location.replace(...)`", () => {
+        const r = validateBloc({
+            tag: "my-bloc",
+            viewSource: `customElements.define("my-bloc", class {
+                a() { location.assign("/a"); }
+                b() { location.replace("/b"); }
+            });`,
+        });
+        expect(r.errors.filter(e => e.includes("location.assign(…)"))).toHaveLength(1);
+        expect(r.errors.filter(e => e.includes("location.replace(…)"))).toHaveLength(1);
+    });
+
+    test("accepts `history.pushState` and `<a href>` patterns", () => {
+        const r = validateBloc({
+            tag: "my-bloc",
+            viewSource: `customElements.define("my-bloc", class {
+                go() { history.pushState({}, "", "/x"); }
+                anchor() { return '<a href="/y">y</a>'; }
+            });`,
+        });
+        expect(r.errors).toHaveLength(0);
+    });
+
+    test("does not false-positive on `window.location ==` comparisons", () => {
+        const r = validateBloc({
+            tag: "my-bloc",
+            viewSource: `customElements.define("my-bloc", class {
+                check() { return window.location == otherLocation; }
+            });`,
+        });
+        expect(r.errors).toHaveLength(0);
+    });
+});
+
 describe("validateBloc — slot consistency (#4)", () => {
     test("accepts comp-sync child slot matching template", () => {
         const r = validateBloc({

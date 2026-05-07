@@ -13882,6 +13882,181 @@ form[method="dialog"] {
     return "open" in el && typeof el.open === "function";
   }
 
+  // src/control/core/editorSystem/editorContext.ts
+  var noop = () => {};
+  var _ctx = {
+    knownPagePaths: new Set,
+    isDirty: () => false,
+    requestNavigation: noop
+  };
+  function setEditorContext(patch) {
+    Object.assign(_ctx, patch);
+  }
+  function getEditorContext() {
+    return _ctx;
+  }
+  function clearEditorContext() {
+    _ctx.knownPagePaths = new Set;
+    _ctx.isDirty = () => false;
+    _ctx.requestNavigation = noop;
+  }
+
+  // src/control/core/editorSystem/classifyLink.ts
+  var SPECIAL_SCHEMES = ["mailto:", "tel:", "sms:"];
+  var ASSET_PREFIXES = ["/uploads/", "/assets/", "/api/", "/.cms/", "/_storage/"];
+  function classifyLink(href, currentOrigin, knownPagePaths) {
+    const trimmed = href.trim();
+    if (!trimmed || trimmed === "#" || /^javascript:/i.test(trimmed)) {
+      return { kind: "empty", target: trimmed };
+    }
+    if (trimmed.startsWith("#")) {
+      return { kind: "anchor", target: trimmed.slice(1) };
+    }
+    if (SPECIAL_SCHEMES.some((s2) => trimmed.toLowerCase().startsWith(s2))) {
+      return { kind: "mailto", target: trimmed };
+    }
+    let url;
+    try {
+      url = new URL(trimmed, currentOrigin);
+    } catch {
+      return { kind: "empty", target: trimmed };
+    }
+    const sameOrigin = url.origin === currentOrigin;
+    if (!sameOrigin) {
+      return { kind: "external", target: url.href };
+    }
+    const path = url.pathname;
+    if (knownPagePaths.has(path)) {
+      return { kind: "page", target: path };
+    }
+    if (ASSET_PREFIXES.some((p) => path.startsWith(p))) {
+      return { kind: "asset", target: url.href };
+    }
+    return { kind: "page", target: path };
+  }
+
+  // src/control/core/editorSystem/navigationGuard.ts
+  function installNavigationGuard() {
+    const origPushState = history.pushState.bind(history);
+    const origReplaceState = history.replaceState.bind(history);
+    const intercept = (raw) => {
+      if (raw === null || raw === undefined || raw === "")
+        return false;
+      const href = String(raw);
+      const ctx = getEditorContext();
+      const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
+      ctx.requestNavigation({ href, classification: cls, via: "programmatic" });
+      return true;
+    };
+    history.pushState = (state, _unused, url) => {
+      if (url == null || !intercept(url))
+        origPushState(state, _unused, url);
+    };
+    history.replaceState = (state, _unused, url) => {
+      if (url == null || !intercept(url))
+        origReplaceState(state, _unused, url);
+    };
+    return () => {
+      history.pushState = origPushState;
+      history.replaceState = origReplaceState;
+    };
+  }
+
+  // src/control/core/editorSystem/installLinkInterceptor.ts
+  function installLinkInterceptor() {
+    let popover = null;
+    const ensurePopover = () => {
+      if (popover)
+        return popover;
+      const el = document.createElement("cms-link-popover");
+      document.body.appendChild(el);
+      popover = el;
+      return el;
+    };
+    const findAnchor = (e) => {
+      for (const n2 of e.composedPath()) {
+        if (n2 instanceof HTMLAnchorElement)
+          return n2;
+      }
+      return null;
+    };
+    const onClick = (e) => {
+      const anchor = findAnchor(e);
+      if (!anchor)
+        return;
+      const href = anchor.getAttribute("href") || "";
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        const ctx = getEditorContext();
+        const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
+        ctx.requestNavigation({ href, classification: cls, via: "modifier-click" });
+        return;
+      }
+      e.preventDefault();
+      ensurePopover().attachTo(anchor);
+    };
+    document.addEventListener("click", onClick, true);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      popover?.remove();
+      popover = null;
+    };
+  }
+
+  // src/control/core/editorSystem/dirtyState.ts
+  var _dirty = false;
+  var _listeners = new Set;
+  function isDirty() {
+    return _dirty;
+  }
+  function markDirty() {
+    if (_dirty)
+      return;
+    _dirty = true;
+    for (const fn of _listeners)
+      try {
+        fn(true);
+      } catch {}
+  }
+  function watchForDirty(workingElement) {
+    const observer = new MutationObserver(() => markDirty());
+    observer.observe(workingElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true
+    });
+    return () => observer.disconnect();
+  }
+
+  // src/control/components/editor/EditorSystem/EditorRoot/linkNavigation.ts
+  function resolveTargetForLink(req) {
+    const { classification: cls, href } = req;
+    switch (cls.kind) {
+      case "page": {
+        const dest = `/editor/page?id=${encodeURIComponent(cls.target)}`;
+        window.location.href = dest;
+        return;
+      }
+      case "anchor": {
+        const id = cls.target;
+        if (!id)
+          return;
+        const candidate = document.getElementById(id) ?? document.querySelector(`[name="${CSS.escape(id)}"]`);
+        candidate?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      case "asset":
+      case "external":
+      case "mailto":
+        window.open(href, "_blank", "noopener,noreferrer");
+        return;
+      case "empty":
+        return;
+    }
+  }
+
   // src/control/core/editorSystem/defaultEditors/ImageEditor/ResizeInstance.ts
   class ResizeInstance {
     isResizing = false;
@@ -14815,6 +14990,9 @@ form[method="dialog"] {
     _dragmanager = null;
     _blocActions = null;
     _blocLibrary = null;
+    _navGuardOff = null;
+    _dirtyWatchOff = null;
+    _linkIntercptOff = null;
     constructor() {
       super();
       this.attachShadow({ mode: "open" });
@@ -14833,6 +15011,7 @@ form[method="dialog"] {
         const slot = this.shadowRoot.querySelector("#workingElement slot");
         if (!slot)
           throw new Error("Working slot not found in shadow DOM");
+        this._installEditorContext(workingElement);
         waitForScripts(this).then(async () => {
           this._observer = new ObserverManager(slot);
           this._dragmanager = new DragManager(workingElement);
@@ -14842,6 +15021,33 @@ form[method="dialog"] {
           workingElement.style.visibility = "visible";
         });
       });
+    }
+    disconnectedCallback() {
+      this._navGuardOff?.();
+      this._dirtyWatchOff?.();
+      this._linkIntercptOff?.();
+      clearEditorContext();
+    }
+    _installEditorContext(workingElement) {
+      setEditorContext({
+        isDirty,
+        requestNavigation: resolveTargetForLink
+      });
+      this._navGuardOff = installNavigationGuard();
+      this._dirtyWatchOff = watchForDirty(workingElement);
+      this._linkIntercptOff = installLinkInterceptor();
+      const apiBase = document.querySelector("meta[name='p9r-api-base']")?.getAttribute("content") || "/api/";
+      fetch(`${apiBase}page/list`).then((r) => r.ok ? r.json() : []).then((list) => {
+        if (!Array.isArray(list))
+          return;
+        const paths = new Set;
+        for (const item of list) {
+          const p = item.path;
+          if (typeof p === "string")
+            paths.add(p);
+        }
+        setEditorContext({ knownPagePaths: paths });
+      }).catch(() => {});
     }
     _isWorkingEmpty() {
       const slot = this.shadowRoot.querySelector("#workingElement slot");
@@ -15300,6 +15506,169 @@ button span {
   }
   if (!customElements.get("cms-floating-toolbar")) {
     customElements.define("cms-floating-toolbar", FloatingToolbar);
+  }
+
+  // src/control/components/editor/EditorSystem/LinkPopover/LinkPopover.style.css
+  var LinkPopover_style_default = `:host {
+    position: fixed;
+    z-index: 10000;
+    display: none;
+    pointer-events: auto;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        system-ui,
+        sans-serif;
+    font-size: 12px;
+}
+:host(.open) { display: block; }
+
+.bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: var(--bg-surface, #ffffff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 6px;
+    box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.18);
+    white-space: nowrap;
+}
+
+.href {
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-muted, #64748b);
+    padding: 0 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-main, #0f172a);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+button:hover { background: var(--bg-base, #f1f5f9); }
+button.primary { color: var(--primary-base, #4361ee); }
+
+.divider {
+    width: 1px;
+    height: 16px;
+    background: var(--border-light, #f1f5f9);
+}
+`;
+
+  // src/control/components/editor/EditorSystem/LinkPopover/LinkPopover.ts
+  class LinkPopover extends HTMLElement {
+    _bar = null;
+    _href = null;
+    _action = null;
+    _target = null;
+    _onDocClick = (e) => this._maybeCloseOnOutsideClick(e);
+    _onKey = (e) => {
+      if (e.key === "Escape")
+        this.close();
+    };
+    constructor() {
+      super();
+      const root2 = this.attachShadow({ mode: "open" });
+      root2.innerHTML = `
+            <style>${LinkPopover_style_default}</style>
+            <div class="bar" part="bar">
+                <span class="href"></span>
+                <span class="divider"></span>
+                <button type="button" class="primary action"></button>
+            </div>
+        `;
+      this._bar = root2.querySelector(".bar");
+      this._href = root2.querySelector(".href");
+      this._action = root2.querySelector(".action");
+      this._action.addEventListener("click", (e) => this._onActionClick(e));
+    }
+    attachTo(anchor) {
+      this._target = anchor;
+      const href = anchor.getAttribute("href") || "";
+      const cls = classifyLink(href, location.origin, getEditorContext().knownPagePaths);
+      if (this._href) {
+        this._href.textContent = href || "(empty)";
+        this._href.title = href;
+      }
+      if (this._action) {
+        const { label, icon } = primaryActionLabel(cls);
+        this._action.textContent = `${icon} ${label}`;
+        this._action.dataset["kind"] = cls.kind;
+      }
+      this.classList.add("open");
+      requestAnimationFrame(() => this._reposition());
+      document.addEventListener("click", this._onDocClick, true);
+      document.addEventListener("keydown", this._onKey);
+    }
+    close() {
+      this.classList.remove("open");
+      this._target = null;
+      document.removeEventListener("click", this._onDocClick, true);
+      document.removeEventListener("keydown", this._onKey);
+    }
+    _reposition() {
+      if (!this._target || !this._bar)
+        return;
+      const r = this._target.getBoundingClientRect();
+      const barH = this._bar.getBoundingClientRect().height;
+      const above = r.top - barH - 6;
+      if (above >= 0) {
+        this.style.top = `${above}px`;
+      } else {
+        this.style.top = `${r.bottom + 6}px`;
+      }
+      this.style.left = `${Math.max(8, r.left)}px`;
+    }
+    _maybeCloseOnOutsideClick(e) {
+      const path = e.composedPath();
+      if (path.includes(this) || this._target && path.includes(this._target))
+        return;
+      this.close();
+    }
+    _onActionClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!this._target)
+        return;
+      const href = this._target.getAttribute("href") || "";
+      const ctx = getEditorContext();
+      const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
+      ctx.requestNavigation({ href, classification: cls, via: "popover-action" });
+    }
+  }
+  function primaryActionLabel(cls) {
+    switch (cls.kind) {
+      case "page":
+        return { label: "Edit page", icon: "↗" };
+      case "anchor":
+        return { label: "Scroll", icon: "↓" };
+      case "asset":
+        return { label: "Open in new tab", icon: "↗" };
+      case "external":
+        return { label: "Open in new tab", icon: "↗" };
+      case "mailto":
+        return { label: "Open", icon: "↗" };
+      case "empty":
+        return { label: "—", icon: "" };
+    }
+  }
+  if (!customElements.get("cms-link-popover")) {
+    customElements.define("cms-link-popover", LinkPopover);
   }
 
   // src/control/components/editor/MediaCenter/template.html

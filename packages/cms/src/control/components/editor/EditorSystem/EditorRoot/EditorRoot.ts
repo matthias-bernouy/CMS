@@ -1,6 +1,11 @@
 import html from "./template.html" with { type: "text" }
 import css from "./EditorRoot.style.css" with { type: "text" }
 import { isToggable } from "src/control/core/isToggable";
+import { setEditorContext, clearEditorContext } from "src/control/core/editorSystem/editorContext";
+import { installNavigationGuard } from "src/control/core/editorSystem/navigationGuard";
+import { installLinkInterceptor } from "src/control/core/editorSystem/installLinkInterceptor";
+import { watchForDirty, isDirty } from "src/control/core/editorSystem/dirtyState";
+import { resolveTargetForLink } from "./linkNavigation";
 import type { EDITOR_SYSTEM_MODE } from "types/w13c/EditorSystem";
 import { ObserverManager } from "src/control/components/editor/EditorSystem/ObserverManager";
 import { DragManager } from "src/control/components/editor/EditorSystem/DragManager";
@@ -18,6 +23,9 @@ export default class EditorRoot extends HTMLElement {
     private _dragmanager: DragManager | null = null;
     private _blocActions: BlocActions | null = null;
     private _blocLibrary: BlocLibrary | null = null;
+    private _navGuardOff:    (() => void) | null = null;
+    private _dirtyWatchOff:  (() => void) | null = null;
+    private _linkIntercptOff: (() => void) | null = null;
 
     constructor(){
         super();
@@ -38,7 +46,9 @@ export default class EditorRoot extends HTMLElement {
             this._blocActions = this.shadowRoot?.querySelector("cms-bloc-actions") as BlocActions;
             const slot = this.shadowRoot!.querySelector("#workingElement slot") as HTMLSlotElement;
             if (!slot) throw new Error("Working slot not found in shadow DOM");
-            
+
+            this._installEditorContext(workingElement);
+
             waitForScripts(this).then(async () => {
                 this._observer = new ObserverManager(slot);
                 this._dragmanager = new DragManager(workingElement);
@@ -51,6 +61,45 @@ export default class EditorRoot extends HTMLElement {
             })
         })
 
+    }
+
+    disconnectedCallback() {
+        this._navGuardOff?.();
+        this._dirtyWatchOff?.();
+        this._linkIntercptOff?.();
+        clearEditorContext();
+    }
+
+    /**
+     * Boot the cross-cutting editor services: navigation guard, dirty
+     * observer, and the shared `editorContext` that link clicks consult
+     * to classify hrefs and route navigation requests. Pages list is
+     * fetched async — link classification falls back to "page" until it
+     * resolves, which is harmless (worst case the editor 404s).
+     */
+    private _installEditorContext(workingElement: HTMLElement) {
+        setEditorContext({
+            isDirty,
+            requestNavigation: resolveTargetForLink,
+        });
+        this._navGuardOff     = installNavigationGuard();
+        this._dirtyWatchOff   = watchForDirty(workingElement);
+        this._linkIntercptOff = installLinkInterceptor();
+
+        // Fire-and-forget: pages list is read-only and small. We tolerate
+        // failure (offline, auth) — link classification still works for
+        // anchors/external/mailto and falls back to "page" for same-origin
+        // paths, which is the right default.
+        const apiBase = document.querySelector("meta[name='p9r-api-base']")?.getAttribute("content") || "/api/";
+        fetch(`${apiBase}page/list`).then(r => r.ok ? r.json() : []).then((list: unknown) => {
+            if (!Array.isArray(list)) return;
+            const paths = new Set<string>();
+            for (const item of list) {
+                const p = (item as { path?: unknown }).path;
+                if (typeof p === "string") paths.add(p);
+            }
+            setEditorContext({ knownPagePaths: paths });
+        }).catch(() => { /* offline / auth — keep empty set */ });
     }
 
     private _isWorkingEmpty(): boolean {

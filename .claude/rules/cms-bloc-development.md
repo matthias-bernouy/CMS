@@ -177,3 +177,45 @@ When a bloc opts into `<p9r-svg-sync>`, the author commits to three rules:
 ### Quick check before commit
 
 Grep `template.html` for `<slot[^>]*>[^<]` (slot with non-empty content right after the opening tag) — every match is a violation.
+
+## 9. Navigation: `<a href>` or `history.pushState` — never `location.*` mutations
+
+* **Guideline:** Static navigation **must** use `<a href="/...">`. Conditional / post-async navigation (login → dashboard, multi-step form, search → results) **must** use `history.pushState` (and let your site-level router pick up the URL change). Never assign to `location.href`, never call `location.assign`/`location.replace`, never assign to `window.location`.
+* **Constraint:** `Bloc.ts` and `BlocEditor.ts` must contain none of: `location.href = …`, `window.location.href = …`, `location.assign(...)`, `location.replace(...)`, `window.location = …`. The push-time `validateBloc` rejects these patterns.
+* **Reasoning:** WebIDL marks every `Location` member as `[[LegacyUnforgeable]]` — browsers refuse runtime overrides. The editor intercepts `<a href>` clicks (capture-phase document listener) and `history.pushState/replaceState` (monkey-patch), but `location.*` mutations slip past entirely: a bloc that does `location.href = "/x"` navigates the user away mid-edit, losing unsaved work. SEO and a11y also benefit (crawlers + screen readers expect anchors).
+
+### Pattern
+
+❌ Direct `Location` mutation — bypasses the editor:
+```ts
+class MyBloc extends Component {
+    private _onClick() { location.href = "/contact"; }
+}
+```
+
+✅ Static link — markup, intercepted natively:
+```html
+<a href="/contact">Contact us</a>
+```
+
+✅ Conditional / async navigation — `pushState`, intercepted:
+```ts
+class MyBloc extends Component {
+    private async _submit() {
+        const res = await fetch("/api/auth/login", { method: "POST", body: ... });
+        if (res.ok) {
+            const { dashboardUrl } = await res.json();
+            history.pushState({}, "", dashboardUrl);
+            // Your SPA router (or full page reload via popstate listener) handles the rest.
+        }
+    }
+}
+```
+
+### Caveat about `history.pushState`
+
+`pushState` only updates the URL — it does NOT reload the page. If your site doesn't have an SPA router that listens for `popstate` / URL changes and re-fetches content, the user sees a stale page after the call. Two options:
+- Wire a small site-level router that reads `location.pathname` on `popstate` and updates the visible content.
+- Accept the limitation: in editor mode the popover lets the user jump to that page's editor anyway; in production follow up the pushState with the right SPA-side rendering.
+
+Form submits (`<form action="/x">`) are a separate channel — not intercepted, not validated. Rare in CMS user content; if you reach for one, check whether `<a>` would suffice.

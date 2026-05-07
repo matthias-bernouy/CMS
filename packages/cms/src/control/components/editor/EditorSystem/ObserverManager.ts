@@ -139,6 +139,9 @@ export class ObserverManager {
             label: "svg",
             cl: SvgEditor as unknown as new (node: HTMLElement) => Editor,
         });
+        // <a> is intercepted at the document level (`installLinkInterceptor`)
+        // because most authored links live inside bloc shadow trees that
+        // ObserverManager doesn't traverse.
 
         this.register_editor({
             tag: "ul",
