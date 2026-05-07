@@ -29,9 +29,12 @@ export class ListEditor extends Editor {
             li = document.createElement("li");
             this.target.append(li);
         }
-        requestAnimationFrame(() => {
-            li.focus();
-        });
+        if (this.target.hasAttribute(p9r.attr.EDITOR.IS_CREATING)) {
+            const firstLi = li;
+            requestAnimationFrame(() => {
+                if (firstLi.isConnected) firstLi.focus();
+            });
+        }
     }
 
     handleKeyDown(e: KeyboardEvent) {

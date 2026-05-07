@@ -14677,11 +14677,13 @@ form[method="dialog"] {
         } else {
           this.target.setAttribute(p9r.attr.TEXT.PLACEHOLDER, "Type text");
         }
-        requestAnimationFrame(() => {
-          if (this.target.isConnected) {
-            this.target.focus();
-          }
-        });
+        if (this.target.hasAttribute(p9r.attr.EDITOR.IS_CREATING)) {
+          requestAnimationFrame(() => {
+            if (this.target.isConnected) {
+              this.target.focus();
+            }
+          });
+        }
       }
     }
     get isDeleteDisabled() {
@@ -14756,9 +14758,13 @@ form[method="dialog"] {
         li = document.createElement("li");
         this.target.append(li);
       }
-      requestAnimationFrame(() => {
-        li.focus();
-      });
+      if (this.target.hasAttribute(p9r.attr.EDITOR.IS_CREATING)) {
+        const firstLi = li;
+        requestAnimationFrame(() => {
+          if (firstLi.isConnected)
+            firstLi.focus();
+        });
+      }
     }
     handleKeyDown(e) {
       const item = e.target;

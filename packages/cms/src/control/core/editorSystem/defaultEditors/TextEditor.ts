@@ -263,11 +263,13 @@ export class TextEditor extends Editor {
             } else {
                 this.target.setAttribute(p9r.attr.TEXT.PLACEHOLDER, "Type text");
             }
-            requestAnimationFrame(() => {
-                if (this.target.isConnected) {
-                    this.target.focus();
-                }
-            });
+            if (this.target.hasAttribute(p9r.attr.EDITOR.IS_CREATING)) {
+                requestAnimationFrame(() => {
+                    if (this.target.isConnected) {
+                        this.target.focus();
+                    }
+                });
+            }
         }
     }
 
