@@ -7524,6 +7524,7 @@ p9r-tag:hover {
   border-bottom: 1px solid var(--_border);
   overflow-x: auto;
   scrollbar-width: thin;
+  overflow: hidden;
 }
 
 .tab {
@@ -8578,6 +8579,31 @@ p9r-tag:hover {
     <polyline points="18 15 12 9 6 15"></polyline>
 </svg>
 `;
+  var ICON_BRACES = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/>
+    <path d="M16 21h1a2 2 0 0 0 2-2v-4a2 2 0 0 1 2-2 2 2 0 0 1-2-2V7a2 2 0 0 0-2-2h-1"/>
+</svg>
+`;
+  var ICON_EYE = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+    <circle cx="12" cy="12" r="3"/>
+</svg>
+`;
+  var ICON_SAVE = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+    <polyline points="17 21 17 13 7 13 7 21"/>
+    <polyline points="7 3 7 8 15 8"/>
+</svg>
+`;
+  var ICON_TRASH = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polyline points="3 6 5 6 21 6"/>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+</svg>
+`;
   var ICON_PIN = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M12 17v5"/>
@@ -8883,6 +8909,31 @@ p9r-tag:hover {
     features.set("saveAsTemplate", target.getAttribute(p9r.attr.ACTION.DISABLE_SAVE_AS_TEMPLATE) !== "true");
   }
 
+  // src/control/core/editorSystem/extensions/registry.ts
+  class ExtensionRegistry {
+    _byScope = new Map;
+    add(surface, ext) {
+      let list = this._byScope.get(surface);
+      if (!list) {
+        list = [];
+        this._byScope.set(surface, list);
+      }
+      list.push(ext);
+      return () => {
+        const i = list.indexOf(ext);
+        if (i >= 0)
+          list.splice(i, 1);
+      };
+    }
+    list(surface) {
+      const list = this._byScope.get(surface);
+      return list ? list.slice() : [];
+    }
+    clear() {
+      this._byScope.clear();
+    }
+  }
+
   // src/control/core/editorSystem/Editor/Editor.ts
   class Editor {
     target;
@@ -8896,6 +8947,7 @@ p9r-tag:hover {
     _hover;
     _mode;
     _pinMode;
+    _extensions = new ExtensionRegistry;
     _actionBarFeatures = defaultActionBarFeatures();
     constructor(target, styles, editor) {
       this.target = target;
@@ -8927,6 +8979,7 @@ p9r-tag:hover {
     viewEditor() {
       this._panel.propagateIdentifier(this._identifier);
       this._panel.notifySyncs();
+      this._extensions.clear();
       this.init();
       if (!this.target.shadowRoot) {
         this._acquireBodyStyle();
@@ -8952,6 +9005,7 @@ p9r-tag:hover {
       this.stateSyncs.forEach((s) => s.unpin());
       this._pinMode.exit();
       this.restore();
+      this._extensions.clear();
       this._hover.unbind();
       this.target.style.removeProperty("pointer-events");
       if (this.target.getAttribute("style") === "") {
@@ -8982,6 +9036,7 @@ p9r-tag:hover {
     onSwitchMode(_mode) {}
     dispose() {
       document.compIdentifierToEditor?.delete(this._identifier);
+      this._extensions.clear();
       this._hover.unbind();
       this._mode.dispose();
       this._pinMode.exit();
@@ -8997,6 +9052,15 @@ p9r-tag:hover {
       const i = this.stateSyncs.indexOf(sync);
       if (i >= 0)
         this.stateSyncs.splice(i, 1);
+    }
+    extendRichTextBar(ext) {
+      return this._extensions.add("richtextbar", ext);
+    }
+    extendBlocActions(ext) {
+      return this._extensions.add("blocActions", ext);
+    }
+    listExtensions(surface) {
+      return this._extensions.list(surface);
     }
     getActionBarAnchor() {
       return null;
@@ -9188,6 +9252,16 @@ p9r-tag:hover {
             Templates
         </w13c-lateral-menu-item>
 
+        <w13c-lateral-menu-item href="./data">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+                <path d="M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6" />
+            </svg>
+            Data
+        </w13c-lateral-menu-item>
+
         <w13c-lateral-menu-item disabled href="./analytics" badge="upcoming">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -9335,6 +9409,79 @@ p9r-tag:hover {
     customElements.define("cms-empty-state", EmptyState);
   }
 
+  // src/control/components/admin/HeadersInput/HeadersInput.ts
+  class CmsHeadersInput extends HTMLElement {
+    _rowCount = 0;
+    _rowsContainer = null;
+    _addBtn = null;
+    _onClick = (e) => {
+      const btn = e.target.closest('[data-action="add-header"]');
+      if (!btn || !this.contains(btn))
+        return;
+      e.preventDefault();
+      this._addRow();
+    };
+    connectedCallback() {
+      if (this.children.length === 0) {
+        this._render();
+        this._addRow();
+      }
+      this.addEventListener("click", this._onClick);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._onClick);
+    }
+    _render() {
+      this.style.display = "flex";
+      this.style.flexDirection = "column";
+      this.style.gap = "0.75rem";
+      this._rowsContainer = document.createElement("p9r-stack");
+      this._rowsContainer.setAttribute("gap", "sm");
+      this.appendChild(this._rowsContainer);
+      this._addBtn = this._makeAddButton();
+      this.appendChild(this._addBtn);
+    }
+    _addRow() {
+      if (!this._rowsContainer)
+        return;
+      const idx = this._rowCount++;
+      const row = document.createElement("p9r-stack");
+      row.setAttribute("direction", "row");
+      row.setAttribute("gap", "sm");
+      row.dataset.role = "header-row";
+      row.appendChild(this._makeInput(`auth.headers.${idx}.name`, "Header name"));
+      row.appendChild(this._makeInput(`auth.headers.${idx}.value`, "Header value"));
+      this._rowsContainer.appendChild(row);
+    }
+    _makeInput(name, placeholder) {
+      const input = document.createElement("p9r-input");
+      input.setAttribute("name", name);
+      input.setAttribute("placeholder", placeholder);
+      return input;
+    }
+    _makeAddButton() {
+      const wrapper = document.createElement("div");
+      wrapper.style.display = "flex";
+      wrapper.style.justifyContent = "flex-start";
+      const btn = document.createElement("p9r-button");
+      btn.setAttribute("variant", "ghost");
+      btn.setAttribute("color", "secondary");
+      btn.dataset.action = "add-header";
+      btn.innerHTML = `
+            <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add header
+        `;
+      wrapper.appendChild(btn);
+      return wrapper;
+    }
+  }
+  customElements.define("cms-headers-input", CmsHeadersInput);
+
   // src/control/components/admin/OpenDialog/OpenDialog.ts
   class OpenDialog extends HTMLElement {
     connectedCallback() {
@@ -9352,6 +9499,437 @@ p9r-tag:hover {
     };
   }
   customElements.define("w13c-open-dialog", OpenDialog);
+
+  // src/control/components/admin/Secrets/template.html
+  var template_default3 = `<div class="add">
+    <p9r-input data-role="add-key"
+        placeholder="MY_API_KEY"></p9r-input>
+    <p9r-input data-role="add-value" type="password"
+        placeholder="Value (kept server-side)"></p9r-input>
+    <p9r-button color="primary" data-action="add-submit">Add</p9r-button>
+</div>
+
+<div data-role="list"></div>
+
+<template data-role="row-template">
+    <div class="row">
+        <strong data-role="key"></strong>
+        <p9r-input data-role="value" type="password"></p9r-input>
+        <button class="icon-btn" data-action="reveal" data-icon="eye"   title="Reveal / hide" type="button"></button>
+        <button class="icon-btn" data-action="save"   data-icon="save"  title="Save"          type="button"></button>
+        <button class="icon-btn icon-btn--danger" data-action="delete" data-icon="trash" title="Delete" type="button"></button>
+    </div>
+</template>
+
+<div data-role="empty" hidden>No secrets yet.</div>
+`;
+
+  // src/control/components/admin/Secrets/style.css
+  var style_default2 = `:host {
+    display: block;
+}
+
+.add {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    margin-bottom: 16px;
+}
+
+.add > p9r-input { flex: 1; min-width: 0; }
+
+[data-role="list"] {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+}
+
+.row > [data-role="key"] {
+    min-width: 14rem;
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    color: var(--text-main, #1e293b);
+}
+
+.row > [data-role="value"] { flex: 1; min-width: 0; }
+
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+}
+
+.icon-btn:hover {
+    background: var(--bg-base, #f1f5f9);
+    color: var(--text-main, #1e293b);
+}
+
+.icon-btn--danger:hover {
+    color: var(--danger-base, #dc2626);
+    background: var(--danger-muted, #fef2f2);
+}
+
+[data-role="empty"] {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--text-muted, #94a3b8);
+    border: 1px dashed var(--border-default, #e2e8f0);
+    border-radius: 8px;
+}
+`;
+
+  // src/control/core/dom/BubblesEvent.ts
+  class BubblesEvent extends Event {
+    constructor(type) {
+      super(type, {
+        bubbles: true,
+        composed: true
+      });
+    }
+  }
+
+  // src/control/components/admin/Secrets/actions.ts
+  var RELOAD_EVENT = "secret:saved";
+  async function fetchSecrets(api) {
+    const res = await fetch(api, { headers: { Accept: "application/json" } });
+    if (!res.ok)
+      throw new Error("Failed to load secrets");
+    return res.json();
+  }
+  async function postSecret(api, key, value) {
+    const res = await fetch(api, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value })
+    });
+    if (res.ok) {
+      document.dispatchEvent(new BubblesEvent(RELOAD_EVENT));
+      return { ok: true };
+    }
+    return { ok: false, error: await readError(res) };
+  }
+  async function deleteSecret(api, key) {
+    const url = `${api}?key=${encodeURIComponent(key)}`;
+    const res = await fetch(url, { method: "DELETE" });
+    if (res.ok) {
+      document.dispatchEvent(new BubblesEvent(RELOAD_EVENT));
+      return { ok: true };
+    }
+    return { ok: false, error: await readError(res) };
+  }
+  async function readError(res) {
+    try {
+      const body = await res.json();
+      if (body && typeof body.error === "string")
+        return body.error;
+    } catch {}
+    return `HTTP ${res.status}`;
+  }
+  var SECRETS_RELOAD_EVENT = RELOAD_EVENT;
+
+  // src/control/components/admin/Secrets/icons.ts
+  var ICONS = { eye: ICON_EYE, save: ICON_SAVE, trash: ICON_TRASH };
+  function injectIcons(root) {
+    root.querySelectorAll("[data-icon]").forEach((el) => {
+      const name = el.dataset.icon;
+      if (ICONS[name])
+        el.innerHTML = ICONS[name];
+    });
+  }
+
+  // src/control/core/showToast.ts
+  function showToast(message, options) {
+    let stack = document.querySelector("p9r-toast-stack");
+    if (!stack) {
+      stack = document.createElement("p9r-toast-stack");
+      document.body.appendChild(stack);
+    }
+    stack.push(message, options);
+  }
+
+  // src/control/components/admin/Secrets/ops.ts
+  var KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+  async function opSaveRow(api, key, value) {
+    const r = await postSecret(api, key, value);
+    if (r.ok)
+      showToast(`Secret ${key} updated`, { type: "success" });
+    else
+      showToast(`Update failed: ${r.error}`, { type: "error" });
+  }
+  async function opAddSecret(api, keyEl, valueEl, knownKeys) {
+    const key = keyEl.value.trim();
+    const value = valueEl.value;
+    if (!key) {
+      showToast("Key is required", { type: "error" });
+      return;
+    }
+    if (!KEY_PATTERN.test(key)) {
+      showToast(`Invalid key: must match /^[A-Z][A-Z0-9_]*$/`, { type: "error" });
+      return;
+    }
+    if (knownKeys.has(key)) {
+      showToast(`Secret ${key} already exists — edit it inline below`, { type: "warning" });
+      return;
+    }
+    const r = await postSecret(api, key, value);
+    if (r.ok) {
+      keyEl.value = "";
+      valueEl.value = "";
+      showToast(`Secret ${key} created`, { type: "success" });
+    } else {
+      showToast(`Create failed: ${r.error}`, { type: "error" });
+    }
+  }
+  async function opDeleteSecret(api, key) {
+    if (!confirm(`Delete secret "${key}"?`))
+      return;
+    const r = await deleteSecret(api, key);
+    if (r.ok)
+      showToast(`Secret ${key} deleted`, { type: "success" });
+    else
+      showToast(`Delete failed: ${r.error}`, { type: "error" });
+  }
+
+  // src/control/components/admin/Secrets/Secrets.ts
+  class CmsSecrets extends Component {
+    _list = null;
+    _rowTemplate = null;
+    _empty = null;
+    _knownKeys = new Set;
+    _onReload = () => this._reload();
+    constructor() {
+      super({ css: style_default2, template: template_default3 });
+    }
+    connectedCallback() {
+      const sr = this.shadowRoot;
+      this._list = sr.querySelector('[data-role="list"]');
+      this._empty = sr.querySelector('[data-role="empty"]');
+      this._rowTemplate = sr.querySelector('[data-role="row-template"]');
+      sr.querySelector('[data-action="add-submit"]')?.addEventListener("click", () => this._add());
+      document.addEventListener(SECRETS_RELOAD_EVENT, this._onReload);
+      this._reload();
+    }
+    disconnectedCallback() {
+      document.removeEventListener(SECRETS_RELOAD_EVENT, this._onReload);
+    }
+    get _api() {
+      return this.getAttribute("api") ?? "/api/secrets";
+    }
+    async _reload() {
+      if (!this._list || !this._empty)
+        return;
+      try {
+        const items = await fetchSecrets(this._api);
+        items.sort((a, b) => a.key.localeCompare(b.key));
+        this._knownKeys = new Set(items.map((it) => it.key));
+        this._list.replaceChildren(...items.map((it) => this._buildRow(it.key, it.value)));
+        this._empty.hidden = items.length > 0;
+      } catch {
+        this._empty.hidden = false;
+        this._empty.textContent = "Failed to load secrets.";
+      }
+    }
+    _buildRow(key, value) {
+      const frag = this._rowTemplate.content.cloneNode(true);
+      const row = frag.firstElementChild;
+      row.dataset.key = key;
+      row.querySelector('[data-role="key"]').textContent = key;
+      row.querySelector('[data-role="value"]').value = value;
+      injectIcons(row);
+      row.querySelector('[data-action="reveal"]')?.addEventListener("click", () => this._toggleReveal(row));
+      row.querySelector('[data-action="save"]')?.addEventListener("click", () => this._save(row));
+      row.querySelector('[data-action="delete"]')?.addEventListener("click", () => opDeleteSecret(this._api, key));
+      return row;
+    }
+    _toggleReveal(row) {
+      const input = row.querySelector('[data-role="value"]');
+      const cur = input.getAttribute("type") ?? "password";
+      input.setAttribute("type", cur === "password" ? "text" : "password");
+    }
+    _save(row) {
+      const key = row.dataset.key;
+      const value = row.querySelector('[data-role="value"]').value;
+      return opSaveRow(this._api, key, value);
+    }
+    _add() {
+      const sr = this.shadowRoot;
+      const keyEl = sr.querySelector('[data-role="add-key"]');
+      const valueEl = sr.querySelector('[data-role="add-value"]');
+      return opAddSecret(this._api, keyEl, valueEl, this._knownKeys);
+    }
+  }
+  if (!customElements.get("cms-secrets"))
+    customElements.define("cms-secrets", CmsSecrets);
+
+  // src/control/components/admin/TestConnection/TestConnection.ts
+  class CmsTestConnection extends HTMLElement {
+    _busy = false;
+    _form = null;
+    _overlay = null;
+    _autoCloseTimer = null;
+    _onClick = async (e) => {
+      const trigger = e.target.closest("p9r-button, button");
+      if (!trigger || !this.contains(trigger))
+        return;
+      if (this._isInsideOverlay(trigger))
+        return;
+      e.preventDefault();
+      if (this._busy)
+        return;
+      await this._run();
+    };
+    connectedCallback() {
+      this.addEventListener("click", this._onClick);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._onClick);
+      if (this._autoCloseTimer)
+        clearTimeout(this._autoCloseTimer);
+    }
+    async _run() {
+      const target = this.getAttribute("target");
+      if (!target)
+        return;
+      this._form = this.closest("form");
+      if (!this._form)
+        return;
+      const overlay = this._ensureOverlay();
+      this._busy = true;
+      this._showLoading(overlay);
+      try {
+        const body = Object.fromEntries(new FormData(this._form).entries());
+        const res = await fetch(target, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const result = await res.json();
+        if (result.ok)
+          this._showSuccess(overlay, result.endpointCount);
+        else
+          this._showError(overlay, result.error);
+      } catch (e) {
+        this._showError(overlay, e instanceof Error ? e.message : String(e));
+      } finally {
+        this._busy = false;
+      }
+    }
+    _ensureOverlay() {
+      if (this._overlay)
+        return this._overlay;
+      if (!this._form)
+        throw new Error("cms-test-connection: no form to overlay");
+      this._form.style.position = this._form.style.position || "relative";
+      const overlay = document.createElement("div");
+      overlay.dataset.role = "test-overlay";
+      overlay.style.cssText = [
+        "position: absolute",
+        "inset: 0",
+        "display: none",
+        "align-items: center",
+        "justify-content: center",
+        "background: var(--bg-surface, #ffffff)",
+        "z-index: 5",
+        "padding: 1.5rem"
+      ].join(";");
+      overlay.addEventListener("click", this._onOverlayClick);
+      this._form.appendChild(overlay);
+      this._overlay = overlay;
+      return overlay;
+    }
+    _onOverlayClick = (e) => {
+      const back = e.target.closest('[data-action="test-back"]');
+      if (back) {
+        e.preventDefault();
+        this._hide();
+      }
+    };
+    _showLoading(overlay) {
+      if (this._autoCloseTimer) {
+        clearTimeout(this._autoCloseTimer);
+        this._autoCloseTimer = null;
+      }
+      overlay.innerHTML = `
+            <p9r-stack gap="sm" align="center" justify="center">
+                <p9r-spinner></p9r-spinner>
+                <p>Testing connection...</p>
+            </p9r-stack>
+        `;
+      overlay.style.display = "flex";
+    }
+    _showSuccess(overlay, endpointCount) {
+      const msg = endpointCount === null ? "Reachable — response is not an OpenAPI spec." : `Reachable — ${endpointCount} endpoint${endpointCount === 1 ? "" : "s"} found.`;
+      overlay.innerHTML = `
+            <p9r-stack gap="sm" align="center" justify="center">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    stroke="var(--success-base, #10b981)" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <p><strong>${msg}</strong></p>
+            </p9r-stack>
+        `;
+      overlay.style.display = "flex";
+      this._autoCloseTimer = setTimeout(() => this._hide(), 1500);
+    }
+    _showError(overlay, message) {
+      const safe = escapeHtml(message);
+      overlay.innerHTML = `
+            <p9r-stack gap="md" align="center" justify="center">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    stroke="var(--danger-base, #ef4444)" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                <p><strong>Connection failed</strong></p>
+                <p style="text-align: center; color: var(--text-muted, #94a3b8);">${safe}</p>
+                <p9r-button variant="ghost" data-action="test-back">Back</p9r-button>
+            </p9r-stack>
+        `;
+      overlay.style.display = "flex";
+    }
+    _hide() {
+      if (this._autoCloseTimer) {
+        clearTimeout(this._autoCloseTimer);
+        this._autoCloseTimer = null;
+      }
+      if (this._overlay)
+        this._overlay.style.display = "none";
+    }
+    _isInsideOverlay(el) {
+      return !!this._overlay && this._overlay.contains(el);
+    }
+  }
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
+  customElements.define("cms-test-connection", CmsTestConnection);
 
   // src/control/components/editor/componentSync/PageLink/PageLink.css
   var PageLink_default = `:host {
@@ -10039,6 +10617,7 @@ p9r-tag:hover {
       requestAnimationFrame(() => {
         if (!this._prepared)
           this._sync();
+        this.addEventListener("input", (e) => this.onChange(e));
         this.addEventListener("change", (e) => this.onChange(e));
       });
     }
@@ -11474,7 +12053,7 @@ p9r-tag:hover {
     customElements.define("p9r-horizontal-action-group", s);
 
   // src/control/components/editor/EditorSystem/BlocActions/view/style.css
-  var style_default2 = `:host {
+  var style_default3 = `:host {
     position: absolute;
     left: 0;
     top: 0;
@@ -11567,7 +12146,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
 
   // src/control/components/editor/EditorSystem/BlocActions/view/template.html
-  var template_default3 = `<button data-action="edit" title="Edit">
+  var template_default4 = `<button data-action="edit" title="Edit">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
 </button>
 
@@ -11634,6 +12213,41 @@ cms-bag-breadcrumb[data-inline="right"] {
     host.querySelector(`[data-action="${action}"]`)?.toggleAttribute("hidden", !show);
   }
 
+  // src/control/core/editorSystem/extensions/collectAncestors.ts
+  function collectAncestorExtensions(fromEl, surface) {
+    const out = [];
+    const attr = p9r.attr.EDITOR.IDENTIFIER;
+    const selector = `[${attr}]`;
+    let el = fromEl.matches(selector) ? fromEl : fromEl.closest(selector);
+    while (el) {
+      const id = el.getAttribute(attr);
+      const editor = id ? document.compIdentifierToEditor?.get(id) : undefined;
+      if (editor)
+        out.push(...editor.listExtensions(surface));
+      el = el.parentElement?.closest(selector) ?? null;
+    }
+    return out;
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/Extensions/ExtensionsButton.ts
+  function hasBlocActionExtensions(target) {
+    return collectExtensions(target).length > 0;
+  }
+  function collectExtensions(target) {
+    const startEl = target.parentElement;
+    if (!startEl)
+      return [];
+    const all = collectAncestorExtensions(startEl, "blocActions").filter((e) => e.enabled?.() !== false);
+    return Array.from(new Set(all));
+  }
+  function buildExtensionsButton() {
+    const btn = document.createElement("button");
+    btn.setAttribute("data-action", "extensions");
+    btn.setAttribute("title", "Extensions");
+    btn.innerHTML = ICON_BRACES;
+    return btn;
+  }
+
   // src/control/components/editor/EditorSystem/BlocActions/domain/renderActionBar.ts
   function renderActionBar(host, editor, parentEditor, target, previousConfigKey) {
     const config = editor.actionBarConfiguration;
@@ -11642,13 +12256,14 @@ cms-bag-breadcrumb[data-inline="right"] {
     const stateSyncCount = editor.stateSyncs.length;
     const variant = editor.variant;
     const canDelete = !!config.get("delete") && !isLastRootBloc(target);
-    const hasAnyButton = hasConfig || !!config.get("duplicate") || canDelete || !!config.get("changeComponent") || customActions.length > 0 || stateSyncCount > 0;
+    const hasExtensions = hasBlocActionExtensions(target);
+    const hasAnyButton = hasConfig || !!config.get("duplicate") || canDelete || !!config.get("changeComponent") || customActions.length > 0 || stateSyncCount > 0 || hasExtensions;
     const showSelectParent = !!parentEditor && hasAnyButton;
-    const configKey = JSON.stringify(Array.from(config.entries())) + hasConfig + variant + customActions.map((a2) => a2.action).join(",") + "|s=" + stateSyncCount + "|p=" + showSelectParent + "|d=" + canDelete;
+    const configKey = JSON.stringify(Array.from(config.entries())) + hasConfig + variant + customActions.map((a2) => a2.action).join(",") + "|s=" + stateSyncCount + "|p=" + showSelectParent + "|d=" + canDelete + "|x=" + hasExtensions;
     if (previousConfigKey === configKey)
       return null;
     host.setAttribute("data-variant", variant);
-    host.innerHTML = template_default3;
+    host.innerHTML = template_default4;
     const separator = host.querySelector('[data-group="delete"]');
     if (showSelectParent)
       host.insertBefore(buildSelectParentButton(), host.firstChild);
@@ -11662,7 +12277,14 @@ cms-bag-breadcrumb[data-inline="right"] {
     if (stateSyncCount > 0) {
       host.insertBefore(buildPinButton(stateSyncCount, editor.stateSyncs[0]?.label), separator);
     }
-    const hasLeftButtons = hasConfig || !!config.get("duplicate") || !!config.get("changeComponent") || customActions.length > 0 || stateSyncCount > 0;
+    if (hasExtensions) {
+      const sep = document.createElement("div");
+      sep.className = "separator";
+      sep.setAttribute("data-group", "extensions");
+      host.insertBefore(sep, separator);
+      host.insertBefore(buildExtensionsButton(), separator);
+    }
+    const hasLeftButtons = hasConfig || !!config.get("duplicate") || !!config.get("changeComponent") || customActions.length > 0 || stateSyncCount > 0 || hasExtensions;
     separator?.toggleAttribute("hidden", !canDelete || !hasLeftButtons);
     return { configKey, hasAnyButton };
   }
@@ -11860,15 +12482,17 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/template.html
-  var template_default4 = `<div class="pill" id="pill"></div>
+  var template_default5 = `<div class="pill" id="pill"></div>
 <div class="bridge"></div>
 `;
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/style.css
-  var style_default3 = `:host {
+  var style_default4 = `:host {
     display: block;
     width: max-content;
-    max-width: 420px;
+    /* Cap at 420px AND keep within the viewport — long labels at 5 items would
+     * otherwise spill off-screen. The min() handles narrow viewports. */
+    max-width: min(420px, calc(100vw - 16px));
     font-family: system-ui, sans-serif;
     font-size: 11px;
     line-height: 1.4;
@@ -11886,8 +12510,12 @@ cms-bag-breadcrumb[data-inline="right"] {
     border-radius: 999px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     white-space: nowrap;
-    overflow: visible;
+    /* Clip overflowing labels — items inside use text-overflow: ellipsis. */
+    overflow: hidden;
     position: relative;
+    /* The bridge sits outside .pill (top: 100% / bottom: 100%) — it must stay
+     * visible even though the pill clips its inner labels. The bridge is
+     * appended as a sibling of .pill in the host, not inside it. */
 }
 
 .parent {
@@ -11899,6 +12527,13 @@ cms-bag-breadcrumb[data-inline="right"] {
     background: transparent;
     cursor: pointer;
     transition: background 0.1s, color 0.1s;
+    /* Allow flex shrinking + truncation. Without min-width:0 the button keeps
+     * its content width and the whole pill grows past max-width. */
+    min-width: 0;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .parent:hover, .parent:focus-visible {
@@ -11917,6 +12552,11 @@ cms-bag-breadcrumb[data-inline="right"] {
     color: var(--primary-base, #4361ee);
     font-weight: 700;
     letter-spacing: 0.01em;
+    min-width: 0;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Hover bridge — covers the gap between BAG and the breadcrumb. */
@@ -11979,7 +12619,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/Breadcrumb.ts
-  var Metadata = { css: style_default3, template: template_default4 };
+  var Metadata = { css: style_default4, template: template_default5 };
 
   class Breadcrumb extends Component {
     _pill;
@@ -12092,7 +12732,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/template.html
-  var template_default5 = `<button class="btn" type="button">
+  var template_default6 = `<button class="btn" type="button">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="12" y1="5" x2="12" y2="19"/>
         <line x1="5" y1="12" x2="19" y2="12"/>
@@ -12101,7 +12741,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 `;
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/style.css
-  var style_default4 = `:host {
+  var style_default5 = `:host {
     position: absolute;
     z-index: 10001;
     display: none;
@@ -12163,8 +12803,8 @@ cms-bag-breadcrumb[data-inline="right"] {
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/InsertButton.ts
   var Metadata2 = {
-    css: style_default4,
-    template: template_default5
+    css: style_default5,
+    template: template_default6
   };
 
   class InsertButton extends Component {
@@ -12343,13 +12983,13 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/template.html
-  var template_default6 = `<div class="menu" id="menu">
+  var template_default7 = `<div class="menu" id="menu">
     <div class="items" id="items"></div>
 </div>
 `;
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/style.css
-  var style_default5 = `:host {
+  var style_default6 = `:host {
     position: absolute;
     z-index: 10001;
     display: block;
@@ -12404,7 +13044,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 `;
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinMenu.ts
-  var Metadata3 = { css: style_default5, template: template_default6 };
+  var Metadata3 = { css: style_default6, template: template_default7 };
 
   class PinMenu extends Component {
     _items;
@@ -12520,6 +13160,8 @@ cms-bag-breadcrumb[data-inline="right"] {
           return deps.onPinClick();
         case "select-parent":
           return deps.onSelectParent();
+        case "extensions":
+          return deps.onExtensions(e);
         default: {
           const custom = deps.editor()?.customActions.find((a2) => a2.action === e.detail.action);
           custom?.handler();
@@ -12719,6 +13361,173 @@ cms-bag-breadcrumb[data-inline="right"] {
     }, { once: true });
   }
 
+  // src/control/components/editor/EditorSystem/BlocActions/sub/Extensions/style.css
+  var style_default7 = `:host {
+    font-family: system-ui, sans-serif;
+    font-size: 12px;
+    color: var(--text-main, #1e293b);
+}
+
+#wrap {
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 4px;
+    min-width: 240px;
+    max-width: 360px;
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.group { display: flex; flex-direction: column; padding: 2px 0; }
+.group + .group {
+    border-top: 1px solid var(--border-light, #f1f5f9);
+    margin-top: 2px;
+    padding-top: 4px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 2px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted, color-mix(in srgb, currentColor 55%, transparent));
+}
+.icon { display: inline-flex; align-items: center; width: 14px; height: 14px; }
+.icon svg { width: 100%; height: 100%; }
+.label { flex: 1; }
+
+.row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 10px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: left;
+    width: 100%;
+    font: inherit;
+}
+.row:hover { background: var(--primary-muted, #eef2ff); }
+.row-label { font-size: 13px; color: var(--text-main, #1e293b); font-weight: 500; }
+.row-path {
+    font-size: 11px;
+    color: color-mix(in srgb, currentColor 55%, transparent);
+    font-family: ui-monospace, monospace;
+    flex: 1;
+    text-align: right;
+}
+
+.empty {
+    padding: 8px 10px;
+    font-size: 12px;
+    color: color-mix(in srgb, currentColor 55%, transparent);
+    text-align: center;
+}
+`;
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/Extensions/render.ts
+  function buildGroup(ext, onPick) {
+    const group = document.createElement("div");
+    group.className = "group";
+    const header = document.createElement("div");
+    header.className = "header";
+    if (ext.icon)
+      header.insertAdjacentHTML("afterbegin", `<span class="icon">${ext.icon}</span>`);
+    const lbl = document.createElement("span");
+    lbl.className = "label";
+    lbl.textContent = ext.label();
+    header.appendChild(lbl);
+    group.appendChild(header);
+    const opts = ext.getOptions();
+    if (opts.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No options";
+      group.appendChild(empty);
+    } else {
+      for (const o of opts)
+        group.appendChild(buildRow(o, onPick));
+    }
+    return group;
+  }
+  function buildRow(opt, onPick) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "row";
+    row.innerHTML = `<span class="row-label"></span><span class="row-path"></span>`;
+    row.querySelector(".row-label").textContent = opt.label;
+    row.querySelector(".row-path").textContent = opt.path;
+    row.addEventListener("mousedown", (e) => e.preventDefault());
+    row.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onPick(opt);
+    });
+    return row;
+  }
+
+  // src/control/components/editor/EditorSystem/BlocActions/sub/Extensions/popover.ts
+  var POPOVER_TAG = "cms-bag-extensions-popover";
+
+  class ExtensionsPopover extends HTMLElement {
+    constructor() {
+      super();
+      const sr = this.attachShadow({ mode: "open" });
+      const style = document.createElement("style");
+      style.textContent = style_default7;
+      sr.appendChild(style);
+      const wrap = document.createElement("div");
+      wrap.id = "wrap";
+      sr.appendChild(wrap);
+    }
+  }
+  if (!customElements.get(POPOVER_TAG))
+    customElements.define(POPOVER_TAG, ExtensionsPopover);
+  function openExtensionsPopover(anchor, exts, target, onAfterPick) {
+    closeExtensionsPopover();
+    const popover = document.createElement(POPOVER_TAG);
+    const wrap = popover.shadowRoot.getElementById("wrap");
+    for (const ext of exts)
+      wrap.appendChild(buildGroup(ext, (opt) => {
+        closeExtensionsPopover();
+        onAfterPick();
+        ext.onPick(opt, { target });
+      }));
+    document.body.appendChild(popover);
+    positionUnder(popover, anchor);
+    queueMicrotask(() => document.addEventListener("mousedown", dismissOnOutside, { capture: true }));
+  }
+  function closeExtensionsPopover() {
+    document.querySelectorAll(POPOVER_TAG).forEach((p) => p.remove());
+    document.removeEventListener("mousedown", dismissOnOutside, { capture: true });
+  }
+  function dismissOnOutside(e) {
+    const path = e.composedPath();
+    if (path.some((n2) => n2?.tagName?.toLowerCase?.() === POPOVER_TAG))
+      return;
+    closeExtensionsPopover();
+  }
+  function positionUnder(popover, anchor) {
+    const r = anchor.getBoundingClientRect();
+    popover.style.cssText = `position:fixed;top:${r.bottom + 6}px;left:${r.left}px;z-index:10010;`;
+    const own = popover.getBoundingClientRect();
+    const overflowRight = own.right - (window.innerWidth - 8);
+    if (overflowRight > 0)
+      popover.style.left = `${r.left - overflowRight}px`;
+    if (popover.getBoundingClientRect().left < 8)
+      popover.style.left = `8px`;
+  }
+
   // src/control/components/editor/EditorSystem/BlocActions/events/buildEventManager.ts
   function buildEventManager(host, accessors, pin, insertBtns, cb) {
     return new EventManager({
@@ -12757,7 +13566,17 @@ cms-bag-breadcrumb[data-inline="right"] {
           openChangeComponentPicker(t, cb.onClose);
       },
       onPinClick: () => pin.handleClick(),
-      onSelectParent: cb.onSelectParent
+      onSelectParent: cb.onSelectParent,
+      onExtensions: (sourceEvent) => {
+        const t = accessors.target();
+        if (!t)
+          return;
+        const anchor = sourceEvent.detail?.target;
+        const exts = collectExtensions(t);
+        if (!anchor || exts.length === 0)
+          return;
+        openExtensionsPopover(anchor, exts, t, cb.onClose);
+      }
     });
   }
 
@@ -12956,7 +13775,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     constructor(host) {
       this.host = host;
       const s2 = document.createElement("style");
-      s2.textContent = style_default2;
+      s2.textContent = style_default3;
       host.shadowRoot.appendChild(s2);
       this.breadcrumb = new BreadcrumbController(host, (ed) => switchToEditor(this, ed));
       this.insertBtns = new InsertButtonsController((pos) => this.withCooldown(() => this.insertBtns.insertBlank(pos)));
@@ -13072,7 +13891,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     customElements.define("cms-bloc-actions", BlocActions);
 
   // src/control/components/editor/EditorSystem/BlocLibrary/template.html
-  var template_default7 = `<dialog id="dialog">
+  var template_default8 = `<dialog id="dialog">
     <div class="container">
         <header class="header">
             <nav class="tabs" id="tabs">
@@ -13096,7 +13915,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 `;
 
   // src/control/components/editor/EditorSystem/BlocLibrary/style.css
-  var style_default6 = `:host {
+  var style_default8 = `:host {
     --bg-main: rgba(255, 255, 255, 0.95);
     --bg-card: #ffffff;
 
@@ -13334,7 +14153,7 @@ form[method="dialog"] {
   }
 
   // src/control/components/editor/EditorSystem/BlocLibrary/components/Card/template.html
-  var template_default8 = `<button type="button" class="card">
+  var template_default9 = `<button type="button" class="card">
     <span class="icon"><slot name="icon"></slot></span>
     <span class="text">
         <span class="title"><slot name="title"></slot></span>
@@ -13344,7 +14163,7 @@ form[method="dialog"] {
 `;
 
   // src/control/components/editor/EditorSystem/BlocLibrary/components/Card/style.css
-  var style_default7 = `:host {
+  var style_default9 = `:host {
     display: contents;
 }
 
@@ -13419,8 +14238,8 @@ form[method="dialog"] {
 
   // src/control/components/editor/EditorSystem/BlocLibrary/components/Card/Card.ts
   var Metadata4 = {
-    css: style_default7,
-    template: template_default8
+    css: style_default9,
+    template: template_default9
   };
 
   class Card extends Component {
@@ -13466,14 +14285,14 @@ form[method="dialog"] {
   }
 
   // src/control/components/editor/EditorSystem/BlocLibrary/components/EmptyState/template.html
-  var template_default9 = `<div class="empty-state">
+  var template_default10 = `<div class="empty-state">
     <slot name="icon"></slot>
     <p><slot name="message"></slot></p>
 </div>
 `;
 
   // src/control/components/editor/EditorSystem/BlocLibrary/components/EmptyState/style.css
-  var style_default8 = `:host {
+  var style_default10 = `:host {
     display: contents;
 }
 
@@ -13503,8 +14322,8 @@ form[method="dialog"] {
 
   // src/control/components/editor/EditorSystem/BlocLibrary/components/EmptyState/EmptyState.ts
   var Metadata5 = {
-    css: style_default8,
-    template: template_default9
+    css: style_default10,
+    template: template_default10
   };
 
   class EmptyState2 extends Component {
@@ -13641,8 +14460,8 @@ form[method="dialog"] {
 
   // src/control/components/editor/EditorSystem/BlocLibrary/BlocLibrary.ts
   var Metadata6 = {
-    css: style_default6,
-    template: template_default7
+    css: style_default8,
+    template: template_default8
   };
 
   class BlocLibrary extends Component {
@@ -14021,7 +14840,7 @@ form[method="dialog"] {
   }
 
   // src/control/components/editor/EditorSystem/EditorRoot/template.html
-  var template_default10 = `<div>
+  var template_default11 = `<div>
     <slot name="style"></slot>
     <slot name="script"></slot>
     <div id="workingElement">
@@ -15186,7 +16005,7 @@ form[method="dialog"] {
       style.textContent = EditorRoot_style_default;
       this.shadowRoot?.append(style);
       const template = document.createElement("template");
-      template.innerHTML = template_default10;
+      template.innerHTML = template_default11;
       this.shadowRoot?.append(template.content.cloneNode(true));
     }
     connectedCallback() {
@@ -15489,7 +16308,7 @@ dialog::backdrop {
                 ${items.map((t) => `
                     <button type="button" class="card" data-id="${t.id}">
                         <span class="icon">${ICON}</span>
-                        <span class="name">${escapeHtml(t.name)}</span>
+                        <span class="name">${escapeHtml2(t.name)}</span>
                     </button>
                 `).join("")}
             </div>
@@ -15523,7 +16342,7 @@ dialog::backdrop {
       r?.(html);
     }
   }
-  function escapeHtml(s2) {
+  function escapeHtml2(s2) {
     return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   if (!customElements.get("cms-template-picker")) {
@@ -15531,7 +16350,7 @@ dialog::backdrop {
   }
 
   // src/control/components/editor/EditorSystem/FloatingToolbar/template.html
-  var template_default11 = `<div id="toolbar-container">
+  var template_default12 = `<div id="toolbar-container">
     <div id="drag-handle" title="Move">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path
@@ -15566,7 +16385,7 @@ dialog::backdrop {
 </div>`;
 
   // src/control/components/editor/EditorSystem/FloatingToolbar/style.css
-  var style_default9 = `:host {
+  var style_default11 = `:host {
   --toolbar-bg: #ffffff;
   --toolbar-border: #e5e7eb;
   --toolbar-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -15645,8 +16464,8 @@ button span {
     _startY = 0;
     constructor() {
       super({
-        css: style_default9,
-        template: template_default11
+        css: style_default11,
+        template: template_default12
       });
       this._onPointerMove = this._onPointerMove.bind(this);
       this._onPointerUp = this._onPointerUp.bind(this);
@@ -15698,7 +16517,7 @@ button span {
   }
 
   // src/control/components/editor/MediaCenter/template.html
-  var template_default12 = `<dialog>
+  var template_default13 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -15766,7 +16585,7 @@ button span {
 `;
 
   // src/control/components/editor/MediaCenter/style.css
-  var style_default10 = `:host {
+  var style_default12 = `:host {
     --mc-bg: #ffffff;
     --mc-border: #e2e8f0;
     --mc-text: #1e293b;
@@ -16155,7 +16974,7 @@ dialog::backdrop {
 `;
 
   // src/control/components/media/CardMedia/template.html
-  var template_default13 = `<div class="card">
+  var template_default14 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -16177,7 +16996,7 @@ dialog::backdrop {
 `;
 
   // src/control/components/media/CardMedia/style.css
-  var style_default11 = `:host {
+  var style_default13 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -16302,8 +17121,8 @@ dialog::backdrop {
   class CardMedia extends Component {
     constructor() {
       super({
-        css: style_default11,
-        template: template_default13
+        css: style_default13,
+        template: template_default14
       });
     }
   }
@@ -16442,7 +17261,7 @@ dialog::backdrop {
       return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   }
-  function escapeHtml2(s2) {
+  function escapeHtml3(s2) {
     return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
   function escapeAttr(s2) {
@@ -16507,9 +17326,9 @@ dialog::backdrop {
       const isLast = i === breadcrumb.length - 1;
       html += `<span class="bc-sep">/</span>`;
       if (isLast) {
-        html += `<span class="bc-current">${escapeHtml2(crumb.label)}</span>`;
+        html += `<span class="bc-current">${escapeHtml3(crumb.label)}</span>`;
       } else {
-        html += `<span class="bc-item" data-folder="${escapeAttr(crumb.id)}" data-index="${i}">${escapeHtml2(crumb.label)}</span>`;
+        html += `<span class="bc-item" data-folder="${escapeAttr(crumb.id)}" data-index="${i}">${escapeHtml3(crumb.label)}</span>`;
       }
     }
     container.innerHTML = html;
@@ -16528,8 +17347,8 @@ dialog::backdrop {
     _dragCounter = 0;
     constructor() {
       super({
-        css: style_default10,
-        template: template_default12
+        css: style_default12,
+        template: template_default13
       });
     }
     connectedCallback() {
@@ -16700,7 +17519,7 @@ dialog::backdrop {
   customElements.define("cms-media-center", MediaCenter);
 
   // src/control/components/editor/RichTextBar/template.html
-  var template_default14 = `<div class="toolbar">
+  var template_default15 = `<div class="toolbar">
     <!-- Format -->
     <button data-command="bold" title="Bold">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -16859,7 +17678,16 @@ dialog::backdrop {
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
         </svg>
     </button>
+
+    <!-- Bloc-published extensions (\`editor.extendRichTextBar(...)\`). Populated
+         dynamically when the caret is inside an editor with extensions. -->
+    <div class="ext-separator"></div>
+    <div class="extensions" id="extensions"></div>
 </div>
+
+<!-- Completions popover for the active extension (sibling of toolbar so its
+     overflow doesn't get clipped). Shown/hidden via \`data-open\`. -->
+<div class="completions" id="completions" hidden></div>
 
 <!-- Link sub-bar -->
 <div class="link-bar">
@@ -16888,7 +17716,7 @@ dialog::backdrop {
 `;
 
   // src/control/components/editor/RichTextBar/style.css
-  var style_default12 = `:host {
+  var style_default14 = `:host {
     position: absolute;
     z-index: 9999999999;
     display: none;
@@ -17226,6 +18054,129 @@ button.active svg {
     background: rgba(239, 68, 68, 0.08);
     color: #ef4444;
 }
+
+/* ── Bloc-published extensions ───────────────────────────────────────── */
+
+.ext-separator {
+    width: 1px;
+    height: 16px;
+    background: #e2e8f0;
+    margin: 0 4px;
+}
+.ext-separator[style*="none"] { display: none; }
+
+.extensions {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.ext-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    height: auto;
+    width: auto;
+    border-radius: 5px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-main, #1e293b);
+}
+.ext-btn .ext-label {
+    font-weight: 500;
+}
+.ext-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.completions {
+    position: absolute;
+    top: 100%;
+    margin-top: 6px;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 4px;
+    min-width: 220px;
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    z-index: 10001;
+}
+.completions[hidden] { display: none; }
+
+.ext-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 10px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: left;
+    width: 100%;
+    height: auto;
+    font: inherit;
+}
+.ext-row:hover {
+    background: var(--primary-muted, #eef2ff);
+}
+
+.ext-row-label {
+    font-size: 13px;
+    color: var(--text-main, #1e293b);
+    font-weight: 500;
+}
+.ext-row-path {
+    font-size: 11px;
+    color: color-mix(in srgb, currentColor 55%, transparent);
+    font-family: ui-monospace, monospace;
+    flex: 1;
+    text-align: right;
+}
+
+.ext-empty {
+    padding: 8px 10px;
+    font-size: 12px;
+    color: color-mix(in srgb, currentColor 55%, transparent);
+    text-align: center;
+}
+
+.ext-group {
+    display: flex;
+    flex-direction: column;
+    padding: 2px 0;
+}
+.ext-group + .ext-group {
+    border-top: 1px solid var(--border-light, #f1f5f9);
+    margin-top: 2px;
+    padding-top: 4px;
+}
+
+.ext-group-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 2px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted, color-mix(in srgb, currentColor 55%, transparent));
+}
+.ext-group-icon {
+    display: inline-flex;
+    align-items: center;
+    width: 12px;
+    height: 12px;
+}
+.ext-group-icon svg { width: 100%; height: 100%; }
+.ext-group-label { flex: 1; }
 `;
 
   // src/control/components/editor/RichTextBar/selection.ts
@@ -17556,6 +18507,155 @@ button.active svg {
     self.hide();
   }
 
+  // src/control/components/editor/RichTextBar/extensions/render.ts
+  function buildBraceButton(onClick) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ext-btn";
+    btn.title = "Insert dynamic content";
+    btn.innerHTML = ICON_BRACES;
+    btn.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+    });
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onClick(btn);
+    });
+    return btn;
+  }
+  function buildGroup2(ext, onPickField) {
+    const group = document.createElement("div");
+    group.className = "ext-group";
+    const header = document.createElement("div");
+    header.className = "ext-group-header";
+    if (ext.icon)
+      header.insertAdjacentHTML("afterbegin", `<span class="ext-group-icon">${ext.icon}</span>`);
+    const lbl = document.createElement("span");
+    lbl.className = "ext-group-label";
+    lbl.textContent = ext.label();
+    header.appendChild(lbl);
+    group.appendChild(header);
+    const fields = ext.getCompletions();
+    if (fields.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "ext-empty";
+      empty.textContent = "No fields";
+      group.appendChild(empty);
+    } else {
+      for (const f of fields)
+        group.appendChild(buildRow2(f, onPickField));
+    }
+    return group;
+  }
+  function buildRow2(field, onPick) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "ext-row";
+    row.innerHTML = `<span class="ext-row-label"></span><span class="ext-row-path"></span>`;
+    row.querySelector(".ext-row-label").textContent = field.label;
+    row.querySelector(".ext-row-path").textContent = field.path;
+    row.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+    });
+    row.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onPick(field);
+    });
+    return row;
+  }
+
+  // src/control/components/editor/RichTextBar/extensions/pick.ts
+  function pickField(self, ext, field) {
+    self.selection.restore();
+    const range = self.selection.range;
+    if (!range)
+      return null;
+    const ctx = {
+      selection: window.getSelection(),
+      range,
+      editableEl: range.startContainer.parentElement ?? range.startContainer
+    };
+    const text = ext.onPick(field, ctx);
+    document.execCommand("insertText", false, text);
+    self.selection.save();
+    return text;
+  }
+
+  // src/control/components/editor/RichTextBar/extensions/index.ts
+  function refreshExtensions(self) {
+    const range = self.selection.range ?? window.getSelection()?.getRangeAt(0) ?? null;
+    if (!range)
+      return clear(self);
+    const startEl = range.startContainer.nodeType === Node.ELEMENT_NODE ? range.startContainer : range.startContainer.parentElement;
+    if (!startEl)
+      return clear(self);
+    if (self._lastEditable === startEl)
+      return;
+    self._lastEditable = startEl;
+    const exts = collectAncestorExtensions(startEl, "richtextbar").filter((e) => e.enabled?.() !== false);
+    self._currentExtensions = exts;
+    render2(self, exts);
+  }
+  function closeCompletions(self) {
+    const popover = self.shadowRoot?.getElementById("completions");
+    if (popover)
+      popover.hidden = true;
+  }
+  function clear(self) {
+    self._lastEditable = null;
+    self._currentExtensions = [];
+    self.shadowRoot.getElementById("extensions").replaceChildren();
+    self.shadowRoot.querySelector(".ext-separator").style.display = "none";
+    closeCompletions(self);
+  }
+  function render2(self, exts) {
+    const slot = self.shadowRoot.getElementById("extensions");
+    const sep = self.shadowRoot.querySelector(".ext-separator");
+    if (exts.length === 0) {
+      slot.replaceChildren();
+      sep.style.display = "none";
+      return;
+    }
+    sep.style.display = "";
+    slot.replaceChildren(buildBraceButton((anchor) => toggle(self, anchor)));
+  }
+  function toggle(self, anchor) {
+    const popover = self.shadowRoot.getElementById("completions");
+    if (!popover.hidden) {
+      closeCompletions(self);
+      return;
+    }
+    popover.replaceChildren();
+    const exts = self._currentExtensions;
+    if (exts.length === 0) {
+      popover.innerHTML = `<div class="ext-empty">No completions available.</div>`;
+    } else {
+      for (const ext of exts)
+        popover.appendChild(buildGroup2(ext, (f) => {
+          pickField(self, ext, f);
+          closeCompletions(self);
+        }));
+    }
+    popover.style.left = `${anchor.offsetLeft}px`;
+    popover.hidden = false;
+    clampPopoverToViewport(self, popover);
+  }
+  var VIEWPORT_MARGIN = 8;
+  function clampPopoverToViewport(self, popover) {
+    const rect = popover.getBoundingClientRect();
+    const overflowRight = rect.right - (window.innerWidth - VIEWPORT_MARGIN);
+    if (overflowRight > 0) {
+      const current = parseFloat(popover.style.left) || 0;
+      popover.style.left = `${current - overflowRight}px`;
+    }
+    const after = popover.getBoundingClientRect();
+    const barRect = self.getBoundingClientRect();
+    const minLeftWithinBar = VIEWPORT_MARGIN - barRect.left;
+    if (after.left < VIEWPORT_MARGIN) {
+      popover.style.left = `${minLeftWithinBar}px`;
+    }
+  }
+
   // src/control/components/editor/RichTextBar/listener.ts
   function handleCustomColorInput(self, e) {
     const input = e.target;
@@ -17610,12 +18710,14 @@ button.active svg {
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || sel.toString().trim() === "") {
       self.hide();
+      closeCompletions(self);
       return;
     }
     const rect = sel.getRangeAt(0).getBoundingClientRect();
     self.selection.save();
     self.show(rect);
     updateState(self);
+    refreshExtensions(self);
   }
   function handleRootMousedown(self, e) {
     const target = e.target;
@@ -17652,6 +18754,8 @@ button.active svg {
     selection = new SelectionTracker;
     interacting = false;
     pageLink = null;
+    _lastEditable = null;
+    _currentExtensions = [];
     _onRootMousedown = (e) => handleRootMousedown(this, e);
     _onRootMouseup = () => handleRootMouseup(this);
     _onRootClick = (e) => handleClick(this, e);
@@ -17661,8 +18765,8 @@ button.active svg {
     _rootListenersAttached = false;
     constructor() {
       super({
-        css: style_default12,
-        template: template_default14
+        css: style_default14,
+        template: template_default15
       });
     }
     connectedCallback() {
@@ -17713,6 +18817,7 @@ button.active svg {
       this.classList.remove("visible");
       this.shadowRoot.querySelector(".color-panel")?.classList.remove("open");
       closeLinkBar(this);
+      closeCompletions(this);
     }
   }
   customElements.define("cms-richtextbar", RichTextBar);
@@ -17732,7 +18837,7 @@ button.active svg {
   }
 
   // src/control/components/editor/configurations/Configuration/template.html
-  var template_default15 = `<w13c-lateral-dialog>
+  var template_default16 = `<w13c-lateral-dialog>
 
     <h3 slot="title"><slot name="title"></slot></h3>
 
@@ -17748,7 +18853,7 @@ button.active svg {
 </w13c-lateral-dialog>`;
 
   // src/control/components/editor/configurations/Configuration/style.css
-  var style_default13 = `form{
+  var style_default15 = `form{
     display: flex;
     flex-direction: column;
 }`;
@@ -17781,7 +18886,7 @@ button.active svg {
       return ["url", "method"];
     }
     constructor() {
-      super(template_default15, style_default13, true);
+      super(template_default16, style_default15, true);
     }
     _handleSubmit = (e) => {
       e.preventDefault();
@@ -17830,11 +18935,11 @@ button.active svg {
   }
 
   // src/control/components/editor/snippet/Snippet/template.html
-  var template_default16 = `<div class="snippet-root"></div>
+  var template_default17 = `<div class="snippet-root"></div>
 `;
 
   // src/control/components/editor/snippet/Snippet/style.css
-  var style_default14 = `:host {
+  var style_default16 = `:host {
     display: block;
     position: relative;
     min-height: 40px;
@@ -17913,8 +19018,8 @@ button.active svg {
 
   // src/control/components/editor/snippet/Snippet/Snippet.ts
   var SnippetMetadata = {
-    css: style_default14,
-    template: template_default16
+    css: style_default16,
+    template: template_default17
   };
 
   class Snippet extends Component {
@@ -17973,7 +19078,7 @@ button.active svg {
   }
 
   // src/control/components/media/CropSystem/template.html
-  var template_default17 = `<div class="backdrop" id="backdrop">
+  var template_default18 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -18012,7 +19117,7 @@ button.active svg {
 `;
 
   // src/control/components/media/CropSystem/style.css
-  var style_default15 = `:host {
+  var style_default17 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -18214,8 +19319,8 @@ button.active svg {
   class CropSystem extends Component {
     constructor() {
       super({
-        css: style_default15,
-        template: template_default17
+        css: style_default17,
+        template: template_default18
       });
     }
     connectedCallback() {
@@ -18252,7 +19357,7 @@ button.active svg {
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/control/components/media/DetailMedia/template.html
-  var template_default18 = `<div class="backdrop" id="backdrop">
+  var template_default19 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -18294,7 +19399,7 @@ button.active svg {
 `;
 
   // src/control/components/media/DetailMedia/style.css
-  var style_default16 = `:host {
+  var style_default18 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -18507,8 +19612,8 @@ button.active svg {
   class DetailMedia extends Component {
     constructor() {
       super({
-        css: style_default16,
-        template: template_default18
+        css: style_default18,
+        template: template_default19
       });
     }
     connectedCallback() {
@@ -18540,7 +19645,7 @@ button.active svg {
   }
 
   // src/control/components/media/GridMedia/view/template.html
-  var template_default19 = `<div class="toolbar">
+  var template_default20 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -18602,7 +19707,7 @@ button.active svg {
 `;
 
   // src/control/components/media/GridMedia/view/style.css
-  var style_default17 = `:host {
+  var style_default19 = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
     --empty-color: var(--text-muted, #94a3b8);
@@ -19191,12 +20296,12 @@ button.active svg {
         ${isImage ? `
         <div class="detail-field">
             <label>Alt text</label>
-            <textarea id="detail-alt" rows="2">${escapeHtml2(item.alt || "")}</textarea>
+            <textarea id="detail-alt" rows="2">${escapeHtml3(item.alt || "")}</textarea>
         </div>` : ""}
         <div class="detail-meta-row">
             <div class="detail-field">
                 <label>Type</label>
-                <span class="detail-value">${escapeHtml2(item.mimetype || item.type)}</span>
+                <span class="detail-value">${escapeHtml3(item.mimetype || item.type)}</span>
             </div>
             <div class="detail-field">
                 <label>Size</label>
@@ -19206,12 +20311,12 @@ button.active svg {
         ${dims ? `
         <div class="detail-field">
             <label>Dimensions</label>
-            <span class="detail-value">${escapeHtml2(dims)}</span>
+            <span class="detail-value">${escapeHtml3(dims)}</span>
         </div>` : ""}
         <div class="detail-field">
             <label>URL</label>
             <div class="url-row">
-                <span class="detail-value mono">${escapeHtml2(mediaUrl)}</span>
+                <span class="detail-value mono">${escapeHtml3(mediaUrl)}</span>
                 <button class="btn-copy" id="btn-copy" title="Copy URL">${ICON_COPY}</button>
             </div>
         </div>
@@ -19368,8 +20473,8 @@ button.active svg {
     _items = [];
     constructor() {
       super({
-        css: style_default17,
-        template: template_default19
+        css: style_default19,
+        template: template_default20
       });
     }
     get detail() {
@@ -19428,16 +20533,6 @@ button.active svg {
   }
   if (!customElements.get("p9r-grid-media")) {
     customElements.define("p9r-grid-media", GridMedia);
-  }
-
-  // src/control/core/dom/BubblesEvent.ts
-  class BubblesEvent extends Event {
-    constructor(type) {
-      super(type, {
-        bubbles: true,
-        composed: true
-      });
-    }
   }
 
   // src/control/components/media/MediaAdmin/MediaAdmin.html

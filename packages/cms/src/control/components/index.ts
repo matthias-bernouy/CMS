@@ -8,6 +8,7 @@ import "./admin/EmptyState/EmptyState"
 import "./admin/HeadersInput/HeadersInput"
 import "./admin/OpenDialog/OpenDialog"
 import "./admin/Secrets/Secrets"
+import "./admin/TestConnection/TestConnection"
 
 // Editor
 import "./editor/componentSync/PageLink/PageLink"
