@@ -9,6 +9,8 @@
 export { MtControlCms } from "src/exports/MtControlCms";
 export type { MtControlCmsDeps, SuperadminRole, TenantRole } from "src/exports/MtControlCms";
 
+export * from "src/exports/MtControlClient";
+
 export type { Tenant, TenantKeycloak, TenantCdnBucket, TenantDelivery } from "src/interfaces/Tenant";
 export type { TenantRepository } from "src/interfaces/TenantRepository";
 

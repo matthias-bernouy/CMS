@@ -7,13 +7,13 @@
       "devDependencies": {
         "@bernouy/auth-composite": "workspace:*",
         "@bernouy/auth-keycloak": "workspace:*",
-        "@bernouy/auth-token": "workspace:*",
         "@bernouy/cdn-buckets": "workspace:*",
         "@bernouy/cdn-node": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/core": "workspace:*",
-        "@bernouy/mailer-console": "workspace:*",
+        "@bernouy/hub-api": "workspace:*",
+        "@bernouy/keycloak-client": "workspace:*",
         "@bernouy/mailer-smtp": "workspace:*",
         "@bernouy/mt-cms-control": "workspace:*",
         "@bernouy/mt-delivery-cms": "workspace:*",
@@ -41,19 +41,6 @@
         "@bernouy/core": "workspace:*",
         "jose": "^6.2.1",
       },
-    },
-    "packages/auth-token": {
-      "name": "@bernouy/auth-token",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/core": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.1.0",
-      },
-      "optionalPeers": [
-        "mongodb",
-      ],
     },
     "packages/cdn-buckets": {
       "name": "@bernouy/cdn-buckets",
@@ -101,7 +88,6 @@
       },
       "devDependencies": {
         "@bernouy/auth-composite": "workspace:*",
-        "@bernouy/auth-token": "workspace:*",
         "@happy-dom/global-registrator": "^20.8.9",
         "@types/bun": "latest",
         "happy-dom": "^20.8.9",
@@ -149,12 +135,21 @@
       "name": "@bernouy/core",
       "version": "0.1.0",
     },
-    "packages/mailer-console": {
-      "name": "@bernouy/mailer-console",
+    "packages/hub-api": {
+      "name": "@bernouy/hub-api",
       "version": "0.1.0",
       "dependencies": {
+        "@asteasolutions/zod-to-openapi": "^8.5.0",
+        "@bernouy/cdn-buckets": "workspace:*",
         "@bernouy/core": "workspace:*",
+        "@bernouy/keycloak-client": "workspace:*",
+        "@bernouy/mt-cms-control": "workspace:*",
+        "zod": "^4.4.3",
       },
+    },
+    "packages/keycloak-client": {
+      "name": "@bernouy/keycloak-client",
+      "version": "0.1.0",
     },
     "packages/mailer-smtp": {
       "name": "@bernouy/mailer-smtp",
@@ -199,11 +194,11 @@
     },
   },
   "packages": {
+    "@asteasolutions/zod-to-openapi": ["@asteasolutions/zod-to-openapi@8.5.0", "", { "dependencies": { "openapi3-ts": "^4.1.2" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-SABbKiObg5dLRiTFnqiW1WWwGcg1BJfmHtT2asIBnBHg6Smy/Ms2KHc650+JI4Hw7lSkdiNebEGXpwoxfben8Q=="],
+
     "@bernouy/auth-composite": ["@bernouy/auth-composite@workspace:packages/auth-composite"],
 
     "@bernouy/auth-keycloak": ["@bernouy/auth-keycloak@workspace:packages/auth-keycloak"],
-
-    "@bernouy/auth-token": ["@bernouy/auth-token@workspace:packages/auth-token"],
 
     "@bernouy/cdn-buckets": ["@bernouy/cdn-buckets@workspace:packages/cdn-buckets"],
 
@@ -215,7 +210,9 @@
 
     "@bernouy/core": ["@bernouy/core@workspace:packages/core"],
 
-    "@bernouy/mailer-console": ["@bernouy/mailer-console@workspace:packages/mailer-console"],
+    "@bernouy/hub-api": ["@bernouy/hub-api@workspace:packages/hub-api"],
+
+    "@bernouy/keycloak-client": ["@bernouy/keycloak-client@workspace:packages/keycloak-client"],
 
     "@bernouy/mailer-smtp": ["@bernouy/mailer-smtp@workspace:packages/mailer-smtp"],
 
@@ -289,6 +286,8 @@
 
     "nth-check": ["nth-check@2.1.1", "", { "dependencies": { "boolbase": "^1.0.0" } }, "sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w=="],
 
+    "openapi3-ts": ["openapi3-ts@4.5.0", "", { "dependencies": { "yaml": "^2.8.0" } }, "sha512-jaL+HgTq2Gj5jRcfdutgRGLosCy/hT8sQf6VOy+P+g36cZOjI1iukdPnijC+4CmeRzg/jEllJUboEic2FhxhtQ=="],
+
     "playwright": ["playwright@1.59.1", "", { "dependencies": { "playwright-core": "1.59.1" }, "optionalDependencies": { "fsevents": "2.3.2" }, "bin": { "playwright": "cli.js" } }, "sha512-C8oWjPR3F81yljW9o5OxcWzfh6avkVwDD2VYdwIGqTkl+OGFISgypqzfu7dOe4QNLL2aqcWBmI3PMtLIK233lw=="],
 
     "playwright-core": ["playwright-core@1.59.1", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-HBV/RJg81z5BiiZ9yPzIiClYV/QMsDCKUyogwH9p3MCP6IYjUFu/MActgYAvK0oWyV9NlwM3GLBjADyWgydVyg=="],
@@ -312,6 +311,10 @@
     "whatwg-url": ["whatwg-url@14.2.0", "", { "dependencies": { "tr46": "^5.1.0", "webidl-conversions": "^7.0.0" } }, "sha512-De72GdQZzNTUBBChsXueQUnPKDkg/5A5zp7pFDuQAj5UFoENpiACU0wlCvzpAGnTkj++ihpKwKyYewn/XNUbKw=="],
 
     "ws": ["ws@8.20.0", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA=="],
+
+    "yaml": ["yaml@2.8.4", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-ml/JPOj9fOQK8RNnWojA67GbZ0ApXAUlN2UQclwv2eVgTgn7O9gg9o7paZWKMp4g0H3nTLtS9LVzhkpOFIKzog=="],
+
+    "zod": ["zod@4.4.3", "", {}, "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="],
 
     "@bernouy/cms/@types/bun": ["@types/bun@1.3.13", "", { "dependencies": { "bun-types": "1.3.13" } }, "sha512-9fqXWk5YIHGGnUau9TEi+qdlTYDAnOj+xLCmSTwXfAIqXr2x4tytJb43E9uCvt09zJURKXwAtkoH4nLQfzeTXw=="],
 

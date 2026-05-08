@@ -1,0 +1,491 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Bernouy Hub API",
+    "version": "0.1.0",
+    "description": "Tenant orchestration API. Authenticate with a Keycloak service-account JWT in the configured api-auth realm."
+  },
+  "servers": [
+    {
+      "url": "https://hub.bernouy.com",
+      "description": "production"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "PreflightResult": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "HubErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              false
+            ]
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "error"
+        ]
+      },
+      "ProvisionTenantResult": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "realm": {
+            "type": "string"
+          },
+          "keycloakClientId": {
+            "type": "string"
+          },
+          "keycloakRoleName": {
+            "type": "string"
+          },
+          "assetsBucketId": {
+            "type": "string"
+          },
+          "deliveryBucketId": {
+            "type": "string"
+          },
+          "welcomeEmailSentTo": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "slug",
+          "realm",
+          "keycloakClientId",
+          "keycloakRoleName",
+          "assetsBucketId",
+          "welcomeEmailSentTo"
+        ]
+      },
+      "ProvisionTenantInput": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+            "description": "URL-safe slug. Used as the realm name, the CMS tenant id, the bucket prefix.",
+            "example": "acme"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Human-readable display name (Keycloak realm + CMS tenant + welcome email).",
+            "example": "ACME Corp"
+          },
+          "adminUser": {
+            "$ref": "#/components/schemas/ProvisionTenantAdminUser"
+          },
+          "bucketOverrides": {
+            "$ref": "#/components/schemas/BucketDefaultsPartial"
+          },
+          "publicAlias": {
+            "type": "string",
+            "description": "Public alias domain (e.g. 'acme.com'). Implies a delivery bucket is created."
+          },
+          "deliveryEnabled": {
+            "type": "boolean",
+            "description": "Enable delivery from the start. Implies a delivery bucket is created."
+          },
+          "welcomeRedirectUri": {
+            "type": "string",
+            "description": "Where the user lands after clicking the welcome magic link."
+          },
+          "welcomeLinkLifespanSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "description": "TTL of the welcome magic link, in seconds. Default = 7 days."
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "adminUser"
+        ]
+      },
+      "ProvisionTenantAdminUser": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "example": "matthias"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "matthias@acme.com"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "email"
+        ]
+      },
+      "BucketDefaultsPartial": {
+        "type": "object",
+        "properties": {
+          "cacheControl": {
+            "type": "string"
+          },
+          "quotas": {
+            "$ref": "#/components/schemas/BucketQuotas"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/BucketLimits"
+          }
+        }
+      },
+      "BucketQuotas": {
+        "type": "object",
+        "properties": {
+          "maxTotalSize": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "description": "Max total bytes stored in the bucket"
+          },
+          "maxFileCount": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          }
+        },
+        "required": [
+          "maxTotalSize",
+          "maxFileCount"
+        ]
+      },
+      "BucketLimits": {
+        "type": "object",
+        "properties": {
+          "maxFileSize": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "description": "Max bytes per uploaded file"
+          },
+          "acceptedMimeTypes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "*"
+                ]
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Either '*' (any MIME) or an explicit array, e.g. ['image/png','image/jpeg']"
+          }
+        },
+        "required": [
+          "maxFileSize",
+          "acceptedMimeTypes"
+        ]
+      },
+      "DeprovisionTenantResult": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug"
+        ]
+      }
+    },
+    "parameters": {},
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/preflight": {
+      "get": {
+        "summary": "Deep health check",
+        "description": "Verifies the hub can authenticate with Keycloak AND that the resulting JWT is accepted as the right role on cms-mt + cdn-origin. Reveals infra info if leaked, hence gated.",
+        "operationId": "preflight",
+        "tags": [
+          "health"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All three downstream services reachable + auth OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PreflightResult"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "At least one downstream service is unreachable / unauth'd",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tenants": {
+      "post": {
+        "summary": "Provision a tenant end-to-end",
+        "description": "Creates the Keycloak realm + clients + role + admin user (with password-set magic link) + the CDN buckets + the CMS tenant row. Failure rolls back partial state best-effort.",
+        "operationId": "provisionTenant",
+        "tags": [
+          "tenants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionTenantInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tenant provisioned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ProvisionTenantResult"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error on the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "An upstream service failed (Keycloak / cms-mt / cdn-origin)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deprovision a tenant",
+        "description": "Deletes the CMS tenant row, both CDN buckets, and the Keycloak realm (in dependency order). Tolerates `not_found` everywhere; collects other errors into a single `deprovision_partial`.",
+        "operationId": "deprovisionTenant",
+        "tags": [
+          "tenants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+              "example": "acme"
+            },
+            "required": true,
+            "name": "slug",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant fully deprovisioned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeprovisionTenantResult"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or malformed `slug` query param",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "At least one downstream delete failed (non-not-found)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Public liveness probe",
+        "description": "Returns 200 if the hub process is up. Does NOT cross the network — for deeper validation use `/api/preflight`.",
+        "operationId": "health",
+        "tags": [
+          "health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Process up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "alive"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

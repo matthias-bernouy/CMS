@@ -1,8 +1,9 @@
+import { sha256Hex, generateBearerToken } from "@bernouy/core";
+
 import type { StorageProvider } from "../../exports/StorageProvider";
 import type { BucketCredential } from "../../interfaces/entities/BucketCredential";
 import type { CredentialCreateDto } from "../validation/credential/parseCreateDto";
-import { generateCredentialToken, generateId } from "../ids";
-import { hashToken } from "./hashToken";
+import { generateId } from "../ids";
 
 /**
  * The cleartext is returned only by this function; once persisted we keep
@@ -22,8 +23,8 @@ export async function createCredential(
     const bucket = await provider.bucketRepo.get(bucketId);
     if (!bucket) throw new Error(`Bucket "${bucketId}" not found.`);
 
-    const cleartextToken = generateCredentialToken();
-    const tokenHash = await hashToken(cleartextToken);
+    const cleartextToken = generateBearerToken("bsp_");
+    const tokenHash = await sha256Hex(cleartextToken);
 
     const credential: BucketCredential = {
         id:        generateId(),

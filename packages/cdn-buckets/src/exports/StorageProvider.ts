@@ -1,9 +1,10 @@
 import { join } from "node:path";
 
-import type { Runner, Authentication } from "@bernouy/core";
-import { serveApi } from "@bernouy/core";
+import type { Runner, Authentication, Subject } from "@bernouy/core";
+import { serveApi, CredentialAuthentication, requireRole } from "@bernouy/core";
 import type { BucketRepository } from "../interfaces/repositories/BucketRepository";
 import type { BucketCredentialRepository } from "../interfaces/repositories/BucketCredentialRepository";
+import type { BucketCredential } from "../interfaces/entities/BucketCredential";
 import type { PreSignedTokenRepository } from "../interfaces/repositories/PreSignedTokenRepository";
 import type { AliasRepository } from "../interfaces/repositories/AliasRepository";
 import type { AliasCertPath } from "../core/nginx/regenerateAliases";
@@ -12,7 +13,6 @@ import type { StoredFolderRepository } from "../interfaces/repositories/StoredFo
 import type { StoredFileRepository } from "../interfaces/repositories/StoredFileRepository";
 import type { BlobStorage } from "../interfaces/BlobStorage";
 import { createAdminGuard } from "../core/authentication/createAdminGuard";
-import { createBrokerGuard } from "../core/authentication/createBrokerGuard";
 import { mountAdminSurface } from "../core/admin/mountAdminSurface";
 import { applyBucketChanges } from "../core/nginx/applyBucketChanges";
 import { applyAliasChanges } from "../core/nginx/applyAliasChanges";
@@ -50,6 +50,9 @@ export type StorageProviderConfig = {
 
 export type StorageProviderDeps = {
     runner: Runner;
+    /** Auth for the `/admin/*` surface. Typically a `CompositeAuthentication` of
+     *  Keycloak cookie + bearer JWT (the bearer leg accepts service-account tokens
+     *  from a "central hub"). Composed externally by the bootstrap. */
     authentication: Authentication;
     bucketRepo: BucketRepository;
     bucketCredentialRepo: BucketCredentialRepository;
@@ -86,8 +89,16 @@ export class StorageProvider {
         this._blobStorage          = deps.blobStorage;
         this._config               = deps.config ?? {};
 
+        const brokerAuth = new CredentialAuthentication<BucketCredential, "tenant">(
+            this._bucketCredentialRepo,
+            (cred): Subject<"tenant"> => ({
+                identifier: cred.id,
+                role:       "tenant",
+                ...(cred.label !== undefined ? { displayName: cred.label } : {}),
+            }),
+        );
         const adminGuard  = createAdminGuard(this._auth);
-        const brokerGuard = createBrokerGuard(this._bucketCredentialRepo);
+        const brokerGuard = requireRole(brokerAuth, "tenant");
 
         this._runner.group("/admin", (admin) => mountAdminSurface(admin, this), [adminGuard]);
         this._runner.group("/api",   (api)   => serveApi(api, join(cdnPackageRoot, "src/api/broker"), this), [brokerGuard]);

@@ -1,13 +1,11 @@
-/** Several credentials per bucket are allowed (rotation, dev/prod separation).
- *  Only the hash is persisted — the cleartext is returned exactly once at
- *  creation and never reconstructible afterwards. */
-export type BucketCredential = {
-    id: string;
+import type { Credential } from "@bernouy/core";
+
+/**
+ * Bucket-scoped bearer credential — a `Credential` extended with the
+ * `bucketId` it grants access to. Several credentials per bucket are
+ * allowed (rotation, dev/prod separation). The cleartext is returned
+ * exactly once at creation; only `tokenHash` is persisted.
+ */
+export type BucketCredential = Credential & {
     bucketId: string;
-    /** Hex-encoded SHA-256 of the cleartext bearer token. */
-    tokenHash: string;
-    label?: string;
-    createdAt: Date;
-    expiresAt?: Date;
-    revokedAt?: Date;
 };

@@ -9,8 +9,8 @@
         "./package.json": "./package.json"
     },
     "dependencies": {
-        "@bernouy/core": "workspace:*",
-        "@bernouy/webcomponents": "workspace:*"
+        "@bernouy/core":           "workspace:*",
+        "@bernouy/webcomponents":  "workspace:*"
     },
     "peerDependencies": {
         "image-size": "^2.0.2",

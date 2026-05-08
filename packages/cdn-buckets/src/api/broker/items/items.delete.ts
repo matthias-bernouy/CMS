@@ -1,9 +1,10 @@
+import { requireCredential } from "@bernouy/core";
 import { deleteItem } from "../../../core/content/deleteItem";
-import { getBrokerBucketId } from "../../../core/authentication/createBrokerGuard";
+import type { BucketCredential } from "../../../interfaces/entities/BucketCredential";
 import { wrapAdmin } from "../../../core/admin/wrapAdmin";
 
 export default wrapAdmin(async (req, provider) => {
-    const bucketId = getBrokerBucketId(req);
+    const bucketId = requireCredential<BucketCredential>(req).bucketId;
     const search = new URL(req.url).searchParams;
     const id = search.get("id");
     if (!id) throw new TypeError("Missing 'id' query param.");

@@ -28,11 +28,12 @@ const SHELL_HTML = (basePath: string, body: string) => `<!DOCTYPE html>
 
 /**
  * Registers the platform-level superadmin surface on the runner:
- *   /superadmin/admin/         → tenants dashboard (HTML)
- *   /superadmin/assets/*       → cms bundle + styles (shared with tenants)
- *   /superadmin/api/tenants*   → CRUD endpoints
+ *   /superadmin/         → tenants dashboard (HTML)
+ *   /superadmin/assets/* → cms bundle + styles
+ *   /superadmin/api/*    → tenant CRUD endpoints
  *
- * All routes guarded by the platform Keycloak with role `superadmin`.
+ * All routes guarded by `superadminAuth` (typically Keycloak cookie + bearer JWT
+ * service-account composed externally) with role `superadmin`.
  */
 export async function mountSuperadminSurface(mt: MtControlCms): Promise<void> {
     const guard = createSuperadminGuard(mt.superadminAuth);

@@ -1,10 +1,11 @@
+import { requireCredential } from "@bernouy/core";
 import { mintToken } from "../../core/upload/token/mintToken";
 import { parseMintTokenDto } from "../../core/upload/token/parseMintDto";
-import { getBrokerBucketId } from "../../core/authentication/createBrokerGuard";
+import type { BucketCredential } from "../../interfaces/entities/BucketCredential";
 import { wrapAdmin } from "../../core/admin/wrapAdmin";
 
 export default wrapAdmin(async (req, provider) => {
-    const bucketId = getBrokerBucketId(req);
+    const bucketId = requireCredential<BucketCredential>(req).bucketId;
     const body = await req.json() as Record<string, unknown>;
     const dto = parseMintTokenDto(body);
     const token = await mintToken(provider, bucketId, dto);

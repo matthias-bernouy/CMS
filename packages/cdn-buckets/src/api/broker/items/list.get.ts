@@ -1,12 +1,13 @@
 import type { CDNItemType } from "@bernouy/core";
+import { requireCredential } from "@bernouy/core";
 import { listItems } from "../../../core/content/listItems";
-import { getBrokerBucketId } from "../../../core/authentication/createBrokerGuard";
+import type { BucketCredential } from "../../../interfaces/entities/BucketCredential";
 import { wrapAdmin } from "../../../core/admin/wrapAdmin";
 
 const ALLOWED_TYPES: readonly CDNItemType[] = ["folder", "image", "video", "audio", "pdf", "document", "text", "archive", "other"];
 
 export default wrapAdmin(async (req, provider) => {
-    const bucketId = getBrokerBucketId(req);
+    const bucketId = requireCredential<BucketCredential>(req).bucketId;
     const search = new URL(req.url).searchParams;
 
     const folderID = search.get("folderID") ?? undefined;

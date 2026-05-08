@@ -28,7 +28,7 @@ const ADMIN_TEMPLATE = `<!DOCTYPE html>
 <title>CDN admin — Origin</title>
 <link rel="stylesheet" href="/admin/assets/style.css">
 <style>html, body { margin: 0; padding: 0; height: 100%; }</style>
-<script src="/admin/assets/ui.js" defer></script>
+<script src="/admin/assets/ui.js"></script>
 </head>
 <body>
 <w13c-left-menu-layout style="--_content-padding: 0;">

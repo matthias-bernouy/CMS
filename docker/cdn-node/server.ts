@@ -6,7 +6,8 @@
 import { MongoClient } from "mongodb";
 import { BunRunner } from "@bernouy/runner-bun";
 import type { Subject, Middleware } from "@bernouy/core";
-import { KeycloakConsumer } from "@bernouy/auth-keycloak";
+import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
+import { CompositeAuthentication } from "@bernouy/auth-composite";
 import {
     StorageProvider,
     LocalBlobStorage,
@@ -69,22 +70,39 @@ const db = mongo.db(MONGO_DB_NAME);
 
 const runner = new BunRunner();
 
-const auth = new KeycloakConsumer(runner, {
+const claimsToSubject = (claims: Record<string, unknown>): Subject => {
+    const realmRoles = ((claims as { realm_access?: { roles?: string[] } }).realm_access?.roles) ?? [];
+    const role: Subject["role"] = realmRoles.includes(KEYCLOAK_ADMIN_ROLE) ? "admin" : "user";
+    return {
+        identifier:  String(claims.sub ?? ""),
+        displayName: String(claims.preferred_username ?? claims.email ?? "user"),
+        role,
+    };
+};
+
+const cookieAuth = new KeycloakConsumer(runner, {
     issuer:        KEYCLOAK_ISSUER,
     clientId:      KEYCLOAK_CLIENT_ID,
     clientSecret:  KEYCLOAK_CLIENT_SECRET,
     appBaseUrl:    `https://${MAIN_DOMAIN}`,
     sessionSecret: KEYCLOAK_SESSION_SECRET,
-    claimsToSubject: (claims) => {
-        const realmRoles = ((claims as { realm_access?: { roles?: string[] } }).realm_access?.roles) ?? [];
-        const role: Subject["role"] = realmRoles.includes(KEYCLOAK_ADMIN_ROLE) ? "admin" : "user";
-        const subject: Subject = {
-            identifier:  String(claims.sub ?? ""),
-            displayName: String(claims.preferred_username ?? claims.email ?? "user"),
-            role,
-        };
-        return subject;
-    },
+    claimsToSubject,
+});
+
+// Bearer JWT validation against the same realm. Lets a service account
+// (typically the central hub's `hub-orchestrator` client, granted the
+// realm role configured by KEYCLOAK_ADMIN_ROLE) authenticate as `admin`
+// on `/admin/*` for machine-to-machine provisioning calls.
+const bearerAuth = new KeycloakBearerConsumer({
+    issuer:          KEYCLOAK_ISSUER,
+    claimsToSubject,
+});
+
+const auth = new CompositeAuthentication(runner, {
+    children: [
+        { auth: bearerAuth },                         // bearer first → short-circuits cookie lookup for API clients
+        { auth: cookieAuth, displayName: "Keycloak" },
+    ],
 });
 
 const provider = new StorageProvider({

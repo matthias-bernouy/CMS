@@ -6,7 +6,8 @@
         "baseUrl":  "."
     },
     "include": [
-        "src/**/*.ts"
+        "src/**/*.ts",
+        "tests/**/*.ts"
     ],
     "references": [
         { "path": "../core" },

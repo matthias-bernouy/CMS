@@ -1,6 +1,7 @@
+import { requireCredential } from "@bernouy/core";
 import { updateBucket } from "../../core/bucket/updateBucket";
 import { parseBucketUpdateDto } from "../../core/validation/bucket/parseUpdateDto";
-import { getBrokerBucketId } from "../../core/authentication/createBrokerGuard";
+import type { BucketCredential } from "../../interfaces/entities/BucketCredential";
 import { wrapAdmin } from "../../core/admin/wrapAdmin";
 
 /**
@@ -13,7 +14,7 @@ import { wrapAdmin } from "../../core/admin/wrapAdmin";
  * parser is reused so future safe extensions land naturally.
  */
 export default wrapAdmin(async (req, provider) => {
-    const bucketId = getBrokerBucketId(req);
+    const bucketId = requireCredential<BucketCredential>(req).bucketId;
     const body = (await req.json()) as Record<string, unknown>;
 
     const FIELDS_ALLOWED = new Set(["notFoundPath"]);

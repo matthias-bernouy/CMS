@@ -16,7 +16,9 @@ export type MtControlCmsDeps = {
     /** Public origin (https://platform.com) used by every tenant's Keycloak callback URLs. */
     appBaseUrl: string;
     tenantRepo: TenantRepository;
-    /** Auth for the `/superadmin/*` surface. Distinct from per-tenant Keycloaks. */
+    /** Auth for the `/superadmin/*` surface. Distinct from per-tenant Keycloaks.
+     *  Typically a `CompositeAuthentication` of the superadmin Keycloak cookie + bearer JWT
+     *  (the bearer leg accepts service-account tokens from a "central hub"). */
     superadminAuth: Authentication<SuperadminRole>;
 };
 

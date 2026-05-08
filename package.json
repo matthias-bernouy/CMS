@@ -22,12 +22,14 @@
         "@bernouy/runner-bun":    "workspace:*",
         "@bernouy/auth-keycloak": "workspace:*",
         "@bernouy/auth-composite":"workspace:*",
+        "@bernouy/keycloak-client":"workspace:*",
         "@bernouy/mailer-smtp":   "workspace:*",
         "@bernouy/cdn-buckets":   "workspace:*",
         "@bernouy/cdn-node":      "workspace:*",
         "@bernouy/cms":           "workspace:*",
         "@bernouy/cms-blocs":     "workspace:*",
         "@bernouy/mt-cms-control":"workspace:*",
-        "@bernouy/mt-delivery-cms":"workspace:*"
+        "@bernouy/mt-delivery-cms":"workspace:*",
+        "@bernouy/hub-api":       "workspace:*"
     }
 }

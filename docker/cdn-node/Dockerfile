@@ -13,7 +13,7 @@
 # Build:
 #   docker buildx build --network=host \
 #       --build-context webcomponents=/path/to/WebComponents \
-#       -f docker/cdn-origin/Dockerfile \
+#       -f docker/cdn-node/Dockerfile \
 #       -t bernouy/cdn-origin:0.1.0 .
 
 FROM debian:bookworm-slim
@@ -62,9 +62,9 @@ RUN bun install && bun run build
 #    import @bernouy/{core,cdn,cdn-origin,runner-bun,auth-keycloak} +
 #    mongodb without its own install step.
 WORKDIR /app
-COPY docker/cdn-origin/runtime.package.json /app/package.json
+COPY docker/cdn-node/runtime.package.json /app/package.json
 RUN ln -s /socle/node_modules /app/node_modules
-COPY docker/cdn-origin/server.ts /app/server.ts
+COPY docker/cdn-node/server.ts /app/server.ts
 
 # 5. Runtime layout. The generated nginx fragments live UNDER the volume
 #    (`/var/lib/cdn/nginx-generated/`) so lsyncd can push them to every
@@ -76,8 +76,8 @@ RUN mkdir -p /etc/lsyncd \
 # 6. Nginx skeleton — admin host only (no public *.MAIN_DOMAIN block —
 #    the origin is private). The HTTP-01 challenge dir on :80 still works
 #    so edges can `proxy_pass` ACME challenges back here.
-COPY docker/cdn-origin/bucketServing.conf  /etc/nginx/conf.d/cdn/bucketServing.conf
-COPY docker/cdn-origin/nginx.conf.template /etc/nginx/conf.d/cdn/nginx.conf.template
+COPY docker/cdn-node/bucketServing.conf  /etc/nginx/conf.d/cdn/bucketServing.conf
+COPY docker/cdn-node/nginx.conf.template /etc/nginx/conf.d/cdn/nginx.conf.template
 RUN echo "include /etc/nginx/conf.d/cdn/nginx.conf;" > /etc/nginx/conf.d/cdn-include.conf \
  && rm -f /etc/nginx/sites-enabled/default
 
@@ -86,10 +86,10 @@ RUN echo "cdn ALL=(root) NOPASSWD: /usr/sbin/nginx -s reload" > /etc/sudoers.d/c
  && chmod 0440 /etc/sudoers.d/cdn
 
 # 8. Entrypoint + lsyncd supervisor + backup script.
-COPY docker/cdn-origin/entrypoint.sh        /usr/local/bin/cdn-entrypoint.sh
-COPY docker/cdn-origin/lsyncd-supervisor.sh /usr/local/bin/lsyncd-supervisor.sh
-COPY docker/cdn-origin/lsyncd-reload.sh     /usr/local/bin/lsyncd-reload.sh
-COPY docker/cdn-origin/cdn-backup.sh        /usr/local/bin/cdn-backup.sh
+COPY docker/cdn-node/entrypoint.sh        /usr/local/bin/cdn-entrypoint.sh
+COPY docker/cdn-node/lsyncd-supervisor.sh /usr/local/bin/lsyncd-supervisor.sh
+COPY docker/cdn-node/lsyncd-reload.sh     /usr/local/bin/lsyncd-reload.sh
+COPY docker/cdn-node/cdn-backup.sh        /usr/local/bin/cdn-backup.sh
 RUN chmod +x /usr/local/bin/cdn-entrypoint.sh \
              /usr/local/bin/lsyncd-supervisor.sh \
              /usr/local/bin/lsyncd-reload.sh \
