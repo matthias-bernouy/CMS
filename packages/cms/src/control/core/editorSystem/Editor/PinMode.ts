@@ -22,7 +22,7 @@ export class PinMode {
     private _lastRect: { x: number; y: number; w: number; h: number } | null = null;
 
     constructor(
-        private _target: HTMLElement,
+        private _getAnchor: () => HTMLElement,
         private _stateSyncs: StateSync[],
         private _onUnpinAll: () => void,
     ) {}
@@ -50,7 +50,7 @@ export class PinMode {
         window.addEventListener("scroll", this._reflow, { passive: true, capture: true });
         window.addEventListener("resize", this._reflow);
         this._resizeObs = new ResizeObserver(this._reflow);
-        this._resizeObs.observe(this._target);
+        this._resizeObs.observe(this._getAnchor());
         this._resizeObs.observe(document.body);
 
         // A sibling resizing/reflowing can displace `_target` without
@@ -79,7 +79,7 @@ export class PinMode {
     private _startRectWatch() {
         const tick = () => {
             if (!this._btn) return;
-            const r = this._target.getBoundingClientRect();
+            const r = this._getAnchor().getBoundingClientRect();
             const last = this._lastRect;
             if (!last || last.x !== r.left || last.y !== r.top || last.w !== r.width || last.h !== r.height) {
                 this._lastRect = { x: r.left, y: r.top, w: r.width, h: r.height };
@@ -92,7 +92,7 @@ export class PinMode {
 
     private _position() {
         if (!this._btn) return;
-        const rect = this._target.getBoundingClientRect();
+        const rect = this._getAnchor().getBoundingClientRect();
         const placement = this._stateSyncs.find(s => s.isPinned)?.placement ?? "left";
         const gap = 8;
         const bw = this._btn.offsetWidth;

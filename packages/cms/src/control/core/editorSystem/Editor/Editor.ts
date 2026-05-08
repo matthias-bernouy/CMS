@@ -49,7 +49,7 @@ export abstract class Editor {
 
         this._panel = new PanelConfig(this, editor);
         this._hover = new HoverBinding(this);
-        this._pinMode = new PinMode(this.target, this.stateSyncs, () => {
+        this._pinMode = new PinMode(() => this.getActionBarAnchor() ?? this.target, this.stateSyncs, () => {
             this.stateSyncs.forEach(s => s.unpin());
             this.notifyPinStateChanged();
         });
