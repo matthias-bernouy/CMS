@@ -1,6 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { BlocListItemResponse, CmsRepository, PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
+import type { TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
 
 /**
  * In-memory implementation of `CmsRepository` for local dev and tests. No
@@ -16,10 +17,11 @@ export class InMemoryCmsRepository implements CmsRepository {
 
     // ── Storage ──
 
-    private _blocs     = new Map<string, TBloc>();      // by tag (= TBloc.id)
-    private _pages     = new Map<string, TPage>();      // by path (unique key)
-    private _snippets  = new Map<string, TSnippet>();   // by id
-    private _templates = new Map<string, TTemplate>();  // by id
+    private _blocs         = new Map<string, TBloc>();          // by tag (= TBloc.id)
+    private _pages         = new Map<string, TPage>();          // by path (unique key)
+    private _snippets      = new Map<string, TSnippet>();       // by id
+    private _templates     = new Map<string, TTemplate>();      // by id
+    private _dataProviders = new Map<string, TDataProvider>();  // by id
     private _system: TSystem = defaultSystem();
 
     // ── Blocs ──
@@ -279,6 +281,72 @@ export class InMemoryCmsRepository implements CmsRepository {
             .filter(p => regex.test(p.content ?? ""))
             .map(p => ({ ...p }));
     }
+
+    // ── Data providers ──
+
+    async createDataProvider(provider: Omit<TDataProvider, "createdAt" | "lastSyncAt">): Promise<TDataProvider> {
+        if (this._dataProviders.has(provider.id)) {
+            throw new Error(`Data provider with id "${provider.id}" already exists`);
+        }
+        const stored: TDataProvider = {
+            ...provider,
+            auth:       cloneAuth(provider.auth),
+            createdAt:  new Date(),
+            lastSyncAt: null,
+        };
+        this._dataProviders.set(stored.id, stored);
+        return cloneDataProvider(stored);
+    }
+
+    async getDataProvider(id: string): Promise<TDataProvider | null> {
+        const found = this._dataProviders.get(id);
+        return found ? cloneDataProvider(found) : null;
+    }
+
+    async getDataProviders(): Promise<TDataProvider[]> {
+        return Array.from(this._dataProviders.values()).map(cloneDataProvider);
+    }
+
+    async getDataProvidersList(): Promise<TDataProviderListItem[]> {
+        return Array.from(this._dataProviders.values()).map(p => ({
+            id:            p.id,
+            name:          p.name,
+            source:        p.source,
+            endpointCount: 0,
+            lastSyncAt:    p.lastSyncAt ? p.lastSyncAt.toDateString() : "",
+        }));
+    }
+
+    async updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null> {
+        const existing = this._dataProviders.get(id);
+        if (!existing) return null;
+        // `id` and `createdAt` are immutable.
+        const { id: _ignored, createdAt: __, ...rest } = data;
+        const merged: TDataProvider = {
+            ...existing,
+            ...rest,
+            id:        existing.id,
+            createdAt: existing.createdAt,
+            auth:      cloneAuth(rest.auth ?? existing.auth),
+        };
+        this._dataProviders.set(id, merged);
+        return cloneDataProvider(merged);
+    }
+
+    async deleteDataProvider(id: string): Promise<void> {
+        this._dataProviders.delete(id);
+    }
+}
+
+function cloneAuth(auth: TDataProvider["auth"]): TDataProvider["auth"] {
+    if (auth.type === "headers") {
+        return { type: "headers", headers: auth.headers.map(h => ({ ...h })) };
+    }
+    return { ...auth };
+}
+
+function cloneDataProvider(p: TDataProvider): TDataProvider {
+    return { ...p, auth: cloneAuth(p.auth) };
 }
 
 function defaultSystem(): TSystem {

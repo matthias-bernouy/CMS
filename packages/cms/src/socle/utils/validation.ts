@@ -44,6 +44,17 @@ export function isValidCustomElementTag(tag: string): boolean {
 }
 
 /**
+ * Slug used as the immutable id of a data provider. Same kebab subset as
+ * snippet identifiers (lowercase letters, digits, single dashes), with
+ * length bounds to keep it usable as an attribute and a binding key.
+ */
+export function isValidDataProviderId(id: string): boolean {
+    if (!id || typeof id !== "string") return false;
+    if (id.length < 2 || id.length > 32)  return false;
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
+}
+
+/**
  * Folder name used by `p9r pull/push` to carry a snippet/template category.
  * One filesystem segment, no separators, no traversal, no hidden files.
  * Permissive otherwise — the category itself is human-authored and may

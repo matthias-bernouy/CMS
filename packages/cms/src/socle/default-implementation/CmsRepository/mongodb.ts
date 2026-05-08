@@ -2,6 +2,7 @@ import { randomUUIDv7 } from "bun";
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { BlocListItemResponse, CmsRepository, PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
+import type { TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
 
 /**
  * MongoDB implementation of `CmsRepository`. Designed for small/medium
@@ -67,11 +68,12 @@ export class MongoCmsRepository implements CmsRepository {
 
     // ── Collections ──
 
-    private get blocs():     Collection<BlocDoc>     { return this.db.collection<BlocDoc>     (this._prefix + "blocs"); }
-    private get pages():     Collection<PageDoc>     { return this.db.collection<PageDoc>     (this._prefix + "pages"); }
-    private get snippets():  Collection<SnippetDoc>  { return this.db.collection<SnippetDoc>  (this._prefix + "snippets"); }
-    private get templates(): Collection<TemplateDoc> { return this.db.collection<TemplateDoc> (this._prefix + "templates"); }
-    private get system():    Collection<SystemDoc>   { return this.db.collection<SystemDoc>   (this._prefix + "system"); }
+    private get blocs():         Collection<BlocDoc>         { return this.db.collection<BlocDoc>         (this._prefix + "blocs"); }
+    private get pages():         Collection<PageDoc>         { return this.db.collection<PageDoc>         (this._prefix + "pages"); }
+    private get snippets():      Collection<SnippetDoc>      { return this.db.collection<SnippetDoc>      (this._prefix + "snippets"); }
+    private get templates():     Collection<TemplateDoc>     { return this.db.collection<TemplateDoc>     (this._prefix + "templates"); }
+    private get system():        Collection<SystemDoc>       { return this.db.collection<SystemDoc>       (this._prefix + "system"); }
+    private get dataProviders(): Collection<DataProviderDoc> { return this.db.collection<DataProviderDoc> (this._prefix + "dataProviders"); }
 
     // ── Blocs ──
 
@@ -341,17 +343,76 @@ export class MongoCmsRepository implements CmsRepository {
         const docs = await this.pages.find({ content: { $regex: pattern, $options: "i" } }).toArray();
         return docs.map(d => fromPageDoc(d)!);
     }
+
+    // ── Data providers ──
+
+    async createDataProvider(provider: Omit<TDataProvider, "createdAt" | "lastSyncAt">): Promise<TDataProvider> {
+        const stored: TDataProvider = { ...provider, createdAt: new Date(), lastSyncAt: null };
+        await this.dataProviders.insertOne(toDataProviderDoc(stored) as OptionalUnlessRequiredId<DataProviderDoc>);
+        return stored;
+    }
+
+    async getDataProvider(id: string): Promise<TDataProvider | null> {
+        return fromDataProviderDoc(await this.dataProviders.findOne({ _id: id }));
+    }
+
+    async getDataProviders(): Promise<TDataProvider[]> {
+        const docs = await this.dataProviders.find().toArray();
+        return docs.map(d => fromDataProviderDoc(d)!);
+    }
+
+    async getDataProvidersList(): Promise<TDataProviderListItem[]> {
+        const docs = await this.dataProviders.find(
+            {},
+            { projection: { name: 1, source: 1, lastSyncAt: 1 } },
+        ).toArray();
+        return docs.map(d => ({
+            id:            d._id,
+            name:          d.name,
+            source:        d.source,
+            endpointCount: 0,
+            lastSyncAt:    d.lastSyncAt ? new Date(d.lastSyncAt).toDateString() : "",
+        }));
+    }
+
+    async updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null> {
+        // `id` and `createdAt` are immutable on the server side — strip
+        // them from the patch so a malformed client can't rewrite them.
+        const { id: _ignored, createdAt: __, ...rest } = data;
+        const result = await this.dataProviders.findOneAndUpdate(
+            { _id: id },
+            { $set: rest as Partial<DataProviderDoc> },
+            { returnDocument: "after" },
+        );
+        return fromDataProviderDoc(result as DataProviderDoc | null);
+    }
+
+    async deleteDataProvider(id: string): Promise<void> {
+        await this.dataProviders.deleteOne({ _id: id });
+    }
+}
+
+function toDataProviderDoc(p: TDataProvider): DataProviderDoc {
+    const { id, ...rest } = p;
+    return { _id: id, ...rest };
+}
+
+function fromDataProviderDoc(d: DataProviderDoc | null): TDataProvider | null {
+    if (!d) return null;
+    const { _id, ...rest } = d;
+    return { id: _id, ...rest };
 }
 
 // ── Document shapes (collection generics) ──
 
 type WithMongoId<T extends { id: string }> = Omit<T, "id"> & { _id: string };
 
-type BlocDoc     = WithMongoId<TBloc>;
-type PageDoc     = WithMongoId<TPage>;
-type SnippetDoc  = WithMongoId<TSnippet>;
-type TemplateDoc = WithMongoId<TTemplate>;
-type SystemDoc   = TSystem & { _id: typeof SYSTEM_ID };
+type BlocDoc         = WithMongoId<TBloc>;
+type PageDoc         = WithMongoId<TPage>;
+type SnippetDoc      = WithMongoId<TSnippet>;
+type TemplateDoc     = WithMongoId<TTemplate>;
+type DataProviderDoc = WithMongoId<TDataProvider>;
+type SystemDoc       = TSystem & { _id: typeof SYSTEM_ID };
 
 const SYSTEM_ID = "singleton" as const;
 

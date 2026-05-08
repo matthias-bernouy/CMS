@@ -5,6 +5,7 @@ import "./globals"
 // Admin
 import "./admin/AdminLayout/AdminLayout"
 import "./admin/EmptyState/EmptyState"
+import "./admin/HeadersInput/HeadersInput"
 import "./admin/OpenDialog/OpenDialog"
 
 // Editor

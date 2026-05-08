@@ -1,4 +1,5 @@
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "./models";
+import type { TDataProvider, TDataProviderListItem } from "./Data/data";
 
 export type BlocListItemResponse = {
     id: string, 
@@ -59,5 +60,14 @@ export interface CmsRepository {
     updateSnippet(id: string, data: Partial<TSnippet>): Promise<TSnippet | null>;
     deleteSnippet(id: string): Promise<void>;
     findPagesUsingSnippet(identifier: string): Promise<TPage[]>;
+
+    // DATA PROVIDER
+    createDataProvider(provider: Omit<TDataProvider, 'createdAt' | 'lastSyncAt'>): Promise<TDataProvider>;
+    getDataProvider(id: string): Promise<TDataProvider | null>;
+    getDataProviders(): Promise<TDataProvider[]>;
+    /** Slim projection for the admin table — never exposes the raw spec or auth secrets. */
+    getDataProvidersList(): Promise<TDataProviderListItem[]>;
+    updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null>;
+    deleteDataProvider(id: string): Promise<void>;
 
 }

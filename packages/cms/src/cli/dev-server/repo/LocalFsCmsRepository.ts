@@ -1,11 +1,13 @@
 import type { CmsRepository, BlocListItemResponse, PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
+import type { TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
 import type { BuiltBloc } from "../build";
 import { PagesStore } from "./pages";
 import { SnippetsStore } from "./snippets";
 import { TemplatesStore } from "./templates";
 import { SystemStore } from "./system";
 import { BlocsStore } from "./blocs";
+import { DataProvidersStore } from "./dataProviders";
 
 /**
  * Filesystem-backed `CmsRepository` for `p9r dev`. Each call hits the local
@@ -17,18 +19,20 @@ import { BlocsStore } from "./blocs";
  * source of truth in dev.
  */
 export class LocalFsCmsRepository implements CmsRepository {
-    private readonly _pages:     PagesStore;
-    private readonly _snippets:  SnippetsStore;
-    private readonly _templates: TemplatesStore;
-    private readonly _system:    SystemStore;
-    private readonly _blocs:     BlocsStore;
+    private readonly _pages:         PagesStore;
+    private readonly _snippets:      SnippetsStore;
+    private readonly _templates:     TemplatesStore;
+    private readonly _system:        SystemStore;
+    private readonly _blocs:         BlocsStore;
+    private readonly _dataProviders: DataProvidersStore;
 
     constructor(siteDir: string, builtBlocs: Map<string, BuiltBloc>) {
-        this._pages     = new PagesStore(siteDir);
-        this._snippets  = new SnippetsStore(siteDir);
-        this._templates = new TemplatesStore(siteDir);
-        this._system    = new SystemStore(siteDir);
-        this._blocs     = new BlocsStore(builtBlocs);
+        this._pages         = new PagesStore(siteDir);
+        this._snippets      = new SnippetsStore(siteDir);
+        this._templates     = new TemplatesStore(siteDir);
+        this._system        = new SystemStore(siteDir);
+        this._blocs         = new BlocsStore(builtBlocs);
+        this._dataProviders = new DataProvidersStore(siteDir);
     }
 
     // ── Bloc ──
@@ -73,4 +77,13 @@ export class LocalFsCmsRepository implements CmsRepository {
     async findPagesUsingSnippet(identifier: string): Promise<TPage[]> {
         return this._snippets.findPagesUsing(identifier, await this._pages.getAll());
     }
+
+    // ── Data providers ──
+
+    async createDataProvider(p: Omit<TDataProvider, "createdAt" | "lastSyncAt">): Promise<TDataProvider> { return this._dataProviders.create(p); }
+    getDataProvider(id: string):                                  Promise<TDataProvider | null>     { return this._dataProviders.getById(id); }
+    getDataProviders():                                           Promise<TDataProvider[]>          { return this._dataProviders.getAll(); }
+    getDataProvidersList():                                       Promise<TDataProviderListItem[]>  { return this._dataProviders.list(); }
+    updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null>     { return this._dataProviders.update(id, data); }
+    deleteDataProvider(id: string):                               Promise<void>                     { return this._dataProviders.delete(id); }
 }

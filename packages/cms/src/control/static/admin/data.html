@@ -60,31 +60,29 @@
         </p9r-tab-panel>
 
         <p9r-tab-panel id="url" label="From URL">
-            <p9r-stack gap="md">
-                <p9r-input name="id" label="ID" placeholder="hub-api"
-                    hint="Lowercase letters, numbers and dashes. Used as binding key. Immutable after creation."
-                    disabled></p9r-input>
-                <p9r-input name="name" label="Name" placeholder="Hub API" disabled></p9r-input>
-                <p9r-input name="url" label="OpenAPI URL"
-                    placeholder="https://api.example.com/openapi.json" disabled></p9r-input>
+            <cms-form target="{{BASE_PATH}}/api/data/provider" emit="new:provider">
+                <input type="hidden" name="source" value="url">
+                <p9r-stack gap="md">
+                    <p9r-input name="id" label="ID" placeholder="hub-api"
+                        hint="Lowercase letters, numbers and dashes. Used as binding key. Immutable after creation."></p9r-input>
+                    <p9r-input name="name" label="Name" placeholder="Hub API"></p9r-input>
+                    <p9r-input name="sourceUrl" label="OpenAPI URL"
+                        placeholder="https://api.example.com/openapi.json"></p9r-input>
 
-                <details>
-                    <summary>Advanced settings</summary>
-                    <p9r-stack gap="sm">
-                        <p9r-input name="auth.bearer" label="Bearer token"
-                            placeholder="eyJhbG... or ${HUB_API_TOKEN}" disabled></p9r-input>
+                    <details>
+                        <summary>Advanced settings</summary>
+                        <p9r-stack gap="sm">
+                            <p9r-input name="auth.bearer" label="Bearer token"
+                                placeholder="eyJhbG... or ${HUB_API_TOKEN}"
+                                hint="Paste a literal token, or use ${VAR_NAME} to read from environment."></p9r-input>
 
-                        <p9r-stack direction="row" gap="sm">
-                            <p9r-input name="auth.headers.0.name" placeholder="Header name" disabled></p9r-input>
-                            <p9r-input name="auth.headers.0.value" placeholder="Header value" disabled></p9r-input>
+                            <cms-headers-input></cms-headers-input>
                         </p9r-stack>
+                    </details>
 
-                        <p9r-button disabled>+</p9r-button>
-                    </p9r-stack>
-                </details>
-
-                <p9r-button color="primary" fullWidth disabled>Add provider</p9r-button>
-            </p9r-stack>
+                    <p9r-button color="primary" fullWidth type="submit">Add provider</p9r-button>
+                </p9r-stack>
+            </cms-form>
         </p9r-tab-panel>
 
         <p9r-tab-panel id="upload" label="Upload file">
