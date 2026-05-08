@@ -7,6 +7,7 @@ import CLI_new from "./CLI_new";
 import CLI_installSkill from "./CLI_installSkill";
 import CLI_listBlocs from "./CLI_listBlocs";
 import CLI_login, { CLI_logout } from "./CLI_login";
+import CLI_secrets from "./CLI_secrets";
 
 const [command, ...rest] = process.argv.slice(2);
 
@@ -40,6 +41,11 @@ Usage:
                                    to skip the overwrite confirmation.
   p9r list-blocs [--json]          List blocs registered on the remote CMS
                                    (id, name, group, description).
+  p9r secrets <sub>                Operate on the remote's secret store.
+      template [--output=<path>] [--force]
+                                   Write an .env.example with the remote's
+                                   KEYS only (no values, ever). Default
+                                   output: .env.example.
   p9r help                         Show this help
 
 Env (loaded from .env or the environment):
@@ -82,6 +88,9 @@ try {
             break;
         case "list-blocs":
             await CLI_listBlocs(rest);
+            break;
+        case "secrets":
+            await CLI_secrets(rest);
             break;
         case undefined:
         case "help":
