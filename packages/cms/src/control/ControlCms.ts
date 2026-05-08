@@ -2,6 +2,8 @@ import type { Authentication, CDN, Runner } from "@bernouy/core";
 import type { CmsRepository } from "../socle/interfaces/CmsRepository";
 import type { Cache } from "../socle/interfaces/Cache";
 import { InMemoryCache } from "../socle/default-implementation/Cache/memory";
+import type { SecretStore } from "../socle/interfaces/SecretStore";
+import { InMemorySecretStore } from "../socle/default-implementation/SecretStore/memory";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
@@ -54,6 +56,7 @@ export class ControlCms {
     private _auth:            Authentication;
     private _media:           CDN;
     private _cache:           Cache;
+    private _secrets:         SecretStore;
 
     constructor(
         runner: Runner,
@@ -61,7 +64,8 @@ export class ControlCms {
         auth: Authentication<CMS_ROLES>,
         media: CDN,
         configuration: Configuration,
-        cache?: Cache
+        cache?: Cache,
+        secrets?: SecretStore
     ){
         this.configuration = configuration;
         this._auth = auth;
@@ -69,6 +73,7 @@ export class ControlCms {
         this._repository = repository;
         this._media = media;
         this._cache = cache || new InMemoryCache();
+        this._secrets = secrets || new InMemorySecretStore();
 
         // Hydration is served as a real `<script src=…>` (CSP-friendly:
         // `default-src 'self'` rejects inline scripts). Pre-compressed once
@@ -118,6 +123,10 @@ export class ControlCms {
 
     get cache(){
         return this._cache;
+    }
+
+    get secrets(){
+        return this._secrets;
     }
 
     /**

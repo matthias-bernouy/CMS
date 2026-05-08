@@ -7,6 +7,7 @@ import "./admin/AdminLayout/AdminLayout"
 import "./admin/EmptyState/EmptyState"
 import "./admin/HeadersInput/HeadersInput"
 import "./admin/OpenDialog/OpenDialog"
+import "./admin/Secrets/Secrets"
 
 // Editor
 import "./editor/componentSync/PageLink/PageLink"
