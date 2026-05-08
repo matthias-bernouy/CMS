@@ -1,5 +1,5 @@
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "./models";
-import type { DataProviderConsumers, TDataProvider, TDataProviderListItem } from "./Data/data";
+import type { DataProviderConsumers, TDataMockup, TDataProvider, TDataProviderListItem } from "./Data/data";
 
 export type BlocListItemResponse = {
     id: string, 
@@ -71,5 +71,18 @@ export interface CmsRepository {
     deleteDataProvider(id: string): Promise<void>;
     /** Pages / templates / snippets whose content references the given provider's `server` URL. Empty / whitespace input matches nothing. */
     findConsumersOfProvider(providerServerUrl: string): Promise<DataProviderConsumers>;
+
+    // DATA MOCKUP
+    listMockups(providerId: string): Promise<TDataMockup[]>;
+    getMockup(providerId: string, method: string, path: string, name: string): Promise<TDataMockup | null>;
+    /** Active mockup for the given operation (at most one). Null if none active. */
+    getActiveMockup(providerId: string, method: string, path: string): Promise<TDataMockup | null>;
+    /** Throws on (providerId, method, path, name) collision. First mockup of an operation becomes active automatically. */
+    createMockup(mockup: Omit<TDataMockup, 'updatedAt' | 'active'>): Promise<TDataMockup>;
+    /** Patch body / status / name of an existing mockup. Renaming must keep it unique within (providerId, method, path). */
+    updateMockup(providerId: string, method: string, path: string, name: string, patch: Partial<Pick<TDataMockup, 'status' | 'body' | 'name'>>): Promise<TDataMockup | null>;
+    deleteMockup(providerId: string, method: string, path: string, name: string): Promise<void>;
+    /** Set `name` as the active mockup for the operation. Pass `null` to clear active for the operation. */
+    setActiveMockup(providerId: string, method: string, path: string, name: string | null): Promise<void>;
 
 }

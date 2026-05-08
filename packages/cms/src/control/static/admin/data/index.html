@@ -34,6 +34,18 @@
                     </p9r-cell>
                     <p9r-cell>
                         <p9r-stack direction="row" gap="sm">
+                            <a href="{{BASE_PATH}}/admin/data/provider?id={{ id }}">
+                                <p9r-button variant="ghost" color="secondary" aria-label="Open {{ id }}">
+                                    <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                        aria-hidden="true" width="16" height="16">
+                                        <path d="M5 12h14"/>
+                                        <path d="M13 6l6 6-6 6"/>
+                                    </svg>
+                                    Open
+                                </p9r-button>
+                            </a>
                             <p9r-open-modal modal-target="edit-provider-{{ id }}">
                                 <p9r-button variant="ghost" color="secondary" aria-label="Edit {{ id }}">
                                     <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg"

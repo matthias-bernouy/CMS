@@ -1,20 +1,43 @@
 import type { ControlCms } from "src/control/ControlCms";
 import { getResolverFor } from "src/control/core/data/getResolverFor";
+import { methodColor } from "src/control/core/data/methodColor";
 
+/**
+ * Endpoint detail. Accepts either:
+ *   - `endpoint=METHOD path` (legacy combined form, used by the picker), or
+ *   - `method=…&path=…` (split form, used by the admin detail page so
+ *     links don't need to URL-encode the space).
+ */
 export default async function getProviderEndpoint(req: Request, cms: ControlCms) {
     const url      = new URL(req.url);
     const id       = url.searchParams.get("id");
     const endpoint = url.searchParams.get("endpoint");
-    if (!id)       return new Response("Missing id",       { status: 400 });
-    if (!endpoint) return new Response("Missing endpoint", { status: 400 });
+    const method   = url.searchParams.get("method");
+    const path     = url.searchParams.get("path");
+    if (!id) return new Response("Missing id", { status: 400 });
+
+    const endpointId = endpoint ?? (method && path ? `${method.toUpperCase()} ${path}` : null);
+    if (!endpointId) return new Response("Missing endpoint", { status: 400 });
 
     const resolver = await getResolverFor(cms, id);
     if (!resolver) return new Response("Not found or not synced", { status: 404 });
 
-    const result = resolver.getEndpoint(endpoint);
+    const result = resolver.getEndpoint(endpointId);
     if (!result) return new Response("Endpoint not found", { status: 404 });
 
-    return new Response(JSON.stringify(result), {
+    const mockupsRaw = await cms.repository.listMockups(id);
+    const mockups    = mockupsRaw
+        .filter(m => m.method === result.method && m.path === result.path)
+        .map(m => ({ ...m, activeLabel: m.active ? "● active" : "" }));
+
+    const enriched = {
+        ...result,
+        methodColor:        methodColor(result.method),
+        responses:          resolver.listResponses(endpointId),
+        mockups,
+        mockupsEmptyLabel:  mockups.length === 0 ? "No mockups for this operation yet." : "",
+    };
+    return new Response(JSON.stringify(enriched), {
         headers: { "Content-Type": "application/json" },
     });
 }

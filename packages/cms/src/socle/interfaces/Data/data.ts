@@ -64,3 +64,29 @@ export type DataProviderConsumers = {
     templates: { identifier: string; name: string }[];
     snippets:  { identifier: string; name: string }[];
 };
+
+/**
+ * Editor-side mockup for a single (provider, method, path) operation.
+ *
+ * Used only at edit time: the editor's fetch proxy hits
+ * `POST /api/data/mock` and the server returns the active mockup so the
+ * preview renders without calling the real API.
+ *
+ * `path` is the OpenAPI-templated path (e.g. `/users/{id}`) — not a
+ * concrete URL. The matcher resolves a concrete URL to its templated
+ * counterpart before looking up the mockup.
+ *
+ * Composite key: `(providerId, method, path, name)`. Exactly one mockup
+ * per `(providerId, method, path)` carries `active = true` at any time —
+ * `setActiveMockup` enforces it.
+ */
+export type TDataMockup = {
+    providerId: string;
+    method:     string;  // upper-case HTTP verb ("GET", "POST", ...)
+    path:       string;  // OpenAPI path template ("/users/{id}")
+    name:       string;  // user-friendly label, unique per (providerId, method, path)
+    status:     number;  // HTTP status code returned by this mockup (200, 401, ...)
+    body:       string;  // raw JSON body, served verbatim with Content-Type: application/json
+    active:     boolean;
+    updatedAt:  Date;
+};

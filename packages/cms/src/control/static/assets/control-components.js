@@ -8613,7 +8613,7 @@ p9r-tag:hover {
 
   // src/control/core/editorSystem/Editor/PinMode.ts
   class PinMode {
-    _target;
+    _getAnchor;
     _stateSyncs;
     _onUnpinAll;
     static _stylesInjected = false;
@@ -8622,8 +8622,8 @@ p9r-tag:hover {
     _reflow = () => this._position();
     _rafId = 0;
     _lastRect = null;
-    constructor(_target, _stateSyncs, _onUnpinAll) {
-      this._target = _target;
+    constructor(_getAnchor, _stateSyncs, _onUnpinAll) {
+      this._getAnchor = _getAnchor;
       this._stateSyncs = _stateSyncs;
       this._onUnpinAll = _onUnpinAll;
     }
@@ -8650,7 +8650,7 @@ p9r-tag:hover {
       window.addEventListener("scroll", this._reflow, { passive: true, capture: true });
       window.addEventListener("resize", this._reflow);
       this._resizeObs = new ResizeObserver(this._reflow);
-      this._resizeObs.observe(this._target);
+      this._resizeObs.observe(this._getAnchor());
       this._resizeObs.observe(document.body);
       this._startRectWatch();
       this._position();
@@ -8674,7 +8674,7 @@ p9r-tag:hover {
       const tick = () => {
         if (!this._btn)
           return;
-        const r = this._target.getBoundingClientRect();
+        const r = this._getAnchor().getBoundingClientRect();
         const last = this._lastRect;
         if (!last || last.x !== r.left || last.y !== r.top || last.w !== r.width || last.h !== r.height) {
           this._lastRect = { x: r.left, y: r.top, w: r.width, h: r.height };
@@ -8687,7 +8687,7 @@ p9r-tag:hover {
     _position() {
       if (!this._btn)
         return;
-      const rect = this._target.getBoundingClientRect();
+      const rect = this._getAnchor().getBoundingClientRect();
       const placement = this._stateSyncs.find((s) => s.isPinned)?.placement ?? "left";
       const gap = 8;
       const bw = this._btn.offsetWidth;
@@ -8960,7 +8960,7 @@ p9r-tag:hover {
       document.compIdentifierToEditor.set(this._identifier, this);
       this._panel = new PanelConfig(this, editor);
       this._hover = new HoverBinding(this);
-      this._pinMode = new PinMode(this.target, this.stateSyncs, () => {
+      this._pinMode = new PinMode(() => this.getActionBarAnchor() ?? this.target, this.stateSyncs, () => {
         this.stateSyncs.forEach((s) => s.unpin());
         this.notifyPinStateChanged();
       });
@@ -16025,6 +16025,58 @@ form[method="dialog"] {
     };
   }
 
+  // src/control/core/editorSystem/installFetchProxy.ts
+  function installFetchProxy() {
+    const originalFetch = window.fetch.bind(window);
+    const basePath = getMetaBasePath();
+    let providers = [];
+    originalFetch(`${basePath}/api/data/providers`).then((r) => r.ok ? r.json() : []).then((list) => {
+      if (!Array.isArray(list))
+        return;
+      providers = list.map((p) => ({
+        id: p.id,
+        server: (p.server ?? "").replace(/\/+$/, "")
+      })).filter((p) => p.id && p.server);
+    }).catch(() => {});
+    const proxy = (input, init) => {
+      const url = resolveUrl(input);
+      const method = resolveMethod(input, init);
+      const match = providers.find((p) => urlMatchesServer(url, p.server));
+      if (!match)
+        return originalFetch(input, init);
+      return originalFetch(`${basePath}/api/data/mock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerId: match.id, method, url })
+      });
+    };
+    window.fetch = proxy;
+    return () => {
+      if (window.fetch === proxy)
+        window.fetch = originalFetch;
+    };
+  }
+  function resolveUrl(input) {
+    if (typeof input === "string")
+      return new URL(input, location.href).href;
+    if (input instanceof URL)
+      return input.href;
+    return input.url;
+  }
+  function resolveMethod(input, init) {
+    if (init?.method)
+      return init.method.toUpperCase();
+    if (input instanceof Request)
+      return input.method.toUpperCase();
+    return "GET";
+  }
+  function urlMatchesServer(url, server) {
+    if (!server || !url.startsWith(server))
+      return false;
+    const next = url[server.length];
+    return next === undefined || next === "/" || next === "?" || next === "#";
+  }
+
   // src/control/core/editorSystem/dirtyState.ts
   var _dirty = false;
   var _listeners = new Set;
@@ -17021,6 +17073,7 @@ form[method="dialog"] {
     _navGuardOff = null;
     _dirtyWatchOff = null;
     _linkIntercptOff = null;
+    _fetchProxyOff = null;
     constructor() {
       super();
       this.attachShadow({ mode: "open" });
@@ -17054,6 +17107,7 @@ form[method="dialog"] {
       this._navGuardOff?.();
       this._dirtyWatchOff?.();
       this._linkIntercptOff?.();
+      this._fetchProxyOff?.();
       clearEditorContext();
     }
     _installEditorContext(workingElement) {
@@ -17064,6 +17118,7 @@ form[method="dialog"] {
       this._navGuardOff = installNavigationGuard();
       this._dirtyWatchOff = watchForDirty(workingElement);
       this._linkIntercptOff = installLinkInterceptor();
+      this._fetchProxyOff = installFetchProxy();
       fetch(`${getMetaBasePath()}/api/page/list`).then((r) => r.ok ? r.json() : []).then((list) => {
         if (!Array.isArray(list))
           return;
@@ -22090,4 +22145,91 @@ button.active svg {
     }
   }
   customElements.define("cms-fetch", FetchComponent);
+
+  // src/control/components/data/MockupCreate/MockupCreate.ts
+  class MockupCreate extends HTMLElement {
+    _responses = [];
+    _statusEl = null;
+    _bodyEl = null;
+    connectedCallback() {
+      this.innerHTML = TEMPLATE;
+      const form = this.querySelector("form");
+      this._statusEl = this.querySelector('p9r-select[name="status"]');
+      this._bodyEl = this.querySelector('p9r-textarea[name="body"]');
+      form.addEventListener("submit", (e) => this._onSubmit(e));
+      this._statusEl?.addEventListener("change", () => this._syncBody());
+      this._loadEndpoint().catch(() => this._fallback());
+    }
+    async _loadEndpoint() {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.get("id") || !params.get("method") || !params.get("path")) {
+        this._fallback();
+        return;
+      }
+      const url = buildRequestUrl("/api/data/provider/endpoint");
+      const res = await fetch(url);
+      if (!res.ok) {
+        this._fallback();
+        return;
+      }
+      const data = await res.json();
+      this._responses = Array.isArray(data.responses) && data.responses.length > 0 ? data.responses : [{ status: "200", description: "", defaultBody: "{}" }];
+      this._renderStatusOptions();
+      this._syncBody();
+    }
+    _fallback() {
+      this._responses = [{ status: "200", description: "", defaultBody: "{}" }];
+      this._renderStatusOptions();
+      this._syncBody();
+    }
+    _renderStatusOptions() {
+      if (!this._statusEl)
+        return;
+      this._statusEl.innerHTML = this._responses.map((r) => `<option value="${escapeAttr2(r.status)}">${escapeAttr2(r.status)}${r.description ? " — " + escapeAttr2(r.description) : ""}</option>`).join("");
+    }
+    _syncBody() {
+      if (!this._statusEl || !this._bodyEl)
+        return;
+      const value = this._statusEl.value || this._responses[0]?.status || "200";
+      const picked = this._responses.find((r) => r.status === value) ?? this._responses[0];
+      if (picked)
+        this._bodyEl.value = picked.defaultBody;
+    }
+    async _onSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      const url = buildRequestUrl("/api/data/provider/mockup");
+      try {
+        const res = await fetch(url.toString(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) {
+          this.dispatchEvent(new BubblesEvent("form:failed"));
+          return;
+        }
+        form.reset();
+        this.dispatchEvent(new BubblesEvent("form:success"));
+        document.dispatchEvent(new BubblesEvent("mockup:created"));
+      } catch {
+        this.dispatchEvent(new BubblesEvent("form:failed"));
+      }
+    }
+  }
+  function escapeAttr2(s2) {
+    return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  var TEMPLATE = `
+<form>
+    <p9r-stack gap="md">
+        <p9r-input name="name" label="Name" placeholder="default" required></p9r-input>
+        <p9r-select name="status" label="HTTP status"></p9r-select>
+        <p9r-textarea name="body" rows="14" autosize label="Body (JSON)"></p9r-textarea>
+        <p9r-button color="primary" fullWidth type="submit">Create</p9r-button>
+    </p9r-stack>
+</form>
+`;
+  customElements.define("cms-mockup-create", MockupCreate);
 })();

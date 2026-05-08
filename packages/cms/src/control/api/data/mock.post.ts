@@ -1,0 +1,89 @@
+import type { ControlCms } from "src/control/ControlCms";
+import InvalidParam from "src/control/errors/Http/InvalidParam";
+import MissingParam from "src/control/errors/Http/MissingParam";
+import { readJsonBody } from "src/control/core/http/readJsonBody";
+import { getResolverFor } from "src/control/core/data/getResolverFor";
+import { stubFromSchema } from "src/control/core/data/stubFromSchema";
+
+/**
+ * Editor-side fetch proxy contract. The editor calls this for every
+ * request a bloc would make against a registered data provider:
+ *
+ *   POST /api/data/mock
+ *   { providerId, method, url }
+ *
+ * The response mirrors the shape the real API would have returned: HTTP
+ * status from the active mockup (or 200 when synthesizing a stub) and
+ * `application/json` body. The editor proxy can therefore use the
+ * response as-is without unwrapping.
+ *
+ * Resolution order:
+ *   1. URL → templated path via `SpecResolver.matchOperationPath`.
+ *   2. Active mockup for that operation → return body+status verbatim.
+ *   3. Otherwise → 200 + synthesized stub from the 200-response schema.
+ *   4. No matching operation in the spec → 404.
+ */
+export default async function postDataMock(req: Request, cms: ControlCms) {
+    const body = await readJsonBody(req);
+    const { providerId, method, url } = body;
+    if (!providerId) throw new MissingParam("providerId");
+    if (!method)     throw new MissingParam("method");
+    if (!url)        throw new MissingParam("url");
+
+    if (typeof providerId !== "string") throw new InvalidParam("providerId", "Must be a string.");
+    if (typeof method     !== "string") throw new InvalidParam("method",     "Must be a string.");
+    if (typeof url        !== "string") throw new InvalidParam("url",        "Must be a string.");
+
+    const provider = await cms.repository.getDataProvider(providerId);
+    if (!provider) return jsonError(404, "Unknown provider.");
+
+    const resolver = await getResolverFor(cms, providerId);
+    if (!resolver) return jsonError(404, "Provider has no synced spec.");
+
+    const verbUpper = method.toUpperCase();
+    const path      = extractOperationPath(provider.server ?? "", url);
+    const template  = resolver.matchOperationPath(verbUpper, path);
+    if (!template) return jsonError(404, `No operation matches ${verbUpper} ${path}`);
+
+    const active = await cms.repository.getActiveMockup(providerId, verbUpper, template);
+    if (active) {
+        return new Response(active.body, {
+            status:  active.status,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+
+    const schema = resolver.getResponseSchema(`${verbUpper} ${template}`);
+    return new Response(JSON.stringify(stubFromSchema(schema)), {
+        status:  200,
+        headers: { "Content-Type": "application/json" },
+    });
+}
+
+/**
+ * Strip the provider's server prefix and any query string from the URL
+ * the bloc was about to call. Accepts either a fully-qualified URL or a
+ * pathname; falls back to URL parsing for hostnames the provider's
+ * server doesn't cover.
+ */
+function extractOperationPath(server: string, raw: string): string {
+    const noQuery       = raw.split("?")[0] ?? "";
+    const trimmedServer = server.replace(/\/+$/, "");
+    if (trimmedServer && noQuery.startsWith(trimmedServer)) {
+        return noQuery.slice(trimmedServer.length) || "/";
+    }
+    if (noQuery.startsWith("/")) return noQuery;
+    try {
+        const u = new URL(noQuery);
+        return u.pathname || "/";
+    } catch {
+        return `/${noQuery}`;
+    }
+}
+
+function jsonError(status: number, message: string): Response {
+    return new Response(JSON.stringify({ error: message }), {
+        status,
+        headers: { "Content-Type": "application/json" },
+    });
+}

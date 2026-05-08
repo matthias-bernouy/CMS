@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { BlocListItemResponse, CmsRepository, PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
-import type { DataProviderConsumers, TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
+import type { DataProviderConsumers, TDataMockup, TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
 import { countOpenApiEndpoints, dataProviderSyncBadge } from "src/socle/utils/openapi";
 import { findConsumersInCollections } from "src/socle/utils/dataProviderRefs";
 
@@ -24,6 +24,7 @@ export class InMemoryCmsRepository implements CmsRepository {
     private _snippets      = new Map<string, TSnippet>();       // by id
     private _templates     = new Map<string, TTemplate>();      // by id
     private _dataProviders = new Map<string, TDataProvider>();  // by id
+    private _dataMockups   = new Map<string, TDataMockup>();    // by mockupKey()
     private _system: TSystem = defaultSystem();
 
     // ── Blocs ──
@@ -343,6 +344,9 @@ export class InMemoryCmsRepository implements CmsRepository {
 
     async deleteDataProvider(id: string): Promise<void> {
         this._dataProviders.delete(id);
+        for (const key of [...this._dataMockups.keys()]) {
+            if (this._dataMockups.get(key)?.providerId === id) this._dataMockups.delete(key);
+        }
     }
 
     async findConsumersOfProvider(providerServerUrl: string): Promise<DataProviderConsumers> {
@@ -353,6 +357,98 @@ export class InMemoryCmsRepository implements CmsRepository {
             Array.from(this._snippets.values()),
         );
     }
+
+    // ── Data mockups ──
+
+    async listMockups(providerId: string): Promise<TDataMockup[]> {
+        const out: TDataMockup[] = [];
+        for (const m of this._dataMockups.values()) {
+            if (m.providerId === providerId) out.push({ ...m });
+        }
+        return out;
+    }
+
+    async getMockup(providerId: string, method: string, path: string, name: string): Promise<TDataMockup | null> {
+        const found = this._dataMockups.get(mockupKey(providerId, method, path, name));
+        return found ? { ...found } : null;
+    }
+
+    async getActiveMockup(providerId: string, method: string, path: string): Promise<TDataMockup | null> {
+        const m = method.toUpperCase();
+        for (const entry of this._dataMockups.values()) {
+            if (entry.active && entry.providerId === providerId && entry.method === m && entry.path === path) {
+                return { ...entry };
+            }
+        }
+        return null;
+    }
+
+    async createMockup(mockup: Omit<TDataMockup, 'updatedAt' | 'active'>): Promise<TDataMockup> {
+        const method = mockup.method.toUpperCase();
+        const key    = mockupKey(mockup.providerId, method, mockup.path, mockup.name);
+        if (this._dataMockups.has(key)) {
+            throw new Error(`Mockup "${mockup.name}" already exists for ${method} ${mockup.path}`);
+        }
+        const isFirst = !(await this.getActiveMockup(mockup.providerId, method, mockup.path));
+        const stored: TDataMockup = {
+            ...mockup,
+            method,
+            active:    isFirst,
+            updatedAt: new Date(),
+        };
+        this._dataMockups.set(key, stored);
+        return { ...stored };
+    }
+
+    async updateMockup(providerId: string, method: string, path: string, name: string, patch: Partial<Pick<TDataMockup, 'status' | 'body' | 'name'>>): Promise<TDataMockup | null> {
+        const m   = method.toUpperCase();
+        const key = mockupKey(providerId, m, path, name);
+        const existing = this._dataMockups.get(key);
+        if (!existing) return null;
+        const newName = patch.name ?? existing.name;
+        const newKey  = mockupKey(providerId, m, path, newName);
+        if (newKey !== key && this._dataMockups.has(newKey)) {
+            throw new Error(`Mockup "${newName}" already exists for ${m} ${path}`);
+        }
+        const updated: TDataMockup = {
+            ...existing,
+            status:    patch.status ?? existing.status,
+            body:      patch.body   ?? existing.body,
+            name:      newName,
+            updatedAt: new Date(),
+        };
+        if (newKey !== key) this._dataMockups.delete(key);
+        this._dataMockups.set(newKey, updated);
+        return { ...updated };
+    }
+
+    async deleteMockup(providerId: string, method: string, path: string, name: string): Promise<void> {
+        const m = method.toUpperCase();
+        const removed = this._dataMockups.get(mockupKey(providerId, m, path, name));
+        this._dataMockups.delete(mockupKey(providerId, m, path, name));
+        if (removed?.active) {
+            // Promote any remaining mockup of the same operation as active.
+            for (const entry of this._dataMockups.values()) {
+                if (entry.providerId === providerId && entry.method === m && entry.path === path) {
+                    entry.active = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    async setActiveMockup(providerId: string, method: string, path: string, name: string | null): Promise<void> {
+        const m = method.toUpperCase();
+        for (const entry of this._dataMockups.values()) {
+            if (entry.providerId === providerId && entry.method === m && entry.path === path) {
+                entry.active = name !== null && entry.name === name;
+            }
+        }
+    }
+}
+
+function mockupKey(providerId: string, method: string, path: string, name: string): string {
+    return `${providerId}\x00${method.toUpperCase()}\x00${path}\x00${name}`;
 }
 
 function cloneAuth(auth: TDataProvider["auth"]): TDataProvider["auth"] {

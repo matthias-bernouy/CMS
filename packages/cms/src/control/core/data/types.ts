@@ -108,3 +108,11 @@ export type FullEndpoint = SlimEndpoint & {
     requestBody:    ResolvedRequestBody | null;
     responseSchema: JSONSchema | null;
 };
+
+/** A single response declared by an operation, ready for mockup-creation UI. */
+export type ResponseChoice = {
+    status:      string;
+    description: string;
+    /** JSON-stringified body — `example` if the spec carries one, otherwise a stub from the schema. */
+    defaultBody: string;
+};

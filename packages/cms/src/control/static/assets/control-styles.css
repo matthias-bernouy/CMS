@@ -76,6 +76,22 @@ a {
 }
 a:hover { text-decoration: underline; }
 
+.endpoint-row {
+    display: block;
+    padding: 0.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-main);
+}
+.endpoint-row:hover {
+    background: var(--bg-overlay);
+    text-decoration: none;
+}
+.endpoint-row p9r-tag {
+    min-width: 5em;
+    justify-content: center;
+}
+
 code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.85em;

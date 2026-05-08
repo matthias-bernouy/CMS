@@ -6,10 +6,12 @@ import type {
     Parameter,
     ResolvedParameter,
     ResolvedRequestBody,
+    ResponseChoice,
     SlimEndpoint,
 } from "./types";
 import { deref } from "./helpers/deref";
 import { flattenSchema } from "./helpers/flattenSchema";
+import { stubFromSchema } from "./stubFromSchema";
 
 const HTTP_METHODS = ["get", "post", "put", "delete", "patch", "head", "options"] as const;
 
@@ -21,6 +23,26 @@ const HTTP_METHODS = ["get", "post", "put", "delete", "patch", "head", "options"
 export class SpecResolver {
 
     constructor(private readonly _spec: ParsedSpec) {}
+
+    /**
+     * Resolve a concrete URL path (e.g. `/users/123`) to the OpenAPI
+     * templated path that declares the operation (e.g. `/users/{id}`).
+     * Static paths win over templated ones for the same URL. Returns null
+     * when no path declares the given verb for that URL.
+     */
+    matchOperationPath(method: string, urlPath: string): string | null {
+        const verb       = method.toUpperCase();
+        const candidates = this.listEndpoints().filter(ep => ep.method === verb);
+        const normalized = stripTrailingSlash(urlPath || "/");
+        for (const ep of candidates) {
+            if (stripTrailingSlash(ep.path) === normalized) return ep.path;
+        }
+        for (const ep of candidates) {
+            if (ep.path.indexOf("{") < 0) continue;
+            if (matchTemplate(ep.path, normalized)) return ep.path;
+        }
+        return null;
+    }
 
     listEndpoints(): SlimEndpoint[] {
         const out: SlimEndpoint[] = [];
@@ -65,6 +87,37 @@ export class SpecResolver {
         return schema ? flattenSchema(schema) : [];
     }
 
+    /**
+     * Every JSON response declared by the operation, with a pre-rendered
+     * stub body. Used by the mockup-create UI to populate the status
+     * dropdown and pre-fill the body for the picked status.
+     *
+     * Falls back to a synthetic 200 entry when the spec declares no
+     * responses, so the UI always has at least one usable status.
+     */
+    listResponses(id: string): ResponseChoice[] {
+        const found = this._findOperation(id);
+        const out: ResponseChoice[] = [];
+        if (!found) return [{ status: "200", description: "", defaultBody: "{}" }];
+
+        const responses = found.op.responses ?? {};
+        const keys = Object.keys(responses);
+        for (const status of keys) {
+            const entry = responses[status];
+            const json  = entry?.content?.["application/json"];
+            const example = json?.example;
+            const schema  = json?.schema ? deref(json.schema, this._spec) : null;
+            const body    = example !== undefined ? example : stubFromSchema(schema);
+            out.push({
+                status,
+                description: entry?.description ?? "",
+                defaultBody: JSON.stringify(body, null, 2),
+            });
+        }
+        if (out.length === 0) out.push({ status: "200", description: "", defaultBody: "{}" });
+        return out;
+    }
+
     search(query: string): SlimEndpoint[] {
         const q = query.trim().toLowerCase();
         if (!q) return [];
@@ -96,6 +149,22 @@ export class SpecResolver {
         }
         return null;
     }
+}
+
+function matchTemplate(template: string, concrete: string): boolean {
+    const t = stripTrailingSlash(template).split("/");
+    const c = stripTrailingSlash(concrete).split("/");
+    if (t.length !== c.length) return false;
+    for (let i = 0; i < t.length; i++) {
+        const seg = t[i]!;
+        if (seg.startsWith("{") && seg.endsWith("}")) { if (!c[i]) return false; continue; }
+        if (seg !== c[i]) return false;
+    }
+    return true;
+}
+
+function stripTrailingSlash(p: string): string {
+    return p.length > 1 && p.endsWith("/") ? p.slice(0, -1) : p;
 }
 
 function toSlim(method: string, path: string, op: Operation): SlimEndpoint {

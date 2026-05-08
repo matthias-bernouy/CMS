@@ -5,6 +5,7 @@ import { runSnippets } from "./push/snippets/run";
 import { runTemplates } from "./push/templates/run";
 import { runSystem } from "./push/system/run";
 import { runDataProviders } from "./push/dataProviders/run";
+import { runMockups } from "./push/mockups/run";
 
 type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string };
 
@@ -40,7 +41,11 @@ async function resolveAdmin(): Promise<{ adminBase: URL; token: string }> {
 async function runStage(stage: Stage, args: string[], adminBase: URL, token: string, flags: Flags): Promise<number> {
     switch (stage) {
         case "system":    return runSystem(adminBase, token, flags);
-        case "data":      return runDataProviders(adminBase, token, flags);
+        case "data": {
+            const providersCode = await runDataProviders(adminBase, token, flags);
+            if (providersCode !== 0) return providersCode;
+            return runMockups(adminBase, token, flags);
+        }
         case "blocs":     return CLI_importBloc(args);
         case "snippets":  return runSnippets(adminBase, token, flags);
         case "templates": return runTemplates(adminBase, token, flags);
