@@ -6,7 +6,6 @@ import { parseAuth } from './auth';
 
 export type DataProviderCreateDto = {
     id: string;
-    name: string;
     source: 'url';
     sourceUrl: string;
     auth: TDataAuth;
@@ -18,21 +17,13 @@ export type DataProviderCreateDto = {
  * shows their tabs disabled, as defense in depth.
  */
 export function parseDataProviderCreateDto(body: Record<string, unknown>): DataProviderCreateDto {
-    const { id, name, source, sourceUrl } = body;
+    const { id, source, sourceUrl } = body;
 
     if (!id)        throw new MissingParam('id');
-    if (!name)      throw new MissingParam('name');
     if (!source)    throw new MissingParam('source');
     if (!sourceUrl) throw new MissingParam('sourceUrl');
 
     assertValidDataProviderId(id);
-
-    if (typeof name !== 'string' || name.trim().length === 0) {
-        throw new InvalidParam('name', 'Must be a non-empty string.');
-    }
-    if (name.trim().length > 100) {
-        throw new InvalidParam('name', 'Maximum 100 characters.');
-    }
 
     if (source !== 'url') {
         throw new InvalidParam('source', 'Only "url" is supported in this phase.');
@@ -50,7 +41,6 @@ export function parseDataProviderCreateDto(body: Record<string, unknown>): DataP
 
     return {
         id,
-        name:      name.trim(),
         source:    'url',
         sourceUrl: parsed.toString(),
         auth:      parseAuth(body),

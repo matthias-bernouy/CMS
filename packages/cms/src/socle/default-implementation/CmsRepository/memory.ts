@@ -292,6 +292,7 @@ export class InMemoryCmsRepository implements CmsRepository {
         }
         const stored: TDataProvider = {
             ...provider,
+            server:     provider.server ?? "",
             auth:       cloneAuth(provider.auth),
             createdAt:  new Date(),
             lastSyncAt: null,
@@ -314,8 +315,8 @@ export class InMemoryCmsRepository implements CmsRepository {
             const badge = dataProviderSyncBadge(p.lastSyncAt);
             return {
                 id:            p.id,
-                name:          p.name,
                 source:        p.source,
+                server:        p.server ?? "",
                 endpointCount: countOpenApiEndpoints(p.spec),
                 lastSyncAt:    p.lastSyncAt ? p.lastSyncAt.toDateString() : "",
                 syncLabel:     badge.label,

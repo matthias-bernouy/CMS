@@ -2,7 +2,7 @@ import InvalidParam from 'src/control/errors/Http/InvalidParam';
 import type { TDataAuth, TDataProvider } from 'src/socle/interfaces/Data/data';
 import { parseAuth } from './auth';
 
-export type DataProviderUpdateDto = Partial<Pick<TDataProvider, 'name' | 'sourceUrl' | 'spec'>> & {
+export type DataProviderUpdateDto = Partial<Pick<TDataProvider, 'sourceUrl' | 'server' | 'spec'>> & {
     auth?: TDataAuth;
 };
 
@@ -15,16 +15,6 @@ export type DataProviderUpdateDto = Partial<Pick<TDataProvider, 'name' | 'source
 export function parseDataProviderUpdateDto(body: Record<string, unknown>): DataProviderUpdateDto {
     const dto: DataProviderUpdateDto = {};
 
-    if (body.name !== undefined) {
-        if (typeof body.name !== 'string' || body.name.trim().length === 0) {
-            throw new InvalidParam('name', 'Must be a non-empty string.');
-        }
-        if (body.name.trim().length > 100) {
-            throw new InvalidParam('name', 'Maximum 100 characters.');
-        }
-        dto.name = body.name.trim();
-    }
-
     if (body.sourceUrl !== undefined) {
         if (typeof body.sourceUrl !== 'string') {
             throw new InvalidParam('sourceUrl', 'Must be a string.');
@@ -36,6 +26,24 @@ export function parseDataProviderUpdateDto(body: Record<string, unknown>): DataP
             throw new InvalidParam('sourceUrl', 'Only http(s) URLs are accepted.');
         }
         dto.sourceUrl = parsed.toString();
+    }
+
+    if (body.server !== undefined) {
+        if (typeof body.server !== 'string') {
+            throw new InvalidParam('server', 'Must be a string.');
+        }
+        const trimmed = body.server.trim();
+        if (trimmed.length > 0) {
+            let parsed: URL;
+            try { parsed = new URL(trimmed); }
+            catch { throw new InvalidParam('server', 'Must be a valid absolute URL or empty.'); }
+            if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                throw new InvalidParam('server', 'Only http(s) URLs are accepted.');
+            }
+            dto.server = parsed.toString();
+        } else {
+            dto.server = "";
+        }
     }
 
     if (body.spec !== undefined) {

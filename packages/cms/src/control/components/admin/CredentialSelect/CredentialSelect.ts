@@ -34,10 +34,17 @@ export class CredentialSelect extends HTMLElement {
     }
 
     connectedCallback() {
-        this._refs = buildShadow(this, this.getAttribute("label"));
-        this._wire();
-        const v = this.getAttribute("value") || "";
-        if (v) setValue(this, v);
+        // Build the shadow once — `attachShadow` throws if a shadow already
+        // exists. Without this guard a disconnect/reconnect cycle (the
+        // editor system re-stamps panels on mode switches) crashes here.
+        if (!this.shadowRoot) {
+            this._refs = buildShadow(this, this.getAttribute("label"));
+            this._wire();
+        }
+        // Re-apply the buffered value on every (re)connection so a value
+        // pushed before the shadow existed lands as soon as we have it.
+        const v = this._value || this.getAttribute("value") || "";
+        setValue(this, v);
         document.addEventListener("secret:saved", this._onSecretSaved);
     }
 

@@ -1,6 +1,8 @@
 import type { ControlCms } from 'src/control/ControlCms';
 import { SecretNotFound } from 'src/control/errors/SecretNotFound';
 import { countOpenApiEndpoints } from 'src/socle/utils/openapi';
+import { parseSpec } from 'src/control/core/data/parseSpec';
+import { SpecParseError } from 'src/control/errors/SpecParseError';
 import { applyAuth } from './applyAuth';
 import { resolveAuth } from './resolveAuth';
 
@@ -55,10 +57,27 @@ export async function syncDataProvider(cms: ControlCms, id: string): Promise<Syn
 
     const spec = await res.text();
 
+    // Derive the API base URL from the spec — `servers[0].url` for 3.x,
+    // or the `schemes`+`host`+`basePath` triplet (translated by
+    // `swagger2to3`) for 2.0. We never guess: an empty value means the
+    // spec carries no server info and the admin will need to fill it in
+    // through the Data tab UI before the runtime fetch can work.
+    const server = deriveServerFrom(spec);
+
     await cms.repository.updateDataProvider(id, {
         spec,
+        server,
         lastSyncAt: new Date(),
     });
+    cms.specCache.delete(id);
 
     return { ok: true, endpointCount: countOpenApiEndpoints(spec) };
+}
+
+function deriveServerFrom(spec: string): string {
+    try { return parseSpec(spec).servers[0]?.url ?? ""; }
+    catch (e) {
+        if (e instanceof SpecParseError) return "";
+        throw e;
+    }
 }

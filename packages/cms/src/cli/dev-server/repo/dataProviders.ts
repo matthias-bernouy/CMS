@@ -65,8 +65,8 @@ export class DataProvidersStore {
             const badge = dataProviderSyncBadge(p.lastSyncAt);
             return {
                 id:            p.id,
-                name:          p.name,
                 source:        p.source,
+                server:        p.server ?? "",
                 endpointCount: countOpenApiEndpoints(p.spec),
                 lastSyncAt:    p.lastSyncAt ? p.lastSyncAt.toDateString() : "",
                 syncLabel:     badge.label,
@@ -86,9 +86,9 @@ export class DataProvidersStore {
         }
         return {
             id,
-            name:       String(parsed.name ?? ""),
             source:     (parsed.source ?? "url") as TDataProvider["source"],
             sourceUrl:  String(parsed.sourceUrl ?? ""),
+            server:     String(parsed.server ?? ""),
             spec:       String(parsed.spec ?? ""),
             auth:       (parsed.auth ?? { type: "none" }) as TDataProvider["auth"],
             createdAt:  FROZEN_DATE,

@@ -10,9 +10,9 @@ export async function createDataProvider(cms: ControlCms, dto: DataProviderCreat
 
     await cms.repository.createDataProvider({
         id:        dto.id,
-        name:      dto.name,
         source:    dto.source,
         sourceUrl: dto.sourceUrl,
+        server:    '',          // populated by sync from spec.servers[0].url
         spec:      '',
         auth:      dto.auth,
     });

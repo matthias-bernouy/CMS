@@ -11,6 +11,7 @@ import { join } from "node:path"
 import { buildMediaHydrationScript } from "./core/authentication/buildMediaHydrationScript";
 import { createAuthGuard } from "./core/authentication/authGuard";
 import { compress, publicAssetCacheControl, sendCompressed } from "../socle/server/compression";
+import { SpecCache } from "./core/data/SpecCache";
 
 type Configuration = {
     /**
@@ -57,6 +58,7 @@ export class ControlCms {
     private _media:           CDN;
     private _cache:           Cache;
     private _secrets:         SecretStore;
+    private _specCache:       SpecCache;
 
     constructor(
         runner: Runner,
@@ -74,6 +76,7 @@ export class ControlCms {
         this._media = media;
         this._cache = cache || new InMemoryCache();
         this._secrets = secrets || new InMemorySecretStore();
+        this._specCache = new SpecCache();
 
         // Hydration is served as a real `<script src=…>` (CSP-friendly:
         // `default-src 'self'` rejects inline scripts). Pre-compressed once
@@ -127,6 +130,10 @@ export class ControlCms {
 
     get secrets(){
         return this._secrets;
+    }
+
+    get specCache(){
+        return this._specCache;
     }
 
     /**

@@ -32,9 +32,9 @@ export async function scanDataProviders(siteDir: string): Promise<LocalDataProvi
         }
         out.push({
             id,
-            name:      String(parsed.name      ?? id),
             source:    (parsed.source ?? "url") as TDataProviderSource,
             sourceUrl: String(parsed.sourceUrl ?? ""),
+            server:    String(parsed.server    ?? ""),
             spec:      String(parsed.spec      ?? ""),
             auth:      (parsed.auth ?? { type: "none" }) as TDataAuth,
         });

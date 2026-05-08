@@ -4,9 +4,9 @@ import type { TDataProvider } from "src/socle/interfaces/Data/data";
 
 const baseProvider: TDataProvider = {
     id:         "hub",
-    name:       "Hub API",
     source:     "url",
     sourceUrl:  "https://hub.bernouy.fr/openapi.json",
+    server:     "",
     spec:       "",
     auth:       { type: "none" },
     createdAt:  new Date(0),
@@ -14,7 +14,8 @@ const baseProvider: TDataProvider = {
 };
 
 function makeSystem(provider: TDataProvider | null = baseProvider) {
-    const updates: { id: string; data: Partial<TDataProvider> }[] = [];
+    const updates:    { id: string; data: Partial<TDataProvider> }[] = [];
+    const invalidated: string[] = [];
     const cms: any = {
         repository: {
             getDataProvider:    async () => provider ? { ...provider } : null,
@@ -23,8 +24,9 @@ function makeSystem(provider: TDataProvider | null = baseProvider) {
                 return provider ? { ...provider, ...data } : null;
             },
         },
+        specCache: { delete: (id: string) => { invalidated.push(id); } },
     };
-    return { cms, updates };
+    return { cms, updates, invalidated };
 }
 
 function makeRequest(id: string | null) {
@@ -76,20 +78,22 @@ describe("POST /api/data/sync", () => {
         expect(updates[0]?.data.lastSyncAt).toBeInstanceOf(Date);
     });
 
-    test("non-2xx response: reports HTTP error, does not update", async () => {
+    test("non-2xx response: reports HTTP error with 502 + structured body", async () => {
         fetchImpl = async () => new Response("nope", { status: 401, statusText: "Unauthorized" });
         const { cms, updates } = makeSystem();
         const res = await postDataProviderSync(makeRequest("hub"), cms);
+        expect(res.status).toBe(502);
         const body = await res.json() as { ok: boolean; error: string };
         expect(body.ok).toBe(false);
         expect(body.error).toMatch(/401/);
         expect(updates).toHaveLength(0);
     });
 
-    test("network error: reports error, does not update", async () => {
+    test("network error: reports error with 502", async () => {
         fetchImpl = async () => { throw new TypeError("Failed to fetch"); };
         const { cms, updates } = makeSystem();
         const res = await postDataProviderSync(makeRequest("hub"), cms);
+        expect(res.status).toBe(502);
         const body = await res.json() as { ok: boolean; error: string };
         expect(body.ok).toBe(false);
         expect(body.error).toMatch(/fetch/i);

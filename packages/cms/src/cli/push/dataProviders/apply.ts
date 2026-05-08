@@ -50,7 +50,6 @@ export async function putProvider(adminBase: URL, token: string, p: LocalDataPro
 function toFlatBody(p: LocalDataProvider): Record<string, string> {
     const body: Record<string, string> = {
         id:        p.id,
-        name:      p.name,
         source:    p.source,
         sourceUrl: p.sourceUrl,
         spec:      p.spec,

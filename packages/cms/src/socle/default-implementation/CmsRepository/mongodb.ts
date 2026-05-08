@@ -348,7 +348,12 @@ export class MongoCmsRepository implements CmsRepository {
     // ── Data providers ──
 
     async createDataProvider(provider: Omit<TDataProvider, "createdAt" | "lastSyncAt">): Promise<TDataProvider> {
-        const stored: TDataProvider = { ...provider, createdAt: new Date(), lastSyncAt: null };
+        const stored: TDataProvider = {
+            ...provider,
+            server:     provider.server ?? "",
+            createdAt:  new Date(),
+            lastSyncAt: null,
+        };
         await this.dataProviders.insertOne(toDataProviderDoc(stored) as OptionalUnlessRequiredId<DataProviderDoc>);
         return stored;
     }
@@ -365,15 +370,15 @@ export class MongoCmsRepository implements CmsRepository {
     async getDataProvidersList(): Promise<TDataProviderListItem[]> {
         const docs = await this.dataProviders.find(
             {},
-            { projection: { name: 1, source: 1, spec: 1, lastSyncAt: 1 } },
+            { projection: { source: 1, server: 1, spec: 1, lastSyncAt: 1 } },
         ).toArray();
         return docs.map(d => {
             const lastSync = d.lastSyncAt ? new Date(d.lastSyncAt) : null;
             const badge = dataProviderSyncBadge(lastSync);
             return {
                 id:            d._id,
-                name:          d.name,
                 source:        d.source,
+                server:        d.server ?? "",
                 endpointCount: countOpenApiEndpoints(d.spec ?? ""),
                 lastSyncAt:    lastSync ? lastSync.toDateString() : "",
                 syncLabel:     badge.label,
@@ -422,7 +427,9 @@ function toDataProviderDoc(p: TDataProvider): DataProviderDoc {
 function fromDataProviderDoc(d: DataProviderDoc | null): TDataProvider | null {
     if (!d) return null;
     const { _id, ...rest } = d;
-    return { id: _id, ...rest };
+    // Default `server` to "" so providers stored before the field was
+    // introduced still surface a usable shape.
+    return { id: _id, ...rest, server: rest.server ?? "" };
 }
 
 // ── Document shapes (collection generics) ──

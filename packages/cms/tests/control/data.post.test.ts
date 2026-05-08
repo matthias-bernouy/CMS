@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import postDataProvider from "src/control/api/data/provider.post";
+import postDataProvider from "src/control/api/data/provider/provider.post";
 import type { TDataProvider } from "src/socle/interfaces/Data/data";
 
 function makeSystem(opts: { existingById?: Record<string, TDataProvider> } = {}) {
@@ -26,9 +26,9 @@ function makeRequest(body: Record<string, unknown>) {
 
 const existingHub: TDataProvider = {
     id:         "hub",
-    name:       "Hub API",
     source:     "url",
     sourceUrl:  "https://hub.bernouy.fr/openapi.json",
+    server:     "",
     spec:       "",
     auth:       { type: "none" },
     createdAt:  new Date(),
@@ -37,7 +37,6 @@ const existingHub: TDataProvider = {
 
 const validBody = {
     id:        "hub",
-    name:      "Hub API",
     source:    "url",
     sourceUrl: "https://hub.bernouy.fr/openapi.json",
 };
@@ -47,12 +46,6 @@ describe("POST /api/data/provider (create)", () => {
         const { cms } = makeSystem();
         await expect(postDataProvider(makeRequest({ ...validBody, id: "" }), cms))
             .rejects.toThrow(/Missing param id/);
-    });
-
-    test("throws when name is missing", async () => {
-        const { cms } = makeSystem();
-        await expect(postDataProvider(makeRequest({ ...validBody, name: "" }), cms))
-            .rejects.toThrow(/Missing param name/);
     });
 
     test("throws when sourceUrl is missing", async () => {
@@ -115,17 +108,10 @@ describe("POST /api/data/provider (create)", () => {
         expect(createCalls).toHaveLength(1);
         const p = createCalls[0]!;
         expect(p.id).toBe("hub");
-        expect(p.name).toBe("Hub API");
         expect(p.source).toBe("url");
         expect(p.sourceUrl).toBe("https://hub.bernouy.fr/openapi.json");
         expect(p.spec).toBe("");
         expect(p.auth).toEqual({ type: "none" });
-    });
-
-    test("name is trimmed before persistence", async () => {
-        const { cms, createCalls } = makeSystem();
-        await postDataProvider(makeRequest({ ...validBody, name: "  Hub API  " }), cms);
-        expect(createCalls[0]?.name).toBe("Hub API");
     });
 
     test("auth defaults to none when no bearer or headers provided", async () => {

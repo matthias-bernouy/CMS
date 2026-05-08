@@ -1,5 +1,7 @@
-<cms-event-toast event="provider:synced" message="Provider synced." type="success"></cms-event-toast>
-<cms-event-toast event="new:provider"   message="Providers updated."  type="success"></cms-event-toast>
+<cms-event-toast event="provider:synced"  message="Provider synced."  type="success"></cms-event-toast>
+<cms-event-toast event="new:provider"    message="Providers updated." type="success"></cms-event-toast>
+<cms-event-toast event="provider:saved"  message="Provider saved."   type="success"></cms-event-toast>
+<cms-event-toast event="form:failed"     message="Action failed — check the data tab and try again." type="error"></cms-event-toast>
 
 <w13c-fixed-admin-layout>
     <span slot="title">Data</span>
@@ -11,16 +13,18 @@
         <p9r-row slot="header">
             <p9r-cell><strong>Provider</strong></p9r-cell>
             <p9r-cell><strong>Source</strong></p9r-cell>
+            <p9r-cell><strong>Server</strong></p9r-cell>
             <p9r-cell><strong>Endpoints</strong></p9r-cell>
             <p9r-cell><strong>Last sync</strong></p9r-cell>
             <p9r-cell></p9r-cell>
         </p9r-row>
 
-        <cms-fetch url="{{BASE_PATH}}/api/data/providers" reload-on="new:provider provider:synced">
+        <cms-fetch url="{{BASE_PATH}}/api/data/providers" reload-on="new:provider provider:synced provider:saved">
             <template for=".">
                 <p9r-row>
-                    <p9r-cell><strong>{{ name }}</strong></p9r-cell>
+                    <p9r-cell><code>{{ id }}</code></p9r-cell>
                     <p9r-cell><p9r-tag>{{ source }}</p9r-tag></p9r-cell>
+                    <p9r-cell><small>{{ server }}</small></p9r-cell>
                     <p9r-cell>{{ endpointCount }}</p9r-cell>
                     <p9r-cell>
                         <p9r-stack direction="row" gap="sm" align="center">
@@ -30,6 +34,17 @@
                     </p9r-cell>
                     <p9r-cell>
                         <p9r-stack direction="row" gap="sm">
+                            <p9r-open-modal modal-target="edit-provider-{{ id }}">
+                                <p9r-button variant="ghost" color="secondary" aria-label="Edit {{ id }}">
+                                    <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                        aria-hidden="true" width="16" height="16">
+                                        <path d="M12 20h9"/>
+                                        <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/>
+                                    </svg>
+                                </p9r-button>
+                            </p9r-open-modal>
                             <cms-form target="{{BASE_PATH}}/api/data/sync?id={{ id }}"
                                 method="POST" emit="provider:synced">
                                 <p9r-button type="submit" variant="ghost" color="secondary"
@@ -56,6 +71,19 @@
                         </p9r-stack>
                     </p9r-cell>
                 </p9r-row>
+
+                <p9r-modal id="edit-provider-{{ id }}" aria-label="Edit provider {{ id }}">
+                    <span slot="title">Edit "{{ id }}"</span>
+                    <cms-form target="{{BASE_PATH}}/api/data/provider?id={{ id }}"
+                        method="PUT" emit="provider:saved">
+                        <p9r-stack gap="md">
+                            <p9r-input name="server" label="Server URL"
+                                placeholder="https://api.example.com/v1" value="{{ server }}"
+                                hint="Base URL of the API. Auto-derived from the spec at sync — fill manually if your spec has no servers info."></p9r-input>
+                            <p9r-button color="primary" fullWidth type="submit">Save</p9r-button>
+                        </p9r-stack>
+                    </cms-form>
+                </p9r-modal>
             </template>
             <template slot="empty">
                 <cms-empty-state>
@@ -100,9 +128,8 @@
                 <p9r-stack gap="md" justify="between" style="min-height: 440px;">
                     <p9r-stack gap="md">
                         <input type="hidden" name="source" value="url">
-                        <p9r-input name="id" label="ID" placeholder="hub-api"
-                            hint="Lowercase letters, numbers and dashes. Used as binding key. Immutable after creation."></p9r-input>
-                        <p9r-input name="name" label="Name" placeholder="Hub API"></p9r-input>
+                        <p9r-input name="id" label="Key" placeholder="hub-api"
+                            hint="Lowercase letters, numbers and dashes. Used as binding key in blocs and as the row label. Immutable."></p9r-input>
                         <p9r-input name="sourceUrl" label="OpenAPI URL"
                             placeholder="https://api.example.com/openapi.json"></p9r-input>
 
@@ -131,10 +158,8 @@
         <p9r-tab-panel id="upload" label="Upload file">
             <p9r-stack gap="md" justify="between" style="min-height: 440px;">
                 <p9r-stack gap="md">
-                    <p9r-input name="id" label="ID" placeholder="hub-api"
-                        hint="Lowercase letters, numbers and dashes. Used as binding key. Immutable after creation."
-                        disabled></p9r-input>
-                    <p9r-input name="name" label="Name" placeholder="Hub API" disabled></p9r-input>
+                    <p9r-input name="id" label="Key" placeholder="hub-api"
+                        hint="Lowercase letters, numbers and dashes." disabled></p9r-input>
                     <p9r-input type="file" name="spec" label="OpenAPI file"
                         hint="JSON or YAML. Snapshot only - no auto-refresh." disabled></p9r-input>
                 </p9r-stack>
@@ -145,10 +170,8 @@
         <p9r-tab-panel id="paste" label="Paste content">
             <p9r-stack gap="md" justify="between" style="min-height: 440px;">
                 <p9r-stack gap="md">
-                    <p9r-input name="id" label="ID" placeholder="hub-api"
-                        hint="Lowercase letters, numbers and dashes. Used as binding key. Immutable after creation."
-                        disabled></p9r-input>
-                    <p9r-input name="name" label="Name" placeholder="Hub API" disabled></p9r-input>
+                    <p9r-input name="id" label="Key" placeholder="hub-api"
+                        hint="Lowercase letters, numbers and dashes." disabled></p9r-input>
                     <p9r-textarea name="spec" rows="12" autosize
                         placeholder='{ "openapi": "3.0.0", ... }' disabled></p9r-textarea>
                 </p9r-stack>

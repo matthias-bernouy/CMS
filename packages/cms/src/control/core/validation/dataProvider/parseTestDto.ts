@@ -10,8 +10,8 @@ export type DataProviderTestDto = {
 
 /**
  * Validates a test-connection request. Same URL + auth shape as
- * create/update — id and name are not needed because we don't persist
- * anything on test.
+ * create/update — id is not needed because we don't persist anything
+ * on test.
  */
 export function parseDataProviderTestDto(body: Record<string, unknown>): DataProviderTestDto {
     const { sourceUrl } = body;
