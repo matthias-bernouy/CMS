@@ -1,58 +1,60 @@
 import { describe, expect, test } from "bun:test";
-import { buildUrn, parseMethodsFilter, parseUrn } from "src/control/components/admin/SchemaPicker/controller";
+import { buildUrl, findProviderForValue, parseMethodsFilter } from "src/control/components/admin/SchemaPicker/controller";
 
-describe("parseUrn", () => {
-    test("returns null for missing or non-cms strings", () => {
-        // @ts-expect-error — intentional misuse
-        expect(parseUrn(undefined)).toBe(null);
-        expect(parseUrn("")).toBe(null);
-        expect(parseUrn("hub-api")).toBe(null);
-        expect(parseUrn("cms:other:hub-api")).toBe(null);
+describe("buildUrl", () => {
+    test("joins server and path with a single separator", () => {
+        expect(buildUrl("https://api.x.com/v1", "/users")).toBe("https://api.x.com/v1/users");
     });
 
-    test("parses the V2 form with method + path", () => {
-        expect(parseUrn("cms:schema:hub-api:GET:/api/users/{id}")).toEqual({
-            providerId: "hub-api",
-            method:     "GET",
-            path:       "/api/users/{id}",
-        });
+    test("normalises a trailing slash on the server", () => {
+        expect(buildUrl("https://api.x.com/v1/", "/users")).toBe("https://api.x.com/v1/users");
     });
 
-    test("supports paths containing colons (rare but legal)", () => {
-        expect(parseUrn("cms:schema:hub:POST:/api/foo:bar")).toEqual({
-            providerId: "hub",
-            method:     "POST",
-            path:       "/api/foo:bar",
-        });
+    test("prepends a leading slash if the path lacks one", () => {
+        expect(buildUrl("https://api.x.com", "users")).toBe("https://api.x.com/users");
     });
 
-    test("parses the V1 form (provider only)", () => {
-        expect(parseUrn("cms:schema:hub-api")).toEqual({
-            providerId: "hub-api",
-            method:     "",
-            path:       "",
-        });
+    test("preserves OpenAPI path templates", () => {
+        expect(buildUrl("https://api.x.com", "/users/{id}/orders")).toBe("https://api.x.com/users/{id}/orders");
     });
 
-    test("returns null when V2 prefix has no path part", () => {
-        expect(parseUrn("cms:schema:hub:GET")).toBe(null);
+    test("tolerates an empty server (degraded mode — no provider matched)", () => {
+        expect(buildUrl("", "/users")).toBe("/users");
     });
 });
 
-describe("buildUrn", () => {
-    test("emits V2 form with method + path", () => {
-        expect(buildUrn("hub-api", "GET", "/api/users/{id}")).toBe("cms:schema:hub-api:GET:/api/users/{id}");
+describe("findProviderForValue", () => {
+    const providers = [
+        { id: "hub",    server: "https://api.hub.com/v1" },
+        { id: "hub-v2", server: "https://api.hub.com/v2" },
+        { id: "other",  server: "https://other.api"     },
+        { id: "empty",  server: ""                       },
+    ];
+
+    test("matches the provider whose server is a prefix of the value", () => {
+        expect(findProviderForValue(providers, "https://api.hub.com/v1/users")?.id).toBe("hub");
     });
 
-    test("falls back to V1 when method or path is empty", () => {
-        expect(buildUrn("hub-api", "", "")).toBe("cms:schema:hub-api");
-        expect(buildUrn("hub-api", "GET", "")).toBe("cms:schema:hub-api");
-        expect(buildUrn("hub-api", "", "/users")).toBe("cms:schema:hub-api");
+    test("matches the bare server URL (no path)", () => {
+        expect(findProviderForValue(providers, "https://api.hub.com/v1")?.id).toBe("hub");
     });
 
-    test("round-trips with parseUrn", () => {
-        const urn = buildUrn("hub", "DELETE", "/items/{id}");
-        expect(parseUrn(urn)).toEqual({ providerId: "hub", method: "DELETE", path: "/items/{id}" });
+    test("does not collide on a longer same-host prefix", () => {
+        expect(findProviderForValue(providers, "https://api.hub.com/v2/users")?.id).toBe("hub-v2");
+        expect(findProviderForValue(providers, "https://api.hub.com/v10/x"  )).toBeNull();
+    });
+
+    test("ignores providers with empty server", () => {
+        expect(findProviderForValue(providers, "")).toBeNull();
+        expect(findProviderForValue(providers, "anything")).toBeNull();
+    });
+
+    test("longest matching prefix wins", () => {
+        const overlap = [
+            { id: "short", server: "https://api.hub.com"    },
+            { id: "long",  server: "https://api.hub.com/v1" },
+        ];
+        expect(findProviderForValue(overlap, "https://api.hub.com/v1/users")?.id).toBe("long");
     });
 });
 

@@ -55,8 +55,8 @@ export type TDataProviderListItem = {
 };
 
 /**
- * Slim per-bucket lists of resources that reference a data provider via
- * the `cms:schema:<id>:...` URN. Used by the delete-blocked flow so the
+ * Slim per-bucket lists of resources whose content references a data
+ * provider's `server` URL. Used by the delete-blocked flow so the
  * admin sees what would break before forcing the deletion.
  */
 export type DataProviderConsumers = {

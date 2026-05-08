@@ -403,9 +403,11 @@ export class MongoCmsRepository implements CmsRepository {
         await this.dataProviders.deleteOne({ _id: id });
     }
 
-    async findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers> {
-        const escaped = providerId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const pattern = `cms:schema:${escaped}(?![a-z0-9-])`;
+    async findConsumersOfProvider(providerServerUrl: string): Promise<DataProviderConsumers> {
+        const trimmed = providerServerUrl.trim().replace(/\/+$/, "");
+        if (!trimmed) return { pages: [], templates: [], snippets: [] };
+        const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const pattern = `${escaped}(?![A-Za-z0-9._~%-])`;
         const [pages, templates, snippets] = await Promise.all([
             this.pages.find    ({ content: { $regex: pattern } }, { projection: { path: 1, title: 1 } }).toArray(),
             this.templates.find({ content: { $regex: pattern } }, { projection: { identifier: 1, name: 1 } }).toArray(),

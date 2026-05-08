@@ -69,7 +69,7 @@ export interface CmsRepository {
     getDataProvidersList(): Promise<TDataProviderListItem[]>;
     updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null>;
     deleteDataProvider(id: string): Promise<void>;
-    /** Pages / templates / snippets whose content references the given provider id via the `cms:schema:<id>:...` URN. */
-    findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers>;
+    /** Pages / templates / snippets whose content references the given provider's `server` URL. Empty / whitespace input matches nothing. */
+    findConsumersOfProvider(providerServerUrl: string): Promise<DataProviderConsumers>;
 
 }

@@ -345,9 +345,9 @@ export class InMemoryCmsRepository implements CmsRepository {
         this._dataProviders.delete(id);
     }
 
-    async findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers> {
+    async findConsumersOfProvider(providerServerUrl: string): Promise<DataProviderConsumers> {
         return findConsumersInCollections(
-            providerId,
+            providerServerUrl,
             Array.from(this._pages.values()),
             Array.from(this._templates.values()),
             Array.from(this._snippets.values()),

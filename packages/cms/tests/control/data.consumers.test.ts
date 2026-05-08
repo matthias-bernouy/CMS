@@ -15,50 +15,56 @@ function snippet(identifier: string, name: string, content: string): TSnippet {
 }
 
 describe("dataProviderRefRegex", () => {
-    test("matches the canonical V2 URN", () => {
-        const re = dataProviderRefRegex("hub-api");
-        expect(re.test('data-source="cms:schema:hub-api:GET:/users"')).toBe(true);
+    test("matches a server URL appearing as a fetch attribute", () => {
+        const re = dataProviderRefRegex("https://api.hub.com/v1")!;
+        expect(re.test('<base-fetch url="https://api.hub.com/v1/users"></base-fetch>')).toBe(true);
     });
 
-    test("matches the V1 (provider only) URN at end of value", () => {
-        const re = dataProviderRefRegex("hub-api");
-        expect(re.test('cms:schema:hub-api"')).toBe(true);
-        expect(re.test('cms:schema:hub-api ')).toBe(true);
+    test("matches the bare server URL (no path) at end of value", () => {
+        const re = dataProviderRefRegex("https://api.hub.com/v1")!;
+        expect(re.test('"https://api.hub.com/v1"')).toBe(true);
+        expect(re.test('https://api.hub.com/v1 ')).toBe(true);
     });
 
-    test("does not match a longer provider id sharing the same prefix", () => {
-        const re = dataProviderRefRegex("hub");
-        expect(re.test('cms:schema:hub-api:GET:/x')).toBe(false);
+    test("does not match a longer-prefix path on the same host", () => {
+        const re = dataProviderRefRegex("https://api.hub.com/v1")!;
+        expect(re.test("https://api.hub.com/v10/x")).toBe(false);
     });
 
-    test("does not match a different scheme", () => {
-        const re = dataProviderRefRegex("hub");
-        expect(re.test('cms:secret:hub')).toBe(false);
+    test("normalises trailing slashes on the input", () => {
+        const re = dataProviderRefRegex("https://api.hub.com/v1/")!;
+        expect(re.test("https://api.hub.com/v1/users")).toBe(true);
+        expect(re.test("https://api.hub.com/v10/users")).toBe(false);
     });
 
-    test("escapes regex metacharacters in id", () => {
-        const re = dataProviderRefRegex("a.b");
-        expect(re.test('cms:schema:a.b:GET')).toBe(true);
-        expect(re.test('cms:schema:axb:GET')).toBe(false);
+    test("escapes regex metacharacters in the URL", () => {
+        const re = dataProviderRefRegex("https://api.hub.com/a.b")!;
+        expect(re.test("https://api.hub.com/a.b/x")).toBe(true);
+        expect(re.test("https://api.hub.com/aXb/x")).toBe(false);
+    });
+
+    test("returns null for empty / whitespace input", () => {
+        expect(dataProviderRefRegex("")).toBeNull();
+        expect(dataProviderRefRegex("   ")).toBeNull();
     });
 });
 
 describe("findConsumersInCollections", () => {
     test("collects matching pages, templates, snippets and ignores others", () => {
         const result = findConsumersInCollections(
-            "hub-api",
+            "https://api.hub.com/v1",
             [
-                page("/", "Home",   '<base-fetch data-source="cms:schema:hub-api:GET:/users"></base-fetch>'),
+                page("/", "Home",   '<base-fetch url="https://api.hub.com/v1/users"></base-fetch>'),
                 page("/about", "About", '<p>plain text</p>'),
-                page("/other", "Other", '<base-fetch data-source="cms:schema:other-api:GET:/x"></base-fetch>'),
+                page("/other", "Other", '<base-fetch url="https://other.api/x"></base-fetch>'),
             ],
             [
-                template("t1", "Template 1", 'cms:schema:hub-api:GET:/posts'),
-                template("t2", "Template 2", 'no refs'),
+                template("t1", "Template 1", 'fetch("https://api.hub.com/v1/posts")'),
+                template("t2", "Template 2", "no refs"),
             ],
             [
-                snippet("s1", "Snippet 1", 'cms:schema:hub-api'),
-                snippet("s2", "Snippet 2", 'cms:schema:hub-api-2'),
+                snippet("s1", "Snippet 1", '"https://api.hub.com/v1"'),
+                snippet("s2", "Snippet 2", '"https://api.hub.com/v10"'),
             ],
         );
         expect(result.pages).toEqual    ([{ path: "/", title: "Home" }]);
@@ -66,9 +72,18 @@ describe("findConsumersInCollections", () => {
         expect(result.snippets).toEqual ([{ identifier: "s1", name: "Snippet 1" }]);
     });
 
-    test("returns empty buckets when nothing references the id", () => {
-        const result = findConsumersInCollections("hub-api", [
-            page("/", "Home", '<p>nothing</p>'),
+    test("returns empty buckets when nothing references the URL", () => {
+        const result = findConsumersInCollections("https://api.hub.com/v1", [
+            page("/", "Home", "<p>nothing</p>"),
+        ], [], []);
+        expect(result.pages).toEqual([]);
+        expect(result.templates).toEqual([]);
+        expect(result.snippets).toEqual([]);
+    });
+
+    test("returns empty buckets when the server URL is empty (provider has no server)", () => {
+        const result = findConsumersInCollections("", [
+            page("/", "Home", '<base-fetch url="https://api.hub.com/v1/users"></base-fetch>'),
         ], [], []);
         expect(result.pages).toEqual([]);
         expect(result.templates).toEqual([]);

@@ -10,6 +10,7 @@ import "./admin/EmptyState/EmptyState"
 import "./admin/EventToast/EventToast"
 import "./admin/HeadersInput/HeadersInput"
 import "./admin/OpenDialog/OpenDialog"
+import "./admin/SchemaPicker/SchemaPicker"
 import "./admin/Secrets/Secrets"
 import "./admin/TestConnection/TestConnection"
 

@@ -88,12 +88,12 @@ export class LocalFsCmsRepository implements CmsRepository {
     updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null>     { return this._dataProviders.update(id, data); }
     deleteDataProvider(id: string):                               Promise<void>                     { return this._dataProviders.delete(id); }
 
-    async findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers> {
+    async findConsumersOfProvider(providerServerUrl: string): Promise<DataProviderConsumers> {
         const [pages, templates, snippets] = await Promise.all([
             this._pages.getAll(),
             this._templates.getAll(),
             this._snippets.getAll(),
         ]);
-        return findConsumersInCollections(providerId, pages, templates, snippets);
+        return findConsumersInCollections(providerServerUrl, pages, templates, snippets);
     }
 }
