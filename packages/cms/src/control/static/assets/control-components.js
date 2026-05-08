@@ -10872,12 +10872,47 @@ p9r-tag:hover {
     customElements.define("p9r-image-sync", ImageSync);
   }
 
-  // src/control/components/editor/componentSync/sync/StateSync.ts
+  // src/control/components/editor/componentSync/sync/StateSync/parseAttrs.ts
+  function parseValues(el) {
+    const raw = el.getAttribute("values");
+    if (raw)
+      return raw.split(",").map((s) => s.trim()).filter(Boolean);
+    const v = el.getAttribute("value") || "";
+    return v ? [v] : [];
+  }
+  function parseLabels(el, values) {
+    const raw = el.getAttribute("labels");
+    if (raw)
+      return raw.split(",").map((s) => s.trim());
+    return values;
+  }
+  function parsePlacement(el) {
+    const v = el.getAttribute("placement");
+    return v === "right" || v === "top" || v === "bottom" ? v : "left";
+  }
+
+  // src/control/components/editor/componentSync/sync/StateSync/applyTargets.ts
+  function makeStateAttrOps(attrName) {
+    if (attrName === "class")
+      return {
+        apply: (el, v) => el.classList.add(v),
+        clear: (el, v) => el.classList.remove(v),
+        isApplied: (el, v) => el.classList.contains(v)
+      };
+    return {
+      apply: (el, v) => el.setAttribute(attrName, v),
+      clear: (el) => el.removeAttribute(attrName),
+      isApplied: (el, v) => el.getAttribute(attrName) === v
+    };
+  }
+
+  // src/control/components/editor/componentSync/sync/StateSync/StateSync.ts
   class StateSync extends HTMLElement {
     _component = null;
     _editor = null;
-    _pinned = false;
+    _activeValue = null;
     _observer = null;
+    _ops = null;
     _prepared = false;
     get targetSelector() {
       return this.getAttribute("target") || "";
@@ -10885,27 +10920,60 @@ p9r-tag:hover {
     get attrName() {
       return this.getAttribute("attr") || "";
     }
-    get attrValue() {
-      return this.getAttribute("value") || "";
+    get isMulti() {
+      return this.getAttribute("values") !== null;
+    }
+    get values() {
+      return parseValues(this);
+    }
+    get labels() {
+      return parseLabels(this, this.values);
     }
     get label() {
-      return this.getAttribute("label") || this.attrValue || this.attrName;
+      return this.getAttribute("label") || this.labels[0] || this.attrName;
     }
     get placement() {
-      const v = this.getAttribute("placement");
-      return v === "right" || v === "top" || v === "bottom" ? v : "left";
+      return parsePlacement(this);
+    }
+    get activeValue() {
+      return this._activeValue;
     }
     get isPinned() {
-      return this._pinned;
+      return this._activeValue !== null;
+    }
+    setActiveValue(value) {
+      if (value !== null && !this.values.includes(value))
+        return;
+      if (value === this._activeValue)
+        return;
+      const targets = this._targets();
+      if (value !== null && targets.length === 0)
+        return;
+      this._ops ??= makeStateAttrOps(this.attrName);
+      if (this._activeValue !== null)
+        targets.forEach((el) => this._ops.clear(el, this._activeValue));
+      if (value !== null)
+        targets.forEach((el) => this._ops.apply(el, value));
+      if (value !== null && this._observer === null)
+        this._startObserver(targets);
+      if (value === null)
+        this._stopObserver();
+      this._activeValue = value;
+    }
+    toggle() {
+      this.setActiveValue(this._activeValue === null ? this.values[0] ?? null : null);
+    }
+    unpin() {
+      this.setActiveValue(null);
     }
     connectedCallback() {
       if (this._prepared)
         return;
-      const componentIdentifier = this.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
-      if (!componentIdentifier)
+      const id = this.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      if (!id)
         return;
-      this._component = document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${componentIdentifier}"]`);
-      this._editor = document.compIdentifierToEditor?.get(componentIdentifier) ?? null;
+      this._component = document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${id}"]`);
+      this._editor = document.compIdentifierToEditor?.get(id) ?? null;
       this._editor?.registerStateSync(this);
     }
     prepare(component, editor) {
@@ -10915,7 +10983,7 @@ p9r-tag:hover {
       this._prepared = true;
     }
     disconnectedCallback() {
-      this.unpin();
+      this.setActiveValue(null);
       this._editor?.unregisterStateSync(this);
     }
     _targets() {
@@ -10924,59 +10992,22 @@ p9r-tag:hover {
         return [];
       return Array.from(root.querySelectorAll(this.targetSelector));
     }
-    _apply(el) {
-      if (this.attrName === "class") {
-        if (this.attrValue)
-          el.classList.add(this.attrValue);
-      } else {
-        el.setAttribute(this.attrName, this.attrValue);
-      }
-    }
-    _clear(el) {
-      if (this.attrName === "class") {
-        if (this.attrValue)
-          el.classList.remove(this.attrValue);
-      } else {
-        el.removeAttribute(this.attrName);
-      }
-    }
-    _isApplied(el) {
-      if (this.attrName === "class") {
-        return !!this.attrValue && el.classList.contains(this.attrValue);
-      }
-      return el.getAttribute(this.attrName) === this.attrValue;
-    }
-    pin() {
-      if (this._pinned)
-        return;
-      const targets = this._targets();
-      if (targets.length === 0)
-        return;
-      targets.forEach((el) => this._apply(el));
-      this._observer = new MutationObserver((mutations) => {
-        for (const m of mutations) {
-          const el = m.target;
-          if (!this._isApplied(el))
-            this._apply(el);
-        }
+    _startObserver(targets) {
+      const filter = this.attrName === "class" ? ["class"] : [this.attrName];
+      this._observer = new MutationObserver(() => {
+        const v = this._activeValue;
+        if (v === null)
+          return;
+        targets.forEach((el) => {
+          if (!this._ops.isApplied(el, v))
+            this._ops.apply(el, v);
+        });
       });
-      const attrFilter = this.attrName === "class" ? ["class"] : [this.attrName];
-      targets.forEach((el) => this._observer.observe(el, { attributes: true, attributeFilter: attrFilter }));
-      this._pinned = true;
+      targets.forEach((el) => this._observer.observe(el, { attributes: true, attributeFilter: filter }));
     }
-    unpin() {
-      if (!this._pinned)
-        return;
+    _stopObserver() {
       this._observer?.disconnect();
       this._observer = null;
-      this._targets().forEach((el) => this._clear(el));
-      this._pinned = false;
-    }
-    toggle() {
-      if (this._pinned)
-        this.unpin();
-      else
-        this.pin();
     }
   }
   if (!customElements.get("p9r-state-sync")) {
@@ -12295,9 +12326,24 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
   }
 
+  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/render.ts
+  function renderRow(row) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "row";
+    btn.innerHTML = `<span class="icon">${ICON_PIN}</span><span class="label"></span>`;
+    btn.querySelector(".label").textContent = row.label;
+    if (row.isActive)
+      btn.setAttribute("data-active", "");
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      row.onClick();
+    });
+    return btn;
+  }
+
   // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/template.html
   var template_default6 = `<div class="menu" id="menu">
-    <div class="title">Pin state</div>
     <div class="items" id="items"></div>
 </div>
 `;
@@ -12315,81 +12361,50 @@ cms-bag-breadcrumb[data-inline="right"] {
     border-radius: 10px;
     padding: 4px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 200px;
+    min-width: 180px;
     font: inherit;
     color: var(--text-main, #1e293b);
-}
-
-.title {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: color-mix(in srgb, currentColor 55%, transparent);
-    padding: 8px 10px 6px;
 }
 
 .items {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
 }
 
-.item {
+.row {
     display: flex;
     align-items: center;
     gap: 10px;
-    text-align: left;
-    padding: 8px 10px;
+    padding: 7px 10px;
     border: 0;
     background: transparent;
     cursor: pointer;
     border-radius: 6px;
     font: inherit;
     color: inherit;
+    text-align: left;
     width: 100%;
+    transition: background 80ms ease, color 80ms ease;
 }
-
-.item:hover {
-    background: var(--primary-muted, #eef2ff);
-}
-
-.item[data-active] {
-    background: var(--primary-muted, #eef2ff);
-    color: var(--primary-base, #4361ee);
-    font-weight: 600;
-}
+.row:hover            { background: var(--primary-muted, #eef2ff); }
+.row[data-active]     { background: var(--primary-muted, #eef2ff); color: var(--primary-base, #4361ee); font-weight: 600; }
 
 .icon {
     display: inline-flex;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     opacity: 0.45;
     flex-shrink: 0;
 }
+.icon svg { width: 100%; height: 100%; }
+.row[data-active] .icon { opacity: 1; }
 
-.icon svg {
-    width: 100%;
-    height: 100%;
-}
-
-.item[data-active] .icon {
-    opacity: 1;
-}
-
-.label {
-    flex: 1;
-}
+.label { flex: 1; }
 `;
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinMenu.ts
-  var Metadata3 = {
-    css: style_default5,
-    template: template_default6
-  };
+  var Metadata3 = { css: style_default5, template: template_default6 };
 
   class PinMenu extends Component {
     _items;
@@ -12397,35 +12412,19 @@ cms-bag-breadcrumb[data-inline="right"] {
       super(Metadata3);
       this._items = this.shadowRoot.getElementById("items");
     }
-    static create(items) {
+    static create(rows) {
       const menu = document.createElement("cms-bag-pin-menu");
-      menu.setItems(items);
+      menu.setRows(rows);
       return menu;
     }
-    setItems(items) {
+    setRows(rows) {
       this._items.innerHTML = "";
-      for (const item of items) {
-        this._items.appendChild(this._renderItem(item));
-      }
+      for (const row of rows)
+        this._items.appendChild(renderRow(row));
     }
     setPosition(left, top) {
       this.style.left = `${left}px`;
       this.style.top = `${top}px`;
-    }
-    _renderItem(item) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "item";
-      btn.innerHTML = `<span class="icon">${ICON_PIN}</span><span class="label"></span>`;
-      btn.querySelector(".label").textContent = item.label;
-      const setActive = () => btn.toggleAttribute("data-active", item.isPinned);
-      setActive();
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        item.onToggle();
-        setActive();
-      });
-      return btn;
     }
   }
   if (!customElements.get("cms-bag-pin-menu")) {
@@ -12449,9 +12448,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       const syncs = editor?.stateSyncs ?? [];
       if (syncs.length === 0)
         return;
-      if (syncs.length === 1) {
-        this._toggle(syncs[0]);
-        refreshPinButton(this._host, editor);
+      if (syncs.length === 1 && !syncs[0].isMulti) {
+        this._commit(syncs[0], () => syncs[0].toggle());
         return;
       }
       this._toggleMenu(syncs);
@@ -12460,9 +12458,16 @@ cms-bag-breadcrumb[data-inline="right"] {
       this._menu?.remove();
       this._menu = null;
     }
-    _toggle(sync) {
-      sync.toggle();
-      this._getEditor()?.notifyPinStateChanged(sync);
+    _commit(sync, change) {
+      const editor = this._getEditor();
+      if (editor) {
+        for (const s2 of editor.stateSyncs)
+          if (s2 !== sync && s2.isPinned)
+            s2.unpin();
+      }
+      change();
+      editor?.notifyPinStateChanged(sync);
+      refreshPinButton(this._host, editor);
     }
     _toggleMenu(syncs) {
       if (this._menu) {
@@ -12472,18 +12477,30 @@ cms-bag-breadcrumb[data-inline="right"] {
       const btn = this._host.querySelector('[data-action="pin-state"]');
       if (!btn)
         return;
-      const menu = PinMenu.create(syncs.map((sync) => ({
-        label: sync.label,
-        isPinned: sync.isPinned,
-        onToggle: () => {
-          this._toggle(sync);
-          refreshPinButton(this._host, this._getEditor());
-        }
-      })));
+      const menu = PinMenu.create(this._buildRows(syncs));
       const rect = btn.getBoundingClientRect();
       menu.setPosition(rect.left, rect.bottom);
       document.body.appendChild(menu);
       this._menu = menu;
+    }
+    _buildRows(syncs) {
+      const rows = [];
+      for (const sync of syncs) {
+        if (sync.isMulti) {
+          sync.values.forEach((value, i) => rows.push({
+            label: sync.labels[i] ?? value,
+            isActive: value === sync.activeValue,
+            onClick: () => this._commit(sync, () => sync.setActiveValue(value === sync.activeValue ? null : value))
+          }));
+        } else {
+          rows.push({
+            label: sync.label,
+            isActive: sync.isPinned,
+            onClick: () => this._commit(sync, () => sync.toggle())
+          });
+        }
+      }
+      return rows;
     }
   }
 

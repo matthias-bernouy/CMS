@@ -1,4 +1,4 @@
-import type { StateSync } from "../../../components/editor/componentSync/sync/StateSync";
+import type { StateSync } from "../../../components/editor/componentSync/sync/StateSync/StateSync";
 import { ICON_PIN } from "../../../components/icons";
 
 /**

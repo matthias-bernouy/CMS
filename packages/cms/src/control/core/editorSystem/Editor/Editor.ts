@@ -1,4 +1,4 @@
-import type { StateSync } from '../../../components/editor/componentSync/sync/StateSync';
+import type { StateSync } from '../../../components/editor/componentSync/sync/StateSync/StateSync';
 import getClosestEditorSystem from '../../dom/editor/getClosestEditorSystem';
 import { PinMode } from './PinMode';
 import { PanelConfig } from './panel';

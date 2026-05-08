@@ -6,7 +6,7 @@ import { Component } from "@bernouy/cms/component";
 import "./sync/AttrSync";
 import "./sync/CompSync";
 import "./sync/ImageSync/ImageSync";
-import "./sync/StateSync";
+import "./sync/StateSync/StateSync";
 import "./PageLink/PageLink";
 
 export class SyncPanel extends Component {

@@ -1,18 +1,18 @@
 import { Component, type ComponentMetadata } from 'src/control/core/editorSystem/Component';
-import { ICON_PIN } from '../../../../../icons';
+import { renderRow } from './render';
 import html from './template.html' with { type: 'text' };
-import css from './style.css' with { type: 'text' };
+import css  from './style.css'     with { type: 'text' };
 
-export type PinMenuItem = {
-    label: string;
-    isPinned: boolean;
-    onToggle: () => void;
+/** Single clickable row in the pin popover. PinController flattens both
+ *  single-value (toggle) and multi-value (one-row-per-value) syncs into this
+ *  homogenous shape so the menu renders a flat list. */
+export type PinMenuRow = {
+    label:    string;
+    isActive: boolean;
+    onClick:  () => void;
 };
 
-const Metadata: ComponentMetadata = {
-    css,
-    template: html as unknown as string,
-};
+const Metadata: ComponentMetadata = { css, template: html as unknown as string };
 
 export class PinMenu extends Component {
 
@@ -23,41 +23,20 @@ export class PinMenu extends Component {
         this._items = this.shadowRoot!.getElementById('items') as HTMLElement;
     }
 
-    static create(items: PinMenuItem[]): PinMenu {
+    static create(rows: PinMenuRow[]): PinMenu {
         const menu = document.createElement('cms-bag-pin-menu') as PinMenu;
-        menu.setItems(items);
+        menu.setRows(rows);
         return menu;
     }
 
-    setItems(items: PinMenuItem[]): void {
+    setRows(rows: PinMenuRow[]): void {
         this._items.innerHTML = '';
-        for (const item of items) {
-            this._items.appendChild(this._renderItem(item));
-        }
+        for (const row of rows) this._items.appendChild(renderRow(row));
     }
 
     setPosition(left: number, top: number): void {
         this.style.left = `${left}px`;
-        this.style.top = `${top}px`;
-    }
-
-    private _renderItem(item: PinMenuItem): HTMLButtonElement {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'item';
-        btn.innerHTML = `<span class="icon">${ICON_PIN}</span><span class="label"></span>`;
-        (btn.querySelector('.label') as HTMLElement).textContent = item.label;
-
-        const setActive = () => btn.toggleAttribute('data-active', item.isPinned);
-        setActive();
-
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            item.onToggle();
-            setActive();
-        });
-
-        return btn;
+        this.style.top  = `${top}px`;
     }
 }
 
