@@ -16030,18 +16030,20 @@ form[method="dialog"] {
     const originalFetch = window.fetch.bind(window);
     const basePath = getMetaBasePath();
     let providers = [];
-    originalFetch(`${basePath}/api/data/providers`).then((r) => r.ok ? r.json() : []).then((list) => {
+    const providersReady = originalFetch(`${basePath}/api/data/providers`).then((r) => r.ok ? r.json() : []).then((list) => {
       if (!Array.isArray(list))
         return;
       providers = list.map((p) => ({
         id: p.id,
-        server: (p.server ?? "").replace(/\/+$/, "")
-      })).filter((p) => p.id && p.server);
+        origin: safeOrigin(p.server ?? "")
+      })).filter((p) => p.id && p.origin);
     }).catch(() => {});
-    const proxy = (input, init) => {
+    const proxy = async (input, init) => {
+      await providersReady;
       const url = resolveUrl(input);
       const method = resolveMethod(input, init);
-      const match = providers.find((p) => urlMatchesServer(url, p.server));
+      const origin = safeOrigin(url);
+      const match = origin ? providers.find((p) => p.origin === origin) : undefined;
       if (!match)
         return originalFetch(input, init);
       return originalFetch(`${basePath}/api/data/mock`, {
@@ -16070,11 +16072,12 @@ form[method="dialog"] {
       return input.method.toUpperCase();
     return "GET";
   }
-  function urlMatchesServer(url, server) {
-    if (!server || !url.startsWith(server))
-      return false;
-    const next = url[server.length];
-    return next === undefined || next === "/" || next === "?" || next === "#";
+  function safeOrigin(url) {
+    try {
+      return new URL(url).origin;
+    } catch {
+      return "";
+    }
   }
 
   // src/control/core/editorSystem/dirtyState.ts
@@ -22146,6 +22149,477 @@ button.active svg {
   }
   customElements.define("cms-fetch", FetchComponent);
 
+  // src/control/components/data/JsonEditor/normalize.ts
+  function normalize(schema) {
+    if (!schema)
+      return null;
+    if (Array.isArray(schema.allOf) && schema.allOf.length > 0) {
+      return mergeAllOf(schema.allOf, schema);
+    }
+    return schema;
+  }
+  function mergeAllOf(parts, parent) {
+    const out = {
+      type: "object",
+      properties: {},
+      required: []
+    };
+    const reqSet = new Set;
+    for (const p of [...parts, parent]) {
+      if (p.type)
+        out.type = p.type;
+      if (p.format)
+        out.format = p.format;
+      if (p.nullable)
+        out.nullable = true;
+      if (p.enum)
+        out.enum = p.enum;
+      if (p.description && !out.description)
+        out.description = p.description;
+      if (p.properties)
+        out.properties = { ...out.properties, ...p.properties };
+      if (Array.isArray(p.required))
+        for (const r of p.required)
+          reqSet.add(r);
+    }
+    if (reqSet.size > 0)
+      out.required = Array.from(reqSet);
+    return out;
+  }
+
+  // src/control/components/data/JsonEditor/renderObject.ts
+  function renderObject(schema, value, onChange, dispatch) {
+    const obj = typeof value === "object" && value !== null && !Array.isArray(value) ? value : {};
+    const required = new Set(schema.required ?? []);
+    const properties = schema.properties ?? {};
+    const container = document.createElement("div");
+    container.className = "json-object";
+    const childReads = {};
+    for (const [key, subSchema] of Object.entries(properties)) {
+      const row = document.createElement("div");
+      row.className = "json-row";
+      const label = document.createElement("label");
+      label.className = "json-label";
+      label.textContent = required.has(key) ? `${key} *` : key;
+      if (subSchema.description)
+        label.title = subSchema.description;
+      row.appendChild(label);
+      const child = dispatch(subSchema, obj[key], onChange);
+      child.el.classList.add("json-row__value");
+      row.appendChild(child.el);
+      childReads[key] = child.read;
+      container.appendChild(row);
+    }
+    if (Object.keys(properties).length === 0) {
+      const note = document.createElement("p");
+      note.className = "json-empty";
+      note.textContent = "(no fields declared in schema)";
+      container.appendChild(note);
+    }
+    return {
+      el: container,
+      read: () => {
+        const out = {};
+        for (const [k, fn] of Object.entries(childReads))
+          out[k] = fn();
+        return out;
+      }
+    };
+  }
+
+  // src/control/components/data/JsonEditor/initFromSchema.ts
+  function initFromSchema(schema) {
+    const s2 = normalize(schema);
+    if (!s2)
+      return null;
+    if (Array.isArray(s2.enum) && s2.enum.length > 0)
+      return s2.enum[0];
+    if (s2.oneOf?.length)
+      return initFromSchema(s2.oneOf[0] ?? null);
+    if (s2.anyOf?.length)
+      return initFromSchema(s2.anyOf[0] ?? null);
+    switch (s2.type) {
+      case "object": {
+        const out = {};
+        for (const [k, v] of Object.entries(s2.properties ?? {}))
+          out[k] = initFromSchema(v);
+        return out;
+      }
+      case "array":
+        return s2.items ? [initFromSchema(s2.items)] : [];
+      case "string":
+        return "";
+      case "integer":
+      case "number":
+        return 0;
+      case "boolean":
+        return false;
+      case "null":
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  // src/control/components/data/JsonEditor/renderArray.ts
+  function renderArray(schema, value, onChange, dispatch) {
+    const items = Array.isArray(value) ? value : [];
+    const itemSchema = schema.items ?? { type: "string" };
+    const container = document.createElement("div");
+    container.className = "json-array";
+    const list = document.createElement("div");
+    list.className = "json-array__list";
+    container.appendChild(list);
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "json-btn json-btn--add";
+    addBtn.textContent = "+ Add item";
+    container.appendChild(addBtn);
+    const childReads = [];
+    function addItem(initial) {
+      const row = document.createElement("details");
+      row.className = "json-array__row";
+      row.open = true;
+      const summary = document.createElement("summary");
+      summary.className = "json-array__summary";
+      const index = document.createElement("span");
+      index.className = "json-array__index";
+      summary.appendChild(index);
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "json-btn json-btn--remove";
+      removeBtn.setAttribute("aria-label", "Remove item");
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = Array.from(list.children).indexOf(row);
+        if (idx < 0)
+          return;
+        childReads.splice(idx, 1);
+        row.remove();
+        renumber();
+        onChange();
+      });
+      summary.appendChild(removeBtn);
+      row.appendChild(summary);
+      const child = dispatch(itemSchema, initial, onChange);
+      child.el.classList.add("json-array__value");
+      row.appendChild(child.el);
+      list.appendChild(row);
+      childReads.push(child.read);
+      renumber();
+    }
+    function renumber() {
+      const rows = list.querySelectorAll(".json-array__index");
+      rows.forEach((el, i) => {
+        el.textContent = String(i + 1);
+      });
+    }
+    for (const v of items)
+      addItem(v);
+    addBtn.addEventListener("click", () => {
+      addItem(initFromSchema(itemSchema));
+      onChange();
+    });
+    return {
+      el: container,
+      read: () => childReads.map((fn) => fn())
+    };
+  }
+
+  // src/control/components/data/JsonEditor/renderPrimitive.ts
+  function renderPrimitive(schema, value, onChange) {
+    const type = schema.type;
+    if (type === "boolean") {
+      const input2 = document.createElement("input");
+      input2.type = "checkbox";
+      input2.checked = value === true;
+      input2.className = "json-input json-input--bool";
+      input2.addEventListener("change", onChange);
+      return { el: input2, read: () => input2.checked };
+    }
+    if (type === "integer" || type === "number") {
+      const input2 = document.createElement("input");
+      input2.type = "number";
+      if (type === "integer")
+        input2.step = "1";
+      input2.value = value === null || value === undefined || value === "" ? "" : String(value);
+      input2.className = "json-input json-input--num";
+      input2.addEventListener("input", onChange);
+      return {
+        el: input2,
+        read: () => {
+          const v = input2.value.trim();
+          if (v === "")
+            return null;
+          const n2 = Number(v);
+          return Number.isFinite(n2) ? n2 : null;
+        }
+      };
+    }
+    if (type === "null") {
+      const span = document.createElement("span");
+      span.textContent = "null";
+      span.className = "json-input json-input--null";
+      return { el: span, read: () => null };
+    }
+    const input = document.createElement("input");
+    input.type = schema.format === "date" ? "date" : schema.format === "date-time" ? "datetime-local" : "text";
+    input.value = value === null || value === undefined ? "" : String(value);
+    input.className = "json-input json-input--str";
+    input.addEventListener("input", onChange);
+    return { el: input, read: () => input.value };
+  }
+
+  // src/control/components/data/JsonEditor/renderVariant.ts
+  function renderVariant(schema, value, onChange, dispatch) {
+    const variants = schema.oneOf ?? schema.anyOf ?? [];
+    if (variants.length === 0) {
+      const span = document.createElement("span");
+      span.className = "json-empty";
+      span.textContent = "(empty oneOf / anyOf)";
+      return { el: span, read: () => null };
+    }
+    const container = document.createElement("div");
+    container.className = "json-variant";
+    const select2 = document.createElement("select");
+    select2.className = "json-input json-input--variant";
+    for (let i = 0;i < variants.length; i++) {
+      const option = document.createElement("option");
+      option.value = String(i);
+      option.textContent = variantLabel(variants[i], i);
+      select2.appendChild(option);
+    }
+    container.appendChild(select2);
+    const slot = document.createElement("div");
+    slot.className = "json-variant__slot";
+    container.appendChild(slot);
+    let activeIndex = pickInitialVariant(variants, value);
+    let activeRead = () => null;
+    function mount(idx, initialValue) {
+      slot.innerHTML = "";
+      const child = dispatch(variants[idx], initialValue, onChange);
+      slot.appendChild(child.el);
+      activeRead = child.read;
+    }
+    select2.value = String(activeIndex);
+    mount(activeIndex, value);
+    select2.addEventListener("change", () => {
+      activeIndex = Number(select2.value);
+      mount(activeIndex, initFromSchema(variants[activeIndex]));
+      onChange();
+    });
+    return {
+      el: container,
+      read: () => activeRead()
+    };
+  }
+  function variantLabel(s2, idx) {
+    if (s2.type)
+      return `${idx + 1}. ${s2.type}`;
+    if (s2.enum?.length)
+      return `${idx + 1}. enum`;
+    return `Variant ${idx + 1}`;
+  }
+  function pickInitialVariant(variants, value) {
+    if (value === null) {
+      const idx2 = variants.findIndex((v) => v.type === "null");
+      return idx2 >= 0 ? idx2 : 0;
+    }
+    const runtime = Array.isArray(value) ? "array" : typeof value === "object" ? "object" : typeof value;
+    const idx = variants.findIndex((v) => v.type === runtime);
+    return idx >= 0 ? idx : 0;
+  }
+
+  // src/control/components/data/JsonEditor/renderNode.ts
+  function renderNode(schema, value, onChange) {
+    const s2 = normalize(schema);
+    if (!s2)
+      return renderUnknown(value);
+    if (s2.oneOf?.length || s2.anyOf?.length)
+      return renderVariant(s2, value, onChange, renderNode);
+    if (Array.isArray(s2.enum) && s2.enum.length > 0)
+      return renderEnum(s2, value, onChange);
+    if (s2.type === "object" || s2.properties)
+      return renderObject(s2, value, onChange, renderNode);
+    if (s2.type === "array")
+      return renderArray(s2, value, onChange, renderNode);
+    return renderPrimitive(s2, value, onChange);
+  }
+  function renderEnum(schema, value, onChange) {
+    const select2 = document.createElement("select");
+    select2.className = "json-input json-input--enum";
+    for (const opt of schema.enum ?? []) {
+      const option = document.createElement("option");
+      option.value = JSON.stringify(opt);
+      option.textContent = String(opt);
+      select2.appendChild(option);
+    }
+    select2.value = JSON.stringify(value);
+    if (select2.selectedIndex < 0 && select2.options.length > 0)
+      select2.selectedIndex = 0;
+    select2.addEventListener("change", onChange);
+    return {
+      el: select2,
+      read: () => {
+        try {
+          return JSON.parse(select2.value);
+        } catch {
+          return select2.value;
+        }
+      }
+    };
+  }
+  function renderUnknown(value) {
+    const span = document.createElement("span");
+    span.className = "json-empty";
+    span.textContent = `(unsupported — ${typeof value})`;
+    return { el: span, read: () => value };
+  }
+
+  // src/control/components/data/JsonEditor/JsonEditor.ts
+  class JsonEditor extends HTMLElement {
+    static formAssociated = true;
+    static get observedAttributes() {
+      return ["schema", "value"];
+    }
+    _internals;
+    _schema = null;
+    _value = null;
+    _mode = "structured";
+    _treeRead = null;
+    _content;
+    _modeBtn;
+    _rawArea;
+    connectedCallback() {
+      if (!this._internals)
+        this._internals = this.attachInternals();
+      if (this._content)
+        return;
+      this._build();
+      const schemaAttr = this.getAttribute("schema");
+      if (schemaAttr)
+        this._schema = parseSchemaAttr(schemaAttr);
+      if (!this._schema)
+        this._mode = "raw";
+      const valueAttr = this.getAttribute("value");
+      if (valueAttr !== null)
+        this._value = parseSafe(valueAttr);
+      this._render();
+      this._publish();
+    }
+    attributeChangedCallback(name, _oldVal, newVal) {
+      if (!this._content)
+        return;
+      if (name === "schema") {
+        this._schema = newVal ? parseSchemaAttr(newVal) : null;
+        if (!this._schema)
+          this._mode = "raw";
+        this._render();
+      } else if (name === "value") {
+        this._value = newVal === null ? null : parseSafe(newVal);
+        this._render();
+        this._publish();
+      }
+    }
+    set schema(s2) {
+      this._schema = s2;
+      this._mode = s2 ? "structured" : "raw";
+      if (this._content)
+        this._render();
+    }
+    get schema() {
+      return this._schema;
+    }
+    set value(raw) {
+      this._value = parseSafe(raw);
+      if (this._content)
+        this._render();
+      this._publish();
+    }
+    get value() {
+      return JSON.stringify(this._value, null, 2);
+    }
+    _build() {
+      const header = document.createElement("div");
+      header.className = "json-editor__header";
+      this._modeBtn = document.createElement("button");
+      this._modeBtn.type = "button";
+      this._modeBtn.className = "json-btn json-btn--mode";
+      this._modeBtn.addEventListener("click", () => this._toggleMode());
+      header.appendChild(this._modeBtn);
+      this._content = document.createElement("div");
+      this._content.className = "json-editor__content";
+      this._rawArea = document.createElement("textarea");
+      this._rawArea.className = "json-editor__raw";
+      this._rawArea.rows = 14;
+      this._rawArea.spellcheck = false;
+      this._rawArea.addEventListener("input", () => {
+        this._value = parseSafe(this._rawArea.value, this._value);
+        this._publish();
+      });
+      this.append(header, this._content);
+      this.classList.add("json-editor");
+    }
+    _render() {
+      const hasSchema = this._schema !== null;
+      this._modeBtn.textContent = this._mode === "raw" ? "Switch to structured" : "Switch to raw JSON";
+      this._modeBtn.disabled = !hasSchema && this._mode === "raw";
+      this._content.innerHTML = "";
+      if (this._mode === "raw" || !hasSchema) {
+        this._rawArea.value = JSON.stringify(this._value, null, 2);
+        this._content.appendChild(this._rawArea);
+        this._treeRead = null;
+        return;
+      }
+      const view = renderNode(this._schema, this._value, () => this._publishFromTree());
+      this._content.appendChild(view.el);
+      this._treeRead = view.read;
+    }
+    _toggleMode() {
+      if (!this._schema)
+        return;
+      if (this._mode === "structured" && this._treeRead) {
+        this._value = this._treeRead();
+      }
+      this._mode = this._mode === "structured" ? "raw" : "structured";
+      this._render();
+      this._publish();
+    }
+    _publishFromTree() {
+      if (!this._treeRead)
+        return;
+      this._value = this._treeRead();
+      this._publish();
+    }
+    _publish() {
+      const serialized = JSON.stringify(this._value);
+      this._internals.setFormValue(serialized);
+      this.dispatchEvent(new BubblesEvent("change"));
+    }
+  }
+  function parseSafe(raw, fallback = null) {
+    if (raw === undefined || raw === null || raw === "")
+      return fallback;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return fallback;
+    }
+  }
+  function parseSchemaAttr(raw) {
+    if (!raw)
+      return null;
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  customElements.define("cms-json-editor", JsonEditor);
+
   // src/control/components/data/MockupCreate/MockupCreate.ts
   class MockupCreate extends HTMLElement {
     _responses = [];
@@ -22155,7 +22629,7 @@ button.active svg {
       this.innerHTML = TEMPLATE;
       const form = this.querySelector("form");
       this._statusEl = this.querySelector('p9r-select[name="status"]');
-      this._bodyEl = this.querySelector('p9r-textarea[name="body"]');
+      this._bodyEl = this.querySelector('cms-json-editor[name="body"]');
       form.addEventListener("submit", (e) => this._onSubmit(e));
       this._statusEl?.addEventListener("change", () => this._syncBody());
       this._loadEndpoint().catch(() => this._fallback());
@@ -22173,12 +22647,12 @@ button.active svg {
         return;
       }
       const data = await res.json();
-      this._responses = Array.isArray(data.responses) && data.responses.length > 0 ? data.responses : [{ status: "200", description: "", defaultBody: "{}" }];
+      this._responses = Array.isArray(data.responses) && data.responses.length > 0 ? data.responses : [defaultResponse()];
       this._renderStatusOptions();
       this._syncBody();
     }
     _fallback() {
-      this._responses = [{ status: "200", description: "", defaultBody: "{}" }];
+      this._responses = [defaultResponse()];
       this._renderStatusOptions();
       this._syncBody();
     }
@@ -22192,8 +22666,10 @@ button.active svg {
         return;
       const value = this._statusEl.value || this._responses[0]?.status || "200";
       const picked = this._responses.find((r) => r.status === value) ?? this._responses[0];
-      if (picked)
-        this._bodyEl.value = picked.defaultBody;
+      if (!picked)
+        return;
+      this._bodyEl.schema = picked.schema;
+      this._bodyEl.value = picked.defaultBody;
     }
     async _onSubmit(e) {
       e.preventDefault();
@@ -22218,6 +22694,9 @@ button.active svg {
       }
     }
   }
+  function defaultResponse() {
+    return { status: "200", description: "", defaultBody: "{}", schema: null };
+  }
   function escapeAttr2(s2) {
     return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -22226,7 +22705,8 @@ button.active svg {
     <p9r-stack gap="md">
         <p9r-input name="name" label="Name" placeholder="default" required></p9r-input>
         <p9r-select name="status" label="HTTP status"></p9r-select>
-        <p9r-textarea name="body" rows="14" autosize label="Body (JSON)"></p9r-textarea>
+        <label class="json-label" style="display: block; margin-top: 0.25rem;">Body</label>
+        <cms-json-editor name="body"></cms-json-editor>
         <p9r-button color="primary" fullWidth type="submit">Create</p9r-button>
     </p9r-stack>
 </form>

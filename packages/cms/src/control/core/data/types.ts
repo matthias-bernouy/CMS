@@ -115,4 +115,8 @@ export type ResponseChoice = {
     description: string;
     /** JSON-stringified body — `example` if the spec carries one, otherwise a stub from the schema. */
     defaultBody: string;
+    /** Dereferenced JSON schema for the response body, when declared. The
+     *  client-side structured editor renders fields from this; absence
+     *  forces the editor into raw-text fallback. */
+    schema:      JSONSchema | null;
 };

@@ -98,7 +98,7 @@ export class SpecResolver {
     listResponses(id: string): ResponseChoice[] {
         const found = this._findOperation(id);
         const out: ResponseChoice[] = [];
-        if (!found) return [{ status: "200", description: "", defaultBody: "{}" }];
+        if (!found) return [{ status: "200", description: "", defaultBody: "{}", schema: null }];
 
         const responses = found.op.responses ?? {};
         const keys = Object.keys(responses);
@@ -112,9 +112,10 @@ export class SpecResolver {
                 status,
                 description: entry?.description ?? "",
                 defaultBody: JSON.stringify(body, null, 2),
+                schema,
             });
         }
-        if (out.length === 0) out.push({ status: "200", description: "", defaultBody: "{}" });
+        if (out.length === 0) out.push({ status: "200", description: "", defaultBody: "{}", schema: null });
         return out;
     }
 

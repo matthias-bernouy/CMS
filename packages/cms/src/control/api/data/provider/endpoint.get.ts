@@ -26,14 +26,24 @@ export default async function getProviderEndpoint(req: Request, cms: ControlCms)
     if (!result) return new Response("Endpoint not found", { status: 404 });
 
     const mockupsRaw = await cms.repository.listMockups(id);
+    const responses  = resolver.listResponses(endpointId);
     const mockups    = mockupsRaw
         .filter(m => m.method === result.method && m.path === result.path)
-        .map(m => ({ ...m, activeLabel: m.active ? "● active" : "" }));
+        .map(m => {
+            const matchedSchema = responses.find(r => r.status === String(m.status))?.schema ?? null;
+            return {
+                ...m,
+                activeLabel: m.active ? "● active" : "",
+                // JSON-stringified so the cms-fetch templating can drop it
+                // straight into a `<cms-json-editor schema="...">` attribute.
+                bodySchema:  matchedSchema ? JSON.stringify(matchedSchema) : "",
+            };
+        });
 
     const enriched = {
         ...result,
         methodColor:        methodColor(result.method),
-        responses:          resolver.listResponses(endpointId),
+        responses,
         mockups,
         mockupsEmptyLabel:  mockups.length === 0 ? "No mockups for this operation yet." : "",
     };

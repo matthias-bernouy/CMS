@@ -98,8 +98,8 @@
                                     <p9r-input name="name" label="Name" value="{{ name }}"
                                         hint="Renaming keeps the mockup unique within this endpoint."></p9r-input>
                                     <p9r-input name="status" type="number" label="HTTP status" value="{{ status }}"></p9r-input>
-                                    <p9r-textarea name="body" rows="14" autosize label="Body (JSON)"
-                                        value="{{ body }}"></p9r-textarea>
+                                    <label class="json-label" style="display: block;">Body</label>
+                                    <cms-json-editor name="body" schema="{{ bodySchema }}" value="{{ body }}"></cms-json-editor>
                                     <p9r-button color="primary" fullWidth type="submit">Save</p9r-button>
                                 </p9r-stack>
                             </cms-form>

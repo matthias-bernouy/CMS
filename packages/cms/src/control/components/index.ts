@@ -49,4 +49,5 @@ import "./media/MediaAdmin/MediaAdmin"
 import "./form/Form/Form";
 import "./form/Validate/Validate";
 import "./data/fetch/FetchComponent"
+import "./data/JsonEditor/JsonEditor"
 import "./data/MockupCreate/MockupCreate"

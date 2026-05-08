@@ -1,10 +1,13 @@
 import BubblesEvent from "src/control/core/dom/BubblesEvent";
 import { buildRequestUrl } from "src/control/core/dom/buildRequestUrl";
+import type { JsonEditor } from "../JsonEditor/JsonEditor";
+import type { JSONSchema } from "../JsonEditor/types";
 
 type ResponseChoice = {
     status:      string;
     description: string;
     defaultBody: string;
+    schema:      JSONSchema | null;
 };
 
 /**
@@ -14,26 +17,26 @@ type ResponseChoice = {
  * from `window.location.search` (the provider detail page carries them
  * in its URL), fetches the endpoint detail and populates:
  *   - the HTTP-status `<p9r-select>` from the spec's declared responses
- *   - the body `<p9r-textarea>` from the picked status's `example` or a
- *     schema stub, regenerated whenever the status changes
+ *   - the body `<cms-json-editor>` from the picked status's schema +
+ *     example, regenerated whenever the status changes
  *
  * On submit, POSTs `{ name, status, body }` to
  * `/api/data/provider/mockup` with `id`/`method`/`path` forwarded as
- * query params (server reads them either from query or body). Dispatches
- * `mockup:created` (so the list refreshes) and `form:success` (so the
- * surrounding `<p9r-modal>` auto-closes) on 2xx; `form:failed` otherwise.
+ * query params. Dispatches `mockup:created` (so the list refreshes) and
+ * `form:success` (so the surrounding `<p9r-modal>` auto-closes) on 2xx;
+ * `form:failed` otherwise.
  */
 export class MockupCreate extends HTMLElement {
 
     private _responses: ResponseChoice[] = [];
     private _statusEl: HTMLElement & { value: string } | null = null;
-    private _bodyEl:   HTMLElement & { value: string } | null = null;
+    private _bodyEl:   JsonEditor | null = null;
 
     connectedCallback(): void {
         this.innerHTML = TEMPLATE;
         const form = this.querySelector("form") as HTMLFormElement;
         this._statusEl = this.querySelector('p9r-select[name="status"]') as HTMLElement & { value: string };
-        this._bodyEl   = this.querySelector('p9r-textarea[name="body"]') as HTMLElement & { value: string };
+        this._bodyEl   = this.querySelector('cms-json-editor[name="body"]') as JsonEditor;
 
         form.addEventListener("submit", e => this._onSubmit(e));
         this._statusEl?.addEventListener("change", () => this._syncBody());
@@ -53,13 +56,13 @@ export class MockupCreate extends HTMLElement {
         const data = await res.json() as { responses?: ResponseChoice[] };
         this._responses = Array.isArray(data.responses) && data.responses.length > 0
             ? data.responses
-            : [{ status: "200", description: "", defaultBody: "{}" }];
+            : [defaultResponse()];
         this._renderStatusOptions();
         this._syncBody();
     }
 
     private _fallback(): void {
-        this._responses = [{ status: "200", description: "", defaultBody: "{}" }];
+        this._responses = [defaultResponse()];
         this._renderStatusOptions();
         this._syncBody();
     }
@@ -75,7 +78,9 @@ export class MockupCreate extends HTMLElement {
         if (!this._statusEl || !this._bodyEl) return;
         const value  = this._statusEl.value || this._responses[0]?.status || "200";
         const picked = this._responses.find(r => r.status === value) ?? this._responses[0];
-        if (picked) this._bodyEl.value = picked.defaultBody;
+        if (!picked) return;
+        this._bodyEl.schema = picked.schema;
+        this._bodyEl.value  = picked.defaultBody;
     }
 
     private async _onSubmit(e: Event): Promise<void> {
@@ -99,6 +104,10 @@ export class MockupCreate extends HTMLElement {
     }
 }
 
+function defaultResponse(): ResponseChoice {
+    return { status: "200", description: "", defaultBody: "{}", schema: null };
+}
+
 function escapeAttr(s: string): string {
     return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -108,7 +117,8 @@ const TEMPLATE = `
     <p9r-stack gap="md">
         <p9r-input name="name" label="Name" placeholder="default" required></p9r-input>
         <p9r-select name="status" label="HTTP status"></p9r-select>
-        <p9r-textarea name="body" rows="14" autosize label="Body (JSON)"></p9r-textarea>
+        <label class="json-label" style="display: block; margin-top: 0.25rem;">Body</label>
+        <cms-json-editor name="body"></cms-json-editor>
         <p9r-button color="primary" fullWidth type="submit">Create</p9r-button>
     </p9r-stack>
 </form>
