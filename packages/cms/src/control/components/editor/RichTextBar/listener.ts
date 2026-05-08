@@ -15,6 +15,7 @@ import {
     toggleLinkBar,
 } from "./actions";
 import { updateState } from "./state";
+import { refreshExtensions, closeCompletions } from "./extensions";
 import type { RichTextBar } from "./RichTextBar";
 
 export function handleCustomColorInput(self: RichTextBar, e: Event): void {
@@ -66,6 +67,7 @@ export function handleSelection(self: RichTextBar): void {
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || sel.toString().trim() === "") {
         self.hide();
+        closeCompletions(self);
         return;
     }
 
@@ -73,6 +75,7 @@ export function handleSelection(self: RichTextBar): void {
     self.selection.save();
     self.show(rect);
     updateState(self);
+    refreshExtensions(self);
 }
 
 export function handleRootMousedown(self: RichTextBar, e: Event): void {

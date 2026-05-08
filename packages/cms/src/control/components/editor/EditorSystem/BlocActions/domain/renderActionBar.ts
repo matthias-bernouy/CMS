@@ -7,6 +7,7 @@ import {
     buildSelectParentButton,
     toggleActionButton,
 } from './actionBarButtons';
+import { buildExtensionsButton, hasBlocActionExtensions } from '../sub/Extensions/ExtensionsButton';
 
 export type SmartRenderResult = {
     /** Hashed config — caller stores it to skip re-render when unchanged. */
@@ -32,18 +33,21 @@ export function renderActionBar(
     const stateSyncCount = editor.stateSyncs.length;
     const variant = editor.variant;
     const canDelete = !!config.get('delete') && !isLastRootBloc(target);
+    const hasExtensions = hasBlocActionExtensions(target);
 
     const hasAnyButton = hasConfig
         || !!config.get('duplicate')
         || canDelete
         || !!config.get('changeComponent')
         || customActions.length > 0
-        || stateSyncCount > 0;
+        || stateSyncCount > 0
+        || hasExtensions;
     const showSelectParent = !!parentEditor && hasAnyButton;
 
     const configKey = JSON.stringify(Array.from(config.entries()))
         + hasConfig + variant + customActions.map(a => a.action).join(',')
-        + '|s=' + stateSyncCount + '|p=' + showSelectParent + '|d=' + canDelete;
+        + '|s=' + stateSyncCount + '|p=' + showSelectParent + '|d=' + canDelete
+        + '|x=' + hasExtensions;
 
     if (previousConfigKey === configKey) return null;
 
@@ -66,11 +70,20 @@ export function renderActionBar(
         host.insertBefore(buildPinButton(stateSyncCount, editor.stateSyncs[0]?.label), separator);
     }
 
+    if (hasExtensions) {
+        const sep = document.createElement('div');
+        sep.className = 'separator';
+        sep.setAttribute('data-group', 'extensions');
+        host.insertBefore(sep, separator);
+        host.insertBefore(buildExtensionsButton(), separator);
+    }
+
     const hasLeftButtons = hasConfig
         || !!config.get('duplicate')
         || !!config.get('changeComponent')
         || customActions.length > 0
-        || stateSyncCount > 0;
+        || stateSyncCount > 0
+        || hasExtensions;
     separator?.toggleAttribute('hidden', !canDelete || !hasLeftButtons);
 
     return { configKey, hasAnyButton };

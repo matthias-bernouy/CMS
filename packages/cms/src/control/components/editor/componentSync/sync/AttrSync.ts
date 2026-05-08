@@ -12,6 +12,10 @@ export class AttrSync extends HTMLElement {
         }
         requestAnimationFrame(() => {
             if (!this._prepared) this._sync();
+            // `input` for live updates while typing (text inputs); `change` is a
+            // safety net for controls that only fire on commit (selects, native
+            // file inputs). Handler is idempotent — same attr value either way.
+            this.addEventListener('input',  (e) => this.onChange(e));
             this.addEventListener('change', (e) => this.onChange(e));
         });
     }

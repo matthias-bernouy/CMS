@@ -5,6 +5,8 @@ import { openChangeComponentPicker } from '../domain/openChangeComponentPicker';
 import { isLastRootBloc } from '../compute/isLastRootBloc';
 import type { PinController } from '../sub/PinMenu/PinController';
 import type { InsertButtonsController } from '../sub/InsertButton/InsertButtonsController';
+import { collectExtensions } from '../sub/Extensions/ExtensionsButton';
+import { openExtensionsPopover } from '../sub/Extensions/popover';
 
 export type BagAccessors = {
     target: () => HTMLElement | null;
@@ -61,5 +63,16 @@ export function buildEventManager(
         },
         onPinClick: () => pin.handleClick(),
         onSelectParent: cb.onSelectParent,
+        onExtensions: (sourceEvent) => {
+            const t = accessors.target();
+            if (!t) return;
+            // HAG packs the originating button into `detail.target` — `e.target`
+            // is the host (composed boundary). See horizontal-action-group's
+            // `_dispatchAction`.
+            const anchor = sourceEvent.detail?.target as HTMLElement | undefined;
+            const exts = collectExtensions(t);
+            if (!anchor || exts.length === 0) return;
+            openExtensionsPopover(anchor, exts, t, cb.onClose);
+        },
     });
 }

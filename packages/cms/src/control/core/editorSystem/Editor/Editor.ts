@@ -11,6 +11,8 @@ import {
     type ActionBarFeatures,
 } from './actionBarFeatures';
 import type { CustomAction } from './types';
+import { ExtensionRegistry } from '../extensions/registry';
+import type { BlocActionExtension, RichTextBarExtension, Surface, SurfaceExtensionMap } from '../extensions/types';
 
 export type { CustomAction } from './types';
 
@@ -29,6 +31,7 @@ export abstract class Editor {
     private _hover: HoverBinding;
     private _mode: ModeBinding;
     private _pinMode: PinMode;
+    private readonly _extensions: ExtensionRegistry = new ExtensionRegistry();
 
     protected _actionBarFeatures: ActionBarFeatures = defaultActionBarFeatures();
 
@@ -71,6 +74,11 @@ export abstract class Editor {
     public viewEditor() {
         this._panel.propagateIdentifier(this._identifier);
         this._panel.notifySyncs();
+        // Clear extensions from any prior init() in the same editor session.
+        // CompSync may re-stamp slots and invoke viewEditor() again on the same
+        // child editor without going through viewClient() — without this reset
+        // the second init() would stack registrations.
+        this._extensions.clear();
         this.init();
 
         if (!this.target.shadowRoot) {
@@ -102,6 +110,7 @@ export abstract class Editor {
         this.stateSyncs.forEach(s => s.unpin());
         this._pinMode.exit();
         this.restore();
+        this._extensions.clear();
 
         this._hover.unbind();
 
@@ -145,6 +154,7 @@ export abstract class Editor {
 
     public dispose() {
         document.compIdentifierToEditor?.delete(this._identifier);
+        this._extensions.clear();
         this._hover.unbind();
         this._mode.dispose();
         this._pinMode.exit();
@@ -162,6 +172,27 @@ export abstract class Editor {
     public unregisterStateSync(sync: StateSync) {
         const i = this.stateSyncs.indexOf(sync);
         if (i >= 0) this.stateSyncs.splice(i, 1);
+    }
+
+    // ── Extensions (hierarchical capability publishing) ─────────────
+    //
+    // A bloc author calls `editor.extendXxx(...)` from `BlocEditor.init()` to
+    // publish a capability scoped to this Editor + its light-DOM descendants.
+    // Surface consumers (richtextbar, …) collect ancestor extensions at the
+    // caret via `collectAncestorExtensions(el, surface)`. Cleanup is automatic
+    // on `viewClient()` / `dispose()`; the disposer return value lets the bloc
+    // tear down earlier if it needs to re-register.
+
+    public extendRichTextBar(ext: RichTextBarExtension): () => void {
+        return this._extensions.add("richtextbar", ext);
+    }
+
+    public extendBlocActions(ext: BlocActionExtension): () => void {
+        return this._extensions.add("blocActions", ext);
+    }
+
+    public listExtensions<S extends Surface>(surface: S): SurfaceExtensionMap[S][] {
+        return this._extensions.list(surface);
     }
 
     public onEditorPinState?(pinned: boolean, stateSync?: StateSync): void;

@@ -1,7 +1,9 @@
 :host {
     display: block;
     width: max-content;
-    max-width: 420px;
+    /* Cap at 420px AND keep within the viewport — long labels at 5 items would
+     * otherwise spill off-screen. The min() handles narrow viewports. */
+    max-width: min(420px, calc(100vw - 16px));
     font-family: system-ui, sans-serif;
     font-size: 11px;
     line-height: 1.4;
@@ -19,8 +21,12 @@
     border-radius: 999px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     white-space: nowrap;
-    overflow: visible;
+    /* Clip overflowing labels — items inside use text-overflow: ellipsis. */
+    overflow: hidden;
     position: relative;
+    /* The bridge sits outside .pill (top: 100% / bottom: 100%) — it must stay
+     * visible even though the pill clips its inner labels. The bridge is
+     * appended as a sibling of .pill in the host, not inside it. */
 }
 
 .parent {
@@ -32,6 +38,13 @@
     background: transparent;
     cursor: pointer;
     transition: background 0.1s, color 0.1s;
+    /* Allow flex shrinking + truncation. Without min-width:0 the button keeps
+     * its content width and the whole pill grows past max-width. */
+    min-width: 0;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .parent:hover, .parent:focus-visible {
@@ -50,6 +63,11 @@
     color: var(--primary-base, #4361ee);
     font-weight: 700;
     letter-spacing: 0.01em;
+    min-width: 0;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Hover bridge — covers the gap between BAG and the breadcrumb. */

@@ -8,6 +8,7 @@ export type ActionDeps = {
     onChangeComponent: () => void;
     onPinClick: () => void;
     onSelectParent: () => void;
+    onExtensions: (sourceEvent: CustomEvent) => void;
 };
 
 /**
@@ -24,6 +25,7 @@ export function createActionDispatcher(deps: ActionDeps) {
             case 'changeComponent': return deps.onChangeComponent();
             case 'pin-state':       return deps.onPinClick();
             case 'select-parent':   return deps.onSelectParent();
+            case 'extensions':      return deps.onExtensions(e);
             default: {
                 const custom = deps.editor()?.customActions.find(a => a.action === e.detail.action);
                 custom?.handler();

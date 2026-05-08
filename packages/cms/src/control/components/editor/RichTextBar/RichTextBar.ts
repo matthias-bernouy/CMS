@@ -6,6 +6,8 @@ import css from "./style.css" with { type: "text" };
 
 import { SelectionTracker } from "./selection";
 import { closeLinkBar } from "./actions";
+import { closeCompletions } from "./extensions";
+import type { RichTextBarExtension } from "src/control/core/editorSystem/extensions/types";
 import {
     handleClick,
     handleCustomColorInput,
@@ -20,6 +22,16 @@ export class RichTextBar extends Component {
     selection = new SelectionTracker();
     interacting = false;
     pageLink: HTMLElement | null = null;
+
+    /** Cached editable element under the caret. Used by `refreshExtensions`
+     *  to skip the ancestor walk when the caret stays in the same element
+     *  (selectionchange fires on every keystroke). */
+    _lastEditable: Element | null = null;
+
+    /** Extensions collected at the current caret. Snapshot — refreshed when the
+     *  editable changes. The popover reads from here when the user clicks the
+     *  brace button. */
+    _currentExtensions: RichTextBarExtension[] = [];
 
     // Stable handler refs so connect/disconnect can pair up. Previously
     // these were arrow literals in connectedCallback — every re-append
@@ -104,6 +116,7 @@ export class RichTextBar extends Component {
         this.classList.remove("visible");
         this.shadowRoot!.querySelector(".color-panel")?.classList.remove("open");
         closeLinkBar(this);
+        closeCompletions(this);
     }
 }
 

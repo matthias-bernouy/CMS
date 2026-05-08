@@ -157,7 +157,16 @@
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
         </svg>
     </button>
+
+    <!-- Bloc-published extensions (`editor.extendRichTextBar(...)`). Populated
+         dynamically when the caret is inside an editor with extensions. -->
+    <div class="ext-separator"></div>
+    <div class="extensions" id="extensions"></div>
 </div>
+
+<!-- Completions popover for the active extension (sibling of toolbar so its
+     overflow doesn't get clipped). Shown/hidden via `data-open`. -->
+<div class="completions" id="completions" hidden></div>
 
 <!-- Link sub-bar -->
 <div class="link-bar">
