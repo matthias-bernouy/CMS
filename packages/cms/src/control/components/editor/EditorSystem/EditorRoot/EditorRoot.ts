@@ -4,6 +4,7 @@ import { isToggable } from "src/control/core/isToggable";
 import { setEditorContext, clearEditorContext } from "src/control/core/editorSystem/editorContext";
 import { installNavigationGuard } from "src/control/core/editorSystem/navigationGuard";
 import { installLinkInterceptor } from "src/control/core/editorSystem/installLinkInterceptor";
+import { installFetchProxy } from "src/control/core/editorSystem/installFetchProxy";
 import { watchForDirty, isDirty } from "src/control/core/editorSystem/dirtyState";
 import { resolveTargetForLink } from "./linkNavigation";
 import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
@@ -27,6 +28,7 @@ export default class EditorRoot extends HTMLElement {
     private _navGuardOff:    (() => void) | null = null;
     private _dirtyWatchOff:  (() => void) | null = null;
     private _linkIntercptOff: (() => void) | null = null;
+    private _fetchProxyOff:  (() => void) | null = null;
 
     constructor(){
         super();
@@ -68,6 +70,7 @@ export default class EditorRoot extends HTMLElement {
         this._navGuardOff?.();
         this._dirtyWatchOff?.();
         this._linkIntercptOff?.();
+        this._fetchProxyOff?.();
         clearEditorContext();
     }
 
@@ -86,6 +89,7 @@ export default class EditorRoot extends HTMLElement {
         this._navGuardOff     = installNavigationGuard();
         this._dirtyWatchOff   = watchForDirty(workingElement);
         this._linkIntercptOff = installLinkInterceptor();
+        this._fetchProxyOff   = installFetchProxy();
 
         // Fire-and-forget: pages list is read-only and small. We tolerate
         // failure (offline, auth) — link classification still works for

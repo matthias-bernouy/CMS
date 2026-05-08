@@ -9848,11 +9848,12 @@ ${followMessage}`)) {
       this._internals = this.attachInternals();
     }
     connectedCallback() {
-      this._refs = buildShadow(this, this.getAttribute("label"));
-      this._wire();
-      const v = this.getAttribute("value") || "";
-      if (v)
-        setValue(this, v);
+      if (!this.shadowRoot) {
+        this._refs = buildShadow(this, this.getAttribute("label"));
+        this._wire();
+      }
+      const v = this._value || this.getAttribute("value") || "";
+      setValue(this, v);
       document.addEventListener("secret:saved", this._onSecretSaved);
     }
     disconnectedCallback() {
@@ -10085,6 +10086,462 @@ ${followMessage}`)) {
     };
   }
   customElements.define("w13c-open-dialog", OpenDialog);
+
+  // src/control/components/admin/SchemaPicker/SchemaPicker.css
+  var SchemaPicker_default = `:host { display: block; }
+
+.field { display: flex; flex-direction: column; gap: 6px; position: relative; }
+
+.label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+}
+
+.input-row { display: flex; gap: 4px; }
+
+.trigger {
+    display: flex; align-items: center; gap: 8px;
+    flex: 1; min-width: 0;
+    padding: 7px 10px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    cursor: pointer; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.trigger:hover         { border-color: var(--text-muted, #94a3b8); }
+.trigger:focus-visible { border-color: var(--primary-base, #4361ee); box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15)); }
+.trigger.open          { border-color: var(--primary-base, #4361ee); }
+.trigger.has-value     { border-color: var(--primary-base, #4361ee); background: var(--primary-muted, rgb(67 97 238 / 0.06)); }
+
+.icon { flex-shrink: 0; color: var(--text-muted, #94a3b8); }
+.trigger.has-value .icon { color: var(--primary-base, #4361ee); }
+
+.method {
+    flex-shrink: 0;
+    font-family: ui-monospace, monospace;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 5px; border-radius: 4px;
+    background: var(--bg-base, #f1f5f9);
+    color: var(--text-muted, #64748b);
+    display: none;
+}
+.trigger.has-value .method { display: inline-block; color: var(--primary-base, #4361ee); }
+
+.value {
+    flex: 1; min-width: 0;
+    font-size: 12px; font-weight: 500;
+    color: var(--text-main, #1e293b);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-family: ui-monospace, monospace;
+}
+.trigger:not(.has-value) .value { color: var(--text-muted, #94a3b8); font-family: inherit; font-weight: 400; }
+
+.chevron { flex-shrink: 0; color: var(--text-muted, #94a3b8); transition: transform 0.2s ease; }
+.trigger.open .chevron { transform: rotate(180deg); color: var(--primary-base, #4361ee); }
+
+.clear-btn {
+    display: none; align-items: center; justify-content: center;
+    width: 32px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer; flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.clear-btn:hover {
+    color: var(--danger-base, #ef4444);
+    border-color: var(--danger-base, #ef4444);
+    background: color-mix(in srgb, var(--danger-base, #ef4444) 6%, transparent);
+}
+
+/* ── Popover panel ── */
+.panel {
+    margin: 0; padding: 0; border: 0;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+    overflow: hidden;
+}
+.panel:popover-open { display: block; }
+
+.provider-row {
+    display: flex; gap: 6px; align-items: center;
+    padding: 6px 6px 4px;
+    border-bottom: 1px solid var(--border-default, #e2e8f0);
+}
+.provider-row label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-muted, #94a3b8);
+}
+.provider-select {
+    flex: 1; min-width: 0;
+    padding: 4px 6px;
+    border: 1px solid var(--border-default, #e2e8f0); border-radius: 6px;
+    background: var(--bg-base, #f8fafc);
+    font-family: inherit; font-size: 11px; color: var(--text-main, #1e293b);
+    outline: none; cursor: pointer;
+}
+.provider-select:focus { border-color: var(--primary-base, #4361ee); }
+
+.search-wrap { padding: 6px 6px 2px; }
+.search {
+    width: 100%; box-sizing: border-box;
+    padding: 6px 8px;
+    border: 1px solid var(--border-default, #e2e8f0); border-radius: 6px;
+    background: var(--bg-base, #f8fafc);
+    font-size: 11px; font-family: inherit; color: var(--text-main, #1e293b);
+    outline: none; transition: border-color 0.15s;
+}
+.search:focus { border-color: var(--primary-base, #4361ee); }
+
+.list { list-style: none; margin: 0; padding: 4px; max-height: 280px; overflow-y: auto; }
+.empty { display: none; padding: 12px; text-align: center; font-size: 11px; color: var(--text-muted, #94a3b8); }
+.list:empty + .empty { display: block; }
+
+.option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 6px;
+    font-size: 12px; color: var(--text-main, #1e293b);
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.option:hover    { background: var(--bg-base, #f1f5f9); }
+.option.selected { background: var(--primary-muted, rgb(67 97 238 / 0.1)); color: var(--primary-base, #4361ee); }
+
+.option-method {
+    flex-shrink: 0;
+    font-family: ui-monospace, monospace;
+    font-size: 9px; font-weight: 700;
+    padding: 2px 5px; border-radius: 4px;
+    background: var(--bg-base, #f1f5f9);
+    color: var(--text-muted, #64748b);
+    min-width: 36px; text-align: center;
+}
+.option.selected .option-method { background: var(--primary-base, #4361ee); color: #fff; }
+
+.option-path {
+    flex: 1; min-width: 0;
+    font-family: ui-monospace, monospace; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.option-summary {
+    flex-shrink: 0;
+    font-size: 10px; color: var(--text-muted, #94a3b8);
+    max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+`;
+
+  // src/control/components/admin/SchemaPicker/template.ts
+  var ICON = `
+<svg class="icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+    <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c2.49-2.7 3.9-6.3 3.9-9 0-2.7-1.41-6.3-3.9-9m0 18c-2.49-2.7-3.9-6.3-3.9-9 0-2.7 1.41-6.3 3.9-9m-9 9a9 9 0 0 1 9-9"/>
+</svg>
+`;
+  var CHEVRON = `
+<svg class="chevron" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+    <path d="m6 9 6 6 6-6"/>
+</svg>
+`;
+  var CLEAR = `
+<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+</svg>
+`;
+  function buildShadow2(host, label) {
+    const shadow = host.attachShadow({ mode: "open" });
+    shadow.innerHTML = `
+        <style>${SchemaPicker_default}</style>
+        <div class="field">
+            ${label ? `<span class="label">${label}</span>` : ""}
+            <div class="input-row">
+                <button class="trigger" type="button" tabindex="0">
+                    ${ICON}
+                    <span class="method"></span>
+                    <span class="value">Select endpoint</span>
+                    ${CHEVRON}
+                </button>
+                <button class="clear-btn" type="button" title="Clear selection">${CLEAR}</button>
+            </div>
+        </div>
+        <div class="panel" popover="auto">
+            <div class="provider-row">
+                <label>Provider</label>
+                <select class="provider-select"></select>
+            </div>
+            <div class="search-wrap"><input class="search" type="text" placeholder="Search endpoints..." spellcheck="false"></div>
+            <ul class="list"></ul>
+            <div class="empty">No endpoints — sync the provider first.</div>
+        </div>
+    `;
+    return {
+      trigger: shadow.querySelector(".trigger"),
+      triggerMethod: shadow.querySelector(".trigger .method"),
+      triggerValue: shadow.querySelector(".trigger .value"),
+      clearBtn: shadow.querySelector(".clear-btn"),
+      panel: shadow.querySelector(".panel"),
+      providerSelect: shadow.querySelector(".provider-select"),
+      search: shadow.querySelector(".search"),
+      list: shadow.querySelector(".list"),
+      empty: shadow.querySelector(".empty")
+    };
+  }
+
+  // src/control/components/admin/SchemaPicker/flows.ts
+  async function fetchProviders(api) {
+    const res = await fetch(`${api}/providers`, { headers: { Accept: "application/json" } });
+    if (!res.ok) {
+      showToast("Failed to load providers", { type: "error" });
+      return [];
+    }
+    const list = await res.json();
+    return list.map((p) => ({
+      id: p.id,
+      server: (p.server ?? "").replace(/\/+$/, "")
+    }));
+  }
+  async function fetchEndpoints(api, providerId) {
+    const url = `${api}/provider/endpoints?id=${encodeURIComponent(providerId)}`;
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (res.status === 404)
+      return [];
+    if (!res.ok) {
+      showToast(`Failed to load endpoints for "${providerId}"`, { type: "error" });
+      return [];
+    }
+    return res.json();
+  }
+
+  // src/control/components/admin/SchemaPicker/controller.ts
+  function buildUrl(serverUrl, path) {
+    const base = (serverUrl ?? "").replace(/\/+$/, "");
+    const tail = path.startsWith("/") ? path : `/${path}`;
+    return `${base}${tail}`;
+  }
+  function findProviderForValue(providers, value) {
+    if (!value)
+      return null;
+    let best = null;
+    for (const p of providers) {
+      if (!p.server)
+        continue;
+      if (value === p.server || value.startsWith(p.server + "/")) {
+        if (!best || p.server.length > best.server.length)
+          best = p;
+      }
+    }
+    return best;
+  }
+  function setValue2(host, url) {
+    host._value = url;
+    host._internals.setFormValue(url);
+    if (!host._refs)
+      return;
+    const has = !!url;
+    host._refs.trigger.classList.toggle("has-value", has);
+    host._refs.clearBtn.style.display = has ? "flex" : "none";
+    host._refs.triggerMethod.textContent = "";
+    if (has) {
+      const match = findProviderForValue(host._providers, url);
+      host._refs.triggerValue.textContent = match ? url.slice(match.server.length) || "/" : url;
+    } else {
+      host._refs.triggerValue.textContent = "Select endpoint";
+    }
+  }
+  function openPanel2(host) {
+    positionPanel2(host);
+    host._refs.panel.showPopover();
+    host._refs.trigger.classList.add("open");
+    host._isOpen = true;
+    initProviderState(host);
+    setTimeout(() => host._refs.search.focus(), 0);
+  }
+  function closePanel2(host) {
+    if (host._refs.panel.matches(":popover-open"))
+      host._refs.panel.hidePopover();
+    host._refs.trigger.classList.remove("open");
+    host._isOpen = false;
+    host._refs.search.value = "";
+    renderEndpoints(host);
+  }
+  function positionPanel2(host) {
+    const GUTTER = 8;
+    const r = host._refs.trigger.getBoundingClientRect();
+    const p = host._refs.panel;
+    const maxWidth = window.innerWidth - GUTTER * 2;
+    const width = Math.min(Math.max(r.width, 360), maxWidth);
+    let left = r.left;
+    if (left + width > window.innerWidth - GUTTER) {
+      left = Math.max(GUTTER, r.right - width);
+    }
+    p.style.top = `${r.bottom + 4}px`;
+    p.style.left = `${left}px`;
+    p.style.width = `${width}px`;
+    p.style.position = "fixed";
+  }
+  async function initProviderState(host) {
+    if (host._providers.length === 0) {
+      host._providers = await fetchProviders(host._api);
+      renderProviderOptions(host);
+      setValue2(host, host._value);
+    }
+    const match = findProviderForValue(host._providers, host._value);
+    const fallback = host._providers[0]?.id ?? "";
+    const active = match?.id ?? fallback;
+    if (active && active !== host._activeProviderId) {
+      host._refs.providerSelect.value = active;
+      await loadEndpointsFor(host, active);
+    } else {
+      renderEndpoints(host);
+    }
+  }
+  async function loadEndpointsFor(host, providerId) {
+    host._activeProviderId = providerId;
+    if (!host._endpointsByProvider.has(providerId)) {
+      host._endpointsByProvider.set(providerId, await fetchEndpoints(host._api, providerId));
+    }
+    renderEndpoints(host);
+  }
+  function renderProviderOptions(host) {
+    host._refs.providerSelect.replaceChildren(...host._providers.map((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.id;
+      return opt;
+    }));
+  }
+  function renderEndpoints(host) {
+    const all = host._endpointsByProvider.get(host._activeProviderId) ?? [];
+    const q = host._refs.search.value.trim().toLowerCase();
+    const allowed = parseMethodsFilter(host.getAttribute("methods"));
+    const filtered = all.filter((e) => {
+      if (allowed && !allowed.has(e.method.toUpperCase()))
+        return false;
+      if (!q)
+        return true;
+      return e.path.toLowerCase().includes(q) || e.summary.toLowerCase().includes(q) || e.tags.some((t) => t.toLowerCase().includes(q));
+    });
+    const active = host._providers.find((p) => p.id === host._activeProviderId);
+    const activeServer = active?.server ?? "";
+    const selectedPath = host._value.startsWith(activeServer) ? host._value.slice(activeServer.length) : "";
+    host._refs.list.replaceChildren(...filtered.map((e) => buildOption2(e, e.path === selectedPath)));
+  }
+  function parseMethodsFilter(raw) {
+    if (!raw)
+      return null;
+    const set = new Set(raw.split(",").map((m) => m.trim().toUpperCase()).filter(Boolean));
+    return set.size > 0 ? set : null;
+  }
+  function buildOption2(ep, selected) {
+    const li = document.createElement("li");
+    li.className = "option" + (selected ? " selected" : "");
+    li.dataset.id = ep.id;
+    li.innerHTML = `
+        <span class="option-method">${ep.method}</span>
+        <span class="option-path"></span>
+        ${ep.summary ? `<span class="option-summary"></span>` : ""}
+    `;
+    li.querySelector(".option-path").textContent = ep.path;
+    if (ep.summary)
+      li.querySelector(".option-summary").textContent = ep.summary;
+    return li;
+  }
+
+  // src/control/components/admin/SchemaPicker/SchemaPicker.ts
+  class SchemaPicker extends HTMLElement {
+    static formAssociated = true;
+    _refs;
+    _internals;
+    _value = "";
+    _isOpen = false;
+    _providers = [];
+    _activeProviderId = "";
+    _endpointsByProvider = new Map;
+    _onWindowClick = (e) => {
+      if (this._isOpen && !this.contains(e.target))
+        closePanel2(this);
+    };
+    _onProviderSaved = () => {
+      this._providers = [];
+      if (this._isOpen)
+        closePanel2(this);
+    };
+    constructor() {
+      super();
+      this._internals = this.attachInternals();
+    }
+    connectedCallback() {
+      if (!this.shadowRoot) {
+        this._refs = buildShadow2(this, this.getAttribute("label"));
+        this._wire();
+      }
+      const v = this._value || this.getAttribute("value") || "";
+      setValue2(this, v);
+      window.addEventListener("click", this._onWindowClick);
+      document.addEventListener("new:provider", this._onProviderSaved);
+      document.addEventListener("provider:synced", this._onProviderSaved);
+    }
+    disconnectedCallback() {
+      window.removeEventListener("click", this._onWindowClick);
+      document.removeEventListener("new:provider", this._onProviderSaved);
+      document.removeEventListener("provider:synced", this._onProviderSaved);
+    }
+    get value() {
+      return this._value;
+    }
+    set value(v) {
+      setValue2(this, v);
+    }
+    get name() {
+      return this.getAttribute("name");
+    }
+    get _api() {
+      return this.getAttribute("api") ?? "/api/data";
+    }
+    _wire() {
+      const r = this._refs;
+      r.trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._isOpen ? closePanel2(this) : openPanel2(this);
+      });
+      r.clearBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        setValue2(this, "");
+        this.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      r.providerSelect.addEventListener("change", () => {
+        loadEndpointsFor(this, r.providerSelect.value);
+      });
+      r.search.addEventListener("input", () => renderEndpoints(this));
+      r.list.addEventListener("click", (e) => {
+        const li = e.target.closest(".option");
+        if (!li || !li.dataset.id)
+          return;
+        const [, ...rest] = li.dataset.id.split(" ");
+        const path = rest.join(" ");
+        if (!path)
+          return;
+        const provider = this._providers.find((p) => p.id === this._activeProviderId);
+        if (!provider)
+          return;
+        setValue2(this, buildUrl(provider.server, path));
+        this.dispatchEvent(new Event("change", { bubbles: true }));
+        closePanel2(this);
+      });
+    }
+  }
+  if (!customElements.get("cms-schema-picker")) {
+    customElements.define("cms-schema-picker", SchemaPicker);
+  }
 
   // src/control/components/admin/Secrets/template.html
   var template_default3 = `<div class="add">
@@ -10829,7 +11286,7 @@ ${followMessage}`)) {
 `;
 
   // src/control/components/editor/componentSync/PageLink/template.ts
-  function buildShadow2(host, label) {
+  function buildShadow3(host, label) {
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = `
         <style>${PageLink_default}</style>
@@ -11008,11 +11465,11 @@ ${followMessage}`)) {
     host._options.forEach((li) => li.classList.toggle("selected", li.dataset.value === host._value));
   }
   function select(host, v, label) {
-    setValue2(host, v, label);
-    closePanel2(host);
+    setValue3(host, v, label);
+    closePanel3(host);
     host.dispatchEvent(new Event("change", { bubbles: true }));
   }
-  function setValue2(host, v, label) {
+  function setValue3(host, v, label) {
     host._value = v;
     const r = host._refs;
     r.display.textContent = v ? label : "No link";
@@ -11023,7 +11480,7 @@ ${followMessage}`)) {
     r.mediaCurrent.textContent = m ? v : "";
     r.mediaCurrent.classList.toggle("has-value", m);
   }
-  function openPanel2(host) {
+  function openPanel3(host) {
     document.querySelectorAll("p9r-link, p9r-select").forEach((el) => {
       if (el !== host && "_close" in el)
         el._close();
@@ -11040,7 +11497,7 @@ ${followMessage}`)) {
         host._refs.externalInput.focus();
     });
   }
-  function closePanel2(host) {
+  function closePanel3(host) {
     host._isOpen = false;
     host._refs.panel.classList.remove("open");
     host._refs.trigger.classList.remove("open");
@@ -11069,20 +11526,20 @@ ${followMessage}`)) {
     });
     r.externalInput.addEventListener("input", () => {
       const url = r.externalInput.value.trim();
-      setValue2(host, url, url || "No link");
+      setValue3(host, url, url || "No link");
       fire();
     });
     r.externalInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        closePanel2(host);
+        closePanel3(host);
       } else if (e.key === "Escape")
-        closePanel2(host);
+        closePanel3(host);
     });
     r.mediaPickBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       openMediaCenter(host, (src) => {
-        setValue2(host, src, mediaLabel(src));
+        setValue3(host, src, mediaLabel(src));
         fire();
       });
     });
@@ -11116,7 +11573,7 @@ ${followMessage}`)) {
     };
     constructor() {
       super();
-      this._refs = buildShadow2(this, this.getAttribute("label"));
+      this._refs = buildShadow3(this, this.getAttribute("label"));
       wire(this);
     }
     connectedCallback() {
@@ -11134,10 +11591,10 @@ ${followMessage}`)) {
       window.removeEventListener("click", this._onWindowClick);
     }
     _open() {
-      openPanel2(this);
+      openPanel3(this);
     }
     _close() {
-      closePanel2(this);
+      closePanel3(this);
     }
     async _loadPages() {
       this._pages = await fetchPages();
@@ -11152,15 +11609,15 @@ ${followMessage}`)) {
     set value(v) {
       if (isMedia(v)) {
         this._mode = "media";
-        setValue2(this, v, mediaLabel(v));
+        setValue3(this, v, mediaLabel(v));
       } else if (isExternal(v)) {
         this._mode = "external";
         this._refs.externalInput.value = v;
-        setValue2(this, v, v);
+        setValue3(this, v, v);
       } else {
         this._mode = "page";
         const m = this._pages.find((p) => p.path === v);
-        setValue2(this, v, m ? m.title : v || "No link");
+        setValue3(this, v, m ? m.title : v || "No link");
       }
       applyMode(this);
     }
@@ -16809,7 +17266,7 @@ dialog::backdrop {
 `;
 
   // src/control/components/editor/EditorSystem/EditorRoot/TemplatePicker/TemplatePicker.ts
-  var ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
+  var ICON2 = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
 
   class TemplatePicker extends HTMLElement {
     _dialog = null;
@@ -16873,7 +17330,7 @@ dialog::backdrop {
             <div class="list">
                 ${items.map((t) => `
                     <button type="button" class="card" data-id="${t.id}">
-                        <span class="icon">${ICON}</span>
+                        <span class="icon">${ICON2}</span>
                         <span class="name">${escapeHtml2(t.name)}</span>
                     </button>
                 `).join("")}
@@ -19328,6 +19785,9 @@ button.active svg {
     _onRootChange = (e) => handleCustomColorInput(this, e);
     _onSelectionChange = () => handleSelection(this);
     _onOutsideMousedown = (e) => handleOutsideMouseDown(this, e);
+    _onExtensionsInvalidated = () => {
+      this._lastEditable = null;
+    };
     _rootListenersAttached = false;
     constructor() {
       super({
@@ -19346,6 +19806,7 @@ button.active svg {
       }
       document.addEventListener("selectionchange", this._onSelectionChange);
       document.addEventListener("mousedown", this._onOutsideMousedown);
+      document.addEventListener("richtextbar:invalidate", this._onExtensionsInvalidated);
       if (!this.pageLink) {
         this.pageLink = document.createElement("p9r-link");
         this.pageLink.setAttribute("label", "");
@@ -19356,6 +19817,7 @@ button.active svg {
     disconnectedCallback() {
       document.removeEventListener("selectionchange", this._onSelectionChange);
       document.removeEventListener("mousedown", this._onOutsideMousedown);
+      document.removeEventListener("richtextbar:invalidate", this._onExtensionsInvalidated);
     }
     show(rect) {
       this.classList.add("visible");
