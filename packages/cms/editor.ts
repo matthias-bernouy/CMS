@@ -9,3 +9,4 @@
  */
 export { Editor } from "src/control/core/editorSystem/Editor/Editor";
 export { registerEditor, registerEditor_opaque } from "src/control/core/editorSystem/registerEditor";
+export { getFields } from "src/control/core/data/getFields";

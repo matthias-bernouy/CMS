@@ -7,7 +7,6 @@ import type {
     ResolvedParameter,
     ResolvedRequestBody,
     SlimEndpoint,
-    TagSummary,
 } from "./types";
 import { deref } from "./helpers/deref";
 import { flattenSchema } from "./helpers/flattenSchema";
@@ -64,16 +63,6 @@ export class SpecResolver {
     getResponseFields(id: string): string[] {
         const schema = this.getResponseSchema(id);
         return schema ? flattenSchema(schema) : [];
-    }
-
-    listTags(): TagSummary[] {
-        const counts = new Map<string, number>();
-        for (const ep of this.listEndpoints()) {
-            for (const tag of ep.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
-        }
-        return Array.from(counts.entries())
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => a.name.localeCompare(b.name));
     }
 
     search(query: string): SlimEndpoint[] {

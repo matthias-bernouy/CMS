@@ -134,15 +134,6 @@ describe("SpecResolver", () => {
         expect(fields.sort()).toEqual(["age", "firstname", "id"]);
     });
 
-    test("listTags counts and dedups across operations", () => {
-        const r = new SpecResolver(SPEC);
-        const tags = r.listTags();
-        expect(tags).toEqual([
-            { name: "Admin", count: 1 },
-            { name: "Users", count: 3 },
-        ]);
-    });
-
     test("search matches path, summary, and tags case-insensitively", () => {
         const r = new SpecResolver(SPEC);
         expect(r.search("user").map(e => e.id).sort()).toEqual(["GET /users", "GET /users/{id}", "POST /users"]);

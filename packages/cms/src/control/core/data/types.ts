@@ -108,5 +108,3 @@ export type FullEndpoint = SlimEndpoint & {
     requestBody:    ResolvedRequestBody | null;
     responseSchema: JSONSchema | null;
 };
-
-export type TagSummary = { name: string; count: number };
