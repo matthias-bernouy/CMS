@@ -1,7 +1,7 @@
 import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
 import type { TDataProviderListItem } from "src/socle/interfaces/Data/data";
 
-type ProviderRef = { id: string; server: string };
+type ProviderRef = { id: string; origin: string };
 
 /**
  * Re-route bloc fetches that hit a registered Data Provider to the
@@ -23,23 +23,25 @@ export function installFetchProxy(): () => void {
     const basePath = getMetaBasePath();
     let providers: ProviderRef[] = [];
 
-    originalFetch(`${basePath}/api/data/providers`)
+    const providersReady = originalFetch(`${basePath}/api/data/providers`)
         .then(r => r.ok ? r.json() : [])
         .then((list: unknown) => {
             if (!Array.isArray(list)) return;
             providers = list
                 .map(p => ({
                     id:     (p as TDataProviderListItem).id,
-                    server: ((p as TDataProviderListItem).server ?? "").replace(/\/+$/, ""),
+                    origin: safeOrigin((p as TDataProviderListItem).server ?? ""),
                 }))
-                .filter(p => p.id && p.server);
+                .filter(p => p.id && p.origin);
         })
         .catch(() => { /* offline / auth — keep empty list, everything passes through */ });
 
-    const proxy = ((input: RequestInfo | URL, init?: RequestInit) => {
+    const proxy = (async (input: RequestInfo | URL, init?: RequestInit) => {
+        await providersReady;
         const url    = resolveUrl(input);
         const method = resolveMethod(input, init);
-        const match  = providers.find(p => urlMatchesServer(url, p.server));
+        const origin = safeOrigin(url);
+        const match  = origin ? providers.find(p => p.origin === origin) : undefined;
         if (!match) return originalFetch(input as RequestInfo, init);
 
         return originalFetch(`${basePath}/api/data/mock`, {
@@ -68,8 +70,7 @@ function resolveMethod(input: RequestInfo | URL, init?: RequestInit): string {
     return "GET";
 }
 
-function urlMatchesServer(url: string, server: string): boolean {
-    if (!server || !url.startsWith(server)) return false;
-    const next = url[server.length];
-    return next === undefined || next === "/" || next === "?" || next === "#";
+function safeOrigin(url: string): string {
+    try { return new URL(url).origin; }
+    catch { return ""; }
 }
