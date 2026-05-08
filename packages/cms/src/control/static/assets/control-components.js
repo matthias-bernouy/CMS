@@ -9347,6 +9347,567 @@ p9r-tag:hover {
   }
   customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
 
+  // src/control/core/dom/BubblesEvent.ts
+  class BubblesEvent extends Event {
+    constructor(type) {
+      super(type, {
+        bubbles: true,
+        composed: true
+      });
+    }
+  }
+
+  // src/control/core/showToast.ts
+  function showToast(message, options) {
+    let stack = document.querySelector("p9r-toast-stack");
+    if (!stack) {
+      stack = document.createElement("p9r-toast-stack");
+      document.body.appendChild(stack);
+    }
+    stack.push(message, options);
+  }
+
+  // src/control/components/admin/ConfirmForm/ConfirmForm.ts
+  class CmsConfirmForm extends HTMLElement {
+    _busy = false;
+    _onClick = async (e) => {
+      const trigger = e.target.closest("p9r-button, button");
+      if (!trigger || !this.contains(trigger))
+        return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (this._busy)
+        return;
+      const message = this.getAttribute("message") || "Are you sure?";
+      if (!confirm(message))
+        return;
+      this._busy = true;
+      try {
+        await this._submit(false);
+      } finally {
+        this._busy = false;
+      }
+    };
+    connectedCallback() {
+      this.addEventListener("click", this._onClick, true);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._onClick, true);
+    }
+    async _submit(force) {
+      const target = this.getAttribute("target");
+      const method = this.getAttribute("method") || "POST";
+      if (!target) {
+        showToast("cms-confirm-form: missing target", { type: "error" });
+        return;
+      }
+      const url = force ? withForce(target) : target;
+      let res;
+      try {
+        res = await fetch(url, { method });
+      } catch (e) {
+        showToast(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
+        return;
+      }
+      if (res.ok) {
+        this._onSuccess();
+        return;
+      }
+      if (res.status === 409 && !force) {
+        const body = await res.json().catch(() => ({}));
+        const followUp = formatConflict(body);
+        const followMessage = this.getAttribute("conflict-confirm-message") || "Proceed anyway?";
+        if (confirm(`${body.error ?? "Conflict"}
+
+${followUp}
+
+${followMessage}`)) {
+          await this._submit(true);
+        }
+        return;
+      }
+      const text = await res.text().catch(() => "");
+      showToast(`HTTP ${res.status} ${text}`.trim(), { type: "error" });
+    }
+    _onSuccess() {
+      const emit = this.getAttribute("emit");
+      if (emit)
+        document.dispatchEvent(new BubblesEvent(emit));
+    }
+  }
+  function withForce(target) {
+    return target + (target.includes("?") ? "&" : "?") + "force=true";
+  }
+  function formatConflict(body) {
+    const lines = [];
+    const pages = Array.isArray(body?.pages) ? body.pages : [];
+    const templates = Array.isArray(body?.templates) ? body.templates : [];
+    const snippets = Array.isArray(body?.snippets) ? body.snippets : [];
+    if (pages.length) {
+      lines.push("Pages:");
+      for (const p of pages)
+        lines.push(`  • ${p.title || p.path}`);
+    }
+    if (templates.length) {
+      if (lines.length)
+        lines.push("");
+      lines.push("Templates:");
+      for (const t of templates)
+        lines.push(`  • ${t.name || t.identifier}`);
+    }
+    if (snippets.length) {
+      if (lines.length)
+        lines.push("");
+      lines.push("Snippets:");
+      for (const s of snippets)
+        lines.push(`  • ${s.name || s.identifier}`);
+    }
+    return lines.join(`
+`);
+  }
+  customElements.define("cms-confirm-form", CmsConfirmForm);
+
+  // src/control/components/admin/CredentialSelect/CredentialSelect.css
+  var CredentialSelect_default = `:host { display: block; }
+
+.field { display: flex; flex-direction: column; gap: 6px; position: relative; }
+
+.label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+}
+
+.input-row { display: flex; gap: 4px; }
+
+.trigger {
+    display: flex; align-items: center; gap: 8px;
+    flex: 1; min-width: 0;
+    padding: 7px 10px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    cursor: pointer; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.trigger:hover           { border-color: var(--text-muted, #94a3b8); }
+.trigger:focus-visible   { border-color: var(--primary-base, #4361ee); box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15)); }
+.trigger.open            { border-color: var(--primary-base, #4361ee); }
+.trigger.has-value       { border-color: var(--primary-base, #4361ee); background: var(--primary-muted, rgb(67 97 238 / 0.06)); }
+
+.key-icon { flex-shrink: 0; color: var(--text-muted, #94a3b8); }
+.trigger.has-value .key-icon { color: var(--primary-base, #4361ee); }
+
+.value {
+    flex: 1; min-width: 0;
+    font-size: 12px; font-weight: 500;
+    color: var(--text-main, #1e293b);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-family: ui-monospace, monospace;
+}
+
+.chevron { flex-shrink: 0; color: var(--text-muted, #94a3b8); transition: transform 0.2s ease; }
+.trigger.open .chevron { transform: rotate(180deg); color: var(--primary-base, #4361ee); }
+
+.clear-btn {
+    display: none; align-items: center; justify-content: center;
+    width: 32px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer; flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.clear-btn:hover {
+    color: var(--danger-base, #ef4444);
+    border-color: var(--danger-base, #ef4444);
+    background: color-mix(in srgb, var(--danger-base, #ef4444) 6%, transparent);
+}
+
+/* ── Popover panel (top-layer, JS-positioned via inset) ── */
+
+.panel {
+    /* Reset UA popover styles */
+    margin: 0; padding: 0; border: 0;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+    overflow: hidden;
+    /* Position is JS-driven — \`top\`/\`left\`/\`width\` set on showPopover() */
+}
+.panel:popover-open { display: block; }
+
+.create-btn {
+    display: block; width: 100%;
+    padding: 9px 10px;
+    border: 0; border-bottom: 1px solid var(--border-default, #e2e8f0);
+    background: var(--bg-base, #f8fafc);
+    font: inherit; font-size: 11px; font-weight: 600;
+    color: var(--primary-base, #4361ee);
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.create-btn:hover { background: var(--primary-muted, rgb(67 97 238 / 0.08)); }
+
+.search-wrap { padding: 6px 6px 2px; }
+.search {
+    width: 100%; box-sizing: border-box;
+    padding: 6px 8px;
+    border: 1px solid var(--border-default, #e2e8f0); border-radius: 6px;
+    background: var(--bg-base, #f8fafc);
+    font-size: 11px; font-family: inherit; color: var(--text-main, #1e293b);
+    outline: none; transition: border-color 0.15s;
+}
+.search:focus { border-color: var(--primary-base, #4361ee); }
+
+.list { list-style: none; margin: 0; padding: 4px; max-height: 200px; overflow-y: auto; }
+.empty { display: none; padding: 12px; text-align: center; font-size: 11px; color: var(--text-muted, #94a3b8); }
+.list:empty + .empty { display: block; }
+
+.option {
+    padding: 6px 10px; border-radius: 6px;
+    font-size: 12px; font-weight: 500;
+    color: var(--text-main, #1e293b);
+    font-family: ui-monospace, monospace;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.option:hover    { background: var(--bg-base, #f1f5f9); }
+.option.selected { background: var(--primary-muted, rgb(67 97 238 / 0.1)); color: var(--primary-base, #4361ee); }
+
+/* ── Create dialog (modal, top-layer) ── */
+
+.create-dialog {
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 10px;
+    box-shadow: 0 16px 40px rgb(0 0 0 / 0.16);
+    background: var(--bg-surface, #fff);
+    color: var(--text-main, #1e293b);
+    width: 360px; max-width: calc(100vw - 32px);
+}
+.create-dialog::backdrop {
+    background: rgb(15 23 42 / 0.45);
+}
+
+.create-form { display: flex; flex-direction: column; gap: 12px; padding: 16px; margin: 0; }
+.create-title { margin: 0; font-size: 13px; font-weight: 700; color: var(--text-main, #1e293b); }
+
+.create-field { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
+.create-field > span {
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    font-size: 10px; color: var(--text-muted, #94a3b8);
+}
+.create-field input {
+    padding: 7px 10px;
+    border: 1px solid var(--border-default, #e2e8f0); border-radius: 6px;
+    background: var(--bg-base, #f8fafc);
+    font-size: 12px; font-family: ui-monospace, monospace; color: var(--text-main, #1e293b);
+    outline: none; transition: border-color 0.15s;
+}
+.create-field input:focus { border-color: var(--primary-base, #4361ee); }
+.create-field small { color: var(--text-muted, #94a3b8); font-size: 10px; }
+
+.create-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+.create-actions button {
+    padding: 7px 14px;
+    border: 1px solid var(--border-default, #e2e8f0); border-radius: 6px;
+    font: inherit; font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    background: var(--bg-surface, #fff);
+    color: var(--text-main, #1e293b);
+    transition: background 0.1s, border-color 0.1s;
+}
+.create-actions button:hover { background: var(--bg-base, #f1f5f9); }
+.create-actions .create-submit {
+    border-color: var(--primary-base, #4361ee);
+    background: var(--primary-base, #4361ee);
+    color: #fff;
+}
+.create-actions .create-submit:hover { filter: brightness(0.96); }
+`;
+
+  // src/control/components/admin/CredentialSelect/icons.ts
+  var ICON_KEY = `
+<svg class="key-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+    <path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/>
+    <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>
+</svg>
+`;
+
+  // src/control/components/admin/CredentialSelect/template.ts
+  function buildShadow(host, label) {
+    const shadow = host.attachShadow({ mode: "open" });
+    shadow.innerHTML = `
+        <style>${CredentialSelect_default}</style>
+        <div class="field">
+            ${label ? `<span class="label">${label}</span>` : ""}
+            <div class="input-row">
+                <button class="trigger" type="button" tabindex="0">
+                    ${ICON_KEY}
+                    <span class="value">No credential</span>
+                    <svg class="chevron" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                </button>
+                <button class="clear-btn" type="button" title="Remove credential">
+                    <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="panel" popover="auto">
+            <button type="button" class="create-btn">+ Create new credential</button>
+            <div class="search-wrap"><input class="search" type="text" placeholder="Search credentials..." spellcheck="false"></div>
+            <ul class="list"></ul>
+            <div class="empty">No credentials yet</div>
+        </div>
+        <dialog class="create-dialog">
+            <form class="create-form" method="dialog">
+                <h3 class="create-title">Create credential</h3>
+                <label class="create-field">
+                    <span>Key</span>
+                    <input class="create-key" type="text" placeholder="MY_API_KEY" spellcheck="false" autocomplete="off">
+                    <small>Uppercase letters, digits, underscore</small>
+                </label>
+                <label class="create-field">
+                    <span>Value</span>
+                    <input class="create-value" type="password" placeholder="Kept server-side" autocomplete="off">
+                </label>
+                <div class="create-actions">
+                    <button type="button" class="create-cancel">Cancel</button>
+                    <button type="button" class="create-submit">Create</button>
+                </div>
+            </form>
+        </dialog>
+    `;
+    return {
+      trigger: shadow.querySelector(".trigger"),
+      display: shadow.querySelector(".value"),
+      clearBtn: shadow.querySelector(".clear-btn"),
+      panel: shadow.querySelector(".panel"),
+      list: shadow.querySelector(".list"),
+      empty: shadow.querySelector(".empty"),
+      search: shadow.querySelector(".search"),
+      createBtn: shadow.querySelector(".create-btn"),
+      dialog: shadow.querySelector(".create-dialog"),
+      dialogKey: shadow.querySelector(".create-key"),
+      dialogValue: shadow.querySelector(".create-value"),
+      dialogCancel: shadow.querySelector(".create-cancel"),
+      dialogSubmit: shadow.querySelector(".create-submit")
+    };
+  }
+
+  // src/control/components/admin/CredentialSelect/flows.ts
+  var SAVED_EVENT = "secret:saved";
+  async function fetchKeys(api) {
+    const res = await fetch(`${api}/keys`, { headers: { Accept: "application/json" } });
+    if (!res.ok) {
+      showToast("Failed to load credentials", { type: "error" });
+      return [];
+    }
+    return res.json();
+  }
+  async function createCredential(api, key, value) {
+    const res = await fetch(api, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value })
+    });
+    if (res.ok) {
+      document.dispatchEvent(new BubblesEvent(SAVED_EVENT));
+      return { ok: true };
+    }
+    let error = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body && typeof body.error === "string")
+        error = body.error;
+    } catch {}
+    return { ok: false, error };
+  }
+
+  // src/control/components/admin/CredentialSelect/controller.ts
+  var REF_PATTERN = /^\$\{([A-Z][A-Z0-9_]*)\}$/;
+  function refToDisplay(ref) {
+    return ref.match(REF_PATTERN)?.[1] ?? "";
+  }
+  function keyToRef(key) {
+    return `\${${key}}`;
+  }
+  function setValue(host, ref) {
+    host._value = ref;
+    host._internals.setFormValue(ref);
+    const display = refToDisplay(ref);
+    host._refs.display.textContent = display || "No credential";
+    const has = ref !== "";
+    host._refs.trigger.classList.toggle("has-value", has);
+    host._refs.clearBtn.style.display = has ? "flex" : "none";
+    host._refs.list.querySelectorAll(".option").forEach((li) => {
+      li.classList.toggle("selected", li.dataset.key === display);
+    });
+  }
+  function openPanel(host) {
+    positionPanel(host);
+    host._refs.panel.showPopover();
+    host._refs.trigger.classList.add("open");
+    host._isOpen = true;
+    refreshList(host);
+    setTimeout(() => host._refs.search.focus(), 0);
+  }
+  function closePanel(host) {
+    if (host._refs.panel.matches(":popover-open"))
+      host._refs.panel.hidePopover();
+    host._refs.trigger.classList.remove("open");
+    host._isOpen = false;
+    host._refs.search.value = "";
+    renderList(host, host._keys);
+  }
+  function positionPanel(host) {
+    const r = host._refs.trigger.getBoundingClientRect();
+    const p = host._refs.panel;
+    p.style.top = `${r.bottom + 4}px`;
+    p.style.left = `${r.left}px`;
+    p.style.width = `${r.width}px`;
+    p.style.position = "fixed";
+  }
+  async function refreshList(host) {
+    host._keys = await fetchKeys(host._api);
+    host._keys.sort((a, b) => a.localeCompare(b));
+    renderList(host, host._keys);
+  }
+  function renderList(host, keys) {
+    const selected = refToDisplay(host._value);
+    host._refs.list.replaceChildren(...keys.map((k) => buildOption(k, k === selected)));
+  }
+  function buildOption(key, selected) {
+    const li = document.createElement("li");
+    li.className = "option" + (selected ? " selected" : "");
+    li.dataset.key = key;
+    li.textContent = key;
+    return li;
+  }
+
+  // src/control/components/admin/CredentialSelect/dialog.ts
+  var KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+  function openCreateDialog(host) {
+    host._refs.dialogKey.value = "";
+    host._refs.dialogValue.value = "";
+    host._refs.dialog.showModal();
+    setTimeout(() => host._refs.dialogKey.focus(), 0);
+  }
+  async function submitCreate(host) {
+    const key = host._refs.dialogKey.value.trim();
+    const value = host._refs.dialogValue.value;
+    if (!KEY_PATTERN.test(key)) {
+      showToast("Invalid key: must match /^[A-Z][A-Z0-9_]*$/", { type: "error" });
+      return;
+    }
+    if (host._keys.includes(key)) {
+      showToast(`Credential ${key} already exists`, { type: "warning" });
+      return;
+    }
+    const r = await createCredential(host._api, key, value);
+    if (!r.ok) {
+      showToast(`Create failed: ${r.error}`, { type: "error" });
+      return;
+    }
+    showToast(`Credential ${key} created`, { type: "success" });
+    host._refs.dialog.close();
+    await refreshList(host);
+    setValue(host, keyToRef(key));
+    host.dispatchEvent(new Event("change", { bubbles: true }));
+    closePanel(host);
+  }
+
+  // src/control/components/admin/CredentialSelect/CredentialSelect.ts
+  class CredentialSelect extends HTMLElement {
+    static formAssociated = true;
+    _refs;
+    _internals;
+    _value = "";
+    _isOpen = false;
+    _keys = [];
+    _onSecretSaved = () => {
+      if (this._isOpen)
+        refreshList(this);
+    };
+    constructor() {
+      super();
+      this._internals = this.attachInternals();
+    }
+    connectedCallback() {
+      this._refs = buildShadow(this, this.getAttribute("label"));
+      this._wire();
+      const v = this.getAttribute("value") || "";
+      if (v)
+        setValue(this, v);
+      document.addEventListener("secret:saved", this._onSecretSaved);
+    }
+    disconnectedCallback() {
+      document.removeEventListener("secret:saved", this._onSecretSaved);
+    }
+    get value() {
+      return this._value;
+    }
+    set value(v) {
+      setValue(this, v);
+    }
+    get name() {
+      return this.getAttribute("name");
+    }
+    get _api() {
+      return this.getAttribute("api") ?? "/api/secrets";
+    }
+    _wire() {
+      const r = this._refs;
+      r.trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._isOpen ? closePanel(this) : openPanel(this);
+      });
+      r.clearBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        setValue(this, "");
+        this.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      r.panel.addEventListener("toggle", (e) => {
+        const newState = e.newState;
+        if (newState === "closed" && this._isOpen)
+          closePanel(this);
+      });
+      r.search.addEventListener("input", () => {
+        const q = r.search.value.trim().toUpperCase();
+        const filtered = q ? this._keys.filter((k) => k.includes(q)) : this._keys;
+        renderList(this, filtered);
+      });
+      r.list.addEventListener("click", (e) => {
+        const li = e.target.closest(".option");
+        if (!li || !li.dataset.key)
+          return;
+        setValue(this, keyToRef(li.dataset.key));
+        this.dispatchEvent(new Event("change", { bubbles: true }));
+        closePanel(this);
+      });
+      r.createBtn.addEventListener("click", () => openCreateDialog(this));
+      r.dialogCancel.addEventListener("click", () => r.dialog.close());
+      r.dialogSubmit.addEventListener("click", () => void submitCreate(this));
+    }
+  }
+  if (!customElements.get("cms-credential-select")) {
+    customElements.define("cms-credential-select", CredentialSelect);
+  }
+
   // src/control/components/admin/EmptyState/template.html
   var template_default2 = `<div class="cell">
     <slot name="icon"></slot>
@@ -9408,6 +9969,31 @@ p9r-tag:hover {
   if (!customElements.get("cms-empty-state")) {
     customElements.define("cms-empty-state", EmptyState);
   }
+
+  // src/control/components/admin/EventToast/EventToast.ts
+  class CmsEventToast extends HTMLElement {
+    _attached = null;
+    _onEvent = () => {
+      const message = this.getAttribute("message") ?? "";
+      const type = this.getAttribute("type") ?? "success";
+      if (message)
+        showToast(message, { type });
+    };
+    connectedCallback() {
+      this.style.display = "none";
+      const evt = this.getAttribute("event");
+      if (!evt)
+        return;
+      document.addEventListener(evt, this._onEvent);
+      this._attached = evt;
+    }
+    disconnectedCallback() {
+      if (this._attached)
+        document.removeEventListener(this._attached, this._onEvent);
+      this._attached = null;
+    }
+  }
+  customElements.define("cms-event-toast", CmsEventToast);
 
   // src/control/components/admin/HeadersInput/HeadersInput.ts
   class CmsHeadersInput extends HTMLElement {
@@ -9601,16 +10187,6 @@ p9r-tag:hover {
 }
 `;
 
-  // src/control/core/dom/BubblesEvent.ts
-  class BubblesEvent extends Event {
-    constructor(type) {
-      super(type, {
-        bubbles: true,
-        composed: true
-      });
-    }
-  }
-
   // src/control/components/admin/Secrets/actions.ts
   var RELOAD_EVENT = "secret:saved";
   async function fetchSecrets(api) {
@@ -9660,18 +10236,8 @@ p9r-tag:hover {
     });
   }
 
-  // src/control/core/showToast.ts
-  function showToast(message, options) {
-    let stack = document.querySelector("p9r-toast-stack");
-    if (!stack) {
-      stack = document.createElement("p9r-toast-stack");
-      document.body.appendChild(stack);
-    }
-    stack.push(message, options);
-  }
-
   // src/control/components/admin/Secrets/ops.ts
-  var KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+  var KEY_PATTERN2 = /^[A-Z][A-Z0-9_]*$/;
   async function opSaveRow(api, key, value) {
     const r = await postSecret(api, key, value);
     if (r.ok)
@@ -9686,7 +10252,7 @@ p9r-tag:hover {
       showToast("Key is required", { type: "error" });
       return;
     }
-    if (!KEY_PATTERN.test(key)) {
+    if (!KEY_PATTERN2.test(key)) {
       showToast(`Invalid key: must match /^[A-Z][A-Z0-9_]*$/`, { type: "error" });
       return;
     }
@@ -10263,7 +10829,7 @@ p9r-tag:hover {
 `;
 
   // src/control/components/editor/componentSync/PageLink/template.ts
-  function buildShadow(host, label) {
+  function buildShadow2(host, label) {
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = `
         <style>${PageLink_default}</style>
@@ -10442,11 +11008,11 @@ p9r-tag:hover {
     host._options.forEach((li) => li.classList.toggle("selected", li.dataset.value === host._value));
   }
   function select(host, v, label) {
-    setValue(host, v, label);
-    closePanel(host);
+    setValue2(host, v, label);
+    closePanel2(host);
     host.dispatchEvent(new Event("change", { bubbles: true }));
   }
-  function setValue(host, v, label) {
+  function setValue2(host, v, label) {
     host._value = v;
     const r = host._refs;
     r.display.textContent = v ? label : "No link";
@@ -10457,7 +11023,7 @@ p9r-tag:hover {
     r.mediaCurrent.textContent = m ? v : "";
     r.mediaCurrent.classList.toggle("has-value", m);
   }
-  function openPanel(host) {
+  function openPanel2(host) {
     document.querySelectorAll("p9r-link, p9r-select").forEach((el) => {
       if (el !== host && "_close" in el)
         el._close();
@@ -10474,7 +11040,7 @@ p9r-tag:hover {
         host._refs.externalInput.focus();
     });
   }
-  function closePanel(host) {
+  function closePanel2(host) {
     host._isOpen = false;
     host._refs.panel.classList.remove("open");
     host._refs.trigger.classList.remove("open");
@@ -10503,20 +11069,20 @@ p9r-tag:hover {
     });
     r.externalInput.addEventListener("input", () => {
       const url = r.externalInput.value.trim();
-      setValue(host, url, url || "No link");
+      setValue2(host, url, url || "No link");
       fire();
     });
     r.externalInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        closePanel(host);
+        closePanel2(host);
       } else if (e.key === "Escape")
-        closePanel(host);
+        closePanel2(host);
     });
     r.mediaPickBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       openMediaCenter(host, (src) => {
-        setValue(host, src, mediaLabel(src));
+        setValue2(host, src, mediaLabel(src));
         fire();
       });
     });
@@ -10550,7 +11116,7 @@ p9r-tag:hover {
     };
     constructor() {
       super();
-      this._refs = buildShadow(this, this.getAttribute("label"));
+      this._refs = buildShadow2(this, this.getAttribute("label"));
       wire(this);
     }
     connectedCallback() {
@@ -10568,10 +11134,10 @@ p9r-tag:hover {
       window.removeEventListener("click", this._onWindowClick);
     }
     _open() {
-      openPanel(this);
+      openPanel2(this);
     }
     _close() {
-      closePanel(this);
+      closePanel2(this);
     }
     async _loadPages() {
       this._pages = await fetchPages();
@@ -10586,15 +11152,15 @@ p9r-tag:hover {
     set value(v) {
       if (isMedia(v)) {
         this._mode = "media";
-        setValue(this, v, mediaLabel(v));
+        setValue2(this, v, mediaLabel(v));
       } else if (isExternal(v)) {
         this._mode = "external";
         this._refs.externalInput.value = v;
-        setValue(this, v, v);
+        setValue2(this, v, v);
       } else {
         this._mode = "page";
         const m = this._pages.find((p) => p.path === v);
-        setValue(this, v, m ? m.title : v || "No link");
+        setValue2(this, v, m ? m.title : v || "No link");
       }
       applyMode(this);
     }

@@ -1,6 +1,7 @@
 import type { CmsRepository, BlocListItemResponse, PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
-import type { TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
+import type { DataProviderConsumers, TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
+import { findConsumersInCollections } from "src/socle/utils/dataProviderRefs";
 import type { BuiltBloc } from "../build";
 import { PagesStore } from "./pages";
 import { SnippetsStore } from "./snippets";
@@ -86,4 +87,13 @@ export class LocalFsCmsRepository implements CmsRepository {
     getDataProvidersList():                                       Promise<TDataProviderListItem[]>  { return this._dataProviders.list(); }
     updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null>     { return this._dataProviders.update(id, data); }
     deleteDataProvider(id: string):                               Promise<void>                     { return this._dataProviders.delete(id); }
+
+    async findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers> {
+        const [pages, templates, snippets] = await Promise.all([
+            this._pages.getAll(),
+            this._templates.getAll(),
+            this._snippets.getAll(),
+        ]);
+        return findConsumersInCollections(providerId, pages, templates, snippets);
+    }
 }

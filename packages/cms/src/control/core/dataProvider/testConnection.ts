@@ -1,5 +1,8 @@
+import type { SecretStore } from 'src/socle/interfaces/SecretStore';
+import { SecretNotFound } from 'src/control/errors/SecretNotFound';
 import type { DataProviderTestDto } from '../validation/dataProvider/parseTestDto';
 import { applyAuth } from './applyAuth';
+import { resolveAuth } from './resolveAuth';
 
 const TIMEOUT_MS = 10_000;
 
@@ -11,10 +14,27 @@ export type TestConnectionResult =
  * Fetch the OpenAPI URL with the supplied auth and report back to the
  * admin UI. On a 2xx + parseable JSON spec, returns the path count. On
  * any other outcome, returns an error string suitable for inline display.
+ *
+ * Resolves `${KEY}` references in the auth payload via `secrets` before
+ * the fetch — same behaviour as `syncDataProvider`, so a successful
+ * test reflects what a real sync would do.
  */
-export async function testConnection(dto: DataProviderTestDto): Promise<TestConnectionResult> {
+export async function testConnection(
+    dto:     DataProviderTestDto,
+    secrets: SecretStore,
+): Promise<TestConnectionResult> {
+    let auth;
+    try {
+        auth = await resolveAuth(dto.auth, secrets);
+    } catch (e) {
+        if (e instanceof SecretNotFound) {
+            return { ok: false, error: `Missing secret: ${e.key}` };
+        }
+        throw e;
+    }
+
     const headers = new Headers({ Accept: 'application/json,application/yaml' });
-    applyAuth(dto.auth, headers);
+    applyAuth(auth, headers);
 
     try {
         const res = await fetch(dto.sourceUrl, {

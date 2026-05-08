@@ -3,6 +3,7 @@ import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
 import { isValidDataProviderId } from "src/socle/utils/validation";
+import { countOpenApiEndpoints, dataProviderSyncBadge } from "src/socle/utils/openapi";
 
 const FOLDER         = "data-providers";
 const FROZEN_DATE    = new Date(0);
@@ -60,13 +61,18 @@ export class DataProvidersStore {
     }
 
     async list(): Promise<TDataProviderListItem[]> {
-        return (await this.getAll()).map(p => ({
-            id:            p.id,
-            name:          p.name,
-            source:        p.source,
-            endpointCount: 0,
-            lastSyncAt:    p.lastSyncAt ? p.lastSyncAt.toDateString() : "",
-        }));
+        return (await this.getAll()).map(p => {
+            const badge = dataProviderSyncBadge(p.lastSyncAt);
+            return {
+                id:            p.id,
+                name:          p.name,
+                source:        p.source,
+                endpointCount: countOpenApiEndpoints(p.spec),
+                lastSyncAt:    p.lastSyncAt ? p.lastSyncAt.toDateString() : "",
+                syncLabel:     badge.label,
+                syncColor:     badge.color,
+            };
+        });
     }
 
     private _dir(): string                { return join(this.siteDir, FOLDER); }
@@ -74,7 +80,7 @@ export class DataProvidersStore {
 
     private async _read(id: string): Promise<TDataProvider> {
         const raw = await readFile(this._fileFor(id), "utf-8");
-        const parsed = JSON.parse(raw) as Partial<TDataProvider>;
+        const parsed = JSON.parse(raw) as Partial<TDataProvider> & { lastSyncAt?: string | null };
         if (parsed.id && parsed.id !== id) {
             throw new Error(`Data provider file ${id}.json declares id="${parsed.id}" — rename to match.`);
         }
@@ -86,15 +92,19 @@ export class DataProvidersStore {
             spec:       String(parsed.spec ?? ""),
             auth:       (parsed.auth ?? { type: "none" }) as TDataProvider["auth"],
             createdAt:  FROZEN_DATE,
-            lastSyncAt: null,
+            lastSyncAt: parsed.lastSyncAt ? new Date(parsed.lastSyncAt) : null,
         };
     }
 
     private async _write(p: TDataProvider): Promise<void> {
         await mkdir(this._dir(), { recursive: true });
-        // Drop server-managed timestamps from the on-disk shape so the file
-        // round-trips cleanly through pull/push without churning git.
-        const { createdAt: _c, lastSyncAt: _l, ...persistable } = p;
+        // `createdAt` is dropped (server-managed). `lastSyncAt` is preserved as
+        // ISO string so the admin sees the same timestamp after reload.
+        const { createdAt: _c, lastSyncAt, ...rest } = p;
+        const persistable = {
+            ...rest,
+            lastSyncAt: lastSyncAt ? lastSyncAt.toISOString() : null,
+        };
         const json = JSON.stringify(persistable, null, 4) + "\n";
         await writeFile(this._fileFor(p.id), json, "utf-8");
     }

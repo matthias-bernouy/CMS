@@ -1,5 +1,5 @@
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "./models";
-import type { TDataProvider, TDataProviderListItem } from "./Data/data";
+import type { DataProviderConsumers, TDataProvider, TDataProviderListItem } from "./Data/data";
 
 export type BlocListItemResponse = {
     id: string, 
@@ -69,5 +69,7 @@ export interface CmsRepository {
     getDataProvidersList(): Promise<TDataProviderListItem[]>;
     updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null>;
     deleteDataProvider(id: string): Promise<void>;
+    /** Pages / templates / snippets whose content references the given provider id via the `cms:schema:<id>:...` URN. */
+    findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers>;
 
 }

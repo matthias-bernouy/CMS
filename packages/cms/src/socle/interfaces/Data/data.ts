@@ -32,6 +32,10 @@ export type TDataProvider = {
 /**
  * Slim projection used by the admin Data table — never returns the raw
  * spec or auth secrets to the browser.
+ *
+ * `syncLabel` / `syncColor` are pre-computed for the admin tag rendering
+ * so the template can stay free of conditional logic (cms-fetch templates
+ * don't support if/else).
  */
 export type TDataProviderListItem = {
     id: string;
@@ -39,4 +43,17 @@ export type TDataProviderListItem = {
     source: TDataProviderSource;
     endpointCount: number;
     lastSyncAt: string;
+    syncLabel: string;
+    syncColor: string;
+};
+
+/**
+ * Slim per-bucket lists of resources that reference a data provider via
+ * the `cms:schema:<id>:...` URN. Used by the delete-blocked flow so the
+ * admin sees what would break before forcing the deletion.
+ */
+export type DataProviderConsumers = {
+    pages:     { path: string; title: string }[];
+    templates: { identifier: string; name: string }[];
+    snippets:  { identifier: string; name: string }[];
 };

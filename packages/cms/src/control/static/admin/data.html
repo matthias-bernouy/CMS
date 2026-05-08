@@ -1,3 +1,6 @@
+<cms-event-toast event="provider:synced" message="Provider synced." type="success"></cms-event-toast>
+<cms-event-toast event="new:provider"   message="Providers updated."  type="success"></cms-event-toast>
+
 <w13c-fixed-admin-layout>
     <span slot="title">Data</span>
     <p9r-open-modal modal-target="add-provider-modal" slot="action">
@@ -13,18 +16,44 @@
             <p9r-cell></p9r-cell>
         </p9r-row>
 
-        <cms-fetch url="{{BASE_PATH}}/api/data/providers" reload-on="new:provider">
+        <cms-fetch url="{{BASE_PATH}}/api/data/providers" reload-on="new:provider provider:synced">
             <template for=".">
                 <p9r-row>
                     <p9r-cell><strong>{{ name }}</strong></p9r-cell>
                     <p9r-cell><p9r-tag>{{ source }}</p9r-tag></p9r-cell>
                     <p9r-cell>{{ endpointCount }}</p9r-cell>
-                    <p9r-cell>{{ lastSyncAt }}</p9r-cell>
                     <p9r-cell>
-                        <cms-form target="{{BASE_PATH}}/api/data/provider?id={{ id }}"
-                            method="DELETE" emit="new:provider">
-                            <p9r-button type="submit" color="danger" aria-label="Delete {{ id }}">×</p9r-button>
-                        </cms-form>
+                        <p9r-stack direction="row" gap="sm" align="center">
+                            <p9r-tag color="{{ syncColor }}">{{ syncLabel }}</p9r-tag>
+                            <small>{{ lastSyncAt }}</small>
+                        </p9r-stack>
+                    </p9r-cell>
+                    <p9r-cell>
+                        <p9r-stack direction="row" gap="sm">
+                            <cms-form target="{{BASE_PATH}}/api/data/sync?id={{ id }}"
+                                method="POST" emit="provider:synced">
+                                <p9r-button type="submit" variant="ghost" color="secondary"
+                                    aria-label="Sync {{ id }}">
+                                    <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                        aria-hidden="true" width="16" height="16">
+                                        <polyline points="23 4 23 10 17 10" />
+                                        <polyline points="1 20 1 14 7 14" />
+                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                                    </svg>
+                                    Sync
+                                </p9r-button>
+                            </cms-form>
+                            <cms-confirm-form
+                                target="{{BASE_PATH}}/api/data/provider?id={{ id }}"
+                                method="DELETE"
+                                emit="new:provider"
+                                message="Delete provider &quot;{{ id }}&quot;?"
+                                conflict-confirm-message="Delete anyway? Bindings will break.">
+                                <p9r-button color="danger" aria-label="Delete {{ id }}">×</p9r-button>
+                            </cms-confirm-form>
+                        </p9r-stack>
                     </p9r-cell>
                 </p9r-row>
             </template>
@@ -80,9 +109,9 @@
                         <details>
                             <summary>Advanced settings</summary>
                             <p9r-stack gap="md">
-                                <p9r-input name="auth.bearer" label="Bearer token"
-                                    placeholder="eyJhbG... or ${HUB_API_TOKEN}"
-                                    hint="Paste a literal token, or use ${VAR_NAME} to read from environment."></p9r-input>
+                                <cms-credential-select name="auth.bearer"
+                                    label="Bearer token"
+                                    api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
 
                                 <cms-headers-input></cms-headers-input>
                             </p9r-stack>

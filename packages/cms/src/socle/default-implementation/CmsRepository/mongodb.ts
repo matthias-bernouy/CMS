@@ -2,7 +2,8 @@ import { randomUUIDv7 } from "bun";
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { BlocListItemResponse, CmsRepository, PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
-import type { TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
+import type { DataProviderConsumers, TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
+import { countOpenApiEndpoints, dataProviderSyncBadge } from "src/socle/utils/openapi";
 
 /**
  * MongoDB implementation of `CmsRepository`. Designed for small/medium
@@ -364,15 +365,21 @@ export class MongoCmsRepository implements CmsRepository {
     async getDataProvidersList(): Promise<TDataProviderListItem[]> {
         const docs = await this.dataProviders.find(
             {},
-            { projection: { name: 1, source: 1, lastSyncAt: 1 } },
+            { projection: { name: 1, source: 1, spec: 1, lastSyncAt: 1 } },
         ).toArray();
-        return docs.map(d => ({
-            id:            d._id,
-            name:          d.name,
-            source:        d.source,
-            endpointCount: 0,
-            lastSyncAt:    d.lastSyncAt ? new Date(d.lastSyncAt).toDateString() : "",
-        }));
+        return docs.map(d => {
+            const lastSync = d.lastSyncAt ? new Date(d.lastSyncAt) : null;
+            const badge = dataProviderSyncBadge(lastSync);
+            return {
+                id:            d._id,
+                name:          d.name,
+                source:        d.source,
+                endpointCount: countOpenApiEndpoints(d.spec ?? ""),
+                lastSyncAt:    lastSync ? lastSync.toDateString() : "",
+                syncLabel:     badge.label,
+                syncColor:     badge.color,
+            };
+        });
     }
 
     async updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null> {
@@ -389,6 +396,21 @@ export class MongoCmsRepository implements CmsRepository {
 
     async deleteDataProvider(id: string): Promise<void> {
         await this.dataProviders.deleteOne({ _id: id });
+    }
+
+    async findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers> {
+        const escaped = providerId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const pattern = `cms:schema:${escaped}(?![a-z0-9-])`;
+        const [pages, templates, snippets] = await Promise.all([
+            this.pages.find    ({ content: { $regex: pattern } }, { projection: { path: 1, title: 1 } }).toArray(),
+            this.templates.find({ content: { $regex: pattern } }, { projection: { identifier: 1, name: 1 } }).toArray(),
+            this.snippets.find ({ content: { $regex: pattern } }, { projection: { identifier: 1, name: 1 } }).toArray(),
+        ]);
+        return {
+            pages:     pages.map    (d => ({ path: d.path, title: d.title })),
+            templates: templates.map(d => ({ identifier: d.identifier, name: d.name })),
+            snippets:  snippets.map (d => ({ identifier: d.identifier, name: d.name })),
+        };
     }
 }
 

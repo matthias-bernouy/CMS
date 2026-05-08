@@ -1,7 +1,9 @@
 import { randomUUIDv7 } from "bun";
 import type { BlocListItemResponse, CmsRepository, PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
-import type { TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
+import type { DataProviderConsumers, TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
+import { countOpenApiEndpoints, dataProviderSyncBadge } from "src/socle/utils/openapi";
+import { findConsumersInCollections } from "src/socle/utils/dataProviderRefs";
 
 /**
  * In-memory implementation of `CmsRepository` for local dev and tests. No
@@ -308,13 +310,18 @@ export class InMemoryCmsRepository implements CmsRepository {
     }
 
     async getDataProvidersList(): Promise<TDataProviderListItem[]> {
-        return Array.from(this._dataProviders.values()).map(p => ({
-            id:            p.id,
-            name:          p.name,
-            source:        p.source,
-            endpointCount: 0,
-            lastSyncAt:    p.lastSyncAt ? p.lastSyncAt.toDateString() : "",
-        }));
+        return Array.from(this._dataProviders.values()).map(p => {
+            const badge = dataProviderSyncBadge(p.lastSyncAt);
+            return {
+                id:            p.id,
+                name:          p.name,
+                source:        p.source,
+                endpointCount: countOpenApiEndpoints(p.spec),
+                lastSyncAt:    p.lastSyncAt ? p.lastSyncAt.toDateString() : "",
+                syncLabel:     badge.label,
+                syncColor:     badge.color,
+            };
+        });
     }
 
     async updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null> {
@@ -335,6 +342,15 @@ export class InMemoryCmsRepository implements CmsRepository {
 
     async deleteDataProvider(id: string): Promise<void> {
         this._dataProviders.delete(id);
+    }
+
+    async findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers> {
+        return findConsumersInCollections(
+            providerId,
+            Array.from(this._pages.values()),
+            Array.from(this._templates.values()),
+            Array.from(this._snippets.values()),
+        );
     }
 }
 

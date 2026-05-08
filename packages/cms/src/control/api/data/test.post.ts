@@ -3,10 +3,10 @@ import { readJsonBody } from 'src/control/core/http/readJsonBody';
 import { parseDataProviderTestDto } from 'src/control/core/validation/dataProvider/parseTestDto';
 import { testConnection } from 'src/control/core/dataProvider/testConnection';
 
-export default async function postDataProviderTest(req: Request, _cms: ControlCms) {
+export default async function postDataProviderTest(req: Request, cms: ControlCms) {
     const body   = await readJsonBody(req);
     const dto    = parseDataProviderTestDto(body);
-    const result = await testConnection(dto);
+    const result = await testConnection(dto, cms.secrets);
     return new Response(JSON.stringify(result), {
         headers: { 'Content-Type': 'application/json' },
     });
