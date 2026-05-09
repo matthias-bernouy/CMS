@@ -174,6 +174,23 @@ export abstract class Editor {
         if (i >= 0) this.stateSyncs.splice(i, 1);
     }
 
+    /**
+     * Mark `el` as a logical child of this editor. Sets the breadcrumb /
+     * ancestor-chain link so a bloc that materializes DOM outside its own
+     * subtree (a `<fetch>`-style data bloc rendering siblings, a portal,
+     * a teleporter, …) stays selectable from its descendants' breadcrumb.
+     *
+     * Use only when DOM nesting alone wouldn't make the link discoverable
+     * — for slotted children populated by `<p9r-comp-sync>` and other
+     * standard CMS flows, the framework already wires it up.
+     *
+     * Call this BEFORE inserting `el` into the document so the editor is
+     * created with the correct parent on its first observation.
+     */
+    public claimChild(el: HTMLElement): void {
+        el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, this._identifier);
+    }
+
     // ── Extensions (hierarchical capability publishing) ─────────────
     //
     // A bloc author calls `editor.extendXxx(...)` from `BlocEditor.init()` to
