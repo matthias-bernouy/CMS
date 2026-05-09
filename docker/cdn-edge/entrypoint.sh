@@ -40,6 +40,14 @@ chown -R cdn-sync:cdn-sync "$DATA/buckets" "$DATA/lego" "$DATA/nginx-generated" 
 chown cdn-sync:cdn-sync     "$DATA"
 chmod 0750                 "$DATA/buckets"
 
+# 1b. Runtime nginx fragment (tmpfs) — `aliasesServers.conf` after
+#     placeholder substitution from the in-memory secrets manifest.
+#     Touched empty so `nginx -t` passes before fetch-secrets has run.
+mkdir -p /run/nginx-runtime /run/cdn-edge
+touch    /run/nginx-runtime/aliasesServers.conf
+chown -R cdn-sync:cdn-sync /run/nginx-runtime /run/cdn-edge
+chmod    0700 /run/cdn-edge
+
 # 2. AUTHORIZED_ORIGIN_PUBKEY — required on FIRST boot (env var). Persists
 #    on the volume; subsequent boots are a no-op.
 AUTHORIZED_FILE=/home/cdn-sync/.ssh/authorized_keys
@@ -134,21 +142,43 @@ if [ ! -f "$DATA/lego/certificates/${PUBLIC_DOMAIN}.crt" ]; then
     done
     echo "[edge] ${PUBLIC_DOMAIN}.crt landed — swapping to full nginx config."
 
+    # Initial pull of the secrets manifest so the runtime fragment is
+    # populated before nginx -t reads it. Best-effort: a network glitch
+    # at this exact moment doesn't have to block the boot — the poll
+    # loop will catch up. Render once afterwards so the fragment is at
+    # least an empty (or stale) file rather than missing entirely.
+    su -s /bin/bash cdn-sync -c "/usr/local/bin/fetch-secrets.sh once" \
+        || echo "[edge] WARN: initial fetch-secrets failed; proxies will activate on next poll."
+    /usr/local/bin/render-secrets.sh || true
+
     # Restore the full template-rendered config and reload.
     envsubst '${PUBLIC_DOMAIN} ${ORIGIN_HOST} ${EDGE_ID}' < "${NGINX_CONF}.template" > "${NGINX_CONF}"
     nginx -t
     nginx -s reload
 else
-    echo "[edge] ${PUBLIC_DOMAIN}.crt already present, starting nginx with full config."
+    echo "[edge] ${PUBLIC_DOMAIN}.crt already present, fetching initial secrets manifest…"
+    su -s /bin/bash cdn-sync -c "/usr/local/bin/fetch-secrets.sh once" \
+        || echo "[edge] WARN: initial fetch-secrets failed; proxies will activate on next poll."
+    /usr/local/bin/render-secrets.sh || true
+
+    echo "[edge] starting nginx with full config."
     nginx -t
     nginx -g 'daemon off;' &
     NGINX_PID=$!
 fi
 
 # 6. Cert-reload watcher (covers both ${PUBLIC_DOMAIN} renewals and
-#    per-alias cert lifecycle, both pushed by origin's lsyncd).
+#    per-alias cert lifecycle, both pushed by origin's lsyncd; also
+#    re-renders the runtime aliasesServers fragment after each lsync).
 su -s /bin/bash cdn-sync -c "/usr/local/bin/cert-reload-watcher.sh" &
 WATCHER_PID=$!
+
+# 6b. Secrets poll loop. Pulls the proxy-secrets manifest from the
+#     origin every SECRETS_POLL_INTERVAL seconds (default 10) using
+#     conditional GET, and triggers a render + nginx reload only when
+#     the ETag changes. Plaintext lives in process memory + /run only.
+su -s /bin/bash cdn-sync -c "/usr/local/bin/fetch-secrets.sh loop" &
+SECRETS_PID=$!
 
 # 7. Hourly logrotate loop. logrotate's `hourly` directive doesn't
 #    self-trigger — it just gates rotation logic to "once per hour";
@@ -165,7 +195,7 @@ LOGROTATE_PID=$!
 
 cleanup() {
     echo "[edge] Caught signal, shutting down…"
-    kill -TERM $SSHD_PID $NGINX_PID $WATCHER_PID $LOGROTATE_PID 2>/dev/null || true
+    kill -TERM $SSHD_PID $NGINX_PID $WATCHER_PID $SECRETS_PID $LOGROTATE_PID 2>/dev/null || true
     wait
 }
 trap cleanup INT TERM
@@ -173,6 +203,6 @@ trap cleanup INT TERM
 wait -n
 EXIT=$?
 echo "[edge] Child exited with ${EXIT}, tearing down the rest…"
-kill -TERM $SSHD_PID $NGINX_PID $WATCHER_PID $LOGROTATE_PID 2>/dev/null || true
+kill -TERM $SSHD_PID $NGINX_PID $WATCHER_PID $SECRETS_PID $LOGROTATE_PID 2>/dev/null || true
 wait
 exit "${EXIT}"

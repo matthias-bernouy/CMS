@@ -18,11 +18,12 @@ FROM debian:bookworm-slim
 # 1. System deps. nginx with brotli for matching the origin's
 #    Cache-Control + pre-compressed sibling behaviour. openssh-server so
 #    the origin can rsync into the volume. inotify-tools for the
-#    cert-reload watcher.
+#    cert-reload watcher. jq + curl + envsubst (gettext-base) for the
+#    secrets-pull pipeline (`fetch-secrets.sh` + `render-secrets.sh`).
 RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static \
         openssh-server rsync inotify-tools logrotate \
-        ca-certificates curl gettext-base sudo procps \
+        ca-certificates curl gettext-base jq sudo procps \
  && rm -rf /var/lib/apt/lists/*
 
 # 2. Dedicated SSH user the origin connects as. Lives at /home/cdn-sync,
@@ -63,11 +64,15 @@ RUN chmod 0644 /etc/logrotate.d/cdn-edge-access
 RUN echo "cdn-sync ALL=(root) NOPASSWD: /usr/sbin/nginx -s reload" > /etc/sudoers.d/cdn-sync \
  && chmod 0440 /etc/sudoers.d/cdn-sync
 
-# 6. Entrypoint + cert-reload watcher.
-COPY entrypoint.sh         /usr/local/bin/cdn-edge-entrypoint.sh
+# 6. Entrypoint + watchers + secrets pipeline.
+COPY entrypoint.sh          /usr/local/bin/cdn-edge-entrypoint.sh
 COPY cert-reload-watcher.sh /usr/local/bin/cert-reload-watcher.sh
+COPY render-secrets.sh      /usr/local/bin/render-secrets.sh
+COPY fetch-secrets.sh       /usr/local/bin/fetch-secrets.sh
 RUN chmod +x /usr/local/bin/cdn-edge-entrypoint.sh \
-             /usr/local/bin/cert-reload-watcher.sh
+             /usr/local/bin/cert-reload-watcher.sh \
+             /usr/local/bin/render-secrets.sh \
+             /usr/local/bin/fetch-secrets.sh
 
 VOLUME ["/var/lib/cdn"]
 EXPOSE 22 80 443

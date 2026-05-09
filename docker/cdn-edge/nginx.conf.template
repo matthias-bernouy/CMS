@@ -120,6 +120,12 @@ server {
 }
 
 # Per-alias `server { … }` blocks (one per alias domain — each block
-# does `set $bucket_id "..."` and `include bucketServing.conf`). lsynced
-# from the origin.
-include /var/lib/cdn/nginx-generated/aliasesServers.conf;
+# does `set $bucket_id "..."` and `include bucketServing.conf`). The
+# raw template is lsynced from the origin to
+# `/var/lib/cdn/nginx-generated/aliasesServers.conf` with `${SECRET_*}`
+# placeholders for proxy auth values; `render-secrets.sh` resolves the
+# placeholders against the in-memory manifest fetched from
+# `/edge-api/secrets` and emits the runtime fragment included here.
+# The runtime file lives in `/run/` (tmpfs) — secrets never touch
+# persistent disk on the edge.
+include /run/nginx-runtime/aliasesServers.conf;

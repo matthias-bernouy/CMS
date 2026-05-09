@@ -25,6 +25,16 @@ echo "[cert-reload-watcher] watching ${WATCH_DIRS[*]} (debounce ${DEBOUNCE_SECON
 attempt_reload() {
     # Returns 0 on successful reload, 1 if config still bad. Caller
     # handles backoff and retry.
+    #
+    # Re-render the runtime `aliasesServers.conf` first: lsync just
+    # pushed a fresh template with `${SECRET_*}` placeholders, and the
+    # runtime fragment we include from nginx must match the current
+    # manifest. `render-secrets.sh` is idempotent — safe to call on
+    # every event even when the template didn't actually change.
+    /usr/local/bin/render-secrets.sh || {
+        echo "[cert-reload-watcher] render-secrets.sh failed (will retry)"
+        return 1
+    }
     if /usr/sbin/nginx -t 2>/dev/null; then
         echo "[cert-reload-watcher] config OK → reloading nginx"
         sudo /usr/sbin/nginx -s reload && return 0
