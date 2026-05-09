@@ -11,6 +11,9 @@ import type { AliasCertPath } from "../core/nginx/regenerateAliases";
 import type { LegoIssuerConfig } from "../core/alias/issueLegoCert";
 import type { StoredFolderRepository } from "../interfaces/repositories/StoredFolderRepository";
 import type { StoredFileRepository } from "../interfaces/repositories/StoredFileRepository";
+import type { BucketDekRepository } from "../interfaces/repositories/BucketDekRepository";
+import type { BucketProxyRepository } from "../interfaces/repositories/BucketProxyRepository";
+import type { SecretCrypto } from "../core/crypto/SecretCrypto";
 import type { BlobStorage } from "../interfaces/BlobStorage";
 import { createAdminGuard } from "../core/authentication/createAdminGuard";
 import { mountAdminSurface } from "../core/admin/mountAdminSurface";
@@ -60,6 +63,16 @@ export type StorageProviderDeps = {
     aliasRepo: AliasRepository;
     storedFolderRepo: StoredFolderRepository;
     storedFileRepo: StoredFileRepository;
+    /** Per-bucket DEK store. Required: every secret persisted by the
+     *  provider (currently `BucketProxy.auth`) is wrapped against the
+     *  bucket's DEK before reaching Mongo. */
+    bucketDekRepo: BucketDekRepository;
+    /** Proxy rules attached to a bucket — exposes per-bucket
+     *  `/.cms/data/<providerId>/*` routes on cdn-edge. */
+    bucketProxyRepo: BucketProxyRepository;
+    /** Envelope encryption surface used by `bucketProxyRepo` and any
+     *  future repository that persists user-supplied secrets. */
+    secretCrypto: SecretCrypto;
     blobStorage: BlobStorage;
     config?: StorageProviderConfig;
 };
@@ -74,6 +87,9 @@ export class StorageProvider {
     private _aliasRepo:            AliasRepository;
     private _storedFolderRepo:     StoredFolderRepository;
     private _storedFileRepo:       StoredFileRepository;
+    private _bucketDekRepo:        BucketDekRepository;
+    private _bucketProxyRepo:      BucketProxyRepository;
+    private _secretCrypto:         SecretCrypto;
     private _blobStorage:          BlobStorage;
     private _config:               StorageProviderConfig;
 
@@ -86,6 +102,9 @@ export class StorageProvider {
         this._aliasRepo            = deps.aliasRepo;
         this._storedFolderRepo     = deps.storedFolderRepo;
         this._storedFileRepo       = deps.storedFileRepo;
+        this._bucketDekRepo        = deps.bucketDekRepo;
+        this._bucketProxyRepo      = deps.bucketProxyRepo;
+        this._secretCrypto         = deps.secretCrypto;
         this._blobStorage          = deps.blobStorage;
         this._config               = deps.config ?? {};
 
@@ -114,6 +133,9 @@ export class StorageProvider {
     get aliasRepo()            { return this._aliasRepo; }
     get storedFolderRepo()     { return this._storedFolderRepo; }
     get storedFileRepo()       { return this._storedFileRepo; }
+    get bucketDekRepo()        { return this._bucketDekRepo; }
+    get bucketProxyRepo()      { return this._bucketProxyRepo; }
+    get secretCrypto()         { return this._secretCrypto; }
     get blobStorage()          { return this._blobStorage; }
     get config()               { return this._config; }
 

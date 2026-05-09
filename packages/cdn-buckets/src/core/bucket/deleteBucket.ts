@@ -8,10 +8,12 @@ import { applyAliasChanges } from "../nginx/applyAliasChanges";
  *   1. nuke aliases pointing at the bucket (so the regenerated nginx fragments
  *      don't reference a dead bucket id),
  *   2. drop every dependent row in mongo (files, folders, credentials,
- *      pre-signed tokens — all cascade off `bucketId`),
- *   3. delete the bucket row,
- *   4. wipe the blob root on disk,
- *   5. regenerate nginx (cacheControls always; aliases only if any was dropped).
+ *      pre-signed tokens, proxies — all cascade off `bucketId`),
+ *   3. drop the bucket's DEK (only AFTER proxies — once it's gone, any
+ *      lingering encrypted secret becomes unreadable),
+ *   4. delete the bucket row,
+ *   5. wipe the blob root on disk,
+ *   6. regenerate nginx (cacheControls always; aliases only if any was dropped).
  *
  * Each repo bulk-delete is a single round-trip via `deleteByBucket`.
  */
@@ -28,8 +30,10 @@ export async function deleteBucket(provider: StorageProvider, id: string): Promi
         provider.storedFolderRepo    .deleteByBucket(id),
         provider.bucketCredentialRepo.deleteByBucket(id),
         provider.preSignedTokenRepo  .deleteByBucket(id),
+        provider.bucketProxyRepo     .deleteByBucket(id),
     ]);
 
+    await provider.bucketDekRepo.delete(id);
     await provider.bucketRepo.delete(id);
     await provider.blobStorage.deleteBucket(id);
     await applyBucketChanges(provider);

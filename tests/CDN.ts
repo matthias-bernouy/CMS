@@ -10,6 +10,10 @@ import {
     MongoAliasRepository,            type AliasDocument,
     MongoStoredFolderRepository,     type StoredFolderDocument,
     MongoStoredFileRepository,       type StoredFileDocument,
+    MongoBucketDekRepository,        type BucketDekDocument,
+    MongoBucketProxyRepository,      type BucketProxyDocument,
+    EnvelopeSecretCrypto,
+    loadKek,
 } from "@bernouy/cdn-buckets";
 
 const mongo = new MongoClient("mongodb://localhost:27017");
@@ -27,6 +31,9 @@ const devAuth: Authentication = {
     getSubject:     async () => ({ identifier: "dev", role: "admin", displayName: "Dev" }),
 };
 
+const bucketDekRepo = new MongoBucketDekRepository(db.collection<BucketDekDocument>("bucket_deks"));
+const secretCrypto  = new EnvelopeSecretCrypto(loadKek(process.env.CDN_BUCKETS_KEK), bucketDekRepo);
+
 new StorageProvider({
     runner,
     authentication:       devAuth,
@@ -36,6 +43,9 @@ new StorageProvider({
     aliasRepo:            new MongoAliasRepository           (db.collection<AliasDocument>            ("aliases")),
     storedFolderRepo:     new MongoStoredFolderRepository    (db.collection<StoredFolderDocument>     ("stored_folders")),
     storedFileRepo:       new MongoStoredFileRepository      (db.collection<StoredFileDocument>       ("stored_files")),
+    bucketDekRepo,
+    bucketProxyRepo:      new MongoBucketProxyRepository     (db.collection<BucketProxyDocument>      ("bucket_proxies"), secretCrypto),
+    secretCrypto,
     blobStorage:          new LocalBlobStorage("/tmp/basic-storage-buckets"),
     config: {
         nginx: {
