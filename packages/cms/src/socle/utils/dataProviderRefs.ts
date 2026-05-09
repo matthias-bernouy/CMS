@@ -1,38 +1,36 @@
 import type { TPage, TSnippet, TTemplate } from "src/socle/interfaces/models";
 import type { DataProviderConsumers } from "src/socle/interfaces/Data/data";
+import { DATA_PROXY_PREFIX } from "src/socle/constants/p9r-constants";
 
 /**
  * Build a regex that matches any reference to the given provider's
- * `server` URL inside HTML content. The negative lookahead prevents
- * partial-segment collisions (`https://api.x.com/v1` shouldn't match
- * `https://api.x.com/v10`).
+ * proxy path inside HTML content. The proxy URL shape is
+ * `<DATA_PROXY_PREFIX>/<providerId>/...`, so we look for the literal
+ * `<prefix>/<id>/` — the trailing `/` is the boundary that prevents
+ * partial-id collisions (`id="hub"` shouldn't match `hub-v2`).
  *
- * Returns `null` for empty/whitespace input — providers with no server
- * URL can't be detected this way and are treated as consumer-free.
- *
- * Trailing slashes on the input are normalised away so a server stored
- * as `https://api.x.com/` still matches references written as
- * `https://api.x.com/users`.
+ * Returns `null` for empty/whitespace input.
  */
-export function dataProviderRefRegex(serverUrl: string): RegExp | null {
-    const trimmed = serverUrl.trim().replace(/\/+$/, "");
+export function dataProviderRefRegex(providerId: string): RegExp | null {
+    const trimmed = providerId.trim();
     if (!trimmed) return null;
-    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`${escaped}(?![A-Za-z0-9._~%-])`);
+    const escapedId     = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapedPrefix = DATA_PROXY_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`${escapedPrefix}/${escapedId}/`);
 }
 
 /**
- * Filter every collection content for references to `serverUrl`. Used
- * by the in-memory + filesystem repository implementations; mongo runs
- * the same regex server-side via `$regex`.
+ * Filter every collection content for references to the provider's
+ * proxy path. Used by the in-memory + filesystem repository
+ * implementations; mongo runs the same regex server-side via `$regex`.
  */
 export function findConsumersInCollections(
-    serverUrl: string,
-    pages:     TPage[],
-    templates: TTemplate[],
-    snippets:  TSnippet[],
+    providerId: string,
+    pages:      TPage[],
+    templates:  TTemplate[],
+    snippets:   TSnippet[],
 ): DataProviderConsumers {
-    const re = dataProviderRefRegex(serverUrl);
+    const re = dataProviderRefRegex(providerId);
     if (!re) return { pages: [], templates: [], snippets: [] };
     return {
         pages:     pages.filter    (p => re.test(p.content ?? "")).map(p => ({ path: p.path, title: p.title })),

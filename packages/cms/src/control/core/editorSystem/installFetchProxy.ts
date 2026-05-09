@@ -1,53 +1,32 @@
 import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
-import type { TDataProviderListItem } from "src/socle/interfaces/Data/data";
-
-type ProviderRef = { id: string; origin: string };
+import { parseDataProxyUrl } from "src/socle/constants/p9r-constants";
 
 /**
- * Re-route bloc fetches that hit a registered Data Provider to the
- * editor's mock endpoint, so authoring renders deterministic data instead
- * of touching the real API. Anything outside a provider's server URL
- * passes through unchanged — the admin UI's own fetches are unaffected.
- *
- * The provider list is loaded once at install via the saved original
- * fetch (no recursion). Until that load resolves, every call passes
- * through; the editor remounts per page, so the list refreshes naturally.
+ * Re-route bloc fetches that hit the data-provider proxy path to the
+ * editor's mock endpoint, so authoring renders deterministic data
+ * instead of touching the real API. Anything outside the proxy shape
+ * `<DATA_PROXY_PREFIX>/<providerId>/...` passes through unchanged — the
+ * admin UI's own fetches are unaffected.
  *
  * Mock contract — POST `<basePath>/api/data/mock` with
- * `{ providerId, method, url }`, expects JSON back. This proxy carries no
- * schema knowledge; URL→operation matching and mock generation live
- * server-side.
+ * `{ providerId, method, path }`. The proxy path carries the providerId
+ * and the operation path together, so no provider list lookup or
+ * upstream URL stripping is required client-side.
  */
 export function installFetchProxy(): () => void {
     const originalFetch = window.fetch.bind(window);
     const basePath = getMetaBasePath();
-    let providers: ProviderRef[] = [];
-
-    const providersReady = originalFetch(`${basePath}/api/data/providers`)
-        .then(r => r.ok ? r.json() : [])
-        .then((list: unknown) => {
-            if (!Array.isArray(list)) return;
-            providers = list
-                .map(p => ({
-                    id:     (p as TDataProviderListItem).id,
-                    origin: safeOrigin((p as TDataProviderListItem).server ?? ""),
-                }))
-                .filter(p => p.id && p.origin);
-        })
-        .catch(() => { /* offline / auth — keep empty list, everything passes through */ });
 
     const proxy = (async (input: RequestInfo | URL, init?: RequestInit) => {
-        await providersReady;
         const url    = resolveUrl(input);
         const method = resolveMethod(input, init);
-        const origin = safeOrigin(url);
-        const match  = origin ? providers.find(p => p.origin === origin) : undefined;
+        const match  = parseDataProxyUrl(url);
         if (!match) return originalFetch(input as RequestInfo, init);
 
         return originalFetch(`${basePath}/api/data/mock`, {
             method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body:    JSON.stringify({ providerId: match.id, method, url }),
+            body:    JSON.stringify({ providerId: match.providerId, method, path: match.path }),
         });
     }) as typeof window.fetch;
 
@@ -68,9 +47,4 @@ function resolveMethod(input: RequestInfo | URL, init?: RequestInit): string {
     if (init?.method) return init.method.toUpperCase();
     if (input instanceof Request) return input.method.toUpperCase();
     return "GET";
-}
-
-function safeOrigin(url: string): string {
-    try { return new URL(url).origin; }
-    catch { return ""; }
 }

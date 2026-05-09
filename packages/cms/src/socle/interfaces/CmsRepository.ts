@@ -69,8 +69,8 @@ export interface CmsRepository {
     getDataProvidersList(): Promise<TDataProviderListItem[]>;
     updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null>;
     deleteDataProvider(id: string): Promise<void>;
-    /** Pages / templates / snippets whose content references the given provider's `server` URL. Empty / whitespace input matches nothing. */
-    findConsumersOfProvider(providerServerUrl: string): Promise<DataProviderConsumers>;
+    /** Pages / templates / snippets whose content references the given provider via its `<DATA_PROXY_PREFIX>/<providerId>/` proxy path. Empty / whitespace input matches nothing. */
+    findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers>;
 
     // DATA MOCKUP
     listMockups(providerId: string): Promise<TDataMockup[]>;

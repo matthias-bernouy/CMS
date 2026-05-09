@@ -11,7 +11,7 @@ export default async function deleteDataProviderEndpoint(req: Request, cms: Cont
     if (!provider) return new Response('Not found', { status: 404 });
 
     if (!force) {
-        const consumers = await cms.repository.findConsumersOfProvider(provider.server);
+        const consumers = await cms.repository.findConsumersOfProvider(provider.id);
         const total = consumers.pages.length + consumers.templates.length + consumers.snippets.length;
         if (total > 0) {
             return new Response(JSON.stringify({

@@ -1,38 +1,38 @@
 import type { SlimEndpoint } from "src/control/core/data/types";
 import type { SchemaPicker } from "./SchemaPicker";
 import { fetchEndpoints, fetchProviders, type ProviderListItem } from "./flows";
+import { buildDataProxyUrl, parseDataProxyUrl } from "src/socle/constants/p9r-constants";
 
 /**
- * Build the URL emitted on selection: `<server><path>`. Server is
- * normalised to drop a trailing slash so we don't end up with
- * `https://api.x.com//users` when the admin entered the server with a
- * trailing `/`.
+ * Build the proxy URL emitted on selection:
+ * `<DATA_PROXY_PREFIX>/<providerId><path>`. The page resolves it
+ * same-origin against the bucket edge, which forwards to the upstream
+ * API stored on the provider — the upstream URL never appears in the
+ * persisted bloc DOM, which is what allows CSP `connect-src 'self'`.
  */
-export function buildUrl(serverUrl: string, path: string): string {
-    const base = (serverUrl ?? "").replace(/\/+$/, "");
-    const tail = path.startsWith("/") ? path : `/${path}`;
-    return `${base}${tail}`;
+export function buildUrl(providerId: string, path: string): string {
+    return buildDataProxyUrl(providerId, path);
 }
 
 /**
- * Find the provider whose `server` is a prefix of `value`. Used both to
- * pre-select the right entry in the dropdown when restoring a saved
- * value, and to display the path-only fragment in the trigger.
- *
- * The longest matching prefix wins — shields against two providers
- * sharing a host where one's server is a prefix of the other's
- * (`https://api.x.com` vs `https://api.x.com/v2`).
+ * Reverse-lookup for the trigger label and the round-trip pre-selection:
+ * given a saved value (always a proxy URL after this rewrite), return
+ * the provider whose id sits in the path. `null` when the value doesn't
+ * match the proxy shape or names an unknown provider.
  */
 export function findProviderForValue(providers: ProviderListItem[], value: string): ProviderListItem | null {
-    if (!value) return null;
-    let best: ProviderListItem | null = null;
-    for (const p of providers) {
-        if (!p.server) continue;
-        if (value === p.server || value.startsWith(p.server + "/")) {
-            if (!best || p.server.length > best.server.length) best = p;
-        }
-    }
-    return best;
+    const parsed = parseDataProxyUrl(value);
+    if (!parsed) return null;
+    return providers.find(p => p.id === parsed.providerId) ?? null;
+}
+
+/**
+ * Path component of a saved value, or `""` when the value isn't a valid
+ * proxy URL. Used by `setValue` and `renderEndpoints` to decorate the
+ * trigger and pre-select the matching list entry.
+ */
+function extractPath(value: string): string {
+    return parseDataProxyUrl(value)?.path ?? "";
 }
 
 export function setValue(host: SchemaPicker, url: string): void {
@@ -53,7 +53,7 @@ export function setValue(host: SchemaPicker, url: string): void {
     if (has) {
         const match = findProviderForValue(host._providers, url);
         host._refs.triggerValue.textContent = match
-            ? url.slice(match.server.length) || "/"
+            ? extractPath(url) || "/"
             : url;
     } else {
         host._refs.triggerValue.textContent = "Select endpoint";
@@ -155,11 +155,8 @@ export function renderEndpoints(host: SchemaPicker): void {
             || e.tags.some(t => t.toLowerCase().includes(q));
     });
 
-    const active        = host._providers.find(p => p.id === host._activeProviderId);
-    const activeServer  = active?.server ?? "";
-    const selectedPath  = host._value.startsWith(activeServer)
-        ? host._value.slice(activeServer.length)
-        : "";
+    const parsed       = parseDataProxyUrl(host._value);
+    const selectedPath = parsed?.providerId === host._activeProviderId ? parsed.path : "";
     host._refs.list.replaceChildren(...filtered.map(e => buildOption(e, e.path === selectedPath)));
 }
 

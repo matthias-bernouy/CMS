@@ -2,24 +2,20 @@ import { describe, expect, test } from "bun:test";
 import { buildUrl, findProviderForValue, parseMethodsFilter } from "src/control/components/admin/SchemaPicker/controller";
 
 describe("buildUrl", () => {
-    test("joins server and path with a single separator", () => {
-        expect(buildUrl("https://api.x.com/v1", "/users")).toBe("https://api.x.com/v1/users");
-    });
-
-    test("normalises a trailing slash on the server", () => {
-        expect(buildUrl("https://api.x.com/v1/", "/users")).toBe("https://api.x.com/v1/users");
+    test("emits the proxy path for a provider id and operation path", () => {
+        expect(buildUrl("hub", "/users")).toBe("/.cms/data/hub/users");
     });
 
     test("prepends a leading slash if the path lacks one", () => {
-        expect(buildUrl("https://api.x.com", "users")).toBe("https://api.x.com/users");
+        expect(buildUrl("hub", "users")).toBe("/.cms/data/hub/users");
     });
 
     test("preserves OpenAPI path templates", () => {
-        expect(buildUrl("https://api.x.com", "/users/{id}/orders")).toBe("https://api.x.com/users/{id}/orders");
+        expect(buildUrl("hub", "/users/{id}/orders")).toBe("/.cms/data/hub/users/{id}/orders");
     });
 
-    test("tolerates an empty server (degraded mode — no provider matched)", () => {
-        expect(buildUrl("", "/users")).toBe("/users");
+    test("normalises an empty path to the provider root", () => {
+        expect(buildUrl("hub", "")).toBe("/.cms/data/hub/");
     });
 });
 
@@ -28,33 +24,29 @@ describe("findProviderForValue", () => {
         { id: "hub",    server: "https://api.hub.com/v1" },
         { id: "hub-v2", server: "https://api.hub.com/v2" },
         { id: "other",  server: "https://other.api"     },
-        { id: "empty",  server: ""                       },
     ];
 
-    test("matches the provider whose server is a prefix of the value", () => {
-        expect(findProviderForValue(providers, "https://api.hub.com/v1/users")?.id).toBe("hub");
+    test("matches the provider whose id appears in the proxy path", () => {
+        expect(findProviderForValue(providers, "/.cms/data/hub/users")?.id).toBe("hub");
+        expect(findProviderForValue(providers, "/.cms/data/hub-v2/users")?.id).toBe("hub-v2");
     });
 
-    test("matches the bare server URL (no path)", () => {
-        expect(findProviderForValue(providers, "https://api.hub.com/v1")?.id).toBe("hub");
+    test("matches the bare provider root (no operation path)", () => {
+        expect(findProviderForValue(providers, "/.cms/data/hub/")?.id).toBe("hub");
     });
 
-    test("does not collide on a longer same-host prefix", () => {
-        expect(findProviderForValue(providers, "https://api.hub.com/v2/users")?.id).toBe("hub-v2");
-        expect(findProviderForValue(providers, "https://api.hub.com/v10/x"  )).toBeNull();
+    test("returns null for unknown providers", () => {
+        expect(findProviderForValue(providers, "/.cms/data/missing/users")).toBeNull();
     });
 
-    test("ignores providers with empty server", () => {
-        expect(findProviderForValue(providers, "")).toBeNull();
+    test("returns null for non-proxy URLs (legacy absolute, garbage, empty)", () => {
+        expect(findProviderForValue(providers, "https://api.hub.com/v1/users")).toBeNull();
         expect(findProviderForValue(providers, "anything")).toBeNull();
+        expect(findProviderForValue(providers, "")).toBeNull();
     });
 
-    test("longest matching prefix wins", () => {
-        const overlap = [
-            { id: "short", server: "https://api.hub.com"    },
-            { id: "long",  server: "https://api.hub.com/v1" },
-        ];
-        expect(findProviderForValue(overlap, "https://api.hub.com/v1/users")?.id).toBe("long");
+    test("ignores leading double-slashes / trailing query gracefully", () => {
+        expect(findProviderForValue(providers, "/.cms/data/hub/users?x=1")?.id).toBe("hub");
     });
 });
 

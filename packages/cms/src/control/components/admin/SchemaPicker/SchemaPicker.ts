@@ -12,13 +12,16 @@ import {
 import type { ProviderListItem } from "./flows";
 
 /**
- * `<cms-schema-picker name="..." label="..." value="https://api.x/...">`
+ * `<cms-schema-picker name="..." label="..." value="/.cms/data/<id>/...">`
  *
  * Form-associated picker for OpenAPI endpoints registered through the
- * Data tab. Output is the **fully-qualified URL** of the selected
- * endpoint — the active provider's `server` joined with the endpoint
- * path. The consumer block places it on whatever attribute fits its
- * bloc config (mirrors `<p9r-link>`).
+ * Data tab. Output is the **proxy path** of the selected endpoint —
+ * `<DATA_PROXY_PREFIX>/<providerId><operationPath>`. The page that ends
+ * up rendering the bloc fetches this same-origin against its own host;
+ * the bucket edge proxies the call to the provider's real upstream
+ * server (whose URL never appears in the persisted DOM). In the editor
+ * preview, `installFetchProxy` recognises the same shape and routes the
+ * request to the mock endpoint instead.
  *
  * The HTTP method is intentionally NOT part of the saved value: most
  * consumer blocs are method-pinned (e.g. `<base-fetch methods="GET">`),
@@ -105,7 +108,7 @@ export class SchemaPicker extends HTMLElement {
             if (!path) return;
             const provider = this._providers.find(p => p.id === this._activeProviderId);
             if (!provider) return;
-            setValue(this, buildUrl(provider.server, path));
+            setValue(this, buildUrl(provider.id, path));
             this.dispatchEvent(new Event("change", { bubbles: true }));
             closePanel(this);
         });

@@ -351,9 +351,9 @@ export class InMemoryCmsRepository implements CmsRepository {
         }
     }
 
-    async findConsumersOfProvider(providerServerUrl: string): Promise<DataProviderConsumers> {
+    async findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers> {
         return findConsumersInCollections(
-            providerServerUrl,
+            providerId,
             Array.from(this._pages.values()),
             Array.from(this._templates.values()),
             Array.from(this._snippets.values()),

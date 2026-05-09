@@ -4,6 +4,7 @@ import type { BlocListItemResponse, CmsRepository, PageLink } from "src/socle/in
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
 import type { DataProviderConsumers, TDataAuth, TDataMockup, TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
 import { countOpenApiEndpoints, dataProviderSyncBadge } from "src/socle/utils/openapi";
+import { DATA_PROXY_PREFIX } from "src/socle/constants/p9r-constants";
 
 /**
  * MongoDB implementation of `CmsRepository`. Designed for small/medium
@@ -481,11 +482,12 @@ export class MongoCmsRepository implements CmsRepository {
         }
     }
 
-    async findConsumersOfProvider(providerServerUrl: string): Promise<DataProviderConsumers> {
-        const trimmed = providerServerUrl.trim().replace(/\/+$/, "");
+    async findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers> {
+        const trimmed = providerId.trim();
         if (!trimmed) return { pages: [], templates: [], snippets: [] };
-        const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const pattern = `${escaped}(?![A-Za-z0-9._~%-])`;
+        const escapedId     = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const escapedPrefix = DATA_PROXY_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const pattern = `${escapedPrefix}/${escapedId}/`;
         const [pages, templates, snippets] = await Promise.all([
             this.pages.find    ({ content: { $regex: pattern } }, { projection: { path: 1, title: 1 } }).toArray(),
             this.templates.find({ content: { $regex: pattern } }, { projection: { identifier: 1, name: 1 } }).toArray(),
