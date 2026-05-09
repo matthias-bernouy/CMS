@@ -108,7 +108,10 @@ export class BagController {
         this.target = editor.target;
         this.hoverEl = editor.getActionBarAnchor?.() ?? editor.target;
         this.highlight?.dispose();
-        this.highlight = new Highlight(this.target, { color: 'var(--primary-base, #3b82f6)' });
+        // Highlight follows the action-bar anchor, not the raw target —
+        // editors that point the BAG at a sub-element (e.g. an inner
+        // visual node) expect the outline to match the same element.
+        this.highlight = new Highlight(this.hoverEl, { color: 'var(--primary-base, #3b82f6)' });
         this.events.rebindHover(prev);
         this.insertBtns.resolveTarget(editor);
     }
