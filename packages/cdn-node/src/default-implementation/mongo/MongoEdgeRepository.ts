@@ -28,7 +28,8 @@ export class MongoEdgeRepository implements EdgeRepository {
 
     private async _ensureIndexes(): Promise<void> {
         const indexes: IndexDescription[] = [
-            { key: { addedAt: 1 }, name: "addedAt_asc" },
+            { key: { addedAt:   1 }, name: "addedAt_asc" },
+            { key: { tokenHash: 1 }, name: "tokenHash_unique", unique: true },
         ];
         await this._collection.createIndexes(indexes);
     }
@@ -46,6 +47,12 @@ export class MongoEdgeRepository implements EdgeRepository {
     async get(id: string): Promise<Edge | null> {
         await this._ready();
         const doc = await this._collection.findOne({ _id: id });
+        return doc ? toEdge(doc) : null;
+    }
+
+    async getByTokenHash(tokenHash: string): Promise<Edge | null> {
+        await this._ready();
+        const doc = await this._collection.findOne({ tokenHash });
         return doc ? toEdge(doc) : null;
     }
 

@@ -12,3 +12,8 @@ export * from "./interfaces/repositories/AccessMetricsRepository";
 // Entities
 export * from "./interfaces/entities/Edge";
 export * from "./interfaces/entities/AccessMetric";
+
+// Edge token helpers (operator UI / scripts may need to verify or
+// regenerate one).
+export * from "./core/edge/issueEdgeToken";
+export * from "./core/edge/authenticateEdge";

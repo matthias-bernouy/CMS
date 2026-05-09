@@ -1,4 +1,8 @@
+import { join } from "node:path";
+
 import type { Runner, Authentication, Middleware } from "@bernouy/core";
+import { serveApi } from "@bernouy/core";
+import type { BucketProxyRepository } from "@bernouy/cdn-buckets";
 
 import type { EdgeRepository } from "../interfaces/repositories/EdgeRepository";
 import type { AccessMetricsRepository } from "../interfaces/repositories/AccessMetricsRepository";
@@ -6,6 +10,7 @@ import { mountOriginAdminSurface } from "../core/admin/mountAdminSurface";
 import { regenerateAndReloadLsyncd } from "../core/lsyncd/reload";
 import { pullAllEdgeLogs, type LogPullConfig } from "../core/logs/pullEdgeLogs";
 import { aggregateAccessLogs } from "../core/logs/aggregateAccessLogs";
+import { originPackageRoot } from "../constants";
 
 export type OriginConfig = {
     /** lsyncd configuration. When `null`, edge writes only persist in
@@ -35,6 +40,10 @@ export type OriginDeps = {
     authentication:   Authentication;
     edgeRepo:         EdgeRepository;
     accessMetricsRepo: AccessMetricsRepository;
+    /** Provided by the cdn-buckets `StorageProvider` instance running
+     *  alongside the origin. Read-only here: the origin only reads it to
+     *  build the secrets manifest served at `/edge-api/secrets`. */
+    bucketProxyRepo:   BucketProxyRepository;
     /** Middleware that gates the admin surface. The cdn-origin
      *  deployment passes its `createAdminGuard(auth)` here so the same
      *  Keycloak session that authorises `/admin/buckets` also authorises
@@ -58,6 +67,7 @@ export class OriginProvider {
     private _auth:               Authentication;
     private _edgeRepo:           EdgeRepository;
     private _accessMetricsRepo:  AccessMetricsRepository;
+    private _bucketProxyRepo:    BucketProxyRepository;
     private _config:             OriginConfig;
 
     constructor(deps: OriginDeps) {
@@ -65,15 +75,18 @@ export class OriginProvider {
         this._auth              = deps.authentication;
         this._edgeRepo          = deps.edgeRepo;
         this._accessMetricsRepo = deps.accessMetricsRepo;
+        this._bucketProxyRepo   = deps.bucketProxyRepo;
         this._config            = deps.config;
 
         this._runner.group("/admin/origin", (admin) => mountOriginAdminSurface(admin, this), [deps.adminGuard]);
+        this._runner.group("/edge-api",     (edge)  => serveApi(edge, join(originPackageRoot, "src/api/edge"), this));
     }
 
     get runner()            { return this._runner; }
     get auth()              { return this._auth; }
     get edgeRepo()          { return this._edgeRepo; }
     get accessMetricsRepo() { return this._accessMetricsRepo; }
+    get bucketProxyRepo()   { return this._bucketProxyRepo; }
     get config()            { return this._config; }
 
     /**

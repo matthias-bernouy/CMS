@@ -203,6 +203,7 @@ const originProvider = new OriginProvider({
         db.collection<AccessMetricDocument>     ("cdn_access_metrics"),
         db.collection<ProcessedLogFileDocument> ("cdn_access_metrics_files"),
     ),
+    bucketProxyRepo: provider.bucketProxyRepo,
     adminGuard,
     config: {
         lsyncd: {

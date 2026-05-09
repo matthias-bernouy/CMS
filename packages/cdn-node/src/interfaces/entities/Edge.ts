@@ -12,6 +12,11 @@
 export type Edge = {
     /** Operator-chosen identifier, e.g. "edge-eu-1". URL-safe, unique. */
     id:          string;
+    /** sha256 hex of the bearer token the edge presents on `/edge-api/*`.
+     *  The plaintext token is generated at `addEdge` time, returned ONCE
+     *  in the create response, and never persisted server-side. Lost
+     *  tokens cannot be recovered — re-issuance is delete + recreate. */
+    tokenHash:   string;
     /** Human label shown in the admin UI. Defaults to `id` when not set. */
     label:       string;
     /** SSH-reachable hostname or IP of the edge. */

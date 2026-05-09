@@ -20,6 +20,10 @@ export interface EdgeRepository {
     /** Fetch an edge by id, or `null` if not found. */
     get(id: string):      Promise<Edge | null>;
 
+    /** Resolve an edge from the sha256 hex of its bearer token. Used by
+     *  the `/edge-api/*` guard. Indexed unique. */
+    getByTokenHash(tokenHash: string): Promise<Edge | null>;
+
     /** Insert a new edge. Throws on `id` conflict. */
     create(edge: Edge):   Promise<void>;
 

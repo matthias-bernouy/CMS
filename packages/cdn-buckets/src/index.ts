@@ -24,6 +24,12 @@ export * from "./core/crypto/SecretCrypto";
 export * from "./core/crypto/loadKek";
 export * from "./core/crypto/encrypt";
 
+// Proxy helpers (consumed by `@bernouy/cdn-node`'s edge-api endpoint)
+export * from "./core/proxy/buildSecretsManifest";
+export * from "./core/proxy/placeholderName";
+export * from "./core/proxy/upsertProxy";
+export * from "./core/proxy/deleteProxy";
+
 // Repository contracts
 export * from "./interfaces/repositories/BucketRepository";
 export * from "./interfaces/repositories/BucketCredentialRepository";
