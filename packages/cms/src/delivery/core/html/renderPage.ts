@@ -30,11 +30,9 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     const head = document.head;
 
-    const settings  = await ctx.repository.getSystem();
-    const providers = await ctx.repository.getDataProvidersList();
-    const providerOrigins = deriveOrigins(providers.map(p => p.server));
+    const settings = await ctx.repository.getSystem();
     const cspExtras = {
-        connectExtras: dedupe([...providerOrigins, ...settings.security.connectExtras]),
+        connectExtras: [...settings.security.connectExtras],
         mediaExtras:   [...settings.security.mediaExtras],
     };
 
@@ -66,22 +64,4 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     buildScriptTags    (document, head, assets);
 
     return compress(document.toString(), "text/html");
-}
-
-/**
- * Map raw server URLs (as stored on each provider) to their deduped
- * origin form. Empty / unparseable values are dropped — those providers
- * have nothing usable to whitelist.
- */
-function deriveOrigins(urls: string[]): string[] {
-    const out = new Set<string>();
-    for (const u of urls) {
-        try { out.add(new URL(u).origin); }
-        catch { /* skip */ }
-    }
-    return [...out];
-}
-
-function dedupe(values: string[]): string[] {
-    return [...new Set(values)];
 }

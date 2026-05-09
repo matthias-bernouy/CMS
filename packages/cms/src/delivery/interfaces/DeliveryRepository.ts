@@ -30,8 +30,8 @@ export interface DeliveryRepository {
     getSnippetByIdentifier(identifier: string): Promise<TSnippet | null>;
     getAllSnippets(): Promise<TSnippet[]>;
 
-    // DATA PROVIDERS (slim list — used at render time to derive the page's
-    // CSP `connect-src` extras so blocs can fetch the registered APIs)
+    // DATA PROVIDERS (slim list — needed by the upcoming server-side proxy
+    // that forwards bloc fetches to the registered APIs)
     getDataProvidersList(): Promise<TDataProviderListItem[]>;
 
 }
