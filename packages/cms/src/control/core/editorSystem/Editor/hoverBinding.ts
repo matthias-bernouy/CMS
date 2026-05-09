@@ -9,22 +9,27 @@ export class HoverBinding {
     constructor(private editor: Editor) {}
 
     /**
-     * Attach the hover listener to the editor's anchor — or to the
-     * editor's own target when the anchor would point to a *different*
-     * editor's element. Stealing another editor's hover would mean two
-     * listeners racing on the same element, with the registration order
-     * deciding which BAG opens; a fetch-style bloc (anchor → produced
-     * child) would fight the produced child's own hover. The child
-     * always owns its hover; the parent stays reachable via the
-     * breadcrumb when the child's BAG opens, and the parent's own BAG
-     * still positions against the anchor on `open()`.
+     * Attach the hover listener to the editor's anchor — except when
+     * the anchor points to another editor that has its own BAG to
+     * open. In that case fall back to our own target so the inner
+     * editor owns its hover (no listener race on the same element).
+     *
+     * If the anchor points to another editor with NO BAG of its own
+     * (`!isInteractive`), keep the anchor binding — otherwise nothing
+     * would respond to the hover and a fetch-style parent would become
+     * unreachable. The inner editor having an identifier is not enough;
+     * what matters is whether it has actions, a panel or anything else
+     * to surface.
      */
     bind(): void {
         this.unbind();
         let resolved = this.editor.getActionBarAnchor() ?? this.editor.target;
         const resolvedId = resolved.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
         const myId       = this.editor.target.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
-        if (resolvedId && resolvedId !== myId) resolved = this.editor.target;
+        if (resolvedId && resolvedId !== myId) {
+            const inner = document.compIdentifierToEditor?.get(resolvedId);
+            if (inner?.isInteractive) resolved = this.editor.target;
+        }
         this._hoverElement = resolved;
         this._hoverElement.addEventListener('mouseenter', this._handler);
     }
