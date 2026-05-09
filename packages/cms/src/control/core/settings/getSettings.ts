@@ -3,9 +3,10 @@ import type { PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TSystem } from "src/socle/interfaces/models";
 
 export type SettingsResponse = {
-    site:    TSystem["site"];
-    editor:  TSystem["editor"];
-    pages:   PageLink[];
+    site:     TSystem["site"];
+    editor:   TSystem["editor"];
+    security: TSystem["security"];
+    pages:    PageLink[];
     layoutCategories: string[];
 };
 
@@ -24,8 +25,9 @@ export async function getSettings(cms: ControlCms): Promise<SettingsResponse> {
     ]);
 
     return {
-        site:    system.site,
-        editor:  system.editor,
+        site:     system.site,
+        editor:   system.editor,
+        security: system.security,
         pages,
         layoutCategories,
     };

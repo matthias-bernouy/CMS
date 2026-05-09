@@ -7,12 +7,20 @@ import {
     publicAssetCacheControl,
     SECURITY_HEADERS,
 } from "src/socle/server/compression";
+import type { CspExtras } from "src/socle/server/buildCspContent";
 import { scanStaticFolder } from "./scanStaticFolder";
 import prepareHtml from "./prepareHtml";
 
 export type ServeStaticFolderOptions = {
     /** Process-shared cache used to memoize compressed bytes per route. */
     cache: Cache;
+    /**
+     * Provider for the CSP extras to inject into HTML response headers
+     * (admin pages). Resolved per-request so updates to the underlying
+     * settings or media-origin take effect without restarting. Returns
+     * `undefined` (or omits the option) to keep the static baseline.
+     */
+    cspExtras?: () => CspExtras | Promise<CspExtras>;
 };
 
 /**
@@ -51,10 +59,11 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
             const cacheKey = `static-html:${finalRoute}`;
 
             runner.get(finalRoute, async (req: Request) => {
+                const extras = options.cspExtras ? await options.cspExtras() : undefined;
                 return cachedResponseAsync(req, cacheKey, cache, async () => {
                     const html = await prepareHtml(file.absolutePath, runner);
                     return compress(html, "text/html; charset=utf-8");
-                }, publicAssetCacheControl(req));
+                }, publicAssetCacheControl(req), { cspExtras: extras });
             });
 
             continue;

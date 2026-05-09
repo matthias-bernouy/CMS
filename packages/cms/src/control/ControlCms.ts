@@ -11,6 +11,7 @@ import { join } from "node:path"
 import { buildMediaHydrationScript } from "./core/authentication/buildMediaHydrationScript";
 import { createAuthGuard } from "./core/authentication/authGuard";
 import { compress, publicAssetCacheControl, sendCompressed } from "../socle/server/compression";
+import type { CspExtras } from "../socle/server/buildCspContent";
 import { SpecCache } from "./core/data/SpecCache";
 
 type Configuration = {
@@ -96,7 +97,10 @@ export class ControlCms {
         }, [authGuard]);
 
         runner.group("/", (staticRunner) => {
-            serveStaticFolder(staticRunner, { cache: this._cache });
+            serveStaticFolder(staticRunner, {
+                cache:     this._cache,
+                cspExtras: () => this.getCspExtras(),
+            });
         }, [authGuard]);
 
         runner.group("/api", (apiRunner) => {
@@ -145,6 +149,28 @@ export class ControlCms {
     get basePath(){
         const base = this._runner.basePath;
         return base === "/" ? "" : base;
+    }
+
+    /**
+     * CSP extras for admin HTML responses: combines the CDN's own public
+     * origins (`media.origins`) with the user-managed
+     * `system.security.{connect,media}Extras`. Resolved per-request from
+     * `serveStaticFolder` so settings updates take effect without a
+     * server restart.
+     *
+     * Each `media.origins` entry lands in BOTH `connect-src` (uploads,
+     * listing fetches) and `media-src` (so a future `<video>` served
+     * from the CDN can play).
+     */
+    async getCspExtras(): Promise<CspExtras> {
+        const settings = await this._repository.getSystem();
+        const connect  = new Set<string>(settings.security.connectExtras);
+        const media    = new Set<string>(settings.security.mediaExtras);
+        for (const origin of this._media.origins) {
+            connect.add(origin);
+            media.add  (origin);
+        }
+        return { connectExtras: [...connect], mediaExtras: [...media] };
     }
 
 }

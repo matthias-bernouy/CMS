@@ -101,3 +101,67 @@ describe("cachedResponseAsync", () => {
         expect(await res2.text()).toBe("async body");
     });
 });
+
+describe("CSP header — opt-out", () => {
+    const html = () => compress("<!doctype html><html></html>", "text/html");
+
+    test("HTML response carries the CSP header by default", () => {
+        const cache = new MemCache();
+        const res = cachedResponse(reqWithAccept(null), "k", cache, html);
+        expect(res.headers.get("Content-Security-Policy")).not.toBeNull();
+    });
+
+    test("skipCspHeader: true drops the CSP header on HTML responses", () => {
+        const cache = new MemCache();
+        const res = cachedResponse(reqWithAccept(null), "k", cache, html, undefined, { skipCspHeader: true });
+        expect(res.headers.get("Content-Security-Policy")).toBeNull();
+    });
+
+    test("non-HTML responses never carry a CSP header (regardless of flag)", () => {
+        const cache = new MemCache();
+        const txt  = () => compress("hello", "text/plain");
+        const res  = cachedResponse(reqWithAccept(null), "k", cache, txt);
+        expect(res.headers.get("Content-Security-Policy")).toBeNull();
+    });
+});
+
+describe("CSP header — extras", () => {
+    const html = () => compress("<!doctype html><html></html>", "text/html");
+
+    test("with no extras, header matches the static baseline", () => {
+        const cache = new MemCache();
+        const res = cachedResponse(reqWithAccept(null), "k", cache, html);
+        const csp = res.headers.get("Content-Security-Policy") ?? "";
+        expect(csp).toContain("default-src 'self'");
+        expect(csp).not.toContain("connect-src");
+        expect(csp).not.toContain("media-src");
+    });
+
+    test("with extras, header includes connect-src and media-src directives", () => {
+        const cache = new MemCache();
+        const res = cachedResponse(reqWithAccept(null), "k", cache, html, undefined, {
+            cspExtras: { connectExtras: ["https://cdn.example.com"], mediaExtras: ["https://cdn.example.com"] },
+        });
+        const csp = res.headers.get("Content-Security-Policy") ?? "";
+        expect(csp).toContain("connect-src 'self' https://cdn.example.com");
+        expect(csp).toContain("media-src 'self' https://cdn.example.com");
+    });
+
+    test("extras are ignored when skipCspHeader: true (no header at all)", () => {
+        const cache = new MemCache();
+        const res = cachedResponse(reqWithAccept(null), "k", cache, html, undefined, {
+            skipCspHeader: true,
+            cspExtras: { connectExtras: ["https://cdn.example.com"], mediaExtras: [] },
+        });
+        expect(res.headers.get("Content-Security-Policy")).toBeNull();
+    });
+
+    test("extras are ignored on non-HTML responses", () => {
+        const cache = new MemCache();
+        const txt  = () => compress("hello", "text/plain");
+        const res  = cachedResponse(reqWithAccept(null), "k", cache, txt, undefined, {
+            cspExtras: { connectExtras: ["https://cdn.example.com"], mediaExtras: [] },
+        });
+        expect(res.headers.get("Content-Security-Policy")).toBeNull();
+    });
+});

@@ -77,7 +77,10 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
     const bucket = await broker.getBucketInfo();
     const cdn = new StorageBrowser({
         apiBaseUrl: `${pathPrefix}/_storage`,
-        bucket: { limits: bucket.limits, quotas: bucket.quotas, cacheControl: bucket.cacheControl },
+        bucket:     { limits: bucket.limits, quotas: bucket.quotas, cacheControl: bucket.cacheControl },
+        // Presigned upload URLs resolve to the upstream assetsCdn origin —
+        // the admin CSP needs to whitelist it.
+        origins:    safeOriginList(tenant.assetsCdn.url),
     });
 
     runner.group(pathPrefix, (sub) => {
@@ -115,4 +118,9 @@ function createTenantAdminGuard(auth: CompositeAuthentication<TenantRole>) {
         }
         return next();
     };
+}
+
+function safeOriginList(url: string): string[] {
+    try { return [new URL(url).origin]; }
+    catch { return []; }
 }

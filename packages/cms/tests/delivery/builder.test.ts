@@ -27,12 +27,14 @@ function mutableRepo(initial: TPage[] = []): DeliveryRepository & {
             language: "", theme: "/* css */",
             notFound: null, serverError: null,
         },
-        editor: { layoutCategory: "" },
+        editor:   { layoutCategory: "" },
+        security: { connectExtras: [], mediaExtras: [] },
     };
     const repo: any = {
         getPage:        async (path: string) => pages.find(p => p.path === path) ?? null,
         getAllPages:    async () => pages,
         getBlocsList:   async () => [],
+        getDataProvidersList: async () => [],
         getBlocViewJS:  async () => null,
         getSystem:      async () => system,
         getSnippetByIdentifier: async (_id: string): Promise<TSnippet | null> => null,

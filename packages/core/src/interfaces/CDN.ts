@@ -254,6 +254,19 @@ export interface CDN {
     readonly quotas: BucketQuotas;
     /** Raw `Cache-Control` value the CDN serves with public files of this bucket. */
     readonly cacheControl: string;
+    /**
+     * Public origins (`scheme://host[:port]`) the browser may reach this
+     * CDN at — used by the CMS to whitelist them in its admin CSP so the
+     * in-browser hydrated client (`_cms.CDN.uploadFile()` / `getItems()` /
+     * etc.) isn't blocked by the same-origin default.
+     *
+     * Plural: token-broker / presigned-upload flows commonly route writes
+     * to a different host than reads (regional upload endpoints, direct-
+     * to-storage providers). Implementations MUST list every origin the
+     * browser will actually fetch. Empty array when the CDN is fully
+     * same-origin with the consuming app.
+     */
+    readonly origins: string[];
 
     // Read
     getItems(opts?: CDNGetItemsOptions): Promise<CDNResponse<CDNItemsPage>>;

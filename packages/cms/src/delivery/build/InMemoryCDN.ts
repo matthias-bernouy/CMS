@@ -21,10 +21,12 @@ export class InMemoryCDN implements CDN {
     readonly limits        = { maxFileSize: 1_000_000_000, acceptedMimeTypes: "*" as const };
     readonly quotas        = { maxTotalSize: Number.MAX_SAFE_INTEGER, maxFileCount: Number.MAX_SAFE_INTEGER };
     readonly cacheControl: string;
+    readonly origins:      string[];
 
     constructor(opts: { urlPrefix?: string; cacheControl?: string } = {}) {
         this._urlPrefix   = opts.urlPrefix   ?? `https://cdn-${Math.random().toString(36).slice(2, 8)}.local`;
         this.cacheControl = opts.cacheControl ?? "public, max-age=60";
+        this.origins      = safeOriginList(this._urlPrefix);
     }
 
     async getItems(opts?: CDNGetItemsOptions): Promise<CDNResponse<CDNItemsPage>> {
@@ -169,6 +171,11 @@ export class InMemoryCDN implements CDN {
  * manifest bytes during integration tests without standing up an HTTP
  * server.
  */
+function safeOriginList(url: string): string[] {
+    try { return [new URL(url).origin]; }
+    catch { return []; }
+}
+
 export function makeCdnFetcher(buckets: readonly InMemoryCDN[]): typeof fetch {
     const f = async (input: URL | RequestInfo): Promise<Response> => {
         const url = typeof input === "string"

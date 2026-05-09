@@ -48,6 +48,8 @@ async function renderWithFallbacks(
             cacheKey,
             delivery.cache,
             () => renderPage(page, makeRuntimeRenderContext(delivery)),
+            undefined,
+            { skipCspHeader: true },
         );
     } catch (err) {
         console.error(`Failed to render page ${cachePath}:`, err);

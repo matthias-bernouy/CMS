@@ -5,6 +5,7 @@ import { compress } from "src/socle/server/compression";
 import { expandSnippets } from "src/delivery/core/html/expandSnippets";
 import { findUsedBlocTags } from "src/delivery/core/blocs/findUsedBlocs";
 import { buildHtmlBasics } from "src/delivery/core/head/buildHtmlBasics";
+import { buildMetaCsp } from "src/delivery/core/head/buildMetaCsp";
 import { buildAssetPreloads, buildFoucShell, buildStylesheetLink } from "src/delivery/core/head/buildAssets";
 import { buildPreconnect } from "src/delivery/core/head/buildPreconnect";
 import { buildScriptTags } from "src/delivery/core/head/buildScriptTags";
@@ -29,7 +30,13 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     const head = document.head;
 
-    const settings = await ctx.repository.getSystem();
+    const settings  = await ctx.repository.getSystem();
+    const providers = await ctx.repository.getDataProvidersList();
+    const providerOrigins = deriveOrigins(providers.map(p => p.server));
+    const cspExtras = {
+        connectExtras: dedupe([...providerOrigins, ...settings.security.connectExtras]),
+        mediaExtras:   [...settings.security.mediaExtras],
+    };
 
     const expandedContent = await expandSnippets(page.content, ctx.repository);
     document.body.innerHTML = expandedContent;
@@ -44,7 +51,12 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     // adds — that ordering matters for parser-blocking scripts (e.g. an
     // observability agent that must monkeypatch `customElements.define`
     // before any deferred bloc IIFE registers its tag).
+    //
+    // `buildMetaCsp` is `prepend`ed inside the helper so it ends up FIRST
+    // regardless of the call order here — meta-borne CSP only governs
+    // resources requested AFTER its position in the document.
     buildHtmlBasics    (document, head, settings);
+    buildMetaCsp       (document, head, cspExtras);
     for (const inject of ctx.headInjectors) inject({ document, head, usedTags });
     buildPreconnect    (document, head);
     buildAssetPreloads (document, head, assets);
@@ -54,4 +66,22 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     buildScriptTags    (document, head, assets);
 
     return compress(document.toString(), "text/html");
+}
+
+/**
+ * Map raw server URLs (as stored on each provider) to their deduped
+ * origin form. Empty / unparseable values are dropped — those providers
+ * have nothing usable to whitelist.
+ */
+function deriveOrigins(urls: string[]): string[] {
+    const out = new Set<string>();
+    for (const u of urls) {
+        try { out.add(new URL(u).origin); }
+        catch { /* skip */ }
+    }
+    return [...out];
+}
+
+function dedupe(values: string[]): string[] {
+    return [...new Set(values)];
 }

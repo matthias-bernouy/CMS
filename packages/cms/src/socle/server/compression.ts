@@ -1,6 +1,7 @@
 import { CryptoHasher, gzipSync } from "bun";
 import { brotliCompressSync } from "node:zlib";
 import type { Cache, CacheEntry } from "src/socle/interfaces/Cache";
+import { buildCspContent, type CspExtras } from "./buildCspContent";
 
 /**
  * Static security headers applied to every compressed response.
@@ -77,17 +78,25 @@ export const SECURITY_HEADERS = {
  * cross-origin asset will silently break the page until this policy is
  * extended.
  */
-export const HTML_CSP_HEADER = {
-    "Content-Security-Policy":
-        "default-src 'self'; style-src 'self' 'unsafe-inline'; " +
-        "img-src 'self' data: https:; " +
-        "base-uri 'self'; form-action 'self'; " +
-        "object-src 'none'; frame-ancestors 'none'",
-} as const;
+export const HTML_CSP_HEADER: Record<string, string> = {
+    "Content-Security-Policy": buildCspContent(),
+};
 
 function withCspIfHtml(contentType: string): Record<string, string> {
     if (!contentType.startsWith("text/html")) return {};
     return HTML_CSP_HEADER;
+}
+
+/**
+ * Per-call CSP header for HTML responses. Falls back to the static
+ * `HTML_CSP_HEADER` (extras-empty baseline) when the caller doesn't
+ * provide extras — keeping the legacy single-source path costless for
+ * everything that doesn't need the dynamic version.
+ */
+function buildCspHeaderForEntry(contentType: string, extras?: CspExtras): Record<string, string> {
+    if (!contentType.startsWith("text/html")) return {};
+    if (!extras) return HTML_CSP_HEADER;
+    return { "Content-Security-Policy": buildCspContent(extras) };
 }
 
 /**
@@ -170,9 +179,10 @@ export function cachedResponse(
     key: string,
     cache: Cache,
     generate: () => CacheEntry,
-    cacheControl?: string
+    cacheControl?: string,
+    opts?: SendCompressedOptions,
 ): Response {
-    return sendCompressed(req, getOrGenerateEntry(key, cache, generate), cacheControl);
+    return sendCompressed(req, getOrGenerateEntry(key, cache, generate), cacheControl, opts);
 }
 
 export async function cachedResponseAsync(
@@ -180,15 +190,37 @@ export async function cachedResponseAsync(
     key: string,
     cache: Cache,
     generate: () => Promise<CacheEntry>,
-    cacheControl?: string
+    cacheControl?: string,
+    opts?: SendCompressedOptions,
 ): Promise<Response> {
-    return sendCompressed(req, await getOrGenerateEntryAsync(key, cache, generate), cacheControl);
+    return sendCompressed(req, await getOrGenerateEntryAsync(key, cache, generate), cacheControl, opts);
 }
 
-export function sendCompressed(req: Request, entry: CacheEntry, cacheControl?: string): Response {
+/**
+ * `skipCspHeader` — caller asserts the HTML response carries its own CSP
+ * via `<meta http-equiv>` (delivery-rendered pages do this). Setting both
+ * a header CSP and a meta CSP would AND-intersect them, blocking what one
+ * side allows; the meta-only path is the single source of truth there.
+ *
+ * `cspExtras` — when present (and the response is HTML), build the CSP
+ * header dynamically with the provided extras instead of the empty-extras
+ * baseline. Used by the admin static-page path to whitelist the CDN
+ * origin + any settings extras without resorting to a separate meta tag.
+ */
+export type SendCompressedOptions = {
+    skipCspHeader?: boolean;
+    cspExtras?:     CspExtras;
+};
+
+export function sendCompressed(
+    req: Request,
+    entry: CacheEntry,
+    cacheControl?: string,
+    opts?: SendCompressedOptions,
+): Response {
     const accept = req.headers.get("accept-encoding") || "";
 
-    const csp = withCspIfHtml(entry.contentType);
+    const csp = opts?.skipCspHeader ? {} : buildCspHeaderForEntry(entry.contentType, opts?.cspExtras);
     const cc: Record<string, string> = cacheControl ? { "Cache-Control": cacheControl } : {};
 
     if (accept.includes("br")) {

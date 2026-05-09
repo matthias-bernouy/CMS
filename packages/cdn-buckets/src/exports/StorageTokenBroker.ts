@@ -63,7 +63,11 @@ export class StorageTokenBroker {
         const bucket = await this.getBucketInfo();
         return buildHydrationScript(this._varName, {
             apiBaseUrl: this._mountPath,
-            bucket: { limits: bucket.limits, quotas: bucket.quotas, cacheControl: bucket.cacheControl },
+            bucket:     { limits: bucket.limits, quotas: bucket.quotas, cacheControl: bucket.cacheControl },
+            // Upload presigned URLs resolve directly to the upstream provider
+            // origin, so the consuming admin's CSP `connect-src` must whitelist
+            // it. Same-origin setups list nothing (provider is just `'self'`).
+            origins:    safeOriginList(this._providerOrigin),
         });
     }
 
@@ -106,4 +110,9 @@ export class StorageTokenBroker {
 
     get mountPath(): string { return this._mountPath; }
     get varName():   string { return this._varName;   }
+}
+
+function safeOriginList(url: string): string[] {
+    try { return [new URL(url).origin]; }
+    catch { return []; }
 }

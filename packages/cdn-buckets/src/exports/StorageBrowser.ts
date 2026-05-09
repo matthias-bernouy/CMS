@@ -10,6 +10,13 @@ export type StorageBrowserHydration = {
     apiBaseUrl: string;
     /** Bucket info exposed read-only on the CDN instance. */
     bucket: { limits: BucketLimits; quotas: BucketQuotas; cacheControl: string };
+    /**
+     * Origins (`scheme://host[:port]`) the browser will hit when this
+     * CDN is in use — the broker frontier itself plus every storage
+     * host presigned upload URLs may resolve to. Used by the consuming
+     * CMS to whitelist them in its admin CSP. Empty when same-origin.
+     */
+    origins: string[];
 };
 
 /**
@@ -25,6 +32,7 @@ export class StorageBrowser implements CDN {
     public readonly limits:       BucketLimits;
     public readonly quotas:       BucketQuotas;
     public readonly cacheControl: string;
+    public readonly origins:      string[];
 
     private _apiBaseUrl: string;
 
@@ -32,6 +40,7 @@ export class StorageBrowser implements CDN {
         this.limits       = h.bucket.limits;
         this.quotas       = h.bucket.quotas;
         this.cacheControl = h.bucket.cacheControl;
+        this.origins      = h.origins;
         this._apiBaseUrl  = h.apiBaseUrl.replace(/\/+$/, "");
     }
 

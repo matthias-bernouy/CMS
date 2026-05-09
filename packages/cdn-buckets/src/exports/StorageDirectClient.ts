@@ -27,6 +27,7 @@ export class StorageDirectClient implements CDN {
     public readonly limits:       BucketLimits;
     public readonly quotas:       BucketQuotas;
     public readonly cacheControl: string;
+    public readonly origins:      string[];
 
     private _providerOrigin: string;
     private _bearer:         string;
@@ -40,6 +41,7 @@ export class StorageDirectClient implements CDN {
         this.limits          = bucket.limits;
         this.quotas          = bucket.quotas;
         this.cacheControl    = bucket.cacheControl;
+        this.origins         = [this._providerOrigin];
     }
 
     /** Fetches the bucket metadata before constructing — convenience wrapper. */

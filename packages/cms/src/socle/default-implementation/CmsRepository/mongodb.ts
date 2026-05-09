@@ -577,6 +577,7 @@ function defaultSystem(): TSystem {
             notFound: null,
             serverError: null,
         },
-        editor: { layoutCategory: "" },
+        editor:   { layoutCategory: "" },
+        security: { connectExtras: [], mediaExtras: [] },
     };
 }

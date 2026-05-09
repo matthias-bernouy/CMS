@@ -24,6 +24,7 @@ export class StubMedia implements CDN {
     readonly limits: BucketLimits = { maxFileSize: 0, acceptedMimeTypes: "*" };
     readonly quotas: BucketQuotas = { maxTotalSize: 0, maxFileCount: 0 };
     readonly cacheControl = "no-store";
+    readonly origins: string[] = [];
 
     async getItems(_opts?: CDNGetItemsOptions): Promise<CDNResponse<CDNItemsPage>> { return UNSUPPORTED(); }
     async getItem(_id: string):                Promise<CDNResponse<CDNItem>>      { return UNSUPPORTED(); }
