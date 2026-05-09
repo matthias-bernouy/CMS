@@ -9212,7 +9212,7 @@ p9r-tag:hover {
     <w13c-lateral-menu slot="sidebar">
         <h2 slot="header">Page Builder</h2>
 
-        <w13c-lateral-menu-item href="./media">
+        <w13c-lateral-menu-item data-route="media">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -9222,7 +9222,7 @@ p9r-tag:hover {
             Media
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item href="./pages">
+        <w13c-lateral-menu-item data-route="pages">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
@@ -9233,7 +9233,7 @@ p9r-tag:hover {
             </svg>
             Pages
         </w13c-lateral-menu-item>
-        <w13c-lateral-menu-item href="./snippets">
+        <w13c-lateral-menu-item data-route="snippets">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="m18 16 4-4-4-4" />
@@ -9242,7 +9242,7 @@ p9r-tag:hover {
             </svg>
             Snippets
         </w13c-lateral-menu-item>
-        <w13c-lateral-menu-item href="./templates">
+        <w13c-lateral-menu-item data-route="templates">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -9252,7 +9252,7 @@ p9r-tag:hover {
             Templates
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item href="./data">
+        <w13c-lateral-menu-item data-route="data">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <ellipse cx="12" cy="5" rx="9" ry="3" />
@@ -9262,7 +9262,7 @@ p9r-tag:hover {
             Data
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item disabled href="./analytics" badge="upcoming">
+        <w13c-lateral-menu-item disabled data-route="analytics" badge="upcoming">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="20" x2="18" y2="10" />
@@ -9272,7 +9272,7 @@ p9r-tag:hover {
             Analytics
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item disabled href="./components" badge="upcoming">
+        <w13c-lateral-menu-item disabled data-route="components" badge="upcoming">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10 3H3v7h7V3Z" />
@@ -9285,7 +9285,7 @@ p9r-tag:hover {
 
 
 
-        <w13c-lateral-menu-item disabled href="./components" badge="upcoming">
+        <w13c-lateral-menu-item disabled data-route="components" badge="upcoming">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
@@ -9299,7 +9299,7 @@ p9r-tag:hover {
         </w13c-lateral-menu-item>
 
 
-        <w13c-lateral-menu-item href="./settings" slot="footer">
+        <w13c-lateral-menu-item data-route="settings" slot="footer">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path
@@ -9309,7 +9309,7 @@ p9r-tag:hover {
             Settings
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-role="profil" href="./profil" slot="footer">
+        <w13c-lateral-menu-item data-role="profil" data-route="profil" slot="footer">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -9343,6 +9343,21 @@ p9r-tag:hover {
         css: "",
         template: template_default
       });
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      const root = this.shadowRoot;
+      if (!root)
+        return;
+      const meta = document.querySelector('meta[name="basePath"]');
+      const basePath = (meta?.getAttribute("content") ?? "").replace(/\/+$/, "");
+      const items = Array.from(root.querySelectorAll("[data-route]"));
+      for (const item of items) {
+        const route = item.dataset.route ?? "";
+        if (!route)
+          continue;
+        item.setAttribute("href", `${basePath}/admin/${route}`);
+      }
     }
   }
   customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
