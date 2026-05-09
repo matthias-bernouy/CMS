@@ -4,6 +4,7 @@ export * from "./exports/StorageTokenBroker";
 export * from "./exports/StorageBrowser";
 export * from "./exports/StorageDirectClient";
 export * from "./exports/BucketsClient";
+export * from "./exports/BucketProxyPublisher";
 
 // Repository implementations (Mongo)
 export * from "./default-implementation/mongo/MongoBucketRepository";

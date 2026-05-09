@@ -25,14 +25,15 @@ function makeRequest(body: Record<string, unknown>) {
 }
 
 const existingHub: TDataProvider = {
-    id:         "hub",
-    source:     "url",
-    sourceUrl:  "https://hub.bernouy.fr/openapi.json",
-    server:     "",
-    spec:       "",
-    auth:       { type: "none" },
-    createdAt:  new Date(),
-    lastSyncAt: null,
+    id:          "hub",
+    source:      "url",
+    sourceUrl:   "https://hub.bernouy.fr/openapi.json",
+    server:      "",
+    spec:        "",
+    specAuth:    { type: "none" },
+    runtimeAuth: { type: "none" },
+    createdAt:   new Date(),
+    lastSyncAt:  null,
 };
 
 const validBody = {
@@ -111,22 +112,22 @@ describe("POST /api/data/provider (create)", () => {
         expect(p.source).toBe("url");
         expect(p.sourceUrl).toBe("https://hub.bernouy.fr/openapi.json");
         expect(p.spec).toBe("");
-        expect(p.auth).toEqual({ type: "none" });
+        expect(p.specAuth).toEqual({ type: "none" });
     });
 
     test("auth defaults to none when no bearer or headers provided", async () => {
         const { cms, createCalls } = makeSystem();
         await postDataProvider(makeRequest(validBody), cms);
-        expect(createCalls[0]?.auth).toEqual({ type: "none" });
+        expect(createCalls[0]?.specAuth).toEqual({ type: "none" });
     });
 
     test("bearer token is captured as bearer auth", async () => {
         const { cms, createCalls } = makeSystem();
         await postDataProvider(
-            makeRequest({ ...validBody, "auth.bearer": "  eyJhbG.xyz  " }),
+            makeRequest({ ...validBody, "specAuth.bearer": "  eyJhbG.xyz  " }),
             cms,
         );
-        expect(createCalls[0]?.auth).toEqual({ type: "bearer", token: "eyJhbG.xyz" });
+        expect(createCalls[0]?.specAuth).toEqual({ type: "bearer", token: "eyJhbG.xyz" });
     });
 
     test("headers are collected and sorted by index", async () => {
@@ -134,14 +135,14 @@ describe("POST /api/data/provider (create)", () => {
         await postDataProvider(
             makeRequest({
                 ...validBody,
-                "auth.headers.1.name":  "X-Tenant",
-                "auth.headers.1.value": "acme",
-                "auth.headers.0.name":  "X-API-Key",
-                "auth.headers.0.value": "secret",
+                "specAuth.headers.1.name":  "X-Tenant",
+                "specAuth.headers.1.value": "acme",
+                "specAuth.headers.0.name":  "X-API-Key",
+                "specAuth.headers.0.value": "secret",
             }),
             cms,
         );
-        expect(createCalls[0]?.auth).toEqual({
+        expect(createCalls[0]?.specAuth).toEqual({
             type: "headers",
             headers: [
                 { name: "X-API-Key", value: "secret" },
@@ -155,13 +156,13 @@ describe("POST /api/data/provider (create)", () => {
         await postDataProvider(
             makeRequest({
                 ...validBody,
-                "auth.bearer":          "tok",
-                "auth.headers.0.name":  "X-API-Key",
-                "auth.headers.0.value": "secret",
+                "specAuth.bearer":          "tok",
+                "specAuth.headers.0.name":  "X-API-Key",
+                "specAuth.headers.0.value": "secret",
             }),
             cms,
         );
-        expect(createCalls[0]?.auth).toEqual({ type: "bearer", token: "tok" });
+        expect(createCalls[0]?.specAuth).toEqual({ type: "bearer", token: "tok" });
     });
 
     test("empty header rows are skipped silently", async () => {
@@ -169,14 +170,14 @@ describe("POST /api/data/provider (create)", () => {
         await postDataProvider(
             makeRequest({
                 ...validBody,
-                "auth.headers.0.name":  "",
-                "auth.headers.0.value": "",
-                "auth.headers.1.name":  "X-Real",
-                "auth.headers.1.value": "yes",
+                "specAuth.headers.0.name":  "",
+                "specAuth.headers.0.value": "",
+                "specAuth.headers.1.name":  "X-Real",
+                "specAuth.headers.1.value": "yes",
             }),
             cms,
         );
-        expect(createCalls[0]?.auth).toEqual({
+        expect(createCalls[0]?.specAuth).toEqual({
             type: "headers",
             headers: [{ name: "X-Real", value: "yes" }],
         });
@@ -185,9 +186,9 @@ describe("POST /api/data/provider (create)", () => {
     test("rejects header with name but no value", async () => {
         const { cms } = makeSystem();
         await expect(postDataProvider(
-            makeRequest({ ...validBody, "auth.headers.0.name": "X-API-Key", "auth.headers.0.value": "" }),
+            makeRequest({ ...validBody, "specAuth.headers.0.name": "X-API-Key", "specAuth.headers.0.value": "" }),
             cms,
-        )).rejects.toThrow(/auth\.headers\.0\.value/);
+        )).rejects.toThrow(/specAuth\.headers\.0\.value/);
     });
 
     test.each([
@@ -198,16 +199,16 @@ describe("POST /api/data/provider (create)", () => {
     ])("rejects invalid header name %p", async (name) => {
         const { cms } = makeSystem();
         await expect(postDataProvider(
-            makeRequest({ ...validBody, "auth.headers.0.name": name, "auth.headers.0.value": "v" }),
+            makeRequest({ ...validBody, "specAuth.headers.0.name": name, "specAuth.headers.0.value": "v" }),
             cms,
-        )).rejects.toThrow(/auth\.headers\.0\.name/);
+        )).rejects.toThrow(/specAuth\.headers\.0\.name/);
     });
 
     test("rejects header value with newline", async () => {
         const { cms } = makeSystem();
         await expect(postDataProvider(
-            makeRequest({ ...validBody, "auth.headers.0.name": "X-API-Key", "auth.headers.0.value": "a\nb" }),
+            makeRequest({ ...validBody, "specAuth.headers.0.name": "X-API-Key", "specAuth.headers.0.value": "a\nb" }),
             cms,
-        )).rejects.toThrow(/auth\.headers\.0\.value/);
+        )).rejects.toThrow(/specAuth\.headers\.0\.value/);
     });
 });

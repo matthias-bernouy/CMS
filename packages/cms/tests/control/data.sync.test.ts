@@ -3,14 +3,15 @@ import postDataProviderSync from "src/control/api/data/sync.post";
 import type { TDataProvider } from "src/socle/interfaces/Data/data";
 
 const baseProvider: TDataProvider = {
-    id:         "hub",
-    source:     "url",
-    sourceUrl:  "https://hub.bernouy.fr/openapi.json",
-    server:     "",
-    spec:       "",
-    auth:       { type: "none" },
-    createdAt:  new Date(0),
-    lastSyncAt: null,
+    id:          "hub",
+    source:      "url",
+    sourceUrl:   "https://hub.bernouy.fr/openapi.json",
+    server:      "",
+    spec:        "",
+    specAuth:    { type: "none" },
+    runtimeAuth: { type: "none" },
+    createdAt:   new Date(0),
+    lastSyncAt:  null,
 };
 
 function makeSystem(provider: TDataProvider | null = baseProvider) {
@@ -115,7 +116,7 @@ describe("POST /api/data/sync", () => {
             captured.auth = (init.headers as Headers).get("Authorization");
             return new Response('{"openapi":"3.0.0","paths":{}}', { status: 200 });
         };
-        const provider = { ...baseProvider, auth: { type: "bearer" as const, token: "abc123" } };
+        const provider = { ...baseProvider, specAuth: { type: "bearer" as const, token: "abc123" } };
         const { cms } = makeSystem(provider);
         await postDataProviderSync(makeRequest("hub"), cms);
         expect(captured.auth).toBe("Bearer abc123");
@@ -129,7 +130,7 @@ describe("POST /api/data/sync", () => {
         };
         const provider = {
             ...baseProvider,
-            auth: { type: "headers" as const, headers: [{ name: "X-Api-Key", value: "secret" }] },
+            specAuth: { type: "headers" as const, headers: [{ name: "X-Api-Key", value: "secret" }] },
         };
         const { cms } = makeSystem(provider);
         await postDataProviderSync(makeRequest("hub"), cms);

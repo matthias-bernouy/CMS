@@ -3,7 +3,7 @@ import type { Runner, Subject } from "@bernouy/core";
 import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
 import { CompositeAuthentication } from "@bernouy/auth-composite";
 import { Cms as ControlCms, MongoCmsRepository } from "@bernouy/cms";
-import { StorageTokenBroker, StorageBrowser } from "@bernouy/cdn-buckets";
+import { StorageTokenBroker, StorageBrowser, BucketProxyPublisher } from "@bernouy/cdn-buckets";
 import type { Tenant } from "src/interfaces/Tenant";
 
 export type TenantRole = "admin" | "user";
@@ -29,6 +29,9 @@ export type MountTenantArgs = {
  * - Keycloak cookie + bearer auth scoped to the tenant's realm
  * - StorageTokenBroker pointed at the tenant's CDN bucket
  * - ControlCms with a Mongo repo prefixed by `tenant_<id>__`
+ * - BucketProxyPublisher pointed at the same bucket — pushes data
+ *   provider proxy rules through the broker's `bucketCredential`, no
+ *   service-account JWT needed at this layer
  *
  * All routes land under `/cms/<id>/`. Subsequent calls to `unmountTenant`
  * remove this whole subtree without restarting the bun process.
@@ -83,6 +86,11 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
         origins:    safeOriginList(tenant.assetsCdn.url),
     });
 
+    const proxyPublisher = new BucketProxyPublisher({
+        brokerBaseUrl:    tenant.assetsCdn.url,
+        bucketCredential: tenant.assetsCdn.bucketCredential,
+    });
+
     runner.group(pathPrefix, (sub) => {
         sub.get("/api/auth/discovery", () => Response.json({
             issuer:   tenant.keycloak.issuer,
@@ -91,7 +99,7 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
         }));
         new ControlCms(sub, repo, auth, cdn, {
             tokensUrl: `${tenant.keycloak.issuer}/account/`,
-        });
+        }, undefined, undefined, proxyPublisher);
     });
 
     return { id: tenant.id, pathPrefix, appBaseUrl };

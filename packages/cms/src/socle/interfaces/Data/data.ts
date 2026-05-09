@@ -30,7 +30,20 @@ export type TDataProvider = {
      *  manually before the provider is usable at runtime. */
     server: string;
     spec: string;
-    auth: TDataAuth;
+    /**
+     * Auth used **once** at admin time to fetch the OpenAPI document at
+     * `sourceUrl` and (re-)compute `server` / `spec`. Often the same
+     * credential as `runtimeAuth`, but not always — a public spec on a
+     * private API uses `{type:'none'}` here and a real bearer there.
+     */
+    specAuth: TDataAuth;
+    /**
+     * Auth forwarded by the cdn-edge proxy on every browser request to
+     * `/.cms/data/<id>/*`. Resolved to plaintext at publish time and
+     * sent to cdn-buckets, where it is encrypted (KEK/DEK) before
+     * landing in Mongo.
+     */
+    runtimeAuth: TDataAuth;
     createdAt: Date;
     lastSyncAt: Date | null;
 };

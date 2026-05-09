@@ -92,6 +92,29 @@
                             <p9r-input name="server" label="Server URL"
                                 placeholder="https://api.example.com/v1" value="{{ server }}"
                                 hint="Base URL of the API. Auto-derived from the spec at sync — fill manually if your spec has no servers info."></p9r-input>
+
+                            <details>
+                                <summary>Spec authentication (used to fetch the OpenAPI spec)</summary>
+                                <p9r-stack gap="md">
+                                    <cms-credential-select name="specAuth.bearer"
+                                        label="Bearer token"
+                                        api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
+                                    <cms-headers-input prefix="specAuth"
+                                        api="{{BASE_PATH}}/api/secrets"></cms-headers-input>
+                                </p9r-stack>
+                            </details>
+
+                            <details>
+                                <summary>Runtime authentication (forwarded by the proxy on every API call)</summary>
+                                <p9r-stack gap="md">
+                                    <cms-credential-select name="runtimeAuth.bearer"
+                                        label="Bearer token"
+                                        api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
+                                    <cms-headers-input prefix="runtimeAuth"
+                                        api="{{BASE_PATH}}/api/secrets"></cms-headers-input>
+                                </p9r-stack>
+                            </details>
+
                             <p9r-button color="primary" fullWidth type="submit">Save</p9r-button>
                         </p9r-stack>
                     </cms-form>
@@ -146,13 +169,24 @@
                             placeholder="https://api.example.com/openapi.json"></p9r-input>
 
                         <details>
-                            <summary>Advanced settings</summary>
+                            <summary>Spec authentication (used to fetch the OpenAPI spec)</summary>
                             <p9r-stack gap="md">
-                                <cms-credential-select name="auth.bearer"
+                                <cms-credential-select name="specAuth.bearer"
                                     label="Bearer token"
                                     api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
+                                <cms-headers-input prefix="specAuth"
+                                    api="{{BASE_PATH}}/api/secrets"></cms-headers-input>
+                            </p9r-stack>
+                        </details>
 
-                                <cms-headers-input></cms-headers-input>
+                        <details>
+                            <summary>Runtime authentication (forwarded by the proxy on every API call)</summary>
+                            <p9r-stack gap="md">
+                                <cms-credential-select name="runtimeAuth.bearer"
+                                    label="Bearer token"
+                                    api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
+                                <cms-headers-input prefix="runtimeAuth"
+                                    api="{{BASE_PATH}}/api/secrets"></cms-headers-input>
                             </p9r-stack>
                         </details>
                     </p9r-stack>

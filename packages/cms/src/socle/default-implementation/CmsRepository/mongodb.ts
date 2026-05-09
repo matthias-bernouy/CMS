@@ -2,7 +2,7 @@ import { randomUUIDv7 } from "bun";
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { BlocListItemResponse, CmsRepository, PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
-import type { DataProviderConsumers, TDataMockup, TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
+import type { DataProviderConsumers, TDataAuth, TDataMockup, TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
 import { countOpenApiEndpoints, dataProviderSyncBadge } from "src/socle/utils/openapi";
 
 /**
@@ -507,9 +507,27 @@ function toDataProviderDoc(p: TDataProvider): DataProviderDoc {
 function fromDataProviderDoc(d: DataProviderDoc | null): TDataProvider | null {
     if (!d) return null;
     const { _id, ...rest } = d;
-    // Default `server` to "" so providers stored before the field was
-    // introduced still surface a usable shape.
-    return { id: _id, ...rest, server: rest.server ?? "" };
+    // `server` defaults to "" for providers stored before the field was
+    // introduced. `auth` was the single field before we split it into
+    // `specAuth` + `runtimeAuth`; legacy rows still carry it. We mirror
+    // the legacy value into both halves on read — the next write through
+    // `updateDataProvider` persists the new shape and `auth` becomes
+    // dead data (silently dropped because TDataProvider doesn't carry
+    // it any longer). No one-shot migration script needed.
+    const legacyAuth = (rest as { auth?: TDataAuth }).auth;
+    const specAuth    = rest.specAuth    ?? legacyAuth ?? { type: "none" };
+    const runtimeAuth = rest.runtimeAuth ?? legacyAuth ?? { type: "none" };
+    return {
+        id:          _id,
+        source:      rest.source,
+        sourceUrl:   rest.sourceUrl,
+        server:      rest.server ?? "",
+        spec:        rest.spec,
+        specAuth,
+        runtimeAuth,
+        createdAt:   rest.createdAt,
+        lastSyncAt:  rest.lastSyncAt,
+    };
 }
 
 // ── Document shapes (collection generics) ──

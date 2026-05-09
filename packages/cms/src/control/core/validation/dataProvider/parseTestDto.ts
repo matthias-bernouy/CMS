@@ -5,7 +5,9 @@ import { parseAuth } from './auth';
 
 export type DataProviderTestDto = {
     sourceUrl: string;
-    auth:      TDataAuth;
+    /** Spec auth specifically — `Test connection` exercises the same
+     *  fetch path as `syncDataProvider`, never the runtime proxy. */
+    specAuth:  TDataAuth;
 };
 
 /**
@@ -29,6 +31,6 @@ export function parseDataProviderTestDto(body: Record<string, unknown>): DataPro
 
     return {
         sourceUrl: parsed.toString(),
-        auth:      parseAuth(body),
+        specAuth:  parseAuth(body, 'specAuth'),
     };
 }

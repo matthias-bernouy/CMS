@@ -2,10 +2,21 @@
  * `<cms-headers-input>` — light-DOM repeating field for HTTP header pairs.
  *
  * Renders an initial empty row plus a "+ Add header" trigger. Each row is a
- * `<p9r-stack direction="row">` carrying two `<p9r-input>` siblings named
- * `auth.headers.<n>.name` and `auth.headers.<n>.value`. Index `<n>`
- * increments per row and never reuses; the server-side parser tolerates
- * gaps so deletes (when added later) won't break submission.
+ * `<p9r-stack direction="row">` carrying a `<p9r-input>` for the header
+ * name and a `<cms-credential-select>` for the value, named
+ * `<prefix>.headers.<n>.name` and `<prefix>.headers.<n>.value`, where
+ * `<prefix>` is the value of the `prefix` attribute (default `"specAuth"`).
+ * Two instances on the same form — one for `specAuth`, one for
+ * `runtimeAuth` — collect into separate sections of the body.
+ *
+ * Header values flow through the credential picker (same as the bearer
+ * token), so they round-trip as `${KEY}` references, get encrypted
+ * server-side and never leak to the browser. The `api` attribute on the
+ * host is forwarded to every credential picker so the multi-tenant path
+ * prefix sticks.
+ *
+ * Index `<n>` increments per row and never reuses; the server-side parser
+ * tolerates gaps so deletes (when added later) won't break submission.
  *
  * Inputs sit in light DOM so the parent `<cms-form>`'s native `FormData`
  * collection picks them up without any custom serialization.
@@ -15,6 +26,14 @@ export class CmsHeadersInput extends HTMLElement {
     private _rowCount = 0;
     private _rowsContainer: HTMLElement | null = null;
     private _addBtn:        HTMLElement | null = null;
+
+    private get _prefix(): string {
+        return this.getAttribute("prefix") || "specAuth";
+    }
+
+    private get _api(): string {
+        return this.getAttribute("api") || "/api/secrets";
+    }
 
     private _onClick = (e: Event) => {
         const btn = (e.target as HTMLElement).closest('[data-action="add-header"]');
@@ -55,20 +74,34 @@ export class CmsHeadersInput extends HTMLElement {
     private _addRow(): void {
         if (!this._rowsContainer) return;
         const idx = this._rowCount++;
+        const p   = this._prefix;
         const row = document.createElement('p9r-stack');
         row.setAttribute('direction', 'row');
         row.setAttribute('gap', 'sm');
+        row.setAttribute('align', 'stretch');
         row.dataset.role = 'header-row';
-        row.appendChild(this._makeInput(`auth.headers.${idx}.name`,  'Header name'));
-        row.appendChild(this._makeInput(`auth.headers.${idx}.value`, 'Header value'));
+        row.appendChild(this._makeNameInput (`${p}.headers.${idx}.name`));
+        row.appendChild(this._makeValueInput(`${p}.headers.${idx}.value`));
         this._rowsContainer.appendChild(row);
     }
 
-    private _makeInput(name: string, placeholder: string): HTMLElement {
+    private _makeNameInput(name: string): HTMLElement {
         const input = document.createElement('p9r-input');
         input.setAttribute('name', name);
-        input.setAttribute('placeholder', placeholder);
+        input.setAttribute('placeholder', 'Header name');
+        input.style.flex = '1';
         return input;
+    }
+
+    // No label on the credential picker so the row aligns with the
+    // label-less name input. The trigger's "No credential" placeholder
+    // text already makes the field's role clear.
+    private _makeValueInput(name: string): HTMLElement {
+        const select = document.createElement('cms-credential-select');
+        select.setAttribute('name', name);
+        select.setAttribute('api',  this._api);
+        select.style.flex = '1';
+        return select;
     }
 
     private _makeAddButton(): HTMLElement {

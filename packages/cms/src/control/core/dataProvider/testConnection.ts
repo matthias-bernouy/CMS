@@ -25,7 +25,7 @@ export async function testConnection(
 ): Promise<TestConnectionResult> {
     let auth;
     try {
-        auth = await resolveAuth(dto.auth, secrets);
+        auth = await resolveAuth(dto.specAuth, secrets);
     } catch (e) {
         if (e instanceof SecretNotFound) {
             return { ok: false, error: `Missing secret: ${e.key}` };

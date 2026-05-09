@@ -97,6 +97,31 @@ export class BucketsClient {
         return this._json("POST", "/admin/api/aliases/renew");
     }
 
+    // ── Proxies (per-bucket /.cms/data/<providerId>/* forwarders) ──────
+
+    async listProxies(bucketId: string): Promise<ProxyListItem[]> {
+        return this._json("GET", `/admin/api/proxies/list?bucketId=${encodeURIComponent(bucketId)}`);
+    }
+
+    /**
+     * Idempotent upsert. The same `(bucketId, providerId)` pair always
+     * replaces the existing rule. The cleartext secret in `auth` is sent
+     * to cdn-buckets, encrypted via envelope crypto before reaching
+     * Mongo, and never written to disk on the edges.
+     */
+    async upsertProxy(bucketId: string, input: ProxyUpsertInput): Promise<{ bucketId: string; providerId: string }> {
+        return this._json("POST", `/admin/api/proxies?bucketId=${encodeURIComponent(bucketId)}`, {
+            providerId: input.providerId,
+            server:     input.server,
+            auth:       input.auth,
+        });
+    }
+
+    async deleteProxy(bucketId: string, providerId: string): Promise<{ bucketId: string; providerId: string }> {
+        const params = new URLSearchParams({ bucketId, providerId });
+        return this._json("DELETE", `/admin/api/proxies?${params.toString()}`);
+    }
+
     // ── Files / folders / items ────────────────────────────────────────
 
     async createFolder(bucketId: string, input: { name: string; parentFolderID?: string | null }): Promise<StoredFolder> {
@@ -234,6 +259,36 @@ export type BucketCredentialView = {
     expiresAt?: string;
     revokedAt?: string;
 };
+
+/** Auth payload accepted by `upsertProxy`. Symmetric with the server's
+ *  `ProxyAuth` shape. Cleartext on the wire — the server-side repository
+ *  encrypts before persistence; never logged. */
+export type ProxyUpsertAuth =
+    | { type: 'none' }
+    | { type: 'bearer';  token: string }
+    | { type: 'headers'; headers: { name: string; value: string }[] };
+
+export type ProxyUpsertInput = {
+    providerId: string;
+    server:     string;
+    auth:       ProxyUpsertAuth;
+};
+
+/** Wire shape returned by `listProxies` — auth is REDACTED to flags so
+ *  the admin UI can show "configured / missing" without ever fetching
+ *  the live secret back. */
+export type ProxyListItem = {
+    bucketId:   string;
+    providerId: string;
+    server:     string;
+    auth:       ProxyListItemAuth;
+    createdAt:  string;
+    updatedAt:  string;
+};
+export type ProxyListItemAuth =
+    | { type: 'none' }
+    | { type: 'bearer';  hasToken: boolean }
+    | { type: 'headers'; headers: { name: string; hasValue: boolean }[] };
 
 export type BucketsClientErrorCode = "not_found" | "unauthorized" | "forbidden" | "conflict" | "validation_error" | "unknown";
 

@@ -8,13 +8,19 @@ export type DataProviderCreateDto = {
     id: string;
     source: 'url';
     sourceUrl: string;
-    auth: TDataAuth;
+    specAuth:    TDataAuth;
+    runtimeAuth: TDataAuth;
 };
 
 /**
  * Validates a create-provider request. Phase 2 only accepts `source: 'url'`
  * — `file`, `paste` and `official` are rejected here even though the UI
  * shows their tabs disabled, as defense in depth.
+ *
+ * Both `specAuth` (used to fetch the OpenAPI spec) and `runtimeAuth`
+ * (forwarded by the proxy on every API call) are read from the body. If
+ * either section is empty, we default to `{ type: 'none' }` — a public
+ * spec or a public API both round-trip cleanly.
  */
 export function parseDataProviderCreateDto(body: Record<string, unknown>): DataProviderCreateDto {
     const { id, source, sourceUrl } = body;
@@ -41,8 +47,9 @@ export function parseDataProviderCreateDto(body: Record<string, unknown>): DataP
 
     return {
         id,
-        source:    'url',
-        sourceUrl: parsed.toString(),
-        auth:      parseAuth(body),
+        source:      'url',
+        sourceUrl:   parsed.toString(),
+        specAuth:    parseAuth(body, 'specAuth'),
+        runtimeAuth: parseAuth(body, 'runtimeAuth'),
     };
 }

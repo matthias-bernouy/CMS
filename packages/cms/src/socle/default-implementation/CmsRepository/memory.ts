@@ -293,10 +293,11 @@ export class InMemoryCmsRepository implements CmsRepository {
         }
         const stored: TDataProvider = {
             ...provider,
-            server:     provider.server ?? "",
-            auth:       cloneAuth(provider.auth),
-            createdAt:  new Date(),
-            lastSyncAt: null,
+            server:      provider.server ?? "",
+            specAuth:    cloneAuth(provider.specAuth),
+            runtimeAuth: cloneAuth(provider.runtimeAuth),
+            createdAt:   new Date(),
+            lastSyncAt:  null,
         };
         this._dataProviders.set(stored.id, stored);
         return cloneDataProvider(stored);
@@ -334,9 +335,10 @@ export class InMemoryCmsRepository implements CmsRepository {
         const merged: TDataProvider = {
             ...existing,
             ...rest,
-            id:        existing.id,
-            createdAt: existing.createdAt,
-            auth:      cloneAuth(rest.auth ?? existing.auth),
+            id:          existing.id,
+            createdAt:   existing.createdAt,
+            specAuth:    cloneAuth(rest.specAuth    ?? existing.specAuth),
+            runtimeAuth: cloneAuth(rest.runtimeAuth ?? existing.runtimeAuth),
         };
         this._dataProviders.set(id, merged);
         return cloneDataProvider(merged);
@@ -451,7 +453,7 @@ function mockupKey(providerId: string, method: string, path: string, name: strin
     return `${providerId}\x00${method.toUpperCase()}\x00${path}\x00${name}`;
 }
 
-function cloneAuth(auth: TDataProvider["auth"]): TDataProvider["auth"] {
+function cloneAuth(auth: TDataProvider["specAuth"]): TDataProvider["specAuth"] {
     if (auth.type === "headers") {
         return { type: "headers", headers: auth.headers.map(h => ({ ...h })) };
     }
@@ -459,7 +461,7 @@ function cloneAuth(auth: TDataProvider["auth"]): TDataProvider["auth"] {
 }
 
 function cloneDataProvider(p: TDataProvider): TDataProvider {
-    return { ...p, auth: cloneAuth(p.auth) };
+    return { ...p, specAuth: cloneAuth(p.specAuth), runtimeAuth: cloneAuth(p.runtimeAuth) };
 }
 
 function defaultSystem(): TSystem {

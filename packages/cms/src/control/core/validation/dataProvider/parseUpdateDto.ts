@@ -1,16 +1,18 @@
 import InvalidParam from 'src/control/errors/Http/InvalidParam';
 import type { TDataAuth, TDataProvider } from 'src/socle/interfaces/Data/data';
-import { parseAuth } from './auth';
+import { parseAuth, hasAuthFields } from './auth';
 
 export type DataProviderUpdateDto = Partial<Pick<TDataProvider, 'sourceUrl' | 'server' | 'spec'>> & {
-    auth?: TDataAuth;
+    specAuth?:    TDataAuth;
+    runtimeAuth?: TDataAuth;
 };
 
 /**
  * Validates an update body. `id`, `source`, `createdAt` are immutable —
- * silently dropped if present. The `auth` field is rebuilt via the same
- * dotted-key parser used at create-time. Only the fields explicitly set
- * by the caller are forwarded to the repository.
+ * silently dropped if present. The two auth sections (`specAuth.*` and
+ * `runtimeAuth.*`) are independently re-parsed when at least one of
+ * their fields is in the body — letting the UI patch one half without
+ * resending the other.
  */
 export function parseDataProviderUpdateDto(body: Record<string, unknown>): DataProviderUpdateDto {
     const dto: DataProviderUpdateDto = {};
@@ -53,16 +55,8 @@ export function parseDataProviderUpdateDto(body: Record<string, unknown>): DataP
         dto.spec = body.spec;
     }
 
-    if (hasAuthFields(body)) {
-        dto.auth = parseAuth(body);
-    }
+    if (hasAuthFields(body, 'specAuth'))    dto.specAuth    = parseAuth(body, 'specAuth');
+    if (hasAuthFields(body, 'runtimeAuth')) dto.runtimeAuth = parseAuth(body, 'runtimeAuth');
 
     return dto;
-}
-
-function hasAuthFields(body: Record<string, unknown>): boolean {
-    for (const key of Object.keys(body)) {
-        if (key === 'auth.bearer' || key.startsWith('auth.headers.')) return true;
-    }
-    return false;
 }

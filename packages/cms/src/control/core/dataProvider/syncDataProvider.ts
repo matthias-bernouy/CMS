@@ -5,6 +5,7 @@ import { parseSpec } from 'src/control/core/data/parseSpec';
 import { SpecParseError } from 'src/control/errors/SpecParseError';
 import { applyAuth } from './applyAuth';
 import { resolveAuth } from './resolveAuth';
+import { publishProxy } from './publishProxy';
 
 const TIMEOUT_MS = 30_000;
 
@@ -30,7 +31,7 @@ export async function syncDataProvider(cms: ControlCms, id: string): Promise<Syn
 
     let auth;
     try {
-        auth = await resolveAuth(provider.auth, cms.secrets);
+        auth = await resolveAuth(provider.specAuth, cms.secrets);
     } catch (e) {
         if (e instanceof SecretNotFound) {
             return { ok: false, error: `Missing secret: ${e.key}` };
@@ -70,6 +71,13 @@ export async function syncDataProvider(cms: ControlCms, id: string): Promise<Syn
         lastSyncAt: new Date(),
     });
     cms.specCache.delete(id);
+
+    // Publish to the upstream CDN proxy layer. Server is now populated
+    // (post-sync), so the proxy can be activated. Failure here doesn't
+    // roll back the sync — the OpenAPI spec is in DB regardless. The
+    // operator will see the publish error (if any) propagated up to
+    // the admin response.
+    await publishProxy(cms, id);
 
     return { ok: true, endpointCount: countOpenApiEndpoints(spec) };
 }

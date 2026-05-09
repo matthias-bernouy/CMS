@@ -30,13 +30,15 @@ export async function scanDataProviders(siteDir: string): Promise<LocalDataProvi
         if (parsed.id && parsed.id !== id) {
             throw new Error(`Data provider ${file} declares id="${parsed.id}" — rename to match.`);
         }
+        const legacy = (parsed as { auth?: TDataAuth }).auth;
         out.push({
             id,
-            source:    (parsed.source ?? "url") as TDataProviderSource,
-            sourceUrl: String(parsed.sourceUrl ?? ""),
-            server:    String(parsed.server    ?? ""),
-            spec:      String(parsed.spec      ?? ""),
-            auth:      (parsed.auth ?? { type: "none" }) as TDataAuth,
+            source:      (parsed.source ?? "url") as TDataProviderSource,
+            sourceUrl:   String(parsed.sourceUrl ?? ""),
+            server:      String(parsed.server    ?? ""),
+            spec:        String(parsed.spec      ?? ""),
+            specAuth:    (parsed.specAuth    ?? legacy ?? { type: "none" }) as TDataAuth,
+            runtimeAuth: (parsed.runtimeAuth ?? legacy ?? { type: "none" }) as TDataAuth,
         });
     }
     return out;

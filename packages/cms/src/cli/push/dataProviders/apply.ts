@@ -45,7 +45,9 @@ export async function putProvider(adminBase: URL, token: string, p: LocalDataPro
 
 /**
  * Flatten the nested local shape into the dot-keyed body the server-side
- * parser expects. Auth nested → `auth.bearer` / `auth.headers.<n>.{name,value}`.
+ * parser expects. Auth nested → `<prefix>.bearer` /
+ * `<prefix>.headers.<n>.{name,value}`, where `<prefix>` is `specAuth`
+ * or `runtimeAuth`.
  */
 function toFlatBody(p: LocalDataProvider): Record<string, string> {
     const body: Record<string, string> = {
@@ -54,20 +56,21 @@ function toFlatBody(p: LocalDataProvider): Record<string, string> {
         sourceUrl: p.sourceUrl,
         spec:      p.spec,
     };
-    flattenAuth(body, p.auth);
+    flattenAuth(body, p.specAuth,    "specAuth");
+    flattenAuth(body, p.runtimeAuth, "runtimeAuth");
     return body;
 }
 
-function flattenAuth(body: Record<string, string>, auth: TDataAuth): void {
+function flattenAuth(body: Record<string, string>, auth: TDataAuth, prefix: string): void {
     if (auth.type === "bearer") {
-        body["auth.bearer"] = auth.token;
+        body[`${prefix}.bearer`] = auth.token;
         return;
     }
     if (auth.type === "headers") {
         for (let i = 0; i < auth.headers.length; i++) {
             const h = auth.headers[i]!;
-            body[`auth.headers.${i}.name`]  = h.name;
-            body[`auth.headers.${i}.value`] = h.value;
+            body[`${prefix}.headers.${i}.name`]  = h.name;
+            body[`${prefix}.headers.${i}.value`] = h.value;
         }
     }
 }

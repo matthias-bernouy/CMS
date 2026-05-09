@@ -108,3 +108,38 @@ describe("BucketsClient — response handling", () => {
         await expect(client.listBuckets()).rejects.toBeInstanceOf(BucketsClientError);
     });
 });
+
+describe("BucketsClient — proxies", () => {
+    test("upsertProxy posts auth body verbatim", async () => {
+        const { fetch, calls } = makeFakeFetch({ ok: true, data: { bucketId: "b", providerId: "stripe" } });
+        const client = new BucketsClient({ baseUrl: ORIGIN, token: "t", fetch });
+        await client.upsertProxy("b", {
+            providerId: "stripe",
+            server:     "https://api.stripe.com/v1",
+            auth:       { type: "bearer", token: "sk_live_abc" },
+        });
+        expect(calls[0]!.method).toBe("POST");
+        expect(calls[0]!.url).toBe(`${ORIGIN}/admin/api/proxies?bucketId=b`);
+        expect(calls[0]!.body).toEqual({
+            providerId: "stripe",
+            server:     "https://api.stripe.com/v1",
+            auth:       { type: "bearer", token: "sk_live_abc" },
+        });
+    });
+
+    test("deleteProxy URL-encodes both query params", async () => {
+        const { fetch, calls } = makeFakeFetch({ ok: true, data: { bucketId: "b", providerId: "p" } });
+        const client = new BucketsClient({ baseUrl: ORIGIN, token: "t", fetch });
+        await client.deleteProxy("b/c", "stripe-eu");
+        expect(calls[0]!.method).toBe("DELETE");
+        expect(calls[0]!.url).toBe(`${ORIGIN}/admin/api/proxies?bucketId=b%2Fc&providerId=stripe-eu`);
+    });
+
+    test("listProxies bucket id encoded in query", async () => {
+        const { fetch, calls } = makeFakeFetch({ ok: true, data: [] });
+        const client = new BucketsClient({ baseUrl: ORIGIN, token: "t", fetch });
+        await client.listProxies("acme bucket");
+        expect(calls[0]!.method).toBe("GET");
+        expect(calls[0]!.url).toBe(`${ORIGIN}/admin/api/proxies/list?bucketId=acme%20bucket`);
+    });
+});
