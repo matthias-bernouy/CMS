@@ -8585,6 +8585,13 @@ p9r-tag:hover {
     <path d="M16 21h1a2 2 0 0 0 2-2v-4a2 2 0 0 1 2-2 2 2 0 0 1-2-2V7a2 2 0 0 0-2-2h-1"/>
 </svg>
 `;
+  var ICON_DATABASE = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+    <path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+    <path d="M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6"/>
+</svg>
+`;
   var ICON_EYE = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
@@ -8828,7 +8835,15 @@ p9r-tag:hover {
     }
     bind() {
       this.unbind();
-      this._hoverElement = this.editor.getActionBarAnchor() ?? this.editor.target;
+      let resolved = this.editor.getActionBarAnchor() ?? this.editor.target;
+      const resolvedId = resolved.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+      const myId = this.editor.target.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+      if (resolvedId && resolvedId !== myId) {
+        const inner = document.compIdentifierToEditor?.get(resolvedId);
+        if (inner?.isInteractive)
+          resolved = this.editor.target;
+      }
+      this._hoverElement = resolved;
       this._hoverElement.addEventListener("mouseenter", this._handler);
     }
     unbind() {
@@ -8998,7 +9013,7 @@ p9r-tag:hover {
       this.target.style.setProperty("pointer-events", "auto", "important");
       this.refreshActionBarFeatures();
       this._hover.unbind();
-      if (this._hasInteractiveFeatures())
+      if (this.isInteractive)
         this._hover.bind();
     }
     viewClient() {
@@ -9053,11 +9068,17 @@ p9r-tag:hover {
       if (i >= 0)
         this.stateSyncs.splice(i, 1);
     }
+    claimChild(el) {
+      el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, this._identifier);
+    }
     extendRichTextBar(ext) {
       return this._extensions.add("richtextbar", ext);
     }
     extendBlocActions(ext) {
       return this._extensions.add("blocActions", ext);
+    }
+    extendData(ext) {
+      return this._extensions.add("data", ext);
     }
     listExtensions(surface) {
       return this._extensions.list(surface);
@@ -9073,7 +9094,7 @@ p9r-tag:hover {
         this._pinMode.enter();
       } else {
         this._pinMode.exit();
-        if (this._hasInteractiveFeatures())
+        if (this.isInteractive)
           this._hover.bind();
       }
       this.onEditorPinState?.(anyPinned, stateSync);
@@ -9087,8 +9108,8 @@ p9r-tag:hover {
     addCustomAction(action) {
       this.customActions.push(action);
     }
-    _hasInteractiveFeatures() {
-      return this._actionBarFeatures.values().some((v) => v === true) || this.stateSyncs.length > 0 || this.customActions.length > 0;
+    get isInteractive() {
+      return this._actionBarFeatures.values().some((v) => v === true) || this.stateSyncs.length > 0 || this.customActions.length > 0 || this.hasConfigPanel;
     }
     get hasConfigPanel() {
       return this._panel.hasPanel;
@@ -10016,6 +10037,12 @@ ${followMessage}`)) {
     _rowCount = 0;
     _rowsContainer = null;
     _addBtn = null;
+    get _prefix() {
+      return this.getAttribute("prefix") || "specAuth";
+    }
+    get _api() {
+      return this.getAttribute("api") || "/api/secrets";
+    }
     _onClick = (e) => {
       const btn = e.target.closest('[data-action="add-header"]');
       if (!btn || !this.contains(btn))
@@ -10047,19 +10074,29 @@ ${followMessage}`)) {
       if (!this._rowsContainer)
         return;
       const idx = this._rowCount++;
+      const p = this._prefix;
       const row = document.createElement("p9r-stack");
       row.setAttribute("direction", "row");
       row.setAttribute("gap", "sm");
+      row.setAttribute("align", "stretch");
       row.dataset.role = "header-row";
-      row.appendChild(this._makeInput(`auth.headers.${idx}.name`, "Header name"));
-      row.appendChild(this._makeInput(`auth.headers.${idx}.value`, "Header value"));
+      row.appendChild(this._makeNameInput(`${p}.headers.${idx}.name`));
+      row.appendChild(this._makeValueInput(`${p}.headers.${idx}.value`));
       this._rowsContainer.appendChild(row);
     }
-    _makeInput(name, placeholder) {
+    _makeNameInput(name) {
       const input = document.createElement("p9r-input");
       input.setAttribute("name", name);
-      input.setAttribute("placeholder", placeholder);
+      input.setAttribute("placeholder", "Header name");
+      input.style.flex = "1";
       return input;
+    }
+    _makeValueInput(name) {
+      const select = document.createElement("cms-credential-select");
+      select.setAttribute("name", name);
+      select.setAttribute("api", this._api);
+      select.style.flex = "1";
+      return select;
     }
     _makeAddButton() {
       const wrapper = document.createElement("div");
@@ -13254,15 +13291,40 @@ cms-bag-breadcrumb[data-inline="right"] {
   // src/control/core/editorSystem/extensions/collectAncestors.ts
   function collectAncestorExtensions(fromEl, surface) {
     const out = [];
-    const attr = p9r.attr.EDITOR.IDENTIFIER;
-    const selector = `[${attr}]`;
-    let el = fromEl.matches(selector) ? fromEl : fromEl.closest(selector);
-    while (el) {
-      const id = el.getAttribute(attr);
-      const editor = id ? document.compIdentifierToEditor?.get(id) : undefined;
+    const idAttr = p9r.attr.EDITOR.IDENTIFIER;
+    const pidAttr = p9r.attr.EDITOR.PARENT_IDENTIFIER;
+    const selector = `[${idAttr}]`;
+    const map = document.compIdentifierToEditor;
+    let entry = fromEl;
+    if (!entry.closest(selector)) {
+      const pidEl = entry.closest(`[${pidAttr}]`);
+      const pid = pidEl?.getAttribute(pidAttr);
+      const owner = pid ? map?.get(pid) : undefined;
+      if (owner)
+        entry = owner.target;
+    }
+    const seed = entry.matches(selector) ? entry : entry.closest(selector);
+    if (!seed)
+      return out;
+    const visited = new Set;
+    const queue = [seed];
+    while (queue.length > 0) {
+      const el = queue.shift();
+      if (visited.has(el))
+        continue;
+      visited.add(el);
+      const id = el.getAttribute(idAttr);
+      const editor = id ? map?.get(id) : undefined;
       if (editor)
         out.push(...editor.listExtensions(surface));
-      el = el.parentElement?.closest(selector) ?? null;
+      const parent = el.parentElement?.closest(selector);
+      if (parent && !visited.has(parent))
+        queue.push(parent);
+      const pid = el.getAttribute(pidAttr);
+      const pidOwner = pid ? map?.get(pid) : undefined;
+      if (pidOwner && pidOwner.target !== el && !visited.has(pidOwner.target)) {
+        queue.push(pidOwner.target);
+      }
     }
     return out;
   }
@@ -13272,10 +13334,10 @@ cms-bag-breadcrumb[data-inline="right"] {
     return collectExtensions(target).length > 0;
   }
   function collectExtensions(target) {
-    const startEl = target.parentElement;
-    if (!startEl)
-      return [];
-    const all = collectAncestorExtensions(startEl, "blocActions").filter((e) => e.enabled?.() !== false);
+    const myId = target.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+    const myEditor = myId ? document.compIdentifierToEditor?.get(myId) : undefined;
+    const ownExts = myEditor ? new Set(myEditor.listExtensions("blocActions")) : new Set;
+    const all = collectAncestorExtensions(target, "blocActions").filter((e) => e.enabled?.() !== false).filter((e) => !ownExts.has(e));
     return Array.from(new Set(all));
   }
   function buildExtensionsButton() {
@@ -14719,12 +14781,6 @@ cms-bag-breadcrumb[data-inline="right"] {
     c.breadcrumb.refinePosition(c.host.getBoundingClientRect());
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/isInteractive.ts
-  function isInteractive(editor) {
-    const someEnabled = Array.from(editor.actionBarConfiguration.values()).some((v) => v);
-    return someEnabled || editor.customActions.length > 0 || editor.stateSyncs.length > 0 || editor.hasConfigPanel;
-  }
-
   // src/control/components/editor/EditorSystem/Highlight.ts
   var ROOT_ID = "p9r-editor-highlight-root";
   var root = null;
@@ -14853,7 +14909,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       this.host.style.cssText = `position:fixed;top:${top}px;left:${left}px;` + `visibility:visible;opacity:1;pointer-events:auto;`;
     }
     setEditor(editor) {
-      if (!isInteractive(editor)) {
+      if (!editor.isInteractive) {
         this.close();
         this.editor = null;
         this.target = null;
@@ -14865,7 +14921,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       this.target = editor.target;
       this.hoverEl = editor.getActionBarAnchor?.() ?? editor.target;
       this.highlight?.dispose();
-      this.highlight = new Highlight(this.target, { color: "var(--primary-base, #3b82f6)" });
+      this.highlight = new Highlight(this.hoverEl, { color: "var(--primary-base, #3b82f6)" });
       this.events.rebindHover(prev);
       this.insertBtns.resolveTarget(editor);
     }
@@ -19676,6 +19732,93 @@ button.active svg {
     self.selection.save();
     return text;
   }
+  // src/control/core/editorSystem/extensions/schemaScalars.ts
+  function flattenScalars(schema, prefix = "") {
+    const s2 = unwrap(schema);
+    if (!s2)
+      return [];
+    if (Array.isArray(s2.enum) && s2.enum.length > 0) {
+      return [{ path: prefix, label: leafLabel(prefix), type: enumTypeOf(s2) }];
+    }
+    switch (s2.type) {
+      case "object": {
+        const out = [];
+        for (const [k, v] of Object.entries(s2.properties ?? {})) {
+          out.push(...flattenScalars(v, prefix ? `${prefix}.${k}` : k));
+        }
+        return out;
+      }
+      case "array":
+        return [{
+          path: prefix ? `${prefix}.length` : "length",
+          label: "length",
+          type: "integer"
+        }];
+      case "string":
+      case "integer":
+      case "number":
+      case "boolean":
+      case "null":
+        return [{ path: prefix, label: leafLabel(prefix), type: s2.type }];
+      default:
+        return [];
+    }
+  }
+  function unwrap(schema) {
+    if (!schema)
+      return null;
+    if (Array.isArray(schema.allOf) && schema.allOf.length > 0) {
+      const merged = { type: "object", properties: {} };
+      for (const part of schema.allOf) {
+        if (part.type)
+          merged.type = part.type;
+        if (part.properties)
+          merged.properties = { ...merged.properties, ...part.properties };
+      }
+      return merged;
+    }
+    if (Array.isArray(schema.oneOf) && schema.oneOf.length > 0)
+      return schema.oneOf[0] ?? null;
+    if (Array.isArray(schema.anyOf) && schema.anyOf.length > 0)
+      return schema.anyOf[0] ?? null;
+    return schema;
+  }
+  function leafLabel(path) {
+    if (!path)
+      return "value";
+    const dot = path.lastIndexOf(".");
+    return dot >= 0 ? path.slice(dot + 1) : path;
+  }
+  function enumTypeOf(s2) {
+    if (s2.type)
+      return s2.type;
+    const first = s2.enum?.[0];
+    return typeof first === "string" ? "string" : typeof first === "number" ? "number" : typeof first === "boolean" ? "boolean" : "string";
+  }
+  // src/control/components/editor/RichTextBar/extensions/dataAdapter.ts
+  function adaptDataExtensions(fromEl) {
+    return collectAncestorExtensions(fromEl, "data").map(adaptOne).filter((x) => x !== null);
+  }
+  function adaptOne(d) {
+    if (d.enabled && !d.enabled())
+      return null;
+    const schema = d.getSchema();
+    if (!schema)
+      return null;
+    const fields = flattenScalars(schema).map((f) => ({
+      path: f.path ? `${d.id}.${f.path}` : d.id,
+      label: f.label,
+      type: f.type
+    }));
+    if (fields.length === 0)
+      return null;
+    return {
+      label: d.label,
+      icon: ICON_DATABASE,
+      getCompletions: () => fields,
+      onPick: (field) => `{{ ${field.path} }}`
+    };
+  }
 
   // src/control/components/editor/RichTextBar/extensions/index.ts
   function refreshExtensions(self) {
@@ -19688,7 +19831,9 @@ button.active svg {
     if (self._lastEditable === startEl)
       return;
     self._lastEditable = startEl;
-    const exts = collectAncestorExtensions(startEl, "richtextbar").filter((e) => e.enabled?.() !== false);
+    const richExts = collectAncestorExtensions(startEl, "richtextbar").filter((e) => e.enabled?.() !== false);
+    const dataExts = adaptDataExtensions(startEl);
+    const exts = [...richExts, ...dataExts];
     self._currentExtensions = exts;
     render2(self, exts);
   }

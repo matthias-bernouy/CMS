@@ -8,9 +8,17 @@ import { collectAncestorExtensions } from 'src/control/core/editorSystem/extensi
  * the BAG's `data-action="extensions"` dispatcher path so the popover opens
  * with the *current* BAG target, not a stale snapshot from render-time.
  *
- * The walk starts at `target.parentElement` so the bloc's OWN editor doesn't
- * see its own `extendBlocActions` (that channel is for descendants —
- * `Editor.addCustomAction` covers self-actions).
+ * Self-publishing rule: a bloc's OWN `extendBlocActions` extensions are
+ * filtered out — that channel is for descendants. `Editor.addCustomAction`
+ * covers self-actions.
+ *
+ * Why the walk starts at `target` (not `target.parentElement`): the
+ * `p9r-parent-identifier` fallback inside `collectAncestorExtensions` is
+ * how stamped descendants reach a publishing ancestor that isn't a real
+ * DOM parent (e.g. `<base-fetch>` stamps siblings; an inserted card
+ * carries `p9r-parent-identifier` pointing at the fetch). The pid lives
+ * ON the target itself, so starting one level higher misses it. We add
+ * the explicit self-filter below to preserve the original intent.
  */
 
 export function hasBlocActionExtensions(target: HTMLElement): boolean {
@@ -18,10 +26,13 @@ export function hasBlocActionExtensions(target: HTMLElement): boolean {
 }
 
 export function collectExtensions(target: HTMLElement): BlocActionExtension[] {
-    const startEl = target.parentElement;
-    if (!startEl) return [];
-    const all = collectAncestorExtensions(startEl, 'blocActions')
-        .filter((e: BlocActionExtension) => e.enabled?.() !== false);
+    const myId     = target.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+    const myEditor = myId ? document.compIdentifierToEditor?.get(myId) : undefined;
+    const ownExts  = myEditor ? new Set(myEditor.listExtensions('blocActions')) : new Set();
+
+    const all = collectAncestorExtensions(target, 'blocActions')
+        .filter((e: BlocActionExtension) => e.enabled?.() !== false)
+        .filter((e: BlocActionExtension) => !ownExts.has(e));
     // De-dupe by identity. The walk should never see the same extension twice
     // (each editor's registry is independent), but if the observer briefly
     // double-editorizes a bloc mid-mutation we'd otherwise show the same group
