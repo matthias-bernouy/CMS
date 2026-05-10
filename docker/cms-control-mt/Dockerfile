@@ -8,7 +8,7 @@ ARG BUN_VERSION=1.3.6
 ARG TARGETARCH=amd64
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        nginx gnupg curl unzip ca-certificates lsb-release sudo gettext-base procps \
+        nginx gnupg curl unzip jq ca-certificates lsb-release sudo gettext-base procps \
  && curl -fsSL "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip" -o /tmp/bun.zip \
  && unzip -q /tmp/bun.zip -d /tmp \
  && mv /tmp/bun-linux-x64/bun /usr/local/bin/bun \
@@ -45,6 +45,11 @@ RUN mkdir -p /etc/nginx/conf.d/cms \
 RUN echo "cms ALL=(root) NOPASSWD: /usr/sbin/nginx -s reload" > /etc/sudoers.d/cms \
  && chmod 0440 /etc/sudoers.d/cms
 
+# Shared OKMS bootstrap wrapper (fetches the config bundle at boot and
+# exec's into the service entrypoint with env populated).
+COPY docker/_shared/okms-fetch.sh /usr/local/bin/okms-fetch
+RUN chmod +x /usr/local/bin/okms-fetch
+
 COPY docker/cms-control-mt/entrypoint.sh /usr/local/bin/cms-entrypoint.sh
 RUN chmod +x /usr/local/bin/cms-entrypoint.sh
 
@@ -56,4 +61,8 @@ EXPOSE 80 443
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
     CMD curl -fsS -o /dev/null http://127.0.0.1:3000/superadmin/ || exit 1
 
-ENTRYPOINT ["/usr/local/bin/cms-entrypoint.sh"]
+# Boot chain: okms-fetch (mTLS pull from OVHcloud Secret Manager) →
+# cms-entrypoint (existing service orchestration). All env vars consumed
+# by entrypoint.sh + server.ts come from the OKMS bundle, except the
+# four OKMS_* bootstrap vars which come from the host's bootstrap.env.
+ENTRYPOINT ["/usr/local/bin/okms-fetch", "/usr/local/bin/cms-entrypoint.sh"]

@@ -5,7 +5,7 @@
 # The origin is private: only the admin/upload host (MAIN_DOMAIN) is
 # served on HTTPS, NOT `*.${MAIN_DOMAIN}` (edges own that). Port 80 is
 # kept for HTTP-01 challenges that edges proxy back here when issuing
-# per-alias certs (see EDGE-SETUP.md).
+# per-alias certs (see ../cdn-edge/DEPLOY.md).
 
 upstream cdn_app {
     server 127.0.0.1:3000;

@@ -11,9 +11,9 @@ import type { AliasCertPath } from "../core/nginx/regenerateAliases";
 import type { LegoIssuerConfig } from "../core/alias/issueLegoCert";
 import type { StoredFolderRepository } from "../interfaces/repositories/StoredFolderRepository";
 import type { StoredFileRepository } from "../interfaces/repositories/StoredFileRepository";
-import type { BucketDekRepository } from "../interfaces/repositories/BucketDekRepository";
+import type { DekRepository } from "@bernouy/core";
 import type { BucketProxyRepository } from "../interfaces/repositories/BucketProxyRepository";
-import type { SecretCrypto } from "../core/crypto/SecretCrypto";
+import type { SecretCrypto } from "@bernouy/core";
 import type { BlobStorage } from "../interfaces/BlobStorage";
 import { createAdminGuard } from "../core/authentication/createAdminGuard";
 import { mountAdminSurface } from "../core/admin/mountAdminSurface";
@@ -66,7 +66,7 @@ export type StorageProviderDeps = {
     /** Per-bucket DEK store. Required: every secret persisted by the
      *  provider (currently `BucketProxy.auth`) is wrapped against the
      *  bucket's DEK before reaching Mongo. */
-    bucketDekRepo: BucketDekRepository;
+    bucketDekRepo: DekRepository;
     /** Proxy rules attached to a bucket — exposes per-bucket
      *  `/.cms/data/<providerId>/*` routes on cdn-edge. */
     bucketProxyRepo: BucketProxyRepository;
@@ -87,7 +87,7 @@ export class StorageProvider {
     private _aliasRepo:            AliasRepository;
     private _storedFolderRepo:     StoredFolderRepository;
     private _storedFileRepo:       StoredFileRepository;
-    private _bucketDekRepo:        BucketDekRepository;
+    private _bucketDekRepo:        DekRepository;
     private _bucketProxyRepo:      BucketProxyRepository;
     private _secretCrypto:         SecretCrypto;
     private _blobStorage:          BlobStorage;

@@ -1,0 +1,52 @@
+# Build context exclusions — applies to every `docker build .` invocation
+# at repo root (cms-control-mt, cdn-node, cdn-edge). Keeps the context
+# small and avoids accidentally shipping host secrets / dev caches.
+
+# Heavy / regenerable
+node_modules
+**/node_modules
+**/dist
+**/.turbo
+**/.next
+**/coverage
+
+# Stale incremental-build metadata — if these are copied into the image,
+# `tsc --build` reads them, concludes "up to date", and skips emit, but
+# the matching `dist/` was excluded above → consumers fail with TS6305.
+**/*.tsbuildinfo
+
+# VCS + editor
+.git
+.gitignore
+.idea
+.vscode
+*.swp
+
+# Local dev artifacts
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+.p9r-dev/
+**/.p9r-dev/
+
+# Build outputs / temp
+*.tar.gz
+*.log
+**/*.log
+.DS_Store
+
+# Lockfiles for non-bun toolchains (we use bun.lock)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Markdown / docs — Dockerfiles don't COPY these, but excluding them
+# tightens the build cache invalidation surface.
+*.md
+!packages/**/README.md
+RECAP_*.md
+TAB_*.md
+TODO.md

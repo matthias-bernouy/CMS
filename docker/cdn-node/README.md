@@ -44,11 +44,11 @@ zone if you front it with a VPN / mesh).
 
 | Var                       | Purpose                                                                                  |
 |---------------------------|------------------------------------------------------------------------------------------|
-| `MAIN_DOMAIN`             | Admin host of the origin, e.g. `cdn-origin.example.com`. Cert is issued for this only.   |
+| `MAIN_DOMAIN`             | Admin host of the origin, e.g. `cdn-origin.example.com`. Cert via DNS-01 or HTTP-01.     |
+| `PUBLIC_DOMAIN`           | Host the edges round-robin on, e.g. `cdn.example.com`. Cert via HTTP-01 webroot through edges. |
 | `LEGO_EMAIL`              | ACME account email (registered on first boot).                                           |
-| `LEGO_DNS_PROVIDER`       | lego DNS provider id (`ovh`, `route53`, `cloudflare`, …) — required on first boot.       |
-| `<DNS>_*`                 | Provider-specific credentials, forwarded to lego.                                        |
 | `MONGO_URL`               | External MongoDB URL (Atlas / self-hosted).                                              |
+| `CDN_BUCKETS_KEK`         | Base64 of 32 random bytes (`openssl rand -base64 32`). Encrypts the per-bucket DEKs which encrypt proxy auth secrets. **Loss = all proxy auths unrecoverable.** |
 | `KEYCLOAK_ISSUER`         | OIDC issuer URL.                                                                         |
 | `KEYCLOAK_CLIENT_ID`      | OIDC client id registered in Keycloak.                                                   |
 | `KEYCLOAK_CLIENT_SECRET`  | OIDC client secret.                                                                      |
@@ -58,6 +58,8 @@ zone if you front it with a VPN / mesh).
 
 | Var                       | Default                                | Purpose                                                                |
 |---------------------------|----------------------------------------|------------------------------------------------------------------------|
+| `LEGO_DNS_PROVIDER`       | (unset)                                | Set to `ovh` / `route53` / etc. to mint `MAIN_DOMAIN` via DNS-01 instead of HTTP-01 standalone. Provider creds (`OVH_*`, `AWS_*`…) must accompany. |
+| `<DNS>_*`                 | -                                      | Provider-specific creds, forwarded to lego when `LEGO_DNS_PROVIDER` is set. |
 | `KEYCLOAK_ADMIN_ROLE`     | `admin`                                | Keycloak realm role mapped to the admin role.                          |
 | `PORT`                    | `3000`                                 | Internal Bun port; nginx upstreams here.                               |
 | `MONGO_DB_NAME`           | `cdn`                                  | DB name on the Mongo cluster.                                          |
@@ -82,17 +84,36 @@ zone if you front it with a VPN / mesh).
 └── backups/         local backup output before rclone (cf. cdn-backup.sh)
 ```
 
-## Admin surface
+## Admin + edge surface
 
 Once running, browse to `https://<MAIN_DOMAIN>/`:
 
 - `/admin/buckets`              — bucket CRUD (from `@bernouy/cdn-buckets`).
+- `/admin/api/proxies/*`        — proxy CRUD across all buckets (superadmin override).
 - `/admin/origin/`              — origin dashboard (edges, lsyncd status, SSH pubkey).
 - `/admin/origin/edges`         — edge CRUD (add, probe, remove).
 - `/admin/origin/api/*`         — JSON API behind those pages.
 
-Adding an edge requires a one-time setup on the edge server first — see
-[EDGE-SETUP.md](EDGE-SETUP.md).
+Bucket-scoped surfaces (per bucket, auth via `bucketCredential`):
+
+- `/api/proxies` (POST / DELETE) — the `BucketProxyPublisher` of each
+  CMS tenant POSTs here when a Data Provider is saved. The bucket scope
+  is taken from the credential, not the URL. See `@bernouy/cdn-buckets`
+  for the full broker surface.
+
+Edge-facing surface (auth via `EDGE_TOKEN`):
+
+- `/edge-api/secrets` (GET, conditional on `If-None-Match`) — returns
+  the `{ etag, manifest: { SECRET_xxx: plaintext } }` for the entire
+  cluster. Each edge polls every `SECRETS_POLL_INTERVAL` seconds (10s
+  default) and reloads nginx with the new substitutions.
+
+Adding an edge is fully covered in
+[`../cdn-edge/DEPLOY.md`](../cdn-edge/DEPLOY.md): bootstrap host with
+`init-server.sh --role edge`, paste the origin pubkey on the host,
+register the edge in the admin UI (the "+ Add edge" form pops a modal
+with the plaintext bearer token — copy it once), drop the token into
+the edge's OKMS bundle as `EDGE_TOKEN`, then run the container.
 
 ## Deployment
 

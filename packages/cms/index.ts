@@ -34,6 +34,9 @@ export { registerDiagnostic } from "./src/diagnostic/registerDiagnostic";
 export { InMemoryCmsRepository } from "./src/socle/default-implementation/CmsRepository/memory";
 export { MongoCmsRepository } from "./src/socle/default-implementation/CmsRepository/mongodb";
 export { InMemoryCache } from "./src/socle/default-implementation/Cache/memory";
+export { InMemorySecretStore } from "./src/socle/default-implementation/SecretStore/memory";
+export { EncryptedMongoSecretStore, type EncryptedSecretDocument, type EncryptedMongoSecretStoreConfig } from "./src/socle/default-implementation/SecretStore/encryptedMongo";
+export { MongoDekRepository, type CmsDekDocument } from "./src/socle/default-implementation/MongoDekRepository";
 
 // Browser-safe bloc authoring symbols are deliberately split into two
 // sub-entries:
@@ -51,6 +54,7 @@ export { InMemoryCache } from "./src/socle/default-implementation/Cache/memory";
 // ── Contracts (for consumers who want to swap in a custom backend) ─────
 export type { CmsRepository } from "./src/socle/interfaces/CmsRepository";
 export type { Cache } from "./src/socle/interfaces/Cache";
+export type { SecretStore } from "./src/socle/interfaces/SecretStore";
 export type { CMS_ROLES } from "./types/roles";
 export type {
     TPage,

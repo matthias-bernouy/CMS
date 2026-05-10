@@ -1,4 +1,4 @@
-import type { SecretCrypto } from "../crypto/SecretCrypto";
+import type { SecretCrypto } from "@bernouy/core";
 import type { ProxyAuth } from "../../interfaces/entities/BucketProxy";
 
 /**
@@ -14,11 +14,11 @@ export type ProxyAuthDoc =
 export async function encryptProxyAuth(bucketId: string, auth: ProxyAuth, crypto: SecretCrypto): Promise<ProxyAuthDoc> {
     if (auth.type === 'none')   return { type: 'none' };
     if (auth.type === 'bearer') {
-        const blob = await crypto.encryptForBucket(bucketId, auth.token);
+        const blob = await crypto.encrypt(bucketId, auth.token);
         return { type: 'bearer', encryptedToken: blob.ciphertext, iv: blob.iv };
     }
     const headers = await Promise.all(auth.headers.map(async (h) => {
-        const blob = await crypto.encryptForBucket(bucketId, h.value);
+        const blob = await crypto.encrypt(bucketId, h.value);
         return { name: h.name, encryptedValue: blob.ciphertext, iv: blob.iv };
     }));
     return { type: 'headers', headers };
@@ -27,11 +27,11 @@ export async function encryptProxyAuth(bucketId: string, auth: ProxyAuth, crypto
 export async function decryptProxyAuth(bucketId: string, doc: ProxyAuthDoc, crypto: SecretCrypto): Promise<ProxyAuth> {
     if (doc.type === 'none')   return { type: 'none' };
     if (doc.type === 'bearer') {
-        const token = await crypto.decryptForBucket(bucketId, { ciphertext: asBuffer(doc.encryptedToken), iv: asBuffer(doc.iv) });
+        const token = await crypto.decrypt(bucketId, { ciphertext: asBuffer(doc.encryptedToken), iv: asBuffer(doc.iv) });
         return { type: 'bearer', token };
     }
     const headers = await Promise.all(doc.headers.map(async (h) => {
-        const value = await crypto.decryptForBucket(bucketId, { ciphertext: asBuffer(h.encryptedValue), iv: asBuffer(h.iv) });
+        const value = await crypto.decrypt(bucketId, { ciphertext: asBuffer(h.encryptedValue), iv: asBuffer(h.iv) });
         return { name: h.name, value };
     }));
     return { type: 'headers', headers };

@@ -19,9 +19,9 @@ import {
     MongoStoredFileRepository,       type StoredFileDocument,
     MongoBucketDekRepository,        type BucketDekDocument,
     MongoBucketProxyRepository,      type BucketProxyDocument,
-    EnvelopeSecretCrypto,
     loadKek,
 } from "@bernouy/cdn-buckets";
+import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/core";
 import {
     OriginProvider,
     MongoEdgeRepository,             type EdgeDocument,
@@ -110,7 +110,7 @@ const auth = new CompositeAuthentication(runner, {
 });
 
 const bucketDekRepo = new MongoBucketDekRepository(db.collection<BucketDekDocument>("bucket_deks"));
-const secretCrypto  = new EnvelopeSecretCrypto(loadKek(process.env.CDN_BUCKETS_KEK), bucketDekRepo);
+const secretCrypto  = new EnvelopeSecretCrypto(new LocalKekProvider(loadKek(process.env.CDN_BUCKETS_KEK)), bucketDekRepo);
 
 const provider = new StorageProvider({
     runner,

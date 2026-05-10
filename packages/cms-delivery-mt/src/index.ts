@@ -1,4 +1,4 @@
-// `@bernouy/mt-delivery-cms` — multi-tenant build-time delivery cron.
+// `@bernouy/cms-delivery-mt` — multi-tenant build-time delivery cron.
 //
 // Hosts a single bun process that periodically iterates the same
 // tenants registry used by `@bernouy/mt-cms-control`, and for every

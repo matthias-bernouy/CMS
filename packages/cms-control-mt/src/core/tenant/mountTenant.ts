@@ -1,8 +1,8 @@
 import type { Db } from "mongodb";
-import type { Runner, Subject } from "@bernouy/core";
+import type { Runner, SecretCrypto, Subject } from "@bernouy/core";
 import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
 import { CompositeAuthentication } from "@bernouy/auth-composite";
-import { Cms as ControlCms, MongoCmsRepository } from "@bernouy/cms";
+import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, type EncryptedSecretDocument } from "@bernouy/cms";
 import { StorageTokenBroker, StorageBrowser, BucketProxyPublisher } from "@bernouy/cdn-buckets";
 import type { Tenant } from "src/interfaces/Tenant";
 
@@ -18,10 +18,11 @@ export type MountedTenant = {
 };
 
 export type MountTenantArgs = {
-    runner:     Runner;
-    db:         Db;
-    tenant:     Tenant;
-    appBaseUrl: string;
+    runner:       Runner;
+    db:           Db;
+    tenant:       Tenant;
+    appBaseUrl:   string;
+    secretCrypto: SecretCrypto;
 };
 
 /**
@@ -37,7 +38,7 @@ export type MountTenantArgs = {
  * remove this whole subtree without restarting the bun process.
  */
 export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant> {
-    const { runner, db, tenant, appBaseUrl } = args;
+    const { runner, db, tenant, appBaseUrl, secretCrypto } = args;
     const pathPrefix = `/cms/${tenant.id}`;
 
     const cookieAuth = new KeycloakConsumer<TenantRole>(runner, {
@@ -91,6 +92,18 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
         bucketCredential: tenant.assetsCdn.bucketCredential,
     });
 
+    // Per-tenant secret store: docs persist in `tenant_<id>__secrets`,
+    // encrypted via `EnvelopeSecretCrypto` with `scopeId = tenant.id`.
+    // Cross-tenant decryption is impossible — distinct scopeIds resolve
+    // to distinct DEKs (one per tenant in the shared `cms_deks`
+    // collection wrapped by the platform KEK).
+    const secretsCollection = db.collection<EncryptedSecretDocument>(`tenant_${tenant.id}__secrets`);
+    const secrets = new EncryptedMongoSecretStore({
+        scopeId:      tenant.id,
+        collection:   secretsCollection,
+        secretCrypto,
+    });
+
     runner.group(pathPrefix, (sub) => {
         sub.get("/api/auth/discovery", () => Response.json({
             issuer:   tenant.keycloak.issuer,
@@ -99,7 +112,7 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
         }));
         new ControlCms(sub, repo, auth, cdn, {
             tokensUrl: `${tenant.keycloak.issuer}/account/`,
-        }, undefined, undefined, proxyPublisher);
+        }, undefined, secrets, proxyPublisher);
     });
 
     return { id: tenant.id, pathPrefix, appBaseUrl };

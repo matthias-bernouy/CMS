@@ -1,20 +1,18 @@
 import { describe, test, expect } from "bun:test";
 import { randomBytes } from "node:crypto";
 
-import { EnvelopeSecretCrypto } from "src/default-implementation/EnvelopeSecretCrypto";
+import { EnvelopeSecretCrypto, LocalKekProvider, type DekRecord, type DekRepository } from "@bernouy/core";
 import { encryptProxyAuth, decryptProxyAuth, type ProxyAuthDoc } from "src/core/proxy/proxyAuthCrypto";
 import type { ProxyAuth } from "src/interfaces/entities/BucketProxy";
-import type { BucketDek } from "src/interfaces/entities/BucketDek";
-import type { BucketDekRepository } from "src/interfaces/repositories/BucketDekRepository";
 
-class InMemoryDekRepo implements BucketDekRepository {
-    private readonly _store = new Map<string, BucketDek>();
-    async get(bucketId: string)    { return this._store.get(bucketId) ?? null; }
-    async upsert(d: BucketDek)     { this._store.set(d.bucketId, d); }
-    async delete(bucketId: string) { this._store.delete(bucketId); }
+class InMemoryDekRepo implements DekRepository {
+    private readonly _store = new Map<string, DekRecord>();
+    async get(scopeId: string)    { return this._store.get(scopeId) ?? null; }
+    async upsert(d: DekRecord)    { this._store.set(d.scopeId, d); }
+    async delete(scopeId: string) { this._store.delete(scopeId); }
 }
 
-const cryptoFor = () => new EnvelopeSecretCrypto(randomBytes(32), new InMemoryDekRepo());
+const cryptoFor = () => new EnvelopeSecretCrypto(new LocalKekProvider(randomBytes(32)), new InMemoryDekRepo());
 
 describe("proxyAuthCrypto", () => {
     test("roundtrips type=none unchanged", async () => {

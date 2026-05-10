@@ -5,9 +5,31 @@ sert N tenants — chaque tenant apporte sa propre Keycloak + son propre
 bucket CDN. MongoDB externe, partagé par tous les tenants (préfixe de
 collections par tenant).
 
+Chaque tenant mounté reçoit aussi automatiquement un `BucketProxyPublisher`
+câblé sur son `tenant.assetsCdn` — quand l'admin du tenant sauve un Data
+Provider, les règles de proxy + secrets sont poussées sur le broker
+`/api/proxies` du bucket via `bucketCredential`. **Aucune config
+supplémentaire requise côté cms-control-mt** : tout vient de `tenant.assetsCdn`
+saisi à l'onboarding (cf. §9).
+
 ---
 
 ## 1. Pré-requis côté serveur prod
+
+```bash
+# Sur la dev box (depuis la racine du repo) — push le script vers le VPS cms
+scp docker/init-server.sh root@<cms-host>:/tmp/
+
+# Sur le VPS cms
+sudo bash /tmp/init-server.sh --role cms
+```
+
+→ apt + Docker CE + ufw (OpenSSH + 80/443 publics) + systemd-timesyncd.
+Idempotent.
+
+> Cette même VM peut héberger `cms-delivery-mt` (cf.
+> [`docker/cms-delivery-mt/DEPLOY.md`](../cms-delivery-mt/DEPLOY.md)) —
+> dans ce cas ce §1 est shared, ne pas relancer.
 
 | Pré-requis | Vérification |
 |---|---|
@@ -52,59 +74,171 @@ realm dédié (ou réutilise le tien) :
 URL accessible depuis le serveur. Le CMS y écrit :
 - `tenants` — registry des tenants (1 doc par tenant)
 - `tenant_<id>__pages`, `tenant_<id>__blocs`, etc. — données par tenant
+- `tenant_<id>__secrets` — secrets admin du tenant **chiffrés en envelope** (cf. §5 + §6)
+- `cms_deks` — DEKs par tenant, **wrapped** par le CMK OVH (jamais en clair en Mongo)
 
 Bonnes pratiques : un user dédié à ce CMS avec lecture/écriture sur cette
 DB seulement.
 
 ---
 
-## 5. Transférer l'image
+## 5. Provisionner le secret bundle dans OKMS
+
+Le container ne lit aucun secret depuis un `.env` — tout vient d'un
+bundle KV dans **OVHcloud Secret Manager**. Pré-requis : un OKMS
+domain provisionné (peut être le même que cdn-origin) — note l'**UUID**
++ la **région**.
+
+### 5a. Créer le bundle `prod/cms-control-mt/config`
+
+Manager OVHcloud → ton OKMS domain → Secrets → New secret.
+- Path : `prod/cms-control-mt/config` (doit matcher exactement la valeur
+  de `OKMS_SECRET_PREFIX` du §8b — slashes, casse, pas de `/` final).
+- Type : KV2 / object
+- Clés à renseigner :
+
+| Clé | Valeur |
+|---|---|
+| `MAIN_DOMAIN` | `cms.bernouy.com` |
+| `LEGO_EMAIL` | `ops@bernouy.com` |
+| `MONGO_URL` | `mongodb+srv://user:pass@<cluster>.mongodb.net/?retryWrites=true` |
+| `MONGO_DB_NAME` | `mt-cms` |
+| `SUPERADMIN_KEYCLOAK_ISSUER` | `https://auth.bernouy.com/realms/platform` |
+| `SUPERADMIN_KEYCLOAK_CLIENT_ID` | `cms-superadmin` |
+| `SUPERADMIN_KEYCLOAK_CLIENT_SECRET` | depuis Keycloak |
+| `SUPERADMIN_KEYCLOAK_SESSION_SECRET` | `openssl rand -hex 32` |
+| `SUPERADMIN_KEYCLOAK_ADMIN_ROLE` | `cms-superadmin` |
+| `CMS_KEK_KEY_ID` | UUID de la **service key** OVH créée au §6 (CMK pour les secrets tenant) |
+
+### 5b. Générer un access certificate dédié à cms-control-mt
+
+Manager → OKMS domain → **Access certificates** → "Generate an access
+certificate". Policy IAM scopée au domain (cf. §6 pour les actions
+exactes — il faut à la fois `secretConfig/get` pour le bundle ET
+`serviceKey/dataKey/{create,decrypt}` pour la CMK). Télécharger le
+**cert** + la **private key** (download unique).
+
+---
+
+## 6. Provisionner la Customer Managed Key (CMK) pour les secrets tenant
+
+Les secrets que les admins tenants saisissent dans `/admin/secrets`
+(API keys d'upstreams data-providers, webhook signing keys, …) sont
+**chiffrés en envelope** avant d'atterrir en Mongo : un DEK par
+tenant, lui-même wrappé par une **CMK qui vit dans le HSM OVH OKMS**
+et n'est jamais lisible côté process. Le run-time fait des appels
+mTLS à OVH pour wrap/unwrap les DEKs (~50-200ms par cache miss, TTL
+30 min côté `EnvelopeSecretCrypto`).
+
+### 6a. Créer la service key dans OVH
+
+Manager OVHcloud → Identity & Security → Key Management Service →
+ton OKMS domain → onglet **Encryption keys** → **+ Create a key** :
+
+| Champ | Valeur |
+|---|---|
+| Name | `cms-secrets-kek` (libre, juste pour t'y retrouver) |
+| Type | `oct` (clé symétrique) |
+| Size | `256` (AES-256) |
+| Operations | cocher **`wrapKey`** + **`unwrapKey`** |
+| Protection level | `SOFTWARE` (suffisant) ou `HSM` / `MANAGED_HSM` (plus cher, plus strict) |
+
+Submit → l'UI affiche un **UUID**. Copie cette valeur dans le bundle
+OKMS du §5a sous la clé `CMS_KEK_KEY_ID`.
+
+### 6b. Étendre la policy IAM du compte de service
+
+Le compte de service `cms-control-mt` (créé au §5b, déjà autorisé à
+lire le bundle KV2) a besoin de deux actions supplémentaires pour
+appeler l'API crypto OVH :
+
+Manager → IAM/Sécurité → Politiques → ouvrir la policy de ce compte →
+ajouter aux **Actions** :
+
+- `okms:apikms:serviceKey/dataKey/create` (générer un DEK wrappé)
+- `okms:apikms:serviceKey/dataKey/decrypt` (unwrap un DEK existant)
+
+Save → attendre 30-60s de propagation. Sans ces actions, le 1er secret
+écrit par un admin tenant fait crash le boot de
+`EnvelopeSecretCrypto._fetchOrCreate` avec un `OvhOkmsError: HTTP 403`.
+
+### 6c. Vérification mTLS direct (optionnel mais utile)
+
+Sur le VPS cms (avec le cert OKMS déjà déployé au §8a) :
 
 ```bash
-docker save bernouy/cms-control-mt:0.1.0 | gzip > cms-control-mt-0.1.0.tar.gz
-scp cms-control-mt-0.1.0.tar.gz <user>@<server>:/tmp/
+sudo bash -c 'set -a; source /etc/cms-mt/bootstrap.env; set +a;
+  curl -v --cert /etc/cms-mt/okms/client.crt --key /etc/cms-mt/okms/client.key \
+    -H "Content-Type: application/json" \
+    -d "{\"name\":\"smoke-test\",\"size\":256}" \
+    "https://${OKMS_REGION}.okms.ovh.net/api/${OKMS_DOMAIN_ID}/v1/servicekey/${CMS_KEK_KEY_ID}/datakey" \
+    2>&1 | tail -20'
+```
+
+Attendu : HTTP 201 + body `{"key":"<JWE>","plaintext":"<base64-32B>"}`.
+Si 403 → policy IAM (revérifier §6b). Si 404 → mauvais `CMS_KEK_KEY_ID`
+ou clé pas dans ce domain. Si `bad certificate` → cert/key/region
+incohérents (cf. §Troubleshooting OKMS du runbook global).
+
+---
+
+## 7. Build + transfert de l'image
+
+```bash
+# Sur la dev box (depuis la racine du repo)
+docker buildx build --network=host \
+    -f docker/cms-control-mt/Dockerfile \
+    -t bernouy/cms-control-mt:0.2.0 .
+docker save bernouy/cms-control-mt:0.2.0 | gzip > cms-control-mt-0.2.0.tar.gz
+scp cms-control-mt-0.2.0.tar.gz <user>@<server>:/tmp/
 
 # Sur le serveur
-sudo docker load < /tmp/cms-control-mt-0.1.0.tar.gz
+sudo docker load < /tmp/cms-control-mt-0.2.0.tar.gz
 sudo docker images bernouy/cms-control-mt
 ```
 
 ---
 
-## 6. Préparer le `.env`
+## 8. Bootstrap du host
+
+### 8a. Déposer le cert + key OKMS
+
+```bash
+sudo install -d -m 0700 -o root -g root /etc/cms-mt/okms
+sudo install -m 0600 -o root -g root /dev/null /etc/cms-mt/okms/client.crt
+sudo install -m 0400 -o root -g root /dev/null /etc/cms-mt/okms/client.key
+sudo nano /etc/cms-mt/okms/client.crt   # paste cert PEM (§5b download)
+sudo nano /etc/cms-mt/okms/client.key   # paste key PEM
+sudo chmod 0600 /etc/cms-mt/okms/client.crt
+sudo chmod 0400 /etc/cms-mt/okms/client.key
+```
+
+### 8b. `bootstrap.env`
 
 ```bash
 sudo install -d -m 0700 -o root -g root /etc/cms-mt
-sudo install -m 0600 -o root -g root /dev/null /etc/cms-mt/cms.env
-sudo nano /etc/cms-mt/cms.env
+sudo install -m 0600 -o root -g root /dev/null /etc/cms-mt/bootstrap.env
+sudo nano /etc/cms-mt/bootstrap.env
 ```
 
-Contenu :
+Contenu (5 vars) :
 
 ```bash
-MAIN_DOMAIN=cms.example.com
-LEGO_EMAIL=ops@example.com
-
-# MongoDB partagé (tous tenants)
-MONGO_URL=mongodb://user:pass@mongo.example.com:27017/?authSource=admin
-MONGO_DB_NAME=mt-cms
-
-# Keycloak SUPERADMIN (plateforme — distincte de toute Keycloak de tenant)
-SUPERADMIN_KEYCLOAK_ISSUER=https://auth.example.com/realms/platform
-SUPERADMIN_KEYCLOAK_CLIENT_ID=cms-superadmin
-SUPERADMIN_KEYCLOAK_CLIENT_SECRET=...
-SUPERADMIN_KEYCLOAK_ADMIN_ROLE=cms-superadmin
-SUPERADMIN_KEYCLOAK_SESSION_SECRET=<openssl rand -hex 32 — fait UNE fois>
+OKMS_REGION=eu-west-rbx
+OKMS_DOMAIN_ID=<uuid-du-domain>
+OKMS_CERT_PATH=/etc/okms/client.crt              # path DANS le container
+OKMS_KEY_PATH=/etc/okms/client.key
+OKMS_SECRET_PREFIX=prod/cms-control-mt/config    # path COMPLET du secret
 ```
 
-Génère le session secret :
-```bash
-openssl rand -hex 32
-```
+> `OKMS_REGION` doit matcher la région où le domain a été créé.
+> `OKMS_SECRET_PREFIX` est le path complet du secret, **pas** un préfixe.
+> Cf. [global DEPLOY.md §0](../DEPLOY.md#0-ovhcloud-secret-manager-okms--source-unique-des-secrets) pour la procédure
+> compte de service + access cert + policy IAM.
 
 ---
 
-## 7. Lancement
+## 9. Lancement
 
 ```bash
 sudo docker run -d --name cms-mt \
@@ -112,18 +246,21 @@ sudo docker run -d --name cms-mt \
     --dns 1.1.1.1 --dns 8.8.8.8 \
     -p 80:80 -p 443:443 \
     -v cms-mt-data:/var/lib/cms \
-    --env-file /etc/cms-mt/cms.env \
-    bernouy/cms-control-mt:0.1.0
+    -v /etc/cms-mt/okms/client.crt:/etc/okms/client.crt:ro \
+    -v /etc/cms-mt/okms/client.key:/etc/okms/client.key:ro \
+    --env-file /etc/cms-mt/bootstrap.env \
+    bernouy/cms-control-mt:0.2.0
 
 sudo docker logs -f cms-mt
 ```
 
-Premier boot ~1 min (lego HTTP-01 standalone, port 80 doit être
-joignable depuis Internet).
+Au boot tu verras d'abord `[okms-fetch] fetched bundle (prefix=cms-control-mt)` +
+la liste des keys exportées. Premier boot ~1 min (lego HTTP-01
+standalone).
 
 ---
 
-## 8. Smoke test
+## 10. Smoke test
 
 ```bash
 # 1. Container healthy
@@ -140,7 +277,7 @@ curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" \
 
 ---
 
-## 9. Onboarder un premier tenant
+## 11. Onboarder un premier tenant
 
 **Côté tenant** (à faire par le client ou toi pour son compte) :
 
@@ -153,27 +290,42 @@ curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" \
    - Optionnel : client public `cms-cli` avec Device Authorization Grant
      pour `p9r login`
 
-2. **Créer un bucket CDN** dédié, émettre une credential bearer.
+2. **Créer un bucket CDN** dédié sur le cluster cdn-origin via
+   `https://<MAIN_DOMAIN>/admin/buckets` → "+ New bucket". Choisir un
+   id (typiquement `<tenant-id>-assets`).
+
+3. **Émettre un bucket credential** bearer pour ce bucket via
+   `/admin/buckets/<id>/credentials` → "+ New credential". Copier le
+   `cleartextToken` retourné (`bspa_xxx`) — il sert à la fois au broker
+   data-plane (uploads) et au `BucketProxyPublisher` (push des proxies).
 
 **Côté superadmin** :
 
 1. `https://cms.example.com/superadmin/` → login → "+ New tenant"
-2. Remplir : id (slug), name, infos Keycloak du tenant, infos CDN du tenant
-3. Submit → le tenant est immédiatement mounté à `/cms/<tenant-id>/*`
+2. Remplir : id (slug), name, infos Keycloak du tenant, infos CDN :
+   - `assetsCdn.url` : `https://<PUBLIC_DOMAIN>/<bucket-id>` (l'origin du
+     broker bucket — typiquement `https://cdn.bernouy.com/<tenant-id>-assets`)
+   - `assetsCdn.bucketCredential` : le `bspa_xxx` de l'étape 3
+3. Submit → le tenant est immédiatement mounté à `/cms/<tenant-id>/*` et
+   son `BucketProxyPublisher` est instancié sur `assetsCdn.{url, bucketCredential}`.
 
-Le tenant accède désormais à son admin via
-`https://cms.example.com/cms/<tenant-id>/admin/pages`.
+Le tenant accède à son admin via
+`https://cms.example.com/cms/<tenant-id>/admin/pages`. Quand il sauve
+un Data Provider via `/admin/data`, le bearer/headers d'auth sont
+poussés sur `<assetsCdn.url>/api/proxies` (broker, scope locké par le
+credential), chiffrés server-side (KEK/DEK), répliqués vers les edges
+au prochain poll de `fetch-secrets.sh`.
 
 ---
 
-## 10. Update de l'image
+## 12. Update de l'image
 
 Identique à `cms-control` : build + scp + docker load + swap. Le volume
 `cms-mt-data` ne porte que les certs lego. La data tenant vit en Mongo.
 
 ---
 
-## 11. Limites connues v0.1
+## 13. Limites connues v0.1
 
 - **Pas d'édition** d'un tenant existant via UI — seulement create/delete.
   Pour rotater une credential CDN, delete + recreate (perd la data Mongo
@@ -183,5 +335,13 @@ Identique à `cms-control` : build + scp + docker load + swap. Le volume
 - **Cookies par tenant** scoped via `cookieName` (`cms-<id>-session`)
   mais pas via `cookiePath` — ce qui est inoffensif (différents noms ne
   collisionnent pas) mais le cookie est envoyé sur toutes les URLs.
-- **Pas de Delivery** — Control uniquement. Le rendu public sera ajouté
-  dans une phase ultérieure (champ `publicCdn` sur Tenant à venir).
+- **Bucket credential figée** : le `BucketProxyPublisher` d'un tenant
+  utilise la `bucketCredential` saisie à l'onboarding. Si tu rotates le
+  credential côté cdn-origin (revoke + new), le tenant doit être
+  delete + recreate avec la nouvelle valeur. Pas d'API de patch
+  partielle.
+- **Pas de Delivery dans CETTE image** — Control uniquement. Le rendu
+  public est servi par l'image sœur `cms-delivery-mt` (cf.
+  [`docker/cms-delivery-mt/DEPLOY.md`](../cms-delivery-mt/DEPLOY.md)),
+  qui peut tourner sur la même VM. Le champ `tenant.delivery` est lu
+  par cette image-là.

@@ -21,8 +21,9 @@ export type AddEdgeResult = {
  * returned plaintext exactly once in the create response.
  *
  * SSH connectivity is NOT tested here — operator setup (key copy,
- * firewall open, user create) is documented in EDGE-SETUP.md. A failed
- * first rsync surfaces in `lsyncd.log` and in the next probe.
+ * firewall open, user create) is documented in
+ * `docker/cdn-edge/DEPLOY.md`. A failed first rsync surfaces in
+ * `lsyncd.log` and in the next probe.
  */
 export async function addEdge(
     provider: OriginProvider,

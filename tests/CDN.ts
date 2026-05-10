@@ -1,6 +1,6 @@
 import { MongoClient } from "mongodb";
 import { BunRunner } from "@bernouy/runner-bun";
-import type { Authentication } from "@bernouy/core";
+import { EnvelopeSecretCrypto, LocalKekProvider, type Authentication } from "@bernouy/core";
 import {
     StorageProvider, StorageTokenBroker,
     LocalBlobStorage,
@@ -12,7 +12,6 @@ import {
     MongoStoredFileRepository,       type StoredFileDocument,
     MongoBucketDekRepository,        type BucketDekDocument,
     MongoBucketProxyRepository,      type BucketProxyDocument,
-    EnvelopeSecretCrypto,
     loadKek,
 } from "@bernouy/cdn-buckets";
 
@@ -32,7 +31,7 @@ const devAuth: Authentication = {
 };
 
 const bucketDekRepo = new MongoBucketDekRepository(db.collection<BucketDekDocument>("bucket_deks"));
-const secretCrypto  = new EnvelopeSecretCrypto(loadKek(process.env.CDN_BUCKETS_KEK), bucketDekRepo);
+const secretCrypto  = new EnvelopeSecretCrypto(new LocalKekProvider(loadKek(process.env.CDN_BUCKETS_KEK)), bucketDekRepo);
 
 new StorageProvider({
     runner,

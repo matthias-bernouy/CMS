@@ -3,9 +3,10 @@
 
 import { MongoClient } from "mongodb";
 import { BunRunner } from "@bernouy/runner-bun";
-import type { Subject } from "@bernouy/core";
+import { EnvelopeSecretCrypto, OvhOkmsKekProvider, type Subject } from "@bernouy/core";
 import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
 import { CompositeAuthentication } from "@bernouy/auth-composite";
+import { MongoDekRepository, type CmsDekDocument } from "@bernouy/cms";
 import { MtControlCms, MongoTenantRepository, type SuperadminRole } from "@bernouy/mt-cms-control";
 
 const required = (k: string): string => {
@@ -24,6 +25,16 @@ const SUPERADMIN_KEYCLOAK_CLIENT_SECRET  = required("SUPERADMIN_KEYCLOAK_CLIENT_
 const SUPERADMIN_KEYCLOAK_SESSION_SECRET = required("SUPERADMIN_KEYCLOAK_SESSION_SECRET");
 const SUPERADMIN_KEYCLOAK_ADMIN_ROLE     = process.env.SUPERADMIN_KEYCLOAK_ADMIN_ROLE ?? "cms-superadmin";
 
+// OVH OKMS Customer Managed Key for the platform's per-tenant secrets
+// envelope encryption. The KEK never leaves OVH's HSM — the process
+// only round-trips wrapped DEKs over mTLS using the same access cert
+// pair as the OKMS bundle pull (cf. `okms-fetch.sh`).
+const OKMS_REGION    = required("OKMS_REGION");
+const OKMS_DOMAIN_ID = required("OKMS_DOMAIN_ID");
+const OKMS_CERT_PATH = process.env.OKMS_CERT_PATH ?? "/etc/okms/client.crt";
+const OKMS_KEY_PATH  = process.env.OKMS_KEY_PATH  ?? "/etc/okms/client.key";
+const CMS_KEK_KEY_ID = required("CMS_KEK_KEY_ID"); // OVH service-key UUID
+
 const PORT = Number(process.env.PORT ?? 3000);
 const APP_BASE_URL = `https://${MAIN_DOMAIN}`;
 
@@ -32,6 +43,19 @@ await mongo.connect();
 const db = mongo.db(MONGO_DB_NAME);
 
 const runner = new BunRunner();
+
+// Single platform-wide envelope-encryption surface. One DEK per tenant,
+// keyed by `scopeId = tenant.id` in the shared `cms_deks` collection.
+// All DEKs are wrapped by the OVH CMK above.
+const kekProvider  = new OvhOkmsKekProvider({
+    region:   OKMS_REGION,
+    domainId: OKMS_DOMAIN_ID,
+    keyId:    CMS_KEK_KEY_ID,
+    certPath: OKMS_CERT_PATH,
+    keyPath:  OKMS_KEY_PATH,
+});
+const dekRepo      = new MongoDekRepository(db.collection<CmsDekDocument>("cms_deks"));
+const secretCrypto = new EnvelopeSecretCrypto(kekProvider, dekRepo);
 
 const claimsToSuperadminSubject = (claims: Record<string, unknown>): Subject<SuperadminRole> => {
     const realmRoles = ((claims as { realm_access?: { roles?: string[] } }).realm_access?.roles) ?? [];
@@ -73,6 +97,7 @@ const mt = new MtControlCms({
     appBaseUrl: APP_BASE_URL,
     tenantRepo: new MongoTenantRepository(db),
     superadminAuth,
+    secretCrypto,
 });
 
 await mt.init();

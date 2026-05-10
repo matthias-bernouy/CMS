@@ -12,7 +12,7 @@
         { "path": "packages/cms" },
         { "path": "packages/cms-blocs" },
         { "path": "packages/cms-control-mt" },
-        { "path": "packages/mt-delivery-cms" },
+        { "path": "packages/cms-delivery-mt" },
         { "path": "packages/hub-api" }
     ]
 }

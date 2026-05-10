@@ -29,6 +29,7 @@ const ADMIN_TEMPLATE = `<!DOCTYPE html>
 <link rel="stylesheet" href="/admin/assets/style.css">
 <style>html, body { margin: 0; padding: 0; height: 100%; }</style>
 <script src="/admin/assets/ui.js"></script>
+<script src="{{BASE_PATH}}/assets/components.js" defer></script>
 </head>
 <body>
 <w13c-left-menu-layout style="--_content-padding: 0;">
@@ -50,12 +51,34 @@ const ADMIN_TEMPLATE = `<!DOCTYPE html>
 /**
  * Mounts the origin's own admin surface under whatever the parent runner
  * scopes us to (the entrypoint mounts us at `/admin/origin`):
- *  - `<scope>/api/*`     → API folder under `src/api/`
- *  - `<scope>/<page>`    → static HTML pages under `src/static/admin/`
+ *  - `<scope>/api/*`             → API folder under `src/api/`
+ *  - `<scope>/assets/components.js` → runtime-built bundle of `src/components/*`
+ *  - `<scope>/<page>`            → static HTML pages under `src/static/admin/`
  */
 export function mountOriginAdminSurface(admin: Runner, provider: OriginProvider): void {
+    const componentsBundlePromise = buildComponentsBundle();
+
     admin.group("/api", (api) => {
         serveApi(api, join(originPackageRoot, "src/api"), provider);
     });
+    admin.get("/assets/components.js", async () => {
+        const bundle = await componentsBundlePromise;
+        if (!bundle) return new Response("// components build failed — see server logs", { status: 500 });
+        return new Response(bundle, { headers: { "Content-Type": "application/javascript; charset=utf-8" } });
+    });
     serveStaticFolder(admin, ADMIN_TEMPLATE, join(originPackageRoot, "src/static/admin"));
+}
+
+async function buildComponentsBundle(): Promise<string | null> {
+    const result = await Bun.build({
+        entrypoints: [join(originPackageRoot, "src/components/index.ts")],
+        target:       "browser",
+        minify:        true,
+    });
+    if (!result.success) {
+        console.error("[OriginProvider] components build failed:");
+        for (const log of result.logs) console.error(log);
+        return null;
+    }
+    return await result.outputs[0]!.text();
 }

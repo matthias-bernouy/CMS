@@ -12,9 +12,8 @@
 #
 # Build:
 #   docker buildx build --network=host \
-#       --build-context webcomponents=/path/to/WebComponents \
 #       -f docker/cdn-node/Dockerfile \
-#       -t bernouy/cdn-origin:0.1.0 .
+#       -t bernouy/cdn-origin:0.2.0 .
 
 FROM debian:bookworm-slim
 
@@ -26,7 +25,7 @@ ARG TARGETARCH=amd64
 #    lsyncd + openssh-client + rsync (edge sync).
 RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static \
-        gnupg curl unzip ca-certificates lsb-release sudo gettext-base procps \
+        gnupg curl unzip jq ca-certificates lsb-release sudo gettext-base procps \
         lsyncd openssh-client rsync libcap2-bin \
  && curl -fsSL "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip" -o /tmp/bun.zip \
  && unzip -q /tmp/bun.zip -d /tmp \
@@ -85,7 +84,12 @@ RUN echo "include /etc/nginx/conf.d/cdn/nginx.conf;" > /etc/nginx/conf.d/cdn-inc
 RUN echo "cdn ALL=(root) NOPASSWD: /usr/sbin/nginx -s reload" > /etc/sudoers.d/cdn \
  && chmod 0440 /etc/sudoers.d/cdn
 
-# 8. Entrypoint + lsyncd supervisor + backup script.
+# 8. Shared OKMS bootstrap wrapper (fetches the config bundle at boot
+#    and exec's into the service entrypoint with env populated).
+COPY docker/_shared/okms-fetch.sh /usr/local/bin/okms-fetch
+RUN chmod +x /usr/local/bin/okms-fetch
+
+# 9. Entrypoint + lsyncd supervisor + backup script.
 COPY docker/cdn-node/entrypoint.sh        /usr/local/bin/cdn-entrypoint.sh
 COPY docker/cdn-node/lsyncd-supervisor.sh /usr/local/bin/lsyncd-supervisor.sh
 COPY docker/cdn-node/lsyncd-reload.sh     /usr/local/bin/lsyncd-reload.sh
@@ -102,4 +106,8 @@ EXPOSE 80 443
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
     CMD curl -fsS -o /dev/null http://127.0.0.1:3000/admin/buckets || exit 1
 
-ENTRYPOINT ["/usr/local/bin/cdn-entrypoint.sh"]
+# Boot chain: okms-fetch (mTLS pull from OVHcloud Secret Manager) →
+# cdn-entrypoint (existing service orchestration). All env vars consumed
+# by entrypoint.sh + server.ts come from the OKMS bundle, except the
+# four OKMS_* bootstrap vars which come from the host's bootstrap.env.
+ENTRYPOINT ["/usr/local/bin/okms-fetch", "/usr/local/bin/cdn-entrypoint.sh"]

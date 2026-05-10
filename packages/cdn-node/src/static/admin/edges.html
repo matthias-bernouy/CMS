@@ -91,10 +91,12 @@
             <p9r-input name="label"    label="label"    placeholder="Frankfurt edge node"></p9r-input>
             <p9r-input name="hostname" label="hostname" placeholder="edge-eu-1.example.com" required></p9r-input>
             <p9r-input name="sshUser"  label="sshUser"  value="cdn-sync"                    required></p9r-input>
-            <p9r-input name="sshPort"  type="number"    label="sshPort" value="2222"        required></p9r-input>
+            <p9r-input name="sshPort"  type="number"    label="sshPort" value="22"          required></p9r-input>
             <p9r-input name="dataPath" label="dataPath" value="/var/lib/cdn"                required></p9r-input>
             <p9r-input name="notes"    label="notes (optional)"></p9r-input>
             <p9r-button color="primary" type="submit" fullWidth>Add</p9r-button>
         </p9r-stack>
     </w13c-form>
 </p9r-modal>
+
+<bso-edge-token-result listen-on="edge:added"></bso-edge-token-result>

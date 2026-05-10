@@ -1,15 +1,16 @@
 #!/bin/bash
 # cdn-edge entrypoint:
-#   1. Volume layout (/var/lib/cdn/{buckets,lego,nginx-generated,sshd}).
-#   2. Install AUTHORIZED_ORIGIN_PUBKEY into ~cdn-sync/.ssh/authorized_keys
-#      (one-shot on first boot).
-#   3. Generate persistent sshd host keys.
-#   4. Render nginx config with ${PUBLIC_DOMAIN} + ${ORIGIN_HOST}.
-#   5. Wait for the ${PUBLIC_DOMAIN} cert to be lsynced from the origin.
+#   1. Volume layout (/var/lib/cdn/{buckets,lego,nginx-generated,access-logs}).
+#      The volume is bind-mounted from the HOST and lsyncd-from-origin
+#      writes into it via the host's sshd as user `cdn-sync` (UID 1099).
+#      In this container the matching cdn-sync UID/GID 1099 means
+#      `www-data` (member of cdn-sync group) reads everything cleanly.
+#   2. Render nginx config with ${PUBLIC_DOMAIN} + ${ORIGIN_HOST} + ${EDGE_ID}.
+#   3. Wait for the ${PUBLIC_DOMAIN} cert to be lsynced from the origin.
 #      The origin mints it via HTTP-01 webroot — validation challenges
 #      hit any edge and get proxy_pass'd back. We can't start nginx on
 #      :443 without the cert, so we block here until lsyncd delivers it.
-#   6. Start sshd + nginx + cert-reload-watcher.
+#   4. Start nginx + cert-reload-watcher + secrets poll loop + logrotate.
 
 set -e
 
@@ -27,8 +28,7 @@ NGINX_CONF=/etc/nginx/conf.d/cdn/nginx.conf
 mkdir -p "$DATA/buckets" \
          "$DATA/lego/certificates" \
          "$DATA/nginx-generated" \
-         "$DATA/access-logs" \
-         "$DATA/sshd"
+         "$DATA/access-logs"
 touch    "$DATA/nginx-generated/cacheControls.conf" \
          "$DATA/nginx-generated/notFoundPaths.conf" \
          "$DATA/nginx-generated/aliases.conf" \
@@ -48,52 +48,21 @@ touch    /run/nginx-runtime/aliasesServers.conf
 chown -R cdn-sync:cdn-sync /run/nginx-runtime /run/cdn-edge
 chmod    0700 /run/cdn-edge
 
-# 2. AUTHORIZED_ORIGIN_PUBKEY — required on FIRST boot (env var). Persists
-#    on the volume; subsequent boots are a no-op.
-AUTHORIZED_FILE=/home/cdn-sync/.ssh/authorized_keys
-if [ ! -s "${AUTHORIZED_FILE}" ]; then
-    if [ -n "${AUTHORIZED_ORIGIN_PUBKEY:-}" ]; then
-        echo "[edge] Installing AUTHORIZED_ORIGIN_PUBKEY into ${AUTHORIZED_FILE}"
-        printf "%s\n" "${AUTHORIZED_ORIGIN_PUBKEY}" >> "${AUTHORIZED_FILE}"
-        chown cdn-sync:cdn-sync "${AUTHORIZED_FILE}"
-        chmod 0600              "${AUTHORIZED_FILE}"
-    else
-        echo "[edge] WARN: ${AUTHORIZED_FILE} is empty AND AUTHORIZED_ORIGIN_PUBKEY is unset."
-        echo "        sshd will still start, but the origin cannot authenticate."
-    fi
-fi
-
-# 3. sshd host keys (persisted on the volume).
-chmod 0700 "$DATA/sshd"
-if [ ! -f "$DATA/sshd/ssh_host_ed25519_key" ]; then
-    echo "[edge] Generating sshd host keys (first boot)…"
-    ssh-keygen -q -t rsa     -b 4096 -N '' -f "$DATA/sshd/ssh_host_rsa_key"
-    ssh-keygen -q -t ecdsa   -b 384  -N '' -f "$DATA/sshd/ssh_host_ecdsa_key"
-    ssh-keygen -q -t ed25519         -N '' -f "$DATA/sshd/ssh_host_ed25519_key"
-fi
-chmod 0600 "$DATA/sshd"/ssh_host_*_key
-chmod 0644 "$DATA/sshd"/ssh_host_*_key.pub
-
-# 4. Render nginx config.
+# 2. Render nginx config.
 echo "[edge] Rendering nginx config (PUBLIC_DOMAIN=${PUBLIC_DOMAIN}, ORIGIN_HOST=${ORIGIN_HOST}, EDGE_ID=${EDGE_ID})…"
 envsubst '${PUBLIC_DOMAIN} ${ORIGIN_HOST} ${EDGE_ID}' < "${NGINX_CONF}.template" > "${NGINX_CONF}"
 
-# 5. Bootstrap chicken-and-egg: the origin can only mint
+# 3. Bootstrap chicken-and-egg: the origin can only mint
 #    ${PUBLIC_DOMAIN}'s cert if at least one edge is online to proxy
-#    the ACME challenge back. So we start sshd + the port-80-only nginx
-#    server BEFORE waiting for the cert, then wait for the cert, then
-#    reload nginx with the full :443 config.
+#    the ACME challenge back. So we start the port-80-only nginx server
+#    BEFORE waiting for the cert, then wait for the cert, then reload
+#    nginx with the full :443 config.
 #
 #    Trick: nginx config has both a port-80 server and a port-443
 #    server (for ${PUBLIC_DOMAIN}). The :443 server's `ssl_certificate`
 #    points at the lsynced path. Without the cert, nginx -t fails. We
 #    swap in a temporary port-80-only config first, then once the cert
 #    exists we swap back and reload.
-
-# sshd needs /run/sshd for privilege separation; debian-slim doesn't ship it.
-mkdir -p /run/sshd && chmod 0755 /run/sshd
-/usr/sbin/sshd -D -e &
-SSHD_PID=$!
 
 # Temporary nginx config: only the port-80 catch-all (which proxy_passes
 # ACME challenges back to origin and 301-redirects everything else).
@@ -131,7 +100,7 @@ if [ ! -f "$DATA/lego/certificates/${PUBLIC_DOMAIN}.crt" ]; then
         if [ "${elapsed}" -ge "${WAIT_MAX}" ]; then
             echo "[edge] FATAL: ${PUBLIC_DOMAIN}.crt still missing after ${WAIT_MAX}s." 1>&2
             echo "        Origin must lsync it (check origin's lsyncd.log + lego output)." 1>&2
-            kill -TERM $NGINX_PID $SSHD_PID 2>/dev/null || true
+            kill -TERM $NGINX_PID 2>/dev/null || true
             exit 1
         fi
         if [ $(( elapsed % 30 )) -eq 0 ]; then
@@ -195,7 +164,7 @@ LOGROTATE_PID=$!
 
 cleanup() {
     echo "[edge] Caught signal, shutting down…"
-    kill -TERM $SSHD_PID $NGINX_PID $WATCHER_PID $SECRETS_PID $LOGROTATE_PID 2>/dev/null || true
+    kill -TERM $NGINX_PID $WATCHER_PID $SECRETS_PID $LOGROTATE_PID 2>/dev/null || true
     wait
 }
 trap cleanup INT TERM
@@ -203,6 +172,6 @@ trap cleanup INT TERM
 wait -n
 EXIT=$?
 echo "[edge] Child exited with ${EXIT}, tearing down the rest…"
-kill -TERM $SSHD_PID $NGINX_PID $WATCHER_PID $SECRETS_PID $LOGROTATE_PID 2>/dev/null || true
+kill -TERM $NGINX_PID $WATCHER_PID $SECRETS_PID $LOGROTATE_PID 2>/dev/null || true
 wait
 exit "${EXIT}"

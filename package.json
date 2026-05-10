@@ -29,7 +29,7 @@
         "@bernouy/cms":           "workspace:*",
         "@bernouy/cms-blocs":     "workspace:*",
         "@bernouy/mt-cms-control":"workspace:*",
-        "@bernouy/mt-delivery-cms":"workspace:*",
+        "@bernouy/cms-delivery-mt":"workspace:*",
         "@bernouy/hub-api":       "workspace:*"
     }
 }

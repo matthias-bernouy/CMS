@@ -1,5 +1,5 @@
 import type { Db } from "mongodb";
-import type { Authentication, Runner } from "@bernouy/core";
+import type { Authentication, Runner, SecretCrypto } from "@bernouy/core";
 import type { Tenant } from "src/interfaces/Tenant";
 import type { TenantRepository } from "src/interfaces/TenantRepository";
 import { mountTenant, type MountedTenant, type TenantRole } from "src/core/tenant/mountTenant";
@@ -20,6 +20,13 @@ export type MtControlCmsDeps = {
      *  Typically a `CompositeAuthentication` of the superadmin Keycloak cookie + bearer JWT
      *  (the bearer leg accepts service-account tokens from a "central hub"). */
     superadminAuth: Authentication<SuperadminRole>;
+    /** Envelope-encryption surface used by every per-tenant `SecretStore`.
+     *  Typically `new EnvelopeSecretCrypto(kekProvider, dekRepo)` where
+     *  `kekProvider` is `OvhOkmsKekProvider` (Customer Managed Key in OVH
+     *  OKMS, never reachable in-process) and `dekRepo` is a single
+     *  `MongoDekRepository` on a shared `cms_deks` collection — DEKs
+     *  isolate across tenants by `scopeId = tenantId`. */
+    secretCrypto: SecretCrypto;
 };
 
 /**
@@ -36,6 +43,7 @@ export class MtControlCms {
     private readonly _appBaseUrl:     string;
     private readonly _tenantRepo:     TenantRepository;
     private readonly _superadminAuth: Authentication<SuperadminRole>;
+    private readonly _secretCrypto:   SecretCrypto;
     private readonly _mounted:        Map<string, MountedTenant> = new Map();
 
     constructor(deps: MtControlCmsDeps) {
@@ -44,6 +52,7 @@ export class MtControlCms {
         this._appBaseUrl     = deps.appBaseUrl;
         this._tenantRepo     = deps.tenantRepo;
         this._superadminAuth = deps.superadminAuth;
+        this._secretCrypto   = deps.secretCrypto;
     }
 
     /** Read-only accessors — used by superadmin endpoints. */
@@ -95,10 +104,11 @@ export class MtControlCms {
 
     private async _mount(tenant: Tenant): Promise<void> {
         const mounted = await mountTenant({
-            runner:     this._runner,
-            db:         this._db,
+            runner:       this._runner,
+            db:           this._db,
             tenant,
-            appBaseUrl: this._appBaseUrl,
+            appBaseUrl:   this._appBaseUrl,
+            secretCrypto: this._secretCrypto,
         });
         this._mounted.set(tenant.id, mounted);
     }
