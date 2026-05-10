@@ -31,6 +31,17 @@ export * from "./core/proxy/placeholderName";
 export * from "./core/proxy/upsertProxy";
 export * from "./core/proxy/deleteProxy";
 
+// Proxy rules DSL — parser + validator + codegen (consumed by @bernouy/cms
+// for its data-provider validate endpoint, and by anything wanting to
+// pre-validate before submitting to the admin API).
+export { parseRulesConfig }      from "./core/proxy/rules/parseRulesConfig";
+export { ProxyRulesParseError }  from "./core/proxy/rules/parseHelpers";
+export { validateRules, ProxyRulesValidationError } from "./core/proxy/rules/validateRules";
+export { compileRulesConfig }    from "./core/proxy/codegen/compileRulesConfig";
+export type { CompileRulesOptions, CompiledRules } from "./core/proxy/codegen/compileRulesConfig";
+export { RULE_TEMPLATES } from "./core/proxy/rules/templates";
+export type { RulesTemplate } from "./core/proxy/rules/templates";
+
 // Repository contracts
 export * from "./interfaces/repositories/BucketRepository";
 export * from "./interfaces/repositories/BucketCredentialRepository";
@@ -49,6 +60,10 @@ export * from "./interfaces/entities/Alias";
 export * from "./interfaces/entities/StoredFolder";
 export * from "./interfaces/entities/StoredFile";
 export * from "./interfaces/entities/BucketProxy";
+
+// Proxy rules DSL (the declarative grammar consumers send via BucketsClient + BucketProxyPublisher)
+export * from "./interfaces/proxy/ProxyRule";
+export * from "./interfaces/proxy/RulesConfig";
 
 // Wire envelope (admin / broker shared response shape)
 export * from "./interfaces/wire/AdminResponse";

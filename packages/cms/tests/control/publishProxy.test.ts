@@ -4,33 +4,29 @@ import type { TDataProvider } from "src/socle/interfaces/Data/data";
 import type { ProxyPublisher, ProxyPublishInput } from "src/socle/interfaces/ProxyPublisher";
 
 class FakePublisher implements ProxyPublisher {
-    public upserts:  ProxyPublishInput[] = [];
-    public deletes:  string[]            = [];
+    public upserts: ProxyPublishInput[] = [];
+    public deletes: string[]            = [];
     async upsertProxy(input: ProxyPublishInput) { this.upserts.push(input); }
     async deleteProxy(id: string)               { this.deletes.push(id);   }
 }
 
 const baseProvider: TDataProvider = {
-    id:          "stripe",
-    source:      "url",
-    sourceUrl:   "https://stripe.com/openapi.json",
-    server:      "",
-    spec:        "",
-    specAuth:    { type: "none" },
-    runtimeAuth: { type: "none" },
-    createdAt:   new Date(0),
-    lastSyncAt:  null,
+    id:         "stripe",
+    source:     "url",
+    sourceUrl:  "https://stripe.com/openapi.json",
+    server:     "",
+    spec:       "",
+    specAuth:   { type: "none" },
+    rules:      { paths: {} },
+    secrets:    {},
+    createdAt:  new Date(0),
+    lastSyncAt: null,
 };
 
 function makeCms(opts: { publisher: ProxyPublisher | null; provider: TDataProvider | null }): any {
     return {
         proxyPublisher: opts.publisher,
-        repository: {
-            getDataProvider: async (_id: string) => opts.provider,
-        },
-        secrets: {
-            get: async (_k: string) => null,
-        },
+        repository:     { getDataProvider: async (_id: string) => opts.provider },
     };
 }
 
@@ -55,7 +51,7 @@ describe("publishProxy", () => {
         expect(pub.upserts).toHaveLength(0);
     });
 
-    test("happy path with auth=none — publishes server, no token", async () => {
+    test("happy path with empty rules + empty secrets — passthrough", async () => {
         const pub = new FakePublisher();
         const cms = makeCms({
             publisher: pub,
@@ -65,64 +61,43 @@ describe("publishProxy", () => {
         expect(pub.upserts).toEqual([{
             providerId: "stripe",
             server:     "https://api.stripe.com/v1",
-            auth:       { type: "none" },
+            rules:      { paths: {} },
+            secrets:    {},
         }]);
     });
 
-    test("resolves bearer ${KEY} via secrets before publishing", async () => {
+    test("rules + secrets are forwarded verbatim — no translation, no resolve", async () => {
         const pub = new FakePublisher();
-        const cms: any = {
-            proxyPublisher: pub,
-            repository: {
-                getDataProvider: async () => ({
-                    ...baseProvider,
-                    server:      "https://api.stripe.com/v1",
-                    runtimeAuth: { type: "bearer", token: "${STRIPE_KEY}" },
-                }),
+        const provider: TDataProvider = {
+            ...baseProvider,
+            server:  "https://api.stripe.com/v1",
+            rules:   {
+                defaults: { on_request: [
+                    { type: "inject_header", name: "Authorization", value: "Bearer ${env:STRIPE_KEY}" },
+                ] },
+                paths: { "/v1/charges": { on_request: [] } },
             },
-            secrets: {
-                get: async (k: string) => k === "STRIPE_KEY" ? "sk_live_REAL" : null,
-            },
+            secrets: { STRIPE_KEY: "sk_live_REAL" },
         };
+        const cms = makeCms({ publisher: pub, provider });
         await publishProxy(cms, "stripe");
-        expect(pub.upserts[0]?.auth).toEqual({ type: "bearer", token: "sk_live_REAL" });
+        expect(pub.upserts[0]?.rules).toEqual(provider.rules);
+        expect(pub.upserts[0]?.secrets).toEqual({ STRIPE_KEY: "sk_live_REAL" });
     });
 
-    test("does NOT use specAuth for proxy publish — only runtimeAuth", async () => {
+    test("specAuth is NEVER shipped to the publisher — admin-time only", async () => {
         const pub = new FakePublisher();
-        const cms: any = {
-            proxyPublisher: pub,
-            repository: {
-                getDataProvider: async () => ({
-                    ...baseProvider,
-                    server:      "https://api.stripe.com/v1",
-                    specAuth:    { type: "bearer", token: "spec-only" },
-                    runtimeAuth: { type: "none" },
-                }),
+        const cms = makeCms({
+            publisher: pub,
+            provider: {
+                ...baseProvider,
+                server:   "https://api.stripe.com/v1",
+                specAuth: { type: "bearer", token: "fetch-only" },
             },
-            secrets: { get: async () => null },
-        };
+        });
         await publishProxy(cms, "stripe");
-        expect(pub.upserts[0]?.auth).toEqual({ type: "none" });
-    });
-
-    test("missing secret skips publish (logs warning, does not throw)", async () => {
-        const pub = new FakePublisher();
-        const cms: any = {
-            proxyPublisher: pub,
-            repository: {
-                getDataProvider: async () => ({
-                    ...baseProvider,
-                    server:      "https://api.stripe.com/v1",
-                    runtimeAuth: { type: "bearer", token: "${MISSING_KEY}" },
-                }),
-            },
-            secrets: {
-                get: async () => null,
-            },
-        };
-        await publishProxy(cms, "stripe");
-        expect(pub.upserts).toHaveLength(0);
+        const input = pub.upserts[0]!;
+        expect(JSON.stringify(input)).not.toContain("fetch-only");
     });
 });
 

@@ -326,19 +326,30 @@ Une fois 1+2+3+4+5 OK :
 2. Login en tant qu'admin du tenant via `https://cms.bernouy.com/cms/<id>/admin/`
 3. Aller sur `/admin/data` → "+ Add provider" → URL OpenAPI publique.
 4. Save → l'admin du tenant voit la liste des endpoints.
-5. Vérifier côté edge :
+5. Vérifier côté edge — fragment lsynced ET manifest secrets :
    ```bash
-   sudo docker exec cdn-edge cat /run/nginx-runtime/aliasesServers.conf
-   # → contient `location /.cms/data/<provider-id>/`
+   # Le fragment nginx (set_by_lua_block + cms_secrets[...])
+   sudo docker exec cdn-edge cat /var/lib/cdn/nginx-generated/aliasesServers.conf \
+       | grep -E 'location /\.cms/data/<provider-id>/|cms_secrets'
+
+   # La table de secrets en RAM (tmpfs)
+   sudo docker exec cdn-edge cat /run/cdn-edge/secrets.json | jq '.manifest | keys'
+
+   # Le fetch-secrets a tourné depuis l'ajout
+   sudo docker logs --since 5m cdn-edge | grep fetch-secrets
+   # → "[fetch-secrets] manifest updated (etag=..., N entries)"
    ```
 6. Browser, depuis une page du tenant qui consomme ce provider via
    un bloc data-aware : l'inspecteur réseau montre des requêtes
    `https://<bucket-domain>/.cms/data/<provider-id>/...` qui
    répondent 2xx avec les données upstream.
 
-Si la route 502 → check `sudo docker logs cdn-edge` pour les erreurs
-nginx + check que `fetch-secrets` a bien tourné après l'ajout du
-provider.
+Si la route 502 :
+- Header `Authorization` vide upstream → la SECRET_X correspondante
+  n'est pas (encore) dans `cms_secrets`. Forcer un poll :
+  `sudo docker exec cdn-edge /usr/local/bin/fetch-secrets.sh once`.
+- Erreur Lua → `sudo docker logs cdn-edge | grep -i lua`.
+- nginx config invalide → `sudo docker exec cdn-edge nginx -t`.
 
 ---
 
@@ -346,8 +357,9 @@ provider.
 
 - [auth/DEPLOY.md](auth/DEPLOY.md) — Keycloak self-hosted (Postgres sibling)
 - [cdn-node/DEPLOY.md](cdn-node/DEPLOY.md) — origin (admin, lsyncd, edge-secrets)
-- [cdn-edge/DEPLOY.md](cdn-edge/DEPLOY.md) — edge (host bootstrap, public-facing nginx, secrets poll, full edge deploy)
+- [cdn-edge/DEPLOY.md](cdn-edge/DEPLOY.md) — edge (OpenResty, host bootstrap, secrets poll, full edge deploy)
 - [cms-control-mt/DEPLOY.md](cms-control-mt/DEPLOY.md) — multi-tenant CMS Control
+- [cms-delivery-mt/DEPLOY.md](cms-delivery-mt/DEPLOY.md) — multi-tenant Delivery cron
 
 ---
 

@@ -1,13 +1,17 @@
 #!/bin/bash
 # fetch-secrets.sh — pull the proxy-secrets manifest from the origin and
-# trigger a re-render + nginx reload whenever it changes.
+# trigger a nginx reload whenever it changes.
 #
 # Conditional GET against /edge-api/secrets with `If-None-Match`. The
-# response body is `{ etag, manifest: { SECRET_xxx: "value" } }`. We
-# never touch persistent disk: env file + etag live under /run (tmpfs).
+# response body is `{ etag, manifest: { SECRET_xxx: "value" } }` — we
+# write it verbatim to `/run/cdn-edge/secrets.json` (tmpfs) and run
+# `nginx -s reload`. The nginx `init_by_lua_block` (defined in
+# nginx.conf) reads the JSON file at config-load time and populates the
+# `cms_secrets` Lua table the per-location `set_by_lua_block`s read.
+# Plaintext never touches persistent disk.
 #
 # Usage:
-#   fetch-secrets.sh once   — run a single fetch (used at boot)
+#   fetch-secrets.sh once   — single fetch (used at boot)
 #   fetch-secrets.sh loop   — poll forever (default)
 #
 # Env:
@@ -24,14 +28,11 @@ ORIGIN_HOST="${ORIGIN_HOST:?ORIGIN_HOST is required}"
 TOKEN_FILE=/run/secrets/edge-token
 RUN_DIR=/run/cdn-edge
 ETAG_FILE="${RUN_DIR}/.secrets-etag"
-ENV_FILE="${RUN_DIR}/.secrets-env"
+SECRETS_FILE="${RUN_DIR}/secrets.json"
 
 mkdir -p "${RUN_DIR}"
 chmod 0700 "${RUN_DIR}" 2>/dev/null || true
 
-# Resolve the bearer token: env var first (handy in dev), fall back to
-# the Docker secret file. Either way, the token is short-lived in this
-# script's process memory and never written to disk.
 if [ -n "${EDGE_TOKEN:-}" ]; then
     TOKEN="${EDGE_TOKEN}"
 elif [ -r "${TOKEN_FILE}" ]; then
@@ -43,15 +44,11 @@ fi
 
 URL="${SCHEME}://${ORIGIN_HOST}/edge-api/secrets"
 
-apply_changes() {
-    /usr/local/bin/render-secrets.sh || {
-        echo "[fetch-secrets] render-secrets.sh failed" >&2
-        return 1
-    }
+reload_nginx() {
     if /usr/sbin/nginx -t 2>/dev/null; then
         sudo /usr/sbin/nginx -s reload
     else
-        echo "[fetch-secrets] nginx -t failed after render — keeping previous runtime" >&2
+        echo "[fetch-secrets] nginx -t failed — keeping previous runtime" >&2
         return 1
     fi
 }
@@ -79,16 +76,17 @@ fetch_once() {
                 echo "[fetch-secrets] could not parse response" >&2
                 return 1
             }
-            tmp="${ENV_FILE}.tmp"
-            printf "%s" "${body}" \
-                | jq -r '.manifest | to_entries | map("\(.key)=\"\(.value)\"") | .[]' \
-                > "${tmp}" || return 1
-            mv "${tmp}" "${ENV_FILE}"
+            tmp="${SECRETS_FILE}.tmp"
+            # Pretty-print + sanitize through jq so the file is well-formed
+            # JSON whatever the origin sends; a stray HTML response would
+            # fail to parse and we'd skip the rename.
+            printf "%s" "${body}" | jq '.' > "${tmp}" || return 1
+            mv "${tmp}" "${SECRETS_FILE}"
             printf "%s" "${new_etag}" > "${ETAG_FILE}"
             local entries
-            entries=$(wc -l < "${ENV_FILE}")
+            entries=$(jq '.manifest | length' < "${SECRETS_FILE}")
             echo "[fetch-secrets] manifest updated (etag=${new_etag}, ${entries} entries)"
-            apply_changes || return 1
+            reload_nginx || return 1
             ;;
         401)
             echo "[fetch-secrets] FATAL: edge token rejected by origin (401)" >&2

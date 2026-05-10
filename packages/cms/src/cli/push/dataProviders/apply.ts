@@ -45,9 +45,11 @@ export async function putProvider(adminBase: URL, token: string, p: LocalDataPro
 
 /**
  * Flatten the nested local shape into the dot-keyed body the server-side
- * parser expects. Auth nested → `<prefix>.bearer` /
- * `<prefix>.headers.<n>.{name,value}`, where `<prefix>` is `specAuth`
- * or `runtimeAuth`.
+ * parser expects.
+ *  - `specAuth` (admin-time) stays the nested bearer/headers grammar:
+ *    `specAuth.bearer` / `specAuth.headers.<n>.{name,value}`.
+ *  - `rules` is serialized as a JSON string (the textarea convention).
+ *  - `secrets` flattens to `secrets.<NAME>` flat entries.
  */
 function toFlatBody(p: LocalDataProvider): Record<string, string> {
     const body: Record<string, string> = {
@@ -55,9 +57,12 @@ function toFlatBody(p: LocalDataProvider): Record<string, string> {
         source:    p.source,
         sourceUrl: p.sourceUrl,
         spec:      p.spec,
+        rules:     JSON.stringify(p.rules),
     };
-    flattenAuth(body, p.specAuth,    "specAuth");
-    flattenAuth(body, p.runtimeAuth, "runtimeAuth");
+    flattenAuth(body, p.specAuth, "specAuth");
+    for (const [envName, value] of Object.entries(p.secrets)) {
+        body[`secrets.${envName}`] = value;
+    }
     return body;
 }
 

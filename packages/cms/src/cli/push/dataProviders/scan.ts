@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { RulesConfig } from "@bernouy/cdn-buckets";
 import type { TDataAuth, TDataProvider, TDataProviderSource } from "src/socle/interfaces/Data/data";
 import { isValidDataProviderId } from "src/socle/utils/validation";
 
@@ -30,15 +31,15 @@ export async function scanDataProviders(siteDir: string): Promise<LocalDataProvi
         if (parsed.id && parsed.id !== id) {
             throw new Error(`Data provider ${file} declares id="${parsed.id}" — rename to match.`);
         }
-        const legacy = (parsed as { auth?: TDataAuth }).auth;
         out.push({
             id,
-            source:      (parsed.source ?? "url") as TDataProviderSource,
-            sourceUrl:   String(parsed.sourceUrl ?? ""),
-            server:      String(parsed.server    ?? ""),
-            spec:        String(parsed.spec      ?? ""),
-            specAuth:    (parsed.specAuth    ?? legacy ?? { type: "none" }) as TDataAuth,
-            runtimeAuth: (parsed.runtimeAuth ?? legacy ?? { type: "none" }) as TDataAuth,
+            source:    (parsed.source ?? "url") as TDataProviderSource,
+            sourceUrl: String(parsed.sourceUrl ?? ""),
+            server:    String(parsed.server    ?? ""),
+            spec:      String(parsed.spec      ?? ""),
+            specAuth:  (parsed.specAuth ?? { type: "none" }) as TDataAuth,
+            rules:     (parsed.rules    ?? { paths: {} })    as RulesConfig,
+            secrets:   (parsed.secrets  ?? {})               as Record<string, string>,
         });
     }
     return out;

@@ -30,7 +30,7 @@ src/
 │   ├── broker/                         /api/* — file-routed via serveApi (frontier B: bucket, items, folders, upload-tokens, proxies)
 │   ├── upload.post.ts                  POST /upload — direct upload with pre-signed token
 │   └── upload.options.ts               CORS preflight for /upload
-├── components/                         admin-side custom elements (CredentialResultDialog, ProxyCreateForm, UploadForm)
+├── components/                         admin-side custom elements (CredentialResultDialog, ProxyRulesEditor, UploadForm)
 ├── static/admin/                       admin SSR pages (buckets.html, bucket-detail.html)
 ├── default-implementation/
 │   ├── EnvelopeSecretCrypto.ts         re-export shim for compatibility (canonical lives in @bernouy/core)

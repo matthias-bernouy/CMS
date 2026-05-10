@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 
 import { computeSecretsResponse } from "../src/core/edge/computeSecretsResponse";
-import type { BucketProxy, BucketProxyRepository } from "@bernouy/cdn-buckets";
+import type { BucketProxy, BucketProxyRepository, RulesConfig } from "@bernouy/cdn-buckets";
 
 class InMemoryProxyRepo implements BucketProxyRepository {
     public proxies: BucketProxy[] = [];
@@ -13,11 +13,19 @@ class InMemoryProxyRepo implements BucketProxyRepository {
     async deleteByBucket(_b: string) { return 0; }
 }
 
+const bearerRules = (envName = "TOK"): RulesConfig => ({
+    defaults: { on_request: [
+        { type: "inject_header", name: "Authorization", value: `Bearer \${env:${envName}}` },
+    ] },
+    paths: {},
+});
+
 const proxy = (overrides: Partial<BucketProxy>): BucketProxy => ({
     bucketId:   "b1",
     providerId: "stripe",
     server:     "https://api.stripe.com/v1",
-    auth:       { type: "bearer", token: "T1" },
+    rules:      bearerRules(),
+    secrets:    { TOK: "T1" },
     createdAt:  new Date(),
     updatedAt:  new Date(),
     ...overrides,
@@ -44,8 +52,10 @@ describe("computeSecretsResponse", () => {
     test("etag is deterministic regardless of proxy insertion order", async () => {
         const repoA = new InMemoryProxyRepo();
         const repoB = new InMemoryProxyRepo();
-        repoA.proxies = [proxy({ providerId: "stripe" }), proxy({ providerId: "weather", auth: { type: "bearer", token: "T2" } })];
-        repoB.proxies = [proxy({ providerId: "weather", auth: { type: "bearer", token: "T2" } }), proxy({ providerId: "stripe" })];
+        const stripe  = proxy({ providerId: "stripe",  secrets: { TOK: "T1" } });
+        const weather = proxy({ providerId: "weather", secrets: { TOK: "T2" } });
+        repoA.proxies = [stripe, weather];
+        repoB.proxies = [weather, stripe];
         const a = await computeSecretsResponse(repoA);
         const b = await computeSecretsResponse(repoB);
         expect(a.etag).toBe(b.etag);

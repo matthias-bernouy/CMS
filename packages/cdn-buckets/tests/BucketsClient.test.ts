@@ -110,20 +110,28 @@ describe("BucketsClient — response handling", () => {
 });
 
 describe("BucketsClient — proxies", () => {
-    test("upsertProxy posts auth body verbatim", async () => {
+    test("upsertProxy posts rules + secrets verbatim", async () => {
         const { fetch, calls } = makeFakeFetch({ ok: true, data: { bucketId: "b", providerId: "stripe" } });
         const client = new BucketsClient({ baseUrl: ORIGIN, token: "t", fetch });
+        const rules = {
+            defaults: { on_request: [
+                { type: "inject_header" as const, name: "Authorization", value: "Bearer ${env:STRIPE_KEY}" },
+            ] },
+            paths: { "/v1/charges": { on_request: [] } },
+        };
         await client.upsertProxy("b", {
             providerId: "stripe",
             server:     "https://api.stripe.com/v1",
-            auth:       { type: "bearer", token: "sk_live_abc" },
+            rules,
+            secrets:    { STRIPE_KEY: "sk_live_abc" },
         });
         expect(calls[0]!.method).toBe("POST");
         expect(calls[0]!.url).toBe(`${ORIGIN}/admin/api/proxies?bucketId=b`);
         expect(calls[0]!.body).toEqual({
             providerId: "stripe",
             server:     "https://api.stripe.com/v1",
-            auth:       { type: "bearer", token: "sk_live_abc" },
+            rules,
+            secrets:    { STRIPE_KEY: "sk_live_abc" },
         });
     });
 

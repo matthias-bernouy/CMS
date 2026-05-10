@@ -1,4 +1,4 @@
 // Side-effect imports — each module self-registers its custom element.
 import "./CredentialResultDialog/CredentialResultDialog";
 import "./UploadForm/UploadForm";
-import "./ProxyCreateForm/ProxyCreateForm";
+import "./ProxyRulesEditor/ProxyRulesEditor";

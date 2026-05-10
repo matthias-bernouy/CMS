@@ -1,6 +1,5 @@
-import type { ControlCms } from 'src/control/ControlCms';
-import { resolveAuth } from './resolveAuth';
-import { SecretNotFound } from 'src/control/errors/SecretNotFound';
+import type { ControlCms } from "src/control/ControlCms";
+import type { ProxyPublishInput } from "src/socle/interfaces/ProxyPublisher";
 
 /**
  * Push the data provider's current state to the configured `ProxyPublisher`.
@@ -10,36 +9,26 @@ import { SecretNotFound } from 'src/control/errors/SecretNotFound';
  *  - the provider has no `server` yet (created but not synced — the
  *    OpenAPI spec hasn't been fetched, so we don't know where to forward)
  *
- * Secrets are resolved here via `resolveAuth` so the publisher receives
- * plaintext. A `SecretNotFound` is logged and swallowed: the provider
- * row is fine, the proxy just won't activate until the operator fixes
- * the missing secret and re-saves the provider. Other errors propagate
- * to the caller (admin gets a useful failure message).
+ * `provider.rules` and `provider.secrets` are passed through verbatim —
+ * the validation that rejects mismatched references already ran at
+ * `POST /api/data/provider`, so the publisher just ships what it gets.
+ * cdn-buckets's `upsertProxy` re-validates server-side as a defense in
+ * depth.
  */
 export async function publishProxy(cms: ControlCms, providerId: string): Promise<void> {
     const publisher = cms.proxyPublisher;
     if (!publisher) return;
 
     const provider = await cms.repository.getDataProvider(providerId);
-    if (!provider) return;
-    if (!provider.server) return;
+    if (!provider || !provider.server) return;
 
-    let resolvedAuth;
-    try {
-        resolvedAuth = await resolveAuth(provider.runtimeAuth, cms.secrets);
-    } catch (e) {
-        if (e instanceof SecretNotFound) {
-            console.warn(`[publishProxy] skipping "${providerId}" — missing secret ${e.key}`);
-            return;
-        }
-        throw e;
-    }
-
-    await publisher.upsertProxy({
+    const input: ProxyPublishInput = {
         providerId,
-        server: provider.server,
-        auth:   resolvedAuth,
-    });
+        server:  provider.server,
+        rules:   provider.rules,
+        secrets: provider.secrets,
+    };
+    await publisher.upsertProxy(input);
 }
 
 /**

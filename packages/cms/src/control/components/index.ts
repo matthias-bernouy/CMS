@@ -51,3 +51,4 @@ import "./form/Validate/Validate";
 import "./data/fetch/FetchComponent"
 import "./data/JsonEditor/JsonEditor"
 import "./data/MockupCreate/MockupCreate"
+import "./data/ProviderRules/ProviderRules"

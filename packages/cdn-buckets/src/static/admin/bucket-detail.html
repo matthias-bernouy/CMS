@@ -226,7 +226,7 @@
                     <p9r-row slot="header">
                         <p9r-header-cell>providerId</p9r-header-cell>
                         <p9r-header-cell>server</p9r-header-cell>
-                        <p9r-header-cell>auth</p9r-header-cell>
+                        <p9r-header-cell>summary</p9r-header-cell>
                         <p9r-header-cell>updated</p9r-header-cell>
                         <p9r-header-cell></p9r-header-cell>
                     </p9r-row>
@@ -236,7 +236,7 @@
                             <p9r-row>
                                 <p9r-cell><code>{{ providerId }}</code></p9r-cell>
                                 <p9r-cell><code>{{ server }}</code></p9r-cell>
-                                <p9r-cell>{{ auth.type }}</p9r-cell>
+                                <p9r-cell><small>{{ summary }}</small></p9r-cell>
                                 <p9r-cell>{{ updatedAt }}</p9r-cell>
                                 <p9r-cell>
                                     <w13c-form target="{{BASE_PATH}}/api/proxies?providerId={{providerId}}" method="DELETE" emit="proxy:deleted">
@@ -305,7 +305,7 @@
 
 <p9r-modal id="create-proxy-modal" aria-label="Create proxy">
     <span slot="title">New proxy</span>
-    <bsp-proxy-create-form target="{{BASE_PATH}}/api/proxies" emit="proxy:created"></bsp-proxy-create-form>
+    <bsp-proxy-rules-editor target="{{BASE_PATH}}/api/proxies" emit="proxy:created"></bsp-proxy-rules-editor>
 </p9r-modal>
 
 <bsp-credential-result listen-on="credential:created"></bsp-credential-result>

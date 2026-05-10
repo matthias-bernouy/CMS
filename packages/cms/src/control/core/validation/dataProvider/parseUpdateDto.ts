@@ -1,18 +1,21 @@
+import type { RulesConfig } from "@bernouy/cdn-buckets";
 import InvalidParam from 'src/control/errors/Http/InvalidParam';
 import type { TDataAuth, TDataProvider } from 'src/socle/interfaces/Data/data';
 import { parseAuth, hasAuthFields } from './auth';
+import { parseRulesAndSecrets, hasRulesFields } from './rules';
 
 export type DataProviderUpdateDto = Partial<Pick<TDataProvider, 'sourceUrl' | 'server' | 'spec'>> & {
-    specAuth?:    TDataAuth;
-    runtimeAuth?: TDataAuth;
+    specAuth?: TDataAuth;
+    rules?:    RulesConfig;
+    secrets?:  Record<string, string>;
 };
 
 /**
  * Validates an update body. `id`, `source`, `createdAt` are immutable —
- * silently dropped if present. The two auth sections (`specAuth.*` and
- * `runtimeAuth.*`) are independently re-parsed when at least one of
- * their fields is in the body — letting the UI patch one half without
- * resending the other.
+ * silently dropped if present. `specAuth.*` and `rules` / `secrets.*`
+ * are independently re-parsed when at least one of their fields is in
+ * the body — letting the UI patch one section without resending the
+ * other.
  */
 export function parseDataProviderUpdateDto(body: Record<string, unknown>): DataProviderUpdateDto {
     const dto: DataProviderUpdateDto = {};
@@ -55,8 +58,12 @@ export function parseDataProviderUpdateDto(body: Record<string, unknown>): DataP
         dto.spec = body.spec;
     }
 
-    if (hasAuthFields(body, 'specAuth'))    dto.specAuth    = parseAuth(body, 'specAuth');
-    if (hasAuthFields(body, 'runtimeAuth')) dto.runtimeAuth = parseAuth(body, 'runtimeAuth');
+    if (hasAuthFields(body, 'specAuth')) dto.specAuth = parseAuth(body, 'specAuth');
+    if (hasRulesFields(body)) {
+        const { rules, secrets } = parseRulesAndSecrets(body);
+        dto.rules   = rules;
+        dto.secrets = secrets;
+    }
 
     return dto;
 }

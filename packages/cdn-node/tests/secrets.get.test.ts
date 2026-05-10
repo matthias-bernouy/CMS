@@ -38,7 +38,13 @@ const edge = (hash: string): Edge => ({
 
 const proxy = (overrides: Partial<BucketProxy> = {}): BucketProxy => ({
     bucketId: "b1", providerId: "stripe", server: "https://api.stripe.com/v1",
-    auth: { type: "bearer", token: "T1" },
+    rules: {
+        defaults: { on_request: [
+            { type: "inject_header", name: "Authorization", value: "Bearer ${env:TOK}" },
+        ] },
+        paths: {},
+    },
+    secrets: { TOK: "T1" },
     createdAt: new Date(), updatedAt: new Date(),
     ...overrides,
 });

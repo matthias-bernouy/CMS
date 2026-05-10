@@ -84,19 +84,17 @@ export class DataProvidersStore {
         if (parsed.id && parsed.id !== id) {
             throw new Error(`Data provider file ${id}.json declares id="${parsed.id}" — rename to match.`);
         }
-        // Migrate legacy single-`auth` JSON files: mirror the value into
-        // both halves on read. New writes (via `_write`) use the split shape.
-        const legacy = (parsed as { auth?: TDataProvider["specAuth"] }).auth;
         return {
             id,
-            source:      (parsed.source ?? "url") as TDataProvider["source"],
-            sourceUrl:   String(parsed.sourceUrl ?? ""),
-            server:      String(parsed.server ?? ""),
-            spec:        String(parsed.spec ?? ""),
-            specAuth:    (parsed.specAuth    ?? legacy ?? { type: "none" }) as TDataProvider["specAuth"],
-            runtimeAuth: (parsed.runtimeAuth ?? legacy ?? { type: "none" }) as TDataProvider["runtimeAuth"],
-            createdAt:   FROZEN_DATE,
-            lastSyncAt:  parsed.lastSyncAt ? new Date(parsed.lastSyncAt) : null,
+            source:     (parsed.source ?? "url") as TDataProvider["source"],
+            sourceUrl:  String(parsed.sourceUrl ?? ""),
+            server:     String(parsed.server ?? ""),
+            spec:       String(parsed.spec ?? ""),
+            specAuth:   (parsed.specAuth ?? { type: "none" }) as TDataProvider["specAuth"],
+            rules:      (parsed.rules    ?? { paths: {} })    as TDataProvider["rules"],
+            secrets:    (parsed.secrets  ?? {})               as TDataProvider["secrets"],
+            createdAt:  FROZEN_DATE,
+            lastSyncAt: parsed.lastSyncAt ? new Date(parsed.lastSyncAt) : null,
         };
     }
 

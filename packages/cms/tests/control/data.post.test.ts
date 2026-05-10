@@ -25,15 +25,16 @@ function makeRequest(body: Record<string, unknown>) {
 }
 
 const existingHub: TDataProvider = {
-    id:          "hub",
-    source:      "url",
-    sourceUrl:   "https://hub.bernouy.fr/openapi.json",
-    server:      "",
-    spec:        "",
-    specAuth:    { type: "none" },
-    runtimeAuth: { type: "none" },
-    createdAt:   new Date(),
-    lastSyncAt:  null,
+    id:         "hub",
+    source:     "url",
+    sourceUrl:  "https://hub.bernouy.fr/openapi.json",
+    server:     "",
+    spec:       "",
+    specAuth:   { type: "none" },
+    rules:      { paths: {} },
+    secrets:    {},
+    createdAt:  new Date(),
+    lastSyncAt: null,
 };
 
 const validBody = {

@@ -1,18 +1,23 @@
 # `bernouy/cdn-edge`
 
 The public-serving node of a CDN cluster. Headless on purpose — just
-nginx (with brotli) + sshd + a small secrets-poll loop. **No app, no
-DB, no Keycloak.**
+**OpenResty** (nginx + LuaJIT) + a small secrets-poll loop. **No app,
+no DB, no Keycloak.** sshd is host-side (port 22), not in the container.
 
 - Receives blobs + certs + nginx fragments from the **origin** via
-  lsyncd-over-SSH.
+  lsyncd-over-SSH (origin → host's sshd → bind-mount into container).
 - Serves `<PUBLIC_DOMAIN>` (e.g. `cdn.bernouy.com`) on HTTPS with
-  brotli/gzip pre-compression.
+  gzip pre-compression. Brotli is temporarily disabled (not bundled
+  by upstream OpenResty); add `lua-resty-brotli` if perf demands it.
 - Proxies `/.well-known/acme-challenge/*` to the origin so HTTP-01
   validation works for both `<PUBLIC_DOMAIN>` itself and per-alias certs.
 - Polls `https://<MAIN_DOMAIN>/edge-api/secrets` every 10s with its
-  bearer `EDGE_TOKEN` to fetch the proxy-secrets manifest, renders the
-  runtime nginx fragment, and reloads on ETag change.
+  bearer `EDGE_TOKEN` to fetch the proxy-secrets manifest. Writes the
+  raw JSON body to `/run/cdn-edge/secrets.json` (tmpfs) and triggers
+  `nginx -s reload` on ETag change. The `init_by_lua_block` in
+  `nginx.conf` re-reads the file at each reload and populates the
+  global `cms_secrets` Lua table — per-location `set_by_lua_block`
+  directives consume it. **Plaintext never lands on persistent disk.**
 - Reloads nginx automatically when lsyncd pushes a new cert or a new
   generated fragment (inotify watcher).
 
@@ -55,15 +60,17 @@ DB, no Keycloak.**
 ├── buckets/             rsynced from origin
 ├── lego/certificates/   rsynced from origin (PUBLIC_DOMAIN cert + per-alias certs)
 ├── nginx-generated/     rsynced from origin (alias maps, cache-control, 404 fallback,
-│                        aliasesServers.conf with ${SECRET_xxx} placeholders)
+│                        aliasesServers.conf — ready-to-use OpenResty config with
+│                        set_by_lua_block + cms_secrets[...] references, no envsubst)
 └── access-logs/         JSON-Lines access log + rotated archives (origin pulls these)
 ```
 
 In RAM only (tmpfs, never disk):
 ```
-/run/cdn-edge/.secrets-etag    last seen ETag from /edge-api/secrets
-/run/cdn-edge/.secrets-env     resolved KEY=value lines (envsubst input)
-/run/nginx-runtime/aliasesServers.conf   rendered nginx fragment with secrets substituted
+/run/cdn-edge/.secrets-etag   last seen ETag from /edge-api/secrets
+/run/cdn-edge/secrets.json    raw manifest body { etag, manifest: { SECRET_X: cleartext } }
+                              read by init_by_lua_block at every nginx reload to
+                              populate the cms_secrets Lua table; never on disk
 ```
 
 ## Topology recap

@@ -3,15 +3,16 @@ import postDataProviderSync from "src/control/api/data/sync.post";
 import type { TDataProvider } from "src/socle/interfaces/Data/data";
 
 const baseProvider: TDataProvider = {
-    id:          "hub",
-    source:      "url",
-    sourceUrl:   "https://hub.bernouy.fr/openapi.json",
-    server:      "",
-    spec:        "",
-    specAuth:    { type: "none" },
-    runtimeAuth: { type: "none" },
-    createdAt:   new Date(0),
-    lastSyncAt:  null,
+    id:         "hub",
+    source:     "url",
+    sourceUrl:  "https://hub.bernouy.fr/openapi.json",
+    server:     "",
+    spec:       "",
+    specAuth:   { type: "none" },
+    rules:      { paths: {} },
+    secrets:    {},
+    createdAt:  new Date(0),
+    lastSyncAt: null,
 };
 
 function makeSystem(provider: TDataProvider | null = baseProvider) {

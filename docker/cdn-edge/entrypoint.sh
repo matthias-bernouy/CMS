@@ -19,7 +19,8 @@ set -e
 : "${EDGE_ID:?EDGE_ID is required (must match the id registered in the origin admin UI, e.g. edge-fr-1)}"
 
 DATA=/var/lib/cdn
-NGINX_CONF=/etc/nginx/conf.d/cdn/nginx.conf
+NGINX_PREFIX="${NGINX_PREFIX:-/usr/local/openresty/nginx}"
+NGINX_CONF="${NGINX_PREFIX}/conf/cdn/nginx.conf"
 
 # 1. Volume layout. `nginx-generated/` is empty-touched so nginx -t
 #    passes before the first lsyncd push. `access-logs/` holds the
@@ -40,12 +41,13 @@ chown -R cdn-sync:cdn-sync "$DATA/buckets" "$DATA/lego" "$DATA/nginx-generated" 
 chown cdn-sync:cdn-sync     "$DATA"
 chmod 0750                 "$DATA/buckets"
 
-# 1b. Runtime nginx fragment (tmpfs) — `aliasesServers.conf` after
-#     placeholder substitution from the in-memory secrets manifest.
-#     Touched empty so `nginx -t` passes before fetch-secrets has run.
-mkdir -p /run/nginx-runtime /run/cdn-edge
-touch    /run/nginx-runtime/aliasesServers.conf
-chown -R cdn-sync:cdn-sync /run/nginx-runtime /run/cdn-edge
+# 1b. Tmpfs working dir for the secrets manifest. `secrets.json` is the
+#     authoritative copy read by `init_by_lua_block` at every nginx
+#     reload — touched empty so the first config-load doesn't fail
+#     before fetch-secrets has run (the Lua block tolerates empty/
+#     missing file).
+mkdir -p /run/cdn-edge
+chown -R cdn-sync:cdn-sync /run/cdn-edge
 chmod    0700 /run/cdn-edge
 
 # 2. Render nginx config.
@@ -111,14 +113,11 @@ if [ ! -f "$DATA/lego/certificates/${PUBLIC_DOMAIN}.crt" ]; then
     done
     echo "[edge] ${PUBLIC_DOMAIN}.crt landed — swapping to full nginx config."
 
-    # Initial pull of the secrets manifest so the runtime fragment is
-    # populated before nginx -t reads it. Best-effort: a network glitch
-    # at this exact moment doesn't have to block the boot — the poll
-    # loop will catch up. Render once afterwards so the fragment is at
-    # least an empty (or stale) file rather than missing entirely.
+    # Initial pull of the secrets manifest so init_by_lua sees a populated
+    # cms_secrets table at the upcoming reload. Best-effort: a network
+    # glitch here doesn't block boot — the poll loop catches up.
     su -s /bin/bash cdn-sync -c "/usr/local/bin/fetch-secrets.sh once" \
         || echo "[edge] WARN: initial fetch-secrets failed; proxies will activate on next poll."
-    /usr/local/bin/render-secrets.sh || true
 
     # Restore the full template-rendered config and reload.
     envsubst '${PUBLIC_DOMAIN} ${ORIGIN_HOST} ${EDGE_ID}' < "${NGINX_CONF}.template" > "${NGINX_CONF}"
@@ -128,7 +127,6 @@ else
     echo "[edge] ${PUBLIC_DOMAIN}.crt already present, fetching initial secrets manifest…"
     su -s /bin/bash cdn-sync -c "/usr/local/bin/fetch-secrets.sh once" \
         || echo "[edge] WARN: initial fetch-secrets failed; proxies will activate on next poll."
-    /usr/local/bin/render-secrets.sh || true
 
     echo "[edge] starting nginx with full config."
     nginx -t

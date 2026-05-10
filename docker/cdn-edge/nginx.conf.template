@@ -50,6 +50,26 @@ map $http_upgrade $connection_upgrade {
     ''      close;
 }
 
+# Secrets table populated once at config-load time by reading the JSON
+# manifest at /run/cdn-edge/secrets.json (tmpfs). Each per-bucket-proxy
+# `set_by_lua_block` emitted by `@bernouy/cdn-buckets` reads from this
+# table — `cms_secrets["SECRET_<HEX>"]`. Re-runs on every `nginx -s
+# reload` (which is what fetch-secrets.sh triggers when the manifest
+# ETag changes), so secret rotation doesn't need a container restart.
+init_by_lua_block {
+    cms_secrets = {}
+    local f = io.open("/run/cdn-edge/secrets.json", "r")
+    if f then
+        local body = f:read("*a")
+        f:close()
+        local cjson = require "cjson.safe"
+        local data = cjson.decode(body)
+        if data and type(data.manifest) == "table" then
+            for k, v in pairs(data.manifest) do cms_secrets[k] = v end
+        end
+    end
+}
+
 # JSON-Lines access log: one event per line, structured for downstream
 # parsing (origin pulls these via SSH+rsync). `escape=json` makes nginx
 # json-quote string values, so a raw newline / quote in user-agent or
@@ -130,11 +150,9 @@ server {
 
 # Per-alias `server { … }` blocks (one per alias domain — each block
 # does `set $bucket_id "..."` and `include bucketServing.conf`). The
-# raw template is lsynced from the origin to
-# `/var/lib/cdn/nginx-generated/aliasesServers.conf` with `${SECRET_*}`
-# placeholders for proxy auth values; `render-secrets.sh` resolves the
-# placeholders against the in-memory manifest fetched from
-# `/edge-api/secrets` and emits the runtime fragment included here.
-# The runtime file lives in `/run/` (tmpfs) — secrets never touch
-# persistent disk on the edge.
-include /run/nginx-runtime/aliasesServers.conf;
+# fragment is lsynced from the origin to
+# `/var/lib/cdn/nginx-generated/aliasesServers.conf`. It's READY-TO-USE
+# nginx config — secret values are read at runtime via Lua from the
+# `cms_secrets` table populated in `init_by_lua_block` above. Plaintext
+# never lands on persistent disk.
+include /var/lib/cdn/nginx-generated/aliasesServers.conf;

@@ -3,14 +3,22 @@
  *
  * A data provider is a registered OpenAPI source the CMS knows how to
  * consume. Phase 2 stores the basic shape; later phases parse the spec,
- * apply auth, generate mocks and expose endpoints to consumer blocks.
+ * apply rules, generate mocks and expose endpoints to consumer blocks.
  *
  * `id` is the user-chosen slug used as the binding key in blocks. It is
  * immutable — renaming would orphan every block that references it.
  */
 
+import type { RulesConfig } from "@bernouy/cdn-buckets";
+
 export type TDataHeader = { name: string; value: string };
 
+/**
+ * Admin-time auth, used **once** to fetch the OpenAPI doc at
+ * `sourceUrl`. Stays simple (bearer / headers / none) because it never
+ * touches the runtime path — the spec is fetched via `cms.secrets`
+ * resolution and that flow is fine as-is.
+ */
 export type TDataAuth =
     | { type: 'none' }
     | { type: 'bearer'; token: string }
@@ -30,20 +38,27 @@ export type TDataProvider = {
      *  manually before the provider is usable at runtime. */
     server: string;
     spec: string;
-    /**
-     * Auth used **once** at admin time to fetch the OpenAPI document at
-     * `sourceUrl` and (re-)compute `server` / `spec`. Often the same
-     * credential as `runtimeAuth`, but not always — a public spec on a
-     * private API uses `{type:'none'}` here and a real bearer there.
-     */
+    /** Admin-time auth, used to fetch the OpenAPI document at `sourceUrl`. */
     specAuth: TDataAuth;
     /**
-     * Auth forwarded by the cdn-edge proxy on every browser request to
-     * `/.cms/data/<id>/*`. Resolved to plaintext at publish time and
-     * sent to cdn-buckets, where it is encrypted (KEK/DEK) before
-     * landing in Mongo.
+     * Declarative rules forwarded to the cdn-edge proxy. Same DSL as
+     * `BucketProxy.rules` (`@bernouy/cdn-buckets`): defaults +
+     * per-path `on_request` / `on_response` primitives. Validated at
+     * write time by the `parseRulesConfig` + `validateRules` pair from
+     * cdn-buckets. The publisher pushes this verbatim to cdn-buckets,
+     * which wraps the matching `secrets` values via envelope crypto
+     * before persistence. Default `{ paths: {} }` (catch-all forward
+     * to upstream with no extra processing).
      */
-    runtimeAuth: TDataAuth;
+    rules: RulesConfig;
+    /**
+     * envName → cleartext, supplying values for the `${env:NAME}`
+     * interpolations referenced inside `rules`. Cleartext on the wire,
+     * encrypted by cdn-buckets at rest. Every `${env:NAME}` in `rules`
+     * MUST have a matching key here; the validate endpoint catches
+     * mismatches before commit.
+     */
+    secrets: Record<string, string>;
     createdAt: Date;
     lastSyncAt: Date | null;
 };

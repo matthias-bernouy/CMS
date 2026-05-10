@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { regenerateAliases } from "src/core/nginx/regenerateAliases";
 import type { Alias } from "src/interfaces/entities/Alias";
 import type { BucketProxy } from "src/interfaces/entities/BucketProxy";
+import type { RulesConfig } from "src/interfaces/proxy/RulesConfig";
 
 const certPath = (domain: string) => ({ cert: `/c/${domain}.crt`, key: `/c/${domain}.key` });
 const includePath = "/etc/nginx/conf.d/cdn/bucketServing.conf";
@@ -21,11 +22,19 @@ const proxy = (overrides: Partial<BucketProxy>): BucketProxy => ({
     bucketId:   "b1",
     providerId: "stripe",
     server:     "https://api.stripe.com/v1",
-    auth:       { type: "none" },
+    rules:      { paths: {} },
+    secrets:    {},
     createdAt:  new Date(),
     updatedAt:  new Date(),
     ...overrides,
 });
+
+const RULES_WITH_BEARER: RulesConfig = {
+    defaults: { on_request: [
+        { type: "inject_header", name: "Authorization", value: "Bearer ${env:STRIPE_KEY}" },
+    ] },
+    paths: { "/v1/*": { on_request: [] } },
+};
 
 describe("regenerateAliases", () => {
     let dir: string;
@@ -46,11 +55,11 @@ describe("regenerateAliases", () => {
         expect(body).not.toContain("location /.cms/data/");
     });
 
-    test("alias with proxies — locations are inlined before the include", async () => {
+    test("alias with proxies — locations are inlined before the include, plaintext never appears", async () => {
         const p = paths();
         const proxiesByBucket = new Map<string, BucketProxy[]>();
         proxiesByBucket.set("b1", [
-            proxy({ providerId: "stripe", auth: { type: "bearer", token: "VERY_SECRET_TOKEN" } }),
+            proxy({ providerId: "stripe", rules: RULES_WITH_BEARER, secrets: { STRIPE_KEY: "VERY_SECRET_TOKEN" } }),
         ]);
         await regenerateAliases([alias()], proxiesByBucket, p.aliases, p.aliasesServers, includePath, certPath);
         const body = await readFile(p.aliasesServers, "utf-8");
@@ -60,7 +69,8 @@ describe("regenerateAliases", () => {
         expect(idxLoc).toBeGreaterThan(-1);
         expect(idxInclude).toBeGreaterThan(idxLoc);
         expect(body).not.toContain("VERY_SECRET_TOKEN");
-        expect(body).toContain('proxy_set_header Authorization "Bearer ${SECRET_');
+        expect(body).toMatch(/set_by_lua_block \$cms_secret_[0-9a-f]+ \{ return cms_secrets\["SECRET_[0-9A-F]+"\] or "" \}/);
+        expect(body).toMatch(/proxy_set_header Authorization "Bearer \$cms_secret_[0-9a-f]+"/);
     });
 
     test("aliases.conf still maps host → bucketId", async () => {

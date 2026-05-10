@@ -2,6 +2,7 @@ import type { Bucket, BucketLimits, BucketQuotas } from "../interfaces/entities/
 import type { Alias } from "../interfaces/entities/Alias";
 import type { StoredFile } from "../interfaces/entities/StoredFile";
 import type { StoredFolder } from "../interfaces/entities/StoredFolder";
+import type { RulesConfig } from "../interfaces/proxy/RulesConfig";
 
 /**
  * Typed HTTP client for `/admin/api/*` on a `cdn-buckets` instance.
@@ -105,15 +106,18 @@ export class BucketsClient {
 
     /**
      * Idempotent upsert. The same `(bucketId, providerId)` pair always
-     * replaces the existing rule. The cleartext secret in `auth` is sent
-     * to cdn-buckets, encrypted via envelope crypto before reaching
-     * Mongo, and never written to disk on the edges.
+     * replaces the existing rule. Cleartext secrets in `secrets` are
+     * sent to cdn-buckets over the wire, encrypted via the bucket DEK
+     * before reaching Mongo, and never written to the rendered nginx
+     * fragment on edges (read at config-load time into a `cms_secrets`
+     * Lua table from a tmpfs JSON manifest).
      */
     async upsertProxy(bucketId: string, input: ProxyUpsertInput): Promise<{ bucketId: string; providerId: string }> {
         return this._json("POST", `/admin/api/proxies?bucketId=${encodeURIComponent(bucketId)}`, {
             providerId: input.providerId,
             server:     input.server,
-            auth:       input.auth,
+            rules:      input.rules,
+            secrets:    input.secrets ?? {},
         });
     }
 
@@ -260,35 +264,27 @@ export type BucketCredentialView = {
     revokedAt?: string;
 };
 
-/** Auth payload accepted by `upsertProxy`. Symmetric with the server's
- *  `ProxyAuth` shape. Cleartext on the wire — the server-side repository
- *  encrypts before persistence; never logged. */
-export type ProxyUpsertAuth =
-    | { type: 'none' }
-    | { type: 'bearer';  token: string }
-    | { type: 'headers'; headers: { name: string; value: string }[] };
-
 export type ProxyUpsertInput = {
     providerId: string;
     server:     string;
-    auth:       ProxyUpsertAuth;
+    rules:      RulesConfig;
+    /** envName → cleartext. Every `${env:NAME}` referenced by `rules`
+     *  must have a matching entry; the server rejects otherwise. */
+    secrets?:   Record<string, string>;
 };
 
-/** Wire shape returned by `listProxies` — auth is REDACTED to flags so
- *  the admin UI can show "configured / missing" without ever fetching
- *  the live secret back. */
+/** Wire shape returned by `listProxies`. `rules` is sent verbatim (no
+ *  secrets in there); `secretNames` only lists envName keys (no values)
+ *  so the admin UI can show "configured / missing" without leaking. */
 export type ProxyListItem = {
-    bucketId:   string;
-    providerId: string;
-    server:     string;
-    auth:       ProxyListItemAuth;
-    createdAt:  string;
-    updatedAt:  string;
+    bucketId:    string;
+    providerId:  string;
+    server:      string;
+    rules:       RulesConfig;
+    secretNames: string[];
+    createdAt:   string;
+    updatedAt:   string;
 };
-export type ProxyListItemAuth =
-    | { type: 'none' }
-    | { type: 'bearer';  hasToken: boolean }
-    | { type: 'headers'; headers: { name: string; hasValue: boolean }[] };
 
 export type BucketsClientErrorCode = "not_found" | "unauthorized" | "forbidden" | "conflict" | "validation_error" | "unknown";
 

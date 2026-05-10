@@ -6,6 +6,21 @@ en HTTPS, redirige les challenges ACME vers l'origin, et poll les
 secrets manifest depuis l'origin pour activer les proxies data-provider
 côté nginx.
 
+> **Stack edge** : depuis Phase 4 le container utilise `openresty/openresty:bookworm-buildpack-deps`
+> (nginx + LuaJIT + lua-cjson built-in). Le binaire nginx vit à
+> `/usr/local/openresty/nginx/sbin/nginx` (un symlink `/usr/sbin/nginx`
+> est posé pour les scripts existants). Les modules brotli sont
+> temporairement droppés (pas bundled par OpenResty upstream) — gzip
+> reste actif. Re-add via `lua-resty-brotli` ou un OpenResty custom
+> build si le perf demande.
+
+> **Secrets pipeline** : plus aucun envsubst ni `${SECRET_xxx}` dans
+> les fragments nginx. `fetch-secrets.sh` poll `/edge-api/secrets`,
+> écrit `/run/cdn-edge/secrets.json` (tmpfs, RAM-only), et déclenche
+> `nginx -s reload`. Le `init_by_lua_block` dans `nginx.conf.template`
+> lit ce JSON à chaque reload et populate la table Lua `cms_secrets`
+> que les `set_by_lua_block` per-location consultent.
+
 > Pré-requis : un origin déjà déployé et accessible sur
 > `https://<MAIN_DOMAIN>` (cf. [`docker/cdn-node/DEPLOY.md`](../cdn-node/DEPLOY.md)).
 
@@ -313,8 +328,8 @@ echo | openssl s_client -connect cdn.bernouy.com:443 \
 # 2. Fichier existant servi (après upload via admin CMS)
 curl -I https://cdn.bernouy.com/<bucket-id>/<some-key>
 
-# 3. Brotli actif
-curl -H 'Accept-Encoding: br' -I \
+# 3. gzip actif (brotli temporairement droppé en Phase 4)
+curl -H 'Accept-Encoding: gzip' -I \
     https://cdn.bernouy.com/<bucket-id>/<text-file> \
     | grep -i content-encoding
 
@@ -330,18 +345,33 @@ sudo docker logs cdn-edge 2>&1 | grep fetch-secrets
 
 ## 11. Tester un proxy data-provider
 
-Suppose qu'un tenant CMS a saisi un Data Provider avec un bearer
-header. Après save :
-1. cms-control-mt POST `/api/proxies` au broker du bucket → upsert dans Mongo (chiffré).
-2. lsyncd push `aliasesServers.conf` (avec `${SECRET_xxx}` placeholders) à tous les edges.
-3. Au prochain poll, `fetch-secrets.sh` reçoit le nouveau manifest, render le fragment runtime, reload nginx.
-4. Browser fetch `https://<bucket-domain>/.cms/data/<providerId>/<path>` → edge proxy_pass vers `<provider.server>` avec les headers d'auth résolus.
+Suppose qu'un tenant CMS a saisi un Data Provider avec des `rules`
+(declarative DSL) + `secrets`. Après save dans l'admin CMS :
+1. cms-control-mt POST `/api/proxies` au broker du bucket → upsert dans Mongo (`rules` plaintext + `secrets` chiffrés via DEK).
+2. cdn-buckets régénère `aliasesServers.conf` avec les directives `set_by_lua_block` qui lisent `cms_secrets["SECRET_xxx"]` (table Lua, pas envsubst).
+3. lsyncd push le fragment à tous les edges.
+4. Côté edge, **deux reloads possibles** :
+   - cert-reload-watcher détecte le changement de fichier → `nginx -s reload`.
+   - fetch-secrets.sh reçoit le nouveau manifest depuis `/edge-api/secrets`, écrit `/run/cdn-edge/secrets.json`, → `nginx -s reload`.
+5. À chaque reload, `init_by_lua_block` re-lit `secrets.json` et populate la table `cms_secrets`.
+6. Browser fetch `https://<bucket-domain>/.cms/data/<providerId>/<path>` → edge fait `set_by_lua_block` qui résout depuis `cms_secrets`, injecte les headers, `proxy_pass` vers `<provider.server>`.
 
 ```bash
-# Vérifier qu'un proxy est actif côté edge
-sudo docker exec cdn-edge cat /run/nginx-runtime/aliasesServers.conf
-# → contient les blocs `location /.cms/data/...` avec `proxy_set_header Authorization "Bearer xxx"`
+# Vérifier qu'un proxy est actif côté edge — fragment lsynced
+sudo docker exec cdn-edge cat /var/lib/cdn/nginx-generated/aliasesServers.conf
+# → contient des blocs `location /.cms/data/...` avec `set_by_lua_block $cms_secret_<hex>`
+#   et `proxy_set_header Authorization "Bearer $cms_secret_<hex>"`
+
+# Vérifier que le manifest secrets est bien pop en RAM
+sudo docker exec cdn-edge cat /run/cdn-edge/secrets.json
+# → { "etag": "...", "manifest": { "SECRET_<HEX>": "<plaintext>" } }
 ```
+
+> **Race window à la création** : entre l'arrivée du fragment lsynced
+> (event-driven, ~secondes) et le prochain poll fetch-secrets (jusqu'à
+> 10s), il peut y avoir une fenêtre où le fragment référence une
+> SECRET_X pas encore dans `cms_secrets` → header vide. Sans impact
+> en pratique (pas de trafic instant sur un nouveau provider).
 
 ---
 
@@ -370,11 +400,12 @@ dans le domain OKMS, pas sur le VPS).
 
 ```bash
 sudo docker logs -f cdn-edge
-sudo docker exec cdn-edge tail -F /var/log/nginx/access.log
-sudo docker exec cdn-edge cat /etc/nginx/conf.d/cdn/nginx.conf
+sudo docker exec cdn-edge tail -F /var/lib/cdn/access-logs/access.log
+sudo docker exec cdn-edge cat /usr/local/openresty/nginx/conf/cdn/nginx.conf
 sudo docker exec cdn-edge ls -la /var/lib/cdn/nginx-generated/
 sudo docker exec cdn-edge ls -la /var/lib/cdn/lego/certificates/
 sudo docker exec cdn-edge cat /run/cdn-edge/.secrets-etag
+sudo docker exec cdn-edge cat /run/cdn-edge/secrets.json | jq '.manifest | keys'
 ```
 
 ---

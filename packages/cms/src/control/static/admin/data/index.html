@@ -84,40 +84,43 @@
                     </p9r-cell>
                 </p9r-row>
 
-                <p9r-modal id="edit-provider-{{ id }}" aria-label="Edit provider {{ id }}">
+                <p9r-modal id="edit-provider-{{ id }}" aria-label="Edit provider {{ id }}"
+                    style="--p9r-modal-width: 880px;">
                     <span slot="title">Edit "{{ id }}"</span>
-                    <cms-form target="{{BASE_PATH}}/api/data/provider?id={{ id }}"
-                        method="PUT" emit="provider:saved">
-                        <p9r-stack gap="md">
-                            <p9r-input name="server" label="Server URL"
-                                placeholder="https://api.example.com/v1" value="{{ server }}"
-                                hint="Base URL of the API. Auto-derived from the spec at sync — fill manually if your spec has no servers info."></p9r-input>
-
-                            <details>
-                                <summary>Spec authentication (used to fetch the OpenAPI spec)</summary>
+                    <cms-fetch url="{{BASE_PATH}}/api/data/provider?id={{ id }}">
+                        <template>
+                            <cms-form target="{{BASE_PATH}}/api/data/provider?id={{ id }}"
+                                method="PUT" emit="provider:saved">
                                 <p9r-stack gap="md">
-                                    <cms-credential-select name="specAuth.bearer"
-                                        label="Bearer token"
-                                        api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
-                                    <cms-headers-input prefix="specAuth"
-                                        api="{{BASE_PATH}}/api/secrets"></cms-headers-input>
-                                </p9r-stack>
-                            </details>
+                                    <p9r-input name="server" label="Server URL"
+                                        placeholder="https://api.example.com/v1" value="{{ server }}"
+                                        hint="Base URL of the API. Auto-derived from the spec at sync — fill manually if your spec has no servers info."></p9r-input>
 
-                            <details>
-                                <summary>Runtime authentication (forwarded by the proxy on every API call)</summary>
-                                <p9r-stack gap="md">
-                                    <cms-credential-select name="runtimeAuth.bearer"
-                                        label="Bearer token"
-                                        api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
-                                    <cms-headers-input prefix="runtimeAuth"
-                                        api="{{BASE_PATH}}/api/secrets"></cms-headers-input>
-                                </p9r-stack>
-                            </details>
+                                    <details>
+                                        <summary>Spec authentication (used to fetch the OpenAPI spec)</summary>
+                                        <p9r-stack gap="md">
+                                            <cms-credential-select name="specAuth.bearer"
+                                                label="Bearer token"
+                                                api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
+                                            <cms-headers-input prefix="specAuth"
+                                                api="{{BASE_PATH}}/api/secrets"></cms-headers-input>
+                                        </p9r-stack>
+                                    </details>
 
-                            <p9r-button color="primary" fullWidth type="submit">Save</p9r-button>
-                        </p9r-stack>
-                    </cms-form>
+                                    <details>
+                                        <summary>Runtime rules (proxy DSL forwarded to cdn-edge)</summary>
+                                        <p9r-stack gap="md">
+                                            <cms-data-provider-rules
+                                                initial="{{ _rulesAndSecretsJson }}"
+                                                validate-url="{{BASE_PATH}}/api/data/provider/validate"></cms-data-provider-rules>
+                                        </p9r-stack>
+                                    </details>
+
+                                    <p9r-button color="primary" fullWidth type="submit">Save</p9r-button>
+                                </p9r-stack>
+                            </cms-form>
+                        </template>
+                    </cms-fetch>
                 </p9r-modal>
             </template>
             <template slot="empty">
@@ -137,7 +140,8 @@
     </p9r-table>
 </w13c-fixed-admin-layout>
 
-<p9r-modal id="add-provider-modal" aria-label="Add a data provider">
+<p9r-modal id="add-provider-modal" aria-label="Add a data provider"
+    style="--p9r-modal-width: 880px;">
     <span slot="title">Add a data provider</span>
 
     <p9r-tabs active="url" style="min-height: 480px;">
@@ -180,13 +184,10 @@
                         </details>
 
                         <details>
-                            <summary>Runtime authentication (forwarded by the proxy on every API call)</summary>
+                            <summary>Runtime rules (proxy DSL forwarded to cdn-edge)</summary>
                             <p9r-stack gap="md">
-                                <cms-credential-select name="runtimeAuth.bearer"
-                                    label="Bearer token"
-                                    api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
-                                <cms-headers-input prefix="runtimeAuth"
-                                    api="{{BASE_PATH}}/api/secrets"></cms-headers-input>
+                                <cms-data-provider-rules
+                                    validate-url="{{BASE_PATH}}/api/data/provider/validate"></cms-data-provider-rules>
                             </p9r-stack>
                         </details>
                     </p9r-stack>

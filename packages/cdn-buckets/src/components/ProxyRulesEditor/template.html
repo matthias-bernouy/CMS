@@ -1,0 +1,35 @@
+<form>
+    <label>
+        providerId
+        <input type="text" name="providerId" required pattern="[a-z0-9-]+" placeholder="supabase">
+    </label>
+    <label>
+        server
+        <input type="url" name="server" required placeholder="https://api.example.com">
+    </label>
+
+    <label class="template-label">
+        <span>start from a template</span>
+        <select class="template-picker">
+            <option value="" disabled selected>— pick a starting point —</option>
+        </select>
+        <small class="template-hint"></small>
+    </label>
+
+    <label class="rules-label">
+        <span>rules <small>(JSON, validated on blur)</small></span>
+        <textarea name="rules" rows="14" spellcheck="false" required>{
+  "paths": {}
+}</textarea>
+    </label>
+    <div class="errors" data-state="empty" role="status" aria-live="polite"></div>
+
+    <fieldset class="secrets">
+        <legend>secrets <small>(envName → cleartext)</small></legend>
+        <div class="secrets-list"></div>
+        <button type="button" class="add-secret">+ Add secret</button>
+    </fieldset>
+
+    <button type="submit" class="primary">Create proxy</button>
+    <div class="status" role="status" aria-live="polite"></div>
+</form>

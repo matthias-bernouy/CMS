@@ -293,11 +293,12 @@ export class InMemoryCmsRepository implements CmsRepository {
         }
         const stored: TDataProvider = {
             ...provider,
-            server:      provider.server ?? "",
-            specAuth:    cloneAuth(provider.specAuth),
-            runtimeAuth: cloneAuth(provider.runtimeAuth),
-            createdAt:   new Date(),
-            lastSyncAt:  null,
+            server:     provider.server ?? "",
+            specAuth:   cloneAuth(provider.specAuth),
+            rules:      structuredClone(provider.rules),
+            secrets:    { ...provider.secrets },
+            createdAt:  new Date(),
+            lastSyncAt: null,
         };
         this._dataProviders.set(stored.id, stored);
         return cloneDataProvider(stored);
@@ -335,10 +336,11 @@ export class InMemoryCmsRepository implements CmsRepository {
         const merged: TDataProvider = {
             ...existing,
             ...rest,
-            id:          existing.id,
-            createdAt:   existing.createdAt,
-            specAuth:    cloneAuth(rest.specAuth    ?? existing.specAuth),
-            runtimeAuth: cloneAuth(rest.runtimeAuth ?? existing.runtimeAuth),
+            id:        existing.id,
+            createdAt: existing.createdAt,
+            specAuth:  cloneAuth(rest.specAuth ?? existing.specAuth),
+            rules:     structuredClone(rest.rules   ?? existing.rules),
+            secrets:   { ...(rest.secrets ?? existing.secrets) },
         };
         this._dataProviders.set(id, merged);
         return cloneDataProvider(merged);
@@ -461,7 +463,12 @@ function cloneAuth(auth: TDataProvider["specAuth"]): TDataProvider["specAuth"] {
 }
 
 function cloneDataProvider(p: TDataProvider): TDataProvider {
-    return { ...p, specAuth: cloneAuth(p.specAuth), runtimeAuth: cloneAuth(p.runtimeAuth) };
+    return {
+        ...p,
+        specAuth: cloneAuth(p.specAuth),
+        rules:    structuredClone(p.rules),
+        secrets:  { ...p.secrets },
+    };
 }
 
 function defaultSystem(): TSystem {

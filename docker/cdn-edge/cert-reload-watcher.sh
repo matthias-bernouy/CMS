@@ -7,13 +7,14 @@
 # event-driven retry-with-backoff (typically caused by partial files
 # mid-rsync) can't permanently leave the watcher in "gave up" state.
 # Even if inotify misses an event entirely (rare, but possible), the
-# periodic re-attempt converges the running nginx with the on-disk
-# state — at the cost of one render-secrets + hash-check every 5 min.
+# periodic re-attempt converges the running nginx with the on-disk state.
 #
-# To keep idle-cluster log noise down, attempt_reload short-circuits
-# when the input hash hasn't changed since the last successful reload —
-# the only output on a stable system is the inotify event burst plus
-# the eventual reload.
+# Secrets reload (`fetch-secrets.sh` polling /edge-api/secrets) is a
+# SEPARATE pipeline that triggers its own `nginx -s reload`; this
+# watcher only cares about cert + lsynced-fragment changes.
+#
+# attempt_reload short-circuits when the input hash hasn't changed since
+# the last successful reload — no log spam on idle clusters.
 
 set -u
 
@@ -34,11 +35,13 @@ echo "[cert-reload-watcher] watching ${WATCH_DIRS[*]} (debounce ${DEBOUNCE_SECON
 # nothing changed (avoids spamming `nginx -s reload` on every periodic
 # tick for a stable cluster). Cheap — sha256 of a handful of small
 # files, even with hundreds of certs.
+NGINX_CONF="${NGINX_PREFIX:-/usr/local/openresty/nginx}/conf/cdn/nginx.conf"
+
 current_hash() {
     {
-        sha256sum /etc/nginx/conf.d/cdn/nginx.conf 2>/dev/null
+        sha256sum "${NGINX_CONF}" 2>/dev/null
         sha256sum /var/lib/cdn/nginx-generated/aliases.conf 2>/dev/null
-        sha256sum /run/nginx-runtime/aliasesServers.conf 2>/dev/null
+        sha256sum /var/lib/cdn/nginx-generated/aliasesServers.conf 2>/dev/null
         find /var/lib/cdn/lego/certificates -type f -exec sha256sum {} + 2>/dev/null | sort
     } | sha256sum | awk '{print $1}'
 }
@@ -46,17 +49,6 @@ current_hash() {
 attempt_reload() {
     # Returns 0 on successful reload (or no-op if hash unchanged), 1 if
     # config still bad. Caller handles backoff and retry.
-    #
-    # Re-render the runtime `aliasesServers.conf` first: lsync just
-    # pushed a fresh template with `${SECRET_*}` placeholders, and the
-    # runtime fragment we include from nginx must match the current
-    # manifest. `render-secrets.sh` is idempotent — safe to call on
-    # every event even when the template didn't actually change.
-    /usr/local/bin/render-secrets.sh || {
-        echo "[cert-reload-watcher] render-secrets.sh failed (will retry)"
-        return 1
-    }
-
     local hash; hash=$(current_hash)
     local last=""; [ -f "${LAST_HASH_FILE}" ] && last=$(cat "${LAST_HASH_FILE}")
     if [ -n "${hash}" ] && [ "${hash}" = "${last}" ]; then

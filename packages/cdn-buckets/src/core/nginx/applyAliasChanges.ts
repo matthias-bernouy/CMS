@@ -8,11 +8,11 @@ import { reload } from "./reload";
  * nginx round-trip if `config.nginx` is unset or alias paths aren't
  * configured — lets the provider boot for tests without aliases wired.
  *
- * Proxies live inside alias `server { }` blocks (a proxy on a bucket
- * without an alias has no public host to serve from), so a proxy mutation
- * regenerates the same `aliasesServers.conf`. Decryption of `auth` happens
- * here via `bucketProxyRepo.listAll()` — secret values are kept in memory
- * just long enough to be substituted into placeholder names.
+ * Proxies live inside alias `server { }` blocks; a proxy mutation
+ * regenerates `aliasesServers.conf`. Secret values travel separately
+ * via `/edge-api/secrets` (JSON manifest in tmpfs) and are loaded into
+ * a `cms_secrets` Lua table by the edge's `init_by_lua_block` at
+ * config-load time — the rendered fragment never carries plaintext.
  */
 export async function applyAliasChanges(provider: StorageProvider): Promise<void> {
     const cfg = provider.config.nginx;

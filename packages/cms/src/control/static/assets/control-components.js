@@ -22919,4 +22919,304 @@ button.active svg {
 </form>
 `;
   customElements.define("cms-mockup-create", MockupCreate);
+
+  // ../cdn-buckets/src/core/proxy/rules/templates.ts
+  var RULE_TEMPLATES = [
+    {
+      label: "Empty (catch-all forward)",
+      description: "Forwards everything to the upstream as-is. No auth, no transformation.",
+      rules: { paths: {} },
+      secrets: {}
+    },
+    {
+      label: "Bearer token",
+      description: "Authorization: Bearer <token> injected on every request. Used by Stripe, OpenAI, GitHub, …",
+      rules: {
+        defaults: { on_request: [
+          { type: "inject_header", name: "Authorization", value: "Bearer ${env:API_TOKEN}" }
+        ] },
+        paths: {}
+      },
+      secrets: { API_TOKEN: "" }
+    },
+    {
+      label: "API key in header (Supabase-style)",
+      description: "Custom header like 'apikey' or 'X-API-Key' on every request.",
+      rules: {
+        defaults: { on_request: [
+          { type: "inject_header", name: "apikey", value: "${env:API_KEY}" }
+        ] },
+        paths: {}
+      },
+      secrets: { API_KEY: "" }
+    },
+    {
+      label: "Multi-header auth",
+      description: "Two headers — e.g. Supabase wants both 'apikey' and 'Authorization: Bearer <jwt>'.",
+      rules: {
+        defaults: { on_request: [
+          { type: "inject_header", name: "apikey", value: "${env:API_KEY}" },
+          { type: "inject_header", name: "Authorization", value: "Bearer ${env:API_TOKEN}" }
+        ] },
+        paths: {}
+      },
+      secrets: { API_KEY: "", API_TOKEN: "" }
+    },
+    {
+      label: "Auth on /api/* only (public assets pass through)",
+      description: "Public paths reach the upstream unauthenticated. Only /api/** gets the bearer.",
+      rules: {
+        paths: {
+          "/api/**": { on_request: [
+            { type: "inject_header", name: "Authorization", value: "Bearer ${env:API_TOKEN}" }
+          ] }
+        }
+      },
+      secrets: { API_TOKEN: "" }
+    },
+    {
+      label: "OAuth login + httpOnly cookie session (Supabase magic link)",
+      description: "POST /auth/v1/token captures access_token + refresh_token from JSON into httpOnly cookies; /rest/v1/* requires the session cookie + injects Bearer.",
+      rules: {
+        defaults: { on_request: [
+          { type: "inject_header", name: "apikey", value: "${env:API_KEY}" }
+        ] },
+        paths: {
+          "/auth/v1/token": {
+            methods: ["POST"],
+            on_response: [
+              {
+                type: "extract_json",
+                field: "access_token",
+                action: {
+                  type: "set_cookie",
+                  name: "sb-access-token",
+                  attributes: { max_age: 3600, http_only: true, secure: true, same_site: "Lax", path: "/" }
+                }
+              },
+              {
+                type: "extract_json",
+                field: "refresh_token",
+                action: {
+                  type: "set_cookie",
+                  name: "sb-refresh-token",
+                  attributes: { max_age: 2592000, http_only: true, secure: true, same_site: "Lax", path: "/" }
+                }
+              },
+              { type: "strip_body_fields", fields: ["access_token", "refresh_token"] }
+            ]
+          },
+          "/rest/v1/*": {
+            on_request: [
+              {
+                type: "require_cookie",
+                name: "sb-access-token",
+                on_missing: { type: "redirect", url: "/.cms/data/<provider>/login?redirectTo={original_url}" }
+              },
+              {
+                type: "cookie_to_header",
+                cookie_name: "sb-access-token",
+                header_name: "Authorization",
+                prefix: "Bearer "
+              }
+            ]
+          }
+        }
+      },
+      secrets: { API_KEY: "" }
+    }
+  ];
+
+  // src/control/components/data/ProviderRules/ProviderRules.ts
+  class CmsDataProviderRules extends HTMLElement {
+    _rules;
+    _errors;
+    _list;
+    _validateUrl() {
+      return this.getAttribute("validate-url");
+    }
+    connectedCallback() {
+      if (this.querySelector("textarea"))
+        return;
+      const initial = this._readInitial();
+      const options = RULE_TEMPLATES.map((t, i) => `<option value="${i}">${escapeAttr3(t.label)}</option>`).join("");
+      this.innerHTML = `
+            <style>
+                cms-data-provider-rules { display: block; }
+                cms-data-provider-rules .ruleslayout {
+                    display: grid; gap: 0.85rem;
+                }
+                cms-data-provider-rules label.dprules-label {
+                    display: grid; gap: 0.4rem; font-size: 0.95rem;
+                }
+                cms-data-provider-rules .template-picker,
+                cms-data-provider-rules input,
+                cms-data-provider-rules textarea {
+                    padding: 0.55rem 0.65rem;
+                    font: inherit;
+                    font-size: 0.95rem;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                }
+                cms-data-provider-rules textarea {
+                    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                    font-size: 0.95rem;
+                    line-height: 1.45;
+                    min-height: 360px;
+                    width: 100%; box-sizing: border-box;
+                    resize: vertical;
+                }
+                cms-data-provider-rules .template-hint { color: #666; font-style: italic; min-height: 1em; font-size: 0.85rem; }
+                cms-data-provider-rules .errors { font-size: 0.85rem; min-height: 1em; color: #c00; font-family: ui-monospace, monospace; }
+                cms-data-provider-rules .errors[data-state="ok"] { color: #047857; }
+                cms-data-provider-rules fieldset.secrets {
+                    border: 1px solid #e5e7eb; padding: 0.85rem 0.85rem 0.7rem;
+                    border-radius: 4px; font-size: 0.95rem;
+                }
+                cms-data-provider-rules fieldset.secrets legend { padding: 0 0.4rem; font-size: 0.95rem; }
+                cms-data-provider-rules .secret-row {
+                    display: grid; grid-template-columns: 1fr 1fr auto;
+                    gap: 0.5rem; margin-bottom: 0.5rem;
+                }
+                cms-data-provider-rules .secret-row input { width: 100%; box-sizing: border-box; }
+                cms-data-provider-rules .secret-row .remove {
+                    background: transparent; border: 1px solid #fca5a5; color: #c00;
+                    padding: 0 0.7rem; cursor: pointer; border-radius: 4px; font-size: 1.1rem;
+                }
+                cms-data-provider-rules .add-secret {
+                    background: transparent; border: 1px dashed #9ca3af; color: #374151;
+                    padding: 0.45rem 0.7rem; cursor: pointer; border-radius: 4px; font-size: 0.9rem;
+                }
+            </style>
+            <div class="ruleslayout">
+                <label class="dprules-label">
+                    <span>start from a template</span>
+                    <select class="template-picker">
+                        <option value="" disabled selected>— pick a starting point —</option>
+                        ${options}
+                    </select>
+                    <small class="template-hint"></small>
+                </label>
+                <label class="dprules-label">
+                    <span>rules <small>(JSON, validated on blur)</small></span>
+                    <textarea name="rules" spellcheck="false"></textarea>
+                </label>
+                <div class="errors" role="status" aria-live="polite"></div>
+                <fieldset class="secrets">
+                    <legend>secrets <small>(envName → cleartext)</small></legend>
+                    <div class="secrets-list"></div>
+                    <button type="button" class="add-secret">+ Add secret</button>
+                </fieldset>
+            </div>`;
+      this._rules = this.querySelector("textarea");
+      this._errors = this.querySelector(".errors");
+      this._list = this.querySelector(".secrets-list");
+      const picker = this.querySelector(".template-picker");
+      const hint = this.querySelector(".template-hint");
+      this._rules.value = JSON.stringify(initial.rules, null, 2);
+      for (const [k, v] of Object.entries(initial.secrets))
+        this._addRow(k, v);
+      if (Object.keys(initial.secrets).length === 0)
+        this._addRow();
+      this._rules.addEventListener("blur", () => void this._validate());
+      this.querySelector(".add-secret").addEventListener("click", () => this._addRow());
+      picker.addEventListener("change", () => this._applyTemplate(Number(picker.value), hint));
+    }
+    _applyTemplate(idx, hint) {
+      const tpl = RULE_TEMPLATES[idx];
+      if (!tpl)
+        return;
+      this._rules.value = JSON.stringify(tpl.rules, null, 2);
+      this._list.innerHTML = "";
+      for (const [k, v] of Object.entries(tpl.secrets))
+        this._addRow(k, v);
+      if (Object.keys(tpl.secrets).length === 0)
+        this._addRow();
+      hint.textContent = tpl.description;
+      this._validate();
+    }
+    _readInitial() {
+      const raw = this.getAttribute("initial");
+      if (!raw)
+        return { rules: { paths: {} }, secrets: {} };
+      try {
+        const parsed = JSON.parse(raw);
+        return { rules: parsed.rules ?? { paths: {} }, secrets: parsed.secrets ?? {} };
+      } catch {
+        return { rules: { paths: {} }, secrets: {} };
+      }
+    }
+    _addRow(envName = "", value = "") {
+      const row = document.createElement("div");
+      row.className = "secret-row";
+      row.innerHTML = `
+            <input type="text"     class="env"   placeholder="ENV_NAME" value="${escapeAttr3(envName)}">
+            <input type="password" class="value" placeholder="cleartext" value="${escapeAttr3(value)}">
+            <button type="button" class="remove" aria-label="Remove">×</button>`;
+      const env = row.querySelector(".env");
+      const val = row.querySelector(".value");
+      const sync = () => {
+        const trimmed = env.value.trim();
+        val.name = trimmed ? `secrets.${trimmed}` : "";
+      };
+      env.addEventListener("input", sync);
+      env.addEventListener("blur", () => void this._validate());
+      val.addEventListener("blur", () => void this._validate());
+      row.querySelector(".remove").addEventListener("click", () => {
+        row.remove();
+        this._validate();
+      });
+      sync();
+      this._list.appendChild(row);
+    }
+    async _validate() {
+      const url = this._validateUrl();
+      if (!url)
+        return;
+      let rules;
+      try {
+        rules = JSON.parse(this._rules.value);
+      } catch (e) {
+        this._show({ ok: false, errors: [{ path: "$", message: `not valid JSON: ${e.message}` }] });
+        return;
+      }
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rules, secrets: this._collectSecrets() })
+        });
+        const body = await res.json();
+        this._show(body);
+      } catch (err) {
+        this._show({ ok: false, errors: [{ path: "$", message: `network: ${err.message}` }] });
+      }
+    }
+    _show(res) {
+      if (res.ok) {
+        this._errors.setAttribute("data-state", "ok");
+        this._errors.textContent = res.referenced.length === 0 ? "Valid. No secrets referenced." : `Valid. References: ${res.referenced.join(", ")}.`;
+      } else {
+        this._errors.removeAttribute("data-state");
+        const e = res.errors[0];
+        this._errors.textContent = `${e.path}: ${e.message}`;
+      }
+    }
+    _collectSecrets() {
+      const out = {};
+      for (const row of Array.from(this._list.querySelectorAll(".secret-row"))) {
+        const env = row.querySelector(".env").value.trim();
+        const val = row.querySelector(".value").value;
+        if (env)
+          out[env] = val;
+      }
+      return out;
+    }
+  }
+  function escapeAttr3(s2) {
+    return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  }
+  if (!customElements.get("cms-data-provider-rules")) {
+    customElements.define("cms-data-provider-rules", CmsDataProviderRules);
+  }
 })();
