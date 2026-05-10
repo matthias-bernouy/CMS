@@ -82,13 +82,39 @@ describe("renderProxyLocations", () => {
     test("emits standard X-Forwarded-* headers + http/1.1", () => {
         const out = renderProxyLocations([proxy({ providerId: "stripe" })]);
         expect(out).toContain("proxy_http_version 1.1;");
-        expect(out).toContain("proxy_set_header X-Real-IP         $remote_addr;");
-        expect(out).toContain("proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;");
-        expect(out).toContain("proxy_set_header X-Forwarded-Proto $scheme;");
-        expect(out).toContain("proxy_set_header X-Forwarded-Host  $host;");
+        expect(out).toContain("proxy_set_header X-Real-IP          $remote_addr;");
+        expect(out).toContain("proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;");
+        expect(out).toContain("proxy_set_header X-Forwarded-Proto  $scheme;");
+        expect(out).toContain("proxy_set_header X-Forwarded-Host   $host;");
         // Host request header is intentionally NOT overridden — nginx
         // default is the upstream's hostname, which is what most APIs
         // expect for routing / URL generation.
         expect(out).not.toContain("proxy_set_header Host ");
+    });
+
+    test("emits X-Forwarded-Prefix without trailing slash so proxy-aware frameworks build correct URLs", () => {
+        const out = renderProxyLocations([proxy({ providerId: "stripe" })]);
+        expect(out).toContain("proxy_set_header X-Forwarded-Prefix /.cms/data/stripe;");
+        // Trailing-slash variant would build URLs with a double slash on
+        // the boundary (e.g. `/.cms/data/stripe//foo`).
+        expect(out).not.toContain("X-Forwarded-Prefix /.cms/data/stripe/;");
+    });
+
+    test("emits proxy_redirect to keep relative-path 3xx responses inside the proxy", () => {
+        const out = renderProxyLocations([proxy({ providerId: "stripe" })]);
+        expect(out).toContain("proxy_redirect      ~^/(.*)$ /.cms/data/stripe/$1;");
+    });
+
+    test("emits WebSocket upgrade headers — Connection wired to the parent map $connection_upgrade", () => {
+        const out = renderProxyLocations([proxy({ providerId: "stripe" })]);
+        expect(out).toContain("proxy_set_header Upgrade            $http_upgrade;");
+        expect(out).toContain("proxy_set_header Connection         $connection_upgrade;");
+    });
+
+    test("emits streaming + body-size directives so SSE / large uploads pass through", () => {
+        const out = renderProxyLocations([proxy({ providerId: "stripe" })]);
+        expect(out).toContain("proxy_buffering          off;");
+        expect(out).toContain("proxy_request_buffering  off;");
+        expect(out).toContain("client_max_body_size     50m;");
     });
 });

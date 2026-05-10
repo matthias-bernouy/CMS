@@ -41,6 +41,15 @@ map $uri $effective_cache_control {
     "~\.html$"  "no-store";
 }
 
+# Standard WebSocket upgrade idiom for `Connection` request header.
+# Used by every per-bucket proxy `location /.cms/data/<id>/` block emitted
+# by `renderProxyLocations` (cf. `@bernouy/cdn-buckets`). Without this
+# `map`, nginx would 502 every WS upgrade attempt that hits a data-provider.
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 # JSON-Lines access log: one event per line, structured for downstream
 # parsing (origin pulls these via SSH+rsync). `escape=json` makes nginx
 # json-quote string values, so a raw newline / quote in user-agent or
