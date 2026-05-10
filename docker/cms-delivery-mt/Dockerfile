@@ -42,9 +42,9 @@ RUN mkdir -p $PLAYWRIGHT_BROWSERS_PATH \
 
 # 5. App layout.
 WORKDIR /app
-COPY docker/mt-delivery-cms/runtime.package.json /app/package.json
+COPY docker/cms-delivery-mt/runtime.package.json /app/package.json
 RUN ln -s /socle/node_modules /app/node_modules
-COPY docker/mt-delivery-cms/server.ts /app/server.ts
+COPY docker/cms-delivery-mt/server.ts /app/server.ts
 RUN chown -R delivery:delivery /app
 
 USER delivery

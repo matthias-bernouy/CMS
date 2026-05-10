@@ -7,7 +7,8 @@
         "paths": {
             "@bernouy/cms":           ["index.ts"],
             "@bernouy/cms/component": ["component.ts"],
-            "@bernouy/cms/editor":    ["editor.ts"]
+            "@bernouy/cms/editor":    ["editor.ts"],
+            "@bernouy/cms/data":      ["data.ts"]
         }
     },
     "include": [
@@ -15,6 +16,7 @@
         "index.ts",
         "component.ts",
         "editor.ts",
+        "data.ts",
         "build.ts",
         "types/**/*.ts",
         "tests/**/*.ts"

@@ -6,7 +6,7 @@
 // (future) `tenant_<id>__delivery_state` collection.
 
 import { MongoClient } from "mongodb";
-import { MtDeliveryCms } from "@bernouy/mt-delivery-cms";
+import { MtDeliveryCms } from "@bernouy/cms-delivery-mt";
 import { MongoTenantRepository } from "@bernouy/mt-cms-control";
 
 const required = (k: string): string => {
@@ -36,7 +36,7 @@ const delivery = new MtDeliveryCms({
 });
 
 delivery.start();
-console.log(`✅ mt-delivery-cms started (interval=${INTERVAL_MS}ms, concurrency=${CONCURRENCY}, playwright=${ENABLE_PLAYWRIGHT}, variants=${!!VARIANT_URL_PATTERN})`);
+console.log(`✅ cms-delivery-mt started (interval=${INTERVAL_MS}ms, concurrency=${CONCURRENCY}, playwright=${ENABLE_PLAYWRIGHT}, variants=${!!VARIANT_URL_PATTERN})`);
 
 // Keep the process alive — Node/Bun would exit after the script body
 // without an active handle. setInterval inside MtDeliveryCms covers that

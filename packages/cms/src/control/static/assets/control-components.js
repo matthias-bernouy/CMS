@@ -10373,25 +10373,46 @@ ${followMessage}`)) {
     return res.json();
   }
 
-  // src/control/components/admin/SchemaPicker/controller.ts
-  function buildUrl(serverUrl, path) {
-    const base = (serverUrl ?? "").replace(/\/+$/, "");
+  // src/socle/constants/p9r-constants.ts
+  var DATA_PROXY_PREFIX = "/.cms/data";
+  function buildDataProxyUrl(providerId, path) {
     const tail = path.startsWith("/") ? path : `/${path}`;
-    return `${base}${tail}`;
+    return `${DATA_PROXY_PREFIX}/${providerId}${tail}`;
+  }
+  function parseDataProxyUrl(raw) {
+    let pathname;
+    try {
+      pathname = new URL(raw, "http://_").pathname;
+    } catch {
+      return null;
+    }
+    const prefix = `${DATA_PROXY_PREFIX}/`;
+    if (!pathname.startsWith(prefix))
+      return null;
+    const rest = pathname.slice(prefix.length);
+    const slash = rest.indexOf("/");
+    if (slash < 0) {
+      return rest ? { providerId: rest, path: "/" } : null;
+    }
+    const providerId = rest.slice(0, slash);
+    const path = rest.slice(slash) || "/";
+    if (!providerId)
+      return null;
+    return { providerId, path };
+  }
+
+  // src/control/components/admin/SchemaPicker/controller.ts
+  function buildUrl(providerId, path) {
+    return buildDataProxyUrl(providerId, path);
   }
   function findProviderForValue(providers, value) {
-    if (!value)
+    const parsed = parseDataProxyUrl(value);
+    if (!parsed)
       return null;
-    let best = null;
-    for (const p of providers) {
-      if (!p.server)
-        continue;
-      if (value === p.server || value.startsWith(p.server + "/")) {
-        if (!best || p.server.length > best.server.length)
-          best = p;
-      }
-    }
-    return best;
+    return providers.find((p) => p.id === parsed.providerId) ?? null;
+  }
+  function extractPath(value) {
+    return parseDataProxyUrl(value)?.path ?? "";
   }
   function setValue2(host, url) {
     host._value = url;
@@ -10404,7 +10425,7 @@ ${followMessage}`)) {
     host._refs.triggerMethod.textContent = "";
     if (has) {
       const match = findProviderForValue(host._providers, url);
-      host._refs.triggerValue.textContent = match ? url.slice(match.server.length) || "/" : url;
+      host._refs.triggerValue.textContent = match ? extractPath(url) || "/" : url;
     } else {
       host._refs.triggerValue.textContent = "Select endpoint";
     }
@@ -10482,9 +10503,8 @@ ${followMessage}`)) {
         return true;
       return e.path.toLowerCase().includes(q) || e.summary.toLowerCase().includes(q) || e.tags.some((t) => t.toLowerCase().includes(q));
     });
-    const active = host._providers.find((p) => p.id === host._activeProviderId);
-    const activeServer = active?.server ?? "";
-    const selectedPath = host._value.startsWith(activeServer) ? host._value.slice(activeServer.length) : "";
+    const parsed = parseDataProxyUrl(host._value);
+    const selectedPath = parsed?.providerId === host._activeProviderId ? parsed.path : "";
     host._refs.list.replaceChildren(...filtered.map((e) => buildOption2(e, e.path === selectedPath)));
   }
   function parseMethodsFilter(raw) {
@@ -10585,7 +10605,7 @@ ${followMessage}`)) {
         const provider = this._providers.find((p) => p.id === this._activeProviderId);
         if (!provider)
           return;
-        setValue2(this, buildUrl(provider.server, path));
+        setValue2(this, buildUrl(provider.id, path));
         this.dispatchEvent(new Event("change", { bubbles: true }));
         closePanel2(this);
       });
@@ -13337,7 +13357,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     const myId = target.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
     const myEditor = myId ? document.compIdentifierToEditor?.get(myId) : undefined;
     const ownExts = myEditor ? new Set(myEditor.listExtensions("blocActions")) : new Set;
-    const all = collectAncestorExtensions(target, "blocActions").filter((e) => e.enabled?.() !== false).filter((e) => !ownExts.has(e));
+    const all = collectAncestorExtensions(target, "blocActions").filter((e) => e.enabled?.({ target }) !== false).filter((e) => !ownExts.has(e));
     return Array.from(new Set(all));
   }
   function buildExtensionsButton() {
@@ -14537,7 +14557,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 `;
 
   // src/control/components/editor/EditorSystem/BlocActions/sub/Extensions/render.ts
-  function buildGroup(ext, onPick) {
+  function buildGroup(ext, target, onPick) {
     const group = document.createElement("div");
     group.className = "group";
     const header = document.createElement("div");
@@ -14549,7 +14569,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     lbl.textContent = ext.label();
     header.appendChild(lbl);
     group.appendChild(header);
-    const opts = ext.getOptions();
+    const opts = ext.getOptions({ target });
     if (opts.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty";
@@ -14598,7 +14618,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     const popover = document.createElement(POPOVER_TAG);
     const wrap = popover.shadowRoot.getElementById("wrap");
     for (const ext of exts)
-      wrap.appendChild(buildGroup(ext, (opt) => {
+      wrap.appendChild(buildGroup(ext, target, (opt) => {
         closeExtensionsPopover();
         onAfterPick();
         ext.onPick(opt, { target });
@@ -16100,27 +16120,16 @@ form[method="dialog"] {
   function installFetchProxy() {
     const originalFetch = window.fetch.bind(window);
     const basePath = getMetaBasePath();
-    let providers = [];
-    const providersReady = originalFetch(`${basePath}/api/data/providers`).then((r) => r.ok ? r.json() : []).then((list) => {
-      if (!Array.isArray(list))
-        return;
-      providers = list.map((p) => ({
-        id: p.id,
-        origin: safeOrigin(p.server ?? "")
-      })).filter((p) => p.id && p.origin);
-    }).catch(() => {});
     const proxy = async (input, init) => {
-      await providersReady;
       const url = resolveUrl(input);
       const method = resolveMethod(input, init);
-      const origin = safeOrigin(url);
-      const match = origin ? providers.find((p) => p.origin === origin) : undefined;
+      const match = parseDataProxyUrl(url);
       if (!match)
         return originalFetch(input, init);
       return originalFetch(`${basePath}/api/data/mock`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId: match.id, method, url })
+        body: JSON.stringify({ providerId: match.providerId, method, path: match.path })
       });
     };
     window.fetch = proxy;
@@ -16142,13 +16151,6 @@ form[method="dialog"] {
     if (input instanceof Request)
       return input.method.toUpperCase();
     return "GET";
-  }
-  function safeOrigin(url) {
-    try {
-      return new URL(url).origin;
-    } catch {
-      return "";
-    }
   }
 
   // src/control/core/editorSystem/dirtyState.ts
@@ -16202,6 +16204,34 @@ form[method="dialog"] {
         return;
       case "empty":
         return;
+    }
+  }
+
+  // src/control/components/editor/EditorSystem/EditorRoot/stripResidualChrome.ts
+  function stripResidualChrome(root2) {
+    walk2(root2);
+  }
+  function walk2(el) {
+    for (const a2 of Array.from(el.attributes)) {
+      if (a2.name.startsWith("p9r-"))
+        el.removeAttribute(a2.name);
+    }
+    el.removeAttribute("contenteditable");
+    el.removeAttribute("tabindex");
+    el.removeAttribute("draggable");
+    if (el.classList.contains("editor-block")) {
+      el.classList.remove("editor-block");
+      if (!el.getAttribute("class"))
+        el.removeAttribute("class");
+    }
+    const style = el.getAttribute("style");
+    if (style && /pointer-events\s*:/.test(style))
+      el.removeAttribute("style");
+    for (const c of Array.from(el.children))
+      walk2(c);
+    if (el.tagName === "TEMPLATE") {
+      for (const c of Array.from(el.content.children))
+        walk2(c);
     }
   }
 
@@ -17098,13 +17128,27 @@ form[method="dialog"] {
         return;
       if (node.parentElement?.closest(`[${p9r.attr.EDITOR.OPAQUE}]`))
         return;
+      if (!node.closest("cms-editor-system"))
+        return;
       const tag = node.tagName.toLowerCase();
       if (!this.editors.has(tag))
         return;
       const cl = this.editors.get(tag)?.cl;
       if (cl) {
-        const editor = new cl(node);
-        editor.viewEditor();
+        try {
+          const editor = new cl(node);
+          editor.viewEditor();
+        } catch (err) {
+          if (!(err instanceof NearestElementRequire))
+            throw err;
+          document.compIdentifierToEditor?.forEach((ed, id) => {
+            if (ed.target === node) {
+              ed.dispose?.();
+              document.compIdentifierToEditor.delete(id);
+            }
+          });
+          return;
+        }
       }
       if (this.opaqueTags.has(tag)) {
         node.setAttribute(p9r.attr.EDITOR.OPAQUE, "true");
@@ -17298,6 +17342,9 @@ form[method="dialog"] {
       this.switchMode("view");
       const slot = this.shadowRoot.querySelector("#workingElement slot");
       const nodes = slot.assignedNodes({ flatten: true });
+      for (const n2 of nodes)
+        if (n2 instanceof Element)
+          stripResidualChrome(n2);
       const html = nodes.filter((n2) => n2.nodeName !== "#text").map((n2) => n2 instanceof Element ? n2.outerHTML : n2.textContent ?? "").join("");
       this.switchMode("editor");
       return html;

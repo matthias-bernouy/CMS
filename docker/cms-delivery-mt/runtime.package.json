@@ -1,5 +1,5 @@
 {
-    "name":    "mt-delivery-cms-runtime",
+    "name":    "cms-delivery-mt-runtime",
     "private": true,
     "type":    "module"
 }

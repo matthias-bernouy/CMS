@@ -22,12 +22,17 @@
         "./editor": {
             "bun": "./editor.ts",
             "default": "./editor.ts"
+        },
+        "./data": {
+            "bun": "./data.ts",
+            "default": "./data.ts"
         }
     },
     "files": [
         "index.ts",
         "component.ts",
         "editor.ts",
+        "data.ts",
         "build.ts",
         "src/",
         "types/",
