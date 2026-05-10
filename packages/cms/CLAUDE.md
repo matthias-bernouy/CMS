@@ -9,7 +9,9 @@
 Three independent layers under `src/`:
 
 - **`src/control/`** — Admin UI + REST API + visual editor. Consumed through the `ControlCms` class. Authenticated, low-traffic, mounted under a runner-scoped prefix (typically `/cms`).
-- **`src/delivery/`** — Public rendering layer. Consumed through `DeliveryCms`. Deployable alone: serves rendered pages, bloc bundles, theme CSS, the component runtime and the default favicon. Runs its own `PlaywrightSession` to post-render-enhance pages (srcset, loading, fetchpriority) on first visit.
+- **`src/delivery/`** — Public rendering layer. Two consumption modes:
+  - **Runtime `DeliveryCms`** — on-demand render: page lookup in repository → `renderPage` → cache. Serves rendered pages + bloc bundles + theme CSS + the component runtime + the default favicon. **No Playwright at runtime.**
+  - **Build-time `DeliveryBuilder`** (under `src/delivery/build/`) — pre-renders every page, generates image variants via `HttpVariantGenerator`, optionally enhances HTML through `BuildEnhancer` + `PlaywrightSession`, uploads everything to a CDN bucket. Used by `@bernouy/cms-delivery-mt`'s cron.
 - **`src/socle/`** — Shared contracts, providers, constants, infrastructure utilities. Both `control/` and `delivery/` depend on `socle/`; never the other way. `delivery/` must never import from `control/`.
 
 Plus:
@@ -28,11 +30,22 @@ Runtime stack — Web Components with Shadow DOM, TypeScript, Bun runtime.
 Both `ControlCms` and `DeliveryCms` derive their mount prefix from the runner they receive. Consumer scopes the runner **before** instantiating:
 
 ```ts
-rootRunner.group("/cms", (scoped) => new ControlCms(scoped, repo, auth, media, cache));
-rootRunner.group("/",    (scoped) => new DeliveryCms({ runner: scoped, media, repository }));
+// Single-tenant
+rootRunner.group("/cms", (scoped) =>
+    new ControlCms(scoped, repo, auth, media, { tokensUrl: "https://kc/account" })
+);
+rootRunner.group("/", (scoped) =>
+    new DeliveryCms({ runner: scoped, repository: repo })
+);
+
+// ControlCms full constructor:
+//   (runner, repository, auth, media: CDN, configuration: { tokensUrl, deliveryUrl? },
+//    cache?, secrets?, proxyPublisher?)
+// DeliveryCms config:
+//   { runner?, repository, cache?, headInjectors? }
 ```
 
-For multi-tenant, repeat the pattern under tenant-scoped groups (`/tenant-1/cms`, `/tenant-1`, …). Delivery shares a single `PlaywrightSession` across tenants by passing it in the config. No hard-coded `/cms` or `/.cms` survives in the runtime — everything derives from `runner.basePath`.
+For multi-tenant, repeat the pattern under tenant-scoped groups (`/tenant-1/cms`, `/tenant-1`, …) — that's exactly what `@bernouy/mt-cms-control` does. No hard-coded `/cms` or `/.cms` survives in the runtime; everything derives from `runner.basePath`. `DeliveryCms` does not take a `media` argument: it never serves media bytes (it only derives variant URLs at render time, the storage backend serves the bytes).
 
 Routes inside Control:
 - `<basePath>/admin/*` — server-rendered admin pages (static HTML files)
@@ -58,36 +71,64 @@ Routes inside Delivery (relative to the delivery runner's basePath):
 
 ## CLI (`p9r`)
 
-Six commands wired in `package.json` bin:
-- `p9r init <folder>` — scaffold a new bloc locally (copies `src/cli/resources/bloc-template/`).
-- `p9r new <folder>` — scaffold a complete CMS app (Control + Delivery co-hosted) with in-memory providers and basic auth.
-- `p9r install-skill` — install the bloc-creator Claude Code skill in the current project.
-- `p9r dev` — local editor against a remote CMS with hot-reload.
-- `p9r import` — deploy blocs via `POST {P9R_URL}/api/bloc`.
-- `p9r list-blocs` — read-only listing of blocs registered on the remote CMS.
+Commands wired in `package.json` bin (one binary, sub-commands):
 
-`dev`, `import`, `list-blocs` read `P9R_URL` (admin base, including the path prefix, e.g. `http://localhost:4999/cms`) and `P9R_TOKEN` (admin bearer) from env or `.env`. `init`, `new`, `install-skill` are offline.
+| Command | Purpose |
+|---|---|
+| `p9r init <folder>` | scaffold a new bloc locally (copies `src/cli/resources/bloc-template/`). Refuses non-empty target without `--force`. |
+| `p9r new <folder>` | scaffold a complete CMS app (Control + Delivery co-hosted) with in-memory providers and basic auth. `--template=full` (default), `--force`. |
+| `p9r install-skill` | install the bloc-creator Claude Code skill into `./.claude/skills/`. Refuses non-empty target without `--force`. |
+| `p9r login [--url=…]` | Keycloak **Device Authorization Grant** flow. Cached in `~/.config/p9r/credentials.json`. |
+| `p9r logout [--url=…]` | drop stored credentials for that URL. |
+| `p9r dev [--port=N --host=H]` | local editor against `site/` with hot-reload. **No remote calls, no auth.** Run `p9r pull` first to bootstrap `site/` from a tenant. |
+| `p9r push [flags]` | push `system → blocs → snippets → templates → pages` to the remote CMS, in that order. Flags: `--type=<one>\|*`, `--dry-run`, `--yes\|-y`, `--force\|-f`, `--only=tag1,tag2`. |
+| `p9r pull [flags]` | inverse of push: materialize remote into `site/`. Same `--type` set; `--yes` / `--force`. |
+| `p9r list-blocs` | read-only listing of blocs registered on the remote CMS. |
+| `p9r secrets` | manage tenant secrets (read/write through the encrypted secret store). |
 
-- `init` and `install-skill` refuse to overwrite a non-empty target unless `--force` / `-f`.
-- `dev` proxies everything to the remote except `/admin/editor` (assembled locally), `/bloc?tag=X` (served from local dev bundles when present), and `POST /api/page` (persisted to `.p9r-dev/scratch.json`). Watches bloc folders via `fs.watch` + a 1s polling rescan and pushes reloads over `GET /dev/reload` (SSE).
-- `import` fetches `GET /api/blocs` first (fail-fast), splits local blocs into fresh/collision sets, only builds the fresh ones, and uploads. Flags: `--dry-run`, `--only=tag1,tag2`. Collisions are warned and skipped — never overwritten.
-- `list-blocs` hits `GET /api/blocs-list`. Reserved prefixes `w13c-*` and `p9r-*` are system-only; never scaffold a bloc with those.
+Remote-talking commands (`dev`, `push`, `pull`, `list-blocs`, `secrets`)
+read `P9R_URL` (admin base, including path prefix, e.g.
+`http://localhost:4999/cms`) and the bearer from
+`~/.config/p9r/credentials.json` populated by `p9r login`. The
+old `P9R_TOKEN` env var is still accepted as a fallback.
 
-CLI source lives in `src/cli/`.
+`init`, `new`, `install-skill` are offline.
+
+- `dev` is **fully offline against `site/`** — there's no proxy to a
+  remote CMS. Watches bloc folders via `fs.watch` + a 1s polling
+  rescan and pushes reloads over `GET /dev/reload` (SSE).
+- `push` runs the pipeline in dependency order. Conflicts surface a
+  diff and prompt `[y/N]` (skip with `--yes`); `--force` bypasses both
+  conflict and cross-ref validation (e.g. a page referencing a missing
+  bloc).
+- `list-blocs` hits `GET /api/blocs-list`. Reserved prefixes `w13c-*`
+  and `p9r-*` are system-only; never scaffold a bloc with those.
+
+CLI source lives in `src/cli/` (one `CLI_<verb>.ts` per command +
+`index.ts` dispatcher).
 
 ## Data layer
 
-- Contracts live under `src/socle/contracts/`:
-  - `Repository/CmsRepository.ts` — admin-side CRUD surface
-  - `Repository/TModels.ts` — `TPage`, `TBloc`, `TTemplate`, `TSnippet`, `TSystem`, `TPageRef`, `PageLink`
-  - `Cache/Cache.ts` — storage shape used by both control and delivery
-  - `Media/*` — media contracts (re-exported from `@bernouy/socle`)
-- Delivery has its own **read-only** repository contract at `src/delivery/interfaces/DeliveryRepository.ts` — strict subset of `CmsRepository` (no CRUD, no editor bundles). A `DefaultCmsRepository` instance satisfies `DeliveryRepository` by structural typing.
+- Contracts live under `src/socle/interfaces/`:
+  - `CmsRepository.ts` — admin-side CRUD surface
+  - `models.ts` — `TPage`, `TBloc`, `TTemplate`, `TSnippet`, `TSystem`, `TPageRef`, `PageLink`
+  - `Cache.ts` — storage shape used by both control and delivery
+  - `KVStore.ts` — generic key-value contract (used by `EncryptedMongoSecretStore` internals)
+  - `SecretStore.ts` — typed secret store (encrypted at rest)
+  - `ProxyPublisher.ts` — bucket proxy push slot (filled by `BucketProxyPublisher` from `@bernouy/cdn-buckets`)
+  - `Data/` — extension/data contracts consumed by editors
+- Delivery has its own **read-only** repository contract at `src/delivery/interfaces/DeliveryRepository.ts` — strict subset of `CmsRepository` (no CRUD, no editor bundles). A `MongoCmsRepository` / `InMemoryCmsRepository` instance satisfies `DeliveryRepository` by structural typing.
 - `TBloc = { id, name, group, description, viewJS, editorJS }` — `group` and `description` persisted alongside compiled JS so queries like `getBlocsList()` can answer without parsing the editor bundle. `group` is also baked into `editorJS` via `BE5_GROUP_TO_BE_REPLACED` for the in-browser BlocLibrary; the DB column is the queryable copy.
 - `TPage` is keyed by `path` alone. No `identifier` — one page per path.
 - `TPageRef = { path } | null` — used for `system.site.notFound` / `system.site.serverError`.
-- **Repository providers**: only `src/socle/providers/memory/CmsRepositoryInMemory.ts` ships in-tree today. A Mongo provider may be re-added; until then the in-memory store is the canonical implementation, used by `tests/human/human.ts` and `p9r new`.
-- **Media providers**: `tests/human/InMemoryMediaServer.ts` (server-side store + endpoints) paired with `tests/human/HttpMedia.ts` (browser-side `Media` consumer). The consumer follows the `Media` portability contract (no module-level helpers, browser-only globals, serializable via `constructor.toString()` for hydration on the client as `window._cms.CDN`).
+- **Repository providers** ship in-tree under `src/socle/default-implementation/`:
+  - `CmsRepository/memory.ts` — `InMemoryCmsRepository` (used by `p9r new`, `tests/human/human.ts`).
+  - `CmsRepository/mongodb.ts` — `MongoCmsRepository`, takes `{ collectionPrefix }` so `cms-control-mt` can isolate tenants by `tenant_<id>__*`.
+  - `Cache/memory.ts` — `InMemoryCache`.
+  - `SecretStore/memory.ts` — `InMemorySecretStore`.
+  - `SecretStore/encryptedMongo.ts` — `EncryptedMongoSecretStore` (envelope-encrypted via `EnvelopeSecretCrypto` from `@bernouy/core`).
+  - `MongoDekRepository.ts` — `DekRepository` impl over a single `cms_deks` collection; one DEK per `scopeId` (typically `tenantId` in `cms-control-mt`).
+- **Media on the consumer side**: the CMS receives a `CDN` instance (the contract from `@bernouy/core`) via `ControlCms`'s constructor. Production wires `StorageBrowser` from `@bernouy/cdn-buckets` (browser-deployable, hydrated via the broker). The test harness (`tests/human/HttpMedia.ts`) is the canonical reference for the `CDN` portability contract.
 
 ## API endpoint convention
 
@@ -121,10 +162,10 @@ Building blocks consumed by every admin page:
 - `<cms-media-admin>` — media admin page in a single tag. Header buttons (`+ New folder`, `Upload`) call `window._cms.CDN.uploadFile()` / `createFolder()` directly (no form post) and refresh the embedded `<p9r-grid-media>`.
 - `<cms-editor-system>` — editor root, mounted on every editor page (page / template / snippet flavor). Handles the editor's shadow DOM, initial bloc registration, and orchestrates `ObserverManager`, `DragManager`, `BlocActions`, `BlocLibrary`.
 
-### Admin UI dependencies — `@bernouy/socle` vs `@bernouy/webcomponents`
+### Admin UI dependencies — `@bernouy/core` vs `@bernouy/webcomponents`
 
-- **`@bernouy/webcomponents`** ships every `<p9r-*>` / `<w13c-*>` admin custom element. Its `.` entry is an **IIFE bundle** — a single bare `import "@bernouy/webcomponents"` registers every tag. Never import from `@bernouy/socle` for UI.
-- **`@bernouy/socle`** is for infrastructure only: `Runner`, `Authentication`, `Subject`, `Media`, `MediaItem`, `MediaUrlBuilder`, `Middleware`. Never pull UI from it.
+- **`@bernouy/webcomponents`** ships every `<p9r-*>` / `<w13c-*>` admin custom element. Its `.` entry is an **IIFE bundle** — a single bare `import "@bernouy/webcomponents"` registers every tag. Never import from `@bernouy/core` for UI.
+- **`@bernouy/core`** is for infrastructure only: `Runner`, `Authentication`, `Subject`, `Middleware`, `CDN` types, envelope crypto. Never pull UI from it.
 - **`showToast`** lives at `src/control/core/showToast.ts`. Lazily mounts a `<p9r-toast-stack>` and calls its `push()`.
 - **Design tokens** (`--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, …) come from `@bernouy/webcomponents/style.css`, exposed at `<basePath>/resources/css/webcomponents.css`. Admin's `style.css` `@import`s it so every admin page inherits the tokens.
 
@@ -160,20 +201,30 @@ The bloc's config panel (`<p9r-config-panel>`, lives in `components/editor/compo
 
 Lives under `src/delivery/`.
 
-- `DeliveryCms` (`src/delivery/DeliveryCms.ts`) holds `runner`, `repository` (`DeliveryRepository`), `media` (Socle `MediaUrlBuilder`), `cache` (defaults to `DeliveryCache`), and a `PageEnhancer`.
+- `DeliveryCms` (`src/delivery/DeliveryCms.ts`) holds `runner`, `repository` (`DeliveryRepository`), `cache` (defaults to `DeliveryCache`), and `headInjectors`. **No media, no Playwright at this layer** — see "build vs runtime" below.
 - `basePath` and `cmsPathPrefix` are derived from `runner.basePath`:
   - `basePath` = `runner.basePath === "/" ? "" : runner.basePath`
   - `cmsPathPrefix` = `basePath + "/.cms"` — always contains the `/.cms` suffix
-- Page resolution is on-demand: `runner.setDefaultEndpoint("GET", handlePageRequest)`, every request that doesn't match a specific asset route falls through to the page handler, which does a single DB lookup and either renders + caches + enhances, or 404s. No boot-time route hydration.
+- Page resolution is on-demand: `runner.setDefaultEndpoint("GET", handlePageRequest)`. Every request that doesn't match a specific asset route falls through to the page handler, which does a single DB lookup, renders through the cache, and falls back to `system.site.notFound` / `system.site.serverError` on miss/error. No boot-time route hydration.
 - **Render pipeline** (`src/delivery/core/html/renderPage.ts`) is a thin orchestrator composing fixed head builders: `buildHtmlBasics`, `buildPreconnect`, `resolveAssets` + `buildAssetPreloads`, `buildFoucShell`, `defineMetaTags`, `buildStylesheetLink`.
-- **Page enhancement** (`src/delivery/core/enhance/`) runs synchronously on cache miss: `PageEnhancer.enhance(path, origin)` awaits until enhanced bytes are committed, with an in-flight dedup map. `PlaywrightSession` opens a long-lived Chromium (injectable so a shared session spans tenants). `enhancePage` measures images at every viewport, classifies `loading` / `fetchpriority`, computes `srcset` via `MediaUrlBuilder.imageConfig.ladderWidths`, rewrites cached HTML, pre-warms variant URLs.
-- **Delivery never serves media bytes.** Images referenced from page content are absolute URLs served by Socle's storage backend; Delivery derives variant URLs via `formatImageUrl` at render and rewrite time. There is no `/media?id=X` endpoint on the Delivery runner.
+- `headInjectors?: HeadInjector[]` is the only extension hook on `DeliveryCmsConfig`. Each injector receives the linkedom document/head + the page's bloc tag list and may append elements to `<head>`. Used for analytics, observability agents, A/B test snippets — i.e. any third-party `<head>` content owned by the consumer.
+
+### Build vs runtime — where Playwright lives
+
+- **Build time** (`src/delivery/build/` — `DeliveryBuilder`, `BuildEnhancer`, `HttpVariantGenerator`, `pageBucketName`, `pagePublicPath`): pre-renders every page, generates image variants, optionally enhances HTML using a long-lived `PlaywrightSession` (Chromium measures images at every viewport, classifies `loading` / `fetchpriority`, computes `srcset`). Uploads to a CDN bucket. **This is where `PlaywrightSession` is instantiated** — typically once per process, shared across tenants by `@bernouy/cms-delivery-mt`.
+- **Runtime** (`src/delivery/core/`): `handlePageRequest` does the lookup → render → cache flow only. No Playwright. The only "enhancement" path it knows about is via the build pipeline that already pre-baked the cached HTML in the bucket served by cdn-edge.
+
+- **Delivery never serves media bytes.** Images referenced from page content resolve to absolute URLs on the storage backend (the bucket on cdn-edge). Variant URLs are computed at build time by `HttpVariantGenerator`. There is no `/media?id=X` endpoint on the Delivery runner.
 - `DeliveryCache` is an isolated `InMemoryCache`-equivalent scoped to Delivery (own file, own DEV bypass). Cache key for pages is `P9R_CACHE.page(path)`.
+
+### Diagnostic agent
+
+`registerDiagnostic(...)` (`src/diagnostic/registerDiagnostic.ts`) is an **opt-in** Web Vitals collector that registers itself as a `HeadInjector`. Useful for collecting CWV signal in production without touching every page. Imported via `@bernouy/cms` main barrel.
 
 ## Shared infrastructure (`src/socle/`)
 
-- `contracts/` — repository + cache + media interfaces, `TModels`.
-- `providers/memory/` — in-memory cache + repository (the canonical implementations until a Mongo provider is re-added).
+- `interfaces/` — `CmsRepository`, `Cache`, `KVStore`, `SecretStore`, `ProxyPublisher`, `models` (`TPage`, `TBloc`, `TTemplate`, `TSnippet`, `TSystem`), `Data/`.
+- `default-implementation/` — in-memory + Mongo providers for repository / cache / secret store, plus `MongoDekRepository` for envelope encryption.
 - `constants/p9r-constants.ts` — cache key builders, event names, DOM ids, mode tokens.
 - `constants/editorAttributes.ts` — DOM attribute names consumed by editors.
 - `utils/validation.ts` — shared path / snippet-identifier / custom-element-tag validators.
