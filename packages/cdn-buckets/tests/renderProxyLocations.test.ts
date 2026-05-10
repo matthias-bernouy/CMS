@@ -67,4 +67,28 @@ describe("renderProxyLocations", () => {
         expect(out).toContain("location /.cms/data/stripe/ {");
         expect(out).toContain("location /.cms/data/weather/ {");
     });
+
+    test("emits cookie scoping directives that re-scope Set-Cookie to the proxy path", () => {
+        const out = renderProxyLocations([proxy({ providerId: "stripe" })]);
+        // Catches every upstream Path including `/`, `/api`, etc., prefixing
+        // `/.cms/data/stripe` so cookies stay scoped to this provider's
+        // surface — no cross-provider leak on the same alias.
+        expect(out).toContain("proxy_cookie_path   ~^(/.*)$ /.cms/data/stripe/$1;");
+        // Domain attribute (if any) gets rewritten to the visible alias so
+        // the browser actually accepts the cookie.
+        expect(out).toContain("proxy_cookie_domain ~.+ $host;");
+    });
+
+    test("emits standard X-Forwarded-* headers + http/1.1", () => {
+        const out = renderProxyLocations([proxy({ providerId: "stripe" })]);
+        expect(out).toContain("proxy_http_version 1.1;");
+        expect(out).toContain("proxy_set_header X-Real-IP         $remote_addr;");
+        expect(out).toContain("proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;");
+        expect(out).toContain("proxy_set_header X-Forwarded-Proto $scheme;");
+        expect(out).toContain("proxy_set_header X-Forwarded-Host  $host;");
+        // Host request header is intentionally NOT overridden — nginx
+        // default is the upstream's hostname, which is what most APIs
+        // expect for routing / URL generation.
+        expect(out).not.toContain("proxy_set_header Host ");
+    });
 });
