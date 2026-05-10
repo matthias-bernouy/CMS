@@ -1,3 +1,5 @@
+import type { JSONSchema } from "src/control/core/data/types";
+
 /**
  * Surface = an editor-side UI affordance that blocs extend by publishing
  * scoped capabilities. Each Editor's extensions apply to itself + its light-DOM
@@ -8,11 +10,12 @@
  * (and via a matching `extendXxx` method on `Editor`) only when there is a
  * concrete consumer to validate the contract.
  */
-export type Surface = "richtextbar" | "blocActions";
+export type Surface = "richtextbar" | "blocActions" | "data";
 
 export type SurfaceExtensionMap = {
     richtextbar: RichTextBarExtension;
     blocActions: BlocActionExtension;
+    data:        DataExtension;
 };
 
 /** A field declared by a richtextbar extension — surfaced as a completion. */
@@ -71,11 +74,43 @@ export interface BlocActionExtension {
     label:      () => string;
     /** Inline SVG shown in the popover header (and as a fallback button title). */
     icon?:      string;
-    enabled?:   () => boolean;
-    /** Items the user can pick — paths into the publishing bloc's data shape. */
-    getOptions: () => Field[];
+    /** Optional gate. Receives the BAG target so the extension can hide itself
+     *  based on context (e.g. an iterate-action publisher wants to suppress
+     *  paths an ancestor already iterates). */
+    enabled?:   (ctx?: BlocActionContext) => boolean;
+    /** Items the user can pick — paths into the publishing bloc's data shape.
+     *  Receives the BAG target so options can be filtered against the target's
+     *  surroundings (same rationale as `enabled`). */
+    getOptions: (ctx?: BlocActionContext) => Field[];
     /** Called when the user clicks an option. The extension owns the side-effect
      *  (wrapping, replacing, reading attributes…). Return type is `void` because
      *  the bar drives no follow-up — unlike richtextbar's text insertion. */
     onPick:     (option: Field, ctx: BlocActionContext) => void;
+}
+
+/**
+ * Contract for blocs that produce data (a `<fetch>`-like bloc, a list bloc,
+ * any source whose shape is described by a JSON schema). Hierarchical:
+ * descendants of the publishing Editor receive the extension via the
+ * standard `collectAncestorExtensions("data")` walk.
+ *
+ * The schema is the single source of truth — consumers (richtextbar Data
+ * dropdown, future array picker / iteration BAG action) derive their
+ * specific projections (scalar paths, array paths, conditions on size)
+ * from it. Bloc authors don't pre-flatten anything.
+ *
+ * `id` becomes the prefix in inserted tokens (e.g. `{{ <id>.user.name }}`),
+ * so the renderer downstream can disambiguate when several ancestors
+ * publish data. Pick a stable, human-readable identifier — typically the
+ * bloc's binding key.
+ */
+export interface DataExtension {
+    id:         string;
+    label:      () => string;
+    /** Returns the current schema describing the data shape. May return
+     *  null while the bloc hasn't fetched/synced yet — consumers treat that
+     *  as "no data yet" and skip the extension. */
+    getSchema:  () => JSONSchema | null;
+    /** Optional gating — return false to hide the extension from consumers. */
+    enabled?:   () => boolean;
 }

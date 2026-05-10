@@ -3,8 +3,10 @@ import type { BlocActionExtension, Field } from 'src/control/core/editorSystem/e
 /** One section of the popover, scoped to a single extension. The header shows
  *  the extension's icon + label; rows below are the options it exposes via
  *  `getOptions()`. Mirrors `RichTextBar/extensions/render.ts` so the two
- *  popovers feel identical. */
-export function buildGroup(ext: BlocActionExtension, onPick: (opt: Field) => void): HTMLElement {
+ *  popovers feel identical. `target` is the BAG target — passed to
+ *  `getOptions(ctx)` so extensions can filter options against where they're
+ *  about to act (e.g. hide already-iterated paths from iterate-action). */
+export function buildGroup(ext: BlocActionExtension, target: HTMLElement, onPick: (opt: Field) => void): HTMLElement {
     const group = document.createElement('div');
     group.className = 'group';
     const header = document.createElement('div');
@@ -15,7 +17,7 @@ export function buildGroup(ext: BlocActionExtension, onPick: (opt: Field) => voi
     lbl.textContent = ext.label();
     header.appendChild(lbl);
     group.appendChild(header);
-    const opts = ext.getOptions();
+    const opts = ext.getOptions({ target });
     if (opts.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'empty';

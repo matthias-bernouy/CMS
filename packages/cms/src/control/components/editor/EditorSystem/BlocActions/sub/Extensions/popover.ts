@@ -35,7 +35,7 @@ export function openExtensionsPopover(
     closeExtensionsPopover();
     const popover = document.createElement(POPOVER_TAG) as ExtensionsPopover;
     const wrap = popover.shadowRoot!.getElementById('wrap')!;
-    for (const ext of exts) wrap.appendChild(buildGroup(ext, (opt) => {
+    for (const ext of exts) wrap.appendChild(buildGroup(ext, target, (opt) => {
         // Tear down popover + BAG BEFORE the bloc's onPick mutates the DOM.
         // If we mutate first, BAG is still attached to a target that's about
         // to be moved/replaced, and its hover/highlight observers can fire on

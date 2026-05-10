@@ -1,4 +1,5 @@
 
+import { NearestElementRequire } from "src/control/errors/NearestElementRequire";
 import { ImageEditor } from "src/control/core/editorSystem/defaultEditors/ImageEditor/ImageEditor";
 import { SvgEditor } from "src/control/core/editorSystem/defaultEditors/SvgEditor";
 import type { Editor } from "../../../core/editorSystem/Editor/Editor";
@@ -258,12 +259,39 @@ export class ObserverManager {
     make_it_editor(node: HTMLElement) {
         if (node.getAttribute(p9r.attr.EDITOR.IS_EDITOR)) return;
         if (node.parentElement?.closest(`[${p9r.attr.EDITOR.OPAQUE}]`)) return;
+        // Skip nodes that have already left the editor scope. The mutation
+        // observer batches added/removed pairs from the same task tick;
+        // when a bloc reshapes its descendants (clear + re-stamp), some
+        // intermediate nodes appear in `addedNodes` even though they're
+        // no longer connected to a `cms-editor-system` by the time we
+        // look. Editorizing them is pointless (they'll be reaped on the
+        // next batch) and `Editor` would throw `NearestElementRequire`,
+        // killing the rest of the foreach.
+        if (!node.closest("cms-editor-system")) return;
         const tag = node.tagName.toLowerCase();
         if (!this.editors.has(tag)) return
         const cl = this.editors.get(tag)?.cl;
         if (cl) {
-            const editor = new cl(node);
-            editor.viewEditor();
+            // Defensive try/catch: even with the closest() guard above,
+            // a bloc's own constructor may sync-mutate the DOM and detach
+            // the target before `Editor`'s ModeBinding gets to its own
+            // `getClosestEditorSystem(target)`. We swallow the throw and
+            // dispose any partially-built editor so the rest of the
+            // observer batch runs and the next mutation cycle can have
+            // a clean retry.
+            try {
+                const editor = new cl(node);
+                editor.viewEditor();
+            } catch (err) {
+                if (!(err instanceof NearestElementRequire)) throw err;
+                document.compIdentifierToEditor?.forEach((ed, id) => {
+                    if (ed.target === node) {
+                        ed.dispose?.();
+                        document.compIdentifierToEditor!.delete(id);
+                    }
+                });
+                return;
+            }
         }
         if (this.opaqueTags.has(tag)) {
             node.setAttribute(p9r.attr.EDITOR.OPAQUE, "true");

@@ -7,6 +7,7 @@ import { installLinkInterceptor } from "src/control/core/editorSystem/installLin
 import { installFetchProxy } from "src/control/core/editorSystem/installFetchProxy";
 import { watchForDirty, isDirty } from "src/control/core/editorSystem/dirtyState";
 import { resolveTargetForLink } from "./linkNavigation";
+import { stripResidualChrome } from "./stripResidualChrome";
 import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
 import type { EDITOR_SYSTEM_MODE } from "types/w13c/EditorSystem";
 import { ObserverManager } from "src/control/components/editor/EditorSystem/ObserverManager";
@@ -200,13 +201,22 @@ export default class EditorRoot extends HTMLElement {
 
     get pageContent(){
         this.switchMode("view");
-        const slot = this.shadowRoot!.querySelector('#workingElement slot') as HTMLSlotElement;                                                                                                  
-        const nodes = slot.assignedNodes({ flatten: true });                                                                                                                            
-        const html = nodes                    
-            .filter(n => n.nodeName !== "#text")                                                                                                                  
+        const slot = this.shadowRoot!.querySelector('#workingElement slot') as HTMLSlotElement;
+        const nodes = slot.assignedNodes({ flatten: true });
+        // Belt-and-braces strip of editor-only artifacts. The per-Editor
+        // viewClient() pass triggered by switchMode("view") above already
+        // cleans every editorized target, but elements outside the Editor
+        // system (e.g. <template> light children of a bloc — inert content
+        // the observer brushed with action-disable + parent-identifier
+        // attrs) escape that pass. Walking the captured subtree once
+        // catches those gaps and makes "no p9r-* in saved HTML" an
+        // invariant we don't have to re-prove for every new bloc pattern.
+        for (const n of nodes) if (n instanceof Element) stripResidualChrome(n);
+        const html = nodes
+            .filter(n => n.nodeName !== "#text")
             .map(n => n instanceof Element ? n.outerHTML : n.textContent ?? '')
-            .join('');   
-        this.switchMode("editor");                                                                                                                                                                          
+            .join('');
+        this.switchMode("editor");
         return html;
     }
 

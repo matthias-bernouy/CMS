@@ -31,7 +31,7 @@ export function collectExtensions(target: HTMLElement): BlocActionExtension[] {
     const ownExts  = myEditor ? new Set(myEditor.listExtensions('blocActions')) : new Set();
 
     const all = collectAncestorExtensions(target, 'blocActions')
-        .filter((e: BlocActionExtension) => e.enabled?.() !== false)
+        .filter((e: BlocActionExtension) => e.enabled?.({ target }) !== false)
         .filter((e: BlocActionExtension) => !ownExts.has(e));
     // De-dupe by identity. The walk should never see the same extension twice
     // (each editor's registry is independent), but if the observer briefly
