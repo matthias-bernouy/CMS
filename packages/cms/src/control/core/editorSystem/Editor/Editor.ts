@@ -12,7 +12,7 @@ import {
 } from './actionBarFeatures';
 import type { CustomAction } from './types';
 import { ExtensionRegistry } from '../extensions/registry';
-import type { BlocActionExtension, RichTextBarExtension, Surface, SurfaceExtensionMap } from '../extensions/types';
+import type { BlocActionExtension, DataExtension, RichTextBarExtension, Surface, SurfaceExtensionMap } from '../extensions/types';
 
 export type { CustomAction } from './types';
 
@@ -103,7 +103,7 @@ export abstract class Editor {
         this.refreshActionBarFeatures();
 
         this._hover.unbind();
-        if (this._hasInteractiveFeatures()) this._hover.bind();
+        if (this.isInteractive) this._hover.bind();
     }
 
     public viewClient() {
@@ -208,6 +208,10 @@ export abstract class Editor {
         return this._extensions.add("blocActions", ext);
     }
 
+    public extendData(ext: DataExtension): () => void {
+        return this._extensions.add("data", ext);
+    }
+
     public listExtensions<S extends Surface>(surface: S): SurfaceExtensionMap[S][] {
         return this._extensions.list(surface);
     }
@@ -226,7 +230,7 @@ export abstract class Editor {
             this._pinMode.enter();
         } else {
             this._pinMode.exit();
-            if (this._hasInteractiveFeatures()) this._hover.bind();
+            if (this.isInteractive) this._hover.bind();
         }
         this.onEditorPinState?.(anyPinned, stateSync);
     }
@@ -245,10 +249,22 @@ export abstract class Editor {
         this.customActions.push(action);
     }
 
-    private _hasInteractiveFeatures(): boolean {
+    /**
+     * True when the editor has anything to surface in the action bar:
+     * an enabled action, a custom action, a state-sync, or a config
+     * panel. Single source of truth — the BAG uses this to gate `open()`,
+     * and `viewEditor()` uses it to decide whether to bind hover.
+     *
+     * Mismatch between the two used to surface as a subtle bug: a bloc
+     * with all default actions disabled but a real config panel would be
+     * accepted by the BAG yet skipped at hover-bind time, so it could
+     * only be reached through a parent's anchor.
+     */
+    public get isInteractive(): boolean {
         return this._actionBarFeatures.values().some(v => v === true)
             || this.stateSyncs.length > 0
-            || this.customActions.length > 0;
+            || this.customActions.length > 0
+            || this.hasConfigPanel;
     }
 
     // ── Configuration panel ─────────────────────────────────────────

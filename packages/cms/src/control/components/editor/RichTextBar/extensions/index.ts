@@ -3,6 +3,7 @@ import type { RichTextBarExtension } from "src/control/core/editorSystem/extensi
 import type { RichTextBar } from "../RichTextBar";
 import { buildBraceButton, buildGroup } from "./render";
 import { pickField } from "./pick";
+import { adaptDataExtensions } from "./dataAdapter";
 
 /**
  * Refreshes the bar's extensions slot from the current caret position.
@@ -25,8 +26,12 @@ export function refreshExtensions(self: RichTextBar): void {
     if (self._lastEditable === startEl) return;
     self._lastEditable = startEl;
 
-    const exts = collectAncestorExtensions(startEl, "richtextbar")
+    const richExts = collectAncestorExtensions(startEl, "richtextbar")
         .filter(e => e.enabled?.() !== false);
+    // Data sources are surfaced through the same popover via per-source
+    // virtual extensions — same UI affordance, same `{ }` button.
+    const dataExts = adaptDataExtensions(startEl);
+    const exts = [...richExts, ...dataExts];
     self._currentExtensions = exts;
     render(self, exts);
 }

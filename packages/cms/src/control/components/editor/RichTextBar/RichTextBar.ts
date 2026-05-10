@@ -43,6 +43,11 @@ export class RichTextBar extends Component {
     private _onRootChange       = (e: Event)      => handleCustomColorInput(this, e);
     private _onSelectionChange  = ()              => handleSelection(this);
     private _onOutsideMousedown = (e: MouseEvent) => handleOutsideMouseDown(this, e);
+    /** Bloc editors dispatch this when their `getCompletions()` payload
+     *  changes (typically after an async schema fetch resolves). Drop the
+     *  caret cache so the next `selectionchange` re-walks ancestors and
+     *  picks the freshly-populated extensions up. */
+    private _onExtensionsInvalidated = () => { this._lastEditable = null; };
     private _rootListenersAttached = false;
 
     constructor() {
@@ -71,6 +76,7 @@ export class RichTextBar extends Component {
         // a document-level mousedown outside the bar and outside the current
         // editable.
         document.addEventListener("mousedown", this._onOutsideMousedown);
+        document.addEventListener("richtextbar:invalidate", this._onExtensionsInvalidated);
 
         if (!this.pageLink) {
             this.pageLink = document.createElement("p9r-link");
@@ -83,6 +89,7 @@ export class RichTextBar extends Component {
     disconnectedCallback() {
         document.removeEventListener("selectionchange", this._onSelectionChange);
         document.removeEventListener("mousedown", this._onOutsideMousedown);
+        document.removeEventListener("richtextbar:invalidate", this._onExtensionsInvalidated);
     }
 
     show(rect: DOMRect) {

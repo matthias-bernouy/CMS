@@ -74,6 +74,17 @@ export const ICON_BRACES = `
 </svg>
 `;
 
+/** Icon for the richtextbar's data-source group header — distinguishes
+ *  data-extension fields (resolved against an ancestor data bloc's
+ *  schema) from regular richtextbar extensions. */
+export const ICON_DATABASE = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+    <path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+    <path d="M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6"/>
+</svg>
+`;
+
 export const ICON_REPEAT = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/>

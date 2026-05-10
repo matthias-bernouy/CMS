@@ -16,11 +16,14 @@ function resetDom() {
 }
 
 /** Attaches the EDITOR identifier attribute on `el` and registers a fake Editor
- *  that exposes the given richtextbar extensions when listExtensions is called. */
+ *  that exposes the given richtextbar extensions when listExtensions is called.
+ *  `target` is set to `el` so the walker's panel-input shortcut (which jumps
+ *  to `owner.target`) sees a usable element. */
 function attachEditor(el: HTMLElement, exts: RichTextBarExtension[]): void {
     const id = "test-" + Math.random().toString(36).slice(2);
     el.setAttribute(p9r.attr.EDITOR.IDENTIFIER, id);
     document.compIdentifierToEditor!.set(id, {
+        target: el,
         listExtensions: (surface: string) => surface === "richtextbar" ? exts : [],
     } as never);
 }
@@ -89,5 +92,49 @@ describe("collectAncestorExtensions", () => {
         const parentId = parent.getAttribute(p9r.attr.EDITOR.IDENTIFIER)!;
         document.compIdentifierToEditor!.delete(parentId);
         expect(collectAncestorExtensions(caret, "richtextbar").map(e => e.label())).toEqual(["g"]);
+    });
+
+    test("panel-input shortcut: PARENT_IDENTIFIER routes the walk to the owner's target", () => {
+        // Bloc tree (the actual page DOM)
+        const grand  = document.createElement("div");
+        const parent = document.createElement("div");
+        grand.appendChild(parent);
+        document.body.appendChild(grand);
+        attachEditor(grand,  [rtb("g")]);
+        attachEditor(parent, [rtb("p")]);
+
+        // Detached panel hosting an input — declares its owner via
+        // PARENT_IDENTIFIER (mirroring what `panel._initFromHTML` does).
+        const panelInput = document.createElement("input");
+        panelInput.setAttribute(
+            p9r.attr.EDITOR.PARENT_IDENTIFIER,
+            parent.getAttribute(p9r.attr.EDITOR.IDENTIFIER)!,
+        );
+        document.body.appendChild(panelInput);
+
+        const out = collectAncestorExtensions(panelInput, "richtextbar").map(e => e.label());
+        expect(out).toEqual(["p", "g"]);
+    });
+
+    test("panel-input shortcut is a fallback — DOM ancestry wins when present", () => {
+        const grand  = document.createElement("div");
+        const parent = document.createElement("div");
+        const caret  = document.createElement("span");
+        const orphan = document.createElement("div");
+        grand.appendChild(parent);
+        parent.appendChild(caret);
+        document.body.appendChild(grand);
+        document.body.appendChild(orphan);
+        attachEditor(grand,  [rtb("g")]);
+        attachEditor(parent, [rtb("p")]);
+        attachEditor(orphan, [rtb("orphan")]);
+        // Caret has both a real DOM ancestor (parent) AND a PARENT_IDENTIFIER
+        // pointing elsewhere — DOM ancestry wins, the shortcut isn't taken.
+        caret.setAttribute(
+            p9r.attr.EDITOR.PARENT_IDENTIFIER,
+            orphan.getAttribute(p9r.attr.EDITOR.IDENTIFIER)!,
+        );
+        const out = collectAncestorExtensions(caret, "richtextbar").map(e => e.label());
+        expect(out).toEqual(["p", "g"]);
     });
 });

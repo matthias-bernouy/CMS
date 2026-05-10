@@ -14,7 +14,6 @@ import type { EventManager } from '../../events/EventManager';
 import { switchToEditor, selectParent } from './navigate';
 import { reflow } from './reflow';
 import { open as openBag } from './open';
-import { isInteractive } from './isInteractive';
 import { Highlight } from '../../../Highlight';
 
 /**
@@ -101,7 +100,7 @@ export class BagController {
     }
 
     setEditor(editor: Editor) {
-        if (!isInteractive(editor)) { this.close(); this.editor = null; this.target = null; return; }
+        if (!editor.isInteractive) { this.close(); this.editor = null; this.target = null; return; }
         const prev = this.hoverEl;
         this.target?.classList.remove('p9r-active');
         this.editor = editor;
