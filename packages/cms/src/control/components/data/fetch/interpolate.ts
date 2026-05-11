@@ -1,4 +1,4 @@
-import { resolve, escape } from './pathHelpers';
+import { resolve } from './pathHelpers';
 
 /**
  * Walks text nodes and attributes under `node`, substituting `{{path}}`
@@ -22,6 +22,11 @@ export function interpolateNode(node: Node, context: unknown): void {
             const replaced = interpolateString(attr.value, context);
             if (replaced !== attr.value) el.setAttribute(attr.name, replaced);
         }
+        // `<cms-fetch>` is a rendering boundary: its own attributes (like
+        // `url`) are interpolated above, but its children (the inner
+        // <template>) belong to a separate stamping pass against ITS data,
+        // not the outer parent's context — don't recurse.
+        if (el.tagName === 'CMS-FETCH') return;
     }
     for (const child of Array.from(node.childNodes)) {
         interpolateNode(child, context);
@@ -44,15 +49,29 @@ function tryRawHtmlInject(el: Element, context: unknown): boolean {
  * Substitute `{{path}}` tokens in `str`. Special-case: `{{value}}` refers
  * to the current context itself when the context is a primitive — useful
  * for arrays-of-primitives templates.
+ *
+ * Returns the resolved value as a plain string. NO HTML entity-encoding:
+ *  - For text nodes, `textContent =` accepts arbitrary strings without
+ *    HTML parsing, so `<script>` shows as literal text — safe by default.
+ *  - For attribute values, `setAttribute` stores the string verbatim;
+ *    HTML entity decoding only happens during HTML PARSING (not via JS),
+ *    so pre-encoding `"` to `&quot;` would corrupt JSON / URL values
+ *    (the consumer sees the literal `&quot;` from `getAttribute`).
+ *  - The only XSS vector — raw HTML insertion — is handled separately
+ *    via the `<inner-html>` element which intentionally bypasses this.
  */
 export function interpolateString(str: string, context: unknown): string {
     return str.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, path: string) => {
         if (path === 'value') {
             if (context !== null && typeof context === 'object' && 'value' in context) {
-                return escape((context as Record<string, unknown>).value);
+                return stringify((context as Record<string, unknown>).value);
             }
-            return escape(context);
+            return stringify(context);
         }
-        return escape(resolve(context, path));
+        return stringify(resolve(context, path));
     });
+}
+
+function stringify(value: unknown): string {
+    return String(value ?? '');
 }

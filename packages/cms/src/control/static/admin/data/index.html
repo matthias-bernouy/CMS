@@ -147,19 +147,65 @@
     <p9r-tabs active="url" style="min-height: 480px;">
 
         <p9r-tab-panel id="official" label="Official">
-            <p9r-stack gap="md" justify="between" style="min-height: 440px;">
-                <p9r-stack gap="sm">
-                    <p9r-button disabled fullWidth>
-                        <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" aria-hidden="true">
+            <div class="official-grid" style="min-height: 440px;">
+
+                <details class="official-card">
+                    <summary class="official-card__summary">
+                        <svg class="official-card__icon" xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                         </svg>
-                        Supabase
-                    </p9r-button>
-                    <small>More providers coming soon (Stripe, GitHub, Hub API, ...).</small>
-                </p9r-stack>
-            </p9r-stack>
+                        <span class="official-card__title">Supabase Auth</span>
+                        <span class="official-card__tag">Email/password sign-in with httpOnly cookies.</span>
+                    </summary>
+                    <div class="official-card__body">
+                        <cms-form target="{{BASE_PATH}}/api/data/provider/official/supabase" emit="new:provider">
+                            <p9r-stack gap="md">
+                                <p9r-input name="id" label="Key" placeholder="supabase-auth"
+                                    hint="Lowercase letters, numbers and dashes. Binding key in blocs."></p9r-input>
+                                <p9r-input name="projectUrl" label="Project URL"
+                                    placeholder="https://xxxxx.supabase.co"
+                                    hint="Settings > API > Project URL."></p9r-input>
+                                <p9r-input name="anonKey" type="password" label="Publishable (anon) key"
+                                    hint="Settings > API Keys > 'Publishable key' (sb_publishable_…) or legacy JWT. NEVER use sb_secret_…"></p9r-input>
+                                <p9r-button color="primary" fullWidth type="submit">Add Supabase Auth</p9r-button>
+                            </p9r-stack>
+                        </cms-form>
+                    </div>
+                </details>
+
+                <details class="official-card">
+                    <summary class="official-card__summary">
+                        <svg class="official-card__icon" xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <ellipse cx="12" cy="5" rx="9" ry="3" />
+                            <path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+                            <path d="M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6" />
+                        </svg>
+                        <span class="official-card__title">Supabase Data</span>
+                        <span class="official-card__tag">PostgREST tables — auto-discovered from your project.</span>
+                    </summary>
+                    <div class="official-card__body">
+                        <cms-form target="{{BASE_PATH}}/api/data/provider/official/supabase-data" emit="new:provider">
+                            <p9r-stack gap="md">
+                                <p9r-input name="id" label="Key" placeholder="supabase-data"
+                                    hint="Lowercase letters, numbers and dashes. Binding key in blocs."></p9r-input>
+                                <p9r-input name="projectRef" label="Project ref"
+                                    placeholder="hnsutcetdsetjrubdhjl"
+                                    hint="20-character project ref — the subdomain of *.supabase.co (visible in your dashboard URL)."></p9r-input>
+                                <p9r-input name="accessToken" type="password" label="Personal Access Token (admin-time only)"
+                                    hint="From supabase.com/dashboard/account/tokens (sbp_…). Used ONCE to fetch the OpenAPI describing your tables. NOT forwarded to the runtime proxy."></p9r-input>
+                                <p9r-input name="anonKey" type="password" label="Publishable (anon) key"
+                                    hint="Runtime key — same as Supabase Auth. RLS gates per-row access via the user JWT."></p9r-input>
+                                <p9r-button color="primary" fullWidth type="submit">Add Supabase Data</p9r-button>
+                            </p9r-stack>
+                        </cms-form>
+                    </div>
+                </details>
+
+            </div>
         </p9r-tab-panel>
 
         <p9r-tab-panel id="url" label="From URL">

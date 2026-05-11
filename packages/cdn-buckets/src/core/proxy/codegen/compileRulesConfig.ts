@@ -79,8 +79,8 @@ export type CompileRulesOptions = {
     server:     string;
     /** Nginx directives prepended to every generated location block.
      *  `proxy_set_header` etc. don't inherit from a parent location in
-     *  nginx, so the baseline (X-Forwarded-*, proxy_cookie_path, …) must
-     *  be repeated in each child. Render layer fills this in. */
+     *  nginx, so the baseline (X-Forwarded-*, proxy_cookie_domain, …)
+     *  must be repeated in each child. Render layer fills this in. */
     baseline?:  string[];
     /** When true, append a plain-prefix catch-all `location <prefix>/`
      *  forwarding to the upstream root, with `defaults.on_request /

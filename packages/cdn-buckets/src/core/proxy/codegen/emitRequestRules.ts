@@ -1,6 +1,6 @@
 import type {
     CookieToBodyFieldRule, CookieToHeaderRule,
-    InjectCookieRule, InjectHeaderRule, OnMissingStrategy,
+    InjectCookieRule, InjectHeaderRule, InjectQueryParamRule, OnMissingStrategy,
     RequireCookieRule, RequireHeaderRule,
 } from "../../../interfaces/proxy/ProxyRule";
 import type { EmittedSnippet, RuleEmitter } from "../../../interfaces/proxy/EmittedSnippet";
@@ -63,11 +63,26 @@ end`,
 }];
 
 export const emitCookieToHeader: RuleEmitter<CookieToHeaderRule> = (rule) => {
-    const prefix = rule.prefix ?? "";
+    const prefix    = rule.prefix ?? "";
+    const cookieVar = nginxCookieVar(rule.cookie_name);
+    if (rule.omit_if_missing) {
+        // Lua-based: only call ngx.req.set_header when the cookie is present
+        // and non-empty. Skipping the header preserves anonymous semantics
+        // upstream (e.g. PostgREST falls back to anon role).
+        return [{
+            kind:  "lua",
+            phase: "request",
+            hook:  "access",
+            code:  `local v = ngx.var.${cookieVar}
+if v and v ~= "" then
+    ngx.req.set_header(${JSON.stringify(rule.header_name)}, ${JSON.stringify(prefix)} .. v)
+end`,
+        }];
+    }
     return [{
         kind:      "nginx",
         phase:     "request",
-        directive: `proxy_set_header ${rule.header_name} "${prefix}$${nginxCookieVar(rule.cookie_name)}";`,
+        directive: `proxy_set_header ${rule.header_name} "${prefix}$${cookieVar}";`,
     }];
 };
 
@@ -111,6 +126,25 @@ data[${JSON.stringify(rule.body_field)}] = ngx.var.${nginxCookieVar(rule.cookie_
 ngx.req.set_body_data(cjson.encode(data))`,
 }];
 
+/**
+ * Inject (or override) one query parameter on the upstream request.
+ * `ngx.req.get_uri_args()` returns the existing client args; we patch
+ * the targeted key, then `set_uri_args` writes the merged table back —
+ * client-supplied args for OTHER keys survive untouched. Same key:
+ * the rule wins (matches `inject_header` semantics).
+ */
+export const emitInjectQueryParam: RuleEmitter<InjectQueryParamRule> = (rule, ctx) => {
+    const r = resolveInterpolations(rule.value, ctx);
+    return [{
+        kind:  "lua",
+        phase: "request",
+        hook:  "access",
+        code:  `local args = ngx.req.get_uri_args()
+args[${JSON.stringify(rule.name)}] = ${r.luaExpr}
+ngx.req.set_uri_args(args)`,
+    }];
+};
+
 export const REQUEST_EMITTERS = {
     require_cookie:       emitRequireCookie,
     require_header:       emitRequireHeader,
@@ -118,6 +152,7 @@ export const REQUEST_EMITTERS = {
     cookie_to_body_field: emitCookieToBodyField,
     inject_header:        emitInjectHeader,
     inject_cookie:        emitInjectCookie,
+    inject_query_param:   emitInjectQueryParam,
 } satisfies Record<string, RuleEmitter<never>>;
 
 export type _EmittedRequestSnippet = EmittedSnippet; // re-export for tests

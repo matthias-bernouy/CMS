@@ -3717,20 +3717,26 @@ input[type="file"]:focus-visible + label {
       customElements.define("p9r-select", Q);
 
     class tt extends HTMLElement {
+      _bufferedValue = "";
       connectedCallback() {
         let t = this.getAttribute("label") || "Size", e = this.getAttribute("name") || "size", r = document.createElement("p9r-select");
-        r.setAttribute("label", t), r.setAttribute("name", e), [{ value: "none", label: "NONE" }, { value: "xs", label: "XS" }, { value: "sm", label: "S" }, { value: "md", label: "M", selected: true }, { value: "lg", label: "L" }, { value: "xl", label: "XL" }].forEach((n) => {
+        if (r.setAttribute("label", t), r.setAttribute("name", e), [{ value: "none", label: "NONE" }, { value: "xs", label: "XS" }, { value: "sm", label: "S" }, { value: "md", label: "M", selected: true }, { value: "lg", label: "L" }, { value: "xl", label: "XL" }].forEach((n) => {
           let a = document.createElement("option");
           if (a.value = n.value, a.textContent = n.label, n.selected)
             a.setAttribute("selected", "");
           r.appendChild(a);
-        }), this.replaceWith(r);
+        }), this._bufferedValue)
+          r.value = this._bufferedValue;
+        this.replaceWith(r);
       }
       get name() {
         return this.getAttribute("name");
       }
       get value() {
-        return "";
+        return this._bufferedValue;
+      }
+      set value(t) {
+        this._bufferedValue = t;
       }
     }
     if (!customElements.get("p9r-sizes-select"))
@@ -10505,7 +10511,13 @@ ${followMessage}`)) {
     });
     const parsed = parseDataProxyUrl(host._value);
     const selectedPath = parsed?.providerId === host._activeProviderId ? parsed.path : "";
-    host._refs.list.replaceChildren(...filtered.map((e) => buildOption2(e, e.path === selectedPath)));
+    const methodAware = !!host.getAttribute("methodAttr");
+    const pickedMethod = host._pickedMethod;
+    host._refs.list.replaceChildren(...filtered.map((e) => {
+      const pathMatch = e.path === selectedPath;
+      const methodMatch = !methodAware || !pickedMethod || e.method.toLowerCase() === pickedMethod;
+      return buildOption2(e, pathMatch && methodMatch);
+    }));
   }
   function parseMethodsFilter(raw) {
     if (!raw)
@@ -10534,6 +10546,7 @@ ${followMessage}`)) {
     _refs;
     _internals;
     _value = "";
+    _pickedMethod = "";
     _isOpen = false;
     _providers = [];
     _activeProviderId = "";
@@ -10558,6 +10571,7 @@ ${followMessage}`)) {
       }
       const v = this._value || this.getAttribute("value") || "";
       setValue2(this, v);
+      this._pickedMethod = readMethodFromTarget(this);
       window.addEventListener("click", this._onWindowClick);
       document.addEventListener("new:provider", this._onProviderSaved);
       document.addEventListener("provider:synced", this._onProviderSaved);
@@ -10588,6 +10602,8 @@ ${followMessage}`)) {
       r.clearBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         setValue2(this, "");
+        this._pickedMethod = "";
+        writeMethodToTarget(this, "");
         this.dispatchEvent(new Event("change", { bubbles: true }));
       });
       r.providerSelect.addEventListener("change", () => {
@@ -10598,18 +10614,46 @@ ${followMessage}`)) {
         const li = e.target.closest(".option");
         if (!li || !li.dataset.id)
           return;
-        const [, ...rest] = li.dataset.id.split(" ");
+        const [method, ...rest] = li.dataset.id.split(" ");
         const path = rest.join(" ");
-        if (!path)
+        if (!path || !method)
           return;
         const provider = this._providers.find((p) => p.id === this._activeProviderId);
         if (!provider)
           return;
+        this._pickedMethod = method.toLowerCase();
+        writeMethodToTarget(this, this._pickedMethod);
         setValue2(this, buildUrl(provider.id, path));
         this.dispatchEvent(new Event("change", { bubbles: true }));
         closePanel2(this);
       });
     }
+  }
+  function findOwnerBloc(host) {
+    const pidEl = host.closest(`[${p9r.attr.EDITOR.PARENT_IDENTIFIER}]`);
+    const pid = pidEl?.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+    if (!pid)
+      return null;
+    return document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${pid}"]`);
+  }
+  function writeMethodToTarget(host, method) {
+    const attr = host.getAttribute("methodAttr");
+    if (!attr)
+      return;
+    const owner = findOwnerBloc(host);
+    if (!owner)
+      return;
+    if (method)
+      owner.setAttribute(attr, method);
+    else
+      owner.removeAttribute(attr);
+  }
+  function readMethodFromTarget(host) {
+    const attr = host.getAttribute("methodAttr");
+    if (!attr)
+      return "";
+    const owner = findOwnerBloc(host);
+    return (owner?.getAttribute(attr) ?? "").toLowerCase();
   }
   if (!customElements.get("cms-schema-picker")) {
     customElements.define("cms-schema-picker", SchemaPicker);
@@ -15986,6 +16030,17 @@ form[method="dialog"] {
  * pages; keep the two in sync when adding new tokens.
  */
 
+/*
+ * Layout transparency. The host element, its shadow wrapper, and the
+ * working element use \`display: contents\` so the slotted page content
+ * participates directly in the document's flex layout. This lets pages
+ * with \`body { display: flex; flex-direction: column }\` stretch a
+ * footer to the bottom via \`margin-top: auto\`.
+ */
+:host { display: contents; }
+:host > div { display: contents; }
+#workingElement { display: contents; }
+
 #editorSystem {
     /* Surfaces */
     --bg-base:    oklch(98% 0.004 265);
@@ -18427,18 +18482,24 @@ dialog::backdrop {
     });
     return res.ok;
   }
+  var _localPreview = new Map;
+  function localPreview(id) {
+    return _localPreview.get(id);
+  }
   async function uploadFiles(files, folder) {
     for (let i = 0;i < files.length; i++) {
       const file = files.item(i);
       if (!file)
         continue;
-      await media().uploadFile({
+      const res = await media().uploadFile({
         data: file,
         name: file.name,
         mimeType: file.type || "application/octet-stream",
         size: file.size,
         ...folder ? { folderID: folder } : {}
       });
+      if (res.ok)
+        _localPreview.set(res.data.id, URL.createObjectURL(file));
     }
   }
   async function saveItemMetadata(id, data) {
@@ -18495,7 +18556,7 @@ dialog::backdrop {
     if (isImage || isSvg) {
       const img = document.createElement("img");
       img.slot = "image";
-      img.src = isSvg ? item.absoluteURL ?? "" : variantUrl(item, 400, 300);
+      img.src = localPreview(item.id) ?? (isSvg ? item.absoluteURL ?? "" : variantUrl(item, 400, 300));
       img.alt = item.alt || item.label;
       img.loading = "lazy";
       card.appendChild(img);
@@ -21881,16 +21942,7 @@ button.active svg {
       const files = this._fileInput?.files;
       if (!files || files.length === 0)
         return;
-      const folder = this._currentFolder();
-      for (const f of Array.from(files)) {
-        await this._media().uploadFile({
-          data: f,
-          name: f.name,
-          mimeType: f.type || "application/octet-stream",
-          size: f.size,
-          ...folder ? { folderID: folder } : {}
-        });
-      }
+      await uploadFiles(files, this._currentFolder());
       if (this._fileInput)
         this._fileInput.value = "";
       this._grid?.refresh();
@@ -22154,9 +22206,6 @@ button.active svg {
   function resolve(obj, path) {
     return path.split(".").reduce((acc, k) => acc != null ? acc[k] : undefined, obj);
   }
-  function escape(value) {
-    return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
 
   // src/control/components/data/fetch/interpolate.ts
   function interpolateNode(node, context) {
@@ -22178,6 +22227,8 @@ button.active svg {
         if (replaced !== attr.value)
           el.setAttribute(attr.name, replaced);
       }
+      if (el.tagName === "CMS-FETCH")
+        return;
     }
     for (const child of Array.from(node.childNodes)) {
       interpolateNode(child, context);
@@ -22196,12 +22247,15 @@ button.active svg {
     return str.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, path) => {
       if (path === "value") {
         if (context !== null && typeof context === "object" && "value" in context) {
-          return escape(context.value);
+          return stringify(context.value);
         }
-        return escape(context);
+        return stringify(context);
       }
-      return escape(resolve(context, path));
+      return stringify(resolve(context, path));
     });
+  }
+  function stringify(value) {
+    return String(value ?? "");
   }
 
   // src/control/components/data/fetch/render.ts
@@ -22239,10 +22293,13 @@ button.active svg {
       if (child.nodeType !== Node.ELEMENT_NODE)
         continue;
       const el = child;
-      if (el.tagName === "TEMPLATE")
+      if (el.tagName === "TEMPLATE") {
         out.push(el);
-      else
-        collectDirectTemplates(el, out);
+        continue;
+      }
+      if (el.tagName === "CMS-FETCH")
+        continue;
+      collectDirectTemplates(el, out);
     }
   }
 

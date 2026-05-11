@@ -157,7 +157,18 @@ export function renderEndpoints(host: SchemaPicker): void {
 
     const parsed       = parseDataProxyUrl(host._value);
     const selectedPath = parsed?.providerId === host._activeProviderId ? parsed.path : "";
-    host._refs.list.replaceChildren(...filtered.map(e => buildOption(e, e.path === selectedPath)));
+    // When `methodAttr=` is configured, selection is method-aware: only
+    // the row whose (path, method) matches the picked endpoint is marked
+    // `.selected`. Without `methodAttr=`, fall back to path-only matching
+    // — preserves the legacy behavior for consumers that don't care about
+    // the method (e.g. `<base-fetch>`).
+    const methodAware  = !!host.getAttribute("methodAttr");
+    const pickedMethod = host._pickedMethod;
+    host._refs.list.replaceChildren(...filtered.map(e => {
+        const pathMatch   = e.path === selectedPath;
+        const methodMatch = !methodAware || !pickedMethod || e.method.toLowerCase() === pickedMethod;
+        return buildOption(e, pathMatch && methodMatch);
+    }));
 }
 
 /** Parse `methods="GET,POST"` into a Set; null = no filter (accept every method). */

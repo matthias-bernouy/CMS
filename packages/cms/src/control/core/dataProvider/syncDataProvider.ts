@@ -29,6 +29,19 @@ export async function syncDataProvider(cms: ControlCms, id: string): Promise<Syn
     const provider = await cms.repository.getDataProvider(id);
     if (!provider) return null;
 
+    // Official providers without admin-fetch auth (typically Supabase Auth,
+    // which ships an embedded spec) have nothing to fetch — "Sync" just
+    // republishes + bumps lastSyncAt. Official providers WITH a specAuth
+    // (typically Supabase Data, which fetches PostgREST's auto-generated
+    // OpenAPI to discover the user's tables) fall through to the normal
+    // fetch flow below — table changes need to flow back to the spec.
+    if (provider.source === 'official' && provider.specAuth.type === 'none') {
+        await cms.repository.updateDataProvider(id, { lastSyncAt: new Date() });
+        cms.specCache.delete(id);
+        await publishProxy(cms, id);
+        return { ok: true, endpointCount: countOpenApiEndpoints(provider.spec) };
+    }
+
     let auth;
     try {
         auth = await resolveAuth(provider.specAuth, cms.secrets);

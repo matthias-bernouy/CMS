@@ -20,13 +20,16 @@ const PARSERS: { [K in ProxyRuleType]: RuleParser<Extract<ProxyRule, { type: K }
         on_missing: parseOnMissingStrategy(o["on_missing"], `${p}.on_missing`),
     }),
     cookie_to_header: (o, p) => {
-        const prefix = optionalString(o["prefix"], `${p}.prefix`);
-        const base = {
+        const prefix          = optionalString(o["prefix"],           `${p}.prefix`);
+        const omit_if_missing = optionalBoolean(o["omit_if_missing"], `${p}.omit_if_missing`);
+        let out = {
             type:        "cookie_to_header" as const,
             cookie_name: requireString(o["cookie_name"], `${p}.cookie_name`),
             header_name: requireString(o["header_name"], `${p}.header_name`),
-        };
-        return prefix !== undefined ? { ...base, prefix } : base;
+        } as Extract<ProxyRule, { type: "cookie_to_header" }>;
+        if (prefix !== undefined)          out = { ...out, prefix };
+        if (omit_if_missing !== undefined) out = { ...out, omit_if_missing };
+        return out;
     },
     cookie_to_body_field: (o, p) => ({
         type:        "cookie_to_body_field",
@@ -35,6 +38,11 @@ const PARSERS: { [K in ProxyRuleType]: RuleParser<Extract<ProxyRule, { type: K }
     }),
     inject_header: (o, p) => ({
         type:  "inject_header",
+        name:  requireString(o["name"],  `${p}.name`),
+        value: requireString(o["value"], `${p}.value`),
+    }),
+    inject_query_param: (o, p) => ({
+        type:  "inject_query_param",
         name:  requireString(o["name"],  `${p}.name`),
         value: requireString(o["value"], `${p}.value`),
     }),

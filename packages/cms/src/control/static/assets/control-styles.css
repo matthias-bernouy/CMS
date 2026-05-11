@@ -245,3 +245,42 @@ code {
     background: var(--bg-base);
     border-radius: 4px;
 }
+
+/* Official-providers tab — responsive grid of collapsible cards. */
+.official-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    align-content: start;
+}
+.official-card {
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    overflow: hidden;
+    align-self: start;
+}
+.official-card[open] { border-color: var(--primary-base); }
+.official-card__summary {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    column-gap: 12px;
+    row-gap: 2px;
+    padding: 14px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: background 0.1s;
+}
+.official-card__summary::-webkit-details-marker { display: none; }
+.official-card__summary:hover { background: var(--secondary-muted); }
+.official-card[open] > .official-card__summary { background: var(--primary-muted); }
+.official-card__icon {
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 28px; height: 28px;
+    color: var(--primary-base);
+}
+.official-card__title  { font-weight: 600; color: var(--text-main); }
+.official-card__tag    { font-size: 12px; color: var(--text-muted); }
+.official-card__body   { padding: 12px 14px 14px; border-top: 1px solid var(--border-light); }

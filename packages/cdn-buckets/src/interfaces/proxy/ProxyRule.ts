@@ -43,6 +43,15 @@ export type CookieToHeaderRule = {
     header_name: string;
     /** Literal prefix prepended to the cookie value (e.g. `"Bearer "`). */
     prefix?:     string;
+    /**
+     * When true, the header is set ONLY if the cookie is present and
+     * non-empty. Without this flag, an absent cookie still emits the
+     * header with an empty value (e.g. `Authorization: Bearer `) which
+     * upstreams like PostgREST treat as malformed-JWT → 401. Use this
+     * flag for opportunistic auth where anonymous access must remain
+     * possible.
+     */
+    omit_if_missing?: boolean;
 };
 
 export type CookieToBodyFieldRule = {
@@ -63,6 +72,16 @@ export type InjectCookieRule = {
     name:       string;
     value:      string;
     attributes?: CookieAttributes;
+};
+
+export type InjectQueryParamRule = {
+    type:  "inject_query_param";
+    name:  string;
+    /** Literal, or interpolation: `${env:VAR}` (whitelist) | `${cookie:NAME}`.
+     *  Always overrides any client-supplied value for the same key —
+     *  same semantics as `inject_header`. Other client query params on
+     *  the request are preserved. */
+    value: string;
 };
 
 // ── on_response ─────────────────────────────────────────────────────────
@@ -112,6 +131,7 @@ export type ProxyRule =
     | CookieToBodyFieldRule
     | InjectHeaderRule
     | InjectCookieRule
+    | InjectQueryParamRule
     | ExtractJsonRule
     | StripBodyFieldsRule
     | RewriteStatusRule

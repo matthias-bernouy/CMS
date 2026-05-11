@@ -56,10 +56,10 @@ describe("renderProxyLocations — fallback location (no rules)", () => {
 });
 
 describe("renderProxyLocations — baseline directives", () => {
-    test("cookie scoping rewrites Set-Cookie Path to the proxy prefix", () => {
+    test("cookie domain rewritten to the visible host (path rewrite intentionally omitted)", () => {
         const out = renderProxyLocations([proxy({ providerId: "stripe" })]);
-        expect(out).toContain("proxy_cookie_path   ~^(/.*)$ /.cms/data/stripe/$1;");
         expect(out).toContain("proxy_cookie_domain ~.+ $host;");
+        expect(out).not.toContain("proxy_cookie_path");
     });
 
     test("X-Forwarded-* + http/1.1 baseline applied", () => {
@@ -113,7 +113,7 @@ describe("renderProxyLocations — with rules", () => {
         const out = renderProxyLocations([proxy({ rules: STRIPE_RULES, secrets: { STRIPE_KEY: "sk" } })]);
         const ruleBlock = out.split("location /.cms/data/stripe/ {")[0]!;
         expect(ruleBlock).toContain("proxy_set_header X-Forwarded-Host   $host;");
-        expect(ruleBlock).toContain("proxy_cookie_path   ~^(/.*)$ /.cms/data/stripe/$1;");
+        expect(ruleBlock).toContain("proxy_cookie_domain ~.+ $host;");
     });
 
     test("plaintext never appears in the rendered fragment — secret read via cms_secrets table", () => {

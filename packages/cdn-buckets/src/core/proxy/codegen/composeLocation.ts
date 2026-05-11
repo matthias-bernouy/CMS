@@ -82,14 +82,48 @@ function dedup(directives: NginxDirective[]): NginxDirective[] {
     return directives.filter(d => seen.has(d.directive) ? false : (seen.add(d.directive), true));
 }
 
+/**
+ * `body_filter_by_lua_block` cannot mutate `ngx.header.*` once the
+ * response headers have been flushed to the client (per OpenResty docs:
+ * "undefined behavior" — internally `r->header_sent` blocks the write).
+ * With the baseline's `proxy_buffering off;`, headers ARE flushed as soon
+ * as upstream sends them, so an `extract_json + set_cookie` rule's
+ * Set-Cookie write would silently no-op.
+ *
+ * When any rule emits a body mutation, we therefore:
+ *   - strip the baseline's `proxy_buffering off;`
+ *   - emit `proxy_buffering on;` + generous buffer sizes so the typical
+ *     auth response (~few KB JSON) fits in memory and the headers stay
+ *     queued until the body filter is done.
+ *
+ * Caveat: this is best-effort. If the upstream response is bigger than
+ * the buffer pool, nginx may start flushing chunks before body_filter
+ * finishes, and the Set-Cookie write may still no-op. The robust fix
+ * is to switch from `proxy_pass` to `content_by_lua_block +
+ * ngx.location.capture` for these locations, which is a larger refactor.
+ */
+const PROXY_BUFFERING_OFF_RE = /^\s*proxy_buffering\s+off\s*;?\s*$/;
+
+function bufferingOverride(needs: boolean, nginxReq: NginxDirective[]): { cleaned: NginxDirective[]; prepended: string[] } {
+    if (!needs) return { cleaned: nginxReq, prepended: [] };
+    const cleaned = nginxReq.filter(d => !PROXY_BUFFERING_OFF_RE.test(d.directive));
+    return { cleaned, prepended: [
+        "proxy_buffering on;",
+        "proxy_buffer_size 16k;",
+        "proxy_buffers     8 16k;",
+    ] };
+}
+
 export function composeLocation(opts: ComposeLocationOptions): string {
     const { nginxReq, nginxRes, luaAccess, luaHeaderF, bodyMut } = partition(opts.snippets);
+    const { cleaned, prepended } = bufferingOverride(bodyMut.length > 0, nginxReq);
 
     const lines: string[] = [`${opts.locationDirective} {`];
 
     const access = luaHookBlock("access_by_lua_block", luaAccess);
     if (access)                       lines.push(indent(access, INDENT));
-    for (const d of dedup(nginxReq))  lines.push(INDENT + d.directive);
+    for (const directive of prepended) lines.push(INDENT + directive);
+    for (const d of dedup(cleaned))   lines.push(INDENT + d.directive);
     lines.push(INDENT + `proxy_pass ${opts.proxyPass};`);
 
     const headerF = luaHookBlock("header_filter_by_lua_block", luaHeaderF);

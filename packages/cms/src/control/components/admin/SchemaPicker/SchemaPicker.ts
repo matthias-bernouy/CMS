@@ -23,11 +23,15 @@ import type { ProviderListItem } from "./flows";
  * preview, `installFetchProxy` recognises the same shape and routes the
  * request to the mock endpoint instead.
  *
- * The HTTP method is intentionally NOT part of the saved value: most
+ * The HTTP method is intentionally NOT part of the saved URL: most
  * consumer blocs are method-pinned (e.g. `<base-fetch methods="GET">`),
  * and embedding it in the value would force every reader to parse a
- * `METHOD URL` shape. Blocs that need the method declare it via their
- * own attribute or via the `methods=` filter on the picker.
+ * `METHOD URL` shape. Blocs that DO care about the method (e.g. a form
+ * that can POST/PUT/PATCH/DELETE) opt in via `methodAttr="<attr-name>"`:
+ * the picker then writes the picked method (lowercased) directly to that
+ * attribute on the owning bloc, in addition to writing the URL via the
+ * normal `name`/form-value channel. Without `methodAttr=`, the legacy
+ * URL-only behavior is preserved for existing consumers.
  *
  * Closing the panel via outside click, ESC, or another popover opening
  * is handled by the browser thanks to `popover="auto"`.
@@ -39,6 +43,7 @@ export class SchemaPicker extends HTMLElement {
     _refs!:                Refs;
     _internals:            ElementInternals;
     _value                  = "";
+    _pickedMethod           = "";
     _isOpen                 = false;
     _providers:            ProviderListItem[] = [];
     _activeProviderId       = "";
@@ -69,6 +74,10 @@ export class SchemaPicker extends HTMLElement {
         // Falls back to the `value` attribute on first connection.
         const v = this._value || this.getAttribute("value") || "";
         setValue(this, v);
+        // Seed `_pickedMethod` from the owning bloc — the saved URL alone
+        // doesn't carry the method, but if `methodAttr=` is configured we
+        // can read it back from the bloc to restore the visual selection.
+        this._pickedMethod = readMethodFromTarget(this);
         window.addEventListener("click", this._onWindowClick);
         document.addEventListener("new:provider",     this._onProviderSaved);
         document.addEventListener("provider:synced",  this._onProviderSaved);
@@ -94,6 +103,8 @@ export class SchemaPicker extends HTMLElement {
         r.clearBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             setValue(this, "");
+            this._pickedMethod = "";
+            writeMethodToTarget(this, "");
             this.dispatchEvent(new Event("change", { bubbles: true }));
         });
         r.providerSelect.addEventListener("change", () => {
@@ -103,16 +114,52 @@ export class SchemaPicker extends HTMLElement {
         r.list.addEventListener("click", (e) => {
             const li = (e.target as HTMLElement).closest(".option") as HTMLElement | null;
             if (!li || !li.dataset.id) return;
-            const [, ...rest] = li.dataset.id.split(" ");
+            const [method, ...rest] = li.dataset.id.split(" ");
             const path = rest.join(" ");
-            if (!path) return;
+            if (!path || !method) return;
             const provider = this._providers.find(p => p.id === this._activeProviderId);
             if (!provider) return;
+            this._pickedMethod = method.toLowerCase();
+            writeMethodToTarget(this, this._pickedMethod);
             setValue(this, buildUrl(provider.id, path));
             this.dispatchEvent(new Event("change", { bubbles: true }));
             closePanel(this);
         });
     }
+}
+
+/**
+ * Resolve the bloc that owns the panel hosting this picker. Mirrors the
+ * lookup `<p9r-attr-sync>` performs: walk up to the nearest element
+ * carrying `p9r-parent-identifier`, then look up the bloc by id. Returns
+ * null when the picker isn't inside an editor panel (standalone use).
+ */
+function findOwnerBloc(host: HTMLElement): HTMLElement | null {
+    const pidEl = host.closest(`[${p9r.attr.EDITOR.PARENT_IDENTIFIER}]`);
+    const pid   = pidEl?.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+    if (!pid) return null;
+    return document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${pid}"]`);
+}
+
+/** Write the picked method to the owning bloc's attribute named by
+ *  `methodAttr`. No-op when `methodAttr` isn't set (most consumers). */
+function writeMethodToTarget(host: SchemaPicker, method: string): void {
+    const attr = host.getAttribute("methodAttr");
+    if (!attr) return;
+    const owner = findOwnerBloc(host);
+    if (!owner) return;
+    if (method) owner.setAttribute(attr, method);
+    else        owner.removeAttribute(attr);
+}
+
+/** Read the current method from the owning bloc's `methodAttr`. Used to
+ *  seed `_pickedMethod` on `connectedCallback` so the dropdown opens with
+ *  the right row pre-selected after a reload. */
+function readMethodFromTarget(host: SchemaPicker): string {
+    const attr = host.getAttribute("methodAttr");
+    if (!attr) return "";
+    const owner = findOwnerBloc(host);
+    return (owner?.getAttribute(attr) ?? "").toLowerCase();
 }
 
 if (!customElements.get("cms-schema-picker")) {

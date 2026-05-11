@@ -51,15 +51,22 @@ export function renderFragment(root: Node, context: unknown): void {
 }
 
 /**
- * Collect `<template>` descendants of `root`, but stop descending when
- * we hit a `<template>` — nested ones are processed by their parent's
- * recursive renderFragment call.
+ * Collect `<template>` descendants of `root`, stopping at rendering
+ * boundaries:
+ *  - `<template>` itself (nested ones are processed by their parent's
+ *    recursive renderFragment call).
+ *  - `<cms-fetch>` (it owns its own children/template lifecycle and its
+ *    inner template is meant to be stamped against ITS data, not the
+ *    outer parent's context). Without this guard, an outer cms-fetch
+ *    consumes an inner one's template with the wrong context, leaving
+ *    the inner cms-fetch with no template to stamp.
  */
 function collectDirectTemplates(root: Node, out: HTMLTemplateElement[]): void {
     for (const child of Array.from(root.childNodes)) {
         if (child.nodeType !== Node.ELEMENT_NODE) continue;
         const el = child as Element;
-        if (el.tagName === 'TEMPLATE') out.push(el as HTMLTemplateElement);
-        else collectDirectTemplates(el, out);
+        if (el.tagName === 'TEMPLATE')  { out.push(el as HTMLTemplateElement); continue; }
+        if (el.tagName === 'CMS-FETCH') continue;
+        collectDirectTemplates(el, out);
     }
 }

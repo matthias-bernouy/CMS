@@ -13,6 +13,7 @@ export const RULE_PHASES: Record<ProxyRuleType, RulePhase> = {
     cookie_to_body_field:     "request",
     inject_header:            "request",
     inject_cookie:            "request",
+    inject_query_param:       "request",
     extract_json:             "response",
     strip_body_fields:        "response",
     rewrite_status:           "response",
