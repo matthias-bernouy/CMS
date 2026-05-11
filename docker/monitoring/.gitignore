@@ -1,0 +1,3 @@
+.env
+grafana/provisioning/dashboards/node-exporter-full.json
+grafana/provisioning/dashboards/cadvisor.json
