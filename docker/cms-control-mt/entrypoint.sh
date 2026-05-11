@@ -43,6 +43,19 @@ fi
 
 nginx -t
 
+# OKMS cert/key for the bun app's KekProvider. `/etc/okms/*` is bind-
+# mounted root:root with 0400 perms (enforced by okms-fetch) so the
+# unprivileged `cms` user can't read it directly. Copy into a tmpfs
+# location it can read, preserving tight perms.
+mkdir -p /run/cms/okms
+cp "${OKMS_CERT_PATH:-/etc/okms/client.crt}" /run/cms/okms/client.crt
+cp "${OKMS_KEY_PATH:-/etc/okms/client.key}"  /run/cms/okms/client.key
+chown -R cms:cms /run/cms/okms
+chmod 0444 /run/cms/okms/client.crt
+chmod 0400 /run/cms/okms/client.key
+export OKMS_CERT_PATH=/run/cms/okms/client.crt
+export OKMS_KEY_PATH=/run/cms/okms/client.key
+
 echo "[mt-cms] Starting nginx + bun…"
 nginx -g 'daemon off;' &
 NGINX_PID=$!

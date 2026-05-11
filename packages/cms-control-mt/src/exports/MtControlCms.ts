@@ -80,6 +80,12 @@ export class MtControlCms {
         try {
             await this._mount(tenant);
         } catch (err) {
+            // mountTenant registers routes (KeycloakConsumer, broker, …) before
+            // its first async network call. If it throws afterwards, those
+            // routes remain on the runner and a retry with corrected config
+            // stacks duplicates — first-match-wins keeps the broken broker
+            // alive. Drop the whole prefix on rollback.
+            this._runner.removeRoutesByPathPrefix(`/cms/${tenant.id}`);
             await this._tenantRepo.delete(tenant.id).catch(() => null);
             throw err;
         }
