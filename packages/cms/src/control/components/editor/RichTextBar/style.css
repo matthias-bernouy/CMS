@@ -137,14 +137,14 @@ button.active svg {
     left: 50%;
     transform: translateX(-50%);
     margin-bottom: 8px;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.92);
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(16px);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
     flex-direction: column;
-    gap: 6px;
-    width: 192px;
+    gap: 10px;
+    width: 244px;
 }
 
 .color-panel.open {
@@ -158,10 +158,112 @@ button.active svg {
     margin-top: 8px;
 }
 
-.color-row {
+/* ── Color tools row (reset + custom) ── */
+
+.color-tools {
     display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.color-custom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: system-ui, sans-serif;
+    color: #64748b;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* ── Sections (Text, Borders, Families) ── */
+
+.color-section {
+    display: flex;
+    flex-direction: column;
     gap: 6px;
 }
+
+.color-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    font-family: system-ui, sans-serif;
+}
+
+/* ── Swatch cells (Text + Borders sections) — swatch on top, label below ── */
+
+.swatch-row {
+    display: flex;
+    gap: 4px;
+}
+
+.swatch-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.swatch-cell-label {
+    font-size: 9px;
+    font-weight: 500;
+    color: #64748b;
+    font-family: system-ui, sans-serif;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ── Color families — tabular grid: name | base | muted | contrasted ── */
+
+.color-families {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.color-family {
+    display: grid;
+    grid-template-columns: 70px repeat(3, 1fr);
+    align-items: center;
+    gap: 6px;
+}
+
+.color-family-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #334155;
+    font-family: system-ui, sans-serif;
+}
+
+.color-family-col {
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+    text-align: center;
+    font-family: system-ui, sans-serif;
+}
+
+.color-family-header {
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    margin-bottom: 2px;
+}
+
+/* ── Swatch ── */
 
 .color-swatch {
     width: 24px;
@@ -172,7 +274,8 @@ button.active svg {
     padding: 0;
     cursor: pointer;
     transition: transform 0.15s ease, border-color 0.15s ease;
-    flex: 1 0 24px;
+    flex-shrink: 0;
+    justify-self: center;
 }
 
 .color-swatch:hover {
@@ -193,19 +296,6 @@ button.active svg {
 
 .swatch-reset:hover {
     background: linear-gradient(135deg, #fff 40%, #e2e8f0 40%, #e2e8f0 60%, #fff 60%);
-}
-
-.color-custom {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 2px;
-    padding-top: 6px;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    font-size: 10px;
-    color: #94a3b8;
-    cursor: pointer;
-    user-select: none;
 }
 
 .color-custom-input {

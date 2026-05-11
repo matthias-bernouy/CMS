@@ -18895,41 +18895,101 @@ dialog::backdrop {
             <span class="color-swatch-current"></span>
         </button>
         <div class="color-panel">
-            <div class="color-row">
-                <button data-color="inherit" class="color-swatch swatch-reset" title="Default"></button>
-                <button data-color="var(--text-main)" class="color-swatch" title="Text main" style="--swatch:var(--text-main)"></button>
-                <button data-color="var(--text-body)" class="color-swatch" title="Text body" style="--swatch:var(--text-body)"></button>
-                <button data-color="var(--text-muted)" class="color-swatch" title="Text muted" style="--swatch:var(--text-muted)"></button>
-                <button data-color="var(--text-label)" class="color-swatch" title="Text label" style="--swatch:var(--text-label)"></button>
+            <!-- Tools: reset + custom on a single row. -->
+            <div class="color-tools">
+                <button data-color="inherit" class="color-swatch swatch-reset" title="Default color"></button>
+                <label class="color-custom" title="Custom color">
+                    <input class="color-custom-input" type="color" value="#000000">
+                    <span class="color-custom-label">Custom</span>
+                </label>
             </div>
-            <div class="color-row">
-                <button data-color="var(--primary-base)" class="color-swatch" title="Primary" style="--swatch:var(--primary-base)"></button>
-                <button data-color="var(--primary-muted)" class="color-swatch" title="Primary muted" style="--swatch:var(--primary-muted)"></button>
-                <button data-color="var(--primary-contrasted)" class="color-swatch" title="Primary contrasted" style="--swatch:var(--primary-contrasted)"></button>
-                <button data-color="var(--secondary-base)" class="color-swatch" title="Secondary" style="--swatch:var(--secondary-base)"></button>
-                <button data-color="var(--secondary-muted)" class="color-swatch" title="Secondary muted" style="--swatch:var(--secondary-muted)"></button>
-                <button data-color="var(--secondary-contrasted)" class="color-swatch" title="Secondary contrasted" style="--swatch:var(--secondary-contrasted)"></button>
+
+            <!-- Text — labeled per swatch since each variant is a distinct role. -->
+            <div class="color-section">
+                <div class="color-section-title">Text</div>
+                <div class="swatch-row">
+                    <div class="swatch-cell">
+                        <button data-color="var(--text-main)" class="color-swatch" title="Text main" style="--swatch:var(--swatch-text-main)"></button>
+                        <span class="swatch-cell-label">Main</span>
+                    </div>
+                    <div class="swatch-cell">
+                        <button data-color="var(--text-body)" class="color-swatch" title="Text body" style="--swatch:var(--swatch-text-body)"></button>
+                        <span class="swatch-cell-label">Body</span>
+                    </div>
+                    <div class="swatch-cell">
+                        <button data-color="var(--text-muted)" class="color-swatch" title="Text muted" style="--swatch:var(--swatch-text-muted)"></button>
+                        <span class="swatch-cell-label">Muted</span>
+                    </div>
+                    <div class="swatch-cell">
+                        <button data-color="var(--text-label)" class="color-swatch" title="Text label" style="--swatch:var(--swatch-text-label)"></button>
+                        <span class="swatch-cell-label">Label</span>
+                    </div>
+                </div>
             </div>
-            <div class="color-row">
-                <button data-color="var(--danger-base)" class="color-swatch" title="Danger" style="--swatch:var(--danger-base)"></button>
-                <button data-color="var(--danger-muted)" class="color-swatch" title="Danger muted" style="--swatch:var(--danger-muted)"></button>
-                <button data-color="var(--danger-contrasted)" class="color-swatch" title="Danger contrasted" style="--swatch:var(--danger-contrasted)"></button>
-                <button data-color="var(--success-base)" class="color-swatch" title="Success" style="--swatch:var(--success-base)"></button>
-                <button data-color="var(--success-muted)" class="color-swatch" title="Success muted" style="--swatch:var(--success-muted)"></button>
-                <button data-color="var(--success-contrasted)" class="color-swatch" title="Success contrasted" style="--swatch:var(--success-contrasted)"></button>
+
+            <!-- Borders — same pattern as Text. -->
+            <div class="color-section">
+                <div class="color-section-title">Borders</div>
+                <div class="swatch-row">
+                    <div class="swatch-cell">
+                        <button data-color="var(--border-default)" class="color-swatch" title="Border default" style="--swatch:var(--swatch-border-default)"></button>
+                        <span class="swatch-cell-label">Default</span>
+                    </div>
+                    <div class="swatch-cell">
+                        <button data-color="var(--border-light)" class="color-swatch" title="Border light" style="--swatch:var(--swatch-border-light)"></button>
+                        <span class="swatch-cell-label">Light</span>
+                    </div>
+                </div>
             </div>
-            <div class="color-row">
-                <button data-color="var(--info-base)" class="color-swatch" title="Info" style="--swatch:var(--info-base)"></button>
-                <button data-color="var(--info-muted)" class="color-swatch" title="Info muted" style="--swatch:var(--info-muted)"></button>
-                <button data-color="var(--info-contrasted)" class="color-swatch" title="Info contrasted" style="--swatch:var(--info-contrasted)"></button>
-                <button data-color="var(--warning-base)" class="color-swatch" title="Warning" style="--swatch:var(--warning-base)"></button>
-                <button data-color="var(--warning-muted)" class="color-swatch" title="Warning muted" style="--swatch:var(--warning-muted)"></button>
-                <button data-color="var(--warning-contrasted)" class="color-swatch" title="Warning contrasted" style="--swatch:var(--warning-contrasted)"></button>
+
+            <!-- Color families — base / muted / contrasted column grid.
+                 Family name labels each row; column headers shown once at the top. -->
+            <div class="color-section">
+                <div class="color-families">
+                    <div class="color-family color-family-header">
+                        <span class="color-family-name"></span>
+                        <span class="color-family-col">Base</span>
+                        <span class="color-family-col">Muted</span>
+                        <span class="color-family-col">Contrasted</span>
+                    </div>
+                    <div class="color-family">
+                        <span class="color-family-name">Primary</span>
+                        <button data-color="var(--primary-base)" class="color-swatch" title="Primary base" style="--swatch:var(--swatch-primary-base)"></button>
+                        <button data-color="var(--primary-muted)" class="color-swatch" title="Primary muted" style="--swatch:var(--swatch-primary-muted)"></button>
+                        <button data-color="var(--primary-contrasted)" class="color-swatch" title="Primary contrasted" style="--swatch:var(--swatch-primary-contrasted)"></button>
+                    </div>
+                    <div class="color-family">
+                        <span class="color-family-name">Secondary</span>
+                        <button data-color="var(--secondary-base)" class="color-swatch" title="Secondary base" style="--swatch:var(--swatch-secondary-base)"></button>
+                        <button data-color="var(--secondary-muted)" class="color-swatch" title="Secondary muted" style="--swatch:var(--swatch-secondary-muted)"></button>
+                        <button data-color="var(--secondary-contrasted)" class="color-swatch" title="Secondary contrasted" style="--swatch:var(--swatch-secondary-contrasted)"></button>
+                    </div>
+                    <div class="color-family">
+                        <span class="color-family-name">Danger</span>
+                        <button data-color="var(--danger-base)" class="color-swatch" title="Danger base" style="--swatch:var(--swatch-danger-base)"></button>
+                        <button data-color="var(--danger-muted)" class="color-swatch" title="Danger muted" style="--swatch:var(--swatch-danger-muted)"></button>
+                        <button data-color="var(--danger-contrasted)" class="color-swatch" title="Danger contrasted" style="--swatch:var(--swatch-danger-contrasted)"></button>
+                    </div>
+                    <div class="color-family">
+                        <span class="color-family-name">Success</span>
+                        <button data-color="var(--success-base)" class="color-swatch" title="Success base" style="--swatch:var(--swatch-success-base)"></button>
+                        <button data-color="var(--success-muted)" class="color-swatch" title="Success muted" style="--swatch:var(--swatch-success-muted)"></button>
+                        <button data-color="var(--success-contrasted)" class="color-swatch" title="Success contrasted" style="--swatch:var(--swatch-success-contrasted)"></button>
+                    </div>
+                    <div class="color-family">
+                        <span class="color-family-name">Info</span>
+                        <button data-color="var(--info-base)" class="color-swatch" title="Info base" style="--swatch:var(--swatch-info-base)"></button>
+                        <button data-color="var(--info-muted)" class="color-swatch" title="Info muted" style="--swatch:var(--swatch-info-muted)"></button>
+                        <button data-color="var(--info-contrasted)" class="color-swatch" title="Info contrasted" style="--swatch:var(--swatch-info-contrasted)"></button>
+                    </div>
+                    <div class="color-family">
+                        <span class="color-family-name">Warning</span>
+                        <button data-color="var(--warning-base)" class="color-swatch" title="Warning base" style="--swatch:var(--swatch-warning-base)"></button>
+                        <button data-color="var(--warning-muted)" class="color-swatch" title="Warning muted" style="--swatch:var(--swatch-warning-muted)"></button>
+                        <button data-color="var(--warning-contrasted)" class="color-swatch" title="Warning contrasted" style="--swatch:var(--swatch-warning-contrasted)"></button>
+                    </div>
+                </div>
             </div>
-            <label class="color-custom" title="Custom color">
-                <input class="color-custom-input" type="color" value="#000000">
-                <span class="color-custom-label">Custom</span>
-            </label>
         </div>
     </div>
 
@@ -19174,14 +19234,14 @@ button.active svg {
     left: 50%;
     transform: translateX(-50%);
     margin-bottom: 8px;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.92);
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(16px);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
     flex-direction: column;
-    gap: 6px;
-    width: 192px;
+    gap: 10px;
+    width: 244px;
 }
 
 .color-panel.open {
@@ -19195,10 +19255,112 @@ button.active svg {
     margin-top: 8px;
 }
 
-.color-row {
+/* ── Color tools row (reset + custom) ── */
+
+.color-tools {
     display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.color-custom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: system-ui, sans-serif;
+    color: #64748b;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* ── Sections (Text, Borders, Families) ── */
+
+.color-section {
+    display: flex;
+    flex-direction: column;
     gap: 6px;
 }
+
+.color-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    font-family: system-ui, sans-serif;
+}
+
+/* ── Swatch cells (Text + Borders sections) — swatch on top, label below ── */
+
+.swatch-row {
+    display: flex;
+    gap: 4px;
+}
+
+.swatch-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.swatch-cell-label {
+    font-size: 9px;
+    font-weight: 500;
+    color: #64748b;
+    font-family: system-ui, sans-serif;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ── Color families — tabular grid: name | base | muted | contrasted ── */
+
+.color-families {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.color-family {
+    display: grid;
+    grid-template-columns: 70px repeat(3, 1fr);
+    align-items: center;
+    gap: 6px;
+}
+
+.color-family-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #334155;
+    font-family: system-ui, sans-serif;
+}
+
+.color-family-col {
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+    text-align: center;
+    font-family: system-ui, sans-serif;
+}
+
+.color-family-header {
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    margin-bottom: 2px;
+}
+
+/* ── Swatch ── */
 
 .color-swatch {
     width: 24px;
@@ -19209,7 +19371,8 @@ button.active svg {
     padding: 0;
     cursor: pointer;
     transition: transform 0.15s ease, border-color 0.15s ease;
-    flex: 1 0 24px;
+    flex-shrink: 0;
+    justify-self: center;
 }
 
 .color-swatch:hover {
@@ -19230,19 +19393,6 @@ button.active svg {
 
 .swatch-reset:hover {
     background: linear-gradient(135deg, #fff 40%, #e2e8f0 40%, #e2e8f0 60%, #fff 60%);
-}
-
-.color-custom {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 2px;
-    padding-top: 6px;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    font-size: 10px;
-    color: #94a3b8;
-    cursor: pointer;
-    user-select: none;
 }
 
 .color-custom-input {
@@ -20163,6 +20313,33 @@ button.active svg {
   }
 
   // src/control/components/editor/RichTextBar/RichTextBar.ts
+  var USER_THEME_TOKENS = [
+    "text-main",
+    "text-body",
+    "text-muted",
+    "text-label",
+    "border-default",
+    "border-light",
+    "primary-base",
+    "primary-muted",
+    "primary-contrasted",
+    "secondary-base",
+    "secondary-muted",
+    "secondary-contrasted",
+    "danger-base",
+    "danger-muted",
+    "danger-contrasted",
+    "success-base",
+    "success-muted",
+    "success-contrasted",
+    "info-base",
+    "info-muted",
+    "info-contrasted",
+    "warning-base",
+    "warning-muted",
+    "warning-contrasted"
+  ];
+
   class RichTextBar extends Component {
     selection = new SelectionTracker;
     interacting = false;
@@ -20202,6 +20379,24 @@ button.active svg {
         this.pageLink.setAttribute("label", "");
         this.pageLink.setAttribute("name", "href");
         root2.querySelector(".link-pages-wrap").appendChild(this.pageLink);
+      }
+      this._syncSwatchVariables();
+    }
+    _syncSwatchVariables() {
+      let workingElement = null;
+      try {
+        const editorSystem = getClosestEditorSystem(this);
+        workingElement = editorSystem.shadowRoot?.querySelector("#workingElement") ?? null;
+      } catch {
+        return;
+      }
+      if (!workingElement)
+        return;
+      const computed = getComputedStyle(workingElement);
+      for (const token of USER_THEME_TOKENS) {
+        const value = computed.getPropertyValue(`--${token}`).trim();
+        if (value)
+          this.style.setProperty(`--swatch-${token}`, value);
       }
     }
     disconnectedCallback() {

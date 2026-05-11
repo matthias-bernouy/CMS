@@ -8,6 +8,7 @@ import { SelectionTracker } from "./selection";
 import { closeLinkBar } from "./actions";
 import { closeCompletions } from "./extensions";
 import type { RichTextBarExtension } from "src/control/core/editorSystem/extensions/types";
+import getClosestEditorSystem from "src/control/core/dom/editor/getClosestEditorSystem";
 import {
     handleClick,
     handleCustomColorInput,
@@ -16,6 +17,27 @@ import {
     handleRootMouseup,
     handleSelection,
 } from "./listener";
+
+/**
+ * User-theme tokens we mirror onto the bar host as `--swatch-<token>` so the
+ * color swatches can render the site's actual palette. We snapshot resolved
+ * values from the working element at mount: the bar lives in the editor
+ * shell shadow where `EditorRoot.style.css` overrides the same names with
+ * the editor's chrome palette, so a plain `var(--primary-base)` on a swatch
+ * picks up the wrong color. The applied color attributes stay as `var(...)`
+ * (deferred against the working element scope), so only the visual preview
+ * is materialized — the saved markup still references the live theme.
+ */
+const USER_THEME_TOKENS = [
+    "text-main", "text-body", "text-muted", "text-label",
+    "border-default", "border-light",
+    "primary-base", "primary-muted", "primary-contrasted",
+    "secondary-base", "secondary-muted", "secondary-contrasted",
+    "danger-base", "danger-muted", "danger-contrasted",
+    "success-base", "success-muted", "success-contrasted",
+    "info-base", "info-muted", "info-contrasted",
+    "warning-base", "warning-muted", "warning-contrasted",
+] as const;
 
 export class RichTextBar extends Component {
 
@@ -83,6 +105,29 @@ export class RichTextBar extends Component {
             this.pageLink.setAttribute("label", "");
             this.pageLink.setAttribute("name", "href");
             root.querySelector(".link-pages-wrap")!.appendChild(this.pageLink);
+        }
+
+        this._syncSwatchVariables();
+    }
+
+    /**
+     * Resolve user-theme tokens against the working element's computed style
+     * and mirror them onto this host as `--swatch-<token>` properties so the
+     * color panel previews the user's palette instead of the editor's.
+     */
+    private _syncSwatchVariables(): void {
+        let workingElement: HTMLElement | null = null;
+        try {
+            const editorSystem = getClosestEditorSystem(this);
+            workingElement = editorSystem.shadowRoot?.querySelector<HTMLElement>("#workingElement") ?? null;
+        } catch {
+            return;
+        }
+        if (!workingElement) return;
+        const computed = getComputedStyle(workingElement);
+        for (const token of USER_THEME_TOKENS) {
+            const value = computed.getPropertyValue(`--${token}`).trim();
+            if (value) this.style.setProperty(`--swatch-${token}`, value);
         }
     }
 
