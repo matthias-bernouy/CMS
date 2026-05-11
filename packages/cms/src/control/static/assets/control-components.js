@@ -8629,22 +8629,24 @@ p9r-tag:hover {
     _getAnchor;
     _stateSyncs;
     _onUnpinAll;
-    static _stylesInjected = false;
+    _parent;
+    static _stylesInjectedFor = new WeakSet;
     _btn = null;
     _resizeObs = null;
     _reflow = () => this._position();
     _rafId = 0;
     _lastRect = null;
-    constructor(_getAnchor, _stateSyncs, _onUnpinAll) {
+    constructor(_getAnchor, _stateSyncs, _onUnpinAll, _parent = document.body) {
       this._getAnchor = _getAnchor;
       this._stateSyncs = _stateSyncs;
       this._onUnpinAll = _onUnpinAll;
+      this._parent = _parent;
     }
     get active() {
       return this._btn !== null;
     }
     enter() {
-      PinMode._injectStyles();
+      PinMode._injectStyles(this._parent);
       if (this._btn) {
         this._position();
         return;
@@ -8659,7 +8661,7 @@ p9r-tag:hover {
         this._onUnpinAll();
       });
       this._btn = btn;
-      document.body.appendChild(btn);
+      this._parent.appendChild(btn);
       window.addEventListener("scroll", this._reflow, { passive: true, capture: true });
       window.addEventListener("resize", this._reflow);
       this._resizeObs = new ResizeObserver(this._reflow);
@@ -8728,8 +8730,10 @@ p9r-tag:hover {
       this._btn.style.left = `${x}px`;
       this._btn.style.top = `${y}px`;
     }
-    static _injectStyles() {
-      if (PinMode._stylesInjected)
+    static _injectStyles(parent) {
+      const root = parent.getRootNode();
+      const styleHost = root instanceof ShadowRoot ? root : document.head;
+      if (PinMode._stylesInjectedFor.has(styleHost))
         return;
       const style = document.createElement("style");
       style.textContent = `
@@ -8755,8 +8759,8 @@ p9r-tag:hover {
 .p9r-unpin-btn svg { width: 14px; height: 14px; }
 .p9r-unpin-btn:hover { background: var(--primary-base, #4361ee); color: #fff; }
 `;
-      document.head.appendChild(style);
-      PinMode._stylesInjected = true;
+      styleHost.appendChild(style);
+      PinMode._stylesInjectedFor.add(styleHost);
     }
   }
 
@@ -8859,10 +8863,31 @@ p9r-tag:hover {
       this._hoverElement = null;
     }
     _onHover(e) {
+      const elAtCursor = document.elementFromPoint(e.clientX, e.clientY);
+      if (elAtCursor && isVisuallyInvisible(elAtCursor))
+        return;
       const editorSystem = getClosestEditorSystem(this.editor.target);
       editorSystem.blocActions.setEditor(this.editor);
       editorSystem.blocActions.open(e.clientX, e.clientY);
     }
+  }
+  function isVisuallyInvisible(el) {
+    if (typeof el.checkVisibility === "function") {
+      const visible = el.checkVisibility({
+        opacityProperty: true,
+        visibilityProperty: true,
+        checkOpacity: true,
+        checkVisibilityCSS: true
+      });
+      if (!visible)
+        return true;
+    }
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0)
+      return true;
+    if (r.bottom <= 0 || r.right <= 0 || r.left >= innerWidth || r.top >= innerHeight)
+      return true;
+    return false;
   }
 
   // src/control/core/editorSystem/Editor/modeBinding.ts
@@ -8956,6 +8981,8 @@ p9r-tag:hover {
   }
 
   // src/control/core/editorSystem/Editor/Editor.ts
+  var _pinnedEditors = new Set;
+
   class Editor {
     target;
     variant = "default";
@@ -8981,10 +9008,11 @@ p9r-tag:hover {
       document.compIdentifierToEditor.set(this._identifier, this);
       this._panel = new PanelConfig(this, editor);
       this._hover = new HoverBinding(this);
+      const pinParent = getClosestEditorSystem(this.target).shadowRoot?.querySelector("#editorSystem") ?? document.body;
       this._pinMode = new PinMode(() => this.getActionBarAnchor() ?? this.target, this.stateSyncs, () => {
         this.stateSyncs.forEach((s) => s.unpin());
         this.notifyPinStateChanged();
-      });
+      }, pinParent);
       this._mode = new ModeBinding(this.target, {
         onEditorMode: () => this.viewEditor(),
         onViewMode: () => this.viewClient(),
@@ -9057,6 +9085,7 @@ p9r-tag:hover {
     onSwitchMode(_mode) {}
     dispose() {
       document.compIdentifierToEditor?.delete(this._identifier);
+      _pinnedEditors.delete(this);
       this._extensions.clear();
       this._hover.unbind();
       this._mode.dispose();
@@ -9095,15 +9124,41 @@ p9r-tag:hover {
     notifyPinStateChanged(stateSync) {
       const anyPinned = this.stateSyncs.some((s) => s.isPinned);
       if (anyPinned) {
-        this._hover.unbind();
+        _pinnedEditors.add(this);
         getClosestEditorSystem(this.target).blocActions.close();
         this._pinMode.enter();
       } else {
+        _pinnedEditors.delete(this);
         this._pinMode.exit();
-        if (this.isInteractive)
-          this._hover.bind();
+      }
+      this._refreshHoverBinding();
+      let p = this.target.parentElement;
+      while (p) {
+        const id = p.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+        if (id)
+          document.compIdentifierToEditor?.get(id)?._refreshHoverBinding();
+        p = p.parentElement;
       }
       this.onEditorPinState?.(anyPinned, stateSync);
+    }
+    _refreshHoverBinding() {
+      if (this._shouldSuppressHover()) {
+        this._hover.unbind();
+        return;
+      }
+      if (this.isInteractive)
+        this._hover.bind();
+    }
+    _shouldSuppressHover() {
+      if (this.stateSyncs.some((s) => s.isPinned))
+        return true;
+      for (const e of _pinnedEditors) {
+        if (e === this)
+          continue;
+        if (this.target.contains(e.target))
+          return true;
+      }
+      return false;
     }
     refreshActionBarFeatures() {
       syncActionBarFeaturesFromAttrs(this.target, this._actionBarFeatures);
@@ -13656,9 +13711,9 @@ cms-bag-breadcrumb[data-inline="right"] {
   var style_default4 = `:host {
     display: block;
     width: max-content;
-    /* Cap at 420px AND keep within the viewport — long labels at 5 items would
+    /* Cap at 640px AND keep within the viewport — long labels at 5 items would
      * otherwise spill off-screen. The min() handles narrow viewports. */
-    max-width: min(420px, calc(100vw - 16px));
+    max-width: min(640px, calc(100vw - 16px));
     font-family: system-ui, sans-serif;
     font-size: 11px;
     line-height: 1.4;
@@ -13694,9 +13749,12 @@ cms-bag-breadcrumb[data-inline="right"] {
     cursor: pointer;
     transition: background 0.1s, color 0.1s;
     /* Allow flex shrinking + truncation. Without min-width:0 the button keeps
-     * its content width and the whole pill grows past max-width. */
+     * its content width and the whole pill grows past max-width. Parents are
+     * the shrink-absorbers — \`.current\` opts out (flex-shrink: 0) so the
+     * active bloc's label always stays fully readable. */
     min-width: 0;
-    max-width: 160px;
+    max-width: 200px;
+    flex-shrink: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -13718,8 +13776,11 @@ cms-bag-breadcrumb[data-inline="right"] {
     color: var(--primary-base, #4361ee);
     font-weight: 700;
     letter-spacing: 0.01em;
-    min-width: 0;
-    max-width: 200px;
+    /* Never shrunk — parents truncate first. The active bloc's label is the
+     * most useful piece of context; we'd rather overflow the pill on the
+     * left (parents become "…") than abbreviate the current. */
+    flex-shrink: 0;
+    max-width: 280px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -14849,16 +14910,18 @@ cms-bag-breadcrumb[data-inline="right"] {
 
   // src/control/components/editor/EditorSystem/Highlight.ts
   var ROOT_ID = "p9r-editor-highlight-root";
-  var root = null;
+  var rootByParent = new WeakMap;
   var active = new Set;
   var onScrollOrResize = null;
-  function ensureRoot() {
-    if (root)
-      return root;
-    root = document.createElement("div");
+  function ensureRoot(parent) {
+    const cached = rootByParent.get(parent);
+    if (cached)
+      return cached;
+    const root = document.createElement("div");
     root.id = ROOT_ID;
     root.style.cssText = "position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999;";
-    document.body.appendChild(root);
+    parent.appendChild(root);
+    rootByParent.set(parent, root);
     return root;
   }
   function attachGlobal() {
@@ -14882,7 +14945,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     _ro;
     constructor(target, options = {}) {
       this._target = target;
-      const r = ensureRoot();
+      const r = ensureRoot(options.parent ?? document.body);
       this._box = document.createElement("div");
       const color = options.color ?? "#3b82f6";
       const thickness = options.thickness ?? 2;
@@ -14987,7 +15050,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       this.target = editor.target;
       this.hoverEl = editor.getActionBarAnchor?.() ?? editor.target;
       this.highlight?.dispose();
-      this.highlight = new Highlight(this.hoverEl, { color: "var(--primary-base, #3b82f6)" });
+      const overlayParent = getClosestEditorSystem(this.host).shadowRoot.querySelector("#editorSystem");
+      this.highlight = new Highlight(this.hoverEl, { color: "var(--primary-base, #3b82f6)", parent: overlayParent });
       this.events.rebindHover(prev);
       this.insertBtns.resolveTarget(editor);
     }
@@ -15808,9 +15872,9 @@ form[method="dialog"] {
       e.dataTransfer?.setData("text/plain", "");
       this._setGhostImage(e);
       this.draggedElement.classList.add("dragging");
-      const root2 = this._container.getRootNode();
-      root2.querySelector("cms-bloc-actions")?.close();
-      root2.querySelector("cms-richtextbar")?.hide();
+      const root = this._container.getRootNode();
+      root.querySelector("cms-bloc-actions")?.close();
+      root.querySelector("cms-richtextbar")?.hide();
       this._originalDisplay = this.draggedElement.style.display;
       const toHide = this.draggedElement;
       setTimeout(() => {
@@ -16288,8 +16352,8 @@ form[method="dialog"] {
   }
 
   // src/control/components/editor/EditorSystem/EditorRoot/stripResidualChrome.ts
-  function stripResidualChrome(root2) {
-    walk2(root2);
+  function stripResidualChrome(root) {
+    walk2(root);
   }
   function walk2(el) {
     for (const a2 of Array.from(el.attributes)) {
@@ -17006,11 +17070,11 @@ form[method="dialog"] {
     groups = new Set(["default"]);
     opaqueTags = new Set;
     constructor(slot) {
-      const root2 = slot.getRootNode();
-      if (!(root2 instanceof ShadowRoot)) {
+      const root = slot.getRootNode();
+      if (!(root instanceof ShadowRoot)) {
         throw new Error("ObserverManager: slot must live in a ShadowRoot");
       }
-      const host = root2.host;
+      const host = root.host;
       this.workingElement = host;
       this._registerEditors();
       const initialAssigned = slot.assignedElements({ flatten: true });
@@ -17140,10 +17204,10 @@ form[method="dialog"] {
           map.get(id)?.dispose();
       });
     }
-    _disposeSubtree(root2) {
-      if (!root2.querySelectorAll)
+    _disposeSubtree(root) {
+      if (!root.querySelectorAll)
         return;
-      const descendants = root2.querySelectorAll(`[${p9r.attr.EDITOR.IDENTIFIER}]`);
+      const descendants = root.querySelectorAll(`[${p9r.attr.EDITOR.IDENTIFIER}]`);
       descendants.forEach((node) => {
         const id = node.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
         if (id)
@@ -17176,10 +17240,10 @@ form[method="dialog"] {
       this.opaqueTags.add(element.tag);
       this.register_editor(element);
       const roots = this.workingElement.querySelectorAll(element.tag);
-      roots.forEach((root2) => this._sealOpaqueSubtree(root2));
+      roots.forEach((root) => this._sealOpaqueSubtree(root));
     }
-    _sealOpaqueSubtree(root2) {
-      const descendants = root2.querySelectorAll(`[${p9r.attr.EDITOR.IDENTIFIER}]`);
+    _sealOpaqueSubtree(root) {
+      const descendants = root.querySelectorAll(`[${p9r.attr.EDITOR.IDENTIFIER}]`);
       descendants.forEach((node) => {
         const id = node.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
         if (!id)
@@ -17395,6 +17459,15 @@ form[method="dialog"] {
       this._mode = mode ?? newMode;
       setEditorContext({ mode: this._mode });
       this._syncModeQueryParam();
+    }
+    toggleMode() {
+      const next = this._mode === "editor" ? "view" : "editor";
+      const url = new URL(location.href);
+      if (next === "view")
+        url.searchParams.set("mode", "view");
+      else
+        url.searchParams.delete("mode");
+      location.replace(url.toString());
     }
     _syncModeQueryParam() {
       const url = new URL(location.href);
@@ -17792,7 +17865,7 @@ button span {
             window.location.href = getMetaBasePath() + "/admin/pages";
             break;
           case "switch-mode":
-            EditorSystem.switchMode();
+            EditorSystem.toggleMode();
             break;
           case "configuration":
             EditorSystem.openConfig();
@@ -19942,9 +20015,9 @@ button.active svg {
     self.shadowRoot.querySelector(".link-bar")?.classList.remove("open");
   }
   function switchLinkType(self, type) {
-    const root2 = self.shadowRoot;
-    root2.querySelectorAll(".link-type-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.linkType === type));
-    root2.querySelectorAll(".link-field").forEach((f) => {
+    const root = self.shadowRoot;
+    root.querySelectorAll(".link-type-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.linkType === type));
+    root.querySelectorAll(".link-field").forEach((f) => {
       f.style.display = f.dataset.linkField === type ? "" : "none";
     });
   }
@@ -20363,12 +20436,12 @@ button.active svg {
       });
     }
     connectedCallback() {
-      const root2 = this.shadowRoot;
+      const root = this.shadowRoot;
       if (!this._rootListenersAttached) {
-        root2.addEventListener("mousedown", this._onRootMousedown);
-        root2.addEventListener("mouseup", this._onRootMouseup);
-        root2.addEventListener("click", this._onRootClick);
-        root2.addEventListener("change", this._onRootChange);
+        root.addEventListener("mousedown", this._onRootMousedown);
+        root.addEventListener("mouseup", this._onRootMouseup);
+        root.addEventListener("click", this._onRootClick);
+        root.addEventListener("change", this._onRootChange);
         this._rootListenersAttached = true;
       }
       document.addEventListener("selectionchange", this._onSelectionChange);
@@ -20378,7 +20451,7 @@ button.active svg {
         this.pageLink = document.createElement("p9r-link");
         this.pageLink.setAttribute("label", "");
         this.pageLink.setAttribute("name", "href");
-        root2.querySelector(".link-pages-wrap").appendChild(this.pageLink);
+        root.querySelector(".link-pages-wrap").appendChild(this.pageLink);
       }
       this._syncSwatchVariables();
     }
@@ -22539,16 +22612,16 @@ button.active svg {
     }
     return out;
   }
-  function renderFragment(root2, context) {
+  function renderFragment(root, context) {
     const templates = [];
-    collectDirectTemplates(root2, templates);
+    collectDirectTemplates(root, templates);
     for (const tpl of templates) {
       tpl.parentNode?.replaceChild(processTemplate(tpl, context), tpl);
     }
-    interpolateNode(root2, context);
+    interpolateNode(root, context);
   }
-  function collectDirectTemplates(root2, out) {
-    for (const child of Array.from(root2.childNodes)) {
+  function collectDirectTemplates(root, out) {
+    for (const child of Array.from(root.childNodes)) {
       if (child.nodeType !== Node.ELEMENT_NODE)
         continue;
       const el = child;

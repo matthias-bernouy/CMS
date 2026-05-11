@@ -181,6 +181,25 @@ export default class EditorRoot extends HTMLElement {
     }
 
     /**
+     * User-facing mode toggle. Unlike `switchMode()` — which does an
+     * in-place flip used for the boot URL sync and for `pageContent`'s
+     * save-time harvest — this one writes the new mode into the URL and
+     * triggers a full `location.replace()`. The page reboots from scratch
+     * in the target mode, so data-fetching blocs naturally run their
+     * real-runtime mount path (no special bloc-side handling needed) and
+     * editor-mode blocs come back to a clean editor scope on the way
+     * back. `replace()` (not assignment) keeps history clean — the back
+     * button doesn't bounce between the same URL with stale mode state.
+     */
+    toggleMode() {
+        const next = this._mode === "editor" ? "view" : "editor";
+        const url = new URL(location.href);
+        if (next === "view") url.searchParams.set("mode", "view");
+        else                 url.searchParams.delete("mode");
+        location.replace(url.toString());
+    }
+
+    /**
      * Mirror the current mode into the URL as `?mode=view` (or strip the
      * param when back to editor — editor is the default). Uses
      * `rawReplaceState` to bypass the navigation guard: a same-page state

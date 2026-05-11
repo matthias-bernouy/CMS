@@ -16,6 +16,16 @@ import type { BlocActionExtension, DataExtension, RichTextBarExtension, Surface,
 
 export type { CustomAction } from './types';
 
+/**
+ * Module-level registry of editors whose own state-syncs are currently
+ * pinned. Used by `_shouldSuppressHover` so ancestor editors can detect
+ * that one of their descendants is pinned and silence their own hover
+ * accordingly — moving the cursor through a parent navbar/section while
+ * editing a pinned dropdown inside it would otherwise pop the parent's
+ * BAG and steal the focus.
+ */
+const _pinnedEditors = new Set<Editor>();
+
 export abstract class Editor {
 
     public target: HTMLElement;
@@ -161,6 +171,7 @@ export abstract class Editor {
 
     public dispose() {
         document.compIdentifierToEditor?.delete(this._identifier);
+        _pinnedEditors.delete(this);
         this._extensions.clear();
         this._hover.unbind();
         this._mode.dispose();
@@ -232,14 +243,59 @@ export abstract class Editor {
     public notifyPinStateChanged(stateSync?: StateSync) {
         const anyPinned = this.stateSyncs.some(s => s.isPinned);
         if (anyPinned) {
-            this._hover.unbind();
+            _pinnedEditors.add(this);
             getClosestEditorSystem(this.target).blocActions.close();
             this._pinMode.enter();
         } else {
+            _pinnedEditors.delete(this);
             this._pinMode.exit();
-            if (this.isInteractive) this._hover.bind();
+        }
+        // Re-evaluate the hover binding for self + every ancestor editor.
+        // Ancestors need refreshing because their `_shouldSuppressHover`
+        // now sees (or stops seeing) this editor in `_pinnedEditors`.
+        // Descendants and siblings are unaffected — their suppression
+        // depends on their own ancestor chain, which didn't change.
+        this._refreshHoverBinding();
+        let p: HTMLElement | null = this.target.parentElement;
+        while (p) {
+            const id = p.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+            if (id) document.compIdentifierToEditor?.get(id)?._refreshHoverBinding();
+            p = p.parentElement;
         }
         this.onEditorPinState?.(anyPinned, stateSync);
+    }
+
+    /**
+     * Bind or unbind the hover listener based on the current pin
+     * landscape. Single source of truth: any pin (own or descendant)
+     * suppresses; otherwise bind if the editor is interactive. Idempotent
+     * — safe to call from anywhere on any pin state change.
+     */
+    public _refreshHoverBinding(): void {
+        if (this._shouldSuppressHover()) {
+            this._hover.unbind();
+            return;
+        }
+        if (this.isInteractive) this._hover.bind();
+    }
+
+    /**
+     * True when this editor should not respond to hover. Either:
+     * - The editor itself has a pinned state-sync, or
+     * - One of its descendant editors does — because in that case the
+     *   user is focused on the descendant subtree and the cursor
+     *   inevitably crosses this editor's bounding box to get there.
+     *
+     * Sibling and unrelated pins do NOT suppress; the user can still
+     * hover elsewhere on the page.
+     */
+    private _shouldSuppressHover(): boolean {
+        if (this.stateSyncs.some(s => s.isPinned)) return true;
+        for (const e of _pinnedEditors) {
+            if (e === this) continue;
+            if (this.target.contains(e.target)) return true;
+        }
+        return false;
     }
 
     // ── Action-bar features ─────────────────────────────────────────
