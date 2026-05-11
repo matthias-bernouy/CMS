@@ -1,44 +1,48 @@
 import type { Component } from "src/control/core/editorSystem/Component";
-import type { MediaCenter } from "../../../MediaCenter/MediaCenter";
 import css from "./SvgSync.style.css" with { type: "text" };
-import { sanitizeSvg } from "./sanitize";
+import { lockActions } from "./lock";
+import { resolveTarget, syncDefault } from "./target";
+import { render, updatePreview } from "./view";
+import { openPicker } from "./mediaCenter";
 
 /**
- * <p9r-svg-sync target=".icon" label="Icon"><span>…</span></p9r-svg-sync>
+ * <p9r-svg-sync slotTarget="icon" label="Icon">
+ *     <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4"/></svg>
+ * </p9r-svg-sync>
  *
- * Inline SVG swap for blocs. Replaces the `<svg>` element matched by
- * `target` (selector relative to the bloc shadow) with one picked from
- * the Media Center. The new markup is sanitized server-of-trust-side
- * (`sanitize.ts`) — disallowed tags, `on*` handlers and dangerous href
- * schemes are stripped before injection.
+ * Inline SVG picker for blocs. Mirrors `<p9r-image-sync>`'s slot-target
+ * pattern: addresses the slotted child via `slotTarget`, not a shadow
+ * selector. The slotted SVG IS what the user sees (projected through
+ * `<slot name="X">` in the bloc shadow), so the preview, the swap target,
+ * and the saved markup all reference the same node — no double-mechanism
+ * drift between an inline shadow default and a slotted override.
  *
- * The bloc author OWNS the swap-safety contract:
- *   1. Use `currentColor` for fill/stroke so cascade colors the icon.
- *   2. Size via the WRAPPER element, not via the SVG's `width`/`height`.
- *   3. Don't target SVG internals (`#myPath`, `.icon path:nth-child(2)`).
- * Documented in `.claude/rules/cms-bloc-development.md` (rule 7).
+ * Default content comes from the sync's own children: clone the inline
+ * `<svg>` template at mount if no `<svg slot="X">` exists yet on the
+ * component. Source-code-trusted, no sanitize. User-uploaded SVGs (via
+ * MediaCenter) go through `sanitizeSvg` before injection.
  *
- * @attr target — required, CSS selector to the SVG inside the bloc shadow.
- * @attr label  — optional, shown above the picker preview.
+ * The bloc author still owns the swap-safety contract (rule 7):
+ *   1. `currentColor` for fill/stroke.
+ *   2. Size via the wrapper, not the SVG.
+ *   3. Don't target SVG internals.
+ *
+ * @attr slotTarget — required, slot name where the `<svg>` lives in the bloc.
+ * @attr label      — optional, shown above the picker card.
  */
 export class SvgSync extends HTMLElement {
 
-    private _component: Component | null = null;
-    private _preview: HTMLElement | null = null;
-    private _error:   HTMLElement | null = null;
+    _component: Component | null = null;
+    _target: SVGElement | null = null;
+    _preview: HTMLElement | null = null;
+    _error: HTMLElement | null = null;
+    _prepared = false;
 
     constructor() {
         super();
-        const root = this.attachShadow({ mode: "open" });
-        root.innerHTML = `
-            <style>${css}</style>
-            <span class="label"></span>
-            <div class="card" part="card">
-                <div class="preview" part="preview"></div>
-                <span class="action">Click to swap…</span>
-            </div>
-            <div class="error" part="error" hidden></div>
-        `;
+        // Own shadow root so the style applies regardless of how many
+        // shadow roots wrap the host (same rationale as ImageSync).
+        this.attachShadow({ mode: "open" }).innerHTML = `<style>${css}</style>`;
     }
 
     connectedCallback() {
@@ -48,88 +52,52 @@ export class SvgSync extends HTMLElement {
                 `[${p9r.attr.EDITOR.IDENTIFIER}="${componentIdentifier}"]`,
             );
         }
-        const root = this.shadowRoot!;
-        root.querySelector(".label")!.textContent = this.getAttribute("label") || "Icon";
-        this._preview = root.querySelector(".preview");
-        this._error   = root.querySelector(".error");
-        root.querySelector(".card")!.addEventListener("click", () => this._openPicker());
-        this._refreshPreview();
+        requestAnimationFrame(() => {
+            if (!this._prepared) syncDefault(this);
+            render(this);
+        });
     }
 
-    private _resolveTarget(): SVGElement | null {
-        const sel = this.getAttribute("target");
-        if (!sel) return null;
-        return this._component?.shadowRoot?.querySelector(sel) ?? null;
+    /** Eager pass while detached: seeds default + locks target. Skips render. */
+    prepare(component: Component) {
+        this._component = component;
+        syncDefault(this);
+        this._target = resolveTarget(this);
+        lockActions(this._target);
+        this._prepared = true;
     }
 
-    private _refreshPreview() {
-        const target = this._resolveTarget();
-        if (!this._preview) return;
-        this._preview.innerHTML = "";
-        if (target instanceof SVGElement) {
-            this._preview.appendChild(target.cloneNode(true));
-        } else {
-            const empty = document.createElement("div");
-            empty.className = "empty";
-            this._preview.appendChild(empty);
-        }
+    init(opts?: { added?: HTMLElement; removed?: HTMLElement }) {
+        const target = resolveTarget(this);
+        // Same bail rule as ImageSync.init: ignore mutations that don't
+        // concern our own slotted child — keeps sibling fan-out cheap.
+        // `added`/`removed` are typed as HTMLElement but the actual node
+        // is an SVGElement when our SVG is involved; compare by Element
+        // identity, which is the only thing that matters.
+        const added = opts?.added as unknown as Element | undefined;
+        const removed = opts?.removed as unknown as Element | undefined;
+        if (added && added !== target) return;
+        if (removed && removed !== this._target && removed !== target) return;
+        this._target = target;
+        lockActions(this._target);
+        updatePreview(this);
     }
 
-    private _showError(msg: string) {
+    openMediaCenter() { openPicker(this); }
+
+    _showError(msg: string) {
         if (!this._error) return;
         this._error.textContent = msg;
         this._error.hidden = false;
     }
 
-    private _clearError() {
+    _clearError() {
         if (!this._error) return;
         this._error.textContent = "";
         this._error.hidden = true;
     }
 
-    private _openPicker() {
-        this._clearError();
-        const mc = document.createElement("cms-media-center") as MediaCenter;
-        document.body.appendChild(mc);
-
-        const handler = async (e: Event) => {
-            mc.removeEventListener("select-item", handler);
-            const src = (e as CustomEvent).detail?.src as string | undefined;
-            mc.remove();
-            if (!src) return;
-            if (!/\.svg($|\?)/i.test(src)) {
-                this._showError("Please pick an SVG file (.svg).");
-                return;
-            }
-            try {
-                const svgText = await fetch(src).then(r => r.text());
-                const cleaned = sanitizeSvg(svgText);
-                this._injectInto(cleaned);
-            } catch (err) {
-                this._showError(err instanceof Error ? err.message : String(err));
-            }
-        };
-        mc.addEventListener("select-item", handler);
-        requestAnimationFrame(() => mc.show(["folder", "image"]));
-    }
-
-    private _injectInto(svgMarkup: string) {
-        const target = this._resolveTarget();
-        if (!target) { this._showError("Target SVG not found in bloc."); return; }
-
-        const parsed = new DOMParser().parseFromString(svgMarkup, "image/svg+xml");
-        const fresh  = parsed.documentElement;
-        if (!(fresh instanceof SVGElement)) { this._showError("Sanitized markup is not a valid SVG."); return; }
-
-        // Preserve the target's class attribute so the bloc's CSS keeps
-        // matching the new node. Everything else (viewBox, xmlns, paths)
-        // comes from the new SVG.
-        const cls = target.getAttribute("class");
-        if (cls) fresh.setAttribute("class", cls);
-
-        target.replaceWith(fresh);
-        this._refreshPreview();
-    }
+    get slotName(): string { return this.getAttribute("slotTarget") || ""; }
 }
 
 if (!customElements.get("p9r-svg-sync")) {

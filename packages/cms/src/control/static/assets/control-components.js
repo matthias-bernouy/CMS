@@ -8765,7 +8765,7 @@ p9r-tag:hover {
   }
 
   // src/control/core/editorSystem/Editor/panel.ts
-  var SYNC_SELECTORS = "p9r-comp-sync, p9r-image-sync, p9r-attr-sync, p9r-state-sync";
+  var SYNC_SELECTORS = "p9r-comp-sync, p9r-image-sync, p9r-svg-sync, p9r-attr-sync, p9r-state-sync";
 
   class PanelConfig {
     editor;
@@ -12879,6 +12879,105 @@ ${followMessage}`)) {
 }
 `;
 
+  // src/control/components/editor/componentSync/sync/SvgSync/lock.ts
+  var LOCKED_ACTIONS2 = [
+    "DISABLE_DELETE",
+    "DISABLE_DUPLICATE",
+    "DISABLE_ADD_BEFORE",
+    "DISABLE_ADD_AFTER",
+    "DISABLE_CHANGE_COMPONENT",
+    "DISABLE_DRAGGING",
+    "DISABLE_SAVE_AS_TEMPLATE"
+  ];
+  function lockActions2(target) {
+    if (!target)
+      return;
+    let changed = false;
+    for (const key of LOCKED_ACTIONS2) {
+      const attr = p9r.attr.ACTION[key];
+      if (target.getAttribute(attr) !== "true") {
+        target.setAttribute(attr, "true");
+        changed = true;
+      }
+    }
+    if (!changed)
+      return;
+    const id = target.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
+    if (id) {
+      const editor = document.compIdentifierToEditor?.get(id);
+      editor?.viewEditor();
+    }
+  }
+
+  // src/control/components/editor/componentSync/sync/SvgSync/target.ts
+  function resolveTarget2(host) {
+    const component = host._component;
+    if (!component)
+      return null;
+    const slot = host.slotName;
+    if (!slot)
+      return component.querySelector("svg");
+    return component.querySelector(`svg[slot="${slot}"]`);
+  }
+  function syncDefault2(host) {
+    if (resolveTarget2(host))
+      return;
+    const template = host.querySelector("svg");
+    if (!template)
+      return;
+    const fresh = template.cloneNode(true);
+    if (host.slotName)
+      fresh.setAttribute("slot", host.slotName);
+    lockActions2(fresh);
+    host._component?.appendChild(fresh);
+  }
+
+  // src/control/components/editor/componentSync/sync/SvgSync/view.ts
+  function render2(host) {
+    const shadow = host.shadowRoot;
+    Array.from(shadow.children).forEach((c) => {
+      if (c.tagName !== "STYLE")
+        c.remove();
+    });
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = host.getAttribute("label") || "Icon";
+    const card = document.createElement("div");
+    card.className = "card";
+    card.setAttribute("part", "card");
+    host._preview = document.createElement("div");
+    host._preview.className = "preview";
+    host._preview.setAttribute("part", "preview");
+    const action = document.createElement("span");
+    action.className = "action";
+    action.textContent = "Click to swap…";
+    card.appendChild(host._preview);
+    card.appendChild(action);
+    card.addEventListener("click", () => host.openMediaCenter());
+    host._error = document.createElement("div");
+    host._error.className = "error";
+    host._error.setAttribute("part", "error");
+    host._error.hidden = true;
+    shadow.appendChild(label);
+    shadow.appendChild(card);
+    shadow.appendChild(host._error);
+    updatePreview2(host);
+  }
+  function updatePreview2(host) {
+    if (!host._preview)
+      return;
+    host._preview.innerHTML = "";
+    const live = resolveTarget2(host);
+    const source = live ?? host.querySelector("svg");
+    if (source) {
+      host._preview.appendChild(source.cloneNode(true));
+    } else {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      host._preview.appendChild(empty);
+    }
+  }
+
   // src/control/components/editor/componentSync/sync/SvgSync/sanitize.ts
   var ALLOWED_TAGS = new Set([
     "svg",
@@ -12964,54 +13063,98 @@ ${followMessage}`)) {
       walk(child);
   }
 
+  // src/control/components/editor/componentSync/sync/SvgSync/mediaCenter.ts
+  function openPicker(host) {
+    host._clearError();
+    const mc = document.createElement("cms-media-center");
+    document.body.appendChild(mc);
+    const handler = async (e) => {
+      mc.removeEventListener("select-item", handler);
+      const src = e.detail?.src;
+      mc.remove();
+      if (!src)
+        return;
+      if (!/\.svg($|\?)/i.test(src)) {
+        host._showError("Please pick an SVG file (.svg).");
+        return;
+      }
+      try {
+        const raw = await fetch(src).then((r) => r.text());
+        const cleaned = sanitizeSvg(raw);
+        swapInto(host, cleaned);
+      } catch (err) {
+        host._showError(err instanceof Error ? err.message : String(err));
+      }
+    };
+    mc.addEventListener("select-item", handler);
+    requestAnimationFrame(() => mc.show(["folder", "image"]));
+  }
+  function swapInto(host, svgMarkup) {
+    const target = resolveTarget2(host);
+    if (!target) {
+      host._showError("Target SVG not found in bloc.");
+      return;
+    }
+    const parsed = new DOMParser().parseFromString(svgMarkup, "image/svg+xml");
+    const fresh = parsed.documentElement;
+    if (!(fresh instanceof SVGElement)) {
+      host._showError("Sanitized markup is not a valid SVG.");
+      return;
+    }
+    const slot = target.getAttribute("slot");
+    if (slot)
+      fresh.setAttribute("slot", slot);
+    const cls = target.getAttribute("class");
+    if (cls)
+      fresh.setAttribute("class", cls);
+    lockActions2(fresh);
+    target.replaceWith(fresh);
+    updatePreview2(host);
+  }
+
   // src/control/components/editor/componentSync/sync/SvgSync/SvgSync.ts
   class SvgSync extends HTMLElement {
     _component = null;
+    _target = null;
     _preview = null;
     _error = null;
+    _prepared = false;
     constructor() {
       super();
-      const root = this.attachShadow({ mode: "open" });
-      root.innerHTML = `
-            <style>${SvgSync_style_default}</style>
-            <span class="label"></span>
-            <div class="card" part="card">
-                <div class="preview" part="preview"></div>
-                <span class="action">Click to swap…</span>
-            </div>
-            <div class="error" part="error" hidden></div>
-        `;
+      this.attachShadow({ mode: "open" }).innerHTML = `<style>${SvgSync_style_default}</style>`;
     }
     connectedCallback() {
       const componentIdentifier = this.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
       if (componentIdentifier && !this._component) {
         this._component = document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${componentIdentifier}"]`);
       }
-      const root = this.shadowRoot;
-      root.querySelector(".label").textContent = this.getAttribute("label") || "Icon";
-      this._preview = root.querySelector(".preview");
-      this._error = root.querySelector(".error");
-      root.querySelector(".card").addEventListener("click", () => this._openPicker());
-      this._refreshPreview();
+      requestAnimationFrame(() => {
+        if (!this._prepared)
+          syncDefault2(this);
+        render2(this);
+      });
     }
-    _resolveTarget() {
-      const sel = this.getAttribute("target");
-      if (!sel)
-        return null;
-      return this._component?.shadowRoot?.querySelector(sel) ?? null;
+    prepare(component) {
+      this._component = component;
+      syncDefault2(this);
+      this._target = resolveTarget2(this);
+      lockActions2(this._target);
+      this._prepared = true;
     }
-    _refreshPreview() {
-      const target = this._resolveTarget();
-      if (!this._preview)
+    init(opts) {
+      const target = resolveTarget2(this);
+      const added = opts?.added;
+      const removed = opts?.removed;
+      if (added && added !== target)
         return;
-      this._preview.innerHTML = "";
-      if (target instanceof SVGElement) {
-        this._preview.appendChild(target.cloneNode(true));
-      } else {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        this._preview.appendChild(empty);
-      }
+      if (removed && removed !== this._target && removed !== target)
+        return;
+      this._target = target;
+      lockActions2(this._target);
+      updatePreview2(this);
+    }
+    openMediaCenter() {
+      openPicker(this);
     }
     _showError(msg) {
       if (!this._error)
@@ -13025,48 +13168,8 @@ ${followMessage}`)) {
       this._error.textContent = "";
       this._error.hidden = true;
     }
-    _openPicker() {
-      this._clearError();
-      const mc = document.createElement("cms-media-center");
-      document.body.appendChild(mc);
-      const handler = async (e) => {
-        mc.removeEventListener("select-item", handler);
-        const src = e.detail?.src;
-        mc.remove();
-        if (!src)
-          return;
-        if (!/\.svg($|\?)/i.test(src)) {
-          this._showError("Please pick an SVG file (.svg).");
-          return;
-        }
-        try {
-          const svgText = await fetch(src).then((r) => r.text());
-          const cleaned = sanitizeSvg(svgText);
-          this._injectInto(cleaned);
-        } catch (err) {
-          this._showError(err instanceof Error ? err.message : String(err));
-        }
-      };
-      mc.addEventListener("select-item", handler);
-      requestAnimationFrame(() => mc.show(["folder", "image"]));
-    }
-    _injectInto(svgMarkup) {
-      const target = this._resolveTarget();
-      if (!target) {
-        this._showError("Target SVG not found in bloc.");
-        return;
-      }
-      const parsed = new DOMParser().parseFromString(svgMarkup, "image/svg+xml");
-      const fresh = parsed.documentElement;
-      if (!(fresh instanceof SVGElement)) {
-        this._showError("Sanitized markup is not a valid SVG.");
-        return;
-      }
-      const cls = target.getAttribute("class");
-      if (cls)
-        fresh.setAttribute("class", cls);
-      target.replaceWith(fresh);
-      this._refreshPreview();
+    get slotName() {
+      return this.getAttribute("slotTarget") || "";
     }
   }
   if (!customElements.get("p9r-svg-sync")) {
@@ -20225,7 +20328,7 @@ button.active svg {
     const dataExts = adaptDataExtensions(startEl);
     const exts = [...richExts, ...dataExts];
     self._currentExtensions = exts;
-    render2(self, exts);
+    render3(self, exts);
   }
   function closeCompletions(self) {
     const popover = self.shadowRoot?.getElementById("completions");
@@ -20239,7 +20342,7 @@ button.active svg {
     self.shadowRoot.querySelector(".ext-separator").style.display = "none";
     closeCompletions(self);
   }
-  function render2(self, exts) {
+  function render3(self, exts) {
     const slot = self.shadowRoot.getElementById("extensions");
     const sep = self.shadowRoot.querySelector(".ext-separator");
     if (exts.length === 0) {

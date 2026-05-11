@@ -2,7 +2,7 @@ import type { SyncPanel } from '../../../components/editor/componentSync/SyncPan
 import getClosestEditorSystem from '../../dom/editor/getClosestEditorSystem';
 import type { Editor } from './Editor';
 
-const SYNC_SELECTORS = 'p9r-comp-sync, p9r-image-sync, p9r-attr-sync, p9r-state-sync';
+const SYNC_SELECTORS = 'p9r-comp-sync, p9r-image-sync, p9r-svg-sync, p9r-attr-sync, p9r-state-sync';
 
 export class PanelConfig {
 
