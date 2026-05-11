@@ -19,14 +19,25 @@
 export type CspExtras = {
     connectExtras: string[];
     mediaExtras:   string[];
+    /** Hosts to allow as origins for `<link rel="stylesheet">`. Needed when
+     *  the rendered HTML references stylesheets uploaded to a public CDN
+     *  served on a different host than the page itself. */
+    styleExtras?:  string[];
+    /** Hosts to allow as origins for `<script src>`. Same rationale as
+     *  `styleExtras` — pre-uploaded JS bundles on a cross-origin CDN. */
+    scriptExtras?: string[];
 };
 
 const EMPTY_EXTRAS: CspExtras = { connectExtras: [], mediaExtras: [] };
 
 export function buildCspContent(extras: CspExtras = EMPTY_EXTRAS): string {
+    const style  = ["'self'", "'unsafe-inline'", ...(extras.styleExtras  ?? [])].join(" ");
+    const script = ["'self'", ...(extras.scriptExtras ?? [])].join(" ");
+
     const parts = [
         "default-src 'self'",
-        "style-src 'self' 'unsafe-inline'",
+        `script-src ${script}`,
+        `style-src ${style}`,
         "img-src 'self' data: https:",
         "base-uri 'self'",
         "form-action 'self'",

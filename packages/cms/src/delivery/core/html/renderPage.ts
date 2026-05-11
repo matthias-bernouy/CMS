@@ -31,10 +31,6 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     const head = document.head;
 
     const settings = await ctx.repository.getSystem();
-    const cspExtras = {
-        connectExtras: [...settings.security.connectExtras],
-        mediaExtras:   [...settings.security.mediaExtras],
-    };
 
     const expandedContent = await expandSnippets(page.content, ctx.repository);
     document.body.innerHTML = expandedContent;
@@ -42,6 +38,21 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     const blocList = await ctx.repository.getBlocsList();
     const usedTags = findUsedBlocTags(expandedContent, blocList);
     const assets   = await ctx.resolveAssets(usedTags);
+
+    // Whitelist asset hosts in CSP. When the build pipeline pre-uploads CSS
+    // / JS to a public CDN whose host differs from the page's serving host
+    // (typical when an alias domain points at the bucket), absolute asset
+    // URLs would otherwise be blocked by `style-src 'self'` /
+    // `default-src 'self'`. Same-origin assets contribute nothing — the
+    // unique-host set naturally drops them via Set semantics.
+    const styleHosts  = uniqueOrigins([assets.styleUrl]);
+    const scriptHosts = uniqueOrigins(assets.scriptUrls);
+    const cspExtras = {
+        connectExtras: [...settings.security.connectExtras],
+        mediaExtras:   [...settings.security.mediaExtras],
+        styleExtras:   styleHosts,
+        scriptExtras:  scriptHosts,
+    };
 
     // <head> assembly, in exact document order. Consumer-supplied head
     // injectors run right after the document basics so they land before any
@@ -64,4 +75,12 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     buildScriptTags    (document, head, assets);
 
     return compress(document.toString(), "text/html");
+}
+
+function uniqueOrigins(urls: string[]): string[] {
+    const out = new Set<string>();
+    for (const u of urls) {
+        try { out.add(new URL(u).origin); } catch { /* relative URL → no origin to whitelist */ }
+    }
+    return [...out];
 }

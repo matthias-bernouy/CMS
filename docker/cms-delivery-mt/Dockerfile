@@ -9,9 +9,9 @@ ARG BUN_VERSION=1.3.6
 # 1. System deps + Bun + Chromium dependencies for Playwright.
 #    The chromium-driver package pulls in the runtime libs Playwright needs;
 #    `playwright install chromium` (run later from the workspace) downloads
-#    the actual browser binary.
+#    the actual browser binary. jq is needed by okms-fetch.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl unzip ca-certificates fonts-liberation libnss3 libatk-bridge2.0-0 \
+        curl unzip ca-certificates jq fonts-liberation libnss3 libatk-bridge2.0-0 \
         libdrm2 libgbm1 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 \
         libxrandr2 libgtk-3-0 libpango-1.0-0 libcairo2 libasound2 libatspi2.0-0 \
  && curl -fsSL "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip" -o /tmp/bun.zip \
@@ -47,6 +47,14 @@ RUN ln -s /socle/node_modules /app/node_modules
 COPY docker/cms-delivery-mt/server.ts /app/server.ts
 RUN chown -R delivery:delivery /app
 
-USER delivery
+# 6. Shared OKMS bootstrap wrapper (pulls config bundle at boot via mTLS).
+COPY docker/_shared/okms-fetch.sh    /usr/local/bin/okms-fetch
+COPY docker/cms-delivery-mt/entrypoint.sh /usr/local/bin/cms-delivery-entrypoint.sh
+RUN chmod +x /usr/local/bin/okms-fetch /usr/local/bin/cms-delivery-entrypoint.sh
+
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
-ENTRYPOINT ["bun", "run", "/app/server.ts"]
+
+# Boot chain: okms-fetch (mTLS pull → exports env) → entrypoint (drops to
+# delivery user → bun). Runs as root so okms-fetch can read the mounted
+# cert/key (root:root 0400).
+ENTRYPOINT ["/usr/local/bin/okms-fetch", "/usr/local/bin/cms-delivery-entrypoint.sh"]
