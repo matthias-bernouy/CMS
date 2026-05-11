@@ -49,7 +49,8 @@ function buildServerBlock(alias: Alias, proxies: BucketProxy[], certPath: AliasC
     const { cert, key } = certPath(alias.domain);
     const proxyBlock    = proxies.length > 0 ? indent(renderProxyLocations(proxies), 4) + "\n\n" : "";
     return `server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${alias.domain};
 
     ssl_certificate     ${cert};

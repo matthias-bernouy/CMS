@@ -23,9 +23,11 @@ function baselineDirectives(providerId: string): string[] {
         // the parent http {} context (see docker/cdn-edge/nginx.conf).
         `proxy_set_header Upgrade            $http_upgrade;`,
         `proxy_set_header Connection         $connection_upgrade;`,
-        // Cookie scoping: rewrite Path on Set-Cookie so providers don't
-        // see each other's cookies; rewrite Domain to the visible host.
-        `proxy_cookie_path   ~^(/.*)$ ${trailing}$1;`,
+        // Cookie domain scoping: rewrite Domain on Set-Cookie to the
+        // visible host so the browser accepts upstream cookies under our
+        // origin. Path scoping (proxy_cookie_path) was removed — Lua-set
+        // cookies bypass it anyway, and the consumer accepts shared
+        // cookies across providers for now (auth standardisation pending).
         `proxy_cookie_domain ~.+ $host;`,
         // 3xx Location: /foo → /.cms/data/<providerId>/foo so relative
         // redirects from the upstream don't escape the proxy surface.
@@ -33,6 +35,13 @@ function baselineDirectives(providerId: string): string[] {
         `proxy_buffering          off;`,
         `proxy_request_buffering  off;`,
         `client_max_body_size     ${MAX_BODY_SIZE};`,
+        // SNI in the TLS handshake to the upstream. Off by default since
+        // nginx 1.13 — without it, CDN-fronted upstreams (Cloudflare /
+        // Supabase / Stripe / …) reject the handshake and we get 502s
+        // before any HTTP exchange. Together with `proxy_ssl_name $host`
+        // (resolved from the proxy_pass URL by default), this restores
+        // the SNI that any modern HTTPS upstream expects.
+        `proxy_ssl_server_name    on;`,
     ];
 }
 

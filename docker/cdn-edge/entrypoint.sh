@@ -68,7 +68,7 @@ envsubst '${PUBLIC_DOMAIN} ${ORIGIN_HOST} ${EDGE_ID}' < "${NGINX_CONF}.template"
 
 # Temporary nginx config: only the port-80 catch-all (which proxy_passes
 # ACME challenges back to origin and 301-redirects everything else).
-TMP_NGINX_CONF=/etc/nginx/conf.d/cdn/nginx.conf.bootstrap
+TMP_NGINX_CONF="${NGINX_PREFIX}/conf/cdn/nginx.conf.bootstrap"
 cat > "${TMP_NGINX_CONF}" <<EOF_BOOTSTRAP
 server {
     listen 80 default_server;

@@ -113,7 +113,8 @@ server {
 
 # Port 443 — main bucket-serving host. Path-based routing.
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${PUBLIC_DOMAIN};
 
     ssl_certificate     /var/lib/cdn/lego/certificates/${PUBLIC_DOMAIN}.crt;
@@ -131,8 +132,7 @@ server {
         add_header Cache-Control                $effective_cache_control always;
         add_header Access-Control-Allow-Origin  "*"                      always;
 
-        brotli_static on;
-        gzip_static   on;
+        gzip_static on;
 
         error_page 404 = @bucket_notfound;
         try_files /$rest /$rest.html /$rest/index.html =404;
