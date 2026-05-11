@@ -19,8 +19,13 @@ export function resolveTargetForLink(req: NavigationRequest): void {
             // Resolve via the editor context's path→id map (populated by
             // EditorRoot from `/api/page/list`); fall back to the path
             // itself for in-memory dev where id === path.
-            const id = getEditorContext().pageIdByPath.get(cls.target) ?? cls.target;
-            const dest = `${getMetaBasePath()}/editor/page?id=${encodeURIComponent(id)}`;
+            const ctx = getEditorContext();
+            const id  = ctx.pageIdByPath.get(cls.target) ?? cls.target;
+            const params = new URLSearchParams({ id });
+            // Persist the current mode across the cross-editor jump — if
+            // the user was previewing, they stay previewing on the next page.
+            if (ctx.mode === "view") params.set("mode", "view");
+            const dest = `${getMetaBasePath()}/editor/page?${params.toString()}`;
             window.location.href = dest;
             return;
         }

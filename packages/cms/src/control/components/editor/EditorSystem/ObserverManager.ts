@@ -7,6 +7,7 @@ import { EmptyEditor } from "../../../core/editorSystem/registerEditor";
 import { TextEditor, textTags } from "src/control/core/editorSystem/defaultEditors/TextEditor";
 import { ListEditor } from "src/control/core/editorSystem/defaultEditors/ListEditor";
 import { SnippetEditor } from "src/control/core/editorSystem/defaultEditors/SnippetEditor";
+import { getEditorContext } from "src/control/core/editorSystem/editorContext";
 
 export type TagElement = {
     cl: new (node: HTMLElement) => Editor,
@@ -281,7 +282,14 @@ export class ObserverManager {
             // a clean retry.
             try {
                 const editor = new cl(node);
+                // viewEditor() first to run the full init() lifecycle and
+                // register baseline state; then drop to viewClient() if the
+                // system is currently in view mode. Without this, nodes
+                // added by data-driven blocs after a `?mode=view` boot stay
+                // editorized forever — ModeBinding only fires on subsequent
+                // switches, not on first construction.
                 editor.viewEditor();
+                if (getEditorContext().mode === "view") editor.viewClient();
             } catch (err) {
                 if (!(err instanceof NearestElementRequire)) throw err;
                 document.compIdentifierToEditor?.forEach((ed, id) => {

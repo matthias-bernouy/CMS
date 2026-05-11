@@ -17,6 +17,7 @@ import {
 import { updateState } from "./state";
 import { refreshExtensions, closeCompletions } from "./extensions";
 import type { RichTextBar } from "./RichTextBar";
+import { getEditorContext } from "src/control/core/editorSystem/editorContext";
 
 export function handleCustomColorInput(self: RichTextBar, e: Event): void {
     const input = e.target as HTMLInputElement;
@@ -58,6 +59,15 @@ export function handleClick(self: RichTextBar, e: MouseEvent): void {
 
 export function handleSelection(self: RichTextBar): void {
     if (self.interacting) return;
+
+    // View mode has no editing surface — text is selectable as in any
+    // normal page, but the bar would just float over inert content. Bail
+    // (and make sure we hide any leftover bar from a previous mode switch).
+    if (getEditorContext().mode === "view") {
+        self.hide();
+        closeCompletions(self);
+        return;
+    }
 
     const activeEl = self.shadowRoot!.activeElement;
     if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName.includes("-"))) {

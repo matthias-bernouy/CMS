@@ -2,7 +2,7 @@ import html from "./template.html" with { type: "text" }
 import css from "./EditorRoot.style.css" with { type: "text" }
 import { isToggable } from "src/control/core/isToggable";
 import { setEditorContext, clearEditorContext } from "src/control/core/editorSystem/editorContext";
-import { installNavigationGuard } from "src/control/core/editorSystem/navigationGuard";
+import { installNavigationGuard, rawReplaceState } from "src/control/core/editorSystem/navigationGuard";
 import { installLinkInterceptor } from "src/control/core/editorSystem/installLinkInterceptor";
 import { installFetchProxy } from "src/control/core/editorSystem/installFetchProxy";
 import { watchForDirty, isDirty } from "src/control/core/editorSystem/dirtyState";
@@ -60,6 +60,15 @@ export default class EditorRoot extends HTMLElement {
                 this._blocLibrary = this.shadowRoot?.querySelector("cms-bloc-library") as BlocLibrary;
 
                 if (this._isWorkingEmpty()) await this._maybePickTemplate();
+
+                // Honor `?mode=view` from the URL — keeps the user in view
+                // mode across navigations (see `linkNavigation.ts`) and
+                // makes hand-edited URLs predictable. Editors are now wired
+                // (ObserverManager + waitForScripts done) so the cascade
+                // dispatched by switchMode reaches them.
+                if (new URLSearchParams(location.search).get("mode") === "view") {
+                    this.switchMode("view");
+                }
 
                 workingElement.style.visibility = "visible";
             })
@@ -167,6 +176,22 @@ export default class EditorRoot extends HTMLElement {
             detail: mode ?? newMode
         }))
         this._mode = mode ?? newMode;
+        setEditorContext({ mode: this._mode });
+        this._syncModeQueryParam();
+    }
+
+    /**
+     * Mirror the current mode into the URL as `?mode=view` (or strip the
+     * param when back to editor — editor is the default). Uses
+     * `rawReplaceState` to bypass the navigation guard: a same-page state
+     * update is not a navigation, and routing it through `requestNavigation`
+     * would either no-op or trigger a redirect loop.
+     */
+    private _syncModeQueryParam(): void {
+        const url = new URL(location.href);
+        if (this._mode === "view") url.searchParams.set("mode", "view");
+        else                       url.searchParams.delete("mode");
+        if (url.href !== location.href) rawReplaceState(history.state, "", url.toString());
     }
 
     get observer(){

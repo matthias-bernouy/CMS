@@ -13493,7 +13493,8 @@ cms-bag-breadcrumb[data-inline="right"] {
     knownPagePaths: new Set,
     pageIdByPath: new Map,
     isDirty: () => false,
-    requestNavigation: noop
+    requestNavigation: noop,
+    mode: "editor"
   };
   function setEditorContext(patch) {
     Object.assign(_ctx, patch);
@@ -13526,6 +13527,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     _ctx.pageIdByPath = new Map;
     _ctx.isDirty = () => false;
     _ctx.requestNavigation = noop;
+    _ctx.mode = "editor";
     setActiveLink(null);
   }
 
@@ -16103,9 +16105,19 @@ form[method="dialog"] {
   }
 
   // src/control/core/editorSystem/navigationGuard.ts
+  var _origPushState = null;
+  var _origReplaceState = null;
+  function rawReplaceState(state, _unused, url) {
+    if (_origReplaceState)
+      _origReplaceState.call(history, state, _unused, url);
+    else
+      history.replaceState(state, _unused, url);
+  }
   function installNavigationGuard() {
     const origPushState = history.pushState.bind(history);
     const origReplaceState = history.replaceState.bind(history);
+    _origPushState = origPushState;
+    _origReplaceState = origReplaceState;
     const intercept = (raw) => {
       if (raw === null || raw === undefined || raw === "")
         return false;
@@ -16126,6 +16138,8 @@ form[method="dialog"] {
     return () => {
       history.pushState = origPushState;
       history.replaceState = origReplaceState;
+      _origPushState = null;
+      _origReplaceState = null;
     };
   }
 
@@ -16151,10 +16165,17 @@ form[method="dialog"] {
         return;
       }
       const href = anchor.getAttribute("href") || "";
+      const ctx = getEditorContext();
+      if (ctx.mode === "view") {
+        e.preventDefault();
+        e.stopPropagation();
+        const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
+        ctx.requestNavigation({ href, classification: cls, via: "link-click" });
+        return;
+      }
       if (e.ctrlKey || e.metaKey || e.shiftKey) {
         e.preventDefault();
         e.stopPropagation();
-        const ctx = getEditorContext();
         const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
         ctx.requestNavigation({ href, classification: cls, via: "modifier-click" });
         return;
@@ -16239,8 +16260,12 @@ form[method="dialog"] {
     const { classification: cls, href } = req;
     switch (cls.kind) {
       case "page": {
-        const id = getEditorContext().pageIdByPath.get(cls.target) ?? cls.target;
-        const dest = `${getMetaBasePath()}/editor/page?id=${encodeURIComponent(id)}`;
+        const ctx = getEditorContext();
+        const id = ctx.pageIdByPath.get(cls.target) ?? cls.target;
+        const params = new URLSearchParams({ id });
+        if (ctx.mode === "view")
+          params.set("mode", "view");
+        const dest = `${getMetaBasePath()}/editor/page?${params.toString()}`;
         window.location.href = dest;
         return;
       }
@@ -17193,6 +17218,8 @@ form[method="dialog"] {
         try {
           const editor = new cl(node);
           editor.viewEditor();
+          if (getEditorContext().mode === "view")
+            editor.viewClient();
         } catch (err) {
           if (!(err instanceof NearestElementRequire))
             throw err;
@@ -17272,6 +17299,9 @@ form[method="dialog"] {
           this._blocLibrary = this.shadowRoot?.querySelector("cms-bloc-library");
           if (this._isWorkingEmpty())
             await this._maybePickTemplate();
+          if (new URLSearchParams(location.search).get("mode") === "view") {
+            this.switchMode("view");
+          }
           workingElement.style.visibility = "visible";
         });
       });
@@ -17363,6 +17393,17 @@ form[method="dialog"] {
         detail: mode ?? newMode
       }));
       this._mode = mode ?? newMode;
+      setEditorContext({ mode: this._mode });
+      this._syncModeQueryParam();
+    }
+    _syncModeQueryParam() {
+      const url = new URL(location.href);
+      if (this._mode === "view")
+        url.searchParams.set("mode", "view");
+      else
+        url.searchParams.delete("mode");
+      if (url.href !== location.href)
+        rawReplaceState(history.state, "", url.toString());
     }
     get observer() {
       if (!this._observer)
@@ -17619,12 +17660,17 @@ dialog::backdrop {
                     d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
             </svg>
         </button>
-        <button data-action="switch-mode" title="View">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" width="20" height="20" viewBox="0 0 24 24"
-                stroke-width="1.5" stroke="currentColor" class="size-6">
+        <button data-action="switch-mode" title="Toggle view/edit">
+            <svg class="icon-view" xmlns="http://www.w3.org/2000/svg" fill="none" width="20" height="20" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+            <svg class="icon-edit" xmlns="http://www.w3.org/2000/svg" fill="none" width="20" height="20" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
             </svg>
         </button>
         <button data-action="configuration" title="Settings">
@@ -17710,7 +17756,16 @@ button:hover {
 /* Hide text if the toolbar is too narrow (optional) */
 button span {
   display: inline-block;
-}`;
+}
+
+/* Mode-toggle button: show eye in editor mode (action = preview),
+   pencil in view mode (action = return to editing). Default to editor
+   mode when the host carries no \`data-mode\` attribute yet. */
+[data-action="switch-mode"] .icon-edit { display: none; }
+[data-action="switch-mode"] .icon-view { display: block; }
+
+:host([data-mode="view"]) [data-action="switch-mode"] .icon-edit { display: block; }
+:host([data-mode="view"]) [data-action="switch-mode"] .icon-view { display: none; }`;
 
   // src/control/components/editor/EditorSystem/FloatingToolbar/FloatingToolbar.ts
   class FloatingToolbar extends Component {
@@ -17743,6 +17798,10 @@ button span {
             EditorSystem.openConfig();
             break;
         }
+      });
+      this.setAttribute("data-mode", EditorSystem.mode);
+      EditorSystem.addEventListener("editor-system-switch-mode", (e) => {
+        this.setAttribute("data-mode", e.detail);
       });
     }
     _onPointerDown(e) {
@@ -20052,6 +20111,11 @@ button.active svg {
   function handleSelection(self) {
     if (self.interacting)
       return;
+    if (getEditorContext().mode === "view") {
+      self.hide();
+      closeCompletions(self);
+      return;
+    }
     const activeEl = self.shadowRoot.activeElement;
     if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName.includes("-"))) {
       return;

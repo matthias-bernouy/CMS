@@ -41,12 +41,24 @@ export function installLinkInterceptor(): () => void {
             return;
         }
         const href = anchor.getAttribute("href") || "";
+        const ctx  = getEditorContext();
+
+        // View mode — no editing UI; behave like a modifier-click and fire
+        // the primary navigation directly so internal links jump straight
+        // to the target page's editor instead of being silently swallowed
+        // by the (hidden) link bar.
+        if (ctx.mode === "view") {
+            e.preventDefault();
+            e.stopPropagation();
+            const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
+            ctx.requestNavigation({ href, classification: cls, via: "link-click" });
+            return;
+        }
 
         // Modifier keys → primary action straight away, no bar.
         if (e.ctrlKey || e.metaKey || e.shiftKey) {
             e.preventDefault();
             e.stopPropagation();
-            const ctx = getEditorContext();
             const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
             ctx.requestNavigation({ href, classification: cls, via: "modifier-click" });
             return;

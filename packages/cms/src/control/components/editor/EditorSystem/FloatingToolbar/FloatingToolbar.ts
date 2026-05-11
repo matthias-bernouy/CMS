@@ -35,6 +35,14 @@ export class FloatingToolbar extends Component {
                 case 'configuration': EditorSystem.openConfig(); break;
             }
         });
+
+        // Mirror the EditorSystem's current mode onto `data-mode` so the
+        // mode-toggle icon (CSS-driven, see style.css) reflects which
+        // direction the next click takes the user.
+        this.setAttribute('data-mode', EditorSystem.mode);
+        EditorSystem.addEventListener('editor-system-switch-mode', (e) => {
+            this.setAttribute('data-mode', (e as CustomEvent<string>).detail);
+        });
     }
 
     _onPointerDown(e: any) {

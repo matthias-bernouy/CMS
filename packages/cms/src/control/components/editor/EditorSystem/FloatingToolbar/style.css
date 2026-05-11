@@ -70,3 +70,12 @@ button:hover {
 button span {
   display: inline-block;
 }
+
+/* Mode-toggle button: show eye in editor mode (action = preview),
+   pencil in view mode (action = return to editing). Default to editor
+   mode when the host carries no `data-mode` attribute yet. */
+[data-action="switch-mode"] .icon-edit { display: none; }
+[data-action="switch-mode"] .icon-view { display: block; }
+
+:host([data-mode="view"]) [data-action="switch-mode"] .icon-edit { display: block; }
+:host([data-mode="view"]) [data-action="switch-mode"] .icon-view { display: none; }

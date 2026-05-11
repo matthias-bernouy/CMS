@@ -2,6 +2,27 @@ import { classifyLink } from "./classifyLink";
 import { getEditorContext } from "./editorContext";
 
 /**
+ * Captured originals of `history.pushState` / `history.replaceState`, set
+ * by `installNavigationGuard`. The guard replaces the live `history.*`
+ * methods with intercepting wrappers, so editor code that legitimately
+ * needs to update the URL without firing a navigation request (e.g. the
+ * `?mode=view` toggle) must go through these references instead — the
+ * live `history.pushState` would route the call into `requestNavigation`.
+ */
+let _origPushState:    typeof history.pushState    | null = null;
+let _origReplaceState: typeof history.replaceState | null = null;
+
+export function rawPushState(state: unknown, _unused: string, url: string | URL): void {
+    if (_origPushState) _origPushState.call(history, state, _unused, url);
+    else                history.pushState(state, _unused, url);
+}
+
+export function rawReplaceState(state: unknown, _unused: string, url: string | URL): void {
+    if (_origReplaceState) _origReplaceState.call(history, state, _unused, url);
+    else                   history.replaceState(state, _unused, url);
+}
+
+/**
  * Programmatic-navigation guard. Patches the only entry points the WebIDL
  * spec lets us redefine:
  *
@@ -21,6 +42,8 @@ import { getEditorContext } from "./editorContext";
 export function installNavigationGuard(): () => void {
     const origPushState     = history.pushState.bind(history);
     const origReplaceState  = history.replaceState.bind(history);
+    _origPushState    = origPushState;
+    _origReplaceState = origReplaceState;
 
     const intercept = (raw: string | URL | null | undefined): boolean => {
         if (raw === null || raw === undefined || raw === "") return false;
@@ -41,5 +64,7 @@ export function installNavigationGuard(): () => void {
     return () => {
         history.pushState     = origPushState;
         history.replaceState  = origReplaceState;
+        _origPushState    = null;
+        _origReplaceState = null;
     };
 }

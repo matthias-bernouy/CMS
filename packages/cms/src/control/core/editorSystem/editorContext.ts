@@ -34,6 +34,12 @@ type Ctx = {
     pageIdByPath: Map<string, string>;
     isDirty: () => boolean;
     requestNavigation: (req: NavigationRequest) => void;
+    /**
+     * Current EditorRoot mode — `"editor"` by default. In `"view"` mode
+     * the link interceptor skips the floating bar and fires the primary
+     * navigation immediately (same path as a modifier-click in editor mode).
+     */
+    mode: "editor" | "view";
 };
 
 const noop = (): void => {};
@@ -43,6 +49,7 @@ const _ctx: Ctx = {
     pageIdByPath:   new Map(),
     isDirty: () => false,
     requestNavigation: noop,
+    mode: "editor",
 };
 
 /** Update one or more fields of the active editor context. */
@@ -86,5 +93,6 @@ export function clearEditorContext(): void {
     _ctx.pageIdByPath   = new Map();
     _ctx.isDirty = () => false;
     _ctx.requestNavigation = noop;
+    _ctx.mode = "editor";
     setActiveLink(null);
 }
