@@ -7,6 +7,8 @@ import "./P9rSelect/P9rSelect";
  */
 export class P9rSizesSelect extends HTMLElement {
 
+    private _bufferedValue = "";
+
     connectedCallback() {
         const label = this.getAttribute("label") || "Size";
         const name = this.getAttribute("name") || "size";
@@ -32,11 +34,16 @@ export class P9rSizesSelect extends HTMLElement {
             select.appendChild(opt);
         });
 
+        // Forward any value set on us (e.g. by `<p9r-attr-sync>`) before
+        // we got connected onto the replacement select.
+        if (this._bufferedValue) (select as HTMLElement & { value?: string }).value = this._bufferedValue;
+
         this.replaceWith(select);
     }
 
     get name() { return this.getAttribute("name"); }
-    get value() { return ""; }
+    get value() { return this._bufferedValue; }
+    set value(v: string) { this._bufferedValue = v; }
 }
 
 if (!customElements.get("p9r-sizes-select")) {
