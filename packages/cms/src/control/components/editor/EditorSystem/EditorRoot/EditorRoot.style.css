@@ -11,6 +11,17 @@
  * pages; keep the two in sync when adding new tokens.
  */
 
+/*
+ * Layout transparency. The host element, its shadow wrapper, and the
+ * working element use `display: contents` so the slotted page content
+ * participates directly in the document's flex layout. This lets pages
+ * with `body { display: flex; flex-direction: column }` stretch a
+ * footer to the bottom via `margin-top: auto`.
+ */
+:host { display: contents; }
+:host > div { display: contents; }
+#workingElement { display: contents; }
+
 #editorSystem {
     /* Surfaces */
     --bg-base:    oklch(98% 0.004 265);

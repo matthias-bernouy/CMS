@@ -49,10 +49,17 @@ export abstract class Editor {
 
         this._panel = new PanelConfig(this, editor);
         this._hover = new HoverBinding(this);
+        // Root the Unpin button inside `#editorSystem` so its
+        // `var(--primary-base, …)` color resolves against the chrome
+        // palette declared there (EditorRoot.style.css), not the site
+        // theme. The shadow root itself doesn't carry the palette — only
+        // `#editorSystem` does.
+        const pinParent: ParentNode =
+            getClosestEditorSystem(this.target).shadowRoot?.querySelector<HTMLDivElement>("#editorSystem") ?? document.body;
         this._pinMode = new PinMode(() => this.getActionBarAnchor() ?? this.target, this.stateSyncs, () => {
             this.stateSyncs.forEach(s => s.unpin());
             this.notifyPinStateChanged();
-        });
+        }, pinParent);
 
         this._mode = new ModeBinding(this.target, {
             onEditorMode: () => this.viewEditor(),

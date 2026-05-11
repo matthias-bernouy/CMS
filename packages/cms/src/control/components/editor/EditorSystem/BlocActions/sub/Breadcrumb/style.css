@@ -1,9 +1,9 @@
 :host {
     display: block;
     width: max-content;
-    /* Cap at 420px AND keep within the viewport — long labels at 5 items would
+    /* Cap at 640px AND keep within the viewport — long labels at 5 items would
      * otherwise spill off-screen. The min() handles narrow viewports. */
-    max-width: min(420px, calc(100vw - 16px));
+    max-width: min(640px, calc(100vw - 16px));
     font-family: system-ui, sans-serif;
     font-size: 11px;
     line-height: 1.4;
@@ -39,9 +39,12 @@
     cursor: pointer;
     transition: background 0.1s, color 0.1s;
     /* Allow flex shrinking + truncation. Without min-width:0 the button keeps
-     * its content width and the whole pill grows past max-width. */
+     * its content width and the whole pill grows past max-width. Parents are
+     * the shrink-absorbers — `.current` opts out (flex-shrink: 0) so the
+     * active bloc's label always stays fully readable. */
     min-width: 0;
-    max-width: 160px;
+    max-width: 200px;
+    flex-shrink: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -63,8 +66,11 @@
     color: var(--primary-base, #4361ee);
     font-weight: 700;
     letter-spacing: 0.01em;
-    min-width: 0;
-    max-width: 200px;
+    /* Never shrunk — parents truncate first. The active bloc's label is the
+     * most useful piece of context; we'd rather overflow the pill on the
+     * left (parents become "…") than abbreviate the current. */
+    flex-shrink: 0;
+    max-width: 280px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

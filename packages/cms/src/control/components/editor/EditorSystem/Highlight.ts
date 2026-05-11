@@ -1,15 +1,17 @@
 const ROOT_ID = "p9r-editor-highlight-root";
 
-let root: HTMLDivElement | null = null;
+const rootByParent = new WeakMap<ParentNode, HTMLDivElement>();
 const active = new Set<Highlight>();
 let onScrollOrResize: (() => void) | null = null;
 
-function ensureRoot(): HTMLDivElement {
-    if (root) return root;
-    root = document.createElement("div");
+function ensureRoot(parent: ParentNode): HTMLDivElement {
+    const cached = rootByParent.get(parent);
+    if (cached) return cached;
+    const root = document.createElement("div");
     root.id = ROOT_ID;
     root.style.cssText = "position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999;";
-    document.body.appendChild(root);
+    parent.appendChild(root);
+    rootByParent.set(parent, root);
     return root;
 }
 
@@ -31,16 +33,29 @@ export interface HighlightOptions {
     color?: string;
     thickness?: number;
     radius?: number;
+    /**
+     * Where the overlay root is appended. Defaults to `document.body`. Pass
+     * the editor shell's shadow root to scope the overlay inside the
+     * editor's chrome — that way `var(--primary-base)` resolves against
+     * `EditorRoot.style.css` (the chrome palette) rather than against the
+     * site's theme (which would tint the highlight with the user's brand).
+     */
+    parent?: ParentNode;
 }
 
 /**
  * Floating outline overlay around a target element. Lives in a fixed,
- * pointer-events-none, overflow-hidden root attached to <body>, so it
- * never causes window overflow and never intercepts events on the
- * target. The target's own DOM/CSS is never touched.
+ * pointer-events-none, overflow-hidden root attached to the configured
+ * parent (default `<body>`), so it never causes window overflow and
+ * never intercepts events on the target. The target's own DOM/CSS is
+ * never touched.
  *
  * Auto-tracks size (ResizeObserver) and viewport changes (scroll/resize).
  * Caller must invoke `dispose()` when the target leaves the DOM.
+ *
+ * `position: fixed` still anchors to the viewport when the root lives
+ * inside a shadow root, provided no ancestor sets `transform`, `filter`,
+ * `perspective`, or `will-change`. The editor shell satisfies that.
  */
 export class Highlight {
     private _target: HTMLElement;
@@ -49,7 +64,7 @@ export class Highlight {
 
     constructor(target: HTMLElement, options: HighlightOptions = {}) {
         this._target = target;
-        const r = ensureRoot();
+        const r = ensureRoot(options.parent ?? document.body);
         this._box = document.createElement("div");
         const color = options.color ?? "#3b82f6";
         const thickness = options.thickness ?? 2;

@@ -15,6 +15,7 @@ import { switchToEditor, selectParent } from './navigate';
 import { reflow } from './reflow';
 import { open as openBag } from './open';
 import { Highlight } from '../../../Highlight';
+import getClosestEditorSystem from 'src/control/core/dom/editor/getClosestEditorSystem';
 
 /**
  * Owns BAG's runtime state + sub-controllers. The custom element class is
@@ -110,7 +111,14 @@ export class BagController {
         // Highlight follows the action-bar anchor, not the raw target —
         // editors that point the BAG at a sub-element (e.g. an inner
         // visual node) expect the outline to match the same element.
-        this.highlight = new Highlight(this.hoverEl, { color: 'var(--primary-base, #3b82f6)' });
+        // Root the overlay inside `#editorSystem` so the
+        // `var(--primary-base, …)` color resolves against the chrome
+        // palette declared there (EditorRoot.style.css), not the site
+        // theme. The shadow root itself doesn't carry the palette — only
+        // `#editorSystem` does — so appending to the shadow root would
+        // give us the *site* tokens via the document cascade.
+        const overlayParent = getClosestEditorSystem(this.host).shadowRoot!.querySelector<HTMLDivElement>("#editorSystem")!;
+        this.highlight = new Highlight(this.hoverEl, { color: 'var(--primary-base, #3b82f6)', parent: overlayParent });
         this.events.rebindHover(prev);
         this.insertBtns.resolveTarget(editor);
     }

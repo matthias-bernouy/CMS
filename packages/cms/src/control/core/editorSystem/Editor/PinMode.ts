@@ -13,7 +13,7 @@ import { ICON_PIN } from "../../../components/icons";
  */
 export class PinMode {
 
-    private static _stylesInjected = false;
+    private static _stylesInjectedFor = new WeakSet<Node>();
 
     private _btn: HTMLButtonElement | null = null;
     private _resizeObs: ResizeObserver | null = null;
@@ -21,10 +21,20 @@ export class PinMode {
     private _rafId = 0;
     private _lastRect: { x: number; y: number; w: number; h: number } | null = null;
 
+    /**
+     * `_parent` is where the floating Unpin button and its `<style>` are
+     * appended. Default `document.body` keeps backward compatibility with
+     * callers that don't care about scoping. Pass the editor shell's
+     * shadow root to resolve theme variables against the chrome palette
+     * instead of the site's theme. `position: fixed` still anchors to the
+     * viewport from inside a shadow root, as long as no ancestor has
+     * `transform` / `filter` / `perspective` / `will-change` set.
+     */
     constructor(
         private _getAnchor: () => HTMLElement,
         private _stateSyncs: StateSync[],
         private _onUnpinAll: () => void,
+        private _parent: ParentNode = document.body,
     ) {}
 
     get active(): boolean {
@@ -32,7 +42,7 @@ export class PinMode {
     }
 
     enter() {
-        PinMode._injectStyles();
+        PinMode._injectStyles(this._parent);
         if (this._btn) { this._position(); return; }
 
         const btn = document.createElement("button");
@@ -45,7 +55,7 @@ export class PinMode {
             this._onUnpinAll();
         });
         this._btn = btn;
-        document.body.appendChild(btn);
+        this._parent.appendChild(btn);
 
         window.addEventListener("scroll", this._reflow, { passive: true, capture: true });
         window.addEventListener("resize", this._reflow);
@@ -121,8 +131,17 @@ export class PinMode {
         this._btn.style.top = `${y}px`;
     }
 
-    private static _injectStyles() {
-        if (PinMode._stylesInjected) return;
+    private static _injectStyles(parent: ParentNode) {
+        // Place the `<style>` so it applies wherever the button lands.
+        // - Mount in a shadow tree → inject `<style>` at the shadow root
+        //   (shadow `<style>` only applies inside its own tree).
+        // - Mount in light DOM → inject in `<head>`.
+        // The mount point itself (`parent`) is often a plain `<div>` inside
+        // a shadow root (e.g. `#editorSystem`), so we walk up via
+        // `getRootNode()` to find the actual style scope.
+        const root = (parent as Node).getRootNode();
+        const styleHost: ParentNode = root instanceof ShadowRoot ? root : document.head;
+        if (PinMode._stylesInjectedFor.has(styleHost as Node)) return;
         const style = document.createElement("style");
         style.textContent = `
 .p9r-unpin-btn {
@@ -147,7 +166,7 @@ export class PinMode {
 .p9r-unpin-btn svg { width: 14px; height: 14px; }
 .p9r-unpin-btn:hover { background: var(--primary-base, #4361ee); color: #fff; }
 `;
-        document.head.appendChild(style);
-        PinMode._stylesInjected = true;
+        styleHost.appendChild(style);
+        PinMode._stylesInjectedFor.add(styleHost as Node);
     }
 }
