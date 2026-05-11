@@ -21,17 +21,31 @@ export async function createFolder(label: string, parent: string | null): Promis
     return res.ok;
 }
 
+/**
+ * id → object-URL of the just-uploaded File. The CDN edge serves a
+ * 404 for a few hundred ms while lsyncd ships the blob from origin, so
+ * instead of waiting / retrying we paint the grid from the bytes the
+ * browser already holds. Cleared on full page reload; URLs leak only
+ * for the lifetime of the admin tab, which is acceptable.
+ */
+const _localPreview = new Map<string, string>();
+
+export function localPreview(id: string): string | undefined {
+    return _localPreview.get(id);
+}
+
 export async function uploadFiles(files: FileList, folder: string | null): Promise<void> {
     for (let i = 0; i < files.length; i++) {
         const file = files.item(i);
         if (!file) continue;
-        await media().uploadFile({
+        const res = await media().uploadFile({
             data:     file,
             name:     file.name,
             mimeType: file.type || "application/octet-stream",
             size:     file.size,
             ...(folder ? { folderID: folder } : {}),
         });
+        if (res.ok) _localPreview.set(res.data.id, URL.createObjectURL(file));
     }
 }
 

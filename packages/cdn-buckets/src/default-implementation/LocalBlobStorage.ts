@@ -56,7 +56,6 @@ export class LocalBlobStorage implements BlobStorage {
             await writer.flush();
         } finally {
             await writer.end();
-            reader.releaseLock();
         }
 
         return { size, sha256: hasher.digest("hex") };

@@ -1,5 +1,6 @@
 import type { MediaItem, BreadcrumbEntry } from "../types";
 import { escapeHtml, escapeAttr, variantUrl } from "../types";
+import { localPreview } from "../api/write";
 
 export function renderGrid(grid: HTMLElement, items: MediaItem[]) {
     grid.innerHTML = "";
@@ -34,7 +35,8 @@ function appendMediaPreview(card: HTMLElement, item: MediaItem) {
         // CDN doesn't expose a URL builder; admin always renders the raw
         // `absoluteURL`. Width/height args to `variantUrl` are kept for
         // signature compatibility but currently ignored.
-        img.src = isSvg ? (item.absoluteURL ?? "") : variantUrl(item, 400, 300);
+        img.src = localPreview(item.id)
+            ?? (isSvg ? (item.absoluteURL ?? "") : variantUrl(item, 400, 300));
         img.alt = item.alt || item.label;
         img.loading = "lazy";
         card.appendChild(img);

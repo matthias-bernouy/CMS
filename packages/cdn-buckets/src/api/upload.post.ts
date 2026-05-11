@@ -58,6 +58,7 @@ export default async function handleUploadPost(req: Request, provider: StoragePr
             headers: corsHeaders(origin, token.allowedOrigins),
         });
     } catch (err) {
+        console.error("[upload.post] error during upload:", err);
         const message = err instanceof Error ? err.message : String(err);
         const code = err instanceof TypeError ? "validation_error" : "unknown";
         const status = code === "validation_error" ? 400 : 500;

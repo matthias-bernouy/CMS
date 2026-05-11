@@ -1,5 +1,6 @@
 import type { CDN } from "@bernouy/core";
 import type { GridMedia } from "../GridMedia/GridMedia";
+import { uploadFiles } from "../GridMedia/api/write";
 import BubblesEvent from "../../../core/dom/BubblesEvent";
 import template from "./MediaAdmin.html" with { type: "text" };
 
@@ -44,16 +45,7 @@ export class MediaAdmin extends HTMLElement {
     private async _handleUpload() {
         const files = this._fileInput?.files;
         if (!files || files.length === 0) return;
-        const folder = this._currentFolder();
-        for (const f of Array.from(files)) {
-            await this._media().uploadFile({
-                data: f,
-                name: f.name,
-                mimeType: f.type || "application/octet-stream",
-                size: f.size,
-                ...(folder ? { folderID: folder } : {}),
-            });
-        }
+        await uploadFiles(files, this._currentFolder());
         if (this._fileInput) this._fileInput.value = "";
         this._grid?.refresh();
     }
