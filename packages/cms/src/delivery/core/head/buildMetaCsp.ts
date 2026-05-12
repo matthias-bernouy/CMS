@@ -24,6 +24,12 @@ export function buildMetaCsp(
     head: HTMLElement,
     extras: CspExtras,
 ): void {
+    // `<meta http-equiv="Content-Security-Policy-Report-Only">` is silently
+    // ignored by browsers (per spec). In DEV the response header already
+    // ships a Report-Only CSP — emitting an enforcing meta here would
+    // re-enforce the policy on pre-rendered pages and re-block cross-origin
+    // assets (fonts, etc.) that DEV explicitly wants to tolerate.
+    if (process.env.MODE === "DEV") return;
     const meta = document.createElement("meta");
     meta.setAttribute("http-equiv", "Content-Security-Policy");
     meta.setAttribute("content",    buildCspContent(extras));

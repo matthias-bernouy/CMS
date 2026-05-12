@@ -1,5 +1,5 @@
 import type { ControlCms } from "src/control/ControlCms";
-import { cachedResponseAsync, compress } from "src/socle/server/compression";
+import { cachedResponseAsync, compress, publicAssetCacheControl } from "src/socle/server/compression";
 import { P9R_CACHE } from "src/socle/constants/p9r-constants";
 
 export default async function editorScriptGet(req: Request, cms: ControlCms) {
@@ -12,5 +12,5 @@ export default async function editorScriptGet(req: Request, cms: ControlCms) {
         ].join("\n")).join("\n");
 
         return compress(js, "text/javascript");
-    });
+    }, publicAssetCacheControl(req));
 }

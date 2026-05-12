@@ -13,6 +13,7 @@
     },
     "include": [
         "src/**/*.ts",
+        "src/**/*.json",
         "index.ts",
         "component.ts",
         "editor.ts",

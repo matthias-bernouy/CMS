@@ -179,7 +179,7 @@ button.active svg {
     user-select: none;
 }
 
-/* ── Sections (Text, Borders, Families) ── */
+/* ── Sections (Text, Accent) ── */
 
 .color-section {
     display: flex;
@@ -196,7 +196,7 @@ button.active svg {
     font-family: system-ui, sans-serif;
 }
 
-/* ── Swatch cells (Text + Borders sections) — swatch on top, label below ── */
+/* ── Swatch cells (all sections) — swatch on top, label below ── */
 
 .swatch-row {
     display: flex;
@@ -223,44 +223,6 @@ button.active svg {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
-}
-
-/* ── Color families — tabular grid: name | base | muted | contrasted ── */
-
-.color-families {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.color-family {
-    display: grid;
-    grid-template-columns: 70px repeat(3, 1fr);
-    align-items: center;
-    gap: 6px;
-}
-
-.color-family-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: #334155;
-    font-family: system-ui, sans-serif;
-}
-
-.color-family-col {
-    font-size: 9px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #94a3b8;
-    text-align: center;
-    font-family: system-ui, sans-serif;
-}
-
-.color-family-header {
-    padding-bottom: 2px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-    margin-bottom: 2px;
 }
 
 /* ── Swatch ── */

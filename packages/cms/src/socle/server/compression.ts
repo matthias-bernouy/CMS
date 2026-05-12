@@ -26,17 +26,23 @@ import { buildCspContent, type CspExtras } from "./buildCspContent";
  *   external blogs can't hotlink our images either — acceptable for a
  *   CMS where the same instance also serves the published pages.
  */
-export const SECURITY_HEADERS = {
-    "X-Content-Type-Options": "nosniff",
-    "Strict-Transport-Security": "max-age=31536000",
-    "X-Frame-Options": "DENY",
-    "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
-    ...(process.env.MODE === "DEV"
-        ? { "Cross-Origin-Opener-Policy-Report-Only": "same-origin" }
-        : { "Cross-Origin-Opener-Policy":            "same-origin" }),
-    "Cross-Origin-Resource-Policy": "same-origin",
-} as const;
+// Built lazily (via `securityHeaders()`) instead of as a top-level constant
+// because the COOP variant depends on `process.env.MODE`, which a CLI may
+// set after this module is already imported (ES module imports are hoisted
+// above any statement-level assignment in the importing file).
+export function securityHeaders(): Record<string, string> {
+    return {
+        "X-Content-Type-Options": "nosniff",
+        "Strict-Transport-Security": "max-age=31536000",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        ...(process.env.MODE === "DEV"
+            ? { "Cross-Origin-Opener-Policy-Report-Only": "same-origin" }
+            : { "Cross-Origin-Opener-Policy":            "same-origin" }),
+        "Cross-Origin-Resource-Policy": "same-origin",
+    };
+}
 
 /**
  * CSP applied to HTML responses only (it is meaningless on JS/CSS/image
@@ -73,30 +79,42 @@ export const SECURITY_HEADERS = {
  * image host) — accepted for CMS flexibility. Restricted to `https:` to
  * prevent mixed-content downgrades. `data:` covers inline base64 images.
  *
- * Now ENFORCING (not Report-Only): any violation actually blocks the load.
- * Keep this in mind when adding features — an inline `<script>` or a
- * cross-origin asset will silently break the page until this policy is
- * extended.
+ * Production: ENFORCING — any violation actually blocks the load. Keep this
+ * in mind when adding features: an inline `<script>` or a cross-origin asset
+ * will silently break the page until this policy is extended.
+ *
+ * DEV (`MODE=DEV`): emitted as `Content-Security-Policy-Report-Only`. Local
+ * dev typically references cross-origin assets (CDN fonts, dev-time
+ * placeholders) whose hosts cannot all be listed pre-deploy — Report-Only
+ * keeps violations visible in the console without breaking the editor.
  */
-export const HTML_CSP_HEADER: Record<string, string> = {
-    "Content-Security-Policy": buildCspContent(),
-};
+// Lazy for the same reason as `securityHeaders()`: header name flips with
+// `process.env.MODE`, which the CLI may set after import.
+function cspHeaderName(): string {
+    return process.env.MODE === "DEV"
+        ? "Content-Security-Policy-Report-Only"
+        : "Content-Security-Policy";
+}
+
+export function htmlCspHeader(): Record<string, string> {
+    return { [cspHeaderName()]: buildCspContent() };
+}
 
 function withCspIfHtml(contentType: string): Record<string, string> {
     if (!contentType.startsWith("text/html")) return {};
-    return HTML_CSP_HEADER;
+    return htmlCspHeader();
 }
 
 /**
- * Per-call CSP header for HTML responses. Falls back to the static
- * `HTML_CSP_HEADER` (extras-empty baseline) when the caller doesn't
- * provide extras — keeping the legacy single-source path costless for
- * everything that doesn't need the dynamic version.
+ * Per-call CSP header for HTML responses. Falls back to the baseline
+ * (extras-empty) header when the caller doesn't provide extras — keeping
+ * the legacy single-source path costless for everything that doesn't need
+ * the dynamic version.
  */
 function buildCspHeaderForEntry(contentType: string, extras?: CspExtras): Record<string, string> {
     if (!contentType.startsWith("text/html")) return {};
-    if (!extras) return HTML_CSP_HEADER;
-    return { "Content-Security-Policy": buildCspContent(extras) };
+    if (!extras) return htmlCspHeader();
+    return { [cspHeaderName()]: buildCspContent(extras) };
 }
 
 /**
@@ -117,7 +135,13 @@ function buildCspHeaderForEntry(contentType: string, extras?: CspExtras): Record
  *   actively edited must never be served from stale cache.
  */
 export function publicAssetCacheControl(req: Request): string {
-    if (process.env.MODE === "DEV") return "no-cache, no-store, must-revalidate";
+    // DEV: drop `no-store` so the browser keeps the response in its disk
+    // cache. `no-cache, must-revalidate` still forces a conditional request
+    // on every load — `sendCompressed` answers `304 Not Modified` against
+    // the entry's ETag when the build hasn't changed, which turns a
+    // ~1 MB transfer into a ~0-byte revalidation. SSE live-reload still
+    // forces a full page reload on bloc rebuild, so no risk of stale UI.
+    if (process.env.MODE === "DEV") return "no-cache, must-revalidate";
     const hasVersion = new URL(req.url).searchParams.has("v");
     return hasVersion
         ? "public, max-age=31536000, immutable"
@@ -223,12 +247,33 @@ export function sendCompressed(
     const csp = opts?.skipCspHeader ? {} : buildCspHeaderForEntry(entry.contentType, opts?.cspExtras);
     const cc: Record<string, string> = cacheControl ? { "Cache-Control": cacheControl } : {};
 
+    // Conditional GET — answer 304 when the client already has the
+    // current build. The entry's `hash` is a stable digest of the raw
+    // bytes (cf. `compress()`), so we use it as the ETag value. Pairs
+    // with the relaxed `Cache-Control` for DEV: the browser keeps a
+    // disk-cached copy, sends `If-None-Match` on every load, and we
+    // skip the body entirely when nothing changed.
+    const etag = `"${entry.hash}"`;
+    const ifNoneMatch = req.headers.get("if-none-match");
+    if (ifNoneMatch && ifNoneMatch === etag) {
+        return new Response(null, {
+            status: 304,
+            headers: {
+                ETag: etag,
+                ...securityHeaders(),
+                ...csp,
+                ...cc,
+            },
+        });
+    }
+
     if (accept.includes("br")) {
         return new Response(entry.brotli as BodyInit, {
             headers: {
                 "Content-Type": entry.contentType,
                 "Content-Encoding": "br",
-                ...SECURITY_HEADERS,
+                ETag: etag,
+                ...securityHeaders(),
                 ...csp,
                 ...cc,
             },
@@ -240,7 +285,8 @@ export function sendCompressed(
             headers: {
                 "Content-Type": entry.contentType,
                 "Content-Encoding": "gzip",
-                ...SECURITY_HEADERS,
+                ETag: etag,
+                ...securityHeaders(),
                 ...csp,
                 ...cc,
             },
@@ -250,7 +296,8 @@ export function sendCompressed(
     return new Response(entry.raw as BodyInit, {
         headers: {
             "Content-Type": entry.contentType,
-            ...SECURITY_HEADERS,
+            ETag: etag,
+            ...securityHeaders(),
             ...csp,
             ...cc,
         },

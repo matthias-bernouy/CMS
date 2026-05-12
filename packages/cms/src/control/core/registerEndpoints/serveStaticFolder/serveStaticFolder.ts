@@ -5,7 +5,7 @@ import {
     cachedResponseAsync,
     compress,
     publicAssetCacheControl,
-    SECURITY_HEADERS,
+    securityHeaders,
 } from "src/socle/server/compression";
 import type { CspExtras } from "src/socle/server/buildCspContent";
 import { scanStaticFolder } from "./scanStaticFolder";
@@ -88,7 +88,7 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
         runner.get(file.relativePath, (req: Request) => {
             return new Response(Bun.file(file.absolutePath), {
                 headers: {
-                    ...SECURITY_HEADERS,
+                    ...securityHeaders(),
                     "Cache-Control": publicAssetCacheControl(req),
                 },
             });

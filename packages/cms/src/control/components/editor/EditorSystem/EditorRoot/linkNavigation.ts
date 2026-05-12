@@ -25,6 +25,19 @@ export function resolveTargetForLink(req: NavigationRequest): void {
             // Persist the current mode across the cross-editor jump — if
             // the user was previewing, they stay previewing on the next page.
             if (ctx.mode === "view") params.set("mode", "view");
+            // Forward the original href's query params so page-level blocs
+            // that rely on URL state (e.g. `<base-fetch url="…?id=eq.{{ query.i }}">`
+            // on `/annonce?i=<uuid>`) still receive their inputs through
+            // the cross-editor jump. Page params coexist with the editor's
+            // own `id` / `mode` — namespace collisions are the caller's
+            // responsibility for now (TODO: move editor state to
+            // sessionStorage so the URL is fully page-owned).
+            try {
+                const original = new URL(href, location.origin);
+                for (const [k, v] of original.searchParams) {
+                    params.append(k, v);
+                }
+            } catch { /* malformed href — fall through to bare id/mode URL */ }
             const dest = `${getMetaBasePath()}/editor/page?${params.toString()}`;
             window.location.href = dest;
             return;

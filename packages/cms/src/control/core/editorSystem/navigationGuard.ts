@@ -48,6 +48,18 @@ export function installNavigationGuard(): () => void {
     const intercept = (raw: string | URL | null | undefined): boolean => {
         if (raw === null || raw === undefined || raw === "") return false;
         const href = String(raw);
+        // Same-origin same-path updates (only `?query` or `#hash` differ
+        // from the current location) are not navigation — they're URL
+        // state changes from blocs like `<base-form mode="url-sync">`
+        // synchronising filter values. Let the original pushState/
+        // replaceState run so the URL bar reflects state without
+        // rerouting the editor.
+        try {
+            const next = new URL(href, location.href);
+            if (next.origin === location.origin && next.pathname === location.pathname) {
+                return false;
+            }
+        } catch { /* malformed URL falls through to the regular guard */ }
         const ctx  = getEditorContext();
         const cls  = classifyLink(href, location.origin, ctx.knownPagePaths);
         ctx.requestNavigation({ href, classification: cls, via: "programmatic" });

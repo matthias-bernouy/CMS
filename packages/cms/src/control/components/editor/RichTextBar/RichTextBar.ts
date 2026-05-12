@@ -23,20 +23,34 @@ import {
  * color swatches can render the site's actual palette. We snapshot resolved
  * values from the working element at mount: the bar lives in the editor
  * shell shadow where `EditorRoot.style.css` overrides the same names with
- * the editor's chrome palette, so a plain `var(--primary-base)` on a swatch
+ * the editor's chrome palette, so a plain `var(--primary-strong)` on a swatch
  * picks up the wrong color. The applied color attributes stay as `var(...)`
  * (deferred against the working element scope), so only the visual preview
  * is materialized — the saved markup still references the live theme.
+ *
+ * Three groups exposed:
+ *   - `text-*` — raw neutral text shades (main/body/muted/label). Used when
+ *     a specific shade is needed and the bloc is known to live on a neutral
+ *     surface — these do NOT adapt to coloured variant providers.
+ *   - `ctx-fg` / `ctx-fg-muted` — context-adaptive foreground. On a neutral
+ *     surface resolves to `--text-main` / `--text-muted`; inside a coloured
+ *     variant provider re-routes to `--*-contrasted` / `--*-contrasted-muted`.
+ *   - `*-strong` per role — text-sized accent intended for a neutral surface
+ *     (legible contrast on `--bg-base`/`--bg-surface`).
+ *
+ * Tokens NOT exposed:
+ *   - `*-base` / `*-muted` / `*-contrasted*` — fill/background tokens, not text.
+ *   - `border-*` — border tokens, never a text colour.
  */
 const USER_THEME_TOKENS = [
     "text-main", "text-body", "text-muted", "text-label",
-    "border-default", "border-light",
-    "primary-base", "primary-muted", "primary-contrasted",
-    "secondary-base", "secondary-muted", "secondary-contrasted",
-    "danger-base", "danger-muted", "danger-contrasted",
-    "success-base", "success-muted", "success-contrasted",
-    "info-base", "info-muted", "info-contrasted",
-    "warning-base", "warning-muted", "warning-contrasted",
+    "ctx-fg", "ctx-fg-muted",
+    "primary-strong",
+    "secondary-strong",
+    "danger-strong",
+    "success-strong",
+    "info-strong",
+    "warning-strong",
 ] as const;
 
 export class RichTextBar extends Component {

@@ -16289,6 +16289,12 @@ form[method="dialog"] {
       if (raw === null || raw === undefined || raw === "")
         return false;
       const href = String(raw);
+      try {
+        const next = new URL(href, location.href);
+        if (next.origin === location.origin && next.pathname === location.pathname) {
+          return false;
+        }
+      } catch {}
       const ctx = getEditorContext();
       const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
       ctx.requestNavigation({ href, classification: cls, via: "programmatic" });
@@ -16432,6 +16438,12 @@ form[method="dialog"] {
         const params = new URLSearchParams({ id });
         if (ctx.mode === "view")
           params.set("mode", "view");
+        try {
+          const original = new URL(href, location.origin);
+          for (const [k, v] of original.searchParams) {
+            params.append(k, v);
+          }
+        } catch {}
         const dest = `${getMetaBasePath()}/editor/page?${params.toString()}`;
         window.location.href = dest;
         return;
@@ -19080,7 +19092,9 @@ dialog::backdrop {
                 </label>
             </div>
 
-            <!-- Text — labeled per swatch since each variant is a distinct role. -->
+            <!-- Text — raw neutral text tokens. Use these when a specific
+                 shade is needed and the bloc is known to live on a neutral
+                 surface (they don't adapt to coloured variant providers). -->
             <div class="color-section">
                 <div class="color-section-title">Text</div>
                 <div class="swatch-row">
@@ -19103,66 +19117,57 @@ dialog::backdrop {
                 </div>
             </div>
 
-            <!-- Borders — same pattern as Text. -->
+            <!-- Contextual — context-adaptive foreground. Resolves to the
+                 parent's foreground: text-main / text-muted on a neutral
+                 surface, *-contrasted / *-contrasted-muted inside a coloured
+                 variant provider. Recommended default when the bloc may be
+                 placed in any context. -->
             <div class="color-section">
-                <div class="color-section-title">Borders</div>
+                <div class="color-section-title">Contextual</div>
                 <div class="swatch-row">
                     <div class="swatch-cell">
-                        <button data-color="var(--border-default)" class="color-swatch" title="Border default" style="--swatch:var(--swatch-border-default)"></button>
+                        <button data-color="var(--ctx-fg)" class="color-swatch" title="Default foreground — adapts to parent variant" style="--swatch:var(--swatch-ctx-fg)"></button>
                         <span class="swatch-cell-label">Default</span>
                     </div>
                     <div class="swatch-cell">
-                        <button data-color="var(--border-light)" class="color-swatch" title="Border light" style="--swatch:var(--swatch-border-light)"></button>
-                        <span class="swatch-cell-label">Light</span>
+                        <button data-color="var(--ctx-fg-muted)" class="color-swatch" title="Muted foreground — adapts to parent variant" style="--swatch:var(--swatch-ctx-fg-muted)"></button>
+                        <span class="swatch-cell-label">Muted</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Color families — base / muted / contrasted column grid.
-                 Family name labels each row; column headers shown once at the top. -->
+            <!-- Accent — one swatch per role, the *-strong token (text-sized
+                 accent legible on a neutral surface). Only valid on a neutral
+                 parent: applying *-strong inside a same-role variant provider
+                 produces a same-on-same illegible match. -->
             <div class="color-section">
-                <div class="color-families">
-                    <div class="color-family color-family-header">
-                        <span class="color-family-name"></span>
-                        <span class="color-family-col">Base</span>
-                        <span class="color-family-col">Muted</span>
-                        <span class="color-family-col">Contrasted</span>
+                <div class="color-section-title">Accent (on neutral background)</div>
+                <div class="swatch-row">
+                    <div class="swatch-cell">
+                        <button data-color="var(--primary-strong)" class="color-swatch" title="Primary accent" style="--swatch:var(--swatch-primary-strong)"></button>
+                        <span class="swatch-cell-label">Primary</span>
                     </div>
-                    <div class="color-family">
-                        <span class="color-family-name">Primary</span>
-                        <button data-color="var(--primary-base)" class="color-swatch" title="Primary base" style="--swatch:var(--swatch-primary-base)"></button>
-                        <button data-color="var(--primary-muted)" class="color-swatch" title="Primary muted" style="--swatch:var(--swatch-primary-muted)"></button>
-                        <button data-color="var(--primary-contrasted)" class="color-swatch" title="Primary contrasted" style="--swatch:var(--swatch-primary-contrasted)"></button>
+                    <div class="swatch-cell">
+                        <button data-color="var(--secondary-strong)" class="color-swatch" title="Secondary accent" style="--swatch:var(--swatch-secondary-strong)"></button>
+                        <span class="swatch-cell-label">Secondary</span>
                     </div>
-                    <div class="color-family">
-                        <span class="color-family-name">Secondary</span>
-                        <button data-color="var(--secondary-base)" class="color-swatch" title="Secondary base" style="--swatch:var(--swatch-secondary-base)"></button>
-                        <button data-color="var(--secondary-muted)" class="color-swatch" title="Secondary muted" style="--swatch:var(--swatch-secondary-muted)"></button>
-                        <button data-color="var(--secondary-contrasted)" class="color-swatch" title="Secondary contrasted" style="--swatch:var(--swatch-secondary-contrasted)"></button>
+                    <div class="swatch-cell">
+                        <button data-color="var(--danger-strong)" class="color-swatch" title="Danger accent" style="--swatch:var(--swatch-danger-strong)"></button>
+                        <span class="swatch-cell-label">Danger</span>
                     </div>
-                    <div class="color-family">
-                        <span class="color-family-name">Danger</span>
-                        <button data-color="var(--danger-base)" class="color-swatch" title="Danger base" style="--swatch:var(--swatch-danger-base)"></button>
-                        <button data-color="var(--danger-muted)" class="color-swatch" title="Danger muted" style="--swatch:var(--swatch-danger-muted)"></button>
-                        <button data-color="var(--danger-contrasted)" class="color-swatch" title="Danger contrasted" style="--swatch:var(--swatch-danger-contrasted)"></button>
+                </div>
+                <div class="swatch-row">
+                    <div class="swatch-cell">
+                        <button data-color="var(--success-strong)" class="color-swatch" title="Success accent" style="--swatch:var(--swatch-success-strong)"></button>
+                        <span class="swatch-cell-label">Success</span>
                     </div>
-                    <div class="color-family">
-                        <span class="color-family-name">Success</span>
-                        <button data-color="var(--success-base)" class="color-swatch" title="Success base" style="--swatch:var(--swatch-success-base)"></button>
-                        <button data-color="var(--success-muted)" class="color-swatch" title="Success muted" style="--swatch:var(--swatch-success-muted)"></button>
-                        <button data-color="var(--success-contrasted)" class="color-swatch" title="Success contrasted" style="--swatch:var(--swatch-success-contrasted)"></button>
+                    <div class="swatch-cell">
+                        <button data-color="var(--info-strong)" class="color-swatch" title="Info accent" style="--swatch:var(--swatch-info-strong)"></button>
+                        <span class="swatch-cell-label">Info</span>
                     </div>
-                    <div class="color-family">
-                        <span class="color-family-name">Info</span>
-                        <button data-color="var(--info-base)" class="color-swatch" title="Info base" style="--swatch:var(--swatch-info-base)"></button>
-                        <button data-color="var(--info-muted)" class="color-swatch" title="Info muted" style="--swatch:var(--swatch-info-muted)"></button>
-                        <button data-color="var(--info-contrasted)" class="color-swatch" title="Info contrasted" style="--swatch:var(--swatch-info-contrasted)"></button>
-                    </div>
-                    <div class="color-family">
-                        <span class="color-family-name">Warning</span>
-                        <button data-color="var(--warning-base)" class="color-swatch" title="Warning base" style="--swatch:var(--swatch-warning-base)"></button>
-                        <button data-color="var(--warning-muted)" class="color-swatch" title="Warning muted" style="--swatch:var(--swatch-warning-muted)"></button>
-                        <button data-color="var(--warning-contrasted)" class="color-swatch" title="Warning contrasted" style="--swatch:var(--swatch-warning-contrasted)"></button>
+                    <div class="swatch-cell">
+                        <button data-color="var(--warning-strong)" class="color-swatch" title="Warning accent" style="--swatch:var(--swatch-warning-strong)"></button>
+                        <span class="swatch-cell-label">Warning</span>
                     </div>
                 </div>
             </div>
@@ -19452,7 +19457,7 @@ button.active svg {
     user-select: none;
 }
 
-/* ── Sections (Text, Borders, Families) ── */
+/* ── Sections (Text, Accent) ── */
 
 .color-section {
     display: flex;
@@ -19469,7 +19474,7 @@ button.active svg {
     font-family: system-ui, sans-serif;
 }
 
-/* ── Swatch cells (Text + Borders sections) — swatch on top, label below ── */
+/* ── Swatch cells (all sections) — swatch on top, label below ── */
 
 .swatch-row {
     display: flex;
@@ -19496,44 +19501,6 @@ button.active svg {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
-}
-
-/* ── Color families — tabular grid: name | base | muted | contrasted ── */
-
-.color-families {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.color-family {
-    display: grid;
-    grid-template-columns: 70px repeat(3, 1fr);
-    align-items: center;
-    gap: 6px;
-}
-
-.color-family-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: #334155;
-    font-family: system-ui, sans-serif;
-}
-
-.color-family-col {
-    font-size: 9px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #94a3b8;
-    text-align: center;
-    font-family: system-ui, sans-serif;
-}
-
-.color-family-header {
-    padding-bottom: 2px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-    margin-bottom: 2px;
 }
 
 /* ── Swatch ── */
@@ -20494,26 +20461,14 @@ button.active svg {
     "text-body",
     "text-muted",
     "text-label",
-    "border-default",
-    "border-light",
-    "primary-base",
-    "primary-muted",
-    "primary-contrasted",
-    "secondary-base",
-    "secondary-muted",
-    "secondary-contrasted",
-    "danger-base",
-    "danger-muted",
-    "danger-contrasted",
-    "success-base",
-    "success-muted",
-    "success-contrasted",
-    "info-base",
-    "info-muted",
-    "info-contrasted",
-    "warning-base",
-    "warning-muted",
-    "warning-contrasted"
+    "ctx-fg",
+    "ctx-fg-muted",
+    "primary-strong",
+    "secondary-strong",
+    "danger-strong",
+    "success-strong",
+    "info-strong",
+    "warning-strong"
   ];
 
   class RichTextBar extends Component {
