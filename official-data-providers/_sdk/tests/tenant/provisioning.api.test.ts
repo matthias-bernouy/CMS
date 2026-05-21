@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
 import { tmpdir } from "node:os";
-import { readFile, rm } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import postTenant from "src/api/admin/tenants.post";
 import getTenants from "src/api/admin/tenants.get";
@@ -58,20 +58,31 @@ test("MemoryAuditSink is structurally immutable (copies out, no mutate API)", as
     expect("update" in a).toBe(false);                 // no mutate/delete method
 });
 
-test("FileLogStore: durable append-only JSONL + filtered bounded query", async () => {
-    const path = join(tmpdir(), `sdk-logs-${Date.now()}.jsonl`);
+const logDir = (tag: string) => join(tmpdir(), `sdk-logs-${tag}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+const auditBase = { schemaVersion: "1", providerId: "p", level: "info", actor: "control-plane", visibility: "control-plane", kind: "audit" } as const;
+
+test("FileLogStore: daily-rotated, durable, windowed query", async () => {
+    const dir = logDir("win");
     try {
-        const s = new FileLogStore(path);
-        const base = { schemaVersion: "1", providerId: "p", requestId: "r", level: "info", actor: "control-plane", visibility: "control-plane" } as const;
-        await s.append({ ...base, ts: "2024-01-01T00:00:00.000Z", kind: "audit", event: "tenant.provision", tenantId: "a" });
-        await s.append({ ...base, ts: "2024-01-02T00:00:00.000Z", kind: "audit", event: "tenant.deprovision", tenantId: "b" });
-        // survives a fresh instance (durable / persistent)
-        const reopened = new FileLogStore(path);
-        const all = await reopened.query({});
-        expect(all.items.length).toBe(2);
-        const onlyB = await reopened.query({ tenantId: "b" });
-        expect(onlyB.items.map((r) => r.event)).toEqual(["tenant.deprovision"]);
-        const lines = (await readFile(path, "utf8")).trim().split("\n");
-        expect(lines.length).toBe(2);
-    } finally { await rm(path, { force: true }); }
+        const s = new FileLogStore(dir, { retentionDays: 30 });
+        await s.append({ ...auditBase, ts: "2024-01-01T00:00:00.000Z", event: "tenant.provision",   tenantId: "a", requestId: "r1" });
+        await s.append({ ...auditBase, ts: "2024-01-02T00:00:00.000Z", event: "tenant.deprovision", tenantId: "b", requestId: "r2" });
+        // durable across a fresh instance (reads both day-files)
+        const reopened = new FileLogStore(dir, { retentionDays: 30 });
+        expect((await reopened.query({})).items.length).toBe(2);
+        expect((await reopened.query({ tenantId: "b" })).items.map((r) => r.event)).toEqual(["tenant.deprovision"]);
+        // a time-windowed query only reads the matching day-file
+        expect((await reopened.query({ sinceTs: "2024-01-02T00:00:00.000Z" })).items.map((r) => r.tenantId)).toEqual(["b"]);
+    } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("FileLogStore: retention prunes day-files past the window", async () => {
+    const dir = logDir("ret");
+    try {
+        const s = new FileLogStore(dir, { retentionDays: 30 });
+        await s.append({ ...auditBase, ts: "2024-01-01T00:00:00.000Z", event: "tenant.provision", tenantId: "old", requestId: "r1" });
+        // appending 60+ days later prunes the 2024-01-01 file (cutoff = day − 30d)
+        await s.append({ ...auditBase, ts: "2024-03-02T00:00:00.000Z", event: "tenant.provision", tenantId: "new", requestId: "r2" });
+        expect((await new FileLogStore(dir).query({})).items.map((r) => r.tenantId)).toEqual(["new"]);
+    } finally { await rm(dir, { recursive: true, force: true }); }
 });
