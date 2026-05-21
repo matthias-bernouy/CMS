@@ -42,11 +42,45 @@ export class KeycloakAdminClient {
         if (input.smtp)        body.smtpServer  = mapSmtp(input.smtp);
         const res = await this._request("POST", "/realms", body);
         await assertOk(res, "createRealm");
+        // Keycloak quirk: creating a realm grants the caller's service
+        // account new `<realm>-realm` client roles, but the cached
+        // service-account token does NOT include them — Keycloak adds them
+        // to subsequent tokens only. Invalidate the cache so the next
+        // /admin call (typically createConfidentialClient on the just-
+        // created realm) fetches a fresh token with the new permissions.
+        this._cachedToken = null;
     }
 
     async deleteRealm(realm: string): Promise<void> {
         const res = await this._request("DELETE", `/realms/${enc(realm)}`);
         await assertOk(res, "deleteRealm");
+    }
+
+    /** Partial update on the realm representation. Only the fields a UI
+     *  operator can edit safely: displayName + enabled. Renaming the realm
+     *  itself is NOT allowed — `realm` IS the tenantId everywhere. */
+    async updateRealm(realm: string, patch: { displayName?: string; enabled?: boolean }): Promise<void> {
+        const body: Record<string, unknown> = {};
+        if (patch.displayName !== undefined) body.displayName = patch.displayName;
+        if (patch.enabled     !== undefined) body.enabled     = patch.enabled;
+        const res = await this._request("PUT", `/realms/${enc(realm)}`, body);
+        await assertOk(res, "updateRealm");
+    }
+
+    /** List all realms accessible by the service account. Minimal
+     *  `RealmRepresentation` fields — extend the type if more are needed. */
+    async listRealms(): Promise<RealmRepresentation[]> {
+        const res = await this._request("GET", "/realms");
+        await assertOk(res, "listRealms");
+        return res.json() as Promise<RealmRepresentation[]>;
+    }
+
+    /** Fetch one realm. Throws `KeycloakClientError("not_found", ...)`
+     *  if absent. */
+    async getRealm(realm: string): Promise<RealmRepresentation> {
+        const res = await this._request("GET", `/realms/${enc(realm)}`);
+        await assertOk(res, "getRealm");
+        return res.json() as Promise<RealmRepresentation>;
     }
 
     // ── Clients ────────────────────────────────────────────────────────
@@ -301,4 +335,13 @@ export type SendActionsOptions = {
     redirectUri?: string;
     /** Client whose redirect URIs are checked against `redirectUri`. Default = `account`. */
     clientId?:    string;
+};
+
+/** Minimal subset of Keycloak's `RealmRepresentation` we surface — extend
+ *  as needed. Property names match Keycloak's JSON wire shape. */
+export type RealmRepresentation = {
+    id:           string;
+    realm:        string;
+    enabled:      boolean;
+    displayName?: string;
 };

@@ -54,16 +54,33 @@ describe("token acquisition + caching", () => {
     });
 
     test("second call within validity window reuses the cached token", async () => {
+        // Use two non-realm-mutating calls — `createRealm` intentionally
+        // invalidates the cache (Keycloak only adds the new `<realm>-realm`
+        // client roles to a fresh token), so this test pairs two reads.
         const { fetch, calls } = makeFetch([
             TOKEN_REPLY,
-            { status: 201, body: {} },
-            { status: 204 },
+            { status: 200, body: [] },
+            { status: 200, body: [] },
+        ]);
+        const kc = new KeycloakAdminClient({ baseUrl: KC, auth: AUTH, fetch });
+        await kc.listRealms();
+        await kc.listRealms();
+        expect(calls).toHaveLength(3);  // 1 token + 2 admin = 3 (no second token)
+        expect(calls[2]!.headers["Authorization"]).toBe("Bearer tok-abc");
+    });
+
+    test("createRealm invalidates the cached token (Keycloak per-realm role quirk)", async () => {
+        const { fetch, calls } = makeFetch([
+            TOKEN_REPLY,                                                           // 1st token
+            { status: 201, body: {} },                                             // createRealm
+            { status: 200, body: { access_token: "tok-fresh", expires_in: 60 } },  // 2nd token (forced)
+            { status: 201, body: {} },                                             // next admin call uses fresh token
         ]);
         const kc = new KeycloakAdminClient({ baseUrl: KC, auth: AUTH, fetch });
         await kc.createRealm({ realm: "a" });
-        await kc.deleteRealm("a");
-        expect(calls).toHaveLength(3);  // 1 token + 2 admin = 3 (no second token)
-        expect(calls[2]!.headers["Authorization"]).toBe("Bearer tok-abc");
+        await kc.createRealmRole("a", { name: "admin" });
+        expect(calls).toHaveLength(4);
+        expect(calls[3]!.headers["Authorization"]).toBe("Bearer tok-fresh");
     });
 
     test("token endpoint failure surfaces as KeycloakClientError(unauthorized)", async () => {
