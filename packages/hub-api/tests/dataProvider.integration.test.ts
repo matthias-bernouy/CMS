@@ -13,6 +13,7 @@ function makeFakeDpFetch(opts: {
     jwksUri?:            string;
     refuseAdmin?:        boolean;
     rejectAdminTenants?: boolean;
+    failLogs?:           boolean;
 } = {}): typeof fetch {
     const providerId      = opts.providerId      ?? "delivery-acme";
     const contractVersion = opts.contractVersion ?? "1.0";
@@ -58,6 +59,10 @@ function makeFakeDpFetch(opts: {
         }
         if (url.startsWith(`${DP_URL}/admin/config`) && method === "GET") {
             return new Response(JSON.stringify({ version: "1.0", config: { x: 1 } }), { status: 200 });
+        }
+        if (url.startsWith(`${DP_URL}/admin/logs`) && method === "GET") {
+            if (opts.failLogs) return new Response("boom", { status: 503 });
+            return new Response(JSON.stringify({ items: [{ ts: "2026-01-01T00:00:00.000Z", event: "request.served" }] }), { status: 200 });
         }
         return new Response("unexpected " + method + " " + url, { status: 500 });
     }) as unknown as typeof fetch;
@@ -165,6 +170,30 @@ describe("Namespace registry + tenants", () => {
         await hub.deleteNamespace("acme");
         expect(await hub.getNamespace("acme")).toBeNull();
         expect(await hub.getTenant("t-x")).toBeNull();
+    });
+});
+
+describe("Namespace logs — partial failure", () => {
+    async function seedNs(fetchImpl: typeof fetch): Promise<Hub> {
+        const hub = makeHub(fetchImpl);
+        await hub.importDataProvider({ url: DP_URL });
+        await hub.createNamespace({ namespaceId: "acme", displayName: "ACME" });
+        await hub.createTenant("acme", "delivery-acme", { tenantId: "t-x", issuers: [] });
+        return hub;
+    }
+
+    test("aggregates tenant logs, no failedProviders on success", async () => {
+        const hub = await seedNs(makeFakeDpFetch());
+        const page = await hub.fetchNamespaceLogs("acme", {});
+        expect(page.items.length).toBe(1);
+        expect(page.failedProviders).toBeUndefined();
+    });
+
+    test("a DP failing /admin/logs → partial result + failedProviders, no throw", async () => {
+        const hub = await seedNs(makeFakeDpFetch({ failLogs: true }));
+        const page = await hub.fetchNamespaceLogs("acme", {});
+        expect(page.items).toEqual([]);
+        expect(page.failedProviders).toEqual(["delivery-acme"]);
     });
 });
 
