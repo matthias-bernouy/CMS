@@ -30,14 +30,29 @@
 
 set -euo pipefail
 
+LOG_PREFIX="${LOG_PREFIX:-okms-fetch}"
+log() { printf "[%s] %s\n" "${LOG_PREFIX}" "$*" >&2; }
+
+# Dev escape hatch — when OKMS_SKIP=1, we don't talk to OKMS at all and
+# chain straight to the wrapped entrypoint. The service's own env vars
+# must come from `--env-file` / `-e` instead of the OKMS bundle. We
+# additionally require `HUB_ENV=dev` so that an accidentally-leaked
+# OKMS_SKIP=1 in a prod container is rejected at boot rather than
+# silently disabling the safety net.
+if [ "${OKMS_SKIP:-0}" = "1" ]; then
+    if [ "${HUB_ENV:-}" != "dev" ]; then
+        log "FATAL: OKMS_SKIP=1 requires HUB_ENV=dev. Refusing to boot — this flag must NEVER be set in production."
+        exit 7
+    fi
+    log "OKMS_SKIP=1 (HUB_ENV=dev) — bypassing bundle fetch. Keys must come from --env-file / -e."
+    exec "$@"
+fi
+
 : "${OKMS_REGION:?OKMS_REGION is required (e.g. eu-west-par)}"
 : "${OKMS_DOMAIN_ID:?OKMS_DOMAIN_ID is required (uuid of the OKMS domain)}"
 : "${OKMS_CERT_PATH:?OKMS_CERT_PATH is required (in-container path to the OKMS access cert .pem)}"
 : "${OKMS_KEY_PATH:?OKMS_KEY_PATH is required (in-container path to the OKMS access key .pem)}"
 : "${OKMS_SECRET_PREFIX:?OKMS_SECRET_PREFIX is required (full secret path, e.g. prod/auth/config)}"
-
-LOG_PREFIX="${LOG_PREFIX:-okms-fetch}"
-log() { printf "[%s] %s\n" "${LOG_PREFIX}" "$*" >&2; }
 
 # Pre-flight: cert + key must exist and be readable. Refuse to boot if
 # the private key has world/group perms — same hygiene as ssh.
@@ -50,16 +65,13 @@ if [ ! -r "${OKMS_KEY_PATH}" ]; then
     exit 1
 fi
 KEY_PERMS=$(stat -c "%a" "${OKMS_KEY_PATH}" 2>/dev/null || echo "")
+# Owner-only perms only. Anything group/world readable (e.g. 0640) is rejected.
+# The empty-string branch tolerates `stat` failures (FS doesn't support it).
 case "${KEY_PERMS}" in
-    400|600|0400|0600|""|*[0-9])
-        # Tolerate any owner-only perms; reject group/world readable.
-        if [ -n "${KEY_PERMS}" ]; then
-            last_two="${KEY_PERMS: -2}"
-            if [ "${last_two}" != "00" ] && [ "${last_two: -1}" != "0" ]; then
-                log "FATAL: access key '${OKMS_KEY_PATH}' has lax perms (${KEY_PERMS}). Set 0400 or 0600 on the host file."
-                exit 1
-            fi
-        fi
+    400|600|0400|0600|"") ;;
+    *)
+        log "FATAL: access key '${OKMS_KEY_PATH}' has lax perms (${KEY_PERMS}). Set 0400 or 0600 on the host file."
+        exit 1
         ;;
 esac
 

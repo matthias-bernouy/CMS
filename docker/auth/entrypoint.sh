@@ -53,11 +53,14 @@ NGINX_PID=$!
 
 # Keycloak runtime config. nginx terminates TLS, so KC speaks plain HTTP
 # on loopback. KC_PROXY_HEADERS=xforwarded preserves the client's scheme.
+# KC 26 hostname v2 is now the default: KC_HOSTNAME must be the full public
+# URL (scheme included) when behind a TLS-terminating reverse proxy, not a
+# bare hostname.
 export KC_DB=postgres
 export KC_HTTP_ENABLED=true
 export KC_HTTP_HOST=127.0.0.1
 export KC_HTTP_PORT=8080
-export KC_HOSTNAME="${MAIN_DOMAIN}"
+export KC_HOSTNAME="https://${MAIN_DOMAIN}"
 export KC_HOSTNAME_STRICT=true
 export KC_PROXY_HEADERS=xforwarded
 

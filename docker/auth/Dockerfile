@@ -5,16 +5,21 @@
 
 FROM debian:bookworm-slim
 
-ARG KEYCLOAK_VERSION=25.0.6
+ARG KEYCLOAK_VERSION=26.6.1
 ARG LEGO_VERSION=4.27.0
 ARG TARGETARCH=amd64
 
-# Keycloak 25.x runs on Java 17 (LTS), shipped in bookworm main. No
-# backports needed. To upgrade to Keycloak 26+, switch to a Java 21 base
-# (eclipse-temurin apt repo, or bookworm-backports openjdk-21-jre-headless).
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        nginx curl ca-certificates jq lsb-release sudo procps gettext-base \
-        openjdk-17-jre-headless \
+# Keycloak 26.x requires Java 21 (LTS). bookworm main only ships 17 and
+# Debian never backported 21 to bookworm (it landed in trixie). Pull
+# Temurin 21 JRE from the Adoptium apt repo, which has a bookworm channel.
+RUN install -d -m 0755 /etc/apt/keyrings \
+ && apt-get update && apt-get install -y --no-install-recommends \
+        nginx curl ca-certificates jq lsb-release sudo procps gettext-base gnupg \
+ && curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public \
+        | gpg --dearmor -o /etc/apt/keyrings/adoptium.gpg \
+ && echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb bookworm main" \
+        > /etc/apt/sources.list.d/adoptium.list \
+ && apt-get update && apt-get install -y --no-install-recommends temurin-21-jre \
  && curl -fsSL "https://github.com/keycloak/keycloak/releases/download/${KEYCLOAK_VERSION}/keycloak-${KEYCLOAK_VERSION}.tar.gz" \
         | tar -xz -C /opt \
  && mv "/opt/keycloak-${KEYCLOAK_VERSION}" /opt/keycloak \
@@ -26,7 +31,7 @@ RUN groupadd -r keycloak \
  && useradd -r -g keycloak -d /opt/keycloak -s /usr/sbin/nologin keycloak \
  && chown -R keycloak:keycloak /opt/keycloak
 
-# Build the Keycloak server-side index once at image build time so first
+# Build the Keycloak server-side index once at image build time so first²²
 # boot doesn't pay the ~30s `kc.sh build` penalty. Re-built at runtime if
 # any KC_DB / KC_FEATURES change vs the baked-in defaults.
 USER keycloak

@@ -1,5 +1,5 @@
 {
-    "name":    "hub-api-runtime",
+    "name":    "hub-runtime",
     "private": true,
     "type":    "module"
 }

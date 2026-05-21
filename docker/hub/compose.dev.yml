@@ -1,0 +1,186 @@
+# ⚠️  DEV ONLY — NEVER USE IN PRODUCTION  ⚠️
+#
+# This compose file embeds plaintext secrets (Keycloak admin password,
+# OIDC client secrets, dev KEK, session secret). The KEK in particular is
+# committed to git; any data wrapped by it is recoverable from history.
+#
+# Production stack lives in `compose.example.yml` (no secrets in the file,
+# everything pulled from OKMS at boot).
+#
+# Global dev stack for the hub. ONE command to spin up everything locally —
+# no OKMS, no nginx-proxy, no real DNS.
+#
+#     docker compose -f docker/hub/compose.dev.yml up --build
+#
+# What it boots :
+#   - keycloak          : http://keycloak.localtest.me:8080  (admin / admin)
+#                         Used ONLY to authenticate /admin superadmins — the
+#                         hub no longer manages tenant realms.
+#   - keycloak-setup    : one-shot job creating the `hub-admin` OIDC client,
+#                         the `superadmin` role, and the `dev@local / dev`
+#                         user in the master realm. Re-runnable, idempotent.
+#   - mongo             : persists the DP registry + the namespace registry.
+#   - hub               : http://hub.localtest.me:3000/admin  (login dev@local / dev)
+#   - example-dp        : http://example-dp.localtest.me:4000 — toy notes DP
+#                         (in-memory store + tenant-config { maxNotes, allowEmoji,
+#                         secretApiKey }). Useful to exercise the full
+#                         import / provision / config-fetch flow.
+#   - addresses-dp      : http://addresses-dp.localtest.me:4001 — proxy to the
+#                         French BAN (Base Adresse Nationale). Endpoints
+#                         /autocomplete + /reverse (consumption plane). Stateless.
+#
+# Why `*.localtest.me`
+#   localtest.me is a public DNS service that always resolves to 127.0.0.1.
+#   We also register the relevant subdomains as Docker network aliases on the
+#   matching services, so containers resolve them to the right container while
+#   the browser resolves them to 127.0.0.1 (forwarded by the published ports).
+#   ⇒ Both sides agree on the URL the iss claim contains, so JWT validation
+#     works without /etc/hosts edits.
+#
+#   Offline fallback : add `127.0.0.1 hub keycloak example-dp` to /etc/hosts
+#   and replace `*.localtest.me` with bare hostnames below + in keycloak-setup.sh.
+
+networks:
+    bernouy-dev-net:
+        driver: bridge
+
+services:
+
+    keycloak:
+        image: quay.io/keycloak/keycloak:26.0
+        command: start-dev
+        environment:
+            KC_BOOTSTRAP_ADMIN_USERNAME: admin
+            KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+            # Make every issued token / endpoint URL carry this hostname.
+            # Both the hub container and the browser reach KC via this URL.
+            KC_HOSTNAME: http://keycloak.localtest.me:8080
+            KC_HOSTNAME_STRICT: "false"
+            KC_HTTP_ENABLED: "true"
+            KC_HEALTH_ENABLED: "true"
+        ports:
+            # Bound to loopback so an open Wi-Fi can't reach the dev KC.
+            - "127.0.0.1:8080:8080"
+        networks:
+            bernouy-dev-net:
+                aliases:
+                    - keycloak.localtest.me
+        healthcheck:
+            # KC 26 ships its health probe on the management port 9000.
+            test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3 || exit 1"]
+            interval: 5s
+            timeout: 3s
+            retries: 40
+            start_period: 30s
+
+    keycloak-setup:
+        image: alpine:3.20
+        depends_on:
+            keycloak:
+                condition: service_healthy
+        networks: [bernouy-dev-net]
+        volumes:
+            - ./dev/keycloak-setup.sh:/setup.sh:ro
+        entrypoint: ["/bin/sh", "/setup.sh"]
+        restart: "no"
+
+    mongo:
+        # No auth — only reachable from bernouy-dev-net (no `ports:` published).
+        # If you ever publish 27017 for a GUI client, bind it to 127.0.0.1 only.
+        image: mongo:7
+        networks: [bernouy-dev-net]
+        volumes:
+            - hub-dev-mongo:/data/db
+
+    hub:
+        build:
+            context: ../..
+            dockerfile: docker/hub/Dockerfile
+        image: bernouy/hub:dev
+        depends_on:
+            keycloak-setup:
+                condition: service_completed_successfully
+            mongo:
+                condition: service_started
+        networks:
+            bernouy-dev-net:
+                aliases:
+                    - hub.localtest.me
+        ports:
+            - "127.0.0.1:3000:3000"
+        volumes:
+            - hub-dev-data:/var/lib/hub
+        environment:
+            # Dev escape hatches — see DEPLOY.md §14. HUB_ENV=dev is the
+            # explicit confirmation that gates OKMS_SKIP=1; in production
+            # this env var must never be set.
+            HUB_ENV: "dev"
+            OKMS_SKIP: "1"
+            HUB_LOCAL_KEK_B64: "UeTvxwunlTm8MMklLI7/Ltopg6LLYujz9+ojG666i+A="
+            # ↑ Fixed dev KEK (32 raw bytes base64) so re-creating the
+            # container keeps the same hub-issuer signing key. Generate
+            # a fresh one with `openssl rand -base64 32` if needed.
+
+            MAIN_DOMAIN:                   "hub.localtest.me:3000"
+            HUB_PUBLIC_URL:                "http://hub.localtest.me:3000"
+            # Keycloak is used ONLY to authenticate /admin superadmins.
+            # No admin-client / SMTP — the hub no longer manages tenants.
+            KEYCLOAK_BASE_URL:             "http://keycloak.localtest.me:8080"
+            KEYCLOAK_API_AUTH_REALM:       "master"
+            KEYCLOAK_API_AUTH_ROLE:        "superadmin"
+            HUB_KEYCLOAK_CLIENT_ID:        "hub-admin"
+            HUB_KEYCLOAK_CLIENT_SECRET:    "dev-admin-secret"
+            HUB_SESSION_SECRET:            "dev-session-secret-must-be-at-least-32-chars-long-please"
+            MONGO_URL:                     "mongodb://mongo:27017"
+            MONGO_DB_NAME:                 "hub_dev"
+
+    example-dp:
+        build:
+            context: ../..
+            dockerfile: docker/example-dp/Dockerfile
+        image: bernouy/example-dp:dev
+        depends_on:
+            hub:
+                condition: service_started
+        networks:
+            bernouy-dev-net:
+                aliases:
+                    - example-dp.localtest.me
+        ports:
+            # Same port inside and on host: docker DNS sees container:4000,
+            # browser sees 127.0.0.1:4000. The DP's iss URL works from both.
+            - "127.0.0.1:4000:4000"
+        environment:
+            PORT:           "4000"
+            # The iss the DP advertises in its metadoc. The hub fetches it
+            # at this exact URL; for token verification the SDK uses the
+            # SAME URL (containers resolve via docker alias, browser via
+            # *.localtest.me → 127.0.0.1 → published port).
+            DP_PUBLIC_URL:  "http://example-dp.localtest.me:4000"
+            # The hub's iss — must match what the hub publishes in its
+            # CP tokens. Allowlisted in the DP's config.
+            HUB_ISSUER_URL: "http://hub.localtest.me:3000"
+
+    addresses-dp:
+        build:
+            context: ../..
+            dockerfile: docker/addresses-dp/Dockerfile
+        image: bernouy/addresses-dp:dev
+        depends_on:
+            hub:
+                condition: service_started
+        networks:
+            bernouy-dev-net:
+                aliases:
+                    - addresses-dp.localtest.me
+        ports:
+            # Different port from example-dp (4000) so both can publish.
+            - "127.0.0.1:4001:4001"
+        environment:
+            PORT:           "4001"
+            DP_PUBLIC_URL:  "http://addresses-dp.localtest.me:4001"
+            HUB_ISSUER_URL: "http://hub.localtest.me:3000"
+
+volumes:
+    hub-dev-mongo:
+    hub-dev-data:
