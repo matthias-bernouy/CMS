@@ -38,7 +38,7 @@ export function buildCspContent(extras: CspExtras = EMPTY_EXTRAS): string {
         "default-src 'self'",
         `script-src ${script}`,
         `style-src ${style}`,
-        "img-src 'self' data: https:",
+        "img-src 'self' data: https: blob:",
         "base-uri 'self'",
         "form-action 'self'",
         "object-src 'none'",

@@ -73,7 +73,7 @@ export function securityHeaders(): Record<string, string> {
  * risk is a style-only injection (CSS-based phishing) — accepted tradeoff.
  * Inline *scripts* remain forbidden via the stricter default-src 'self'.
  *
- * `img-src 'self' data: https:` lets blocs reference external images (CDN
+ * `img-src 'self' data: https: blob:` lets blocs reference external images (CDN
  * assets, placeholders like picsum, OpenGraph previews). Images can't
  * execute code, so the residual risk is privacy (visitor IP leaked to the
  * image host) — accepted for CMS flexibility. Restricted to `https:` to

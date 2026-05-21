@@ -46,7 +46,7 @@ describe("CSP is only emitted on HTML responses", () => {
         const csp = res.headers.get("Content-Security-Policy");
         expect(csp).toContain("default-src 'self'");
         expect(csp).toContain("style-src 'self' 'unsafe-inline'");
-        expect(csp).toContain("img-src 'self' data: https:");
+        expect(csp).toContain("img-src 'self' data: https: blob:");
         expect(csp).toContain("frame-ancestors 'none'");
         expect(csp).toContain("object-src 'none'");
         // Report-Only must not be present now that we're enforcing.

@@ -5,8 +5,9 @@ describe("buildCspContent", () => {
     test("emits the baseline directives with no extras (default arg)", () => {
         const csp = buildCspContent();
         expect(csp).toContain("default-src 'self'");
+        expect(csp).toContain("script-src 'self'");
         expect(csp).toContain("style-src 'self' 'unsafe-inline'");
-        expect(csp).toContain("img-src 'self' data: https:");
+        expect(csp).toContain("img-src 'self' data: https: blob:");
         expect(csp).toContain("base-uri 'self'");
         expect(csp).toContain("form-action 'self'");
         expect(csp).toContain("object-src 'none'");
@@ -46,8 +47,8 @@ describe("buildCspContent", () => {
 
     test("baseline output (no extras) matches the legacy hardcoded constant", () => {
         const expected =
-            "default-src 'self'; style-src 'self' 'unsafe-inline'; " +
-            "img-src 'self' data: https:; " +
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data: https: blob:; " +
             "base-uri 'self'; form-action 'self'; " +
             "object-src 'none'; frame-ancestors 'none'";
         expect(buildCspContent()).toBe(expected);
@@ -55,6 +56,6 @@ describe("buildCspContent", () => {
 
     test("directives are joined with '; ' separator", () => {
         const csp = buildCspContent();
-        expect(csp.split("; ").length).toBe(7);
+        expect(csp.split("; ").length).toBe(8);
     });
 });
