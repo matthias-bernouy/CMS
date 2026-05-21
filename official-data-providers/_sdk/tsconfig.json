@@ -1,0 +1,27 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": ".",
+        "baseUrl": "."
+    },
+    "include": [
+        "src/**/*.ts",
+        "tests/**/*.ts"
+    ],
+    "//exclude": "cross-package e2e: import @bernouy/data-provider-example; a tsc project-ref would cycle (_example → _sdk). bun-run only.",
+    "exclude": [
+        "tests/e2e/example.e2e.test.ts",
+        "tests/e2e/example.contract.test.ts",
+        "tests/e2e/conformance.e2e.test.ts",
+        "tests/e2e/tenant-config.e2e.test.ts"
+    ],
+    "references": [
+        {
+            "path": "../../packages/core"
+        },
+        {
+            "path": "../_data-provider-contract"
+        }
+    ]
+}
