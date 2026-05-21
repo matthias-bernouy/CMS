@@ -17,6 +17,19 @@ test("recorder: unknown event → throws synchronously (catalog enforced)", () =
         .toThrow(SdkError);
 });
 
+test("recorder: domain.* business events accepted on any kind; other unknowns still throw", async () => {
+    const { store, rec } = mk();
+    await rec.record({ kind: "audit", level: "info", event: "domain.deploy_published",
+        tenantId: "t1", actor: "tenant", visibility: "control-plane", ctx: { version: "v42" } });
+    await rec.record({ kind: "security", level: "warn", event: "domain.rate_limit_tripped",
+        tenantId: "t1", actor: "tenant", visibility: "control-plane", ctx: { rps: 9000 } });
+    expect((await store.query({})).items.map((i) => i.event).sort())
+        .toEqual(["domain.deploy_published", "domain.rate_limit_tripped"]);
+    // a non-core, non-domain event is still a programming error
+    expect(() => rec.record({ kind: "request", level: "info", event: "random.thing",
+        tenantId: "t1", actor: "tenant", visibility: "both" })).toThrow(SdkError);
+});
+
 test("recorder: deny-list strips token/Authorization/JWT from ctx", async () => {
     const { store, rec } = mk();
     await rec.record({

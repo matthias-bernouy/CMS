@@ -58,6 +58,24 @@ test("tenant token on /tenant/logs (SDK-owned) → 200, redacted page", async ()
     } finally { s.stop(); }
 });
 
+test("auto request.served carries access metrics (durationMs + sizes); control-plane is logged too", async () => {
+    const s = await setupMounted();
+    try {
+        await provision(s);                                          // control-plane call
+        await s.request("GET", "/notes", bearer(await tToken(s.tIss))); // tenant call
+        const items = (await (await s.request("GET", "/admin/logs?kind=request",
+            bearer(await cpToken(s.hub)))).json()).items as Array<{
+                event: string; actor: string; ctx?: Record<string, unknown> }>;
+        const served = items.filter((i) => i.event === "request.served");
+        const notes = served.find((i) => i.ctx?.path === "/notes")!;
+        expect(notes.ctx!.method).toBe("GET");
+        expect(typeof notes.ctx!.durationMs).toBe("number");
+        expect(notes.ctx!.durationMs as number).toBeGreaterThanOrEqual(0);
+        // control-plane requests are now access-logged (scope = all non-public)
+        expect(served.some((i) => i.actor === "control-plane")).toBe(true);
+    } finally { s.stop(); }
+});
+
 async function securityEvents(s: Awaited<ReturnType<typeof setupMounted>>): Promise<string[]> {
     const r = await s.request("GET", "/admin/logs?kind=security",
         bearer(await cpToken(s.hub)));

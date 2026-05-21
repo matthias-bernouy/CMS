@@ -67,18 +67,30 @@ export async function mountProvider(d: MountDeps): Promise<void> {
             const tenant = resolved?.tenant ?? null;
             setRequestAuth(req, { ...auth, tenant });
             setRequestRecorder(req, d.recorder);
+            const t0  = performance.now();
             const res = await next();
-            // §10: emit one `request.served` per plane-2/3 request so the
-            // request log stream (and `/tenant/logs`) is actually populated.
-            if (auth.role === "tenant" && planForPath(path) !== "admin") {
-                void d.recorder.record({
-                    kind: "request", level: "info", event: "request.served",
-                    tenantId: tenant?.tenantId ?? null, actor: "tenant",
-                    visibility: "both", outcome: res.ok ? "ok" : "error",
-                    ...(auth.claims.sub ? { sub: auth.claims.sub } : {}),
-                    ctx: { method: req.method, path, status: res.status },
-                });
-            }
+            // §10: one `request.served` access-log per authorized (non-public)
+            // request — populates the request stream + `/tenant/logs`, and
+            // carries timing/size for analytics. Public infra probes never
+            // reach here (PUBLIC bypass above). Body sizes are best-effort via
+            // Content-Length (we never buffer the body — would break streaming).
+            const isCP = auth.role === "control-plane";
+            const reqLen = req.headers.get("content-length");
+            const resLen = res.headers.get("content-length");
+            void d.recorder.record({
+                kind: "request", level: "info", event: "request.served",
+                tenantId: tenant?.tenantId ?? null,
+                actor:      isCP ? "control-plane" : "tenant",
+                visibility: isCP ? "control-plane" : "both",
+                outcome: res.ok ? "ok" : "error",
+                ...(auth.claims.sub ? { sub: auth.claims.sub } : {}),
+                ctx: {
+                    method: req.method, path, status: res.status,
+                    durationMs: Math.round(performance.now() - t0),
+                    ...(reqLen ? { reqBytes: Number(reqLen) } : {}),
+                    ...(resLen ? { resBytes: Number(resLen) } : {}),
+                },
+            });
             return res;
         } catch (e) {
             if (e instanceof PlaneError) {
