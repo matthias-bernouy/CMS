@@ -1,0 +1,23 @@
+/* Hub UI — GLOBALS ONLY. Theme tokens come from @bernouy/webcomponents'
+ * style.css; everything visual lives in its component's shadow style.css.
+ * Keep this file to page-level primitives (reset / font / the root layout
+ * host) — no component classes here. */
+
+html, body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: system-ui, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-body);
+}
+
+/* The lateral-menu layout host is a 2-col grid (sidebar + main) — fill the
+ * viewport so the sidebar stays full-height. */
+w13c-left-menu-layout {
+    min-height: 100vh;
+}
+
+/* Tab panels: breathing room above content. Scoped to :not([hidden]) so the
+ * `hidden` attribute <p9r-tabs> toggles still wins. (Styling a slotted
+ * webcomponent host — can't live in a shadow root.) */
+p9r-tab-panel:not([hidden]) { display: block; padding-top: 1rem; }

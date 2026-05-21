@@ -1,0 +1,14 @@
+:host { display: block; }
+
+[part="grid"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+/* The <w13c-fetch> host stamps its cards as siblings — keep it out of the
+ * grid flow so it doesn't claim a cell. */
+[part="grid"] ::slotted(w13c-fetch) { display: contents; }
+
+[part="empty"] { margin-top: 0.5rem; }
+[part="empty"][hidden] { display: none; }

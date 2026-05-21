@@ -1,0 +1,54 @@
+:host { display: block; }
+
+[part="root"] { display: flex; flex-direction: column; gap: 1rem; }
+
+.bar { display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; }
+
+/* Keep the filter dropdowns a stable width — otherwise the host collapses to
+ * the chevron when "All" is selected and jumps around on each change. */
+.bar p9r-select { display: inline-block; min-width: 9rem; }
+
+.rows {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    overflow: auto;
+    max-height: 28rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+}
+.rows:empty { display: none; }
+
+.row {
+    display: grid;
+    grid-template-columns: 12rem 5.5rem 4rem 1fr auto;
+    gap: 0.75rem;
+    align-items: baseline;
+    padding: 0.4rem 0.75rem;
+    border-bottom: 1px solid var(--border-light, var(--border-default));
+    color: var(--text-body);
+}
+.row:last-child { border-bottom: 0; }
+
+.ts { color: var(--text-muted); white-space: nowrap; }
+
+.tag {
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    color: var(--text-label, var(--text-muted));
+}
+
+.event { color: var(--text-main); word-break: break-word; }
+.meta  { color: var(--text-muted); white-space: nowrap; }
+
+/* Level accent via the theme status tokens — no hardcoded colors. */
+.row.level-warn  .tag.level { color: var(--warning-base); }
+.row.level-error .tag.level { color: var(--danger-base); }
+.row.level-info  .tag.level { color: var(--info-base); }
+
+.empty[hidden], .more[hidden] { display: none; }
+.more { align-self: flex-start; }

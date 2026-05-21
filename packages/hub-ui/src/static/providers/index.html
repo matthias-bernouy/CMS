@@ -1,0 +1,47 @@
+<hub-page>
+    <h1 slot="title">Data-providers</h1>
+    <p slot="title">Data-plane services imported into the hub. Configure the DP's allowlist before importing.</p>
+    <p9r-open-modal slot="actions" modal-target="import-dp-modal">
+        <p9r-button color="primary">+ Import a DP</p9r-button>
+    </p9r-open-modal>
+
+    <hub-grid>
+        <w13c-fetch url="/api/providers" reload-on="provider:imported provider:removed provider:refreshed">
+            <template for="data.providers">
+                <p9r-card>
+                    <p9r-stack gap="s">
+                        <div><strong>{{ providerId }}</strong></div>
+                        <hub-hint>{{ providerKind }} — {{ url }}</hub-hint>
+                        <p9r-stack direction="row" gap="s">
+                            <a href="{{BASE_PATH}}/providers/provider?providerId={{providerId}}">
+                                <p9r-button variant="ghost">Open</p9r-button>
+                            </a>
+                            <w13c-form target="/api/providers/refresh?providerId={{providerId}}" method="POST" emit="provider:refreshed">
+                                <p9r-button variant="ghost" type="submit" title="Re-fetch schemas">↻</p9r-button>
+                            </w13c-form>
+                            <w13c-form target="/api/providers?providerId={{providerId}}" method="DELETE" emit="provider:removed">
+                                <p9r-button variant="ghost" color="danger" type="submit" title="Unimport">✕</p9r-button>
+                            </w13c-form>
+                        </p9r-stack>
+                    </p9r-stack>
+                </p9r-card>
+            </template>
+        </w13c-fetch>
+        <p9r-alert slot="empty" type="info">No data-provider imported. Click "+ Import a DP" to get started.</p9r-alert>
+    </hub-grid>
+</hub-page>
+
+<p9r-modal id="import-dp-modal" aria-label="Import a data-provider">
+    <span slot="title">Import a data-provider</span>
+    <w13c-form target="/api/providers" method="POST" emit="provider:imported" content-type="application/json">
+        <p9r-stack gap="m">
+            <hub-hint>
+                Enter the data-provider's base URL. The hub fetches the 4 discovery
+                documents (info, metadoc, JWKS, openapi.admin) and persists the import.
+            </hub-hint>
+            <p9r-input name="url" label="URL" placeholder="https://delivery.acme.com" required></p9r-input>
+            <p9r-input name="name" label="Label (optional)" placeholder="Acme Delivery"></p9r-input>
+            <p9r-button color="primary" type="submit" fullWidth>Import</p9r-button>
+        </p9r-stack>
+    </w13c-form>
+</p9r-modal>

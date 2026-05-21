@@ -1,0 +1,29 @@
+<hub-page>
+    <h1 slot="title">Hub-issuer</h1>
+    <p slot="title">The hub's cryptographic identity. Configure each DP's allowlist with this snippet.</p>
+
+    <w13c-fetch url="/api/issuer">
+        <template>
+            <p9r-stack gap="m">
+                <p9r-card>
+                    <p9r-stack gap="s">
+                        <div><strong>iss:</strong> <hub-code>{{ data.iss }}</hub-code></div>
+                        <div><strong>JWKS URL:</strong> <hub-code>{{ data.jwksUrl }}</hub-code></div>
+                        <div><strong>Metadoc URL:</strong> <hub-code>{{ data.metadocUrl }}</hub-code></div>
+                    </p9r-stack>
+                </p9r-card>
+
+                <hub-section label="Allowlist snippet (for each DP)">
+                    <hub-hint>Paste this entry into each DP's <hub-code>allowlist</hub-code> in its <hub-code>ProviderConfig</hub-code>, before importing:</hub-hint>
+                    <hub-code block>{
+    "iss":  "{{ data.iss }}",
+    "role": "control-plane"
+}</hub-code>
+                </hub-section>
+            </p9r-stack>
+        </template>
+        <template slot="error">
+            <p9r-alert type="error">Issuer info not found.</p9r-alert>
+        </template>
+    </w13c-fetch>
+</hub-page>
