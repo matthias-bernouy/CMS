@@ -18,7 +18,7 @@ export type ApiOperationMeta = {
         // OpenAPI's `parameters` come from a ZodObject — each top-level field becomes a query param.
         query?: z.ZodObject<z.ZodRawShape>;
     };
-    responses: Record<number, { description: string; schema: z.ZodTypeAny }>;
+    responses: Record<number, { description: string; schema?: z.ZodTypeAny }>;
     /** Default true — flip false on public endpoints (e.g. `/health`). */
     requiresAuth?: boolean;
 };

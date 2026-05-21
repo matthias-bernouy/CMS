@@ -12,10 +12,10 @@
     },
     "dependencies": {
         "@asteasolutions/zod-to-openapi": "^8.5.0",
-        "@bernouy/cdn-buckets": "workspace:*",
         "@bernouy/core": "workspace:*",
-        "@bernouy/keycloak-client": "workspace:*",
-        "@bernouy/mt-cms-control": "workspace:*",
+        "@bernouy/issuer-kit": "workspace:*",
+        "@bernouy/data-provider-contract": "workspace:*",
+        "mongodb": "^7.1.0",
         "zod": "^4.4.3"
     }
 }

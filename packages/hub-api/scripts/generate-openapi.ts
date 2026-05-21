@@ -45,7 +45,7 @@ async function main(): Promise<void> {
             },
             responses: Object.fromEntries(Object.entries(ep.meta.responses).map(([code, r]) => [code, {
                 description: r.description,
-                content:     { "application/json": { schema: r.schema } },
+                ...(r.schema ? { content: { "application/json": { schema: r.schema } } } : {}),
             }])),
         });
     }
@@ -56,7 +56,7 @@ async function main(): Promise<void> {
         method:      "get",
         path:        "/health",
         summary:     "Public liveness probe",
-        description: "Returns 200 if the hub process is up. Does NOT cross the network — for deeper validation use `/api/preflight`.",
+        description: "Returns 200 if the hub process is up. Does NOT cross the network to any data-provider.",
         operationId: "health",
         tags:        ["health"],
         responses: {

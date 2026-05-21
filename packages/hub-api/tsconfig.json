@@ -8,8 +8,8 @@
     "include": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
     "references": [
         { "path": "../core" },
-        { "path": "../cdn-buckets" },
-        { "path": "../cms-control-mt" },
-        { "path": "../keycloak-client" }
+        { "path": "../keycloak-client" },
+        { "path": "../../official-data-providers/_issuer-kit" },
+        { "path": "../../official-data-providers/_data-provider-contract" }
     ]
 }

@@ -13,18 +13,42 @@
   ],
   "components": {
     "schemas": {
-      "PreflightResult": {
+      "IssuerInfo": {
         "type": "object",
         "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "ready"
+          "iss": {
+            "type": "string"
+          },
+          "jwksUrl": {
+            "type": "string"
+          },
+          "metadocUrl": {
+            "type": "string"
+          },
+          "allowlistEntry": {
+            "type": "object",
+            "properties": {
+              "iss": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "control-plane"
+                ]
+              }
+            },
+            "required": [
+              "iss",
+              "role"
             ]
           }
         },
         "required": [
-          "status"
+          "iss",
+          "jwksUrl",
+          "metadocUrl",
+          "allowlistEntry"
         ]
       },
       "HubErrorEnvelope": {
@@ -57,189 +81,413 @@
           "error"
         ]
       },
-      "ProvisionTenantResult": {
+      "DataProviderImportSummary": {
         "type": "object",
         "properties": {
-          "slug": {
+          "providerId": {
             "type": "string"
           },
-          "realm": {
+          "url": {
             "type": "string"
           },
-          "keycloakClientId": {
+          "name": {
             "type": "string"
           },
-          "keycloakRoleName": {
+          "providerKind": {
             "type": "string"
           },
-          "assetsBucketId": {
+          "iss": {
             "type": "string"
           },
-          "deliveryBucketId": {
+          "importedAt": {
             "type": "string"
           },
-          "welcomeEmailSentTo": {
-            "type": "string",
-            "format": "email"
+          "cachedAt": {
+            "type": "string"
           }
         },
         "required": [
-          "slug",
-          "realm",
-          "keycloakClientId",
-          "keycloakRoleName",
-          "assetsBucketId",
-          "welcomeEmailSentTo"
+          "providerId",
+          "url",
+          "iss",
+          "importedAt",
+          "cachedAt"
         ]
       },
-      "ProvisionTenantInput": {
+      "DataProviderImport": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DataProviderImportSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "schemas": {
+                "type": "object",
+                "properties": {
+                  "info": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "nullable": true
+                    }
+                  },
+                  "metadoc": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "nullable": true
+                    }
+                  },
+                  "jwks": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "nullable": true
+                    }
+                  },
+                  "openapiAdmin": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "nullable": true
+                    }
+                  },
+                  "tenantConfig": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "nullable": true
+                    }
+                  },
+                  "tenantConfigVersion": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "info",
+                  "metadoc",
+                  "jwks",
+                  "openapiAdmin"
+                ]
+              }
+            },
+            "required": [
+              "schemas"
+            ]
+          }
+        ]
+      },
+      "LogPage": {
         "type": "object",
         "properties": {
-          "slug": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LogRecord"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "failedProviders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "LogRecord": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "tenantId": {
             "type": "string",
-            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
-            "description": "URL-safe slug. Used as the realm name, the CMS tenant id, the bucket prefix.",
-            "example": "acme"
+            "nullable": true
+          },
+          "actor": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "iss": {
+            "type": "string"
+          },
+          "sub": {
+            "type": "string"
+          },
+          "ctx": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            }
+          },
+          "schemaVersion": {
+            "type": "string"
+          },
+          "ts": {
+            "type": "string"
+          },
+          "providerId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "level",
+          "event",
+          "tenantId",
+          "actor",
+          "visibility",
+          "requestId",
+          "schemaVersion",
+          "ts",
+          "providerId"
+        ]
+      },
+      "ImportDataProviderInput": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Base URL of the data-provider (no trailing slash).",
+            "example": "https://delivery.acme.com"
           },
           "name": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200,
-            "description": "Human-readable display name (Keycloak realm + CMS tenant + welcome email).",
-            "example": "ACME Corp"
-          },
-          "adminUser": {
-            "$ref": "#/components/schemas/ProvisionTenantAdminUser"
-          },
-          "bucketOverrides": {
-            "$ref": "#/components/schemas/BucketDefaultsPartial"
-          },
-          "publicAlias": {
-            "type": "string",
-            "description": "Public alias domain (e.g. 'acme.com'). Implies a delivery bucket is created."
-          },
-          "deliveryEnabled": {
-            "type": "boolean",
-            "description": "Enable delivery from the start. Implies a delivery bucket is created."
-          },
-          "welcomeRedirectUri": {
-            "type": "string",
-            "description": "Where the user lands after clicking the welcome magic link."
-          },
-          "welcomeLinkLifespanSeconds": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true,
-            "description": "TTL of the welcome magic link, in seconds. Default = 7 days."
+            "description": "Optional UI label.",
+            "example": "Acme Delivery"
           }
         },
         "required": [
-          "slug",
-          "name",
-          "adminUser"
+          "url"
         ]
       },
-      "ProvisionTenantAdminUser": {
+      "DeleteNamespaceResult": {
         "type": "object",
         "properties": {
-          "username": {
+          "namespaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "namespaceId"
+        ]
+      },
+      "Namespace": {
+        "type": "object",
+        "properties": {
+          "namespaceId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "namespaceId",
+          "displayName",
+          "createdAt"
+        ]
+      },
+      "CreateNamespaceInput": {
+        "type": "object",
+        "properties": {
+          "namespaceId": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+            "description": "URL-safe id (lowercase + digits + dash, ≤63 chars).",
+            "example": "acme"
+          },
+          "displayName": {
             "type": "string",
             "minLength": 1,
-            "example": "matthias"
+            "maxLength": 200,
+            "example": "ACME Corp"
           },
-          "email": {
+          "description": {
             "type": "string",
-            "format": "email",
-            "example": "matthias@acme.com"
-          },
-          "firstName": {
-            "type": "string"
-          },
-          "lastName": {
-            "type": "string"
+            "maxLength": 2000
           }
         },
         "required": [
-          "username",
-          "email"
+          "namespaceId",
+          "displayName"
         ]
       },
-      "BucketDefaultsPartial": {
+      "UpdateNamespaceInput": {
         "type": "object",
         "properties": {
-          "cacheControl": {
-            "type": "string"
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
           },
-          "quotas": {
-            "$ref": "#/components/schemas/BucketQuotas"
-          },
-          "limits": {
-            "$ref": "#/components/schemas/BucketLimits"
+          "description": {
+            "type": "string",
+            "maxLength": 2000
           }
         }
       },
-      "BucketQuotas": {
+      "NamespaceList": {
         "type": "object",
         "properties": {
-          "maxTotalSize": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true,
-            "description": "Max total bytes stored in the bucket"
-          },
-          "maxFileCount": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
+          "namespaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Namespace"
+            }
           }
         },
         "required": [
-          "maxTotalSize",
-          "maxFileCount"
+          "namespaces"
         ]
       },
-      "BucketLimits": {
+      "TenantList": {
         "type": "object",
         "properties": {
-          "maxFileSize": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true,
-            "description": "Max bytes per uploaded file"
-          },
-          "acceptedMimeTypes": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "*"
-                ]
-              },
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            ],
-            "description": "Either '*' (any MIME) or an explicit array, e.g. ['image/png','image/jpeg']"
+          "tenants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tenant"
+            }
           }
         },
         "required": [
-          "maxFileSize",
-          "acceptedMimeTypes"
+          "tenants"
         ]
       },
-      "DeprovisionTenantResult": {
+      "Tenant": {
         "type": "object",
         "properties": {
-          "slug": {
+          "tenantId": {
+            "type": "string"
+          },
+          "namespaceId": {
+            "type": "string"
+          },
+          "providerId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "issuers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "config": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended"
+            ]
+          },
+          "activatedAt": {
             "type": "string"
           }
         },
         "required": [
-          "slug"
+          "tenantId",
+          "namespaceId",
+          "providerId",
+          "issuers",
+          "status",
+          "activatedAt"
         ]
+      },
+      "CreateTenantInput": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+            "description": "Optional explicit id; generated from the providerId when omitted.",
+            "example": "acme-addresses-fr-a1b2c3d4"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "issuers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "default": [],
+            "description": "Trusted issuers granted tenant-role on this DP. May be empty (issuers can be attached later). Each iss is globally unique across tenants."
+          },
+          "providerConfig": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            }
+          }
+        }
+      },
+      "UpdateTenantInput": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "issuers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Trusted issuers granted tenant-role on this DP. May be empty (issuers can be attached later). Each iss is globally unique across tenants."
+          },
+          "providerConfig": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended"
+            ]
+          }
+        }
       }
     },
     "parameters": {},
@@ -252,13 +500,13 @@
     }
   },
   "paths": {
-    "/api/preflight": {
+    "/api/issuer": {
       "get": {
-        "summary": "Deep health check",
-        "description": "Verifies the hub can authenticate with Keycloak AND that the resulting JWT is accepted as the right role on cms-mt + cdn-origin. Reveals infra info if leaked, hence gated.",
-        "operationId": "preflight",
+        "summary": "Hub-issuer metadata + allowlist snippet",
+        "description": "Returns the hub's iss URL, JWKS URL, metadoc URL, and a ready-to-copy allowlist entry the operator pastes into each DP's config before importing it.",
+        "operationId": "getHubIssuer",
         "tags": [
-          "health"
+          "issuer"
         ],
         "security": [
           {
@@ -267,7 +515,7 @@
         ],
         "responses": {
           "200": {
-            "description": "All three downstream services reachable + auth OK",
+            "description": "Issuer info",
             "content": {
               "application/json": {
                 "schema": {
@@ -280,7 +528,130 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/PreflightResult"
+                      "$ref": "#/components/schemas/IssuerInfo"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers": {
+      "delete": {
+        "summary": "Unimport (forget) a data-provider",
+        "description": "Removes the DP from the hub's meta-registry. Does NOT touch the DP's own tenants — their data stays intact on the DP. To clean up tenants on the DP, call DELETE /api/tenants/providers BEFORE this.",
+        "operationId": "unimportDataProvider",
+        "tags": [
+          "providers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "delivery-acme"
+            },
+            "required": true,
+            "name": "providerId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Unimported"
+          },
+          "400": {
+            "description": "Missing providerId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown providerId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List imported data-providers (or get one)",
+        "description": "Without `?providerId=`: returns the list (summaries — no schemas). With `?providerId=X`: returns the full row including the 4 cached schemas.",
+        "operationId": "listDataProviders",
+        "tags": [
+          "providers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "If set, returns the single DP with that id (incl. cached schemas); otherwise returns the list."
+            },
+            "required": false,
+            "description": "If set, returns the single DP with that id (incl. cached schemas); otherwise returns the list.",
+            "name": "providerId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List or single DP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "providers": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/DataProviderImportSummary"
+                              }
+                            }
+                          },
+                          "required": [
+                            "providers"
+                          ]
+                        },
+                        {
+                          "$ref": "#/components/schemas/DataProviderImport"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -291,8 +662,8 @@
               }
             }
           },
-          "503": {
-            "description": "At least one downstream service is unreachable / unauth'd",
+          "404": {
+            "description": "Unknown providerId",
             "content": {
               "application/json": {
                 "schema": {
@@ -302,15 +673,13 @@
             }
           }
         }
-      }
-    },
-    "/api/tenants": {
+      },
       "post": {
-        "summary": "Provision a tenant end-to-end",
-        "description": "Creates the Keycloak realm + clients + role + admin user (with password-set magic link) + the CDN buckets + the CMS tenant row. Failure rolls back partial state best-effort.",
-        "operationId": "provisionTenant",
+        "summary": "Import a data-provider",
+        "description": "Fetches the DP's 4 discovery documents (/.well-known/data-provider-info, /.well-known/oauth-authorization-server, JWKS, /openapi.admin.json, opt. /openapi.tenant-config.json), validates them, and stores the result in the hub's meta-registry. The DP MUST already trust the hub's iss as control-plane.",
+        "operationId": "importDataProvider",
         "tags": [
-          "tenants"
+          "providers"
         ],
         "security": [
           {
@@ -321,14 +690,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ProvisionTenantInput"
+                "$ref": "#/components/schemas/ImportDataProviderInput"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Tenant provisioned",
+            "description": "Imported",
             "content": {
               "application/json": {
                 "schema": {
@@ -341,7 +710,7 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/ProvisionTenantResult"
+                      "$ref": "#/components/schemas/DataProviderImport"
                     }
                   },
                   "required": [
@@ -353,7 +722,17 @@
             }
           },
           "400": {
-            "description": "Validation error on the request",
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already imported (providerId/url/iss)",
             "content": {
               "application/json": {
                 "schema": {
@@ -363,7 +742,312 @@
             }
           },
           "502": {
-            "description": "An upstream service failed (Keycloak / cms-mt / cdn-origin)",
+            "description": "DP unreachable / refused hub trust",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers/logs": {
+      "get": {
+        "summary": "Read a data-provider's logs (all tenants)",
+        "description": "Proxies the DP's control-plane GET /admin/logs. Filters kind/level/time, bounded pagination via cursor.",
+        "operationId": "fetchProviderLogs",
+        "tags": [
+          "logs"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "security",
+                "audit",
+                "request"
+              ]
+            },
+            "required": false,
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "debug",
+                "info",
+                "warn",
+                "error"
+              ]
+            },
+            "required": false,
+            "name": "level",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "sinceTs",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "untilTs",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 200
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "providerId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded log page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LogPage"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown DP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "DP refused / unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/providers/refresh": {
+      "post": {
+        "summary": "Refresh a data-provider's cached schemas",
+        "description": "Re-fetches the 4 discovery documents and updates the cache. Call after a version bump on the DP.",
+        "operationId": "refreshDataProvider",
+        "tags": [
+          "providers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "delivery-acme"
+            },
+            "required": true,
+            "name": "providerId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DataProviderImport"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing providerId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown providerId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "DP unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/namespaces": {
+      "delete": {
+        "summary": "Delete a namespace (cascade)",
+        "description": "Deactivates the namespace on every DP it has a provision on (best-effort), then drops the namespace + provisions rows. Operator must accept the destructive side-effects on data-providers.",
+        "operationId": "deleteNamespace",
+        "tags": [
+          "namespaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+              "description": "URL-safe id (lowercase + digits + dash, ≤63 chars).",
+              "example": "acme"
+            },
+            "required": true,
+            "description": "URL-safe id (lowercase + digits + dash, ≤63 chars).",
+            "name": "namespaceId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cascade-deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeleteNamespaceResult"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown namespace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "At least one DP failed",
             "content": {
               "application/json": {
                 "schema": {
@@ -374,10 +1058,460 @@
           }
         }
       },
-      "delete": {
-        "summary": "Deprovision a tenant",
-        "description": "Deletes the CMS tenant row, both CDN buckets, and the Keycloak realm (in dependency order). Tolerates `not_found` everywhere; collects other errors into a single `deprovision_partial`.",
-        "operationId": "deprovisionTenant",
+      "post": {
+        "summary": "Create a namespace",
+        "description": "Pure metadata — the hub does NOT create Keycloak realms, OIDC clients, or users. A namespace is just a logical grouping of (DP × tenant) provisions.",
+        "operationId": "createNamespace",
+        "tags": [
+          "namespaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNamespaceInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Namespace created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Namespace"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "namespaceId already taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a namespace's metadata",
+        "description": "Patches displayName and/or description. namespaceId itself is immutable (it's also used as tenantId on every DP).",
+        "operationId": "updateNamespace",
+        "tags": [
+          "namespaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+              "description": "URL-safe id (lowercase + digits + dash, ≤63 chars).",
+              "example": "acme"
+            },
+            "required": true,
+            "description": "URL-safe id (lowercase + digits + dash, ≤63 chars).",
+            "name": "namespaceId",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNamespaceInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Namespace"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List namespaces (or fetch one)",
+        "description": "Without `namespaceId`: returns the list. With `?namespaceId=X`: returns one or 404.",
+        "operationId": "listNamespaces",
+        "tags": [
+          "namespaces"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "If set, returns the single namespace or 404."
+            },
+            "required": false,
+            "description": "If set, returns the single namespace or 404.",
+            "name": "namespaceId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Namespaces",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/NamespaceList"
+                        },
+                        {
+                          "$ref": "#/components/schemas/Namespace"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown namespaceId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/namespaces/logs": {
+      "get": {
+        "summary": "Read a namespace's logs (all its tenants)",
+        "description": "Aggregates logs across every tenant of the namespace (possibly on different DPs), merged + sorted by ts desc, truncated to `limit`. No cursor (heterogeneous sources).",
+        "operationId": "fetchNamespaceLogs",
+        "tags": [
+          "logs"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "security",
+                "audit",
+                "request"
+              ]
+            },
+            "required": false,
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "debug",
+                "info",
+                "warn",
+                "error"
+              ]
+            },
+            "required": false,
+            "name": "level",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "sinceTs",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "untilTs",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 200
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "namespaceId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Merged log page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LogPage"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown namespace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "DP refused / unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/namespaces/tenants": {
+      "get": {
+        "summary": "List or fetch tenants",
+        "description": "`?namespaceId=X`: tenants in a namespace. `?providerId=X`: tenants for a DP. `?tenantId=X`: a single tenant (200 + null when absent).",
+        "operationId": "listTenants",
+        "tags": [
+          "tenants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "namespaceId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "providerId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": false,
+            "name": "tenantId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/TenantList"
+                        },
+                        {
+                          "$ref": "#/components/schemas/Tenant"
+                        },
+                        {
+                          "nullable": true
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a tenant to a namespace for a DP",
+        "description": "Mints a hub CP token, POSTs /admin/tenants on the DP with a fresh `tenantId` + issuers + optional `providerConfig`, then mirrors the row. A namespace may hold multiple tenants of the same DP.",
+        "operationId": "createTenant",
         "tags": [
           "tenants"
         ],
@@ -391,16 +1525,36 @@
             "schema": {
               "type": "string",
               "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+              "description": "URL-safe id (lowercase + digits + dash, ≤63 chars).",
               "example": "acme"
             },
             "required": true,
-            "name": "slug",
+            "description": "URL-safe id (lowercase + digits + dash, ≤63 chars).",
+            "name": "namespaceId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "providerId",
             "in": "query"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTenantInput"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Tenant fully deprovisioned",
+          "201": {
+            "description": "Created",
             "content": {
               "application/json": {
                 "schema": {
@@ -413,7 +1567,7 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/DeprovisionTenantResult"
+                      "$ref": "#/components/schemas/Tenant"
                     }
                   },
                   "required": [
@@ -425,7 +1579,7 @@
             }
           },
           "400": {
-            "description": "Missing or malformed `slug` query param",
+            "description": "Invalid query / body",
             "content": {
               "application/json": {
                 "schema": {
@@ -434,8 +1588,422 @@
               }
             }
           },
-          "500": {
-            "description": "At least one downstream delete failed (non-not-found)",
+          "404": {
+            "description": "Unknown namespace or DP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "DP refused / unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a tenant",
+        "description": "PATCHes `issuers`, `providerConfig`, and/or `status` on the DP, mirrors in the hub. `displayName` is hub-local only.",
+        "operationId": "updateTenant",
+        "tags": [
+          "tenants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+              "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+              "example": "acme-addresses-fr-a1b2c3d4"
+            },
+            "required": true,
+            "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+            "name": "tenantId",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenantInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Tenant"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown tenant or DP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "DP refused / unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a tenant",
+        "description": "DELETE /admin/tenants on the DP, then drop the local row. `?force=true` overrides the DP's grace policy (base.md §8).",
+        "operationId": "removeTenant",
+        "tags": [
+          "tenants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+              "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+              "example": "acme-addresses-fr-a1b2c3d4"
+            },
+            "required": true,
+            "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+            "name": "tenantId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "force",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed"
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "DP refused / unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/namespaces/tenants/logs": {
+      "get": {
+        "summary": "Read a tenant's logs",
+        "description": "Resolves the tenant's DP, then proxies GET /admin/logs scoped to that tenant. Filters kind/level/time, bounded pagination via cursor.",
+        "operationId": "fetchTenantLogs",
+        "tags": [
+          "logs"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "security",
+                "audit",
+                "request"
+              ]
+            },
+            "required": false,
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "debug",
+                "info",
+                "warn",
+                "error"
+              ]
+            },
+            "required": false,
+            "name": "level",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "sinceTs",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "untilTs",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 200
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "tenantId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded log page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/LogPage"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown tenant or DP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "DP refused / unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/namespaces/tenants/config": {
+      "get": {
+        "summary": "Read the live config from the DP for a tenant",
+        "description": "GETs /admin/config on the DP. Returns 200 with `data: null` when nothing is stored yet (so the UI doesn't see a 404 in DevTools).",
+        "operationId": "fetchTenantConfig",
+        "tags": [
+          "tenants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+              "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+              "example": "acme-addresses-fr-a1b2c3d4"
+            },
+            "required": true,
+            "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+            "name": "tenantId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Config from DP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "version": {
+                          "type": "string"
+                        },
+                        "config": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "nullable": true
+                          }
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "config"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown tenant / DP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "DP refused / unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -450,7 +2018,7 @@
     "/health": {
       "get": {
         "summary": "Public liveness probe",
-        "description": "Returns 200 if the hub process is up. Does NOT cross the network — for deeper validation use `/api/preflight`.",
+        "description": "Returns 200 if the hub process is up. Does NOT cross the network to any data-provider.",
         "operationId": "health",
         "tags": [
           "health"

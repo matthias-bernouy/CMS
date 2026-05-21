@@ -1,164 +1,147 @@
 # @bernouy/hub-api
 
-The orchestrator that provisions a tenant end-to-end across Keycloak +
-`cms-control-mt` + `cdn-buckets`. Single public surface:
-`POST /api/tenants` (provision), `DELETE /api/tenants` (deprovision),
-`GET /api/preflight` (deep health check).
+Control-plane orchestrator for the data-provider platform. **Post-pivot**,
+the hub does NOT manage identity (no Keycloak realm / OIDC client / user
+creation). It is a thin registry + provisioning router:
 
-This package owns the **recipe** — what gets created, in what order,
-how it rolls back. It owns no state of its own; everything lives on
-the downstream services it composes.
+- **DP registry** — import / refresh / unimport conforming data-providers.
+- **Namespace registry** — logical groupings (a customer, a project…) +
+  their per-DP provisions, each carrying a trusted-issuer list + config.
+- **Control-plane issuer** — mints short-lived CP tokens (issuer-kit) to
+  call each DP's `/admin/*`.
+
+Authentication of the superadmin `/admin/*` surface is delegated to an
+`Authentication` instance the consumer passes to `mountHubApi` (typically a
+Keycloak bearer + cookie composite). The hub never calls a Keycloak admin
+API — that Keycloak is just an IdP for operators.
 
 ## Layout
 
 ```
 src/
 ├── exports/
-│   ├── Hub.ts                 composition root: holds KeycloakAdminClient + per-op MtControlClient/BucketsClient
-│   └── mountHubApi.ts         registers /health (public) + /api/* (gated by requireRole)
+│   ├── Hub.ts                 composition root: issuer + DP registry + namespace registry
+│   └── mountHubApi.ts         registers /health (public) + /api/* (gated) + hub-issuer publication
 ├── core/
-│   ├── provisionTenant.ts     12-step recipe (Keycloak realm → clients → role → user → magic link → CDN buckets → CMS tenant)
-│   ├── deprovisionTenant.ts   reverse-order best-effort cleanup
-│   ├── checkInit.ts           preflight: end-to-end auth + role check across all three downstreams
-│   ├── HubError.ts            { code, message, cause? } — wraps the downstream client error
-│   └── schemas/               zod schemas for input/output + zod-to-openapi setup (used by scripts/generate-openapi.ts)
-├── api/                       file-routed endpoints — `meta` export + default handler
-│   ├── preflight.get.ts       GET /api/preflight
-│   └── tenants/
-│       ├── tenants.post.ts    POST /api/tenants — provision
-│       └── tenants.delete.ts  DELETE /api/tenants — deprovision
+│   ├── HubError.ts            { code, message, cause? } + HubErrorCode union
+│   ├── HubErrorHttp.ts        HUB_ERROR_HTTP table + hubErrorResponse()
+│   ├── denestDottedKeys.ts    form-body helper (a.b → { a: { b } })
+│   ├── dataProvider/          import / refresh / unimport + discoverEndpoints
+│   ├── namespace/             createNamespace, deleteNamespace (cascade),
+│   │                          createTenant, updateTenant, removeTenant,
+│   │                          fetchTenantConfig, makeTenantId
+│   ├── issuer/cpTokenFor.ts   fresh CP token per call (NO cache — DP enforces JTI replay)
+│   ├── logs/fetchLogs.ts      proxy a DP's /admin/logs (fetchProviderLogs + fetchTenantLogs)
+│   └── schemas/               zod schemas + zod-to-openapi setup
+├── api/                       file-routed endpoints (meta + default handler)
+│   ├── issuer.get.ts          GET /api/issuer (hub-issuer info + allowlist snippet)
+│   ├── providers/             import / list / refresh / unimport
+│   └── namespaces/            CRUD + tenants/ (create / update / remove / config)
 ├── interfaces/
-│   └── HubConfig.ts           keycloak + cms + cdn URLs, SMTP, optional bucket defaults
-├── constants.ts               hubApiPackageRoot
-└── index.ts                   re-exports Hub, mountHubApi, HubError, HubConfig, ProvisionTenant{Input,Result}
+│   ├── HubConfig.ts           issuer + optional imports + optional namespaces + fetch
+│   ├── DataProviderImport*.ts DP registry entity + repo contract
+│   └── Namespace*.ts          Namespace + Tenant + repo contract
+├── default-implementation/    Memory + Mongo repos (DP imports + namespaces)
+└── index.ts                   public re-exports
 ```
 
-## What `Hub` does (and doesn't)
-
-`Hub` is a thin glue class:
-
-- Constructs **once** a `KeycloakAdminClient` (which manages its own
-  JWT cache + 30s-pre-expiry refresh).
-- Builds **per-operation** `MtControlClient` and `BucketsClient`,
-  passing them the JWT cached by the Keycloak admin client. Same JWT
-  is accepted by `cms-control-mt` and `cdn-buckets` because they both
-  validate it through `KeycloakBearerConsumer` against the same realm
-  + service-account.
-- Delegates `init()` / `provisionTenant()` / `deprovisionTenant()` to
-  pure recipe functions in `core/`.
-
-`Hub` does **not**:
-- own state (no DB, no cache).
-- expose its own auth — `mountHubApi` plugs in any `Authentication`
-  (typically `KeycloakBearerConsumer` validating service-account
-  callers in the `master` realm).
-- know about HTTP — `mountHubApi` is the only HTTP-aware code.
-
-## Provisioning recipe (12 steps)
-
-`provisionTenant` runs in this order. Anything that throws triggers a
-best-effort `deprovisionTenant` rollback before the original error
-bubbles to the caller as `HubError("provision_failed", …)`:
-
-1. **Keycloak realm** + SMTP config (so the welcome email works).
-2. **Confidential OIDC client `cms`** for the CMS web app (returns the
-   client secret).
-3. **Public OIDC client `cms-cli`** with device-flow enabled, for the
-   `p9r` CLI.
-4. **Realm role `admin`**.
-5–7. **First user** + `admin` role assignment + `execute-actions-email`
-   for `UPDATE_PASSWORD` + `VERIFY_EMAIL` (lifespan default 7 days).
-8–9. **CDN assets bucket** `<slug>-assets` + bucket credential.
-10–11. **(Optional) CDN delivery bucket** `<slug>-delivery` + credential
-   when `deliveryEnabled` or `publicAlias` is set.
-12. **CMS tenant row** in `cms-control-mt` carrying the realm details +
-   bucket URLs + freshly generated 32-byte session secret.
-
-The session secret is generated per tenant via `crypto.getRandomValues`
-inside `provisionTenant`; the consumer (CMS) HMAC-signs sessions with
-it. Rotating it logs every existing user out of that tenant — that's
-the intended escape hatch.
-
-## Bucket defaults
-
-Default bucket settings (applied to both buckets unless overridden):
-
-```ts
-cacheControl: "public, max-age=31536000, immutable"
-quotas:       { maxTotalSize: 10 GiB, maxFileCount: 10000 }
-limits:       { maxFileSize: 100 MiB, acceptedMimeTypes: "*" }
-```
-
-Overridable per-hub via `HubConfig.bucketDefaults`, and per-tenant via
-`ProvisionTenantInput.bucketOverrides`. `mergeBucketDefaults` takes
-care of the merge order — don't reach into either at the call site.
-
-## Endpoint metadata + OpenAPI
-
-Every file in `api/` exports a `meta: ApiOperationMeta` object alongside
-the default handler. `scripts/generate-openapi.ts` walks `api/`, reads
-each `meta`, and emits a checked-in `openapi.json` at the package root.
-**The committed `openapi.json` IS the contract** — regenerate it
-whenever you touch a meta or a schema (`bun run openapi`).
-
-## `mountHubApi` — what it registers
+## Endpoints (`mountHubApi`)
 
 ```
-GET    /health           public liveness (200 if process alive)
-POST   /api/tenants      provisionTenant     (gated)
-DELETE /api/tenants      deprovisionTenant   (gated)
-GET    /api/preflight    Hub.init()          (gated)
+GET    /health                                           public liveness
+/.well-known/oauth-authorization-server, /jwks.json      public (hub is an issuer)
+
+GET    /api/issuer                                       hub-issuer info
+POST   /api/providers                                    import a DP
+GET    /api/providers[?providerId=X]                     list / get one
+POST   /api/providers/refresh?providerId=X               re-fetch schemas
+DELETE /api/providers?providerId=X                       unimport
+
+GET    /api/namespaces[?namespaceId=X]                   list / get one
+POST   /api/namespaces                                   create (metadata only)
+PATCH  /api/namespaces?namespaceId=X                     rename / re-describe
+DELETE /api/namespaces?namespaceId=X                     cascade-delete (removes all tenants)
+
+GET    /api/namespaces/tenants?namespaceId=X             list tenants in a namespace
+GET    /api/namespaces/tenants?providerId=Y              list tenants for a DP
+GET    /api/namespaces/tenants?tenantId=T                fetch one (200 + null when absent)
+POST   /api/namespaces/tenants?namespaceId=X&providerId=Y   add a tenant (issuers? + config?)
+PATCH  /api/namespaces/tenants?tenantId=T                update issuers / config / status / name
+DELETE /api/namespaces/tenants?tenantId=T[&force=true]   remove a tenant
+GET    /api/namespaces/tenants/config?tenantId=T         live config from the DP
+GET    /api/namespaces/logs?namespaceId=X[&kind&level&sinceTs&untilTs&limit]               all tenants of a namespace (merged, no cursor)
+GET    /api/namespaces/tenants/logs?tenantId=T[&kind&level&sinceTs&untilTs&limit&cursor]  tenant-scoped logs
+GET    /api/providers/logs?providerId=Y[&kind&level&sinceTs&untilTs&limit&cursor]          all-tenant DP logs
 ```
 
-- `/health` is intentionally public so a Docker `HEALTHCHECK` or LB
-  probe doesn't need credentials.
-- `/api/preflight` is the **deep** check — actually pings Keycloak,
-  cms-control-mt, cdn-buckets with the cached JWT and verifies role
-  acceptance. Reveals infra info, hence gated.
-- Default `requiredRole = "superadmin"`. Override per-deployment.
-- Default `csrf = "cookie-only"` — bearer requests pass through, cookie
-  requests get the Origin/Referer same-origin check.
+Namespace logs aggregate across tenants that may live on different DPs
+(`/admin/logs` only filters one `tenantId`), so the recipe queries each
+tenant, merges, sorts by `ts` desc and truncates to `limit` — no resumable
+cursor (heterogeneous sources).
 
-## `HubError`
+All `/api/*` gated by `requireRole(auth, requiredRole, { csrf: "cookie-only" })`.
 
-Every public method of `Hub` throws `HubError({ code, message, cause? })`
-on a controlled failure path. Codes:
+## Key design points
 
-| code | meaning | typical HTTP |
+- **Tenant-per-namespace.** A namespace holds many tenants; a namespace may
+  even hold MULTIPLE tenants of the SAME DP. Each tenant has a
+  globally-unique `tenantId` (RFC 1123 label, `^[a-z0-9-]{1,63}$`) —
+  generated by `makeTenantId(namespaceId, providerId)` unless the caller
+  supplies one. That `tenantId` is what the hub sends to the DP.
+- **Multi-issuer, optional.** A tenant carries `issuers: string[]` forwarded
+  verbatim to the DP (SDK now accepts the full list). It MAY be empty — a
+  tenant can be created first and have issuers attached later.
+- **CP token minting is uncached** (`cpTokenFor.ts`) — the SDK enforces
+  strict JTI replay protection (base.md §4.5), so a token is single-use.
+- **No Keycloak admin client** at all — the hub never manages identity.
+- **Cascade delete**: removing a namespace best-effort removes every tenant
+  on its DP, then drops the rows. Per-tenant failures are collected + surfaced.
+
+## `HubError` codes
+
+| code | HTTP | meaning |
 |---|---|---|
-| `validation_error` | bad input (zod parse failed, slug clash) | 400 |
-| `keycloak_unreachable` | downstream service down / auth failed | 502 (preflight 503) |
-| `cms_unreachable` | … | 502 (preflight 503) |
-| `cdn_unreachable` | … | 502 (preflight 503) |
-| `provision_failed` | recipe threw + rollback ran (cause is the original error) | 502 |
-| `deprovision_partial` | rollback couldn't clean everything (e.g. realm vanished mid-cleanup) | 500 |
-| `unknown` | last-resort fallback | 500 |
-
-The `cause` field carries the underlying client error
-(`KeycloakClientError`, `BucketsClientError`, `MtControlClientError`)
-so operators have something concrete to read in the logs.
-
-## Conventions
-
-- **Recipe in `core/`, glue in `exports/Hub.ts`, HTTP in
-  `exports/mountHubApi.ts`** — keep the layers strict. Adding business
-  logic to a handler (`api/...`) breaks the OpenAPI generator (it
-  expects a thin shell around `Hub.*`).
-- **Per-op clients, not class-level.** `_cmsClient` / `_cdnClient`
-  build a fresh `MtControlClient` / `BucketsClient` each call. They're
-  cheap; the Keycloak JWT cache absorbs the round-trip cost. **Don't
-  cache them** — long-lived clients holding stale tokens are a
-  recurring class of bug.
-- **All idempotence is the operator's call.** The recipe does strict
-  CREATE everywhere (Keycloak `create*` throw on conflict). On retry
-  you call `deprovisionTenant(slug)` first, then `provisionTenant`
-  again — there is no "upsert tenant" affordance by design.
-- **Endpoint shape**: `meta: ApiOperationMeta` + default handler
-  `(req, hub: Hub) => Response`. Throw `HubError` for known failures,
-  let unexpected ones bubble (they end up as 500 via `Bun.serve`'s
-  outer catch in the runner).
+| `validation_error` | 400 | bad input / zod parse |
+| `duplicate_provider_id` | 409 | DP import conflict |
+| `provider_not_found` | 404 | DP not imported |
+| `provider_unreachable` | 502 | DP network error |
+| `provider_metadoc_invalid` | 502 | bad discovery doc / contract mismatch |
+| `provider_does_not_trust_hub` | 502 | DP rejected the hub's CP token |
+| `provider_rejected_provisioning` | 502 | DP returned non-2xx on /admin/tenants |
+| `namespace_not_found` | 404 | unknown namespace |
+| `duplicate_namespace_id` | 409 | namespace already exists |
+| `provision_not_found` | 404 | no (namespace, DP) row |
+| `duplicate_provision` | 409 | provision already exists |
+| `tenant_not_found` | 404 | DP returned 404 for a known namespace |
+| `unknown` | 500 | fallback |
 
 ## Dependencies
 
-- runtime: `@bernouy/core`, `@bernouy/cdn-buckets`, `@bernouy/keycloak-client`, `@bernouy/mt-cms-control`
-- runtime: `zod`, `@asteasolutions/zod-to-openapi`
+- runtime: `@bernouy/core`, `@bernouy/issuer-kit`,
+  `@bernouy/data-provider-contract`, `zod`, `mongodb`,
+  `@asteasolutions/zod-to-openapi`
+
+## TODO — central log aggregation (design, not built)
+
+Today logs live on each DP and the hub PULLS them on demand (`fetchLogs` →
+`GET /admin/logs`). To get a single searchable archive, add a **batch-pull
+cron** (NOT streaming — keep the DP passive behind the standardized query
+contract; no DP→sink coupling):
+
+- Daily cron loops imported DPs, paginates `fetchProviderLogs(dp, { sinceTs,
+  untilTs, cursor })` over the previous day(s) using the **keyset cursor**,
+  and appends into a **hub-side `LogStore`** (the central archive — its own,
+  longer retention for search / correlation / compliance).
+- **Idempotency**: dedup on `(providerId, requestId)` or persist a per-DP
+  high-water cursor (re-running the cron must not double-insert).
+- **DP retention contract**: a DP that wants to be aggregated must retain
+  logs ≥ *aggregation lag* (cron interval + tolerated hub/DP downtime +
+  margin) — NOT a compliance number; **compliance/long retention lives on
+  the hub**. The default `FileLogStore` (30-day rotation) covers a daily cron
+  with weeks of slack. Clean form: the DP declares `logRetentionDays` in
+  `/.well-known/data-provider-info` (symmetry with `defaultDeprovisionPolicy`)
+  and the hub validates it ≥ its aggregation need at import. Document the
+  rule in `base.md §10.4` when implementing.
+- **Security latency**: daily batch is fine for audit/compliance, too slow
+  for attack detection — run a faster cadence (e.g. hourly) for
+  `kind=security` if alerting is needed.

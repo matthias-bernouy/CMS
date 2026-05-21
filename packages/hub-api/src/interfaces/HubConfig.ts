@@ -1,39 +1,34 @@
-import type { SmtpConfig } from "@bernouy/keycloak-client";
-import type { BucketLimits, BucketQuotas } from "@bernouy/cdn-buckets";
+import type { KeyStore } from "@bernouy/issuer-kit";
+import type { DataProviderImportsRepository } from "./DataProviderImportsRepository";
+import type { NamespaceRepository } from "./NamespaceRepository";
 
-/** Bucket settings applied to every bucket created by the hub. */
-export type BucketDefaults = {
-    cacheControl: string;
-    quotas:       BucketQuotas;
-    limits:       BucketLimits;
-};
-
+/**
+ * Hub configuration — post-pivot. The hub no longer creates Keycloak realms,
+ * SMTP-bound OIDC clients, or admin users. It just :
+ *   - hosts a `ControlPlaneIssuer` to mint CP tokens against the DPs (D5),
+ *   - keeps a meta-registry of imported DPs (D2),
+ *   - keeps a meta-registry of namespaces + their per-DP provisions (D-post-pivot).
+ *
+ * Authentication of the `/admin/*` superadmin UI is done via the consumer-
+ * provided `Authentication` instance passed to `mountHubApi` / `mountHubUi`.
+ * The hub never touches Keycloak admin APIs.
+ */
 export type HubConfig = {
-    keycloak: {
-        /** Keycloak base URL — no `/admin`, no trailing slash. */
-        baseUrl:           string;
-        /** Realm hosting the hub's service-account client. Typically `master`. */
-        adminRealm:        string;
-        /** Service account client id. Typically `hub-orchestrator`. */
-        adminClientId:     string;
-        adminClientSecret: string;
+    /** §5 — the hub is itself an issuer in the data-provider trust graph. */
+    issuer: {
+        /** Public URL of THIS hub. Will be served as `iss` in its metadoc. */
+        baseUrl:  string;
+        /** Signing-key storage. Inject e.g. `FileKeyStore` for prod,
+         *  `MemoryKeyStore` for tests. */
+        keyStore: KeyStore;
     };
-    cms: {
-        /** Public URL of the cms-control-mt instance, e.g. `https://cms.bernouy.com`.
-         *  Reused as the redirect-URI base when registering each tenant's Keycloak client. */
-        baseUrl: string;
-    };
-    cdn: {
-        /** Origin admin URL (e.g. `https://cdn-origin.bernouy.com`). */
-        baseUrl:    string;
-        /** Edges public host the CMS will use to serve files (e.g. `https://cdn.bernouy.com`).
-         *  Bucket URLs become `${publicHost}/${bucketId}/<file>`. */
-        publicHost: string;
-    };
-    /** SMTP credentials applied to every created realm so the welcome magic link can be delivered. */
-    smtp:           SmtpConfig;
-    /** Override the default bucket settings (cacheControl, quotas, limits) globally for this hub. */
-    bucketDefaults?: Partial<BucketDefaults>;
+    /** §11 — meta-registry of imported data-providers (D2). Defaults to
+     *  in-memory (lost on restart — dev / tests only). Inject the Mongo
+     *  variant in prod. */
+    imports?:    DataProviderImportsRepository;
+    /** Registry of namespaces + their per-DP provisions. Memory by default,
+     *  Mongo in prod. */
+    namespaces?: NamespaceRepository;
     /** Optional fetch implementation (overrideable for tests). */
-    fetch?:          typeof fetch;
+    fetch?:      typeof fetch;
 };
