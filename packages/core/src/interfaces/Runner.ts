@@ -80,5 +80,17 @@ export interface Runner {
      */
     removeRoutesByPathPrefix(prefix: string): void;
 
+    /**
+     * Start serving. `port` defaults to 3000; pass `0` for an OS-assigned
+     * ephemeral port (the actual port is exposed by the implementation,
+     * e.g. `BunRunner.port`) — useful for isolated tests.
+     */
     start(port?: number): void;
+
+    /**
+     * Stop serving and release the listening socket. Idempotent; safe to
+     * call when never started. Pairs with `start()` so a process (or a test)
+     * can spin a Runner up and tear it down without leaking a port.
+     */
+    stop(): void;
 }

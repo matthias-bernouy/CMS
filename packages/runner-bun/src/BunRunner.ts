@@ -27,6 +27,12 @@ export class BunRunner implements Runner {
 
     private globalMiddlewares: Middleware[] = [];
 
+    private server?: ReturnType<typeof Bun.serve>;
+
+    /** The bound TCP port once `start()` has run (the OS-assigned one when
+     *  started with `0`), or `undefined` before start / after stop. */
+    get port(): number | undefined { return this.server?.port; }
+
     private defaultEndpoints: Array<{
         method: string;
         prefix: string;
@@ -81,6 +87,8 @@ export class BunRunner implements Runner {
             removeRoutesByPathPrefix: (prefix) => {
                 this.removeRoutesByPathPrefix(urlJoin(currentPrefix, prefix));
             },
+
+            stop: () => this.stop(),
         };
 
         callback(scopedRunner);
@@ -116,7 +124,7 @@ export class BunRunner implements Runner {
     start(port: number = 3000): void {
         const self = this;
 
-        Bun.serve({
+        this.server = Bun.serve({
             port,
             async fetch(request, server) {
                 const peer = server.requestIP(request);
@@ -161,7 +169,13 @@ export class BunRunner implements Runner {
             },
         });
 
-        console.log(`🚀 Server started on http://localhost:${port}`);
+        console.log(`🚀 Server started on http://localhost:${this.server.port}`);
+    }
+
+    /** Stop the `Bun.serve` listener and free the port. Idempotent. */
+    stop(): void {
+        this.server?.stop(true);
+        this.server = undefined;
     }
 
     private matchPath(routePath: string, requestPath: string): boolean {
