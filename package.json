@@ -2,13 +2,14 @@
     "name": "@bernouy/socle-monorepo",
     "private": true,
     "workspaces": [
-        "packages/*"
+        "packages/*",
+        "official-data-providers/*"
     ],
     "scripts": {
-        "build":     "bun run build.ts",
+        "build": "bun run build.ts",
         "typecheck": "tsc --build",
-        "clean":     "tsc --build --clean",
-        "test":      "bun test"
+        "clean": "tsc --build --clean",
+        "test": "bun test"
     },
     "devDependencies": {
         "@types/bun": "latest",
@@ -18,18 +19,24 @@
         "image-size": "^2.0.2",
         "nodemailer": "^6.9.16",
         "jose": "^6.2.1",
-        "@bernouy/core":          "workspace:*",
-        "@bernouy/runner-bun":    "workspace:*",
+        "@bernouy/core": "workspace:*",
+        "@bernouy/runner-bun": "workspace:*",
         "@bernouy/auth-keycloak": "workspace:*",
-        "@bernouy/auth-composite":"workspace:*",
-        "@bernouy/keycloak-client":"workspace:*",
-        "@bernouy/mailer-smtp":   "workspace:*",
-        "@bernouy/cdn-buckets":   "workspace:*",
-        "@bernouy/cdn-node":      "workspace:*",
-        "@bernouy/cms":           "workspace:*",
-        "@bernouy/cms-blocs":     "workspace:*",
-        "@bernouy/mt-cms-control":"workspace:*",
-        "@bernouy/cms-delivery-mt":"workspace:*",
-        "@bernouy/hub-api":       "workspace:*"
+        "@bernouy/auth-composite": "workspace:*",
+        "@bernouy/keycloak-client": "workspace:*",
+        "@bernouy/mailer-smtp": "workspace:*",
+        "@bernouy/cdn-buckets": "workspace:*",
+        "@bernouy/cdn-node": "workspace:*",
+        "@bernouy/cms": "workspace:*",
+        "@bernouy/cms-blocs": "workspace:*",
+        "@bernouy/mt-cms-control": "workspace:*",
+        "@bernouy/cms-delivery-mt": "workspace:*",
+        "@bernouy/hub-api": "workspace:*",
+        "@bernouy/hub-ui":  "workspace:*",
+        "@bernouy/data-provider-sdk": "workspace:*",
+        "@bernouy/data-provider-example": "workspace:*",
+        "@bernouy/data-provider-addresses": "workspace:*",
+        "@bernouy/data-provider-contract": "workspace:*",
+        "@bernouy/issuer-kit": "workspace:*"
     }
 }

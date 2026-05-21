@@ -1,18 +1,59 @@
 {
     "files": [],
     "references": [
-        { "path": "packages/core" },
-        { "path": "packages/runner-bun" },
-        { "path": "packages/auth-keycloak" },
-        { "path": "packages/auth-composite" },
-        { "path": "packages/keycloak-client" },
-        { "path": "packages/mailer-smtp" },
-        { "path": "packages/cdn-buckets" },
-        { "path": "packages/cdn-node" },
-        { "path": "packages/cms" },
-        { "path": "packages/cms-blocs" },
-        { "path": "packages/cms-control-mt" },
-        { "path": "packages/cms-delivery-mt" },
-        { "path": "packages/hub-api" }
+        {
+            "path": "packages/core"
+        },
+        {
+            "path": "packages/runner-bun"
+        },
+        {
+            "path": "packages/auth-keycloak"
+        },
+        {
+            "path": "packages/auth-composite"
+        },
+        {
+            "path": "packages/keycloak-client"
+        },
+        {
+            "path": "packages/mailer-smtp"
+        },
+        {
+            "path": "packages/cdn-buckets"
+        },
+        {
+            "path": "packages/cdn-node"
+        },
+        {
+            "path": "packages/cms"
+        },
+        {
+            "path": "packages/cms-blocs"
+        },
+        {
+            "path": "packages/cms-control-mt"
+        },
+        {
+            "path": "packages/cms-delivery-mt"
+        },
+        {
+            "path": "packages/hub-api"
+        },
+        {
+            "path": "packages/hub-ui"
+        },
+        {
+            "path": "official-data-providers/_data-provider-contract"
+        },
+        {
+            "path": "official-data-providers/_sdk"
+        },
+        {
+            "path": "official-data-providers/_example"
+        },
+        {
+            "path": "official-data-providers/_issuer-kit"
+        }
     ]
 }
