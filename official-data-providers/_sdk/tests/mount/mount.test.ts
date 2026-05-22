@@ -53,7 +53,7 @@ test("/openapi.admin.json is control-plane-gated, then generated from meta", asy
         expect(ok.status).toBe(200);
         const spec = await ok.json();
         expect(spec.openapi).toBe("3.0.3");
-        expect(Object.keys(spec.paths).sort()).toEqual(["/admin/config", "/admin/logs", "/admin/tenants"]);
+        expect(Object.keys(spec.paths).sort()).toEqual(["/admin/config", "/admin/info", "/admin/logs", "/admin/tenants"]);
         expect(spec["x-data-provider"].contractVersion).toBe("1.0");
     } finally { s.stop(); }
 });

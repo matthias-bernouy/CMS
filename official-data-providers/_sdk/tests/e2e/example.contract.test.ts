@@ -46,10 +46,10 @@ test("/openapi.admin.json is the frozen §8 surface (identical for any provider)
             { headers: { Authorization: `Bearer ${await hub.mint({ aud: "notes-provider" })}` } });
         const spec = await res.json();
         expect(spec.openapi).toBe("3.0.3");
-        expect(Object.keys(spec.paths).sort()).toEqual(["/admin/config", "/admin/logs", "/admin/tenants"]);
+        expect(Object.keys(spec.paths).sort()).toEqual(["/admin/config", "/admin/info", "/admin/logs", "/admin/tenants"]);
         const ids = Object.values(spec.paths).flatMap((p) =>
             Object.values(p as Record<string, { operationId: string }>).map((o) => o.operationId)).sort();
-        expect(ids).toEqual(["adminReadLogs", "adminReadTenantConfig", "deprovisionTenant", "listTenants", "provisionTenant", "updateTenant"]);
+        expect(ids).toEqual(["adminReadLogs", "adminReadTenantConfig", "deprovisionTenant", "listTenants", "provisionTenant", "tenantInfo", "updateTenant"]);
         expect(spec["x-data-provider"].defaultDeprovisionPolicy).toBeDefined();
     } finally { hub.stop(); runner.stop(); }
 });

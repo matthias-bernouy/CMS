@@ -18,6 +18,7 @@ import { updateTenant }         from "src/core/namespace/updateTenant";
 import { removeTenant }         from "src/core/namespace/removeTenant";
 import { fetchTenantConfig }    from "src/core/namespace/fetchTenantConfig";
 import { fetchProviderLogs, fetchTenantLogs, fetchNamespaceLogs, type LogQuery, type LogPage } from "src/core/logs/fetchLogs";
+import { fetchTenantInfo, type TenantInfo } from "src/core/tenantInfo";
 import type {
     CreateNamespaceInput, UpdateNamespaceInput,
     CreateTenantInput, UpdateTenantInput,
@@ -128,5 +129,11 @@ export class Hub {
     }
     fetchNamespaceLogs(namespaceId: string, query: Omit<LogQuery, "tenantId" | "cursor">): Promise<LogPage> {
         return fetchNamespaceLogs(this, namespaceId, query);
+    }
+
+    // ── tenant info (DP-computed read-only facts, /admin/info) ──
+
+    fetchTenantInfo(tenantId: string): Promise<TenantInfo> {
+        return fetchTenantInfo(this, tenantId);
     }
 }

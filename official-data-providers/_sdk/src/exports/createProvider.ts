@@ -10,6 +10,7 @@ import type { SdkContext } from "src/types/SdkContext";
 import type { TenantConfigSchema } from "src/interfaces/TenantConfigSchema";
 import type { TenantConfigStore } from "src/interfaces/TenantConfigStore";
 import type { TenantConfigContext } from "src/types/TenantConfigContext";
+import type { TenantInfoProvider } from "src/types/TenantInfo";
 import { parseProviderConfig } from "src/core/schemas/providerConfig";
 import { MemoryTenantRegistry } from "src/default-implementation/MemoryTenantRegistry";
 import { FileLogStore } from "src/default-implementation/FileLogStore";
@@ -55,6 +56,10 @@ export interface CreateProviderOptions {
      *  set, the SDK auto-mounts the 3 config endpoints. Omit for providers
      *  without per-tenant business config (toy / passthrough). */
     tenantConfig?: CreateProviderTenantConfig;
+    /** Optional: DP-computed read-only info about a tenant (e.g. a realm
+     *  issuer URL). When set, the SDK auto-mounts `GET /admin/info?tenantId=`
+     *  (control-plane). Distinct from `tenantConfig` (which the hub writes). */
+    tenantInfo?: TenantInfoProvider;
 }
 
 export interface Provider {
@@ -92,6 +97,7 @@ export function createProvider(opts: CreateProviderOptions): Provider {
         registry, hooks: opts.hooks, audit: new RecorderAuditSink(recorder),
         invalidate: rit.cache.invalidate, now, store,
         ...(tenantConfigCtx ? { tenantConfig: tenantConfigCtx } : {}),
+        ...(opts.tenantInfo ? { tenantInfo: opts.tenantInfo } : {}),
     };
 
     return {

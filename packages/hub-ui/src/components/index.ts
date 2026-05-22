@@ -10,6 +10,7 @@ import "./HubStat/HubStat";
 import "./HubCode/HubCode";
 import "./HubHint/HubHint";
 import "./HubStatus/HubStatus";
+import "./HubField/HubField";
 // Data / behaviour
 import "./HubJson/HubJson";
 import "./HubConfigForm/HubConfigForm";

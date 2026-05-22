@@ -488,6 +488,43 @@
             ]
           }
         }
+      },
+      "TenantInfo": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TenantInfoField"
+            }
+          }
+        },
+        "required": [
+          "fields"
+        ]
+      },
+      "TenantInfoField": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "url",
+              "code"
+            ]
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ]
       }
     },
     "parameters": {},
@@ -1886,6 +1923,79 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown tenant or DP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "DP refused / unreachable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/namespaces/tenants/info": {
+      "get": {
+        "summary": "Read a tenant's DP-computed info",
+        "description": "Resolves the tenant's DP and proxies GET /admin/info — read-only facts the provider surfaces (e.g. a realm issuer URL). Distinct from the editable §11 config.",
+        "operationId": "fetchTenantInfo",
+        "tags": [
+          "tenants"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true,
+            "name": "tenantId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant info (may be empty)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TenantInfo"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
                 }
               }
             }

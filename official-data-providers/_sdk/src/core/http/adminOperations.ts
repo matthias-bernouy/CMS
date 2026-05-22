@@ -5,6 +5,7 @@ import { meta as deprov }       from "src/api/admin/tenants.delete";
 import { meta as listT }        from "src/api/admin/tenants.get";
 import { meta as adminLogs }    from "src/api/admin/logs.get";
 import { meta as adminConfig }  from "src/api/admin/config.get";
+import { meta as tenantInfo }   from "src/api/admin/info.get";
 
 /**
  * The frozen plane-1 surface (base.md §8 + §10.5 + §11.3). Single source
@@ -22,4 +23,5 @@ export const ADMIN_OPERATIONS: ReadonlyArray<{
     { method: "get",    path: "/admin/tenants", meta: listT },
     { method: "get",    path: "/admin/logs",    meta: adminLogs },
     { method: "get",    path: "/admin/config",  meta: adminConfig },
+    { method: "get",    path: "/admin/info",    meta: tenantInfo },
 ];

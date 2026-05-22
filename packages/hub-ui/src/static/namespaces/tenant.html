@@ -40,6 +40,16 @@
                 </template>
                 <template slot="error"><p9r-alert type="error">Tenant not found.</p9r-alert></template>
             </w13c-fetch>
+
+            <hub-section label="Provider info">
+                <hub-hint>Read-only facts the data-provider exposes about this tenant (e.g. a realm issuer URL). Not editable here.</hub-hint>
+                <w13c-fetch url="/api/namespaces/tenants/info" reload-on="tenant:updated">
+                    <template for="data.fields">
+                        <div><strong>{{ label }}:</strong> <hub-field value="{{ value }}" kind="{{ kind }}"></hub-field></div>
+                    </template>
+                    <p9r-alert slot="empty" type="info">This data-provider exposes no extra info.</p9r-alert>
+                </w13c-fetch>
+            </hub-section>
         </p9r-tab-panel>
 
         <p9r-tab-panel id="logs" label="Logs">

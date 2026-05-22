@@ -43,6 +43,7 @@ export type {
     ProviderHooks, ProvisionInput, UpdateInput, DeprovisionInput,
 } from "src/interfaces/hooks";
 export type { ProviderContext } from "src/types/ProviderContext";
+export type { TenantInfo, TenantInfoField, TenantInfoProvider } from "src/types/TenantInfo";
 export type { TokenClaims, TokenScope } from "src/types/claims";
 export type { ResolvedIssuer } from "src/types/ResolvedIssuer";
 
