@@ -33,7 +33,7 @@
                             <div><strong>namespace:</strong> {{ data.namespaceId }}</div>
                             <div><strong>data-provider:</strong> {{ data.providerId }}</div>
                             <div><strong>display name:</strong> {{ data.displayName }}</div>
-                            <div><strong>status:</strong> {{ data.status }}</div>
+                            <div><strong>status:</strong> <hub-status value="{{ data.status }}"></hub-status></div>
                             <div><strong>activated:</strong> {{ data.activatedAt }}</div>
                         </p9r-stack>
                     </p9r-card>

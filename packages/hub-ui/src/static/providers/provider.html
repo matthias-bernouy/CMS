@@ -76,8 +76,8 @@
             <hub-table>
                 <p9r-row slot="header">
                     <p9r-header-cell>tenantId</p9r-header-cell>
+                    <p9r-header-cell>name</p9r-header-cell>
                     <p9r-header-cell>namespace</p9r-header-cell>
-                    <p9r-header-cell>issuers</p9r-header-cell>
                     <p9r-header-cell>status</p9r-header-cell>
                     <p9r-header-cell></p9r-header-cell>
                 </p9r-row>
@@ -85,9 +85,9 @@
                     <template for="data.tenants">
                         <p9r-row>
                             <p9r-cell><hub-code>{{ tenantId }}</hub-code></p9r-cell>
+                            <p9r-cell>{{ displayName }}</p9r-cell>
                             <p9r-cell>{{ namespaceId }}</p9r-cell>
-                            <p9r-cell>{{ issuers.length }}</p9r-cell>
-                            <p9r-cell>{{ status }}</p9r-cell>
+                            <p9r-cell><hub-status value="{{ status }}"></hub-status></p9r-cell>
                             <p9r-cell>
                                 <a href="{{BASE_PATH}}/namespaces/tenant?tenantId={{tenantId}}&namespaceId={{namespaceId}}">
                                     <p9r-button variant="ghost">Open</p9r-button>

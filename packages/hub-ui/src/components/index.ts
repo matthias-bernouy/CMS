@@ -9,6 +9,7 @@ import "./HubTable/HubTable";
 import "./HubStat/HubStat";
 import "./HubCode/HubCode";
 import "./HubHint/HubHint";
+import "./HubStatus/HubStatus";
 // Data / behaviour
 import "./HubJson/HubJson";
 import "./HubConfigForm/HubConfigForm";
