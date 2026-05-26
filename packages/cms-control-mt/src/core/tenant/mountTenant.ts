@@ -3,7 +3,7 @@ import type { Db } from "mongodb";
 import type { Runner, SecretCrypto, Subject } from "@bernouy/core";
 import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
 import { CompositeAuthentication } from "@bernouy/auth-composite";
-import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, MongoCmsFilesMetadata, LocalFsCmsFilesBlob, type EncryptedSecretDocument } from "@bernouy/cms";
+import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, MongoCmsFilesMetadata, LocalFsCmsFilesBlob, S3CmsFilesBlob, type CmsFilesBlobStore, type EncryptedSecretDocument } from "@bernouy/cms";
 import type { Tenant } from "src/interfaces/Tenant";
 import { loadAdminEmails } from "src/core/tenant/members";
 
@@ -73,12 +73,21 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
     const repo = new MongoCmsRepository(db, { collectionPrefix: `tenant_${tenant.id}__` });
     await repo.init();
 
-    // Files: Mongo metadata tree + local-FS bytes, one root per tenant. Interim
-    // backend — swap `LocalFsCmsFilesBlob` for an S3/CDN-provider blob later
-    // (same `CmsFilesBlobStore` contract). `CMS_FILES_DIR` defaults to ./cms-files.
+    // Files: Mongo metadata tree + a per-tenant blob backend. Production uses
+    // S3-compatible object storage when `CMS_S3_BUCKET` is set (tenant isolated
+    // by key prefix); otherwise a local-FS dir (dev / single-node interim).
     const filesMetadata = new MongoCmsFilesMetadata(db, { collectionPrefix: `tenant_${tenant.id}__` });
     await filesMetadata.init();
-    const filesBlob = new LocalFsCmsFilesBlob(join(process.env.CMS_FILES_DIR ?? "./cms-files", tenant.id));
+    const filesBlob: CmsFilesBlobStore = process.env.CMS_S3_BUCKET
+        ? new S3CmsFilesBlob({
+            bucket:          process.env.CMS_S3_BUCKET,
+            accessKeyId:     process.env.CMS_S3_ACCESS_KEY_ID ?? "",
+            secretAccessKey: process.env.CMS_S3_SECRET_ACCESS_KEY ?? "",
+            ...(process.env.CMS_S3_REGION   ? { region:   process.env.CMS_S3_REGION }   : {}),
+            ...(process.env.CMS_S3_ENDPOINT ? { endpoint: process.env.CMS_S3_ENDPOINT } : {}),
+            prefix: `tenant_${tenant.id}/`,
+        })
+        : new LocalFsCmsFilesBlob(join(process.env.CMS_FILES_DIR ?? "./cms-files", tenant.id));
 
     // Per-tenant secret store: docs persist in `tenant_<id>__secrets`,
     // encrypted via `EnvelopeSecretCrypto` with `scopeId = tenant.id`.

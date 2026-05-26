@@ -38,6 +38,7 @@ export type {
 } from "./src/socle/interfaces/CmsFilesMetadataRepository";
 export { InMemoryCmsFilesBlob } from "./src/socle/default-implementation/CmsFilesBlob/memory";
 export { LocalFsCmsFilesBlob } from "./src/socle/default-implementation/CmsFilesBlob/localFs";
+export { S3CmsFilesBlob, type S3CmsFilesBlobConfig } from "./src/socle/default-implementation/CmsFilesBlob/s3";
 export type { CmsFilesBlobStore, BlobInput } from "./src/socle/interfaces/CmsFilesBlobStore";
 export { LocalFsCmsFiles } from "./src/socle/default-implementation/CmsFiles/localFs";
 export { InMemoryCache } from "./src/socle/default-implementation/Cache/memory";
