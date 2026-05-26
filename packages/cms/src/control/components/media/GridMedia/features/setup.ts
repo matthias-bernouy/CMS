@@ -9,8 +9,8 @@ import { setupDetail } from "./detail/setup";
 /**
  * Wires every per-feature controller (context menu, rename dialog, new
  * folder prompt, drag-drop overlay, detail panel) and connects each one
- * to the shared host (mutations call `_cms.CDN`, then trigger a
- * refresh on the host). Returns the few controllers the host still
+ * to the shared host (mutations call the `/api/files` write helpers, then
+ * trigger a refresh on the host). Returns the few controllers the host still
  * needs to drive directly (ctxMenu, dragDrop, detail).
  */
 export function setupFeatures(host: GridMedia, s: ShadowRoot) {

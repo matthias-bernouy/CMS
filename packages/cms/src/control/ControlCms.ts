@@ -10,9 +10,7 @@ import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path"
-import { buildMediaHydrationScript } from "./core/authentication/buildMediaHydrationScript";
 import { createAuthGuard } from "./core/authentication/authGuard";
-import { compress, publicAssetCacheControl, sendCompressed } from "../socle/server/compression";
 import type { CspExtras } from "../socle/server/buildCspContent";
 import { SpecCache } from "./core/data/SpecCache";
 
@@ -87,22 +85,7 @@ export class ControlCms {
         this._filesBlob = filesBlob ?? null;
         this._specCache = new SpecCache();
 
-        // Hydration is served as a real `<script src=…>` (CSP-friendly:
-        // `default-src 'self'` rejects inline scripts). Pre-compressed once
-        // at boot — content depends only on the Media instance, which is
-        // fixed for this ControlCms's lifetime. Each tenant has its own
-        // ControlCms, so each gets its own hydration entry in their cache.
-        const hydrationEntry = compress(
-            buildMediaHydrationScript(this["_media"]),
-            "text/javascript; charset=utf-8",
-        );
         const authGuard = createAuthGuard(this);
-
-        runner.group("/_cms", (cmsRunner) => {
-            cmsRunner.get("/hydration.js", (req: Request) => {
-                return sendCompressed(req, hydrationEntry, publicAssetCacheControl(req));
-            });
-        }, [authGuard]);
 
         runner.group("/", (staticRunner) => {
             serveStaticFolder(staticRunner, {
