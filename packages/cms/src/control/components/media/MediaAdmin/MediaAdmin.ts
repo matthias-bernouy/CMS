@@ -1,6 +1,5 @@
-import type { CDN } from "@bernouy/core";
 import type { GridMedia } from "../GridMedia/GridMedia";
-import { uploadFiles } from "../GridMedia/api/write";
+import { uploadFiles, createFolder } from "../GridMedia/api/write";
 import BubblesEvent from "../../../core/dom/BubblesEvent";
 import template from "./MediaAdmin.html" with { type: "text" };
 
@@ -8,12 +7,11 @@ type FormFieldEl = HTMLElement & { value: string };
 
 /**
  * `<cms-media-admin>` — full media admin page: layout, header buttons,
- * and direct calls to `window._cms.CDN`. Renders into light DOM so the
- * embedded `<p9r-grid-media>` keeps using its existing API surface.
+ * and same-origin calls to the `/api/files/*` endpoints. Renders into light
+ * DOM so the embedded `<p9r-grid-media>` keeps using its existing API surface.
  *
- * Header buttons bypass `<cms-form>` because the `Media` consumer (e.g.
- * `HttpMedia`) handles its own transport — uploads go through
- * `media.uploadFile()`, not multipart-form posts.
+ * Header buttons bypass `<cms-form>` because uploads go through a multipart
+ * POST to `/api/files/upload`, not a JSON form post.
  */
 export class MediaAdmin extends HTMLElement {
 
@@ -55,12 +53,8 @@ export class MediaAdmin extends HTMLElement {
         const input = this.querySelector('[data-role="folder-name"]') as FormFieldEl | null;
         const name = input?.value?.trim();
         if (!name) return;
-        const folder = this._currentFolder();
-        const res = await this._media().createFolder({
-            name,
-            ...(folder ? { parentFolderID: folder } : {}),
-        });
-        if (!res.ok) return;
+        const ok = await createFolder(name, this._currentFolder());
+        if (!ok) return;
         if (input) input.value = "";
         button?.dispatchEvent(new BubblesEvent("form:success"));
         this._grid?.refresh();
@@ -68,12 +62,6 @@ export class MediaAdmin extends HTMLElement {
 
     private _currentFolder(): string | null {
         return new URL(window.location.href).searchParams.get("folder");
-    }
-
-    private _media(): CDN {
-        const m = window._cms?.CDN;
-        if (!m) throw new Error("window._cms.CDN missing — admin must load /<basePath>/_cms/media.js first");
-        return m;
     }
 }
 

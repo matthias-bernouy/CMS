@@ -4,6 +4,8 @@ import type { Cache } from "../socle/interfaces/Cache";
 import { InMemoryCache } from "../socle/default-implementation/Cache/memory";
 import type { SecretStore } from "../socle/interfaces/SecretStore";
 import { InMemorySecretStore } from "../socle/default-implementation/SecretStore/memory";
+import type { CmsFilesMetadataRepository } from "../socle/interfaces/CmsFilesMetadataRepository";
+import type { CmsFilesBlobStore } from "../socle/interfaces/CmsFilesBlobStore";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
@@ -59,6 +61,8 @@ export class ControlCms {
     private _media:           CDN;
     private _cache:           Cache;
     private _secrets:         SecretStore;
+    private _filesMetadata:   CmsFilesMetadataRepository | null;
+    private _filesBlob:       CmsFilesBlobStore | null;
     private _specCache:       SpecCache;
 
     constructor(
@@ -69,6 +73,8 @@ export class ControlCms {
         configuration: Configuration,
         cache?: Cache,
         secrets?: SecretStore,
+        filesMetadata?: CmsFilesMetadataRepository,
+        filesBlob?: CmsFilesBlobStore,
     ){
         this.configuration = configuration;
         this._auth = auth;
@@ -77,6 +83,8 @@ export class ControlCms {
         this._media = media;
         this._cache = cache || new InMemoryCache();
         this._secrets = secrets || new InMemorySecretStore();
+        this._filesMetadata = filesMetadata ?? null;
+        this._filesBlob = filesBlob ?? null;
         this._specCache = new SpecCache();
 
         // Hydration is served as a real `<script src=…>` (CSP-friendly:
@@ -134,6 +142,19 @@ export class ControlCms {
 
     get secrets(){
         return this._secrets;
+    }
+
+    /** File-tree metadata (folders + file records). Throws until a files
+     *  backend is wired (media transition in progress). */
+    get filesMetadata(): CmsFilesMetadataRepository {
+        if (!this._filesMetadata) throw new Error("files metadata backend not configured");
+        return this._filesMetadata;
+    }
+
+    /** Opaque byte storage for files. Throws until wired (see `filesMetadata`). */
+    get filesBlob(): CmsFilesBlobStore {
+        if (!this._filesBlob) throw new Error("files blob backend not configured");
+        return this._filesBlob;
     }
 
     get specCache(){

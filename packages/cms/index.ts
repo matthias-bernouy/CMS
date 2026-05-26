@@ -36,6 +36,10 @@ export type {
     CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem, FilesItemType,
     FilesListOptions, FilesPage, NewFolder, NewFile, ItemPatch,
 } from "./src/socle/interfaces/CmsFilesMetadataRepository";
+export { InMemoryCmsFilesBlob } from "./src/socle/default-implementation/CmsFilesBlob/memory";
+export { LocalFsCmsFilesBlob } from "./src/socle/default-implementation/CmsFilesBlob/localFs";
+export type { CmsFilesBlobStore, BlobInput } from "./src/socle/interfaces/CmsFilesBlobStore";
+export { LocalFsCmsFiles } from "./src/socle/default-implementation/CmsFiles/localFs";
 export { InMemoryCache } from "./src/socle/default-implementation/Cache/memory";
 export { InMemorySecretStore } from "./src/socle/default-implementation/SecretStore/memory";
 export { DisabledCDN } from "./src/socle/default-implementation/CDN/DisabledCDN";

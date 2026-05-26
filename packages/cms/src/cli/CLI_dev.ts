@@ -15,6 +15,7 @@ import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
 import { DisabledCDN } from "../socle/default-implementation/CDN/DisabledCDN";
+import { LocalFsCmsFiles } from "../socle/default-implementation/CmsFiles/localFs";
 import { loadPushConfig } from "./push/shared/config";
 
 function parseFlags(args: string[]): { port: number; host: string } {
@@ -72,13 +73,17 @@ export default async function CLI_dev(args: string[]) {
     const repo   = new LocalFsCmsRepository(config.siteDir, built);
     const auth   = new InMemoryAuthentication({ role: "admin", displayName: "p9r dev" });
     const media  = new DisabledCDN();
+    // Files backend for the new /api/files surface: the site's `files/` dir IS
+    // the media tree (folder = directory, name = filename, bytes = content) —
+    // a plain, push-able folder. One object serves both metadata + blob.
+    const files = new LocalFsCmsFiles(`${config.siteDir}/files`);
 
     const runner = new BunRunner();
     // Live-reload SSE channel — registered before the ControlCms group so it
     // matches first (the group catches `/` as a fallback).
     runner.addEndpoint("GET", "/dev/reload", sseHandler(reload));
 
-    const cms = new ControlCms(runner, repo, auth, media, { tokensUrl: "" });
+    const cms = new ControlCms(runner, repo, auth, media, { tokensUrl: "" }, undefined, undefined, files, files);
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
     // still need to drop the editor-script (consolidated bundle) and the

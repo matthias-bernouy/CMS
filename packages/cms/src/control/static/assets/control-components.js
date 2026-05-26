@@ -9294,14 +9294,12 @@ p9r-tag:hover {
     <w13c-lateral-menu slot="sidebar">
         <h2 slot="header">Page Builder</h2>
 
-        <w13c-lateral-menu-item data-route="media">
+        <w13c-lateral-menu-item data-route="files">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="9" cy="9" r="2" />
-                <path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21" />
+                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
             </svg>
-            Media
+            Files
         </w13c-lateral-menu-item>
 
         <w13c-lateral-menu-item data-route="pages">
@@ -10200,520 +10198,6 @@ ${followMessage}`)) {
   }
   customElements.define("w13c-open-dialog", OpenDialog);
 
-  // src/control/components/admin/SchemaPicker/SchemaPicker.css
-  var SchemaPicker_default = `:host { display: block; }
-
-.field { display: flex; flex-direction: column; gap: 6px; position: relative; }
-
-.label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted, #94a3b8);
-}
-
-.input-row { display: flex; gap: 4px; }
-
-.trigger {
-    display: flex; align-items: center; gap: 8px;
-    flex: 1; min-width: 0;
-    padding: 7px 10px;
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 8px;
-    background: var(--bg-surface, #fff);
-    cursor: pointer; outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-}
-.trigger:hover         { border-color: var(--text-muted, #94a3b8); }
-.trigger:focus-visible { border-color: var(--primary-base, #4361ee); box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15)); }
-.trigger.open          { border-color: var(--primary-base, #4361ee); }
-.trigger.has-value     { border-color: var(--primary-base, #4361ee); background: var(--primary-muted, rgb(67 97 238 / 0.06)); }
-
-.icon { flex-shrink: 0; color: var(--text-muted, #94a3b8); }
-.trigger.has-value .icon { color: var(--primary-base, #4361ee); }
-
-.method {
-    flex-shrink: 0;
-    font-family: ui-monospace, monospace;
-    font-size: 10px; font-weight: 700;
-    padding: 2px 5px; border-radius: 4px;
-    background: var(--bg-base, #f1f5f9);
-    color: var(--text-muted, #64748b);
-    display: none;
-}
-.trigger.has-value .method { display: inline-block; color: var(--primary-base, #4361ee); }
-
-.value {
-    flex: 1; min-width: 0;
-    font-size: 12px; font-weight: 500;
-    color: var(--text-main, #1e293b);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    font-family: ui-monospace, monospace;
-}
-.trigger:not(.has-value) .value { color: var(--text-muted, #94a3b8); font-family: inherit; font-weight: 400; }
-
-.chevron { flex-shrink: 0; color: var(--text-muted, #94a3b8); transition: transform 0.2s ease; }
-.trigger.open .chevron { transform: rotate(180deg); color: var(--primary-base, #4361ee); }
-
-.clear-btn {
-    display: none; align-items: center; justify-content: center;
-    width: 32px;
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 8px;
-    background: var(--bg-surface, #fff);
-    color: var(--text-muted, #94a3b8);
-    cursor: pointer; flex-shrink: 0;
-    transition: color 0.15s, border-color 0.15s, background 0.15s;
-}
-.clear-btn:hover {
-    color: var(--danger-base, #ef4444);
-    border-color: var(--danger-base, #ef4444);
-    background: color-mix(in srgb, var(--danger-base, #ef4444) 6%, transparent);
-}
-
-/* ── Popover panel ── */
-.panel {
-    margin: 0; padding: 0; border: 0;
-    background: var(--bg-surface, #fff);
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 8px;
-    box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
-    overflow: hidden;
-}
-.panel:popover-open { display: block; }
-
-.provider-row {
-    display: flex; gap: 6px; align-items: center;
-    padding: 6px 6px 4px;
-    border-bottom: 1px solid var(--border-default, #e2e8f0);
-}
-.provider-row label {
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.06em; color: var(--text-muted, #94a3b8);
-}
-.provider-select {
-    flex: 1; min-width: 0;
-    padding: 4px 6px;
-    border: 1px solid var(--border-default, #e2e8f0); border-radius: 6px;
-    background: var(--bg-base, #f8fafc);
-    font-family: inherit; font-size: 11px; color: var(--text-main, #1e293b);
-    outline: none; cursor: pointer;
-}
-.provider-select:focus { border-color: var(--primary-base, #4361ee); }
-
-.search-wrap { padding: 6px 6px 2px; }
-.search {
-    width: 100%; box-sizing: border-box;
-    padding: 6px 8px;
-    border: 1px solid var(--border-default, #e2e8f0); border-radius: 6px;
-    background: var(--bg-base, #f8fafc);
-    font-size: 11px; font-family: inherit; color: var(--text-main, #1e293b);
-    outline: none; transition: border-color 0.15s;
-}
-.search:focus { border-color: var(--primary-base, #4361ee); }
-
-.list { list-style: none; margin: 0; padding: 4px; max-height: 280px; overflow-y: auto; }
-.empty { display: none; padding: 12px; text-align: center; font-size: 11px; color: var(--text-muted, #94a3b8); }
-.list:empty + .empty { display: block; }
-
-.option {
-    display: flex; align-items: center; gap: 8px;
-    padding: 6px 10px; border-radius: 6px;
-    font-size: 12px; color: var(--text-main, #1e293b);
-    cursor: pointer;
-    transition: background 0.1s;
-}
-.option:hover    { background: var(--bg-base, #f1f5f9); }
-.option.selected { background: var(--primary-muted, rgb(67 97 238 / 0.1)); color: var(--primary-base, #4361ee); }
-
-.option-method {
-    flex-shrink: 0;
-    font-family: ui-monospace, monospace;
-    font-size: 9px; font-weight: 700;
-    padding: 2px 5px; border-radius: 4px;
-    background: var(--bg-base, #f1f5f9);
-    color: var(--text-muted, #64748b);
-    min-width: 36px; text-align: center;
-}
-.option.selected .option-method { background: var(--primary-base, #4361ee); color: #fff; }
-
-.option-path {
-    flex: 1; min-width: 0;
-    font-family: ui-monospace, monospace; font-weight: 500;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.option-summary {
-    flex-shrink: 0;
-    font-size: 10px; color: var(--text-muted, #94a3b8);
-    max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-`;
-
-  // src/control/components/admin/SchemaPicker/template.ts
-  var ICON = `
-<svg class="icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-    stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
-    <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c2.49-2.7 3.9-6.3 3.9-9 0-2.7-1.41-6.3-3.9-9m0 18c-2.49-2.7-3.9-6.3-3.9-9 0-2.7 1.41-6.3 3.9-9m-9 9a9 9 0 0 1 9-9"/>
-</svg>
-`;
-  var CHEVRON = `
-<svg class="chevron" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
-    stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
-    <path d="m6 9 6 6 6-6"/>
-</svg>
-`;
-  var CLEAR = `
-<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-    stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
-    <line x1="18" y1="6" x2="6" y2="18"/>
-    <line x1="6" y1="6" x2="18" y2="18"/>
-</svg>
-`;
-  function buildShadow2(host, label) {
-    const shadow = host.attachShadow({ mode: "open" });
-    shadow.innerHTML = `
-        <style>${SchemaPicker_default}</style>
-        <div class="field">
-            ${label ? `<span class="label">${label}</span>` : ""}
-            <div class="input-row">
-                <button class="trigger" type="button" tabindex="0">
-                    ${ICON}
-                    <span class="method"></span>
-                    <span class="value">Select endpoint</span>
-                    ${CHEVRON}
-                </button>
-                <button class="clear-btn" type="button" title="Clear selection">${CLEAR}</button>
-            </div>
-        </div>
-        <div class="panel" popover="auto">
-            <div class="provider-row">
-                <label>Provider</label>
-                <select class="provider-select"></select>
-            </div>
-            <div class="search-wrap"><input class="search" type="text" placeholder="Search endpoints..." spellcheck="false"></div>
-            <ul class="list"></ul>
-            <div class="empty">No endpoints — sync the provider first.</div>
-        </div>
-    `;
-    return {
-      trigger: shadow.querySelector(".trigger"),
-      triggerMethod: shadow.querySelector(".trigger .method"),
-      triggerValue: shadow.querySelector(".trigger .value"),
-      clearBtn: shadow.querySelector(".clear-btn"),
-      panel: shadow.querySelector(".panel"),
-      providerSelect: shadow.querySelector(".provider-select"),
-      search: shadow.querySelector(".search"),
-      list: shadow.querySelector(".list"),
-      empty: shadow.querySelector(".empty")
-    };
-  }
-
-  // src/control/components/admin/SchemaPicker/flows.ts
-  async function fetchProviders(api) {
-    const res = await fetch(`${api}/providers`, { headers: { Accept: "application/json" } });
-    if (!res.ok) {
-      showToast("Failed to load providers", { type: "error" });
-      return [];
-    }
-    const list = await res.json();
-    return list.map((p) => ({
-      id: p.id,
-      server: (p.server ?? "").replace(/\/+$/, "")
-    }));
-  }
-  async function fetchEndpoints(api, providerId) {
-    const url = `${api}/provider/endpoints?id=${encodeURIComponent(providerId)}`;
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (res.status === 404)
-      return [];
-    if (!res.ok) {
-      showToast(`Failed to load endpoints for "${providerId}"`, { type: "error" });
-      return [];
-    }
-    return res.json();
-  }
-
-  // src/socle/constants/p9r-constants.ts
-  var DATA_PROXY_PREFIX = "/.cms/data";
-  function buildDataProxyUrl(providerId, path) {
-    const tail = path.startsWith("/") ? path : `/${path}`;
-    return `${DATA_PROXY_PREFIX}/${providerId}${tail}`;
-  }
-  function parseDataProxyUrl(raw) {
-    let pathname;
-    try {
-      pathname = new URL(raw, "http://_").pathname;
-    } catch {
-      return null;
-    }
-    const prefix = `${DATA_PROXY_PREFIX}/`;
-    if (!pathname.startsWith(prefix))
-      return null;
-    const rest = pathname.slice(prefix.length);
-    const slash = rest.indexOf("/");
-    if (slash < 0) {
-      return rest ? { providerId: rest, path: "/" } : null;
-    }
-    const providerId = rest.slice(0, slash);
-    const path = rest.slice(slash) || "/";
-    if (!providerId)
-      return null;
-    return { providerId, path };
-  }
-
-  // src/control/components/admin/SchemaPicker/controller.ts
-  function buildUrl(providerId, path) {
-    return buildDataProxyUrl(providerId, path);
-  }
-  function findProviderForValue(providers, value) {
-    const parsed = parseDataProxyUrl(value);
-    if (!parsed)
-      return null;
-    return providers.find((p) => p.id === parsed.providerId) ?? null;
-  }
-  function extractPath(value) {
-    return parseDataProxyUrl(value)?.path ?? "";
-  }
-  function setValue2(host, url) {
-    host._value = url;
-    host._internals.setFormValue(url);
-    if (!host._refs)
-      return;
-    const has = !!url;
-    host._refs.trigger.classList.toggle("has-value", has);
-    host._refs.clearBtn.style.display = has ? "flex" : "none";
-    host._refs.triggerMethod.textContent = "";
-    if (has) {
-      const match = findProviderForValue(host._providers, url);
-      host._refs.triggerValue.textContent = match ? extractPath(url) || "/" : url;
-    } else {
-      host._refs.triggerValue.textContent = "Select endpoint";
-    }
-  }
-  function openPanel2(host) {
-    positionPanel2(host);
-    host._refs.panel.showPopover();
-    host._refs.trigger.classList.add("open");
-    host._isOpen = true;
-    initProviderState(host);
-    setTimeout(() => host._refs.search.focus(), 0);
-  }
-  function closePanel2(host) {
-    if (host._refs.panel.matches(":popover-open"))
-      host._refs.panel.hidePopover();
-    host._refs.trigger.classList.remove("open");
-    host._isOpen = false;
-    host._refs.search.value = "";
-    renderEndpoints(host);
-  }
-  function positionPanel2(host) {
-    const GUTTER = 8;
-    const r = host._refs.trigger.getBoundingClientRect();
-    const p = host._refs.panel;
-    const maxWidth = window.innerWidth - GUTTER * 2;
-    const width = Math.min(Math.max(r.width, 360), maxWidth);
-    let left = r.left;
-    if (left + width > window.innerWidth - GUTTER) {
-      left = Math.max(GUTTER, r.right - width);
-    }
-    p.style.top = `${r.bottom + 4}px`;
-    p.style.left = `${left}px`;
-    p.style.width = `${width}px`;
-    p.style.position = "fixed";
-  }
-  async function initProviderState(host) {
-    if (host._providers.length === 0) {
-      host._providers = await fetchProviders(host._api);
-      renderProviderOptions(host);
-      setValue2(host, host._value);
-    }
-    const match = findProviderForValue(host._providers, host._value);
-    const fallback = host._providers[0]?.id ?? "";
-    const active = match?.id ?? fallback;
-    if (active && active !== host._activeProviderId) {
-      host._refs.providerSelect.value = active;
-      await loadEndpointsFor(host, active);
-    } else {
-      renderEndpoints(host);
-    }
-  }
-  async function loadEndpointsFor(host, providerId) {
-    host._activeProviderId = providerId;
-    if (!host._endpointsByProvider.has(providerId)) {
-      host._endpointsByProvider.set(providerId, await fetchEndpoints(host._api, providerId));
-    }
-    renderEndpoints(host);
-  }
-  function renderProviderOptions(host) {
-    host._refs.providerSelect.replaceChildren(...host._providers.map((p) => {
-      const opt = document.createElement("option");
-      opt.value = p.id;
-      opt.textContent = p.id;
-      return opt;
-    }));
-  }
-  function renderEndpoints(host) {
-    const all = host._endpointsByProvider.get(host._activeProviderId) ?? [];
-    const q = host._refs.search.value.trim().toLowerCase();
-    const allowed = parseMethodsFilter(host.getAttribute("methods"));
-    const filtered = all.filter((e) => {
-      if (allowed && !allowed.has(e.method.toUpperCase()))
-        return false;
-      if (!q)
-        return true;
-      return e.path.toLowerCase().includes(q) || e.summary.toLowerCase().includes(q) || e.tags.some((t) => t.toLowerCase().includes(q));
-    });
-    const parsed = parseDataProxyUrl(host._value);
-    const selectedPath = parsed?.providerId === host._activeProviderId ? parsed.path : "";
-    const methodAware = !!host.getAttribute("methodAttr");
-    const pickedMethod = host._pickedMethod;
-    host._refs.list.replaceChildren(...filtered.map((e) => {
-      const pathMatch = e.path === selectedPath;
-      const methodMatch = !methodAware || !pickedMethod || e.method.toLowerCase() === pickedMethod;
-      return buildOption2(e, pathMatch && methodMatch);
-    }));
-  }
-  function parseMethodsFilter(raw) {
-    if (!raw)
-      return null;
-    const set = new Set(raw.split(",").map((m) => m.trim().toUpperCase()).filter(Boolean));
-    return set.size > 0 ? set : null;
-  }
-  function buildOption2(ep, selected) {
-    const li = document.createElement("li");
-    li.className = "option" + (selected ? " selected" : "");
-    li.dataset.id = ep.id;
-    li.innerHTML = `
-        <span class="option-method">${ep.method}</span>
-        <span class="option-path"></span>
-        ${ep.summary ? `<span class="option-summary"></span>` : ""}
-    `;
-    li.querySelector(".option-path").textContent = ep.path;
-    if (ep.summary)
-      li.querySelector(".option-summary").textContent = ep.summary;
-    return li;
-  }
-
-  // src/control/components/admin/SchemaPicker/SchemaPicker.ts
-  class SchemaPicker extends HTMLElement {
-    static formAssociated = true;
-    _refs;
-    _internals;
-    _value = "";
-    _pickedMethod = "";
-    _isOpen = false;
-    _providers = [];
-    _activeProviderId = "";
-    _endpointsByProvider = new Map;
-    _onWindowClick = (e) => {
-      if (this._isOpen && !this.contains(e.target))
-        closePanel2(this);
-    };
-    _onProviderSaved = () => {
-      this._providers = [];
-      if (this._isOpen)
-        closePanel2(this);
-    };
-    constructor() {
-      super();
-      this._internals = this.attachInternals();
-    }
-    connectedCallback() {
-      if (!this.shadowRoot) {
-        this._refs = buildShadow2(this, this.getAttribute("label"));
-        this._wire();
-      }
-      const v = this._value || this.getAttribute("value") || "";
-      setValue2(this, v);
-      this._pickedMethod = readMethodFromTarget(this);
-      window.addEventListener("click", this._onWindowClick);
-      document.addEventListener("new:provider", this._onProviderSaved);
-      document.addEventListener("provider:synced", this._onProviderSaved);
-    }
-    disconnectedCallback() {
-      window.removeEventListener("click", this._onWindowClick);
-      document.removeEventListener("new:provider", this._onProviderSaved);
-      document.removeEventListener("provider:synced", this._onProviderSaved);
-    }
-    get value() {
-      return this._value;
-    }
-    set value(v) {
-      setValue2(this, v);
-    }
-    get name() {
-      return this.getAttribute("name");
-    }
-    get _api() {
-      return this.getAttribute("api") ?? "/api/data";
-    }
-    _wire() {
-      const r = this._refs;
-      r.trigger.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this._isOpen ? closePanel2(this) : openPanel2(this);
-      });
-      r.clearBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        setValue2(this, "");
-        this._pickedMethod = "";
-        writeMethodToTarget(this, "");
-        this.dispatchEvent(new Event("change", { bubbles: true }));
-      });
-      r.providerSelect.addEventListener("change", () => {
-        loadEndpointsFor(this, r.providerSelect.value);
-      });
-      r.search.addEventListener("input", () => renderEndpoints(this));
-      r.list.addEventListener("click", (e) => {
-        const li = e.target.closest(".option");
-        if (!li || !li.dataset.id)
-          return;
-        const [method, ...rest] = li.dataset.id.split(" ");
-        const path = rest.join(" ");
-        if (!path || !method)
-          return;
-        const provider = this._providers.find((p) => p.id === this._activeProviderId);
-        if (!provider)
-          return;
-        this._pickedMethod = method.toLowerCase();
-        writeMethodToTarget(this, this._pickedMethod);
-        setValue2(this, buildUrl(provider.id, path));
-        this.dispatchEvent(new Event("change", { bubbles: true }));
-        closePanel2(this);
-      });
-    }
-  }
-  function findOwnerBloc(host) {
-    const pidEl = host.closest(`[${p9r.attr.EDITOR.PARENT_IDENTIFIER}]`);
-    const pid = pidEl?.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
-    if (!pid)
-      return null;
-    return document.querySelector(`[${p9r.attr.EDITOR.IDENTIFIER}="${pid}"]`);
-  }
-  function writeMethodToTarget(host, method) {
-    const attr = host.getAttribute("methodAttr");
-    if (!attr)
-      return;
-    const owner = findOwnerBloc(host);
-    if (!owner)
-      return;
-    if (method)
-      owner.setAttribute(attr, method);
-    else
-      owner.removeAttribute(attr);
-  }
-  function readMethodFromTarget(host) {
-    const attr = host.getAttribute("methodAttr");
-    if (!attr)
-      return "";
-    const owner = findOwnerBloc(host);
-    return (owner?.getAttribute(attr) ?? "").toLowerCase();
-  }
-  if (!customElements.get("cms-schema-picker")) {
-    customElements.define("cms-schema-picker", SchemaPicker);
-  }
-
   // src/control/components/admin/Secrets/template.html
   var template_default3 = `<div class="add">
     <p9r-input data-role="add-key"
@@ -10977,153 +10461,6 @@ ${followMessage}`)) {
   }
   if (!customElements.get("cms-secrets"))
     customElements.define("cms-secrets", CmsSecrets);
-
-  // src/control/components/admin/TestConnection/TestConnection.ts
-  class CmsTestConnection extends HTMLElement {
-    _busy = false;
-    _form = null;
-    _overlay = null;
-    _autoCloseTimer = null;
-    _onClick = async (e) => {
-      const trigger = e.target.closest("p9r-button, button");
-      if (!trigger || !this.contains(trigger))
-        return;
-      if (this._isInsideOverlay(trigger))
-        return;
-      e.preventDefault();
-      if (this._busy)
-        return;
-      await this._run();
-    };
-    connectedCallback() {
-      this.addEventListener("click", this._onClick);
-    }
-    disconnectedCallback() {
-      this.removeEventListener("click", this._onClick);
-      if (this._autoCloseTimer)
-        clearTimeout(this._autoCloseTimer);
-    }
-    async _run() {
-      const target = this.getAttribute("target");
-      if (!target)
-        return;
-      this._form = this.closest("form");
-      if (!this._form)
-        return;
-      const overlay = this._ensureOverlay();
-      this._busy = true;
-      this._showLoading(overlay);
-      try {
-        const body = Object.fromEntries(new FormData(this._form).entries());
-        const res = await fetch(target, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-        const result = await res.json();
-        if (result.ok)
-          this._showSuccess(overlay, result.endpointCount);
-        else
-          this._showError(overlay, result.error);
-      } catch (e) {
-        this._showError(overlay, e instanceof Error ? e.message : String(e));
-      } finally {
-        this._busy = false;
-      }
-    }
-    _ensureOverlay() {
-      if (this._overlay)
-        return this._overlay;
-      if (!this._form)
-        throw new Error("cms-test-connection: no form to overlay");
-      this._form.style.position = this._form.style.position || "relative";
-      const overlay = document.createElement("div");
-      overlay.dataset.role = "test-overlay";
-      overlay.style.cssText = [
-        "position: absolute",
-        "inset: 0",
-        "display: none",
-        "align-items: center",
-        "justify-content: center",
-        "background: var(--bg-surface, #ffffff)",
-        "z-index: 5",
-        "padding: 1.5rem"
-      ].join(";");
-      overlay.addEventListener("click", this._onOverlayClick);
-      this._form.appendChild(overlay);
-      this._overlay = overlay;
-      return overlay;
-    }
-    _onOverlayClick = (e) => {
-      const back = e.target.closest('[data-action="test-back"]');
-      if (back) {
-        e.preventDefault();
-        this._hide();
-      }
-    };
-    _showLoading(overlay) {
-      if (this._autoCloseTimer) {
-        clearTimeout(this._autoCloseTimer);
-        this._autoCloseTimer = null;
-      }
-      overlay.innerHTML = `
-            <p9r-stack gap="sm" align="center" justify="center">
-                <p9r-spinner></p9r-spinner>
-                <p>Testing connection...</p>
-            </p9r-stack>
-        `;
-      overlay.style.display = "flex";
-    }
-    _showSuccess(overlay, endpointCount) {
-      const msg = endpointCount === null ? "Reachable — response is not an OpenAPI spec." : `Reachable — ${endpointCount} endpoint${endpointCount === 1 ? "" : "s"} found.`;
-      overlay.innerHTML = `
-            <p9r-stack gap="sm" align="center" justify="center">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
-                    stroke="var(--success-base, #10b981)" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
-                <p><strong>${msg}</strong></p>
-            </p9r-stack>
-        `;
-      overlay.style.display = "flex";
-      this._autoCloseTimer = setTimeout(() => this._hide(), 1500);
-    }
-    _showError(overlay, message) {
-      const safe = escapeHtml(message);
-      overlay.innerHTML = `
-            <p9r-stack gap="md" align="center" justify="center">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
-                    stroke="var(--danger-base, #ef4444)" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="15" y1="9" x2="9" y2="15" />
-                    <line x1="9" y1="9" x2="15" y2="15" />
-                </svg>
-                <p><strong>Connection failed</strong></p>
-                <p style="text-align: center; color: var(--text-muted, #94a3b8);">${safe}</p>
-                <p9r-button variant="ghost" data-action="test-back">Back</p9r-button>
-            </p9r-stack>
-        `;
-      overlay.style.display = "flex";
-    }
-    _hide() {
-      if (this._autoCloseTimer) {
-        clearTimeout(this._autoCloseTimer);
-        this._autoCloseTimer = null;
-      }
-      if (this._overlay)
-        this._overlay.style.display = "none";
-    }
-    _isInsideOverlay(el) {
-      return !!this._overlay && this._overlay.contains(el);
-    }
-  }
-  function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-  }
-  customElements.define("cms-test-connection", CmsTestConnection);
 
   // src/control/components/editor/componentSync/PageLink/PageLink.css
   var PageLink_default = `:host {
@@ -11457,7 +10794,7 @@ ${followMessage}`)) {
 `;
 
   // src/control/components/editor/componentSync/PageLink/template.ts
-  function buildShadow3(host, label) {
+  function buildShadow2(host, label) {
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = `
         <style>${PageLink_default}</style>
@@ -11636,11 +10973,11 @@ ${followMessage}`)) {
     host._options.forEach((li) => li.classList.toggle("selected", li.dataset.value === host._value));
   }
   function select(host, v, label) {
-    setValue3(host, v, label);
-    closePanel3(host);
+    setValue2(host, v, label);
+    closePanel2(host);
     host.dispatchEvent(new Event("change", { bubbles: true }));
   }
-  function setValue3(host, v, label) {
+  function setValue2(host, v, label) {
     host._value = v;
     const r = host._refs;
     r.display.textContent = v ? label : "No link";
@@ -11651,7 +10988,7 @@ ${followMessage}`)) {
     r.mediaCurrent.textContent = m ? v : "";
     r.mediaCurrent.classList.toggle("has-value", m);
   }
-  function openPanel3(host) {
+  function openPanel2(host) {
     document.querySelectorAll("p9r-link, p9r-select").forEach((el) => {
       if (el !== host && "_close" in el)
         el._close();
@@ -11668,7 +11005,7 @@ ${followMessage}`)) {
         host._refs.externalInput.focus();
     });
   }
-  function closePanel3(host) {
+  function closePanel2(host) {
     host._isOpen = false;
     host._refs.panel.classList.remove("open");
     host._refs.trigger.classList.remove("open");
@@ -11697,20 +11034,20 @@ ${followMessage}`)) {
     });
     r.externalInput.addEventListener("input", () => {
       const url = r.externalInput.value.trim();
-      setValue3(host, url, url || "No link");
+      setValue2(host, url, url || "No link");
       fire();
     });
     r.externalInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        closePanel3(host);
+        closePanel2(host);
       } else if (e.key === "Escape")
-        closePanel3(host);
+        closePanel2(host);
     });
     r.mediaPickBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       openMediaCenter(host, (src) => {
-        setValue3(host, src, mediaLabel(src));
+        setValue2(host, src, mediaLabel(src));
         fire();
       });
     });
@@ -11744,7 +11081,7 @@ ${followMessage}`)) {
     };
     constructor() {
       super();
-      this._refs = buildShadow3(this, this.getAttribute("label"));
+      this._refs = buildShadow2(this, this.getAttribute("label"));
       wire(this);
     }
     connectedCallback() {
@@ -11762,10 +11099,10 @@ ${followMessage}`)) {
       window.removeEventListener("click", this._onWindowClick);
     }
     _open() {
-      openPanel3(this);
+      openPanel2(this);
     }
     _close() {
-      closePanel3(this);
+      closePanel2(this);
     }
     async _loadPages() {
       this._pages = await fetchPages();
@@ -11780,15 +11117,15 @@ ${followMessage}`)) {
     set value(v) {
       if (isMedia(v)) {
         this._mode = "media";
-        setValue3(this, v, mediaLabel(v));
+        setValue2(this, v, mediaLabel(v));
       } else if (isExternal(v)) {
         this._mode = "external";
         this._refs.externalInput.value = v;
-        setValue3(this, v, v);
+        setValue2(this, v, v);
       } else {
         this._mode = "page";
         const m = this._pages.find((p) => p.path === v);
-        setValue3(this, v, m ? m.title : v || "No link");
+        setValue2(this, v, m ? m.title : v || "No link");
       }
       applyMode(this);
     }
@@ -16365,43 +15702,6 @@ form[method="dialog"] {
     };
   }
 
-  // src/control/core/editorSystem/installFetchProxy.ts
-  function installFetchProxy() {
-    const originalFetch = window.fetch.bind(window);
-    const basePath = getMetaBasePath();
-    const proxy = async (input, init) => {
-      const url = resolveUrl(input);
-      const method = resolveMethod(input, init);
-      const match = parseDataProxyUrl(url);
-      if (!match)
-        return originalFetch(input, init);
-      return originalFetch(`${basePath}/api/data/mock`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId: match.providerId, method, path: match.path })
-      });
-    };
-    window.fetch = proxy;
-    return () => {
-      if (window.fetch === proxy)
-        window.fetch = originalFetch;
-    };
-  }
-  function resolveUrl(input) {
-    if (typeof input === "string")
-      return new URL(input, location.href).href;
-    if (input instanceof URL)
-      return input.href;
-    return input.url;
-  }
-  function resolveMethod(input, init) {
-    if (init?.method)
-      return init.method.toUpperCase();
-    if (input instanceof Request)
-      return input.method.toUpperCase();
-    return "GET";
-  }
-
   // src/control/core/editorSystem/dirtyState.ts
   var _dirty = false;
   var _listeners = new Set;
@@ -17452,7 +16752,6 @@ form[method="dialog"] {
     _navGuardOff = null;
     _dirtyWatchOff = null;
     _linkIntercptOff = null;
-    _fetchProxyOff = null;
     constructor() {
       super();
       this.attachShadow({ mode: "open" });
@@ -17489,7 +16788,6 @@ form[method="dialog"] {
       this._navGuardOff?.();
       this._dirtyWatchOff?.();
       this._linkIntercptOff?.();
-      this._fetchProxyOff?.();
       clearEditorContext();
     }
     _installEditorContext(workingElement) {
@@ -17500,7 +16798,6 @@ form[method="dialog"] {
       this._navGuardOff = installNavigationGuard();
       this._dirtyWatchOff = watchForDirty(workingElement);
       this._linkIntercptOff = installLinkInterceptor();
-      this._fetchProxyOff = installFetchProxy();
       fetch(`${getMetaBasePath()}/api/page/list`).then((r) => r.ok ? r.json() : []).then((list) => {
         if (!Array.isArray(list))
           return;
@@ -17726,7 +17023,7 @@ dialog::backdrop {
 `;
 
   // src/control/components/editor/EditorSystem/EditorRoot/TemplatePicker/TemplatePicker.ts
-  var ICON2 = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
+  var ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
 
   class TemplatePicker extends HTMLElement {
     _dialog = null;
@@ -17790,8 +17087,8 @@ dialog::backdrop {
             <div class="list">
                 ${items.map((t) => `
                     <button type="button" class="card" data-id="${t.id}">
-                        <span class="icon">${ICON2}</span>
-                        <span class="name">${escapeHtml2(t.name)}</span>
+                        <span class="icon">${ICON}</span>
+                        <span class="name">${escapeHtml(t.name)}</span>
                     </button>
                 `).join("")}
             </div>
@@ -17825,7 +17122,7 @@ dialog::backdrop {
       r?.(html);
     }
   }
-  function escapeHtml2(s2) {
+  function escapeHtml(s2) {
     return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   if (!customElements.get("cms-template-picker")) {
@@ -18632,42 +17929,45 @@ dialog::backdrop {
   }
 
   // src/control/components/media/GridMedia/api/client.ts
-  function media() {
-    const m = window._cms?.CDN;
-    if (!m) {
-      throw new Error("window._cms.CDN is not available. Check that the admin page loaded /<basePath>/_cms/media.js.");
-    }
-    return m;
+  function filesBase() {
+    return `${getMetaBasePath()}/api/files`;
+  }
+  function rawUrl(id) {
+    return `${filesBase()}/raw?id=${encodeURIComponent(id)}`;
   }
   function toLocal(item) {
+    const isImage = item.type === "file" && (item.mimeType?.startsWith("image/") ?? false);
     const local = {
       id: item.id,
-      type: item.type === "folder" ? "folder" : item.type === "image" ? "image" : "other",
+      type: item.type === "folder" ? "folder" : isImage ? "image" : "other",
       label: item.name
     };
-    if (item.type !== "folder") {
+    if (item.type === "file") {
       local.mimetype = item.mimeType;
       local.size = item.size;
-      local.absoluteURL = item.absoluteURL;
-    }
-    if (item.type === "image") {
-      local.width = item.imageInfo.width;
-      local.height = item.imageInfo.height;
+      local.absoluteURL = rawUrl(item.id);
     }
     return local;
   }
 
   // src/control/components/media/GridMedia/api/read.ts
   async function fetchItems(folder, types) {
-    const res = await media().getItems({
-      folderID: folder ?? undefined,
-      accept: expandAccept(types),
-      pagination: { page: 1, limit: 1e4 },
-      sortBy: "name"
-    });
+    const url = new URL(filesBase(), window.location.origin);
+    if (folder)
+      url.searchParams.set("parentId", folder);
+    const accept = expandAccept(types);
+    if (accept)
+      url.searchParams.set("accept", accept);
+    url.searchParams.set("sortBy", "name");
+    url.searchParams.set("limit", "10000");
+    const res = await fetch(url.toString());
     if (!res.ok)
       return [];
-    const items = res.data.items.map(toLocal);
+    const page = await res.json();
+    let items = page.items.map(toLocal);
+    if (types && types.length > 0) {
+      items = items.filter((i) => types.includes(i.type));
+    }
     items.sort((a2, b) => {
       if (a2.type === "folder" && b.type !== "folder")
         return -1;
@@ -18678,54 +17978,53 @@ dialog::backdrop {
     return items;
   }
   function expandAccept(types) {
-    const all = [
-      "folder",
-      "image",
-      "video",
-      "audio",
-      "pdf",
-      "document",
-      "text",
-      "archive",
-      "other"
-    ];
     if (!types || types.length === 0)
-      return all;
-    const out = [];
+      return;
+    const accept = new Set;
     if (types.includes("folder"))
-      out.push("folder");
-    if (types.includes("image"))
-      out.push("image");
-    if (types.includes("other"))
-      out.push("video", "audio", "pdf", "document", "text", "archive", "other");
-    return out;
+      accept.add("folder");
+    if (types.includes("image") || types.includes("other"))
+      accept.add("file");
+    return accept.size > 0 ? [...accept].join(",") : undefined;
   }
   async function resolveBreadcrumbTrail(id) {
     const trail = [];
     let currentId = id;
     while (currentId) {
-      const res = await media().getItem(currentId);
+      const url = new URL(`${filesBase()}/item`, window.location.origin);
+      url.searchParams.set("id", currentId);
+      const res = await fetch(url.toString());
       if (!res.ok)
         break;
-      const item = res.data;
+      const item = await res.json();
       trail.unshift({ id: item.id, label: item.name });
-      currentId = item.parentFolderID;
+      currentId = item.parentId;
     }
     return trail;
   }
   // src/control/components/media/GridMedia/api/write.ts
   async function renameItem(id, label) {
-    const res = await media().updateItem({ id, name: label });
+    const url = new URL(filesBase(), window.location.origin);
+    url.searchParams.set("id", id);
+    const res = await fetch(url.toString(), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: label })
+    });
     return res.ok;
   }
   async function deleteItem(id) {
-    const res = await media().deleteItem({ id, recursive: true });
+    const url = new URL(filesBase(), window.location.origin);
+    url.searchParams.set("id", id);
+    url.searchParams.set("recursive", "true");
+    const res = await fetch(url.toString(), { method: "DELETE" });
     return res.ok;
   }
   async function createFolder(label, parent) {
-    const res = await media().createFolder({
-      name: label,
-      ...parent ? { parentFolderID: parent } : {}
+    const res = await fetch(`${filesBase()}/folder`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: label, parentId: parent })
     });
     return res.ok;
   }
@@ -18738,15 +18037,15 @@ dialog::backdrop {
       const file = files.item(i);
       if (!file)
         continue;
-      const res = await media().uploadFile({
-        data: file,
-        name: file.name,
-        mimeType: file.type || "application/octet-stream",
-        size: file.size,
-        ...folder ? { folderID: folder } : {}
-      });
-      if (res.ok)
-        _localPreview.set(res.data.id, URL.createObjectURL(file));
+      const form = new FormData;
+      form.append("file", file);
+      if (folder)
+        form.append("parentId", folder);
+      const res = await fetch(`${filesBase()}/upload`, { method: "POST", body: form });
+      if (res.ok) {
+        const item = await res.json();
+        _localPreview.set(item.id, URL.createObjectURL(file));
+      }
     }
   }
   async function saveItemMetadata(id, data) {
@@ -18754,10 +18053,16 @@ dialog::backdrop {
     if (typeof data["label"] === "string")
       patch.name = data["label"];
     if (typeof data["parent"] === "string")
-      patch.parentFolderID = data["parent"];
+      patch.parentId = data["parent"];
     if (Object.keys(patch).length === 0)
       return true;
-    const res = await media().updateItem({ id, ...patch });
+    const url = new URL(filesBase(), window.location.origin);
+    url.searchParams.set("id", id);
+    const res = await fetch(url.toString(), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch)
+    });
     return res.ok;
   }
   // src/control/components/media/GridMedia/types.ts
@@ -18768,7 +18073,7 @@ dialog::backdrop {
       return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   }
-  function escapeHtml3(s2) {
+  function escapeHtml2(s2) {
     return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
   function escapeAttr(s2) {
@@ -18833,9 +18138,9 @@ dialog::backdrop {
       const isLast = i === breadcrumb.length - 1;
       html += `<span class="bc-sep">/</span>`;
       if (isLast) {
-        html += `<span class="bc-current">${escapeHtml3(crumb.label)}</span>`;
+        html += `<span class="bc-current">${escapeHtml2(crumb.label)}</span>`;
       } else {
-        html += `<span class="bc-item" data-folder="${escapeAttr(crumb.id)}" data-index="${i}">${escapeHtml3(crumb.label)}</span>`;
+        html += `<span class="bc-item" data-folder="${escapeAttr(crumb.id)}" data-index="${i}">${escapeHtml2(crumb.label)}</span>`;
       }
     }
     container.innerHTML = html;
@@ -22040,12 +21345,12 @@ button.active svg {
         ${isImage ? `
         <div class="detail-field">
             <label>Alt text</label>
-            <textarea id="detail-alt" rows="2">${escapeHtml3(item.alt || "")}</textarea>
+            <textarea id="detail-alt" rows="2">${escapeHtml2(item.alt || "")}</textarea>
         </div>` : ""}
         <div class="detail-meta-row">
             <div class="detail-field">
                 <label>Type</label>
-                <span class="detail-value">${escapeHtml3(item.mimetype || item.type)}</span>
+                <span class="detail-value">${escapeHtml2(item.mimetype || item.type)}</span>
             </div>
             <div class="detail-field">
                 <label>Size</label>
@@ -22055,12 +21360,12 @@ button.active svg {
         ${dims ? `
         <div class="detail-field">
             <label>Dimensions</label>
-            <span class="detail-value">${escapeHtml3(dims)}</span>
+            <span class="detail-value">${escapeHtml2(dims)}</span>
         </div>` : ""}
         <div class="detail-field">
             <label>URL</label>
             <div class="url-row">
-                <span class="detail-value mono">${escapeHtml3(mediaUrl)}</span>
+                <span class="detail-value mono">${escapeHtml2(mediaUrl)}</span>
                 <button class="btn-copy" id="btn-copy" title="Copy URL">${ICON_COPY}</button>
             </div>
         </div>
@@ -22281,7 +21586,7 @@ button.active svg {
 
   // src/control/components/media/MediaAdmin/MediaAdmin.html
   var MediaAdmin_default = `<w13c-fixed-admin-layout>
-    <span slot="title">Media</span>
+    <span slot="title">Files</span>
     <p9r-open-modal slot="action" modal-target="cms-media-new-folder">
         <p9r-button>+ New folder</p9r-button>
     </p9r-open-modal>
@@ -22343,12 +21648,8 @@ button.active svg {
       const name = input?.value?.trim();
       if (!name)
         return;
-      const folder = this._currentFolder();
-      const res = await this._media().createFolder({
-        name,
-        ...folder ? { parentFolderID: folder } : {}
-      });
-      if (!res.ok)
+      const ok = await createFolder(name, this._currentFolder());
+      if (!ok)
         return;
       if (input)
         input.value = "";
@@ -22357,12 +21658,6 @@ button.active svg {
     }
     _currentFolder() {
       return new URL(window.location.href).searchParams.get("folder");
-    }
-    _media() {
-      const m = window._cms?.CDN;
-      if (!m)
-        throw new Error("window._cms.CDN missing — admin must load /<basePath>/_cms/media.js first");
-      return m;
     }
   }
   if (!customElements.get("cms-media-admin"))
@@ -23273,397 +22568,4 @@ button.active svg {
     }
   }
   customElements.define("cms-json-editor", JsonEditor);
-
-  // src/control/components/data/MockupCreate/MockupCreate.ts
-  class MockupCreate extends HTMLElement {
-    _responses = [];
-    _statusEl = null;
-    _bodyEl = null;
-    connectedCallback() {
-      this.innerHTML = TEMPLATE;
-      const form = this.querySelector("form");
-      this._statusEl = this.querySelector('p9r-select[name="status"]');
-      this._bodyEl = this.querySelector('cms-json-editor[name="body"]');
-      form.addEventListener("submit", (e) => this._onSubmit(e));
-      this._statusEl?.addEventListener("change", () => this._syncBody());
-      this._loadEndpoint().catch(() => this._fallback());
-    }
-    async _loadEndpoint() {
-      const params = new URLSearchParams(window.location.search);
-      if (!params.get("id") || !params.get("method") || !params.get("path")) {
-        this._fallback();
-        return;
-      }
-      const url = buildRequestUrl("/api/data/provider/endpoint");
-      const res = await fetch(url);
-      if (!res.ok) {
-        this._fallback();
-        return;
-      }
-      const data = await res.json();
-      this._responses = Array.isArray(data.responses) && data.responses.length > 0 ? data.responses : [defaultResponse()];
-      this._renderStatusOptions();
-      this._syncBody();
-    }
-    _fallback() {
-      this._responses = [defaultResponse()];
-      this._renderStatusOptions();
-      this._syncBody();
-    }
-    _renderStatusOptions() {
-      if (!this._statusEl)
-        return;
-      this._statusEl.innerHTML = this._responses.map((r) => `<option value="${escapeAttr2(r.status)}">${escapeAttr2(r.status)}${r.description ? " — " + escapeAttr2(r.description) : ""}</option>`).join("");
-    }
-    _syncBody() {
-      if (!this._statusEl || !this._bodyEl)
-        return;
-      const value = this._statusEl.value || this._responses[0]?.status || "200";
-      const picked = this._responses.find((r) => r.status === value) ?? this._responses[0];
-      if (!picked)
-        return;
-      this._bodyEl.schema = picked.schema;
-      this._bodyEl.value = picked.defaultBody;
-    }
-    async _onSubmit(e) {
-      e.preventDefault();
-      const form = e.target;
-      const data = Object.fromEntries(new FormData(form).entries());
-      const url = buildRequestUrl("/api/data/provider/mockup");
-      try {
-        const res = await fetch(url.toString(), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-        if (!res.ok) {
-          this.dispatchEvent(new BubblesEvent("form:failed"));
-          return;
-        }
-        form.reset();
-        this.dispatchEvent(new BubblesEvent("form:success"));
-        document.dispatchEvent(new BubblesEvent("mockup:created"));
-      } catch {
-        this.dispatchEvent(new BubblesEvent("form:failed"));
-      }
-    }
-  }
-  function defaultResponse() {
-    return { status: "200", description: "", defaultBody: "{}", schema: null };
-  }
-  function escapeAttr2(s2) {
-    return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-  var TEMPLATE = `
-<form>
-    <p9r-stack gap="md">
-        <p9r-input name="name" label="Name" placeholder="default" required></p9r-input>
-        <p9r-select name="status" label="HTTP status"></p9r-select>
-        <label class="json-label" style="display: block; margin-top: 0.25rem;">Body</label>
-        <cms-json-editor name="body"></cms-json-editor>
-        <p9r-button color="primary" fullWidth type="submit">Create</p9r-button>
-    </p9r-stack>
-</form>
-`;
-  customElements.define("cms-mockup-create", MockupCreate);
-
-  // ../cdn-buckets/src/core/proxy/rules/templates.ts
-  var RULE_TEMPLATES = [
-    {
-      label: "Empty (catch-all forward)",
-      description: "Forwards everything to the upstream as-is. No auth, no transformation.",
-      rules: { paths: {} },
-      secrets: {}
-    },
-    {
-      label: "Bearer token",
-      description: "Authorization: Bearer <token> injected on every request. Used by Stripe, OpenAI, GitHub, …",
-      rules: {
-        defaults: { on_request: [
-          { type: "inject_header", name: "Authorization", value: "Bearer ${env:API_TOKEN}" }
-        ] },
-        paths: {}
-      },
-      secrets: { API_TOKEN: "" }
-    },
-    {
-      label: "API key in header (Supabase-style)",
-      description: "Custom header like 'apikey' or 'X-API-Key' on every request.",
-      rules: {
-        defaults: { on_request: [
-          { type: "inject_header", name: "apikey", value: "${env:API_KEY}" }
-        ] },
-        paths: {}
-      },
-      secrets: { API_KEY: "" }
-    },
-    {
-      label: "Multi-header auth",
-      description: "Two headers — e.g. Supabase wants both 'apikey' and 'Authorization: Bearer <jwt>'.",
-      rules: {
-        defaults: { on_request: [
-          { type: "inject_header", name: "apikey", value: "${env:API_KEY}" },
-          { type: "inject_header", name: "Authorization", value: "Bearer ${env:API_TOKEN}" }
-        ] },
-        paths: {}
-      },
-      secrets: { API_KEY: "", API_TOKEN: "" }
-    },
-    {
-      label: "Auth on /api/* only (public assets pass through)",
-      description: "Public paths reach the upstream unauthenticated. Only /api/** gets the bearer.",
-      rules: {
-        paths: {
-          "/api/**": { on_request: [
-            { type: "inject_header", name: "Authorization", value: "Bearer ${env:API_TOKEN}" }
-          ] }
-        }
-      },
-      secrets: { API_TOKEN: "" }
-    },
-    {
-      label: "OAuth login + httpOnly cookie session (Supabase magic link)",
-      description: "POST /auth/v1/token captures access_token + refresh_token from JSON into httpOnly cookies; /rest/v1/* requires the session cookie + injects Bearer.",
-      rules: {
-        defaults: { on_request: [
-          { type: "inject_header", name: "apikey", value: "${env:API_KEY}" }
-        ] },
-        paths: {
-          "/auth/v1/token": {
-            methods: ["POST"],
-            on_response: [
-              {
-                type: "extract_json",
-                field: "access_token",
-                action: {
-                  type: "set_cookie",
-                  name: "sb-access-token",
-                  attributes: { max_age: 3600, http_only: true, secure: true, same_site: "Lax", path: "/" }
-                }
-              },
-              {
-                type: "extract_json",
-                field: "refresh_token",
-                action: {
-                  type: "set_cookie",
-                  name: "sb-refresh-token",
-                  attributes: { max_age: 2592000, http_only: true, secure: true, same_site: "Lax", path: "/" }
-                }
-              },
-              { type: "strip_body_fields", fields: ["access_token", "refresh_token"] }
-            ]
-          },
-          "/rest/v1/*": {
-            on_request: [
-              {
-                type: "require_cookie",
-                name: "sb-access-token",
-                on_missing: { type: "redirect", url: "/.cms/data/<provider>/login?redirectTo={original_url}" }
-              },
-              {
-                type: "cookie_to_header",
-                cookie_name: "sb-access-token",
-                header_name: "Authorization",
-                prefix: "Bearer "
-              }
-            ]
-          }
-        }
-      },
-      secrets: { API_KEY: "" }
-    }
-  ];
-
-  // src/control/components/data/ProviderRules/ProviderRules.ts
-  class CmsDataProviderRules extends HTMLElement {
-    _rules;
-    _errors;
-    _list;
-    _validateUrl() {
-      return this.getAttribute("validate-url");
-    }
-    connectedCallback() {
-      if (this.querySelector("textarea"))
-        return;
-      const initial = this._readInitial();
-      const options = RULE_TEMPLATES.map((t, i) => `<option value="${i}">${escapeAttr3(t.label)}</option>`).join("");
-      this.innerHTML = `
-            <style>
-                cms-data-provider-rules { display: block; }
-                cms-data-provider-rules .ruleslayout {
-                    display: grid; gap: 0.85rem;
-                }
-                cms-data-provider-rules label.dprules-label {
-                    display: grid; gap: 0.4rem; font-size: 0.95rem;
-                }
-                cms-data-provider-rules .template-picker,
-                cms-data-provider-rules input,
-                cms-data-provider-rules textarea {
-                    padding: 0.55rem 0.65rem;
-                    font: inherit;
-                    font-size: 0.95rem;
-                    border: 1px solid #ccc;
-                    border-radius: 4px;
-                }
-                cms-data-provider-rules textarea {
-                    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-                    font-size: 0.95rem;
-                    line-height: 1.45;
-                    min-height: 360px;
-                    width: 100%; box-sizing: border-box;
-                    resize: vertical;
-                }
-                cms-data-provider-rules .template-hint { color: #666; font-style: italic; min-height: 1em; font-size: 0.85rem; }
-                cms-data-provider-rules .errors { font-size: 0.85rem; min-height: 1em; color: #c00; font-family: ui-monospace, monospace; }
-                cms-data-provider-rules .errors[data-state="ok"] { color: #047857; }
-                cms-data-provider-rules fieldset.secrets {
-                    border: 1px solid #e5e7eb; padding: 0.85rem 0.85rem 0.7rem;
-                    border-radius: 4px; font-size: 0.95rem;
-                }
-                cms-data-provider-rules fieldset.secrets legend { padding: 0 0.4rem; font-size: 0.95rem; }
-                cms-data-provider-rules .secret-row {
-                    display: grid; grid-template-columns: 1fr 1fr auto;
-                    gap: 0.5rem; margin-bottom: 0.5rem;
-                }
-                cms-data-provider-rules .secret-row input { width: 100%; box-sizing: border-box; }
-                cms-data-provider-rules .secret-row .remove {
-                    background: transparent; border: 1px solid #fca5a5; color: #c00;
-                    padding: 0 0.7rem; cursor: pointer; border-radius: 4px; font-size: 1.1rem;
-                }
-                cms-data-provider-rules .add-secret {
-                    background: transparent; border: 1px dashed #9ca3af; color: #374151;
-                    padding: 0.45rem 0.7rem; cursor: pointer; border-radius: 4px; font-size: 0.9rem;
-                }
-            </style>
-            <div class="ruleslayout">
-                <label class="dprules-label">
-                    <span>start from a template</span>
-                    <select class="template-picker">
-                        <option value="" disabled selected>— pick a starting point —</option>
-                        ${options}
-                    </select>
-                    <small class="template-hint"></small>
-                </label>
-                <label class="dprules-label">
-                    <span>rules <small>(JSON, validated on blur)</small></span>
-                    <textarea name="rules" spellcheck="false"></textarea>
-                </label>
-                <div class="errors" role="status" aria-live="polite"></div>
-                <fieldset class="secrets">
-                    <legend>secrets <small>(envName → cleartext)</small></legend>
-                    <div class="secrets-list"></div>
-                    <button type="button" class="add-secret">+ Add secret</button>
-                </fieldset>
-            </div>`;
-      this._rules = this.querySelector("textarea");
-      this._errors = this.querySelector(".errors");
-      this._list = this.querySelector(".secrets-list");
-      const picker = this.querySelector(".template-picker");
-      const hint = this.querySelector(".template-hint");
-      this._rules.value = JSON.stringify(initial.rules, null, 2);
-      for (const [k, v] of Object.entries(initial.secrets))
-        this._addRow(k, v);
-      if (Object.keys(initial.secrets).length === 0)
-        this._addRow();
-      this._rules.addEventListener("blur", () => void this._validate());
-      this.querySelector(".add-secret").addEventListener("click", () => this._addRow());
-      picker.addEventListener("change", () => this._applyTemplate(Number(picker.value), hint));
-    }
-    _applyTemplate(idx, hint) {
-      const tpl = RULE_TEMPLATES[idx];
-      if (!tpl)
-        return;
-      this._rules.value = JSON.stringify(tpl.rules, null, 2);
-      this._list.innerHTML = "";
-      for (const [k, v] of Object.entries(tpl.secrets))
-        this._addRow(k, v);
-      if (Object.keys(tpl.secrets).length === 0)
-        this._addRow();
-      hint.textContent = tpl.description;
-      this._validate();
-    }
-    _readInitial() {
-      const raw = this.getAttribute("initial");
-      if (!raw)
-        return { rules: { paths: {} }, secrets: {} };
-      try {
-        const parsed = JSON.parse(raw);
-        return { rules: parsed.rules ?? { paths: {} }, secrets: parsed.secrets ?? {} };
-      } catch {
-        return { rules: { paths: {} }, secrets: {} };
-      }
-    }
-    _addRow(envName = "", value = "") {
-      const row = document.createElement("div");
-      row.className = "secret-row";
-      row.innerHTML = `
-            <input type="text"     class="env"   placeholder="ENV_NAME" value="${escapeAttr3(envName)}">
-            <input type="password" class="value" placeholder="cleartext" value="${escapeAttr3(value)}">
-            <button type="button" class="remove" aria-label="Remove">×</button>`;
-      const env = row.querySelector(".env");
-      const val = row.querySelector(".value");
-      const sync = () => {
-        const trimmed = env.value.trim();
-        val.name = trimmed ? `secrets.${trimmed}` : "";
-      };
-      env.addEventListener("input", sync);
-      env.addEventListener("blur", () => void this._validate());
-      val.addEventListener("blur", () => void this._validate());
-      row.querySelector(".remove").addEventListener("click", () => {
-        row.remove();
-        this._validate();
-      });
-      sync();
-      this._list.appendChild(row);
-    }
-    async _validate() {
-      const url = this._validateUrl();
-      if (!url)
-        return;
-      let rules;
-      try {
-        rules = JSON.parse(this._rules.value);
-      } catch (e) {
-        this._show({ ok: false, errors: [{ path: "$", message: `not valid JSON: ${e.message}` }] });
-        return;
-      }
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rules, secrets: this._collectSecrets() })
-        });
-        const body = await res.json();
-        this._show(body);
-      } catch (err) {
-        this._show({ ok: false, errors: [{ path: "$", message: `network: ${err.message}` }] });
-      }
-    }
-    _show(res) {
-      if (res.ok) {
-        this._errors.setAttribute("data-state", "ok");
-        this._errors.textContent = res.referenced.length === 0 ? "Valid. No secrets referenced." : `Valid. References: ${res.referenced.join(", ")}.`;
-      } else {
-        this._errors.removeAttribute("data-state");
-        const e = res.errors[0];
-        this._errors.textContent = `${e.path}: ${e.message}`;
-      }
-    }
-    _collectSecrets() {
-      const out = {};
-      for (const row of Array.from(this._list.querySelectorAll(".secret-row"))) {
-        const env = row.querySelector(".env").value.trim();
-        const val = row.querySelector(".value").value;
-        if (env)
-          out[env] = val;
-      }
-      return out;
-    }
-  }
-  function escapeAttr3(s2) {
-    return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-  }
-  if (!customElements.get("cms-data-provider-rules")) {
-    customElements.define("cms-data-provider-rules", CmsDataProviderRules);
-  }
 })();
