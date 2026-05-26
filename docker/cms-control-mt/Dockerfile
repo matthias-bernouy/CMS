@@ -56,10 +56,10 @@ RUN chmod +x /usr/local/bin/cms-entrypoint.sh
 VOLUME ["/var/lib/cms"]
 EXPOSE 80 443
 
-# Healthcheck — superadmin landing page returns 302 to login when un-auth.
-# That's a 3xx → curl -f stays happy.
+# Healthcheck — liveness probe (the superadmin surface is gone; provisioning
+# is hub-driven). Returns 200.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
-    CMD curl -fsS -o /dev/null http://127.0.0.1:3000/superadmin/ || exit 1
+    CMD curl -fsS -o /dev/null http://127.0.0.1:3000/health || exit 1
 
 # Boot chain: okms-fetch (mTLS pull from OVHcloud Secret Manager) →
 # cms-entrypoint (existing service orchestration). All env vars consumed

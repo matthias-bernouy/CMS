@@ -1,14 +1,11 @@
 import type { Db } from "mongodb";
-import type { Authentication, Runner, SecretCrypto } from "@bernouy/core";
+import type { Runner, SecretCrypto } from "@bernouy/core";
 import type { Tenant } from "src/interfaces/Tenant";
 import type { TenantRepository } from "src/interfaces/TenantRepository";
 import { mountTenant, type MountedTenant, type TenantRole } from "src/core/tenant/mountTenant";
 import { unmountTenant } from "src/core/tenant/unmountTenant";
 import { purgeTenantData } from "src/core/tenant/purgeTenantData";
-import { mountSuperadminSurface } from "src/core/superadmin/mountSuperadminSurface";
 import type { TenantCreateDto } from "src/core/validation/tenant/parseCreateDto";
-
-export type SuperadminRole = "superadmin" | "user";
 
 export type MtControlCmsDeps = {
     runner:     Runner;
@@ -16,10 +13,6 @@ export type MtControlCmsDeps = {
     /** Public origin (https://platform.com) used by every tenant's Keycloak callback URLs. */
     appBaseUrl: string;
     tenantRepo: TenantRepository;
-    /** Auth for the `/superadmin/*` surface. Distinct from per-tenant Keycloaks.
-     *  Typically a `CompositeAuthentication` of the superadmin Keycloak cookie + bearer JWT
-     *  (the bearer leg accepts service-account tokens from a "central hub"). */
-    superadminAuth: Authentication<SuperadminRole>;
     /** Envelope-encryption surface used by every per-tenant `SecretStore`.
      *  Typically `new EnvelopeSecretCrypto(kekProvider, dekRepo)` where
      *  `kekProvider` is `OvhOkmsKekProvider` (Customer Managed Key in OVH
@@ -32,9 +25,10 @@ export type MtControlCmsDeps = {
 /**
  * Multi-tenant orchestrator. Holds the shared infrastructure (one runner,
  * one Db, one MongoClient) and lazily mounts/unmounts per-tenant CMS
- * Control instances on demand. Adding a tenant via the superadmin UI
- * triggers `addTenant`, which writes the row, mounts the routes, and
- * makes the tenant immediately reachable — no restart.
+ * Control instances on demand. Provisioning is driven by the hub (via the
+ * `cms-control` tenant-provisioner's `onProvision`/`onDeprovision` hooks,
+ * which call `addTenant`/`removeTenant`) — there is no in-process superadmin
+ * surface; the tenant registry is a hub-fed runtime store.
  */
 export class MtControlCms {
 
@@ -42,7 +36,6 @@ export class MtControlCms {
     private readonly _db:             Db;
     private readonly _appBaseUrl:     string;
     private readonly _tenantRepo:     TenantRepository;
-    private readonly _superadminAuth: Authentication<SuperadminRole>;
     private readonly _secretCrypto:   SecretCrypto;
     private readonly _mounted:        Map<string, MountedTenant> = new Map();
 
@@ -51,23 +44,21 @@ export class MtControlCms {
         this._db             = deps.db;
         this._appBaseUrl     = deps.appBaseUrl;
         this._tenantRepo     = deps.tenantRepo;
-        this._superadminAuth = deps.superadminAuth;
         this._secretCrypto   = deps.secretCrypto;
     }
 
-    /** Read-only accessors — used by superadmin endpoints. */
-    get runner():         Runner                          { return this._runner; }
-    get db():             Db                              { return this._db; }
-    get appBaseUrl():     string                          { return this._appBaseUrl; }
-    get tenantRepo():     TenantRepository                { return this._tenantRepo; }
-    get superadminAuth(): Authentication<SuperadminRole>  { return this._superadminAuth; }
+    /** Read-only accessors — used by the provisioning connector. */
+    get runner():     Runner            { return this._runner; }
+    get db():         Db                { return this._db; }
+    get appBaseUrl(): string            { return this._appBaseUrl; }
+    get tenantRepo(): TenantRepository  { return this._tenantRepo; }
 
     /**
-     * Mount the superadmin surface AND every tenant currently in the
-     * registry. Call once at boot, before `runner.start()`.
+     * Mount every tenant currently in the registry. Call once at boot,
+     * before `runner.start()`. The hub does NOT re-run `onProvision` after a
+     * restart, so this boot-mount is what brings existing tenants back online.
      */
     async init(): Promise<void> {
-        await mountSuperadminSurface(this);
         const tenants = await this._tenantRepo.list();
         for (const t of tenants) await this._mount(t);
     }
