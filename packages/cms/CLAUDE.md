@@ -217,10 +217,6 @@ Lives under `src/delivery/`.
 - **Delivery never serves media bytes.** Images referenced from page content resolve to absolute URLs on the storage backend (the bucket on cdn-edge). Variant URLs are computed at build time by `HttpVariantGenerator`. There is no `/media?id=X` endpoint on the Delivery runner.
 - `DeliveryCache` is an isolated `InMemoryCache`-equivalent scoped to Delivery (own file, own DEV bypass). Cache key for pages is `P9R_CACHE.page(path)`.
 
-### Diagnostic agent
-
-`registerDiagnostic(...)` (`src/diagnostic/registerDiagnostic.ts`) is an **opt-in** Web Vitals collector that registers itself as a `HeadInjector`. Useful for collecting CWV signal in production without touching every page. Imported via `@bernouy/cms` main barrel.
-
 ## Shared infrastructure (`src/socle/`)
 
 - `interfaces/` — `CmsRepository`, `Cache`, `KVStore`, `SecretStore`, `ProxyPublisher`, `models` (`TPage`, `TBloc`, `TTemplate`, `TSnippet`, `TSystem`), `Data/`.

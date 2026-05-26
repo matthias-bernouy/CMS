@@ -27,9 +27,6 @@ export { BuildEnhancer }        from "./src/delivery/build/BuildEnhancer";
 export { HttpVariantGenerator } from "./src/delivery/build/HttpVariantGenerator";
 export { pageBucketName, pagePublicPath } from "./src/delivery/build/pathSlug";
 
-// ── Diagnostic (opt-in Web Vitals agent, depends on Delivery's HeadInjector) ──
-export { registerDiagnostic } from "./src/diagnostic/registerDiagnostic";
-
 // ── Default providers ──────────────────────────────────────────────────
 export { InMemoryCmsRepository } from "./src/socle/default-implementation/CmsRepository/memory";
 export { MongoCmsRepository } from "./src/socle/default-implementation/CmsRepository/mongodb";
