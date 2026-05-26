@@ -103,6 +103,21 @@ Manager OVHcloud → ton OKMS domain → Secrets → New secret.
 | `SUPERADMIN_KEYCLOAK_SESSION_SECRET` | `openssl rand -hex 32` |
 | `SUPERADMIN_KEYCLOAK_ADMIN_ROLE` | `cms-superadmin` |
 | `CMS_KEK_KEY_ID` | UUID de la **service key** OVH créée au §6 (CMK pour les secrets tenant) |
+| `CMS_ADMIN_OIDC_ISSUER` | issuer du realm **partagé** d'auth admin (ex. `https://auth.bernouy.com/realms/cms-admin`) — un seul pour tous les tenants |
+| `CMS_ADMIN_OIDC_CLIENT_ID` | client confidentiel partagé pour le login admin (redirect-URI **wildcard** `…/cms/*/auth/*`) |
+| `CMS_ADMIN_OIDC_CLIENT_SECRET` | secret de ce client |
+| `CMS_ADMIN_OIDC_SESSION_SECRET` | `openssl rand -hex 32` — signe les cookies de session admin (tous tenants) |
+| `CMS_ADMIN_OIDC_CLI_CLIENT_ID` | *(optionnel)* client public pour `p9r login` (défaut `<clientId>-cli`) |
+| `CMS_S3_BUCKET` | bucket S3-compatible **partagé** pour les médias (isolation par préfixe de clé `tenant_<id>/`) |
+| `CMS_S3_ACCESS_KEY_ID` | access key S3 |
+| `CMS_S3_SECRET_ACCESS_KEY` | secret key S3 |
+| `CMS_S3_REGION` | région (ex. `gra` chez OVH) |
+| `CMS_S3_ENDPOINT` | endpoint non-AWS (ex. OVH `https://s3.gra.io.cloud.ovh.net`) — omis pour AWS |
+
+> Médias : si `CMS_S3_BUCKET` est absent, fallback sur `CMS_FILES_DIR` (dossier
+> local) — déconseillé en prod multi-node (non partagé entre instances).
+> Authz admin : l'OIDC ci-dessus n'**authentifie** que ; les rôles sont gérés
+> par le CMS (admin ssi email vérifié ∈ member set, seedé via `initialAdminEmail`).
 
 ### 5b. Générer un access certificate dédié à cms-control-mt
 

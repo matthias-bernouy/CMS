@@ -1,15 +1,7 @@
-// One row in the platform's tenant registry. Each tenant brings its own
-// Keycloak realm; the data layer is the shared Mongo Db with per-tenant
-// collection prefix (see `mountTenant`).
-
-export type TenantKeycloak = {
-    issuer:        string;
-    clientId:      string;
-    clientSecret:  string;
-    sessionSecret: string;
-    /** Public client used by the `p9r login` Device Authorization Grant. */
-    cliClientId?:  string;
-};
+// One row in the platform's tenant registry. Admin OIDC is platform-level
+// (one shared realm + client, see `AdminOidcConfig`), not stored per-tenant.
+// The data layer is the shared Mongo Db with per-tenant collection prefix
+// (see `mountTenant`).
 
 export type TenantDelivery = {
     /** Optional public host (`acme.com`) — used when rewriting absolute URLs in pages. */
@@ -34,7 +26,6 @@ export type Tenant = {
     name:      string;
     createdAt: Date;
     updatedAt: Date;
-    keycloak:  TenantKeycloak;
     /** Optional Delivery wiring — fillable later, opt-in via `enabled`. */
     delivery?: TenantDelivery;
 };

@@ -1,7 +1,6 @@
-import { randomBytes } from "node:crypto";
 import type { Db } from "mongodb";
 import type { Runner, SecretCrypto } from "@bernouy/core";
-import type { Tenant, TenantKeycloak } from "src/interfaces/Tenant";
+import type { Tenant } from "src/interfaces/Tenant";
 import type { TenantRepository } from "src/interfaces/TenantRepository";
 import { mountTenant, type MountedTenant, type TenantRole } from "src/core/tenant/mountTenant";
 import { unmountTenant } from "src/core/tenant/unmountTenant";
@@ -9,20 +8,33 @@ import { purgeTenantData } from "src/core/tenant/purgeTenantData";
 import { seedAdmin } from "src/core/tenant/members";
 
 /**
- * What a provisioner passes to mount a tenant. `sessionSecret` is omitted —
- * that cookie-signing secret is platform-internal, owned by the runtime
- * (generated on first provision, persisted, reused on remount). Authorization
- * is by email: `initialAdminEmail` is seeded as the tenant's first CMS admin.
+ * Shared, platform-level admin OIDC. Configured **once** at the runtime's
+ * composition root (one realm + one confidential client for all tenants), not
+ * per-tenant. Keycloak is authentication only; authorization is by email,
+ * seeded per-tenant via `initialAdminEmail`. The shared client uses a wildcard
+ * redirect URI so each tenant keeps its own auth basePath + cookie name.
+ */
+export type AdminOidcConfig = {
+    issuer:        string;
+    clientId:      string;
+    clientSecret:  string;
+    sessionSecret: string;
+    /** Public client used by the `p9r login` Device Authorization Grant. */
+    cliClientId?:  string;
+};
+
+/**
+ * What a provisioner passes to mount a tenant. No OIDC here — admin OIDC is
+ * platform-level (`AdminOidcConfig`), configured once at the composition root.
+ * Authorization is by email: `initialAdminEmail` is seeded as the tenant's
+ * first CMS admin.
  */
 export type TenantProvisionInput = {
     id:                string;
     name:              string;
-    keycloak:          Omit<TenantKeycloak, "sessionSecret">;
     /** Email of the bootstrap admin — seeded into the tenant's member set. */
     initialAdminEmail: string;
 };
-
-const newSessionSecret = (): string => randomBytes(32).toString("base64url");
 
 export type MtControlCmsDeps = {
     runner:     Runner;
@@ -30,6 +42,8 @@ export type MtControlCmsDeps = {
     /** Public origin (https://platform.com) used by every tenant's Keycloak callback URLs. */
     appBaseUrl: string;
     tenantRepo: TenantRepository;
+    /** Shared admin OIDC, configured once for every tenant. */
+    adminOidc:  AdminOidcConfig;
     /** Envelope-encryption surface used by every per-tenant `SecretStore`.
      *  Typically `new EnvelopeSecretCrypto(kekProvider, dekRepo)` where
      *  `kekProvider` is `OvhOkmsKekProvider` (Customer Managed Key in OVH
@@ -55,6 +69,7 @@ export class MtControlCms {
     private readonly _appBaseUrl:     string;
     private readonly _tenantRepo:     TenantRepository;
     private readonly _secretCrypto:   SecretCrypto;
+    private readonly _adminOidc:      AdminOidcConfig;
     private readonly _mounted:        Map<string, MountedTenant> = new Map();
 
     constructor(deps: MtControlCmsDeps) {
@@ -63,6 +78,7 @@ export class MtControlCms {
         this._appBaseUrl     = deps.appBaseUrl;
         this._tenantRepo     = deps.tenantRepo;
         this._secretCrypto   = deps.secretCrypto;
+        this._adminOidc      = deps.adminOidc;
     }
 
     /** Read-only accessors — used by the provisioning connector. */
@@ -82,10 +98,9 @@ export class MtControlCms {
     }
 
     /**
-     * Provision a tenant: persist the row (minting a fresh `sessionSecret`)
-     * and mount it. **Idempotent** — a tenant already mounted is left as-is
-     * (the hub may retry `onProvision`); the OIDC carried by a retry is
-     * ignored (config changes go through `reprovisionTenant`).
+     * Provision a tenant: persist the row and mount it. **Idempotent** — a
+     * tenant already mounted is left as-is (the hub may retry `onProvision`).
+     * Admin OIDC is platform-level (shared), so nothing OIDC is persisted here.
      */
     async provisionTenant(input: TenantProvisionInput): Promise<void> {
         if (this._mounted.has(input.id)) return;
@@ -93,7 +108,6 @@ export class MtControlCms {
         const now = new Date();
         const tenant: Tenant = {
             id: input.id, name: input.name, createdAt: now, updatedAt: now,
-            keycloak: { ...input.keycloak, sessionSecret: newSessionSecret() },
         };
         await this._tenantRepo.create(tenant);
         try {
@@ -112,14 +126,13 @@ export class MtControlCms {
     }
 
     /**
-     * Re-mount a tenant after an OIDC change: unmount, update the row (the
-     * existing `sessionSecret` is **preserved** so admin sessions survive),
-     * then mount with the new config. Falls back to a provision when the
+     * Re-mount a tenant: unmount, upsert the row, re-seed the admin, then
+     * mount. Admin OIDC is platform-level (shared), so there is no per-tenant
+     * OIDC/sessionSecret to preserve. Falls back to a provision when the
      * tenant is unknown.
      */
     async reprovisionTenant(input: TenantProvisionInput): Promise<void> {
         const existing = await this._tenantRepo.get(input.id);
-        const sessionSecret = existing?.keycloak.sessionSecret ?? newSessionSecret();
 
         const mounted = this._mounted.get(input.id);
         if (mounted) {
@@ -127,13 +140,12 @@ export class MtControlCms {
             this._mounted.delete(input.id);
         }
 
-        const keycloak: TenantKeycloak = { ...input.keycloak, sessionSecret };
         let tenant = existing
-            ? await this._tenantRepo.update(input.id, { name: input.name, keycloak, updatedAt: new Date() })
+            ? await this._tenantRepo.update(input.id, { name: input.name, updatedAt: new Date() })
             : null;
         if (!tenant) {
             const now = new Date();
-            tenant = { id: input.id, name: input.name, createdAt: now, updatedAt: now, keycloak };
+            tenant = { id: input.id, name: input.name, createdAt: now, updatedAt: now };
             await this._tenantRepo.create(tenant);
         }
         await seedAdmin(this._db, input.id, input.initialAdminEmail);
@@ -168,6 +180,7 @@ export class MtControlCms {
             tenant,
             appBaseUrl:   this._appBaseUrl,
             secretCrypto: this._secretCrypto,
+            oidc:         this._adminOidc,
         });
         this._mounted.set(tenant.id, mounted);
     }

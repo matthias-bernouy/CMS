@@ -47,5 +47,5 @@ export { CMS_TENANT_CONFIG } from "./tenantConfig";
 export type { CmsTenantConfig } from "./tenantConfig";
 export { MongoTenantConfigStore } from "./MongoTenantConfigStore";
 export { makeCmsHooks } from "./hooks";
-export type { CmsHooksOptions, CmsTenantRuntime, CmsAdminOidc } from "./hooks";
+export type { CmsHooksOptions, CmsTenantRuntime } from "./hooks";
 export { DEFAULT_CMS_PROVIDER_ID } from "./constants";

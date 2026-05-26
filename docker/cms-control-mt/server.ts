@@ -30,6 +30,17 @@ const OKMS_CERT_PATH = process.env.OKMS_CERT_PATH ?? "/etc/okms/client.crt";
 const OKMS_KEY_PATH  = process.env.OKMS_KEY_PATH  ?? "/etc/okms/client.key";
 const CMS_KEK_KEY_ID = required("CMS_KEK_KEY_ID"); // OVH service-key UUID
 
+// Shared, platform-level admin OIDC — one realm + client for every tenant,
+// configured once here (not per-tenant). The shared client uses a wildcard
+// redirect URI; each tenant keeps its own cookie name + auth basePath.
+const adminOidc = {
+    issuer:        required("CMS_ADMIN_OIDC_ISSUER"),
+    clientId:      required("CMS_ADMIN_OIDC_CLIENT_ID"),
+    clientSecret:  required("CMS_ADMIN_OIDC_CLIENT_SECRET"),
+    sessionSecret: required("CMS_ADMIN_OIDC_SESSION_SECRET"),
+    ...(process.env.CMS_ADMIN_OIDC_CLI_CLIENT_ID ? { cliClientId: process.env.CMS_ADMIN_OIDC_CLI_CLIENT_ID } : {}),
+};
+
 const PORT = Number(process.env.PORT ?? 3000);
 const APP_BASE_URL = `https://${MAIN_DOMAIN}`;
 
@@ -58,6 +69,7 @@ const mt = new MtControlCms({
     appBaseUrl: APP_BASE_URL,
     tenantRepo: new MongoTenantRepository(db),
     secretCrypto,
+    adminOidc,
 });
 
 await mt.init();

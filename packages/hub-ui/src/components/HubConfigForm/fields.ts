@@ -33,16 +33,19 @@ export function makeInput(name: string, prop: Prop, value: any, widget: string, 
             el.setAttribute("name", name);
             if (value === true || value === "true") el.setAttribute("checked", "");
             break;
-        case "select":
+        case "select": {
             el = document.createElement("p9r-select");
             el.setAttribute("name", name);
-            for (const opt of prop.enum) {
+            const names = Array.isArray(prop.enumNames) ? prop.enumNames : null;
+            (prop.enum ?? []).forEach((opt: any, i: number) => {
                 const o = document.createElement("option");
-                o.value = String(opt); o.textContent = String(opt);
+                o.value = String(opt);
+                o.textContent = names && names[i] !== undefined ? String(names[i]) : String(opt);
                 if (String(opt) === sv) o.selected = true;
                 el.appendChild(o);
-            }
+            });
             break;
+        }
         case "select-multiple": {
             el = document.createElement("select");
             el.setAttribute("multiple", ""); el.setAttribute("name", name);

@@ -65,6 +65,33 @@ else
     log "client $ADMIN_ID already exists, skipping"
 fi
 
+# 2b. cms-admin — shared confidential client for tenant-admin login on cms-tp.
+#     One realm + client for ALL tenants; the CMS authorizes per-tenant by
+#     verified email. Redirect uses a SINGLE TRAILING wildcard `/cms/*` —
+#     Keycloak only honors `*` at the end of the URI, so a mid-path pattern
+#     like `/cms/*/auth/*` is rejected with "Invalid parameter: redirect_uri".
+#     `/cms/*` covers every tenant's `/cms/<id>/auth/callback`.
+CMS_ADMIN_ID=cms-admin
+CMS_ADMIN_SECRET=dev-cms-admin-secret
+if [ -z "$(get_client_uuid $CMS_ADMIN_ID)" ]; then
+    log "creating client $CMS_ADMIN_ID…"
+    curl -fsS -X POST -H "$AUTH" -H "Content-Type: application/json" \
+        "$KC/admin/realms/$REALM/clients" \
+        -d "{
+            \"clientId\": \"$CMS_ADMIN_ID\",
+            \"clientAuthenticatorType\": \"client-secret\",
+            \"secret\": \"$CMS_ADMIN_SECRET\",
+            \"enabled\": true,
+            \"publicClient\": false,
+            \"standardFlowEnabled\": true,
+            \"directAccessGrantsEnabled\": false,
+            \"redirectUris\": [\"http://cms-tp.localtest.me:4012/cms/*\"],
+            \"webOrigins\": [\"http://cms-tp.localtest.me:4012\"]
+        }" >/dev/null
+else
+    log "client $CMS_ADMIN_ID already exists, skipping"
+fi
+
 # 3. superadmin realm role
 if ! curl -fsS -o /dev/null -H "$AUTH" "$KC/admin/realms/$REALM/roles/$SUPERADMIN_ROLE"; then
     log "creating role $SUPERADMIN_ROLE…"

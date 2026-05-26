@@ -5,6 +5,7 @@ import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak
 import { CompositeAuthentication } from "@bernouy/auth-composite";
 import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, MongoCmsFilesMetadata, LocalFsCmsFilesBlob, S3CmsFilesBlob, type CmsFilesBlobStore, type EncryptedSecretDocument } from "@bernouy/cms";
 import type { Tenant } from "src/interfaces/Tenant";
+import type { AdminOidcConfig } from "src/exports/MtControlCms";
 import { loadAdminEmails } from "src/core/tenant/members";
 
 export type TenantRole = "admin" | "user";
@@ -24,6 +25,8 @@ export type MountTenantArgs = {
     tenant:       Tenant;
     appBaseUrl:   string;
     secretCrypto: SecretCrypto;
+    /** Shared, platform-level admin OIDC (one realm + client for all tenants). */
+    oidc:         AdminOidcConfig;
 };
 
 /**
@@ -39,7 +42,7 @@ export type MountTenantArgs = {
  * remove this whole subtree without restarting the bun process.
  */
 export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant> {
-    const { runner, db, tenant, appBaseUrl, secretCrypto } = args;
+    const { runner, db, tenant, appBaseUrl, secretCrypto, oidc } = args;
     const pathPrefix = `/cms/${tenant.id}`;
 
     // Admin membership, captured for this mount. The email comes from the
@@ -47,18 +50,18 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
     const adminEmails = await loadAdminEmails(db, tenant.id);
 
     const cookieAuth = new KeycloakConsumer<TenantRole>(runner, {
-        issuer:        tenant.keycloak.issuer,
-        clientId:      tenant.keycloak.clientId,
-        clientSecret:  tenant.keycloak.clientSecret,
+        issuer:        oidc.issuer,
+        clientId:      oidc.clientId,
+        clientSecret:  oidc.clientSecret,
         appBaseUrl,
-        sessionSecret: tenant.keycloak.sessionSecret,
+        sessionSecret: oidc.sessionSecret,
         cookieName:    `cms-${tenant.id}-session`,
         basePath:      `${pathPrefix}/auth`,
         claimsToSubject: (claims) => mapClaimsToSubject(claims, adminEmails),
     });
 
     const bearerAuth = new KeycloakBearerConsumer<TenantRole>({
-        issuer:          tenant.keycloak.issuer,
+        issuer:          oidc.issuer,
         claimsToSubject: (claims) => mapClaimsToSubject(claims, adminEmails),
     });
 
@@ -103,12 +106,12 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
 
     runner.group(pathPrefix, (sub) => {
         sub.get("/api/auth/discovery", () => Response.json({
-            issuer:   tenant.keycloak.issuer,
-            clientId: tenant.keycloak.cliClientId ?? `${tenant.keycloak.clientId}-cli`,
+            issuer:   oidc.issuer,
+            clientId: oidc.cliClientId ?? `${oidc.clientId}-cli`,
             grant:    "urn:ietf:params:oauth:grant-type:device_code",
         }));
         new ControlCms(sub, repo, auth, {
-            tokensUrl: `${tenant.keycloak.issuer}/account/`,
+            tokensUrl: `${oidc.issuer}/account/`,
         }, undefined, secrets, filesMetadata, filesBlob);
     });
 
@@ -130,19 +133,4 @@ function mapClaimsToSubject(
         displayName: String(claims.preferred_username ?? claims.email ?? "user"),
         role,
     };
-}
-
-function createTenantAdminGuard(auth: CompositeAuthentication<TenantRole>) {
-    return async (req: Request, next: () => Promise<Response>): Promise<Response> => {
-        const subject = await auth.getSubject(req);
-        if (!subject || subject.role !== "admin") {
-            return new Response("forbidden", { status: 403 });
-        }
-        return next();
-    };
-}
-
-function safeOriginList(url: string): string[] {
-    try { return [new URL(url).origin]; }
-    catch { return []; }
 }
