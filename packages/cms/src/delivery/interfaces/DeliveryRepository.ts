@@ -1,5 +1,4 @@
 import type { TPage, TSnippet, TSystem } from "src/socle/interfaces/models";
-import type { TDataProviderListItem } from "src/socle/interfaces/Data/data";
 
 /**
  * Read-only data contract consumed by the Delivery layer. Mirrors the subset
@@ -29,9 +28,5 @@ export interface DeliveryRepository {
     // SNIPPET (for expandSnippets during render)
     getSnippetByIdentifier(identifier: string): Promise<TSnippet | null>;
     getAllSnippets(): Promise<TSnippet[]>;
-
-    // DATA PROVIDERS (slim list — needed by the upcoming server-side proxy
-    // that forwards bloc fetches to the registered APIs)
-    getDataProvidersList(): Promise<TDataProviderListItem[]>;
 
 }

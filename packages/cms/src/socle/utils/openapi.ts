@@ -14,9 +14,3 @@ export function countOpenApiEndpoints(spec: string): number {
     } catch { /* not JSON or malformed — treat as zero */ }
     return 0;
 }
-
-/** Sync state badge fields for the admin Data table. */
-export function dataProviderSyncBadge(lastSyncAt: Date | null): { label: string; color: string } {
-    if (!lastSyncAt) return { label: "Never synced", color: "" };
-    return { label: "Synced", color: "success" };
-}

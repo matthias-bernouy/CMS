@@ -4,7 +4,6 @@ import type { Cache } from "../socle/interfaces/Cache";
 import { InMemoryCache } from "../socle/default-implementation/Cache/memory";
 import type { SecretStore } from "../socle/interfaces/SecretStore";
 import { InMemorySecretStore } from "../socle/default-implementation/SecretStore/memory";
-import type { ProxyPublisher } from "../socle/interfaces/ProxyPublisher";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
@@ -61,7 +60,6 @@ export class ControlCms {
     private _cache:           Cache;
     private _secrets:         SecretStore;
     private _specCache:       SpecCache;
-    private _proxyPublisher:  ProxyPublisher | null;
 
     constructor(
         runner: Runner,
@@ -71,7 +69,6 @@ export class ControlCms {
         configuration: Configuration,
         cache?: Cache,
         secrets?: SecretStore,
-        proxyPublisher?: ProxyPublisher,
     ){
         this.configuration = configuration;
         this._auth = auth;
@@ -81,7 +78,6 @@ export class ControlCms {
         this._cache = cache || new InMemoryCache();
         this._secrets = secrets || new InMemorySecretStore();
         this._specCache = new SpecCache();
-        this._proxyPublisher = proxyPublisher ?? null;
 
         // Hydration is served as a real `<script src=…>` (CSP-friendly:
         // `default-src 'self'` rejects inline scripts). Pre-compressed once
@@ -142,14 +138,6 @@ export class ControlCms {
 
     get specCache(){
         return this._specCache;
-    }
-
-    /** Optional outbound channel that publishes proxy rules to the
-     *  upstream CDN/edge layer. `null` when the deployment doesn't have
-     *  a CDN paired (e.g. dev / single-tenant on localhost) — the
-     *  data-provider mutations no-op the publish step in that case. */
-    get proxyPublisher(){
-        return this._proxyPublisher;
     }
 
     /**

@@ -3,7 +3,7 @@ import type { CDN, Runner, SecretCrypto, Subject } from "@bernouy/core";
 import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
 import { CompositeAuthentication } from "@bernouy/auth-composite";
 import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, DisabledCDN, type EncryptedSecretDocument } from "@bernouy/cms";
-import { StorageTokenBroker, StorageBrowser, BucketProxyPublisher } from "@bernouy/cdn-buckets";
+import { StorageTokenBroker, StorageBrowser } from "@bernouy/cdn-buckets";
 import type { Tenant } from "src/interfaces/Tenant";
 import { loadAdminEmails } from "src/core/tenant/members";
 
@@ -76,12 +76,10 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
     const repo = new MongoCmsRepository(db, { collectionPrefix: `tenant_${tenant.id}__` });
     await repo.init();
 
-    // Media is opt-in. With a bucket, wire the storage broker + browsable CDN
-    // + proxy publisher. Without one, mount a `DisabledCDN` — the admin loads
-    // but media operations are unavailable until a bucket is configured (which
-    // triggers a remount). The broker route + proxy publisher are skipped too.
+    // Media is opt-in. With a bucket, wire the storage broker + browsable CDN.
+    // Without one, mount a `DisabledCDN` — the admin loads but media operations
+    // are unavailable until a bucket is configured (which triggers a remount).
     let cdn: CDN = new DisabledCDN();
-    let proxyPublisher: BucketProxyPublisher | undefined;
     if (tenant.assetsCdn) {
         const adminGuard = createTenantAdminGuard(auth);
         const broker = new StorageTokenBroker({
@@ -99,11 +97,6 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
             // Presigned upload URLs resolve to the upstream assetsCdn origin —
             // the admin CSP needs to whitelist it.
             origins:    safeOriginList(tenant.assetsCdn.url),
-        });
-
-        proxyPublisher = new BucketProxyPublisher({
-            brokerBaseUrl:    tenant.assetsCdn.url,
-            bucketCredential: tenant.assetsCdn.bucketCredential,
         });
     }
 
@@ -127,7 +120,7 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
         }));
         new ControlCms(sub, repo, auth, cdn, {
             tokensUrl: `${tenant.keycloak.issuer}/account/`,
-        }, undefined, secrets, proxyPublisher);
+        }, undefined, secrets);
     });
 
     return { id: tenant.id, pathPrefix, appBaseUrl };

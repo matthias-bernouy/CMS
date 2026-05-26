@@ -1,7 +1,7 @@
 import type { Db } from "mongodb";
 import type { Tenant } from "@bernouy/mt-cms-control";
 import { MongoCmsRepository, DeliveryBuilder, BuildEnhancer, HttpVariantGenerator, PlaywrightSession, pageBucketName } from "@bernouy/cms";
-import { StorageDirectClient, BucketProxyPublisher } from "@bernouy/cdn-buckets";
+import { StorageDirectClient } from "@bernouy/cdn-buckets";
 
 export type BuildTenantOptions = {
     /** Shared Playwright session (Chromium launched once per Delivery). */
@@ -78,37 +78,6 @@ export async function buildTenant(
         const patch = await bucket.updateBucketSettings({ notFoundPath });
         if (!patch.ok) {
             console.warn(`[delivery] tenant=${tenant.id} updateBucketSettings failed: ${patch.error.message}`);
-        }
-    }
-
-    // Mirror the tenant's data-provider proxies to the public bucket. The
-    // admin edits them in CMS Control which publishes to the assets bucket
-    // (frontier B of `tenant.assetsCdn`); the public bucket needs the same
-    // rules so the alias-served site can hit `/.cms/data/<providerId>/*`
-    // through the edge. Source of truth = the CMS repo, not the assets
-    // bucket — same shape that `publishProxy` reads at admin push time.
-    await mirrorProxiesToPublicCdn(repo, tenant);
-}
-
-async function mirrorProxiesToPublicCdn(repo: MongoCmsRepository, tenant: Tenant): Promise<void> {
-    if (!tenant.delivery?.publicCdn) return;
-    const publisher = new BucketProxyPublisher({
-        brokerBaseUrl:    tenant.delivery.publicCdn.url,
-        bucketCredential: tenant.delivery.publicCdn.bucketCredential,
-    });
-    const providers = await repo.getDataProviders();
-    for (const p of providers) {
-        if (!p.server) continue;
-        try {
-            await publisher.upsertProxy({
-                providerId: p.id,
-                server:     p.server,
-                rules:      p.rules,
-                secrets:    p.secrets,
-            });
-        } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            console.warn(`[delivery] tenant=${tenant.id} proxy "${p.id}" mirror failed: ${msg}`);
         }
     }
 }

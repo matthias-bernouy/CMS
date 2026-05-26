@@ -2,9 +2,6 @@ import { randomUUIDv7 } from "bun";
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { BlocListItemResponse, CmsRepository, PageLink } from "src/socle/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
-import type { DataProviderConsumers, TDataMockup, TDataProvider, TDataProviderListItem } from "src/socle/interfaces/Data/data";
-import { countOpenApiEndpoints, dataProviderSyncBadge } from "src/socle/utils/openapi";
-import { DATA_PROXY_PREFIX } from "src/socle/constants/p9r-constants";
 
 /**
  * MongoDB implementation of `CmsRepository`. Designed for small/medium
@@ -65,8 +62,6 @@ export class MongoCmsRepository implements CmsRepository {
             this.pages.createIndex    ({ path: 1 },       { unique: true }),
             this.snippets.createIndex ({ identifier: 1 }, { unique: true }),
             this.templates.createIndex({ identifier: 1 }, { unique: true }),
-            this.dataMockups.createIndex({ providerId: 1, method: 1, path: 1, name: 1 }, { unique: true }),
-            this.dataMockups.createIndex({ providerId: 1, method: 1, path: 1 }),
         ]);
     }
 
@@ -77,8 +72,6 @@ export class MongoCmsRepository implements CmsRepository {
     private get snippets():      Collection<SnippetDoc>      { return this.db.collection<SnippetDoc>      (this._prefix + "snippets"); }
     private get templates():     Collection<TemplateDoc>     { return this.db.collection<TemplateDoc>     (this._prefix + "templates"); }
     private get system():        Collection<SystemDoc>       { return this.db.collection<SystemDoc>       (this._prefix + "system"); }
-    private get dataProviders(): Collection<DataProviderDoc> { return this.db.collection<DataProviderDoc> (this._prefix + "dataProviders"); }
-    private get dataMockups():   Collection<DataMockupDoc>   { return this.db.collection<DataMockupDoc>   (this._prefix + "dataMockups"); }
 
     // ── Blocs ──
 
@@ -348,184 +341,6 @@ export class MongoCmsRepository implements CmsRepository {
         const docs = await this.pages.find({ content: { $regex: pattern, $options: "i" } }).toArray();
         return docs.map(d => fromPageDoc(d)!);
     }
-
-    // ── Data providers ──
-
-    async createDataProvider(provider: Omit<TDataProvider, "createdAt" | "lastSyncAt">): Promise<TDataProvider> {
-        const stored: TDataProvider = {
-            ...provider,
-            server:     provider.server ?? "",
-            createdAt:  new Date(),
-            lastSyncAt: null,
-        };
-        await this.dataProviders.insertOne(toDataProviderDoc(stored) as OptionalUnlessRequiredId<DataProviderDoc>);
-        return stored;
-    }
-
-    async getDataProvider(id: string): Promise<TDataProvider | null> {
-        return fromDataProviderDoc(await this.dataProviders.findOne({ _id: id }));
-    }
-
-    async getDataProviders(): Promise<TDataProvider[]> {
-        const docs = await this.dataProviders.find().toArray();
-        return docs.map(d => fromDataProviderDoc(d)!);
-    }
-
-    async getDataProvidersList(): Promise<TDataProviderListItem[]> {
-        const docs = await this.dataProviders.find(
-            {},
-            { projection: { source: 1, server: 1, spec: 1, lastSyncAt: 1 } },
-        ).toArray();
-        return docs.map(d => {
-            const lastSync = d.lastSyncAt ? new Date(d.lastSyncAt) : null;
-            const badge = dataProviderSyncBadge(lastSync);
-            return {
-                id:            d._id,
-                source:        d.source,
-                server:        d.server ?? "",
-                endpointCount: countOpenApiEndpoints(d.spec ?? ""),
-                lastSyncAt:    lastSync ? lastSync.toDateString() : "",
-                syncLabel:     badge.label,
-                syncColor:     badge.color,
-            };
-        });
-    }
-
-    async updateDataProvider(id: string, data: Partial<TDataProvider>): Promise<TDataProvider | null> {
-        // `id` and `createdAt` are immutable on the server side — strip
-        // them from the patch so a malformed client can't rewrite them.
-        const { id: _ignored, createdAt: __, ...rest } = data;
-        const result = await this.dataProviders.findOneAndUpdate(
-            { _id: id },
-            { $set: rest as Partial<DataProviderDoc> },
-            { returnDocument: "after" },
-        );
-        return fromDataProviderDoc(result as DataProviderDoc | null);
-    }
-
-    async deleteDataProvider(id: string): Promise<void> {
-        await Promise.all([
-            this.dataProviders.deleteOne({ _id: id }),
-            this.dataMockups.deleteMany({ providerId: id }),
-        ]);
-    }
-
-    // ── Data mockups ──
-
-    async listMockups(providerId: string): Promise<TDataMockup[]> {
-        const docs = await this.dataMockups.find({ providerId }).toArray();
-        return docs.map(fromDataMockupDoc);
-    }
-
-    async getMockup(providerId: string, method: string, path: string, name: string): Promise<TDataMockup | null> {
-        const doc = await this.dataMockups.findOne({ providerId, method: method.toUpperCase(), path, name });
-        return doc ? fromDataMockupDoc(doc) : null;
-    }
-
-    async getActiveMockup(providerId: string, method: string, path: string): Promise<TDataMockup | null> {
-        const doc = await this.dataMockups.findOne({ providerId, method: method.toUpperCase(), path, active: true });
-        return doc ? fromDataMockupDoc(doc) : null;
-    }
-
-    async createMockup(mockup: Omit<TDataMockup, 'updatedAt' | 'active'>): Promise<TDataMockup> {
-        const method  = mockup.method.toUpperCase();
-        const isFirst = !(await this.getActiveMockup(mockup.providerId, method, mockup.path));
-        const stored: TDataMockup = {
-            ...mockup,
-            method,
-            active:    isFirst,
-            updatedAt: new Date(),
-        };
-        await this.dataMockups.insertOne(stored as OptionalUnlessRequiredId<DataMockupDoc>);
-        return stored;
-    }
-
-    async updateMockup(providerId: string, method: string, path: string, name: string, patch: Partial<Pick<TDataMockup, 'status' | 'body' | 'name'>>): Promise<TDataMockup | null> {
-        const m = method.toUpperCase();
-        const $set: Partial<DataMockupDoc> = { updatedAt: new Date() };
-        if (patch.status !== undefined) $set.status = patch.status;
-        if (patch.body   !== undefined) $set.body   = patch.body;
-        if (patch.name   !== undefined) $set.name   = patch.name;
-        const result = await this.dataMockups.findOneAndUpdate(
-            { providerId, method: m, path, name },
-            { $set },
-            { returnDocument: "after" },
-        );
-        return result ? fromDataMockupDoc(result) : null;
-    }
-
-    async deleteMockup(providerId: string, method: string, path: string, name: string): Promise<void> {
-        const m       = method.toUpperCase();
-        const removed = await this.dataMockups.findOneAndDelete({ providerId, method: m, path, name });
-        if (removed?.active) {
-            const replacement = await this.dataMockups.findOne({ providerId, method: m, path });
-            if (replacement) {
-                await this.dataMockups.updateOne(
-                    { providerId, method: m, path, name: replacement.name },
-                    { $set: { active: true } },
-                );
-            }
-        }
-    }
-
-    async setActiveMockup(providerId: string, method: string, path: string, name: string | null): Promise<void> {
-        const m = method.toUpperCase();
-        await this.dataMockups.updateMany(
-            { providerId, method: m, path },
-            { $set: { active: false } },
-        );
-        if (name !== null) {
-            await this.dataMockups.updateOne(
-                { providerId, method: m, path, name },
-                { $set: { active: true } },
-            );
-        }
-    }
-
-    async findConsumersOfProvider(providerId: string): Promise<DataProviderConsumers> {
-        const trimmed = providerId.trim();
-        if (!trimmed) return { pages: [], templates: [], snippets: [] };
-        const escapedId     = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const escapedPrefix = DATA_PROXY_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const pattern = `${escapedPrefix}/${escapedId}/`;
-        const [pages, templates, snippets] = await Promise.all([
-            this.pages.find    ({ content: { $regex: pattern } }, { projection: { path: 1, title: 1 } }).toArray(),
-            this.templates.find({ content: { $regex: pattern } }, { projection: { identifier: 1, name: 1 } }).toArray(),
-            this.snippets.find ({ content: { $regex: pattern } }, { projection: { identifier: 1, name: 1 } }).toArray(),
-        ]);
-        return {
-            pages:     pages.map    (d => ({ path: d.path, title: d.title })),
-            templates: templates.map(d => ({ identifier: d.identifier, name: d.name })),
-            snippets:  snippets.map (d => ({ identifier: d.identifier, name: d.name })),
-        };
-    }
-}
-
-function toDataProviderDoc(p: TDataProvider): DataProviderDoc {
-    const { id, ...rest } = p;
-    return { _id: id, ...rest };
-}
-
-function fromDataProviderDoc(d: DataProviderDoc | null): TDataProvider | null {
-    if (!d) return null;
-    const { _id, ...rest } = d;
-    // `server` defaults to "" for providers stored before the field was
-    // introduced. `specAuth` defaults to `{type:"none"}`. `runtimeAuth`
-    // is gone (replaced by `rules + secrets`); silently dropped on
-    // read — fresh writes never persist it again.
-    const specAuth = rest.specAuth ?? { type: "none" };
-    return {
-        id:          _id,
-        source:      rest.source,
-        sourceUrl:   rest.sourceUrl,
-        server:      rest.server ?? "",
-        spec:        rest.spec,
-        specAuth,
-        rules:       rest.rules   ?? { paths: {} },
-        secrets:     rest.secrets ?? {},
-        createdAt:   rest.createdAt,
-        lastSyncAt:  rest.lastSyncAt,
-    };
 }
 
 // ── Document shapes (collection generics) ──
@@ -536,22 +351,7 @@ type BlocDoc         = WithMongoId<TBloc>;
 type PageDoc         = WithMongoId<TPage>;
 type SnippetDoc      = WithMongoId<TSnippet>;
 type TemplateDoc     = WithMongoId<TTemplate>;
-type DataProviderDoc = WithMongoId<TDataProvider>;
-type DataMockupDoc   = TDataMockup;
 type SystemDoc       = TSystem & { _id: typeof SYSTEM_ID };
-
-function fromDataMockupDoc(d: DataMockupDoc & { _id?: unknown }): TDataMockup {
-    return {
-        providerId: d.providerId,
-        method:     d.method,
-        path:       d.path,
-        name:       d.name,
-        status:     d.status,
-        body:       d.body,
-        active:     d.active,
-        updatedAt:  new Date(d.updatedAt),
-    };
-}
 
 const SYSTEM_ID = "singleton" as const;
 
