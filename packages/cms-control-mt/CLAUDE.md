@@ -2,15 +2,16 @@
 
 Multi-tenant wrapper around `@bernouy/cms`'s single-tenant
 `ControlCms`. Holds a tenant **registry** (Mongo) and a tenant
-**runtime** (per-tenant routes mounted on the shared runner). Calling
-`addTenant` mounts a tenant immediately — no restart.
+**runtime** (per-tenant routes mounted on the shared runner).
+`provisionTenant` mounts a tenant immediately — no restart.
 
 **Provisioning is hub-driven.** There is no in-process superadmin
-surface anymore. The `cms-control` tenant-provisioner (see
+surface. The `cms-control` tenant-provisioner (see
 `official-tenant-provisioners/cms-control`) receives the hub's
-`/admin/tenants` calls and drives `addTenant`/`removeTenant` here via a
-connector. The Mongo registry is a hub-fed runtime store, not an
-independent control plane. (Connector wiring is the next step.)
+`/admin/tenants` calls and drives
+`provisionTenant`/`reprovisionTenant`/`deprovisionTenant` here via a
+connector wired at the composition root (`docker/cms-tp`). The Mongo
+registry is a hub-fed runtime store, not an independent control plane.
 
 Package name on disk: `cms-control-mt/`. Published as
 `@bernouy/mt-cms-control`.
@@ -20,14 +21,13 @@ Package name on disk: `cms-control-mt/`. Published as
 ```
 src/
 ├── exports/
-│   └── MtControlCms.ts        composition root: init/addTenant/removeTenant + Map<id, MountedTenant>
+│   └── MtControlCms.ts        composition root: init/provisionTenant/reprovisionTenant/deprovisionTenant + Map<id, MountedTenant>
 ├── core/
 │   ├── tenant/
-│   │   ├── mountTenant.ts     wires KeycloakConsumer + KeycloakBearerConsumer + StorageTokenBroker + StorageBrowser + ControlCms onto /cms/<id>/
+│   │   ├── mountTenant.ts     wires Keycloak cookie+bearer (authN) + member-based authZ + StorageTokenBroker + StorageBrowser + ControlCms onto /cms/<id>/
+│   │   ├── members.ts         per-tenant CMS-admin membership (authZ lives in the CMS): seedAdmin + loadAdminEmails
 │   │   ├── unmountTenant.ts   runner.removeRoutesByPathPrefix(/cms/<id>)
 │   │   └── purgeTenantData.ts drops Mongo collections matching `tenant_<id>__*`
-│   └── validation/
-│       └── tenant/{id,parseCreateDto}.ts
 ├── interfaces/
 │   ├── Tenant.ts              { id, name, keycloak, assetsCdn, delivery? }
 │   └── TenantRepository.ts
@@ -54,18 +54,23 @@ tenantRepo.list() → for each → _mount(tenant)
 ```
 
 After `init()`, every tenant's CMS Control is reachable at
-`<appBaseUrl>/cms/<tenantId>/admin`. New tenants added at runtime via
-`addTenant(dto)` go through the same `_mount` path and become reachable
-without restart.
+`<appBaseUrl>/cms/<tenantId>/` (admin pages under `/admin/*`). New
+tenants provisioned at runtime via `provisionTenant(input)` go through
+the same `_mount` path and become reachable without restart.
 
 ## Per-tenant auth chain
 
-Each tenant's CMS mounts under `/cms/<id>/*` behind a tenant-scoped
-`CompositeAuthentication` (`KeycloakBearerConsumer` + `KeycloakConsumer`
-against `tenant.keycloak.issuer`). Role: `admin` for the tenant's CMS
-UI, mapped from the realm role named `tenant.keycloak.adminRole`. Each
-tenant's chain is isolated from every other tenant's — cross-tenant
-isolation lives at this layer.
+Each tenant's CMS mounts under `/cms/<id>/*` behind a
+`CompositeAuthentication` (`KeycloakBearerConsumer` + `KeycloakConsumer`).
+Keycloak is **authentication only** — typically a **shared realm + shared
+client** across all tenants (no per-tenant Keycloak object).
+
+**Authorization lives in the CMS**: `mountTenant` loads the tenant's
+admin emails (`loadAdminEmails`) into a set and `claimsToSubject` (sync)
+grants `admin` iff the token's **verified email** is in it — else `user`.
+The subject `identifier` stays the opaque `sub` (contract). Membership is
+captured at mount; changes take effect on remount. The first admin is
+seeded from `initialAdminEmail` at provision.
 
 ## Tenant data layout
 
@@ -110,7 +115,7 @@ Every tenant gets an `EncryptedMongoSecretStore` with
 
 ```
 { id, name, createdAt, updatedAt,
-  keycloak:  { issuer, clientId, clientSecret, sessionSecret, adminRole, cliClientId? },
+  keycloak:  { issuer, clientId, clientSecret, sessionSecret, cliClientId? },
   assetsCdn: { url, bucketCredential },
   delivery?: { publicCdn, alias?, enabled?, dirtyAt? } }
 ```
@@ -128,11 +133,13 @@ Every tenant gets an `EncryptedMongoSecretStore` with
 
 ## Conventions
 
-- **Adding a tenant is `addTenant(dto)`** — never write to the repo
-  directly and skip the runtime mount. The `try/catch` rolls back the
-  DB write if mounting throws.
-- **Removing a tenant is `removeTenant(id)`**: unmount → purgeData →
-  delete row. The order matters — keep it.
+- **Provisioning a tenant is `provisionTenant(input)`** (idempotent:
+  already-mounted → no-op) — never write to the repo directly and skip
+  the runtime mount. The `try/catch` rolls back the DB write if mounting
+  throws. `reprovisionTenant` re-mounts after an OIDC change (preserves
+  the `sessionSecret`).
+- **Deprovisioning is `deprovisionTenant(id, { force })`**: unmount →
+  (force only) purgeData → delete row. Non-force keeps the CMS data.
 - **No per-tenant `runner.start()`.** All tenants share the runner the
   consumer started before calling `init()`. `runner.group(prefix)` +
   `removeRoutesByPathPrefix(prefix)` is what makes the dynamic

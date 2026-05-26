@@ -1,11 +1,28 @@
+import { randomBytes } from "node:crypto";
 import type { Db } from "mongodb";
 import type { Runner, SecretCrypto } from "@bernouy/core";
-import type { Tenant } from "src/interfaces/Tenant";
+import type { Tenant, TenantKeycloak } from "src/interfaces/Tenant";
 import type { TenantRepository } from "src/interfaces/TenantRepository";
 import { mountTenant, type MountedTenant, type TenantRole } from "src/core/tenant/mountTenant";
 import { unmountTenant } from "src/core/tenant/unmountTenant";
 import { purgeTenantData } from "src/core/tenant/purgeTenantData";
-import type { TenantCreateDto } from "src/core/validation/tenant/parseCreateDto";
+import { seedAdmin } from "src/core/tenant/members";
+
+/**
+ * What a provisioner passes to mount a tenant. `sessionSecret` is omitted —
+ * that cookie-signing secret is platform-internal, owned by the runtime
+ * (generated on first provision, persisted, reused on remount). Authorization
+ * is by email: `initialAdminEmail` is seeded as the tenant's first CMS admin.
+ */
+export type TenantProvisionInput = {
+    id:                string;
+    name:              string;
+    keycloak:          Omit<TenantKeycloak, "sessionSecret">;
+    /** Email of the bootstrap admin — seeded into the tenant's member set. */
+    initialAdminEmail: string;
+};
+
+const newSessionSecret = (): string => randomBytes(32).toString("base64url");
 
 export type MtControlCmsDeps = {
     runner:     Runner;
@@ -25,10 +42,11 @@ export type MtControlCmsDeps = {
 /**
  * Multi-tenant orchestrator. Holds the shared infrastructure (one runner,
  * one Db, one MongoClient) and lazily mounts/unmounts per-tenant CMS
- * Control instances on demand. Provisioning is driven by the hub (via the
- * `cms-control` tenant-provisioner's `onProvision`/`onDeprovision` hooks,
- * which call `addTenant`/`removeTenant`) — there is no in-process superadmin
- * surface; the tenant registry is a hub-fed runtime store.
+ * Control instances on demand. Provisioning is driven by the hub via the
+ * `cms-control` tenant-provisioner's hooks, which call
+ * `provisionTenant`/`reprovisionTenant`/`deprovisionTenant` — there is no
+ * in-process superadmin surface; the tenant registry is a hub-fed runtime
+ * store.
  */
 export class MtControlCms {
 
@@ -63,12 +81,23 @@ export class MtControlCms {
         for (const t of tenants) await this._mount(t);
     }
 
-    /** Add a tenant: persist + mount + return the live entity. */
-    async addTenant(dto: TenantCreateDto): Promise<Tenant> {
+    /**
+     * Provision a tenant: persist the row (minting a fresh `sessionSecret`)
+     * and mount it. **Idempotent** — a tenant already mounted is left as-is
+     * (the hub may retry `onProvision`); the OIDC carried by a retry is
+     * ignored (config changes go through `reprovisionTenant`).
+     */
+    async provisionTenant(input: TenantProvisionInput): Promise<void> {
+        if (this._mounted.has(input.id)) return;
+
         const now = new Date();
-        const tenant: Tenant = { ...dto, createdAt: now, updatedAt: now };
+        const tenant: Tenant = {
+            id: input.id, name: input.name, createdAt: now, updatedAt: now,
+            keycloak: { ...input.keycloak, sessionSecret: newSessionSecret() },
+        };
         await this._tenantRepo.create(tenant);
         try {
+            await seedAdmin(this._db, input.id, input.initialAdminEmail);
             await this._mount(tenant);
         } catch (err) {
             // mountTenant registers routes (KeycloakConsumer, broker, …) before
@@ -80,18 +109,51 @@ export class MtControlCms {
             await this._tenantRepo.delete(tenant.id).catch(() => null);
             throw err;
         }
-        return tenant;
     }
 
-    /** Remove a tenant: unmount, drop collections, delete row. */
-    async removeTenant(id: string): Promise<boolean> {
+    /**
+     * Re-mount a tenant after an OIDC change: unmount, update the row (the
+     * existing `sessionSecret` is **preserved** so admin sessions survive),
+     * then mount with the new config. Falls back to a provision when the
+     * tenant is unknown.
+     */
+    async reprovisionTenant(input: TenantProvisionInput): Promise<void> {
+        const existing = await this._tenantRepo.get(input.id);
+        const sessionSecret = existing?.keycloak.sessionSecret ?? newSessionSecret();
+
+        const mounted = this._mounted.get(input.id);
+        if (mounted) {
+            unmountTenant(this._runner, mounted);
+            this._mounted.delete(input.id);
+        }
+
+        const keycloak: TenantKeycloak = { ...input.keycloak, sessionSecret };
+        let tenant = existing
+            ? await this._tenantRepo.update(input.id, { name: input.name, keycloak, updatedAt: new Date() })
+            : null;
+        if (!tenant) {
+            const now = new Date();
+            tenant = { id: input.id, name: input.name, createdAt: now, updatedAt: now, keycloak };
+            await this._tenantRepo.create(tenant);
+        }
+        await seedAdmin(this._db, input.id, input.initialAdminEmail);
+        await this._mount(tenant);
+    }
+
+    /**
+     * Deprovision a tenant: always unmount + drop the runtime row (so a
+     * restart won't re-mount it). The tenant's **CMS data is dropped only
+     * when `force`** — a non-force deprovision keeps the collections so the
+     * tenant can be restored by re-provisioning the same id.
+     */
+    async deprovisionTenant(id: string, opts: { force: boolean }): Promise<void> {
         const mounted = this._mounted.get(id);
         if (mounted) {
             unmountTenant(this._runner, mounted);
             this._mounted.delete(id);
         }
-        await purgeTenantData(this._db, id);
-        return this._tenantRepo.delete(id);
+        if (opts.force) await purgeTenantData(this._db, id);
+        await this._tenantRepo.delete(id);
     }
 
     /** Snapshot of currently mounted tenants — used by the dashboard. */

@@ -206,15 +206,19 @@ services:
                 aliases:
                     - cms-tp.localtest.me
         ports:
+            # :4002 = provider (hub-facing, SDK-guarded) — :4012 = admin UI (browser).
             - "127.0.0.1:4002:4002"
+            - "127.0.0.1:4012:4012"
         environment:
-            PORT:           "4002"
-            TP_PUBLIC_URL:  "http://cms-tp.localtest.me:4002"
-            HUB_ISSUER_URL: "http://hub.localtest.me:3000"
+            PORT:             "4002"
+            TP_PUBLIC_URL:    "http://cms-tp.localtest.me:4002"
+            ADMIN_PORT:       "4012"
+            ADMIN_PUBLIC_URL: "http://cms-tp.localtest.me:4012"
+            HUB_ISSUER_URL:   "http://hub.localtest.me:3000"
             # Per-tenant CMS data (collection set per tenant) in the shared dev
             # Mongo, in its own database.
-            MONGO_URL:      "mongodb://mongo:27017"
-            MONGO_DB_NAME:  "cms_dev"
+            MONGO_URL:        "mongodb://mongo:27017"
+            MONGO_DB_NAME:    "cms_dev"
 
     keycloak-tp:
         build:

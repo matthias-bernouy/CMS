@@ -9,18 +9,22 @@ import type {
 
 const UNSUPPORTED = <T>(): CDNResponse<T> => ({
     ok: false,
-    error: { code: "unsupported_operation", message: "Media operations are disabled in `p9r dev`." },
+    error: {
+        code: "unsupported_operation",
+        message: "Media operations are unavailable — no storage bucket is configured for this CMS.",
+    },
 });
 
 /**
- * No-op CDN for `p9r dev`. Every operation returns `unsupported_operation`
- * — the dev server has no storage backend. Browsing the Media admin will
- * surface the error inline, image pickers will fail loud. Acceptable
- * trade-off: media is out of scope for the local-only dev workflow.
+ * No-op CDN for a Control instance mounted **without a storage bucket**.
+ * Every operation returns `unsupported_operation`; `origins` is empty so the
+ * admin CSP whitelists nothing extra. The Media admin surfaces the error
+ * inline and image pickers fail loud — acceptable until a real bucket is
+ * configured (then the tenant is re-mounted with a live `CDN`).
  *
- * Drop this in favour of a real `LocalFsMedia` if/when dev needs to upload.
+ * Also used by `p9r dev`, which has no storage backend.
  */
-export class StubMedia implements CDN {
+export class DisabledCDN implements CDN {
     readonly limits: BucketLimits = { maxFileSize: 0, acceptedMimeTypes: "*" };
     readonly quotas: BucketQuotas = { maxTotalSize: 0, maxFileCount: 0 };
     readonly cacheControl = "no-store";

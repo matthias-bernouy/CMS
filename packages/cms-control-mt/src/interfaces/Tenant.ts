@@ -7,7 +7,6 @@ export type TenantKeycloak = {
     clientId:      string;
     clientSecret:  string;
     sessionSecret: string;
-    adminRole:     string;
     /** Public client used by the `p9r login` Device Authorization Grant. */
     cliClientId?:  string;
 };
@@ -45,8 +44,12 @@ export type Tenant = {
     createdAt: Date;
     updatedAt: Date;
     keycloak:  TenantKeycloak;
-    /** Bucket where Control admin uploads land. */
-    assetsCdn: TenantCdnBucket;
+    /**
+     * Bucket where Control admin uploads land. **Optional**: when absent the
+     * tenant mounts with a `DisabledCDN` (media operations unavailable). The
+     * bucket is configured later from the CMS admin, which triggers a remount.
+     */
+    assetsCdn?: TenantCdnBucket;
     /** Optional Delivery wiring — fillable later, opt-in via `enabled`. */
     delivery?: TenantDelivery;
 };

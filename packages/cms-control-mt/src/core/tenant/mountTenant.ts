@@ -1,10 +1,11 @@
 import type { Db } from "mongodb";
-import type { Runner, SecretCrypto, Subject } from "@bernouy/core";
+import type { CDN, Runner, SecretCrypto, Subject } from "@bernouy/core";
 import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
 import { CompositeAuthentication } from "@bernouy/auth-composite";
-import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, type EncryptedSecretDocument } from "@bernouy/cms";
+import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, DisabledCDN, type EncryptedSecretDocument } from "@bernouy/cms";
 import { StorageTokenBroker, StorageBrowser, BucketProxyPublisher } from "@bernouy/cdn-buckets";
 import type { Tenant } from "src/interfaces/Tenant";
+import { loadAdminEmails } from "src/core/tenant/members";
 
 export type TenantRole = "admin" | "user";
 
@@ -27,7 +28,10 @@ export type MountTenantArgs = {
 
 /**
  * Wires a full per-tenant CMS Control surface onto the shared runner:
- * - Keycloak cookie + bearer auth scoped to the tenant's realm
+ * - Keycloak cookie + bearer auth (authN only) against the shared realm
+ * - **Authorization in the CMS**: admin iff the token's verified email is in
+ *   the tenant's member set (loaded here, checked synchronously in
+ *   `claimsToSubject`). No per-tenant Keycloak role.
  * - StorageTokenBroker pointed at the tenant's CDN bucket
  * - ControlCms with a Mongo repo prefixed by `tenant_<id>__`
  * - BucketProxyPublisher pointed at the same bucket — pushes data
@@ -41,6 +45,10 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
     const { runner, db, tenant, appBaseUrl, secretCrypto } = args;
     const pathPrefix = `/cms/${tenant.id}`;
 
+    // Admin membership, captured for this mount. The email comes from the
+    // token at login, so the (sync) `claimsToSubject` can gate on it.
+    const adminEmails = await loadAdminEmails(db, tenant.id);
+
     const cookieAuth = new KeycloakConsumer<TenantRole>(runner, {
         issuer:        tenant.keycloak.issuer,
         clientId:      tenant.keycloak.clientId,
@@ -49,12 +57,12 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
         sessionSecret: tenant.keycloak.sessionSecret,
         cookieName:    `cms-${tenant.id}-session`,
         basePath:      `${pathPrefix}/auth`,
-        claimsToSubject: (claims) => mapClaimsToSubject(claims, tenant.keycloak.adminRole),
+        claimsToSubject: (claims) => mapClaimsToSubject(claims, adminEmails),
     });
 
     const bearerAuth = new KeycloakBearerConsumer<TenantRole>({
         issuer:          tenant.keycloak.issuer,
-        claimsToSubject: (claims) => mapClaimsToSubject(claims, tenant.keycloak.adminRole),
+        claimsToSubject: (claims) => mapClaimsToSubject(claims, adminEmails),
     });
 
     const auth = new CompositeAuthentication<TenantRole>(runner, {
@@ -68,29 +76,36 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
     const repo = new MongoCmsRepository(db, { collectionPrefix: `tenant_${tenant.id}__` });
     await repo.init();
 
-    const adminGuard = createTenantAdminGuard(auth);
+    // Media is opt-in. With a bucket, wire the storage broker + browsable CDN
+    // + proxy publisher. Without one, mount a `DisabledCDN` — the admin loads
+    // but media operations are unavailable until a bucket is configured (which
+    // triggers a remount). The broker route + proxy publisher are skipped too.
+    let cdn: CDN = new DisabledCDN();
+    let proxyPublisher: BucketProxyPublisher | undefined;
+    if (tenant.assetsCdn) {
+        const adminGuard = createTenantAdminGuard(auth);
+        const broker = new StorageTokenBroker({
+            runner,
+            providerOrigin:  tenant.assetsCdn.url,
+            credentialToken: tenant.assetsCdn.bucketCredential,
+            mountPath:       `${pathPrefix}/_storage`,
+            middlewares:     [adminGuard],
+        });
 
-    const broker = new StorageTokenBroker({
-        runner,
-        providerOrigin:  tenant.assetsCdn.url,
-        credentialToken: tenant.assetsCdn.bucketCredential,
-        mountPath:       `${pathPrefix}/_storage`,
-        middlewares:     [adminGuard],
-    });
+        const bucket = await broker.getBucketInfo();
+        cdn = new StorageBrowser({
+            apiBaseUrl: `${pathPrefix}/_storage`,
+            bucket:     { limits: bucket.limits, quotas: bucket.quotas, cacheControl: bucket.cacheControl },
+            // Presigned upload URLs resolve to the upstream assetsCdn origin —
+            // the admin CSP needs to whitelist it.
+            origins:    safeOriginList(tenant.assetsCdn.url),
+        });
 
-    const bucket = await broker.getBucketInfo();
-    const cdn = new StorageBrowser({
-        apiBaseUrl: `${pathPrefix}/_storage`,
-        bucket:     { limits: bucket.limits, quotas: bucket.quotas, cacheControl: bucket.cacheControl },
-        // Presigned upload URLs resolve to the upstream assetsCdn origin —
-        // the admin CSP needs to whitelist it.
-        origins:    safeOriginList(tenant.assetsCdn.url),
-    });
-
-    const proxyPublisher = new BucketProxyPublisher({
-        brokerBaseUrl:    tenant.assetsCdn.url,
-        bucketCredential: tenant.assetsCdn.bucketCredential,
-    });
+        proxyPublisher = new BucketProxyPublisher({
+            brokerBaseUrl:    tenant.assetsCdn.url,
+            bucketCredential: tenant.assetsCdn.bucketCredential,
+        });
+    }
 
     // Per-tenant secret store: docs persist in `tenant_<id>__secrets`,
     // encrypted via `EnvelopeSecretCrypto` with `scopeId = tenant.id`.
@@ -120,10 +135,14 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
 
 function mapClaimsToSubject(
     claims: Record<string, unknown>,
-    adminRole: string,
+    adminEmails: Set<string>,
 ): Subject<TenantRole> {
-    const realmRoles = ((claims as { realm_access?: { roles?: string[] } }).realm_access?.roles) ?? [];
-    const role: TenantRole = realmRoles.includes(adminRole) ? "admin" : "user";
+    // Identity is the opaque `sub` (contract: identifier is NOT the email).
+    // Authorization is by verified email against the tenant's member set —
+    // an unverified email never grants admin.
+    const verified = claims.email_verified === true;
+    const email = verified ? String(claims.email ?? "").trim().toLowerCase() : "";
+    const role: TenantRole = email && adminEmails.has(email) ? "admin" : "user";
     return {
         identifier:  String(claims.sub ?? ""),
         displayName: String(claims.preferred_username ?? claims.email ?? "user"),

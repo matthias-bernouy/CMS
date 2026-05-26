@@ -14,7 +14,7 @@ import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
-import { StubMedia } from "./dev-server/stubMedia";
+import { DisabledCDN } from "../socle/default-implementation/CDN/DisabledCDN";
 import { loadPushConfig } from "./push/shared/config";
 
 function parseFlags(args: string[]): { port: number; host: string } {
@@ -71,7 +71,7 @@ export default async function CLI_dev(args: string[]) {
     const reload = createReloadEmitter();
     const repo   = new LocalFsCmsRepository(config.siteDir, built);
     const auth   = new InMemoryAuthentication({ role: "admin", displayName: "p9r dev" });
-    const media  = new StubMedia();
+    const media  = new DisabledCDN();
 
     const runner = new BunRunner();
     // Live-reload SSE channel — registered before the ControlCms group so it

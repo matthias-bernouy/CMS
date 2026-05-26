@@ -36,7 +36,7 @@ RUN chmod +x /usr/local/bin/cms-tp-entrypoint.sh
 
 # Default; override via `PORT` env (compose pins to 4002 to avoid colliding
 # with the hub (3000), example-tp (4000), addresses-tp (4001) on host).
-EXPOSE 3000 4002
+EXPOSE 3000 4002 4012
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -fsS -o /dev/null "http://127.0.0.1:${PORT:-3000}/health" || exit 1

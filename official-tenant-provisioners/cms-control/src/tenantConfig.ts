@@ -2,32 +2,34 @@ import { z } from "zod";
 import { defineTenantConfig } from "@bernouy/tenant-provisioner-sdk";
 
 /**
- * Per-tenant CMS config the **hub operator** sets (base.md §11). These are the
- * platform-level site identity knobs — distinct from what a CMS admin edits
- * in-app (favicon, notFound page, …) through ControlCms. They map onto the
- * tenant's `system.site` record via the provision/update hooks.
+ * Per-tenant config the **hub** sets when provisioning a CMS instance
+ * (base.md §11). Intentionally minimal: only the OIDC essentials for the
+ * tenant's **admin space**. Everything else (site name, host, language,
+ * theme, media bucket, …) is configured inside the CMS admin itself — the
+ * hub neither sees nor manages it.
  *
- * All fields are `control-plane`-writable only: they're operator concerns, not
- * tenant self-service (which avoids the `/tenant/config` PATCH path that does
- * NOT notify our hooks — only the control-plane PATCH calls `onUpdate`).
+ * Keys are flat (not a nested `oidc` object) so the client secret can be
+ * `writeOnly` on its own: `stripWriteOnly` is shallow (top-level fields only).
+ * All fields are control-plane-writable — operator concern, not tenant
+ * self-service (the `/tenant/config` PATCH path does NOT notify our hooks).
  */
 const CmsConfigShape = z.object({
-    siteName: z.string().default(""),
-    host:     z.string().default(""),   // canonical base URL
-    language: z.string().default(""),   // BCP-47 tag
-    theme:    z.string().default(""),   // raw theme CSS
+    oidcIssuer:        z.string().min(1),   // shared realm issuer URL (authN only)
+    oidcClientId:      z.string().min(1),   // shared confidential client for admin login
+    oidcClientSecret:  z.string().min(1),   // that client's secret (write-only)
+    initialAdminEmail: z.string().email(),  // bootstrap admin — authZ lives in the CMS
 });
 
 export const CMS_TENANT_CONFIG = defineTenantConfig({
-    version: "1.0",
+    version: "3.0",
     zod:     CmsConfigShape,
     title:   "CMS tenant config",
     defaultWritableBy: ["control-plane"],
     annotations: {
-        siteName: { title: "Site name",                 widget: "text",     group: "Identity" },
-        host:     { title: "Canonical host (base URL)",  widget: "text",     group: "Identity" },
-        language: { title: "Language (BCP-47)",          widget: "text",     group: "Identity" },
-        theme:    { title: "Theme CSS",                  widget: "textarea", group: "Appearance" },
+        oidcIssuer:        { title: "Admin OIDC issuer",        widget: "text", group: "Admin auth" },
+        oidcClientId:      { title: "Admin OIDC client ID",     widget: "text", group: "Admin auth" },
+        oidcClientSecret:  { title: "Admin OIDC client secret", widget: "text", group: "Admin auth", writeOnly: true },
+        initialAdminEmail: { title: "Initial admin email",      widget: "text", group: "Admin auth" },
     },
 });
 
