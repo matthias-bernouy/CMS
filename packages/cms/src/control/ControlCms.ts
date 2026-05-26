@@ -12,7 +12,6 @@ import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path"
 import { createAuthGuard } from "./core/authentication/authGuard";
 import type { CspExtras } from "../socle/server/buildCspContent";
-import { SpecCache } from "./core/data/SpecCache";
 
 type Configuration = {
     /**
@@ -60,7 +59,6 @@ export class ControlCms {
     private _secrets:         SecretStore;
     private _filesMetadata:   CmsFilesMetadataRepository | null;
     private _filesBlob:       CmsFilesBlobStore | null;
-    private _specCache:       SpecCache;
 
     constructor(
         runner: Runner,
@@ -80,7 +78,6 @@ export class ControlCms {
         this._secrets = secrets || new InMemorySecretStore();
         this._filesMetadata = filesMetadata ?? null;
         this._filesBlob = filesBlob ?? null;
-        this._specCache = new SpecCache();
 
         const authGuard = createAuthGuard(this);
 
@@ -131,10 +128,6 @@ export class ControlCms {
     get filesBlob(): CmsFilesBlobStore {
         if (!this._filesBlob) throw new Error("files blob backend not configured");
         return this._filesBlob;
-    }
-
-    get specCache(){
-        return this._specCache;
     }
 
     /**

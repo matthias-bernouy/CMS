@@ -1,6 +1,6 @@
 // One row in the platform's tenant registry. Each tenant brings its own
-// Keycloak realm + CDN bucket; the data layer is the shared Mongo Db with
-// per-tenant collection prefix (see `mountTenant`).
+// Keycloak realm; the data layer is the shared Mongo Db with per-tenant
+// collection prefix (see `mountTenant`).
 
 export type TenantKeycloak = {
     issuer:        string;
@@ -11,16 +11,7 @@ export type TenantKeycloak = {
     cliClientId?:  string;
 };
 
-export type TenantCdnBucket = {
-    /** Origin of the CDN provider (frontier B), e.g. `https://cdn.example.com`. */
-    url:              string;
-    /** Bucket-credential bearer held server-side; never reaches the browser. */
-    bucketCredential: string;
-};
-
 export type TenantDelivery = {
-    /** Bucket the Delivery cron writes rendered HTML, image variants, bundles and CSS into. */
-    publicCdn: TenantCdnBucket;
     /** Optional public host (`acme.com`) — used when rewriting absolute URLs in pages. */
     alias?: string;
     /**
@@ -44,12 +35,6 @@ export type Tenant = {
     createdAt: Date;
     updatedAt: Date;
     keycloak:  TenantKeycloak;
-    /**
-     * Bucket where Control admin uploads land. **Optional**: when absent the
-     * tenant mounts with a `DisabledCDN` (media operations unavailable). The
-     * bucket is configured later from the CMS admin, which triggers a remount.
-     */
-    assetsCdn?: TenantCdnBucket;
     /** Optional Delivery wiring — fillable later, opt-in via `enabled`. */
     delivery?: TenantDelivery;
 };
