@@ -1,40 +1,33 @@
-# Socle — Bernouy CMS & CDN platform
+# Socle — Bernouy CMS platform
 
 Bun + TypeScript monorepo (`@bernouy/socle-monorepo`) bundling the
-infrastructure contracts, the CDN stack, the CMS (single- and
-multi-tenant), the admin Web Components, and the deployment artefacts
-that run them on bare VPS.
+infrastructure contracts, the CMS (single- and multi-tenant), the admin
+Web Components, and the deployment artefacts that run them on bare VPS.
 
 ## Layout
 
 ```
 Cms/
-├── packages/                         # 14 workspace members
+├── packages/                         # 10 workspace members
 │   ├── core/                         @bernouy/core            interfaces (Runner, Authentication, Mailer, CDN) + serve helpers + envelope crypto
 │   ├── runner-bun/                   @bernouy/runner-bun      Runner backed by `Bun.serve`
 │   ├── auth-keycloak/                @bernouy/auth-keycloak   Keycloak / OIDC consumer (jose)
 │   ├── auth-composite/               @bernouy/auth-composite  host-based router across multiple Authentications
 │   ├── keycloak-client/              @bernouy/keycloak-client Keycloak Admin REST client
 │   ├── mailer-smtp/                  @bernouy/mailer-smtp     Mailer over `nodemailer`
-│   ├── cdn-buckets/                  @bernouy/cdn-buckets     bucket CDN: provider, broker, browser, Mongo repos, envelope-encrypted proxy secrets
-│   ├── cdn-node/                     @bernouy/cdn-node        CDN origin/edge orchestration (edge registry, edge tokens, access metrics)
 │   ├── webcomponents/                @bernouy/webcomponents   admin UI toolkit (`<w13c-*>`, `<p9r-*>`), built bundle + style.css
 │   ├── cms/                          @bernouy/cms             CMS core: Control (admin + REST + visual editor), Delivery (rendering), `p9r` CLI
 │   ├── cms-blocs/                    @bernouy/cms-blocs       library of reusable blocs (action / content / form / header / layout / navigation / …)
 │   ├── cms-control-mt/               @bernouy/mt-cms-control  multi-tenant wrapper around Control (superadmin + per-tenant mounting)
-│   ├── cms-delivery-mt/              @bernouy/cms-delivery-mt multi-tenant build-time delivery cron (renders + uploads to tenant CDN buckets)
-│   └── hub-api/                      @bernouy/hub-api         public REST surface bridging consumers to CDN + tenant provisioning (zod + OpenAPI)
+│   └── hub-api/                      @bernouy/hub-api         public REST surface bridging consumers to tenant provisioning (zod + OpenAPI)
 │
 ├── docker/                           # deployment artefacts
 │   ├── auth/                         Keycloak self-hosted (sibling `postgres:16-alpine`)
-│   ├── cdn-edge/                     public-serving CDN node (nginx + brotli + secrets-poll loop)
-│   ├── cdn-node/                     CDN origin / control-plane (admin + lsyncd-over-SSH push to edges)
 │   ├── cms-control-mt/               multi-tenant Control container
-│   ├── cms-delivery-mt/              multi-tenant Delivery cron container
 │   ├── hub-api/                      Hub REST API container
 │   ├── _shared/                      `okms-fetch.sh` — OVHcloud OKMS mTLS secret pull, used by every entrypoint
-│   ├── init-server.sh                fresh-VPS bootstrap (apt + Docker + ufw), `--role <auth|origin|edge|cms>`
-│   └── DEPLOY.md                     end-to-end runbook across the 4 prod hosts
+│   ├── init-server.sh                fresh-VPS bootstrap (apt + Docker + ufw), `--role <auth|cms>`
+│   └── DEPLOY.md                     end-to-end runbook across the prod hosts
 │
 ├── tests/                            workspace-level integration smoke tests
 ├── build.ts                          orchestrated build (see below)
@@ -52,24 +45,15 @@ core ─┬─ runner-bun
       ├─ auth-keycloak              (+ jose)
       ├─ auth-composite
       ├─ mailer-smtp                (peer: nodemailer)
-      ├─ cdn-buckets ──────────────────┐ (peer: image-size, mongodb)
-      │     ▲                          │
-      │     │                          │
-      │     ├── cdn-node               │ (peer: mongodb)
-      │     │                          │
-      │     ├── cms ◄── webcomponents  │ (deps: linkedom, playwright; peer: mongodb, typescript)
-      │     │     ▲                    │
-      │     │     ├── cms-blocs        │
-      │     │     │                    │
-      │     │     └── cms-control-mt ◄─┘ ◄── auth-keycloak, auth-composite, runner-bun
-      │     │              ▲
-      │     │              ├── cms-delivery-mt   (peer: mongodb, playwright)
-      │     │              │
-      │     │              └── hub-api ◄── keycloak-client (+ zod, @asteasolutions/zod-to-openapi)
+      ├─ cms ◄── webcomponents      (deps: linkedom, playwright; peer: mongodb, typescript)
+      │     ▲
+      │     ├── cms-blocs
       │     │
-      │     └── (cdn-buckets is also a direct dep of cms-delivery-mt and hub-api)
+      │     └── cms-control-mt ◄── auth-keycloak, auth-composite, runner-bun
+      │              ▲
+      │              └── hub-api ◄── keycloak-client (+ zod, @asteasolutions/zod-to-openapi)
       │
-      └── webcomponents (no deps; consumed by cdn-buckets, cdn-node, cms)
+      └── webcomponents (no deps; consumed by cms)
 ```
 
 Rules of thumb:
@@ -79,7 +63,7 @@ Rules of thumb:
   primitives (`EnvelopeSecretCrypto`, `LocalKekProvider`,
   `OvhOkmsKekProvider`).
 - `@bernouy/webcomponents` is the only place admin UI custom elements
-  live; everything visual in `cdn-buckets`, `cdn-node` and `cms` consumes it.
+  live; everything visual in `cms` consumes it.
 - The `*-mt` packages are thin wrappers that compose the single-tenant
   packages under per-tenant runner groups.
 
@@ -103,9 +87,9 @@ artefacts at type-check time:
 3. `packages/cms` → control-side prebuild + own `.d.ts` emit.
 
 Every other package (`core`, `runner-bun`, `auth-*`, `mailer-*`,
-`keycloak-client`, `cdn-buckets`, `cdn-node`, `cms-blocs`, `cms-*-mt`,
-`hub-api`) ships **source** through its `exports` field — no bundle
-step, `bun link` consumers resolve straight to `src/`.
+`keycloak-client`, `cms-blocs`, `cms-*-mt`, `hub-api`) ships **source**
+through its `exports` field — no bundle step, `bun link` consumers
+resolve straight to `src/`.
 
 ## Deployment
 
@@ -114,9 +98,8 @@ nginx template (when relevant), `runtime.package.json`, and a per-image
 `DEPLOY.md`. They all share `docker/_shared/okms-fetch.sh` for boot-time
 secret retrieval (mTLS against an OVHcloud OKMS domain).
 
-The cluster targets four hosts (auth, cdn-origin, cdn-edge ×N, cms);
-`docker/DEPLOY.md` is the cross-cutting runbook (host roles,
-boot order, OKMS provisioning, certs).
+The cluster targets the auth and cms hosts; `docker/DEPLOY.md` is the
+cross-cutting runbook (host roles, boot order, OKMS provisioning, certs).
 
 ## License
 

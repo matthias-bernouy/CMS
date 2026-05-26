@@ -1,14 +1,10 @@
 # Déploiement bernouy.com — runbook global
 
-Orchestration de bout en bout pour redéployer le cluster sur les 4
-domaines :
+Orchestration de bout en bout pour redéployer le cluster :
 
 | Domaine | Image | VPS |
 |---|---|---|
 | `auth.bernouy.com` | `bernouy/auth` (+ sibling `postgres:16-alpine`) | auth box |
-| `cdn-origin.bernouy.com` | `bernouy/cdn-origin` | origin (1 box) |
-| `cdn.bernouy.com` (round-robin) | `bernouy/cdn-edge` | N edges |
-| `cdn-edge.bernouy.com` (SSH/admin host) | (alias DNS sur 1 edge) | edge VPS |
 | `cms.bernouy.com` | `bernouy/cms-control-mt` | cms box |
 
 > **Contexte** : déploiement « test en conditions réelles ». Tous les
@@ -56,9 +52,7 @@ Manager → IAM/Sécurité → Identités et gestion des accès → onglet
 | Compte de service | Pour |
 |---|---|
 | `auth` | Keycloak self-hosted |
-| `cdn-origin` | l'origin |
 | `cms-control-mt` | le CMS multi-tenant |
-| `cdn-edge-<edge-id>` | un par edge — **un par VPS edge** |
 
 > Le compte de service est l'**identité IAM** à laquelle on bind le cert
 > mTLS. L'URN qui s'affiche peut contenir le mot `oauth2` (legacy
@@ -101,21 +95,19 @@ un secret" → Type **Clé/valeur (KV2)**.
 | Path du secret (suggéré) | Pour |
 |---|---|
 | `prod/auth/config` | Keycloak self-hosted |
-| `prod/cdn-origin/config` | origin |
 | `prod/cms-control-mt/config` | CMS multi-tenant |
-| `prod/cdn-edge/<edge-id>/config` | un par edge |
 
 > Le path est libre (tu peux ajouter un namespace `prod/`, `staging/`,
 > etc.). Ce qui compte c'est que `OKMS_SECRET_PREFIX` du §0.6 contienne
 > exactement la même valeur (path complet, sans `/` final).
 
 Le détail des clés à mettre dans chaque bundle est dans le DEPLOY.md
-du service correspondant (§3 ou §5).
+du service correspondant.
 
 #### 0.6. Sur chaque VPS host : cert + key + bootstrap.env
 
 ```bash
-# Adapter le SERVICE_DIR : /etc/auth, /etc/cdn, /etc/cms-mt, /etc/cdn-edge
+# Adapter le SERVICE_DIR : /etc/auth, /etc/cms-mt
 SERVICE_DIR=/etc/auth
 
 sudo install -d -m 0700 -o root -g root ${SERVICE_DIR}/okms
@@ -147,15 +139,14 @@ OKMS_SECRET_PREFIX=prod/auth/config    # path COMPLET du secret (cf. §0.5)
 
 ### 1. Keycloak (self-hosted via `bernouy/auth`)
 
-Déployer **en premier** dans la chaîne — cdn-origin et cms-control-mt
-s'authentifient contre lui. Cf. [`auth/DEPLOY.md`](auth/DEPLOY.md).
+Déployer **en premier** dans la chaîne — cms-control-mt
+s'authentifie contre lui. Cf. [`auth/DEPLOY.md`](auth/DEPLOY.md).
 
-Une fois Keycloak up, 3 clients OIDC à provisionner via l'admin UI
+Une fois Keycloak up, les clients OIDC à provisionner via l'admin UI
 **avant** de booter les services consommateurs :
 
 | Realm/Client | Pour | Ref |
 |---|---|---|
-| `cdn` realm, client `cdn-origin` | admin cdn-origin | auth/DEPLOY §8a |
 | `platform` realm, client `cms-superadmin` | admin cms-control-mt | auth/DEPLOY §8b |
 | (par tenant) `<tenant>` realm, client `cms` + `cms-cli` | admin tenant CMS | cms-control-mt DEPLOY §9 |
 
@@ -165,49 +156,18 @@ exit fatal au boot, KEYCLOAK_CLIENT_SECRET requis).
 
 ### 2. MongoDB externe (Atlas ou self-hosted)
 
-**Une seule** instance. Crée 2 databases :
-- `cdn` — partagé entre cdn-origin et cdn-buckets (mêmes collections,
-  même KEK).
+**Une seule** instance. Crée la database :
 - `mt-cms` — pour cms-control-mt (collections `tenants`, `tenant_<id>__*`).
 
-User dédié par DB recommandé.
+User dédié recommandé.
 
-### 3. KEK (envelope encryption key)
-
-**Une seule** valeur pour tout le cluster CDN. Génère :
-
-```bash
-openssl rand -base64 32
-```
-
-Stocker dans le bundle OKMS `cdn-origin/config` sous la clé
-`CDN_BUCKETS_KEK`. **Nulle part ailleurs** (cms-control-mt et cdn-edge
-n'en ont pas besoin — l'encryption est server-side dans cdn-origin
-via `MongoBucketProxyRepository`).
-
-Si tu redéploies à zéro avec un **nouveau** KEK : la collection
-`bucket_proxies` existante devient illisible. Soit tu purges la
-collection (re-saisir tous les Data Providers via les admins CMS),
-soit tu réutilises le KEK existant.
-
-### 4. DNS records
+### 3. DNS records
 
 Tous en TTL=300 pour pouvoir bouger vite.
 
 | Record | Type | Cible |
 |---|---|---|
 | `cms.bernouy.com` | A | `<ip-cms-vps>` |
-| `cdn-origin.bernouy.com` | A | `<ip-origin-vps>` |
-| `cdn.bernouy.com` | A (round-robin) | `<ip-edge-1>`, `<ip-edge-2>`, … |
-| `cdn-edge.bernouy.com` (optionnel) | A | `<ip-edge-1>` (juste pour ton SSH/admin) |
-
-**N'inclure aucune IP origin** dans le RR `cdn.bernouy.com`.
-
-### 5. OVH credentials (DNS-01)
-
-Recommandé pour le cert origin. Variables `OVH_ENDPOINT`,
-`OVH_APPLICATION_KEY`, `OVH_APPLICATION_SECRET`, `OVH_CONSUMER_KEY`. Cf.
-[lego docs](https://go-acme.github.io/lego/dns/ovh/).
 
 ---
 
@@ -216,150 +176,47 @@ Recommandé pour le cert origin. Variables `OVH_ENDPOINT`,
 ```
         ┌─────────────────────┐
         │ 0. auth (Keycloak)  │   upstream — tout le reste auth contre lui
-        │    auth.bernouy.com │   + UI : créer realms cdn + platform,
-        └──────┬──────────────┘     clients cdn-origin + cms-superadmin,
+        │    auth.bernouy.com │   + UI : créer realm platform,
+        └──────┬──────────────┘     client cms-superadmin,
                │                    copier secrets dans bundles OKMS
                ▼
         ┌─────────────────────┐
-        │ 1. cdn-origin       │
-        │    cdn-origin.b.com │
-        └──────┬──────────────┘
-               │ génère pubkey SSH
-               ▼
-        ┌─────────────────────┐
-        │ 2. registrer        │
-        │    edge dans admin  │   → récupère plaintextToken
-        └──────┬──────────────┘
-               │
-               ▼
-        ┌─────────────────────┐
-        │ 3. cdn-edge         │
-        │    cdn.bernouy.com  │   ← bootstrap mode, attend cert
-        └──────┬──────────────┘
-               │ ACME proxy_back
-               ▼
-        ┌─────────────────────┐
-        │ 4. PUBLIC_DOMAIN    │   l'origin retry au renew
-        │    cert minted      │   → lsync vers edge
-        └──────┬──────────────┘
-               │
-               ▼
-        ┌─────────────────────┐
-        │ 5. cms-control-mt   │   indépendant, peut commencer en parallèle de 1
-        │    cms.bernouy.com  │   mais ne peut onboarder un tenant qu'après 4
+        │ 1. cms-control-mt   │
+        │    cms.bernouy.com  │
         └─────────────────────┘
 ```
 
-### Étape 1 — cdn-origin
+### Étape 1 — cms-control-mt
 
-Suivre [`cdn-node/DEPLOY.md`](cdn-node/DEPLOY.md). À la fin :
-- `https://cdn-origin.bernouy.com/admin/origin/` accessible et auth via Keycloak.
-- pubkey SSH affichée + cert MAIN_DOMAIN valide.
-- Dashboard edges vide.
-- **Cert PUBLIC_DOMAIN absent** (renew loop le retry quand un edge sera up).
-
-### Étape 2 — Déploiement du 1er edge
-
-Tout vit dans [`cdn-edge/DEPLOY.md`](cdn-edge/DEPLOY.md) : bootstrap
-host (`init-server.sh --role edge`), pubkey origin → host edge
-(§3-§4), enregistrement de l'edge dans l'admin origin avec récup du
-`plaintextToken` via la modale (§6), bundle OKMS de l'edge incluant
-`EDGE_TOKEN` (§7), run du container (§8). Le container boot en mode
-bootstrap (port 80 only) en attendant le cert `PUBLIC_DOMAIN`.
-
-### Étape 3 — Cert PUBLIC_DOMAIN + sync complet
-
-Sur l'origin :
-```bash
-sudo docker restart cdn-origin
-# → relance le boot, retry HTTP-01 webroot via l'edge → cert minted en ~20s
-# → lsyncd push vers l'edge → l'edge sort du bootstrap, full nginx :443
-```
-
-Smoke test :
-```bash
-echo | openssl s_client -connect cdn.bernouy.com:443 \
-    -servername cdn.bernouy.com 2>/dev/null \
-    | openssl x509 -noout -issuer -dates
-```
-
-Mettre à jour le DNS public `cdn.bernouy.com` → IP de l'edge.
-
-### Étape 4 — cms-control-mt
-
-Suivre [`cms-control-mt/DEPLOY.md`](cms-control-mt/DEPLOY.md). Peut être
-démarré dès l'étape 1 (indépendant de la chaîne CDN), mais
-l'onboarding d'un premier tenant requiert :
-- un bucket créé via `https://cdn-origin.bernouy.com/admin/buckets`
-- une `bucketCredential` émise pour ce bucket
-- `<PUBLIC_DOMAIN>` qui sert effectivement (étape 4 OK)
+Suivre [`cms-control-mt/DEPLOY.md`](cms-control-mt/DEPLOY.md). Dépend
+uniquement de l'étape 0 (Keycloak) + MongoDB externe.
 
 ---
 
 ## Smoke test global après déploiement
 
 ```bash
-# 1. Origin
-curl -sI https://cdn-origin.bernouy.com/admin/origin/ | head -1
-# → HTTP/2 302 (redirect Keycloak)
-
-# 2. Edge serving
-curl -sI https://cdn.bernouy.com/<bucket-id>/<known-key> | head -1
-# → HTTP/2 200
-
-# 3. Manifest secrets sur l'edge
-sudo docker logs cdn-edge --tail 50 | grep fetch-secrets
-# → "[fetch-secrets] manifest updated (etag=..., N entries)" (au moins une fois)
-
-# 4. CMS superadmin
+# CMS superadmin
 curl -sI https://cms.bernouy.com/superadmin/ | head -1
 # → HTTP/2 302 (redirect Keycloak)
 ```
 
 ---
 
-## Test end-to-end : un Data Provider qui marche
+## Test end-to-end : onboarder un tenant
 
-Une fois 1+2+3+4+5 OK :
+Une fois 0+1 OK :
 
 1. Onboarder un tenant via `https://cms.bernouy.com/superadmin/`
 2. Login en tant qu'admin du tenant via `https://cms.bernouy.com/cms/<id>/admin/`
-3. Aller sur `/admin/data` → "+ Add provider" → URL OpenAPI publique.
-4. Save → l'admin du tenant voit la liste des endpoints.
-5. Vérifier côté edge — fragment lsynced ET manifest secrets :
-   ```bash
-   # Le fragment nginx (set_by_lua_block + cms_secrets[...])
-   sudo docker exec cdn-edge cat /var/lib/cdn/nginx-generated/aliasesServers.conf \
-       | grep -E 'location /\.cms/data/<provider-id>/|cms_secrets'
-
-   # La table de secrets en RAM (tmpfs)
-   sudo docker exec cdn-edge cat /run/cdn-edge/secrets.json | jq '.manifest | keys'
-
-   # Le fetch-secrets a tourné depuis l'ajout
-   sudo docker logs --since 5m cdn-edge | grep fetch-secrets
-   # → "[fetch-secrets] manifest updated (etag=..., N entries)"
-   ```
-6. Browser, depuis une page du tenant qui consomme ce provider via
-   un bloc data-aware : l'inspecteur réseau montre des requêtes
-   `https://<bucket-domain>/.cms/data/<provider-id>/...` qui
-   répondent 2xx avec les données upstream.
-
-Si la route 502 :
-- Header `Authorization` vide upstream → la SECRET_X correspondante
-  n'est pas (encore) dans `cms_secrets`. Forcer un poll :
-  `sudo docker exec cdn-edge /usr/local/bin/fetch-secrets.sh once`.
-- Erreur Lua → `sudo docker logs cdn-edge | grep -i lua`.
-- nginx config invalide → `sudo docker exec cdn-edge nginx -t`.
+3. L'admin du tenant accède à son espace `/admin/pages`.
 
 ---
 
 ## Documents détaillés par image
 
 - [auth/DEPLOY.md](auth/DEPLOY.md) — Keycloak self-hosted (Postgres sibling)
-- [cdn-node/DEPLOY.md](cdn-node/DEPLOY.md) — origin (admin, lsyncd, edge-secrets)
-- [cdn-edge/DEPLOY.md](cdn-edge/DEPLOY.md) — edge (OpenResty, host bootstrap, secrets poll, full edge deploy)
 - [cms-control-mt/DEPLOY.md](cms-control-mt/DEPLOY.md) — multi-tenant CMS Control
-- [cms-delivery-mt/DEPLOY.md](cms-delivery-mt/DEPLOY.md) — multi-tenant Delivery cron
 
 ---
 
@@ -367,7 +224,7 @@ Si la route 502 :
 
 Diagnostiquer un container qui boucle au boot avec `[okms-fetch] FATAL`.
 Lancer chaque commande sur le VPS du service en panne — adapter
-`SERVICE_DIR` au service (`/etc/auth`, `/etc/cdn`, etc.).
+`SERVICE_DIR` au service (`/etc/auth`, `/etc/cms-mt`, etc.).
 
 ### Symptôme : `sslv3 alert bad certificate` au TLS handshake
 

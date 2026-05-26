@@ -11,7 +11,7 @@ Three independent layers under `src/`:
 - **`src/control/`** — Admin UI + REST API + visual editor. Consumed through the `ControlCms` class. Authenticated, low-traffic, mounted under a runner-scoped prefix (typically `/cms`).
 - **`src/delivery/`** — Public rendering layer. Two consumption modes:
   - **Runtime `DeliveryCms`** — on-demand render: page lookup in repository → `renderPage` → cache. Serves rendered pages + bloc bundles + theme CSS + the component runtime + the default favicon. **No Playwright at runtime.**
-  - **Build-time `DeliveryBuilder`** (under `src/delivery/build/`) — pre-renders every page, generates image variants via `HttpVariantGenerator`, optionally enhances HTML through `BuildEnhancer` + `PlaywrightSession`, uploads everything to a CDN bucket. Used by `@bernouy/cms-delivery-mt`'s cron.
+  - **Build-time `DeliveryBuilder`** (under `src/delivery/build/`) — pre-renders every page, generates image variants via `HttpVariantGenerator`, optionally enhances HTML through `BuildEnhancer` + `PlaywrightSession`. Build engine only, currently not wired to a publish target.
 - **`src/socle/`** — Shared contracts, providers, constants, infrastructure utilities. Both `control/` and `delivery/` depend on `socle/`; never the other way. `delivery/` must never import from `control/`.
 
 Plus:
@@ -115,7 +115,6 @@ CLI source lives in `src/cli/` (one `CLI_<verb>.ts` per command +
   - `Cache.ts` — storage shape used by both control and delivery
   - `KVStore.ts` — generic key-value contract (used by `EncryptedMongoSecretStore` internals)
   - `SecretStore.ts` — typed secret store (encrypted at rest)
-  - `ProxyPublisher.ts` — bucket proxy push slot (filled by `BucketProxyPublisher` from `@bernouy/cdn-buckets`)
   - `Data/` — extension/data contracts consumed by editors
 - Delivery has its own **read-only** repository contract at `src/delivery/interfaces/DeliveryRepository.ts` — strict subset of `CmsRepository` (no CRUD, no editor bundles). A `MongoCmsRepository` / `InMemoryCmsRepository` instance satisfies `DeliveryRepository` by structural typing.
 - `TBloc = { id, name, group, description, viewJS, editorJS }` — `group` and `description` persisted alongside compiled JS so queries like `getBlocsList()` can answer without parsing the editor bundle. `group` is also baked into `editorJS` via `BE5_GROUP_TO_BE_REPLACED` for the in-browser BlocLibrary; the DB column is the queryable copy.
@@ -128,7 +127,7 @@ CLI source lives in `src/cli/` (one `CLI_<verb>.ts` per command +
   - `SecretStore/memory.ts` — `InMemorySecretStore`.
   - `SecretStore/encryptedMongo.ts` — `EncryptedMongoSecretStore` (envelope-encrypted via `EnvelopeSecretCrypto` from `@bernouy/core`).
   - `MongoDekRepository.ts` — `DekRepository` impl over a single `cms_deks` collection; one DEK per `scopeId` (typically `tenantId` in `cms-control-mt`).
-- **Media on the consumer side**: the CMS receives a `CDN` instance (the contract from `@bernouy/core`) via `ControlCms`'s constructor. Production wires `StorageBrowser` from `@bernouy/cdn-buckets` (browser-deployable, hydrated via the broker). The test harness (`tests/human/HttpMedia.ts`) is the canonical reference for the `CDN` portability contract.
+- **Media on the consumer side**: media now goes through the `/api/files` endpoints, backed by `CmsFilesMetadataRepository` + `CmsFilesBlobStore`. The test harness (`tests/human/HttpMedia.ts`) is the canonical reference for the `CDN` portability contract.
 
 ## API endpoint convention
 
@@ -211,15 +210,15 @@ Lives under `src/delivery/`.
 
 ### Build vs runtime — where Playwright lives
 
-- **Build time** (`src/delivery/build/` — `DeliveryBuilder`, `BuildEnhancer`, `HttpVariantGenerator`, `pageBucketName`, `pagePublicPath`): pre-renders every page, generates image variants, optionally enhances HTML using a long-lived `PlaywrightSession` (Chromium measures images at every viewport, classifies `loading` / `fetchpriority`, computes `srcset`). Uploads to a CDN bucket. **This is where `PlaywrightSession` is instantiated** — typically once per process, shared across tenants by `@bernouy/cms-delivery-mt`.
-- **Runtime** (`src/delivery/core/`): `handlePageRequest` does the lookup → render → cache flow only. No Playwright. The only "enhancement" path it knows about is via the build pipeline that already pre-baked the cached HTML in the bucket served by cdn-edge.
+- **Build time** (`src/delivery/build/` — `DeliveryBuilder`, `BuildEnhancer`, `HttpVariantGenerator`, `pageBucketName`, `pagePublicPath`): pre-renders every page, generates image variants, optionally enhances HTML using a long-lived `PlaywrightSession` (Chromium measures images at every viewport, classifies `loading` / `fetchpriority`, computes `srcset`). **This is where `PlaywrightSession` is instantiated** — typically once per process. Build engine only, currently not wired to a publish target.
+- **Runtime** (`src/delivery/core/`): `handlePageRequest` does the lookup → render → cache flow only. No Playwright. The only "enhancement" path it knows about is via the build pipeline that already pre-baked the cached HTML.
 
-- **Delivery never serves media bytes.** Images referenced from page content resolve to absolute URLs on the storage backend (the bucket on cdn-edge). Variant URLs are computed at build time by `HttpVariantGenerator`. There is no `/media?id=X` endpoint on the Delivery runner.
+- **Delivery never serves media bytes.** Images referenced from page content resolve to absolute URLs on the storage backend. Variant URLs are computed at build time by `HttpVariantGenerator`. There is no `/media?id=X` endpoint on the Delivery runner.
 - `DeliveryCache` is an isolated `InMemoryCache`-equivalent scoped to Delivery (own file, own DEV bypass). Cache key for pages is `P9R_CACHE.page(path)`.
 
 ## Shared infrastructure (`src/socle/`)
 
-- `interfaces/` — `CmsRepository`, `Cache`, `KVStore`, `SecretStore`, `ProxyPublisher`, `models` (`TPage`, `TBloc`, `TTemplate`, `TSnippet`, `TSystem`), `Data/`.
+- `interfaces/` — `CmsRepository`, `CmsFilesMetadataRepository`, `CmsFilesBlobStore`, `Cache`, `KVStore`, `SecretStore`, `models` (`TPage`, `TBloc`, `TTemplate`, `TSnippet`, `TSystem`), `Data/`.
 - `default-implementation/` — in-memory + Mongo providers for repository / cache / secret store, plus `MongoDekRepository` for envelope encryption.
 - `constants/p9r-constants.ts` — cache key builders, event names, DOM ids, mode tokens.
 - `constants/editorAttributes.ts` — DOM attribute names consumed by editors.

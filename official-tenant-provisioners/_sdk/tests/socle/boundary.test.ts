@@ -8,7 +8,6 @@ import { sdkPackageRoot } from "src/constants";
 const FORBIDDEN = [
     "@bernouy/cms",            // covers cms, cms-blocs, cms-*-mt by prefix
     "@bernouy/mt-cms-control",
-    "@bernouy/cms-delivery-mt",
     "@bernouy/auth-keycloak",
 ] as const;
 

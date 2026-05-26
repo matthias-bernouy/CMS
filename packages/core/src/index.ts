@@ -24,9 +24,7 @@ export * from "./utilities/html";
 export * from "./utilities/concurrencyLimit";
 
 // Envelope encryption (KEK + per-scope DEK + cached unwrap). Used by
-// cdn-buckets to encrypt per-bucket proxy secrets and by cms-control-mt
-// to encrypt per-tenant admin secrets — same primitives, different
-// scope conventions.
+// cms-control-mt to encrypt per-tenant admin secrets.
 export { encryptAesGcm, decryptAesGcm, type EncryptedBlob } from "./crypto/aesGcm";
 export { loadKek }                                          from "./crypto/loadKek";
 export type { KekProvider }                                 from "./crypto/KekProvider";

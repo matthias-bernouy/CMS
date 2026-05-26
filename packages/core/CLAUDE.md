@@ -54,7 +54,7 @@ src/
 - **`Mailer.send` is the only method.** No `sendBatch`, no template
   language. Consumers that need email build the body themselves.
 - **`CDN` is one bucket.** Multi-bucket fan-out (admin / provisioning)
-  lives in a separate provider contract in `cdn-buckets`. Don't
+  used to live in a separate provider contract (now removed). Don't
   generalize this interface.
 
 ## CDN portability — the single most enforced rule

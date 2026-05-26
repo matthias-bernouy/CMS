@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Generate the 4-node WireGuard mesh for the monitoring overlay network.
+# Generate the WireGuard mesh for the monitoring overlay network.
 #
-# Outputs four wg0.conf files under ./out/, one per peer. Each peer's
+# Outputs one wg0.conf file per peer under ./out/. Each peer's
 # [Interface] holds its private key + its assigned 10.10.0.X address, and
 # carries [Peer] sections for every OTHER node in the mesh. No public-
 # internet exposure of metrics endpoints — Prometheus scrapes via the
@@ -21,8 +21,6 @@ cd "$(dirname "$0")"
 # ── Public IPs of each VPS — required for the [Peer].Endpoint line.
 : "${VPS_IP_MONITORING:?VPS_IP_MONITORING is required (public IP of the new monitoring VPS)}"
 : "${VPS_IP_CMS:?VPS_IP_CMS is required (public IP of cms.bernouy.com)}"
-: "${VPS_IP_CDN_ORIGIN:?VPS_IP_CDN_ORIGIN is required (public IP of cdn-origin.bernouy.com)}"
-: "${VPS_IP_CDN_EDGE:?VPS_IP_CDN_EDGE is required (public IP of cdn-edge / cdn.bernouy.com)}"
 
 LISTEN_PORT="${WG_LISTEN_PORT:-51820}"
 OUT_DIR="${OUT_DIR:-./out}"
@@ -35,9 +33,7 @@ if ! command -v wg >/dev/null 2>&1; then
 fi
 
 NODES=("monitoring:10.10.0.1:${VPS_IP_MONITORING}"
-       "cms:10.10.0.2:${VPS_IP_CMS}"
-       "cdn-origin:10.10.0.3:${VPS_IP_CDN_ORIGIN}"
-       "cdn-edge:10.10.0.4:${VPS_IP_CDN_EDGE}")
+       "cms:10.10.0.2:${VPS_IP_CMS}")
 
 # 1. Generate one keypair per node.
 declare -A PRIV PUB
@@ -79,7 +75,7 @@ done
 
 echo
 echo "Next:"
-echo "  for node in monitoring cms cdn-origin cdn-edge; do"
+echo "  for node in monitoring cms; do"
 echo "    scp out/\${node}.wg0.conf ubuntu@<host>:/tmp/wg0.conf"
 echo "    ssh ubuntu@<host> 'sudo install -m 0600 /tmp/wg0.conf /etc/wireguard/wg0.conf && \\"
 echo "       sudo systemctl enable --now wg-quick@wg0'"
@@ -87,5 +83,3 @@ echo "  done"
 echo
 echo "Verify connectivity from monitoring VPS:"
 echo "  ping -c2 10.10.0.2  # cms"
-echo "  ping -c2 10.10.0.3  # cdn-origin"
-echo "  ping -c2 10.10.0.4  # cdn-edge"

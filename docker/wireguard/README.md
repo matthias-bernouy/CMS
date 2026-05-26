@@ -1,18 +1,16 @@
 # WireGuard mesh — monitoring overlay network
 
-Self-hosted 4-node WireGuard mesh that carries Prometheus scrapes from the
+Self-hosted WireGuard mesh that carries Prometheus scrapes from the
 monitoring VPS to the exporters on each production node. **Not** an internet
 gateway — `AllowedIPs` only matches the `10.10.0.0/24` subnet, regular traffic
 stays on the public interface.
 
 ```
 10.10.0.1  monitoring  (Prometheus, Grafana, Alertmanager)
-10.10.0.2  cms         (cms.bernouy.com — cms-control-mt + cms-delivery-mt)
-10.10.0.3  cdn-origin  (cdn-origin.bernouy.com — cdn-node)
-10.10.0.4  cdn-edge    (cdn.bernouy.com — openresty edge)
+10.10.0.2  cms         (cms.bernouy.com — cms-control-mt)
 ```
 
-Each node holds its own private key and the public keys of the three others.
+Each node holds its own private key and the public keys of every other peer.
 Add a node → re-run `generate-mesh.sh` with one more entry → re-distribute
 `wg0.conf` to all peers (or `wg set` the new peer ad-hoc on each existing
 node, keys preserved).
@@ -36,21 +34,17 @@ On each VPS:
 ```bash
 cd docker/wireguard
 
-# Fill these with the public IPs of your 4 VPS:
+# Fill these with the public IPs of your VPS:
 export VPS_IP_MONITORING=51.x.x.x
 export VPS_IP_CMS=162.19.255.149
-export VPS_IP_CDN_ORIGIN=51.91.77.195
-export VPS_IP_CDN_EDGE=51.x.x.x
 
 ./generate-mesh.sh
 ```
 
-Outputs 4 files under `out/`:
+Outputs one file per peer under `out/`:
 ```
 out/monitoring.wg0.conf
 out/cms.wg0.conf
-out/cdn-origin.wg0.conf
-out/cdn-edge.wg0.conf
 ```
 
 Then per-VPS:
@@ -66,7 +60,7 @@ ssh ubuntu@<monitoring-host> '
 '
 ```
 
-Repeat for cms, cdn-origin, cdn-edge with the matching file.
+Repeat for cms with the matching file.
 
 ## Verify
 
@@ -74,8 +68,6 @@ From the monitoring VPS:
 
 ```bash
 ping -c2 10.10.0.2   # cms
-ping -c2 10.10.0.3   # cdn-origin
-ping -c2 10.10.0.4   # cdn-edge
 sudo wg show         # see peer handshakes + last-handshake age
 ```
 

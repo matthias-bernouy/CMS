@@ -1,5 +1,5 @@
 # Build context exclusions — applies to every `docker build .` invocation
-# at repo root (cms-control-mt, cdn-node, cdn-edge). Keeps the context
+# at repo root (cms-control-mt). Keeps the context
 # small and avoids accidentally shipping host secrets / dev caches.
 
 # Heavy / regenerable

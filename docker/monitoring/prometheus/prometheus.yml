@@ -39,8 +39,6 @@ scrape_configs:
         labels: { instance: cms }
       - targets: [10.10.0.3:9100]
         labels: { instance: cdn-origin }
-      - targets: [10.10.0.4:9100]
-        labels: { instance: cdn-edge }
 
   # Per-container metrics via cAdvisor. Same host targets, different port.
   - job_name: cadvisor
@@ -49,8 +47,6 @@ scrape_configs:
         labels: { instance: cms }
       - targets: [10.10.0.3:8080]
         labels: { instance: cdn-origin }
-      - targets: [10.10.0.4:8080]
-        labels: { instance: cdn-edge }
 
   # Public HTTP probes — answers "does the user-facing URL respond at
   # all?". Uses the blackbox_exporter pattern via a small inline relabel

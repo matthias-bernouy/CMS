@@ -1,7 +1,7 @@
 # Exporters deploy — per-VPS sidecar
 
 For every production VPS that should appear on the Grafana dashboards
-(cms, cdn-origin, cdn-edge).
+(cms).
 
 ## Prerequisites
 

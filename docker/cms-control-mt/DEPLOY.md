@@ -1,16 +1,14 @@
 # Déploiement prod — `bernouy/cms-control-mt`
 
 Runbook pour déployer le CMS Control multi-tenant. **Une seule** instance
-sert N tenants — chaque tenant apporte sa propre Keycloak + son propre
-bucket CDN. MongoDB externe, partagé par tous les tenants (préfixe de
-collections par tenant).
+sert N tenants — chaque tenant apporte sa propre Keycloak. MongoDB externe,
+partagé par tous les tenants (préfixe de collections par tenant).
 
-Chaque tenant mounté reçoit aussi automatiquement un `BucketProxyPublisher`
-câblé sur son `tenant.assetsCdn` — quand l'admin du tenant sauve un Data
-Provider, les règles de proxy + secrets sont poussées sur le broker
-`/api/proxies` du bucket via `bucketCredential`. **Aucune config
-supplémentaire requise côté cms-control-mt** : tout vient de `tenant.assetsCdn`
-saisi à l'onboarding (cf. §9).
+Le stockage des fichiers (médias) est servi par le CMS lui-même via
+`/api/files` : arbre dans Mongo (`tenant_<id>__`) + octets dans un blob
+backend. En prod, S3-compatible si `CMS_S3_BUCKET` est défini (isolation par
+préfixe de clé `tenant_<id>/`), sinon un dossier local (`CMS_FILES_DIR`).
+Aucune credential par tenant à saisir à l'onboarding.
 
 ---
 
@@ -26,10 +24,6 @@ sudo bash /tmp/init-server.sh --role cms
 
 → apt + Docker CE + ufw (OpenSSH + 80/443 publics) + systemd-timesyncd.
 Idempotent.
-
-> Cette même VM peut héberger `cms-delivery-mt` (cf.
-> [`docker/cms-delivery-mt/DEPLOY.md`](../cms-delivery-mt/DEPLOY.md)) —
-> dans ce cas ce §1 est shared, ne pas relancer.
 
 | Pré-requis | Vérification |
 |---|---|
@@ -290,31 +284,22 @@ curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" \
    - Optionnel : client public `cms-cli` avec Device Authorization Grant
      pour `p9r login`
 
-2. **Créer un bucket CDN** dédié sur le cluster cdn-origin via
-   `https://<MAIN_DOMAIN>/admin/buckets` → "+ New bucket". Choisir un
-   id (typiquement `<tenant-id>-assets`).
-
-3. **Émettre un bucket credential** bearer pour ce bucket via
-   `/admin/buckets/<id>/credentials` → "+ New credential". Copier le
-   `cleartextToken` retourné (`bspa_xxx`) — il sert à la fois au broker
-   data-plane (uploads) et au `BucketProxyPublisher` (push des proxies).
+2. **Stockage fichiers** : rien à provisionner par tenant. Au niveau de
+   l'image, définir les env `CMS_S3_*` (bucket S3-compatible partagé,
+   isolation par préfixe de clé) en prod ; sinon `CMS_FILES_DIR` (dossier
+   local, single-node).
 
 **Côté superadmin** :
 
 1. `https://cms.example.com/superadmin/` → login → "+ New tenant"
-2. Remplir : id (slug), name, infos Keycloak du tenant, infos CDN :
-   - `assetsCdn.url` : `https://<PUBLIC_DOMAIN>/<bucket-id>` (l'origin du
-     broker bucket — typiquement `https://cdn.bernouy.com/<tenant-id>-assets`)
-   - `assetsCdn.bucketCredential` : le `bspa_xxx` de l'étape 3
-3. Submit → le tenant est immédiatement mounté à `/cms/<tenant-id>/*` et
-   son `BucketProxyPublisher` est instancié sur `assetsCdn.{url, bucketCredential}`.
+2. Remplir : id (slug), name, infos Keycloak du tenant.
+3. Submit → le tenant est immédiatement mounté à `/cms/<tenant-id>/*`
+   (repo Mongo + files backend préfixés `tenant_<id>__`).
 
 Le tenant accède à son admin via
-`https://cms.example.com/cms/<tenant-id>/admin/pages`. Quand il sauve
-un Data Provider via `/admin/data`, le bearer/headers d'auth sont
-poussés sur `<assetsCdn.url>/api/proxies` (broker, scope locké par le
-credential), chiffrés server-side (KEK/DEK), répliqués vers les edges
-au prochain poll de `fetch-secrets.sh`.
+`https://cms.example.com/cms/<tenant-id>/admin/pages`. Les médias se
+gèrent via `/admin/files` (uploads → `/api/files`, stockés dans le blob
+backend configuré).
 
 ---
 
@@ -335,13 +320,6 @@ Identique à `cms-control` : build + scp + docker load + swap. Le volume
 - **Cookies par tenant** scoped via `cookieName` (`cms-<id>-session`)
   mais pas via `cookiePath` — ce qui est inoffensif (différents noms ne
   collisionnent pas) mais le cookie est envoyé sur toutes les URLs.
-- **Bucket credential figée** : le `BucketProxyPublisher` d'un tenant
-  utilise la `bucketCredential` saisie à l'onboarding. Si tu rotates le
-  credential côté cdn-origin (revoke + new), le tenant doit être
-  delete + recreate avec la nouvelle valeur. Pas d'API de patch
-  partielle.
 - **Pas de Delivery dans CETTE image** — Control uniquement. Le rendu
-  public est servi par l'image sœur `cms-delivery-mt` (cf.
-  [`docker/cms-delivery-mt/DEPLOY.md`](../cms-delivery-mt/DEPLOY.md)),
-  qui peut tourner sur la même VM. Le champ `tenant.delivery` est lu
-  par cette image-là.
+  public n'est pas servi par cette image ; le champ `tenant.delivery`
+  est réservé à une future image de Delivery.

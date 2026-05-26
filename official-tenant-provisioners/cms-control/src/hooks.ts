@@ -14,7 +14,7 @@ export interface CmsAdminOidc {
  * The browser-facing admin runtime the lifecycle hooks drive. Implemented at
  * the composition root (`docker/cms-tp`) by adapting `MtControlCms` — kept as
  * an injected interface so this package stays free of the runtime's heavy
- * dependencies (keycloak / cdn-buckets / composite-auth).
+ * dependencies (keycloak / composite-auth).
  */
 export interface CmsTenantRuntime {
     /** Mount the tenant's CMS admin + seed the initial admin. Idempotent. */

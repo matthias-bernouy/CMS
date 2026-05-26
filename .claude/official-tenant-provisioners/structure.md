@@ -11,7 +11,7 @@ déploiement unique**. Il suit l'architecture « Socle » du projet
   rendu par le **hub/central**. Le provider n'expose que des API.
 - **Mono-runner** : la tenancy est **logique**, résolue à la requête depuis
   l'`iss` vérifié (`base.md` §5). On ne scope **jamais** un runner par tenant
-  (contrairement à `cms-control-mt` / `cms-delivery-mt`).
+  (contrairement à `cms-control-mt`).
 
 ## Le noyau de conformité : `_sdk`
 

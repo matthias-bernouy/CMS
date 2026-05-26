@@ -10,7 +10,6 @@ const FORBIDDEN = [
     "@bernouy/tenant-provisioner-sdk",
     "@bernouy/cms",
     "@bernouy/mt-cms-control",
-    "@bernouy/cms-delivery-mt",
     "@bernouy/auth-keycloak",
 ] as const;
 

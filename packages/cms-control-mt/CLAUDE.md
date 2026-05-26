@@ -24,12 +24,12 @@ src/
 │   └── MtControlCms.ts        composition root: init/provisionTenant/reprovisionTenant/deprovisionTenant + Map<id, MountedTenant>
 ├── core/
 │   ├── tenant/
-│   │   ├── mountTenant.ts     wires Keycloak cookie+bearer (authN) + member-based authZ + StorageTokenBroker + StorageBrowser + ControlCms onto /cms/<id>/
+│   │   ├── mountTenant.ts     wires Keycloak cookie+bearer (authN) + member-based authZ + per-tenant files backend (Mongo metadata + S3/FS blob) + ControlCms onto /cms/<id>/
 │   │   ├── members.ts         per-tenant CMS-admin membership (authZ lives in the CMS): seedAdmin + loadAdminEmails
 │   │   ├── unmountTenant.ts   runner.removeRoutesByPathPrefix(/cms/<id>)
 │   │   └── purgeTenantData.ts drops Mongo collections matching `tenant_<id>__*`
 ├── interfaces/
-│   ├── Tenant.ts              { id, name, keycloak, assetsCdn, delivery? }
+│   ├── Tenant.ts              { id, name, keycloak, delivery? }
 │   └── TenantRepository.ts
 ├── default-implementation/
 │   └── MongoTenantRepository.ts
@@ -47,9 +47,7 @@ tenantRepo.list() → for each → _mount(tenant)
   → KeycloakConsumer<TenantRole>(runner, tenant.keycloak)
   → KeycloakBearerConsumer<TenantRole>(tenant.keycloak)
   → CompositeAuthentication(bearer first, cookie second)
-  → StorageTokenBroker(/cms/<id>/_storage, tenant.assetsCdn.bucketCredential)
-  → StorageBrowser hydrated from broker.getBucketInfo()
-  → BucketProxyPublisher (uses bucketCredential, not a service-account JWT)
+  → MongoCmsFilesMetadata(tenant_<id>__) + per-tenant blob (S3 if CMS_S3_BUCKET, else local FS)
   → ControlCms mounted under /cms/<id>
 ```
 
@@ -116,20 +114,18 @@ Every tenant gets an `EncryptedMongoSecretStore` with
 ```
 { id, name, createdAt, updatedAt,
   keycloak:  { issuer, clientId, clientSecret, sessionSecret, cliClientId? },
-  assetsCdn: { url, bucketCredential },
-  delivery?: { publicCdn, alias?, enabled?, dirtyAt? } }
+  delivery?: { alias?, enabled?, dirtyAt? } }
 ```
 
 - **`id` is the slug**, the URL prefix, and the Mongo collection
   prefix. URL-safe, never editable.
-- **`keycloak` and `assetsCdn` are NOT patchable** — rotating any of
-  those values requires delete + recreate so the runtime mount stays
-  consistent with what's in the registry.
+- **`keycloak` is NOT patchable** — rotating those values requires
+  delete + recreate so the runtime mount stays consistent with the registry.
 - **`delivery` IS patchable** via `updateTenantDelivery(id, …)` — used
   to enable delivery after DNS cutover.
 - **`delivery.dirtyAt`** is set by Control admin actions (page save,
-  bloc deploy) so the Delivery cron knows the tenant has changes to
-  flush. Cleared by `cms-delivery-mt` once a build covers `>= dirtyAt`.
+  bloc deploy) so a Delivery cron knows the tenant has changes to
+  flush.
 
 ## Conventions
 
@@ -148,13 +144,13 @@ Every tenant gets an `EncryptedMongoSecretStore` with
   browser can be logged into multiple tenants on the same host.
 - **`bearerAuth` comes first in the composite** — short-circuits cookie
   lookup for service-account API calls (e.g. the hub).
-- **`StorageBrowser` is built once at mount** from a single
-  `broker.getBucketInfo()` call; the bucket info is treated as
-  immutable for the lifetime of the mount. If the bucket settings
-  change, unmount + remount.
+- **Files backend per tenant**: `MongoCmsFilesMetadata` (tree, prefixed
+  `tenant_<id>__`) + a `CmsFilesBlobStore` (S3 when `CMS_S3_BUCKET` is set,
+  keyed `tenant_<id>/`; else a local-FS dir). Media flows through the CMS's
+  `/api/files` endpoints.
 
 ## Dependencies
 
 - runtime: `@bernouy/core`, `@bernouy/runner-bun`, `@bernouy/auth-keycloak`,
-  `@bernouy/auth-composite`, `@bernouy/cdn-buckets`, `@bernouy/cms`
+  `@bernouy/auth-composite`, `@bernouy/cms`
 - peer: `mongodb`, `typescript`
