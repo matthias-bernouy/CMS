@@ -2,7 +2,7 @@
 
 <hub-page>
     <p9r-breadcrumb slot="title">
-        <a href="{{BASE_PATH}}/providers/">Data-providers</a>
+        <a href="{{BASE_PATH}}/providers/">Tenant-provisioners</a>
         <span class="hub-provider-id"></span>
     </p9r-breadcrumb>
     <h1 slot="title">Provider — <span class="hub-provider-id"></span></h1>
@@ -32,7 +32,7 @@
                         </p9r-card>
                         <p9r-card>
                             <p9r-stack gap="s">
-                                <hub-hint>Deprovision policy (DP-side) — set by the DP author, not editable from the hub.</hub-hint>
+                                <hub-hint>Deprovision policy (TP-side) — set by the TP author, not editable from the hub.</hub-hint>
                                 <div><strong>mode:</strong> <hub-code>{{ data.schemas.info.defaultDeprovisionPolicy.mode }}</hub-code></div>
                                 <div><strong>graceSeconds:</strong> {{ data.schemas.info.defaultDeprovisionPolicy.graceSeconds }}</div>
                             </p9r-stack>
@@ -56,7 +56,7 @@
 
         <p9r-tab-panel id="raw" label="Raw schemas">
             <p9r-accordion>
-                <p9r-accordion-item label=".well-known/data-provider-info">
+                <p9r-accordion-item label=".well-known/tenant-provisioner-info">
                     <hub-json src="/api/providers" path="schemas.info"></hub-json>
                 </p9r-accordion-item>
                 <p9r-accordion-item label="RFC 8414 metadoc">
@@ -72,7 +72,7 @@
         </p9r-tab-panel>
 
         <p9r-tab-panel id="tenants" label="Tenants">
-            <hub-hint>All tenants created across every namespace for this data-provider.</hub-hint>
+            <hub-hint>All tenants created across every namespace for this tenant-provisioner.</hub-hint>
             <hub-table>
                 <p9r-row slot="header">
                     <p9r-header-cell>tenantId</p9r-header-cell>
@@ -96,12 +96,12 @@
                         </p9r-row>
                     </template>
                 </w13c-fetch>
-                <p9r-alert slot="empty" type="info">No tenant uses this data-provider yet.</p9r-alert>
+                <p9r-alert slot="empty" type="info">No tenant uses this tenant-provisioner yet.</p9r-alert>
             </hub-table>
         </p9r-tab-panel>
 
         <p9r-tab-panel id="logs" label="Logs">
-            <hub-hint>All logs emitted by this data-provider, across every tenant.</hub-hint>
+            <hub-hint>All logs emitted by this tenant-provisioner, across every tenant.</hub-hint>
             <hub-logs src="/api/providers/logs"></hub-logs>
         </p9r-tab-panel>
     </p9r-tabs>

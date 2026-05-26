@@ -15,16 +15,16 @@ const QuerySchema = z.object({
 });
 
 export const meta: ApiOperationMeta = {
-    summary:     "Add a tenant to a namespace for a DP",
-    description: "Mints a hub CP token, POSTs /admin/tenants on the DP with a fresh `tenantId` + issuers + optional `providerConfig`, then mirrors the row. A namespace may hold multiple tenants of the same DP.",
+    summary:     "Add a tenant to a namespace for a TP",
+    description: "Mints a hub CP token, POSTs /admin/tenants on the TP with a fresh `tenantId` + issuers + optional `providerConfig`, then mirrors the row. A namespace may hold multiple tenants of the same TP.",
     operationId: "createTenant",
     tags:        ["tenants"],
     request:     { query: QuerySchema, body: CreateTenantInputSchema },
     responses: {
         201: { description: "Created",                  schema: successEnvelope(TenantSchema) },
         400: { description: "Invalid query / body",     schema: HubErrorEnvelope },
-        404: { description: "Unknown namespace or DP",  schema: HubErrorEnvelope },
-        502: { description: "DP refused / unreachable", schema: HubErrorEnvelope },
+        404: { description: "Unknown namespace or TP",  schema: HubErrorEnvelope },
+        502: { description: "TP refused / unreachable", schema: HubErrorEnvelope },
     },
 };
 

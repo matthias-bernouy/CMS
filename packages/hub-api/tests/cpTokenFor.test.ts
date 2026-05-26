@@ -11,7 +11,7 @@ function freshIssuer(now: () => number = () => Math.floor(Date.now() / 1000)) {
 }
 
 describe("cpTokenFor", () => {
-    test("every call mints a fresh token — no cache (DP enforces JTI replay, base.md §4.5)", async () => {
+    test("every call mints a fresh token — no cache (TP enforces JTI replay, base.md §4.5)", async () => {
         const cp = createCpTokenFor({ issuer: freshIssuer() });
         const t1 = await cp("delivery-acme");
         const t2 = await cp("delivery-acme");

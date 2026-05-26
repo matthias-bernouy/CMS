@@ -1,6 +1,6 @@
 import { z } from "./zodInit";
 
-/** Shared log filters (mirror the DP's `/admin/logs`, base.md §10.5). */
+/** Shared log filters (mirror the TP's `/admin/logs`, base.md §10.5). */
 const LogFiltersSchema = z.object({
     kind:    z.enum(["security", "audit", "request"]).optional(),
     level:   z.enum(["debug", "info", "warn", "error"]).optional(),

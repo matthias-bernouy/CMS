@@ -4,10 +4,10 @@ import { apiGet, apiSend, queryParam } from "../_base/api";
 
 /**
  * `<hub-add-tenant namespace-id="...">` — modal content for adding a tenant:
- * a data-provider `<p9r-select>` (populated from `/api/providers`), an
+ * a tenant-provisioner `<p9r-select>` (populated from `/api/providers`), an
  * optional display name, and a create button. POSTs a tenant with no issuer
  * (issuers are attached later in the tenant detail) — a namespace may hold
- * several tenants of the same DP. On success dispatches `tenant:created` on
+ * several tenants of the same TP. On success dispatches `tenant:created` on
  * `document` so a sibling `<w13c-fetch reload-on="tenant:created">` refreshes.
  *
  * Meant to live inside a `<p9r-modal>` opened by a `<p9r-open-modal>` button.
@@ -24,7 +24,7 @@ export class HubAddTenant extends Component {
 
     private async _render() {
         const root = this._root;
-        root.textContent = "Loading data-providers…";
+        root.textContent = "Loading tenant-provisioners…";
         const data = await apiGet<{ providers: { providerId: string; providerKind?: string }[] }>("/api/providers");
         const providers = data?.providers ?? [];
         root.innerHTML = "";
@@ -32,14 +32,14 @@ export class HubAddTenant extends Component {
         if (providers.length === 0) {
             const a = document.createElement("p9r-alert");
             a.setAttribute("type", "info");
-            a.innerHTML = `No data-provider imported. <a href="../providers/">Import one first</a>.`;
+            a.innerHTML = `No tenant-provisioner imported. <a href="../providers/">Import one first</a>.`;
             root.appendChild(a);
             return;
         }
 
         const select = document.createElement("p9r-select") as any;
         select.setAttribute("name", "providerId");
-        select.setAttribute("label", "Data-provider");
+        select.setAttribute("label", "Tenant-provisioner");
         for (const p of providers) {
             const o = document.createElement("option");
             o.value = p.providerId;
@@ -66,7 +66,7 @@ export class HubAddTenant extends Component {
         const msg = this.shadowRoot!.querySelector(".msg") as HTMLElement;
         msg.innerHTML = "";
         const providerId = select.value ?? select.getAttribute("value") ?? "";
-        if (!providerId) { this._error(msg, "Pick a data-provider."); return; }
+        if (!providerId) { this._error(msg, "Pick a tenant-provisioner."); return; }
         const displayName = (name.value ?? name.getAttribute("value") ?? "").trim();
 
         btn.setAttribute("disabled", "");

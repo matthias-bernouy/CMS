@@ -1,9 +1,9 @@
 import type { Hub } from "src/exports/Hub";
 import { HubError } from "src/core/HubError";
 
-/** Read the live config from the DP for a tenant — mirrors what the SDK
+/** Read the live config from the TP for a tenant — mirrors what the SDK
  *  persists. The hub's row holds what was last sent; this returns the
- *  canonical value from the DP. */
+ *  canonical value from the TP. */
 export async function fetchTenantConfig(
     hub: Hub, tenantId: string,
 ): Promise<unknown | null> {
@@ -12,7 +12,7 @@ export async function fetchTenantConfig(
 
     const dp = await hub.imports.getByProviderId(cur.providerId);
     if (!dp) throw new HubError("provider_not_found",
-        `data-provider "${cur.providerId}" is not imported`);
+        `tenant-provisioner "${cur.providerId}" is not imported`);
 
     const token = await hub.issuer.mint({ aud: cur.providerId });
     const f     = hub.config.fetch ?? fetch;

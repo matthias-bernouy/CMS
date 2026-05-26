@@ -4,10 +4,10 @@ import { HubError } from "src/core/HubError";
 import { makeTenantId } from "./makeTenantId";
 import type { CreateTenantInput } from "src/core/schemas/namespace";
 
-/** Add a tenant to a namespace for a DP: mint a CP token, POST
- *  `/admin/tenants` on the DP with the tenant's id + issuers + optional
+/** Add a tenant to a namespace for a TP: mint a CP token, POST
+ *  `/admin/tenants` on the TP with the tenant's id + issuers + optional
  *  config, persist the local row. A namespace may hold multiple tenants of
- *  the same DP, so this always creates a NEW row (no upsert). */
+ *  the same TP, so this always creates a NEW row (no upsert). */
 export async function createTenant(
     hub: Hub,
     namespaceId: string,
@@ -18,7 +18,7 @@ export async function createTenant(
     if (!ns) throw new HubError("namespace_not_found", `unknown namespace "${namespaceId}"`);
 
     const dp = await hub.imports.getByProviderId(providerId);
-    if (!dp) throw new HubError("provider_not_found", `data-provider "${providerId}" is not imported`);
+    if (!dp) throw new HubError("provider_not_found", `tenant-provisioner "${providerId}" is not imported`);
 
     const tenantId    = input.tenantId ?? makeTenantId(namespaceId, providerId);
     const displayName = input.displayName ?? `${ns.displayName} · ${providerId}`;

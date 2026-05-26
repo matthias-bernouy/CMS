@@ -8,7 +8,7 @@ import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 export const meta: ApiOperationMeta = {
     summary:     "Update a namespace's metadata",
-    description: "Patches displayName and/or description. namespaceId itself is immutable (it's also used as tenantId on every DP).",
+    description: "Patches displayName and/or description. namespaceId itself is immutable (it's also used as tenantId on every TP).",
     operationId: "updateNamespace",
     tags:        ["namespaces"],
     request:     { query: NamespaceIdQuerySchema, body: UpdateNamespaceInputSchema },

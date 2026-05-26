@@ -7,19 +7,19 @@ export interface TenantInfoField {
     kind?: "text" | "url" | "code";
 }
 
-/** DP-computed read-only facts about a tenant — proxied through untouched. */
+/** TP-computed read-only facts about a tenant — proxied through untouched. */
 export interface TenantInfo {
     fields: TenantInfoField[];
 }
 
-/** Read a tenant's DP-computed info (base.md §8): resolve its DP, mint a fresh
- *  CP token, GET `/admin/info?tenantId=`. The DP returns empty `fields` when it
+/** Read a tenant's TP-computed info (base.md §8): resolve its TP, mint a fresh
+ *  CP token, GET `/admin/info?tenantId=`. The TP returns empty `fields` when it
  *  declares no tenant-info capability. */
 export async function fetchTenantInfo(hub: Hub, tenantId: string): Promise<TenantInfo> {
     const tenant = await hub.namespaces.getTenant(tenantId);
     if (!tenant) throw new HubError("tenant_not_found", `unknown tenant "${tenantId}"`);
     const dp = await hub.imports.getByProviderId(tenant.providerId);
-    if (!dp) throw new HubError("provider_not_found", `data-provider "${tenant.providerId}" is not imported`);
+    if (!dp) throw new HubError("provider_not_found", `tenant-provisioner "${tenant.providerId}" is not imported`);
 
     const token = await hub.issuer.mint({ aud: tenant.providerId });
     const f     = hub.config.fetch ?? fetch;

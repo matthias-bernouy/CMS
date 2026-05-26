@@ -2,7 +2,7 @@
 
 Runbook pour déployer le hub : UI superadmin (`/admin/*`), API
 d'orchestration (`/api/*`), et issuer (signe des tokens control-plane
-pour les data-providers conformants).
+pour les tenant-provisioners conformants).
 
 **Pattern** : le hub parle plain HTTP sur `:3000` derrière le container
 `bernouy/nginx-proxy` (qui termine TLS + gère ACME). Le hub n'est PAS
@@ -26,7 +26,7 @@ sudo bash /tmp/init-server.sh --role hub
 | Accès Keycloak | `curl -fI https://auth.bernouy.com/realms/master/.well-known/openid-configuration` |
 
 > Optionnel mais recommandé : MongoDB accessible pour persister le
-> registre des data-providers importés. Sans Mongo, ils sont stockés
+> registre des tenant-provisioners importés. Sans Mongo, ils sont stockés
 > en mémoire et perdus au redémarrage.
 
 > Le hub ne publie **AUCUN port sur l'host** — il est joignable
@@ -81,9 +81,9 @@ Dans le realm de ton choix (typiquement `master`) :
 ## 4. Pré-requis MongoDB (recommandé)
 
 URL accessible depuis le hub. Stocke deux registres :
-- `data_provider_imports` (DPs importés + schémas cachés)
+- `tenant_provisioner_imports` (TPs importés + schémas cachés)
 - `hub_namespaces` + `hub_namespace_provisions` (namespaces + leurs
-  provisions par DP, avec issuers de confiance + config)
+  provisions par TP, avec issuers de confiance + config)
 
 Sans Mongo → tout en mémoire (perdu au restart, smoke test only).
 Bonne pratique : un user dédié read/write sur une DB `hub_meta`.
@@ -136,14 +136,14 @@ Télécharger le **cert** + la **private key** (download unique).
 
 ## 6. Provisionner la Customer Managed Key pour le hub-issuer
 
-Le hub mint des tokens `control-plane` pour parler aux data-providers ;
+Le hub mint des tokens `control-plane` pour parler aux tenant-provisioners ;
 leur **private key signe** chaque token. Sur disque
 (`/var/lib/hub/keys/keys.json`), ces clés sont chiffrées en envelope
 encryption : un DEK par clé signante, wrappé par une CMK qui vit dans
 le HSM OVH OKMS et n'est jamais lisible côté process.
 
 Perdre cette CMK = perdre la capacité du hub à déchiffrer ses clés
-signantes = il en regen au prochain boot = tous les data-providers
+signantes = il en regen au prochain boot = tous les tenant-provisioners
 rejettent ses tokens jusqu'à propagation de la nouvelle JWKS.
 
 ### 6a. Créer la service key
@@ -273,9 +273,9 @@ curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" \
 
 ---
 
-## 11. Setup côté data-providers
+## 11. Setup côté tenant-provisioners
 
-Pour qu'un data-provider accepte les tokens du hub, sa config doit
+Pour qu'un tenant-provisioner accepte les tokens du hub, sa config doit
 contenir dans son `allowlist` :
 
 ```json
@@ -286,7 +286,7 @@ contenir dans son `allowlist` :
 ```
 
 L'UI hub (`/admin/`) affiche le snippet exact au moment où l'opérateur
-veut importer un nouveau data-provider.
+veut importer un nouveau tenant-provisioner.
 
 ---
 
@@ -295,7 +295,7 @@ veut importer un nouveau data-provider.
 Build + scp + `docker load` + `docker stop hub && docker rm hub` puis
 relancer §9. Le volume `hub-data` conserve les certs lego + **les clés
 signantes du hub-issuer** — ne JAMAIS supprimer ce volume sauf si tu
-acceptes que tous les DPs rejettent les tokens jusqu'à publication des
+acceptes que tous les TPs rejettent les tokens jusqu'à publication des
 nouvelles clés.
 
 ---
@@ -304,10 +304,10 @@ nouvelles clés.
 
 - **Single-instance.** Le `FileKeyStore` est sur disque ; pour scale
   horizontal, il faudra un `KeyStore` réseau (DB-backed) — non livré.
-- **Un seul issuer forwarded par (namespace, DP).** La trust-list stocke
-  plusieurs issuers mais seul le 1er est envoyé au DP (la SDK n'accepte
+- **Un seul issuer forwarded par (namespace, TP).** La trust-list stocke
+  plusieurs issuers mais seul le 1er est envoyé au TP (la SDK n'accepte
   qu'un iss par tenant). Multi-issuer = roadmap SDK.
-- **Pas de grouping visuel par `providerKind`** dans la liste des DPs.
+- **Pas de grouping visuel par `providerKind`** dans la liste des TPs.
 - **Pas d'autoredirect `/` → `/admin/`.** L'opérateur tape `/admin/`.
 
 ---
@@ -326,7 +326,7 @@ Le hub embarque trois flags pour le dev local :
 
 ### Démarrage rapide : `compose.dev.yml`
 
-Stack locale complète (Keycloak + Mongo + hub + 2 data-providers conformants), un seul `up` :
+Stack locale complète (Keycloak + Mongo + hub + 2 tenant-provisioners conformants), un seul `up` :
 
 ```bash
 docker compose -f docker/hub/compose.dev.yml up --build
@@ -336,8 +336,8 @@ docker compose -f docker/hub/compose.dev.yml up --build
 |---|---|---|
 | Hub `/admin/` | http://hub.localtest.me:3000/admin/ | login `dev@local` / `dev` |
 | Keycloak | http://keycloak.localtest.me:8080 | admin / admin (auth superadmin only) |
-| Example DP | http://example-dp.localtest.me:4000 | notes DP (tenantConfig) |
-| Addresses DP | http://addresses-dp.localtest.me:4001 | BAN proxy (FR) |
+| Example TP | http://example-tp.localtest.me:4000 | notes TP (tenantConfig) |
+| Addresses TP | http://addresses-tp.localtest.me:4001 | BAN proxy (FR) |
 
 > Les URLs `*.localtest.me` résolvent toujours vers `127.0.0.1` (DNS public). On les déclare aussi en alias Docker network, donc browser ET containers utilisent la même URL pour parler à chaque service — pas d'`/etc/hosts`, l'iss claim colle.
 
@@ -346,10 +346,10 @@ docker compose -f docker/hub/compose.dev.yml up --build
 Une fois le stack up :
 
 1. Ouvre http://hub.localtest.me:3000/admin/, login `dev@local / dev`.
-2. **Providers → Importer un DP** : URL = `http://example-dp.localtest.me:4000` (puis `:4001` pour addresses). Le hub fetch les 4 docs de discovery et persiste l'import.
+2. **Providers → Importer un TP** : URL = `http://example-tp.localtest.me:4000` (puis `:4001` pour addresses). Le hub fetch les 4 docs de discovery et persiste l'import.
 3. **Namespaces → Nouveau namespace** : crée par ex. `acme` (juste un id + nom, aucune création Keycloak).
-4. **Namespace acme → carte DP → Configurer** : sur la page dédiée, renseigne la trust-list (issuers de confiance) + la config. Le hub mint un CP token, POST/PATCH `/admin/tenants` sur le DP.
-5. **Vérifie** : GET `/api/namespaces/providers/config?namespaceId=acme&providerId=…` renvoie la config persistée côté DP.
+4. **Namespace acme → carte TP → Configurer** : sur la page dédiée, renseigne la trust-list (issuers de confiance) + la config. Le hub mint un CP token, POST/PATCH `/admin/tenants` sur le TP.
+5. **Vérifie** : GET `/api/namespaces/providers/config?namespaceId=acme&providerId=…` renvoie la config persistée côté TP.
 
 Détail dans le fichier `compose.dev.yml` lui-même (annoté).
 

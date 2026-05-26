@@ -10,11 +10,11 @@ export { hubErrorResponse, HUB_ERROR_HTTP } from "./core/HubErrorHttp";
 
 export type { HubConfig }            from "./interfaces/HubConfig";
 
-// Data-provider registry surface.
-export type { DataProviderImport }            from "./interfaces/DataProviderImport";
-export type { DataProviderImportsRepository } from "./interfaces/DataProviderImportsRepository";
-export { MemoryDataProviderImportsRepository } from "./default-implementation/MemoryDataProviderImportsRepository";
-export { MongoDataProviderImportsRepository }  from "./default-implementation/MongoDataProviderImportsRepository";
+// Tenant-provisioner registry surface.
+export type { TenantProvisionerImport }            from "./interfaces/TenantProvisionerImport";
+export type { TenantProvisionerImportsRepository } from "./interfaces/TenantProvisionerImportsRepository";
+export { MemoryTenantProvisionerImportsRepository } from "./default-implementation/MemoryTenantProvisionerImportsRepository";
+export { MongoTenantProvisionerImportsRepository }  from "./default-implementation/MongoTenantProvisionerImportsRepository";
 
 // Namespace registry surface.
 export type { Namespace, Tenant }              from "./interfaces/Namespace";

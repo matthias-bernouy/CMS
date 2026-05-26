@@ -20,12 +20,12 @@ RUN groupadd -r hub \
  && useradd -r -g hub -d /home/hub -s /usr/sbin/nologin -m hub
 
 # Workspace build at image-build time. Both `packages/` and
-# `official-data-providers/` are needed since hub-api consumes
-# `@bernouy/issuer-kit` + `@bernouy/data-provider-contract` at runtime.
+# `official-tenant-provisioners/` are needed since hub-api consumes
+# `@bernouy/issuer-kit` + `@bernouy/tenant-provisioner-contract` at runtime.
 WORKDIR /socle
 COPY package.json bun.lock tsconfig.base.json tsconfig.json ./
 COPY packages ./packages
-COPY official-data-providers ./official-data-providers
+COPY official-tenant-provisioners ./official-tenant-provisioners
 COPY build.ts ./
 RUN bun install && bun run build
 
@@ -43,7 +43,7 @@ RUN chmod +x /usr/local/bin/hub-entrypoint.sh
 
 # /var/lib/hub holds the issuer-kit signing keys (keys.json). MUST be a
 # persistent volume in prod — losing it means the hub regen its signing
-# keys at next boot, breaking every data-provider's trust until they
+# keys at next boot, breaking every tenant-provisioner's trust until they
 # refetch the JWKS.
 VOLUME ["/var/lib/hub"]
 EXPOSE 3000

@@ -6,16 +6,16 @@ import { ProviderLogsQuerySchema, LogPageSchema } from "src/core/schemas/logs";
 import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 export const meta: ApiOperationMeta = {
-    summary:     "Read a data-provider's logs (all tenants)",
-    description: "Proxies the DP's control-plane GET /admin/logs. Filters kind/level/time, bounded pagination via cursor.",
+    summary:     "Read a tenant-provisioner's logs (all tenants)",
+    description: "Proxies the TP's control-plane GET /admin/logs. Filters kind/level/time, bounded pagination via cursor.",
     operationId: "fetchProviderLogs",
     tags:        ["logs"],
     request:     { query: ProviderLogsQuerySchema },
     responses: {
         200: { description: "Bounded log page",         schema: successEnvelope(LogPageSchema) },
         400: { description: "Invalid query",            schema: HubErrorEnvelope },
-        404: { description: "Unknown DP",               schema: HubErrorEnvelope },
-        502: { description: "DP refused / unreachable", schema: HubErrorEnvelope },
+        404: { description: "Unknown TP",               schema: HubErrorEnvelope },
+        502: { description: "TP refused / unreachable", schema: HubErrorEnvelope },
     },
 };
 

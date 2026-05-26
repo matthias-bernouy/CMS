@@ -9,10 +9,10 @@ interface LogRecord {
 
 /**
  * `<hub-logs src="/api/providers/logs">` — log viewer backed by a hub log
- * endpoint that proxies a DP's `/admin/logs`. Forwards the page's
+ * endpoint that proxies a TP's `/admin/logs`. Forwards the page's
  * `tenantId` / `providerId` query param to the endpoint (like `<hub-json>`),
  * adds kind/level filter selects, renders a table, and pages via the
- * `nextCursor` returned by the DP ("Load more").
+ * `nextCursor` returned by the TP ("Load more").
  */
 export class HubLogs extends Component {
     private _items: LogRecord[] = [];
@@ -47,7 +47,7 @@ export class HubLogs extends Component {
 
     private _scopeParam(): string {
         // The endpoint expects one scope id — tenantId (tenant), providerId
-        // (DP) or namespaceId (whole namespace). Forward the highest-priority
+        // (TP) or namespaceId (whole namespace). Forward the highest-priority
         // one the page carries (a tenant page has both tenantId + namespaceId,
         // and its `src` points at the tenant endpoint, so tenantId wins).
         for (const key of ["tenantId", "providerId", "namespaceId"]) {

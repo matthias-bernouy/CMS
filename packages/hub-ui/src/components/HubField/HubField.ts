@@ -1,7 +1,7 @@
 import { Component } from "../_base/Component";
 
 /**
- * `<hub-field value="…" kind="url|code|text">` — renders a single DP-provided
+ * `<hub-field value="…" kind="url|code|text">` — renders a single TP-provided
  * tenant-info value per its `kind`: a link (http/https only), monospace code,
  * or plain text (default). Used to display `/api/namespaces/tenants/info`.
  */

@@ -14,7 +14,7 @@
         "@asteasolutions/zod-to-openapi": "^8.5.0",
         "@bernouy/core": "workspace:*",
         "@bernouy/issuer-kit": "workspace:*",
-        "@bernouy/data-provider-contract": "workspace:*",
+        "@bernouy/tenant-provisioner-contract": "workspace:*",
         "mongodb": "^7.1.0",
         "zod": "^4.4.3"
     }

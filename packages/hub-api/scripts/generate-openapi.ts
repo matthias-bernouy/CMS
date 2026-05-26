@@ -56,7 +56,7 @@ async function main(): Promise<void> {
         method:      "get",
         path:        "/health",
         summary:     "Public liveness probe",
-        description: "Returns 200 if the hub process is up. Does NOT cross the network to any data-provider.",
+        description: "Returns 200 if the hub process is up. Does NOT cross the network to any tenant-provisioner.",
         operationId: "health",
         tags:        ["health"],
         responses: {

@@ -9,7 +9,7 @@
     "references": [
         { "path": "../core" },
         { "path": "../keycloak-client" },
-        { "path": "../../official-data-providers/_issuer-kit" },
-        { "path": "../../official-data-providers/_data-provider-contract" }
+        { "path": "../../official-tenant-provisioners/_issuer-kit" },
+        { "path": "../../official-tenant-provisioners/_tenant-provisioner-contract" }
     ]
 }

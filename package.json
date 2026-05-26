@@ -3,7 +3,7 @@
     "private": true,
     "workspaces": [
         "packages/*",
-        "official-data-providers/*"
+        "official-tenant-provisioners/*"
     ],
     "scripts": {
         "build": "bun run build.ts",
@@ -33,10 +33,12 @@
         "@bernouy/cms-delivery-mt": "workspace:*",
         "@bernouy/hub-api": "workspace:*",
         "@bernouy/hub-ui":  "workspace:*",
-        "@bernouy/data-provider-sdk": "workspace:*",
-        "@bernouy/data-provider-example": "workspace:*",
-        "@bernouy/data-provider-addresses": "workspace:*",
-        "@bernouy/data-provider-contract": "workspace:*",
+        "@bernouy/tenant-provisioner-sdk": "workspace:*",
+        "@bernouy/tenant-provisioner-example": "workspace:*",
+        "@bernouy/tenant-provisioner-addresses": "workspace:*",
+        "@bernouy/tenant-provisioner-cms-control": "workspace:*",
+        "@bernouy/tenant-provisioner-keycloak": "workspace:*",
+        "@bernouy/tenant-provisioner-contract": "workspace:*",
         "@bernouy/issuer-kit": "workspace:*"
     }
 }

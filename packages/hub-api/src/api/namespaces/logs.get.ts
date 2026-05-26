@@ -7,7 +7,7 @@ import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 export const meta: ApiOperationMeta = {
     summary:     "Read a namespace's logs (all its tenants)",
-    description: "Aggregates logs across every tenant of the namespace (possibly on different DPs), merged + sorted by ts desc, truncated to `limit`. No cursor (heterogeneous sources).",
+    description: "Aggregates logs across every tenant of the namespace (possibly on different TPs), merged + sorted by ts desc, truncated to `limit`. No cursor (heterogeneous sources).",
     operationId: "fetchNamespaceLogs",
     tags:        ["logs"],
     request:     { query: NamespaceLogsQuerySchema },
@@ -15,7 +15,7 @@ export const meta: ApiOperationMeta = {
         200: { description: "Merged log page",          schema: successEnvelope(LogPageSchema) },
         400: { description: "Invalid query",            schema: HubErrorEnvelope },
         404: { description: "Unknown namespace",        schema: HubErrorEnvelope },
-        502: { description: "DP refused / unreachable", schema: HubErrorEnvelope },
+        502: { description: "TP refused / unreachable", schema: HubErrorEnvelope },
     },
 };
 

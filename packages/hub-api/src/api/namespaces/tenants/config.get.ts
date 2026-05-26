@@ -7,16 +7,16 @@ import { TenantIdQuerySchema } from "src/core/schemas/namespace";
 import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 export const meta: ApiOperationMeta = {
-    summary:     "Read the live config from the DP for a tenant",
-    description: "GETs /admin/config on the DP. Returns 200 with `data: null` when nothing is stored yet (so the UI doesn't see a 404 in DevTools).",
+    summary:     "Read the live config from the TP for a tenant",
+    description: "GETs /admin/config on the TP. Returns 200 with `data: null` when nothing is stored yet (so the UI doesn't see a 404 in DevTools).",
     operationId: "fetchTenantConfig",
     tags:        ["tenants"],
     request:     { query: TenantIdQuerySchema },
     responses: {
-        200: { description: "Config from DP",           schema: successEnvelope(z.object({ version: z.string(), config: z.record(z.string(), z.unknown()) }).nullable()) },
+        200: { description: "Config from TP",           schema: successEnvelope(z.object({ version: z.string(), config: z.record(z.string(), z.unknown()) }).nullable()) },
         400: { description: "Invalid query",            schema: HubErrorEnvelope },
-        404: { description: "Unknown tenant / DP",      schema: HubErrorEnvelope },
-        502: { description: "DP refused / unreachable", schema: HubErrorEnvelope },
+        404: { description: "Unknown tenant / TP",      schema: HubErrorEnvelope },
+        502: { description: "TP refused / unreachable", schema: HubErrorEnvelope },
     },
 };
 

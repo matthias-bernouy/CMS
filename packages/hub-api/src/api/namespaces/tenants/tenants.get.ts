@@ -16,7 +16,7 @@ const ListSchema = z.object({ tenants: z.array(TenantSchema) }).openapi("TenantL
 
 export const meta: ApiOperationMeta = {
     summary:     "List or fetch tenants",
-    description: "`?namespaceId=X`: tenants in a namespace. `?providerId=X`: tenants for a DP. `?tenantId=X`: a single tenant (200 + null when absent).",
+    description: "`?namespaceId=X`: tenants in a namespace. `?providerId=X`: tenants for a TP. `?tenantId=X`: a single tenant (200 + null when absent).",
     operationId: "listTenants",
     tags:        ["tenants"],
     request:     { query: QuerySchema },

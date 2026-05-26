@@ -81,7 +81,7 @@
           "error"
         ]
       },
-      "DataProviderImportSummary": {
+      "TenantProvisionerImportSummary": {
         "type": "object",
         "properties": {
           "providerId": {
@@ -114,10 +114,10 @@
           "cachedAt"
         ]
       },
-      "DataProviderImport": {
+      "TenantProvisionerImport": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/DataProviderImportSummary"
+            "$ref": "#/components/schemas/TenantProvisionerImportSummary"
           },
           {
             "type": "object",
@@ -259,13 +259,13 @@
           "providerId"
         ]
       },
-      "ImportDataProviderInput": {
+      "ImportTenantProvisionerInput": {
         "type": "object",
         "properties": {
           "url": {
             "type": "string",
             "format": "uri",
-            "description": "Base URL of the data-provider (no trailing slash).",
+            "description": "Base URL of the tenant-provisioner (no trailing slash).",
             "example": "https://delivery.acme.com"
           },
           "name": {
@@ -448,7 +448,7 @@
               "format": "uri"
             },
             "default": [],
-            "description": "Trusted issuers granted tenant-role on this DP. May be empty (issuers can be attached later). Each iss is globally unique across tenants."
+            "description": "Trusted issuers granted tenant-role on this TP. May be empty (issuers can be attached later). Each iss is globally unique across tenants."
           },
           "providerConfig": {
             "type": "object",
@@ -472,7 +472,7 @@
               "type": "string",
               "format": "uri"
             },
-            "description": "Trusted issuers granted tenant-role on this DP. May be empty (issuers can be attached later). Each iss is globally unique across tenants."
+            "description": "Trusted issuers granted tenant-role on this TP. May be empty (issuers can be attached later). Each iss is globally unique across tenants."
           },
           "providerConfig": {
             "type": "object",
@@ -540,7 +540,7 @@
     "/api/issuer": {
       "get": {
         "summary": "Hub-issuer metadata + allowlist snippet",
-        "description": "Returns the hub's iss URL, JWKS URL, metadoc URL, and a ready-to-copy allowlist entry the operator pastes into each DP's config before importing it.",
+        "description": "Returns the hub's iss URL, JWKS URL, metadoc URL, and a ready-to-copy allowlist entry the operator pastes into each TP's config before importing it.",
         "operationId": "getHubIssuer",
         "tags": [
           "issuer"
@@ -581,9 +581,9 @@
     },
     "/api/providers": {
       "delete": {
-        "summary": "Unimport (forget) a data-provider",
-        "description": "Removes the DP from the hub's meta-registry. Does NOT touch the DP's own tenants — their data stays intact on the DP. To clean up tenants on the DP, call DELETE /api/tenants/providers BEFORE this.",
-        "operationId": "unimportDataProvider",
+        "summary": "Unimport (forget) a tenant-provisioner",
+        "description": "Removes the TP from the hub's meta-registry. Does NOT touch the TP's own tenants — their data stays intact on the TP. To clean up tenants on the TP, call DELETE /api/tenants/providers BEFORE this.",
+        "operationId": "unimportTenantProvisioner",
         "tags": [
           "providers"
         ],
@@ -631,9 +631,9 @@
         }
       },
       "get": {
-        "summary": "List imported data-providers (or get one)",
+        "summary": "List imported tenant-provisioners (or get one)",
         "description": "Without `?providerId=`: returns the list (summaries — no schemas). With `?providerId=X`: returns the full row including the 4 cached schemas.",
-        "operationId": "listDataProviders",
+        "operationId": "listTenantProvisioners",
         "tags": [
           "providers"
         ],
@@ -647,17 +647,17 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "description": "If set, returns the single DP with that id (incl. cached schemas); otherwise returns the list."
+              "description": "If set, returns the single TP with that id (incl. cached schemas); otherwise returns the list."
             },
             "required": false,
-            "description": "If set, returns the single DP with that id (incl. cached schemas); otherwise returns the list.",
+            "description": "If set, returns the single TP with that id (incl. cached schemas); otherwise returns the list.",
             "name": "providerId",
             "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "List or single DP",
+            "description": "List or single TP",
             "content": {
               "application/json": {
                 "schema": {
@@ -677,7 +677,7 @@
                             "providers": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/DataProviderImportSummary"
+                                "$ref": "#/components/schemas/TenantProvisionerImportSummary"
                               }
                             }
                           },
@@ -686,7 +686,7 @@
                           ]
                         },
                         {
-                          "$ref": "#/components/schemas/DataProviderImport"
+                          "$ref": "#/components/schemas/TenantProvisionerImport"
                         }
                       ]
                     }
@@ -712,9 +712,9 @@
         }
       },
       "post": {
-        "summary": "Import a data-provider",
-        "description": "Fetches the DP's 4 discovery documents (/.well-known/data-provider-info, /.well-known/oauth-authorization-server, JWKS, /openapi.admin.json, opt. /openapi.tenant-config.json), validates them, and stores the result in the hub's meta-registry. The DP MUST already trust the hub's iss as control-plane.",
-        "operationId": "importDataProvider",
+        "summary": "Import a tenant-provisioner",
+        "description": "Fetches the TP's 4 discovery documents (/.well-known/tenant-provisioner-info, /.well-known/oauth-authorization-server, JWKS, /openapi.admin.json, opt. /openapi.tenant-config.json), validates them, and stores the result in the hub's meta-registry. The TP MUST already trust the hub's iss as control-plane.",
+        "operationId": "importTenantProvisioner",
         "tags": [
           "providers"
         ],
@@ -727,7 +727,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ImportDataProviderInput"
+                "$ref": "#/components/schemas/ImportTenantProvisionerInput"
               }
             }
           }
@@ -747,7 +747,7 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/DataProviderImport"
+                      "$ref": "#/components/schemas/TenantProvisionerImport"
                     }
                   },
                   "required": [
@@ -779,7 +779,7 @@
             }
           },
           "502": {
-            "description": "DP unreachable / refused hub trust",
+            "description": "TP unreachable / refused hub trust",
             "content": {
               "application/json": {
                 "schema": {
@@ -793,8 +793,8 @@
     },
     "/api/providers/logs": {
       "get": {
-        "summary": "Read a data-provider's logs (all tenants)",
-        "description": "Proxies the DP's control-plane GET /admin/logs. Filters kind/level/time, bounded pagination via cursor.",
+        "summary": "Read a tenant-provisioner's logs (all tenants)",
+        "description": "Proxies the TP's control-plane GET /admin/logs. Filters kind/level/time, bounded pagination via cursor.",
         "operationId": "fetchProviderLogs",
         "tags": [
           "logs"
@@ -914,7 +914,7 @@
             }
           },
           "404": {
-            "description": "Unknown DP",
+            "description": "Unknown TP",
             "content": {
               "application/json": {
                 "schema": {
@@ -924,7 +924,7 @@
             }
           },
           "502": {
-            "description": "DP refused / unreachable",
+            "description": "TP refused / unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -938,9 +938,9 @@
     },
     "/api/providers/refresh": {
       "post": {
-        "summary": "Refresh a data-provider's cached schemas",
-        "description": "Re-fetches the 4 discovery documents and updates the cache. Call after a version bump on the DP.",
-        "operationId": "refreshDataProvider",
+        "summary": "Refresh a tenant-provisioner's cached schemas",
+        "description": "Re-fetches the 4 discovery documents and updates the cache. Call after a version bump on the TP.",
+        "operationId": "refreshTenantProvisioner",
         "tags": [
           "providers"
         ],
@@ -976,7 +976,7 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/DataProviderImport"
+                      "$ref": "#/components/schemas/TenantProvisionerImport"
                     }
                   },
                   "required": [
@@ -1008,7 +1008,7 @@
             }
           },
           "502": {
-            "description": "DP unreachable",
+            "description": "TP unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -1023,7 +1023,7 @@
     "/api/namespaces": {
       "delete": {
         "summary": "Delete a namespace (cascade)",
-        "description": "Deactivates the namespace on every DP it has a provision on (best-effort), then drops the namespace + provisions rows. Operator must accept the destructive side-effects on data-providers.",
+        "description": "Deactivates the namespace on every TP it has a provision on (best-effort), then drops the namespace + provisions rows. Operator must accept the destructive side-effects on tenant-provisioners.",
         "operationId": "deleteNamespace",
         "tags": [
           "namespaces"
@@ -1084,7 +1084,7 @@
             }
           },
           "502": {
-            "description": "At least one DP failed",
+            "description": "At least one TP failed",
             "content": {
               "application/json": {
                 "schema": {
@@ -1097,7 +1097,7 @@
       },
       "post": {
         "summary": "Create a namespace",
-        "description": "Pure metadata — the hub does NOT create Keycloak realms, OIDC clients, or users. A namespace is just a logical grouping of (DP × tenant) provisions.",
+        "description": "Pure metadata — the hub does NOT create Keycloak realms, OIDC clients, or users. A namespace is just a logical grouping of (TP × tenant) provisions.",
         "operationId": "createNamespace",
         "tags": [
           "namespaces"
@@ -1166,7 +1166,7 @@
       },
       "patch": {
         "summary": "Update a namespace's metadata",
-        "description": "Patches displayName and/or description. namespaceId itself is immutable (it's also used as tenantId on every DP).",
+        "description": "Patches displayName and/or description. namespaceId itself is immutable (it's also used as tenantId on every TP).",
         "operationId": "updateNamespace",
         "tags": [
           "namespaces"
@@ -1321,7 +1321,7 @@
     "/api/namespaces/logs": {
       "get": {
         "summary": "Read a namespace's logs (all its tenants)",
-        "description": "Aggregates logs across every tenant of the namespace (possibly on different DPs), merged + sorted by ts desc, truncated to `limit`. No cursor (heterogeneous sources).",
+        "description": "Aggregates logs across every tenant of the namespace (possibly on different TPs), merged + sorted by ts desc, truncated to `limit`. No cursor (heterogeneous sources).",
         "operationId": "fetchNamespaceLogs",
         "tags": [
           "logs"
@@ -1443,7 +1443,7 @@
             }
           },
           "502": {
-            "description": "DP refused / unreachable",
+            "description": "TP refused / unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -1458,7 +1458,7 @@
     "/api/namespaces/tenants": {
       "get": {
         "summary": "List or fetch tenants",
-        "description": "`?namespaceId=X`: tenants in a namespace. `?providerId=X`: tenants for a DP. `?tenantId=X`: a single tenant (200 + null when absent).",
+        "description": "`?namespaceId=X`: tenants in a namespace. `?providerId=X`: tenants for a TP. `?tenantId=X`: a single tenant (200 + null when absent).",
         "operationId": "listTenants",
         "tags": [
           "tenants"
@@ -1546,8 +1546,8 @@
         }
       },
       "post": {
-        "summary": "Add a tenant to a namespace for a DP",
-        "description": "Mints a hub CP token, POSTs /admin/tenants on the DP with a fresh `tenantId` + issuers + optional `providerConfig`, then mirrors the row. A namespace may hold multiple tenants of the same DP.",
+        "summary": "Add a tenant to a namespace for a TP",
+        "description": "Mints a hub CP token, POSTs /admin/tenants on the TP with a fresh `tenantId` + issuers + optional `providerConfig`, then mirrors the row. A namespace may hold multiple tenants of the same TP.",
         "operationId": "createTenant",
         "tags": [
           "tenants"
@@ -1626,7 +1626,7 @@
             }
           },
           "404": {
-            "description": "Unknown namespace or DP",
+            "description": "Unknown namespace or TP",
             "content": {
               "application/json": {
                 "schema": {
@@ -1636,7 +1636,7 @@
             }
           },
           "502": {
-            "description": "DP refused / unreachable",
+            "description": "TP refused / unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -1649,7 +1649,7 @@
       },
       "patch": {
         "summary": "Update a tenant",
-        "description": "PATCHes `issuers`, `providerConfig`, and/or `status` on the DP, mirrors in the hub. `displayName` is hub-local only.",
+        "description": "PATCHes `issuers`, `providerConfig`, and/or `status` on the TP, mirrors in the hub. `displayName` is hub-local only.",
         "operationId": "updateTenant",
         "tags": [
           "tenants"
@@ -1664,11 +1664,11 @@
             "schema": {
               "type": "string",
               "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
-              "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+              "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the TP as `tenantId`.",
               "example": "acme-addresses-fr-a1b2c3d4"
             },
             "required": true,
-            "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+            "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the TP as `tenantId`.",
             "name": "tenantId",
             "in": "query"
           }
@@ -1719,7 +1719,7 @@
             }
           },
           "404": {
-            "description": "Unknown tenant or DP",
+            "description": "Unknown tenant or TP",
             "content": {
               "application/json": {
                 "schema": {
@@ -1729,7 +1729,7 @@
             }
           },
           "502": {
-            "description": "DP refused / unreachable",
+            "description": "TP refused / unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -1742,7 +1742,7 @@
       },
       "delete": {
         "summary": "Remove a tenant",
-        "description": "DELETE /admin/tenants on the DP, then drop the local row. `?force=true` overrides the DP's grace policy (base.md §8).",
+        "description": "DELETE /admin/tenants on the TP, then drop the local row. `?force=true` overrides the TP's grace policy (base.md §8).",
         "operationId": "removeTenant",
         "tags": [
           "tenants"
@@ -1757,11 +1757,11 @@
             "schema": {
               "type": "string",
               "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
-              "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+              "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the TP as `tenantId`.",
               "example": "acme-addresses-fr-a1b2c3d4"
             },
             "required": true,
-            "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+            "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the TP as `tenantId`.",
             "name": "tenantId",
             "in": "query"
           },
@@ -1793,7 +1793,7 @@
             }
           },
           "502": {
-            "description": "DP refused / unreachable",
+            "description": "TP refused / unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -1808,7 +1808,7 @@
     "/api/namespaces/tenants/logs": {
       "get": {
         "summary": "Read a tenant's logs",
-        "description": "Resolves the tenant's DP, then proxies GET /admin/logs scoped to that tenant. Filters kind/level/time, bounded pagination via cursor.",
+        "description": "Resolves the tenant's TP, then proxies GET /admin/logs scoped to that tenant. Filters kind/level/time, bounded pagination via cursor.",
         "operationId": "fetchTenantLogs",
         "tags": [
           "logs"
@@ -1928,7 +1928,7 @@
             }
           },
           "404": {
-            "description": "Unknown tenant or DP",
+            "description": "Unknown tenant or TP",
             "content": {
               "application/json": {
                 "schema": {
@@ -1938,7 +1938,7 @@
             }
           },
           "502": {
-            "description": "DP refused / unreachable",
+            "description": "TP refused / unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -1952,8 +1952,8 @@
     },
     "/api/namespaces/tenants/info": {
       "get": {
-        "summary": "Read a tenant's DP-computed info",
-        "description": "Resolves the tenant's DP and proxies GET /admin/info — read-only facts the provider surfaces (e.g. a realm issuer URL). Distinct from the editable §11 config.",
+        "summary": "Read a tenant's TP-computed info",
+        "description": "Resolves the tenant's TP and proxies GET /admin/info — read-only facts the provider surfaces (e.g. a realm issuer URL). Distinct from the editable §11 config.",
         "operationId": "fetchTenantInfo",
         "tags": [
           "tenants"
@@ -2001,7 +2001,7 @@
             }
           },
           "404": {
-            "description": "Unknown tenant or DP",
+            "description": "Unknown tenant or TP",
             "content": {
               "application/json": {
                 "schema": {
@@ -2011,7 +2011,7 @@
             }
           },
           "502": {
-            "description": "DP refused / unreachable",
+            "description": "TP refused / unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -2025,8 +2025,8 @@
     },
     "/api/namespaces/tenants/config": {
       "get": {
-        "summary": "Read the live config from the DP for a tenant",
-        "description": "GETs /admin/config on the DP. Returns 200 with `data: null` when nothing is stored yet (so the UI doesn't see a 404 in DevTools).",
+        "summary": "Read the live config from the TP for a tenant",
+        "description": "GETs /admin/config on the TP. Returns 200 with `data: null` when nothing is stored yet (so the UI doesn't see a 404 in DevTools).",
         "operationId": "fetchTenantConfig",
         "tags": [
           "tenants"
@@ -2041,18 +2041,18 @@
             "schema": {
               "type": "string",
               "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
-              "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+              "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the TP as `tenantId`.",
               "example": "acme-addresses-fr-a1b2c3d4"
             },
             "required": true,
-            "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+            "description": "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the TP as `tenantId`.",
             "name": "tenantId",
             "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "Config from DP",
+            "description": "Config from TP",
             "content": {
               "application/json": {
                 "schema": {
@@ -2103,7 +2103,7 @@
             }
           },
           "404": {
-            "description": "Unknown tenant / DP",
+            "description": "Unknown tenant / TP",
             "content": {
               "application/json": {
                 "schema": {
@@ -2113,7 +2113,7 @@
             }
           },
           "502": {
-            "description": "DP refused / unreachable",
+            "description": "TP refused / unreachable",
             "content": {
               "application/json": {
                 "schema": {
@@ -2128,7 +2128,7 @@
     "/health": {
       "get": {
         "summary": "Public liveness probe",
-        "description": "Returns 200 if the hub process is up. Does NOT cross the network to any data-provider.",
+        "description": "Returns 200 if the hub process is up. Does NOT cross the network to any tenant-provisioner.",
         "operationId": "health",
         "tags": [
           "health"

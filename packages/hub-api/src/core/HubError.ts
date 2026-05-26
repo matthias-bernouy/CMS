@@ -1,6 +1,6 @@
 export type HubErrorCode =
     | "validation_error"
-    // Data-provider registry / cross-DP provisioning
+    // Tenant-provisioner registry / cross-TP provisioning
     | "provider_unreachable"
     | "provider_metadoc_invalid"
     | "provider_does_not_trust_hub"
@@ -12,13 +12,13 @@ export type HubErrorCode =
     | "duplicate_namespace_id"
     | "provision_not_found"
     | "duplicate_provision"
-    | "tenant_not_found"   // ← still used: the DP returned 404 on a known namespace
+    | "tenant_not_found"   // ← still used: the TP returned 404 on a known namespace
     | "unknown";
 
 /**
  * Surfaces failures from the orchestration. Wraps the underlying client
  * error (`cause`) so the operator can read the original error (e.g. the
- * network error from a data-provider fetch) in the logs.
+ * network error from a tenant-provisioner fetch) in the logs.
  */
 export class HubError extends Error {
 

@@ -1,14 +1,14 @@
 # @bernouy/hub-api
 
-Control-plane orchestrator for the data-provider platform. **Post-pivot**,
+Control-plane orchestrator for the tenant-provisioner platform. **Post-pivot**,
 the hub does NOT manage identity (no Keycloak realm / OIDC client / user
 creation). It is a thin registry + provisioning router:
 
-- **DP registry** — import / refresh / unimport conforming data-providers.
+- **TP registry** — import / refresh / unimport conforming tenant-provisioners.
 - **Namespace registry** — logical groupings (a customer, a project…) +
-  their per-DP provisions, each carrying a trusted-issuer list + config.
+  their per-TP provisions, each carrying a trusted-issuer list + config.
 - **Control-plane issuer** — mints short-lived CP tokens (issuer-kit) to
-  call each DP's `/admin/*`.
+  call each TP's `/admin/*`.
 
 Authentication of the superadmin `/admin/*` surface is delegated to an
 `Authentication` instance the consumer passes to `mountHubApi` (typically a
@@ -20,18 +20,18 @@ API — that Keycloak is just an IdP for operators.
 ```
 src/
 ├── exports/
-│   ├── Hub.ts                 composition root: issuer + DP registry + namespace registry
+│   ├── Hub.ts                 composition root: issuer + TP registry + namespace registry
 │   └── mountHubApi.ts         registers /health (public) + /api/* (gated) + hub-issuer publication
 ├── core/
 │   ├── HubError.ts            { code, message, cause? } + HubErrorCode union
 │   ├── HubErrorHttp.ts        HUB_ERROR_HTTP table + hubErrorResponse()
 │   ├── denestDottedKeys.ts    form-body helper (a.b → { a: { b } })
-│   ├── dataProvider/          import / refresh / unimport + discoverEndpoints
+│   ├── tenantProvisioner/          import / refresh / unimport + discoverEndpoints
 │   ├── namespace/             createNamespace, deleteNamespace (cascade),
 │   │                          createTenant, updateTenant, removeTenant,
 │   │                          fetchTenantConfig, makeTenantId
-│   ├── issuer/cpTokenFor.ts   fresh CP token per call (NO cache — DP enforces JTI replay)
-│   ├── logs/fetchLogs.ts      proxy a DP's /admin/logs (fetchProviderLogs + fetchTenantLogs)
+│   ├── issuer/cpTokenFor.ts   fresh CP token per call (NO cache — TP enforces JTI replay)
+│   ├── logs/fetchLogs.ts      proxy a TP's /admin/logs (fetchProviderLogs + fetchTenantLogs)
 │   └── schemas/               zod schemas + zod-to-openapi setup
 ├── api/                       file-routed endpoints (meta + default handler)
 │   ├── issuer.get.ts          GET /api/issuer (hub-issuer info + allowlist snippet)
@@ -39,9 +39,9 @@ src/
 │   └── namespaces/            CRUD + tenants/ (create / update / remove / config)
 ├── interfaces/
 │   ├── HubConfig.ts           issuer + optional imports + optional namespaces + fetch
-│   ├── DataProviderImport*.ts DP registry entity + repo contract
+│   ├── TenantProvisionerImport*.ts TP registry entity + repo contract
 │   └── Namespace*.ts          Namespace + Tenant + repo contract
-├── default-implementation/    Memory + Mongo repos (DP imports + namespaces)
+├── default-implementation/    Memory + Mongo repos (TP imports + namespaces)
 └── index.ts                   public re-exports
 ```
 
@@ -52,7 +52,7 @@ GET    /health                                           public liveness
 /.well-known/oauth-authorization-server, /jwks.json      public (hub is an issuer)
 
 GET    /api/issuer                                       hub-issuer info
-POST   /api/providers                                    import a DP
+POST   /api/providers                                    import a TP
 GET    /api/providers[?providerId=X]                     list / get one
 POST   /api/providers/refresh?providerId=X               re-fetch schemas
 DELETE /api/providers?providerId=X                       unimport
@@ -63,18 +63,18 @@ PATCH  /api/namespaces?namespaceId=X                     rename / re-describe
 DELETE /api/namespaces?namespaceId=X                     cascade-delete (removes all tenants)
 
 GET    /api/namespaces/tenants?namespaceId=X             list tenants in a namespace
-GET    /api/namespaces/tenants?providerId=Y              list tenants for a DP
+GET    /api/namespaces/tenants?providerId=Y              list tenants for a TP
 GET    /api/namespaces/tenants?tenantId=T                fetch one (200 + null when absent)
 POST   /api/namespaces/tenants?namespaceId=X&providerId=Y   add a tenant (issuers? + config?)
 PATCH  /api/namespaces/tenants?tenantId=T                update issuers / config / status / name
 DELETE /api/namespaces/tenants?tenantId=T[&force=true]   remove a tenant
-GET    /api/namespaces/tenants/config?tenantId=T         live config from the DP
+GET    /api/namespaces/tenants/config?tenantId=T         live config from the TP
 GET    /api/namespaces/logs?namespaceId=X[&kind&level&sinceTs&untilTs&limit]               all tenants of a namespace (merged, no cursor)
 GET    /api/namespaces/tenants/logs?tenantId=T[&kind&level&sinceTs&untilTs&limit&cursor]  tenant-scoped logs
-GET    /api/providers/logs?providerId=Y[&kind&level&sinceTs&untilTs&limit&cursor]          all-tenant DP logs
+GET    /api/providers/logs?providerId=Y[&kind&level&sinceTs&untilTs&limit&cursor]          all-tenant TP logs
 ```
 
-Namespace logs aggregate across tenants that may live on different DPs
+Namespace logs aggregate across tenants that may live on different TPs
 (`/admin/logs` only filters one `tenantId`), so the recipe queries each
 tenant, merges, sorts by `ts` desc and truncates to `limit` — no resumable
 cursor (heterogeneous sources).
@@ -84,62 +84,62 @@ All `/api/*` gated by `requireRole(auth, requiredRole, { csrf: "cookie-only" })`
 ## Key design points
 
 - **Tenant-per-namespace.** A namespace holds many tenants; a namespace may
-  even hold MULTIPLE tenants of the SAME DP. Each tenant has a
+  even hold MULTIPLE tenants of the SAME TP. Each tenant has a
   globally-unique `tenantId` (RFC 1123 label, `^[a-z0-9-]{1,63}$`) —
   generated by `makeTenantId(namespaceId, providerId)` unless the caller
-  supplies one. That `tenantId` is what the hub sends to the DP.
+  supplies one. That `tenantId` is what the hub sends to the TP.
 - **Multi-issuer, optional.** A tenant carries `issuers: string[]` forwarded
-  verbatim to the DP (SDK now accepts the full list). It MAY be empty — a
+  verbatim to the TP (SDK now accepts the full list). It MAY be empty — a
   tenant can be created first and have issuers attached later.
 - **CP token minting is uncached** (`cpTokenFor.ts`) — the SDK enforces
   strict JTI replay protection (base.md §4.5), so a token is single-use.
 - **No Keycloak admin client** at all — the hub never manages identity.
 - **Cascade delete**: removing a namespace best-effort removes every tenant
-  on its DP, then drops the rows. Per-tenant failures are collected + surfaced.
+  on its TP, then drops the rows. Per-tenant failures are collected + surfaced.
 
 ## `HubError` codes
 
 | code | HTTP | meaning |
 |---|---|---|
 | `validation_error` | 400 | bad input / zod parse |
-| `duplicate_provider_id` | 409 | DP import conflict |
-| `provider_not_found` | 404 | DP not imported |
-| `provider_unreachable` | 502 | DP network error |
+| `duplicate_provider_id` | 409 | TP import conflict |
+| `provider_not_found` | 404 | TP not imported |
+| `provider_unreachable` | 502 | TP network error |
 | `provider_metadoc_invalid` | 502 | bad discovery doc / contract mismatch |
-| `provider_does_not_trust_hub` | 502 | DP rejected the hub's CP token |
-| `provider_rejected_provisioning` | 502 | DP returned non-2xx on /admin/tenants |
+| `provider_does_not_trust_hub` | 502 | TP rejected the hub's CP token |
+| `provider_rejected_provisioning` | 502 | TP returned non-2xx on /admin/tenants |
 | `namespace_not_found` | 404 | unknown namespace |
 | `duplicate_namespace_id` | 409 | namespace already exists |
-| `provision_not_found` | 404 | no (namespace, DP) row |
+| `provision_not_found` | 404 | no (namespace, TP) row |
 | `duplicate_provision` | 409 | provision already exists |
-| `tenant_not_found` | 404 | DP returned 404 for a known namespace |
+| `tenant_not_found` | 404 | TP returned 404 for a known namespace |
 | `unknown` | 500 | fallback |
 
 ## Dependencies
 
 - runtime: `@bernouy/core`, `@bernouy/issuer-kit`,
-  `@bernouy/data-provider-contract`, `zod`, `mongodb`,
+  `@bernouy/tenant-provisioner-contract`, `zod`, `mongodb`,
   `@asteasolutions/zod-to-openapi`
 
 ## TODO — central log aggregation (design, not built)
 
-Today logs live on each DP and the hub PULLS them on demand (`fetchLogs` →
+Today logs live on each TP and the hub PULLS them on demand (`fetchLogs` →
 `GET /admin/logs`). To get a single searchable archive, add a **batch-pull
-cron** (NOT streaming — keep the DP passive behind the standardized query
-contract; no DP→sink coupling):
+cron** (NOT streaming — keep the TP passive behind the standardized query
+contract; no TP→sink coupling):
 
-- Daily cron loops imported DPs, paginates `fetchProviderLogs(dp, { sinceTs,
+- Daily cron loops imported TPs, paginates `fetchProviderLogs(dp, { sinceTs,
   untilTs, cursor })` over the previous day(s) using the **keyset cursor**,
   and appends into a **hub-side `LogStore`** (the central archive — its own,
   longer retention for search / correlation / compliance).
-- **Idempotency**: dedup on `(providerId, requestId)` or persist a per-DP
+- **Idempotency**: dedup on `(providerId, requestId)` or persist a per-TP
   high-water cursor (re-running the cron must not double-insert).
-- **DP retention contract**: a DP that wants to be aggregated must retain
-  logs ≥ *aggregation lag* (cron interval + tolerated hub/DP downtime +
+- **TP retention contract**: a TP that wants to be aggregated must retain
+  logs ≥ *aggregation lag* (cron interval + tolerated hub/TP downtime +
   margin) — NOT a compliance number; **compliance/long retention lives on
   the hub**. The default `FileLogStore` (30-day rotation) covers a daily cron
-  with weeks of slack. Clean form: the DP declares `logRetentionDays` in
-  `/.well-known/data-provider-info` (symmetry with `defaultDeprovisionPolicy`)
+  with weeks of slack. Clean form: the TP declares `logRetentionDays` in
+  `/.well-known/tenant-provisioner-info` (symmetry with `defaultDeprovisionPolicy`)
   and the hub validates it ≥ its aggregation need at import. Document the
   rule in `base.md §10.4` when implementing.
 - **Security latency**: daily batch is fine for audit/compliance, too slow

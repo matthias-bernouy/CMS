@@ -1,7 +1,7 @@
 import type { Hub } from "src/exports/Hub";
 import { HubError } from "src/core/HubError";
 
-/** Filters forwarded verbatim to the DP's `GET /admin/logs` (base.md §10.5). */
+/** Filters forwarded verbatim to the TP's `GET /admin/logs` (base.md §10.5). */
 export interface LogQuery {
     tenantId?: string;
     kind?:     string;
@@ -12,7 +12,7 @@ export interface LogQuery {
     cursor?:   string;
 }
 
-/** A bounded log page as returned by the DP — proxied through untouched.
+/** A bounded log page as returned by the TP — proxied through untouched.
  *  `failedProviders` is set only by `fetchNamespaceLogs`: the deduped list of
  *  providerIds whose fetch failed, so a partial result is honest about what
  *  is missing rather than silently dropping it. */
@@ -22,14 +22,14 @@ export interface LogPage {
     failedProviders?: string[];
 }
 
-/** Read logs from a DP's control-plane `/admin/logs`. With `query.tenantId`
- *  the DP scopes to that tenant; without it, all tenants of the DP. The hub
+/** Read logs from a TP's control-plane `/admin/logs`. With `query.tenantId`
+ *  the TP scopes to that tenant; without it, all tenants of the TP. The hub
  *  mints a fresh CP token (single-use, JTI replay) per call. */
 export async function fetchProviderLogs(
     hub: Hub, providerId: string, query: LogQuery,
 ): Promise<LogPage> {
     const dp = await hub.imports.getByProviderId(providerId);
-    if (!dp) throw new HubError("provider_not_found", `data-provider "${providerId}" is not imported`);
+    if (!dp) throw new HubError("provider_not_found", `tenant-provisioner "${providerId}" is not imported`);
 
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(query)) {
@@ -55,7 +55,7 @@ export async function fetchProviderLogs(
     return res.json() as Promise<LogPage>;
 }
 
-/** Read logs scoped to one tenant: resolve its DP, then forward `tenantId`. */
+/** Read logs scoped to one tenant: resolve its TP, then forward `tenantId`. */
 export async function fetchTenantLogs(
     hub: Hub, tenantId: string, query: Omit<LogQuery, "tenantId">,
 ): Promise<LogPage> {
@@ -65,10 +65,10 @@ export async function fetchTenantLogs(
 }
 
 /** Read logs across ALL tenants of a namespace. Tenants may live on
- *  different DPs and `/admin/logs` only filters one `tenantId`, so we query
+ *  different TPs and `/admin/logs` only filters one `tenantId`, so we query
  *  each tenant, merge, sort by `ts` descending and truncate to `limit`.
- *  No cross-DP cursor (heterogeneous): the result is the latest `limit`
- *  entries, not a resumable page. A single unreachable DP must NOT sink the
+ *  No cross-TP cursor (heterogeneous): the result is the latest `limit`
+ *  entries, not a resumable page. A single unreachable TP must NOT sink the
  *  whole namespace: failures are collected (`allSettled`) and surfaced via
  *  `failedProviders` so the partial result is honest about what is missing. */
 export async function fetchNamespaceLogs(

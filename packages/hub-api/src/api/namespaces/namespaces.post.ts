@@ -8,7 +8,7 @@ import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 export const meta: ApiOperationMeta = {
     summary:     "Create a namespace",
-    description: "Pure metadata — the hub does NOT create Keycloak realms, OIDC clients, or users. A namespace is just a logical grouping of (DP × tenant) provisions.",
+    description: "Pure metadata — the hub does NOT create Keycloak realms, OIDC clients, or users. A namespace is just a logical grouping of (TP × tenant) provisions.",
     operationId: "createNamespace",
     tags:        ["namespaces"],
     request:     { body: CreateNamespaceInputSchema },

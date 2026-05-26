@@ -1,6 +1,6 @@
 <hub-page>
     <h1 slot="title">Dashboard</h1>
-    <p slot="title">Registry of the platform's namespaces and data-providers.</p>
+    <p slot="title">Registry of the platform's namespaces and tenant-provisioners.</p>
 
     <hub-grid>
         <w13c-fetch url="/api/namespaces">
@@ -10,7 +10,7 @@
         </w13c-fetch>
         <w13c-fetch url="/api/providers">
             <template>
-                <hub-stat href="{{BASE_PATH}}/providers/" label="Data-providers" sub="→ Manage">{{ data.providers.length }}</hub-stat>
+                <hub-stat href="{{BASE_PATH}}/providers/" label="Tenant-provisioners" sub="→ Manage">{{ data.providers.length }}</hub-stat>
             </template>
         </w13c-fetch>
     </hub-grid>
@@ -23,7 +23,7 @@
                         <div><strong>iss:</strong> <hub-code>{{ data.iss }}</hub-code></div>
                         <div><strong>JWKS:</strong> <hub-code>{{ data.jwksUrl }}</hub-code></div>
                         <p9r-alert type="info">
-                            Before importing a data-provider, configure its
+                            Before importing a tenant-provisioner, configure its
                             <hub-code>allowlist</hub-code> so it trusts this hub as control-plane:
                             <hub-code>{ "iss": "{{ data.iss }}", "role": "control-plane" }</hub-code>.
                         </p9r-alert>

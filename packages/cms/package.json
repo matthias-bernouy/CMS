@@ -26,6 +26,11 @@
         "./data": {
             "bun": "./data.ts",
             "default": "./data.ts"
+        },
+        "./repository": {
+            "types": "./dist/repository.d.ts",
+            "bun": "./repository.ts",
+            "default": "./repository.ts"
         }
     },
     "files": [
@@ -33,6 +38,7 @@
         "component.ts",
         "editor.ts",
         "data.ts",
+        "repository.ts",
         "build.ts",
         "src/",
         "types/",

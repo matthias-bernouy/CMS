@@ -4,7 +4,7 @@
  * the namespace — it just stores metadata + its tenants.
  *
  * `namespaceId` is human-chosen and URL-safe (RFC 1123 label,
- * `^[a-z0-9-]{1,63}$`). It is NOT what the hub sends to a DP — each tenant
+ * `^[a-z0-9-]{1,63}$`). It is NOT what the hub sends to a TP — each tenant
  * carries its own globally-unique `tenantId`.
  */
 export interface Namespace {
@@ -15,15 +15,15 @@ export interface Namespace {
 }
 
 /**
- * One tenant = one (namespace, DP) activation. A namespace may hold
- * MULTIPLE tenants of the SAME DP, so the row is keyed by a globally-unique
- * `tenantId` (RFC 1123 label) — that is the id the hub sends to the DP's
+ * One tenant = one (namespace, TP) activation. A namespace may hold
+ * MULTIPLE tenants of the SAME TP, so the row is keyed by a globally-unique
+ * `tenantId` (RFC 1123 label) — that is the id the hub sends to the TP's
  * `POST /admin/tenants`.
  *
- * `issuers` is the trusted-issuer list forwarded to the DP (multi-issuer,
+ * `issuers` is the trusted-issuer list forwarded to the TP (multi-issuer,
  * SDK base.md §8). It MAY be empty — a tenant can be created first and have
  * issuers attached later. `config` is the validated `providerConfig`
- * (against the DP's `tenantConfig` schema); the DP holds the canonical copy.
+ * (against the TP's `tenantConfig` schema); the TP holds the canonical copy.
  */
 export interface Tenant {
     tenantId:     string;

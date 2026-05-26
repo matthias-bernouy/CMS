@@ -1,9 +1,9 @@
 // Hub — single Bun process serving /admin/* (UI), /api/* (REST), and the
 // hub-issuer publication endpoints. POST-PIVOT: the hub no longer creates
 // Keycloak realms / users / OIDC clients. It just :
-//   - mints CP tokens to talk to data-providers
-//   - keeps a registry of imported DPs
-//   - keeps a registry of namespaces + their per-DP provisions
+//   - mints CP tokens to talk to tenant-provisioners
+//   - keeps a registry of imported TPs
+//   - keeps a registry of namespaces + their per-TP provisions
 //
 // All env vars come from the OKMS bundle through `okms-fetch`; in dev,
 // `entrypoint.sh` short-circuits OKMS and the vars come from compose.
@@ -21,7 +21,7 @@ import { CompositeAuthentication } from "@bernouy/auth-composite";
 import { FileKeyStore } from "@bernouy/issuer-kit";
 import {
     Hub, mountHubApi,
-    MongoDataProviderImportsRepository, MongoNamespaceRepository,
+    MongoTenantProvisionerImportsRepository, MongoNamespaceRepository,
 } from "@bernouy/hub-api";
 import { mountHubUi } from "@bernouy/hub-ui";
 
@@ -65,16 +65,16 @@ const keyStore = new FileKeyStore({
     keyOverlapSeconds: 300,
 });
 
-// Mongo — both DP imports + namespace registry. Optional; without
+// Mongo — both TP imports + namespace registry. Optional; without
 // `MONGO_URL` the hub falls back to in-memory repos (lost on restart).
-let imports:    MongoDataProviderImportsRepository | undefined;
+let imports:    MongoTenantProvisionerImportsRepository | undefined;
 let namespaces: MongoNamespaceRepository           | undefined;
 const MONGO_URL = process.env.MONGO_URL;
 if (MONGO_URL) {
     const mongo = new MongoClient(MONGO_URL);
     await mongo.connect();
     const db = mongo.db(env("MONGO_DB_NAME", "hub_meta"));
-    imports    = new MongoDataProviderImportsRepository(db);
+    imports    = new MongoTenantProvisionerImportsRepository(db);
     namespaces = new MongoNamespaceRepository(db);
     await imports.initIndexes();
     await namespaces.initIndexes();
@@ -131,5 +131,5 @@ runner.start(PORT);
 console.log(`🚀 hub listening on :${PORT}`);
 console.log(`   admin UI:     ${HUB_PUBLIC_URL}/admin/`);
 console.log(`   API:          ${HUB_PUBLIC_URL}/api/`);
-console.log(`   issuer (DP):  ${HUB_PUBLIC_URL}/.well-known/oauth-authorization-server`);
+console.log(`   issuer (TP):  ${HUB_PUBLIC_URL}/.well-known/oauth-authorization-server`);
 console.log(`   storage:      ${imports ? "Mongo (persisted)" : "Memory (lost on restart!)"}`);

@@ -7,15 +7,15 @@ import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 export const meta: ApiOperationMeta = {
     summary:     "Read a tenant's logs",
-    description: "Resolves the tenant's DP, then proxies GET /admin/logs scoped to that tenant. Filters kind/level/time, bounded pagination via cursor.",
+    description: "Resolves the tenant's TP, then proxies GET /admin/logs scoped to that tenant. Filters kind/level/time, bounded pagination via cursor.",
     operationId: "fetchTenantLogs",
     tags:        ["logs"],
     request:     { query: TenantLogsQuerySchema },
     responses: {
         200: { description: "Bounded log page",         schema: successEnvelope(LogPageSchema) },
         400: { description: "Invalid query",            schema: HubErrorEnvelope },
-        404: { description: "Unknown tenant or DP",     schema: HubErrorEnvelope },
-        502: { description: "DP refused / unreachable", schema: HubErrorEnvelope },
+        404: { description: "Unknown tenant or TP",     schema: HubErrorEnvelope },
+        502: { description: "TP refused / unreachable", schema: HubErrorEnvelope },
     },
 };
 

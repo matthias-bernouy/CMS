@@ -10,14 +10,14 @@ const ResultSchema = z.object({ namespaceId: z.string() }).openapi("DeleteNamesp
 
 export const meta: ApiOperationMeta = {
     summary:     "Delete a namespace (cascade)",
-    description: "Deactivates the namespace on every DP it has a provision on (best-effort), then drops the namespace + provisions rows. Operator must accept the destructive side-effects on data-providers.",
+    description: "Deactivates the namespace on every TP it has a provision on (best-effort), then drops the namespace + provisions rows. Operator must accept the destructive side-effects on tenant-provisioners.",
     operationId: "deleteNamespace",
     tags:        ["namespaces"],
     request:     { query: NamespaceIdQuerySchema },
     responses: {
         200: { description: "Cascade-deleted",         schema: successEnvelope(ResultSchema) },
         404: { description: "Unknown namespace",       schema: HubErrorEnvelope },
-        502: { description: "At least one DP failed",  schema: HubErrorEnvelope },
+        502: { description: "At least one TP failed",  schema: HubErrorEnvelope },
     },
 };
 

@@ -10,15 +10,15 @@ import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 export const meta: ApiOperationMeta = {
     summary:     "Update a tenant",
-    description: "PATCHes `issuers`, `providerConfig`, and/or `status` on the DP, mirrors in the hub. `displayName` is hub-local only.",
+    description: "PATCHes `issuers`, `providerConfig`, and/or `status` on the TP, mirrors in the hub. `displayName` is hub-local only.",
     operationId: "updateTenant",
     tags:        ["tenants"],
     request:     { query: TenantIdQuerySchema, body: UpdateTenantInputSchema },
     responses: {
         200: { description: "Updated",                  schema: successEnvelope(TenantSchema) },
         400: { description: "Invalid",                  schema: HubErrorEnvelope },
-        404: { description: "Unknown tenant or DP",     schema: HubErrorEnvelope },
-        502: { description: "DP refused / unreachable", schema: HubErrorEnvelope },
+        404: { description: "Unknown tenant or TP",     schema: HubErrorEnvelope },
+        502: { description: "TP refused / unreachable", schema: HubErrorEnvelope },
     },
 };
 

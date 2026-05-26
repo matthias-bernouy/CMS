@@ -1,8 +1,8 @@
 import type { Hub } from "src/exports/Hub";
 import { HubError } from "src/core/HubError";
 
-/** Remove a tenant: DELETE on the DP then drop the local row. `force=true`
- *  overrides the DP's grace policy (base.md §8). Idempotent. */
+/** Remove a tenant: DELETE on the TP then drop the local row. `force=true`
+ *  overrides the TP's grace policy (base.md §8). Idempotent. */
 export async function removeTenant(
     hub: Hub,
     tenantId: string,
@@ -13,7 +13,7 @@ export async function removeTenant(
 
     const dp = await hub.imports.getByProviderId(cur.providerId);
     if (!dp) {
-        // The DP was unimported behind our back; just clean our row.
+        // The TP was unimported behind our back; just clean our row.
         await hub.namespaces.removeTenant(tenantId);
         return;
     }

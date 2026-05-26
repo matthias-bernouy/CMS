@@ -7,14 +7,14 @@ import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 export const meta: ApiOperationMeta = {
     summary:     "Remove a tenant",
-    description: "DELETE /admin/tenants on the DP, then drop the local row. `?force=true` overrides the DP's grace policy (base.md §8).",
+    description: "DELETE /admin/tenants on the TP, then drop the local row. `?force=true` overrides the TP's grace policy (base.md §8).",
     operationId: "removeTenant",
     tags:        ["tenants"],
     request:     { query: TenantDeleteQuerySchema },
     responses: {
         204: { description: "Removed" },
         400: { description: "Invalid query",            schema: HubErrorEnvelope },
-        502: { description: "DP refused / unreachable", schema: HubErrorEnvelope },
+        502: { description: "TP refused / unreachable", schema: HubErrorEnvelope },
     },
 };
 

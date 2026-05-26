@@ -6,15 +6,15 @@ import { TenantInfoSchema, TenantInfoQuerySchema } from "src/core/schemas/tenant
 import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 export const meta: ApiOperationMeta = {
-    summary:     "Read a tenant's DP-computed info",
-    description: "Resolves the tenant's DP and proxies GET /admin/info — read-only facts the provider surfaces (e.g. a realm issuer URL). Distinct from the editable §11 config.",
+    summary:     "Read a tenant's TP-computed info",
+    description: "Resolves the tenant's TP and proxies GET /admin/info — read-only facts the provider surfaces (e.g. a realm issuer URL). Distinct from the editable §11 config.",
     operationId: "fetchTenantInfo",
     tags:        ["tenants"],
     request:     { query: TenantInfoQuerySchema },
     responses: {
         200: { description: "Tenant info (may be empty)", schema: successEnvelope(TenantInfoSchema) },
-        404: { description: "Unknown tenant or DP",       schema: HubErrorEnvelope },
-        502: { description: "DP refused / unreachable",   schema: HubErrorEnvelope },
+        404: { description: "Unknown tenant or TP",       schema: HubErrorEnvelope },
+        502: { description: "TP refused / unreachable",   schema: HubErrorEnvelope },
     },
 };
 

@@ -8,7 +8,8 @@
             "@bernouy/cms":           ["index.ts"],
             "@bernouy/cms/component": ["component.ts"],
             "@bernouy/cms/editor":    ["editor.ts"],
-            "@bernouy/cms/data":      ["data.ts"]
+            "@bernouy/cms/data":      ["data.ts"],
+            "@bernouy/cms/repository": ["repository.ts"]
         }
     },
     "include": [
@@ -18,6 +19,7 @@
         "component.ts",
         "editor.ts",
         "data.ts",
+        "repository.ts",
         "build.ts",
         "types/**/*.ts",
         "tests/**/*.ts"

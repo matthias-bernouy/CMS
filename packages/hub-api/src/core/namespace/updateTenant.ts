@@ -3,8 +3,8 @@ import type { Tenant } from "src/interfaces/Namespace";
 import { HubError } from "src/core/HubError";
 import type { UpdateTenantInput } from "src/core/schemas/namespace";
 
-/** PATCH `/admin/tenants?tenantId=` on the DP with the changed fields, then
- *  mirror in the hub. `displayName` is hub-local only (the DP doesn't need
+/** PATCH `/admin/tenants?tenantId=` on the TP with the changed fields, then
+ *  mirror in the hub. `displayName` is hub-local only (the TP doesn't need
  *  it for routing). */
 export async function updateTenant(
     hub: Hub,
@@ -16,7 +16,7 @@ export async function updateTenant(
 
     const dp = await hub.imports.getByProviderId(cur.providerId);
     if (!dp) throw new HubError("provider_not_found",
-        `data-provider "${cur.providerId}" is not imported`);
+        `tenant-provisioner "${cur.providerId}" is not imported`);
 
     const body: Record<string, unknown> = {};
     if (input.issuers !== undefined)        body.issuers = input.issuers;

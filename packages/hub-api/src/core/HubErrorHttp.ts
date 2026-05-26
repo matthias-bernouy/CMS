@@ -4,7 +4,7 @@ import { HubError, type HubErrorCode } from "./HubError";
  *  consumed by every handler that maps a `HubError` to a Response. */
 export const HUB_ERROR_HTTP: Record<HubErrorCode, number> = {
     validation_error:                400,
-    // Data-provider registry / cross-DP
+    // Tenant-provisioner registry / cross-TP
     provider_unreachable:            502,
     provider_metadoc_invalid:        502,
     provider_does_not_trust_hub:     502,

@@ -3,7 +3,7 @@ import css from "./style.css" with { type: "text" };
 import { apiGet, apiSend, queryParam } from "../_base/api";
 
 /**
- * `<hub-tenant-config-form tenant-id="...">` — loads the DP's `tenantConfig`
+ * `<hub-tenant-config-form tenant-id="...">` — loads the TP's `tenantConfig`
  * schema + the tenant's current config, renders a `<hub-config-form>`, and
  * saves via PATCH `/api/namespaces/tenants?tenantId=` with `{ providerConfig }`.
  * The `providerId` is resolved from the tenant record.
@@ -33,7 +33,7 @@ export class HubTenantConfigForm extends Component {
 
         const dp = await apiGet<{ schemas?: { tenantConfig?: any } }>(`/api/providers?providerId=${encodeURIComponent(tenant.providerId)}`);
         const schema = dp?.schemas?.tenantConfig ?? null;
-        if (!schema) { this._info("", "This data-provider declares no tenantConfig — nothing to edit here."); return; }
+        if (!schema) { this._info("", "This tenant-provisioner declares no tenantConfig — nothing to edit here."); return; }
 
         const live = await apiGet<{ config?: any }>(`/api/namespaces/tenants/config?tenantId=${encodeURIComponent(tenantId)}`);
         this._renderForm(schema, live?.config ?? {});

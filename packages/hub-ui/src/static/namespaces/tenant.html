@@ -15,12 +15,12 @@
 
     <p9r-tabs active="config">
         <p9r-tab-panel id="config" label="Config">
-            <hub-hint>Per-tenant configuration validated against the data-provider's schema.</hub-hint>
+            <hub-hint>Per-tenant configuration validated against the tenant-provisioner's schema.</hub-hint>
             <hub-tenant-config-form></hub-tenant-config-form>
         </p9r-tab-panel>
 
         <p9r-tab-panel id="issuers" label="Issuers">
-            <hub-hint>Trusted issuers granted tenant access on the data-provider. The list may be empty.</hub-hint>
+            <hub-hint>Trusted issuers granted tenant access on the tenant-provisioner. The list may be empty.</hub-hint>
             <hub-tenant-issuers></hub-tenant-issuers>
         </p9r-tab-panel>
 
@@ -31,7 +31,7 @@
                         <p9r-stack gap="s">
                             <div><strong>tenantId:</strong> <hub-code>{{ data.tenantId }}</hub-code></div>
                             <div><strong>namespace:</strong> {{ data.namespaceId }}</div>
-                            <div><strong>data-provider:</strong> {{ data.providerId }}</div>
+                            <div><strong>tenant-provisioner:</strong> {{ data.providerId }}</div>
                             <div><strong>display name:</strong> {{ data.displayName }}</div>
                             <div><strong>status:</strong> <hub-status value="{{ data.status }}"></hub-status></div>
                             <div><strong>activated:</strong> {{ data.activatedAt }}</div>
@@ -42,18 +42,18 @@
             </w13c-fetch>
 
             <hub-section label="Provider info">
-                <hub-hint>Read-only facts the data-provider exposes about this tenant (e.g. a realm issuer URL). Not editable here.</hub-hint>
+                <hub-hint>Read-only facts the tenant-provisioner exposes about this tenant (e.g. a realm issuer URL). Not editable here.</hub-hint>
                 <w13c-fetch url="/api/namespaces/tenants/info" reload-on="tenant:updated">
                     <template for="data.fields">
                         <div><strong>{{ label }}:</strong> <hub-field value="{{ value }}" kind="{{ kind }}"></hub-field></div>
                     </template>
-                    <p9r-alert slot="empty" type="info">This data-provider exposes no extra info.</p9r-alert>
+                    <p9r-alert slot="empty" type="info">This tenant-provisioner exposes no extra info.</p9r-alert>
                 </w13c-fetch>
             </hub-section>
         </p9r-tab-panel>
 
         <p9r-tab-panel id="logs" label="Logs">
-            <hub-hint>Logs emitted by the data-provider for this tenant.</hub-hint>
+            <hub-hint>Logs emitted by the tenant-provisioner for this tenant.</hub-hint>
             <hub-logs src="/api/namespaces/tenants/logs"></hub-logs>
         </p9r-tab-panel>
 

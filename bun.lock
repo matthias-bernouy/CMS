@@ -13,10 +13,6 @@
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-delivery-mt": "workspace:*",
         "@bernouy/core": "workspace:*",
-        "@bernouy/data-provider-addresses": "workspace:*",
-        "@bernouy/data-provider-contract": "workspace:*",
-        "@bernouy/data-provider-example": "workspace:*",
-        "@bernouy/data-provider-sdk": "workspace:*",
         "@bernouy/hub-api": "workspace:*",
         "@bernouy/hub-ui": "workspace:*",
         "@bernouy/issuer-kit": "workspace:*",
@@ -24,6 +20,12 @@
         "@bernouy/mailer-smtp": "workspace:*",
         "@bernouy/mt-cms-control": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
+        "@bernouy/tenant-provisioner-addresses": "workspace:*",
+        "@bernouy/tenant-provisioner-cms-control": "workspace:*",
+        "@bernouy/tenant-provisioner-contract": "workspace:*",
+        "@bernouy/tenant-provisioner-example": "workspace:*",
+        "@bernouy/tenant-provisioner-keycloak": "workspace:*",
+        "@bernouy/tenant-provisioner-sdk": "workspace:*",
         "@types/bun": "latest",
         "bun-types": "^1.3.6",
         "image-size": "^2.0.2",
@@ -33,27 +35,20 @@
         "typescript": "^5.9.3",
       },
     },
-    "official-data-providers/_data-provider-contract": {
-      "name": "@bernouy/data-provider-contract",
+    "official-tenant-provisioners/_example": {
+      "name": "@bernouy/tenant-provisioner-example",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/tenant-provisioner-sdk": "workspace:*",
         "zod": "^4.4.3",
       },
     },
-    "official-data-providers/_example": {
-      "name": "@bernouy/data-provider-example",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/data-provider-sdk": "workspace:*",
-        "zod": "^4.4.3",
-      },
-    },
-    "official-data-providers/_issuer-kit": {
+    "official-tenant-provisioners/_issuer-kit": {
       "name": "@bernouy/issuer-kit",
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/core": "workspace:*",
-        "@bernouy/data-provider-contract": "workspace:*",
+        "@bernouy/tenant-provisioner-contract": "workspace:*",
         "jose": "^6.2.1",
         "zod": "^4.4.3",
       },
@@ -61,12 +56,12 @@
         "@bernouy/runner-bun": "workspace:*",
       },
     },
-    "official-data-providers/_sdk": {
-      "name": "@bernouy/data-provider-sdk",
+    "official-tenant-provisioners/_sdk": {
+      "name": "@bernouy/tenant-provisioner-sdk",
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/core": "workspace:*",
-        "@bernouy/data-provider-contract": "workspace:*",
+        "@bernouy/tenant-provisioner-contract": "workspace:*",
         "jose": "^6.2.1",
         "zod": "^4.4.3",
       },
@@ -74,11 +69,37 @@
         "@bernouy/runner-bun": "workspace:*",
       },
     },
-    "official-data-providers/addresses": {
-      "name": "@bernouy/data-provider-addresses",
+    "official-tenant-provisioners/_tenant-provisioner-contract": {
+      "name": "@bernouy/tenant-provisioner-contract",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/data-provider-sdk": "workspace:*",
+        "zod": "^4.4.3",
+      },
+    },
+    "official-tenant-provisioners/addresses": {
+      "name": "@bernouy/tenant-provisioner-addresses",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/tenant-provisioner-sdk": "workspace:*",
+        "zod": "^4.4.3",
+      },
+    },
+    "official-tenant-provisioners/cms-control": {
+      "name": "@bernouy/tenant-provisioner-cms-control",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms": "workspace:*",
+        "@bernouy/tenant-provisioner-sdk": "workspace:*",
+        "mongodb": "^7.2.0",
+        "zod": "^4.4.3",
+      },
+    },
+    "official-tenant-provisioners/keycloak": {
+      "name": "@bernouy/tenant-provisioner-keycloak",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/keycloak-client": "workspace:*",
+        "@bernouy/tenant-provisioner-sdk": "workspace:*",
         "zod": "^4.4.3",
       },
     },
@@ -210,8 +231,8 @@
       "dependencies": {
         "@asteasolutions/zod-to-openapi": "^8.5.0",
         "@bernouy/core": "workspace:*",
-        "@bernouy/data-provider-contract": "workspace:*",
         "@bernouy/issuer-kit": "workspace:*",
+        "@bernouy/tenant-provisioner-contract": "workspace:*",
         "mongodb": "^7.1.0",
         "zod": "^4.4.3",
       },
@@ -279,19 +300,11 @@
 
     "@bernouy/core": ["@bernouy/core@workspace:packages/core"],
 
-    "@bernouy/data-provider-addresses": ["@bernouy/data-provider-addresses@workspace:official-data-providers/addresses"],
-
-    "@bernouy/data-provider-contract": ["@bernouy/data-provider-contract@workspace:official-data-providers/_data-provider-contract"],
-
-    "@bernouy/data-provider-example": ["@bernouy/data-provider-example@workspace:official-data-providers/_example"],
-
-    "@bernouy/data-provider-sdk": ["@bernouy/data-provider-sdk@workspace:official-data-providers/_sdk"],
-
     "@bernouy/hub-api": ["@bernouy/hub-api@workspace:packages/hub-api"],
 
     "@bernouy/hub-ui": ["@bernouy/hub-ui@workspace:packages/hub-ui"],
 
-    "@bernouy/issuer-kit": ["@bernouy/issuer-kit@workspace:official-data-providers/_issuer-kit"],
+    "@bernouy/issuer-kit": ["@bernouy/issuer-kit@workspace:official-tenant-provisioners/_issuer-kit"],
 
     "@bernouy/keycloak-client": ["@bernouy/keycloak-client@workspace:packages/keycloak-client"],
 
@@ -300,6 +313,18 @@
     "@bernouy/mt-cms-control": ["@bernouy/mt-cms-control@workspace:packages/cms-control-mt"],
 
     "@bernouy/runner-bun": ["@bernouy/runner-bun@workspace:packages/runner-bun"],
+
+    "@bernouy/tenant-provisioner-addresses": ["@bernouy/tenant-provisioner-addresses@workspace:official-tenant-provisioners/addresses"],
+
+    "@bernouy/tenant-provisioner-cms-control": ["@bernouy/tenant-provisioner-cms-control@workspace:official-tenant-provisioners/cms-control"],
+
+    "@bernouy/tenant-provisioner-contract": ["@bernouy/tenant-provisioner-contract@workspace:official-tenant-provisioners/_tenant-provisioner-contract"],
+
+    "@bernouy/tenant-provisioner-example": ["@bernouy/tenant-provisioner-example@workspace:official-tenant-provisioners/_example"],
+
+    "@bernouy/tenant-provisioner-keycloak": ["@bernouy/tenant-provisioner-keycloak@workspace:official-tenant-provisioners/keycloak"],
+
+    "@bernouy/tenant-provisioner-sdk": ["@bernouy/tenant-provisioner-sdk@workspace:official-tenant-provisioners/_sdk"],
 
     "@bernouy/webcomponents": ["@bernouy/webcomponents@workspace:packages/webcomponents"],
 
@@ -395,7 +420,7 @@
 
     "zod": ["zod@4.4.3", "", {}, "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="],
 
-    "@bernouy/cms/@types/bun": ["@types/bun@1.3.13", "", { "dependencies": { "bun-types": "1.3.13" } }, "sha512-9fqXWk5YIHGGnUau9TEi+qdlTYDAnOj+xLCmSTwXfAIqXr2x4tytJb43E9uCvt09zJURKXwAtkoH4nLQfzeTXw=="],
+    "@bernouy/cms/@types/bun": ["@types/bun@1.3.14", "", { "dependencies": { "bun-types": "1.3.14" } }, "sha512-h1hFqFVcvAvD9j9K7ZW7vd82aSA+rTdznZa+5bwvCwqSB1jmmfLcbIWhOLx1/+boy/xmjgCs/OMUL8hRJSmnPw=="],
 
     "@bernouy/cms-blocs/@types/bun": ["@types/bun@1.3.13", "", { "dependencies": { "bun-types": "1.3.13" } }, "sha512-9fqXWk5YIHGGnUau9TEi+qdlTYDAnOj+xLCmSTwXfAIqXr2x4tytJb43E9uCvt09zJURKXwAtkoH4nLQfzeTXw=="],
 
@@ -405,7 +430,7 @@
 
     "@bernouy/cms-blocs/@types/bun/bun-types": ["bun-types@1.3.13", "", { "dependencies": { "@types/node": "*" } }, "sha512-QXKeHLlOLqQX9LgYaHJfzdBaV21T63HhFJnvuRCcjZiaUDpbs5ED1MgxbMra71CsryN/1dAoXuJJJwIv/2drVA=="],
 
-    "@bernouy/cms/@types/bun/bun-types": ["bun-types@1.3.13", "", { "dependencies": { "@types/node": "*" } }, "sha512-QXKeHLlOLqQX9LgYaHJfzdBaV21T63HhFJnvuRCcjZiaUDpbs5ED1MgxbMra71CsryN/1dAoXuJJJwIv/2drVA=="],
+    "@bernouy/cms/@types/bun/bun-types": ["bun-types@1.3.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ=="],
 
     "@bernouy/webcomponents/@types/bun/bun-types": ["bun-types@1.3.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ=="],
   }

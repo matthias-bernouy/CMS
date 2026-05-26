@@ -101,4 +101,34 @@ curl -fsS -X POST -H "$AUTH" -H "Content-Type: application/json" \
     "$KC/admin/realms/$REALM/users/$USER_ID/role-mappings/realm" \
     -d "[$SUPERADMIN_ROLE_JSON]" >/dev/null 2>&1 || log "(superadmin already assigned)"
 
+# 6. keycloak-tp service account — the Keycloak tenant-provisioner authenticates
+#    with client_credentials to create/update/delete realms. DEV: granted the
+#    master `admin` role (full admin). Prod would scope this to `create-realm`
+#    + realm-management and pull the secret from OKMS, never inline.
+TP_CLIENT_ID=keycloak-tp
+TP_CLIENT_SECRET=dev-keycloak-tp-secret
+if [ -z "$(get_client_uuid $TP_CLIENT_ID)" ]; then
+    log "creating service-account client $TP_CLIENT_ID…"
+    curl -fsS -X POST -H "$AUTH" -H "Content-Type: application/json" \
+        "$KC/admin/realms/$REALM/clients" \
+        -d "{
+            \"clientId\": \"$TP_CLIENT_ID\",
+            \"clientAuthenticatorType\": \"client-secret\",
+            \"secret\": \"$TP_CLIENT_SECRET\",
+            \"enabled\": true,
+            \"publicClient\": false,
+            \"serviceAccountsEnabled\": true,
+            \"standardFlowEnabled\": false,
+            \"directAccessGrantsEnabled\": false
+        }" >/dev/null
+else
+    log "client $TP_CLIENT_ID already exists, skipping"
+fi
+TP_UUID=$(get_client_uuid $TP_CLIENT_ID)
+TP_SA_USER=$(curl -fsS -H "$AUTH" "$KC/admin/realms/$REALM/clients/$TP_UUID/service-account-user" | jq -r '.id')
+ADMIN_ROLE_JSON=$(curl -fsS -H "$AUTH" "$KC/admin/realms/$REALM/roles/admin")
+curl -fsS -X POST -H "$AUTH" -H "Content-Type: application/json" \
+    "$KC/admin/realms/$REALM/users/$TP_SA_USER/role-mappings/realm" \
+    -d "[$ADMIN_ROLE_JSON]" >/dev/null 2>&1 || log "(admin role already assigned to $TP_CLIENT_ID)"
+
 log "✅ done — login as $USER_EMAIL / $USER_PASSWORD at http://hub.localtest.me:3000/admin/"

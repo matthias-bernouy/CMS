@@ -4,26 +4,26 @@ import { HubError } from "src/core/HubError";
 import { hubErrorResponse } from "src/core/HubErrorHttp";
 import { HubErrorEnvelope, successEnvelope } from "src/core/schemas/envelopes";
 import {
-    DataProviderImportSchema, DataProviderImportSummarySchema,
-} from "src/core/schemas/dataProvider";
+    TenantProvisionerImportSchema, TenantProvisionerImportSummarySchema,
+} from "src/core/schemas/tenantProvisioner";
 import type { ApiOperationMeta } from "src/core/schemas/operationMeta";
 
 const QuerySchema = z.object({
-    providerId: z.string().min(1).optional().openapi({ description: "If set, returns the single DP with that id (incl. cached schemas); otherwise returns the list." }),
+    providerId: z.string().min(1).optional().openapi({ description: "If set, returns the single TP with that id (incl. cached schemas); otherwise returns the list." }),
 });
 
 /** Response shape varies with `?providerId=` presence: list summary by default,
  *  full row with cached schemas when a single provider is requested. */
-const ListResultSchema = z.object({ providers: z.array(DataProviderImportSummarySchema) });
+const ListResultSchema = z.object({ providers: z.array(TenantProvisionerImportSummarySchema) });
 
 export const meta: ApiOperationMeta = {
-    summary:     "List imported data-providers (or get one)",
+    summary:     "List imported tenant-provisioners (or get one)",
     description: "Without `?providerId=`: returns the list (summaries — no schemas). With `?providerId=X`: returns the full row including the 4 cached schemas.",
-    operationId: "listDataProviders",
+    operationId: "listTenantProvisioners",
     tags:        ["providers"],
     request:     { query: QuerySchema },
     responses: {
-        200: { description: "List or single DP",  schema: successEnvelope(z.union([ListResultSchema, DataProviderImportSchema])) },
+        200: { description: "List or single TP",  schema: successEnvelope(z.union([ListResultSchema, TenantProvisionerImportSchema])) },
         404: { description: "Unknown providerId", schema: HubErrorEnvelope },
     },
 };

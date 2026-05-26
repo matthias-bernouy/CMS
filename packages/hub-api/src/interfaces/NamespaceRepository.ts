@@ -21,7 +21,7 @@ export interface NamespaceRepository {
     /** Remove the namespace row AND all its tenants in one shot. */
     removeNamespace(namespaceId: string): Promise<boolean>;
 
-    // ── Tenants (a namespace may hold many, even of the same DP) ────────
+    // ── Tenants (a namespace may hold many, even of the same TP) ────────
     listTenants(namespaceId: string): Promise<Tenant[]>;
     listTenantsByProvider(providerId: string): Promise<Tenant[]>;
     getTenant(tenantId: string): Promise<Tenant | null>;

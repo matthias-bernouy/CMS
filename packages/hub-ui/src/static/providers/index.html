@@ -1,8 +1,8 @@
 <hub-page>
-    <h1 slot="title">Data-providers</h1>
-    <p slot="title">Data-plane services imported into the hub. Configure the DP's allowlist before importing.</p>
-    <p9r-open-modal slot="actions" modal-target="import-dp-modal">
-        <p9r-button color="primary">+ Import a DP</p9r-button>
+    <h1 slot="title">Tenant-provisioners</h1>
+    <p slot="title">Data-plane services imported into the hub. Configure the TP's allowlist before importing.</p>
+    <p9r-open-modal slot="actions" modal-target="import-tp-modal">
+        <p9r-button color="primary">+ Import a TP</p9r-button>
     </p9r-open-modal>
 
     <hub-grid>
@@ -27,16 +27,16 @@
                 </p9r-card>
             </template>
         </w13c-fetch>
-        <p9r-alert slot="empty" type="info">No data-provider imported. Click "+ Import a DP" to get started.</p9r-alert>
+        <p9r-alert slot="empty" type="info">No tenant-provisioner imported. Click "+ Import a TP" to get started.</p9r-alert>
     </hub-grid>
 </hub-page>
 
-<p9r-modal id="import-dp-modal" aria-label="Import a data-provider">
-    <span slot="title">Import a data-provider</span>
+<p9r-modal id="import-tp-modal" aria-label="Import a tenant-provisioner">
+    <span slot="title">Import a tenant-provisioner</span>
     <w13c-form target="/api/providers" method="POST" emit="provider:imported" content-type="application/json">
         <p9r-stack gap="m">
             <hub-hint>
-                Enter the data-provider's base URL. The hub fetches the 4 discovery
+                Enter the tenant-provisioner's base URL. The hub fetches the 4 discovery
                 documents (info, metadoc, JWKS, openapi.admin) and persists the import.
             </hub-hint>
             <p9r-input name="url" label="URL" placeholder="https://delivery.acme.com" required></p9r-input>

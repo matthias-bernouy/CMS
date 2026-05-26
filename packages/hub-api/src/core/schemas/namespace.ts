@@ -1,6 +1,6 @@
 import { z } from "./zodInit";
 
-// RFC 1123 label constraints — keeps URL paths + DP tenant ids consistent.
+// RFC 1123 label constraints — keeps URL paths + TP tenant ids consistent.
 const LABEL_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
 export const NamespaceIdSchema = z.string().regex(LABEL_RE).openapi({
@@ -9,7 +9,7 @@ export const NamespaceIdSchema = z.string().regex(LABEL_RE).openapi({
 });
 
 export const TenantIdSchema = z.string().regex(LABEL_RE).openapi({
-    description: "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the DP as `tenantId`.",
+    description: "Globally-unique tenant id (lowercase + digits + dash, ≤63 chars). Sent to the TP as `tenantId`.",
     example:     "acme-addresses-fr-a1b2c3d4",
 });
 
@@ -29,7 +29,7 @@ export const NamespaceIdQuerySchema = z.object({
 });
 
 const IssuersSchema = z.array(z.string().url()).openapi({
-    description: "Trusted issuers granted tenant-role on this DP. May be empty (issuers can be attached later). Each iss is globally unique across tenants.",
+    description: "Trusted issuers granted tenant-role on this TP. May be empty (issuers can be attached later). Each iss is globally unique across tenants.",
 });
 
 /** Body for `POST /api/namespaces/tenants?namespaceId=&providerId=`. */
