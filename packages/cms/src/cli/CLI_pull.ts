@@ -7,13 +7,11 @@ import { pullPages } from "./push/pages/pull";
 import { pullSnippets } from "./push/snippets/pull";
 import { pullTemplates } from "./push/templates/pull";
 import { pullSystem } from "./push/system/pull";
-import { pullDataProviders } from "./push/dataProviders/pull";
-import { pullMockups } from "./push/mockups/pull";
 
 type Flags = { force: boolean; yes: boolean; type: string };
 
-const TYPES = ["*", "system", "data", "blocs", "snippets", "templates", "pages"] as const;
-const ORDER = ["system", "data", "blocs", "snippets", "templates", "pages"] as const;
+const TYPES = ["*", "system", "blocs", "snippets", "templates", "pages"] as const;
+const ORDER = ["system", "blocs", "snippets", "templates", "pages"] as const;
 type Stage = typeof ORDER[number];
 
 function parseFlags(args: string[]): Flags {
@@ -42,24 +40,11 @@ async function resolveAdmin(): Promise<{ adminBase: URL; token: string }> {
 
 async function runStage(stage: Stage, adminBase: URL, token: string, siteDir: string): Promise<void> {
     if      (stage === "system")    await pullSystem(adminBase, token, siteDir);
-    else if (stage === "data")    { reportData    (await pullDataProviders(adminBase, token, siteDir));
-                                    reportMockups (await pullMockups       (adminBase, token, siteDir)); }
     else if (stage === "blocs")     reportBlocs   (await pullBlocs   (adminBase, token, siteDir));
     else if (stage === "snippets")  reportItems   (await pullSnippets(adminBase, token, siteDir), "snippets", "identifier");
     else if (stage === "templates") reportTemplates(await pullTemplates(adminBase, token, siteDir));
     else                            reportItems   (await pullPages   (adminBase, token, siteDir), "pages", "path");
     if (stage === "system") console.log("→ system: pulled.");
-}
-
-function reportData(r: { pulled: string[]; failed: { id: string; error: string }[] }): void {
-    for (const ok of r.pulled) console.log  (`    ✓ ${ok}`);
-    for (const ko of r.failed) console.error(`    ✗ ${ko.id}: ${ko.error}`);
-    console.log(`→ data: ${r.pulled.length} pulled, ${r.failed.length} failed.`);
-}
-
-function reportMockups(r: { pulled: number; failed: { providerId: string; error: string }[] }): void {
-    for (const ko of r.failed) console.error(`    ✗ [${ko.providerId}] ${ko.error}`);
-    console.log(`→ mockups: ${r.pulled} pulled, ${r.failed.length} failed.`);
 }
 
 function reportItems(r: { pulled: string[]; failed: { error: string }[] & ({ path?: string; identifier?: string }[]) }, label: string, key: "path" | "identifier"): void {

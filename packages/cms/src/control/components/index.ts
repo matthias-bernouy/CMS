@@ -10,9 +10,7 @@ import "./admin/EmptyState/EmptyState"
 import "./admin/EventToast/EventToast"
 import "./admin/HeadersInput/HeadersInput"
 import "./admin/OpenDialog/OpenDialog"
-import "./admin/SchemaPicker/SchemaPicker"
 import "./admin/Secrets/Secrets"
-import "./admin/TestConnection/TestConnection"
 
 // Editor
 import "./editor/componentSync/PageLink/PageLink"
@@ -50,5 +48,3 @@ import "./form/Form/Form";
 import "./form/Validate/Validate";
 import "./data/fetch/FetchComponent"
 import "./data/JsonEditor/JsonEditor"
-import "./data/MockupCreate/MockupCreate"
-import "./data/ProviderRules/ProviderRules"
