@@ -30,6 +30,12 @@ export { pageBucketName, pagePublicPath } from "./src/delivery/build/pathSlug";
 // ── Default providers ──────────────────────────────────────────────────
 export { InMemoryCmsRepository } from "./src/socle/default-implementation/CmsRepository/memory";
 export { MongoCmsRepository } from "./src/socle/default-implementation/CmsRepository/mongodb";
+export { InMemoryCmsFilesMetadata } from "./src/socle/default-implementation/CmsFilesMetadata/memory";
+export { MongoCmsFilesMetadata, type MongoCmsFilesMetadataConfig } from "./src/socle/default-implementation/CmsFilesMetadata/mongodb";
+export type {
+    CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem, FilesItemType,
+    FilesListOptions, FilesPage, NewFolder, NewFile, ItemPatch,
+} from "./src/socle/interfaces/CmsFilesMetadataRepository";
 export { InMemoryCache } from "./src/socle/default-implementation/Cache/memory";
 export { InMemorySecretStore } from "./src/socle/default-implementation/SecretStore/memory";
 export { DisabledCDN } from "./src/socle/default-implementation/CDN/DisabledCDN";
