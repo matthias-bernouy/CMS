@@ -20,12 +20,6 @@
             "path": "packages/mailer-smtp"
         },
         {
-            "path": "packages/cdn-buckets"
-        },
-        {
-            "path": "packages/cdn-node"
-        },
-        {
             "path": "packages/cms"
         },
         {
@@ -33,9 +27,6 @@
         },
         {
             "path": "packages/cms-control-mt"
-        },
-        {
-            "path": "packages/cms-delivery-mt"
         },
         {
             "path": "packages/hub-api"

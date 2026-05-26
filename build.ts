@@ -8,7 +8,7 @@
 //   3. cms `bun run build` → runs prebuildControl (control-components.js
 //      bundle, depends on webcomponents/dist) + emits its own d.ts.
 //
-// Other packages (core, runner-bun, auth-*, mailer-*, cdn-buckets, cdn-node) ship sources
+// Other packages (core, runner-bun, auth-*, mailer-*) ship sources
 // directly via their `exports` field — no bundle step needed.
 
 async function run(cmd: string[], cwd?: string): Promise<void> {

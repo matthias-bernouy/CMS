@@ -7,11 +7,8 @@
       "devDependencies": {
         "@bernouy/auth-composite": "workspace:*",
         "@bernouy/auth-keycloak": "workspace:*",
-        "@bernouy/cdn-buckets": "workspace:*",
-        "@bernouy/cdn-node": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
-        "@bernouy/cms-delivery-mt": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/hub-api": "workspace:*",
         "@bernouy/hub-ui": "workspace:*",
@@ -118,37 +115,6 @@
         "jose": "^6.2.1",
       },
     },
-    "packages/cdn-buckets": {
-      "name": "@bernouy/cdn-buckets",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/core": "workspace:*",
-        "@bernouy/webcomponents": "workspace:*",
-      },
-      "peerDependencies": {
-        "image-size": "^2.0.2",
-        "mongodb": "^7.1.0",
-      },
-      "optionalPeers": [
-        "image-size",
-        "mongodb",
-      ],
-    },
-    "packages/cdn-node": {
-      "name": "@bernouy/cdn-node",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cdn-buckets": "workspace:*",
-        "@bernouy/core": "workspace:*",
-        "@bernouy/webcomponents": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.1.0",
-      },
-      "optionalPeers": [
-        "mongodb",
-      ],
-    },
     "packages/cms": {
       "name": "@bernouy/cms",
       "version": "0.0.1",
@@ -194,7 +160,6 @@
       "dependencies": {
         "@bernouy/auth-composite": "workspace:*",
         "@bernouy/auth-keycloak": "workspace:*",
-        "@bernouy/cdn-buckets": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
@@ -205,20 +170,6 @@
       "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^5.9.3",
-      },
-    },
-    "packages/cms-delivery-mt": {
-      "name": "@bernouy/cms-delivery-mt",
-      "version": "0.0.1",
-      "dependencies": {
-        "@bernouy/cdn-buckets": "workspace:*",
-        "@bernouy/cms": "workspace:*",
-        "@bernouy/core": "workspace:*",
-        "@bernouy/mt-cms-control": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "playwright": "^1.59.1",
       },
     },
     "packages/core": {
@@ -288,15 +239,9 @@
 
     "@bernouy/auth-keycloak": ["@bernouy/auth-keycloak@workspace:packages/auth-keycloak"],
 
-    "@bernouy/cdn-buckets": ["@bernouy/cdn-buckets@workspace:packages/cdn-buckets"],
-
-    "@bernouy/cdn-node": ["@bernouy/cdn-node@workspace:packages/cdn-node"],
-
     "@bernouy/cms": ["@bernouy/cms@workspace:packages/cms"],
 
     "@bernouy/cms-blocs": ["@bernouy/cms-blocs@workspace:packages/cms-blocs"],
-
-    "@bernouy/cms-delivery-mt": ["@bernouy/cms-delivery-mt@workspace:packages/cms-delivery-mt"],
 
     "@bernouy/core": ["@bernouy/core@workspace:packages/core"],
 

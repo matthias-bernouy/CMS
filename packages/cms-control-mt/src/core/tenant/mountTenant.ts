@@ -1,9 +1,9 @@
+import { join } from "node:path";
 import type { Db } from "mongodb";
-import type { CDN, Runner, SecretCrypto, Subject } from "@bernouy/core";
+import type { Runner, SecretCrypto, Subject } from "@bernouy/core";
 import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
 import { CompositeAuthentication } from "@bernouy/auth-composite";
-import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, DisabledCDN, type EncryptedSecretDocument } from "@bernouy/cms";
-import { StorageTokenBroker, StorageBrowser } from "@bernouy/cdn-buckets";
+import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, MongoCmsFilesMetadata, LocalFsCmsFilesBlob, type EncryptedSecretDocument } from "@bernouy/cms";
 import type { Tenant } from "src/interfaces/Tenant";
 import { loadAdminEmails } from "src/core/tenant/members";
 
@@ -32,11 +32,8 @@ export type MountTenantArgs = {
  * - **Authorization in the CMS**: admin iff the token's verified email is in
  *   the tenant's member set (loaded here, checked synchronously in
  *   `claimsToSubject`). No per-tenant Keycloak role.
- * - StorageTokenBroker pointed at the tenant's CDN bucket
  * - ControlCms with a Mongo repo prefixed by `tenant_<id>__`
- * - BucketProxyPublisher pointed at the same bucket — pushes data
- *   provider proxy rules through the broker's `bucketCredential`, no
- *   service-account JWT needed at this layer
+ * - Files: a Mongo metadata tree + local-FS bytes, one root per tenant
  *
  * All routes land under `/cms/<id>/`. Subsequent calls to `unmountTenant`
  * remove this whole subtree without restarting the bun process.
@@ -76,29 +73,12 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
     const repo = new MongoCmsRepository(db, { collectionPrefix: `tenant_${tenant.id}__` });
     await repo.init();
 
-    // Media is opt-in. With a bucket, wire the storage broker + browsable CDN.
-    // Without one, mount a `DisabledCDN` — the admin loads but media operations
-    // are unavailable until a bucket is configured (which triggers a remount).
-    let cdn: CDN = new DisabledCDN();
-    if (tenant.assetsCdn) {
-        const adminGuard = createTenantAdminGuard(auth);
-        const broker = new StorageTokenBroker({
-            runner,
-            providerOrigin:  tenant.assetsCdn.url,
-            credentialToken: tenant.assetsCdn.bucketCredential,
-            mountPath:       `${pathPrefix}/_storage`,
-            middlewares:     [adminGuard],
-        });
-
-        const bucket = await broker.getBucketInfo();
-        cdn = new StorageBrowser({
-            apiBaseUrl: `${pathPrefix}/_storage`,
-            bucket:     { limits: bucket.limits, quotas: bucket.quotas, cacheControl: bucket.cacheControl },
-            // Presigned upload URLs resolve to the upstream assetsCdn origin —
-            // the admin CSP needs to whitelist it.
-            origins:    safeOriginList(tenant.assetsCdn.url),
-        });
-    }
+    // Files: Mongo metadata tree + local-FS bytes, one root per tenant. Interim
+    // backend — swap `LocalFsCmsFilesBlob` for an S3/CDN-provider blob later
+    // (same `CmsFilesBlobStore` contract). `CMS_FILES_DIR` defaults to ./cms-files.
+    const filesMetadata = new MongoCmsFilesMetadata(db, { collectionPrefix: `tenant_${tenant.id}__` });
+    await filesMetadata.init();
+    const filesBlob = new LocalFsCmsFilesBlob(join(process.env.CMS_FILES_DIR ?? "./cms-files", tenant.id));
 
     // Per-tenant secret store: docs persist in `tenant_<id>__secrets`,
     // encrypted via `EnvelopeSecretCrypto` with `scopeId = tenant.id`.
@@ -118,9 +98,9 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
             clientId: tenant.keycloak.cliClientId ?? `${tenant.keycloak.clientId}-cli`,
             grant:    "urn:ietf:params:oauth:grant-type:device_code",
         }));
-        new ControlCms(sub, repo, auth, cdn, {
+        new ControlCms(sub, repo, auth, {
             tokensUrl: `${tenant.keycloak.issuer}/account/`,
-        }, undefined, secrets);
+        }, undefined, secrets, filesMetadata, filesBlob);
     });
 
     return { id: tenant.id, pathPrefix, appBaseUrl };

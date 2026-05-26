@@ -1,4 +1,4 @@
-import type { Authentication, CDN, Runner } from "@bernouy/core";
+import type { Authentication, Runner } from "@bernouy/core";
 import type { CmsRepository } from "../socle/interfaces/CmsRepository";
 import type { Cache } from "../socle/interfaces/Cache";
 import { InMemoryCache } from "../socle/default-implementation/Cache/memory";
@@ -56,7 +56,6 @@ export class ControlCms {
     private _repository:      CmsRepository;
     private _runner:          Runner;
     private _auth:            Authentication;
-    private _media:           CDN;
     private _cache:           Cache;
     private _secrets:         SecretStore;
     private _filesMetadata:   CmsFilesMetadataRepository | null;
@@ -67,7 +66,6 @@ export class ControlCms {
         runner: Runner,
         repository: CmsRepository,
         auth: Authentication<CMS_ROLES>,
-        media: CDN,
         configuration: Configuration,
         cache?: Cache,
         secrets?: SecretStore,
@@ -78,7 +76,6 @@ export class ControlCms {
         this._auth = auth;
         this._runner = runner;
         this._repository = repository;
-        this._media = media;
         this._cache = cache || new InMemoryCache();
         this._secrets = secrets || new InMemorySecretStore();
         this._filesMetadata = filesMetadata ?? null;
@@ -97,10 +94,6 @@ export class ControlCms {
         runner.group("/api", (apiRunner) => {
             serveApi(apiRunner, join(__dirname, "./api"), this);
         }, [authGuard]);
-    }
-
-    get media(){
-        return this._media;
     }
 
     get config(){
@@ -162,19 +155,13 @@ export class ControlCms {
      * `serveStaticFolder` so settings updates take effect without a
      * server restart.
      *
-     * Each `media.origins` entry lands in BOTH `connect-src` (uploads,
-     * listing fetches) and `media-src` (so a future `<video>` served
-     * from the CDN can play).
      */
     async getCspExtras(): Promise<CspExtras> {
         const settings = await this._repository.getSystem();
-        const connect  = new Set<string>(settings.security.connectExtras);
-        const media    = new Set<string>(settings.security.mediaExtras);
-        for (const origin of this._media.origins) {
-            connect.add(origin);
-            media.add  (origin);
-        }
-        return { connectExtras: [...connect], mediaExtras: [...media] };
+        return {
+            connectExtras: [...settings.security.connectExtras],
+            mediaExtras:   [...settings.security.mediaExtras],
+        };
     }
 
 }

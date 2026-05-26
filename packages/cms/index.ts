@@ -42,7 +42,6 @@ export type { CmsFilesBlobStore, BlobInput } from "./src/socle/interfaces/CmsFil
 export { LocalFsCmsFiles } from "./src/socle/default-implementation/CmsFiles/localFs";
 export { InMemoryCache } from "./src/socle/default-implementation/Cache/memory";
 export { InMemorySecretStore } from "./src/socle/default-implementation/SecretStore/memory";
-export { DisabledCDN } from "./src/socle/default-implementation/CDN/DisabledCDN";
 export { EncryptedMongoSecretStore, type EncryptedSecretDocument, type EncryptedMongoSecretStoreConfig } from "./src/socle/default-implementation/SecretStore/encryptedMongo";
 export { MongoDekRepository, type CmsDekDocument } from "./src/socle/default-implementation/MongoDekRepository";
 

@@ -14,7 +14,6 @@
         { "path": "../runner-bun" },
         { "path": "../auth-keycloak" },
         { "path": "../auth-composite" },
-        { "path": "../cdn-buckets" },
         { "path": "../cms" }
     ]
 }
