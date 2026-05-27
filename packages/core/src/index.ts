@@ -10,6 +10,7 @@ export { default as serveStaticFolder } from "./serve/serveStaticFolder/serveSta
 
 // Auth helpers
 export * from "./auth/requireRole";
+export { SignedCookieCodec } from "./auth/SignedCookieCodec";
 
 // Credentials (bearer-token authentication)
 export * from "./credentials/Credential";
