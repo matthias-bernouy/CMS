@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign in</title>
+    <link rel="stylesheet" href="{{BASE_PATH}}/assets/control-styles.css">
+    <script src="{{BASE_PATH}}/assets/control-components.js"></script>
+    <style>
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 1rem;
+               background: var(--bg-base, #f6f6f6); font-family: var(--font-body, system-ui, sans-serif); }
+        .shell { width: 360px; max-width: 100%; }
+        .title { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--text-main, #1e293b); }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <p9r-card>
+            <p9r-stack gap="lg">
+                <h1 class="title">Sign in</h1>
+                {{ERROR}}
+                <form method="POST" action="{{BASE_PATH}}/auth/login">
+                    <p9r-stack gap="md">
+                        <input type="hidden" name="returnTo" value="{{RETURN_TO}}">
+                        <p9r-input name="email" type="email" label="Email" autocomplete="username" required></p9r-input>
+                        <p9r-input name="password" type="password" label="Password" autocomplete="current-password" required></p9r-input>
+                        <p9r-button type="submit" color="primary" fullWidth>Sign in</p9r-button>
+                    </p9r-stack>
+                </form>
+                <cms-login-methods base="{{BASE_PATH}}"></cms-login-methods>
+            </p9r-stack>
+        </p9r-card>
+    </div>
+</body>
+</html>

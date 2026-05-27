@@ -1,9 +1,16 @@
 import type { Middleware } from "@bernouy/core";
 import type { ControlCms } from "src/control/ControlCms";
+import { renderForbiddenPage } from "./forbiddenPage";
 
 export const createAuthGuard = (cms: ControlCms): Middleware => {
     return async (req, next) => {
         const url = new URL(req.url);
+
+        // Public static assets (JS/CSS/fonts) — served without auth so the
+        // unguarded login page can load the component bundle + theme tokens.
+        // Anchored to `<basePath>/assets/` (a loose `includes` would exempt any
+        // guarded path that merely contains "/assets/").
+        if (url.pathname.startsWith(`${cms.basePath}/assets/`)) return next();
 
         // CSRF: mutating methods must come from the same origin.
         const method = req.method.toUpperCase();
@@ -40,7 +47,8 @@ export const createAuthGuard = (cms: ControlCms): Middleware => {
             });
         }
         if (subject.role !== "admin") {
-            return new Response("Forbidden", { status: 403 });
+            if (url.pathname.startsWith(`${cms.basePath}/api/`)) return new Response("Forbidden", { status: 403 });
+            return renderForbiddenPage(cms.basePath, cms.auth.buildLogoutUrl(`${cms.basePath}/login`));
         }
 
         return await next();

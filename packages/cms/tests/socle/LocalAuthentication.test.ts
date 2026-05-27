@@ -48,7 +48,7 @@ const loginReq = (email: string, password: string) =>
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, password }),
     });
-const login = (routes: Record<string, Handler>, email: string, pw: string) => routes["POST /login"](loginReq(email, pw));
+const login = (routes: Record<string, Handler>, email: string, pw: string) => routes["POST /login"]!(loginReq(email, pw));
 const loc = (res: Response) => res.headers.get("location") ?? "";
 const cookie = (res: Response) => res.headers.get("set-cookie") ?? "";
 
