@@ -4,7 +4,7 @@ import type { DekRepository, DekRecord } from "@bernouy/core";
 
 /**
  * Mongo doc shape for a per-scope DEK record. `_id` carries the scope
- * identifier (in cms-control-mt's usage: a `tenantId`). `wrapped` is
+ * identifier (in a multi-tenant setup: a tenantId). `wrapped` is
  * provider-opaque — for `LocalKekProvider` a base64-of-IV+ciphertext
  * blob, for `OvhOkmsKekProvider` the JWE token returned by OVH.
  */
@@ -16,7 +16,7 @@ export type CmsDekDocument = {
 };
 
 /**
- * Generic MongoDB-backed `DekRepository`. cms-control-mt mounts a single
+ * Generic MongoDB-backed `DekRepository`. A multi-tenant consumer mounts a single
  * instance of this on a shared `cms_deks` collection (no per-tenant
  * prefix) — DEK isolation across tenants comes from distinct scopeIds,
  * not distinct collections, so a single DEK cache (inside

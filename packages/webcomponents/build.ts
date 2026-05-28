@@ -20,6 +20,8 @@ const blocs: Array<[string, string]> = [
     ["divider", "./src/ui/Divider/Divider.ts"],
     ["form-dialog", "./src/ui/Dialog/FormDialog/FormDialog.ts"],
     ["lateral-dialog", "./src/ui/Dialog/LateralDialog/LateralDialog.ts"],
+    ["modal", "./src/ui/Dialog/Modal/Modal.ts"],
+    ["open-modal", "./src/ui/Dialog/OpenModal/OpenModal.ts"],
     ["button", "./src/ui/Form/Button/Button.ts"],
     ["checkbox", "./src/ui/Form/Checkbox/Checkbox.ts"],
     ["form-section", "./src/ui/Form/FormSection/FormSection.ts"],

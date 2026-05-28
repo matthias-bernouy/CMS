@@ -1,11 +1,11 @@
 /**
- * @bernouy/cms/data — bloc-editor data helpers.
+ * @bernouy/cms-control/data — bloc-editor data helpers.
  *
  * This entry hosts pure utility functions blocs may call from their
  * `BlocEditor.ts` (extension collection today; future schema/data helpers
  * land here too).
  *
- * Why a separate entry from `@bernouy/cms/editor` — the `editor` entry
+ * Why a separate entry from `@bernouy/cms-control/editor` — the `editor` entry
  * is intercepted by `p9rExternalsPlugin` so its symbols (`Editor`,
  * `registerEditor`) read from `window.p9r.*` (singleton across blocs).
  * That mechanism only matters for class identity / `instanceof` checks.

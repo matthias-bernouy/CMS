@@ -1,7 +1,7 @@
 # @bernouy/cms-blocs
 
 Library of CMS blocs (PageBuilder building blocks) consumed by `p9r
-import` and shipped to any `@bernouy/cms` deployment that wants the
+import` and shipped to any `@bernouy/cms-control` deployment that wants the
 default kit. **No JS export** — this package is a folder of bloc
 sources, discovered by manifest scan, not by import.
 
@@ -31,8 +31,8 @@ Each leaf folder is one bloc:
 ```
 my-bloc/
 ├── manifest.json     required, root marker discovered by `p9r import`
-├── Bloc.ts           view bundle entry — imports `Component` from `@bernouy/cms/component`
-├── BlocEditor.ts     (optional) editor bundle entry — imports `Editor` from `@bernouy/cms/editor`
+├── Bloc.ts           view bundle entry — imports `Component` from `@bernouy/cms-control/component`
+├── BlocEditor.ts     (optional) editor bundle entry — imports `Editor` from `@bernouy/cms-control/editor`
 ├── template.html     shadow DOM template (loaded with `with { type: 'text' }`)
 ├── style.css         shadow DOM CSS (loaded with `with { type: 'text' }`)
 └── configuration.html editor config panel (sync elements: `<p9r-attr-sync>`, `<p9r-comp-sync>`, `<p9r-image-sync>`, `<p9r-link>`, …)
@@ -68,7 +68,7 @@ my-bloc/
 
 This package never ships JS. Two consumption paths:
 
-- **`p9r import`** (CLI in `@bernouy/cms`) — scans
+- **`p9r import`** (`@bernouy/cms-cli`) — scans
   `node_modules/@bernouy/cms-blocs/src/**/manifest.json`, builds each
   bloc into a view + editor bundle via `Bun.build`, POSTs to the
   remote CMS's `/api/bloc`. The CMS server stores `{ id, group,
@@ -78,7 +78,7 @@ This package never ships JS. Two consumption paths:
   proxy so the bloc reloads on file change.
 
 The TS in this package is type-checked via `tsc` (project ref to
-`../cms` for `@bernouy/cms/component` + `@bernouy/cms/editor` types) but
+`../cms-control` for `@bernouy/cms-control/component` + `@bernouy/cms-control/editor` types) but
 **never bundled by this package's `build`** — bundling is the CLI's job
 on the consumer side.
 
@@ -125,9 +125,9 @@ complain. `template`/`css` are passed verbatim to the
 
 ## Dependencies
 
-- runtime: `@bernouy/cms` (`Component`, `Editor`)
+- runtime: `@bernouy/cms-control` (`Component`, `Editor`)
 - peer / dev: TypeScript
 
 The package has no `main`/`exports` — it ships sources only. Adding a
 public TS export here would be a category mistake; if you need a shared
-helper across blocs, lift it to `@bernouy/cms` or `@bernouy/webcomponents`.
+helper across blocs, lift it to `@bernouy/cms-shared` or `@bernouy/webcomponents`.

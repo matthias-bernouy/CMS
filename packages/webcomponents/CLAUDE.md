@@ -8,7 +8,7 @@ Lightweight Web Components toolkit. Two component flavors:
   that handle declarative submit/fetch with no per-page JS.
 
 Published to npm as `@bernouy/webcomponents` (MIT). Other workspace
-packages (`@bernouy/cms`, `@bernouy/cdn-*`) consume the **built bundle**
+packages (`@bernouy/cms-control`) consume the **built bundle**
 from `dist/`, not the sources.
 
 ## Layout
@@ -82,10 +82,10 @@ class Component extends HTMLElement {
 ```
 
 - Open shadow root, every component.
-- CSS / template injection is optional — `Stack.ts` and similar passthroughs skip it.
+- CSS / template injection is optional — `Stack.ts` and similar passthroughs may skip it when the shadow already inherits styling.
 - **No reactive lifecycle, no attribute helper, no CSS-variable
   rewriting.** Subclasses add what they need.
-- The CMS (`@bernouy/cms/component`) ships its **own** richer
+- The CMS (`@bernouy/cms-control/component`) ships its **own** richer
   `Component` for blocs. Don't merge the two — the CMS version drags
   bloc-editor concerns that have no place in a plain admin dialog.
 
@@ -151,7 +151,7 @@ component renders.
 
 - **Name a visual component `<p9r-*>`** — never `<cms-*>` or `<w13c-*>`.
   Logical components are `<w13c-*>`. `cms-*` is reserved for the CMS
-  internal admin shell (lives in `@bernouy/cms`).
+  internal admin shell (lives in `@bernouy/cms-control`).
 - **Self-register with the idempotent guard** at the bottom of the
   component file. Never register from `index.ts`.
 - **Imports of `*.html` / `*.css` use `with { type: 'text' }`** so Bun
@@ -165,8 +165,9 @@ component renders.
   standalone — keep it free of `@bernouy/*` imports.
 - **Sources are not consumed directly.** Workspace packages depend on
   the **built bundle** (`@bernouy/webcomponents` resolves to
-  `dist/ui.js` via `main`/`exports`). `@bernouy/cms`'s `build.ts` runs
-  this package's build first for that reason.
+  `dist/ui.js` via `main`/`exports`). The workspace root `build.ts`
+  builds this package first so consumer packages see the `dist/`
+  artifacts at type-check time.
 
 ## Reference docs in repo
 

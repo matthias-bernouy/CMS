@@ -1,5 +1,5 @@
 /**
- * Minimal Web Component base for the UI toolkit shipped by `@bernouy/socle`.
+ * Minimal Web Component base for the UI toolkit of the `@bernouy/webcomponents` toolkit.
  *
  * Intentionally tiny: wires up an open Shadow Root, optionally injects the
  * caller's CSS (as a `<style>`) and HTML template (via `<template>`) at
@@ -7,7 +7,7 @@
  * no CSS-variable rewriting — consumers that need more add it in their own
  * subclasses.
  *
- * The CMS (`@bernouy/cms/component`) provides its own richer `Component`
+ * The CMS (`@bernouy/cms-control/component`) provides its own richer `Component`
  * class for bloc runtime. The two are deliberately kept separate so that a
  * simple admin UI dialog doesn't drag in bloc-editor concerns.
  */

@@ -1,7 +1,7 @@
 import type { BunPlugin } from "bun";
 
 /**
- * Bloc bundles must not re-bundle `@bernouy/cms/component` or
+ * Bloc bundles must not re-bundle `@bernouy/cms-control/component` or
  * `/editor`. Those base classes are shipped once per page via
  * `src/core/global.ts`, which installs them on `window.p9r`. This plugin
  * rewrites the two import specifiers to read from that global, so each

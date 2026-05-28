@@ -21,7 +21,6 @@ export type {
     TPage, TBloc, TTemplate, TSnippet, TSystem, TPageRef,
 } from "cms-shared/interfaces/models";
 export type { Cache, CacheEntry } from "cms-shared/interfaces/Cache";
-export type { KVStore }           from "cms-shared/interfaces/KVStore";
 export type { SecretStore }       from "cms-shared/interfaces/SecretStore";
 export type {
     CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem, FilesItemType,

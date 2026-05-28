@@ -25,7 +25,7 @@ export default async function CLI_installSkill(args: string[]) {
     const sourceStat = await stat(sourceDir).catch(() => null);
     if (!sourceStat || !sourceStat.isDirectory()) {
         console.error(`✖ Skill folder not found at ${sourceDir}`);
-        console.error(`  Make sure you are running p9r from an installed @bernouy/cms package.`);
+        console.error(`  Make sure you are running p9r from an installed @bernouy/cms-cli package.`);
         process.exit(1);
     }
 

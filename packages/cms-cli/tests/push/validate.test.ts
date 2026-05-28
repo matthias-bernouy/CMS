@@ -6,8 +6,8 @@ const set   = (s: string[]) => new Set(s);
 
 describe("extractRefs", () => {
     test("captures non-system custom-element tags as bloc refs", () => {
-        const { blocs, snippets } = extractRefs("<cs-step-card></cs-step-card><hub-button>x</hub-button>");
-        expect(blocs).toEqual(new Set(["cs-step-card", "hub-button"]));
+        const { blocs, snippets } = extractRefs("<cs-step-card></cs-step-card><my-button>x</my-button>");
+        expect(blocs).toEqual(new Set(["cs-step-card", "my-button"]));
         expect(snippets.size).toBe(0);
     });
 

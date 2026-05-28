@@ -70,7 +70,7 @@ per-request — composed runners share the same value.
 - **One server per `BunRunner` instance.** `start()` is the only call
   that spawns `Bun.serve`. Calling `start()` twice opens two listeners.
 - **Routes registered after `start()` are honored**, because matching
-  is lazy at request time. Useful for `cms-control-mt` mounting tenant
+  is lazy at request time. Useful for `the CMS multi-tenant case` mounting tenant
   routes dynamically.
 - The 500 response logs the error but never includes the message in the
   body — keep it that way to avoid leaking internals.

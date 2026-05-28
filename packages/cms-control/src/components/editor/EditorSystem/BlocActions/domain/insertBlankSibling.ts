@@ -26,7 +26,7 @@ function resolveSiblingTemplate(target: HTMLElement): HTMLElement | null {
  * comp-sync template — the same source `_sync()` (first insertion) and
  * `_add()` (panel "+ Add") use — so the new element carries any default
  * attributes AND default child content the template declared (e.g. a
- * `<nav-item>` template that contains a `<hub-button>` default would
+ * `<nav-item>` template that contains a `<p9r-button>` default would
  * have stripped that child if we'd only kept the tag). Falls back to a
  * bare `<p>` when no template can be resolved.
  */

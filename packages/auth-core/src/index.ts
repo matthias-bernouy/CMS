@@ -15,8 +15,7 @@
 export { LocalAuthentication, type LocalAuthConfig } from "auth-core/auth/LocalAuthentication";
 export { OidcAuthentication, type OidcAuthConfig }   from "auth-core/auth/OidcAuthentication";
 export { SubjectResolver, internalUserId }            from "auth-core/auth/SubjectResolver";
-export { PiiCrypto, createPiiCrypto }                 from "auth-core/auth/PiiCrypto";
-export { dummyPasswordVerify }                        from "auth-core/auth/passwordTiming";
+export { PiiCrypto }                                  from "auth-core/auth/PiiCrypto";
 export { mintPatToken, hashPatToken }                 from "auth-core/auth/patToken";
 export { toLoginMethod }                              from "auth-core/auth/toLoginMethod";
 export { readCookie, setCookie, clearCookie, sanitizeReturnTo } from "auth-core/auth/cookies";
@@ -47,6 +46,5 @@ export { MongoDekRepository, type CmsDekDocument }           from "auth-core/def
 
 // ── Pages + guard (server) ─────────────────────────────────────────────
 export { renderLoginPage }                                   from "auth-core/pages/loginPage";
-export { renderForbiddenPage }                               from "auth-core/pages/forbiddenPage";
 export { renderAuthPage }                                    from "auth-core/pages/renderAuthPage";
 export { createAuthGuard, type AuthGuardContext }            from "auth-core/pages/authGuard";
