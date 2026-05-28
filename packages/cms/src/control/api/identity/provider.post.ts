@@ -1,5 +1,5 @@
 import type { ControlCms } from "src/control/ControlCms";
-import type { IdentityProviderKind, NewIdentityProvider } from "src/socle/interfaces/IdentityProvider";
+import type { IdentityProviderKind, NewIdentityProvider } from "@bernouy/auth-core";
 import { readJsonBody } from "src/control/core/http/readJsonBody";
 import MissingParam from "src/control/errors/Http/MissingParam";
 import InvalidParam from "src/control/errors/Http/InvalidParam";

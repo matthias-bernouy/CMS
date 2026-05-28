@@ -1,5 +1,5 @@
 {
-    "name": "@bernouy/socle-monorepo",
+    "name": "@bernouy/cms-core",
     "private": true,
     "workspaces": [
         "packages/*",
@@ -21,9 +21,7 @@
         "jose": "^6.2.1",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
-        "@bernouy/auth-keycloak": "workspace:*",
-        "@bernouy/auth-composite": "workspace:*",
-        "@bernouy/keycloak-client": "workspace:*",
+        "@bernouy/auth-core": "workspace:*",
         "@bernouy/mailer-smtp": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
@@ -34,7 +32,6 @@
         "@bernouy/tenant-provisioner-example": "workspace:*",
         "@bernouy/tenant-provisioner-addresses": "workspace:*",
         "@bernouy/tenant-provisioner-cms-control": "workspace:*",
-        "@bernouy/tenant-provisioner-keycloak": "workspace:*",
         "@bernouy/tenant-provisioner-contract": "workspace:*",
         "@bernouy/issuer-kit": "workspace:*"
     }

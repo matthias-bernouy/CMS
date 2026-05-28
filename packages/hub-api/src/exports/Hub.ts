@@ -31,12 +31,12 @@ import type {
  *  - A `NamespaceRepository` (the meta-org table : namespaces + their
  *    per-TP provisions, each with its trusted-issuer list).
  *
- * The hub NO LONGER manages identity (no Keycloak realm / OIDC client /
- * user creation). The trusted issuers are supplied by the operator (or by
- * a consumer via API) when activating a TP for a namespace. The
- * `/admin/*` superadmin UI is still authenticated against a Keycloak
- * instance via `auth-keycloak` — that Keycloak is configured at deploy
- * time, the hub itself never calls its admin API.
+ * The hub NO LONGER manages tenant identity. The trusted issuers are
+ * supplied by the operator (or by a consumer via API) when activating a
+ * TP for a namespace. Superadmin authentication on `/admin/*` is the
+ * consumer's concern — `mountHubApi` accepts any `Authentication<Role>`
+ * (typically the `LocalAuthentication` from `@bernouy/auth-core`,
+ * optionally composed with dynamic OIDC providers).
  */
 export class Hub {
 

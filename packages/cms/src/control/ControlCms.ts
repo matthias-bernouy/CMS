@@ -7,16 +7,12 @@ import type { SecretStore } from "../socle/interfaces/SecretStore";
 import { InMemorySecretStore } from "../socle/default-implementation/SecretStore/memory";
 import type { CmsFilesMetadataRepository } from "../socle/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "../socle/interfaces/CmsFilesBlobStore";
-import type { UsersRepository } from "../socle/interfaces/UsersRepository";
-import type { IdentityProviderRepository } from "../socle/interfaces/IdentityProvider";
-import type { PatRepository } from "../socle/interfaces/PatRepository";
+import type { UsersRepository, IdentityProviderRepository, PatRepository } from "@bernouy/auth-core";
+import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/auth-core";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path"
-import { createAuthGuard } from "./core/authentication/authGuard";
-import { renderLoginPage } from "./core/authentication/loginPage";
-import { toLoginMethod } from "../socle/auth/toLoginMethod";
 import type { CspExtras } from "../socle/server/buildCspContent";
 
 type Configuration = {
@@ -86,7 +82,7 @@ export class ControlCms {
         this._identityProviders = identityProviders ?? null;
         this._pats = pats ?? null;
 
-        const authGuard = createAuthGuard(this);
+        const authGuard = createAuthGuard<CMS_ROLES>({ basePath: this.basePath, auth: this._auth, requiredRole: "admin" });
 
         // Unguarded: the standalone login page. The guard redirects
         // unauthenticated users here via `buildLoginUrl`; registered before the

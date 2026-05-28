@@ -2,7 +2,8 @@ import { join } from "node:path";
 import type { Db } from "mongodb";
 import type { Runner, SecretCrypto } from "@bernouy/core";
 import { SignedCookieCodec } from "@bernouy/core";
-import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, MongoCmsFilesMetadata, LocalFsCmsFilesBlob, S3CmsFilesBlob, MongoUsersRepository, MongoIdentityProviderRepository, MongoLocalCredentialStore, MongoPatRepository, MongoRateLimiter, SubjectResolver, LocalAuthentication, OidcAuthentication, createPiiCrypto, type CmsFilesBlobStore, type EncryptedSecretDocument } from "@bernouy/cms";
+import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, MongoCmsFilesMetadata, LocalFsCmsFilesBlob, S3CmsFilesBlob, type CmsFilesBlobStore, type EncryptedSecretDocument } from "@bernouy/cms";
+import { MongoUsersRepository, MongoIdentityProviderRepository, MongoLocalCredentialStore, MongoPatRepository, MongoRateLimiter, SubjectResolver, LocalAuthentication, OidcAuthentication, createPiiCrypto } from "@bernouy/auth-core";
 import type { Tenant } from "src/interfaces/Tenant";
 import type { AdminSessionConfig } from "src/exports/MtControlCms";
 

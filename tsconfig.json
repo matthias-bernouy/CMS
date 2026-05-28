@@ -8,13 +8,7 @@
             "path": "packages/runner-bun"
         },
         {
-            "path": "packages/auth-keycloak"
-        },
-        {
-            "path": "packages/auth-composite"
-        },
-        {
-            "path": "packages/keycloak-client"
+            "path": "packages/auth-core"
         },
         {
             "path": "packages/mailer-smtp"
@@ -51,9 +45,6 @@
         },
         {
             "path": "official-tenant-provisioners/cms-control"
-        },
-        {
-            "path": "official-tenant-provisioners/keycloak"
         }
     ]
 }

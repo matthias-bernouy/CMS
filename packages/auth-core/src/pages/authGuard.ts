@@ -23,14 +23,18 @@ export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>
         // guarded path that merely contains "/assets/").
         if (url.pathname.startsWith(`${ctx.basePath}/assets/`)) return next();
 
-        // CSRF: mutating methods must come from the same origin.
+        // CSRF: mutating methods must come from the same origin. The host the
+        // browser sees lives in the `Host` header (preserved by reverse proxies
+        // via `proxy_set_header Host $host`); `req.url`'s host reflects the
+        // INTERNAL connection (e.g. `cms:3000`) and would always mismatch.
         const method = req.method.toUpperCase();
         if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
             const origin = req.headers.get("origin") || req.headers.get("referer");
             if (origin) {
                 try {
-                    const oHost = new URL(origin).host;
-                    if (oHost !== url.host) {
+                    const oHost   = new URL(origin).host;
+                    const reqHost = req.headers.get("host") ?? url.host;
+                    if (oHost !== reqHost) {
                         return new Response("CSRF: cross-origin request blocked", { status: 403 });
                     }
                 } catch {

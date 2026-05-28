@@ -143,8 +143,9 @@ of the credential pair:
   Downstream handlers retrieve it via `getCredential(req)` /
   `requireCredential(req)` to access consumer-extended fields
   (`bucketId`, `tenantId`, …) that don't fit `Subject`.
-- `loginUrl` / `logoutUrl` / `profileUrl` are `""` — composes via
-  `auth-composite` where the cookie child supplies the URLs.
+- `loginUrl` / `logoutUrl` / `profileUrl` are `""` — bearer auth has no
+  HTML-redirect surface; the cookie child of the consuming chain
+  supplies those URLs.
 
 `generateBearerToken()` produces `{ cleartext, tokenHash }`. Hand
 `cleartext` to the user once at creation; persist `tokenHash`.

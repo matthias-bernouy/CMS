@@ -1,8 +1,8 @@
 # @bernouy/hub-api
 
 Control-plane orchestrator for the tenant-provisioner platform. **Post-pivot**,
-the hub does NOT manage identity (no Keycloak realm / OIDC client / user
-creation). It is a thin registry + provisioning router:
+the hub does NOT manage identity (no realm / OIDC client / user creation). It
+is a thin registry + provisioning router:
 
 - **TP registry** — import / refresh / unimport conforming tenant-provisioners.
 - **Namespace registry** — logical groupings (a customer, a project…) +
@@ -11,9 +11,10 @@ creation). It is a thin registry + provisioning router:
   call each TP's `/admin/*`.
 
 Authentication of the superadmin `/admin/*` surface is delegated to an
-`Authentication` instance the consumer passes to `mountHubApi` (typically a
-Keycloak bearer + cookie composite). The hub never calls a Keycloak admin
-API — that Keycloak is just an IdP for operators.
+`Authentication` instance the consumer passes to `mountHubApi` — typically
+the `LocalAuthentication` from `@bernouy/auth-core` (signed session cookie
++ PAT bearer in one instance), optionally paired with `OidcAuthentication`
+for SSO providers stored as data.
 
 ## Layout
 
@@ -93,7 +94,7 @@ All `/api/*` gated by `requireRole(auth, requiredRole, { csrf: "cookie-only" })`
   tenant can be created first and have issuers attached later.
 - **CP token minting is uncached** (`cpTokenFor.ts`) — the SDK enforces
   strict JTI replay protection (base.md §4.5), so a token is single-use.
-- **No Keycloak admin client** at all — the hub never manages identity.
+- **No external admin client** at all — the hub never manages identity beyond its own superadmin (CMS-owned).
 - **Cascade delete**: removing a namespace best-effort removes every tenant
   on its TP, then drops the rows. Per-tenant failures are collected + surfaced.
 

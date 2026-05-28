@@ -3,7 +3,7 @@ import type { CmsTenantConfig } from "./tenantConfig";
 
 /**
  * The browser-facing admin runtime the lifecycle hooks drive. Implemented at
- * the composition root (`docker/cms-tp`) by adapting `MtControlCms` — kept as
+ * the consumer's composition root by adapting `MtControlCms` — kept as
  * an injected interface so this package stays free of the runtime's heavy
  * dependencies (`@bernouy/cms` + Mongo). Authentication is CMS-owned (builtin
  * local provider + per-tenant dynamic OIDC providers stored as data); only

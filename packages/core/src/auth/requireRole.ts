@@ -70,7 +70,10 @@ function checkCsrf(req: Request): Response | null {
     let originHost: string;
     try { originHost = new URL(origin).host; }
     catch { return new Response("CSRF: invalid origin", { status: 403 }); }
-    const reqHost = new URL(req.url).host;
+    // The host the browser sees lives in the `Host` header (preserved by
+    // reverse proxies via `proxy_set_header Host $host`); `req.url`'s host
+    // reflects the INTERNAL connection (e.g. `cms:3000`) and would mismatch.
+    const reqHost = req.headers.get("host") ?? new URL(req.url).host;
     if (originHost !== reqHost) return new Response("CSRF: cross-origin request blocked", { status: 403 });
     return null;
 }

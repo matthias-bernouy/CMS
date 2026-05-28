@@ -2,15 +2,15 @@ import { test, expect } from "bun:test";
 import { join } from "node:path";
 import { issuerKitPackageRoot } from "src/constants";
 
-// The issuer-kit is the SIGN side. It MUST NOT import the SDK (verify side),
-// the CMS, or auth-keycloak. The only shared wire contract it may use is
-// `@bernouy/tenant-provisioner-contract`. Drift here would break the
+// The issuer-kit is the SIGN side. It MUST NOT import the SDK (verify side)
+// or the CMS / auth-core runtime stacks. The only shared wire contract it may
+// use is `@bernouy/tenant-provisioner-contract`. Drift here would break the
 // sign↔verify decoupling the architecture relies on.
 const FORBIDDEN = [
     "@bernouy/tenant-provisioner-sdk",
     "@bernouy/cms",
     "@bernouy/mt-cms-control",
-    "@bernouy/auth-keycloak",
+    "@bernouy/auth-core",
 ] as const;
 
 function findForbidden(source: string): string[] {

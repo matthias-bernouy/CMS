@@ -7,7 +7,7 @@ import { unmountTenant } from "src/core/tenant/unmountTenant";
 import { purgeTenantData } from "src/core/tenant/purgeTenantData";
 import { seedAdmin } from "src/core/tenant/members";
 import { seedTenantAuth } from "src/core/tenant/seedTenantAuth";
-import { createPiiCrypto } from "@bernouy/cms";
+import { createPiiCrypto } from "@bernouy/auth-core";
 import { randomBase64Url } from "@bernouy/core";
 
 /**

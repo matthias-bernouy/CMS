@@ -10,7 +10,7 @@ surface. The `cms-control` tenant-provisioner (see
 `official-tenant-provisioners/cms-control`) receives the hub's
 `/admin/tenants` calls and drives
 `provisionTenant`/`reprovisionTenant`/`deprovisionTenant` here via a
-connector wired at the composition root (`docker/cms-tp`). The Mongo
+connector wired at the consumer's composition root. The Mongo
 registry is a hub-fed runtime store, not an independent control plane.
 
 Package name on disk: `cms-control-mt/`. Published as

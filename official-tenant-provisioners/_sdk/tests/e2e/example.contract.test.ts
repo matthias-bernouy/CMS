@@ -11,7 +11,7 @@ const exampleSrc = join(examplePackageRoot, "src");
 
 // Decoupling (_sdk.md): the example depends on the SDK and NOTHING else —
 // re-checks the boundary guard at the consumer level.
-const FORBIDDEN = ["@bernouy/cms", "@bernouy/core", "@bernouy/auth-keycloak", "@bernouy/mt-cms-control"];
+const FORBIDDEN = ["@bernouy/cms", "@bernouy/core", "@bernouy/auth-core", "@bernouy/mt-cms-control"];
 
 test("example imports ONLY @bernouy/tenant-provisioner-sdk (decoupling proof)", async () => {
     const offenders: string[] = [];

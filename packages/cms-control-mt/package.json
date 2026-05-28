@@ -24,6 +24,7 @@
     "dependencies": {
         "@bernouy/core":       "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
+        "@bernouy/auth-core":  "workspace:*",
         "@bernouy/cms":        "workspace:*"
     },
     "engines": {

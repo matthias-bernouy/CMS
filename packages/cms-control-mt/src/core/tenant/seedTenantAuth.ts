@@ -1,5 +1,5 @@
 import type { Db } from "mongodb";
-import { MongoUsersRepository, MongoIdentityProviderRepository, MongoLocalCredentialStore, internalUserId, type PiiCrypto } from "@bernouy/cms";
+import { MongoUsersRepository, MongoIdentityProviderRepository, MongoLocalCredentialStore, internalUserId, type PiiCrypto } from "@bernouy/auth-core";
 import type { TenantRole } from "src/core/tenant/mountTenant";
 
 /**

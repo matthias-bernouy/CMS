@@ -5,15 +5,13 @@
     "": {
       "name": "@befive/dass",
       "devDependencies": {
-        "@bernouy/auth-composite": "workspace:*",
-        "@bernouy/auth-keycloak": "workspace:*",
+        "@bernouy/auth-core": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/hub-api": "workspace:*",
         "@bernouy/hub-ui": "workspace:*",
         "@bernouy/issuer-kit": "workspace:*",
-        "@bernouy/keycloak-client": "workspace:*",
         "@bernouy/mailer-smtp": "workspace:*",
         "@bernouy/mt-cms-control": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
@@ -21,7 +19,6 @@
         "@bernouy/tenant-provisioner-cms-control": "workspace:*",
         "@bernouy/tenant-provisioner-contract": "workspace:*",
         "@bernouy/tenant-provisioner-example": "workspace:*",
-        "@bernouy/tenant-provisioner-keycloak": "workspace:*",
         "@bernouy/tenant-provisioner-sdk": "workspace:*",
         "@types/bun": "latest",
         "bun-types": "^1.3.6",
@@ -91,28 +88,16 @@
         "zod": "^4.4.3",
       },
     },
-    "official-tenant-provisioners/keycloak": {
-      "name": "@bernouy/tenant-provisioner-keycloak",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/keycloak-client": "workspace:*",
-        "@bernouy/tenant-provisioner-sdk": "workspace:*",
-        "zod": "^4.4.3",
-      },
-    },
-    "packages/auth-composite": {
-      "name": "@bernouy/auth-composite",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/core": "workspace:*",
-      },
-    },
-    "packages/auth-keycloak": {
-      "name": "@bernouy/auth-keycloak",
+    "packages/auth-core": {
+      "name": "@bernouy/auth-core",
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/core": "workspace:*",
         "jose": "^6.2.1",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
       },
     },
     "packages/cms": {
@@ -122,6 +107,7 @@
         "p9r": "./src/cli/index.ts",
       },
       "dependencies": {
+        "@bernouy/auth-core": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
         "@bernouy/webcomponents": "workspace:*",
@@ -129,7 +115,6 @@
         "playwright": "^1.59.1",
       },
       "devDependencies": {
-        "@bernouy/auth-composite": "workspace:*",
         "@happy-dom/global-registrator": "^20.8.9",
         "@types/bun": "latest",
         "happy-dom": "^20.8.9",
@@ -158,8 +143,7 @@
       "name": "@bernouy/mt-cms-control",
       "version": "0.0.1",
       "dependencies": {
-        "@bernouy/auth-composite": "workspace:*",
-        "@bernouy/auth-keycloak": "workspace:*",
+        "@bernouy/auth-core": "workspace:*",
         "@bernouy/cms": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
@@ -200,10 +184,6 @@
         "@bernouy/runner-bun": "workspace:*",
       },
     },
-    "packages/keycloak-client": {
-      "name": "@bernouy/keycloak-client",
-      "version": "0.1.0",
-    },
     "packages/mailer-smtp": {
       "name": "@bernouy/mailer-smtp",
       "version": "0.1.0",
@@ -235,9 +215,7 @@
   "packages": {
     "@asteasolutions/zod-to-openapi": ["@asteasolutions/zod-to-openapi@8.5.0", "", { "dependencies": { "openapi3-ts": "^4.1.2" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-SABbKiObg5dLRiTFnqiW1WWwGcg1BJfmHtT2asIBnBHg6Smy/Ms2KHc650+JI4Hw7lSkdiNebEGXpwoxfben8Q=="],
 
-    "@bernouy/auth-composite": ["@bernouy/auth-composite@workspace:packages/auth-composite"],
-
-    "@bernouy/auth-keycloak": ["@bernouy/auth-keycloak@workspace:packages/auth-keycloak"],
+    "@bernouy/auth-core": ["@bernouy/auth-core@workspace:packages/auth-core"],
 
     "@bernouy/cms": ["@bernouy/cms@workspace:packages/cms"],
 
@@ -250,8 +228,6 @@
     "@bernouy/hub-ui": ["@bernouy/hub-ui@workspace:packages/hub-ui"],
 
     "@bernouy/issuer-kit": ["@bernouy/issuer-kit@workspace:official-tenant-provisioners/_issuer-kit"],
-
-    "@bernouy/keycloak-client": ["@bernouy/keycloak-client@workspace:packages/keycloak-client"],
 
     "@bernouy/mailer-smtp": ["@bernouy/mailer-smtp@workspace:packages/mailer-smtp"],
 
@@ -266,8 +242,6 @@
     "@bernouy/tenant-provisioner-contract": ["@bernouy/tenant-provisioner-contract@workspace:official-tenant-provisioners/_tenant-provisioner-contract"],
 
     "@bernouy/tenant-provisioner-example": ["@bernouy/tenant-provisioner-example@workspace:official-tenant-provisioners/_example"],
-
-    "@bernouy/tenant-provisioner-keycloak": ["@bernouy/tenant-provisioner-keycloak@workspace:official-tenant-provisioners/keycloak"],
 
     "@bernouy/tenant-provisioner-sdk": ["@bernouy/tenant-provisioner-sdk@workspace:official-tenant-provisioners/_sdk"],
 

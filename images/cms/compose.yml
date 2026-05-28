@@ -1,0 +1,36 @@
+# Basic CMS deployment — `docker compose -f images/cms/compose.yml up --build`.
+#
+# Two services: the Bun process serving Control + Delivery, and an nginx
+# sidecar that terminates HTTP on the host's :80 and reverse-proxies the
+# upstream. Everything in memory — nothing persists across `down`.
+#
+# Edit the env block below before pointing this at anything public:
+#   - CMS_SESSION_SECRET must be a real random 32+ char value
+#     (`openssl rand -hex 32`).
+#   - CMS_ADMIN_PASSWORD should be set explicitly; the generated fallback is
+#     logged on stdout and lost when the container restarts.
+
+services:
+    cms:
+        build:
+            context: ../..
+            dockerfile: images/cms/Dockerfile
+        image: bernouy/cms:basic
+        environment:
+            PORT:               "3000"
+            CMS_PUBLIC_URL:     "http://localhost:8080"
+            CMS_SESSION_SECRET: "dev-session-secret-must-be-at-least-32-chars-long-please"
+            CMS_ADMIN_EMAIL:    "admin@local.com"
+            CMS_ADMIN_PASSWORD: "dev-admin-password"
+            NODE_ENV:           "development"
+        expose:
+            - "3000"
+
+    nginx:
+        image: nginx:alpine
+        ports:
+            - "8080:80"
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf:ro
+        depends_on:
+            - cms

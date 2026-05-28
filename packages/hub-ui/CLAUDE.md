@@ -4,8 +4,8 @@ Superadmin UI for `@bernouy/hub-api`. SSR-light HTML pages + webcomponents
 served on the **same runner** as the hub API, under `/admin/*`. Single
 public entry : `mountHubUi(opts)`.
 
-The cookie set by Keycloak superadmin login is shared natively between
-`/admin/*` and `/api/*` (same origin) — no CORS, no token plumbing.
+The signed session cookie issued by the superadmin login is shared natively
+between `/admin/*` and `/api/*` (same origin) — no CORS, no token plumbing.
 
 ## Layout
 
@@ -131,7 +131,8 @@ même Runner (Bun.serve)
 Côté composition root du déploiement :
 ```ts
 const runner = new BunRunner();
-const auth   = new KeycloakConsumer(...);   // superadmin Keycloak
+const auth   = new LocalAuthentication(runner, { … });   // superadmin local + signed cookie + PAT
+new OidcAuthentication(runner, { … });                   // optional dynamic OIDC backends
 
 mountHubApi({ runner, hub, auth });
 mountHubUi ({ runner,      auth });

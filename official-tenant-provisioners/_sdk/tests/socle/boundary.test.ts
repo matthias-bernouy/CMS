@@ -3,12 +3,12 @@ import { join } from "node:path";
 import { sdkPackageRoot } from "src/constants";
 
 // Normative guard (_sdk.md "Indépendance système") : the SDK MUST NOT import
-// the CMS, the proxy, or auth-keycloak. Drift here would make the
-// "découplage système" claim of base.md §4.8 a lie.
+// the CMS or the auth-core / mt-cms-control runtime stacks. Drift here would
+// make the "découplage système" claim of base.md §4.8 a lie.
 const FORBIDDEN = [
     "@bernouy/cms",            // covers cms, cms-blocs, cms-*-mt by prefix
     "@bernouy/mt-cms-control",
-    "@bernouy/auth-keycloak",
+    "@bernouy/auth-core",
 ] as const;
 
 function findForbidden(source: string): string[] {
@@ -19,7 +19,7 @@ function findForbidden(source: string): string[] {
 
 test("detector flags a forbidden import (self-test of the guard)", () => {
     expect(findForbidden(`import x from "@bernouy/cms";`)).toContain("@bernouy/cms");
-    expect(findForbidden(`import x from "@bernouy/auth-keycloak";`)).toContain("@bernouy/auth-keycloak");
+    expect(findForbidden(`import x from "@bernouy/auth-core";`)).toContain("@bernouy/auth-core");
     expect(findForbidden(`import x from "@bernouy/core";`)).toHaveLength(0);
 });
 

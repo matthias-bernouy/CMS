@@ -7,8 +7,9 @@ import { hubApiPackageRoot } from "src/constants";
 export type MountHubApiOptions<Role extends string> = {
     runner:        Runner;
     hub:           Hub;
-    /** Authentication chain validating callers (typically a `KeycloakBearerConsumer`,
-     *  optionally composed with a cookie consumer if you also expose a UI). */
+    /** Authentication chain validating callers (typically the
+     *  `LocalAuthentication` from `@bernouy/auth-core`, which terminates a
+     *  signed session cookie AND verifies bearer PATs in one instance). */
     auth:          Authentication<Role>;
     /** Role required to call any `/api/*` endpoint. Default = `"superadmin"`. */
     requiredRole?: Role;

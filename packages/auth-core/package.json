@@ -1,0 +1,20 @@
+{
+    "name": "@bernouy/auth-core",
+    "version": "0.1.0",
+    "description": "CMS-owned authentication primitives (LocalAuth + OidcAuth + PAT + signed cookies) plus the membership / identity-provider / credential stores. Provider-agnostic — Keycloak/Google/Okta plug in as one OIDC backend among many. Consumed by `@bernouy/cms`, the hub composition root, and any other surface that needs an admin-side auth chain.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/index.ts",
+    "exports": {
+        ".":            "./src/index.ts",
+        "./components": "./src/components/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/core": "workspace:*",
+        "jose":          "^6.2.1"
+    },
+    "peerDependencies": {
+        "mongodb":    "^7.2.0",
+        "typescript": "^5.9.3"
+    }
+}

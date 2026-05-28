@@ -44,32 +44,10 @@ export { LocalFsCmsFiles } from "./src/socle/default-implementation/CmsFiles/loc
 export { InMemoryCache } from "./src/socle/default-implementation/Cache/memory";
 export { InMemorySecretStore } from "./src/socle/default-implementation/SecretStore/memory";
 export { EncryptedMongoSecretStore, type EncryptedSecretDocument, type EncryptedMongoSecretStoreConfig } from "./src/socle/default-implementation/SecretStore/encryptedMongo";
-export { MongoDekRepository, type CmsDekDocument } from "./src/socle/default-implementation/MongoDekRepository";
-
-// ── Users, authorization & identity (CMS-side authn/authz) ─────────────
-export { InMemoryUsersRepository } from "./src/socle/default-implementation/UsersRepository/memory";
-export { MongoUsersRepository, type MongoUsersConfig } from "./src/socle/default-implementation/UsersRepository/mongodb";
-export type { UsersRepository, Identity, TUser, UsersListOptions, UsersPage } from "./src/socle/interfaces/UsersRepository";
-export { SubjectResolver, internalUserId } from "./src/socle/auth/SubjectResolver";
-export { PiiCrypto, createPiiCrypto } from "./src/socle/auth/PiiCrypto";
-export { LocalAuthentication, type LocalAuthConfig } from "./src/socle/auth/LocalAuthentication";
-export { OidcAuthentication, type OidcAuthConfig } from "./src/socle/auth/OidcAuthentication";
-export { InMemoryPatRepository } from "./src/socle/default-implementation/PatRepository/memory";
-export { MongoPatRepository, type MongoPatConfig } from "./src/socle/default-implementation/PatRepository/mongodb";
-export type { PatRepository, Pat, PatPrincipal, NewPat } from "./src/socle/interfaces/PatRepository";
-export { InMemoryIdentityProviderRepository } from "./src/socle/default-implementation/IdentityProviderRepository/memory";
-export { MongoIdentityProviderRepository, type MongoIdentityProviderConfig } from "./src/socle/default-implementation/IdentityProviderRepository/mongodb";
-export { InMemoryLocalCredentialStore } from "./src/socle/default-implementation/LocalCredentialStore/memory";
-export { MongoLocalCredentialStore, type MongoLocalCredentialConfig } from "./src/socle/default-implementation/LocalCredentialStore/mongodb";
-export type { LocalCredentialStore, LocalCredential, NewCredential } from "./src/socle/interfaces/LocalCredentialStore";
-export { toLoginMethod } from "./src/socle/auth/toLoginMethod";
-export type {
-    IdentityProvider, IdentityProviderRepository, IdentityProviderKind,
-    LoginMethod, NewIdentityProvider, IdentityProviderPatch,
-} from "./src/socle/interfaces/IdentityProvider";
-export { InMemoryRateLimiter } from "./src/socle/default-implementation/RateLimiter/memory";
-export { MongoRateLimiter, type MongoRateLimiterConfig } from "./src/socle/default-implementation/RateLimiter/mongodb";
-export type { RateLimiter, RateLimitResult, RateLimitPolicy } from "./src/socle/interfaces/RateLimiter";
+// Auth backbone (CMS-side authN + authZ + identity providers + PATs) lives
+// in `@bernouy/auth-core` — consumers import from there, not from this barrel.
+// The DEK repository (`MongoDekRepository`) used by `EncryptedMongoSecretStore`
+// is also there, since envelope encryption is shared with `PiiCrypto`.
 
 // Browser-safe bloc authoring symbols are deliberately split into two
 // sub-entries:

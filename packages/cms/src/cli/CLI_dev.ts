@@ -15,8 +15,8 @@ import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
 import { LocalFsCmsFiles } from "../socle/default-implementation/CmsFiles/localFs";
-import { InMemoryUsersRepository } from "../socle/default-implementation/UsersRepository/memory";
-import { InMemoryIdentityProviderRepository } from "../socle/default-implementation/IdentityProviderRepository/memory";
+import { InMemoryUsersRepository } from "@bernouy/auth-core";
+import { InMemoryIdentityProviderRepository } from "@bernouy/auth-core";
 import type { CMS_ROLES } from "types/roles";
 import { loadPushConfig } from "./push/shared/config";
 

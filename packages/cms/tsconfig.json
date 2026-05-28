@@ -26,6 +26,7 @@
     ],
     "references": [
         { "path": "../core" },
-        { "path": "../runner-bun" }
+        { "path": "../runner-bun" },
+        { "path": "../auth-core" }
     ]
 }
