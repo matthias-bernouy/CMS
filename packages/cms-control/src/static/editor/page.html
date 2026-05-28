@@ -7,7 +7,9 @@
             <link slot="style" rel="stylesheet" href="{{BASE_PATH}}/api/editor/style.css">
             <script slot="script" src="{{BASE_PATH}}/api/editor/script.js"></script>
 
-            <cms-editor-configuration url="{{BASE_PATH}}/api/page" slot="configuration">
+            <cms-editor-configuration url="{{BASE_PATH}}/api/page" slot="configuration"
+                delete-redirect="{{BASE_PATH}}/admin/pages" delete-label="Delete page"
+                delete-message="Delete this page permanently? This cannot be undone.">
 
                 <span slot="title">Page</span>
 

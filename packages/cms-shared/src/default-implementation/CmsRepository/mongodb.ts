@@ -162,6 +162,10 @@ export class MongoCmsRepository implements CmsRepository {
         await this.pages.updateOne({ _id: id }, { $set: rest });
     }
 
+    async deletePage(id: string): Promise<void> {
+        await this.pages.deleteOne({ _id: id });
+    }
+
     async getLinks(): Promise<PageLink[]> {
         const docs = await this.pages.find(
             {},

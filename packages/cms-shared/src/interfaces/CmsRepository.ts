@@ -31,6 +31,7 @@ export interface CmsRepository {
     insertPage(path: string, title: string): Promise<void>;
     getPageById(id: string): Promise<TPage | null>;
     updatePage(page: Partial<TPage>): Promise<void>;
+    deletePage(id: string): Promise<void>;
     getLinks(): Promise<PageLink[]>
     getPagesMetadata(): Promise<{id: string, path: string, title: string, tags: string[], visible: boolean}[]>
     getTemplatesMetadata(): Promise<{id: string, identifier: string, name: string, category: string, createdAt: string}[]>

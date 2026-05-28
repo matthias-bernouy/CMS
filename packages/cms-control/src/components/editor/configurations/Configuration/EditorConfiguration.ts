@@ -13,7 +13,7 @@ import { getFormData } from "../../../../core/dom/getFormData";
 export default class EditorConfiguration extends CustomHTMLElement {
 
     static override get observedAttributes(): string[] {
-        return [ "url", "method" ]
+        return [ "url", "method", "delete-redirect", "delete-label" ]
     }
 
     constructor(){
@@ -48,7 +48,34 @@ export default class EditorConfiguration extends CustomHTMLElement {
         requestAnimationFrame(() => {
             const form = this.shadowRoot?.querySelector("form")!;
             form.addEventListener("submit", this._handleSubmit)
+            this._setupDelete()
         })
+    }
+
+    /**
+     * Wire the opt-in "Delete" button. Reused `cms-confirm-form` handles the
+     * confirm → DELETE → 409-conflict → redirect/toast flow; we only feed it
+     * the runtime values it can't template itself: the resource id (from the
+     * URL) and the list page to return to (the `delete-redirect` attribute).
+     */
+    private _setupDelete(){
+        const redirect = this.getAttribute("delete-redirect");
+        const confirmForm = this.shadowRoot?.querySelector("#delete-form");
+        if (!confirmForm || !redirect) return;
+
+        const id = new URL(window.location.href).searchParams.get("id");
+        if (!id) return;
+
+        confirmForm.setAttribute("target", `${this.url}?id=${encodeURIComponent(id)}`);
+        confirmForm.setAttribute("method", "DELETE");
+        confirmForm.setAttribute("redirect", redirect);
+        confirmForm.setAttribute("message", this.getAttribute("delete-message")
+            || "Delete this permanently? This cannot be undone.");
+
+        const label = this.getAttribute("delete-label");
+        if (label) this.shadowRoot!.querySelector("#delete-btn")!.textContent = label;
+
+        confirmForm.removeAttribute("hidden");
     }
 
     override disconnectedCallback(): void {

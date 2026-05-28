@@ -45,6 +45,7 @@ export class LocalFsCmsRepository implements CmsRepository {
     getAllPages():                             Promise<TPage[]>      { return this._pages.getAll(); }
     insertPage(path: string, title: string):   Promise<void>         { return this._pages.insert(path, title); }
     updatePage(page: Partial<TPage>):          Promise<void>         { return this._pages.update(page); }
+    deletePage(id: string):                    Promise<void>         { return this._pages.delete(id); }
     getLinks():                                Promise<PageLink[]>   { return this._pages.links(); }
     getPagesMetadata() { return this._pages.metadata(); }
     getTemplatesMetadata() { return this._templates.metadata(); }

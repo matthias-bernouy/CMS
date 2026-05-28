@@ -20194,6 +20194,13 @@ button.active svg {
 
     </form>
 
+    <!-- Opt-in: enabled only when the host carries \`delete-redirect\` (set by
+         the page/template/snippet editors). Target + redirect are wired at
+         runtime in EditorConfiguration since the resource id lives in the URL. -->
+    <cms-confirm-form id="delete-form" hidden>
+        <p9r-button id="delete-btn" fullwidth type="button" variant="ghost" color="danger">Delete</p9r-button>
+    </cms-confirm-form>
+
 </w13c-lateral-dialog>`;
 
   // src/components/editor/configurations/Configuration/style.css
@@ -20227,7 +20234,7 @@ button.active svg {
   // src/components/editor/configurations/Configuration/EditorConfiguration.ts
   class EditorConfiguration extends CustomHTMLElement {
     static get observedAttributes() {
-      return ["url", "method"];
+      return ["url", "method", "delete-redirect", "delete-label"];
     }
     constructor() {
       super(template_default16, style_default15, true);
@@ -20253,7 +20260,25 @@ button.active svg {
       requestAnimationFrame(() => {
         const form = this.shadowRoot?.querySelector("form");
         form.addEventListener("submit", this._handleSubmit);
+        this._setupDelete();
       });
+    }
+    _setupDelete() {
+      const redirect = this.getAttribute("delete-redirect");
+      const confirmForm = this.shadowRoot?.querySelector("#delete-form");
+      if (!confirmForm || !redirect)
+        return;
+      const id = new URL(window.location.href).searchParams.get("id");
+      if (!id)
+        return;
+      confirmForm.setAttribute("target", `${this.url}?id=${encodeURIComponent(id)}`);
+      confirmForm.setAttribute("method", "DELETE");
+      confirmForm.setAttribute("redirect", redirect);
+      confirmForm.setAttribute("message", this.getAttribute("delete-message") || "Delete this permanently? This cannot be undone.");
+      const label = this.getAttribute("delete-label");
+      if (label)
+        this.shadowRoot.querySelector("#delete-btn").textContent = label;
+      confirmForm.removeAttribute("hidden");
     }
     disconnectedCallback() {
       const form = this.shadowRoot?.querySelector("form");

@@ -106,6 +106,11 @@ export class InMemoryCmsRepository implements CmsRepository {
         this._pages.set(merged.path, merged);
     }
 
+    async deletePage(id: string): Promise<void> {
+        const entry = this._findPageEntryById(id);
+        if (entry) this._pages.delete(entry[0]);
+    }
+
     async getLinks(): Promise<PageLink[]> {
         return Array.from(this._pages.values()).map(p => ({
             path:  p.path,

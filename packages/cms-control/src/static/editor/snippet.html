@@ -7,7 +7,8 @@
             <link slot="style" rel="stylesheet" href="{{BASE_PATH}}/api/editor/style.css">
             <script slot="script" src="{{BASE_PATH}}/api/editor/script.js"></script>
 
-            <cms-editor-configuration url="{{BASE_PATH}}/api/snippet" slot="configuration">
+            <cms-editor-configuration url="{{BASE_PATH}}/api/snippet" slot="configuration"
+                delete-redirect="{{BASE_PATH}}/admin/snippets" delete-label="Delete snippet">
 
                 <span slot="title">Snippet</span>
 
