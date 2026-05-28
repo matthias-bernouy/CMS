@@ -1,4 +1,4 @@
-import { ICON_EYE, ICON_SAVE, ICON_TRASH } from "src/control/components/icons";
+import { ICON_EYE, ICON_SAVE, ICON_TRASH } from "cms-control/components/icons";
 
 /** Resolve `[data-icon="..."]` placeholders inside `root` to inline SVG
  *  markup from the shared icon registry. Keeps SVGs out of HTML templates. */

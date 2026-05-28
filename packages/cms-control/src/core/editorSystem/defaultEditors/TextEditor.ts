@@ -1,4 +1,4 @@
-import { BlocLibrary } from "src/control/components/editor/EditorSystem/BlocLibrary/BlocLibrary";
+import { BlocLibrary } from "cms-control/components/editor/EditorSystem/BlocLibrary/BlocLibrary";
 import { Editor } from "../Editor/Editor";
 import getClosestEditorSystem from "../../dom/editor/getClosestEditorSystem";
 import type { EDITOR_SYSTEM_MODE } from "types/w13c/EditorSystem";

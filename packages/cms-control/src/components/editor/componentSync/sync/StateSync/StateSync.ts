@@ -1,5 +1,5 @@
-import type { Component } from "src/control/core/editorSystem/Component";
-import type { Editor }    from "src/control/core/editorSystem/Editor/Editor";
+import type { Component } from "cms-control/core/editorSystem/Component";
+import type { Editor }    from "cms-control/core/editorSystem/Editor/Editor";
 import { parseValues, parseLabels, parsePlacement } from "./parseAttrs";
 import { makeStateAttrOps, type StateAttrOps }      from "./applyTargets";
 

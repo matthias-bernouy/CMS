@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { DragManager } from "src/control/components/editor/EditorSystem/DragManager";
+import { DragManager } from "cms-control/components/editor/EditorSystem/DragManager";
 
 function setRect(el: HTMLElement, top: number, height: number) {
     (el as any).getBoundingClientRect = () => ({

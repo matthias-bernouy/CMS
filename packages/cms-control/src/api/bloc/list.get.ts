@@ -1,4 +1,4 @@
-import type { ControlCms } from "src/control/ControlCms";
+import type { ControlCms } from "cms-control/ControlCms";
 
 /**
  * Lightweight bloc metadata endpoint. Returns `{id, name, group, description}`

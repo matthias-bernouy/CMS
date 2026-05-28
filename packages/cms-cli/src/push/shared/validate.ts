@@ -1,4 +1,4 @@
-import { extractRefs } from "src/socle/utils/contentRefs";
+import { extractRefs } from "@bernouy/cms-shared";
 
 export { extractRefs };
 

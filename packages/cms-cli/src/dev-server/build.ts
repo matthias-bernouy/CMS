@@ -1,8 +1,8 @@
 import { writeFile, unlink, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import type { DevBloc } from "./scan";
-import { p9rExternalsPlugin } from "src/socle/blocs/p9rExternalsPlugin";
-import { validateBloc } from "src/socle/blocs/validateBloc";
+import { p9rExternalsPlugin } from "@bernouy/cms-shared";
+import { validateBloc } from "@bernouy/cms-shared";
 
 export type BuiltBloc = {
     tag: string;
@@ -41,7 +41,7 @@ if (__Cls && !customElements.get("BE5_TAG_TO_BE_REPLACED")) {
 
 const editorWrapperSrc = (importSpec: string) => `
 import * as __mod from ${JSON.stringify(importSpec)};
-import { registerEditor } from "@bernouy/cms/editor";
+import { registerEditor } from "@bernouy/cms-control/editor";
 const __Cls = Object.values(__mod).find((v) => typeof v === "function");
 if (__Cls) registerEditor({ cl: __Cls as any });
 `;
@@ -50,7 +50,7 @@ if (__Cls) registerEditor({ cl: __Cls as any });
  *  bloc gets a default (empty) editor for parent-level actions but is marked
  *  opaque so its subtree is sealed. */
 const opaqueEditorWrapperSrc = () => `
-import { registerEditor_opaque } from "@bernouy/cms/editor";
+import { registerEditor_opaque } from "@bernouy/cms-control/editor";
 registerEditor_opaque();
 `;
 

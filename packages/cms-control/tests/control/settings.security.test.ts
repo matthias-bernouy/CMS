@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { parseSettingsUpdateDto } from "src/control/core/validation/settings/parseUpdateDto";
-import InvalidParam from "src/control/errors/Http/InvalidParam";
+import { parseSettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 describe("parseSettingsUpdateDto — security section", () => {
     test("returns empty arrays when both fields are empty strings", () => {

@@ -1,4 +1,4 @@
-import MissingParam from 'src/control/errors/Http/MissingParam';
+import MissingParam from 'cms-control/errors/Http/MissingParam';
 import { assertValidPageTitle } from './title';
 import { assertValidPagePath } from './path';
 

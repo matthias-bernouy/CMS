@@ -1,4 +1,4 @@
-import { buildRequestUrl } from 'src/control/core/dom/buildRequestUrl';
+import { buildRequestUrl } from 'cms-control/core/dom/buildRequestUrl';
 
 export type FetchOutcome =
     | { kind: 'success'; data: unknown }

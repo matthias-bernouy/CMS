@@ -1,6 +1,6 @@
-import type { DeliveryRepository } from "src/delivery/interfaces/DeliveryRepository";
-import type { HeadInjector } from "src/delivery/interfaces/HeadInjector";
-import type { AssetsManifest } from "src/delivery/core/assets/resolveAssets";
+import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
+import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";
+import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
 
 /**
  * Everything `renderPage` needs that isn't the page itself. Decoupled from

@@ -1,5 +1,5 @@
-import type { ControlCms } from "src/control/ControlCms";
-import InvalidParam from "src/control/errors/Http/InvalidParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 /**
  * Refuses an action (disable or delete a provider) that would leave no admin

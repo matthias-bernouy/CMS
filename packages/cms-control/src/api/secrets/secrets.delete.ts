@@ -1,7 +1,7 @@
-import type { ControlCms } from "src/control/ControlCms";
-import MissingParam from "src/control/errors/Http/MissingParam";
-import { deleteSecret } from "src/control/core/secrets/deleteSecret";
-import { withValidationResponse } from "src/control/core/secrets/withValidationResponse";
+import type { ControlCms } from "cms-control/ControlCms";
+import MissingParam from "cms-control/errors/Http/MissingParam";
+import { deleteSecret } from "cms-control/core/secrets/deleteSecret";
+import { withValidationResponse } from "cms-control/core/secrets/withValidationResponse";
 
 export default async function deleteSecretEndpoint(req: Request, cms: ControlCms) {
     return withValidationResponse(async () => {

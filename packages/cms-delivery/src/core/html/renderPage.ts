@@ -1,16 +1,16 @@
 import { parseHTML } from "linkedom";
-import type { TPage } from "src/socle/interfaces/models";
-import type { CacheEntry } from "src/socle/interfaces/Cache";
-import { compress } from "src/socle/server/compression";
-import { expandSnippets } from "src/delivery/core/html/expandSnippets";
-import { findUsedBlocTags } from "src/delivery/core/blocs/findUsedBlocs";
-import { buildHtmlBasics } from "src/delivery/core/head/buildHtmlBasics";
-import { buildMetaCsp } from "src/delivery/core/head/buildMetaCsp";
-import { buildAssetPreloads, buildFoucShell, buildStylesheetLink } from "src/delivery/core/head/buildAssets";
-import { buildPreconnect } from "src/delivery/core/head/buildPreconnect";
-import { buildScriptTags } from "src/delivery/core/head/buildScriptTags";
-import { defineMetaTags } from "src/delivery/core/seo/defineMetaTags";
-import type { RenderContext } from "src/delivery/core/html/RenderContext";
+import type { TPage } from "@bernouy/cms-shared";
+import type { CacheEntry } from "@bernouy/cms-shared";
+import { compress } from "@bernouy/cms-shared";
+import { expandSnippets } from "cms-delivery/core/html/expandSnippets";
+import { findUsedBlocTags } from "cms-delivery/core/blocs/findUsedBlocs";
+import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
+import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
+import { buildAssetPreloads, buildFoucShell, buildStylesheetLink } from "cms-delivery/core/head/buildAssets";
+import { buildPreconnect } from "cms-delivery/core/head/buildPreconnect";
+import { buildScriptTags } from "cms-delivery/core/head/buildScriptTags";
+import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
+import type { RenderContext } from "cms-delivery/core/html/RenderContext";
 
 /**
  * Render a page to a compressed CacheEntry. Thin orchestrator — every piece

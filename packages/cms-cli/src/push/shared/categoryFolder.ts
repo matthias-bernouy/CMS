@@ -1,4 +1,4 @@
-import { isValidCategoryFolder } from "src/socle/utils/validation";
+import { isValidCategoryFolder } from "@bernouy/cms-shared";
 
 /**
  * Snippets and templates carry a `category` whose value is the parent

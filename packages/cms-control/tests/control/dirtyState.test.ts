@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { isDirty, markDirty, clearDirty, onDirtyChange, watchForDirty } from "src/control/core/editorSystem/dirtyState";
+import { isDirty, markDirty, clearDirty, onDirtyChange, watchForDirty } from "cms-control/core/editorSystem/dirtyState";
 
 describe("dirtyState", () => {
     beforeEach(() => clearDirty());

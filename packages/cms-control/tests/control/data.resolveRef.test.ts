@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { resolveRef } from "src/control/core/data/resolveRef";
-import type { ParsedSpec } from "src/control/core/data/types";
+import { resolveRef } from "cms-control/core/data/resolveRef";
+import type { ParsedSpec } from "cms-control/core/data/types";
 
 const SPEC: ParsedSpec = {
     info: { title: "T", version: "1" },

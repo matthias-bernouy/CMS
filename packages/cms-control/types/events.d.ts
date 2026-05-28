@@ -1,4 +1,4 @@
-import type { P9RMode } from "src/socle/constants/p9r-constants";
+import type { P9RMode } from "@bernouy/cms-shared";
 
 export interface SwitchModeEvent extends CustomEvent {
     readonly detail: P9RMode;

@@ -1,6 +1,6 @@
 import { ICON_BRACES } from '../../../../../icons';
-import type { BlocActionExtension } from 'src/control/core/editorSystem/extensions/types';
-import { collectAncestorExtensions } from 'src/control/core/editorSystem/extensions/collectAncestors';
+import type { BlocActionExtension } from 'cms-control/core/editorSystem/extensions/types';
+import { collectAncestorExtensions } from 'cms-control/core/editorSystem/extensions/collectAncestors';
 
 /**
  * Single brace-style button rendered in the BAG when ≥1 ancestor of the

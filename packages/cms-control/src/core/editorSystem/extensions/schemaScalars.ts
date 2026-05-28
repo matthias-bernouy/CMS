@@ -1,4 +1,4 @@
-import type { JSONSchema } from "src/control/core/data/types";
+import type { JSONSchema } from "cms-control/core/data/types";
 
 /** Result of walking a JSON schema for scalar-addressable paths. */
 export type ScalarField = { path: string; label: string; type: string };

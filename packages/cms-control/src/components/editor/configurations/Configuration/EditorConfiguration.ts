@@ -1,8 +1,8 @@
-import { CustomHTMLElement } from "src/control/components/CustomHTMLElement";
+import { CustomHTMLElement } from "cms-control/components/CustomHTMLElement";
 
 import html from "./template.html" with { type: "text" }
 import css  from "./style.css"     with { type: "text" }
-import getClosestEditorSystem from "src/control/core/dom/editor/getClosestEditorSystem";
+import getClosestEditorSystem from "cms-control/core/dom/editor/getClosestEditorSystem";
 import type { LateralDialog } from "@bernouy/webcomponents";
 import { getFormData } from "../../../../core/dom/getFormData";
 

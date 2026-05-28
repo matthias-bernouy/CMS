@@ -1,4 +1,4 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 import template from '../view/template.html' with { type: 'text' };
 import { isLastRootBloc } from '../compute/isLastRootBloc';
 import {

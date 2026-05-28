@@ -1,5 +1,5 @@
-import type { ControlCms } from "src/control/ControlCms";
-import MissingParam from "src/control/errors/Http/MissingParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import MissingParam from "cms-control/errors/Http/MissingParam";
 
 /**
  * Returns the author-side source bundle for a bloc, used by `p9r pull` to

@@ -1,5 +1,5 @@
-import type { Editor } from '@bernouy/cms/editor';
-import getClosestEditorSystem from 'src/control/core/dom/editor/getClosestEditorSystem';
+import type { Editor } from '@bernouy/cms-control/editor';
+import getClosestEditorSystem from 'cms-control/core/dom/editor/getClosestEditorSystem';
 import { Breadcrumb } from './Breadcrumb';
 import { buildBreadcrumb } from '../../compute/breadcrumbBuilder';
 

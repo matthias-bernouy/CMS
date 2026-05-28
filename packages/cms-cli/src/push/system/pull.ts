@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fetchRemoteSystem } from "./apply";
-import type { TPageRef } from "src/socle/interfaces/models";
+import type { TPageRef } from "@bernouy/cms-shared";
 
 /**
  * Fetch the remote system snapshot and write `<siteDir>/system.json`

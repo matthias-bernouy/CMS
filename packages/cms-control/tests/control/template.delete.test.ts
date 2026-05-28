@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import deleteTemplate from "src/control/api/template/template.delete";
+import deleteTemplate from "cms-control/api/template/template.delete";
 
 function makeSystem() {
     const deleteCalls: string[] = [];

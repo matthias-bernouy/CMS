@@ -1,5 +1,5 @@
-import type { ControlCms } from "src/control/ControlCms";
-import MissingParam from "src/control/errors/Http/MissingParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import MissingParam from "cms-control/errors/Http/MissingParam";
 
 /** GET /api/pats — the current user's personal access tokens (no secrets).
  *  Scoped to the caller's `sub`; never lists another user's tokens. Dates are

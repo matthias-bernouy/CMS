@@ -1,5 +1,5 @@
-import type { ControlCms } from "src/control/ControlCms";
-import MissingParam from "src/control/errors/Http/MissingParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import MissingParam from "cms-control/errors/Http/MissingParam";
 
 export default async function getPage(req: Request, cms: ControlCms) {
 

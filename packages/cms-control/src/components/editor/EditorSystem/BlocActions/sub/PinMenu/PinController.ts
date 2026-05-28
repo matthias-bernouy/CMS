@@ -1,4 +1,4 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 import type { StateSync } from '../../../../componentSync/sync/StateSync/StateSync';
 import { PinMenu, type PinMenuRow } from './PinMenu';
 import { refreshPinButton } from './refreshPinButton';

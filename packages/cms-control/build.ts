@@ -1,5 +1,5 @@
 import { rmSync } from "node:fs";
-import prebuildControl from "src/control/prebuildControl";
+import prebuildControl from "cms-control/prebuildControl";
 
 
 // Pre-build: bundle the admin control-components IIFE

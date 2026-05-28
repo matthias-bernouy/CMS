@@ -1,0 +1,17 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir":  "dist",
+        "rootDir": "./src",
+        "baseUrl": "./src",
+        "paths": {
+            "cms-delivery/*": ["./*"]
+        },
+        "resolveJsonModule": true
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../core" },
+        { "path": "../cms-shared" }
+    ]
+}

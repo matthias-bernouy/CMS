@@ -1,4 +1,4 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 import { InsertButton } from './InsertButton';
 import { positionInsertButtons } from '../../compute/insertButtonPosition';
 import { resolveActionBarAnchor } from '../../compute/anchor';

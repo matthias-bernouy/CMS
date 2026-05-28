@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { collectAncestorExtensions } from "src/control/core/editorSystem/extensions/collectAncestors";
-import type { RichTextBarExtension } from "src/control/core/editorSystem/extensions/types";
+import { collectAncestorExtensions } from "cms-control/core/editorSystem/extensions/collectAncestors";
+import type { RichTextBarExtension } from "cms-control/core/editorSystem/extensions/types";
 
 // Tests use `label` as a stable identity probe — it's a getter returning the
 // extension's own name, which lets us assert ordering by reading `e.label()`.

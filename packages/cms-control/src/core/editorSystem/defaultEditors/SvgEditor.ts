@@ -1,5 +1,5 @@
-import type { MediaCenter } from "src/control/components/editor/MediaCenter/MediaCenter";
-import { sanitizeSvg } from "src/control/components/editor/componentSync/sync/SvgSync/sanitize";
+import type { MediaCenter } from "cms-control/components/editor/MediaCenter/MediaCenter";
+import { sanitizeSvg } from "cms-control/components/editor/componentSync/sync/SvgSync/sanitize";
 import { Editor } from "../Editor/Editor";
 
 const cssStyle = `

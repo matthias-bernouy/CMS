@@ -1,5 +1,5 @@
-import type { CmsFilesMetadataRepository, FileItem } from "src/socle/interfaces/CmsFilesMetadataRepository";
-import type { CmsFilesBlobStore } from "src/socle/interfaces/CmsFilesBlobStore";
+import type { CmsFilesMetadataRepository, FileItem } from "@bernouy/cms-shared";
+import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
 
 /**
  * Upload a file: create its metadata record (which mints the id), then store

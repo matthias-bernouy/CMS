@@ -1,7 +1,7 @@
-import type { ControlCms } from "src/control/ControlCms";
-import { readJsonBody } from "src/control/core/http/readJsonBody";
-import { parseSettingsUpdateDto } from "src/control/core/validation/settings/parseUpdateDto";
-import { updateSettings } from "src/control/core/settings/updateSettings";
+import type { ControlCms } from "cms-control/ControlCms";
+import { readJsonBody } from "cms-control/core/http/readJsonBody";
+import { parseSettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
+import { updateSettings } from "cms-control/core/settings/updateSettings";
 
 export default async function postSettings(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);

@@ -1,5 +1,5 @@
-import getClosestEditorSystem from "src/control/core/dom/editor/getClosestEditorSystem";
-import resolveApiUrl from "src/control/core/dom/meta/resolveApiUrl";
+import getClosestEditorSystem from "cms-control/core/dom/editor/getClosestEditorSystem";
+import resolveApiUrl from "cms-control/core/dom/meta/resolveApiUrl";
 import type { MediaCenter } from "../../../MediaCenter/MediaCenter";
 import type { PageRef } from "../PageLink.picker";
 

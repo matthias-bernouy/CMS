@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
-import putSnippet from "src/control/api/snippet/snippet.put";
-import { P9R_CACHE } from "src/socle/constants/p9r-constants";
-import type { TPage, TSnippet } from "src/socle/interfaces/models";
+import putSnippet from "cms-control/api/snippet/snippet.put";
+import { P9R_CACHE } from "@bernouy/cms-shared";
+import type { TPage, TSnippet } from "@bernouy/cms-shared";
 
 function makeSystem(opts: {
     updatedSnippet?: TSnippet | null;

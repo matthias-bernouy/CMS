@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { categoryToFolder } from "src/cli/push/shared/categoryFolder";
+import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 

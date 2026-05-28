@@ -1,7 +1,7 @@
 import type { Runner } from "@bernouy/core";
 import { BunRunner } from "@bernouy/runner-bun";
-import type { Cache } from "src/socle/interfaces/Cache";
-import { DeliveryCache } from "src/delivery/core/DeliveryCache";
+import type { Cache } from "@bernouy/cms-shared";
+import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
 import type { DeliveryRepository } from "./interfaces/DeliveryRepository";
 import type { HeadInjector } from "./interfaces/HeadInjector";
 
@@ -34,10 +34,9 @@ export type DeliveryCmsConfig = {
  * repository; Delivery does not maintain a route registry, so new pages
  * written admin-side are visible immediately (subject to cache invalidation).
  *
- * Image variants + srcset rewrites are produced at **build time** by
- * `DeliveryBuilder` (see `src/delivery/build/`), which uploads variant
- * bytes to the CDN and ships pre-enhanced HTML. Runtime Delivery only
- * serves the cached output.
+ * Runtime-only: every request renders fresh through `handlePageRequest`
+ * and caches. A build-time pre-render / image-variant pipeline used to
+ * live alongside this package and was removed during the CmsCore refocus.
  *
  * Path layout for one Delivery instance:
  *   <basePath>/                — user pages, served by the default endpoint

@@ -3,7 +3,7 @@ import {
     isValidPathFormat,
     isValidSnippetIdentifier,
     isValidCustomElementTag,
-} from "src/socle/utils/validation";
+} from "@bernouy/cms-shared";
 
 describe("isValidPathFormat", () => {
     test("accepts root", () => {

@@ -1,4 +1,4 @@
-import { buildCspContent, type CspExtras } from "src/socle/server/buildCspContent";
+import { buildCspContent, type CspExtras } from "@bernouy/cms-shared";
 
 /**
  * Inject the page's `Content-Security-Policy` as a `<meta http-equiv>` tag

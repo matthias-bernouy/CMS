@@ -1,5 +1,5 @@
-import BubblesEvent from "src/control/core/dom/BubblesEvent";
-import { buildRequestUrl } from "src/control/core/dom/buildRequestUrl";
+import BubblesEvent from "cms-control/core/dom/BubblesEvent";
+import { buildRequestUrl } from "cms-control/core/dom/buildRequestUrl";
 import type CmsForm from "../Form";
 
 

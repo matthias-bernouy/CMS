@@ -2,7 +2,7 @@ import { randomUUIDv7 } from "bun";
 import type {
     CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem,
     FilesListOptions, FilesPage, NewFolder, NewFile, ItemPatch,
-} from "src/socle/interfaces/CmsFilesMetadataRepository";
+} from "cms-shared/interfaces/CmsFilesMetadataRepository";
 
 /**
  * In-memory `CmsFilesMetadataRepository` for local dev and tests. No

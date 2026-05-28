@@ -1,4 +1,4 @@
-import type { ControlCms } from "src/control/ControlCms";
+import type { ControlCms } from "cms-control/ControlCms";
 
 /**
  * Replace `<w13c-snippet identifier="...">...</w13c-snippet>` wrappers with

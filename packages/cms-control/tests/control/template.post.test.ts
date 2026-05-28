@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import postTemplate from "src/control/api/template/template.post";
-import type { TTemplate } from "src/socle/interfaces/models";
+import postTemplate from "cms-control/api/template/template.post";
+import type { TTemplate } from "@bernouy/cms-shared";
 
 function makeSystem() {
     const createCalls: Omit<TTemplate, "id">[] = [];

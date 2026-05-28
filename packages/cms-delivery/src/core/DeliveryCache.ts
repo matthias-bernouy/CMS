@@ -1,4 +1,4 @@
-import type { Cache, CacheEntry } from "src/socle/interfaces/Cache";
+import type { Cache, CacheEntry } from "@bernouy/cms-shared";
 
 /**
  * In-memory cache scoped to the Delivery process. Stores pre-compressed

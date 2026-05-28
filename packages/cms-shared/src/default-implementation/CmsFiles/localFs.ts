@@ -3,8 +3,8 @@ import { join } from "node:path";
 import type {
     CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem,
     FilesListOptions, FilesPage, NewFolder, NewFile, ItemPatch,
-} from "src/socle/interfaces/CmsFilesMetadataRepository";
-import type { BlobInput, CmsFilesBlobStore } from "src/socle/interfaces/CmsFilesBlobStore";
+} from "cms-shared/interfaces/CmsFilesMetadataRepository";
+import type { BlobInput, CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
 
 /**
  * Filesystem-native files store for local dev (`p9r dev`): the `<root>` dir IS

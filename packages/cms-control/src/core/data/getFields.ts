@@ -1,4 +1,4 @@
-import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
+import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
 /**
  * Browser-side helper for consumer bloc editors. Resolves the response

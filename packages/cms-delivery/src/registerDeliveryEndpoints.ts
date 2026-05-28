@@ -1,11 +1,11 @@
-import type DeliveryCms from "src/delivery/DeliveryCms";
-import BlocServer      from "src/delivery/endpoints/bloc.server";
-import StyleServer     from "src/delivery/endpoints/style.server";
-import RobotsServer    from "src/delivery/endpoints/robots.txt.server";
-import SitemapServer   from "src/delivery/endpoints/sitemap.xml.server";
-import FaviconServer   from "src/delivery/endpoints/assets/favicon.server";
-import ComponentServer from "src/delivery/endpoints/assets/component.server";
-import { handlePageRequest } from "src/delivery/core/pages/handlePageRequest";
+import type DeliveryCms from "cms-delivery/DeliveryCms";
+import BlocServer      from "cms-delivery/endpoints/bloc.server";
+import StyleServer     from "cms-delivery/endpoints/style.server";
+import RobotsServer    from "cms-delivery/endpoints/robots.txt.server";
+import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
+import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
+import ComponentServer from "cms-delivery/endpoints/assets/component.server";
+import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Routes are registered

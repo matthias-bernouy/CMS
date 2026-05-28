@@ -1,4 +1,4 @@
-import type { JSONSchema } from "src/control/core/data/types";
+import type { JSONSchema } from "cms-control/core/data/types";
 
 /**
  * Surface = an editor-side UI affordance that blocs extend by publishing

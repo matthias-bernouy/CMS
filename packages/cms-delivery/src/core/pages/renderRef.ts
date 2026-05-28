@@ -1,6 +1,6 @@
-import type DeliveryCms from "src/delivery/DeliveryCms";
-import { renderPage } from "src/delivery/core/html/renderPage";
-import { makeRuntimeRenderContext } from "src/delivery/core/html/runtimeContext";
+import type DeliveryCms from "cms-delivery/DeliveryCms";
+import { renderPage } from "cms-delivery/core/html/renderPage";
+import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 
 /**
  * Render the configured fallback page for `site.notFound` / `site.serverError`

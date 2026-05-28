@@ -1,23 +1,23 @@
 // `p9r dev` is the local development entry point. Flag the runtime so the
 // socle's security headers (CSP, COOP) downgrade to Report-Only and the
 // asset cache is bypassed — both already gated on `MODE === "DEV"`. Set
-// before the lazy-evaluated helpers in `src/socle/server/compression.ts`
+// before the lazy-evaluated helpers in `@bernouy/cms-shared/server/compression`
 // observe it (they read at call time, not at import time).
 process.env.MODE = "DEV";
 
 import { relative } from "node:path";
 import { BunRunner } from "@bernouy/runner-bun";
-import { ControlCms } from "src/control/ControlCms";
-import { P9R_CACHE } from "src/socle/constants/p9r-constants";
-import { InMemoryAuthentication } from "../../tests/human/InMemoryAuthentication";
+import { ControlCms } from "@bernouy/cms-control";
+import { P9R_CACHE } from "@bernouy/cms-shared";
+import { InMemoryAuthentication } from "@bernouy/cms-control";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
-import { LocalFsCmsFiles } from "../socle/default-implementation/CmsFiles/localFs";
+import { LocalFsCmsFiles } from "@bernouy/cms-shared";
 import { InMemoryUsersRepository } from "@bernouy/auth-core";
 import { InMemoryIdentityProviderRepository } from "@bernouy/auth-core";
-import type { CMS_ROLES } from "types/roles";
+import type { CMS_ROLES } from "@bernouy/cms-shared";
 import { loadPushConfig } from "./push/shared/config";
 
 function parseFlags(args: string[]): { port: number; host: string } {

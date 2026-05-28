@@ -1,4 +1,4 @@
-import type { AssetsManifest } from "src/delivery/core/assets/resolveAssets";
+import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
 
 /**
  * Preload the stylesheet + every bloc/runtime script as early as possible.

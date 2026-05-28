@@ -1,7 +1,7 @@
-import type { ControlCms } from "src/control/ControlCms";
-import { P9R_CACHE } from "src/socle/constants/p9r-constants";
-import { invalidateAllPages } from "src/control/core/server/cache/invalidation";
-import type { SettingsUpdateDto } from "src/control/core/validation/settings/parseUpdateDto";
+import type { ControlCms } from "cms-control/ControlCms";
+import { P9R_CACHE } from "@bernouy/cms-shared";
+import { invalidateAllPages } from "cms-control/core/server/cache/invalidation";
+import type { SettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
 
 /**
  * Persist a settings update. Theme CSS is served at `/style` keyed by

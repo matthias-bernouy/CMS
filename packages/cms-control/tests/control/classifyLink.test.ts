@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { classifyLink } from "src/control/core/editorSystem/classifyLink";
+import { classifyLink } from "cms-control/core/editorSystem/classifyLink";
 
 const ORIGIN = "https://cms.example.com";
 const PAGES = new Set(["/", "/about", "/blog/post-1"]);

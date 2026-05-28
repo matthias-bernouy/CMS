@@ -1,4 +1,4 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 import type EditorRoot from '../../EditorRoot/EditorRoot';
 import { ancestorChain, collapseChain } from './ancestorChain';
 import type { BreadcrumbItem } from '../sub/Breadcrumb/Breadcrumb';

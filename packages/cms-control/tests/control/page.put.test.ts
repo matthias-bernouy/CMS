@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import putPage from "src/control/api/page/page.put";
-import type { TPage } from "src/socle/interfaces/models";
+import putPage from "cms-control/api/page/page.put";
+import type { TPage } from "@bernouy/cms-shared";
 
 function makeSystem(opts: { existing?: TPage | null } = {}) {
     const updateCalls: TPage[] = [];

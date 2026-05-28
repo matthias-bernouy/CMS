@@ -1,5 +1,5 @@
-import { collectAncestorExtensions } from "src/control/core/editorSystem/extensions/collectAncestors";
-import type { RichTextBarExtension } from "src/control/core/editorSystem/extensions/types";
+import { collectAncestorExtensions } from "cms-control/core/editorSystem/extensions/collectAncestors";
+import type { RichTextBarExtension } from "cms-control/core/editorSystem/extensions/types";
 import type { RichTextBar } from "../RichTextBar";
 import { buildBraceButton, buildGroup } from "./render";
 import { pickField } from "./pick";

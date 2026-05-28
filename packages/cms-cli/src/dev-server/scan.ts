@@ -1,7 +1,7 @@
 import { readdir, stat, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
-import { folderToCategory } from "src/cli/push/shared/categoryFolder";
+import { folderToCategory } from "cms-cli/push/shared/categoryFolder";
 
 export type BlocManifest = {
     runtime?: string;

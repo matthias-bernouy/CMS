@@ -1,4 +1,4 @@
-import { isValidCustomElementTag } from "src/socle/utils/validation";
+import { isValidCustomElementTag } from "cms-shared/utils/validation";
 
 /**
  * Inputs passed to `validateBloc`. All HTML/source fields are optional —

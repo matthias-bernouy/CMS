@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { collectDataFields } from "src/control/core/editorSystem/extensions/collectDataFields";
-import type { DataExtension } from "src/control/core/editorSystem/extensions/types";
-import type { JSONSchema } from "src/control/core/data/types";
+import { collectDataFields } from "cms-control/core/editorSystem/extensions/collectDataFields";
+import type { DataExtension } from "cms-control/core/editorSystem/extensions/types";
+import type { JSONSchema } from "cms-control/core/data/types";
 
 function resetDom() {
     document.body.querySelectorAll("*").forEach((n) => {

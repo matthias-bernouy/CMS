@@ -1,10 +1,10 @@
 import html from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
-import { Component } from 'src/control/core/editorSystem/Component';
+import { Component } from 'cms-control/core/editorSystem/Component';
 
-import "src/control/components/media/CardMedia/CardMedia";
-import type { MediaItem, BreadcrumbEntry } from "src/control/components/media/GridMedia/types";
-import { uploadFiles, createFolder, fetchItems, type LocalTypeFilter } from "src/control/components/media/GridMedia/api";
+import "cms-control/components/media/CardMedia/CardMedia";
+import type { MediaItem, BreadcrumbEntry } from "cms-control/components/media/GridMedia/types";
+import { uploadFiles, createFolder, fetchItems, type LocalTypeFilter } from "cms-control/components/media/GridMedia/api";
 import { renderBreadcrumb, renderGrid } from '../../media/GridMedia/view/render';
 
 export class MediaCenter extends Component {

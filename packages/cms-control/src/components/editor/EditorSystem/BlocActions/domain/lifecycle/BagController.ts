@@ -1,10 +1,10 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 import css from '../../view/style.css' with { type: 'text' };
 import type { VAnchor } from '../../compute/groupPosition';
 import { findParentEditor } from '../../compute/ancestorChain';
 import { renderActionBar } from '../renderActionBar';
 import { mountLinkSection } from '../mountLinkSection';
-import { onActiveLinkChange } from 'src/control/core/editorSystem/editorContext';
+import { onActiveLinkChange } from 'cms-control/core/editorSystem/editorContext';
 import { refreshPinButton } from '../../sub/PinMenu/refreshPinButton';
 import { BreadcrumbController } from '../../sub/Breadcrumb/BreadcrumbController';
 import { InsertButtonsController } from '../../sub/InsertButton/InsertButtonsController';
@@ -15,7 +15,7 @@ import { switchToEditor, selectParent } from './navigate';
 import { reflow } from './reflow';
 import { open as openBag } from './open';
 import { Highlight } from '../../../Highlight';
-import getClosestEditorSystem from 'src/control/core/dom/editor/getClosestEditorSystem';
+import getClosestEditorSystem from 'cms-control/core/dom/editor/getClosestEditorSystem';
 
 /**
  * Owns BAG's runtime state + sub-controllers. The custom element class is

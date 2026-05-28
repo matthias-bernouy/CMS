@@ -1,5 +1,5 @@
-import type { ControlCms } from "src/control/ControlCms";
-import type { FilesItemType, FilesListOptions } from "src/socle/interfaces/CmsFilesMetadataRepository";
+import type { ControlCms } from "cms-control/ControlCms";
+import type { FilesItemType, FilesListOptions } from "@bernouy/cms-shared";
 
 /** GET /api/files?parentId=&accept=&search=&sortBy=&sortOrder=&page=&limit=
  *  List the direct children of a folder (no `parentId` = root). */

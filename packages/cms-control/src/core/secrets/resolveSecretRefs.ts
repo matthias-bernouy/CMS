@@ -1,5 +1,5 @@
-import type { SecretStore } from "src/socle/interfaces/SecretStore";
-import { SecretNotFound } from "src/control/errors/SecretNotFound";
+import type { SecretStore } from "@bernouy/cms-shared";
+import { SecretNotFound } from "cms-control/errors/SecretNotFound";
 
 /**
  * Pattern matching an env-var-style secret reference. Mirrors the picker's

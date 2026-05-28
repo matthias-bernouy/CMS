@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { SyncPanel } from "src/control/components/editor/componentSync/SyncPanel";
+import { SyncPanel } from "cms-control/components/editor/componentSync/SyncPanel";
 
 describe("ConfigPanel", () => {
     let panel: SyncPanel;

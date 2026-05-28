@@ -1,5 +1,5 @@
-import type { CmsRepository, BlocListItemResponse, PageLink } from "src/socle/interfaces/CmsRepository";
-import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
+import type { CmsRepository, BlocListItemResponse, PageLink } from "@bernouy/cms-shared";
+import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "@bernouy/cms-shared";
 import type { BuiltBloc } from "../build";
 import { PagesStore } from "./pages";
 import { SnippetsStore } from "./snippets";

@@ -1,4 +1,4 @@
-import MissingParam from 'src/control/errors/Http/MissingParam';
+import MissingParam from 'cms-control/errors/Http/MissingParam';
 import { assertValidTemplateId } from './id';
 import { assertValidTemplateName } from './name';
 import { sanitizeTemplateCategory } from './category';

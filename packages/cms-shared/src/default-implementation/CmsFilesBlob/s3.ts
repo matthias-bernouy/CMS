@@ -1,5 +1,5 @@
 import { S3Client } from "bun";
-import type { BlobInput, CmsFilesBlobStore } from "src/socle/interfaces/CmsFilesBlobStore";
+import type { BlobInput, CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
 
 /**
  * S3-compatible `CmsFilesBlobStore` (AWS S3 / OVH Object Storage / Cloudflare R2

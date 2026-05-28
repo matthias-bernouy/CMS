@@ -1,6 +1,6 @@
-import type { DataExtension, RichTextBarExtension } from "src/control/core/editorSystem/extensions";
-import { collectAncestorExtensions, flattenScalars } from "src/control/core/editorSystem/extensions";
-import { ICON_DATABASE } from "src/control/components/icons";
+import type { DataExtension, RichTextBarExtension } from "cms-control/core/editorSystem/extensions";
+import { collectAncestorExtensions, flattenScalars } from "cms-control/core/editorSystem/extensions";
+import { ICON_DATABASE } from "cms-control/components/icons";
 
 /**
  * Synthesize one virtual `RichTextBarExtension` per ancestor data

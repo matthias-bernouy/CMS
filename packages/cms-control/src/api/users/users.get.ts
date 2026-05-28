@@ -1,4 +1,4 @@
-import type { ControlCms } from "src/control/ControlCms";
+import type { ControlCms } from "cms-control/ControlCms";
 import type { UsersListOptions } from "@bernouy/auth-core";
 
 /** GET /api/users?role= — the admin user list (authz membership). `role` is an

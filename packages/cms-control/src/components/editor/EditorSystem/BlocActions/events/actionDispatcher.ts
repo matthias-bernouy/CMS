@@ -1,4 +1,4 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 
 export type ActionDeps = {
     editor: () => Editor | null;

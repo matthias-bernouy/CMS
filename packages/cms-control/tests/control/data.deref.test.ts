@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { deref } from "src/control/core/data/helpers/deref";
-import type { ParsedSpec } from "src/control/core/data/types";
+import { deref } from "cms-control/core/data/helpers/deref";
+import type { ParsedSpec } from "cms-control/core/data/types";
 
 const SPEC = (over: Partial<ParsedSpec["components"]["schemas"]> = {}): ParsedSpec => ({
     info: { title: "T", version: "1" },

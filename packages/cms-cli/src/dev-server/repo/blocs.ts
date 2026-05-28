@@ -1,6 +1,6 @@
-import type { BlocListItemResponse } from "src/socle/interfaces/CmsRepository";
+import type { BlocListItemResponse } from "@bernouy/cms-shared";
 import type { BuiltBloc } from "../build";
-import { bundleBlocSource } from "src/cli/push/blocs/bundle";
+import { bundleBlocSource } from "cms-cli/push/blocs/bundle";
 
 /**
  * Filesystem-backed bloc store. Reads from a shared `built` map populated

@@ -1,6 +1,6 @@
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import type { BlobInput, CmsFilesBlobStore } from "src/socle/interfaces/CmsFilesBlobStore";
+import type { BlobInput, CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
 
 /**
  * Local-filesystem `CmsFilesBlobStore`: one flat file per key under `root`

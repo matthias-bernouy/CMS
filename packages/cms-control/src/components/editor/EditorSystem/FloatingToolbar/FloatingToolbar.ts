@@ -1,9 +1,9 @@
 import "@bernouy/webcomponents";
 import html from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
-import { Component } from "@bernouy/cms/component";
-import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
-import getClosestEditorSystem from "src/control/core/dom/editor/getClosestEditorSystem";
+import { Component } from "@bernouy/cms-control/component";
+import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
+import getClosestEditorSystem from "cms-control/core/dom/editor/getClosestEditorSystem";
 
 export class FloatingToolbar extends Component {
 

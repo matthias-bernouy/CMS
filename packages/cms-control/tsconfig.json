@@ -5,11 +5,11 @@
         "rootDir":  ".",
         "baseUrl":  ".",
         "paths": {
-            "@bernouy/cms":           ["index.ts"],
-            "@bernouy/cms/component": ["component.ts"],
-            "@bernouy/cms/editor":    ["editor.ts"],
-            "@bernouy/cms/data":      ["data.ts"],
-            "@bernouy/cms/repository": ["repository.ts"]
+            "@bernouy/cms-control":           ["index.ts"],
+            "@bernouy/cms-control/component": ["component.ts"],
+            "@bernouy/cms-control/editor":    ["editor.ts"],
+            "@bernouy/cms-control/data":      ["data.ts"],
+            "cms-control/*":                  ["src/*"]
         }
     },
     "include": [
@@ -19,7 +19,6 @@
         "component.ts",
         "editor.ts",
         "data.ts",
-        "repository.ts",
         "build.ts",
         "types/**/*.ts",
         "tests/**/*.ts"
@@ -27,6 +26,7 @@
     "references": [
         { "path": "../core" },
         { "path": "../runner-bun" },
-        { "path": "../auth-core" }
+        { "path": "../auth-core" },
+        { "path": "../cms-shared" }
     ]
 }

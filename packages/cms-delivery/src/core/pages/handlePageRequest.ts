@@ -1,10 +1,10 @@
-import type DeliveryCms from "src/delivery/DeliveryCms";
-import type { TPage } from "src/socle/interfaces/models";
-import { cachedResponseAsync } from "src/socle/server/compression";
-import { renderPage } from "src/delivery/core/html/renderPage";
-import { makeRuntimeRenderContext } from "src/delivery/core/html/runtimeContext";
-import { renderRef } from "src/delivery/core/pages/renderRef";
-import { P9R_CACHE } from "src/socle/constants/p9r-constants";
+import type DeliveryCms from "cms-delivery/DeliveryCms";
+import type { TPage } from "@bernouy/cms-shared";
+import { cachedResponseAsync } from "@bernouy/cms-shared";
+import { renderPage } from "cms-delivery/core/html/renderPage";
+import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
+import { renderRef } from "cms-delivery/core/pages/renderRef";
+import { P9R_CACHE } from "@bernouy/cms-shared";
 
 /**
  * Shared entry point for every dynamic page GET registered by Delivery.

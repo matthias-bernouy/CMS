@@ -12,5 +12,5 @@
  * `getFields`) live in `@bernouy/cms/data` so bun bundles them inline
  * per bloc — cheaper than going through the global mechanism.
  */
-export { Editor } from "src/control/core/editorSystem/Editor/Editor";
-export { registerEditor, registerEditor_opaque } from "src/control/core/editorSystem/registerEditor";
+export { Editor } from "./src/core/editorSystem/Editor/Editor";
+export { registerEditor, registerEditor_opaque } from "./src/core/editorSystem/registerEditor";

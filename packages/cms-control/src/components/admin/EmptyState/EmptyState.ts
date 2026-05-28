@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms/component";
+import { Component } from "@bernouy/cms-control/component";
 
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };

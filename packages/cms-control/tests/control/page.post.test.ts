@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import postPage from "src/control/api/page/page.post";
+import postPage from "cms-control/api/page/page.post";
 
 function makeSystem() {
     const insertCalls: { path: string; title: string }[] = [];

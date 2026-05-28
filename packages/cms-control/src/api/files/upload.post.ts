@@ -1,6 +1,6 @@
-import type { ControlCms } from "src/control/ControlCms";
-import { uploadFile } from "src/control/core/files/uploadFile";
-import InvalidParam from "src/control/errors/Http/InvalidParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import { uploadFile } from "cms-control/core/files/uploadFile";
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 /** POST /api/files/upload (multipart: `file` + optional `parentId`) — store a
  *  file's bytes and create its metadata record. */

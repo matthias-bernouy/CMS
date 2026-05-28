@@ -1,5 +1,5 @@
-import { isValidPathFormat } from 'src/socle/utils/validation';
-import InvalidParam from 'src/control/errors/Http/InvalidParam';
+import { isValidPathFormat } from '@bernouy/cms-shared';
+import InvalidParam from 'cms-control/errors/Http/InvalidParam';
 
 export function assertValidPagePath(value: unknown): asserts value is string {
     if (typeof value !== 'string' || !isValidPathFormat(value)) {

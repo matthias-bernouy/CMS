@@ -1,5 +1,5 @@
-import type { RichTextBarExtension, Field } from "src/control/core/editorSystem/extensions/types";
-import { ICON_BRACES } from "src/control/components/icons";
+import type { RichTextBarExtension, Field } from "cms-control/core/editorSystem/extensions/types";
+import { ICON_BRACES } from "cms-control/components/icons";
 
 /** The single, generic `{ }` button rendered on the bar when ≥1 extension is
  *  scoped at the caret. The popover (built by `buildGroup`) opens below it. */

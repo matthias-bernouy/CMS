@@ -1,6 +1,6 @@
-import { Component } from "@bernouy/cms/component";
-import { Editor, registerEditor, registerEditor_opaque } from "@bernouy/cms/editor";
-import { P9R_ATTR } from "src/socle/constants/editorAttributes";
+import { Component } from "@bernouy/cms-control/component";
+import { Editor, registerEditor, registerEditor_opaque } from "@bernouy/cms-control/editor";
+import { P9R_ATTR } from "@bernouy/cms-shared";
 import { showToast } from "../core/showToast";
 
 

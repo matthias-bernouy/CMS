@@ -1,8 +1,8 @@
-import type { ControlCms } from "src/control/ControlCms";
+import type { ControlCms } from "cms-control/ControlCms";
 import type { IdentityProviderPatch } from "@bernouy/auth-core";
-import { readJsonBody } from "src/control/core/http/readJsonBody";
-import MissingParam from "src/control/errors/Http/MissingParam";
-import InvalidParam from "src/control/errors/Http/InvalidParam";
+import { readJsonBody } from "cms-control/core/http/readJsonBody";
+import MissingParam from "cms-control/errors/Http/MissingParam";
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import { assertAdminReachableAfterRemoving } from "./_adminReachability";
 
 /** PATCH /api/identity/provider { id, ...fields } — update a provider. Used by

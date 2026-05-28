@@ -18,7 +18,7 @@ export const p9rExternalsPlugin: BunPlugin = {
         build.onLoad(
             { filter: /.*/, namespace: "p9r-extern" },
             (args) => {
-                if (args.path === "@bernouy/cms/component") {
+                if (args.path === "@bernouy/cms-control/component") {
                     return {
                         contents: `export const Component = window.p9r.Component;`,
                         loader: "js",

@@ -1,4 +1,4 @@
-import type { RichTextBarExtension, Field, PickContext } from "src/control/core/editorSystem/extensions/types";
+import type { RichTextBarExtension, Field, PickContext } from "cms-control/core/editorSystem/extensions/types";
 import type { RichTextBar } from "../RichTextBar";
 
 /** Restores the saved selection, calls `ext.onPick()` to get the text to

@@ -1,13 +1,13 @@
 import type { Runner } from "@bernouy/core";
 import { extname } from "node:path";
-import type { Cache } from "src/socle/interfaces/Cache";
+import type { Cache } from "@bernouy/cms-shared";
 import {
     cachedResponseAsync,
     compress,
     publicAssetCacheControl,
     securityHeaders,
-} from "src/socle/server/compression";
-import type { CspExtras } from "src/socle/server/buildCspContent";
+} from "@bernouy/cms-shared";
+import type { CspExtras } from "@bernouy/cms-shared";
 import { scanStaticFolder } from "./scanStaticFolder";
 import prepareHtml from "./prepareHtml";
 

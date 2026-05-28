@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { ExtensionRegistry } from "src/control/core/editorSystem/extensions/registry";
-import type { RichTextBarExtension } from "src/control/core/editorSystem/extensions/types";
+import { ExtensionRegistry } from "cms-control/core/editorSystem/extensions/registry";
+import type { RichTextBarExtension } from "cms-control/core/editorSystem/extensions/types";
 
 function rtb(name: string): RichTextBarExtension {
     return { label: () => name, getCompletions: () => [], onPick: () => "" };

@@ -7,4 +7,4 @@
  * ObserverManager, …) is reachable from this entry — even transitively — so
  * the bundle that visitors download never contains editor code.
  */
-export { Component } from "src/control/core/editorSystem/Component";
+export { Component } from "./src/core/editorSystem/Component";

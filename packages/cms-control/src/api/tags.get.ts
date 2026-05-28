@@ -1,4 +1,4 @@
-import type { ControlCms } from "src/control/ControlCms";
+import type { ControlCms } from "cms-control/ControlCms";
 
 /**
  * Returns the list of tags (pages) or categories (snippets/templates)

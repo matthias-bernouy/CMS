@@ -1,7 +1,7 @@
-import { getMetaApiPath } from 'src/control/core/dom/meta/getMetaApiPath';
+import { getMetaApiPath } from 'cms-control/core/dom/meta/getMetaApiPath';
 import type { BlocMeta, SnippetItem, TemplateItem } from './types';
-import resolveApiUrl from 'src/control/core/dom/meta/resolveApiUrl';
-import type { BlocListItemResponse } from 'src/socle/interfaces/CmsRepository';
+import resolveApiUrl from 'cms-control/core/dom/meta/resolveApiUrl';
+import type { BlocListItemResponse } from '@bernouy/cms-shared';
 
 async function fetchJson<T>(path: string, fallback: T): Promise<T> {
     try {

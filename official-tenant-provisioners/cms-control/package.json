@@ -9,7 +9,7 @@
         "./constants": "./src/constants.ts"
     },
     "dependencies": {
-        "@bernouy/cms":               "workspace:*",
+        "@bernouy/cms-control": "workspace:*",
         "@bernouy/tenant-provisioner-sdk": "workspace:*",
         "mongodb": "^7.2.0",
         "zod": "^4.4.3"

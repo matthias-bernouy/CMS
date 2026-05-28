@@ -1,7 +1,7 @@
-import type DeliveryCms from "src/delivery/DeliveryCms";
-import { cachedResponseAsync, publicAssetCacheControl } from "src/socle/server/compression";
-import { generateBlocEntry } from "src/delivery/core/blocs/buildBloc";
-import { P9R_CACHE } from "src/socle/constants/p9r-constants";
+import type DeliveryCms from "cms-delivery/DeliveryCms";
+import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/cms-shared";
+import { generateBlocEntry } from "cms-delivery/core/blocs/buildBloc";
+import { P9R_CACHE } from "@bernouy/cms-shared";
 
 export default async function BlocServer(req: Request, delivery: DeliveryCms){
 

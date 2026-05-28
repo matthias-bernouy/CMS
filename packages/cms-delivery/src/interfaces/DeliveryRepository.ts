@@ -1,4 +1,4 @@
-import type { TPage, TSnippet, TSystem } from "src/socle/interfaces/models";
+import type { TPage, TSnippet, TSystem } from "@bernouy/cms-shared";
 
 /**
  * Read-only data contract consumed by the Delivery layer. Mirrors the subset

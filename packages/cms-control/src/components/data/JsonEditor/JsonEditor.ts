@@ -1,4 +1,4 @@
-import BubblesEvent from "src/control/core/dom/BubblesEvent";
+import BubblesEvent from "cms-control/core/dom/BubblesEvent";
 import type { JSONSchema, NodeView } from "./types";
 import { renderNode } from "./renderNode";
 

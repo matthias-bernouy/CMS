@@ -1,6 +1,6 @@
 import { CryptoHasher, gzipSync } from "bun";
 import { brotliCompressSync } from "node:zlib";
-import type { Cache, CacheEntry } from "src/socle/interfaces/Cache";
+import type { Cache, CacheEntry } from "cms-shared/interfaces/Cache";
 import { buildCspContent, type CspExtras } from "./buildCspContent";
 
 /**

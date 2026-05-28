@@ -1,7 +1,7 @@
-import type { ControlCms } from "src/control/ControlCms";
-import type { ItemPatch } from "src/socle/interfaces/CmsFilesMetadataRepository";
-import { readJsonBody } from "src/control/core/http/readJsonBody";
-import MissingParam from "src/control/errors/Http/MissingParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import type { ItemPatch } from "@bernouy/cms-shared";
+import { readJsonBody } from "cms-control/core/http/readJsonBody";
+import MissingParam from "cms-control/errors/Http/MissingParam";
 
 /** PATCH /api/files?id= { name?, parentId? } — rename and/or move an item. */
 export default async function updateFile(req: Request, cms: ControlCms) {

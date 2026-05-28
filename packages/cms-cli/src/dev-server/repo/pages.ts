@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { TPage } from "src/socle/interfaces/models";
-import { scanPages } from "src/cli/push/pages/scan";
-import { serializeFrontmatter } from "src/cli/push/shared/frontmatterWrite";
+import type { TPage } from "@bernouy/cms-shared";
+import { scanPages } from "cms-cli/push/pages/scan";
+import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
 
 /**
  * Filesystem-backed page store. IDs are the URL path itself (`/about`, `/`)

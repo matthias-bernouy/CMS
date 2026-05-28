@@ -1,4 +1,4 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 
 /**
  * Reflects the editor's pin state on the action bar's pin button.

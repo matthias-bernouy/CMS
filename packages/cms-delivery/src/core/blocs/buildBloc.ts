@@ -1,6 +1,6 @@
-import type { DeliveryRepository } from "src/delivery/interfaces/DeliveryRepository";
-import type { CacheEntry } from "src/socle/interfaces/Cache";
-import { compress } from "src/socle/server/compression";
+import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
+import type { CacheEntry } from "@bernouy/cms-shared";
+import { compress } from "@bernouy/cms-shared";
 
 /**
  * Build the view bundle entry for a bloc. The repository returns the raw

@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsCmsFiles } from "src/socle/default-implementation/CmsFiles/localFs";
+import { LocalFsCmsFiles } from "@bernouy/cms-shared";
 import { uploadFile } from "src/control/core/files/uploadFile";
 import { deleteFileTree } from "src/control/core/files/deleteFileTree";
 

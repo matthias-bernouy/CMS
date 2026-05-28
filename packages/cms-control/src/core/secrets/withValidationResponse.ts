@@ -1,5 +1,5 @@
-import InvalidParam from "src/control/errors/Http/InvalidParam";
-import MissingParam from "src/control/errors/Http/MissingParam";
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import MissingParam from "cms-control/errors/Http/MissingParam";
 
 /**
  * Catches `InvalidParam` / `MissingParam` thrown by the secrets endpoints

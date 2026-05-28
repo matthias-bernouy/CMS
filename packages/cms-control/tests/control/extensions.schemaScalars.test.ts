@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { flattenScalars } from "src/control/core/editorSystem/extensions/schemaScalars";
-import type { JSONSchema } from "src/control/core/data/types";
+import { flattenScalars } from "cms-control/core/editorSystem/extensions/schemaScalars";
+import type { JSONSchema } from "cms-control/core/data/types";
 
 describe("flattenScalars", () => {
 

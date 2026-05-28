@@ -1,4 +1,4 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 
 export function findEditorByElement(target: HTMLElement): Editor | null {
     const id = target.getAttribute(p9r.attr.EDITOR.IDENTIFIER);

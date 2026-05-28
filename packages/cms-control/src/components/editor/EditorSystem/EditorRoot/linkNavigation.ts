@@ -1,5 +1,5 @@
-import { getEditorContext, type NavigationRequest } from "src/control/core/editorSystem/editorContext";
-import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
+import { getEditorContext, type NavigationRequest } from "cms-control/core/editorSystem/editorContext";
+import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
 /**
  * Default `requestNavigation` handler wired by EditorRoot. Routes each

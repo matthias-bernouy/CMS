@@ -1,7 +1,7 @@
-import type { ControlCms } from "src/control/ControlCms";
-import type { CacheEntry } from "src/socle/interfaces/Cache";
-import { cachedResponseAsync, compress, publicAssetCacheControl } from "src/socle/server/compression";
-import { P9R_CACHE } from "src/socle/constants/p9r-constants";
+import type { ControlCms } from "cms-control/ControlCms";
+import type { CacheEntry } from "@bernouy/cms-shared";
+import { cachedResponseAsync, compress, publicAssetCacheControl } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-shared";
 
 /**
  * Serves a bloc's compiled view JS so the editor preview can register the

@@ -1,4 +1,4 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 import type { VAnchor } from '../../compute/groupPosition';
 import { findParentEditor } from '../../compute/ancestorChain';
 import type { BagController } from './BagController';

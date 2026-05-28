@@ -1,10 +1,10 @@
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { TPage, TSnippet } from "src/socle/interfaces/models";
-import { scanSnippets } from "src/cli/push/snippets/scan";
-import { serializeFrontmatter } from "src/cli/push/shared/frontmatterWrite";
-import { categoryToFolder } from "src/cli/push/shared/categoryFolder";
+import type { TPage, TSnippet } from "@bernouy/cms-shared";
+import { scanSnippets } from "cms-cli/push/snippets/scan";
+import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
+import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
 
 const FROZEN_DATE = new Date(0);
 

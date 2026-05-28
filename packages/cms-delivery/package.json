@@ -1,0 +1,19 @@
+{
+    "name": "@bernouy/cms-delivery",
+    "version": "0.1.0",
+    "description": "Public-facing rendering layer of the CMS — `DeliveryCms` mounts page resolution, bloc bundles, theme CSS, the component runtime, and the favicon under a runner. Reads from a `DeliveryRepository` (the read-only subset of `CmsRepository`). Pure on-demand rendering — no Playwright, no build-time pre-rendering.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/index.ts",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/core":        "workspace:*",
+        "@bernouy/cms-shared":  "workspace:*",
+        "linkedom": "^0.18.12"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    }
+}

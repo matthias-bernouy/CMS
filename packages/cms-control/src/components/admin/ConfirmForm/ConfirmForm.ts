@@ -1,5 +1,5 @@
-import BubblesEvent from "src/control/core/dom/BubblesEvent";
-import { showToast } from "src/control/core/showToast";
+import BubblesEvent from "cms-control/core/dom/BubblesEvent";
+import { showToast } from "cms-control/core/showToast";
 
 /**
  * `<cms-confirm-form target="..." method="DELETE" emit="..." message="..."

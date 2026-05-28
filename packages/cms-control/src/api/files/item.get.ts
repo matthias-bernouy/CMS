@@ -1,5 +1,5 @@
-import type { ControlCms } from "src/control/ControlCms";
-import MissingParam from "src/control/errors/Http/MissingParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import MissingParam from "cms-control/errors/Http/MissingParam";
 
 /** GET /api/files/item?id= — one item (folder or file) by id. */
 export default async function getFileItem(req: Request, cms: ControlCms) {

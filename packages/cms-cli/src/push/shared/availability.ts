@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { scanDevBlocs } from "src/cli/dev-server/scan";
+import { scanDevBlocs } from "cms-cli/dev-server/scan";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 

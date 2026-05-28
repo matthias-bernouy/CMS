@@ -1,9 +1,9 @@
 import { rmSync } from "node:fs"
 
-const controlComponentTargetDir = "src/control/static/assets/";
+const controlComponentTargetDir = "src/static/assets/";
 const controlComponentTargetNaming = "control-components.js";
 const controlComponentTargetFile = controlComponentTargetDir+controlComponentTargetNaming;
-const controlComponentOrigin = "src/control/components/index.ts";
+const controlComponentOrigin = "src/components/index.ts";
 
 export default async function prebuildControl(){
 

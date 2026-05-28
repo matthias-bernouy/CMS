@@ -1,7 +1,7 @@
-import type { ControlCms } from 'src/control/ControlCms';
-import { readJsonBody } from 'src/control/core/http/readJsonBody';
-import { parsePageCreateDto } from 'src/control/core/validation/page/parseCreateDto';
-import { createPage } from 'src/control/core/page/createPage';
+import type { ControlCms } from 'cms-control/ControlCms';
+import { readJsonBody } from 'cms-control/core/http/readJsonBody';
+import { parsePageCreateDto } from 'cms-control/core/validation/page/parseCreateDto';
+import { createPage } from 'cms-control/core/page/createPage';
 
 export default async function postPage(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);

@@ -1,4 +1,4 @@
-import { showToast, type ToastType } from "src/control/core/showToast";
+import { showToast, type ToastType } from "cms-control/core/showToast";
 
 /**
  * `<cms-event-toast event="provider:synced" message="Provider synced"

@@ -1,5 +1,5 @@
-import type { ControlCms } from "src/control/ControlCms";
-import { listSecretKeys } from "src/control/core/secrets/listSecrets";
+import type { ControlCms } from "cms-control/ControlCms";
+import { listSecretKeys } from "cms-control/core/secrets/listSecrets";
 
 /**
  * Lists every secret key without exposing values. Safe surface for the

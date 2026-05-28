@@ -15,7 +15,7 @@
         "typescript": "^5.9.3"
     },
     "dependencies": {
-        "@bernouy/cms": "workspace:*"
+        "@bernouy/cms-control": "workspace:*"
     },
     "engines": {
         "bun": ">=1.3.0"

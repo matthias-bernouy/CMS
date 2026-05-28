@@ -1,4 +1,4 @@
-import type { BlocActionExtension } from 'src/control/core/editorSystem/extensions/types';
+import type { BlocActionExtension } from 'cms-control/core/editorSystem/extensions/types';
 import css from './style.css' with { type: 'text' };
 import { buildGroup } from './render';
 

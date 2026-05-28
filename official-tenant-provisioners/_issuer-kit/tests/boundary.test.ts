@@ -8,7 +8,7 @@ import { issuerKitPackageRoot } from "src/constants";
 // sign↔verify decoupling the architecture relies on.
 const FORBIDDEN = [
     "@bernouy/tenant-provisioner-sdk",
-    "@bernouy/cms",
+    "@bernouy/cms-control",
     "@bernouy/mt-cms-control",
     "@bernouy/auth-core",
 ] as const;
@@ -19,7 +19,7 @@ function findForbidden(source: string): string[] {
 
 test("detector flags a forbidden import (self-test of the guard)", () => {
     expect(findForbidden(`import x from "@bernouy/tenant-provisioner-sdk";`)).toContain("@bernouy/tenant-provisioner-sdk");
-    expect(findForbidden(`import x from "@bernouy/cms";`)).toContain("@bernouy/cms");
+    expect(findForbidden(`import x from "@bernouy/cms-control";`)).toContain("@bernouy/cms-control");
     expect(findForbidden(`import x from "@bernouy/tenant-provisioner-contract";`)).toHaveLength(0);
     expect(findForbidden(`import x from "@bernouy/core";`)).toHaveLength(0);
 });

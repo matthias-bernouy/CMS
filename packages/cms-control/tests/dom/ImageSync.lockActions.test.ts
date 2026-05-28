@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { ImageSync } from "src/control/components/editor/componentSync/sync/ImageSync/ImageSync";
-import { Editor } from "src/control/core/editorSystem/Editor/Editor";
+import { ImageSync } from "cms-control/components/editor/componentSync/sync/ImageSync/ImageSync";
+import { Editor } from "cms-control/core/editorSystem/Editor/Editor";
 
 // Minimal `<cms-editor-system>` stub. Editor.constructor walks up via
 // `closest("cms-editor-system")` and calls `.blocActions.close()` on the

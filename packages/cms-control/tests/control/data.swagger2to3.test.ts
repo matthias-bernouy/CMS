@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { swagger2to3 } from "src/control/core/data/helpers/swagger2to3";
+import { swagger2to3 } from "cms-control/core/data/helpers/swagger2to3";
 
 describe("swagger2to3", () => {
     test("moves definitions into components.schemas", () => {

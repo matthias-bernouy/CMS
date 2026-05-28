@@ -1,5 +1,5 @@
-import InvalidParam from "src/control/errors/Http/InvalidParam";
-import type { TPageRef, TSystem } from "src/socle/interfaces/models";
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import type { TPageRef, TSystem } from "@bernouy/cms-shared";
 
 export type SettingsUpdateDto = Partial<TSystem>;
 

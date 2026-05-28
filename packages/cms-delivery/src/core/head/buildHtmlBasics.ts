@@ -1,4 +1,4 @@
-import type { TSystem } from "src/socle/interfaces/models";
+import type { TSystem } from "@bernouy/cms-shared";
 
 /**
  * HTML basics every page needs: `<html lang>` when a language is configured,

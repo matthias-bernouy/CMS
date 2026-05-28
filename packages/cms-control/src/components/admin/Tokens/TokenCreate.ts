@@ -1,4 +1,4 @@
-import { showToast } from "src/control/core/showToast";
+import { showToast } from "cms-control/core/showToast";
 
 /**
  * `<cms-token-create api emit>` — the "new token" modal body. Two states in

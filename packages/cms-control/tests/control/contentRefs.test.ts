@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { assertContentRefsExist } from "src/control/core/validation/contentRefs";
+import { assertContentRefsExist } from "cms-control/core/validation/contentRefs";
 
 function makeSystem(opts: { blocs?: string[]; snippets?: string[] } = {}) {
     const cms: any = {

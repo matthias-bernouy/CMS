@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll } from "bun:test";
 import "src/control/components/data/JsonEditor/JsonEditor";
-import type { JsonEditor } from "src/control/components/data/JsonEditor/JsonEditor";
-import type { JSONSchema } from "src/control/core/data/types";
+import type { JsonEditor } from "cms-control/components/data/JsonEditor/JsonEditor";
+import type { JSONSchema } from "cms-control/core/data/types";
 
 beforeAll(() => {
     // happy-dom defines `customElements`; the import above defines the tag.

@@ -1,10 +1,10 @@
 import { describe, test, expect, mock } from "bun:test";
-import { P9R_CACHE } from "src/socle/constants/p9r-constants";
-import type { TBloc } from "src/socle/interfaces/models";
+import { P9R_CACHE } from "@bernouy/cms-shared";
+import type { TBloc } from "@bernouy/cms-shared";
 
 // Stub prepare_bloc so tests never touch the filesystem or run Bun.build.
 // Must be registered before importBloc is imported.
-mock.module("src/blocs/prepare_bloc", () => ({
+mock.module("@bernouy/cms-shared", () => ({
     prepare_bloc: async (
         _view: File,
         _editor: File | null,
@@ -22,7 +22,7 @@ mock.module("src/blocs/prepare_bloc", () => ({
     }),
 }));
 
-const { default: importBloc } = await import("src/control/api/bloc/bloc.post");
+const { default: importBloc } = await import("cms-control/api/bloc/bloc.post");
 
 type CreateBlocCall = { bloc: TBloc };
 

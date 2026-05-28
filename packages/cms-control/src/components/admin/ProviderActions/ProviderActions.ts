@@ -1,4 +1,4 @@
-import { showToast } from "src/control/core/showToast";
+import { showToast } from "cms-control/core/showToast";
 
 /**
  * `<cms-provider-actions provider-id kind enabled base-url emit>` — the actions

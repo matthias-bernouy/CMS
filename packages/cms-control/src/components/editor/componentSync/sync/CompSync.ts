@@ -1,4 +1,4 @@
-import type { Component } from "src/control/core/editorSystem/Component";
+import type { Component } from "cms-control/core/editorSystem/Component";
 
 /**
  * `<p9r-comp-sync>` is both a **slot content manager** (clones its light-DOM

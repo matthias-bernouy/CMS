@@ -17,7 +17,7 @@ import {
 import { updateState } from "./state";
 import { refreshExtensions, closeCompletions } from "./extensions";
 import type { RichTextBar } from "./RichTextBar";
-import { getEditorContext } from "src/control/core/editorSystem/editorContext";
+import { getEditorContext } from "cms-control/core/editorSystem/editorContext";
 
 export function handleCustomColorInput(self: RichTextBar, e: Event): void {
     const input = e.target as HTMLInputElement;

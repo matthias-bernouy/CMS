@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { validateBloc, validateBlocTag } from "src/socle/blocs/validateBloc";
+import { validateBloc, validateBlocTag } from "@bernouy/cms-shared";
 
 describe("validateBlocTag", () => {
     test.each([
@@ -35,7 +35,7 @@ describe("validateBloc — source patterns", () => {
     test("accepts source without customElements.define", () => {
         const r = validateBloc({
             tag: "my-bloc",
-            viewSource: `import { Component } from "@bernouy/cms/component";
+            viewSource: `import { Component } from "@bernouy/cms-control/component";
                          export class MyBloc extends Component {}`,
         });
         expect(r.errors).toHaveLength(0);

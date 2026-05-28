@@ -1,4 +1,4 @@
-import MissingParam from 'src/control/errors/Http/MissingParam';
+import MissingParam from 'cms-control/errors/Http/MissingParam';
 import { assertValidSnippetIdentifier } from './identifier';
 import { assertValidSnippetName } from './name';
 import { sanitizeSnippetCategory } from './category';

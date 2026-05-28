@@ -1,5 +1,5 @@
 import { HorizontalActionGroup } from '@bernouy/webcomponents/blocs/horizontal-action-group';
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 import { BagController } from './domain/lifecycle/BagController';
 
 /**

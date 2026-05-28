@@ -8,6 +8,6 @@
     "include": ["src/**/*.ts", "tests/**/*.ts"],
     "references": [
         { "path": "../_sdk" },
-        { "path": "../../packages/cms" }
+        { "path": "../../packages/cms-control" }
     ]
 }

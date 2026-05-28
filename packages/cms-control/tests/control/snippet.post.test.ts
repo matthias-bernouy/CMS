@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import postSnippet from "src/control/api/snippet/snippet.post";
-import type { TSnippet } from "src/socle/interfaces/models";
+import postSnippet from "cms-control/api/snippet/snippet.post";
+import type { TSnippet } from "@bernouy/cms-shared";
 
 function makeSystem(opts: { existingByIdentifier?: Record<string, TSnippet> } = {}) {
     const createCalls: TSnippet[] = [];

@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryCmsFilesMetadata } from "src/socle/default-implementation/CmsFilesMetadata/memory";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-shared";
 
 describe("InMemoryCmsFilesMetadata", () => {
     test("creates a tree and lists children of root and folders", async () => {

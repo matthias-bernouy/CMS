@@ -1,4 +1,4 @@
-import type { ControlCms } from "src/control/ControlCms";
+import type { ControlCms } from "cms-control/ControlCms";
 
 export default async function deleteTemplate(req: Request, cms: ControlCms) {
     const url = new URL(req.url);

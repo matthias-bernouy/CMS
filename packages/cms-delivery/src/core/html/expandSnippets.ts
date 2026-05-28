@@ -1,4 +1,4 @@
-import type { DeliveryRepository } from "src/delivery/interfaces/DeliveryRepository";
+import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
 
 /**
  * Replace `<w13c-snippet identifier="...">...</w13c-snippet>` wrappers with

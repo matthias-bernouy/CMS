@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { TPageRef, TSystem } from "src/socle/interfaces/models";
+import type { TPageRef, TSystem } from "@bernouy/cms-shared";
 
 const SYSTEM_FILE = "system.json";
 const THEME_FILE  = "theme.css";

@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
-import { resolveSecretRefs } from "src/control/core/secrets/resolveSecretRefs";
-import { SecretNotFound } from "src/control/errors/SecretNotFound";
-import { InMemorySecretStore } from "src/socle/default-implementation/SecretStore/memory";
+import { resolveSecretRefs } from "cms-control/core/secrets/resolveSecretRefs";
+import { SecretNotFound } from "cms-control/errors/SecretNotFound";
+import { InMemorySecretStore } from "@bernouy/cms-shared";
 
 async function makeStore(entries: Record<string, string>) {
     const s = new InMemorySecretStore();

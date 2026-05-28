@@ -1,13 +1,13 @@
 
-import { NearestElementRequire } from "src/control/errors/NearestElementRequire";
-import { ImageEditor } from "src/control/core/editorSystem/defaultEditors/ImageEditor/ImageEditor";
-import { SvgEditor } from "src/control/core/editorSystem/defaultEditors/SvgEditor";
+import { NearestElementRequire } from "cms-control/errors/NearestElementRequire";
+import { ImageEditor } from "cms-control/core/editorSystem/defaultEditors/ImageEditor/ImageEditor";
+import { SvgEditor } from "cms-control/core/editorSystem/defaultEditors/SvgEditor";
 import type { Editor } from "../../../core/editorSystem/Editor/Editor";
 import { EmptyEditor } from "../../../core/editorSystem/registerEditor";
-import { TextEditor, textTags } from "src/control/core/editorSystem/defaultEditors/TextEditor";
-import { ListEditor } from "src/control/core/editorSystem/defaultEditors/ListEditor";
-import { SnippetEditor } from "src/control/core/editorSystem/defaultEditors/SnippetEditor";
-import { getEditorContext } from "src/control/core/editorSystem/editorContext";
+import { TextEditor, textTags } from "cms-control/core/editorSystem/defaultEditors/TextEditor";
+import { ListEditor } from "cms-control/core/editorSystem/defaultEditors/ListEditor";
+import { SnippetEditor } from "cms-control/core/editorSystem/defaultEditors/SnippetEditor";
+import { getEditorContext } from "cms-control/core/editorSystem/editorContext";
 
 export type TagElement = {
     cl: new (node: HTMLElement) => Editor,

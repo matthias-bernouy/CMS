@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import "src/control/components/editor/componentSync/sync/StateSync/StateSync";
-import type { StateSync } from "src/control/components/editor/componentSync/sync/StateSync/StateSync";
-import type { Component } from "src/control/core/editorSystem/Component";
-import type { Editor } from "src/control/core/editorSystem/Editor/Editor";
+import type { StateSync } from "cms-control/components/editor/componentSync/sync/StateSync/StateSync";
+import type { Component } from "cms-control/core/editorSystem/Component";
+import type { Editor } from "cms-control/core/editorSystem/Editor/Editor";
 
 function nextFrame(): Promise<void> {
     return new Promise((r) => requestAnimationFrame(() => r()));

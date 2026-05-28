@@ -16,16 +16,16 @@
 
 import { BunRunner } from "@bernouy/runner-bun";
 import { SignedCookieCodec, randomBase64Url } from "@bernouy/core";
+import { ControlCms } from "@bernouy/cms-control";
+import { DeliveryCms } from "@bernouy/cms-delivery";
 import {
-    Cms as ControlCms,
-    DeliveryCms,
     InMemoryCmsRepository,
     InMemoryCmsFilesMetadata,
     InMemoryCmsFilesBlob,
     InMemoryCache,
     InMemorySecretStore,
     type CMS_ROLES,
-} from "@bernouy/cms";
+} from "@bernouy/cms-shared";
 import {
     InMemoryUsersRepository,
     InMemoryIdentityProviderRepository,

@@ -1,6 +1,6 @@
-import type DeliveryCms from "src/delivery/DeliveryCms";
-import { resolveRuntimeAssets } from "src/delivery/core/assets/resolveAssets";
-import type { RenderContext } from "src/delivery/core/html/RenderContext";
+import type DeliveryCms from "cms-delivery/DeliveryCms";
+import { resolveRuntimeAssets } from "cms-delivery/core/assets/resolveAssets";
+import type { RenderContext } from "cms-delivery/core/html/RenderContext";
 
 /**
  * Build a `RenderContext` for the live serving path. Assets are resolved

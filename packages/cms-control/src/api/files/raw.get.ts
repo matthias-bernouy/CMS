@@ -1,5 +1,5 @@
-import type { ControlCms } from "src/control/ControlCms";
-import MissingParam from "src/control/errors/Http/MissingParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import MissingParam from "cms-control/errors/Http/MissingParam";
 
 /** GET /api/files/raw?id= — stream a file's bytes (the proxy read). */
 export default async function rawFile(req: Request, cms: ControlCms) {

@@ -1,5 +1,5 @@
-import { Component } from "@bernouy/cms/component";
-import "src/control/components/editor/componentSync/PageLink/PageLink";
+import { Component } from "@bernouy/cms-control/component";
+import "cms-control/components/editor/componentSync/PageLink/PageLink";
 
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
@@ -7,8 +7,8 @@ import css from "./style.css" with { type: "text" };
 import { SelectionTracker } from "./selection";
 import { closeLinkBar } from "./actions";
 import { closeCompletions } from "./extensions";
-import type { RichTextBarExtension } from "src/control/core/editorSystem/extensions/types";
-import getClosestEditorSystem from "src/control/core/dom/editor/getClosestEditorSystem";
+import type { RichTextBarExtension } from "cms-control/core/editorSystem/extensions/types";
+import getClosestEditorSystem from "cms-control/core/dom/editor/getClosestEditorSystem";
 import {
     handleClick,
     handleCustomColorInput,

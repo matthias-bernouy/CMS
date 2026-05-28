@@ -1,4 +1,4 @@
-import type { Editor } from '@bernouy/cms/editor';
+import type { Editor } from '@bernouy/cms-control/editor';
 import { EventManager } from './EventManager';
 import { duplicateSibling } from '../domain/duplicateSibling';
 import { openChangeComponentPicker } from '../domain/openChangeComponentPicker';

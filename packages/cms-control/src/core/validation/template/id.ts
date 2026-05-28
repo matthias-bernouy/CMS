@@ -1,4 +1,4 @@
-import InvalidParam from 'src/control/errors/Http/InvalidParam';
+import InvalidParam from 'cms-control/errors/Http/InvalidParam';
 
 export function assertValidTemplateId(value: unknown): asserts value is string {
     if (typeof value !== 'string' || value.length === 0) {

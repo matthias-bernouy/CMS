@@ -1,4 +1,4 @@
-import type { MediaCenter } from "src/control/components/editor/MediaCenter/MediaCenter";
+import type { MediaCenter } from "cms-control/components/editor/MediaCenter/MediaCenter";
 import { Editor } from "../../Editor/Editor";
 import { ResizeInstance } from "./ResizeInstance";
 

@@ -1,6 +1,6 @@
-import type { ControlCms } from "src/control/ControlCms";
-import MissingParam from "src/control/errors/Http/MissingParam";
-import InvalidParam from "src/control/errors/Http/InvalidParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import MissingParam from "cms-control/errors/Http/MissingParam";
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 /**
  * Fetch a single snippet by either `?id=` (system-generated, used by the

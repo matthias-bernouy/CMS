@@ -1,4 +1,4 @@
-import InvalidParam from 'src/control/errors/Http/InvalidParam';
+import InvalidParam from 'cms-control/errors/Http/InvalidParam';
 
 /**
  * Parse the request body as JSON. Returns a guaranteed-object value; throws

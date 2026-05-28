@@ -1,4 +1,4 @@
-import type { ControlCms } from 'src/control/ControlCms';
+import type { ControlCms } from 'cms-control/ControlCms';
 import { DEFAULT_TEMPLATE_CONTENT } from '../validation/template/content';
 import type { TemplateCreateDto } from '../validation/template/parseCreateDto';
 

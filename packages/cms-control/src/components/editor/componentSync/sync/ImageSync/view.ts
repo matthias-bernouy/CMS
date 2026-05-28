@@ -1,4 +1,4 @@
-import { ICON_UPLOAD } from "src/control/components/icons";
+import { ICON_UPLOAD } from "cms-control/components/icons";
 import { lockActions } from "./lock";
 import { resolveTarget } from "./target";
 import type { ImageSync } from "./ImageSync";

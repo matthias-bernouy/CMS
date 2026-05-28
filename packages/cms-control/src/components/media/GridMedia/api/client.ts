@@ -1,5 +1,5 @@
 import type { MediaItem as LocalMediaItem } from "../types";
-import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
+import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 
 /**
  * Filter expressed in the admin-UI's compact vocabulary (`folder` / `image`

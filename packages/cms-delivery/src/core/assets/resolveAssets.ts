@@ -1,9 +1,9 @@
-import type DeliveryCms from "src/delivery/DeliveryCms";
-import { getOrGenerateEntryAsync } from "src/socle/server/compression";
-import { generateBlocEntry } from "src/delivery/core/blocs/buildBloc";
-import { generateStyleEntry } from "src/delivery/core/assets/buildStyle";
-import { generateComponentJsEntry } from "src/delivery/core/assets/buildComponent";
-import { P9R_CACHE } from "src/socle/constants/p9r-constants";
+import type DeliveryCms from "cms-delivery/DeliveryCms";
+import { getOrGenerateEntryAsync } from "@bernouy/cms-shared";
+import { generateBlocEntry } from "cms-delivery/core/blocs/buildBloc";
+import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
+import { generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
+import { P9R_CACHE } from "@bernouy/cms-shared";
 
 /**
  * Content-addressed URLs for every asset a page references. The hash is the

@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { buildCspContent } from "src/socle/server/buildCspContent";
+import { buildCspContent } from "@bernouy/cms-shared";
 
 describe("buildCspContent", () => {
     test("emits the baseline directives with no extras (default arg)", () => {

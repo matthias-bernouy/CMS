@@ -1,4 +1,4 @@
-import type { AssetsManifest } from "src/delivery/core/assets/resolveAssets";
+import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
 
 /**
  * Deferred `<script>` tags — downloaded in parallel, executed in document

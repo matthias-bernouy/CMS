@@ -1,8 +1,8 @@
-import { Component, type ComponentMetadata } from 'src/control/core/editorSystem/Component';
-import { ICON_SNIPPET } from 'src/control/components/icons';
+import { Component, type ComponentMetadata } from 'cms-control/core/editorSystem/Component';
+import { ICON_SNIPPET } from 'cms-control/components/icons';
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
-import resolveApiUrl from 'src/control/core/dom/meta/resolveApiUrl';
+import resolveApiUrl from 'cms-control/core/dom/meta/resolveApiUrl';
 
 const SnippetMetadata: ComponentMetadata = {
     css: css,

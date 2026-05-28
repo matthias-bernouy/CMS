@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { serializeFrontmatter } from "src/cli/push/shared/frontmatterWrite";
-import { categoryToFolder } from "src/cli/push/shared/categoryFolder";
+import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
+import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 

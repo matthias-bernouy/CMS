@@ -1,5 +1,5 @@
-import InvalidParam from 'src/control/errors/Http/InvalidParam';
-import { isValidSnippetIdentifier } from 'src/socle/utils/validation';
+import InvalidParam from 'cms-control/errors/Http/InvalidParam';
+import { isValidSnippetIdentifier } from '@bernouy/cms-shared';
 
 /**
  * Templates use the same slug shape as snippets — kebab-case, lowercase

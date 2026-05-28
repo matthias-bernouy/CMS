@@ -1,4 +1,4 @@
-import { showToast } from "src/control/core/showToast";
+import { showToast } from "cms-control/core/showToast";
 
 const ROLES = ["user", "admin"] as const;
 

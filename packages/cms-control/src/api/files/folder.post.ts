@@ -1,6 +1,6 @@
-import type { ControlCms } from "src/control/ControlCms";
-import { readJsonBody } from "src/control/core/http/readJsonBody";
-import InvalidParam from "src/control/errors/Http/InvalidParam";
+import type { ControlCms } from "cms-control/ControlCms";
+import { readJsonBody } from "cms-control/core/http/readJsonBody";
+import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 /** POST /api/files/folder { name, parentId? } — create a folder. */
 export default async function createFolder(req: Request, cms: ControlCms) {

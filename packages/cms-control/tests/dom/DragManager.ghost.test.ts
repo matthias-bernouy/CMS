@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { DragManager } from "src/control/components/editor/EditorSystem/DragManager";
+import { DragManager } from "cms-control/components/editor/EditorSystem/DragManager";
 
 function drag(kind: string, target: HTMLElement, captured: any) {
     const ev = new Event(kind, { bubbles: true, cancelable: true }) as any;

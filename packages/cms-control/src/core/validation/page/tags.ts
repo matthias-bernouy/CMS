@@ -1,4 +1,4 @@
-import InvalidParam from 'src/control/errors/Http/InvalidParam';
+import InvalidParam from 'cms-control/errors/Http/InvalidParam';
 
 const MAX_TAG_LENGTH = 50;
 const MAX_TAGS       = 50;

@@ -1,4 +1,4 @@
-import { SpecParseError } from "src/control/errors/SpecParseError";
+import { SpecParseError } from "cms-control/errors/SpecParseError";
 import type { JSONSchema, ParsedSpec, PathItem } from "./types";
 import { swagger2to3 } from "./helpers/swagger2to3";
 

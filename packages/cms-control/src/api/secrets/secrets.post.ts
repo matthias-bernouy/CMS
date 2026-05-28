@@ -1,8 +1,8 @@
-import type { ControlCms } from "src/control/ControlCms";
-import { readJsonBody } from "src/control/core/http/readJsonBody";
-import { parseSecretDto } from "src/control/core/validation/secrets/parseSecretDto";
-import { setSecret } from "src/control/core/secrets/setSecret";
-import { withValidationResponse } from "src/control/core/secrets/withValidationResponse";
+import type { ControlCms } from "cms-control/ControlCms";
+import { readJsonBody } from "cms-control/core/http/readJsonBody";
+import { parseSecretDto } from "cms-control/core/validation/secrets/parseSecretDto";
+import { setSecret } from "cms-control/core/secrets/setSecret";
+import { withValidationResponse } from "cms-control/core/secrets/withValidationResponse";
 
 export default async function postSecret(req: Request, cms: ControlCms) {
     return withValidationResponse(async () => {

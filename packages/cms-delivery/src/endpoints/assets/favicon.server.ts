@@ -1,6 +1,6 @@
-import type DeliveryCms from "src/delivery/DeliveryCms";
-import { sendCompressed } from "src/socle/server/compression";
-import { generateFaviconEntry } from "src/delivery/core/assets/defaultFavicon";
+import type DeliveryCms from "cms-delivery/DeliveryCms";
+import { sendCompressed } from "@bernouy/cms-shared";
+import { generateFaviconEntry } from "cms-delivery/core/assets/defaultFavicon";
 
 /**
  * Default Delivery favicon served at `<cmsPathPrefix>/assets/favicon`.

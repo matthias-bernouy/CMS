@@ -1,4 +1,4 @@
-import getClosestEditorSystem from 'src/control/core/dom/editor/getClosestEditorSystem';
+import getClosestEditorSystem from 'cms-control/core/dom/editor/getClosestEditorSystem';
 
 function inherit(source: HTMLElement, dest: HTMLElement) {
     const parentId = source.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);

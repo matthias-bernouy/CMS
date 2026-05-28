@@ -1,16 +1,16 @@
 import html from "./template.html" with { type: "text" }
 import css from "./EditorRoot.style.css" with { type: "text" }
-import { isToggable } from "src/control/core/isToggable";
-import { setEditorContext, clearEditorContext } from "src/control/core/editorSystem/editorContext";
-import { installNavigationGuard, rawReplaceState } from "src/control/core/editorSystem/navigationGuard";
-import { installLinkInterceptor } from "src/control/core/editorSystem/installLinkInterceptor";
-import { watchForDirty, isDirty } from "src/control/core/editorSystem/dirtyState";
+import { isToggable } from "cms-control/core/isToggable";
+import { setEditorContext, clearEditorContext } from "cms-control/core/editorSystem/editorContext";
+import { installNavigationGuard, rawReplaceState } from "cms-control/core/editorSystem/navigationGuard";
+import { installLinkInterceptor } from "cms-control/core/editorSystem/installLinkInterceptor";
+import { watchForDirty, isDirty } from "cms-control/core/editorSystem/dirtyState";
 import { resolveTargetForLink } from "./linkNavigation";
 import { stripResidualChrome } from "./stripResidualChrome";
-import { getMetaBasePath } from "src/control/core/dom/meta/getMetaBasePath";
+import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import type { EDITOR_SYSTEM_MODE } from "types/w13c/EditorSystem";
-import { ObserverManager } from "src/control/components/editor/EditorSystem/ObserverManager";
-import { DragManager } from "src/control/components/editor/EditorSystem/DragManager";
+import { ObserverManager } from "cms-control/components/editor/EditorSystem/ObserverManager";
+import { DragManager } from "cms-control/components/editor/EditorSystem/DragManager";
 import { BlocActions } from "../BlocActions/BlocActions";
 import type { BlocLibrary } from "../BlocLibrary/BlocLibrary";
 import { waitForScripts } from "./waitForScripts";

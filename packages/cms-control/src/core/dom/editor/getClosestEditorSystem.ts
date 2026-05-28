@@ -1,5 +1,5 @@
-import type EditorRoot from "src/control/components/editor/EditorSystem/EditorRoot/EditorRoot";
-import { NearestElementRequire } from "src/control/errors/NearestElementRequire";
+import type EditorRoot from "cms-control/components/editor/EditorSystem/EditorRoot/EditorRoot";
+import { NearestElementRequire } from "cms-control/errors/NearestElementRequire";
 
 
 export default function getClosestEditorSystem(ele: HTMLElement): EditorRoot {

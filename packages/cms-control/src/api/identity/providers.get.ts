@@ -1,4 +1,4 @@
-import type { ControlCms } from "src/control/ControlCms";
+import type { ControlCms } from "cms-control/ControlCms";
 
 /** GET /api/identity/providers — all configured login providers (non-secret
  *  config; the clientSecret lives in the SecretStore, never returned here).

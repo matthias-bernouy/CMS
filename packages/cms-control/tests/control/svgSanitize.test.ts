@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { sanitizeSvg } from "src/control/components/editor/componentSync/sync/SvgSync/sanitize";
+import { sanitizeSvg } from "cms-control/components/editor/componentSync/sync/SvgSync/sanitize";
 
 describe("sanitizeSvg", () => {
     test("preserves a clean SVG (paths, fills, viewBox)", () => {

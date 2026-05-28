@@ -3,7 +3,7 @@ import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type {
     CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem,
     FilesListOptions, FilesPage, NewFolder, NewFile, ItemPatch,
-} from "src/socle/interfaces/CmsFilesMetadataRepository";
+} from "cms-shared/interfaces/CmsFilesMetadataRepository";
 
 /**
  * MongoDB `CmsFilesMetadataRepository`. One collection (`<prefix>filesMeta`),

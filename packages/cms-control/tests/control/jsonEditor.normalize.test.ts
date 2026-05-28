@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { normalize } from "src/control/components/data/JsonEditor/normalize";
-import type { JSONSchema } from "src/control/core/data/types";
+import { normalize } from "cms-control/components/data/JsonEditor/normalize";
+import type { JSONSchema } from "cms-control/core/data/types";
 
 describe("normalize", () => {
     test("returns null for null/undefined input", () => {

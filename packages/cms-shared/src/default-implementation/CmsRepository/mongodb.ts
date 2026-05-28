@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
-import type { BlocListItemResponse, CmsRepository, PageLink } from "src/socle/interfaces/CmsRepository";
-import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "src/socle/interfaces/models";
+import type { BlocListItemResponse, CmsRepository, PageLink } from "cms-shared/interfaces/CmsRepository";
+import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "cms-shared/interfaces/models";
 
 /**
  * MongoDB implementation of `CmsRepository`. Designed for small/medium

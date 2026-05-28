@@ -1,9 +1,9 @@
-import { classifyLink } from "src/control/core/editorSystem/classifyLink";
+import { classifyLink } from "cms-control/core/editorSystem/classifyLink";
 import {
     getActiveLink,
     getEditorContext,
     type LinkClassification,
-} from "src/control/core/editorSystem/editorContext";
+} from "cms-control/core/editorSystem/editorContext";
 
 const SECTION_CLASS = "bag-link-section";
 

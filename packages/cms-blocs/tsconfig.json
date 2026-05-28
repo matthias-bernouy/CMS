@@ -10,6 +10,6 @@
         "src/**/*.d.ts"
     ],
     "references": [
-        { "path": "../cms" }
+        { "path": "../cms-control" }
     ]
 }

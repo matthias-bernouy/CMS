@@ -1,5 +1,5 @@
-import type { ControlCms } from "src/control/ControlCms";
-import { getPagesList } from "src/control/core/page/getPagesList";
+import type { ControlCms } from "cms-control/ControlCms";
+import { getPagesList } from "cms-control/core/page/getPagesList";
 
 export default async function getPages(_req: Request, cms: ControlCms) {
     const pages = await getPagesList(cms);

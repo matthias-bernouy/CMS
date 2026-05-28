@@ -1,4 +1,4 @@
-import type { BlocActionExtension, Field } from 'src/control/core/editorSystem/extensions/types';
+import type { BlocActionExtension, Field } from 'cms-control/core/editorSystem/extensions/types';
 
 /** One section of the popover, scoped to a single extension. The header shows
  *  the extension's icon + label; rows below are the options it exposes via

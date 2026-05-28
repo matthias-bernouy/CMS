@@ -1,5 +1,5 @@
-import type { CacheEntry } from "src/socle/interfaces/Cache";
-import { compress } from "src/socle/server/compression";
+import type { CacheEntry } from "@bernouy/cms-shared";
+import { compress } from "@bernouy/cms-shared";
 
 /**
  * Inline SVG used as the default favicon when `site.favicon` is empty.
