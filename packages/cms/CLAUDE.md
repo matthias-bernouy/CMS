@@ -32,15 +32,25 @@ Both `ControlCms` and `DeliveryCms` derive their mount prefix from the runner th
 ```ts
 // Single-tenant
 rootRunner.group("/cms", (scoped) =>
-    new ControlCms(scoped, repo, auth, media, { tokensUrl: "https://kc/account" })
+    new ControlCms(scoped, repo, auth, { deliveryUrl: "https://acme.com" })
 );
 rootRunner.group("/", (scoped) =>
     new DeliveryCms({ runner: scoped, repository: repo })
 );
 
-// ControlCms full constructor:
-//   (runner, repository, auth, media: CDN, configuration: { tokensUrl, deliveryUrl? },
-//    cache?, secrets?, proxyPublisher?)
+// ControlCms full constructor (only the first 4 args are required):
+//   (runner, repository, auth, configuration: { deliveryUrl? },
+//    cache?, secrets?, filesMetadata?, filesBlob?,
+//    users?, identityProviders?, pats?)
+//
+// `auth` is an `Authentication<CMS_ROLES>` — typically the
+// `LocalAuthentication` returned by mounting the builtin local provider
+// (see `cms-control-mt` for the multi-tenant wiring example). The
+// `users` / `identityProviders` / `pats` repos enable the Users admin
+// page, the Settings → Identity tab, and the Profile → Tokens tab
+// respectively; omit them and the corresponding admin surfaces throw
+// "not configured" until wired.
+//
 // DeliveryCms config:
 //   { runner?, repository, cache?, headInjectors? }
 ```

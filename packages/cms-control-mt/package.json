@@ -22,11 +22,9 @@
         "mongodb": "^7.2.0"
     },
     "dependencies": {
-        "@bernouy/core":           "workspace:*",
-        "@bernouy/runner-bun":     "workspace:*",
-        "@bernouy/auth-keycloak":  "workspace:*",
-        "@bernouy/auth-composite": "workspace:*",
-        "@bernouy/cms":            "workspace:*"
+        "@bernouy/core":       "workspace:*",
+        "@bernouy/runner-bun": "workspace:*",
+        "@bernouy/cms":        "workspace:*"
     },
     "engines": {
         "bun": ">=1.3.0"

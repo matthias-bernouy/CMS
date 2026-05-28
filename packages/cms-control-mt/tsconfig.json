@@ -12,8 +12,6 @@
     "references": [
         { "path": "../core" },
         { "path": "../runner-bun" },
-        { "path": "../auth-keycloak" },
-        { "path": "../auth-composite" },
         { "path": "../cms" }
     ]
 }
