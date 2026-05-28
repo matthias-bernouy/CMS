@@ -9,7 +9,6 @@ WORKDIR /app
 # `workspace:*` dep without a curated subset.
 COPY package.json bun.lock tsconfig.base.json tsconfig.json build.ts ./
 COPY packages/ ./packages/
-COPY official-tenant-provisioners/ ./official-tenant-provisioners/
 COPY images/ ./images/
 
 RUN bun install --frozen-lockfile

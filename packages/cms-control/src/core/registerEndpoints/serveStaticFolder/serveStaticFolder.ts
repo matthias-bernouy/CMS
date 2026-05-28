@@ -59,6 +59,19 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
             const cacheKey = `static-html:${finalRoute}`;
 
             runner.get(finalRoute, async (req: Request) => {
+                // /editor/<resource> needs an `id` query param; without one the
+                // client-side JS would hit /api/<resource> and 500 with
+                // `MissingParam("id")`. Bounce the user to the matching admin
+                // listing instead. Plural is just "+s" for the current set
+                // (page, snippet, template).
+                if (finalRoute.startsWith("/editor/")) {
+                    const url = new URL(req.url);
+                    if (!url.searchParams.get("id")) {
+                        const resource = finalRoute.slice("/editor/".length);
+                        const basePath = runner.basePath === "/" ? "" : runner.basePath;
+                        return Response.redirect(`${basePath}/admin/${resource}s`, 302);
+                    }
+                }
                 const extras = options.cspExtras ? await options.cspExtras() : undefined;
                 return cachedResponseAsync(req, cacheKey, cache, async () => {
                     const html = await prepareHtml(file.absolutePath, runner);

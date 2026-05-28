@@ -2,6 +2,7 @@ import type { Runner } from "@bernouy/core";
 import { BunRunner } from "@bernouy/runner-bun";
 import type { Cache } from "@bernouy/cms-shared";
 import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
+import { registerDeliveryEndpoints } from "cms-delivery/registerDeliveryEndpoints";
 import type { DeliveryRepository } from "./interfaces/DeliveryRepository";
 import type { HeadInjector } from "./interfaces/HeadInjector";
 
@@ -59,6 +60,8 @@ export default class DeliveryCms {
         this._repository         = config.repository;
         this._cache              = config.cache || new DeliveryCache();
         this._headInjectors      = config.headInjectors ?? [];
+
+        registerDeliveryEndpoints(this);
     }
 
     get runner(){

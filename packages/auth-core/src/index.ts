@@ -15,7 +15,7 @@
 export { LocalAuthentication, type LocalAuthConfig } from "auth-core/auth/LocalAuthentication";
 export { OidcAuthentication, type OidcAuthConfig }   from "auth-core/auth/OidcAuthentication";
 export { SubjectResolver, internalUserId }            from "auth-core/auth/SubjectResolver";
-export { PiiCrypto }                                  from "auth-core/auth/PiiCrypto";
+export { PiiCrypto, createPiiCrypto }                 from "auth-core/auth/PiiCrypto";
 export { mintPatToken, hashPatToken }                 from "auth-core/auth/patToken";
 export { toLoginMethod }                              from "auth-core/auth/toLoginMethod";
 export { readCookie, setCookie, clearCookie, sanitizeReturnTo } from "auth-core/auth/cookies";

@@ -1,36 +1,65 @@
-# Basic CMS deployment — `docker compose -f images/cms/compose.yml up --build`.
+# Per-instance CMS deployment. Copy this file + a `.env` to a dedicated
+# folder on the server (one folder per client/site) and run
+# `docker compose up -d`. The shared infrastructure (nginx-proxy,
+# acme-companion, mongo) must already be running — see `infra/compose.yml`.
 #
-# Two services: the Bun process serving Control + Delivery, and an nginx
-# sidecar that terminates HTTP on the host's :80 and reverse-proxies the
-# upstream. Everything in memory — nothing persists across `down`.
+# nginx-proxy detects the container via the `VIRTUAL_HOST_MULTIPORTS`
+# env var and routes:
+#   - ${DOMAIN}        → :3001 (Delivery, public site)
+#   - admin.${DOMAIN}  → :3000 (Control, admin)
+# acme-companion obtains certs for both hostnames.
 #
-# Edit the env block below before pointing this at anything public:
-#   - CMS_SESSION_SECRET must be a real random 32+ char value
-#     (`openssl rand -hex 32`).
-#   - CMS_ADMIN_PASSWORD should be set explicitly; the generated fallback is
-#     logged on stdout and lost when the container restarts.
+# Required `.env`:
+#   DOMAIN=clientX.com
+#   INSTANCE_ID=clientX                                 # mongo db name suffix
+#   CMS_SESSION_SECRET=$(openssl rand -hex 32)
+#   CMS_KEK_HEX=$(openssl rand -hex 32)
+#   CMS_ADMIN_PASSWORD=$(openssl rand -base64 18)
+#
+# Override `MONGO_URL` to point at an external cluster (Atlas, …) — the
+# default uses the bundled mongo from `infra/compose.yml`.
+#
+# DNS: both A/AAAA records for `${DOMAIN}` and `admin.${DOMAIN}` must
+# resolve to the server before the first `up`, otherwise acme-companion
+# will fail to obtain the cert (it retries automatically once DNS is up).
 
 services:
     cms:
-        build:
-            context: ../..
-            dockerfile: images/cms/Dockerfile
         image: bernouy/cms:basic
+        restart: unless-stopped
         environment:
-            PORT:               "3000"
-            CMS_PUBLIC_URL:     "http://localhost:8080"
-            CMS_SESSION_SECRET: "dev-session-secret-must-be-at-least-32-chars-long-please"
-            CMS_ADMIN_EMAIL:    "admin@local.com"
-            CMS_ADMIN_PASSWORD: "dev-admin-password"
-            NODE_ENV:           "development"
+            CONTROL_PORT:        "3000"
+            DELIVERY_PORT:       "3001"
+            CONTROL_PUBLIC_URL:  "https://admin.${DOMAIN:?DOMAIN must be set}"
+            DELIVERY_PUBLIC_URL: "https://${DOMAIN}"
+            CMS_SESSION_SECRET:  ${CMS_SESSION_SECRET:?CMS_SESSION_SECRET must be set (32+ chars; openssl rand -hex 32)}
+            CMS_KEK_HEX:         ${CMS_KEK_HEX:?CMS_KEK_HEX must be set (32 bytes hex = 64 chars; openssl rand -hex 32)}
+            CMS_ADMIN_EMAIL:     ${CMS_ADMIN_EMAIL:-admin@${DOMAIN}}
+            CMS_ADMIN_PASSWORD:  ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
+            CMS_FILES_DIR:       /var/lib/cms/files
+            MONGO_URL:           ${MONGO_URL:-mongodb://mongo:27017/cms_${INSTANCE_ID:?INSTANCE_ID must be set when MONGO_URL is not (used as mongo db name suffix)}}
+            NODE_ENV:            production
+
+            # nginx-proxy + acme-companion routing/cert directives. The
+            # YAML block tells nginx-proxy to route Delivery on the apex
+            # and Control on the admin subdomain. Both hostnames get a
+            # cert from acme-companion via `LETSENCRYPT_HOST`.
+            VIRTUAL_HOST_MULTIPORTS: |-
+                ${DOMAIN}:
+                  "/":
+                    port: 3001
+                admin.${DOMAIN}:
+                  "/":
+                    port: 3000
+            LETSENCRYPT_HOST: "${DOMAIN},admin.${DOMAIN}"
+        volumes:
+            - ./files:/var/lib/cms/files
         expose:
             - "3000"
+            - "3001"
+        networks:
+            - cms_net
 
-    nginx:
-        image: nginx:alpine
-        ports:
-            - "8080:80"
-        volumes:
-            - ./nginx.conf:/etc/nginx/nginx.conf:ro
-        depends_on:
-            - cms
+networks:
+    cms_net:
+        external: true

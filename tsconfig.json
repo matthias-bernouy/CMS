@@ -8,12 +8,6 @@
         { "path": "packages/cms-delivery" },
         { "path": "packages/cms-control" },
         { "path": "packages/cms-cli" },
-        { "path": "packages/cms-blocs" },
-        { "path": "official-tenant-provisioners/_tenant-provisioner-contract" },
-        { "path": "official-tenant-provisioners/_sdk" },
-        { "path": "official-tenant-provisioners/_example" },
-        { "path": "official-tenant-provisioners/_issuer-kit" },
-        { "path": "official-tenant-provisioners/addresses" },
-        { "path": "official-tenant-provisioners/cms-control" }
+        { "path": "packages/cms-blocs" }
     ]
 }

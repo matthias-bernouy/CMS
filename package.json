@@ -2,8 +2,7 @@
     "name": "@bernouy/cms-core",
     "private": true,
     "workspaces": [
-        "packages/*",
-        "official-tenant-provisioners/*"
+        "packages/*"
     ],
     "scripts": {
         "build": "bun run build.ts",
@@ -25,12 +24,6 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-cli": "workspace:*",
-        "@bernouy/cms-blocs": "workspace:*",
-        "@bernouy/tenant-provisioner-sdk": "workspace:*",
-        "@bernouy/tenant-provisioner-example": "workspace:*",
-        "@bernouy/tenant-provisioner-addresses": "workspace:*",
-        "@bernouy/tenant-provisioner-cms-control": "workspace:*",
-        "@bernouy/tenant-provisioner-contract": "workspace:*",
-        "@bernouy/issuer-kit": "workspace:*"
+        "@bernouy/cms-blocs": "workspace:*"
     }
 }

@@ -1,0 +1,80 @@
+# Shared CMS infrastructure — run ONCE per server, before bringing up any
+# CMS instance. Provides:
+#
+#   - nginx-proxy:     dynamic reverse proxy. Watches the Docker socket;
+#                      every container that publishes `VIRTUAL_HOST` (and
+#                      `VIRTUAL_PORT` / `VIRTUAL_HOST_MULTIPORTS`) is added
+#                      to the nginx config automatically, no reload script.
+#   - acme-companion:  obtains + renews Let's Encrypt certs for every
+#                      container that declares `LETSENCRYPT_HOST`. Runs in
+#                      a background loop, hooks `nginx -s reload` on cert
+#                      change. Email comes from `DEFAULT_EMAIL` (set via
+#                      `.env`).
+#   - mongo:           single MongoDB cluster, shared across all CMS
+#                      instances. Each instance uses its own database
+#                      (e.g. `cms_clientX`). No auth — only reachable on
+#                      the `cms_net` docker network, no port published to
+#                      host.
+#
+# Usage:
+#   cd images/cms/infra
+#   cat > .env <<'EOF'
+#   LETSENCRYPT_EMAIL=ops@yourdomain.com
+#   EOF
+#   docker compose up -d
+#
+# The `cms_net` network is created with a stable name so per-instance
+# compose files (see ../compose.yml) can join it with `external: true`.
+
+services:
+    nginx-proxy:
+        image: nginxproxy/nginx-proxy:latest
+        container_name: nginx-proxy
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+            - nginx_certs:/etc/nginx/certs
+            - nginx_vhost:/etc/nginx/vhost.d
+            - nginx_html:/usr/share/nginx/html
+            - nginx_acme:/etc/acme.sh
+        networks:
+            - cms_net
+
+    acme-companion:
+        image: nginxproxy/acme-companion:latest
+        container_name: acme-companion
+        restart: unless-stopped
+        depends_on:
+            - nginx-proxy
+        volumes_from:
+            - nginx-proxy
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - nginx_acme:/etc/acme.sh
+        environment:
+            DEFAULT_EMAIL: ${LETSENCRYPT_EMAIL:?LETSENCRYPT_EMAIL must be set (used for renewal alerts)}
+        networks:
+            - cms_net
+
+    mongo:
+        image: mongo:7
+        container_name: mongo
+        restart: unless-stopped
+        volumes:
+            - mongo_data:/data/db
+        networks:
+            - cms_net
+
+networks:
+    cms_net:
+        name: cms_net
+
+volumes:
+    nginx_certs:
+    nginx_vhost:
+    nginx_html:
+    nginx_acme:
+    mongo_data:
