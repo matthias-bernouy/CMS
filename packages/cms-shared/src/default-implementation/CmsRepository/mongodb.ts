@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
-import type { BlocListItemResponse, CmsRepository, PageLink } from "cms-shared/interfaces/CmsRepository";
+import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-shared/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "cms-shared/interfaces/models";
 
 /**
@@ -174,11 +174,28 @@ export class MongoCmsRepository implements CmsRepository {
         return docs.map(d => ({ path: d.path, title: d.title }));
     }
 
-    async getPagesMetadata(): Promise<{ id: string; path: string; title: string; tags: string[]; visible: boolean }[]> {
-        const docs = await this.pages.find(
-            {},
-            { projection: { path: 1, title: 1, tags: 1, visible: 1 } },
-        ).toArray();
+    async getPagesMetadata(opts: PagesQuery = {}): Promise<PageMeta[]> {
+        // Filtering + sorting run IN the query — page metadata isn't encrypted,
+        // so `$regex` on title/path and a server-side sort are all available.
+        const filter: Record<string, unknown> = {};
+        const search = opts.search?.trim();
+        if (search) {
+            const rx = { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+            filter.$or = [{ title: rx }, { path: rx }];
+        }
+        if (opts.tag)                     filter.tags = opts.tag;
+        if (opts.visible === "published") filter.visible = true;
+        else if (opts.visible === "draft") filter.visible = false;
+
+        const sortField = opts.sortBy ?? "title";
+        const sort = { [sortField]: opts.sortOrder === "desc" ? -1 : 1 } as Record<string, 1 | -1>;
+
+        // Collation strength 1 → case- and accent-insensitive sort, matching
+        // the in-memory impls' `localeCompare(sensitivity: "base")`.
+        const docs = await this.pages.find(filter, {
+            projection: { path: 1, title: 1, tags: 1, visible: 1 },
+        }).collation({ locale: "en", strength: 1 }).sort(sort).toArray();
+
         return docs.map(d => ({
             id:      d._id,
             path:    d.path,

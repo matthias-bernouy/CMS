@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { TPage } from "@bernouy/cms-shared";
+import type { TPage, PageMeta, PagesQuery } from "@bernouy/cms-shared";
+import { filterAndSortPages } from "@bernouy/cms-shared";
 import { scanPages } from "cms-cli/push/pages/scan";
 import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
 
@@ -46,10 +47,11 @@ export class PagesStore {
         return (await this.getAll()).map(p => ({ path: p.path, title: p.title }));
     }
 
-    async metadata(): Promise<{ id: string; path: string; title: string; tags: string[]; visible: boolean }[]> {
-        return (await this.getAll()).map(p => ({
+    async metadata(opts: PagesQuery = {}): Promise<PageMeta[]> {
+        const all: PageMeta[] = (await this.getAll()).map(p => ({
             id: p.id, path: p.path, title: p.title, tags: p.tags, visible: p.visible,
         }));
+        return filterAndSortPages(all, opts);
     }
 
     private _toTPage(path: string, fm: { title: string; description: string; visible: boolean; tags: string[] }, content: string): TPage {

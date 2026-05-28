@@ -1,6 +1,7 @@
 import { randomUUIDv7 } from "bun";
-import type { BlocListItemResponse, CmsRepository, PageLink } from "cms-shared/interfaces/CmsRepository";
+import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-shared/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "cms-shared/interfaces/models";
+import { filterAndSortPages } from "cms-shared/default-implementation/CmsRepository/pagesQuery";
 
 /**
  * In-memory implementation of `CmsRepository` for local dev and tests. No
@@ -118,14 +119,17 @@ export class InMemoryCmsRepository implements CmsRepository {
         }));
     }
 
-    async getPagesMetadata(): Promise<{ id: string; path: string; title: string; tags: string[]; visible: boolean }[]> {
-        return Array.from(this._pages.values()).map(p => ({
-            id:      p.id,
-            path:    p.path,
-            title:   p.title,
-            tags:    [...p.tags],
-            visible: p.visible,
-        }));
+    async getPagesMetadata(opts: PagesQuery = {}): Promise<PageMeta[]> {
+        return filterAndSortPages(
+            Array.from(this._pages.values()).map(p => ({
+                id:      p.id,
+                path:    p.path,
+                title:   p.title,
+                tags:    [...p.tags],
+                visible: p.visible,
+            })),
+            opts,
+        );
     }
 
     async getTemplatesMetadata(): Promise<{ id: string; identifier: string; name: string; category: string; createdAt: string }[]> {

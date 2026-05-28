@@ -1,4 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
+import type { PagesQuery } from "@bernouy/cms-shared";
 
 export type PageListItem = {
     id: string;
@@ -9,15 +10,19 @@ export type PageListItem = {
     visibleColor: string;
 };
 
+/** Filter + sort options, owned by the repository (`CmsRepository.PagesQuery`).
+ *  Re-exported under the name the API layer already imports. */
+export type PageListOptions = PagesQuery;
+
 /**
- * View-model for the admin Pages table. Hands back exactly what the
- * `<cms-fetch>` template needs and nothing more — `repository.getPagesMetadata()`
- * is narrow on purpose (no `content` / `description`), and the boolean
- * `visible` is mapped here to a label + p9r-tag color so the HTML stays
- * a flat `{{ visibleLabel }}` / `{{ visibleColor }}` interpolation.
+ * View-model for the admin Pages table. Filtering + sorting now live in the
+ * repository (`getPagesMetadata(opts)`), so each storage engine handles them
+ * optimally (Mongo in-query, in-memory in JS). This stays a thin mapper:
+ * `repository.getPagesMetadata` is narrow on purpose (no `content`), and the
+ * boolean `visible` becomes a label + p9r-tag color for the flat template.
  */
-export async function getPagesList(cms: ControlCms): Promise<PageListItem[]> {
-    const pages = await cms.repository.getPagesMetadata();
+export async function getPagesList(cms: ControlCms, opts: PageListOptions = {}): Promise<PageListItem[]> {
+    const pages = await cms.repository.getPagesMetadata(opts);
     return pages.map(p => ({
         id:           p.id,
         path:         p.path,

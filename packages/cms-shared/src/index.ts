@@ -15,8 +15,9 @@ export type CMS_ROLES = "admin" | "user";
 
 // ── Content interfaces ─────────────────────────────────────────────────
 export type {
-    CmsRepository, BlocListItemResponse, PageLink,
+    CmsRepository, BlocListItemResponse, PageLink, PageMeta, PagesQuery,
 } from "cms-shared/interfaces/CmsRepository";
+export { filterAndSortPages } from "cms-shared/default-implementation/CmsRepository/pagesQuery";
 export type {
     TPage, TBloc, TTemplate, TSnippet, TSystem, TPageRef,
 } from "cms-shared/interfaces/models";

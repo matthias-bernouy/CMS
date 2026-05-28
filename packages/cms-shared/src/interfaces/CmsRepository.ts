@@ -12,6 +12,32 @@ export type PageLink = {
     title: string;
 }
 
+export type PageMeta = {
+    id: string;
+    path: string;
+    title: string;
+    tags: string[];
+    visible: boolean;
+}
+
+/**
+ * Filter + sort for the admin Pages listing. Optional everywhere — an empty
+ * query lists every page (title asc). Each implementation honours this the best
+ * its engine allows (Mongo: in-query `$regex` + sort + indexes; in-memory: a
+ * plain filter/sort). Page metadata is NOT encrypted, so unlike `UsersRepository`
+ * substring search and sort on title/path are fully supported server-side.
+ */
+export type PagesQuery = {
+    /** Case-insensitive substring matched against title AND path. */
+    search?:    string;
+    /** Keep only pages carrying this tag. */
+    tag?:       string;
+    /** "published" → visible only; "draft" → hidden only. */
+    visible?:   "published" | "draft";
+    sortBy?:    "title" | "path" | "visible";
+    sortOrder?: "asc" | "desc";
+}
+
 export interface CmsRepository {
 
     // BLOC
@@ -33,7 +59,7 @@ export interface CmsRepository {
     updatePage(page: Partial<TPage>): Promise<void>;
     deletePage(id: string): Promise<void>;
     getLinks(): Promise<PageLink[]>
-    getPagesMetadata(): Promise<{id: string, path: string, title: string, tags: string[], visible: boolean}[]>
+    getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]>
     getTemplatesMetadata(): Promise<{id: string, identifier: string, name: string, category: string, createdAt: string}[]>
 
 

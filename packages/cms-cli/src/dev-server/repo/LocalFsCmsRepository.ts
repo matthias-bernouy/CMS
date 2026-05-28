@@ -1,4 +1,4 @@
-import type { CmsRepository, BlocListItemResponse, PageLink } from "@bernouy/cms-shared";
+import type { CmsRepository, BlocListItemResponse, PageLink, PagesQuery } from "@bernouy/cms-shared";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "@bernouy/cms-shared";
 import type { BuiltBloc } from "../build";
 import { PagesStore } from "./pages";
@@ -47,7 +47,7 @@ export class LocalFsCmsRepository implements CmsRepository {
     updatePage(page: Partial<TPage>):          Promise<void>         { return this._pages.update(page); }
     deletePage(id: string):                    Promise<void>         { return this._pages.delete(id); }
     getLinks():                                Promise<PageLink[]>   { return this._pages.links(); }
-    getPagesMetadata() { return this._pages.metadata(); }
+    getPagesMetadata(opts?: PagesQuery) { return this._pages.metadata(opts); }
     getTemplatesMetadata() { return this._templates.metadata(); }
 
     // ── System ──

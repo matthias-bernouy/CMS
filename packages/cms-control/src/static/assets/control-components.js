@@ -10200,6 +10200,102 @@ ${followMessage}`)) {
   }
   customElements.define("cms-headers-input", CmsHeadersInput);
 
+  // src/components/admin/ListFilter/ListFilter.ts
+  class CmsListFilter extends HTMLElement {
+    _fetch = null;
+    _base = "";
+    _filters = {};
+    _sortBy = "";
+    _sortOrder = "asc";
+    _debounce = null;
+    connectedCallback() {
+      requestAnimationFrame(() => this._init());
+    }
+    _init() {
+      this._fetch = this.querySelector("cms-fetch");
+      if (!this._fetch)
+        return;
+      this._base = (this._fetch.getAttribute("url") || "").split("?")[0];
+      this._sortBy = this.getAttribute("default-sort") || "title";
+      this._renderSortIndicators();
+      this._wireFilters();
+      this._wireSort();
+      this._loadTags();
+    }
+    _wireFilters() {
+      const search = this.querySelector('[data-filter="search"]');
+      search?.addEventListener("input", () => {
+        if (this._debounce)
+          clearTimeout(this._debounce);
+        this._debounce = setTimeout(() => this._set("search", val(search)), 250);
+      });
+      for (const key of ["visible", "tag"]) {
+        const el = this.querySelector(`[data-filter="${key}"]`);
+        el?.addEventListener("change", () => this._set(key, val(el)));
+      }
+    }
+    _wireSort() {
+      this.querySelectorAll("[data-sort]").forEach((h) => {
+        h.style.cursor = "pointer";
+        h.addEventListener("click", () => {
+          const key = h.dataset.sort;
+          if (this._sortBy === key)
+            this._sortOrder = this._sortOrder === "asc" ? "desc" : "asc";
+          else {
+            this._sortBy = key;
+            this._sortOrder = "asc";
+          }
+          this._renderSortIndicators();
+          this._apply();
+        });
+      });
+    }
+    _renderSortIndicators() {
+      this.querySelectorAll("[data-sort]").forEach((h) => {
+        const ind = h.querySelector("[data-sort-ind]");
+        if (ind)
+          ind.textContent = h.dataset.sort === this._sortBy ? this._sortOrder === "asc" ? "↑" : "↓" : "";
+      });
+    }
+    _set(key, value) {
+      if (value)
+        this._filters[key] = value;
+      else
+        delete this._filters[key];
+      this._apply();
+    }
+    _apply() {
+      if (!this._fetch)
+        return;
+      const params = new URLSearchParams(this._filters);
+      if (this._sortBy) {
+        params.set("sortBy", this._sortBy);
+        params.set("sortOrder", this._sortOrder);
+      }
+      const qs = params.toString();
+      this._fetch.setAttribute("url", qs ? `${this._base}?${qs}` : this._base);
+    }
+    async _loadTags() {
+      const url = this.getAttribute("tags-url");
+      const sel = this.querySelector('[data-filter="tag"]');
+      if (!url || !sel)
+        return;
+      try {
+        const tags = await (await fetch(url)).json();
+        for (const t of tags) {
+          const opt = document.createElement("option");
+          opt.value = t.value;
+          opt.textContent = `${t.value} (${t.count})`;
+          sel.appendChild(opt);
+        }
+      } catch {}
+    }
+  }
+  var val = (el) => el.value ?? "";
+  if (!customElements.get("cms-list-filter")) {
+    customElements.define("cms-list-filter", CmsListFilter);
+  }
+
   // ../auth-core/src/components/LoginMethods/LoginMethods.ts
   class CmsLoginMethods extends HTMLElement {
     async connectedCallback() {
@@ -11465,9 +11561,9 @@ ${followMessage}`)) {
     _sync() {
       const inputs = Array.from(this.querySelectorAll("[name]"));
       inputs.forEach((input) => {
-        const val = this._component?.getAttribute(input.name);
-        if (val) {
-          input.value = val;
+        const val2 = this._component?.getAttribute(input.name);
+        if (val2) {
+          input.value = val2;
         } else {
           if (input.value) {
             this._component?.setAttribute(input.name, input.value);
@@ -22063,10 +22159,10 @@ button.active svg {
       return this.getAttribute("redirect");
     }
     get target() {
-      const val = this.getAttribute("target");
-      if (!val)
+      const val2 = this.getAttribute("target");
+      if (!val2)
         throw new Error("CmsForm target attribute should be set");
-      return val;
+      return val2;
     }
     get method() {
       return this.getAttribute("method");
