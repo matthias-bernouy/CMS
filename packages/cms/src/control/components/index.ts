@@ -12,6 +12,7 @@ import "./admin/HeadersInput/HeadersInput"
 import "./admin/LoginMethods/LoginMethods"
 import "./admin/OpenDialog/OpenDialog"
 import "./admin/ProviderActions/ProviderActions"
+import "./admin/RoleSelect/RoleSelect"
 import "./admin/Tokens/TokenCreate"
 import "./admin/Secrets/Secrets"
 
