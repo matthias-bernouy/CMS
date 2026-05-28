@@ -7,7 +7,7 @@ sécurité y vit **une seule fois**. Un provider le **consomme** par la frontiè
 `exports` (jamais d'import qui la traverse — `import-rules.md` règle 3) et
 **n'en réimplémente aucune partie**.
 
-Forme Socle : le SDK lui-même suit `.claude/rules/structure.md`
+Forme Socle : le SDK lui-même suit `.agents/rules/structure.md`
 (`interfaces/`, `core/`, `default-implementation/`, `exports/`).
 
 **Indépendance système (normatif).** `_sdk` NE DOIT importer **ni** le CMS

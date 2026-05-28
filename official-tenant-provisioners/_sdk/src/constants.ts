@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 // `import.meta.url` resolves to .../official-tenant-provisioners/_sdk/src/constants.ts.
 // Walking up once gives `src/`, twice gives the package root — used to
 // reference `src/...` for `serveApi`/test scans without `__dirname`
-// gymnastics (cf. .claude/rules/import-rules.md §2).
+// gymnastics (cf. .agents/rules/import-rules.md §2).
 const here = dirname(fileURLToPath(import.meta.url));
 
 export const sdkPackageRoot: string = dirname(here);

@@ -4,7 +4,7 @@ import { z } from "zod";
  * THE single source of the tenant-provisioner wire contract, consumed by BOTH
  * `@bernouy/tenant-provisioner-sdk` (verify side) and `@bernouy/issuer-kit`
  * (sign side) so they cannot drift. Depends on nothing but `zod` (no cycle).
- * Spec: `.claude/official-tenant-provisioners/base.md` §4.3 / §4.4 / §4.6 / §4.8.
+ * Spec: `.agents/official-tenant-provisioners/base.md` §4.3 / §4.4 / §4.6 / §4.8.
  */
 
 /** Wire-contract version (RFC 8414 metadoc field below). Distinct from any

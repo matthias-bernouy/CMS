@@ -5,7 +5,7 @@ import { redactForTenant } from "src/core/log/redaction";
  * Control-plane log read (`/admin/logs`) — base.md §10.5. Raw records, all
  * tenants/kinds, bounded by the store; the store handles filtering +
  * pagination, this layer is the thin pass-through that gives `api/` a single
- * call site (cf. `.claude/rules/api-folder.md`).
+ * call site (cf. `.agents/rules/api-folder.md`).
  */
 export function readAdminLogs(store: LogStore, q: LogQuery): Promise<LogPage> {
     return store.query(q);

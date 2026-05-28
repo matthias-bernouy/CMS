@@ -84,7 +84,7 @@ on the consumer side.
 
 ## Bloc authoring contract
 
-Inherits the rules in `.claude/rules/cms-bloc-development.md`:
+Inherits the rules in `.agents/rules/cms-bloc-development.md`:
 
 - **No icon fonts.** Use SVG/PNG/JPEG. Inline SVG (with
   `fill="currentColor"`) for swappable icons via `<p9r-svg-sync>`;

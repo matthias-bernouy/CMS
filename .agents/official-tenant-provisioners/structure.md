@@ -5,7 +5,7 @@ l'agencement interne **obligatoire** de `official-tenant-provisioners/<name>/`.
 
 Un official tenant-provisioner est un **service API-only, multi-tenant, à
 déploiement unique**. Il suit l'architecture « Socle » du projet
-(`.claude/rules/structure.md`), avec **deux différences assumées** :
+(`.agents/rules/structure.md`), avec **deux différences assumées** :
 
 - **Pas de `static/`** ni de `components/` : aucune UI. Tout l'affichage est
   rendu par le **hub/central**. Le provider n'expose que des API.
@@ -78,7 +78,7 @@ Notes :
 
 ## 2. Rôles des couches
 
-Identiques à `.claude/rules/structure.md`. Spécificités provider :
+Identiques à `.agents/rules/structure.md`. Spécificités provider :
 
 - **`interfaces/`** — contrats du **domaine** uniquement (repos métier). Les
   contrats transverses (`ProviderConfig`, `TenantRegistry`) viennent du SDK.
@@ -183,7 +183,7 @@ config ». Aucune erreur.
 
 ## 5. Limites
 
-Celles de `.claude/rules/structure.md` : fichier ≤ 120 lignes, dossier ≤ 8
+Celles de `.agents/rules/structure.md` : fichier ≤ 120 lignes, dossier ≤ 8
 entrées, profondeur ≤ 4 depuis la racine du provider. Le provider étant réduit
 au domaine + hooks, ces limites sont largement tenables ; découper
 `core/<domain>/` en sous-modules si besoin.
