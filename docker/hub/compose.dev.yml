@@ -224,13 +224,11 @@ services:
             # Mongo, in its own database.
             MONGO_URL:        "mongodb://mongo:27017"
             MONGO_DB_NAME:    "cms_dev"
-            # Shared admin OIDC — one realm + client for ALL tenants; the CMS
-            # authorizes per-tenant by member email. The `cms-admin` client +
-            # secret are created by keycloak-setup.sh (master realm).
-            CMS_ADMIN_OIDC_ISSUER:         "http://keycloak.localtest.me:8080/realms/master"
-            CMS_ADMIN_OIDC_CLIENT_ID:      "cms-admin"
-            CMS_ADMIN_OIDC_CLIENT_SECRET:  "dev-cms-admin-secret"
-            CMS_ADMIN_OIDC_SESSION_SECRET: "dev-cms-session-secret-must-be-at-least-32-chars-long"
+            # Shared key signing every tenant's admin session cookie. Auth is
+            # CMS-owned (builtin local provider + per-tenant dynamic OIDC
+            # providers stored as data), so this is the only platform-wide
+            # auth secret.
+            CMS_SESSION_SECRET: "dev-cms-session-secret-must-be-at-least-32-chars-long"
             # Media: CMS_S3_* come from the gitignored `dev/.env.cms-tp`
             # (see `env_file` above) — real bucket creds stay out of git. Drop
             # that env_file to fall back to a local FS dir (CMS_FILES_DIR).

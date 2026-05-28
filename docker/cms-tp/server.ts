@@ -39,15 +39,12 @@ const HUB_ISSUER_URL   = env("HUB_ISSUER_URL");     // the hub iss (allowlisted)
 const MONGO_URL        = env("MONGO_URL");
 const MONGO_DB_NAME    = env("MONGO_DB_NAME", "cms_dev");
 
-// Shared, platform-level admin OIDC — one realm + client for every tenant,
-// configured once here (not per-tenant). The shared client uses a wildcard
-// redirect URI; each tenant keeps its own cookie name + auth basePath.
-const adminOidc = {
-    issuer:        env("CMS_ADMIN_OIDC_ISSUER"),
-    clientId:      env("CMS_ADMIN_OIDC_CLIENT_ID"),
-    clientSecret:  env("CMS_ADMIN_OIDC_CLIENT_SECRET"),
-    sessionSecret: env("CMS_ADMIN_OIDC_SESSION_SECRET"),
-    ...(process.env.CMS_ADMIN_OIDC_CLI_CLIENT_ID ? { cliClientId: process.env.CMS_ADMIN_OIDC_CLI_CLIENT_ID } : {}),
+// Shared, platform-level session-signing key — one key for every tenant,
+// configured once here (not per-tenant). Authentication is CMS-owned (builtin
+// local provider + per-tenant dynamic OIDC providers stored as data), so this
+// is the only platform-wide auth secret.
+const session = {
+    sessionSecret: env("CMS_SESSION_SECRET"),
 };
 
 const mongo = new MongoClient(MONGO_URL);
@@ -78,17 +75,17 @@ const mt = new MtControlCms({
     appBaseUrl: ADMIN_PUBLIC_URL,
     tenantRepo: new MongoTenantRepository(db),
     secretCrypto,
-    adminOidc,
+    session,
 });
 
-// Adapter: translate the provider lifecycle into runtime mounts. Admin OIDC is
-// platform-level (configured once on `mt`), so only the tenant id/name + the
-// bootstrap admin email flow here.
+// Adapter: translate the provider lifecycle into runtime mounts. The
+// session-signing key is platform-level (configured once on `mt`); the
+// tenant id/name + the bootstrap admin (email + optional password) flow here.
 const runtime: CmsTenantRuntime = {
-    provision:   ({ tenantId, displayName, initialAdminEmail }) =>
-        mt.provisionTenant({ id: tenantId, name: displayName ?? tenantId, initialAdminEmail }),
-    reprovision: ({ tenantId, displayName, initialAdminEmail }) =>
-        mt.reprovisionTenant({ id: tenantId, name: displayName ?? tenantId, initialAdminEmail }),
+    provision:   ({ tenantId, displayName, initialAdminEmail, initialAdminPassword }) =>
+        mt.provisionTenant({ id: tenantId, name: displayName ?? tenantId, initialAdminEmail, initialAdminPassword }),
+    reprovision: ({ tenantId, displayName, initialAdminEmail, initialAdminPassword }) =>
+        mt.reprovisionTenant({ id: tenantId, name: displayName ?? tenantId, initialAdminEmail, initialAdminPassword }),
     deprovision: ({ tenantId, force }) =>
         mt.deprovisionTenant(tenantId, { force }),
 };

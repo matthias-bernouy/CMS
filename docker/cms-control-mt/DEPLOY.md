@@ -103,11 +103,7 @@ Manager OVHcloud → ton OKMS domain → Secrets → New secret.
 | `SUPERADMIN_KEYCLOAK_SESSION_SECRET` | `openssl rand -hex 32` |
 | `SUPERADMIN_KEYCLOAK_ADMIN_ROLE` | `cms-superadmin` |
 | `CMS_KEK_KEY_ID` | UUID de la **service key** OVH créée au §6 (CMK pour les secrets tenant) |
-| `CMS_ADMIN_OIDC_ISSUER` | issuer du realm **partagé** d'auth admin (ex. `https://auth.bernouy.com/realms/cms-admin`) — un seul pour tous les tenants |
-| `CMS_ADMIN_OIDC_CLIENT_ID` | client confidentiel partagé pour le login admin (redirect-URI **wildcard** `…/cms/*/auth/*`) |
-| `CMS_ADMIN_OIDC_CLIENT_SECRET` | secret de ce client |
-| `CMS_ADMIN_OIDC_SESSION_SECRET` | `openssl rand -hex 32` — signe les cookies de session admin (tous tenants) |
-| `CMS_ADMIN_OIDC_CLI_CLIENT_ID` | *(optionnel)* client public pour `p9r login` (défaut `<clientId>-cli`) |
+| `CMS_SESSION_SECRET` | `openssl rand -hex 32` — clé partagée qui signe les cookies de session admin (tous tenants). Seul secret d'auth platform-level : l'auth est CMS-owned (provider local builtin + providers OIDC dynamiques par tenant, stockés en data) |
 | `CMS_S3_BUCKET` | bucket S3-compatible **partagé** pour les médias (isolation par préfixe de clé `tenant_<id>/`) |
 | `CMS_S3_ACCESS_KEY_ID` | access key S3 |
 | `CMS_S3_SECRET_ACCESS_KEY` | secret key S3 |
@@ -290,14 +286,14 @@ curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" \
 
 **Côté tenant** (à faire par le client ou toi pour son compte) :
 
-1. **Créer un realm Keycloak** dédié au tenant (ou client OIDC dans un
-   realm existant) avec :
-   - Client `cms` confidential
-   - Valid Redirect URIs : `https://cms.example.com/cms/<tenant-id>/auth/callback`
-   - Realm Role `admin` (ou autre — référence le `keycloak.adminRole` du
-     formulaire)
-   - Optionnel : client public `cms-cli` avec Device Authorization Grant
-     pour `p9r login`
+1. **Auth de départ** : rien à provisionner côté IdP. Au provisioning, le
+   tenant reçoit un provider local (email/mot de passe) builtin et un premier
+   admin seedé depuis `initialAdminEmail` + `initialAdminPassword`. Des
+   providers OIDC supplémentaires (Google, Keycloak, …) s'ajoutent ensuite
+   comme **data** depuis l'admin (Settings → Identity), avec redirect URI
+   `https://cms.example.com/cms/<tenant-id>/auth/<provider-id>/callback`.
+   Les accès CLI / server-to-server se font via un Personal Access Token créé
+   dans l'admin (page Profile).
 
 2. **Stockage fichiers** : rien à provisionner par tenant. Au niveau de
    l'image, définir les env `CMS_S3_*` (bucket S3-compatible partagé,
