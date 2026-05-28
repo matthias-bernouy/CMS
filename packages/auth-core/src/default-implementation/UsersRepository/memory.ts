@@ -46,6 +46,15 @@ export class InMemoryUsersRepository<Role extends string = string> implements Us
         return clone(next);
     }
 
+    async setProfile(sub: string, patch: { displayName?: string }): Promise<TUser<Role> | null> {
+        const u = this._users.get(sub);
+        if (!u) return null;
+        const next = { ...u };
+        if (patch.displayName !== undefined) next.displayName = patch.displayName;
+        this._users.set(sub, next);
+        return clone(next);
+    }
+
     async delete(sub: string): Promise<boolean> {
         return this._users.delete(sub);
     }

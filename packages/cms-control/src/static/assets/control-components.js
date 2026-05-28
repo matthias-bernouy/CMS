@@ -8482,7 +8482,7 @@ p9r-tag:hover {
     customElements.define("w13c-fetch", Nt);
   })();
 
-  // src/control/core/editorSystem/Component.ts
+  // src/core/editorSystem/Component.ts
   class Component extends HTMLElement {
     _rawStyles = "";
     _styles = null;
@@ -8511,14 +8511,14 @@ p9r-tag:hover {
     }
     connectedCallback() {}
   }
-  // src/control/errors/NearestElementRequire.ts
+  // src/errors/NearestElementRequire.ts
   class NearestElementRequire extends Error {
     constructor(ele, target) {
       super("The element " + ele.tagName + " should be placed under <" + target + ">");
     }
   }
 
-  // src/control/core/dom/editor/getClosestEditorSystem.ts
+  // src/core/dom/editor/getClosestEditorSystem.ts
   function getClosestEditorSystem(ele) {
     let current = ele;
     while (current) {
@@ -8536,7 +8536,7 @@ p9r-tag:hover {
     throw new NearestElementRequire(ele, "cms-editor-system");
   }
 
-  // src/control/components/icons.ts
+  // src/components/icons.ts
   var ICON_SNIPPET = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w13c-icon-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="m18 16 4-4-4-4"/>
@@ -8624,7 +8624,7 @@ p9r-tag:hover {
 </svg>
 `;
 
-  // src/control/core/editorSystem/Editor/PinMode.ts
+  // src/core/editorSystem/Editor/PinMode.ts
   class PinMode {
     _getAnchor;
     _stateSyncs;
@@ -8764,7 +8764,7 @@ p9r-tag:hover {
     }
   }
 
-  // src/control/core/editorSystem/Editor/panel.ts
+  // src/core/editorSystem/Editor/panel.ts
   var SYNC_SELECTORS = "p9r-comp-sync, p9r-image-sync, p9r-svg-sync, p9r-attr-sync, p9r-state-sync";
 
   class PanelConfig {
@@ -8835,7 +8835,7 @@ p9r-tag:hover {
     }
   }
 
-  // src/control/core/editorSystem/Editor/hoverBinding.ts
+  // src/core/editorSystem/Editor/hoverBinding.ts
   class HoverBinding {
     editor;
     _hoverElement = null;
@@ -8890,7 +8890,7 @@ p9r-tag:hover {
     return false;
   }
 
-  // src/control/core/editorSystem/Editor/modeBinding.ts
+  // src/core/editorSystem/Editor/modeBinding.ts
   var EVENT_NAME = "editor-system-switch-mode";
 
   class ModeBinding {
@@ -8913,7 +8913,7 @@ p9r-tag:hover {
     }
   }
 
-  // src/control/core/editorSystem/Editor/bodyStyle.ts
+  // src/core/editorSystem/Editor/bodyStyle.ts
   var registry = new Map;
   function acquireBodyStyle(tag, el) {
     let entry = registry.get(tag);
@@ -8935,7 +8935,7 @@ p9r-tag:hover {
     }
   }
 
-  // src/control/core/editorSystem/Editor/actionBarFeatures.ts
+  // src/core/editorSystem/Editor/actionBarFeatures.ts
   function defaultActionBarFeatures() {
     return new Map([
       ["delete", true],
@@ -8955,7 +8955,7 @@ p9r-tag:hover {
     features.set("saveAsTemplate", target.getAttribute(p9r.attr.ACTION.DISABLE_SAVE_AS_TEMPLATE) !== "true");
   }
 
-  // src/control/core/editorSystem/extensions/registry.ts
+  // src/core/editorSystem/extensions/registry.ts
   class ExtensionRegistry {
     _byScope = new Map;
     add(surface, ext) {
@@ -8980,7 +8980,7 @@ p9r-tag:hover {
     }
   }
 
-  // src/control/core/editorSystem/Editor/Editor.ts
+  // src/core/editorSystem/Editor/Editor.ts
   var _pinnedEditors = new Set;
 
   class Editor {
@@ -9216,7 +9216,7 @@ p9r-tag:hover {
       releaseBodyStyle(this.target.tagName);
     }
   }
-  // src/control/core/editorSystem/registerEditor.ts
+  // src/core/editorSystem/registerEditor.ts
   class EmptyEditor extends Editor {
     constructor(target) {
       super(target, "");
@@ -9244,7 +9244,7 @@ p9r-tag:hover {
       group: props.group
     });
   }
-  // src/socle/constants/editorAttributes.ts
+  // ../cms-shared/src/constants/editorAttributes.ts
   var P9R_ATTR = {
     ACTION: {
       DISABLE_DELETE: "p9r-action-disable-delete",
@@ -9278,8 +9278,7 @@ p9r-tag:hover {
       PERSISTENT_IDENTIFIER: "p9r-persistent-identifier"
     }
   };
-
-  // src/control/components/globals.ts
+  // src/components/globals.ts
   window.p9r = {
     attr: P9R_ATTR,
     Component,
@@ -9288,7 +9287,7 @@ p9r-tag:hover {
     registerEditor_opaque
   };
 
-  // src/control/components/admin/AdminLayout/template.html
+  // src/components/admin/AdminLayout/template.html
   var template_default = `<w13c-left-menu-layout>
 
     <w13c-lateral-menu slot="sidebar">
@@ -9379,6 +9378,17 @@ p9r-tag:hover {
         </w13c-lateral-menu-item>
 
 
+        <w13c-lateral-menu-item data-route="users" slot="footer">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Users
+        </w13c-lateral-menu-item>
+
         <w13c-lateral-menu-item data-route="settings" slot="footer">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -9392,8 +9402,9 @@ p9r-tag:hover {
         <w13c-lateral-menu-item data-role="profil" data-route="profil" slot="footer">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="10" r="3" />
+                <path d="M6.5 18.5a6 6 0 0 1 11 0" />
             </svg>
             Profil
         </w13c-lateral-menu-item>
@@ -9416,7 +9427,7 @@ p9r-tag:hover {
 
 </w13c-left-menu-layout>`;
 
-  // src/control/components/admin/AdminLayout/AdminLayout.ts
+  // src/components/admin/AdminLayout/AdminLayout.ts
   class FixedAdminLayout extends Component {
     constructor() {
       super({
@@ -9442,7 +9453,7 @@ p9r-tag:hover {
   }
   customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
 
-  // src/control/core/dom/BubblesEvent.ts
+  // src/core/dom/BubblesEvent.ts
   class BubblesEvent extends Event {
     constructor(type) {
       super(type, {
@@ -9452,7 +9463,7 @@ p9r-tag:hover {
     }
   }
 
-  // src/control/core/showToast.ts
+  // src/core/showToast.ts
   function showToast(message, options) {
     let stack = document.querySelector("p9r-toast-stack");
     if (!stack) {
@@ -9462,7 +9473,7 @@ p9r-tag:hover {
     stack.push(message, options);
   }
 
-  // src/control/components/admin/ConfirmForm/ConfirmForm.ts
+  // src/components/admin/ConfirmForm/ConfirmForm.ts
   class CmsConfirmForm extends HTMLElement {
     _busy = false;
     _onClick = async (e) => {
@@ -9562,7 +9573,7 @@ ${followMessage}`)) {
   }
   customElements.define("cms-confirm-form", CmsConfirmForm);
 
-  // src/control/components/admin/CredentialSelect/CredentialSelect.css
+  // src/components/admin/CredentialSelect/CredentialSelect.css
   var CredentialSelect_default = `:host { display: block; }
 
 .field { display: flex; flex-direction: column; gap: 6px; position: relative; }
@@ -9728,7 +9739,7 @@ ${followMessage}`)) {
 .create-actions .create-submit:hover { filter: brightness(0.96); }
 `;
 
-  // src/control/components/admin/CredentialSelect/icons.ts
+  // src/components/admin/CredentialSelect/icons.ts
   var ICON_KEY = `
 <svg class="key-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
     stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
@@ -9737,7 +9748,7 @@ ${followMessage}`)) {
 </svg>
 `;
 
-  // src/control/components/admin/CredentialSelect/template.ts
+  // src/components/admin/CredentialSelect/template.ts
   function buildShadow(host, label) {
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = `
@@ -9804,7 +9815,7 @@ ${followMessage}`)) {
     };
   }
 
-  // src/control/components/admin/CredentialSelect/flows.ts
+  // src/components/admin/CredentialSelect/flows.ts
   var SAVED_EVENT = "secret:saved";
   async function fetchKeys(api) {
     const res = await fetch(`${api}/keys`, { headers: { Accept: "application/json" } });
@@ -9833,7 +9844,7 @@ ${followMessage}`)) {
     return { ok: false, error };
   }
 
-  // src/control/components/admin/CredentialSelect/controller.ts
+  // src/components/admin/CredentialSelect/controller.ts
   var REF_PATTERN = /^\$\{([A-Z][A-Z0-9_]*)\}$/;
   function refToDisplay(ref) {
     return ref.match(REF_PATTERN)?.[1] ?? "";
@@ -9894,7 +9905,7 @@ ${followMessage}`)) {
     return li;
   }
 
-  // src/control/components/admin/CredentialSelect/dialog.ts
+  // src/components/admin/CredentialSelect/dialog.ts
   var KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
   function openCreateDialog(host) {
     host._refs.dialogKey.value = "";
@@ -9926,7 +9937,7 @@ ${followMessage}`)) {
     closePanel(host);
   }
 
-  // src/control/components/admin/CredentialSelect/CredentialSelect.ts
+  // src/components/admin/CredentialSelect/CredentialSelect.ts
   class CredentialSelect extends HTMLElement {
     static formAssociated = true;
     _refs;
@@ -10004,7 +10015,7 @@ ${followMessage}`)) {
     customElements.define("cms-credential-select", CredentialSelect);
   }
 
-  // src/control/components/admin/EmptyState/template.html
+  // src/components/admin/EmptyState/template.html
   var template_default2 = `<div class="cell">
     <slot name="icon"></slot>
     <slot name="title"></slot>
@@ -10012,7 +10023,7 @@ ${followMessage}`)) {
 </div>
 `;
 
-  // src/control/components/admin/EmptyState/style.css
+  // src/components/admin/EmptyState/style.css
   var style_default = `:host {
     display: table-row;
     position: relative;
@@ -10053,7 +10064,7 @@ ${followMessage}`)) {
 }
 `;
 
-  // src/control/components/admin/EmptyState/EmptyState.ts
+  // src/components/admin/EmptyState/EmptyState.ts
   class EmptyState extends Component {
     constructor() {
       super({
@@ -10066,7 +10077,7 @@ ${followMessage}`)) {
     customElements.define("cms-empty-state", EmptyState);
   }
 
-  // src/control/components/admin/EventToast/EventToast.ts
+  // src/components/admin/EventToast/EventToast.ts
   class CmsEventToast extends HTMLElement {
     _attached = null;
     _onEvent = () => {
@@ -10091,7 +10102,7 @@ ${followMessage}`)) {
   }
   customElements.define("cms-event-toast", CmsEventToast);
 
-  // src/control/components/admin/HeadersInput/HeadersInput.ts
+  // src/components/admin/HeadersInput/HeadersInput.ts
   class CmsHeadersInput extends HTMLElement {
     _rowCount = 0;
     _rowsContainer = null;
@@ -10180,7 +10191,39 @@ ${followMessage}`)) {
   }
   customElements.define("cms-headers-input", CmsHeadersInput);
 
-  // src/control/components/admin/OpenDialog/OpenDialog.ts
+  // ../auth-core/src/components/LoginMethods/LoginMethods.ts
+  class CmsLoginMethods extends HTMLElement {
+    async connectedCallback() {
+      const base = this.getAttribute("base") ?? "";
+      const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
+      root.innerHTML = `
+        <style>
+          .sep { display: flex; align-items: center; gap: .75rem; color: var(--text-muted, #999); font-size: .8rem; margin: 1rem 0; }
+          .sep::before, .sep::after { content: ""; flex: 1; height: 1px; background: var(--border-default, #ddd); }
+          a.provider { display: block; text-align: center; padding: .6rem; margin-top: .5rem; text-decoration: none;
+                       border: 1px solid var(--border-default, #ddd); border-radius: var(--radius-sm, 6px);
+                       color: var(--text-main, #111); background: var(--bg-surface, #fff); }
+          a.provider:hover { background: var(--bg-base, #f6f6f6); }
+        </style>
+        <div class="methods"></div>`;
+      const wrap = root.querySelector(".methods");
+      const returnTo = new URL(location.href).searchParams.get("returnTo") ?? "";
+      const rt = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+      try {
+        const res = await fetch(`${base}/auth/methods`);
+        const methods = res.ok ? await res.json() : [];
+        const redirect = methods.filter((m) => m.loginUrl);
+        if (!redirect.length)
+          return;
+        wrap.innerHTML = `<div class="sep">or</div>` + redirect.map((m) => `<a class="provider" href="${escapeAttr(m.loginUrl)}${rt}">${escapeText(m.displayName)}</a>`).join("");
+      } catch {}
+    }
+  }
+  var escapeAttr = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  var escapeText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  customElements.define("cms-login-methods", CmsLoginMethods);
+
+  // src/components/admin/OpenDialog/OpenDialog.ts
   class OpenDialog extends HTMLElement {
     connectedCallback() {
       this.addEventListener("click", this.handleClick);
@@ -10198,7 +10241,250 @@ ${followMessage}`)) {
   }
   customElements.define("w13c-open-dialog", OpenDialog);
 
-  // src/control/components/admin/Secrets/template.html
+  // src/components/admin/ProviderActions/ProviderActions.ts
+  class CmsProviderActions extends HTMLElement {
+    static get observedAttributes() {
+      return ["provider-id", "kind", "enabled"];
+    }
+    connectedCallback() {
+      this._render();
+    }
+    attributeChangedCallback() {
+      if (this.isConnected)
+        this._render();
+    }
+    get _base() {
+      return this.getAttribute("base-url") ?? "/api/identity/provider";
+    }
+    get _id() {
+      return this.getAttribute("provider-id") ?? "";
+    }
+    get _kind() {
+      return this.getAttribute("kind") ?? "";
+    }
+    get _enabled() {
+      return this.getAttribute("enabled") === "true";
+    }
+    get _emit() {
+      return this.getAttribute("emit");
+    }
+    get _builtin() {
+      return this._kind === "local";
+    }
+    _render() {
+      const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
+      const on = this._enabled;
+      root.innerHTML = `
+        <style>
+          :host { display: inline-flex; }
+          .row { display: inline-flex; gap: .6rem; align-items: center; }
+          .switch { width: 38px; height: 22px; padding: 0; border-radius: 11px; border: 1px solid var(--border-default, #ddd);
+                    background: var(--bg-base, #eee); position: relative; cursor: pointer; transition: background .15s, border-color .15s; }
+          .switch.on { background: var(--success-base, #16a34a); border-color: var(--success-base, #16a34a); }
+          .switch .knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+                          background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+          .switch.on .knob { transform: translateX(16px); }
+          .state { font-size: .85rem; color: var(--text-muted, #777); min-width: 4.5em; }
+          .btn { font: inherit; cursor: pointer; border-radius: var(--radius-sm, 6px); padding: .3rem .55rem;
+                 border: 1px solid var(--border-default, #ddd); background: var(--bg-surface, #fff); color: var(--text-body, #333); }
+          .btn:hover { background: var(--bg-base, #f3f3f3); }
+          .remove { border-color: var(--danger-muted, #fee2e2); color: var(--danger-base, #dc2626); }
+          .remove:hover { background: var(--danger-muted, #fee2e2); }
+        </style>
+        <div class="row">
+          <button type="button" class="switch ${on ? "on" : ""}" role="switch" aria-checked="${on}" title="${on ? "Disable" : "Enable"}"><span class="knob"></span></button>
+          <span class="state">${on ? "Enabled" : "Disabled"}</span>
+          ${this._builtin ? "" : `<button type="button" class="btn edit">Edit</button>`}
+          ${this._builtin ? "" : `<button type="button" class="btn remove">Remove</button>`}
+        </div>`;
+      root.querySelector(".switch").addEventListener("click", () => this._toggle());
+      root.querySelector(".edit")?.addEventListener("click", () => document.getElementById(`edit-${this._id}`)?.setAttribute("open", ""));
+      root.querySelector(".remove")?.addEventListener("click", () => this._remove());
+    }
+    async _toggle() {
+      const next = !this._enabled;
+      if (await this._send("PATCH", { id: this._id, enabled: next })) {
+        this.setAttribute("enabled", String(next));
+        showToast(next ? "Provider enabled" : "Provider disabled", { type: "success" });
+        this._fire();
+      }
+    }
+    async _remove() {
+      if (!confirm(`Remove provider "${this._id}"?`))
+        return;
+      if (await this._send("DELETE", { id: this._id })) {
+        showToast("Provider removed", { type: "success" });
+        this._fire();
+      }
+    }
+    async _send(method, body) {
+      try {
+        const res = await fetch(this._base, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        if (!res.ok) {
+          showToast("Action failed", { type: "error" });
+          return false;
+        }
+        return true;
+      } catch {
+        showToast("Network error", { type: "error" });
+        return false;
+      }
+    }
+    _fire() {
+      if (this._emit)
+        document.dispatchEvent(new Event(this._emit, { bubbles: true }));
+    }
+  }
+  customElements.define("cms-provider-actions", CmsProviderActions);
+
+  // src/components/admin/RoleSelect/RoleSelect.ts
+  var ROLES = ["user", "admin"];
+
+  class CmsRoleSelect extends HTMLElement {
+    static get observedAttributes() {
+      return ["sub", "value"];
+    }
+    connectedCallback() {
+      this._render();
+    }
+    attributeChangedCallback() {
+      if (this.isConnected)
+        this._render();
+    }
+    get _url() {
+      return this.getAttribute("url") ?? "/api/users/role";
+    }
+    get _sub() {
+      return this.getAttribute("sub") ?? "";
+    }
+    get _value() {
+      return this.getAttribute("value") ?? "user";
+    }
+    get _emit() {
+      return this.getAttribute("emit");
+    }
+    _render() {
+      const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
+      root.innerHTML = `
+        <style>
+          select { font: inherit; padding: .35rem .5rem; border-radius: var(--radius-sm, 6px);
+                   border: 1px solid var(--border-default, #ddd); background: var(--bg-surface, #fff); color: var(--text-body, #333); }
+        </style>
+        <select>${ROLES.map((r) => `<option value="${r}"${r === this._value ? " selected" : ""}>${r}</option>`).join("")}</select>`;
+      const sel = root.querySelector("select");
+      sel.addEventListener("change", () => this._save(sel.value));
+    }
+    async _save(role) {
+      try {
+        const res = await fetch(this._url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sub: this._sub, role })
+        });
+        if (res.ok) {
+          showToast("Role updated", { type: "success" });
+          if (this._emit)
+            document.dispatchEvent(new Event(this._emit, { bubbles: true }));
+        } else {
+          showToast("Failed to update role", { type: "error" });
+        }
+      } catch {
+        showToast("Network error", { type: "error" });
+      }
+    }
+  }
+  customElements.define("cms-role-select", CmsRoleSelect);
+
+  // src/components/admin/Tokens/TokenCreate.ts
+  class CmsTokenCreate extends HTMLElement {
+    _token = "";
+    connectedCallback() {
+      this.innerHTML = TEMPLATE;
+      this._q('[data-role="create"]').addEventListener("click", () => this._create());
+      this._q('[data-role="copy"]').addEventListener("click", () => this._copy());
+      this._q('[data-role="done"]').addEventListener("click", () => this._close());
+      this.closest("p9r-modal")?.addEventListener("open", () => this._reset());
+    }
+    _q(sel) {
+      return this.querySelector(sel);
+    }
+    get _api() {
+      return this.getAttribute("api") ?? "/api/pats";
+    }
+    get _emit() {
+      return this.getAttribute("emit") ?? "pat:changed";
+    }
+    async _create() {
+      const input = this._q('[data-role="name"]');
+      const name = (input.value ?? "").trim();
+      if (!name) {
+        input.setAttribute("invalid", "");
+        input.focus?.();
+        return;
+      }
+      input.removeAttribute("invalid");
+      const btn = this._q('[data-role="create"]');
+      btn.setAttribute("disabled", "");
+      try {
+        const res = await fetch(this._api, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name })
+        });
+        if (!res.ok) {
+          showToast("Could not create token", { type: "error" });
+          return;
+        }
+        const { token } = await res.json();
+        this._token = token;
+        this._q('[data-role="token"]').value = token;
+        this._q('[data-role="form"]').hidden = true;
+        this._q('[data-role="reveal"]').hidden = false;
+        document.dispatchEvent(new Event(this._emit, { bubbles: true }));
+      } catch {
+        showToast("Network error", { type: "error" });
+      } finally {
+        btn.removeAttribute("disabled");
+      }
+    }
+    _copy() {
+      navigator.clipboard?.writeText(this._token);
+      showToast("Token copied", { type: "success" });
+    }
+    _reset() {
+      this._token = "";
+      this._q('[data-role="name"]').value = "";
+      this._q('[data-role="form"]').hidden = false;
+      this._q('[data-role="reveal"]').hidden = true;
+    }
+    _close() {
+      this._reset();
+      this.closest("p9r-modal")?.removeAttribute("open");
+    }
+  }
+  var TEMPLATE = `
+<div data-role="form">
+  <p9r-stack gap="md">
+    <p9r-input data-role="name" name="name" label="Token name" placeholder="my laptop CLI"></p9r-input>
+    <p9r-button data-role="create" color="primary" fullWidth>Create token</p9r-button>
+  </p9r-stack>
+</div>
+<div data-role="reveal" hidden>
+  <p9r-stack gap="md">
+    <p9r-alert type="warning">
+      <span slot="title">Copy this token now</span>
+      It won't be shown again.
+    </p9r-alert>
+    <p9r-input data-role="token" label="Token"></p9r-input>
+    <p9r-stack direction="row" gap="sm" justify="end">
+      <p9r-button data-role="copy" variant="outlined">Copy</p9r-button>
+      <p9r-button data-role="done" color="primary">Done</p9r-button>
+    </p9r-stack>
+  </p9r-stack>
+</div>`;
+  customElements.define("cms-token-create", CmsTokenCreate);
+
+  // src/components/admin/Secrets/template.html
   var template_default3 = `<div class="add">
     <p9r-input data-role="add-key"
         placeholder="MY_API_KEY"></p9r-input>
@@ -10222,7 +10508,7 @@ ${followMessage}`)) {
 <div data-role="empty" hidden>No secrets yet.</div>
 `;
 
-  // src/control/components/admin/Secrets/style.css
+  // src/components/admin/Secrets/style.css
   var style_default2 = `:host {
     display: block;
 }
@@ -10299,7 +10585,7 @@ ${followMessage}`)) {
 }
 `;
 
-  // src/control/components/admin/Secrets/actions.ts
+  // src/components/admin/Secrets/actions.ts
   var RELOAD_EVENT = "secret:saved";
   async function fetchSecrets(api) {
     const res = await fetch(api, { headers: { Accept: "application/json" } });
@@ -10338,7 +10624,7 @@ ${followMessage}`)) {
   }
   var SECRETS_RELOAD_EVENT = RELOAD_EVENT;
 
-  // src/control/components/admin/Secrets/icons.ts
+  // src/components/admin/Secrets/icons.ts
   var ICONS = { eye: ICON_EYE, save: ICON_SAVE, trash: ICON_TRASH };
   function injectIcons(root) {
     root.querySelectorAll("[data-icon]").forEach((el) => {
@@ -10348,7 +10634,7 @@ ${followMessage}`)) {
     });
   }
 
-  // src/control/components/admin/Secrets/ops.ts
+  // src/components/admin/Secrets/ops.ts
   var KEY_PATTERN2 = /^[A-Z][A-Z0-9_]*$/;
   async function opSaveRow(api, key, value) {
     const r = await postSecret(api, key, value);
@@ -10391,7 +10677,7 @@ ${followMessage}`)) {
       showToast(`Delete failed: ${r.error}`, { type: "error" });
   }
 
-  // src/control/components/admin/Secrets/Secrets.ts
+  // src/components/admin/Secrets/Secrets.ts
   class CmsSecrets extends Component {
     _list = null;
     _rowTemplate = null;
@@ -10462,7 +10748,7 @@ ${followMessage}`)) {
   if (!customElements.get("cms-secrets"))
     customElements.define("cms-secrets", CmsSecrets);
 
-  // src/control/components/editor/componentSync/PageLink/PageLink.css
+  // src/components/editor/componentSync/PageLink/PageLink.css
   var PageLink_default = `:host {
     display: block;
 }
@@ -10793,7 +11079,7 @@ ${followMessage}`)) {
 }
 `;
 
-  // src/control/components/editor/componentSync/PageLink/template.ts
+  // src/components/editor/componentSync/PageLink/template.ts
   function buildShadow2(host, label) {
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = `
@@ -10858,7 +11144,7 @@ ${followMessage}`)) {
     };
   }
 
-  // src/control/components/editor/componentSync/PageLink/detect.ts
+  // src/components/editor/componentSync/PageLink/detect.ts
   function isExternal(v) {
     return /^(https?:|mailto:|tel:|\/\/)/i.test(v);
   }
@@ -10870,7 +11156,7 @@ ${followMessage}`)) {
     return m ? `Media ${m[1]}` : src;
   }
 
-  // src/control/core/dom/meta/getMetaBasePath.ts
+  // src/core/dom/meta/getMetaBasePath.ts
   function getMetaBasePath() {
     const meta = document.querySelector('meta[name="basePath"]');
     const content = meta?.getAttribute("content") ?? "";
@@ -10879,12 +11165,12 @@ ${followMessage}`)) {
     return content.replace(/\/+$/, "");
   }
 
-  // src/control/core/dom/meta/getMetaApiPath.ts
+  // src/core/dom/meta/getMetaApiPath.ts
   function getMetaApiPath() {
     return `${getMetaBasePath()}/api`;
   }
 
-  // src/control/core/dom/meta/resolveApiUrl.ts
+  // src/core/dom/meta/resolveApiUrl.ts
   function resolveApiUrl(path) {
     const apiPath = getMetaApiPath();
     const base = /^https?:\/\//.test(apiPath) ? apiPath : new URL(apiPath, window.location.origin).href;
@@ -10893,7 +11179,7 @@ ${followMessage}`)) {
     return new URL(cleanBase + cleanPath);
   }
 
-  // src/control/components/editor/componentSync/PageLink/parts/flows.ts
+  // src/components/editor/componentSync/PageLink/parts/flows.ts
   async function fetchPages() {
     try {
       const res = await fetch(resolveApiUrl("page/links"));
@@ -10921,7 +11207,7 @@ ${followMessage}`)) {
     });
   }
 
-  // src/control/components/editor/componentSync/PageLink/PageLink.picker.ts
+  // src/components/editor/componentSync/PageLink/PageLink.picker.ts
   function filterPages(pages, query) {
     const q = query.toLowerCase();
     return pages.filter((p) => p.title.toLowerCase().includes(q) || p.path.toLowerCase().includes(q));
@@ -10952,7 +11238,7 @@ ${followMessage}`)) {
     return options;
   }
 
-  // src/control/components/editor/componentSync/PageLink/parts/controller.ts
+  // src/components/editor/componentSync/PageLink/parts/controller.ts
   function applyMode(host) {
     const { _refs: r, _mode: m } = host;
     r.pageSection.style.display = m === "page" ? "" : "none";
@@ -11011,7 +11297,7 @@ ${followMessage}`)) {
     host._refs.trigger.classList.remove("open");
   }
 
-  // src/control/components/editor/componentSync/PageLink/parts/wiring.ts
+  // src/components/editor/componentSync/PageLink/parts/wiring.ts
   function wire(host) {
     const r = host._refs;
     const fire = () => host.dispatchEvent(new Event("change", { bubbles: true }));
@@ -11054,7 +11340,7 @@ ${followMessage}`)) {
     applyMode(host);
   }
 
-  // src/control/components/editor/componentSync/PageLink/PageLink.ts
+  // src/components/editor/componentSync/PageLink/PageLink.ts
   class PageLink extends HTMLElement {
     _refs;
     _options = [];
@@ -11136,7 +11422,7 @@ ${followMessage}`)) {
   if (!customElements.get("p9r-link"))
     customElements.define("p9r-link", PageLink);
 
-  // src/control/components/editor/componentSync/sync/AttrSync.ts
+  // src/components/editor/componentSync/sync/AttrSync.ts
   class AttrSync extends HTMLElement {
     _component = null;
     _prepared = false;
@@ -11185,7 +11471,7 @@ ${followMessage}`)) {
     customElements.define("p9r-attr-sync", AttrSync);
   }
 
-  // src/control/components/editor/componentSync/sync/CompSync.ts
+  // src/components/editor/componentSync/sync/CompSync.ts
   class CompSync extends HTMLElement {
     _component = null;
     _root;
@@ -11601,7 +11887,7 @@ ${followMessage}`)) {
     customElements.define("p9r-comp-sync", CompSync);
   }
 
-  // src/control/components/editor/componentSync/sync/ImageSync/ImageSync.style.css
+  // src/components/editor/componentSync/sync/ImageSync/ImageSync.style.css
   var ImageSync_style_default = `:host {
     display: flex;
     flex-direction: column;
@@ -11722,7 +12008,7 @@ ${followMessage}`)) {
 }
 `;
 
-  // src/control/components/editor/componentSync/sync/ImageSync/lock.ts
+  // src/components/editor/componentSync/sync/ImageSync/lock.ts
   var LOCKED_ACTIONS = [
     "DISABLE_DELETE",
     "DISABLE_DUPLICATE",
@@ -11752,7 +12038,7 @@ ${followMessage}`)) {
     }
   }
 
-  // src/control/components/editor/componentSync/sync/ImageSync/target.ts
+  // src/components/editor/componentSync/sync/ImageSync/target.ts
   function resolveTarget(host) {
     const component = host._component;
     if (!component)
@@ -11795,7 +12081,7 @@ ${followMessage}`)) {
     host._component?.appendChild(img);
   }
 
-  // src/control/components/editor/componentSync/sync/ImageSync/view.ts
+  // src/components/editor/componentSync/sync/ImageSync/view.ts
   function render(host) {
     host._target = resolveTarget(host);
     lockActions(host._target);
@@ -11871,7 +12157,7 @@ ${followMessage}`)) {
     host._targetObserver.observe(target, { attributes: true, attributeFilter: ["src"] });
   }
 
-  // src/control/components/editor/componentSync/sync/ImageSync/mediaCenter.ts
+  // src/components/editor/componentSync/sync/ImageSync/mediaCenter.ts
   function openMediaCenter2(host) {
     const acceptRaw = host.getAttribute("accept") || "image";
     const types = ["folder", ...acceptRaw.split(",").map((t) => t.trim())];
@@ -11903,7 +12189,7 @@ ${followMessage}`)) {
     updatePreview(host, "");
   }
 
-  // src/control/components/editor/componentSync/sync/ImageSync/ImageSync.ts
+  // src/components/editor/componentSync/sync/ImageSync/ImageSync.ts
   class ImageSync extends HTMLElement {
     _component = null;
     _target = null;
@@ -11982,7 +12268,7 @@ ${followMessage}`)) {
     customElements.define("p9r-image-sync", ImageSync);
   }
 
-  // src/control/components/editor/componentSync/sync/StateSync/parseAttrs.ts
+  // src/components/editor/componentSync/sync/StateSync/parseAttrs.ts
   function parseValues(el) {
     const raw = el.getAttribute("values");
     if (raw)
@@ -12001,7 +12287,7 @@ ${followMessage}`)) {
     return v === "right" || v === "top" || v === "bottom" ? v : "left";
   }
 
-  // src/control/components/editor/componentSync/sync/StateSync/applyTargets.ts
+  // src/components/editor/componentSync/sync/StateSync/applyTargets.ts
   function makeStateAttrOps(attrName) {
     if (attrName === "class")
       return {
@@ -12016,7 +12302,7 @@ ${followMessage}`)) {
     };
   }
 
-  // src/control/components/editor/componentSync/sync/StateSync/StateSync.ts
+  // src/components/editor/componentSync/sync/StateSync/StateSync.ts
   class StateSync extends HTMLElement {
     _component = null;
     _editor = null;
@@ -12124,7 +12410,7 @@ ${followMessage}`)) {
     customElements.define("p9r-state-sync", StateSync);
   }
 
-  // src/control/components/editor/componentSync/SyncPanel.ts
+  // src/components/editor/componentSync/SyncPanel.ts
   class SyncPanel extends Component {
     dialog = null;
     constructor() {
@@ -12159,7 +12445,7 @@ ${followMessage}`)) {
     customElements.define("p9r-config-panel", SyncPanel);
   }
 
-  // src/control/components/editor/componentSync/sync/SvgSync/SvgSync.style.css
+  // src/components/editor/componentSync/sync/SvgSync/SvgSync.style.css
   var SvgSync_style_default = `:host {
     display: flex;
     flex-direction: column;
@@ -12216,7 +12502,7 @@ ${followMessage}`)) {
 }
 `;
 
-  // src/control/components/editor/componentSync/sync/SvgSync/lock.ts
+  // src/components/editor/componentSync/sync/SvgSync/lock.ts
   var LOCKED_ACTIONS2 = [
     "DISABLE_DELETE",
     "DISABLE_DUPLICATE",
@@ -12246,7 +12532,7 @@ ${followMessage}`)) {
     }
   }
 
-  // src/control/components/editor/componentSync/sync/SvgSync/target.ts
+  // src/components/editor/componentSync/sync/SvgSync/target.ts
   function resolveTarget2(host) {
     const component = host._component;
     if (!component)
@@ -12269,7 +12555,7 @@ ${followMessage}`)) {
     host._component?.appendChild(fresh);
   }
 
-  // src/control/components/editor/componentSync/sync/SvgSync/view.ts
+  // src/components/editor/componentSync/sync/SvgSync/view.ts
   function render2(host) {
     const shadow = host.shadowRoot;
     Array.from(shadow.children).forEach((c) => {
@@ -12315,7 +12601,7 @@ ${followMessage}`)) {
     }
   }
 
-  // src/control/components/editor/componentSync/sync/SvgSync/sanitize.ts
+  // src/components/editor/componentSync/sync/SvgSync/sanitize.ts
   var ALLOWED_TAGS = new Set([
     "svg",
     "g",
@@ -12400,7 +12686,7 @@ ${followMessage}`)) {
       walk(child);
   }
 
-  // src/control/components/editor/componentSync/sync/SvgSync/mediaCenter.ts
+  // src/components/editor/componentSync/sync/SvgSync/mediaCenter.ts
   function openPicker(host) {
     host._clearError();
     const mc = document.createElement("cms-media-center");
@@ -12449,7 +12735,7 @@ ${followMessage}`)) {
     updatePreview2(host);
   }
 
-  // src/control/components/editor/componentSync/sync/SvgSync/SvgSync.ts
+  // src/components/editor/componentSync/sync/SvgSync/SvgSync.ts
   class SvgSync extends HTMLElement {
     _component = null;
     _target = null;
@@ -12686,7 +12972,7 @@ ${followMessage}`)) {
   if (!customElements.get("p9r-horizontal-action-group"))
     customElements.define("p9r-horizontal-action-group", s);
 
-  // src/control/components/editor/EditorSystem/BlocActions/view/style.css
+  // src/components/editor/EditorSystem/BlocActions/view/style.css
   var style_default3 = `:host {
     position: absolute;
     left: 0;
@@ -12751,7 +13037,7 @@ cms-bag-breadcrumb[data-inline="right"] {
    from this shadow stylesheet beyond the wrapper itself. */
 `;
 
-  // src/control/components/editor/EditorSystem/BlocActions/compute/ancestorChain.ts
+  // src/components/editor/EditorSystem/BlocActions/compute/ancestorChain.ts
   function findParentEditor(target) {
     const parentId = target.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
     if (!parentId)
@@ -12779,7 +13065,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return [items[0], null, items[items.length - 3], items[items.length - 2], items[items.length - 1]];
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/view/template.html
+  // src/components/editor/EditorSystem/BlocActions/view/template.html
   var template_default4 = `<button data-action="edit" title="Edit">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
 </button>
@@ -12799,7 +13085,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 </button>
 `;
 
-  // src/control/components/editor/EditorSystem/BlocActions/compute/isLastRootBloc.ts
+  // src/components/editor/EditorSystem/BlocActions/compute/isLastRootBloc.ts
   function isLastRootBloc(target) {
     if (target.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER))
       return false;
@@ -12821,7 +13107,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return count === 1;
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/actionBarButtons.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/actionBarButtons.ts
   function buildSelectParentButton() {
     const btn = document.createElement("button");
     btn.setAttribute("data-action", "select-parent");
@@ -12847,7 +13133,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     host.querySelector(`[data-action="${action}"]`)?.toggleAttribute("hidden", !show);
   }
 
-  // src/control/core/editorSystem/extensions/collectAncestors.ts
+  // src/core/editorSystem/extensions/collectAncestors.ts
   function collectAncestorExtensions(fromEl, surface) {
     const out = [];
     const idAttr = p9r.attr.EDITOR.IDENTIFIER;
@@ -12888,7 +13174,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return out;
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/Extensions/ExtensionsButton.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/Extensions/ExtensionsButton.ts
   function hasBlocActionExtensions(target) {
     return collectExtensions(target).length > 0;
   }
@@ -12907,7 +13193,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return btn;
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/renderActionBar.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/renderActionBar.ts
   function renderActionBar(host, editor, parentEditor, target, previousConfigKey) {
     const config = editor.actionBarConfiguration;
     const hasConfig = editor.hasConfigPanel;
@@ -12948,7 +13234,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return { configKey, hasAnyButton };
   }
 
-  // src/control/core/editorSystem/classifyLink.ts
+  // src/core/editorSystem/classifyLink.ts
   var SPECIAL_SCHEMES = ["mailto:", "tel:", "sms:"];
   var ASSET_PREFIXES = ["/uploads/", "/assets/", "/api/", "/.cms/", "/_storage/"];
   function classifyLink(href, currentOrigin, knownPagePaths) {
@@ -12982,7 +13268,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return { kind: "page", target: path };
   }
 
-  // src/control/core/editorSystem/editorContext.ts
+  // src/core/editorSystem/editorContext.ts
   var noop = () => {};
   var _ctx = {
     knownPagePaths: new Set,
@@ -13026,7 +13312,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     setActiveLink(null);
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/mountLinkSection.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/mountLinkSection.ts
   var SECTION_CLASS = "bag-link-section";
   function mountLinkSection(host) {
     const link = getActiveLink();
@@ -13133,7 +13419,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/refreshPinButton.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/PinMenu/refreshPinButton.ts
   function refreshPinButton(host, editor) {
     const btn = host.querySelector('[data-action="pin-state"]');
     if (!btn)
@@ -13142,12 +13428,12 @@ cms-bag-breadcrumb[data-inline="right"] {
     btn.toggleAttribute("data-active", anyPinned);
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/template.html
+  // src/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/template.html
   var template_default5 = `<div class="pill" id="pill"></div>
 <div class="bridge"></div>
 `;
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/style.css
+  // src/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/style.css
   var style_default4 = `:host {
     display: block;
     width: max-content;
@@ -13248,7 +13534,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 :host([data-inline="right"]) .bridge { right: 100% !important; left: auto !important; }
 `;
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/items.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/items.ts
   function renderBreadcrumbItem(item, cb) {
     if (item.type === "ellipsis") {
       const span = document.createElement("span");
@@ -13285,7 +13571,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return sep;
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/Breadcrumb.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/Breadcrumb.ts
   var Metadata = { css: style_default4, template: template_default5 };
 
   class Breadcrumb extends Component {
@@ -13336,7 +13622,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     customElements.define("cms-bag-breadcrumb", Breadcrumb);
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/compute/breadcrumbBuilder.ts
+  // src/components/editor/EditorSystem/BlocActions/compute/breadcrumbBuilder.ts
   function buildBreadcrumb(editor, editorSystem) {
     const observer = editorSystem.observer;
     const labelled = ancestorChain(editor).map((ed) => {
@@ -13360,7 +13646,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return { items, editorByKey };
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/BreadcrumbController.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/BreadcrumbController.ts
   class BreadcrumbController {
     _host;
     _onSwitch;
@@ -13398,7 +13684,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/template.html
+  // src/components/editor/EditorSystem/BlocActions/sub/InsertButton/template.html
   var template_default6 = `<button class="btn" type="button">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="12" y1="5" x2="12" y2="19"/>
@@ -13407,7 +13693,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 </button>
 `;
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/style.css
+  // src/components/editor/EditorSystem/BlocActions/sub/InsertButton/style.css
   var style_default5 = `:host {
     position: absolute;
     z-index: 10001;
@@ -13468,7 +13754,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 }
 `;
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/InsertButton.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/InsertButton/InsertButton.ts
   var Metadata2 = {
     css: style_default5,
     template: template_default6
@@ -13502,7 +13788,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     customElements.define("cms-bag-insert-button", InsertButton);
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/compute/insertButtonPosition.ts
+  // src/components/editor/EditorSystem/BlocActions/compute/insertButtonPosition.ts
   function positionInsertButtons(btnBefore, btnAfter, rect, inline, show) {
     btnBefore.setInline(inline);
     btnAfter.setInline(inline);
@@ -13533,13 +13819,13 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/compute/anchor.ts
+  // src/components/editor/EditorSystem/BlocActions/compute/anchor.ts
   function resolveActionBarAnchor(target, editor) {
     const element = editor?.getActionBarAnchor?.() ?? target;
     return { rect: element.getBoundingClientRect(), element };
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/insertBlankSibling.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/insertBlankSibling.ts
   function resolveSiblingTemplate(target) {
     const parentId = target.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
     if (!parentId)
@@ -13576,7 +13862,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       target.after(fresh);
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/InsertButton/InsertButtonsController.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/InsertButton/InsertButtonsController.ts
   class InsertButtonsController {
     _btnBefore;
     _btnAfter;
@@ -13633,7 +13919,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/render.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/PinMenu/render.ts
   function renderRow(row) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -13649,13 +13935,13 @@ cms-bag-breadcrumb[data-inline="right"] {
     return btn;
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/template.html
+  // src/components/editor/EditorSystem/BlocActions/sub/PinMenu/template.html
   var template_default7 = `<div class="menu" id="menu">
     <div class="items" id="items"></div>
 </div>
 `;
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/style.css
+  // src/components/editor/EditorSystem/BlocActions/sub/PinMenu/style.css
   var style_default6 = `:host {
     position: absolute;
     z-index: 10001;
@@ -13710,7 +13996,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 .label { flex: 1; }
 `;
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinMenu.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinMenu.ts
   var Metadata3 = { css: style_default6, template: template_default7 };
 
   class PinMenu extends Component {
@@ -13738,7 +14024,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     customElements.define("cms-bag-pin-menu", PinMenu);
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinController.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinController.ts
   class PinController {
     _host;
     _getEditor;
@@ -13811,7 +14097,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/events/actionDispatcher.ts
+  // src/components/editor/EditorSystem/BlocActions/events/actionDispatcher.ts
   function createActionDispatcher(deps) {
     return (e) => {
       switch (e.detail.action) {
@@ -13837,7 +14123,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     };
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/events/keyboardHandler.ts
+  // src/components/editor/EditorSystem/BlocActions/events/keyboardHandler.ts
   function createKeyDownHandler(deps) {
     return (e) => {
       if (e.key === "Escape") {
@@ -13860,7 +14146,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     };
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/events/pointerHandlers.ts
+  // src/components/editor/EditorSystem/BlocActions/events/pointerHandlers.ts
   function createPointerHandlers(deps) {
     let lastX = 0;
     let lastY = 0;
@@ -13927,7 +14213,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     };
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/events/EventManager.ts
+  // src/components/editor/EditorSystem/BlocActions/events/EventManager.ts
   class EventManager {
     deps;
     _attached = false;
@@ -13977,7 +14263,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/duplicateSibling.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/duplicateSibling.ts
   function duplicateSibling(target, position) {
     const clone = target.cloneNode(true);
     clone.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
@@ -13992,7 +14278,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       target.after(clone);
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/openChangeComponentPicker.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/openChangeComponentPicker.ts
   function inherit(source, dest) {
     const parentId = source.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
     if (parentId)
@@ -14028,7 +14314,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     }, { once: true });
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/Extensions/style.css
+  // src/components/editor/EditorSystem/BlocActions/sub/Extensions/style.css
   var style_default7 = `:host {
     font-family: system-ui, sans-serif;
     font-size: 12px;
@@ -14103,7 +14389,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 }
 `;
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/Extensions/render.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/Extensions/render.ts
   function buildGroup(ext, target, onPick) {
     const group = document.createElement("div");
     group.className = "group";
@@ -14143,7 +14429,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return row;
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/sub/Extensions/popover.ts
+  // src/components/editor/EditorSystem/BlocActions/sub/Extensions/popover.ts
   var POPOVER_TAG = "cms-bag-extensions-popover";
 
   class ExtensionsPopover extends HTMLElement {
@@ -14195,7 +14481,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       popover.style.left = `8px`;
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/events/buildEventManager.ts
+  // src/components/editor/EditorSystem/BlocActions/events/buildEventManager.ts
   function buildEventManager(host, accessors, pin, insertBtns, cb) {
     return new EventManager({
       host,
@@ -14247,7 +14533,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     });
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/navigate.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/lifecycle/navigate.ts
   function switchToEditor(c, target) {
     const t = c.host.style.transform;
     const va = c.host.getAttribute("data-v-anchor");
@@ -14269,7 +14555,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       switchToEditor(c, p);
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/compute/groupPosition.ts
+  // src/components/editor/EditorSystem/BlocActions/compute/groupPosition.ts
   function computeGroupPosition(input) {
     const { rect, barWidth, barHeight, mouseX, mouseY } = input;
     const margin = 8;
@@ -14295,7 +14581,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return { x, y, vAnchor };
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/compute/applyBagPosition.ts
+  // src/components/editor/EditorSystem/BlocActions/compute/applyBagPosition.ts
   function applyBagPosition(bag, target, editor, mouseX, mouseY, lastVAnchor) {
     const { rect, element } = resolveActionBarAnchor(target, editor);
     const my = mouseY ?? (lastVAnchor === "top" ? rect.top : rect.bottom);
@@ -14314,7 +14600,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     return { vAnchor, anchorEl: element };
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/reflow.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/lifecycle/reflow.ts
   function reflow(c) {
     if (!c.target)
       return;
@@ -14329,7 +14615,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     c.breadcrumb.refinePosition(c.host.getBoundingClientRect());
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/open.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/lifecycle/open.ts
   function open(c, mouseX, mouseY) {
     if (!c.editor || !c.target || c.cooldown)
       return;
@@ -14348,7 +14634,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     c.breadcrumb.refinePosition(c.host.getBoundingClientRect());
   }
 
-  // src/control/components/editor/EditorSystem/Highlight.ts
+  // src/components/editor/EditorSystem/Highlight.ts
   var ROOT_ID = "p9r-editor-highlight-root";
   var rootByParent = new WeakMap;
   var active = new Set;
@@ -14418,7 +14704,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/domain/lifecycle/BagController.ts
+  // src/components/editor/EditorSystem/BlocActions/domain/lifecycle/BagController.ts
   class BagController {
     host;
     target = null;
@@ -14530,7 +14816,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocActions/BlocActions.ts
+  // src/components/editor/EditorSystem/BlocActions/BlocActions.ts
   class BlocActions extends s {
     _ctrl;
     constructor() {
@@ -14554,7 +14840,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   if (!customElements.get("cms-bloc-actions"))
     customElements.define("cms-bloc-actions", BlocActions);
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/template.html
+  // src/components/editor/EditorSystem/BlocLibrary/template.html
   var template_default8 = `<dialog id="dialog">
     <div class="container">
         <header class="header">
@@ -14578,7 +14864,7 @@ cms-bag-breadcrumb[data-inline="right"] {
 </dialog>
 `;
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/style.css
+  // src/components/editor/EditorSystem/BlocLibrary/style.css
   var style_default8 = `:host {
     --bg-main: rgba(255, 255, 255, 0.95);
     --bg-card: #ffffff;
@@ -14785,7 +15071,7 @@ form[method="dialog"] {
 }
 `;
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/api.ts
+  // src/components/editor/EditorSystem/BlocLibrary/api.ts
   async function fetchJson(path, fallback) {
     try {
       const res = await fetch(resolveApiUrl(path));
@@ -14816,7 +15102,7 @@ form[method="dialog"] {
     return new Map(list.map((b) => [b.id, { description: b.description }]));
   }
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/components/Card/template.html
+  // src/components/editor/EditorSystem/BlocLibrary/components/Card/template.html
   var template_default9 = `<button type="button" class="card">
     <span class="icon"><slot name="icon"></slot></span>
     <span class="text">
@@ -14826,7 +15112,7 @@ form[method="dialog"] {
 </button>
 `;
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/components/Card/style.css
+  // src/components/editor/EditorSystem/BlocLibrary/components/Card/style.css
   var style_default9 = `:host {
     display: contents;
 }
@@ -14900,7 +15186,7 @@ form[method="dialog"] {
 }
 `;
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/components/Card/Card.ts
+  // src/components/editor/EditorSystem/BlocLibrary/components/Card/Card.ts
   var Metadata4 = {
     css: style_default9,
     template: template_default9
@@ -14935,7 +15221,7 @@ form[method="dialog"] {
     customElements.define("cms-bloc-library-card", Card);
   }
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/sections/renderBlocs.ts
+  // src/components/editor/EditorSystem/BlocLibrary/sections/renderBlocs.ts
   function renderBlocs({ grid, items, blocMeta, onPick }) {
     for (const item of items) {
       const card = Card.create({
@@ -14948,14 +15234,14 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/components/EmptyState/template.html
+  // src/components/editor/EditorSystem/BlocLibrary/components/EmptyState/template.html
   var template_default10 = `<div class="empty-state">
     <slot name="icon"></slot>
     <p><slot name="message"></slot></p>
 </div>
 `;
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/components/EmptyState/style.css
+  // src/components/editor/EditorSystem/BlocLibrary/components/EmptyState/style.css
   var style_default10 = `:host {
     display: contents;
 }
@@ -14984,7 +15270,7 @@ form[method="dialog"] {
 }
 `;
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/components/EmptyState/EmptyState.ts
+  // src/components/editor/EditorSystem/BlocLibrary/components/EmptyState/EmptyState.ts
   var Metadata5 = {
     css: style_default10,
     template: template_default10
@@ -15013,7 +15299,7 @@ form[method="dialog"] {
     customElements.define("cms-bloc-library-empty-state", EmptyState2);
   }
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/sections/renderTemplates.ts
+  // src/components/editor/EditorSystem/BlocLibrary/sections/renderTemplates.ts
   function renderTemplates({ grid, templates, category, onPick }) {
     const filtered = templates.filter((t) => (t.category || "Default") === category);
     if (filtered.length === 0) {
@@ -15037,7 +15323,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/sections/renderSnippets.ts
+  // src/components/editor/EditorSystem/BlocLibrary/sections/renderSnippets.ts
   function renderSnippets({ grid, snippets, category, onPick }) {
     const filtered = snippets.filter((s2) => (s2.category || "Default") === category);
     if (filtered.length === 0) {
@@ -15058,7 +15344,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/sections/renderSearch.ts
+  // src/components/editor/EditorSystem/BlocLibrary/sections/renderSearch.ts
   function renderSearch({ grid, query, blocs, blocMeta, templates, snippets, onPick }) {
     const q = query.trim().toLowerCase();
     const matchingBlocs = blocs.filter((b) => {
@@ -15122,7 +15408,7 @@ form[method="dialog"] {
     grid.appendChild(header);
   }
 
-  // src/control/components/editor/EditorSystem/BlocLibrary/BlocLibrary.ts
+  // src/components/editor/EditorSystem/BlocLibrary/BlocLibrary.ts
   var Metadata6 = {
     css: style_default8,
     template: template_default8
@@ -15275,7 +15561,7 @@ form[method="dialog"] {
     customElements.define("cms-bloc-library", BlocLibrary);
   }
 
-  // src/control/components/editor/EditorSystem/DragManager.ts
+  // src/components/editor/EditorSystem/DragManager.ts
   var DRAG_PILL_WIDTH = 180;
   var DRAG_PILL_HEIGHT = 32;
 
@@ -15503,7 +15789,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/EditorRoot/template.html
+  // src/components/editor/EditorSystem/EditorRoot/template.html
   var template_default11 = `<div>
     <slot name="style"></slot>
     <slot name="script"></slot>
@@ -15522,7 +15808,7 @@ form[method="dialog"] {
     </div>
 </div>`;
 
-  // src/control/components/editor/EditorSystem/EditorRoot/EditorRoot.style.css
+  // src/components/editor/EditorSystem/EditorRoot/EditorRoot.style.css
   var EditorRoot_style_default = `/*
  * Admin design tokens + typography, scoped to #editorSystem.
  *
@@ -15603,12 +15889,12 @@ form[method="dialog"] {
 }
 `;
 
-  // src/control/core/isToggable.ts
+  // src/core/isToggable.ts
   function isToggable(el) {
     return "open" in el && typeof el.open === "function";
   }
 
-  // src/control/core/editorSystem/navigationGuard.ts
+  // src/core/editorSystem/navigationGuard.ts
   var _origPushState = null;
   var _origReplaceState = null;
   function rawReplaceState(state, _unused, url) {
@@ -15653,7 +15939,7 @@ form[method="dialog"] {
     };
   }
 
-  // src/control/core/editorSystem/installLinkInterceptor.ts
+  // src/core/editorSystem/installLinkInterceptor.ts
   function installLinkInterceptor() {
     const ensureLinkBar = () => {
       if (document.querySelector("cms-link-bar"))
@@ -15702,7 +15988,7 @@ form[method="dialog"] {
     };
   }
 
-  // src/control/core/editorSystem/dirtyState.ts
+  // src/core/editorSystem/dirtyState.ts
   var _dirty = false;
   var _listeners = new Set;
   function isDirty() {
@@ -15728,7 +16014,7 @@ form[method="dialog"] {
     return () => observer.disconnect();
   }
 
-  // src/control/components/editor/EditorSystem/EditorRoot/linkNavigation.ts
+  // src/components/editor/EditorSystem/EditorRoot/linkNavigation.ts
   function resolveTargetForLink(req) {
     const { classification: cls, href } = req;
     switch (cls.kind) {
@@ -15766,7 +16052,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/EditorRoot/stripResidualChrome.ts
+  // src/components/editor/EditorSystem/EditorRoot/stripResidualChrome.ts
   function stripResidualChrome(root) {
     walk2(root);
   }
@@ -15794,7 +16080,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/core/editorSystem/defaultEditors/ImageEditor/ResizeInstance.ts
+  // src/core/editorSystem/defaultEditors/ImageEditor/ResizeInstance.ts
   class ResizeInstance {
     isResizing = false;
     hasMoved = false;
@@ -15888,7 +16174,7 @@ form[method="dialog"] {
     };
   }
 
-  // src/control/core/editorSystem/defaultEditors/ImageEditor/ImageEditor.ts
+  // src/core/editorSystem/defaultEditors/ImageEditor/ImageEditor.ts
   var cssStyle = `
     img:hover {
         opacity: 0.5;
@@ -15944,7 +16230,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/core/editorSystem/defaultEditors/SvgEditor.ts
+  // src/core/editorSystem/defaultEditors/SvgEditor.ts
   var cssStyle2 = `
     svg:hover {
         opacity: 0.5;
@@ -16004,7 +16290,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/core/editorSystem/defaultEditors/TextEditor.ts
+  // src/core/editorSystem/defaultEditors/TextEditor.ts
   var cssStyle3 = `
 :is(h1, h2, h3, h4, h5, h6, p, span, blockquote, a):empty::before {
     content: attr(p9r-text-placeholder);
@@ -16306,7 +16592,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/core/editorSystem/defaultEditors/ListEditor.ts
+  // src/core/editorSystem/defaultEditors/ListEditor.ts
   var cssStyle4 = `
     li:empty::before{
         content: attr(p9r-text-placeholder);
@@ -16445,7 +16731,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/core/editorSystem/defaultEditors/SnippetEditor.ts
+  // src/core/editorSystem/defaultEditors/SnippetEditor.ts
   var EDIT_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 
   class SnippetEditor extends Editor {
@@ -16477,7 +16763,7 @@ form[method="dialog"] {
     restore() {}
   }
 
-  // src/control/components/editor/EditorSystem/ObserverManager.ts
+  // src/components/editor/EditorSystem/ObserverManager.ts
   class ObserverManager {
     workingElement;
     observer;
@@ -16721,7 +17007,7 @@ form[method="dialog"] {
     }
   }
 
-  // src/control/components/editor/EditorSystem/EditorRoot/waitForScripts.ts
+  // src/components/editor/EditorSystem/EditorRoot/waitForScripts.ts
   async function waitForScripts(ele) {
     const scriptSlot = ele.shadowRoot?.querySelector('slot[name="script"]');
     const scripts = scriptSlot.assignedElements();
@@ -16742,7 +17028,7 @@ form[method="dialog"] {
     await Promise.all(loaders);
   }
 
-  // src/control/components/editor/EditorSystem/EditorRoot/EditorRoot.ts
+  // src/components/editor/EditorSystem/EditorRoot/EditorRoot.ts
   class EditorRoot extends HTMLElement {
     _mode = "editor";
     _observer = null;
@@ -16935,7 +17221,7 @@ form[method="dialog"] {
     customElements.define("cms-editor-system", EditorRoot);
   }
 
-  // src/control/components/editor/EditorSystem/EditorRoot/TemplatePicker/TemplatePicker.style.css
+  // src/components/editor/EditorSystem/EditorRoot/TemplatePicker/TemplatePicker.style.css
   var TemplatePicker_style_default = `:host { display: contents; }
 
 dialog {
@@ -17022,7 +17308,7 @@ dialog::backdrop {
 .skip:hover { color: var(--text-main, #1e293b); background: var(--bg-base, #f8fafc); }
 `;
 
-  // src/control/components/editor/EditorSystem/EditorRoot/TemplatePicker/TemplatePicker.ts
+  // src/components/editor/EditorSystem/EditorRoot/TemplatePicker/TemplatePicker.ts
   var ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
 
   class TemplatePicker extends HTMLElement {
@@ -17129,7 +17415,7 @@ dialog::backdrop {
     customElements.define("cms-template-picker", TemplatePicker);
   }
 
-  // src/control/components/editor/EditorSystem/FloatingToolbar/template.html
+  // src/components/editor/EditorSystem/FloatingToolbar/template.html
   var template_default12 = `<div id="toolbar-container">
     <div id="drag-handle" title="Move">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -17169,7 +17455,7 @@ dialog::backdrop {
     </nav>
 </div>`;
 
-  // src/control/components/editor/EditorSystem/FloatingToolbar/style.css
+  // src/components/editor/EditorSystem/FloatingToolbar/style.css
   var style_default11 = `:host {
   --toolbar-bg: #ffffff;
   --toolbar-border: #e5e7eb;
@@ -17252,7 +17538,7 @@ button span {
 :host([data-mode="view"]) [data-action="switch-mode"] .icon-edit { display: block; }
 :host([data-mode="view"]) [data-action="switch-mode"] .icon-view { display: none; }`;
 
-  // src/control/components/editor/EditorSystem/FloatingToolbar/FloatingToolbar.ts
+  // src/components/editor/EditorSystem/FloatingToolbar/FloatingToolbar.ts
   class FloatingToolbar extends Component {
     _startX = 0;
     _startY = 0;
@@ -17314,7 +17600,7 @@ button span {
     customElements.define("cms-floating-toolbar", FloatingToolbar);
   }
 
-  // src/control/components/editor/MediaCenter/template.html
+  // src/components/editor/MediaCenter/template.html
   var template_default13 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
@@ -17382,7 +17668,7 @@ button span {
 </dialog>
 `;
 
-  // src/control/components/editor/MediaCenter/style.css
+  // src/components/editor/MediaCenter/style.css
   var style_default12 = `:host {
     --mc-bg: #ffffff;
     --mc-border: #e2e8f0;
@@ -17771,7 +18057,7 @@ dialog::backdrop {
 }
 `;
 
-  // src/control/components/media/CardMedia/template.html
+  // src/components/media/CardMedia/template.html
   var template_default14 = `<div class="card">
     <div class="preview">
         <slot name="image">
@@ -17793,7 +18079,7 @@ dialog::backdrop {
 </div>
 `;
 
-  // src/control/components/media/CardMedia/style.css
+  // src/components/media/CardMedia/style.css
   var style_default13 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
@@ -17915,7 +18201,7 @@ dialog::backdrop {
 }
 `;
 
-  // src/control/components/media/CardMedia/CardMedia.ts
+  // src/components/media/CardMedia/CardMedia.ts
   class CardMedia extends Component {
     constructor() {
       super({
@@ -17928,7 +18214,7 @@ dialog::backdrop {
     customElements.define("p9r-card-media", CardMedia);
   }
 
-  // src/control/components/media/GridMedia/api/client.ts
+  // src/components/media/GridMedia/api/client.ts
   function filesBase() {
     return `${getMetaBasePath()}/api/files`;
   }
@@ -17950,7 +18236,7 @@ dialog::backdrop {
     return local;
   }
 
-  // src/control/components/media/GridMedia/api/read.ts
+  // src/components/media/GridMedia/api/read.ts
   async function fetchItems(folder, types) {
     const url = new URL(filesBase(), window.location.origin);
     if (folder)
@@ -18002,7 +18288,7 @@ dialog::backdrop {
     }
     return trail;
   }
-  // src/control/components/media/GridMedia/api/write.ts
+  // src/components/media/GridMedia/api/write.ts
   async function renameItem(id, label) {
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id);
@@ -18065,7 +18351,7 @@ dialog::backdrop {
     });
     return res.ok;
   }
-  // src/control/components/media/GridMedia/types.ts
+  // src/components/media/GridMedia/types.ts
   function formatSize(bytes) {
     if (bytes < 1024)
       return bytes + " B";
@@ -18076,14 +18362,14 @@ dialog::backdrop {
   function escapeHtml2(s2) {
     return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
-  function escapeAttr(s2) {
+  function escapeAttr2(s2) {
     return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
   function variantUrl(item, _width, _height) {
     return item.absoluteURL ?? "";
   }
 
-  // src/control/components/media/GridMedia/view/render.ts
+  // src/components/media/GridMedia/view/render.ts
   function renderGrid(grid, items) {
     grid.innerHTML = "";
     for (const item of items) {
@@ -18140,13 +18426,13 @@ dialog::backdrop {
       if (isLast) {
         html += `<span class="bc-current">${escapeHtml2(crumb.label)}</span>`;
       } else {
-        html += `<span class="bc-item" data-folder="${escapeAttr(crumb.id)}" data-index="${i}">${escapeHtml2(crumb.label)}</span>`;
+        html += `<span class="bc-item" data-folder="${escapeAttr2(crumb.id)}" data-index="${i}">${escapeHtml2(crumb.label)}</span>`;
       }
     }
     container.innerHTML = html;
   }
 
-  // src/control/components/editor/MediaCenter/MediaCenter.ts
+  // src/components/editor/MediaCenter/MediaCenter.ts
   class MediaCenter extends Component {
     _dialog = null;
     _grid = null;
@@ -18330,7 +18616,7 @@ dialog::backdrop {
   }
   customElements.define("cms-media-center", MediaCenter);
 
-  // src/control/components/editor/RichTextBar/template.html
+  // src/components/editor/RichTextBar/template.html
   var template_default15 = `<div class="toolbar">
     <!-- Format -->
     <button data-command="bold" title="Bold">
@@ -18580,7 +18866,7 @@ dialog::backdrop {
 </div>
 `;
 
-  // src/control/components/editor/RichTextBar/style.css
+  // src/components/editor/RichTextBar/style.css
   var style_default14 = `:host {
     position: absolute;
     z-index: 9999999999;
@@ -19096,7 +19382,7 @@ button.active svg {
 .ext-group-label { flex: 1; }
 `;
 
-  // src/control/components/editor/RichTextBar/selection.ts
+  // src/components/editor/RichTextBar/selection.ts
   class SelectionTracker {
     savedRange = null;
     save() {
@@ -19119,7 +19405,7 @@ button.active svg {
     }
   }
 
-  // src/control/components/editor/RichTextBar/commands.ts
+  // src/components/editor/RichTextBar/commands.ts
   function focusElement() {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0)
@@ -19287,7 +19573,7 @@ button.active svg {
     return el?.closest("a")?.getAttribute("href") || null;
   }
 
-  // src/control/components/editor/RichTextBar/state.ts
+  // src/components/editor/RichTextBar/state.ts
   var FORMAT_COMMANDS = ["bold", "italic", "underline", "strikeThrough"];
   var ALIGN_COMMANDS = ["justifyLeft", "justifyCenter", "justifyRight"];
   var ACTIVE_COMMANDS = [...FORMAT_COMMANDS, ...ALIGN_COMMANDS];
@@ -19317,7 +19603,7 @@ button.active svg {
       trigger.style.background = color;
   }
 
-  // src/control/components/editor/RichTextBar/actions.ts
+  // src/components/editor/RichTextBar/actions.ts
   function runCommand(cmd) {
     switch (cmd) {
       case "bold":
@@ -19424,7 +19710,7 @@ button.active svg {
     self.hide();
   }
 
-  // src/control/components/editor/RichTextBar/extensions/render.ts
+  // src/components/editor/RichTextBar/extensions/render.ts
   function buildBraceButton(onClick) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -19481,7 +19767,7 @@ button.active svg {
     return row;
   }
 
-  // src/control/components/editor/RichTextBar/extensions/pick.ts
+  // src/components/editor/RichTextBar/extensions/pick.ts
   function pickField(self, ext, field) {
     self.selection.restore();
     const range = self.selection.range;
@@ -19497,7 +19783,7 @@ button.active svg {
     self.selection.save();
     return text;
   }
-  // src/control/core/editorSystem/extensions/schemaScalars.ts
+  // src/core/editorSystem/extensions/schemaScalars.ts
   function flattenScalars(schema, prefix = "") {
     const s2 = unwrap(schema);
     if (!s2)
@@ -19560,7 +19846,7 @@ button.active svg {
     const first = s2.enum?.[0];
     return typeof first === "string" ? "string" : typeof first === "number" ? "number" : typeof first === "boolean" ? "boolean" : "string";
   }
-  // src/control/components/editor/RichTextBar/extensions/dataAdapter.ts
+  // src/components/editor/RichTextBar/extensions/dataAdapter.ts
   function adaptDataExtensions(fromEl) {
     return collectAncestorExtensions(fromEl, "data").map(adaptOne).filter((x) => x !== null);
   }
@@ -19585,7 +19871,7 @@ button.active svg {
     };
   }
 
-  // src/control/components/editor/RichTextBar/extensions/index.ts
+  // src/components/editor/RichTextBar/extensions/index.ts
   function refreshExtensions(self) {
     const range = self.selection.range ?? window.getSelection()?.getRangeAt(0) ?? null;
     if (!range)
@@ -19662,7 +19948,7 @@ button.active svg {
     }
   }
 
-  // src/control/components/editor/RichTextBar/listener.ts
+  // src/components/editor/RichTextBar/listener.ts
   function handleCustomColorInput(self, e) {
     const input = e.target;
     if (!input.classList.contains("color-custom-input"))
@@ -19760,7 +20046,7 @@ button.active svg {
     self.hide();
   }
 
-  // src/control/components/editor/RichTextBar/RichTextBar.ts
+  // src/components/editor/RichTextBar/RichTextBar.ts
   var USER_THEME_TOKENS = [
     "text-main",
     "text-body",
@@ -19871,7 +20157,7 @@ button.active svg {
   }
   customElements.define("cms-richtextbar", RichTextBar);
 
-  // src/control/components/CustomHTMLElement.ts
+  // src/components/CustomHTMLElement.ts
   class CustomHTMLElement extends HTMLElement {
     constructor(html, css, shadow) {
       super();
@@ -19885,7 +20171,7 @@ button.active svg {
     }
   }
 
-  // src/control/components/editor/configurations/Configuration/template.html
+  // src/components/editor/configurations/Configuration/template.html
   var template_default16 = `<w13c-lateral-dialog>
 
     <h3 slot="title"><slot name="title"></slot></h3>
@@ -19901,13 +20187,13 @@ button.active svg {
 
 </w13c-lateral-dialog>`;
 
-  // src/control/components/editor/configurations/Configuration/style.css
+  // src/components/editor/configurations/Configuration/style.css
   var style_default15 = `form{
     display: flex;
     flex-direction: column;
 }`;
 
-  // src/control/core/dom/getFormData.ts
+  // src/core/dom/getFormData.ts
   function getFormData(formEle, slotTarget) {
     const formData = new FormData(formEle);
     const elements = slotTarget?.assignedElements();
@@ -19929,7 +20215,7 @@ button.active svg {
     return formData;
   }
 
-  // src/control/components/editor/configurations/Configuration/EditorConfiguration.ts
+  // src/components/editor/configurations/Configuration/EditorConfiguration.ts
   class EditorConfiguration extends CustomHTMLElement {
     static get observedAttributes() {
       return ["url", "method"];
@@ -19983,11 +20269,11 @@ button.active svg {
     customElements.define("cms-editor-configuration", EditorConfiguration);
   }
 
-  // src/control/components/editor/snippet/Snippet/template.html
+  // src/components/editor/snippet/Snippet/template.html
   var template_default17 = `<div class="snippet-root"></div>
 `;
 
-  // src/control/components/editor/snippet/Snippet/style.css
+  // src/components/editor/snippet/Snippet/style.css
   var style_default16 = `:host {
     display: block;
     position: relative;
@@ -20065,7 +20351,7 @@ button.active svg {
 }
 `;
 
-  // src/control/components/editor/snippet/Snippet/Snippet.ts
+  // src/components/editor/snippet/Snippet/Snippet.ts
   var SnippetMetadata = {
     css: style_default16,
     template: template_default17
@@ -20126,7 +20412,7 @@ button.active svg {
     customElements.define("w13c-snippet", Snippet);
   }
 
-  // src/control/components/media/CropSystem/template.html
+  // src/components/media/CropSystem/template.html
   var template_default18 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
@@ -20165,7 +20451,7 @@ button.active svg {
 </div>
 `;
 
-  // src/control/components/media/CropSystem/style.css
+  // src/components/media/CropSystem/style.css
   var style_default17 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
@@ -20364,7 +20650,7 @@ button.active svg {
 }
 `;
 
-  // src/control/components/media/CropSystem/CropSystem.ts
+  // src/components/media/CropSystem/CropSystem.ts
   class CropSystem extends Component {
     constructor() {
       super({
@@ -20405,7 +20691,7 @@ button.active svg {
   }
   customElements.define("p9r-crop-system", CropSystem);
 
-  // src/control/components/media/DetailMedia/template.html
+  // src/components/media/DetailMedia/template.html
   var template_default19 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
@@ -20447,7 +20733,7 @@ button.active svg {
 </div>
 `;
 
-  // src/control/components/media/DetailMedia/style.css
+  // src/components/media/DetailMedia/style.css
   var style_default18 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
@@ -20657,7 +20943,7 @@ button.active svg {
 }
 `;
 
-  // src/control/components/media/DetailMedia/DetailMedia.ts
+  // src/components/media/DetailMedia/DetailMedia.ts
   class DetailMedia extends Component {
     constructor() {
       super({
@@ -20693,7 +20979,7 @@ button.active svg {
     customElements.define("p9r-detail-media", DetailMedia);
   }
 
-  // src/control/components/media/GridMedia/view/template.html
+  // src/components/media/GridMedia/view/template.html
   var template_default20 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
@@ -20755,7 +21041,7 @@ button.active svg {
 <p9r-crop-system id="crop"></p9r-crop-system>
 `;
 
-  // src/control/components/media/GridMedia/view/style.css
+  // src/components/media/GridMedia/view/style.css
   var style_default19 = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
@@ -21156,7 +21442,7 @@ button.active svg {
 }
 `;
 
-  // src/control/components/media/GridMedia/features/context-menu.ts
+  // src/components/media/GridMedia/features/context-menu.ts
   function setupContextMenu(s2, callbacks) {
     const menu = s2.getElementById("ctx-menu");
     let activeItem = null;
@@ -21182,7 +21468,7 @@ button.active svg {
     };
   }
 
-  // src/control/components/media/GridMedia/features/rename.ts
+  // src/components/media/GridMedia/features/rename.ts
   function setupRename(s2, callbacks) {
     const backdrop = s2.getElementById("rename-backdrop");
     const input = s2.getElementById("rename-input");
@@ -21226,7 +21512,7 @@ button.active svg {
     };
   }
 
-  // src/control/components/media/GridMedia/features/new-folder.ts
+  // src/components/media/GridMedia/features/new-folder.ts
   function setupNewFolder(host, s2, callbacks) {
     const backdrop = s2.getElementById("nf-backdrop");
     const input = s2.getElementById("nf-input");
@@ -21265,7 +21551,7 @@ button.active svg {
     });
   }
 
-  // src/control/components/media/GridMedia/features/drag-drop.ts
+  // src/components/media/GridMedia/features/drag-drop.ts
   function setupDragDrop(s2, callbacks) {
     const fileInput = s2.getElementById("file-input");
     const dropOverlay = s2.getElementById("drop-overlay");
@@ -21316,7 +21602,7 @@ button.active svg {
     };
   }
 
-  // src/control/components/media/GridMedia/features/detail/builders.ts
+  // src/components/media/GridMedia/features/detail/builders.ts
   var ICON_COPY = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
   var ICON_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
   function buildPreview(item) {
@@ -21340,7 +21626,7 @@ button.active svg {
     el.innerHTML = `
         <div class="detail-field">
             <label>Name</label>
-            <input type="text" id="detail-label" value="${escapeAttr(item.label)}">
+            <input type="text" id="detail-label" value="${escapeAttr2(item.label)}">
         </div>
         ${isImage ? `
         <div class="detail-field">
@@ -21392,7 +21678,7 @@ button.active svg {
     return el;
   }
 
-  // src/control/components/media/GridMedia/features/detail/setup.ts
+  // src/components/media/GridMedia/features/detail/setup.ts
   function setupDetail(detail, callbacks) {
     detail.addEventListener("close", () => callbacks.onClose());
     return {
@@ -21430,7 +21716,7 @@ button.active svg {
     return data;
   }
 
-  // src/control/components/media/GridMedia/features/setup.ts
+  // src/components/media/GridMedia/features/setup.ts
   function setupFeatures(host, s2) {
     const refresh2 = () => host._refresh();
     const ctxMenu = setupContextMenu(s2, {
@@ -21473,7 +21759,7 @@ button.active svg {
     return { ctxMenu, dragDrop, detail };
   }
 
-  // src/control/components/media/GridMedia/events/grid.ts
+  // src/components/media/GridMedia/events/grid.ts
   function wireGrid(host, s2, ctxMenu, detail) {
     const grid = s2.getElementById("grid");
     grid.addEventListener("click", (e) => {
@@ -21502,7 +21788,7 @@ button.active svg {
     });
   }
 
-  // src/control/components/media/GridMedia/events/breadcrumb.ts
+  // src/components/media/GridMedia/events/breadcrumb.ts
   function wireBreadcrumb(host, s2) {
     s2.getElementById("breadcrumb").addEventListener("click", (e) => {
       const target = e.target;
@@ -21515,7 +21801,7 @@ button.active svg {
     });
   }
 
-  // src/control/components/media/GridMedia/GridMedia.ts
+  // src/components/media/GridMedia/GridMedia.ts
   class GridMedia extends Component {
     _folder = null;
     _breadcrumb = [];
@@ -21584,7 +21870,7 @@ button.active svg {
     customElements.define("p9r-grid-media", GridMedia);
   }
 
-  // src/control/components/media/MediaAdmin/MediaAdmin.html
+  // src/components/media/MediaAdmin/MediaAdmin.html
   var MediaAdmin_default = `<w13c-fixed-admin-layout>
     <span slot="title">Files</span>
     <p9r-open-modal slot="action" modal-target="cms-media-new-folder">
@@ -21604,7 +21890,7 @@ button.active svg {
 </p9r-modal>
 `;
 
-  // src/control/components/media/MediaAdmin/MediaAdmin.ts
+  // src/components/media/MediaAdmin/MediaAdmin.ts
   class MediaAdmin extends HTMLElement {
     _grid = null;
     _fileInput = null;
@@ -21663,7 +21949,7 @@ button.active svg {
   if (!customElements.get("cms-media-admin"))
     customElements.define("cms-media-admin", MediaAdmin);
 
-  // src/control/components/form/Form/events/onKeyboardEvent.ts
+  // src/components/form/Form/events/onKeyboardEvent.ts
   function onKeyboardEvent(e, nativeForm) {
     if (e.key !== "Enter")
       return;
@@ -21674,7 +21960,7 @@ button.active svg {
     nativeForm.requestSubmit();
   }
 
-  // src/control/core/dom/buildRequestUrl.ts
+  // src/core/dom/buildRequestUrl.ts
   function buildRequestUrl(target) {
     const u = new URL(target, window.location.href);
     for (const [k, v] of new URLSearchParams(window.location.search))
@@ -21682,7 +21968,7 @@ button.active svg {
     return u;
   }
 
-  // src/control/components/form/Form/events/onSubmit.ts
+  // src/components/form/Form/events/onSubmit.ts
   function onSubmit(e, me) {
     e.preventDefault();
     const form = e.target;
@@ -21707,7 +21993,7 @@ button.active svg {
     });
   }
 
-  // src/control/components/form/Form/Form.ts
+  // src/components/form/Form/Form.ts
   class CmsForm extends CustomHTMLElement {
     _nativeForm = null;
     static get observedAttributes() {
@@ -21759,7 +22045,161 @@ button.active svg {
     customElements.define("cms-form", CmsForm);
   }
 
-  // src/control/components/form/Validate/Validate.ts
+  // src/components/form/MediaInput/MediaInput.css
+  var MediaInput_default = `:host { display: block; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+}
+
+.input-row { display: flex; gap: 4px; }
+
+.trigger {
+    display: flex; align-items: center; gap: 10px;
+    flex: 1; min-width: 0;
+    padding: 7px 10px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    cursor: pointer; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.trigger:hover         { border-color: var(--text-muted, #94a3b8); }
+.trigger:focus-visible { border-color: var(--primary-base, #4361ee); box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15)); }
+
+.preview {
+    display: none;
+    width: 28px; height: 28px;
+    object-fit: contain;
+    border-radius: 4px;
+    background: var(--bg-base, #f8fafc);
+    flex-shrink: 0;
+}
+
+.value {
+    flex: 1; min-width: 0;
+    font-size: 12px; font-weight: 500;
+    color: var(--text-main, #1e293b);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-align: left;
+}
+
+.clear-btn {
+    display: none; align-items: center; justify-content: center;
+    width: 32px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer; flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.clear-btn:hover {
+    color: var(--danger-base, #ef4444);
+    border-color: var(--danger-base, #ef4444);
+    background: color-mix(in srgb, var(--danger-base, #ef4444) 6%, transparent);
+}
+`;
+
+  // src/components/form/MediaInput/MediaInput.ts
+  class MediaInput extends HTMLElement {
+    static formAssociated = true;
+    _internals;
+    _value = "";
+    _preview;
+    _label;
+    _clearBtn;
+    constructor() {
+      super();
+      this._internals = this.attachInternals();
+    }
+    connectedCallback() {
+      if (!this.shadowRoot) {
+        this._build(this.getAttribute("label"));
+        this._wire();
+      }
+      this.value = this._value || this.getAttribute("value") || "";
+    }
+    get name() {
+      return this.getAttribute("name");
+    }
+    get value() {
+      return this._value;
+    }
+    set value(v) {
+      this._value = v;
+      this._internals.setFormValue(v);
+      this._preview.src = v;
+      this._preview.style.display = v ? "block" : "none";
+      this._label.textContent = v ? fileName(v) : this.getAttribute("placeholder") || "Choose a file…";
+      this._clearBtn.style.display = v ? "flex" : "none";
+    }
+    get _types() {
+      const raw = this.getAttribute("types") || "image";
+      return ["folder", ...raw.split(",").map((t) => t.trim()).filter(Boolean)];
+    }
+    _build(label) {
+      const shadow = this.attachShadow({ mode: "open" });
+      shadow.innerHTML = `
+            <style>${MediaInput_default}</style>
+            <div class="field">
+                ${label ? `<span class="label">${label}</span>` : ""}
+                <div class="input-row">
+                    <button class="trigger" type="button">
+                        <img class="preview" alt="" />
+                        <span class="value">Choose a file…</span>
+                    </button>
+                    <button class="clear-btn" type="button" title="Remove">
+                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>`;
+      this._preview = shadow.querySelector(".preview");
+      this._label = shadow.querySelector(".value");
+      this._clearBtn = shadow.querySelector(".clear-btn");
+    }
+    _wire() {
+      this.shadowRoot.querySelector(".trigger").addEventListener("click", () => this._openPicker());
+      this._clearBtn.addEventListener("click", () => {
+        this.value = "";
+        this.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    }
+    _openPicker() {
+      const center = document.createElement("cms-media-center");
+      document.body.appendChild(center);
+      const handler = (e) => {
+        center.removeEventListener("select-item", handler);
+        const src = e.detail?.src;
+        if (src) {
+          this.value = src;
+          this.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        center.remove();
+      };
+      center.addEventListener("select-item", handler);
+      center.show(this._types);
+    }
+  }
+  function fileName(url) {
+    const clean = url.split("?")[0].replace(/\/$/, "");
+    return clean.slice(clean.lastIndexOf("/") + 1) || url;
+  }
+  if (!customElements.get("cms-media-input")) {
+    customElements.define("cms-media-input", MediaInput);
+  }
+
+  // src/components/form/Validate/Validate.ts
   class CmsValidate extends CustomHTMLElement {
     _abort = null;
     _debounceId = null;
@@ -21847,7 +22287,7 @@ button.active svg {
     customElements.define("cms-validate", CmsValidate);
   }
 
-  // src/control/components/data/fetch/templates.ts
+  // src/components/data/fetch/templates.ts
   function collectTemplates(host) {
     const map = {};
     for (const child of Array.from(host.children)) {
@@ -21860,7 +22300,7 @@ button.active svg {
     return map;
   }
 
-  // src/control/components/data/fetch/state.ts
+  // src/components/data/fetch/state.ts
   function isEmpty(data) {
     if (data === null || data === undefined)
       return true;
@@ -21871,7 +22311,7 @@ button.active svg {
     return false;
   }
 
-  // src/control/components/data/fetch/fetcher.ts
+  // src/components/data/fetch/fetcher.ts
   async function runFetch(url, signal) {
     try {
       const u = buildRequestUrl(url);
@@ -21887,12 +22327,12 @@ button.active svg {
     }
   }
 
-  // src/control/components/data/fetch/pathHelpers.ts
+  // src/components/data/fetch/pathHelpers.ts
   function resolve(obj, path) {
     return path.split(".").reduce((acc, k) => acc != null ? acc[k] : undefined, obj);
   }
 
-  // src/control/components/data/fetch/interpolate.ts
+  // src/components/data/fetch/interpolate.ts
   function interpolateNode(node, context) {
     if (node.nodeType === Node.TEXT_NODE) {
       const original = node.textContent ?? "";
@@ -21943,7 +22383,7 @@ button.active svg {
     return String(value ?? "");
   }
 
-  // src/control/components/data/fetch/render.ts
+  // src/components/data/fetch/render.ts
   function processTemplate(tpl, context) {
     const forKey = tpl.getAttribute("for");
     const out = document.createDocumentFragment();
@@ -21988,7 +22428,7 @@ button.active svg {
     }
   }
 
-  // src/control/components/data/fetch/stamp.ts
+  // src/components/data/fetch/stamp.ts
   function stampSiblingsOf(host, tpl, context, previous) {
     clearStamped(previous);
     const parent = host.parentNode;
@@ -22004,7 +22444,7 @@ button.active svg {
       n2.parentNode?.removeChild(n2);
   }
 
-  // src/control/components/data/fetch/FetchComponent.ts
+  // src/components/data/fetch/FetchComponent.ts
   class FetchComponent extends HTMLElement {
     static get observedAttributes() {
       return ["url", "reload-on"];
@@ -22098,7 +22538,7 @@ button.active svg {
   }
   customElements.define("cms-fetch", FetchComponent);
 
-  // src/control/components/data/JsonEditor/normalize.ts
+  // src/components/data/JsonEditor/normalize.ts
   function normalize(schema) {
     if (!schema)
       return null;
@@ -22136,7 +22576,7 @@ button.active svg {
     return out;
   }
 
-  // src/control/components/data/JsonEditor/renderObject.ts
+  // src/components/data/JsonEditor/renderObject.ts
   function renderObject(schema, value, onChange, dispatch) {
     const obj = typeof value === "object" && value !== null && !Array.isArray(value) ? value : {};
     const required = new Set(schema.required ?? []);
@@ -22176,7 +22616,7 @@ button.active svg {
     };
   }
 
-  // src/control/components/data/JsonEditor/initFromSchema.ts
+  // src/components/data/JsonEditor/initFromSchema.ts
   function initFromSchema(schema) {
     const s2 = normalize(schema);
     if (!s2)
@@ -22210,7 +22650,7 @@ button.active svg {
     }
   }
 
-  // src/control/components/data/JsonEditor/renderArray.ts
+  // src/components/data/JsonEditor/renderArray.ts
   function renderArray(schema, value, onChange, dispatch) {
     const items = Array.isArray(value) ? value : [];
     const itemSchema = schema.items ?? { type: "string" };
@@ -22277,7 +22717,7 @@ button.active svg {
     };
   }
 
-  // src/control/components/data/JsonEditor/renderPrimitive.ts
+  // src/components/data/JsonEditor/renderPrimitive.ts
   function renderPrimitive(schema, value, onChange) {
     const type = schema.type;
     if (type === "boolean") {
@@ -22321,7 +22761,7 @@ button.active svg {
     return { el: input, read: () => input.value };
   }
 
-  // src/control/components/data/JsonEditor/renderVariant.ts
+  // src/components/data/JsonEditor/renderVariant.ts
   function renderVariant(schema, value, onChange, dispatch) {
     const variants = schema.oneOf ?? schema.anyOf ?? [];
     if (variants.length === 0) {
@@ -22381,7 +22821,7 @@ button.active svg {
     return idx >= 0 ? idx : 0;
   }
 
-  // src/control/components/data/JsonEditor/renderNode.ts
+  // src/components/data/JsonEditor/renderNode.ts
   function renderNode(schema, value, onChange) {
     const s2 = normalize(schema);
     if (!s2)
@@ -22427,7 +22867,7 @@ button.active svg {
     return { el: span, read: () => value };
   }
 
-  // src/control/components/data/JsonEditor/JsonEditor.ts
+  // src/components/data/JsonEditor/JsonEditor.ts
   class JsonEditor extends HTMLElement {
     static formAssociated = true;
     static get observedAttributes() {

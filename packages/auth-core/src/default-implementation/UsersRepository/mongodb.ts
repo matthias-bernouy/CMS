@@ -77,6 +77,14 @@ export class MongoUsersRepository<Role extends string = string> implements Users
         return d ? this._fromDoc(d) : null;
     }
 
+    async setProfile(sub: string, patch: { displayName?: string }): Promise<TUser<Role> | null> {
+        const $set: Partial<UserDoc<Role>> = {};
+        if (patch.displayName !== undefined) $set.displayNameEnc = await this.pii.encrypt(patch.displayName);
+        if (Object.keys($set).length === 0) return this.getBySub(sub);
+        const d = await this.col.findOneAndUpdate({ _id: sub }, { $set }, { returnDocument: "after" });
+        return d ? this._fromDoc(d) : null;
+    }
+
     async delete(sub: string): Promise<boolean> {
         const r = await this.col.deleteOne({ _id: sub });
         return r.deletedCount === 1;

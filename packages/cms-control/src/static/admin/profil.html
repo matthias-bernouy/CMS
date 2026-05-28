@@ -3,8 +3,8 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 16px;
-        padding: 56px 24px 36px;
+        gap: 12px;
+        padding: 48px 24px 32px;
         border-radius: 16px;
         background: linear-gradient(180deg,
             color-mix(in srgb, var(--primary-base, #4361ee) 12%, var(--bg-surface, #fff)) 0%,
@@ -17,13 +17,9 @@
         color: var(--text-main, #1e293b);
         line-height: 1.2;
     }
-    .profil-hint {
+    .profil-email {
         font-size: 0.875rem;
         color: var(--text-muted, #94a3b8);
-        text-align: center;
-        max-width: 44ch;
-        line-height: 1.5;
-        margin: 0;
     }
     .tokens-hint {
         font-size: 0.875rem;
@@ -32,6 +28,9 @@
         margin: 0;
     }
 </style>
+
+<cms-event-toast event="profil:updated"   message="Profile updated"  type="success"></cms-event-toast>
+<cms-event-toast event="password:changed" message="Password changed" type="success"></cms-event-toast>
 
 <w13c-fixed-admin-layout>
     <span slot="title">Profile</span>
@@ -48,16 +47,47 @@
         <p9r-tabs active="profile">
 
             <p9r-tab-panel id="profile" label="Profile">
-                <div class="profil-hero">
-                    <p9r-avatar size="xl" color="primary" name="Administrator"></p9r-avatar>
-                    <p9r-stack gap="xs" align="center">
-                        <span class="profil-name">Administrator</span>
-                        <p9r-tag color="primary">Admin</p9r-tag>
-                    </p9r-stack>
-                    <p class="profil-hint">
-                        User details — display name, role, last login, active sessions — will surface here in a later iteration.
-                    </p>
-                </div>
+                <cms-fetch url="{{BASE_PATH}}/api/profil" reload-on="profil:updated">
+                    <template>
+                        <p9r-stack gap="lg">
+                            <div class="profil-hero">
+                                <p9r-avatar size="xl" color="primary" name="{{ displayName }}"></p9r-avatar>
+                                <p9r-stack gap="xs" align="center">
+                                    <span class="profil-name">{{ displayName }}</span>
+                                    <p9r-tag color="primary">{{ roleLabel }}</p9r-tag>
+                                    <span class="profil-email">{{ email }}</span>
+                                </p9r-stack>
+                            </div>
+
+                            <p9r-card>
+                                <span slot="header">Account</span>
+                                <cms-form target="{{BASE_PATH}}/api/profil" emit="profil:updated">
+                                    <p9r-stack gap="md">
+                                        <p9r-input name="displayName" label="Display name" value="{{ displayName }}" placeholder="Your name"></p9r-input>
+                                        <p9r-stack direction="row" justify="end">
+                                            <p9r-button color="primary" type="submit">Save</p9r-button>
+                                        </p9r-stack>
+                                    </p9r-stack>
+                                </cms-form>
+                            </p9r-card>
+
+                            <template for="passwordCard">
+                                <p9r-card>
+                                    <span slot="header">Password</span>
+                                    <cms-form target="{{BASE_PATH}}/api/profil/password" emit="password:changed">
+                                        <p9r-stack gap="md">
+                                            <p9r-input name="currentPassword" type="password" label="Current password" autocomplete="current-password" required></p9r-input>
+                                            <p9r-input name="newPassword" type="password" label="New password" placeholder="At least 8 characters" autocomplete="new-password" required></p9r-input>
+                                            <p9r-stack direction="row" justify="end">
+                                                <p9r-button color="primary" type="submit">Change password</p9r-button>
+                                            </p9r-stack>
+                                        </p9r-stack>
+                                    </cms-form>
+                                </p9r-card>
+                            </template>
+                        </p9r-stack>
+                    </template>
+                </cms-fetch>
             </p9r-tab-panel>
 
             <p9r-tab-panel id="tokens" label="Tokens">
@@ -73,34 +103,41 @@
                         </p9r-open-modal>
                     </p9r-stack>
 
-                    <p9r-table>
-                        <p9r-row slot="header">
-                            <p9r-cell><strong>Name</strong></p9r-cell>
-                            <p9r-cell><strong>Created</strong></p9r-cell>
-                            <p9r-cell><strong>Last used</strong></p9r-cell>
-                            <p9r-cell></p9r-cell>
-                        </p9r-row>
-                        <cms-fetch url="{{BASE_PATH}}/api/pats" reload-on="pat:changed">
-                            <template for=".">
-                                <p9r-row>
-                                    <p9r-cell><strong>{{ name }}</strong></p9r-cell>
-                                    <p9r-cell>{{ createdLabel }}</p9r-cell>
-                                    <p9r-cell>{{ lastUsedLabel }}</p9r-cell>
-                                    <p9r-cell>
-                                        <cms-confirm-form target="{{BASE_PATH}}/api/pats?id={{ id }}" method="DELETE" emit="pat:changed" message="Revoke this token? Any client using it stops working immediately.">
-                                            <p9r-button color="danger" variant="ghost">Revoke</p9r-button>
-                                        </cms-confirm-form>
-                                    </p9r-cell>
+                    <cms-fetch url="{{BASE_PATH}}/api/pats" reload-on="pat:changed">
+                        <template slot="empty">
+                            <cms-empty-state>
+                                <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="7.5" cy="15.5" r="5.5"/>
+                                    <path d="m21 2-9.6 9.6"/>
+                                    <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                                </svg>
+                                <p slot="title">No access tokens yet</p>
+                                <p slot="hint">Create one to authenticate the CLI or server-to-server calls. The secret is shown once, at creation.</p>
+                            </cms-empty-state>
+                        </template>
+                        <template>
+                            <p9r-table>
+                                <p9r-row slot="header">
+                                    <p9r-cell><strong>Name</strong></p9r-cell>
+                                    <p9r-cell><strong>Created</strong></p9r-cell>
+                                    <p9r-cell><strong>Last used</strong></p9r-cell>
+                                    <p9r-cell></p9r-cell>
                                 </p9r-row>
-                            </template>
-                            <template slot="empty">
-                                <cms-empty-state>
-                                    <p slot="title">No access tokens</p>
-                                    <p slot="hint">Create one to authenticate the CLI or server-to-server calls.</p>
-                                </cms-empty-state>
-                            </template>
-                        </cms-fetch>
-                    </p9r-table>
+                                <template for=".">
+                                    <p9r-row>
+                                        <p9r-cell><strong>{{ name }}</strong></p9r-cell>
+                                        <p9r-cell>{{ createdLabel }}</p9r-cell>
+                                        <p9r-cell>{{ lastUsedLabel }}</p9r-cell>
+                                        <p9r-cell>
+                                            <cms-confirm-form target="{{BASE_PATH}}/api/pats?id={{ id }}" method="DELETE" emit="pat:changed" message="Revoke this token? Any client using it stops working immediately.">
+                                                <p9r-button color="danger" variant="ghost">Revoke</p9r-button>
+                                            </cms-confirm-form>
+                                        </p9r-cell>
+                                    </p9r-row>
+                                </template>
+                            </p9r-table>
+                        </template>
+                    </cms-fetch>
                 </p9r-stack>
             </p9r-tab-panel>
 

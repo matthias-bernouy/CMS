@@ -7,7 +7,7 @@ import type { SecretStore } from "@bernouy/cms-shared";
 import { InMemorySecretStore } from "@bernouy/cms-shared";
 import type { CmsFilesMetadataRepository } from "@bernouy/cms-shared";
 import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
-import type { UsersRepository, IdentityProviderRepository, PatRepository } from "@bernouy/auth-core";
+import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/auth-core";
 import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/auth-core";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
@@ -56,6 +56,7 @@ export class ControlCms {
     private _users:               UsersRepository<CMS_ROLES> | null;
     private _identityProviders:   IdentityProviderRepository | null;
     private _pats:                PatRepository | null;
+    private _credentials:         LocalCredentialStore | null;
 
     constructor(
         runner: Runner,
@@ -69,6 +70,7 @@ export class ControlCms {
         users?: UsersRepository<CMS_ROLES>,
         identityProviders?: IdentityProviderRepository,
         pats?: PatRepository,
+        credentials?: LocalCredentialStore,
     ){
         this.configuration = configuration;
         this._auth = auth;
@@ -81,6 +83,7 @@ export class ControlCms {
         this._users = users ?? null;
         this._identityProviders = identityProviders ?? null;
         this._pats = pats ?? null;
+        this._credentials = credentials ?? null;
 
         const authGuard = createAuthGuard<CMS_ROLES>({ basePath: this.basePath, auth: this._auth, requiredRole: "admin" });
 
@@ -168,6 +171,14 @@ export class ControlCms {
     get pats(): PatRepository {
         if (!this._pats) throw new Error("PAT repository not configured");
         return this._pats;
+    }
+
+    /** Local email/password credential store (authn secrets for the builtin
+     *  `local` provider). Backs the admin "add user by hand" flow. Throws until
+     *  wired. */
+    get credentials(): LocalCredentialStore {
+        if (!this._credentials) throw new Error("local credential store not configured");
+        return this._credentials;
     }
 
     /**

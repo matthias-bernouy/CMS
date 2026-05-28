@@ -131,7 +131,7 @@ const auth = new LocalAuthentication<CMS_ROLES>(controlRunner, {
     cookieSecure,
     defaultHome:   "/admin/pages",
 });
-new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats);
+new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials);
 
 // Delivery on its own runner/port — strictly public surface.
 const deliveryRunner = new BunRunner();

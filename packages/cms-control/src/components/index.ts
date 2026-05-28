@@ -49,6 +49,7 @@ import "./media/MediaAdmin/MediaAdmin"
 
 // Form
 import "./form/Form/Form";
+import "./form/MediaInput/MediaInput";
 import "./form/Validate/Validate";
 import "./data/fetch/FetchComponent"
 import "./data/JsonEditor/JsonEditor"

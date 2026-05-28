@@ -66,6 +66,11 @@ export interface UsersRepository<Role extends string = string> {
     /** The explicit, server-side role grant/revoke. `null` when `sub` is unknown. */
     setRole(sub: string, role: Role): Promise<TUser<Role> | null>;
 
+    /** Update mutable profile fields (admin self-service profile edit). Only
+     *  touches the fields present in `patch`; leaves role and `lastSeenAt`
+     *  alone (it is NOT a login). `null` when `sub` is unknown. */
+    setProfile(sub: string, patch: { displayName?: string }): Promise<TUser<Role> | null>;
+
     /** Remove a user from the CMS membership (authz). Does NOT touch any auth
      *  backend / credential store. `false` when `sub` is unknown. */
     delete(sub: string): Promise<boolean>;

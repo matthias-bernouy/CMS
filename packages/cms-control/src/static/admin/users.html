@@ -1,5 +1,8 @@
 <w13c-fixed-admin-layout>
     <span slot="title">Users</span>
+    <p9r-open-modal modal-target="create-user-modal" slot="action">
+        <p9r-button color="primary">+ Add user</p9r-button>
+    </p9r-open-modal>
 
     <p9r-table>
         <p9r-row slot="header">
@@ -35,3 +38,19 @@
         </cms-fetch>
     </p9r-table>
 </w13c-fixed-admin-layout>
+
+<p9r-modal id="create-user-modal" aria-label="Add a local user">
+    <span slot="title">Add user</span>
+    <cms-form target="{{BASE_PATH}}/api/users" emit="user:updated">
+        <p9r-stack gap="md">
+            <p9r-input name="email" type="email" label="Email" placeholder="user@example.com" required></p9r-input>
+            <p9r-input name="password" type="password" label="Password" placeholder="At least 8 characters" required></p9r-input>
+            <p9r-input name="displayName" label="Display name" placeholder="Jane Doe"></p9r-input>
+            <p9r-select name="role" label="Role" value="user">
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+            </p9r-select>
+            <p9r-button color="primary" fullWidth type="submit">Create user</p9r-button>
+        </p9r-stack>
+    </cms-form>
+</p9r-modal>

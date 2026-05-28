@@ -14,7 +14,7 @@
                                     <p9r-stack gap="md">
                                         <p9r-input name="site.name"    label="Site name"   value="{{ site.name }}"    placeholder="My Website"></p9r-input>
                                         <p9r-input name="site.host"    label="Host"        value="{{ site.host }}"    placeholder="https://example.com"></p9r-input>
-                                        <p9r-input name="site.favicon" label="Favicon URL" value="{{ site.favicon }}" placeholder="https://..."></p9r-input>
+                                        <cms-media-input name="site.favicon" label="Favicon" value="{{ site.favicon }}" types="image" placeholder="Choose a file…"></cms-media-input>
                                         <p9r-select name="site.language" label="Language" value="{{ site.language }}">
                                             <option value="">— Default —</option>
                                             <option value="en">English</option>

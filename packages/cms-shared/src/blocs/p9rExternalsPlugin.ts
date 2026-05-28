@@ -11,14 +11,14 @@ export const p9rExternalsPlugin: BunPlugin = {
     name: "p9r-externals",
     setup(build) {
         build.onResolve(
-            { filter: /^@bernouy\/cms\/(component|editor)$/ },
+            { filter: /^@bernouy\/cms(-control)?\/(component|editor)$/ },
             (args) => ({ path: args.path, namespace: "p9r-extern" }),
         );
 
         build.onLoad(
             { filter: /.*/, namespace: "p9r-extern" },
             (args) => {
-                if (args.path === "@bernouy/cms-control/component") {
+                if (args.path === "@bernouy/cms/component" || args.path === "@bernouy/cms-control/component") {
                     return {
                         contents: `export const Component = window.p9r.Component;`,
                         loader: "js",
