@@ -17,12 +17,13 @@ const DEFAULT_OUTPUT = ".env.example";
 async function resolveAdmin(): Promise<{ base: URL; token: string }> {
     const rawUrl = Bun.env.P9R_URL;
     if (!rawUrl || !/^https?:\/\//i.test(rawUrl)) {
-        console.error("✖ P9R_URL must be set and start with http(s)://. Run `p9r login` after.");
+
+        console.error("✖ P9R_URL must be set and start with http(s)://.");
         process.exit(1);
     }
     const token = await getAccessToken(rawUrl.replace(/\/+$/, ""));
     if (!token) {
-        console.error(`✖ No credentials for ${rawUrl}. Run \`p9r login --url=${rawUrl}\`.`);
+        console.error(`✖ No token for ${rawUrl}. Set P9R_TOKEN to a CMS Personal Access Token (admin → Profile), or add it to ~/.config/p9r/credentials.json.`);
         process.exit(1);
     }
     return { base: new URL(rawUrl.replace(/\/$/, "") + "/"), token };
@@ -32,7 +33,7 @@ async function fetchKeys(base: URL, token: string): Promise<string[]> {
     const url = new URL("api/secrets/keys", base).href;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (res.status === 401 || res.status === 403) {
-        console.error(`✖ Remote refused the credentials (HTTP ${res.status}). Run \`p9r login\` again.`);
+        console.error(`✖ Remote refused the token (HTTP ${res.status}). Create a new Personal Access Token (admin → Profile) and set P9R_TOKEN.`);
         process.exit(1);
     }
     if (!res.ok) {

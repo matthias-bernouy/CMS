@@ -14,5 +14,6 @@
  * surface small. This entry is NOT intercepted; bun bundles each call
  * site normally.
  */
+export { getFields } from "src/control/core/data/getFields";
 export { collectAncestorExtensions } from "src/control/core/editorSystem/extensions/collectAncestors";
 export type { Surface, SurfaceExtensionMap, DataExtension, RichTextBarExtension, BlocActionExtension, Field, PickContext, BlocActionContext } from "src/control/core/editorSystem/extensions/types";

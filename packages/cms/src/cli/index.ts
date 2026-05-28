@@ -6,7 +6,6 @@ import CLI_init from "./CLI_init";
 import CLI_new from "./CLI_new";
 import CLI_installSkill from "./CLI_installSkill";
 import CLI_listBlocs from "./CLI_listBlocs";
-import CLI_login, { CLI_logout } from "./CLI_login";
 import CLI_secrets from "./CLI_secrets";
 
 const [command, ...rest] = process.argv.slice(2);
@@ -22,9 +21,6 @@ Usage:
       --force | -f                 Allow a non-empty target.
   p9r install-skill [--force]      Install the bloc-creator Claude skill
                                    into ./.claude/skills/.
-  p9r login  [--url=...]           Keycloak Device Auth flow (cached in
-                                   ~/.config/p9r/credentials.json).
-  p9r logout [--url=...]           Drop stored credentials for the URL.
   p9r dev [--port=N --host=H]      Run the editor 100% locally against site/.
                                    No remote calls, no auth. Run \`p9r pull\`
                                    first to bootstrap site/ from a tenant.
@@ -51,8 +47,9 @@ Usage:
 Env (loaded from .env or the environment):
   P9R_URL      Base URL of the remote Cms CMS
                e.g. http://localhost:4999/cms
-  P9R_TOKEN    Optional fallback bearer token (legacy static-token mode).
-               Prefer \`p9r login\` for the Keycloak device flow.
+  P9R_TOKEN    Bearer token for remote commands — a CMS Personal Access Token
+               (pat_...) created in the admin Profile page. Alternatively store
+               it in ~/.config/p9r/credentials.json keyed by CMS URL.
 `);
 }
 
@@ -68,10 +65,9 @@ try {
             await CLI_installSkill(rest);
             break;
         case "login":
-            await CLI_login(rest);
-            break;
         case "logout":
-            await CLI_logout(rest);
+            console.error("✖ `p9r login`/`logout` were removed. Create a Personal Access Token in the CMS admin Profile page, then set P9R_TOKEN=pat_... (or add it to ~/.config/p9r/credentials.json).");
+            process.exit(1);
             break;
         case "dev":
             await CLI_dev(rest);

@@ -78,8 +78,6 @@ Commands wired in `package.json` bin (one binary, sub-commands):
 | `p9r init <folder>` | scaffold a new bloc locally (copies `src/cli/resources/bloc-template/`). Refuses non-empty target without `--force`. |
 | `p9r new <folder>` | scaffold a complete CMS app (Control + Delivery co-hosted) with in-memory providers and basic auth. `--template=full` (default), `--force`. |
 | `p9r install-skill` | install the bloc-creator Claude Code skill into `./.claude/skills/`. Refuses non-empty target without `--force`. |
-| `p9r login [--url=…]` | Keycloak **Device Authorization Grant** flow. Cached in `~/.config/p9r/credentials.json`. |
-| `p9r logout [--url=…]` | drop stored credentials for that URL. |
 | `p9r dev [--port=N --host=H]` | local editor against `site/` with hot-reload. **No remote calls, no auth.** Run `p9r pull` first to bootstrap `site/` from a tenant. |
 | `p9r push [flags]` | push `system → blocs → snippets → templates → pages` to the remote CMS, in that order. Flags: `--type=<one>\|*`, `--dry-run`, `--yes\|-y`, `--force\|-f`, `--only=tag1,tag2`. |
 | `p9r pull [flags]` | inverse of push: materialize remote into `site/`. Same `--type` set; `--yes` / `--force`. |
@@ -88,9 +86,11 @@ Commands wired in `package.json` bin (one binary, sub-commands):
 
 Remote-talking commands (`dev`, `push`, `pull`, `list-blocs`, `secrets`)
 read `P9R_URL` (admin base, including path prefix, e.g.
-`http://localhost:4999/cms`) and the bearer from
-`~/.config/p9r/credentials.json` populated by `p9r login`. The
-old `P9R_TOKEN` env var is still accepted as a fallback.
+`http://localhost:4999/cms`) and the bearer — a CMS Personal Access Token
+(`pat_…`) created in the admin Profile page — from `P9R_TOKEN` or from a
+`~/.config/p9r/credentials.json` entry keyed by CMS URL. There is no `p9r
+login`: the old Keycloak device flow was retired when Keycloak stopped being
+the CMS auth backend (it is now one optional per-tenant OIDC provider).
 
 `init`, `new`, `install-skill` are offline.
 

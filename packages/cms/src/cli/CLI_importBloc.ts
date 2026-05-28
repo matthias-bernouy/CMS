@@ -31,7 +31,7 @@ async function resolveAdminBase(): Promise<{ adminBase: URL; token: string }> {
 
     if (!rawUrl) {
         console.error("✖ P9R_URL must be set (in .env or the environment).");
-        console.error("  Then run `p9r login` to authenticate (or set P9R_TOKEN for static-token mode).");
+        console.error("  Then set P9R_TOKEN to a CMS Personal Access Token (admin → Profile).");
         process.exit(1);
     }
     if (!/^https?:\/\//i.test(rawUrl)) {
@@ -41,7 +41,7 @@ async function resolveAdminBase(): Promise<{ adminBase: URL; token: string }> {
 
     const token = await getAccessToken(rawUrl.replace(/\/+$/, ""));
     if (!token) {
-        console.error(`✖ No credentials for ${rawUrl}. Run \`p9r login --url=${rawUrl}\`.`);
+        console.error(`✖ No token for ${rawUrl}. Set P9R_TOKEN to a CMS Personal Access Token (admin → Profile), or add it to ~/.config/p9r/credentials.json.`);
         process.exit(1);
     }
     try {
@@ -179,7 +179,7 @@ async function fetchRemoteTags(adminBase: URL, token: string): Promise<Set<strin
         process.exit(1);
     }
     if (res.status === 401 || res.status === 403) {
-        console.error(`✖ Remote refused the credentials (HTTP ${res.status}). Run \`p9r login\` again.`);
+        console.error(`✖ Remote refused the token (HTTP ${res.status}). Create a new Personal Access Token (admin → Profile) and set P9R_TOKEN.`);
         process.exit(1);
     }
     if (!res.ok) {
