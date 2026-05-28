@@ -1,9 +1,0 @@
-:host { display: block; }
-
-[part="root"] {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.msg:empty { display: none; }

@@ -1,4 +1,0 @@
-:host { display: block; }
-
-[part="empty"] { margin-top: 1rem; }
-[part="empty"][hidden] { display: none; }
