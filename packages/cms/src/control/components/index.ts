@@ -10,6 +10,7 @@ import "./admin/EmptyState/EmptyState"
 import "./admin/EventToast/EventToast"
 import "./admin/HeadersInput/HeadersInput"
 import "./admin/OpenDialog/OpenDialog"
+import "./admin/Tokens/TokenCreate"
 import "./admin/Secrets/Secrets"
 
 // Editor

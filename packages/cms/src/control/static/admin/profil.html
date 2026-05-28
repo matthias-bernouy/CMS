@@ -25,6 +25,12 @@
         line-height: 1.5;
         margin: 0;
     }
+    .tokens-hint {
+        font-size: 0.875rem;
+        color: var(--text-muted, #94a3b8);
+        line-height: 1.5;
+        margin: 0;
+    }
 </style>
 
 <w13c-fixed-admin-layout>
@@ -39,15 +45,70 @@
     </cms-fetch>
 
     <p9r-container size="md">
-        <div class="profil-hero">
-            <p9r-avatar size="xl" color="primary" name="Administrator"></p9r-avatar>
-            <p9r-stack gap="xs" align="center">
-                <span class="profil-name">Administrator</span>
-                <p9r-tag color="primary">Admin</p9r-tag>
-            </p9r-stack>
-            <p class="profil-hint">
-                User details — display name, role, last login, active sessions — will surface here in a later iteration.
-            </p>
-        </div>
+        <p9r-tabs active="profile">
+
+            <p9r-tab-panel id="profile" label="Profile">
+                <div class="profil-hero">
+                    <p9r-avatar size="xl" color="primary" name="Administrator"></p9r-avatar>
+                    <p9r-stack gap="xs" align="center">
+                        <span class="profil-name">Administrator</span>
+                        <p9r-tag color="primary">Admin</p9r-tag>
+                    </p9r-stack>
+                    <p class="profil-hint">
+                        User details — display name, role, last login, active sessions — will surface here in a later iteration.
+                    </p>
+                </div>
+            </p9r-tab-panel>
+
+            <p9r-tab-panel id="tokens" label="Tokens">
+                <p9r-stack gap="lg">
+                    <p class="tokens-hint">
+                        Bearer tokens for the CLI and server-to-server access. They authenticate as you,
+                        whatever provider you log in with. Send as Authorization: Bearer &lt;token&gt;.
+                    </p>
+
+                    <p9r-stack direction="row" justify="end">
+                        <p9r-open-modal modal-target="new-token-modal">
+                            <p9r-button color="primary">+ New token</p9r-button>
+                        </p9r-open-modal>
+                    </p9r-stack>
+
+                    <p9r-table>
+                        <p9r-row slot="header">
+                            <p9r-cell><strong>Name</strong></p9r-cell>
+                            <p9r-cell><strong>Created</strong></p9r-cell>
+                            <p9r-cell><strong>Last used</strong></p9r-cell>
+                            <p9r-cell></p9r-cell>
+                        </p9r-row>
+                        <cms-fetch url="{{BASE_PATH}}/api/pats" reload-on="pat:changed">
+                            <template for=".">
+                                <p9r-row>
+                                    <p9r-cell><strong>{{ name }}</strong></p9r-cell>
+                                    <p9r-cell>{{ createdLabel }}</p9r-cell>
+                                    <p9r-cell>{{ lastUsedLabel }}</p9r-cell>
+                                    <p9r-cell>
+                                        <cms-confirm-form target="{{BASE_PATH}}/api/pats?id={{ id }}" method="DELETE" emit="pat:changed" message="Revoke this token? Any client using it stops working immediately.">
+                                            <p9r-button color="danger" variant="ghost">Revoke</p9r-button>
+                                        </cms-confirm-form>
+                                    </p9r-cell>
+                                </p9r-row>
+                            </template>
+                            <template slot="empty">
+                                <cms-empty-state>
+                                    <p slot="title">No access tokens</p>
+                                    <p slot="hint">Create one to authenticate the CLI or server-to-server calls.</p>
+                                </cms-empty-state>
+                            </template>
+                        </cms-fetch>
+                    </p9r-table>
+                </p9r-stack>
+            </p9r-tab-panel>
+
+        </p9r-tabs>
     </p9r-container>
 </w13c-fixed-admin-layout>
+
+<p9r-modal id="new-token-modal" aria-label="Create access token">
+    <span slot="title">New access token</span>
+    <cms-token-create api="{{BASE_PATH}}/api/pats" emit="pat:changed"></cms-token-create>
+</p9r-modal>
