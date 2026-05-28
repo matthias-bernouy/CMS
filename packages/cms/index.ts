@@ -11,21 +11,13 @@
 // ── Core ────────────────────────────────────────────────────────────────
 export { ControlCms as Cms } from "./src/control/ControlCms";
 
-// ── Delivery (public-facing rendering, deployable alone) ───────────────
+// ── Delivery (public-facing rendering) ─────────────────────────────────
 export { default as DeliveryCms } from "./src/delivery/DeliveryCms";
 export { DeliveryCache } from "./src/delivery/core/DeliveryCache";
-export { PlaywrightSession } from "./src/delivery/core/enhance/PlaywrightSession";
 export { registerDeliveryEndpoints } from "./src/delivery/registerDeliveryEndpoints";
 export type { DeliveryRepository } from "./src/delivery/interfaces/DeliveryRepository";
 export type { DeliveryCmsConfig } from "./src/delivery/DeliveryCms";
 export type { HeadInjector, HeadInjectorContext } from "./src/delivery/interfaces/HeadInjector";
-
-// ── Build pipeline (used by the multi-tenant Delivery cron) ────────────
-export { DeliveryBuilder }      from "./src/delivery/build/DeliveryBuilder";
-export type { DeliveryBuilderDeps, RunOnceResult } from "./src/delivery/build/DeliveryBuilder";
-export { BuildEnhancer }        from "./src/delivery/build/BuildEnhancer";
-export { HttpVariantGenerator } from "./src/delivery/build/HttpVariantGenerator";
-export { pageBucketName, pagePublicPath } from "./src/delivery/build/pathSlug";
 
 // ── Default providers ──────────────────────────────────────────────────
 export { InMemoryCmsRepository } from "./src/socle/default-implementation/CmsRepository/memory";

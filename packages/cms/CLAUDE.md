@@ -9,9 +9,7 @@
 Three independent layers under `src/`:
 
 - **`src/control/`** — Admin UI + REST API + visual editor. Consumed through the `ControlCms` class. Authenticated, low-traffic, mounted under a runner-scoped prefix (typically `/cms`).
-- **`src/delivery/`** — Public rendering layer. Two consumption modes:
-  - **Runtime `DeliveryCms`** — on-demand render: page lookup in repository → `renderPage` → cache. Serves rendered pages + bloc bundles + theme CSS + the component runtime + the default favicon. **No Playwright at runtime.**
-  - **Build-time `DeliveryBuilder`** (under `src/delivery/build/`) — pre-renders every page, generates image variants via `HttpVariantGenerator`, optionally enhances HTML through `BuildEnhancer` + `PlaywrightSession`. Build engine only, currently not wired to a publish target.
+- **`src/delivery/`** — Public rendering layer. `DeliveryCms` does on-demand render: page lookup in repository → `renderPage` → cache. Serves rendered pages + bloc bundles + theme CSS + the component runtime + the default favicon.
 - **`src/socle/`** — Shared contracts, providers, constants, infrastructure utilities. Both `control/` and `delivery/` depend on `socle/`; never the other way. `delivery/` must never import from `control/`.
 
 Plus:
@@ -137,7 +135,7 @@ CLI source lives in `src/cli/` (one `CLI_<verb>.ts` per command +
   - `SecretStore/memory.ts` — `InMemorySecretStore`.
   - `SecretStore/encryptedMongo.ts` — `EncryptedMongoSecretStore` (envelope-encrypted via `EnvelopeSecretCrypto` from `@bernouy/core`).
   - `MongoDekRepository.ts` — `DekRepository` impl over a single `cms_deks` collection; one DEK per `scopeId` (typically `tenantId` in `cms-control-mt`).
-- **Media on the consumer side**: media now goes through the `/api/files` endpoints, backed by `CmsFilesMetadataRepository` + `CmsFilesBlobStore`. The test harness (`tests/human/HttpMedia.ts`) is the canonical reference for the `CDN` portability contract.
+- **Media on the consumer side**: media goes through the `/api/files` endpoints, backed by `CmsFilesMetadataRepository` + `CmsFilesBlobStore`. The bundled in-memory + local-FS impls cover dev; an S3-backed impl ships in `src/socle/default-implementation/CmsFilesBlob/s3.ts`.
 
 ## API endpoint convention
 
@@ -168,13 +166,13 @@ Building blocks consumed by every admin page:
 - `<cms-fetch>` — fetches JSON, stamps a `<template>` against the response, inserts as siblings. Slots: `default` (data), `loading`, `error`, `empty`. `reload-on="event-name"` listens on `document` for refresh triggers; `cms-fetch:reload` is built-in. Public `el.reload()`.
 - `<cms-form>` — wraps an inner `<form>`, posts JSON to `target` URL on submit, dispatches `form:success` / `form:failed` (bubbles + composed via `BubblesEvent`). `emit="some:event"` re-dispatches on success so `<cms-fetch reload-on>` receives it.
 - `<cms-validate>` — display-transparent (`display: contents`) wrapper. Reads child `[name]` values, POSTs to `url`, applies `setCustomValidity` per field from `{ valid, message?, errors? }` response.
-- `<cms-media-admin>` — media admin page in a single tag. Header buttons (`+ New folder`, `Upload`) call `window._cms.CDN.uploadFile()` / `createFolder()` directly (no form post) and refresh the embedded `<p9r-grid-media>`.
+- `<cms-media-admin>` — media admin page in a single tag. Header buttons (`+ New folder`, `Upload`) hit the `/api/files` endpoints directly (no form post) and refresh the embedded `<p9r-grid-media>`.
 - `<cms-editor-system>` — editor root, mounted on every editor page (page / template / snippet flavor). Handles the editor's shadow DOM, initial bloc registration, and orchestrates `ObserverManager`, `DragManager`, `BlocActions`, `BlocLibrary`.
 
 ### Admin UI dependencies — `@bernouy/core` vs `@bernouy/webcomponents`
 
 - **`@bernouy/webcomponents`** ships every `<p9r-*>` / `<w13c-*>` admin custom element. Its `.` entry is an **IIFE bundle** — a single bare `import "@bernouy/webcomponents"` registers every tag. Never import from `@bernouy/core` for UI.
-- **`@bernouy/core`** is for infrastructure only: `Runner`, `Authentication`, `Subject`, `Middleware`, `CDN` types, envelope crypto. Never pull UI from it.
+- **`@bernouy/core`** is for infrastructure only: `Runner`, `Authentication`, `Subject`, `Middleware`, envelope crypto. Never pull UI from it.
 - **`showToast`** lives at `src/control/core/showToast.ts`. Lazily mounts a `<p9r-toast-stack>` and calls its `push()`.
 - **Design tokens** (`--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, …) come from `@bernouy/webcomponents/style.css`, exposed at `<basePath>/resources/css/webcomponents.css`. Admin's `style.css` `@import`s it so every admin page inherits the tokens.
 
@@ -218,12 +216,8 @@ Lives under `src/delivery/`.
 - **Render pipeline** (`src/delivery/core/html/renderPage.ts`) is a thin orchestrator composing fixed head builders: `buildHtmlBasics`, `buildPreconnect`, `resolveAssets` + `buildAssetPreloads`, `buildFoucShell`, `defineMetaTags`, `buildStylesheetLink`.
 - `headInjectors?: HeadInjector[]` is the only extension hook on `DeliveryCmsConfig`. Each injector receives the linkedom document/head + the page's bloc tag list and may append elements to `<head>`. Used for analytics, observability agents, A/B test snippets — i.e. any third-party `<head>` content owned by the consumer.
 
-### Build vs runtime — where Playwright lives
-
-- **Build time** (`src/delivery/build/` — `DeliveryBuilder`, `BuildEnhancer`, `HttpVariantGenerator`, `pageBucketName`, `pagePublicPath`): pre-renders every page, generates image variants, optionally enhances HTML using a long-lived `PlaywrightSession` (Chromium measures images at every viewport, classifies `loading` / `fetchpriority`, computes `srcset`). **This is where `PlaywrightSession` is instantiated** — typically once per process. Build engine only, currently not wired to a publish target.
-- **Runtime** (`src/delivery/core/`): `handlePageRequest` does the lookup → render → cache flow only. No Playwright. The only "enhancement" path it knows about is via the build pipeline that already pre-baked the cached HTML.
-
-- **Delivery never serves media bytes.** Images referenced from page content resolve to absolute URLs on the storage backend. Variant URLs are computed at build time by `HttpVariantGenerator`. There is no `/media?id=X` endpoint on the Delivery runner.
+- **Runtime-only.** `handlePageRequest` does the lookup → render → cache flow on demand. No Playwright, no pre-rendering — every request renders fresh (and caches). A build-time pre-render / image-variant pipeline used to live here and was removed; we'll re-introduce something like it later if SSG-style deployment becomes a need.
+- **Delivery never serves media bytes.** Images referenced from page content resolve to absolute URLs on the storage backend. There is no `/media?id=X` endpoint on the Delivery runner.
 - `DeliveryCache` is an isolated `InMemoryCache`-equivalent scoped to Delivery (own file, own DEV bypass). Cache key for pages is `P9R_CACHE.page(path)`.
 
 ## Shared infrastructure (`src/socle/`)

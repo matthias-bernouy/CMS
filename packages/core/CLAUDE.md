@@ -1,9 +1,9 @@
 # @bernouy/core
 
 The contracts shared by every other workspace package, plus a handful
-of low-level helpers (HTTP serve, credentials, envelope crypto).
-**Browser-safe** by default — only the OVH OKMS provider and `loadKek`
-touch Node-only APIs (`node:fs`).
+of low-level helpers (HTTP serve, signed cookies, envelope crypto).
+**Browser-safe** by default — only `loadKek` touches Node-only APIs
+(`node:fs`).
 
 ## Layout
 
@@ -11,24 +11,16 @@ touch Node-only APIs (`node:fs`).
 src/
 ├── interfaces/
 │   ├── Runner.ts              Runner contract (verb routes, groups, middlewares, default endpoint, IP capture, dynamic teardown)
-│   ├── Authentication.ts      Subject<Role> + Authentication<Role> + DefaultRole = "admin" | "user"
-│   ├── Mailer.ts              MailMessage + Mailer
-│   └── CDN.ts                 CDN single-bucket contract — strict portability rules (see "CDN portability" below)
+│   └── Authentication.ts      Subject<Role> + Authentication<Role> + DefaultRole = "admin" | "user"
 ├── serve/
 │   ├── serveApiFolder.ts      file-routed REST: <name>.<method>.ts → addEndpoint(method, /name, handler)
 │   └── serveStaticFolder/     scan + prepareHtml + replaceBasePath → mounts every .html with template injection
 ├── auth/
-│   └── requireRole.ts         middleware factory with optional CSRF policy ("off" / "cookie-only" / "always")
-├── credentials/
-│   ├── Credential.ts          { id, tokenHash, label?, createdAt, expiresAt?, revokedAt? } — never store cleartext
-│   ├── CredentialRepository.ts CRUD + getByTokenHash hot path
-│   ├── CredentialAuthentication.ts Authentication<Role> over Authorization: Bearer + WeakMap-via-Symbol stash
-│   └── generateBearerToken.ts cleartext + sha256Hex pair
+│   └── SignedCookieCodec.ts   HMAC-signed cookie payload codec (used by auth-core's LocalAuthentication)
 ├── crypto/                    envelope encryption (KEK + per-scope DEK + cached unwrap)
 │   ├── aesGcm.ts              encryptAesGcm / decryptAesGcm + EncryptedBlob
 │   ├── KekProvider.ts         interface (generateDek + unwrap)
-│   ├── LocalKekProvider.ts    in-process AES-KW wrap, for dev / single-node
-│   ├── OvhOkmsKekProvider.ts  REST + mTLS against OVH OKMS, with fatal vs transient retry split
+│   ├── LocalKekProvider.ts    in-process AES-KW wrap, for dev / single-node — the only impl shipped
 │   ├── DekRepository.ts       interface — persisted { scopeId, wrapped, createdAt, rotatedAt }
 │   ├── EnvelopeSecretCrypto.ts SecretCrypto impl, TTL+LRU DEK cache, in-flight dedup per scope
 │   ├── SecretCrypto.ts        encrypt/decrypt(scopeId, …)
@@ -36,8 +28,7 @@ src/
 └── utilities/
     ├── crypto.ts              sha256Hex + randomBase64Url
     ├── html.ts                escapeHtml + htmlResponse + redirect
-    ├── requestIP.ts           getRequestIP / setRequestIP (Symbol.for('@bernouy/core::requestIP'))
-    └── concurrencyLimit.ts    in-process FIFO semaphore
+    └── requestIP.ts           getRequestIP / setRequestIP (Symbol.for('@bernouy/core::requestIP'))
 ```
 
 ## Rules every contract enforces
@@ -51,33 +42,6 @@ src/
 - **`Runner` is a contract, not a class.** `removeRoutesByPathPrefix`
   is the multi-tenant teardown hook. `setDefaultEndpoint` is what lets
   a Delivery server fall through to on-demand page rendering.
-- **`Mailer.send` is the only method.** No `sendBatch`, no template
-  language. Consumers that need email build the body themselves.
-- **`CDN` is one bucket.** Multi-bucket fan-out (admin / provisioning)
-  used to live in a separate provider contract (now removed). Don't
-  generalize this interface.
-
-## CDN portability — the single most enforced rule
-
-The `CDN` interface in `src/interfaces/CDN.ts` ships a long contract
-comment because it is **non-negotiable**. Implementations of `CDN` must
-be browser-deployable and serializable via `constructor.toString()` so
-the CMS can ship them to the browser as `window._cms.CDN`:
-
-- No external function reference — every helper a method needs lives
-  as a private method on the same class. No module-level `function
-  helper()`.
-- No runtime `import { … }` — only `import type { … }` (erased at
-  compile time).
-- Only Web-standard globals (`fetch`, `URL`, `Blob`, `FormData`,
-  `crypto`, `ReadableStream`, …). No Node APIs.
-- No side effects at module load.
-- Server-side concerns (master credentials, token minting, storage
-  SDKs) live **outside** the CDN impl, behind HTTP.
-
-`HttpMedia` in the test harness is the canonical example. If you're
-reviewing a new CDN impl, this is the rule that bites.
-
 ## `serveApi` (file-routed REST)
 
 `serveApi(runner, folder, system)`:
@@ -95,9 +59,9 @@ reviewing a new CDN impl, this is the rule that bites.
   package-level "world" object).
 - Modules are dynamically imported by absolute path. **Side-effect: a
   module loaded this way is a different instance than one loaded
-  through the regular import graph.** That's why `CredentialAuthentication`
-  pins its WeakMap on `globalThis[Symbol.for(...)]` — search for
-  `SHARED_KEY` if you hit "credential not found despite auth ran".
+  through the regular import graph.** That's why `requestIP` pins its
+  storage on `globalThis[Symbol.for(...)]` — search for `SHARED_KEY`
+  if you hit "request IP not found despite the runner set it".
 
 ## `serveStaticFolder` (HTML pages with template injection)
 
@@ -112,51 +76,14 @@ reviewing a new CDN impl, this is the rule that bites.
   template and the page content. Asset references must use
   `{{BASE_PATH}}/…`.
 
-## `requireRole` (auth middleware)
-
-`requireRole(auth, role, options?)` returns a `Middleware` that:
-
-1. Optionally checks CSRF on mutating methods (POST/PUT/PATCH/DELETE).
-   Three modes:
-   - `"off"` (default) — never checks. Safe for bearer-only surfaces.
-   - `"cookie-only"` — skips when `Authorization` header is present
-     (bearer auth is CSRF-immune); enforces same-origin otherwise.
-   - `"always"` — enforces on every mutating request.
-2. Calls `auth.getSubject(req)`; null → 401 (overridable via
-   `onUnauthenticated`).
-3. Compares `subject.role === role`; mismatch → 403 (overridable via
-   `onForbidden`).
-
-CSRF check is lenient: missing Origin/Referer is acceptable; it only
-rejects when present and cross-origin.
-
-## Credentials
-
-`CredentialAuthentication` is the `Authorization: Bearer` consumer side
-of the credential pair:
-
-- Looks up the credential by `sha256Hex(cleartext)`. Cleartext is
-  **never** persisted.
-- Rejects revoked or expired credentials.
-- Stashes the **full credential** on a `WeakMap<Request, Credential>`
-  pinned via `Symbol.for("@bernouy/core::CredentialAuthentication::credentialByRequest")`.
-  Downstream handlers retrieve it via `getCredential(req)` /
-  `requireCredential(req)` to access consumer-extended fields
-  (`bucketId`, `tenantId`, …) that don't fit `Subject`.
-- `loginUrl` / `logoutUrl` / `profileUrl` are `""` — bearer auth has no
-  HTML-redirect surface; the cookie child of the consuming chain
-  supplies those URLs.
-
-`generateBearerToken()` produces `{ cleartext, tokenHash }`. Hand
-`cleartext` to the user once at creation; persist `tokenHash`.
-
 ## Envelope encryption — `EnvelopeSecretCrypto`
 
-The `SecretCrypto` impl shipped here is the only one. Architecture:
+The only `SecretCrypto` impl shipped here. Architecture:
 
-- A **KEK** (32 bytes AES-256) sits in a `KekProvider`. Two providers
-  ship today: `LocalKekProvider` (in-process AES-KW from `loadKek`),
-  `OvhOkmsKekProvider` (mTLS to OVH OKMS — KEK never leaves OVH's HSM).
+- A **KEK** (32 bytes AES-256) sits in a `KekProvider`. The only
+  provider shipped is `LocalKekProvider` (in-process AES-KW from
+  `loadKek`). Consumers that need a remote/managed KEK (cloud KMS,
+  HSM, …) supply their own `KekProvider` impl.
 - A per-scope **DEK** is generated on demand and persisted (wrapped) in
   a `DekRepository`. The wrapped form is opaque to the impl.
 - `EnvelopeSecretCrypto.encrypt(scopeId, plaintext)` looks up or
@@ -172,11 +99,6 @@ The `SecretCrypto` impl shipped here is the only one. Architecture:
   DEK and the last write silently invalidates the first two ciphertexts.
   Don't remove this dedup.
 
-`OvhOkmsKekProvider` splits HTTP errors into `transient` (5xx, 408,
-429, network) → retry with exponential backoff to a 10s ceiling vs
-`fatal` (other 4xx, malformed body) → throw `OvhOkmsError`. Logs never
-contain plaintext or the JWE.
-
 `loadKek(envValue, envVarName)` decodes a base64 KEK, requires exactly
 32 bytes, fails fast otherwise (silently downgrading to AES-128 would
 be worse than refusing to boot).
@@ -184,11 +106,10 @@ be worse than refusing to boot).
 ## Conventions
 
 - **Browser-safe by default.** Anything that touches `node:fs` is in
-  `loadKek` and `OvhOkmsKekProvider` (cert + key read at construction).
-  Don't `import "node:..."` in any other file without flagging it.
+  `loadKek` (cert + key read at construction). Don't `import "node:..."`
+  in any other file without flagging it.
 - **`requestIP` uses `Symbol.for(...)`** to survive re-imports across
-  the dynamic-import boundary that `serveApi` introduces. Same trick
-  as `CredentialAuthentication`'s WeakMap.
+  the dynamic-import boundary that `serveApi` introduces.
 - **Errors**: contracts return `null` for routine "not found / not
   authenticated" cases; throw for misconfiguration (bad KEK length,
   duplicate route, missing handler default-export).
@@ -198,6 +119,4 @@ be worse than refusing to boot).
 
 ## Dependencies
 
-None at runtime. Type-only and Web-standard globals. The OVH provider
-relies on `Bun.fetch`'s `tls: { cert, key }` option — that's why this
-package targets Bun, not generic Node.
+None at runtime. Type-only and Web-standard globals.

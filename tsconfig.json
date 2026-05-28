@@ -1,50 +1,16 @@
 {
     "files": [],
     "references": [
-        {
-            "path": "packages/core"
-        },
-        {
-            "path": "packages/runner-bun"
-        },
-        {
-            "path": "packages/auth-core"
-        },
-        {
-            "path": "packages/mailer-smtp"
-        },
-        {
-            "path": "packages/cms"
-        },
-        {
-            "path": "packages/cms-blocs"
-        },
-        {
-            "path": "packages/cms-control-mt"
-        },
-        {
-            "path": "packages/hub-api"
-        },
-        {
-            "path": "packages/hub-ui"
-        },
-        {
-            "path": "official-tenant-provisioners/_tenant-provisioner-contract"
-        },
-        {
-            "path": "official-tenant-provisioners/_sdk"
-        },
-        {
-            "path": "official-tenant-provisioners/_example"
-        },
-        {
-            "path": "official-tenant-provisioners/_issuer-kit"
-        },
-        {
-            "path": "official-tenant-provisioners/addresses"
-        },
-        {
-            "path": "official-tenant-provisioners/cms-control"
-        }
+        { "path": "packages/core" },
+        { "path": "packages/runner-bun" },
+        { "path": "packages/auth-core" },
+        { "path": "packages/cms" },
+        { "path": "packages/cms-blocs" },
+        { "path": "official-tenant-provisioners/_tenant-provisioner-contract" },
+        { "path": "official-tenant-provisioners/_sdk" },
+        { "path": "official-tenant-provisioners/_example" },
+        { "path": "official-tenant-provisioners/_issuer-kit" },
+        { "path": "official-tenant-provisioners/addresses" },
+        { "path": "official-tenant-provisioners/cms-control" }
     ]
 }
