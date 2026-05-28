@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { canonicalHash } from "src/cli/push/pages/scan";
+import { canonicalHash } from "cms-cli/push/pages/scan";
 
 const base = {
     title:       "About",

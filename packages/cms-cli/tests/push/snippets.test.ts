@@ -2,10 +2,10 @@ import { describe, test, expect } from "bun:test";
 import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, sep } from "node:path";
 import { tmpdir } from "node:os";
-import { scanSnippets, canonicalSnippetHash } from "src/cli/push/snippets/scan";
-import { classifySnippets } from "src/cli/push/snippets/classify";
-import type { LocalSnippet } from "src/cli/push/snippets/scan";
-import type { PushState } from "src/cli/push/shared/state";
+import { scanSnippets, canonicalSnippetHash } from "cms-cli/push/snippets/scan";
+import { classifySnippets } from "cms-cli/push/snippets/classify";
+import type { LocalSnippet } from "cms-cli/push/snippets/scan";
+import type { PushState } from "cms-cli/push/shared/state";
 
 /** Pass `{ "<category>/<file.html>": content }`; mirrors the on-disk layout. */
 function makeSite(files: Record<string, string>): string {

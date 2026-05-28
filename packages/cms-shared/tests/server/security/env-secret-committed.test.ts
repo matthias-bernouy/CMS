@@ -2,7 +2,9 @@ import { describe, test, expect } from "bun:test";
 import { $ } from "bun";
 import { join } from "node:path";
 
-const REPO_ROOT = join(import.meta.dir, "..", "..", "..");
+// Test file lives at packages/cms-shared/tests/server/security/ — 5 levels
+// below the workspace root.
+const REPO_ROOT = join(import.meta.dir, "..", "..", "..", "..", "..");
 
 describe("env secret not committed", () => {
     test(".env must not be tracked in git", async () => {

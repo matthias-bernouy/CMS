@@ -20,11 +20,11 @@ function spyRuntime() {
     return { calls, runtime };
 }
 
-test("tenantConfig: initialAdminEmail only (admin OIDC is platform-level), zod parses", () => {
+test("tenantConfig: initialAdminEmail + optional initialAdminPassword, zod parses", () => {
     const schema = CMS_TENANT_CONFIG.schema as {
         properties: Record<string, Record<string, unknown>>; defaultWritableBy: string[] };
     expect(Object.keys(schema.properties).sort())
-        .toEqual(["initialAdminEmail"]);
+        .toEqual(["initialAdminEmail", "initialAdminPassword"]);
     expect(schema.defaultWritableBy).toEqual(["control-plane"]);
     expect(CMS_TENANT_CONFIG.zod.parse(cfg)).toMatchObject(cfg);
 });

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import "src/control/components/data/JsonEditor/JsonEditor";
+import "cms-control/components/data/JsonEditor/JsonEditor";
 import type { JsonEditor } from "cms-control/components/data/JsonEditor/JsonEditor";
 import type { JSONSchema } from "cms-control/core/data/types";
 

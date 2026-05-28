@@ -2,10 +2,10 @@ import { describe, test, expect } from "bun:test";
 import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, sep } from "node:path";
 import { tmpdir } from "node:os";
-import { scanTemplates } from "src/cli/push/templates/scan";
-import { classifyTemplates } from "src/cli/push/templates/classify";
-import type { LocalTemplate } from "src/cli/push/templates/scan";
-import type { PushState } from "src/cli/push/shared/state";
+import { scanTemplates } from "cms-cli/push/templates/scan";
+import { classifyTemplates } from "cms-cli/push/templates/classify";
+import type { LocalTemplate } from "cms-cli/push/templates/scan";
+import type { PushState } from "cms-cli/push/shared/state";
 
 /**
  * Create a fixture site whose `templates/` tree mirrors the production

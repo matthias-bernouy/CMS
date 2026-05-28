@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { scanDevBlocs } from "src/cli/dev-server/scan";
+import { scanDevBlocs } from "cms-cli/dev-server/scan";
 
 function makeBlocsRoot(layout: Record<string, Record<string, string>>): string {
     const root = mkdtempSync(join(tmpdir(), "p9r-blocs-"));

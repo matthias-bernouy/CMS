@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { bundleBlocSource } from "src/cli/push/blocs/bundle";
+import { bundleBlocSource } from "cms-cli/push/blocs/bundle";
 
 function tmpBloc(files: Record<string, string | Buffer>): string {
     const root = mkdtempSync(join(tmpdir(), "p9r-bloc-"));

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import "src/control/components/editor/componentSync/sync/StateSync/StateSync";
+import "cms-control/components/editor/componentSync/sync/StateSync/StateSync";
 import type { StateSync } from "cms-control/components/editor/componentSync/sync/StateSync/StateSync";
 import type { Component } from "cms-control/core/editorSystem/Component";
 import type { Editor } from "cms-control/core/editorSystem/Editor/Editor";

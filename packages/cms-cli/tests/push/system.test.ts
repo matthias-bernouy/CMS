@@ -2,8 +2,8 @@ import { describe, test, expect } from "bun:test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { scanSystem, canonicalSystemHash } from "src/cli/push/system/scan";
-import { flatten, projectRemote } from "src/cli/push/system/apply";
+import { scanSystem, canonicalSystemHash } from "cms-cli/push/system/scan";
+import { flatten, projectRemote } from "cms-cli/push/system/apply";
 
 function tmpSite(files: Record<string, string>): string {
     const root = mkdtempSync(join(tmpdir(), "p9r-sys-"));

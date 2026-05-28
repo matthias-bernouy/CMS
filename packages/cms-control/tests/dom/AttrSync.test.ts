@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import "src/control/components/editor/componentSync/sync/AttrSync";
+import "cms-control/components/editor/componentSync/sync/AttrSync";
 
 function nextFrame(): Promise<void> {
     return new Promise((r) => requestAnimationFrame(() => r()));

@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
-import { classifyPages } from "src/cli/push/pages/classify";
-import type { LocalPage } from "src/cli/push/pages/scan";
-import type { PushState } from "src/cli/push/shared/state";
+import { classifyPages } from "cms-cli/push/pages/classify";
+import type { LocalPage } from "cms-cli/push/pages/scan";
+import type { PushState } from "cms-cli/push/shared/state";
 
 function page(path: string, hash: string): LocalPage {
     return {

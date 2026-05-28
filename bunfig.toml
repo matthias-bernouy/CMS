@@ -1,0 +1,9 @@
+# Workspace-wide test setup. happy-dom + p9r globals are required by the
+# DOM-based tests in `packages/cms-control` and harmless for the
+# server-side tests in `packages/{auth-core,cms-shared,cms-delivery}`
+# (they just leave the DOM globals untouched).
+#
+# Each package can still ship its own `bunfig.toml` and override this.
+
+[test]
+preload = ["./packages/cms-control/tests/setup.ts"]

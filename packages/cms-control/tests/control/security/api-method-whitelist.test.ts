@@ -7,7 +7,7 @@ import { describe, test, expect } from "bun:test";
 // this — either via a literal allow-list or by skipping unknown methods.
 describe("API routing guards HTTP methods", () => {
     test("serveApiFolder whitelists HTTP methods", async () => {
-        const src = await Bun.file("src/control/core/registerEndpoints/serveApiFolder.ts").text();
+        const src = await Bun.file("packages/cms-control/src/core/registerEndpoints/serveApiFolder.ts").text();
 
         // Either a whitelist literal appears, or the code throws on unknown.
         const hasWhitelist =

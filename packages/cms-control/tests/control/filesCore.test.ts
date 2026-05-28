@@ -1,8 +1,8 @@
 import { describe, test, expect } from "bun:test";
 import { InMemoryCmsFilesMetadata } from "@bernouy/cms-shared";
 import { InMemoryCmsFilesBlob } from "@bernouy/cms-shared";
-import { uploadFile } from "src/control/core/files/uploadFile";
-import { deleteFileTree } from "src/control/core/files/deleteFileTree";
+import { uploadFile } from "cms-control/core/files/uploadFile";
+import { deleteFileTree } from "cms-control/core/files/deleteFileTree";
 
 const file = (name: string, content: string, type = "text/plain") => new File([content], name, { type });
 

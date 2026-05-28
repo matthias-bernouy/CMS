@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { extractRefs, validateDocs } from "src/cli/push/shared/validate";
+import { extractRefs, validateDocs } from "cms-cli/push/shared/validate";
 
 const empty = () => new Set<string>();
 const set   = (s: string[]) => new Set(s);
