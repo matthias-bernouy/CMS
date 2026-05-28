@@ -1,7 +1,8 @@
-// One row in the platform's tenant registry. Admin OIDC is platform-level
-// (one shared realm + client, see `AdminOidcConfig`), not stored per-tenant.
-// The data layer is the shared Mongo Db with per-tenant collection prefix
-// (see `mountTenant`).
+// One row in the platform's tenant registry. Authentication is CMS-owned
+// (builtin local provider + per-tenant dynamic OIDC providers stored as data);
+// the only platform-level secret is the shared session-signing key (see
+// `AdminSessionConfig`). The data layer is the shared Mongo Db with per-tenant
+// collection prefix (see `mountTenant`).
 
 export type TenantDelivery = {
     /** Optional public host (`acme.com`) — used when rewriting absolute URLs in pages. */

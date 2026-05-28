@@ -8,7 +8,7 @@
 // mount dynamically without a restart.
 
 export { MtControlCms } from "src/exports/MtControlCms";
-export type { MtControlCmsDeps, TenantProvisionInput, TenantRole, AdminOidcConfig } from "src/exports/MtControlCms";
+export type { MtControlCmsDeps, TenantProvisionInput, TenantRole, AdminSessionConfig } from "src/exports/MtControlCms";
 
 export type { Tenant, TenantDelivery } from "src/interfaces/Tenant";
 export type { TenantRepository } from "src/interfaces/TenantRepository";

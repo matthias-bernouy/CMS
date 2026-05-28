@@ -1,12 +1,10 @@
 import { join } from "node:path";
 import type { Db } from "mongodb";
-import type { Runner, SecretCrypto, Subject } from "@bernouy/core";
-import { KeycloakConsumer, KeycloakBearerConsumer } from "@bernouy/auth-keycloak";
-import { CompositeAuthentication } from "@bernouy/auth-composite";
-import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, MongoCmsFilesMetadata, LocalFsCmsFilesBlob, S3CmsFilesBlob, type CmsFilesBlobStore, type EncryptedSecretDocument } from "@bernouy/cms";
+import type { Runner, SecretCrypto } from "@bernouy/core";
+import { SignedCookieCodec } from "@bernouy/core";
+import { Cms as ControlCms, MongoCmsRepository, EncryptedMongoSecretStore, MongoCmsFilesMetadata, LocalFsCmsFilesBlob, S3CmsFilesBlob, MongoUsersRepository, MongoIdentityProviderRepository, MongoLocalCredentialStore, MongoPatRepository, MongoRateLimiter, SubjectResolver, LocalAuthentication, OidcAuthentication, createPiiCrypto, type CmsFilesBlobStore, type EncryptedSecretDocument } from "@bernouy/cms";
 import type { Tenant } from "src/interfaces/Tenant";
-import type { AdminOidcConfig } from "src/exports/MtControlCms";
-import { loadAdminEmails } from "src/core/tenant/members";
+import type { AdminSessionConfig } from "src/exports/MtControlCms";
 
 export type TenantRole = "admin" | "user";
 
@@ -25,53 +23,29 @@ export type MountTenantArgs = {
     tenant:       Tenant;
     appBaseUrl:   string;
     secretCrypto: SecretCrypto;
-    /** Shared, platform-level admin OIDC (one realm + client for all tenants). */
-    oidc:         AdminOidcConfig;
+    /** Shared, platform-level session-signing config (one key for all tenants). */
+    session:      AdminSessionConfig;
 };
 
 /**
  * Wires a full per-tenant CMS Control surface onto the shared runner:
- * - Keycloak cookie + bearer auth (authN only) against the shared realm
- * - **Authorization in the CMS**: admin iff the token's verified email is in
- *   the tenant's member set (loaded here, checked synchronously in
- *   `claimsToSubject`). No per-tenant Keycloak role.
- * - ControlCms with a Mongo repo prefixed by `tenant_<id>__`
- * - Files: a Mongo metadata tree + local-FS bytes, one root per tenant
+ * - **CMS-owned auth**: `LocalAuthentication` (builtin email/password
+ *   provider) + `OidcAuthentication` (one dynamic backend serving every
+ *   redirect provider stored in the tenant's `identityProviders` repo,
+ *   resolved per request — adding / editing / enabling one needs no remount).
+ * - Signed session cookie issued by the CMS itself, named `cms-<id>-session`
+ *   and signed with the platform-shared `session.sessionSecret`.
+ * - Authorization from `UsersRepository` via `SubjectResolver` (`sub → role`,
+ *   default `user`; bootstrap admin seeded by `seedTenantAuth`).
+ * - ControlCms with Mongo repos + secret/files stores, all prefixed by
+ *   `tenant_<id>__`, plus the auth repos + PAT repo wired in.
  *
  * All routes land under `/cms/<id>/`. Subsequent calls to `unmountTenant`
  * remove this whole subtree without restarting the bun process.
  */
 export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant> {
-    const { runner, db, tenant, appBaseUrl, secretCrypto, oidc } = args;
+    const { runner, db, tenant, appBaseUrl, secretCrypto, session } = args;
     const pathPrefix = `/cms/${tenant.id}`;
-
-    // Admin membership, captured for this mount. The email comes from the
-    // token at login, so the (sync) `claimsToSubject` can gate on it.
-    const adminEmails = await loadAdminEmails(db, tenant.id);
-
-    const cookieAuth = new KeycloakConsumer<TenantRole>(runner, {
-        issuer:        oidc.issuer,
-        clientId:      oidc.clientId,
-        clientSecret:  oidc.clientSecret,
-        appBaseUrl,
-        sessionSecret: oidc.sessionSecret,
-        cookieName:    `cms-${tenant.id}-session`,
-        basePath:      `${pathPrefix}/auth`,
-        claimsToSubject: (claims) => mapClaimsToSubject(claims, adminEmails),
-    });
-
-    const bearerAuth = new KeycloakBearerConsumer<TenantRole>({
-        issuer:          oidc.issuer,
-        claimsToSubject: (claims) => mapClaimsToSubject(claims, adminEmails),
-    });
-
-    const auth = new CompositeAuthentication<TenantRole>(runner, {
-        children: [
-            { auth: bearerAuth },
-            { auth: cookieAuth, displayName: "Keycloak" },
-        ],
-        basePath: `${pathPrefix}/auth`,
-    });
 
     const repo = new MongoCmsRepository(db, { collectionPrefix: `tenant_${tenant.id}__` });
     await repo.init();
@@ -104,33 +78,58 @@ export async function mountTenant(args: MountTenantArgs): Promise<MountedTenant>
         secretCrypto,
     });
 
+    // Auth surfaces, tenant-isolated by the same `tenant_<id>__` prefix. PII
+    // (user email/displayName, credential email) is encrypted at rest under the
+    // tenant DEK via `PiiCrypto`; secrets stay in the encrypted secret store.
+    const pii = await createPiiCrypto(tenant.id, secretCrypto, db, `tenant_${tenant.id}__`);
+    const users = new MongoUsersRepository<TenantRole>(db, pii, { collectionPrefix: `tenant_${tenant.id}__` });
+    const identityProviders = new MongoIdentityProviderRepository(db, { collectionPrefix: `tenant_${tenant.id}__` });
+    const credentials = new MongoLocalCredentialStore(db, pii, { collectionPrefix: `tenant_${tenant.id}__` });
+    await credentials.init();
+    // Personal Access Tokens (CLI / server-to-server). Hashes only; one row per
+    // token, isolated by the same tenant prefix.
+    const pats = new MongoPatRepository(db, { collectionPrefix: `tenant_${tenant.id}__` });
+    await pats.init();
+    // Login brute-force throttle, keyed by email (shared state across nodes via
+    // Mongo TTL). Checked before argon2; tuned for humans, not bots.
+    const loginRateByEmail = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }, { collectionPrefix: `tenant_${tenant.id}__` });
+    await loginRateByEmail.init();
+
+    // Authn → authz: a backend yields an Identity, the resolver records it under
+    // its `provider:sub` key and assigns the role from the membership store
+    // (per-identity — new identities default to `user`; the bootstrap local
+    // admin is seeded `admin`). The CMS issues its own signed session cookie.
+    const codec    = new SignedCookieCodec(new TextEncoder().encode(session.sessionSecret));
+    const resolver = new SubjectResolver<TenantRole>(users, "user");
+
+    const cookieName   = `cms-${tenant.id}-session`;
+    const cookieSecure = appBaseUrl.startsWith("https");
+    const defaultHome  = `${pathPrefix}/admin/pages`;
+    const loginPage    = `${pathPrefix}/login`;
+
     runner.group(pathPrefix, (sub) => {
-        sub.get("/api/auth/discovery", () => Response.json({
-            issuer:   oidc.issuer,
-            clientId: oidc.cliClientId ?? `${oidc.clientId}-cli`,
-            grant:    "urn:ietf:params:oauth:grant-type:device_code",
-        }));
-        new ControlCms(sub, repo, auth, {
-            tokensUrl: `${oidc.issuer}/account/`,
-        }, undefined, secrets, filesMetadata, filesBlob);
+        const auth = new LocalAuthentication<TenantRole>(sub, {
+            providerId:    "local",
+            basePath:      "/auth",
+            loginPagePath: loginPage,
+            logoutPath:    `${pathPrefix}/auth/logout`,
+            credentials, resolver, codec, pats,
+            rateLimit: loginRateByEmail,
+            cookieName, cookieSecure, defaultHome,
+        });
+        // One dynamic OIDC backend serves EVERY configured redirect provider,
+        // resolved per request — adding/editing/enabling one needs no remount.
+        new OidcAuthentication<TenantRole>(sub, {
+            basePath:      "/auth",
+            callbackBase:  `${appBaseUrl}${pathPrefix}/auth`,
+            providers:     identityProviders,
+            secrets,
+            resolver, codec, cookieName, cookieSecure, defaultHome,
+            loginPagePath: loginPage,
+        });
+        new ControlCms(sub, repo, auth, {},
+            undefined, secrets, filesMetadata, filesBlob, users, identityProviders, pats);
     });
 
     return { id: tenant.id, pathPrefix, appBaseUrl };
-}
-
-function mapClaimsToSubject(
-    claims: Record<string, unknown>,
-    adminEmails: Set<string>,
-): Subject<TenantRole> {
-    // Identity is the opaque `sub` (contract: identifier is NOT the email).
-    // Authorization is by verified email against the tenant's member set —
-    // an unverified email never grants admin.
-    const verified = claims.email_verified === true;
-    const email = verified ? String(claims.email ?? "").trim().toLowerCase() : "";
-    const role: TenantRole = email && adminEmails.has(email) ? "admin" : "user";
-    return {
-        identifier:  String(claims.sub ?? ""),
-        displayName: String(claims.preferred_username ?? claims.email ?? "user"),
-        role,
-    };
 }
