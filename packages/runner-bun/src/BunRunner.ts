@@ -164,6 +164,18 @@ export class BunRunner implements Runner {
                     return await next(request);
                 } catch (e) {
                     console.error(e);
+                    // An error carrying a numeric `status` is a deliberate HTTP
+                    // error (validation, conflict…): surface its message as a
+                    // JSON `{ error }` body with that status, so clients can show
+                    // something explicit instead of an opaque 500.
+                    const status = (e as { status?: unknown })?.status;
+                    if (typeof status === "number") {
+                        const message = e instanceof Error ? e.message : "Error";
+                        return new Response(JSON.stringify({ error: message }), {
+                            status,
+                            headers: { "Content-Type": "application/json" },
+                        });
+                    }
                     return new Response("Internal Server Error", { status: 500 });
                 }
             },

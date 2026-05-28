@@ -85,6 +85,18 @@
                                     </cms-form>
                                 </p9r-card>
                             </template>
+
+                            <p9r-card>
+                                <span slot="header">Danger zone</span>
+                                <p9r-stack gap="md">
+                                    <span class="profil-email">Permanently delete your account, local password and access tokens. This cannot be undone.</span>
+                                    <p9r-stack direction="row" justify="end">
+                                        <cms-confirm-form target="{{BASE_PATH}}/api/profil" method="DELETE" redirect="{{ logoutUrl }}" message="Delete your account permanently? You will be signed out immediately. This cannot be undone.">
+                                            <p9r-button color="danger">Delete account</p9r-button>
+                                        </cms-confirm-form>
+                                    </p9r-stack>
+                                </p9r-stack>
+                            </p9r-card>
                         </p9r-stack>
                     </template>
                 </cms-fetch>

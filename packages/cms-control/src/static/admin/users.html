@@ -10,6 +10,7 @@
             <p9r-cell><strong>Email</strong></p9r-cell>
             <p9r-cell><strong>Provider</strong></p9r-cell>
             <p9r-cell><strong>Role</strong></p9r-cell>
+            <p9r-cell></p9r-cell>
         </p9r-row>
 
         <cms-fetch url="{{BASE_PATH}}/api/users" reload-on="user:updated">
@@ -20,6 +21,11 @@
                     <p9r-cell><p9r-tag>{{ provider }}</p9r-tag></p9r-cell>
                     <p9r-cell>
                         <cms-role-select sub="{{ sub }}" value="{{ role }}" url="{{BASE_PATH}}/api/users/role" emit="user:updated"></cms-role-select>
+                    </p9r-cell>
+                    <p9r-cell>
+                        <cms-confirm-form target="{{BASE_PATH}}/api/users?sub={{ sub }}" method="DELETE" emit="user:updated" message="Delete this user? Their account, local password and access tokens are removed. This cannot be undone.">
+                            <p9r-button color="danger" variant="ghost">Delete</p9r-button>
+                        </cms-confirm-form>
                     </p9r-cell>
                 </p9r-row>
             </template>

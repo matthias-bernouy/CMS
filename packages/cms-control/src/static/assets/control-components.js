@@ -9533,12 +9533,21 @@ ${followMessage}`)) {
         return;
       }
       const text = await res.text().catch(() => "");
-      showToast(`HTTP ${res.status} ${text}`.trim(), { type: "error" });
+      let message = text;
+      try {
+        const body = JSON.parse(text);
+        if (body?.error)
+          message = body.error;
+      } catch {}
+      showToast(message || `HTTP ${res.status}`, { type: "error" });
     }
     _onSuccess() {
       const emit = this.getAttribute("emit");
       if (emit)
         document.dispatchEvent(new BubblesEvent(emit));
+      const redirect = this.getAttribute("redirect");
+      if (redirect)
+        window.location.href = redirect;
     }
   }
   function withForce(target) {
@@ -22048,7 +22057,7 @@ button.active svg {
   // src/components/form/MediaInput/MediaInput.css
   var MediaInput_default = `:host { display: block; }
 
-.field { display: flex; flex-direction: column; gap: 6px; }
+.field { display: inline-flex; flex-direction: column; gap: 6px; }
 
 .label {
     font-size: 10px;
@@ -22058,52 +22067,53 @@ button.active svg {
     color: var(--text-muted, #94a3b8);
 }
 
-.input-row { display: flex; gap: 4px; }
-
-.trigger {
-    display: flex; align-items: center; gap: 10px;
-    flex: 1; min-width: 0;
-    padding: 7px 10px;
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 8px;
-    background: var(--bg-surface, #fff);
-    cursor: pointer; outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+.tile {
+    position: relative;
+    width: var(--tile-size, 64px);
+    height: var(--tile-size, 64px);
+    padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px dashed var(--border-default, #cbd5e1);
+    border-radius: 10px;
+    background: var(--bg-base, #f8fafc);
+    cursor: pointer; outline: none; overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
-.trigger:hover         { border-color: var(--text-muted, #94a3b8); }
-.trigger:focus-visible { border-color: var(--primary-base, #4361ee); box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15)); }
+.tile:hover         { border-color: var(--primary-base, #4361ee); }
+.tile:focus-visible { border-color: var(--primary-base, #4361ee); box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 0.15)); }
+.tile.has-value     { border-style: solid; border-color: var(--border-default, #e2e8f0); background: var(--bg-surface, #fff); }
 
 .preview {
     display: none;
-    width: 28px; height: 28px;
+    width: 100%; height: 100%;
     object-fit: contain;
-    border-radius: 4px;
-    background: var(--bg-base, #f8fafc);
-    flex-shrink: 0;
+    padding: 6px;
+    box-sizing: border-box;
 }
+.tile.has-value .preview { display: block; }
 
-.value {
-    flex: 1; min-width: 0;
-    font-size: 12px; font-weight: 500;
-    color: var(--text-main, #1e293b);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    text-align: left;
+.placeholder {
+    color: var(--text-muted, #94a3b8);
 }
+.placeholder svg { width: 40%; height: 40%; min-width: 20px; min-height: 20px; }
+.tile.has-value .placeholder { display: none; }
 
-.clear-btn {
-    display: none; align-items: center; justify-content: center;
-    width: 32px;
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 8px;
+.clear {
+    display: none;
+    position: absolute;
+    top: 3px; right: 3px;
+    width: 18px; height: 18px;
+    align-items: center; justify-content: center;
+    border-radius: 50%;
     background: var(--bg-surface, #fff);
     color: var(--text-muted, #94a3b8);
-    cursor: pointer; flex-shrink: 0;
-    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.18);
+    transition: color 0.15s, background 0.15s;
 }
-.clear-btn:hover {
-    color: var(--danger-base, #ef4444);
-    border-color: var(--danger-base, #ef4444);
-    background: color-mix(in srgb, var(--danger-base, #ef4444) 6%, transparent);
+.clear svg { width: 11px; height: 11px; }
+.clear:hover {
+    color: #fff;
+    background: var(--danger-base, #ef4444);
 }
 `;
 
@@ -22112,8 +22122,8 @@ button.active svg {
     static formAssociated = true;
     _internals;
     _value = "";
+    _tile;
     _preview;
-    _label;
     _clearBtn;
     constructor() {
       super();
@@ -22136,8 +22146,7 @@ button.active svg {
       this._value = v;
       this._internals.setFormValue(v);
       this._preview.src = v;
-      this._preview.style.display = v ? "block" : "none";
-      this._label.textContent = v ? fileName(v) : this.getAttribute("placeholder") || "Choose a file…";
+      this._tile.classList.toggle("has-value", !!v);
       this._clearBtn.style.display = v ? "flex" : "none";
     }
     get _types() {
@@ -22146,31 +22155,38 @@ button.active svg {
     }
     _build(label) {
       const shadow = this.attachShadow({ mode: "open" });
+      const size = this.getAttribute("size") || "64";
       shadow.innerHTML = `
             <style>${MediaInput_default}</style>
-            <div class="field">
+            <div class="field" style="--tile-size:${size}px">
                 ${label ? `<span class="label">${label}</span>` : ""}
-                <div class="input-row">
-                    <button class="trigger" type="button">
-                        <img class="preview" alt="" />
-                        <span class="value">Choose a file…</span>
-                    </button>
-                    <button class="clear-btn" type="button" title="Remove">
-                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" width="14" height="14" fill="none">
+                <button class="tile" type="button" title="Choose a file">
+                    <img class="preview" alt="" />
+                    <span class="placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="9" cy="9" r="1.6"/>
+                            <path d="m21 15-4.5-4.5L5 21"/>
+                        </svg>
+                    </span>
+                    <span class="clear" title="Remove" role="button" aria-label="Remove">
+                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">
                             <line x1="18" y1="6" x2="6" y2="18"/>
                             <line x1="6" y1="6" x2="18" y2="18"/>
                         </svg>
-                    </button>
-                </div>
+                    </span>
+                </button>
             </div>`;
+      this._tile = shadow.querySelector(".tile");
       this._preview = shadow.querySelector(".preview");
-      this._label = shadow.querySelector(".value");
-      this._clearBtn = shadow.querySelector(".clear-btn");
+      this._clearBtn = shadow.querySelector(".clear");
     }
     _wire() {
-      this.shadowRoot.querySelector(".trigger").addEventListener("click", () => this._openPicker());
-      this._clearBtn.addEventListener("click", () => {
+      this._tile.addEventListener("click", () => this._openPicker());
+      this._clearBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         this.value = "";
         this.dispatchEvent(new Event("change", { bubbles: true }));
       });
@@ -22190,10 +22206,6 @@ button.active svg {
       center.addEventListener("select-item", handler);
       center.show(this._types);
     }
-  }
-  function fileName(url) {
-    const clean = url.split("?")[0].replace(/\/$/, "");
-    return clean.slice(clean.lastIndexOf("/") + 1) || url;
   }
   if (!customElements.get("cms-media-input")) {
     customElements.define("cms-media-input", MediaInput);

@@ -63,13 +63,21 @@ export class CmsConfirmForm extends HTMLElement {
             return;
         }
 
+        // Prefer the server's explicit `{ error }` message; fall back to raw
+        // text, then to the bare status — never show an opaque "HTTP 500".
         const text = await res.text().catch(() => '');
-        showToast(`HTTP ${res.status} ${text}`.trim(), { type: 'error' });
+        let message = text;
+        try { const body = JSON.parse(text); if (body?.error) message = body.error; } catch { /* not JSON */ }
+        showToast(message || `HTTP ${res.status}`, { type: 'error' });
     }
 
     private _onSuccess(): void {
         const emit = this.getAttribute('emit');
         if (emit) document.dispatchEvent(new BubblesEvent(emit));
+        // `redirect` is for actions that invalidate the current view/session
+        // (e.g. deleting your own account) — navigate instead of reloading.
+        const redirect = this.getAttribute('redirect');
+        if (redirect) window.location.href = redirect;
     }
 }
 

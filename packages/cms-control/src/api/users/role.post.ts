@@ -3,6 +3,7 @@ import type { CMS_ROLES } from "types/roles";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import { isLastAdmin } from "cms-control/core/users/lastAdmin";
 
 const ROLES: CMS_ROLES[] = ["admin", "user"];
 
@@ -19,12 +20,8 @@ export default async function setUserRole(req: Request, cms: ControlCms) {
     }
 
     // Never strip the last admin — that would lock everyone out of the tenant.
-    if ((role as CMS_ROLES) !== "admin") {
-        const current = await cms.users.getBySub(sub);
-        if (current?.role === "admin") {
-            const admins = await cms.users.list({ role: "admin" });
-            if (admins.total <= 1) throw new InvalidParam("role", "cannot demote the last admin");
-        }
+    if ((role as CMS_ROLES) !== "admin" && await isLastAdmin(cms, sub)) {
+        throw new InvalidParam("role", "cannot demote the last admin");
     }
 
     const updated = await cms.users.setRole(sub, role as CMS_ROLES);
