@@ -1,4 +1,5 @@
 import type { Authentication, Runner } from "@bernouy/core";
+import { redirect } from "@bernouy/core";
 import type { CmsRepository } from "../socle/interfaces/CmsRepository";
 import type { Cache } from "../socle/interfaces/Cache";
 import { InMemoryCache } from "../socle/default-implementation/Cache/memory";
@@ -6,22 +7,19 @@ import type { SecretStore } from "../socle/interfaces/SecretStore";
 import { InMemorySecretStore } from "../socle/default-implementation/SecretStore/memory";
 import type { CmsFilesMetadataRepository } from "../socle/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "../socle/interfaces/CmsFilesBlobStore";
+import type { UsersRepository } from "../socle/interfaces/UsersRepository";
+import type { IdentityProviderRepository } from "../socle/interfaces/IdentityProvider";
+import type { PatRepository } from "../socle/interfaces/PatRepository";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path"
 import { createAuthGuard } from "./core/authentication/authGuard";
+import { renderLoginPage } from "./core/authentication/loginPage";
+import { toLoginMethod } from "../socle/auth/toLoginMethod";
 import type { CspExtras } from "../socle/server/buildCspContent";
 
 type Configuration = {
-    /**
-     * Absolute URL to the external token management interface. Surfaced on
-     * the admin Profile page as the "Manage tokens" button. Required:
-     * deliberately a CMS-level config rather than pulled from
-     * `auth.profileUrl` because that Socle contract is too ambiguous
-     * (profile vs tokens vs account management).
-     */
-    tokensUrl: string;
     /**
      * Absolute URL of the Delivery service paired with this Control instance.
      * Used by admin UI surfaces that need to construct public-facing URLs
@@ -59,6 +57,9 @@ export class ControlCms {
     private _secrets:         SecretStore;
     private _filesMetadata:   CmsFilesMetadataRepository | null;
     private _filesBlob:       CmsFilesBlobStore | null;
+    private _users:               UsersRepository<CMS_ROLES> | null;
+    private _identityProviders:   IdentityProviderRepository | null;
+    private _pats:                PatRepository | null;
 
     constructor(
         runner: Runner,
@@ -69,6 +70,9 @@ export class ControlCms {
         secrets?: SecretStore,
         filesMetadata?: CmsFilesMetadataRepository,
         filesBlob?: CmsFilesBlobStore,
+        users?: UsersRepository<CMS_ROLES>,
+        identityProviders?: IdentityProviderRepository,
+        pats?: PatRepository,
     ){
         this.configuration = configuration;
         this._auth = auth;
@@ -78,8 +82,30 @@ export class ControlCms {
         this._secrets = secrets || new InMemorySecretStore();
         this._filesMetadata = filesMetadata ?? null;
         this._filesBlob = filesBlob ?? null;
+        this._users = users ?? null;
+        this._identityProviders = identityProviders ?? null;
+        this._pats = pats ?? null;
 
         const authGuard = createAuthGuard(this);
+
+        // Unguarded: the standalone login page. The guard redirects
+        // unauthenticated users here via `buildLoginUrl`; registered before the
+        // guarded groups so it is reachable without a session (first-match-wins).
+        runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, this.basePath));
+
+        // Unguarded discovery: the enabled login methods, consumed by the login
+        // page (and auth blocs) to render the local form + provider buttons.
+        runner.addEndpoint("GET", "/auth/methods", async () => {
+            const providers = this._identityProviders ? await this._identityProviders.list() : [];
+            const methods = providers.filter((p) => p.enabled).map((p) => toLoginMethod(p, `${this.basePath}/auth`));
+            return Response.json(methods);
+        });
+
+        // Bare tenant root / `/admin` land on the Pages list instead of the
+        // empty index page. Guarded → unauth falls through to login.
+        const toPages = () => redirect(`${this.basePath}/admin/pages`);
+        runner.addEndpoint("GET", "/",      toPages, [authGuard]);
+        runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
 
         runner.group("/", (staticRunner) => {
             serveStaticFolder(staticRunner, {
@@ -128,6 +154,24 @@ export class ControlCms {
     get filesBlob(): CmsFilesBlobStore {
         if (!this._filesBlob) throw new Error("files blob backend not configured");
         return this._filesBlob;
+    }
+
+    /** CMS membership store (authz: `sub → role`). Throws until wired. */
+    get users(): UsersRepository<CMS_ROLES> {
+        if (!this._users) throw new Error("users repository not configured");
+        return this._users;
+    }
+
+    /** Configured login providers (identity-as-data). Throws until wired. */
+    get identityProviders(): IdentityProviderRepository {
+        if (!this._identityProviders) throw new Error("identity providers repository not configured");
+        return this._identityProviders;
+    }
+
+    /** Personal Access Tokens (CLI / server-to-server). Throws until wired. */
+    get pats(): PatRepository {
+        if (!this._pats) throw new Error("PAT repository not configured");
+        return this._pats;
     }
 
     /**

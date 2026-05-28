@@ -15,6 +15,9 @@ import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
 import { LocalFsCmsFiles } from "../socle/default-implementation/CmsFiles/localFs";
+import { InMemoryUsersRepository } from "../socle/default-implementation/UsersRepository/memory";
+import { InMemoryIdentityProviderRepository } from "../socle/default-implementation/IdentityProviderRepository/memory";
+import type { CMS_ROLES } from "types/roles";
 import { loadPushConfig } from "./push/shared/config";
 
 function parseFlags(args: string[]): { port: number; host: string } {
@@ -76,12 +79,20 @@ export default async function CLI_dev(args: string[]) {
     // a plain, push-able folder. One object serves both metadata + blob.
     const files = new LocalFsCmsFiles(`${config.siteDir}/files`);
 
+    // Auth surfaces (in-memory for dev): the membership store (authz) seeded
+    // with a couple of users so the Settings → Users tab shows data, plus an
+    // empty identity-provider store for the Settings → Identity tab.
+    const users = new InMemoryUsersRepository<CMS_ROLES>();
+    await users.upsert({ sub: "dev-admin", displayName: "p9r dev", email: "dev@example.com" }, "admin");
+    await users.upsert({ sub: "demo-user", displayName: "Demo User", email: "demo@example.com" }, "user");
+    const identityProviders = new InMemoryIdentityProviderRepository();
+
     const runner = new BunRunner();
     // Live-reload SSE channel — registered before the ControlCms group so it
     // matches first (the group catches `/` as a fallback).
     runner.addEndpoint("GET", "/dev/reload", sseHandler(reload));
 
-    const cms = new ControlCms(runner, repo, auth, { tokensUrl: "" }, undefined, undefined, files, files);
+    const cms = new ControlCms(runner, repo, auth, {}, undefined, undefined, files, files, users, identityProviders);
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
     // still need to drop the editor-script (consolidated bundle) and the
