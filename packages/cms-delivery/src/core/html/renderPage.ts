@@ -1,7 +1,7 @@
 import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-shared";
 import type { CacheEntry } from "@bernouy/cms-shared";
-import { compress } from "@bernouy/cms-shared";
+import { compress, sanitizeDomTree } from "@bernouy/cms-shared";
 import { expandSnippets } from "cms-delivery/core/html/expandSnippets";
 import { findUsedBlocTags } from "cms-delivery/core/blocs/findUsedBlocs";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
@@ -34,6 +34,10 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
 
     const expandedContent = await expandSnippets(page.content, ctx.repository);
     document.body.innerHTML = expandedContent;
+    // Authoritative stored-XSS guard at the actual innerHTML sink: strip
+    // scripts / on* handlers / dangerous URL schemes from the parsed tree
+    // before this HTML reaches a public visitor, whatever path stored it.
+    sanitizeDomTree(document.body);
 
     const blocList = await ctx.repository.getBlocsList();
     const usedTags = findUsedBlocTags(expandedContent, blocList);

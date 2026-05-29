@@ -69,6 +69,7 @@
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
+        "linkedom": "^0.18.12",
       },
       "devDependencies": {
         "@happy-dom/global-registrator": "^20.8.9",
@@ -85,6 +86,7 @@
       "name": "@bernouy/cms-delivery",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/core": "workspace:*",
         "linkedom": "^0.18.12",

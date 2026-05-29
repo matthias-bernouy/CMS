@@ -13,9 +13,10 @@ function inherit(source: HTMLElement, dest: HTMLElement) {
  */
 export function openChangeComponentPicker(target: HTMLElement, onDone: () => void) {
     const library = getClosestEditorSystem(target).blocLibrary;
-    library.open();
-    library.addEventListener('insert', ((e: CustomEvent) => {
-        const detail = e.detail;
+    // Deliver via the open() callback so only this picker receives the insert —
+    // the bloc library is shared, and a bubbling `{ once: true }` listener armed
+    // then dismissed would otherwise fire on a later, unrelated insertion.
+    library.open((detail) => {
         if (detail.type === 'template') {
             const fragment = document.createRange().createContextualFragment(detail.html);
             Array.from(fragment.children).forEach(el => {
@@ -35,5 +36,5 @@ export function openChangeComponentPicker(target: HTMLElement, onDone: () => voi
             target.replaceWith(newEl);
         }
         onDone();
-    }) as EventListener, { once: true });
+    });
 }

@@ -29,6 +29,8 @@ describe("validateBlocTag", () => {
         ["p9r-anything"],
         ["be5-card"],
         ["be5-anything"],
+        ["cms-foo"],
+        ["cms-anything"],
     ])("rejects reserved prefix %p", (tag) => {
         expect(validateBlocTag(tag)).toMatch(/reserved prefix/);
     });

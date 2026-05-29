@@ -1,4 +1,5 @@
 import InvalidParam from 'cms-control/errors/Http/InvalidParam';
+import { hardenStoredHtml } from 'cms-control/core/validation/hardenStoredHtml';
 
 const MAX_CONTENT = 5_000_000;
 
@@ -6,5 +7,5 @@ export function sanitizePageContent(value: unknown): string {
     if (value == null) return '';
     if (typeof value !== 'string') throw new InvalidParam('content', 'Must be a string.');
     if (value.length > MAX_CONTENT) throw new InvalidParam('content', `Max ${MAX_CONTENT} chars.`);
-    return value;
+    return hardenStoredHtml(value);
 }

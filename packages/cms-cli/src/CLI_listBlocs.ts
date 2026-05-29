@@ -1,4 +1,5 @@
 import { getAccessToken } from "./credentials";
+import { RESERVED_PREFIXES } from "@bernouy/cms-shared";
 
 type RemoteBlocMeta = {
     id:          string;
@@ -102,7 +103,8 @@ function printHuman(blocs: RemoteBlocMeta[], adminBase: URL) {
         console.log("");
     }
 
-    console.log("Reserved prefixes: `p9r-*`, `w13c-*` and `be5-*` are reserved by the Cms system.");
+    const reserved = RESERVED_PREFIXES.map(p => `\`${p}*\``).join(", ");
+    console.log(`Reserved prefixes: ${reserved} are reserved by the Cms system.`);
     console.log("Do not create blocs using those prefixes.");
 }
 

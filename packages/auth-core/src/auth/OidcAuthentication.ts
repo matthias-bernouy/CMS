@@ -22,6 +22,10 @@ export type OidcAuthConfig<Role extends string> = {
     defaultHome:       string;
     cookieSecure?:     boolean;
     sessionTtlSeconds?: number;
+    /** Dev-only escape hatch to allow an `http://` issuer. Off by default: a
+     *  non-https issuer makes discovery/token/JWKS MITM-forgeable, so it must
+     *  never be enabled in production. */
+    allowInsecureIssuer?: boolean;
 };
 
 /**
@@ -54,9 +58,15 @@ export class OidcAuthentication<Role extends string = string> {
         if (!id) return null;
         const p = await this.cfg.providers.get(id);
         if (!p || !p.enabled || p.kind !== "oidc" || !p.issuer || !p.clientId) return null;
-        // In a secure deployment the issuer MUST be https — discovery, token
-        // exchange and JWKS all hit it, so an http issuer is MITM-forgeable.
-        if (this.cfg.cookieSecure && !p.issuer.startsWith("https://")) return null;
+        // The issuer MUST be https — discovery, token exchange and JWKS all hit
+        // it, so an http issuer is MITM-forgeable (→ forged id_token). Refuse it
+        // by default, independent of cookieSecure; only an explicit dev opt-in
+        // (`allowInsecureIssuer`) lets a local http issuer through. Logged so the
+        // rejection isn't a silent "unknown provider" 404 in dev.
+        if (!this._isHttps(p.issuer) && !this.cfg.allowInsecureIssuer) {
+            console.warn(`OIDC: provider "${id}" rejected — issuer "${p.issuer}" is not https (set allowInsecureIssuer to permit http in dev).`);
+            return null;
+        }
         const key = p.clientSecretRef ? p.clientSecretRef.replace(/^\$\{(.+)\}$/, "$1") : null;
         const secret = key ? (await this.cfg.secrets.get(key)) ?? "" : "";
         return { p, secret };
@@ -73,12 +83,28 @@ export class OidcAuthentication<Role extends string = string> {
         return m;
     }
 
+    private _isHttps(u: string): boolean {
+        try { return new URL(u).protocol === "https:"; } catch { return false; }
+    }
+
     private async _fetchMeta(base: string): Promise<Meta> {
         const res = await fetch(`${base}/.well-known/openid-configuration`);
         if (!res.ok) throw new Error(`discovery failed: ${res.status}`);
+        // A 30x could downgrade discovery to http; the final URL must stay https.
+        if (!this.cfg.allowInsecureIssuer && res.url && !this._isHttps(res.url)) {
+            throw new Error("discovery: redirected to a non-https URL");
+        }
         const meta = await res.json() as Partial<Meta>;
         if (!meta.authorization_endpoint || !meta.token_endpoint || !meta.jwks_uri) {
             throw new Error("discovery: missing required endpoints");
+        }
+        // The discovery document controls the URLs we hit next (authorization,
+        // token exchange, JWKS). A compromised/MITM issuer could point these at
+        // http to downgrade them — require https on each unless dev opt-in.
+        if (!this.cfg.allowInsecureIssuer) {
+            for (const ep of [meta.authorization_endpoint, meta.token_endpoint, meta.jwks_uri]) {
+                if (!this._isHttps(ep)) throw new Error(`discovery: non-https endpoint rejected (${ep})`);
+            }
         }
         return meta as Meta;
     }

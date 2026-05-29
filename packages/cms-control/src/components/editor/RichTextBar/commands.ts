@@ -168,9 +168,23 @@ export function insertList(tag: "ul" | "ol") {
     selection.addRange(newRange);
 }
 
-/** Wraps the selection in `<a href>`. */
+/**
+ * True for URLs safe to store in an `href`: relative URLs, anchors, and the
+ * http/https/mailto/tel/sms schemes. Rejects `javascript:`, `data:`,
+ * `vbscript:` and friends so a crafted link can't smuggle script into the
+ * saved page content. Control chars are stripped first since browsers ignore
+ * them when resolving a scheme (`java\nscript:` → `javascript:`).
+ */
+function isSafeLinkUrl(raw: string): boolean {
+    const stripped = raw.trim().replace(/[\u0000-\u001F\u007F]/g, "");
+    const scheme = stripped.match(/^([a-z][a-z0-9+.-]*):/i);
+    if (!scheme) return true; // relative URL, anchor or query — no scheme
+    return ["http", "https", "mailto", "tel", "sms"].includes(scheme[1]!.toLowerCase());
+}
+
+/** Wraps the selection in `<a href>`. No-op when the URL scheme is unsafe. */
 export function applyLinkUrl(url: string) {
-    if (!url) return;
+    if (!url || !isSafeLinkUrl(url)) return;
     const a = document.createElement("a");
     a.href = url;
     wrapWithElement(a);

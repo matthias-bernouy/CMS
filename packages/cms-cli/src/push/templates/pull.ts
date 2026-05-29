@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
 import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
+import { safeJoin } from "cms-cli/push/shared/safeJoin";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
@@ -51,11 +51,12 @@ async function fetchOne(adminBase: URL, token: string, id: string): Promise<Remo
 
 async function writeTemplate(siteDir: string, identifier: string, t: RemoteTemplate): Promise<void> {
     const folder = categoryToFolder(t.category ?? "");
-    const dir    = join(siteDir, "templates", folder);
+    const dir    = safeJoin(siteDir, "templates", folder);
+    const file   = safeJoin(dir, `${identifier}.html`);
     await mkdir(dir, { recursive: true });
     const fm = serializeFrontmatter({
         name:        t.name        ?? "",
         description: t.description ?? "",
     });
-    await writeFile(join(dir, `${identifier}.html`), fm + (t.content ?? ""), "utf-8");
+    await writeFile(file, fm + (t.content ?? ""), "utf-8");
 }

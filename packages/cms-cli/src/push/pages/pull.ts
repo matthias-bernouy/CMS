@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { serializeFrontmatter } from "../shared/frontmatterWrite";
+import { safeJoin } from "../shared/safeJoin";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
@@ -52,7 +53,7 @@ async function fetchOne(adminBase: URL, token: string, id: string): Promise<Remo
 }
 
 async function writePage(siteDir: string, urlPath: string, page: RemotePage): Promise<void> {
-    const file = join(siteDir, "pages", urlPathToFile(urlPath));
+    const file = safeJoin(siteDir, "pages", urlPathToFile(urlPath));
     await mkdir(dirname(file), { recursive: true });
 
     const visible = page.visible === true || page.visible === "on";

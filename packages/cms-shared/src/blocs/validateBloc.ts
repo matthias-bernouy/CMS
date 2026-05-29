@@ -1,4 +1,5 @@
 import { isValidCustomElementTag } from "cms-shared/utils/validation";
+import { RESERVED_PREFIXES } from "cms-shared/utils/contentRefs";
 
 /**
  * Inputs passed to `validateBloc`. All HTML/source fields are optional —
@@ -24,8 +25,6 @@ export type ValidateBlocResult = {
     warnings: string[];
 };
 
-/** Reserved custom-element prefixes — system-only, never bloc tags. */
-const RESERVED_TAG_PREFIXES = ["p9r-", "w13c-", "be5-"] as const;
 
 /**
  * Bloc-specific tag check: format-valid custom-element name AND not in a
@@ -36,7 +35,7 @@ export function validateBlocTag(tag: string): string | null {
     if (!isValidCustomElementTag(tag)) {
         return `Invalid tag "${tag}" — must be a lowercase custom-element name (e.g. "my-card").`;
     }
-    for (const prefix of RESERVED_TAG_PREFIXES) {
+    for (const prefix of RESERVED_PREFIXES) {
         if (tag.startsWith(prefix)) {
             return `Tag "${tag}" uses reserved prefix "${prefix}*" — pick another name.`;
         }

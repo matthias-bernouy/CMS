@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
+import { safeJoin } from "cms-cli/push/shared/safeJoin";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
@@ -32,7 +33,7 @@ export async function pullBlocs(adminBase: URL, token: string, siteDir: string):
                 out.skipped.push({ tag, reason: "no source bundle on the server (push it once with the new CLI)" });
                 continue;
             }
-            const target = join(siteDir, "blocs", categoryToFolder(group), tag);
+            const target = safeJoin(siteDir, "blocs", categoryToFolder(group), tag);
             await writeBlocSource(target, source);
             out.pulled.push(tag);
         } catch (err) {
@@ -61,7 +62,7 @@ async function fetchSource(adminBase: URL, token: string, tag: string): Promise<
 
 async function writeBlocSource(target: string, source: Record<string, string>): Promise<void> {
     for (const [rel, base64] of Object.entries(source)) {
-        const full = join(target, rel);
+        const full = safeJoin(target, rel);
         await mkdir(dirname(full), { recursive: true });
         const bytes = rel === "manifest.json"
             ? Buffer.from(stripLegacyManifestFields(Buffer.from(base64, "base64").toString("utf-8")), "utf-8")

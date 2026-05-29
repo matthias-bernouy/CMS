@@ -29,6 +29,12 @@ export class BlocLibrary extends Component {
     private _blocMeta: Map<string, BlocMeta> = new Map();
     private _dataLoaded: boolean = false;
 
+    /** The single requester that opened the library this session. The insert is
+     *  delivered ONLY to this callback — the library is shared across every
+     *  editor on the page, so a bubbling broadcast would fire on stale armed
+     *  editors too (duplicate inserts / data loss). Cleared on any dismissal. */
+    private _onInsert: ((detail: InsertDetail) => void) | null = null;
+
     constructor() {
         super(Metadata);
     }
@@ -40,18 +46,23 @@ export class BlocLibrary extends Component {
         this._dialog.addEventListener('click', (e) => {
             if (e.target === this._dialog) this.close();
         });
+        // Native dismissals (Esc, form method=dialog) don't call close(), so
+        // drop the pending requester here to avoid a stale callback firing later.
+        this._dialog.addEventListener('close', () => { this._onInsert = null; });
 
         s.getElementById('tabs')!.addEventListener('click', (e) => this._onTabClick(e));
         s.getElementById('sidebar')!.addEventListener('click', (e) => this._onSidebarClick(e));
         s.getElementById('search')!.addEventListener('input', (e) => this._onSearchInput(e));
     }
 
-    open() {
+    open(onInsert?: (detail: InsertDetail) => void) {
+        this._onInsert = onInsert ?? null;
         this._dialog.showModal();
         void this._refresh();
     }
 
     close() {
+        this._onInsert = null;
         this._dialog.close();
     }
 
@@ -172,8 +183,12 @@ export class BlocLibrary extends Component {
     }
 
     private _emitInsert(detail: InsertDetail) {
-        this.dispatchEvent(new CustomEvent('insert', { detail, bubbles: true, composed: true }));
+        // Deliver to the single requester that opened the library; capture it
+        // before close() clears it. Dialog dismissal already nulled it, so a
+        // dismissed-then-reopened editor can never receive another's insert.
+        const onInsert = this._onInsert;
         this.close();
+        onInsert?.(detail);
     }
 }
 

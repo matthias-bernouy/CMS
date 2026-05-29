@@ -74,6 +74,12 @@ export class BunRunner implements Runner {
             delete: (p, h, m) => scopedRunner.addEndpoint('DELETE', p, h, m),
             patch: (p, h, m) => scopedRunner.addEndpoint('PATCH', p, h, m),
 
+            // `{ ...this }` copies instance fields but NOT prototype methods, so
+            // `use` would be missing from the scoped runner even though it's on
+            // the `Runner` contract — `r.use(mw)` inside a group() callback would
+            // throw "r.use is not a function". Register against the root.
+            use: (mw) => this.use(mw),
+
             group: (p, c, m = []) => {
                 this.group(urlJoin(currentPrefix, p), c, [...currentMiddlewares, ...m]);
             },

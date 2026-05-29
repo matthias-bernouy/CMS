@@ -14385,9 +14385,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
   function openChangeComponentPicker(target, onDone) {
     const library = getClosestEditorSystem(target).blocLibrary;
-    library.open();
-    library.addEventListener("insert", (e) => {
-      const detail = e.detail;
+    library.open((detail) => {
       if (detail.type === "template") {
         const fragment = document.createRange().createContextualFragment(detail.html);
         Array.from(fragment.children).forEach((el2) => {
@@ -14407,7 +14405,7 @@ cms-bag-breadcrumb[data-inline="right"] {
         target.replaceWith(newEl);
       }
       onDone();
-    }, { once: true });
+    });
   }
 
   // src/components/editor/EditorSystem/BlocActions/sub/Extensions/style.css
@@ -15519,6 +15517,7 @@ form[method="dialog"] {
     _snippets = [];
     _blocMeta = new Map;
     _dataLoaded = false;
+    _onInsert = null;
     constructor() {
       super(Metadata6);
     }
@@ -15529,15 +15528,20 @@ form[method="dialog"] {
         if (e.target === this._dialog)
           this.close();
       });
+      this._dialog.addEventListener("close", () => {
+        this._onInsert = null;
+      });
       s.getElementById("tabs").addEventListener("click", (e) => this._onTabClick(e));
       s.getElementById("sidebar").addEventListener("click", (e) => this._onSidebarClick(e));
       s.getElementById("search").addEventListener("input", (e) => this._onSearchInput(e));
     }
-    open() {
+    open(onInsert) {
+      this._onInsert = onInsert ?? null;
       this._dialog.showModal();
       this._refresh();
     }
     close() {
+      this._onInsert = null;
       this._dialog.close();
     }
     async _refresh() {
@@ -15649,8 +15653,9 @@ form[method="dialog"] {
       return Array.from(new Set(this._snippets.map((s) => s.category || "Default")));
     }
     _emitInsert(detail) {
-      this.dispatchEvent(new CustomEvent("insert", { detail, bubbles: true, composed: true }));
+      const onInsert = this._onInsert;
       this.close();
+      onInsert?.(detail);
     }
   }
   if (!customElements.get("cms-bloc-library")) {
@@ -16601,21 +16606,19 @@ form[method="dialog"] {
       if (this.target.innerText === "/" && this.isBlocManagementEnabled && !this.isChangeComponentDisabled) {
         e.stopPropagation();
         e.stopImmediatePropagation();
-        const blocLibrary = editorRoot.blocLibrary;
-        const actionbar = blocLibrary.open();
-        blocLibrary.addEventListener("insert", (e2) => {
-          if (e2.detail.type === "template") {
-            const fragment = document.createRange().createContextualFragment(e2.detail.html);
+        editorRoot.blocLibrary.open((detail) => {
+          if (detail.type === "template") {
+            const fragment = document.createRange().createContextualFragment(detail.html);
             this.target.replaceWith(fragment);
-          } else if (e2.detail.type === "snippet") {
+          } else if (detail.type === "snippet") {
             const new_node = document.createElement("w13c-snippet");
-            new_node.setAttribute("identifier", e2.detail.identifier);
+            new_node.setAttribute("identifier", detail.identifier);
             this.target.replaceWith(new_node);
           } else {
-            const new_node = this.createElement(e2.detail.id);
+            const new_node = this.createElement(detail.id);
             this.target.replaceWith(new_node);
           }
-        }, { once: true });
+        });
       }
     }
     init() {
@@ -19643,8 +19646,15 @@ button.active svg {
     newRange.selectNodeContents(li2);
     selection.addRange(newRange);
   }
+  function isSafeLinkUrl(raw) {
+    const stripped = raw.trim().replace(/[\u0000-\u001F\u007F]/g, "");
+    const scheme = stripped.match(/^([a-z][a-z0-9+.-]*):/i);
+    if (!scheme)
+      return true;
+    return ["http", "https", "mailto", "tel", "sms"].includes(scheme[1].toLowerCase());
+  }
   function applyLinkUrl(url) {
-    if (!url)
+    if (!url || !isSafeLinkUrl(url))
       return;
     const a2 = document.createElement("a");
     a2.href = url;

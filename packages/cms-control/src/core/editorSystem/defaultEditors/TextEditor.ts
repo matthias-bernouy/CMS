@@ -228,21 +228,25 @@ export class TextEditor extends Editor {
         if (this.target.innerText === "/" && this.isBlocManagementEnabled && !this.isChangeComponentDisabled) {
             e.stopPropagation();
             e.stopImmediatePropagation()
-            const blocLibrary = editorRoot.blocLibrary;
-            const actionbar = blocLibrary.open();
-            blocLibrary.addEventListener("insert", (e: any) => {
-                if (e.detail.type === 'template') {
-                    const fragment = document.createRange().createContextualFragment(e.detail.html);
+            // Pass the insert handler to open() so the shared bloc library
+            // delivers ONLY to this editor. The previous addEventListener
+            // approach broadcast on the shared library: a `{ once: true }`
+            // listener armed then dismissed without inserting stayed attached
+            // and fired on a later, unrelated insertion (stacking + cross-editor
+            // duplicate inserts).
+            editorRoot.blocLibrary.open((detail) => {
+                if (detail.type === 'template') {
+                    const fragment = document.createRange().createContextualFragment(detail.html);
                     this.target.replaceWith(fragment);
-                } else if (e.detail.type === 'snippet') {
+                } else if (detail.type === 'snippet') {
                     const new_node = document.createElement('w13c-snippet');
-                    new_node.setAttribute('identifier', e.detail.identifier);
+                    new_node.setAttribute('identifier', detail.identifier);
                     this.target.replaceWith(new_node);
                 } else {
-                    const new_node = this.createElement(e.detail.id);
+                    const new_node = this.createElement(detail.id);
                     this.target.replaceWith(new_node);
                 }
-            }, { once: true });
+            });
         }
     }
 

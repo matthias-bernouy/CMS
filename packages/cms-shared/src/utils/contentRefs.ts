@@ -9,7 +9,13 @@
  * write-time gate so both end up rejecting the same set of references.
  */
 
-const RESERVED_BLOC_PREFIXES = ["p9r-", "w13c-", "be5-", "cms-"];
+/**
+ * Custom-element prefixes reserved by the system — never valid bloc tags. Single
+ * source of truth shared by `extractRefs` (render-time ref extraction),
+ * `validateBlocTag` (push-time validation) and the CLI help, so the three can't
+ * drift (a tag accepted by validation but dropped by extraction renders nothing).
+ */
+export const RESERVED_PREFIXES = ["p9r-", "w13c-", "be5-", "cms-"] as const;
 const SNIPPET_TAG            = "w13c-snippet";
 
 const TAG_RE = /<([a-z][a-z0-9]*-[a-z0-9-]+)\b([^>]*)/gi;
@@ -25,7 +31,7 @@ export function extractRefs(html: string): { blocs: Set<string>; snippets: Set<s
             if (idMatch?.[1]) snippets.add(idMatch[1]);
             continue;
         }
-        if (RESERVED_BLOC_PREFIXES.some(p => tag.startsWith(p))) continue;
+        if (RESERVED_PREFIXES.some(p => tag.startsWith(p))) continue;
         blocs.add(tag);
     }
     return { blocs, snippets };

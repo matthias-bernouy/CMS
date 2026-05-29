@@ -35,10 +35,14 @@ export class SignedCookieCodec {
         const data = token.slice(0, dot);
         const sig  = token.slice(dot + 1);
 
-        const key = await this._key;
-        const ok  = await crypto.subtle.verify("HMAC", key, b64urlDecode(sig) as BufferSource, new TextEncoder().encode(data) as BufferSource);
-        if (!ok) return null;
         try {
+            // `b64urlDecode` (via `atob`) throws on malformed base64, so the
+            // signature decode must sit INSIDE the try too: a junk cookie like
+            // `a.@@@` must yield `null`, never propagate a DOMException out of
+            // `verify` (the no-throw contract `getSubject` relies on).
+            const key = await this._key;
+            const ok  = await crypto.subtle.verify("HMAC", key, b64urlDecode(sig) as BufferSource, new TextEncoder().encode(data) as BufferSource);
+            if (!ok) return null;
             const body = JSON.parse(new TextDecoder().decode(b64urlDecode(data))) as T & { exp: number };
             if (typeof body.exp !== "number" || body.exp * 1000 <= Date.now()) return null;
             return body;
