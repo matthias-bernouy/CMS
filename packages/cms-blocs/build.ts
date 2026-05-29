@@ -94,6 +94,7 @@ function dtsStub(entry: string): string {
 await rm(dist, { recursive: true, force: true });
 await mkdir(blocsDir, { recursive: true });
 
+await buildBundle("./src/base/Component.ts", dist, "base.js", "esm");
 await buildBundle("./src/index.ts", dist, "ui.js", "iife");
 
 await Promise.all(

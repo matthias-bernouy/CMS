@@ -1,4 +1,4 @@
-import { Component, type ComponentMetadata } from 'cms-control/core/editorSystem/Component';
+import { Component, type ComponentMetadata } from '@bernouy/cms-blocs/base';
 import { ICON_SNIPPET } from 'cms-control/components/icons';
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };

@@ -11,6 +11,7 @@
     "dependencies": {
         "@bernouy/core":        "workspace:*",
         "@bernouy/cms-shared":  "workspace:*",
+        "@bernouy/cms-blocs":   "workspace:*",
         "linkedom": "^0.18.12"
     },
     "peerDependencies": {

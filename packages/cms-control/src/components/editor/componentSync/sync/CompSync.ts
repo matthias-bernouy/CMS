@@ -1,4 +1,4 @@
-import type { Component } from "cms-control/core/editorSystem/Component";
+import type { Component } from "@bernouy/cms-blocs/base";
 
 /**
  * `<p9r-comp-sync>` is both a **slot content manager** (clones its light-DOM

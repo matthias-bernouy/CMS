@@ -1,4 +1,4 @@
-import type { Component } from "cms-control/core/editorSystem/Component";
+import type { Component } from "@bernouy/cms-blocs/base";
 import css from "./SvgSync.style.css" with { type: "text" };
 import { lockActions } from "./lock";
 import { resolveTarget, syncDefault } from "./target";

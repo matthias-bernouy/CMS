@@ -1,4 +1,4 @@
-import { Component } from "../../../base/Component";
+import { Component } from "@bernouy/cms-blocs/base";
 import "./LateralMenuItem/LateralMenuItem";
 
 import template from './template.html' with { type: 'text' };

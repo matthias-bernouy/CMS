@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-control/component";
+import { Component } from "@bernouy/cms-blocs/base";
 
 import "@bernouy/cms-blocs";
 

@@ -34,6 +34,12 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/ui.js"
     },
+    "./base": {
+      "types": "./dist/base/Component.d.ts",
+      "bun": "./src/base/Component.ts",
+      "import": "./dist/base.js",
+      "default": "./dist/base.js"
+    },
     "./style.css": "./dist/style.css",
     "./blocs/*": {
       "types": "./dist/blocs/*.d.ts",

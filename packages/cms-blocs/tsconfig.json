@@ -8,6 +8,10 @@
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
+    "baseUrl": ".",
+    "paths": {
+      "@bernouy/cms-blocs/base": ["src/base/Component.ts"]
+    },
 
     // Bundler mode
     "moduleResolution": "bundler",

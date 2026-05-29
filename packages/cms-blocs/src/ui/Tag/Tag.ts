@@ -1,4 +1,4 @@
-import { Component } from "../../base/Component";
+import { Component } from "@bernouy/cms-blocs/base";
 
 import html from './Tag.template.html' with { type: 'text' };
 import baseCss from './Tag.base.css' with { type: 'text' };

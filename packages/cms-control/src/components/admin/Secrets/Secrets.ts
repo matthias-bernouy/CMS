@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-control/component";
+import { Component } from "@bernouy/cms-blocs/base";
 import template from "./template.html" with { type: "text" };
 import css from "./style.css" with { type: "text" };
 import { fetchSecrets, SECRETS_RELOAD_EVENT } from "./actions";

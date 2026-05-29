@@ -1,7 +1,7 @@
 import "@bernouy/cms-blocs";
 import html from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
-import { Component } from "@bernouy/cms-control/component";
+import { Component } from "@bernouy/cms-blocs/base";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import getClosestEditorSystem from "cms-control/core/dom/editor/getClosestEditorSystem";
 

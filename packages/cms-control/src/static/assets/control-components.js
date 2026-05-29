@@ -18,15 +18,24 @@
     Da(Vl, { showToast: () => ya, Tooltip: () => qt, ToastStack: () => Rt, Toast: () => Pt, Textarea: () => bt, TagSuggest: () => ht, Tag: () => lt, Tabs: () => It, TableRow: () => Tt, TableHeaderCell: () => Ht, TableCell: () => Mt, Table: () => zt, TabPanel: () => St, Switch: () => st, Stepper: () => Ct, Step: () => Lt, Stack: () => vt, Spinner: () => At, Skeleton: () => Et, SegmentedSwitch: () => ot, RadioGroup: () => it, Radio: () => et, Progress: () => kt, Pagination: () => wt, P9rSizesSelect: () => tt, P9rSelect: () => Q, P9rRange: () => J, P9rInput: () => G, OpenModal: () => V, Modal: () => O, LeftMenuLayout: () => ft, LateralMenuItem: () => _t, LateralMenu: () => xt, LateralDialog: () => N, InputFile: () => W, IconButton: () => X, HorizontalActionGroup: () => mt, FormSection: () => Y, FormDialog: () => F, Form: () => jt, FetchComponent: () => Nt, Divider: () => K, Container: () => gt, Component: () => o, Checkbox: () => U, Card: () => j, Button: () => $, BreadcrumbItem: () => B, Breadcrumb: () => D, Badge: () => q, Avatar: () => R, Alert: () => P, AccordionItem: () => S, Accordion: () => I });
 
     class o extends HTMLElement {
+      _rawStyles = "";
+      _styles = null;
       constructor(t) {
         super();
         let e = this.attachShadow({ mode: "open" });
         if (t) {
-          let r = document.createElement("style");
-          r.innerHTML = t.css, e.appendChild(r);
-          let i = document.createElement("template");
-          i.innerHTML = t.template, e.appendChild(i.content.cloneNode(true));
+          this._rawStyles = t.css, this._styles = document.createElement("style"), this._styles.innerHTML = t.css, e.appendChild(this._styles);
+          let r = document.createElement("template");
+          r.innerHTML = t.template, e.appendChild(r.content.cloneNode(true));
         }
+      }
+      registerCSSVariables(t) {
+        if (!this._styles)
+          return;
+        let e = this._rawStyles;
+        Object.entries(t).forEach(([r, i]) => {
+          e = e.replaceAll("var(--" + r + ")", i);
+        }), this._styles.innerHTML = e;
       }
       connectedCallback() {}
     }
@@ -8482,35 +8491,30 @@ p9r-tag:hover {
     customElements.define("w13c-fetch", Nt);
   })();
 
-  // src/core/editorSystem/Component.ts
-  class Component extends HTMLElement {
+  // ../cms-blocs/dist/base.js
+  class z extends HTMLElement {
     _rawStyles = "";
     _styles = null;
-    _template = null;
-    constructor(metadata) {
+    constructor(g) {
       super();
-      const shadow = this.attachShadow({ mode: "open" });
-      if (metadata) {
-        this._rawStyles = metadata.css;
-        this._styles = document.createElement("style");
-        this._styles.innerHTML = metadata.css;
-        shadow.appendChild(this._styles);
-        this._template = document.createElement("template");
-        this._template.innerHTML = metadata ? metadata.template : "";
-        shadow.appendChild(this._template.content.cloneNode(true));
+      let j = this.attachShadow({ mode: "open" });
+      if (g) {
+        this._rawStyles = g.css, this._styles = document.createElement("style"), this._styles.innerHTML = g.css, j.appendChild(this._styles);
+        let q = document.createElement("template");
+        q.innerHTML = g.template, j.appendChild(q.content.cloneNode(true));
       }
     }
-    registerCSSVariables(items) {
+    registerCSSVariables(g) {
       if (!this._styles)
         return;
-      let src = this._rawStyles;
-      Object.entries(items).forEach(([key, value]) => {
-        src = src.replaceAll("var(--" + key + ")", value);
-      });
-      this._styles.innerHTML = src;
+      let j = this._rawStyles;
+      Object.entries(g).forEach(([q, x]) => {
+        j = j.replaceAll("var(--" + q + ")", x);
+      }), this._styles.innerHTML = j;
     }
     connectedCallback() {}
   }
+
   // src/errors/NearestElementRequire.ts
   class NearestElementRequire extends Error {
     constructor(ele, target) {
@@ -9281,7 +9285,7 @@ p9r-tag:hover {
   // src/components/globals.ts
   window.p9r = {
     attr: P9R_ATTR,
-    Component,
+    Component: z,
     Editor,
     registerEditor,
     registerEditor_opaque
@@ -9428,7 +9432,7 @@ p9r-tag:hover {
 </w13c-left-menu-layout>`;
 
   // src/components/admin/AdminLayout/AdminLayout.ts
-  class FixedAdminLayout extends Component {
+  class FixedAdminLayout extends z {
     constructor() {
       super({
         css: "",
@@ -10074,7 +10078,7 @@ ${followMessage}`)) {
 `;
 
   // src/components/admin/EmptyState/EmptyState.ts
-  class EmptyState extends Component {
+  class EmptyState extends z {
     constructor() {
       super({
         css: style_default,
@@ -10783,7 +10787,7 @@ ${followMessage}`)) {
   }
 
   // src/components/admin/Secrets/Secrets.ts
-  class CmsSecrets extends Component {
+  class CmsSecrets extends z {
     _list = null;
     _rowTemplate = null;
     _empty = null;
@@ -12516,7 +12520,7 @@ ${followMessage}`)) {
   }
 
   // src/components/editor/componentSync/SyncPanel.ts
-  class SyncPanel extends Component {
+  class SyncPanel extends z {
     dialog = null;
     constructor() {
       super({
@@ -13002,15 +13006,24 @@ ${followMessage}`)) {
 `;
 
   class a extends HTMLElement {
+    _rawStyles = "";
+    _styles = null;
     constructor(t) {
       super();
       let r = this.attachShadow({ mode: "open" });
       if (t) {
-        let o = document.createElement("style");
-        o.innerHTML = t.css, r.appendChild(o);
-        let e = document.createElement("template");
-        e.innerHTML = t.template, r.appendChild(e.content.cloneNode(true));
+        this._rawStyles = t.css, this._styles = document.createElement("style"), this._styles.innerHTML = t.css, r.appendChild(this._styles);
+        let o = document.createElement("template");
+        o.innerHTML = t.template, r.appendChild(o.content.cloneNode(true));
       }
+    }
+    registerCSSVariables(t) {
+      if (!this._styles)
+        return;
+      let r = this._rawStyles;
+      Object.entries(t).forEach(([o, e]) => {
+        r = r.replaceAll("var(--" + o + ")", e);
+      }), this._styles.innerHTML = r;
     }
     connectedCallback() {}
   }
@@ -13679,7 +13692,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   // src/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/Breadcrumb.ts
   var Metadata = { css: style_default4, template: template_default5 };
 
-  class Breadcrumb extends Component {
+  class Breadcrumb extends z {
     _pill;
     constructor() {
       super(Metadata);
@@ -13865,7 +13878,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     template: template_default6
   };
 
-  class InsertButton extends Component {
+  class InsertButton extends z {
     constructor() {
       super(Metadata2);
       this.shadowRoot.querySelector(".btn").addEventListener("click", () => {
@@ -14104,7 +14117,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   // src/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinMenu.ts
   var Metadata3 = { css: style_default6, template: template_default7 };
 
-  class PinMenu extends Component {
+  class PinMenu extends z {
     _items;
     constructor() {
       super(Metadata3);
@@ -15297,7 +15310,7 @@ form[method="dialog"] {
     template: template_default9
   };
 
-  class Card extends Component {
+  class Card extends z {
     constructor() {
       super(Metadata4);
     }
@@ -15381,7 +15394,7 @@ form[method="dialog"] {
     template: template_default10
   };
 
-  class EmptyState2 extends Component {
+  class EmptyState2 extends z {
     constructor() {
       super(Metadata5);
     }
@@ -15519,7 +15532,7 @@ form[method="dialog"] {
     template: template_default8
   };
 
-  class BlocLibrary extends Component {
+  class BlocLibrary extends z {
     _dialog;
     _section = "blocs";
     _activeGroup = null;
@@ -17644,7 +17657,7 @@ button span {
 :host([data-mode="view"]) [data-action="switch-mode"] .icon-view { display: none; }`;
 
   // src/components/editor/EditorSystem/FloatingToolbar/FloatingToolbar.ts
-  class FloatingToolbar extends Component {
+  class FloatingToolbar extends z {
     _startX = 0;
     _startY = 0;
     constructor() {
@@ -18307,7 +18320,7 @@ dialog::backdrop {
 `;
 
   // src/components/media/CardMedia/CardMedia.ts
-  class CardMedia extends Component {
+  class CardMedia extends z {
     constructor() {
       super({
         css: style_default13,
@@ -18538,7 +18551,7 @@ dialog::backdrop {
   }
 
   // src/components/editor/MediaCenter/MediaCenter.ts
-  class MediaCenter extends Component {
+  class MediaCenter extends z {
     _dialog = null;
     _grid = null;
     _btnSelect = null;
@@ -20167,7 +20180,7 @@ button.active svg {
     "warning-strong"
   ];
 
-  class RichTextBar extends Component {
+  class RichTextBar extends z {
     selection = new SelectionTracker;
     interacting = false;
     pageLink = null;
@@ -20487,7 +20500,7 @@ button.active svg {
     template: template_default17
   };
 
-  class Snippet extends Component {
+  class Snippet extends z {
     _root;
     constructor() {
       super(SnippetMetadata);
@@ -20781,7 +20794,7 @@ button.active svg {
 `;
 
   // src/components/media/CropSystem/CropSystem.ts
-  class CropSystem extends Component {
+  class CropSystem extends z {
     constructor() {
       super({
         css: style_default17,
@@ -21074,7 +21087,7 @@ button.active svg {
 `;
 
   // src/components/media/DetailMedia/DetailMedia.ts
-  class DetailMedia extends Component {
+  class DetailMedia extends z {
     constructor() {
       super({
         css: style_default18,
@@ -21932,7 +21945,7 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/GridMedia.ts
-  class GridMedia extends Component {
+  class GridMedia extends z {
     _folder = null;
     _breadcrumb = [];
     _items = [];

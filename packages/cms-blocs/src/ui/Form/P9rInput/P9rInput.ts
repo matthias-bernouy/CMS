@@ -1,4 +1,4 @@
-import { Component } from "../../../base/Component";
+import { Component } from "@bernouy/cms-blocs/base";
 import template from './ui/template.html' with { type: 'text' };
 import baseCss from './ui/styles/base.css' with { type: 'text' };
 import variantCss from './ui/styles/variant.css' with { type: 'text' };
