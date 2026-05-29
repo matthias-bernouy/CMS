@@ -22,8 +22,8 @@
         "@bernouy/auth-core": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
+        "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
-        "@bernouy/cms-cli": "workspace:*",
-        "@bernouy/cms-blocs": "workspace:*"
+        "@bernouy/cms-cli": "workspace:*"
     }
 }

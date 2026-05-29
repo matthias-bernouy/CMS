@@ -6,8 +6,8 @@
         { "path": "packages/auth-core" },
         { "path": "packages/cms-shared" },
         { "path": "packages/cms-delivery" },
+        { "path": "packages/cms-blocs" },
         { "path": "packages/cms-control" },
-        { "path": "packages/cms-cli" },
-        { "path": "packages/cms-blocs" }
+        { "path": "packages/cms-cli" }
     ]
 }

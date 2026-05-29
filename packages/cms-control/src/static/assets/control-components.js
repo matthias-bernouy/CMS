@@ -1,5 +1,5 @@
 (() => {
-  // ../webcomponents/dist/ui.js
+  // ../cms-blocs/dist/ui.js
   (() => {
     var { defineProperty: Ot, getOwnPropertyNames: Pa, getOwnPropertyDescriptor: Ra } = Object, qa = Object.prototype.hasOwnProperty;
     var Me = new WeakMap, Ba = (t) => {
@@ -12904,7 +12904,7 @@ ${followMessage}`)) {
     customElements.define("p9r-svg-sync", SvgSync);
   }
 
-  // ../webcomponents/dist/blocs/horizontal-action-group.mjs
+  // ../cms-blocs/dist/blocs/horizontal-action-group.mjs
   var l = `<div class="actions" role="toolbar" part="toolbar">
     <slot></slot>
 </div>

@@ -186,11 +186,11 @@ Building blocks consumed by every admin page:
 
 ### Admin UI dependencies
 
-- **`@bernouy/webcomponents`** ships every `<p9r-*>` / `<w13c-*>` admin custom element. Its `.` entry is an **IIFE bundle** — a single bare `import "@bernouy/webcomponents"` registers every tag. Never import from `@bernouy/core` for UI.
+- **`@bernouy/cms-blocs`** ships every `<p9r-*>` / `<w13c-*>` admin custom element. Its `.` entry is an **IIFE bundle** — a single bare `import "@bernouy/cms-blocs"` registers every tag. Never import from `@bernouy/core` for UI.
 - **`@bernouy/core`** is for infrastructure only: `Runner`, `Authentication`, `Subject`, `Middleware`, envelope crypto. Never pull UI from it.
 - **`@bernouy/cms-shared/constants`** is the browser-safe sub-entry exposing `P9R_ATTR`, `P9R_MODE`, `P9R_EVENT`, `P9R_ID`, `P9R_CACHE` — imported by `src/components/globals.ts` to wire `window.p9r.*`. Don't import the main `@bernouy/cms-shared` barrel from `components/` — it transitively reaches Mongo / Bun modules and breaks the browser bundle.
 - **`showToast`** lives at `src/core/showToast.ts`. Lazily mounts a `<p9r-toast-stack>` and calls its `push()`.
-- **Design tokens** (`--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, …) come from `@bernouy/webcomponents/style.css`, exposed at `<basePath>/resources/css/webcomponents.css`. Admin's `style.css` `@import`s it so every admin page inherits the tokens before any component renders.
+- **Design tokens** (`--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, …) come from `@bernouy/cms-blocs/style.css`, exposed at `<basePath>/resources/css/cms-blocs.css`. Admin's `style.css` `@import`s it so every admin page inherits the tokens before any component renders.
 
 ## Editor system
 
@@ -227,14 +227,14 @@ The bloc's config panel (`<p9r-config-panel>`, lives in `components/editor/compo
 - CSS `attr()` only works for simple numeric values with px fallback: `attr(radius px, 16px)`.
 - For enum-like attributes (e.g. background names mapping to CSS variables), always use `:host([attr="value"])` selectors.
 - All CSS variables must be self-contained in the component's `style.css`.
-- Global design tokens: `--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, etc. — defined in `@bernouy/webcomponents/style.css` and pulled in via `<basePath>/resources/css/webcomponents.css`.
-- Admin resources live in `src/static/assets/` (built `control-components.js` + `control-styles.css`) — no compression pipeline; admin is authenticated and low-traffic. `style.css` `@import`s `webcomponents.css` so design tokens are in scope before anything else.
+- Global design tokens: `--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, etc. — defined in `@bernouy/cms-blocs/style.css` and pulled in via `<basePath>/resources/css/cms-blocs.css`.
+- Admin resources live in `src/static/assets/` (built `control-components.js` + `control-styles.css`) — no compression pipeline; admin is authenticated and low-traffic. `style.css` `@import`s `cms-blocs.css` so design tokens are in scope before anything else.
 
 ## Custom element prefix conventions
 
 - **`cms-*`** — internal CMS components (admin shell, editor system, form/data utilities). E.g. `cms-form`, `cms-validate`, `cms-fetch`, `cms-editor-system`, `cms-bloc-actions`, `cms-bloc-library`, `cms-floating-toolbar`, `cms-media-center`, `cms-media-admin`.
-- **`p9r-*`** — public custom elements provided by the framework (from `@bernouy/webcomponents`), used inside bloc configurations and editor panels. Reserved system-only — never scaffold a bloc with a `p9r-*` tag.
-- **`w13c-*`** — public custom elements from `@bernouy/webcomponents` (admin chrome, generic UI). Reserved system-only.
+- **`p9r-*`** — public custom elements provided by the framework (from `@bernouy/cms-blocs`), used inside bloc configurations and editor panels. Reserved system-only — never scaffold a bloc with a `p9r-*` tag.
+- **`w13c-*`** — public custom elements from `@bernouy/cms-blocs` (admin chrome, generic UI). Reserved system-only.
 
 ## Key rules
 

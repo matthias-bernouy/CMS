@@ -1,133 +1,186 @@
 # @bernouy/cms-blocs
 
-Library of CMS blocs (PageBuilder building blocks) consumed by `p9r
-import` and shipped to any `@bernouy/cms-control` deployment that wants the
-default kit. **No JS export** — this package is a folder of bloc
-sources, discovered by manifest scan, not by import.
+CMS blocs and admin custom elements toolkit. Two component flavors:
+
+- **`<p9r-*>`** — visual UI components (Button, Card, Tabs, Toast,
+  Input, Select, …) consumed by every CMS admin page and by blocs.
+- **`<w13c-*>`** — logical components (`<w13c-form>`, `<w13c-fetch>`)
+  that handle declarative submit/fetch with no per-page JS.
+
+Published to npm as `@bernouy/cms-blocs` (MIT). Other workspace
+packages (`@bernouy/cms-control`) consume the **built bundle**
+from `dist/`, not the sources.
 
 ## Layout
 
 ```
 src/
-├── action/           buttons + prominent search variants
-├── content/          card, chip, feedback, media, stat, strip
-├── doc/              documentation-flavored set: api, code, content, layout, meta, navigation
-├── form/             choice (radio/checkbox/switch/chip), numeric, select, structure (form/fieldset), temporal, text, upload
-├── header/           article, article-meta, page-actions, section, toolbar
-├── interactive/      accordion (+ accordion-item), tabs (+ tab), filter-panel, toggle-row
-├── layout/           container, grid, hero-{plain,marketing,editorial}, spacing
-├── navigation/       footer (+ footer-column), menu (notif-dropdown, user-menu), navbar (navbar, nav-item, navbar-actions), sidenav (+ -section, -item)
-└── ambient.d.ts      `*.css` and `*.html` modules → `string`
+├── base/
+│   └── Component.ts          minimal HTMLElement base — open shadow root, optional CSS + template injection
+├── ui/                       all <p9r-*> visual components
+│   ├── Accordion/  Alert/  Avatar/  Badge/  Breadcrumb/  Card/
+│   ├── Dialog/     Divider/  Form/  HorizontalActionGroup/
+│   ├── Layout/     Menu/     Pagination/  Progress/  Skeleton/
+│   ├── Spinner/    Stepper/  Table/  Tabs/  Tag/  Toast/  Tooltip/
+│   └── …
+├── logicalComponents/        all <w13c-*> behavioral components
+│   ├── Form/Form.ts          <w13c-form> — declarative submit
+│   └── data/fetch/           <w13c-fetch> — declarative fetch + slot stamp
+├── assets/
+│   └── default.css           global theme tokens (--primary-*, --bg-*, --text-*, --border-*, --danger-*, …)
+├── types/                    shared TS types
+└── index.ts                  enumerated exports of every class
 ```
 
-102 manifests today (one per bloc folder). Top-level subfolders are
-**categorical**, not architectural — `p9r import` walks recursively and
-only cares about `manifest.json`.
+`dist/` (built) holds:
+- `ui.js`           — IIFE bundle that imports `src/index.ts` once. A
+  single `<script src="…/dist/ui.js"></script>` (or `import
+  "@bernouy/cms-blocs"` from a bundler that respects the IIFE
+  default) registers **every** `<p9r-*>` and `<w13c-*>` tag.
+- `style.css`       — copy of `src/assets/default.css`.
+- `blocs/<name>.{js,mjs,d.ts}` — per-component IIFE + ESM + d.ts stub
+  so consumers can lazy-load a single component:
+  `import "@bernouy/cms-blocs/blocs/button"`.
+- `index.d.ts` + the tsc-emitted tree (for `import { Button } from "@bernouy/cms-blocs"`).
 
-## Bloc folder shape
+## Build (`build.ts`)
 
-Each leaf folder is one bloc:
+The build is hand-rolled, three steps:
 
-```
-my-bloc/
-├── manifest.json     required, root marker discovered by `p9r import`
-├── Bloc.ts           view bundle entry — imports `Component` from `@bernouy/cms-control/component`
-├── BlocEditor.ts     (optional) editor bundle entry — imports `Editor` from `@bernouy/cms-control/editor`
-├── template.html     shadow DOM template (loaded with `with { type: 'text' }`)
-├── style.css         shadow DOM CSS (loaded with `with { type: 'text' }`)
-└── configuration.html editor config panel (sync elements: `<p9r-attr-sync>`, `<p9r-comp-sync>`, `<p9r-image-sync>`, `<p9r-link>`, …)
-```
+1. `Bun.build(src/index.ts → dist/ui.js, format: "iife", minify)`.
+2. For each entry in the **flat list at the top of `build.ts`**, build
+   IIFE + ESM with `Bun.build`, and write a `.d.ts` stub re-exporting
+   from the tsc-emitted declarations.
+3. `cp src/assets/default.css → dist/style.css`, then `tsc -p
+   tsconfig.build.json` for the type tree.
 
-`manifest.json` minimum:
+**Adding a new component**:
+1. Create `src/ui/MyThing/MyThing.ts` (+ `template.html`, `style.css` if needed).
+2. Self-register at the bottom of the file:
+   `if (!customElements.get("p9r-my-thing")) customElements.define("p9r-my-thing", MyThing);`.
+3. `export { MyThing } from "./ui/MyThing/MyThing"` in `src/index.ts`.
+4. Add an entry to the `blocs` array in `build.ts` so consumers can
+   import it as `@bernouy/cms-blocs/blocs/my-thing`.
 
-```json
-{
-    "runtime":       "0.0.1",
-    "bloc":          "./Bloc.ts",
-    "editor":        "./BlocEditor.ts",
-    "default-tag":   "base-button",
-    "default-group": "Action",
-    "meta": {
-        "author":      "Be5 Solutions",
-        "title":       "Button",
-        "description": "Reusable action button …",
-        "categories":  ["action"]
+Step 4 is **required for lazy import**, but optional if the component
+is only meant to ship via `ui.js`. Forgetting it gives you a working
+component but no per-component bundle.
+
+## Component base — what it does and doesn't do
+
+`src/base/Component.ts` is intentionally tiny:
+
+```ts
+class Component extends HTMLElement {
+    constructor(metadata?: { css, template }) {
+        super();
+        const shadow = this.attachShadow({ mode: "open" });
+        if (metadata) { /* inject <style>{css} + <template>{template} */ }
     }
+    connectedCallback() {} // override in subclass
 }
 ```
 
-- `default-tag` is the custom-element tag **and** the DB primary key on
-  the CMS server. It must be globally unique. `p9r-*` and `w13c-*` are
-  reserved system prefixes — never scaffold a bloc with them.
-- `editor` is optional. Without it, the bloc becomes opaque (the CMS
-  CLI synthesizes a default editor that calls `registerEditor_opaque`).
-- `runtime` matches the cms component runtime version that compiled
-  against this manifest schema.
+- Open shadow root, every component.
+- CSS / template injection is optional — `Stack.ts` and similar passthroughs may skip it when the shadow already inherits styling.
+- **No reactive lifecycle, no attribute helper, no CSS-variable
+  rewriting.** Subclasses add what they need.
+- The CMS (`@bernouy/cms-control/component`) ships its **own** richer
+  `Component` for blocs. Don't merge the two — the CMS version drags
+  bloc-editor concerns that have no place in a plain admin dialog.
 
-## How blocs ship
+## Self-registering pattern (idempotent guard)
 
-This package never ships JS. Two consumption paths:
-
-- **`p9r import`** (`@bernouy/cms-cli`) — scans
-  `node_modules/@bernouy/cms-blocs/src/**/manifest.json`, builds each
-  bloc into a view + editor bundle via `Bun.build`, POSTs to the
-  remote CMS's `/api/bloc`. The CMS server stores `{ id, group,
-  description, viewJS, editorJS }`. Blocs whose `default-tag` already
-  exists are skipped (collisions are loud, never overwritten).
-- **`p9r dev`** — same scan, but builds locally and serves via the dev
-  proxy so the bloc reloads on file change.
-
-The TS in this package is type-checked via `tsc` (project ref to
-`../cms-control` for `@bernouy/cms-control/component` + `@bernouy/cms-control/editor` types) but
-**never bundled by this package's `build`** — bundling is the CLI's job
-on the consumer side.
-
-## Bloc authoring contract
-
-Inherits the rules in `.agents/rules/cms-bloc-development.md`:
-
-- **No icon fonts.** Use SVG/PNG/JPEG. Inline SVG (with
-  `fill="currentColor"`) for swappable icons via `<p9r-svg-sync>`;
-  hardcoded SVG for design ornaments.
-- **CSS-first.** Layout via Flex/Grid; only reach for JS when CSS
-  truly can't.
-- **Pre-compute on the editor side.** Heavy calculations live in
-  `BlocEditor.ts`; the runtime stores results as attributes / slot
-  content.
-- **Theme variables, never hardcoded values.** Use the `--primary-base`,
-  `--bg-surface`, `--text-main`, `--border-default` family. Anything
-  not covered must become a configurable attribute.
-- **Text inside a leaf `<span>`.** Editor anchoring breaks if a text
-  node sits next to sibling elements, or if a `<span>` wraps both
-  elements and a text node.
-- **Slots empty in `template.html`**, populated by `<p9r-comp-sync>` in
-  `configuration.html`. Two sources of truth would diverge as soon as
-  the user removes a child.
-- **`<p9r-comp-sync>` never empty.** An empty sync element causes
-  editor bugs; always wrap a child.
-- **Navigation:** `<a href>` for static, `history.pushState` for
-  conditional. Never assign to `location.*` — the editor cannot
-  intercept it (Location members are `[[LegacyUnforgeable]]`), and the
-  push-time `validateBloc` rejects the pattern.
-
-## CSS imports
-
-Blocs import HTML/CSS as text via Bun's import attributes:
+Every component file ends with:
 
 ```ts
-import template from './template.html' with { type: 'text' };
-import css      from './style.css'     with { type: 'text' };
+if (!customElements.get("p9r-thing")) {
+    customElements.define("p9r-thing", Thing);
+}
 ```
 
-`ambient.d.ts` declares these modules return `string` so TS doesn't
-complain. `template`/`css` are passed verbatim to the
-`Component({ template, css })` constructor; nothing else processes them.
+The guard matters: `dist/ui.js` (IIFE) AND a per-component bundle
+(`dist/blocs/thing.js`) can both end up loaded on the same page (e.g.
+admin loads ui.js, a bloc lazy-loads `blocs/thing.js`). Without the
+guard the second load throws "already defined".
+
+## Form components
+
+Form-bearing components (`Button`, `Checkbox`, `Switch`, `RadioGroup`,
+`P9rInput`, `P9rSelect`, …) declare `static formAssociated = true` and
+attach `ElementInternals`. They participate in native form submission
+and `setCustomValidity` flows. Don't reach for shadow DOM listeners to
+forward values — `ElementInternals.setFormValue()` is the right tool.
+
+## Logical components
+
+`<w13c-form>` wraps an inner `<form>`, posts JSON to `target` on
+submit, dispatches `form:success` / `form:failed` (bubbles + composed
+via `BubblesEvent`). `emit="some:event"` re-dispatches on success so a
+sibling `<w13c-fetch reload-on>` can refresh.
+
+`<w13c-fetch>` fetches JSON from `url`, stamps a child `<template>`
+against the response, inserts the result as siblings. Slots: `default`
+(data), `loading`, `error`, `empty`. `reload-on="event-name"` listens
+on `document` for refresh triggers; `cms-fetch:reload` is built in.
+Public `el.reload()`.
+
+Both use `BubblesEvent` (a `CustomEvent`-equivalent with `bubbles +
+composed = true`) so events escape shadow boundaries.
+
+## Theme variables
+
+`src/assets/default.css` defines the design tokens that every visual
+component reads via `var(...)`:
+
+| Family | Tokens |
+|---|---|
+| Surfaces | `--bg-base`, `--bg-surface`, `--bg-overlay` |
+| Text     | `--text-main`, `--text-body`, `--text-muted`, `--text-label` |
+| Borders  | `--border-default`, `--border-light` |
+| Primary  | `--primary-base`, `--primary-muted`, `--primary-contrasted` |
+| Secondary| `--secondary-base`, `--secondary-muted`, `--secondary-contrasted` |
+| Status   | `--danger-*`, `--success-*`, `--info-*`, `--warning-*` (each as `-base`/`-muted`/`-contrasted`) |
+
+Consumers serve `dist/style.css` at a stable URL (typically
+`<basePath>/resources/css/cms-blocs.css`) and `@import` it from
+their own admin stylesheet so the tokens are in scope before any
+component renders.
+
+## Conventions
+
+- **Name a visual component `<p9r-*>`** — never `<cms-*>` or `<w13c-*>`.
+  Logical components are `<w13c-*>`. `cms-*` is reserved for the CMS
+  internal admin shell (lives in `@bernouy/cms-control`).
+- **Self-register with the idempotent guard** at the bottom of the
+  component file. Never register from `index.ts`.
+- **Imports of `*.html` / `*.css` use `with { type: 'text' }`** so Bun
+  inlines them as strings. Keep them under 100 lines per file; split
+  `style.css` into `base.css` + `variant.css` (à la `Form/Button/`)
+  when style logic grows.
+- **Theme tokens, never hardcoded colors.** If a component needs a hue
+  outside the token set, the consumer should expose it as an attribute
+  rather than the component baking it in.
+- **No external runtime deps.** This package is published to npm
+  standalone — keep it free of `@bernouy/*` imports.
+- **Sources are not consumed directly.** Workspace packages depend on
+  the **built bundle** (`@bernouy/cms-blocs` resolves to
+  `dist/ui.js` via `main`/`exports`). The workspace root `build.ts`
+  builds this package first so consumer packages see the `dist/`
+  artifacts at type-check time.
+
+## Reference docs in repo
+
+- `conventions/API.md` — public API conventions (attribute names,
+  events).
+- `conventions/EVENTS.md` — event taxonomy.
+- `W13C-EVENTS.md` — known logical-component events
+  (`form:success` → modals close, `form:failed`, …).
+
+These are short notes, not exhaustive reference. The source is the
+contract.
 
 ## Dependencies
 
-- runtime: `@bernouy/cms-control` (`Component`, `Editor`)
-- peer / dev: TypeScript
-
-The package has no `main`/`exports` — it ships sources only. Adding a
-public TS export here would be a category mistake; if you need a shared
-helper across blocs, lift it to `@bernouy/cms-shared` or `@bernouy/webcomponents`.
+- runtime: none
+- peer: `typescript ^5`

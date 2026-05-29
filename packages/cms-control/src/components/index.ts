@@ -1,4 +1,4 @@
-import "@bernouy/webcomponents"
+import "@bernouy/cms-blocs"
 
 import "./globals"
 

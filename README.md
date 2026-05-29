@@ -2,7 +2,7 @@
 
 Bun + TypeScript monorepo (`@bernouy/socle-monorepo`) bundling the
 infrastructure contracts, the CMS (single- and multi-tenant), the admin
-Web Components, and the deployment artefacts that run them on bare VPS.
+custom elements, and the deployment artefacts that run them on bare VPS.
 
 ## Layout
 
@@ -13,12 +13,11 @@ CmsCore/
 │   ├── runner-bun/                   @bernouy/runner-bun      Runner backed by `Bun.serve`
 │   ├── auth-core/                    @bernouy/auth-core       CMS-owned auth primitives (LocalAuth + OidcAuth + PATs + signed cookies + Users / IdP / Credential / RateLimiter stores) + login / forbidden page renderers + authGuard
 │   ├── mailer-smtp/                  @bernouy/mailer-smtp     Mailer over `nodemailer`
-│   ├── webcomponents/                @bernouy/webcomponents   admin UI toolkit (`<w13c-*>`, `<p9r-*>`), built bundle + style.css
+│   ├── cms-blocs/                    @bernouy/cms-blocs       admin UI toolkit (`<w13c-*>`, `<p9r-*>`), built bundle + style.css
 │   ├── cms/                          @bernouy/cms             CMS core: Control (admin + REST + visual editor), Delivery (rendering), `p9r` CLI
-│   ├── cms-blocs/                    @bernouy/cms-blocs       library of reusable blocs (action / content / form / header / layout / navigation / …)
 │   ├── cms-control-mt/               @bernouy/mt-cms-control  multi-tenant wrapper around Control (superadmin + per-tenant mounting)
 │   ├── hub-api/                      @bernouy/hub-api         public REST surface bridging consumers to tenant provisioning (zod + OpenAPI)
-│   └── hub-ui/                       @bernouy/hub-ui          superadmin UI for hub-api (HTML + webcomponents)
+│   └── hub-ui/                       @bernouy/hub-ui          superadmin UI for hub-api (HTML + cms-blocs)
 │
 ├── official-tenant-provisioners/     # the conforming TPs shipped with the platform
 │   ├── _sdk/                         @bernouy/tenant-provisioner-sdk
@@ -46,17 +45,15 @@ Workspace edges, taken from each package's `package.json`:
 core ─┬─ runner-bun
       ├─ auth-core                  (+ jose ; peer: mongodb)
       ├─ mailer-smtp                (peer: nodemailer)
-      ├─ cms ◄── webcomponents, auth-core   (deps: linkedom, playwright; peer: mongodb, typescript)
+      ├─ cms ◄── cms-blocs, auth-core   (deps: linkedom, playwright; peer: mongodb, typescript)
       │     ▲
-      │     ├── cms-blocs
-      │     │
       │     └── cms-control-mt ◄── auth-core, runner-bun
       │              ▲
       │              └── hub-api      (+ zod, @asteasolutions/zod-to-openapi, issuer-kit, contract)
       │                       ▲
       │                       └── hub-ui
       │
-      └── webcomponents (no deps; consumed by cms + hub-ui)
+      └── cms-blocs (no deps; consumed by cms + hub-ui)
 ```
 
 Rules of thumb:
@@ -70,7 +67,7 @@ Rules of thumb:
   session cookies + PAT bearers. The CMS and the hub both consume it; no
   package in this repo is tied to a specific IdP (Keycloak / Auth0 / Okta
   / Google plug in as one OIDC backend among many).
-- `@bernouy/webcomponents` is the only place admin UI custom elements
+- `@bernouy/cms-blocs` is the only place admin UI custom elements
   live; everything visual in `cms` + `hub-ui` consumes it.
 - The `*-mt` packages are thin wrappers that compose the single-tenant
   packages under per-tenant runner groups.
@@ -79,7 +76,7 @@ Rules of thumb:
 
 ```bash
 bun install                 # links every workspace package + installs externals
-bun run build               # orchestrated: webcomponents bundle → tsc --build → cms bundle
+bun run build               # orchestrated: cms-blocs bundle → tsc --build → cms bundle
 bun run typecheck           # tsc --build only (project references)
 bun run clean               # tsc --build --clean (drops per-package dist + tsbuildinfo)
 bun test                    # workspace test runner
@@ -88,14 +85,14 @@ bun test                    # workspace test runner
 `build.ts` is sequenced because downstream packages need upstream
 artefacts at type-check time:
 
-1. `packages/webcomponents` → `dist/{ui.js, style.css, index.d.ts, blocs/*.d.ts}`
-   (`webcomponents` ships its built bundle as `main`; consumers import
+1. `packages/cms-blocs` → `dist/{ui.js, style.css, index.d.ts, blocs/*.d.ts}`
+   (`cms-blocs` ships its built bundle as `main`; consumers import
    the IIFE bundle to register every tag at once).
 2. `tsc --build` → emits `.d.ts` for every other package via project refs.
 3. `packages/cms` → control-side prebuild + own `.d.ts` emit.
 
 Every other package (`core`, `runner-bun`, `auth-core`, `mailer-smtp`,
-`cms-blocs`, `cms-*-mt`, `hub-api`, `hub-ui`) ships **source** through
+`cms-*-mt`, `hub-api`, `hub-ui`) ships **source** through
 its `exports` field — no bundle step, `bun link` consumers resolve
 straight to `src/`.
 

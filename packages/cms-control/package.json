@@ -59,7 +59,7 @@
         "@bernouy/runner-bun":    "workspace:*",
         "@bernouy/auth-core":     "workspace:*",
         "@bernouy/cms-shared":    "workspace:*",
-        "@bernouy/webcomponents": "workspace:*"
+        "@bernouy/cms-blocs": "workspace:*"
     },
     "engines": {
         "bun": ">=1.3.0"

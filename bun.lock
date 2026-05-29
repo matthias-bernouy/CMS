@@ -35,16 +35,12 @@
     },
     "packages/cms-blocs": {
       "name": "@bernouy/cms-blocs",
-      "version": "0.0.1",
-      "dependencies": {
-        "@bernouy/cms-control": "workspace:*",
-      },
+      "version": "0.1.2",
       "devDependencies": {
         "@types/bun": "latest",
-        "typescript": "^5.9.3",
       },
       "peerDependencies": {
-        "typescript": "^5.9.3",
+        "typescript": "^5",
       },
     },
     "packages/cms-cli": {
@@ -69,10 +65,10 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/auth-core": "workspace:*",
+        "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
-        "@bernouy/webcomponents": "workspace:*",
       },
       "devDependencies": {
         "@happy-dom/global-registrator": "^20.8.9",
@@ -120,16 +116,6 @@
         "@bernouy/core": "workspace:*",
       },
     },
-    "packages/webcomponents": {
-      "name": "@bernouy/webcomponents",
-      "version": "0.1.2",
-      "devDependencies": {
-        "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
   },
   "packages": {
     "@bernouy/auth-core": ["@bernouy/auth-core@workspace:packages/auth-core"],
@@ -147,8 +133,6 @@
     "@bernouy/core": ["@bernouy/core@workspace:packages/core"],
 
     "@bernouy/runner-bun": ["@bernouy/runner-bun@workspace:packages/runner-bun"],
-
-    "@bernouy/webcomponents": ["@bernouy/webcomponents@workspace:packages/webcomponents"],
 
     "@happy-dom/global-registrator": ["@happy-dom/global-registrator@20.9.0", "", { "dependencies": { "@types/node": ">=20.0.0", "happy-dom": "^20.9.0" } }, "sha512-lBW6/m5BIFl3pMuWPNN0lIOYw9LMCmPfix53ExS3FBi4E+NELEljQ3xH6aAV9IYiQRfn9YIIgzzMrD0vIcD7tw=="],
 
