@@ -3,16 +3,16 @@ import type { GatewayRepository } from "../../interfaces/GatewayRepository";
 import type { Provider, Endpoint } from "../../interfaces/Gateway";
 
 /**
- * Implémentation MongoDB de `GatewayRepository`. Un `Provider` = un document,
- * `_id` = son `urn` (donc l'unicité de l'urn est gratuite via la clé Mongo).
- * L'appelant possède le cycle de vie du `MongoClient` ; il passe le `Db` et
- * appelle `init()` une fois au démarrage.
+ * MongoDB implementation of `GatewayRepository`. One `Provider` = one document,
+ * `_id` = its `urn` (so urn uniqueness comes for free via the Mongo key).
+ * The caller owns the `MongoClient` lifecycle; it passes the `Db` and
+ * calls `init()` once at startup.
  *
- * NB : uniquement des imports `type` de `mongodb` ici → aucun couplage runtime.
- * Le `Db` est injecté par l'appelant ; le gateway reste sans dépendance d'exécution.
+ * NB: only `type` imports from `mongodb` here → no runtime coupling.
+ * The `Db` is injected by the caller; the gateway has no runtime dependency.
  */
 export type MongoGatewayRepositoryConfig = {
-    /** Préfixe ajouté au nom de collection (`providers`). Défaut `""` (mono-tenant). */
+    /** Prefix prepended to the collection name (`providers`). Default `""` (single-tenant). */
     collectionPrefix?: string;
 };
 
@@ -30,8 +30,8 @@ export class MongoGatewayRepository implements GatewayRepository {
     }
 
     /**
-     * Index pour la lecture par urn d'endpoint. Idempotent — sûr à chaque boot.
-     * L'unicité de l'urn de provider est déjà assurée par `_id`.
+     * Index for lookups by endpoint urn. Idempotent — safe to call on every boot.
+     * Provider urn uniqueness is already enforced by `_id`.
      */
     async init(): Promise<void> {
         await this.providers.createIndex({ "endpoints.urn": 1 });
@@ -42,7 +42,7 @@ export class MongoGatewayRepository implements GatewayRepository {
     }
 
     async createProvider(provider: Provider): Promise<Provider> {
-        // _id = urn → un urn dupliqué fait échouer l'insert (Mongo code 11000).
+        // _id = urn → a duplicate urn causes the insert to fail (Mongo code 11000).
         await this.providers.insertOne(toDoc(provider) as OptionalUnlessRequiredId<ProviderDoc>);
         return structuredClone(provider);
     }

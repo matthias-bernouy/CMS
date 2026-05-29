@@ -1,14 +1,14 @@
 /**
- * DataShape — description minimale de la FORME d'une donnée (entrée/sortie d'un
- * endpoint, voir `Gateway.ts`). Volontairement réduit : juste le type + la structure.
+ * DataShape — minimal description of the SHAPE of a piece of data (input/output of an
+ * endpoint, see `Gateway.ts`). Intentionally kept small: just the type + the structure.
  *
- * Les champs reprennent le vocabulaire JSON Schema (`type`/`properties`/`items`),
- * donc c'est familier ET assignable tel quel à l'éditeur (`flattenScalars`,
- * `JsonEditor`). On ajoutera `required`/`enum`/`format`/`description` quand la
- * validation ou l'éditeur en auront besoin.
+ * The fields reuse JSON Schema vocabulary (`type`/`properties`/`items`),
+ * so it is familiar AND directly assignable to the editor (`flattenScalars`,
+ * `JsonEditor`). We will add `required`/`enum`/`format`/`description` when
+ * validation or the editor needs them.
  */
 export type DataShape = {
     type: "string" | "number" | "boolean" | "object" | "array";
-    properties?: Record<string, DataShape>;   // quand type === "object"
-    items?: DataShape;                          // quand type === "array"
+    properties?: Record<string, DataShape>;   // when type === "object"
+    items?: DataShape;                          // when type === "array"
 };

@@ -22,3 +22,6 @@ export {
 } from "./core/urn";
 export { validateProvider, endpointBelongsToProvider } from "./core/validateProvider";
 export { resolveEndpoint, type ResolveResult } from "./core/resolveEndpoint";
+export { seedProviders, type SeedResult } from "./core/seedProviders";
+export { buildUpstreamUrl, type BuildUpstream } from "./core/buildUpstreamUrl";
+export { executeEndpoint, type ExecutorDeps } from "./core/executeEndpoint";

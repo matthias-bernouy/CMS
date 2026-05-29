@@ -5,14 +5,14 @@ export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 
 /** Where a rule's value comes from. */
 export type EndpointRuleSource =
     | { from: 'static'; value: string }   // ex: "2024-01"
-    | { from: 'secret'; ref: string }     // ex: ${STRIPE_KEY} → credential de l'app
-    | { from: 'userId' };                 // identité du user CMS courant
+    | { from: 'secret'; ref: string }     // ex: ${STRIPE_KEY} → app credential
+    | { from: 'userId' };                 // identity of the current CMS user
 
 /**
- * Règles d'injection sortantes, composables, appliquées dans l'ordre.
- * À l'étape 0 (sans auth) AUCUNE n'est appliquée — c'est le seam pluggable.
- * Une règle `from: 'userId'` exigera une session CMS authentifiée (validé
- * quand les rules seront câblées).
+ * Outbound injection rules, composable, applied in order.
+ * At step 0 (no auth) NONE are applied — this is the pluggable seam.
+ * A rule `from: 'userId'` will require an authenticated CMS session (validated
+ * when the rules are wired up).
  */
 export type EndpointRule =
     | { place: 'bearer';                                       source: EndpointRuleSource }
@@ -20,16 +20,16 @@ export type EndpointRule =
     | { place: 'query';  param: string;                        source: EndpointRuleSource }
     | { place: 'jwt'; header?: string; audience?: string; signingKeyRef: string; source: EndpointRuleSource };
 
-/** Un paramètre d'entrée + son emplacement dans la requête amont. */
+/** An input parameter and its location in the upstream request. */
 export type EndpointParam = {
     name: string;
-    in: 'path' | 'query' | 'header';   // 'path' → templé dans `targetUrl` sous la forme {name}
+    in: 'path' | 'query' | 'header';   // 'path' → templated into `targetUrl` as {name}
     required?: boolean;
     description?: string;
     schema: DataShape;
 };
 
-/** Métadonnées descriptives pour l'éditeur (listing/présentation). Pas utilisées par le proxy. */
+/** Descriptive metadata for the editor (listing/display). Not used by the proxy. */
 export type GatewayMeta = {
     name: string;
     description?: string;
@@ -37,20 +37,20 @@ export type GatewayMeta = {
 };
 
 export type Endpoint = {
-    urn: string;            // ex: "urn:provider-id:getUser" (method PAS dans l'urn)
+    urn: string;            // ex: "urn:provider-id:getUser" (method NOT in the urn)
     method: HTTPMethod;
     targetUrl: string;      // ex: "https://api.example.com/v1/users/{id}"
-    rules: EndpointRule[];  // étape 0: [] (aucune appliquée)
+    rules: EndpointRule[];  // step 0: [] (none applied)
 
     meta?: GatewayMeta;
 
-    /** Contrat de requête : pilote le formulaire éditeur ET la construction de l'appel amont. */
+    /** Request contract: drives the editor form AND the construction of the upstream call. */
     input?: {
         params?: EndpointParam[];
         body?: DataShape;
     };
 
-    /** Contrat de réponse : pilote le binding des champs côté éditeur (flattenScalars). */
+    /** Response contract: drives field binding on the editor side (flattenScalars). */
     output?: DataShape;
 };
 

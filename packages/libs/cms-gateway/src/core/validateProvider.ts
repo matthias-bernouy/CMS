@@ -1,14 +1,14 @@
 import type { Provider } from "../interfaces/Gateway";
 import { isProviderUrn, isEndpointUrn, providerUrnOf } from "./urn";
 
-/** `true` si l'urn d'endpoint appartient au provider donné. */
+/** `true` if the endpoint urn belongs to the given provider. */
 export function endpointBelongsToProvider(endpointUrn: string, providerUrn: string): boolean {
     return providerUrnOf(endpointUrn) === providerUrn;
 }
 
 /**
- * Valide un provider avant stockage. Retourne la liste des erreurs ([] = valide).
- * Pur — aucune I/O. À appeler côté création (API/seed) avant `repo.createProvider`.
+ * Validates a provider before storage. Returns the list of errors ([] = valid).
+ * Pure — no I/O. Call on the creation side (API/seed) before `repo.createProvider`.
  */
 export function validateProvider(provider: Provider): string[] {
     const errors: string[] = [];

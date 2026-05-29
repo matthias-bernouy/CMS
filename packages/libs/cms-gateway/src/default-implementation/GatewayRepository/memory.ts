@@ -2,12 +2,12 @@ import type { GatewayRepository } from "../../interfaces/GatewayRepository";
 import type { Provider, Endpoint } from "../../interfaces/Gateway";
 
 /**
- * Implémentation en mémoire de `GatewayRepository` — le défaut dep-free, pour le
- * dev et les tests. Clonage défensif (`structuredClone`) en entrée et en sortie :
- * les données stockées sont du JSON pur, donc clonables sans souci.
+ * In-memory implementation of `GatewayRepository` — the dep-free default, for
+ * dev and tests. Defensive cloning (`structuredClone`) on input and output:
+ * stored data is plain JSON, so cloning is safe.
  */
 export class InMemoryGatewayRepository implements GatewayRepository {
-    private _providers = new Map<string, Provider>();   // par provider.urn
+    private _providers = new Map<string, Provider>();   // keyed by provider.urn
 
     async createProvider(provider: Provider): Promise<Provider> {
         if (this._providers.has(provider.urn)) {

@@ -7,14 +7,14 @@ export type ResolveResult =
     | { ok: false; reason: "not_found" | "method_not_allowed" };
 
 /**
- * Résout une requête entrante vers un endpoint déclaré (adressage B :
- * `<provider>/<endpoint>`). Utilise l'INTERFACE `GatewayRepository` par injection
- * — jamais une implémentation concrète.
+ * Resolves an incoming request to a declared endpoint (B addressing:
+ * `<provider>/<endpoint>`). Uses the `GatewayRepository` INTERFACE via injection
+ * — never a concrete implementation.
  *
- * @param segments  le path après le préfixe gateway, ex. `["shop", "getCart"]`
- *                  (le préfixe public est géré par la couche Delivery, pas ici).
- * @returns `not_found` si segments mal formés ou endpoint inconnu ;
- *          `method_not_allowed` si l'endpoint existe mais que sa `method` diffère.
+ * @param segments  the path after the gateway prefix, e.g. `["shop", "getCart"]`
+ *                  (the public prefix is handled by the Delivery layer, not here).
+ * @returns `not_found` if segments are malformed or the endpoint is unknown;
+ *          `method_not_allowed` if the endpoint exists but its `method` differs.
  */
 export async function resolveEndpoint(
     repo: GatewayRepository,

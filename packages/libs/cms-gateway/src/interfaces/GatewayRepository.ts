@@ -1,25 +1,25 @@
 import type { Provider, Endpoint } from "./Gateway";
 
 /**
- * Persistance des providers du gateway. Agrégat : un `Provider` est stocké en
- * entier (avec ses endpoints), clé = son `urn`.
+ * Persistence of gateway providers. Aggregate: a `Provider` is stored in full
+ * (with its endpoints), keyed by its `urn`.
  *
- * Étape 0 : création + lectures uniquement. `updateProvider`/`deleteProvider`
- * arriveront avec l'UI admin.
+ * Step 0: creation + reads only. `updateProvider`/`deleteProvider`
+ * will come with the admin UI.
  */
 export interface GatewayRepository {
-    /** Persiste un provider (clé = `provider.urn`). Rejette si l'urn existe déjà. */
+    /** Persists a provider (key = `provider.urn`). Rejects if the urn already exists. */
     createProvider(provider: Provider): Promise<Provider>;
 
-    /** Un provider par son urn, ex: "urn:shop". `null` si absent. */
+    /** A provider by its urn, e.g. "urn:shop". `null` if not found. */
     getProvider(urn: string): Promise<Provider | null>;
 
-    /** Tous les providers. */
+    /** All providers. */
     getAllProviders(): Promise<Provider[]>;
 
     /**
-     * Un endpoint par son urn, ex: "urn:shop:getCart" — la lecture dont le proxy
-     * se sert pour résoudre une requête entrante. `null` si absent.
+     * An endpoint by its urn, e.g. "urn:shop:getCart" — the lookup the proxy
+     * uses to resolve an incoming request. `null` if not found.
      */
     getEndpoint(urn: string): Promise<Endpoint | null>;
 }

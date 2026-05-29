@@ -1,13 +1,13 @@
 /**
- * Helpers d'URN du gateway. Grammaire :
+ * Gateway URN helpers. Grammar:
  *   - provider : `urn:<providerId>`            (ex: "urn:shop")
  *   - endpoint : `urn:<providerId>:<endpointId>` (ex: "urn:shop:getCart")
- * Pur, zéro dépendance.
+ * Pure, zero dependencies.
  */
 
 export type ParsedUrn = { provider: string; endpoint: string | null };
 
-/** Parse une urn. `null` si la forme est invalide. */
+/** Parses a urn. Returns `null` if the form is invalid. */
 export function parseUrn(urn: string): ParsedUrn | null {
     const parts = urn.split(":");
     if (parts[0] !== "urn") return null;
@@ -24,7 +24,7 @@ export function makeEndpointUrn(providerId: string, endpointId: string): string 
     return `urn:${providerId}:${endpointId}`;
 }
 
-/** L'urn du provider auquel appartient un endpoint. `null` si ce n'est pas une urn d'endpoint. */
+/** The provider urn that an endpoint belongs to. Returns `null` if this is not an endpoint urn. */
 export function providerUrnOf(endpointUrn: string): string | null {
     const parsed = parseUrn(endpointUrn);
     return parsed?.endpoint ? makeProviderUrn(parsed.provider) : null;
