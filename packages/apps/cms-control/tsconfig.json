@@ -1,5 +1,5 @@
 {
-    "extends": "../../tsconfig.base.json",
+    "extends": "../../../tsconfig.base.json",
     "compilerOptions": {
         "outDir":   "dist",
         "rootDir":  ".",
@@ -24,9 +24,9 @@
         "tests/**/*.ts"
     ],
     "references": [
-        { "path": "../core" },
-        { "path": "../runner-bun" },
-        { "path": "../auth-core" },
-        { "path": "../cms-shared" }
+        { "path": "../../libs/core" },
+        { "path": "../../libs/runner-bun" },
+        { "path": "../../libs/auth-core" },
+        { "path": "../../libs/cms-shared" }
     ]
 }

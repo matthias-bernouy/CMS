@@ -22,29 +22,7 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/auth-core": {
-      "name": "@bernouy/auth-core",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/core": "workspace:*",
-        "jose": "^6.2.1",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/cms-blocs": {
-      "name": "@bernouy/cms-blocs",
-      "version": "0.1.2",
-      "devDependencies": {
-        "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
-    "packages/cms-cli": {
+    "packages/apps/cms-cli": {
       "name": "@bernouy/cms-cli",
       "version": "0.1.0",
       "bin": {
@@ -61,7 +39,7 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/cms-control": {
+    "packages/apps/cms-control": {
       "name": "@bernouy/cms-control",
       "version": "0.1.0",
       "dependencies": {
@@ -83,7 +61,7 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/cms-delivery": {
+    "packages/apps/cms-delivery": {
       "name": "@bernouy/cms-delivery",
       "version": "0.1.0",
       "dependencies": {
@@ -96,7 +74,29 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/cms-gateway": {
+    "packages/libs/auth-core": {
+      "name": "@bernouy/auth-core",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/core": "workspace:*",
+        "jose": "^6.2.1",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/libs/cms-blocs": {
+      "name": "@bernouy/cms-blocs",
+      "version": "0.1.2",
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/libs/cms-gateway": {
       "name": "@bernouy/cms-gateway",
       "version": "0.1.0",
       "peerDependencies": {
@@ -104,7 +104,7 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/cms-shared": {
+    "packages/libs/cms-shared": {
       "name": "@bernouy/cms-shared",
       "version": "0.1.0",
       "dependencies": {
@@ -116,11 +116,11 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/core": {
+    "packages/libs/core": {
       "name": "@bernouy/core",
       "version": "0.1.0",
     },
-    "packages/runner-bun": {
+    "packages/libs/runner-bun": {
       "name": "@bernouy/runner-bun",
       "version": "0.1.0",
       "dependencies": {
@@ -129,23 +129,23 @@
     },
   },
   "packages": {
-    "@bernouy/auth-core": ["@bernouy/auth-core@workspace:packages/auth-core"],
+    "@bernouy/auth-core": ["@bernouy/auth-core@workspace:packages/libs/auth-core"],
 
-    "@bernouy/cms-blocs": ["@bernouy/cms-blocs@workspace:packages/cms-blocs"],
+    "@bernouy/cms-blocs": ["@bernouy/cms-blocs@workspace:packages/libs/cms-blocs"],
 
-    "@bernouy/cms-cli": ["@bernouy/cms-cli@workspace:packages/cms-cli"],
+    "@bernouy/cms-cli": ["@bernouy/cms-cli@workspace:packages/apps/cms-cli"],
 
-    "@bernouy/cms-control": ["@bernouy/cms-control@workspace:packages/cms-control"],
+    "@bernouy/cms-control": ["@bernouy/cms-control@workspace:packages/apps/cms-control"],
 
-    "@bernouy/cms-delivery": ["@bernouy/cms-delivery@workspace:packages/cms-delivery"],
+    "@bernouy/cms-delivery": ["@bernouy/cms-delivery@workspace:packages/apps/cms-delivery"],
 
-    "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/cms-gateway"],
+    "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/libs/cms-gateway"],
 
-    "@bernouy/cms-shared": ["@bernouy/cms-shared@workspace:packages/cms-shared"],
+    "@bernouy/cms-shared": ["@bernouy/cms-shared@workspace:packages/libs/cms-shared"],
 
-    "@bernouy/core": ["@bernouy/core@workspace:packages/core"],
+    "@bernouy/core": ["@bernouy/core@workspace:packages/libs/core"],
 
-    "@bernouy/runner-bun": ["@bernouy/runner-bun@workspace:packages/runner-bun"],
+    "@bernouy/runner-bun": ["@bernouy/runner-bun@workspace:packages/libs/runner-bun"],
 
     "@happy-dom/global-registrator": ["@happy-dom/global-registrator@20.9.0", "", { "dependencies": { "@types/node": ">=20.0.0", "happy-dom": "^20.9.0" } }, "sha512-lBW6/m5BIFl3pMuWPNN0lIOYw9LMCmPfix53ExS3FBi4E+NELEljQ3xH6aAV9IYiQRfn9YIIgzzMrD0vIcD7tw=="],
 

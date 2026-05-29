@@ -1,5 +1,5 @@
 (() => {
-  // ../cms-blocs/dist/index.js
+  // ../../libs/cms-blocs/dist/index.js
   class o extends HTMLElement {
     _rawStyles = "";
     _styles = null;
@@ -8471,7 +8471,7 @@ p9r-tag:hover {
     }
   }
 
-  // ../cms-blocs/dist/base.js
+  // ../../libs/cms-blocs/dist/base.js
   class z2 extends HTMLElement {
     _rawStyles = "";
     _styles = null;
@@ -9228,7 +9228,7 @@ p9r-tag:hover {
       group: props.group
     });
   }
-  // ../cms-shared/src/constants/editorAttributes.ts
+  // ../../libs/cms-shared/src/constants/editorAttributes.ts
   var P9R_ATTR = {
     ACTION: {
       DISABLE_DELETE: "p9r-action-disable-delete",
@@ -10280,7 +10280,7 @@ ${followMessage}`)) {
     customElements.define("cms-list-filter", CmsListFilter);
   }
 
-  // ../auth-core/src/components/LoginMethods/LoginMethods.ts
+  // ../../libs/auth-core/src/components/LoginMethods/LoginMethods.ts
   class CmsLoginMethods extends HTMLElement {
     async connectedCallback() {
       const base = this.getAttribute("base") ?? "";
@@ -12888,7 +12888,7 @@ ${followMessage}`)) {
     customElements.define("p9r-svg-sync", SvgSync);
   }
 
-  // ../cms-blocs/dist/blocs/horizontal-action-group.mjs
+  // ../../libs/cms-blocs/dist/blocs/horizontal-action-group.mjs
   var l = `<div class="actions" role="toolbar" part="toolbar">
     <slot></slot>
 </div>

@@ -2,7 +2,8 @@
     "name": "@bernouy/cms-core",
     "private": true,
     "workspaces": [
-        "packages/*"
+        "packages/libs/*",
+        "packages/apps/*"
     ],
     "scripts": {
         "build": "bun run build.ts",

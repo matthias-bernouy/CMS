@@ -10,8 +10,8 @@
 //      bundle, depends on cms-blocs/dist) + emits its own d.ts.
 //
 // Other packages (core, runner-bun, auth-core, cms-shared, cms-delivery,
-// cms-cli) ship sources directly via their `exports` field — no bundle
-// step needed.
+// cms-gateway, cms-cli) ship sources directly via their `exports` field — no
+// bundle step needed.
 
 async function run(cmd: string[], cwd?: string): Promise<void> {
     const proc = Bun.spawn(cmd, { stdout: "inherit", stderr: "inherit", cwd });
@@ -19,8 +19,8 @@ async function run(cmd: string[], cwd?: string): Promise<void> {
     if (exit !== 0) throw new Error(`${cmd.join(" ")} (cwd=${cwd ?? "."}) exited with ${exit}`);
 }
 
-await run(["bun", "run", "build"], "packages/cms-blocs");
+await run(["bun", "run", "build"], "packages/libs/cms-blocs");
 await run(["bunx", "tsc", "--build"]);
-await run(["bun", "run", "build"], "packages/cms-control");
+await run(["bun", "run", "build"], "packages/apps/cms-control");
 
 console.log("✅ workspace build done");

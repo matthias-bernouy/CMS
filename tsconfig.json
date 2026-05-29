@@ -1,14 +1,14 @@
 {
     "files": [],
     "references": [
-        { "path": "packages/core" },
-        { "path": "packages/runner-bun" },
-        { "path": "packages/auth-core" },
-        { "path": "packages/cms-shared" },
-        { "path": "packages/cms-gateway" },
-        { "path": "packages/cms-delivery" },
-        { "path": "packages/cms-blocs" },
-        { "path": "packages/cms-control" },
-        { "path": "packages/cms-cli" }
+        { "path": "packages/libs/core" },
+        { "path": "packages/libs/runner-bun" },
+        { "path": "packages/libs/auth-core" },
+        { "path": "packages/libs/cms-shared" },
+        { "path": "packages/libs/cms-gateway" },
+        { "path": "packages/libs/cms-blocs" },
+        { "path": "packages/apps/cms-delivery" },
+        { "path": "packages/apps/cms-control" },
+        { "path": "packages/apps/cms-cli" }
     ]
 }
