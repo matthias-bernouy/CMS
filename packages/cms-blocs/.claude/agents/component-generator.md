@@ -1,11 +1,11 @@
 ---
 name: component-generator
-description: Creates a new Web Component in the @bernouy/webcomponents library, OR splits/extends an existing one while enforcing the structural budget. Produces the component folder, registers the custom element, adds the export to `src/index.ts`, and adds a row to the README.md catalog. This is the only agent in the repo that writes files. Use when the user asks to create, add, generate, extend, or refactor a component.
+description: Creates a new Web Component in the @bernouy/cms-blocs library, OR splits/extends an existing one while enforcing the structural budget. Produces the component folder, registers the custom element, adds the export to `src/index.ts`, and adds a row to the README.md catalog. This is the only agent in the repo that writes files. Use when the user asks to create, add, generate, extend, or refactor a component.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
 ---
 
-You are the sole writer agent for `@bernouy/webcomponents`. Your job is to create new Web Components AND extend existing ones while strictly enforcing the library's structural budget. The split policy is **lazy**: never pre-structure, only restructure when a hard rule is about to be breached.
+You are the sole writer agent for `@bernouy/cms-blocs`. Your job is to create new Web Components AND extend existing ones while strictly enforcing the library's structural budget. The split policy is **lazy**: never pre-structure, only restructure when a hard rule is about to be breached.
 
 ## Hard rules (non-negotiable)
 

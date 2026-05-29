@@ -198,7 +198,7 @@ Then drive attribute-based variants by reassigning the locals, never by rewritin
 
 ### Global design tokens
 
-These are declared via `@property` in `src/endpoints/admin-css/system/colors.css` and are available everywhere (they pierce the Shadow DOM because custom properties are inherited).
+These are declared in `@bernouy/cms-blocs` (`src/assets/default.css`, served at `<basePath>/resources/css/cms-blocs.css`) and are available everywhere (they pierce the Shadow DOM because custom properties are inherited).
 
 **Colors** — every family exposes `base`, `muted`, and `contrasted`:
 

@@ -1,6 +1,6 @@
-# Convention de Structure : Architecture "Socle"
+# Convention de Structure : Architecture en couches
 
-Cette architecture repose sur le package `@bernouy/socle`. L'objectif est une séparation stricte entre les contrats (interfaces), la logique (core) et l'infrastructure (default-implementation).
+Cette architecture s'applique à chaque package du monorepo (`@bernouy/core`, `@bernouy/cms-shared`, `@bernouy/cms-control`, …) et repose sur les contrats de `@bernouy/core`. L'objectif est une séparation stricte entre les contrats (interfaces), la logique (core) et l'infrastructure (default-implementation).
 
 ## 1. Responsabilités des Dossiers (Couches)
 
@@ -18,13 +18,13 @@ Cette architecture repose sur le package `@bernouy/socle`. L'objectif est une s�
     - *Usage :* C'est le point d'entrée unique pour les autres dossiers pour récupérer une instance (ex: `export const auth = new MongoAuth()`).
 
 ### 🌐 Entrées / Sorties (I/O)
-- **api/** : Routage automatique par fichiers via `@bernouy/socle`.
+- **api/** : Routage automatique par fichiers via `serveApiFolder` (`@bernouy/core`).
     - Format : `nom.methode.ts` (ex: `media.post.ts`).
     - *Règle :* Pas de logique métier ici, on appelle uniquement les instances de `exports/`.
-- **static/** : Rendu via `renderStaticFolder`.
+- **static/** : Rendu via `serveStaticFolder` (`@bernouy/core`).
     - Fichiers `.html` : Injectés dans `{{CONTENT}}`.
     - *Lien :* Utilise obligatoirement `{{BASE_PATH}}` pour les assets.
-- **components/** : Agrégats ou composants spécifiques basés sur `@bernouy/webcomponents`.
+- **components/** : Agrégats ou custom elements spécifiques basés sur `@bernouy/cms-blocs`.
 
 ---
 
@@ -32,14 +32,14 @@ Cette architecture repose sur le package `@bernouy/socle`. L'objectif est une s�
 
 1. **Le sens de la flèche :** `api/` -> `exports/` -> `core/` -> `interfaces/`.
 2. **L'instanciation interdite :** On ne doit jamais voir de `new MaClasse()` en dehors de `exports/` ou de `default-implementation/`. 
-3. **Double Routage :** Si un endpoint est défini à la fois en fichier (`api/user.get.ts`) et en dossier (`api/user/user.get.ts`), c'est une erreur critique. Privilégier systématiquement la structure **[à définir : à plat ou en dossier ?]**.
+3. **Double Routage :** Si deux fichiers collapsent vers la même route (ex: `api/user.get.ts` à plat ET `api/user/user.get.ts` qui collapse aussi vers `/user`), `serveApiFolder` échoue au boot (fail-fast). Choisir UNE des deux formes : à plat tant que la ressource tient en un fichier, en dossier dès qu'elle a plusieurs endpoints ou des helpers internes (`_*.ts`).
 
 ---
 
-## 3. Conventions Spécifiques @bernouy/socle
+## 3. Conventions Spécifiques
 
 - Tout ajout d'un nouveau service doit commencer par la création de son interface dans `interfaces/`.
-- Chaque endpoint dans `api/` doit exporter une fonction compatible avec le handler de `renderApiFolder`.
+- Chaque endpoint dans `api/` doit exporter (en `default`) une fonction compatible avec le handler de `serveApiFolder` : `(req, system) => Response | Promise<Response>`.
 
 ## 4. Limites
 

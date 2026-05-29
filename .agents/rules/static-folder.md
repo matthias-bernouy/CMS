@@ -2,7 +2,7 @@
 
 ## Rôle
 
-Le dossier `static/` contient le rendu côté serveur de pages HTML, servi par `serveStaticFolder(runner, template, path)` (cf. `src/serve/serveStaticFolder/`).
+Le dossier `static/` contient le rendu côté serveur de pages HTML, servi par `serveStaticFolder(runner, template, path)` (cf. `@bernouy/core`, `packages/core/src/serve/serveStaticFolder/`).
 
 Chaque fichier `.html` du dossier devient une route. Les fichiers non-`.html` (images, fonts, etc.) sont servis tels quels, à leur chemin relatif.
 
@@ -29,10 +29,10 @@ Le préfixe d'URL dépend du `runner` passé à `serveStaticFolder` (par exemple
 
 Chaque `.html` ne contient que le fragment injecté dans `{{CONTENT}}` — pas de `<html>`, `<head>` ou `<body>`, ces balises viennent du template.
 
-Pas de JS ni de CSS dans les fichiers de `static/`. Le styling et l'interactivité passent par les composants de `components/` ou par des assets externes référencés via `{{BASE_PATH}}`.
+Pas de JS ni de CSS dans les fichiers de `static/`. Le styling et l'interactivité passent par les custom elements ou par des assets externes référencés via `{{BASE_PATH}}`.
 
-## Webcomponents
+## Composants UI (cms-blocs)
 
-`@bernouy/webcomponents` fournit des composants visuels et des composants logiques (`<w13c-fetch>`, `<w13c-form>`, …) qui couvrent fetch et soumission de formulaires de manière déclarative, sans JS.
+`@bernouy/cms-blocs` fournit les custom elements visuels (`<p9r-*>`) et logiques (`<w13c-form>`, `<w13c-fetch>`) qui couvrent la soumission de formulaire et le fetch de manière déclarative, sans JS de page. Côté CMS admin, `@bernouy/cms-control` ajoute en plus ses propres tags `<cms-*>` (`<cms-form>`, `<cms-fetch>`, `<cms-validate>`, …).
 
-Voir la documentation de `@bernouy/webcomponents` pour la liste complète.
+Voir la documentation de `@bernouy/cms-blocs` (README + `conventions/`) pour la liste complète.
