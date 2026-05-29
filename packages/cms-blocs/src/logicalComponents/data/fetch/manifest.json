@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./FetchComponent.ts",
+    "default-tag": "base-fetch",
+    "meta": {
+        "title": "Fetch",
+        "description": "Reusable Fetch component.",
+        "categories": [
+            "Logical"
+        ]
+    }
+}

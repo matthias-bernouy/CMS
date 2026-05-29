@@ -1,14 +1,15 @@
 /**
  * Walk HTML content and collect every custom-element reference. Reserved
- * system prefixes (`w13c-*`, `cms-*`) are skipped — they ship with the
- * runtime, not the bloc registry. `<w13c-snippet identifier="X">` is the
+ * system prefixes (`p9r-*`, `w13c-*`, `be5-*`, `cms-*`) are skipped —
+ * they ship with the runtime, not the bloc registry.
+ * `<w13c-snippet identifier="X">` is the
  * one exception: we record the identifier as a snippet ref.
  *
  * Pure utility — no I/O. Used by the CLI's pre-push check and the server's
  * write-time gate so both end up rejecting the same set of references.
  */
 
-const RESERVED_BLOC_PREFIXES = ["w13c-", "cms-"];
+const RESERVED_BLOC_PREFIXES = ["p9r-", "w13c-", "be5-", "cms-"];
 const SNIPPET_TAG            = "w13c-snippet";
 
 const TAG_RE = /<([a-z][a-z0-9]*-[a-z0-9-]+)\b([^>]*)/gi;

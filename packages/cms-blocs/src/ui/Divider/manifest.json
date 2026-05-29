@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Divider.ts",
+    "default-tag": "base-divider",
+    "meta": {
+        "title": "Divider",
+        "description": "Reusable Divider component.",
+        "categories": [
+            "Divider"
+        ]
+    }
+}

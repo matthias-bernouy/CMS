@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./P9rInput.ts",
+    "default-tag": "base-input",
+    "meta": {
+        "title": "Input",
+        "description": "Reusable Input component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

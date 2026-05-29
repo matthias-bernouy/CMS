@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Tag.ts",
+    "default-tag": "base-tag",
+    "meta": {
+        "title": "Tag",
+        "description": "Reusable Tag component.",
+        "categories": [
+            "Tag"
+        ]
+    }
+}

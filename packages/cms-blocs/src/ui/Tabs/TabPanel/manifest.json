@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./TabPanel.ts",
+    "default-tag": "base-tab-panel",
+    "meta": {
+        "title": "Tab Panel",
+        "description": "Reusable Tab Panel component.",
+        "categories": [
+            "Tabs"
+        ]
+    }
+}

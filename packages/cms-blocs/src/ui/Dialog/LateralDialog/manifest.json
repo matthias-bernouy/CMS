@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./LateralDialog.ts",
+    "default-tag": "base-lateral-dialog",
+    "meta": {
+        "title": "Lateral Dialog",
+        "description": "Reusable Lateral Dialog component.",
+        "categories": [
+            "Dialog"
+        ]
+    }
+}

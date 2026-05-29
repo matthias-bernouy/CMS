@@ -55,4 +55,14 @@ describe("scanDevBlocs", () => {
         // parseManifest swallows the throw and warns; the bloc is dropped.
         expect(blocs).toHaveLength(0);
     });
+
+    test("continues scanning nested bloc folders after a parent manifest", async () => {
+        const root = makeBlocsRoot({
+            "ui/accordion": { "manifest.json": baseManifest("base-accordion"), "Bloc.ts": "" },
+            "ui/accordion/item": { "manifest.json": baseManifest("base-accordion-item"), "Bloc.ts": "" },
+        });
+        const blocs = await scanDevBlocs(root, { quiet: true });
+        const tags = blocs.map(b => b.tag).sort();
+        expect(tags).toEqual(["base-accordion", "base-accordion-item"]);
+    });
 });

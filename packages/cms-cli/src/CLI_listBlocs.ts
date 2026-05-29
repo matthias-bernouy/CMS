@@ -102,7 +102,7 @@ function printHuman(blocs: RemoteBlocMeta[], adminBase: URL) {
         console.log("");
     }
 
-    console.log("Reserved prefixes: `w13c-*` and `p9r-*` are reserved by the Cms system.");
+    console.log("Reserved prefixes: `p9r-*`, `w13c-*` and `be5-*` are reserved by the Cms system.");
     console.log("Do not create blocs using those prefixes.");
 }
 

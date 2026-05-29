@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Avatar.ts",
+    "default-tag": "base-avatar",
+    "meta": {
+        "title": "Avatar",
+        "description": "Reusable Avatar component.",
+        "categories": [
+            "Avatar"
+        ]
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Spinner.ts",
+    "default-tag": "base-spinner",
+    "meta": {
+        "title": "Spinner",
+        "description": "Reusable Spinner component.",
+        "categories": [
+            "Spinner"
+        ]
+    }
+}

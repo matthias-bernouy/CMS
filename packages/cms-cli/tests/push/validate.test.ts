@@ -11,9 +11,21 @@ describe("extractRefs", () => {
         expect(snippets.size).toBe(0);
     });
 
-    test("skips reserved system prefixes (w13c-, cms-)", () => {
-        const { blocs } = extractRefs("<w13c-fixed-admin-layout></w13c-fixed-admin-layout><cms-fetch></cms-fetch><cs-stat-tile></cs-stat-tile>");
-        expect(blocs).toEqual(new Set(["cs-stat-tile"]));
+    test("skips system prefixes but keeps base blocs as normal refs", () => {
+        const { blocs } = extractRefs(
+            `<p9r-input></p9r-input>
+             <w13c-fixed-admin-layout></w13c-fixed-admin-layout>
+             <be5-editor></be5-editor>
+             <cms-fetch></cms-fetch>
+             <base-card></base-card>
+             <cs-stat-tile></cs-stat-tile>`,
+        );
+        expect(blocs).toEqual(new Set(["base-card", "cs-stat-tile"]));
+    });
+
+    test("captures base-prefixed tags as bloc refs", () => {
+        const { blocs } = extractRefs("<base-card></base-card>");
+        expect(blocs).toEqual(new Set(["base-card"]));
     });
 
     test("captures w13c-snippet identifier as a snippet ref, not a bloc", () => {

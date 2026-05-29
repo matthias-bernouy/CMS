@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Modal.ts",
+    "default-tag": "base-modal",
+    "meta": {
+        "title": "Modal",
+        "description": "Reusable Modal component.",
+        "categories": [
+            "Dialog"
+        ]
+    }
+}

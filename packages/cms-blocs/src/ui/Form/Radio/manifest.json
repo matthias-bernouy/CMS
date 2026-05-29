@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Radio.ts",
+    "default-tag": "base-radio",
+    "meta": {
+        "title": "Radio",
+        "description": "Reusable Radio component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

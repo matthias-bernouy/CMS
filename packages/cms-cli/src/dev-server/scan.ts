@@ -61,7 +61,6 @@ async function walk(dir: string, results: DevBloc[], options: ScanOptions) {
             const bloc = toDevBloc(dir, manifest, options);
             if (bloc) results.push(bloc);
         }
-        return;
     }
 
     await Promise.all(entries.map(async (entry) => {

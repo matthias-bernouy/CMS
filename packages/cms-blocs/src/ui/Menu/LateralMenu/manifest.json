@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./LateralMenu.ts",
+    "default-tag": "base-lateral-menu",
+    "meta": {
+        "title": "Lateral Menu",
+        "description": "Reusable Lateral Menu component.",
+        "categories": [
+            "Menu"
+        ]
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Progress.ts",
+    "default-tag": "base-progress",
+    "meta": {
+        "title": "Progress",
+        "description": "Reusable Progress component.",
+        "categories": [
+            "Progress"
+        ]
+    }
+}

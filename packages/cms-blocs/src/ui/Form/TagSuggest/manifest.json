@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./TagSuggest.ts",
+    "default-tag": "base-tag-suggest",
+    "meta": {
+        "title": "Tag Suggest",
+        "description": "Reusable Tag Suggest component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

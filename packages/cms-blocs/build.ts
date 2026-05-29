@@ -29,7 +29,7 @@ const blocs: Array<[string, string]> = [
     ["p9r-input", "./src/ui/Form/P9rInput/P9rInput.ts"],
     ["p9r-range", "./src/ui/Form/P9rRange/P9rRange.ts"],
     ["p9r-select", "./src/ui/Form/P9rSelect/P9rSelect.ts"],
-    ["p9r-sizes-select", "./src/ui/Form/P9rSizesSelect.ts"],
+    ["p9r-sizes-select", "./src/ui/Form/P9rSizesSelect/P9rSizesSelect.ts"],
     ["radio", "./src/ui/Form/Radio/Radio.ts"],
     ["radio-group", "./src/ui/Form/RadioGroup/RadioGroup.ts"],
     ["segmented-switch", "./src/ui/Form/SegmentedSwitch/SegmentedSwitch.ts"],

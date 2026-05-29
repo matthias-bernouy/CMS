@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Table.ts",
+    "default-tag": "base-table",
+    "meta": {
+        "title": "Table",
+        "description": "Reusable Table component.",
+        "categories": [
+            "Table"
+        ]
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./IconButton.ts",
+    "default-tag": "base-icon-button",
+    "meta": {
+        "title": "Icon Button",
+        "description": "Reusable Icon Button component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

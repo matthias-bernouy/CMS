@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Button.ts",
+    "default-tag": "base-button",
+    "meta": {
+        "title": "Button",
+        "description": "Reusable Button component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

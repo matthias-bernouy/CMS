@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./FormDialog.ts",
+    "default-tag": "base-form-dialog",
+    "meta": {
+        "title": "Form Dialog",
+        "description": "Reusable Form Dialog component.",
+        "categories": [
+            "Dialog"
+        ]
+    }
+}

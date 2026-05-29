@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Skeleton.ts",
+    "default-tag": "base-skeleton",
+    "meta": {
+        "title": "Skeleton",
+        "description": "Reusable Skeleton component.",
+        "categories": [
+            "Skeleton"
+        ]
+    }
+}

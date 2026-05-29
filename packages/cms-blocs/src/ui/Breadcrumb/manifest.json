@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Breadcrumb.ts",
+    "default-tag": "base-breadcrumb",
+    "meta": {
+        "title": "Breadcrumb",
+        "description": "Reusable Breadcrumb component.",
+        "categories": [
+            "Breadcrumb"
+        ]
+    }
+}

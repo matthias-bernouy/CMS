@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./P9rRange.ts",
+    "default-tag": "base-range",
+    "meta": {
+        "title": "Range",
+        "description": "Reusable Range component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

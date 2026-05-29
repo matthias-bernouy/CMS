@@ -25,7 +25,7 @@ export type ValidateBlocResult = {
 };
 
 /** Reserved custom-element prefixes — system-only, never bloc tags. */
-const RESERVED_TAG_PREFIXES = ["w13c-", "p9r-"] as const;
+const RESERVED_TAG_PREFIXES = ["p9r-", "w13c-", "be5-"] as const;
 
 /**
  * Bloc-specific tag check: format-valid custom-element name AND not in a

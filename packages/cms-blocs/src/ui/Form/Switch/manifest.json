@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Switch.ts",
+    "default-tag": "base-switch",
+    "meta": {
+        "title": "Switch",
+        "description": "Reusable Switch component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

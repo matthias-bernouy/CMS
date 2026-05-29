@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Textarea.ts",
+    "default-tag": "base-textarea",
+    "meta": {
+        "title": "Textarea",
+        "description": "Reusable Textarea component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

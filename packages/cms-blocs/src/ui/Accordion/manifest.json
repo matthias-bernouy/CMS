@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Accordion.ts",
+    "default-tag": "base-accordion",
+    "meta": {
+        "title": "Accordion",
+        "description": "Reusable Accordion component.",
+        "categories": [
+            "Accordion"
+        ]
+    }
+}

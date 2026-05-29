@@ -6,6 +6,7 @@ describe("validateBlocTag", () => {
         ["my-card"],
         ["a-b"],
         ["app-v2"],
+        ["base-card"],
         ["super-cool-bloc"],
     ])("accepts %p", (tag) => {
         expect(validateBlocTag(tag)).toBeNull();
@@ -26,6 +27,8 @@ describe("validateBlocTag", () => {
         ["w13c-foo"],
         ["p9r-input"],
         ["p9r-anything"],
+        ["be5-card"],
+        ["be5-anything"],
     ])("rejects reserved prefix %p", (tag) => {
         expect(validateBlocTag(tag)).toMatch(/reserved prefix/);
     });

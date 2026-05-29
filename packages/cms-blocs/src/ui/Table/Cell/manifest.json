@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Cell.ts",
+    "default-tag": "base-table-cell",
+    "meta": {
+        "title": "Table Cell",
+        "description": "Reusable Table Cell component.",
+        "categories": [
+            "Table"
+        ]
+    }
+}

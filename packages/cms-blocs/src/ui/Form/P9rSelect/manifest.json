@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./P9rSelect.ts",
+    "default-tag": "base-select",
+    "meta": {
+        "title": "Select",
+        "description": "Reusable Select component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

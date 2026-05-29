@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Toast.ts",
+    "default-tag": "base-toast",
+    "meta": {
+        "title": "Toast",
+        "description": "Reusable Toast component.",
+        "categories": [
+            "Toast"
+        ]
+    }
+}

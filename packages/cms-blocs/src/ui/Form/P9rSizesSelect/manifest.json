@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./P9rSizesSelect.ts",
+    "default-tag": "base-sizes-select",
+    "meta": {
+        "title": "Sizes Select",
+        "description": "Reusable Sizes Select component.",
+        "categories": [
+            "Form"
+        ]
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Stepper.ts",
+    "default-tag": "base-stepper",
+    "meta": {
+        "title": "Stepper",
+        "description": "Reusable Stepper component.",
+        "categories": [
+            "Stepper"
+        ]
+    }
+}

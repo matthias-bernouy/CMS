@@ -39,7 +39,7 @@ export { InputFile } from "./ui/Form/InputFile/InputFile";
 export { P9rInput } from "./ui/Form/P9rInput/P9rInput";
 export { P9rRange } from "./ui/Form/P9rRange/P9rRange";
 export { P9rSelect } from "./ui/Form/P9rSelect/P9rSelect";
-export { P9rSizesSelect } from "./ui/Form/P9rSizesSelect";
+export { P9rSizesSelect } from "./ui/Form/P9rSizesSelect/P9rSizesSelect";
 export { Radio } from "./ui/Form/Radio/Radio";
 export { RadioGroup } from "./ui/Form/RadioGroup/RadioGroup";
 export { SegmentedSwitch } from "./ui/Form/SegmentedSwitch/SegmentedSwitch";

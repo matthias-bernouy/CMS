@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Form.ts",
+    "default-tag": "base-form",
+    "meta": {
+        "title": "Form",
+        "description": "Reusable Form component.",
+        "categories": [
+            "Logical"
+        ]
+    }
+}

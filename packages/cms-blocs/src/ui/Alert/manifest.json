@@ -1,0 +1,12 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Alert.ts",
+    "default-tag": "base-alert",
+    "meta": {
+        "title": "Alert",
+        "description": "Reusable Alert component.",
+        "categories": [
+            "Alert"
+        ]
+    }
+}
