@@ -10,6 +10,7 @@
         "@bernouy/cms-cli": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
@@ -95,6 +96,14 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/cms-gateway": {
+      "name": "@bernouy/cms-gateway",
+      "version": "0.1.0",
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/cms-shared": {
       "name": "@bernouy/cms-shared",
       "version": "0.1.0",
@@ -129,6 +138,8 @@
     "@bernouy/cms-control": ["@bernouy/cms-control@workspace:packages/cms-control"],
 
     "@bernouy/cms-delivery": ["@bernouy/cms-delivery@workspace:packages/cms-delivery"],
+
+    "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/cms-gateway"],
 
     "@bernouy/cms-shared": ["@bernouy/cms-shared@workspace:packages/cms-shared"],
 

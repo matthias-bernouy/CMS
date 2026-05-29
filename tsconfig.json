@@ -5,6 +5,7 @@
         { "path": "packages/runner-bun" },
         { "path": "packages/auth-core" },
         { "path": "packages/cms-shared" },
+        { "path": "packages/cms-gateway" },
         { "path": "packages/cms-delivery" },
         { "path": "packages/cms-blocs" },
         { "path": "packages/cms-control" },

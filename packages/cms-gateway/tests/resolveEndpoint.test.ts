@@ -1,0 +1,42 @@
+import { describe, test, expect } from "bun:test";
+import { resolveEndpoint } from "cms-gateway/core/resolveEndpoint";
+import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/GatewayRepository/memory";
+import type { Provider } from "cms-gateway/interfaces/Gateway";
+
+const provider: Provider = {
+    urn: "urn:shop",
+    endpoints: [
+        { urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart", rules: [] },
+    ],
+};
+
+async function seededRepo() {
+    const r = new InMemoryGatewayRepository();
+    await r.createProvider(provider);
+    return r;
+}
+
+describe("resolveEndpoint", () => {
+    test("resolves a declared endpoint", async () => {
+        const res = await resolveEndpoint(await seededRepo(), ["shop", "getCart"], "GET");
+        expect(res.ok).toBe(true);
+        if (res.ok) expect(res.endpoint.urn).toBe("urn:shop:getCart");
+    });
+    test("method comparison is case-insensitive", async () => {
+        const res = await resolveEndpoint(await seededRepo(), ["shop", "getCart"], "get");
+        expect(res.ok).toBe(true);
+    });
+    test("unknown endpoint → not_found", async () => {
+        expect(await resolveEndpoint(await seededRepo(), ["shop", "nope"], "GET"))
+            .toEqual({ ok: false, reason: "not_found" });
+    });
+    test("wrong segment count → not_found", async () => {
+        const repo = await seededRepo();
+        expect(await resolveEndpoint(repo, ["shop"], "GET")).toEqual({ ok: false, reason: "not_found" });
+        expect(await resolveEndpoint(repo, ["shop", "getCart", "x"], "GET")).toEqual({ ok: false, reason: "not_found" });
+    });
+    test("wrong method → method_not_allowed", async () => {
+        expect(await resolveEndpoint(await seededRepo(), ["shop", "getCart"], "POST"))
+            .toEqual({ ok: false, reason: "method_not_allowed" });
+    });
+});
