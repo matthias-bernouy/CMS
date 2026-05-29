@@ -74,7 +74,3 @@ export class Modal extends Component {
     hide() { if (this.hasAttribute('open')) this.removeAttribute('open'); }
     toggle() { if (this.open) this.hide(); else this.show(); }
 }
-
-if (!customElements.get('p9r-modal')) {
-    customElements.define('p9r-modal', Modal);
-}

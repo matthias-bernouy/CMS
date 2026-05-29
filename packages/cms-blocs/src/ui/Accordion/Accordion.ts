@@ -3,8 +3,6 @@ import { Component } from "@bernouy/cms-blocs/base";
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
 
-import "./AccordionItem/AccordionItem";
-
 export class Accordion extends Component {
 
     constructor() {
@@ -34,8 +32,4 @@ export class Accordion extends Component {
             if (item !== target) item.removeAttribute('open');
         }
     };
-}
-
-if (!customElements.get("p9r-accordion")) {
-    customElements.define("p9r-accordion", Accordion);
 }

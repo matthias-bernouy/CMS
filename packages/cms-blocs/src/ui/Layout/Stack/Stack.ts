@@ -8,7 +8,3 @@ export class Stack extends Component {
         super({ css, template: template as unknown as string });
     }
 }
-
-if (!customElements.get('p9r-stack')) {
-    customElements.define('p9r-stack', Stack);
-}

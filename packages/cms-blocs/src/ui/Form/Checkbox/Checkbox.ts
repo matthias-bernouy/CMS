@@ -79,7 +79,3 @@ export class Checkbox extends Component {
 
     override click() { this._input?.click(); }
 }
-
-if (!customElements.get("w13c-checkbox")) {
-    customElements.define("w13c-checkbox", Checkbox);
-}

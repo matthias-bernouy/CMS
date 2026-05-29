@@ -54,7 +54,3 @@ export class TableHeaderCell extends Component {
     private _onWindowClick = () => closeFilterPopover(this._filterBtn, this._filterPopover);
     private _stopPropagation = (e: Event) => e.stopPropagation();
 }
-
-if (!customElements.get("p9r-header-cell")) {
-    customElements.define("p9r-header-cell", TableHeaderCell);
-}

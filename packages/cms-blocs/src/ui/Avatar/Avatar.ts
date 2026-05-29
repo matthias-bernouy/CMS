@@ -75,7 +75,3 @@ export class Avatar extends Component {
         if (this._img) this._img.hidden = true;
     };
 }
-
-if (!customElements.get("p9r-avatar")) {
-    customElements.define("p9r-avatar", Avatar);
-}

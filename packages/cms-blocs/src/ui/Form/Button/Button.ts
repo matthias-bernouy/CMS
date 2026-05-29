@@ -72,7 +72,3 @@ export class Button extends Component {
         else this.removeAttribute('disabled');
     }
 }
-
-if (!customElements.get("p9r-button")) {
-    customElements.define("p9r-button", Button);
-}

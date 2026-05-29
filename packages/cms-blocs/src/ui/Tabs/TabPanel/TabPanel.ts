@@ -12,7 +12,3 @@ export class TabPanel extends Component {
         });
     }
 }
-
-if (!customElements.get("p9r-tab-panel")) {
-    customElements.define("p9r-tab-panel", TabPanel);
-}

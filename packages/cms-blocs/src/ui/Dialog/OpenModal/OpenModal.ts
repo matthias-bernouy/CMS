@@ -48,7 +48,3 @@ export class OpenModal extends Component {
         else this.removeAttribute('modal-target');
     }
 }
-
-if (!customElements.get('p9r-open-modal')) {
-    customElements.define('p9r-open-modal', OpenModal);
-}

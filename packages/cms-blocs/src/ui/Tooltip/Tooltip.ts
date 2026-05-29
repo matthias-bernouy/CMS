@@ -67,7 +67,3 @@ export class Tooltip extends Component {
         }, 80);
     };
 }
-
-if (!customElements.get("p9r-tooltip")) {
-    customElements.define("p9r-tooltip", Tooltip);
-}

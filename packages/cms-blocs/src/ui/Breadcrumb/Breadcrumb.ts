@@ -3,8 +3,6 @@ import { Component } from "@bernouy/cms-blocs/base";
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
 
-import "./BreadcrumbItem/BreadcrumbItem";
-
 export class Breadcrumb extends Component {
 
     static get observedAttributes() {
@@ -37,8 +35,4 @@ export class Breadcrumb extends Component {
         const last = items[items.length - 1];
         if (last && !last.hasAttribute('current')) last.setAttribute('current', '');
     }
-}
-
-if (!customElements.get("p9r-breadcrumb")) {
-    customElements.define("p9r-breadcrumb", Breadcrumb);
 }

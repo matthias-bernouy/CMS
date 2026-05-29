@@ -82,7 +82,3 @@ export class SegmentedSwitch extends Component {
     private _onSlotChange = () => syncOptions(this, this._slot);
     private _onKey = (e: KeyboardEvent) => handleKeydown(this, this._slot, e);
 }
-
-if (!customElements.get("p9r-segmented-switch")) {
-    customElements.define("p9r-segmented-switch", SegmentedSwitch);
-}

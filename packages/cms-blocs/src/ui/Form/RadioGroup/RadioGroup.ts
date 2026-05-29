@@ -72,7 +72,3 @@ export class RadioGroup extends Component {
     private _onChange = (e: Event) => handleRadioChange(this, e);
     private _onKey = (e: KeyboardEvent) => handleKeydown(this, this._slot, e);
 }
-
-if (!customElements.get("p9r-radio-group")) {
-    customElements.define("p9r-radio-group", RadioGroup);
-}

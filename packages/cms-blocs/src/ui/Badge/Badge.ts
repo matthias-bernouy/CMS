@@ -12,7 +12,3 @@ export class Badge extends Component {
         });
     }
 }
-
-if (!customElements.get("p9r-badge")) {
-    customElements.define("p9r-badge", Badge);
-}

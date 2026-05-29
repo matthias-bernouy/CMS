@@ -92,7 +92,3 @@ export class Radio extends Component {
     get value() { return this.getAttribute('value') ?? ''; }
     set value(v: string) { this.setAttribute('value', v); }
 }
-
-if (!customElements.get("p9r-radio")) {
-    customElements.define("p9r-radio", Radio);
-}

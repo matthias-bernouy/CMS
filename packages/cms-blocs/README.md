@@ -16,37 +16,33 @@ bun run build
 
 Produces:
 
-- `dist/ui.js` — IIFE bundle with all components, minified. Drop into a page with a `<script>` tag; custom elements register themselves on load.
-- `dist/blocs/<name>.js` — one minified IIFE per component, for consumers who only need a single bloc (e.g. `dist/blocs/button.js`, `dist/blocs/segmented-switch.js`). Each file self-registers its custom element.
+- `dist/index.js` — ESM entry exporting every component class. It does not register custom elements.
+- `dist/blocs/<name>.mjs` — one ESM entry per component for consumers who only need a single class (e.g. `dist/blocs/button.mjs`, `dist/blocs/segmented-switch.mjs`).
 - `dist/style.css` — default stylesheet (`src/assets/default.css`).
 - `dist/**/*.d.ts` — TypeScript declarations (entry: `dist/index.d.ts`).
 
 ## Usage
 
-### Everything
+### Register what you use
 
-```html
-<link rel="stylesheet" href="node_modules/@bernouy/cms-blocs/dist/style.css">
-<script src="node_modules/@bernouy/cms-blocs/dist/ui.js"></script>
+`@bernouy/cms-blocs` is classes-only. Consumers choose the tag names and register them explicitly.
 
-<p9r-button variant="filled">Click me</p9r-button>
+```ts
+import { Button } from "@bernouy/cms-blocs";
+
+if (!customElements.get("p9r-button")) {
+    customElements.define("p9r-button", Button);
+}
 ```
 
 ### Single bloc
 
-Only load what you use. The stylesheet stays shared.
-
-```html
-<link rel="stylesheet" href="node_modules/@bernouy/cms-blocs/dist/style.css">
-<script src="node_modules/@bernouy/cms-blocs/dist/blocs/button.js"></script>
-
-<p9r-button variant="filled">Click me</p9r-button>
-```
-
-Or via the package subpath (bundlers):
+Only import what you use. The stylesheet stays shared.
 
 ```ts
-import "@bernouy/cms-blocs/blocs/button";
+import { Button } from "@bernouy/cms-blocs/blocs/button";
+
+customElements.define("p9r-button", Button);
 ```
 
 ## Components

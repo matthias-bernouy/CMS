@@ -72,7 +72,3 @@ export class Tag extends Component {
         else this.removeAttribute('removable');
     }
 }
-
-if (!customElements.get("p9r-tag")) {
-    customElements.define("p9r-tag", Tag);
-}

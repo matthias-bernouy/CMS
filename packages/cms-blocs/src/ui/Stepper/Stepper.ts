@@ -3,8 +3,6 @@ import { Component } from "@bernouy/cms-blocs/base";
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
 
-import "./Step/Step";
-
 export class Stepper extends Component {
 
     static get observedAttributes() {
@@ -54,8 +52,4 @@ export class Stepper extends Component {
             else                    step.setAttribute('data-state', 'pending');
         });
     }
-}
-
-if (!customElements.get("p9r-stepper")) {
-    customElements.define("p9r-stepper", Stepper);
 }

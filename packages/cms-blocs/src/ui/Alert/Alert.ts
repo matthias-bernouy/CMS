@@ -53,7 +53,3 @@ export class Alert extends Component {
         this._handleClose();
     }
 }
-
-if (!customElements.get("p9r-alert")) {
-    customElements.define("p9r-alert", Alert);
-}

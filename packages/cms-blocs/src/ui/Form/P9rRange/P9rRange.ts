@@ -86,5 +86,3 @@ export class P9rRange extends Component {
     private _onNumberChange = () => onNumberChange(this, this._slider, this._input, this._fill, this._internals);
     private _onNumberBlur = () => onNumberBlur(this._slider, this._input);
 }
-
-if (!customElements.get('p9r-range')) customElements.define('p9r-range', P9rRange);

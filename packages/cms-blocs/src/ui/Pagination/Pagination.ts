@@ -48,7 +48,3 @@ export class Pagination extends Component {
     private _onNext = () => handleNext(this, this.page, this.total);
     private _onPageClick = (e: Event) => handlePageClick(this, this.page, e);
 }
-
-if (!customElements.get("p9r-pagination")) {
-    customElements.define("p9r-pagination", Pagination);
-}

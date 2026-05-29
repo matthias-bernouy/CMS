@@ -42,7 +42,3 @@ export class BreadcrumbItem extends Component {
         else this._link.removeAttribute('aria-current');
     }
 }
-
-if (!customElements.get("p9r-breadcrumb-item")) {
-    customElements.define("p9r-breadcrumb-item", BreadcrumbItem);
-}

@@ -2,7 +2,6 @@ import { Component } from "@bernouy/cms-blocs/base";
 import template from './template.html' with { type: 'text' };
 import baseCss from './base.css' with { type: 'text' };
 import variantCss from './variant.css' with { type: 'text' };
-import "../../Tag/Tag";
 import type { Suggestion } from './types';
 import { upgradeProperty } from './compute';
 import { loadSuggestions } from './domain/api';
@@ -96,5 +95,3 @@ export class TagSuggest extends Component {
     set disabled(v: boolean) { v ? this.setAttribute('disabled', '') : this.removeAttribute('disabled'); }
     get tags() { return [...this._tags]; }
 }
-
-if (!customElements.get('p9r-tag-suggest')) customElements.define('p9r-tag-suggest', TagSuggest);

@@ -81,7 +81,3 @@ export class Progress extends Component {
         else this.removeAttribute('indeterminate');
     }
 }
-
-if (!customElements.get("p9r-progress")) {
-    customElements.define("p9r-progress", Progress);
-}

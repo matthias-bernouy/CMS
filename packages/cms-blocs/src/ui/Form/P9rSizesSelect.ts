@@ -1,5 +1,3 @@
-import "./P9rSelect/P9rSelect";
-
 /**
  * <p9r-sizes-select name="size" label="Size"></p9r-sizes-select>
  *
@@ -44,8 +42,4 @@ export class P9rSizesSelect extends HTMLElement {
     get name() { return this.getAttribute("name"); }
     get value() { return this._bufferedValue; }
     set value(v: string) { this._bufferedValue = v; }
-}
-
-if (!customElements.get("p9r-sizes-select")) {
-    customElements.define("p9r-sizes-select", P9rSizesSelect);
 }

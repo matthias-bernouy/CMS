@@ -12,7 +12,3 @@ export class Card extends Component {
         });
     }
 }
-
-if (!customElements.get("p9r-card")) {
-    customElements.define("p9r-card", Card);
-}

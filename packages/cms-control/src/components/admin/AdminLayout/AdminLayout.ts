@@ -1,7 +1,5 @@
 import { Component } from "@bernouy/cms-blocs/base";
 
-import "@bernouy/cms-blocs";
-
 import template from './template.html' with { type: 'text' };
 
 /**

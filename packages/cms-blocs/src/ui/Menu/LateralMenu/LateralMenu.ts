@@ -1,5 +1,4 @@
 import { Component } from "@bernouy/cms-blocs/base";
-import "./LateralMenuItem/LateralMenuItem";
 
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
@@ -45,8 +44,4 @@ export class LateralMenu extends Component {
     }
 
     private _onKey = (e: KeyboardEvent) => handleKeydown(this, e);
-}
-
-if (!customElements.get("w13c-lateral-menu")) {
-    customElements.define("w13c-lateral-menu", LateralMenu);
 }

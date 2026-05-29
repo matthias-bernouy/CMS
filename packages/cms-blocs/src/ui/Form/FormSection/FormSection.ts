@@ -48,7 +48,3 @@ export class FormSection extends Component {
     private _onClick = () => handleToggleClick(this);
     private _onKey = (e: KeyboardEvent) => handleToggleKey(this, e);
 }
-
-if (!customElements.get('p9r-section')) {
-    customElements.define('p9r-section', FormSection);
-}

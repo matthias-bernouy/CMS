@@ -84,5 +84,3 @@ export class Textarea extends Component {
     private _onInput = () => handleInput(this, this._textarea, this._internals, this._counter, this._count);
     private _onChange = () => handleChange(this._textarea, this._internals);
 }
-
-if (!customElements.get("p9r-textarea")) customElements.define("p9r-textarea", Textarea);

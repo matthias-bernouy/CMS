@@ -1,4 +1,114 @@
-import "@bernouy/cms-blocs"
+import {
+    Accordion,
+    AccordionItem,
+    Alert,
+    Avatar,
+    Badge,
+    Breadcrumb,
+    BreadcrumbItem,
+    Button,
+    Card,
+    Checkbox,
+    Container,
+    Divider,
+    FetchComponent as BlocsFetchComponent,
+    Form as BlocsForm,
+    FormDialog,
+    FormSection,
+    HorizontalActionGroup,
+    IconButton,
+    InputFile,
+    LateralDialog,
+    LateralMenu,
+    LateralMenuItem,
+    LeftMenuLayout,
+    Modal,
+    OpenModal,
+    P9rInput,
+    P9rRange,
+    P9rSelect,
+    P9rSizesSelect,
+    Pagination,
+    Progress,
+    Radio,
+    RadioGroup,
+    SegmentedSwitch,
+    Skeleton,
+    Spinner,
+    Stack,
+    Step,
+    Stepper,
+    Switch,
+    TabPanel,
+    Table,
+    TableCell,
+    TableHeaderCell,
+    TableRow,
+    Tabs,
+    Tag,
+    TagSuggest,
+    Textarea,
+    Toast,
+    ToastStack,
+    Tooltip,
+} from "@bernouy/cms-blocs";
+
+function define(tag: string, constructor: CustomElementConstructor) {
+    if (!customElements.get(tag)) customElements.define(tag, constructor);
+}
+
+define("p9r-accordion", Accordion);
+define("p9r-accordion-item", AccordionItem);
+define("p9r-alert", Alert);
+define("p9r-avatar", Avatar);
+define("p9r-badge", Badge);
+define("p9r-breadcrumb", Breadcrumb);
+define("p9r-breadcrumb-item", BreadcrumbItem);
+define("p9r-button", Button);
+define("p9r-card", Card);
+define("w13c-checkbox", Checkbox);
+define("p9r-container", Container);
+define("p9r-divider", Divider);
+define("w13c-fetch", BlocsFetchComponent);
+define("w13c-form", BlocsForm);
+define("p9r-form-dialog", FormDialog);
+define("p9r-section", FormSection);
+define("p9r-horizontal-action-group", HorizontalActionGroup);
+define("p9r-icon-button", IconButton);
+define("w13c-input-file", InputFile);
+define("w13c-lateral-dialog", LateralDialog);
+define("w13c-lateral-menu", LateralMenu);
+define("w13c-lateral-menu-item", LateralMenuItem);
+define("w13c-left-menu-layout", LeftMenuLayout);
+define("p9r-modal", Modal);
+define("p9r-open-modal", OpenModal);
+define("p9r-input", P9rInput);
+define("p9r-range", P9rRange);
+define("p9r-select", P9rSelect);
+define("p9r-sizes-select", P9rSizesSelect);
+define("p9r-pagination", Pagination);
+define("p9r-progress", Progress);
+define("p9r-radio", Radio);
+define("p9r-radio-group", RadioGroup);
+define("p9r-segmented-switch", SegmentedSwitch);
+define("p9r-skeleton", Skeleton);
+define("p9r-spinner", Spinner);
+define("p9r-stack", Stack);
+define("p9r-step", Step);
+define("p9r-stepper", Stepper);
+define("p9r-switch", Switch);
+define("p9r-tab-panel", TabPanel);
+define("p9r-table", Table);
+define("p9r-cell", TableCell);
+define("p9r-header-cell", TableHeaderCell);
+define("p9r-row", TableRow);
+define("p9r-tabs", Tabs);
+define("p9r-tag", Tag);
+define("p9r-tag-suggest", TagSuggest);
+define("p9r-textarea", Textarea);
+define("p9r-toast", Toast);
+define("p9r-toast-stack", ToastStack);
+define("p9r-tooltip", Tooltip);
 
 import "./globals"
 

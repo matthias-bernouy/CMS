@@ -63,7 +63,3 @@ export class LateralMenuItem extends Component {
     private _onPopstate = () => checkActiveState(this, this._anchor);
     private _onKey = (e: KeyboardEvent) => handleKeydown(this, this._anchor, e);
 }
-
-if (!customElements.get("w13c-lateral-menu-item")) {
-    customElements.define("w13c-lateral-menu-item", LateralMenuItem);
-}

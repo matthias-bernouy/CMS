@@ -69,7 +69,3 @@ export class FormDialog extends Component {
     get enctype() { return this.getAttribute('enctype') ?? 'application/x-www-form-urlencoded'; }
     set enctype(v: string) { v ? this.setAttribute('enctype', v) : this.removeAttribute('enctype'); }
 }
-
-if (!customElements.get('p9r-form-dialog')) {
-    customElements.define('p9r-form-dialog', FormDialog);
-}

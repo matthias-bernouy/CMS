@@ -74,7 +74,3 @@ export class IconButton extends Component {
         else this.removeAttribute('disabled');
     }
 }
-
-if (!customElements.get("p9r-icon-button")) {
-    customElements.define("p9r-icon-button", IconButton);
-}

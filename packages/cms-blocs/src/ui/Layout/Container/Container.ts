@@ -8,7 +8,3 @@ export class Container extends Component {
         super({ css, template: template as unknown as string });
     }
 }
-
-if (!customElements.get("p9r-container")) {
-    customElements.define("p9r-container", Container);
-}

@@ -29,7 +29,3 @@ export class Divider extends Component {
         this.setAttribute('aria-orientation', orientation);
     }
 }
-
-if (!customElements.get("p9r-divider")) {
-    customElements.define("p9r-divider", Divider);
-}

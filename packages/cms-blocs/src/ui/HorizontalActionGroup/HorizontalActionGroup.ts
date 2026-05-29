@@ -87,7 +87,3 @@ export class HorizontalActionGroup extends Component {
         else this.setAttribute('label', val);
     }
 }
-
-if (!customElements.get("p9r-horizontal-action-group")) {
-    customElements.define("p9r-horizontal-action-group", HorizontalActionGroup);
-}

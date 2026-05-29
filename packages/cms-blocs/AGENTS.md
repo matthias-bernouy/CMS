@@ -33,13 +33,11 @@ src/
 ```
 
 `dist/` (built) holds:
-- `ui.js`           — IIFE bundle that imports `src/index.ts` once. A
-  single `<script src="…/dist/ui.js"></script>` (or `import
-  "@bernouy/cms-blocs"` from a bundler that respects the IIFE
-  default) registers **every** `<p9r-*>` and `<w13c-*>` tag.
+- `index.js`        — ESM bundle exporting every component class. It does
+  **not** register custom-element tags.
 - `style.css`       — copy of `src/assets/default.css`.
-- `blocs/<name>.{js,mjs,d.ts}` — per-component IIFE + ESM + d.ts stub
-  so consumers can lazy-load a single component:
+- `blocs/<name>.{mjs,d.ts}` — per-component ESM + d.ts stub so consumers
+  can lazy-load a single component class:
   `import "@bernouy/cms-blocs/blocs/button"`.
 - `index.d.ts` + the tsc-emitted tree (for `import { Button } from "@bernouy/cms-blocs"`).
 
@@ -47,17 +45,16 @@ src/
 
 The build is hand-rolled, three steps:
 
-1. `Bun.build(src/index.ts → dist/ui.js, format: "iife", minify)`.
+1. `Bun.build(src/index.ts → dist/index.js, format: "esm", minify)`.
 2. For each entry in the **flat list at the top of `build.ts`**, build
-   IIFE + ESM with `Bun.build`, and write a `.d.ts` stub re-exporting
-   from the tsc-emitted declarations.
+   ESM with `Bun.build`, and write a `.d.ts` stub re-exporting from the
+   tsc-emitted declarations.
 3. `cp src/assets/default.css → dist/style.css`, then `tsc -p
    tsconfig.build.json` for the type tree.
 
 **Adding a new component**:
 1. Create `src/ui/MyThing/MyThing.ts` (+ `template.html`, `style.css` if needed).
-2. Self-register at the bottom of the file:
-   `if (!customElements.get("p9r-my-thing")) customElements.define("p9r-my-thing", MyThing);`.
+2. Do **not** call `customElements.define()` in the component source.
 3. `export { MyThing } from "./ui/MyThing/MyThing"` in `src/index.ts`.
 4. Add an entry to the `blocs` array in `build.ts` so consumers can
    import it as `@bernouy/cms-blocs/blocs/my-thing`.
@@ -83,26 +80,17 @@ class Component extends HTMLElement {
 
 - Open shadow root, every component.
 - CSS / template injection is optional — `Stack.ts` and similar passthroughs may skip it when the shadow already inherits styling.
-- **No reactive lifecycle, no attribute helper, no CSS-variable
-  rewriting.** Subclasses add what they need.
+- **No reactive lifecycle or attribute helper.** Subclasses add what they need.
 - The CMS (`@bernouy/cms-control/component`) ships its **own** richer
   `Component` for blocs. Don't merge the two — the CMS version drags
   bloc-editor concerns that have no place in a plain admin dialog.
 
-## Self-registering pattern (idempotent guard)
+## Registration
 
-Every component file ends with:
-
-```ts
-if (!customElements.get("p9r-thing")) {
-    customElements.define("p9r-thing", Thing);
-}
-```
-
-The guard matters: `dist/ui.js` (IIFE) AND a per-component bundle
-(`dist/blocs/thing.js`) can both end up loaded on the same page (e.g.
-admin loads ui.js, a bloc lazy-loads `blocs/thing.js`). Without the
-guard the second load throws "already defined".
+This package is classes-only. Component sources must not self-register.
+Consumers that need custom elements register the exported classes explicitly
+with their own tag names. The CMS admin does this centrally in
+`@bernouy/cms-control`'s browser entrypoint.
 
 ## Form components
 
@@ -152,8 +140,7 @@ component renders.
 - **Name a visual component `<p9r-*>`** — never `<cms-*>` or `<w13c-*>`.
   Logical components are `<w13c-*>`. `cms-*` is reserved for the CMS
   internal admin shell (lives in `@bernouy/cms-control`).
-- **Self-register with the idempotent guard** at the bottom of the
-  component file. Never register from `index.ts`.
+- **Never self-register from component sources.** Export the class only.
 - **Imports of `*.html` / `*.css` use `with { type: 'text' }`** so Bun
   inlines them as strings. Keep them under 100 lines per file; split
   `style.css` into `base.css` + `variant.css` (à la `Form/Button/`)
@@ -165,7 +152,7 @@ component renders.
   standalone — keep it free of `@bernouy/*` imports.
 - **Sources are not consumed directly.** Workspace packages depend on
   the **built bundle** (`@bernouy/cms-blocs` resolves to
-  `dist/ui.js` via `main`/`exports`). The workspace root `build.ts`
+  `dist/index.js` via `main`/`exports`). The workspace root `build.ts`
   builds this package first so consumer packages see the `dist/`
   artifacts at type-check time.
 

@@ -71,7 +71,3 @@ export class AccordionItem extends Component {
         else this.removeAttribute('disabled');
     }
 }
-
-if (!customElements.get("p9r-accordion-item")) {
-    customElements.define("p9r-accordion-item", AccordionItem);
-}

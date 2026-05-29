@@ -87,5 +87,3 @@ export class P9rInput extends Component {
     private _onInput = () => handleInput(this, this._input, this._internals, this._counterEl, this._countEl);
     private _onChange = () => handleChange(this._input, this._internals);
 }
-
-if (!customElements.get('p9r-input')) customElements.define('p9r-input', P9rInput);

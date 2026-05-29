@@ -47,7 +47,3 @@ export class TableRow extends Component {
         else this.setAttribute('target', val);
     }
 }
-
-if (!customElements.get("p9r-row")) {
-    customElements.define("p9r-row", TableRow);
-}

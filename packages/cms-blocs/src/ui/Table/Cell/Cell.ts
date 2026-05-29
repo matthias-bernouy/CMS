@@ -12,7 +12,3 @@ export class TableCell extends Component {
         if (!this.hasAttribute('role')) this.setAttribute('role', 'cell');
     }
 }
-
-if (!customElements.get("p9r-cell")) {
-    customElements.define("p9r-cell", TableCell);
-}

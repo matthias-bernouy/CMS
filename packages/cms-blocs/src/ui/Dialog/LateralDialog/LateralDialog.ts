@@ -74,7 +74,3 @@ export class LateralDialog extends Component {
         if (this._dialog.open) this._dialog.close();
     }
 }
-
-if (!customElements.get("w13c-lateral-dialog")) {
-    customElements.define("w13c-lateral-dialog", LateralDialog);
-}

@@ -37,7 +37,3 @@ export class Skeleton extends Component {
         return /^\d+(\.\d+)?$/.test(v) ? `${v}px` : v;
     }
 }
-
-if (!customElements.get("p9r-skeleton")) {
-    customElements.define("p9r-skeleton", Skeleton);
-}

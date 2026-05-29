@@ -86,7 +86,3 @@ export class Switch extends Component {
 
     override click() { this._input?.click(); }
 }
-
-if (!customElements.get("p9r-switch")) {
-    customElements.define("p9r-switch", Switch);
-}

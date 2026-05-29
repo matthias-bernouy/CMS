@@ -1,5 +1,3 @@
-import "@bernouy/cms-blocs";
-
 import type { LateralDialog } from "@bernouy/cms-blocs";
 import { Component } from "@bernouy/cms-blocs/base";
 

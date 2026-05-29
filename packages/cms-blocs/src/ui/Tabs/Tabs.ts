@@ -5,8 +5,6 @@ import baseCss from './base.css' with { type: 'text' };
 import variantCss from './variant.css' with { type: 'text' };
 const css = baseCss + variantCss;
 
-import "./TabPanel/TabPanel";
-
 import { rebuildTabs, activateTab } from './domain/tabs';
 import { handleTablistClick, handleKeydown } from './listener';
 
@@ -46,8 +44,4 @@ export class Tabs extends Component {
     private _onRebuild = () => rebuildTabs(this, this._tablist, this._slot);
     private _onClick = (e: Event) => handleTablistClick(this, this._tablist, this._slot, e);
     private _onKey = (e: KeyboardEvent) => handleKeydown(this, this._tablist, this._slot, e);
-}
-
-if (!customElements.get("p9r-tabs")) {
-    customElements.define("p9r-tabs", Tabs);
 }

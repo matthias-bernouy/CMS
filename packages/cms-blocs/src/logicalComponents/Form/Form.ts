@@ -56,7 +56,3 @@ export class Form extends HTMLElement {
     get emit () { return this.getAttribute("emit") }
 
 }
-
-if ( !customElements.get("w13c-form") ){
-    customElements.define("w13c-form", Form);
-}

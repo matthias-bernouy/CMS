@@ -12,7 +12,3 @@ export class Spinner extends Component {
         });
     }
 }
-
-if (!customElements.get("p9r-spinner")) {
-    customElements.define("p9r-spinner", Spinner);
-}

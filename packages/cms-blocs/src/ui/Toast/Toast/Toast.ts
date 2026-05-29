@@ -38,7 +38,3 @@ export class Toast extends Component {
         }, { once: true });
     }
 }
-
-if (!customElements.get("p9r-toast")) {
-    customElements.define("p9r-toast", Toast);
-}

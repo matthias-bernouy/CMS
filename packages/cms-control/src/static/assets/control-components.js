@@ -1,49 +1,32 @@
 (() => {
-  // ../cms-blocs/dist/ui.js
-  (() => {
-    var { defineProperty: Ot, getOwnPropertyNames: Pa, getOwnPropertyDescriptor: Ra } = Object, qa = Object.prototype.hasOwnProperty;
-    var Me = new WeakMap, Ba = (t) => {
-      var e = Me.get(t), r;
-      if (e)
-        return e;
-      if (e = Ot({}, "__esModule", { value: true }), t && typeof t === "object" || typeof t === "function")
-        Pa(t).map((i) => !qa.call(e, i) && Ot(e, i, { get: () => t[i], enumerable: !(r = Ra(t, i)) || r.enumerable }));
-      return Me.set(t, e), e;
-    };
-    var Da = (t, e) => {
-      for (var r in e)
-        Ot(t, r, { get: e[r], enumerable: true, configurable: true, set: (i) => e[r] = () => i });
-    };
-    var Vl = {};
-    Da(Vl, { showToast: () => ya, Tooltip: () => qt, ToastStack: () => Rt, Toast: () => Pt, Textarea: () => bt, TagSuggest: () => ht, Tag: () => lt, Tabs: () => It, TableRow: () => Tt, TableHeaderCell: () => Ht, TableCell: () => Mt, Table: () => zt, TabPanel: () => St, Switch: () => st, Stepper: () => Ct, Step: () => Lt, Stack: () => vt, Spinner: () => At, Skeleton: () => Et, SegmentedSwitch: () => ot, RadioGroup: () => it, Radio: () => et, Progress: () => kt, Pagination: () => wt, P9rSizesSelect: () => tt, P9rSelect: () => Q, P9rRange: () => J, P9rInput: () => G, OpenModal: () => V, Modal: () => O, LeftMenuLayout: () => ft, LateralMenuItem: () => _t, LateralMenu: () => xt, LateralDialog: () => N, InputFile: () => W, IconButton: () => X, HorizontalActionGroup: () => mt, FormSection: () => Y, FormDialog: () => F, Form: () => jt, FetchComponent: () => Nt, Divider: () => K, Container: () => gt, Component: () => o, Checkbox: () => U, Card: () => j, Button: () => $, BreadcrumbItem: () => B, Breadcrumb: () => D, Badge: () => q, Avatar: () => R, Alert: () => P, AccordionItem: () => S, Accordion: () => I });
-
-    class o extends HTMLElement {
-      _rawStyles = "";
-      _styles = null;
-      constructor(t) {
-        super();
-        let e = this.attachShadow({ mode: "open" });
-        if (t) {
-          this._rawStyles = t.css, this._styles = document.createElement("style"), this._styles.innerHTML = t.css, e.appendChild(this._styles);
-          let r = document.createElement("template");
-          r.innerHTML = t.template, e.appendChild(r.content.cloneNode(true));
-        }
+  // ../cms-blocs/dist/index.js
+  class o extends HTMLElement {
+    _rawStyles = "";
+    _styles = null;
+    constructor(t) {
+      super();
+      let e = this.attachShadow({ mode: "open" });
+      if (t) {
+        this._rawStyles = t.css, this._styles = document.createElement("style"), this._styles.innerHTML = t.css, e.appendChild(this._styles);
+        let r = document.createElement("template");
+        r.innerHTML = t.template, e.appendChild(r.content.cloneNode(true));
       }
-      registerCSSVariables(t) {
-        if (!this._styles)
-          return;
-        let e = this._rawStyles;
-        Object.entries(t).forEach(([r, i]) => {
-          e = e.replaceAll("var(--" + r + ")", i);
-        }), this._styles.innerHTML = e;
-      }
-      connectedCallback() {}
     }
-    var He = `<div class="accordion" part="accordion">
+    registerCSSVariables(t) {
+      if (!this._styles)
+        return;
+      let e = this._rawStyles;
+      Object.entries(t).forEach(([r, i]) => {
+        e = e.replaceAll("var(--" + r + ")", i);
+      }), this._styles.innerHTML = e;
+    }
+    connectedCallback() {}
+  }
+  var Ht = `<div class="accordion" part="accordion">
     <slot></slot>
 </div>
 `;
-    var ze = `:host {
+  var St = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -71,7 +54,32 @@
   border-bottom: 1px solid var(--_border);
 }
 `;
-    var Se = `<div class="item" part="item">
+
+  class zt extends o {
+    constructor() {
+      super({ css: St, template: Ht });
+    }
+    connectedCallback() {
+      this.addEventListener("accordion-item-toggle", this._handleItemToggle);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("accordion-item-toggle", this._handleItemToggle);
+    }
+    _items() {
+      return Array.from(this.querySelectorAll("p9r-accordion-item"));
+    }
+    _handleItemToggle = (t) => {
+      if (this.hasAttribute("multiple"))
+        return;
+      if (!t.detail.open)
+        return;
+      let e = t.target;
+      for (let r of this._items())
+        if (r !== e)
+          r.removeAttribute("open");
+    };
+  }
+  var It = `<div class="item" part="item">
     <button class="header" part="header" type="button" aria-expanded="false">
         <span class="title" part="title"><slot name="header"></slot></span>
         <span class="chevron" part="chevron" aria-hidden="true">
@@ -87,7 +95,7 @@
     </div>
 </div>
 `;
-    var Ie = `:host {
+  var Pt = `:host {
   display: block;
 
   --_text: var(--text-main, #1f2937);
@@ -179,100 +187,71 @@
 }
 `;
 
-    class S extends o {
-      _header;
-      static get observedAttributes() {
-        return ["open", "disabled"];
-      }
-      constructor() {
-        super({ css: Ie, template: Se });
-        this._header = this.shadowRoot?.querySelector(".header") ?? null;
-      }
-      connectedCallback() {
-        for (let t of ["open", "disabled"])
-          this._upgradeProperty(t);
-        this._header?.addEventListener("click", this._toggle), this._syncAria();
-      }
-      disconnectedCallback() {
-        this._header?.removeEventListener("click", this._toggle);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "open" || t === "disabled")
-          this._syncAria();
-      }
-      _toggle = () => {
-        if (this.hasAttribute("disabled"))
-          return;
-        let t = !this.hasAttribute("open");
-        if (t)
-          this.setAttribute("open", "");
-        else
-          this.removeAttribute("open");
-        this.dispatchEvent(new CustomEvent("accordion-item-toggle", { bubbles: true, detail: { open: t } }));
-      };
-      _syncAria() {
-        if (!this._header)
-          return;
-        if (this._header.setAttribute("aria-expanded", String(this.hasAttribute("open"))), this.hasAttribute("disabled"))
-          this._header.setAttribute("disabled", "");
-        else
-          this._header.removeAttribute("disabled");
-      }
-      _upgradeProperty(t) {
-        if (Object.prototype.hasOwnProperty.call(this, t)) {
-          let e = this[t];
-          delete this[t], this[t] = e;
-        }
-      }
-      get open() {
-        return this.hasAttribute("open");
-      }
-      set open(t) {
-        if (t)
-          this.setAttribute("open", "");
-        else
-          this.removeAttribute("open");
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        if (t)
-          this.setAttribute("disabled", "");
-        else
-          this.removeAttribute("disabled");
+  class Rt extends o {
+    _header;
+    static get observedAttributes() {
+      return ["open", "disabled"];
+    }
+    constructor() {
+      super({ css: Pt, template: It });
+      this._header = this.shadowRoot?.querySelector(".header") ?? null;
+    }
+    connectedCallback() {
+      for (let t of ["open", "disabled"])
+        this._upgradeProperty(t);
+      this._header?.addEventListener("click", this._toggle), this._syncAria();
+    }
+    disconnectedCallback() {
+      this._header?.removeEventListener("click", this._toggle);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (t === "open" || t === "disabled")
+        this._syncAria();
+    }
+    _toggle = () => {
+      if (this.hasAttribute("disabled"))
+        return;
+      let t = !this.hasAttribute("open");
+      if (t)
+        this.setAttribute("open", "");
+      else
+        this.removeAttribute("open");
+      this.dispatchEvent(new CustomEvent("accordion-item-toggle", { bubbles: true, detail: { open: t } }));
+    };
+    _syncAria() {
+      if (!this._header)
+        return;
+      if (this._header.setAttribute("aria-expanded", String(this.hasAttribute("open"))), this.hasAttribute("disabled"))
+        this._header.setAttribute("disabled", "");
+      else
+        this._header.removeAttribute("disabled");
+    }
+    _upgradeProperty(t) {
+      if (Object.prototype.hasOwnProperty.call(this, t)) {
+        let e = this[t];
+        delete this[t], this[t] = e;
       }
     }
-    if (!customElements.get("p9r-accordion-item"))
-      customElements.define("p9r-accordion-item", S);
-
-    class I extends o {
-      constructor() {
-        super({ css: ze, template: He });
-      }
-      connectedCallback() {
-        this.addEventListener("accordion-item-toggle", this._handleItemToggle);
-      }
-      disconnectedCallback() {
-        this.removeEventListener("accordion-item-toggle", this._handleItemToggle);
-      }
-      _items() {
-        return Array.from(this.querySelectorAll("p9r-accordion-item"));
-      }
-      _handleItemToggle = (t) => {
-        if (this.hasAttribute("multiple"))
-          return;
-        if (!t.detail.open)
-          return;
-        let e = t.target;
-        for (let r of this._items())
-          if (r !== e)
-            r.removeAttribute("open");
-      };
+    get open() {
+      return this.hasAttribute("open");
     }
-    if (!customElements.get("p9r-accordion"))
-      customElements.define("p9r-accordion", I);
-    var Pe = `<div class="alert" part="alert" role="alert">
+    set open(t) {
+      if (t)
+        this.setAttribute("open", "");
+      else
+        this.removeAttribute("open");
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      if (t)
+        this.setAttribute("disabled", "");
+      else
+        this.removeAttribute("disabled");
+    }
+  }
+  var qt = `<div class="alert" part="alert" role="alert">
     <span class="icon" part="icon" aria-hidden="true">
         <slot name="icon"></slot>
     </span>
@@ -283,7 +262,7 @@
     <button class="close" part="close" aria-label="Dismiss" hidden>&times;</button>
 </div>
 `;
-    var Re = `:host {
+  var Bt = `:host {
   display: block;
 
   --_bg: var(--info-muted, #eff6ff);
@@ -355,7 +334,7 @@
 
 .close:hover { opacity: 1; }
 `;
-    var qe = `:host([type="success"]) {
+  var Dt = `:host([type="success"]) {
   --_bg: var(--success-muted);
   --_color: var(--success-contrasted);
   --_accent: var(--success-base);
@@ -429,50 +408,48 @@
   to   { opacity: 0; transform: translateY(-6px); }
 }
 `;
-    var Ua = Re + qe;
+  var Da = Bt + Dt;
 
-    class P extends o {
-      _close;
-      static get observedAttributes() {
-        return ["dismissible"];
-      }
-      constructor() {
-        super({ css: Ua, template: Pe });
-        this._close = this.shadowRoot?.querySelector(".close") ?? null;
-      }
-      connectedCallback() {
-        this._syncDismissible(), this._close?.addEventListener("click", this._handleClose);
-      }
-      disconnectedCallback() {
-        this._close?.removeEventListener("click", this._handleClose);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "dismissible")
-          this._syncDismissible();
-      }
-      _syncDismissible() {
-        if (!this._close)
-          return;
-        this._close.hidden = !this.hasAttribute("dismissible");
-      }
-      _handleClose = () => {
-        if (!this.dispatchEvent(new CustomEvent("dismiss", { bubbles: true, cancelable: true })))
-          return;
-        this.setAttribute("leaving", ""), this.addEventListener("animationend", () => this.remove(), { once: true });
-      };
-      dismiss() {
-        this._handleClose();
-      }
+  class Ft extends o {
+    _close;
+    static get observedAttributes() {
+      return ["dismissible"];
     }
-    if (!customElements.get("p9r-alert"))
-      customElements.define("p9r-alert", P);
-    var Be = `<div class="avatar" part="avatar">
+    constructor() {
+      super({ css: Da, template: qt });
+      this._close = this.shadowRoot?.querySelector(".close") ?? null;
+    }
+    connectedCallback() {
+      this._syncDismissible(), this._close?.addEventListener("click", this._handleClose);
+    }
+    disconnectedCallback() {
+      this._close?.removeEventListener("click", this._handleClose);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (t === "dismissible")
+        this._syncDismissible();
+    }
+    _syncDismissible() {
+      if (!this._close)
+        return;
+      this._close.hidden = !this.hasAttribute("dismissible");
+    }
+    _handleClose = () => {
+      if (!this.dispatchEvent(new CustomEvent("dismiss", { bubbles: true, cancelable: true })))
+        return;
+      this.setAttribute("leaving", ""), this.addEventListener("animationend", () => this.remove(), { once: true });
+    };
+    dismiss() {
+      this._handleClose();
+    }
+  }
+  var jt = `<div class="avatar" part="avatar">
     <img class="image" part="image" alt="" hidden />
     <span class="initials" part="initials" aria-hidden="true"></span>
     <span class="fallback" part="fallback"><slot></slot></span>
 </div>
 `;
-    var De = `:host {
+  var Nt = `:host {
   display: inline-block;
 
   --_size: 2.5rem;
@@ -548,68 +525,66 @@
 }
 `;
 
-    class R extends o {
-      _img;
-      _initials;
-      static get observedAttributes() {
-        return ["src", "alt", "name", "initials"];
-      }
-      constructor() {
-        super({ css: De, template: Be });
-        this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
-      }
-      connectedCallback() {
-        if (this._img)
-          this._img.addEventListener("error", this._handleImageError);
-        this._syncImage(), this._syncInitials();
-      }
-      disconnectedCallback() {
-        if (this._img)
-          this._img.removeEventListener("error", this._handleImageError);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "src" || t === "alt")
-          this._syncImage();
-        if (t === "name" || t === "initials")
-          this._syncInitials();
-      }
-      _syncImage() {
-        if (!this._img)
-          return;
-        let t = this.getAttribute("src"), e = this.getAttribute("alt") ?? this.getAttribute("name") ?? "";
-        if (t)
-          this._img.src = t, this._img.alt = e, this._img.hidden = false;
-        else
-          this._img.hidden = true, this._img.removeAttribute("src");
-      }
-      _syncInitials() {
-        if (!this._initials)
-          return;
-        let t = this.getAttribute("initials");
-        if (t) {
-          this._initials.textContent = t;
-          return;
-        }
-        let e = this.getAttribute("name");
-        if (!e) {
-          this._initials.textContent = "";
-          return;
-        }
-        this._initials.textContent = e.split(/\s+/).filter(Boolean).slice(0, 2).map((r) => r[0]).join("").toUpperCase();
-      }
-      _handleImageError = () => {
-        if (this._img)
-          this._img.hidden = true;
-      };
+  class Ot extends o {
+    _img;
+    _initials;
+    static get observedAttributes() {
+      return ["src", "alt", "name", "initials"];
     }
-    if (!customElements.get("p9r-avatar"))
-      customElements.define("p9r-avatar", R);
-    var je = `<span class="badge" part="badge">
+    constructor() {
+      super({ css: Nt, template: jt });
+      this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
+    }
+    connectedCallback() {
+      if (this._img)
+        this._img.addEventListener("error", this._handleImageError);
+      this._syncImage(), this._syncInitials();
+    }
+    disconnectedCallback() {
+      if (this._img)
+        this._img.removeEventListener("error", this._handleImageError);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (t === "src" || t === "alt")
+        this._syncImage();
+      if (t === "name" || t === "initials")
+        this._syncInitials();
+    }
+    _syncImage() {
+      if (!this._img)
+        return;
+      let t = this.getAttribute("src"), e = this.getAttribute("alt") ?? this.getAttribute("name") ?? "";
+      if (t)
+        this._img.src = t, this._img.alt = e, this._img.hidden = false;
+      else
+        this._img.hidden = true, this._img.removeAttribute("src");
+    }
+    _syncInitials() {
+      if (!this._initials)
+        return;
+      let t = this.getAttribute("initials");
+      if (t) {
+        this._initials.textContent = t;
+        return;
+      }
+      let e = this.getAttribute("name");
+      if (!e) {
+        this._initials.textContent = "";
+        return;
+      }
+      this._initials.textContent = e.split(/\s+/).filter(Boolean).slice(0, 2).map((r) => r[0]).join("").toUpperCase();
+    }
+    _handleImageError = () => {
+      if (this._img)
+        this._img.hidden = true;
+    };
+  }
+  var Vt = `<span class="badge" part="badge">
     <span class="dot" part="dot" aria-hidden="true"></span>
     <span class="content" part="content"><slot></slot></span>
 </span>
 `;
-    var Fe = `:host {
+  var Kt = `:host {
   display: inline-flex;
 
   --_bg: var(--secondary-muted, #f1f5f9);
@@ -677,20 +652,18 @@
 }
 `;
 
-    class q extends o {
-      constructor() {
-        super({ css: Fe, template: je });
-      }
+  class $t extends o {
+    constructor() {
+      super({ css: Kt, template: Vt });
     }
-    if (!customElements.get("p9r-badge"))
-      customElements.define("p9r-badge", q);
-    var Ne = `<nav class="breadcrumb" part="breadcrumb" aria-label="Breadcrumb">
+  }
+  var Ut = `<nav class="breadcrumb" part="breadcrumb" aria-label="Breadcrumb">
     <ol class="list" part="list">
         <slot></slot>
     </ol>
 </nav>
 `;
-    var Oe = `:host {
+  var Yt = `:host {
   display: block;
 
   --_separator: "/";
@@ -722,11 +695,36 @@
   display: inline;
 }
 `;
-    var Ve = `<li class="item" part="item">
+
+  class Xt extends o {
+    static get observedAttributes() {
+      return ["separator"];
+    }
+    constructor() {
+      super({ css: Yt, template: Ut });
+    }
+    connectedCallback() {
+      this._syncSeparator(), this._markCurrent();
+    }
+    attributeChangedCallback(t, e, r) {
+      if (t === "separator")
+        this._syncSeparator();
+    }
+    _syncSeparator() {
+      let t = this.getAttribute("separator") ?? "/";
+      this.style.setProperty("--_separator", `"${t.replace(/"/g, "\\\"")}"`);
+    }
+    _markCurrent() {
+      let t = Array.from(this.querySelectorAll("p9r-breadcrumb-item")), e = t[t.length - 1];
+      if (e && !e.hasAttribute("current"))
+        e.setAttribute("current", "");
+    }
+  }
+  var Zt = `<li class="item" part="item">
     <a class="link" part="link"><slot></slot></a>
 </li>
 `;
-    var Ke = `:host {
+  var Gt = `:host {
   display: inline-flex;
   align-items: center;
 
@@ -760,72 +758,43 @@
 }
 `;
 
-    class B extends o {
-      _link;
-      static get observedAttributes() {
-        return ["href", "current"];
-      }
-      constructor() {
-        super({ css: Ke, template: Ve });
-        this._link = this.shadowRoot?.querySelector(".link") ?? null;
-      }
-      connectedCallback() {
-        this._syncHref(), this._syncCurrent();
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "href")
-          this._syncHref();
-        if (t === "current")
-          this._syncCurrent();
-      }
-      _syncHref() {
-        if (!this._link)
-          return;
-        let t = this.getAttribute("href");
-        if (t)
-          this._link.setAttribute("href", t);
-        else
-          this._link.removeAttribute("href");
-      }
-      _syncCurrent() {
-        if (!this._link)
-          return;
-        if (this.hasAttribute("current"))
-          this._link.setAttribute("aria-current", "page");
-        else
-          this._link.removeAttribute("aria-current");
-      }
+  class Wt extends o {
+    _link;
+    static get observedAttributes() {
+      return ["href", "current"];
     }
-    if (!customElements.get("p9r-breadcrumb-item"))
-      customElements.define("p9r-breadcrumb-item", B);
-
-    class D extends o {
-      static get observedAttributes() {
-        return ["separator"];
-      }
-      constructor() {
-        super({ css: Oe, template: Ne });
-      }
-      connectedCallback() {
-        this._syncSeparator(), this._markCurrent();
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "separator")
-          this._syncSeparator();
-      }
-      _syncSeparator() {
-        let t = this.getAttribute("separator") ?? "/";
-        this.style.setProperty("--_separator", `"${t.replace(/"/g, "\\\"")}"`);
-      }
-      _markCurrent() {
-        let t = Array.from(this.querySelectorAll("p9r-breadcrumb-item")), e = t[t.length - 1];
-        if (e && !e.hasAttribute("current"))
-          e.setAttribute("current", "");
-      }
+    constructor() {
+      super({ css: Gt, template: Zt });
+      this._link = this.shadowRoot?.querySelector(".link") ?? null;
     }
-    if (!customElements.get("p9r-breadcrumb"))
-      customElements.define("p9r-breadcrumb", D);
-    var $e = `<article class="card" part="card">
+    connectedCallback() {
+      this._syncHref(), this._syncCurrent();
+    }
+    attributeChangedCallback(t, e, r) {
+      if (t === "href")
+        this._syncHref();
+      if (t === "current")
+        this._syncCurrent();
+    }
+    _syncHref() {
+      if (!this._link)
+        return;
+      let t = this.getAttribute("href");
+      if (t)
+        this._link.setAttribute("href", t);
+      else
+        this._link.removeAttribute("href");
+    }
+    _syncCurrent() {
+      if (!this._link)
+        return;
+      if (this.hasAttribute("current"))
+        this._link.setAttribute("aria-current", "page");
+      else
+        this._link.removeAttribute("aria-current");
+    }
+  }
+  var Jt = `<article class="card" part="card">
     <header class="header" part="header">
         <slot name="header"></slot>
     </header>
@@ -837,7 +806,7 @@
     </footer>
 </article>
 `;
-    var Ue = `:host {
+  var Qt = `:host {
   display: block;
 
   --_bg: var(--bg-surface, #ffffff);
@@ -914,14 +883,12 @@
 }
 `;
 
-    class j extends o {
-      constructor() {
-        super({ css: Ue, template: $e });
-      }
+  class te extends o {
+    constructor() {
+      super({ css: Qt, template: Jt });
     }
-    if (!customElements.get("p9r-card"))
-      customElements.define("p9r-card", j);
-    var Ye = `<dialog part="dialog" aria-modal="true">
+  }
+  var ee = `<dialog part="dialog" aria-modal="true">
     <div class="modal-wrapper" part="wrapper">
         <form method="dialog" id="close-form"></form>
 
@@ -947,7 +914,7 @@
     </div>
 </dialog>
 `;
-    var Xe = `:host {
+  var re = `:host {
     --_modal-width: 500px;
     --_modal-radius: 12px;
     --_modal-bg: var(--bg-surface);
@@ -1017,7 +984,7 @@ footer.actions {
     border-top: 1px solid var(--border-default);
 }
 `;
-    var Ze = `.close-icon {
+  var ie = `.close-icon {
     background: transparent;
     border: none;
     font-size: 1.5rem;
@@ -1072,101 +1039,101 @@ footer.actions {
     }
 }
 `;
-    var We = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    };
-    var Ge = (t) => {
-      t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
-    }, Je = (t) => {
-      t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
-    };
-    var Qe = (t, e) => {
-      let r = t.shadowRoot?.querySelector("dialog");
-      if (!r)
-        return;
-      if (e.target !== r)
-        return;
-      let i = r.getBoundingClientRect();
-      if (!(i.top <= e.clientY && e.clientY <= i.top + i.height && i.left <= e.clientX && e.clientX <= i.left + i.width))
-        t.close();
-    }, tr = (t, e) => {
-      t.querySelectorAll("[name]").forEach((i) => {
-        let n = i.getAttribute("name"), a = i.value;
-        if (n && a !== undefined && a !== null && a !== "")
-          e.formData.append(n, String(a));
-      });
-    };
-    var oo = Xe + Ze;
-
-    class F extends o {
-      _dialog;
-      _form;
-      _previouslyFocused = null;
-      static get observedAttributes() {
-        return ["action", "method", "enctype"];
-      }
-      constructor() {
-        super({ css: oo, template: Ye });
-        this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._form = this.shadowRoot?.querySelector("#form-validation") ?? null;
-      }
-      connectedCallback() {
-        for (let t of ["action", "method", "enctype"])
-          We(this, t);
-        this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("close", this._onClose), this._form?.addEventListener("formdata", this._onFormData);
-      }
-      disconnectedCallback() {
-        this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("close", this._onClose), this._form?.removeEventListener("formdata", this._onFormData);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._form)
-          return;
-        if (t === "action")
-          this._form.action = r ?? "";
-        if (t === "method")
-          this._form.method = r ?? "get";
-        if (t === "enctype")
-          this._form.enctype = r ?? "application/x-www-form-urlencoded";
-      }
-      _onBackdrop = (t) => Qe(this, t);
-      _onFormData = (t) => tr(this, t);
-      _onClose = () => {
-        if (this._previouslyFocused instanceof HTMLElement)
-          this._previouslyFocused.focus();
-        this._previouslyFocused = null, Je(this);
-      };
-      showModal() {
-        if (!this._dialog)
-          return;
-        this._previouslyFocused = document.activeElement, this._dialog.showModal(), Ge(this);
-      }
-      close() {
-        this._dialog?.close();
-      }
-      get action() {
-        return this.getAttribute("action") ?? "";
-      }
-      set action(t) {
-        t ? this.setAttribute("action", t) : this.removeAttribute("action");
-      }
-      get method() {
-        return this.getAttribute("method") ?? "get";
-      }
-      set method(t) {
-        t ? this.setAttribute("method", t) : this.removeAttribute("method");
-      }
-      get enctype() {
-        return this.getAttribute("enctype") ?? "application/x-www-form-urlencoded";
-      }
-      set enctype(t) {
-        t ? this.setAttribute("enctype", t) : this.removeAttribute("enctype");
-      }
+  var ne = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("p9r-form-dialog"))
-      customElements.define("p9r-form-dialog", F);
-    var er = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
+  };
+  var ae = (t) => {
+    t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
+  };
+  var oe = (t) => {
+    t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+  };
+  var se = (t, e) => {
+    let r = t.shadowRoot?.querySelector("dialog");
+    if (!r)
+      return;
+    if (e.target !== r)
+      return;
+    let i = r.getBoundingClientRect();
+    if (!(i.top <= e.clientY && e.clientY <= i.top + i.height && i.left <= e.clientX && e.clientX <= i.left + i.width))
+      t.close();
+  };
+  var le = (t, e) => {
+    t.querySelectorAll("[name]").forEach((i) => {
+      let n = i.getAttribute("name"), a = i.value;
+      if (n && a !== undefined && a !== null && a !== "")
+        e.formData.append(n, String(a));
+    });
+  };
+  var Ja = re + ie;
+
+  class de extends o {
+    _dialog;
+    _form;
+    _previouslyFocused = null;
+    static get observedAttributes() {
+      return ["action", "method", "enctype"];
+    }
+    constructor() {
+      super({ css: Ja, template: ee });
+      this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._form = this.shadowRoot?.querySelector("#form-validation") ?? null;
+    }
+    connectedCallback() {
+      for (let t of ["action", "method", "enctype"])
+        ne(this, t);
+      this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("close", this._onClose), this._form?.addEventListener("formdata", this._onFormData);
+    }
+    disconnectedCallback() {
+      this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("close", this._onClose), this._form?.removeEventListener("formdata", this._onFormData);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._form)
+        return;
+      if (t === "action")
+        this._form.action = r ?? "";
+      if (t === "method")
+        this._form.method = r ?? "get";
+      if (t === "enctype")
+        this._form.enctype = r ?? "application/x-www-form-urlencoded";
+    }
+    _onBackdrop = (t) => se(this, t);
+    _onFormData = (t) => le(this, t);
+    _onClose = () => {
+      if (this._previouslyFocused instanceof HTMLElement)
+        this._previouslyFocused.focus();
+      this._previouslyFocused = null, oe(this);
+    };
+    showModal() {
+      if (!this._dialog)
+        return;
+      this._previouslyFocused = document.activeElement, this._dialog.showModal(), ae(this);
+    }
+    close() {
+      this._dialog?.close();
+    }
+    get action() {
+      return this.getAttribute("action") ?? "";
+    }
+    set action(t) {
+      t ? this.setAttribute("action", t) : this.removeAttribute("action");
+    }
+    get method() {
+      return this.getAttribute("method") ?? "get";
+    }
+    set method(t) {
+      t ? this.setAttribute("method", t) : this.removeAttribute("method");
+    }
+    get enctype() {
+      return this.getAttribute("enctype") ?? "application/x-www-form-urlencoded";
+    }
+    set enctype(t) {
+      t ? this.setAttribute("enctype", t) : this.removeAttribute("enctype");
+    }
+  }
+  var ce = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
     <header part="header">
         <div id="title" part="title">
             <slot name="title">Dialog</slot>
@@ -1183,7 +1150,7 @@ footer.actions {
     </footer>
 </dialog>
 `;
-    var rr = `:host {
+  var ue = `:host {
     --drawer-width: 400px;
     --drawer-bg: #ffffff;
     --transition-speed: 0.4s;
@@ -1235,7 +1202,7 @@ dialog > * {
     pointer-events: auto;
 }
 `;
-    var ir = `header {
+  var pe = `header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1316,7 +1283,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     filter: brightness(0.9);
 }
 `;
-    var nr = `@media (prefers-reduced-motion: no-preference) {
+  var he = `@media (prefers-reduced-motion: no-preference) {
     dialog {
         transition:
             transform var(--transition-speed) var(--transition-curve),
@@ -1362,104 +1329,108 @@ footer slot[name="footer"]::slotted(button:hover) {
     }
 }
 `;
-    var ar = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    };
-    var or = (t) => {
-      t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
-    }, sr = (t) => {
-      t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
-    };
-    var lr = (t, e) => {
-      let r = t.shadowRoot?.querySelector("dialog");
-      if (e.target === r)
-        t.close();
-    }, dr = (t, e) => {
-      e.preventDefault(), t.close();
-    }, cr = (t, e) => {
-      e.preventDefault(), t.close();
-    }, ur = (t) => {
-      if (t.hasAttribute("open"))
-        t.removeAttribute("open");
-      sr(t);
-    };
-    var po = rr + ir + nr;
+  var be = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
+    }
+  };
+  var me = (t) => {
+    t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
+  };
+  var ge = (t) => {
+    t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+  };
+  var fe = (t, e) => {
+    let r = t.shadowRoot?.querySelector("dialog");
+    if (e.target === r)
+      t.close();
+  };
+  var ve = (t, e) => {
+    e.preventDefault(), t.close();
+  };
+  var _e = (t, e) => {
+    e.preventDefault(), t.close();
+  };
+  var xe = (t) => {
+    if (t.hasAttribute("open"))
+      t.removeAttribute("open");
+    ge(t);
+  };
+  var io = ue + pe + he;
 
-    class N extends o {
-      _dialog;
-      _closeBtn;
-      static get observedAttributes() {
-        return ["open"];
-      }
-      constructor() {
-        super({ css: po, template: er });
-        this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._closeBtn = this.shadowRoot?.querySelector("#close-btn") ?? null;
-      }
-      connectedCallback() {
-        ar(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this._closeBtn?.addEventListener("click", this._onCloseClick);
-      }
-      disconnectedCallback() {
-        this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this._closeBtn?.removeEventListener("click", this._onCloseClick);
-      }
-      attributeChangedCallback(t) {
-        if (!this._dialog)
-          return;
-        if (t === "open") {
-          let e = this.hasAttribute("open");
-          if (e && !this._dialog.open)
-            this._dialog.showModal();
-          else if (!e && this._dialog.open)
-            this._dialog.close();
-        }
-      }
-      _onBackdrop = (t) => lr(this, t);
-      _onCloseClick = (t) => dr(this, t);
-      _onCancel = (t) => cr(this, t);
-      _onClose = () => ur(this);
-      get open() {
-        return this.hasAttribute("open");
-      }
-      set open(t) {
-        if (t)
-          this.setAttribute("open", "");
-        else
-          this.removeAttribute("open");
-      }
-      show() {
-        if (!this._dialog)
-          return;
-        if (!this._dialog.open)
+  class ye extends o {
+    _dialog;
+    _closeBtn;
+    static get observedAttributes() {
+      return ["open"];
+    }
+    constructor() {
+      super({ css: io, template: ce });
+      this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._closeBtn = this.shadowRoot?.querySelector("#close-btn") ?? null;
+    }
+    connectedCallback() {
+      be(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this._closeBtn?.addEventListener("click", this._onCloseClick);
+    }
+    disconnectedCallback() {
+      this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this._closeBtn?.removeEventListener("click", this._onCloseClick);
+    }
+    attributeChangedCallback(t) {
+      if (!this._dialog)
+        return;
+      if (t === "open") {
+        let e = this.hasAttribute("open");
+        if (e && !this._dialog.open)
           this._dialog.showModal();
-        if (!this.hasAttribute("open"))
-          this.setAttribute("open", "");
-        or(this);
-      }
-      showModal() {
-        this.show();
-      }
-      close() {
-        if (!this._dialog)
-          return;
-        if (this._dialog.open)
+        else if (!e && this._dialog.open)
           this._dialog.close();
       }
     }
-    if (!customElements.get("w13c-lateral-dialog"))
-      customElements.define("w13c-lateral-dialog", N);
-    var pr = (t, e) => {
-      if (e.target === e.currentTarget)
-        t.hide();
-    }, hr = (t, e) => {
-      e.preventDefault(), t.hide();
-    }, br = (t) => {
-      if (t.hasAttribute("open"))
-        t.removeAttribute("open");
-      t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
-    };
-    var mr = `<dialog part="dialog">
+    _onBackdrop = (t) => fe(this, t);
+    _onCloseClick = (t) => ve(this, t);
+    _onCancel = (t) => _e(this, t);
+    _onClose = () => xe(this);
+    get open() {
+      return this.hasAttribute("open");
+    }
+    set open(t) {
+      if (t)
+        this.setAttribute("open", "");
+      else
+        this.removeAttribute("open");
+    }
+    show() {
+      if (!this._dialog)
+        return;
+      if (!this._dialog.open)
+        this._dialog.showModal();
+      if (!this.hasAttribute("open"))
+        this.setAttribute("open", "");
+      me(this);
+    }
+    showModal() {
+      this.show();
+    }
+    close() {
+      if (!this._dialog)
+        return;
+      if (this._dialog.open)
+        this._dialog.close();
+    }
+  }
+  var we = (t, e) => {
+    if (e.target === e.currentTarget)
+      t.hide();
+  };
+  var ke = (t, e) => {
+    e.preventDefault(), t.hide();
+  };
+  var Ee = (t) => {
+    if (t.hasAttribute("open"))
+      t.removeAttribute("open");
+    t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+  };
+  var Ae = `<dialog part="dialog">
     <form method="dialog" id="m-close"></form>
     <div class="panel" part="panel">
         <header class="header" part="header">
@@ -1471,7 +1442,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     </div>
 </dialog>
 `;
-    var gr = `:host {
+  var Le = `:host {
     --modal-width: var(--p9r-modal-width, 520px);
     --modal-radius: var(--p9r-modal-radius, 12px);
     --modal-bg: var(--p9r-modal-bg, var(--bg-surface, #ffffff));
@@ -1551,137 +1522,133 @@ dialog[open]::backdrop { opacity: 1; }
 .body { padding: var(--modal-pad); overflow: auto; }
 `;
 
-    class O extends o {
-      _dialog = null;
-      _onBackdrop = (t) => pr(this, t);
-      _onCancel = (t) => hr(this, t);
-      _onClose = () => br(this);
-      static get observedAttributes() {
-        return ["open", "aria-label"];
-      }
-      constructor() {
-        super({ css: gr, template: mr });
-      }
-      connectedCallback() {
-        this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null, this._upgradeProperty("open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this.addEventListener("form:success", this.hide), this._syncLabel(), this._syncOpen();
-      }
-      disconnectedCallback() {
-        this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this.removeEventListener("form:success", this.hide);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (e === r || !this.isConnected)
-          return;
-        if (t === "aria-label")
-          this._syncLabel();
-        else if (t === "open")
-          this._syncOpen();
-      }
-      _syncLabel() {
-        let t = this.getAttribute("aria-label");
-        if (t)
-          this._dialog?.setAttribute("aria-label", t);
-        else
-          this._dialog?.removeAttribute("aria-label");
-      }
-      _syncOpen() {
-        if (!this._dialog)
-          return;
-        let t = this.hasAttribute("open");
-        if (t && !this._dialog.open)
-          this._dialog.showModal(), this.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
-        else if (!t && this._dialog.open)
-          this._dialog.close();
-      }
-      _upgradeProperty(t) {
-        if (Object.prototype.hasOwnProperty.call(this, t)) {
-          let e = this[t];
-          delete this[t], this[t] = e;
-        }
-      }
-      get open() {
-        return this.hasAttribute("open");
-      }
-      set open(t) {
-        t ? this.setAttribute("open", "") : this.removeAttribute("open");
-      }
-      show() {
-        if (!this.hasAttribute("open"))
-          this.setAttribute("open", "");
-      }
-      showModal() {
-        this.show();
-      }
-      hide() {
-        if (this.hasAttribute("open"))
-          this.removeAttribute("open");
-      }
-      toggle() {
-        if (this.open)
-          this.hide();
-        else
-          this.show();
+  class Ce extends o {
+    _dialog = null;
+    _onBackdrop = (t) => we(this, t);
+    _onCancel = (t) => ke(this, t);
+    _onClose = () => Ee(this);
+    static get observedAttributes() {
+      return ["open", "aria-label"];
+    }
+    constructor() {
+      super({ css: Le, template: Ae });
+    }
+    connectedCallback() {
+      this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null, this._upgradeProperty("open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this.addEventListener("form:success", this.hide), this._syncLabel(), this._syncOpen();
+    }
+    disconnectedCallback() {
+      this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this.removeEventListener("form:success", this.hide);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (e === r || !this.isConnected)
+        return;
+      if (t === "aria-label")
+        this._syncLabel();
+      else if (t === "open")
+        this._syncOpen();
+    }
+    _syncLabel() {
+      let t = this.getAttribute("aria-label");
+      if (t)
+        this._dialog?.setAttribute("aria-label", t);
+      else
+        this._dialog?.removeAttribute("aria-label");
+    }
+    _syncOpen() {
+      if (!this._dialog)
+        return;
+      let t = this.hasAttribute("open");
+      if (t && !this._dialog.open)
+        this._dialog.showModal(), this.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
+      else if (!t && this._dialog.open)
+        this._dialog.close();
+    }
+    _upgradeProperty(t) {
+      if (Object.prototype.hasOwnProperty.call(this, t)) {
+        let e = this[t];
+        delete this[t], this[t] = e;
       }
     }
-    if (!customElements.get("p9r-modal"))
-      customElements.define("p9r-modal", O);
-    var fr = `<slot></slot>
+    get open() {
+      return this.hasAttribute("open");
+    }
+    set open(t) {
+      t ? this.setAttribute("open", "") : this.removeAttribute("open");
+    }
+    show() {
+      if (!this.hasAttribute("open"))
+        this.setAttribute("open", "");
+    }
+    showModal() {
+      this.show();
+    }
+    hide() {
+      if (this.hasAttribute("open"))
+        this.removeAttribute("open");
+    }
+    toggle() {
+      if (this.open)
+        this.hide();
+      else
+        this.show();
+    }
+  }
+  var Te = `<slot></slot>
 `;
-    var vr = `:host {
+  var Me = `:host {
     display: contents;
     cursor: pointer;
 }
 `;
 
-    class V extends o {
-      constructor() {
-        super({ css: vr, template: fr });
-      }
-      connectedCallback() {
-        if (!this.hasAttribute("role"))
-          this.setAttribute("role", "button");
-        if (!this.hasAttribute("tabindex"))
-          this.setAttribute("tabindex", "0");
-        this.addEventListener("click", this._open), this.addEventListener("keydown", this._handleKeydown);
-      }
-      disconnectedCallback() {
-        this.removeEventListener("click", this._open), this.removeEventListener("keydown", this._handleKeydown);
-      }
-      _handleKeydown = (t) => {
-        if (t.key !== "Enter" && t.key !== " ")
-          return;
-        t.preventDefault(), this._open();
-      };
-      _open = () => {
-        let t = this.getAttribute("modal-target");
-        if (!t)
-          return;
-        let e = this.getRootNode(), r = e.getElementById ? e.getElementById(t) : e.querySelector(`#${CSS.escape(t)}`);
-        if (!r)
-          return;
-        if (typeof r.show === "function")
-          r.show();
-        else
-          r.setAttribute("open", "");
-      };
-      get modalTarget() {
-        return this.getAttribute("modal-target") ?? "";
-      }
-      set modalTarget(t) {
-        if (t)
-          this.setAttribute("modal-target", t);
-        else
-          this.removeAttribute("modal-target");
-      }
+  class He extends o {
+    constructor() {
+      super({ css: Me, template: Te });
     }
-    if (!customElements.get("p9r-open-modal"))
-      customElements.define("p9r-open-modal", V);
-    var _r = `<div class="divider" part="divider" role="separator">
+    connectedCallback() {
+      if (!this.hasAttribute("role"))
+        this.setAttribute("role", "button");
+      if (!this.hasAttribute("tabindex"))
+        this.setAttribute("tabindex", "0");
+      this.addEventListener("click", this._open), this.addEventListener("keydown", this._handleKeydown);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._open), this.removeEventListener("keydown", this._handleKeydown);
+    }
+    _handleKeydown = (t) => {
+      if (t.key !== "Enter" && t.key !== " ")
+        return;
+      t.preventDefault(), this._open();
+    };
+    _open = () => {
+      let t = this.getAttribute("modal-target");
+      if (!t)
+        return;
+      let e = this.getRootNode(), r = e.getElementById ? e.getElementById(t) : e.querySelector(`#${CSS.escape(t)}`);
+      if (!r)
+        return;
+      if (typeof r.show === "function")
+        r.show();
+      else
+        r.setAttribute("open", "");
+    };
+    get modalTarget() {
+      return this.getAttribute("modal-target") ?? "";
+    }
+    set modalTarget(t) {
+      if (t)
+        this.setAttribute("modal-target", t);
+      else
+        this.removeAttribute("modal-target");
+    }
+  }
+  var Se = `<div class="divider" part="divider" role="separator">
     <span class="line line-start" part="line"></span>
     <span class="label" part="label"><slot></slot></span>
     <span class="line line-end" part="line"></span>
 </div>
 `;
-    var xr = `:host {
+  var ze = `:host {
   display: block;
 
   --_color: var(--border-default, #e5e7eb);
@@ -1766,28 +1733,26 @@ dialog[open]::backdrop { opacity: 1; }
 }
 `;
 
-    class K extends o {
-      static get observedAttributes() {
-        return ["orientation"];
-      }
-      constructor() {
-        super({ css: xr, template: _r });
-      }
-      connectedCallback() {
-        this._syncAria();
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "orientation")
-          this._syncAria();
-      }
-      _syncAria() {
-        let t = this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal";
-        this.setAttribute("aria-orientation", t);
-      }
+  class Ie extends o {
+    static get observedAttributes() {
+      return ["orientation"];
     }
-    if (!customElements.get("p9r-divider"))
-      customElements.define("p9r-divider", K);
-    var yr = `<button id="btn" class="button" part="button">
+    constructor() {
+      super({ css: ze, template: Se });
+    }
+    connectedCallback() {
+      this._syncAria();
+    }
+    attributeChangedCallback(t, e, r) {
+      if (t === "orientation")
+        this._syncAria();
+    }
+    _syncAria() {
+      let t = this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal";
+      this.setAttribute("aria-orientation", t);
+    }
+  }
+  var Pe = `<button id="btn" class="button" part="button">
     <slot name="icon-left"></slot>
     <span class="label">
         <slot>Button</slot>
@@ -1795,7 +1760,7 @@ dialog[open]::backdrop { opacity: 1; }
     <slot name="icon-right"></slot>
 </button>
 `;
-    var wr = `:host {
+  var Re = `:host {
   display: inline-block;
 
   --_btn-padding-y: 0.6rem;
@@ -1853,7 +1818,7 @@ dialog[open]::backdrop { opacity: 1; }
   width: 1.2rem;
 }
 `;
-    var kr = `:host([color="primary"]) {
+  var qe = `:host([color="primary"]) {
   --_accent-base: var(--primary-base);
   --_accent-muted: var(--primary-muted);
   --_accent-contrast: oklch(100% 0 0);
@@ -1929,72 +1894,70 @@ dialog[open]::backdrop { opacity: 1; }
   }
 }
 `;
-    var wo = wr + kr;
+  var bo = Re + qe;
 
-    class $ extends o {
-      static formAssociated = true;
-      _internals;
-      _btn;
-      constructor() {
-        super({ css: wo, template: yr });
-        this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
+  class Be extends o {
+    static formAssociated = true;
+    _internals;
+    _btn;
+    constructor() {
+      super({ css: bo, template: Pe });
+      this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
+    }
+    static get observedAttributes() {
+      return ["type", "disabled"];
+    }
+    connectedCallback() {
+      for (let t of ["type", "disabled"])
+        this._upgradeProperty(t);
+      if (!this.hasAttribute("type"))
+        this.setAttribute("type", "button");
+      if (!this.hasAttribute("variant"))
+        this.setAttribute("variant", "filled");
+      this.addEventListener("click", this._handleClick);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._handleClick);
+    }
+    _handleClick = (t) => {
+      if (this.hasAttribute("disabled")) {
+        t.stopImmediatePropagation();
+        return;
       }
-      static get observedAttributes() {
-        return ["type", "disabled"];
-      }
-      connectedCallback() {
-        for (let t of ["type", "disabled"])
-          this._upgradeProperty(t);
-        if (!this.hasAttribute("type"))
-          this.setAttribute("type", "button");
-        if (!this.hasAttribute("variant"))
-          this.setAttribute("variant", "filled");
-        this.addEventListener("click", this._handleClick);
-      }
-      disconnectedCallback() {
-        this.removeEventListener("click", this._handleClick);
-      }
-      _handleClick = (t) => {
-        if (this.hasAttribute("disabled")) {
-          t.stopImmediatePropagation();
-          return;
-        }
-        let e = this._internals.form;
-        if (!e)
-          return;
-        let r = this.getAttribute("type");
-        if (r === "submit")
-          e.requestSubmit();
-        if (r === "reset")
-          e.reset();
-      };
-      _upgradeProperty(t) {
-        if (this.hasOwnProperty(t)) {
-          let e = this[t];
-          delete this[t], this[t] = e;
-        }
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._btn)
-          return;
-        if (t === "type")
-          this._btn.type = r ?? "button";
-        if (t === "disabled")
-          this._btn.disabled = this.hasAttribute("disabled");
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        if (t)
-          this.setAttribute("disabled", "");
-        else
-          this.removeAttribute("disabled");
+      let e = this._internals.form;
+      if (!e)
+        return;
+      let r = this.getAttribute("type");
+      if (r === "submit")
+        e.requestSubmit();
+      if (r === "reset")
+        e.reset();
+    };
+    _upgradeProperty(t) {
+      if (this.hasOwnProperty(t)) {
+        let e = this[t];
+        delete this[t], this[t] = e;
       }
     }
-    if (!customElements.get("p9r-button"))
-      customElements.define("p9r-button", $);
-    var Er = `<label class="checkbox-container" part="container">
+    attributeChangedCallback(t, e, r) {
+      if (!this._btn)
+        return;
+      if (t === "type")
+        this._btn.type = r ?? "button";
+      if (t === "disabled")
+        this._btn.disabled = this.hasAttribute("disabled");
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      if (t)
+        this.setAttribute("disabled", "");
+      else
+        this.removeAttribute("disabled");
+    }
+  }
+  var De = `<label class="checkbox-container" part="container">
     <span class="input-wrapper">
         <input type="checkbox" id="native-input" part="input" />
         <span class="custom-box" part="box" aria-hidden="true">
@@ -2009,7 +1972,7 @@ dialog[open]::backdrop { opacity: 1; }
     </span>
 </label>
 `;
-    var Ar = `:host {
+  var Fe = `:host {
   display: inline-block;
   --cb-size: 20px;
   --cb-border: var(--border-default, #d1d5db);
@@ -2091,7 +2054,7 @@ input {
   display: none;
 }
 `;
-    var Lr = `input:checked ~ .custom-box {
+  var je = `input:checked ~ .custom-box {
   background-color: var(--cb-active-bg);
   border-color: var(--cb-active-border);
 }
@@ -2144,120 +2107,122 @@ input:focus-visible ~ .custom-box {
   }
 }
 `;
-    var Cr = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, f = (t, e, r) => {
-      let i = e?.checked ?? t.hasAttribute("checked");
-      r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
-    }, Tr = (t, e) => {
-      if (!e)
-        return;
-      if (e.checked = t.hasAttribute("checked"), e.disabled = t.hasAttribute("disabled"), e.indeterminate = t.hasAttribute("indeterminate"), t.hasAttribute("name"))
-        e.name = t.getAttribute("name") ?? "";
-      if (t.hasAttribute("value"))
-        e.value = t.getAttribute("value") ?? "";
-    }, Mr = (t, e, r, i, n) => {
-      if (!e)
-        return;
-      if (i === "checked")
-        e.checked = n !== null, f(t, e, r);
-      else if (i === "disabled")
-        e.disabled = n !== null;
-      else if (i === "indeterminate")
-        e.indeterminate = n !== null;
-      else if (i === "name")
-        e.name = n ?? "";
-      else if (i === "value")
-        e.value = n ?? "", f(t, e, r);
-    };
-    var Hr = (t, e, r) => {
-      if (e?.checked ?? false)
-        t.setAttribute("checked", "");
-      else
-        t.removeAttribute("checked");
-      if (e && e.indeterminate === false && t.hasAttribute("indeterminate"))
-        t.removeAttribute("indeterminate");
-      f(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
-    }, zr = (t, e) => {
-      if (t.hasAttribute("disabled"))
-        e.preventDefault(), e.stopImmediatePropagation();
-    };
-    var Lo = Ar + Lr;
-
-    class U extends o {
-      static formAssociated = true;
-      _internals;
-      _input;
-      _defaultChecked = false;
-      _defaultIndeterminate = false;
-      _defaultsCaptured = false;
-      static get observedAttributes() {
-        return ["checked", "disabled", "name", "value", "indeterminate"];
-      }
-      constructor() {
-        super({ css: Lo, template: Er });
-        this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null;
-      }
-      connectedCallback() {
-        if (!this._defaultsCaptured)
-          this._defaultChecked = this.hasAttribute("checked"), this._defaultIndeterminate = this.hasAttribute("indeterminate"), this._defaultsCaptured = true;
-        ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => Cr(this, t)), Tr(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), f(this, this._input, this._internals);
-      }
-      disconnectedCallback() {
-        this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
-      }
-      formResetCallback() {
-        this.indeterminate = this._defaultIndeterminate, this.checked = this._defaultChecked;
-      }
-      attributeChangedCallback(t, e, r) {
-        Mr(this, this._input, this._internals, t, r);
-      }
-      _onChange = () => Hr(this, this._input, this._internals);
-      _onClick = (t) => zr(this, t);
-      get checked() {
-        return this.hasAttribute("checked");
-      }
-      set checked(t) {
-        t ? this.setAttribute("checked", "") : this.removeAttribute("checked");
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      get indeterminate() {
-        return this._input?.indeterminate ?? this.hasAttribute("indeterminate");
-      }
-      set indeterminate(t) {
-        if (t ? this.setAttribute("indeterminate", "") : this.removeAttribute("indeterminate"), this._input)
-          this._input.indeterminate = t;
-      }
-      get name() {
-        return this.getAttribute("name") ?? "";
-      }
-      set name(t) {
-        this.setAttribute("name", t);
-      }
-      get value() {
-        return this.getAttribute("value") ?? "on";
-      }
-      set value(t) {
-        this.setAttribute("value", t);
-      }
-      get form() {
-        return this._internals.form;
-      }
-      click() {
-        this._input?.click();
-      }
+  var Ne = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("w13c-checkbox"))
-      customElements.define("w13c-checkbox", U);
-    var Sr = `<section class="section-container" part="container">
+  };
+  var f = (t, e, r) => {
+    let i = e?.checked ?? t.hasAttribute("checked");
+    r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
+  };
+  var Oe = (t, e) => {
+    if (!e)
+      return;
+    if (e.checked = t.hasAttribute("checked"), e.disabled = t.hasAttribute("disabled"), e.indeterminate = t.hasAttribute("indeterminate"), t.hasAttribute("name"))
+      e.name = t.getAttribute("name") ?? "";
+    if (t.hasAttribute("value"))
+      e.value = t.getAttribute("value") ?? "";
+  };
+  var Ve = (t, e, r, i, n) => {
+    if (!e)
+      return;
+    if (i === "checked")
+      e.checked = n !== null, f(t, e, r);
+    else if (i === "disabled")
+      e.disabled = n !== null;
+    else if (i === "indeterminate")
+      e.indeterminate = n !== null;
+    else if (i === "name")
+      e.name = n ?? "";
+    else if (i === "value")
+      e.value = n ?? "", f(t, e, r);
+  };
+  var Ke = (t, e, r) => {
+    if (e?.checked ?? false)
+      t.setAttribute("checked", "");
+    else
+      t.removeAttribute("checked");
+    if (e && e.indeterminate === false && t.hasAttribute("indeterminate"))
+      t.removeAttribute("indeterminate");
+    f(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  var $e = (t, e) => {
+    if (t.hasAttribute("disabled"))
+      e.preventDefault(), e.stopImmediatePropagation();
+  };
+  var vo = Fe + je;
+
+  class Ue extends o {
+    static formAssociated = true;
+    _internals;
+    _input;
+    _defaultChecked = false;
+    _defaultIndeterminate = false;
+    _defaultsCaptured = false;
+    static get observedAttributes() {
+      return ["checked", "disabled", "name", "value", "indeterminate"];
+    }
+    constructor() {
+      super({ css: vo, template: De });
+      this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null;
+    }
+    connectedCallback() {
+      if (!this._defaultsCaptured)
+        this._defaultChecked = this.hasAttribute("checked"), this._defaultIndeterminate = this.hasAttribute("indeterminate"), this._defaultsCaptured = true;
+      ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => Ne(this, t)), Oe(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), f(this, this._input, this._internals);
+    }
+    disconnectedCallback() {
+      this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
+    }
+    formResetCallback() {
+      this.indeterminate = this._defaultIndeterminate, this.checked = this._defaultChecked;
+    }
+    attributeChangedCallback(t, e, r) {
+      Ve(this, this._input, this._internals, t, r);
+    }
+    _onChange = () => Ke(this, this._input, this._internals);
+    _onClick = (t) => $e(this, t);
+    get checked() {
+      return this.hasAttribute("checked");
+    }
+    set checked(t) {
+      t ? this.setAttribute("checked", "") : this.removeAttribute("checked");
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    get indeterminate() {
+      return this._input?.indeterminate ?? this.hasAttribute("indeterminate");
+    }
+    set indeterminate(t) {
+      if (t ? this.setAttribute("indeterminate", "") : this.removeAttribute("indeterminate"), this._input)
+        this._input.indeterminate = t;
+    }
+    get name() {
+      return this.getAttribute("name") ?? "";
+    }
+    set name(t) {
+      this.setAttribute("name", t);
+    }
+    get value() {
+      return this.getAttribute("value") ?? "on";
+    }
+    set value(t) {
+      this.setAttribute("value", t);
+    }
+    get form() {
+      return this._internals.form;
+    }
+    click() {
+      this._input?.click();
+    }
+  }
+  var Ye = `<section class="section-container" part="container">
     <header id="toggle" part="header" role="button" tabindex="0" aria-expanded="true">
         <div class="accent-bar" part="accent"></div>
         <div class="title-wrapper" part="title"></div>
@@ -2270,7 +2235,7 @@ input:focus-visible ~ .custom-box {
     </main>
 </section>
 `;
-    var Ir = `:host {
+  var Xe = `:host {
     display: block;
     margin-bottom: 8px;
 }
@@ -2349,73 +2314,74 @@ header:focus-visible {
     width: 100%;
 }
 `;
-    var Pr = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, Vt = (t, e) => {
-      if (e)
-        e.textContent = t.getAttribute("data-title") ?? "";
-    }, Kt = (t, e, r) => {
-      if (!e)
-        return;
-      let i = t.hasAttribute("collapsed");
-      if (e.setAttribute("aria-expanded", String(!i)), r)
-        r.hidden = i;
-    };
-    var Rr = (t, e) => {
-      t.dispatchEvent(new CustomEvent("toggle", { detail: { collapsed: e }, bubbles: true, composed: true }));
-    };
-    var $t = (t) => {
-      t.collapsed = !t.collapsed, Rr(t, t.collapsed);
-    }, qr = (t, e) => {
-      if (e.key !== "Enter" && e.key !== " ")
-        return;
-      e.preventDefault(), $t(t);
-    };
-
-    class Y extends o {
-      static get observedAttributes() {
-        return ["collapsed", "data-title"];
-      }
-      _toggle;
-      _title;
-      _content;
-      constructor() {
-        super({ css: Ir, template: Sr });
-        this._toggle = this.shadowRoot?.getElementById("toggle") ?? null, this._title = this.shadowRoot?.querySelector(".title-wrapper") ?? null, this._content = this.shadowRoot?.getElementById("content") ?? null;
-      }
-      connectedCallback() {
-        if (Pr(this, "collapsed"), this.hasAttribute("data-collapsed") && !this.hasAttribute("collapsed"))
-          this.setAttribute("collapsed", "");
-        Vt(this, this._title), Kt(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
-      }
-      disconnectedCallback() {
-        this._toggle?.removeEventListener("click", this._onClick), this._toggle?.removeEventListener("keydown", this._onKey);
-      }
-      attributeChangedCallback(t) {
-        if (t === "collapsed")
-          Kt(this, this._toggle, this._content);
-        if (t === "data-title")
-          Vt(this, this._title);
-      }
-      get collapsed() {
-        return this.hasAttribute("collapsed");
-      }
-      set collapsed(t) {
-        t ? this.setAttribute("collapsed", "") : this.removeAttribute("collapsed");
-      }
-      _onClick = () => $t(this);
-      _onKey = (t) => qr(this, t);
+  var Ze = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("p9r-section"))
-      customElements.define("p9r-section", Y);
-    var Br = `<button id="btn" class="icon-button" part="button">
+  };
+  var K = (t, e) => {
+    if (e)
+      e.textContent = t.getAttribute("data-title") ?? "";
+  };
+  var $ = (t, e, r) => {
+    if (!e)
+      return;
+    let i = t.hasAttribute("collapsed");
+    if (e.setAttribute("aria-expanded", String(!i)), r)
+      r.hidden = i;
+  };
+  var Ge = (t, e) => {
+    t.dispatchEvent(new CustomEvent("toggle", { detail: { collapsed: e }, bubbles: true, composed: true }));
+  };
+  var U = (t) => {
+    t.collapsed = !t.collapsed, Ge(t, t.collapsed);
+  };
+  var We = (t, e) => {
+    if (e.key !== "Enter" && e.key !== " ")
+      return;
+    e.preventDefault(), U(t);
+  };
+
+  class Je extends o {
+    static get observedAttributes() {
+      return ["collapsed", "data-title"];
+    }
+    _toggle;
+    _title;
+    _content;
+    constructor() {
+      super({ css: Xe, template: Ye });
+      this._toggle = this.shadowRoot?.getElementById("toggle") ?? null, this._title = this.shadowRoot?.querySelector(".title-wrapper") ?? null, this._content = this.shadowRoot?.getElementById("content") ?? null;
+    }
+    connectedCallback() {
+      if (Ze(this, "collapsed"), this.hasAttribute("data-collapsed") && !this.hasAttribute("collapsed"))
+        this.setAttribute("collapsed", "");
+      K(this, this._title), $(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
+    }
+    disconnectedCallback() {
+      this._toggle?.removeEventListener("click", this._onClick), this._toggle?.removeEventListener("keydown", this._onKey);
+    }
+    attributeChangedCallback(t) {
+      if (t === "collapsed")
+        $(this, this._toggle, this._content);
+      if (t === "data-title")
+        K(this, this._title);
+    }
+    get collapsed() {
+      return this.hasAttribute("collapsed");
+    }
+    set collapsed(t) {
+      t ? this.setAttribute("collapsed", "") : this.removeAttribute("collapsed");
+    }
+    _onClick = () => U(this);
+    _onKey = (t) => We(this, t);
+  }
+  var Qe = `<button id="btn" class="icon-button" part="button">
     <slot></slot>
 </button>
 `;
-    var Dr = `:host {
+  var tr = `:host {
   display: inline-block;
 
   --_size: 2.25rem;
@@ -2505,81 +2471,79 @@ header:focus-visible {
 }
 `;
 
-    class X extends o {
-      static formAssociated = true;
-      _internals;
-      _btn;
-      static get observedAttributes() {
-        return ["type", "disabled", "aria-label"];
+  class er extends o {
+    static formAssociated = true;
+    _internals;
+    _btn;
+    static get observedAttributes() {
+      return ["type", "disabled", "aria-label"];
+    }
+    constructor() {
+      super({ css: tr, template: Qe });
+      this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
+    }
+    connectedCallback() {
+      for (let t of ["type", "disabled"])
+        this._upgradeProperty(t);
+      if (!this.hasAttribute("type"))
+        this.setAttribute("type", "button");
+      if (!this.hasAttribute("variant"))
+        this.setAttribute("variant", "ghost");
+      this.addEventListener("click", this._handleClick), this._syncAriaLabel();
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._handleClick);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._btn)
+        return;
+      if (t === "type")
+        this._btn.type = r ?? "button";
+      if (t === "disabled")
+        this._btn.disabled = this.hasAttribute("disabled");
+      if (t === "aria-label")
+        this._syncAriaLabel();
+    }
+    _syncAriaLabel() {
+      if (!this._btn)
+        return;
+      let t = this.getAttribute("aria-label");
+      if (t)
+        this._btn.setAttribute("aria-label", t);
+      else
+        this._btn.removeAttribute("aria-label");
+    }
+    _handleClick = (t) => {
+      if (this.hasAttribute("disabled")) {
+        t.stopImmediatePropagation();
+        return;
       }
-      constructor() {
-        super({ css: Dr, template: Br });
-        this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
-      }
-      connectedCallback() {
-        for (let t of ["type", "disabled"])
-          this._upgradeProperty(t);
-        if (!this.hasAttribute("type"))
-          this.setAttribute("type", "button");
-        if (!this.hasAttribute("variant"))
-          this.setAttribute("variant", "ghost");
-        this.addEventListener("click", this._handleClick), this._syncAriaLabel();
-      }
-      disconnectedCallback() {
-        this.removeEventListener("click", this._handleClick);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._btn)
-          return;
-        if (t === "type")
-          this._btn.type = r ?? "button";
-        if (t === "disabled")
-          this._btn.disabled = this.hasAttribute("disabled");
-        if (t === "aria-label")
-          this._syncAriaLabel();
-      }
-      _syncAriaLabel() {
-        if (!this._btn)
-          return;
-        let t = this.getAttribute("aria-label");
-        if (t)
-          this._btn.setAttribute("aria-label", t);
-        else
-          this._btn.removeAttribute("aria-label");
-      }
-      _handleClick = (t) => {
-        if (this.hasAttribute("disabled")) {
-          t.stopImmediatePropagation();
-          return;
-        }
-        let e = this._internals.form;
-        if (!e)
-          return;
-        let r = this.getAttribute("type");
-        if (r === "submit")
-          e.requestSubmit();
-        if (r === "reset")
-          e.reset();
-      };
-      _upgradeProperty(t) {
-        if (Object.prototype.hasOwnProperty.call(this, t)) {
-          let e = this[t];
-          delete this[t], this[t] = e;
-        }
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        if (t)
-          this.setAttribute("disabled", "");
-        else
-          this.removeAttribute("disabled");
+      let e = this._internals.form;
+      if (!e)
+        return;
+      let r = this.getAttribute("type");
+      if (r === "submit")
+        e.requestSubmit();
+      if (r === "reset")
+        e.reset();
+    };
+    _upgradeProperty(t) {
+      if (Object.prototype.hasOwnProperty.call(this, t)) {
+        let e = this[t];
+        delete this[t], this[t] = e;
       }
     }
-    if (!customElements.get("p9r-icon-button"))
-      customElements.define("p9r-icon-button", X);
-    var jr = `<div class="field-header" part="header">
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      if (t)
+        this.setAttribute("disabled", "");
+      else
+        this.removeAttribute("disabled");
+    }
+  }
+  var rr = `<div class="field-header" part="header">
     <slot name="label"></slot>
 </div>
 
@@ -2602,7 +2566,7 @@ header:focus-visible {
 
 <div class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
 `;
-    var Fr = `:host {
+  var ir = `:host {
     display: block;
     width: 100%;
     margin: 1.25rem 0;
@@ -2700,165 +2664,167 @@ input[type="file"]:focus-visible + label {
     }
 }
 `;
-    var Nr = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, Or = (t) => {
-      if (t < 1024)
-        return `${t} B`;
-      if (t < 1048576)
-        return `${(t / 1024).toFixed(1)} KB`;
-      return `${(t / 1048576).toFixed(1)} MB`;
-    }, Ut = (t, e) => {
-      if (t)
-        t.textContent = e;
-    };
-    var Yt = (t, e) => {
-      t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { files: e } }));
-    };
-    var Z = (t, e, r, i, n) => {
-      let a = e?.files;
-      if (!a || a.length === 0) {
-        if (r)
-          r.textContent = "No file selected";
-        n.setFormValue(null), Ut(i, "No file selected"), Yt(t, null);
-        return;
-      }
-      let s = a.length === 1 && a[0] ? `${a[0].name} (${Or(a[0].size)})` : `${a.length} files selected`;
+  var nr = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
+    }
+  };
+  var ar = (t) => {
+    if (t < 1024)
+      return `${t} B`;
+    if (t < 1048576)
+      return `${(t / 1024).toFixed(1)} KB`;
+    return `${(t / 1048576).toFixed(1)} MB`;
+  };
+  var Y = (t, e) => {
+    if (t)
+      t.textContent = e;
+  };
+  var X = (t, e) => {
+    t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { files: e } }));
+  };
+  var z = (t, e, r, i, n) => {
+    let a = e?.files;
+    if (!a || a.length === 0) {
       if (r)
-        r.textContent = s;
-      if (a.length === 1 && a[0])
-        n.setFormValue(a[0]);
-      else {
-        let l = new FormData, d = t.getAttribute("name") ?? "";
-        for (let c = 0;c < a.length; c++) {
-          let u = a.item(c);
-          if (u)
-            l.append(d, u);
-        }
-        n.setFormValue(l);
+        r.textContent = "No file selected";
+      n.setFormValue(null), Y(i, "No file selected"), X(t, null);
+      return;
+    }
+    let s = a.length === 1 && a[0] ? `${a[0].name} (${ar(a[0].size)})` : `${a.length} files selected`;
+    if (r)
+      r.textContent = s;
+    if (a.length === 1 && a[0])
+      n.setFormValue(a[0]);
+    else {
+      let l = new FormData, d = t.getAttribute("name") ?? "";
+      for (let c = 0;c < a.length; c++) {
+        let u = a.item(c);
+        if (u)
+          l.append(d, u);
       }
-      Ut(i, `Selected: ${s}`), Yt(t, a);
-    };
-    var Vr = (t, e) => {
-      if (e.preventDefault(), t.hasAttribute("disabled"))
-        return;
-      t.toggleAttribute("dragging", true);
-    }, Kr = (t, e) => {
-      e.preventDefault(), t.toggleAttribute("dragging", false);
-    }, $r = (t, e, r, i, n, a) => {
-      let s = a;
-      if (s.preventDefault(), t.removeAttribute("dragging"), t.hasAttribute("disabled"))
-        return;
-      if (s.dataTransfer?.files && e)
-        e.files = s.dataTransfer.files, Z(t, e, r, i, n);
-    };
+      n.setFormValue(l);
+    }
+    Y(i, `Selected: ${s}`), X(t, a);
+  };
+  var or = (t, e) => {
+    if (e.preventDefault(), t.hasAttribute("disabled"))
+      return;
+    t.toggleAttribute("dragging", true);
+  };
+  var sr = (t, e) => {
+    e.preventDefault(), t.toggleAttribute("dragging", false);
+  };
+  var lr = (t, e, r, i, n, a) => {
+    let s = a;
+    if (s.preventDefault(), t.removeAttribute("dragging"), t.hasAttribute("disabled"))
+      return;
+    if (s.dataTransfer?.files && e)
+      e.files = s.dataTransfer.files, z(t, e, r, i, n);
+  };
 
-    class W extends o {
-      static formAssociated = true;
-      _internals;
-      _input;
-      _preview;
-      _dropZone;
-      _liveRegion;
-      constructor() {
-        super({ css: Fr, template: jr });
-        this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector('input[type="file"]') ?? null, this._preview = this.shadowRoot?.querySelector(".file-info") ?? null, this._dropZone = this.shadowRoot?.querySelector(".drop-zone") ?? null, this._liveRegion = this.shadowRoot?.querySelector(".sr-live") ?? null;
-      }
-      static get observedAttributes() {
-        return ["accept", "multiple", "name", "disabled", "required"];
-      }
-      connectedCallback() {
-        for (let t of ["accept", "multiple", "name", "disabled", "required"])
-          Nr(this, t);
-        this._input?.addEventListener("change", this._onChange), this._dropZone?.addEventListener("dragover", this._onDragOver), this._dropZone?.addEventListener("dragleave", this._onDragLeave), this._dropZone?.addEventListener("drop", this._onDrop);
-      }
-      disconnectedCallback() {
-        this._input?.removeEventListener("change", this._onChange), this._dropZone?.removeEventListener("dragover", this._onDragOver), this._dropZone?.removeEventListener("dragleave", this._onDragLeave), this._dropZone?.removeEventListener("drop", this._onDrop);
-      }
-      formResetCallback() {
-        if (this._input)
-          this._input.value = "";
-        if (this._internals.setFormValue(null), this._preview)
-          this._preview.textContent = "No file selected";
-        this.removeAttribute("dragging");
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._input)
-          return;
-        switch (t) {
-          case "accept":
-            if (r === null)
-              this._input.removeAttribute("accept");
-            else
-              this._input.setAttribute("accept", r);
-            break;
-          case "multiple":
-            this._input.multiple = this.hasAttribute("multiple");
-            break;
-          case "name":
-            if (r === null)
-              this._input.removeAttribute("name");
-            else
-              this._input.setAttribute("name", r);
-            break;
-          case "disabled":
-            this._input.disabled = this.hasAttribute("disabled");
-            break;
-          case "required":
-            this._input.required = this.hasAttribute("required");
-            break;
-        }
-      }
-      _onChange = () => Z(this, this._input, this._preview, this._liveRegion, this._internals);
-      _onDragOver = (t) => Vr(this, t);
-      _onDragLeave = (t) => Kr(this, t);
-      _onDrop = (t) => $r(this, this._input, this._preview, this._liveRegion, this._internals, t);
-      get name() {
-        return this.getAttribute("name") ?? "";
-      }
-      set name(t) {
-        this.setAttribute("name", t);
-      }
-      get accept() {
-        return this.getAttribute("accept") ?? "";
-      }
-      set accept(t) {
-        t ? this.setAttribute("accept", t) : this.removeAttribute("accept");
-      }
-      get multiple() {
-        return this.hasAttribute("multiple");
-      }
-      set multiple(t) {
-        t ? this.setAttribute("multiple", "") : this.removeAttribute("multiple");
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      get required() {
-        return this.hasAttribute("required");
-      }
-      set required(t) {
-        t ? this.setAttribute("required", "") : this.removeAttribute("required");
-      }
-      get files() {
-        return this._input?.files ?? null;
-      }
-      get value() {
-        return this._input?.files?.[0] ?? null;
-      }
-      get form() {
-        return this._internals.form;
+  class dr extends o {
+    static formAssociated = true;
+    _internals;
+    _input;
+    _preview;
+    _dropZone;
+    _liveRegion;
+    constructor() {
+      super({ css: ir, template: rr });
+      this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector('input[type="file"]') ?? null, this._preview = this.shadowRoot?.querySelector(".file-info") ?? null, this._dropZone = this.shadowRoot?.querySelector(".drop-zone") ?? null, this._liveRegion = this.shadowRoot?.querySelector(".sr-live") ?? null;
+    }
+    static get observedAttributes() {
+      return ["accept", "multiple", "name", "disabled", "required"];
+    }
+    connectedCallback() {
+      for (let t of ["accept", "multiple", "name", "disabled", "required"])
+        nr(this, t);
+      this._input?.addEventListener("change", this._onChange), this._dropZone?.addEventListener("dragover", this._onDragOver), this._dropZone?.addEventListener("dragleave", this._onDragLeave), this._dropZone?.addEventListener("drop", this._onDrop);
+    }
+    disconnectedCallback() {
+      this._input?.removeEventListener("change", this._onChange), this._dropZone?.removeEventListener("dragover", this._onDragOver), this._dropZone?.removeEventListener("dragleave", this._onDragLeave), this._dropZone?.removeEventListener("drop", this._onDrop);
+    }
+    formResetCallback() {
+      if (this._input)
+        this._input.value = "";
+      if (this._internals.setFormValue(null), this._preview)
+        this._preview.textContent = "No file selected";
+      this.removeAttribute("dragging");
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._input)
+        return;
+      switch (t) {
+        case "accept":
+          if (r === null)
+            this._input.removeAttribute("accept");
+          else
+            this._input.setAttribute("accept", r);
+          break;
+        case "multiple":
+          this._input.multiple = this.hasAttribute("multiple");
+          break;
+        case "name":
+          if (r === null)
+            this._input.removeAttribute("name");
+          else
+            this._input.setAttribute("name", r);
+          break;
+        case "disabled":
+          this._input.disabled = this.hasAttribute("disabled");
+          break;
+        case "required":
+          this._input.required = this.hasAttribute("required");
+          break;
       }
     }
-    if (!customElements.get("w13c-input-file"))
-      customElements.define("w13c-input-file", W);
-    var Ur = `<div class="field" part="field">
+    _onChange = () => z(this, this._input, this._preview, this._liveRegion, this._internals);
+    _onDragOver = (t) => or(this, t);
+    _onDragLeave = (t) => sr(this, t);
+    _onDrop = (t) => lr(this, this._input, this._preview, this._liveRegion, this._internals, t);
+    get name() {
+      return this.getAttribute("name") ?? "";
+    }
+    set name(t) {
+      this.setAttribute("name", t);
+    }
+    get accept() {
+      return this.getAttribute("accept") ?? "";
+    }
+    set accept(t) {
+      t ? this.setAttribute("accept", t) : this.removeAttribute("accept");
+    }
+    get multiple() {
+      return this.hasAttribute("multiple");
+    }
+    set multiple(t) {
+      t ? this.setAttribute("multiple", "") : this.removeAttribute("multiple");
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    get required() {
+      return this.hasAttribute("required");
+    }
+    set required(t) {
+      t ? this.setAttribute("required", "") : this.removeAttribute("required");
+    }
+    get files() {
+      return this._input?.files ?? null;
+    }
+    get value() {
+      return this._input?.files?.[0] ?? null;
+    }
+    get form() {
+      return this._internals.form;
+    }
+  }
+  var cr = `<div class="field" part="field">
     <label class="label" part="label"></label>
     <input class="input" part="input" type="text" />
     <div class="meta" part="meta" hidden>
@@ -2867,7 +2833,7 @@ input[type="file"]:focus-visible + label {
     </div>
 </div>
 `;
-    var Yr = `:host {
+  var ur = `:host {
     display: block;
 }
 
@@ -2939,7 +2905,7 @@ input[type="file"]:focus-visible + label {
     display: none;
 }
 `;
-    var Xr = `.input:hover:not(:disabled) {
+  var pr = `.input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -2975,185 +2941,198 @@ input[type="file"]:focus-visible + label {
     font-weight: 600;
 }
 `;
-    var Zr = `@media (prefers-reduced-motion: no-preference) {
+  var hr = `@media (prefers-reduced-motion: no-preference) {
     .input { transition: border-color 0.15s, box-shadow 0.15s; }
 }
 `;
-    var Wr = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, Xt = (t) => {
-      let e = t.getAttribute("max-count");
-      if (e === null)
-        return null;
-      let r = parseInt(e, 10);
-      return Number.isFinite(r) && r > 0 ? r : null;
-    }, v = (t, e, r, i) => {
-      if (!e || !r || !i)
-        return;
-      let n = Xt(t);
-      if (n === null)
-        return;
-      let a = e.value.length;
-      i.textContent = String(a), r.dataset.over = String(a > n);
-    }, Zt = (t, e, r) => {
-      if (!t || !e || !r)
-        return;
-      let i = (t.textContent ?? "").length > 0, n = !e.hidden;
-      r.hidden = !i && !n;
-    }, Bo = 0, Gr = () => `p9r-input-label-${++Bo}`;
-    var Wt = (t, e) => {
-      if (!e)
-        return;
-      let r = t.getAttribute("label") ?? "";
-      e.textContent = r, e.hidden = r === "";
-    }, Do = (t, e) => {
-      if (!e)
-        return;
-      let r = t.getAttribute("placeholder");
-      if (r === null)
-        e.removeAttribute("placeholder");
-      else
-        e.setAttribute("placeholder", r);
-    }, jo = (t, e) => {
-      if (!e)
-        return;
-      e.setAttribute("type", t.getAttribute("type") ?? "text");
-    }, Fo = (t, e) => {
-      if (e)
-        e.disabled = t.hasAttribute("disabled");
-    }, No = (t, e) => {
-      if (!e)
-        return;
-      let r = t.hasAttribute("required");
-      if (e.required = r, r)
-        e.setAttribute("aria-required", "true");
-      else
-        e.removeAttribute("aria-required");
-    }, Oo = (t, e, r, i) => {
-      if (!e)
-        return;
-      e.textContent = t.getAttribute("hint") ?? "", Zt(e, r, i);
-    }, Vo = (t, e) => {
-      if (!e)
-        return;
-      e.dataset.level = t.getAttribute("hint-level") ?? "info";
-    }, Ko = (t, e) => {
-      if (!e)
-        return;
-      if (t.hasAttribute("invalid"))
-        e.setAttribute("aria-invalid", "true");
-      else
-        e.removeAttribute("aria-invalid");
-    }, Gt = (t, e, r, i, n) => {
-      if (!e || !r)
-        return;
-      let a = Xt(t);
-      if (a === null)
-        e.hidden = true;
-      else
-        e.hidden = false, r.textContent = String(a);
-      Zt(i, e, n);
-    }, Jt = (t, e, r, i, n, a, s) => {
-      Wt(t, r), Do(t, e), jo(t, e), Fo(t, e), No(t, e), Oo(t, i, a, n), Vo(t, i), Ko(t, e), Gt(t, a, s, i, n);
-    };
-    var Jr = (t, e, r, i, n) => {
-      if (!e)
-        return;
-      r.setFormValue(e.value), v(t, e, i, n);
-    }, Qr = (t, e) => {
-      if (!t)
-        return;
-      e.setFormValue(t.value);
-    };
-    var $o = Yr + Xr + Zr;
-
-    class G extends o {
-      static formAssociated = true;
-      static get observedAttributes() {
-        return ["value", "label", "placeholder", "type", "hint", "hint-level", "max-count", "invalid", "disabled", "required"];
-      }
-      _internals;
-      _input;
-      _labelEl;
-      _hintEl;
-      _metaEl;
-      _counterEl;
-      _countEl;
-      _maxEl;
-      _defaultValue = "";
-      _defaultsCaptured = false;
-      constructor() {
-        super({ css: $o, template: Ur });
-        this._internals = this.attachInternals();
-        let t = this.shadowRoot;
-        this._labelEl = t.querySelector(".label"), this._input = t.querySelector(".input"), this._hintEl = t.querySelector(".hint"), this._metaEl = t.querySelector(".meta"), this._counterEl = t.querySelector(".counter"), this._countEl = t.querySelector(".count"), this._maxEl = t.querySelector(".max");
-        let e = Gr();
-        if (this._labelEl && this._input)
-          this._labelEl.id = e, this._input.setAttribute("aria-labelledby", e);
-      }
-      connectedCallback() {
-        if (!this._defaultsCaptured)
-          this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-        ["value", "disabled", "required"].forEach((e) => Wr(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), Jt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
-        let t = this.getAttribute("value");
-        if (t !== null)
-          this.value = t;
-        else
-          v(this, this._input, this._counterEl, this._countEl);
-      }
-      disconnectedCallback() {
-        this._input?.removeEventListener("input", this._onInput), this._input?.removeEventListener("change", this._onChange);
-      }
-      formResetCallback() {
-        this.value = this._defaultValue;
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._input)
-          return;
-        if (t === "value" && r !== null)
-          this.value = r;
-        else if (t === "label")
-          Wt(this, this._labelEl);
-        else if (t === "max-count")
-          Gt(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), v(this, this._input, this._counterEl, this._countEl);
-        else
-          Jt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
-      }
-      get value() {
-        return this._input?.value ?? "";
-      }
-      set value(t) {
-        if (!this._input)
-          return;
-        this._input.value = t, this._internals.setFormValue(t), v(this, this._input, this._counterEl, this._countEl);
-      }
-      get name() {
-        return this.getAttribute("name") ?? "";
-      }
-      get disabled() {
-        return this._input?.disabled ?? false;
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      get required() {
-        return this.hasAttribute("required");
-      }
-      set required(t) {
-        t ? this.setAttribute("required", "") : this.removeAttribute("required");
-      }
-      focus() {
-        this._input?.focus();
-      }
-      _onInput = () => Jr(this, this._input, this._internals, this._counterEl, this._countEl);
-      _onChange = () => Qr(this._input, this._internals);
+  var br = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("p9r-input"))
-      customElements.define("p9r-input", G);
-    var ti = `<div class="field" part="field">
+  };
+  var Z = (t) => {
+    let e = t.getAttribute("max-count");
+    if (e === null)
+      return null;
+    let r = parseInt(e, 10);
+    return Number.isFinite(r) && r > 0 ? r : null;
+  };
+  var v = (t, e, r, i) => {
+    if (!e || !r || !i)
+      return;
+    let n = Z(t);
+    if (n === null)
+      return;
+    let a = e.value.length;
+    i.textContent = String(a), r.dataset.over = String(a > n);
+  };
+  var G = (t, e, r) => {
+    if (!t || !e || !r)
+      return;
+    let i = (t.textContent ?? "").length > 0, n = !e.hidden;
+    r.hidden = !i && !n;
+  };
+  var Mo = 0;
+  var mr = () => `p9r-input-label-${++Mo}`;
+  var W = (t, e) => {
+    if (!e)
+      return;
+    let r = t.getAttribute("label") ?? "";
+    e.textContent = r, e.hidden = r === "";
+  };
+  var Ho = (t, e) => {
+    if (!e)
+      return;
+    let r = t.getAttribute("placeholder");
+    if (r === null)
+      e.removeAttribute("placeholder");
+    else
+      e.setAttribute("placeholder", r);
+  };
+  var So = (t, e) => {
+    if (!e)
+      return;
+    e.setAttribute("type", t.getAttribute("type") ?? "text");
+  };
+  var zo = (t, e) => {
+    if (e)
+      e.disabled = t.hasAttribute("disabled");
+  };
+  var Io = (t, e) => {
+    if (!e)
+      return;
+    let r = t.hasAttribute("required");
+    if (e.required = r, r)
+      e.setAttribute("aria-required", "true");
+    else
+      e.removeAttribute("aria-required");
+  };
+  var Po = (t, e, r, i) => {
+    if (!e)
+      return;
+    e.textContent = t.getAttribute("hint") ?? "", G(e, r, i);
+  };
+  var Ro = (t, e) => {
+    if (!e)
+      return;
+    e.dataset.level = t.getAttribute("hint-level") ?? "info";
+  };
+  var qo = (t, e) => {
+    if (!e)
+      return;
+    if (t.hasAttribute("invalid"))
+      e.setAttribute("aria-invalid", "true");
+    else
+      e.removeAttribute("aria-invalid");
+  };
+  var J = (t, e, r, i, n) => {
+    if (!e || !r)
+      return;
+    let a = Z(t);
+    if (a === null)
+      e.hidden = true;
+    else
+      e.hidden = false, r.textContent = String(a);
+    G(i, e, n);
+  };
+  var Q = (t, e, r, i, n, a, s) => {
+    W(t, r), Ho(t, e), So(t, e), zo(t, e), Io(t, e), Po(t, i, a, n), Ro(t, i), qo(t, e), J(t, a, s, i, n);
+  };
+  var gr = (t, e, r, i, n) => {
+    if (!e)
+      return;
+    r.setFormValue(e.value), v(t, e, i, n);
+  };
+  var fr = (t, e) => {
+    if (!t)
+      return;
+    e.setFormValue(t.value);
+  };
+  var Bo = ur + pr + hr;
+
+  class vr extends o {
+    static formAssociated = true;
+    static get observedAttributes() {
+      return ["value", "label", "placeholder", "type", "hint", "hint-level", "max-count", "invalid", "disabled", "required"];
+    }
+    _internals;
+    _input;
+    _labelEl;
+    _hintEl;
+    _metaEl;
+    _counterEl;
+    _countEl;
+    _maxEl;
+    _defaultValue = "";
+    _defaultsCaptured = false;
+    constructor() {
+      super({ css: Bo, template: cr });
+      this._internals = this.attachInternals();
+      let t = this.shadowRoot;
+      this._labelEl = t.querySelector(".label"), this._input = t.querySelector(".input"), this._hintEl = t.querySelector(".hint"), this._metaEl = t.querySelector(".meta"), this._counterEl = t.querySelector(".counter"), this._countEl = t.querySelector(".count"), this._maxEl = t.querySelector(".max");
+      let e = mr();
+      if (this._labelEl && this._input)
+        this._labelEl.id = e, this._input.setAttribute("aria-labelledby", e);
+    }
+    connectedCallback() {
+      if (!this._defaultsCaptured)
+        this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
+      ["value", "disabled", "required"].forEach((e) => br(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), Q(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+      let t = this.getAttribute("value");
+      if (t !== null)
+        this.value = t;
+      else
+        v(this, this._input, this._counterEl, this._countEl);
+    }
+    disconnectedCallback() {
+      this._input?.removeEventListener("input", this._onInput), this._input?.removeEventListener("change", this._onChange);
+    }
+    formResetCallback() {
+      this.value = this._defaultValue;
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._input)
+        return;
+      if (t === "value" && r !== null)
+        this.value = r;
+      else if (t === "label")
+        W(this, this._labelEl);
+      else if (t === "max-count")
+        J(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), v(this, this._input, this._counterEl, this._countEl);
+      else
+        Q(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+    }
+    get value() {
+      return this._input?.value ?? "";
+    }
+    set value(t) {
+      if (!this._input)
+        return;
+      this._input.value = t, this._internals.setFormValue(t), v(this, this._input, this._counterEl, this._countEl);
+    }
+    get name() {
+      return this.getAttribute("name") ?? "";
+    }
+    get disabled() {
+      return this._input?.disabled ?? false;
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    get required() {
+      return this.hasAttribute("required");
+    }
+    set required(t) {
+      t ? this.setAttribute("required", "") : this.removeAttribute("required");
+    }
+    focus() {
+      this._input?.focus();
+    }
+    _onInput = () => gr(this, this._input, this._internals, this._counterEl, this._countEl);
+    _onChange = () => fr(this._input, this._internals);
+  }
+  var _r = `<div class="field" part="field">
     <div class="header" part="header">
         <span class="label" part="label"></span>
         <div class="input-wrap" part="input-wrap">
@@ -3173,7 +3152,7 @@ input[type="file"]:focus-visible + label {
     </div>
 </div>
 `;
-    var ei = `:host {
+  var xr = `:host {
     display: block;
 }
 
@@ -3249,7 +3228,7 @@ input[type="file"]:focus-visible + label {
     margin-top: -2px;
 }
 `;
-    var ri = `:host([disabled]) {
+  var yr = `:host([disabled]) {
     opacity: 0.55;
     pointer-events: none;
 }
@@ -3335,166 +3314,174 @@ input[type="file"]:focus-visible + label {
     border: none;
 }
 `;
-    var ii = `@media (prefers-reduced-motion: no-preference) {
+  var wr = `@media (prefers-reduced-motion: no-preference) {
     .input-wrap { transition: border-color 0.15s; }
     .fill { transition: width 0.05s ease; }
     .slider::-webkit-slider-thumb { transition: transform 0.1s; }
 }
 `;
-    var ni = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, L = (t, e) => {
-      if (!t)
-        return e;
-      let r = Number(t.min), i = Number(t.max);
-      if (!Number.isFinite(e))
-        return r;
-      if (e < r)
-        return r;
-      if (e > i)
-        return i;
-      return e;
-    }, _ = (t, e) => {
-      if (!t || !e)
-        return;
-      let r = Number(t.min), i = Number(t.max), n = Number(t.value), a = i === r ? 0 : (n - r) / (i - r) * 100;
-      e.style.width = `${a}%`;
-    };
-    var Qt = (t, e, r, i, n) => {
-      if (!e || !r || !i || !n)
-        return;
-      let a = t.getAttribute("min") ?? "0", s = t.getAttribute("max") ?? "100", l = t.getAttribute("step") ?? "1";
-      e.min = a, e.max = s, e.step = l, r.min = a, r.max = s, r.step = l, i.textContent = a, n.textContent = s;
-    }, te = (t, e, r, i) => {
-      if (!e || !r || !i)
-        return;
-      let n = t.getAttribute("label") ?? t.getAttribute("name") ?? "";
-      if (e.textContent = n, e.hidden = n === "", n)
-        r.setAttribute("aria-label", n), i.setAttribute("aria-label", n);
-    }, ee = (t, e) => {
-      if (!e)
-        return;
-      let r = t.getAttribute("unit") ?? "";
-      e.textContent = r, e.hidden = r === "";
-    }, re = (t, e, r) => {
-      if (!e || !r)
-        return;
-      let i = t.hasAttribute("disabled");
-      e.disabled = i, r.disabled = i;
-    }, C = (t, e, r, i, n) => {
-      if (!t || !e)
-        return;
-      let a = L(t, Number(n));
-      t.value = String(a), e.value = String(a), i.setFormValue(t.value), _(t, r);
-    };
-    var ai = (t, e, r, i, n) => {
-      if (!e || !r)
-        return;
-      r.value = e.value, n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-    }, oi = (t, e, r) => {
-      if (!e)
-        return;
-      r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    }, si = (t, e, r, i, n) => {
-      if (!e || !r)
-        return;
-      if (r.value === "")
-        return;
-      let a = L(e, Number(r.value));
-      e.value = String(a), n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-    }, li = (t, e, r, i, n) => {
-      if (!e || !r)
-        return;
-      let a = L(e, Number(r.value));
-      e.value = String(a), r.value = String(a), n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    }, di = (t, e) => {
-      if (!t || !e)
-        return;
-      e.value = t.value;
-    };
-    var Wo = ei + ri + ii;
-
-    class J extends o {
-      static formAssociated = true;
-      static get observedAttributes() {
-        return ["value", "label", "min", "max", "step", "unit", "disabled"];
-      }
-      _internals;
-      _slider;
-      _input;
-      _fill;
-      _labelEl;
-      _unitEl;
-      _minEl;
-      _maxEl;
-      _defaultValue = "";
-      _defaultsCaptured = false;
-      constructor() {
-        super({ css: Wo, template: ti });
-        this._internals = this.attachInternals();
-        let t = this.shadowRoot;
-        this._slider = t.querySelector(".slider"), this._input = t.querySelector(".number"), this._fill = t.querySelector(".fill"), this._labelEl = t.querySelector(".label"), this._unitEl = t.querySelector(".unit"), this._minEl = t.querySelector(".min-bound"), this._maxEl = t.querySelector(".max-bound");
-      }
-      connectedCallback() {
-        ["value", "disabled"].forEach((e) => ni(this, e)), te(this, this._labelEl, this._slider, this._input), Qt(this, this._slider, this._input, this._minEl, this._maxEl), ee(this, this._unitEl), re(this, this._slider, this._input);
-        let t = this.getAttribute("value") ?? this.getAttribute("min") ?? "0";
-        if (!this._defaultsCaptured)
-          this._defaultValue = t, this._defaultsCaptured = true;
-        C(this._slider, this._input, this._fill, this._internals, t), this._wire("addEventListener");
-      }
-      disconnectedCallback() {
-        this._wire("removeEventListener");
-      }
-      formResetCallback() {
-        C(this._slider, this._input, this._fill, this._internals, this._defaultValue);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._slider || !this._input)
-          return;
-        if (t === "value" && r !== null)
-          C(this._slider, this._input, this._fill, this._internals, r);
-        else if (t === "label")
-          te(this, this._labelEl, this._slider, this._input);
-        else if (t === "min" || t === "max" || t === "step")
-          Qt(this, this._slider, this._input, this._minEl, this._maxEl);
-        else if (t === "unit")
-          ee(this, this._unitEl);
-        else if (t === "disabled")
-          re(this, this._slider, this._input);
-      }
-      get value() {
-        return this._slider?.value ?? "";
-      }
-      set value(t) {
-        C(this._slider, this._input, this._fill, this._internals, String(t));
-      }
-      get name() {
-        return this.getAttribute("name") ?? "";
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      focus() {
-        this._slider?.focus();
-      }
-      _wire(t) {
-        this._slider?.[t]("input", this._onSliderInput), this._slider?.[t]("change", this._onSliderChange), this._input?.[t]("input", this._onNumberInput), this._input?.[t]("change", this._onNumberChange), this._input?.[t]("blur", this._onNumberBlur);
-      }
-      _onSliderInput = () => ai(this, this._slider, this._input, this._fill, this._internals);
-      _onSliderChange = () => oi(this, this._slider, this._internals);
-      _onNumberInput = () => si(this, this._slider, this._input, this._fill, this._internals);
-      _onNumberChange = () => li(this, this._slider, this._input, this._fill, this._internals);
-      _onNumberBlur = () => di(this._slider, this._input);
+  var kr = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("p9r-range"))
-      customElements.define("p9r-range", J);
-    var ci = `<div class="field">
+  };
+  var L = (t, e) => {
+    if (!t)
+      return e;
+    let r = Number(t.min), i = Number(t.max);
+    if (!Number.isFinite(e))
+      return r;
+    if (e < r)
+      return r;
+    if (e > i)
+      return i;
+    return e;
+  };
+  var _ = (t, e) => {
+    if (!t || !e)
+      return;
+    let r = Number(t.min), i = Number(t.max), n = Number(t.value), a = i === r ? 0 : (n - r) / (i - r) * 100;
+    e.style.width = `${a}%`;
+  };
+  var tt = (t, e, r, i, n) => {
+    if (!e || !r || !i || !n)
+      return;
+    let a = t.getAttribute("min") ?? "0", s = t.getAttribute("max") ?? "100", l = t.getAttribute("step") ?? "1";
+    e.min = a, e.max = s, e.step = l, r.min = a, r.max = s, r.step = l, i.textContent = a, n.textContent = s;
+  };
+  var et = (t, e, r, i) => {
+    if (!e || !r || !i)
+      return;
+    let n = t.getAttribute("label") ?? t.getAttribute("name") ?? "";
+    if (e.textContent = n, e.hidden = n === "", n)
+      r.setAttribute("aria-label", n), i.setAttribute("aria-label", n);
+  };
+  var rt = (t, e) => {
+    if (!e)
+      return;
+    let r = t.getAttribute("unit") ?? "";
+    e.textContent = r, e.hidden = r === "";
+  };
+  var it = (t, e, r) => {
+    if (!e || !r)
+      return;
+    let i = t.hasAttribute("disabled");
+    e.disabled = i, r.disabled = i;
+  };
+  var C = (t, e, r, i, n) => {
+    if (!t || !e)
+      return;
+    let a = L(t, Number(n));
+    t.value = String(a), e.value = String(a), i.setFormValue(t.value), _(t, r);
+  };
+  var Er = (t, e, r, i, n) => {
+    if (!e || !r)
+      return;
+    r.value = e.value, n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+  };
+  var Ar = (t, e, r) => {
+    if (!e)
+      return;
+    r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+  };
+  var Lr = (t, e, r, i, n) => {
+    if (!e || !r)
+      return;
+    if (r.value === "")
+      return;
+    let a = L(e, Number(r.value));
+    e.value = String(a), n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+  };
+  var Cr = (t, e, r, i, n) => {
+    if (!e || !r)
+      return;
+    let a = L(e, Number(r.value));
+    e.value = String(a), r.value = String(a), n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+  };
+  var Tr = (t, e) => {
+    if (!t || !e)
+      return;
+    e.value = t.value;
+  };
+  var Oo = xr + yr + wr;
+
+  class Mr extends o {
+    static formAssociated = true;
+    static get observedAttributes() {
+      return ["value", "label", "min", "max", "step", "unit", "disabled"];
+    }
+    _internals;
+    _slider;
+    _input;
+    _fill;
+    _labelEl;
+    _unitEl;
+    _minEl;
+    _maxEl;
+    _defaultValue = "";
+    _defaultsCaptured = false;
+    constructor() {
+      super({ css: Oo, template: _r });
+      this._internals = this.attachInternals();
+      let t = this.shadowRoot;
+      this._slider = t.querySelector(".slider"), this._input = t.querySelector(".number"), this._fill = t.querySelector(".fill"), this._labelEl = t.querySelector(".label"), this._unitEl = t.querySelector(".unit"), this._minEl = t.querySelector(".min-bound"), this._maxEl = t.querySelector(".max-bound");
+    }
+    connectedCallback() {
+      ["value", "disabled"].forEach((e) => kr(this, e)), et(this, this._labelEl, this._slider, this._input), tt(this, this._slider, this._input, this._minEl, this._maxEl), rt(this, this._unitEl), it(this, this._slider, this._input);
+      let t = this.getAttribute("value") ?? this.getAttribute("min") ?? "0";
+      if (!this._defaultsCaptured)
+        this._defaultValue = t, this._defaultsCaptured = true;
+      C(this._slider, this._input, this._fill, this._internals, t), this._wire("addEventListener");
+    }
+    disconnectedCallback() {
+      this._wire("removeEventListener");
+    }
+    formResetCallback() {
+      C(this._slider, this._input, this._fill, this._internals, this._defaultValue);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._slider || !this._input)
+        return;
+      if (t === "value" && r !== null)
+        C(this._slider, this._input, this._fill, this._internals, r);
+      else if (t === "label")
+        et(this, this._labelEl, this._slider, this._input);
+      else if (t === "min" || t === "max" || t === "step")
+        tt(this, this._slider, this._input, this._minEl, this._maxEl);
+      else if (t === "unit")
+        rt(this, this._unitEl);
+      else if (t === "disabled")
+        it(this, this._slider, this._input);
+    }
+    get value() {
+      return this._slider?.value ?? "";
+    }
+    set value(t) {
+      C(this._slider, this._input, this._fill, this._internals, String(t));
+    }
+    get name() {
+      return this.getAttribute("name") ?? "";
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    focus() {
+      this._slider?.focus();
+    }
+    _wire(t) {
+      this._slider?.[t]("input", this._onSliderInput), this._slider?.[t]("change", this._onSliderChange), this._input?.[t]("input", this._onNumberInput), this._input?.[t]("change", this._onNumberChange), this._input?.[t]("blur", this._onNumberBlur);
+    }
+    _onSliderInput = () => Er(this, this._slider, this._input, this._fill, this._internals);
+    _onSliderChange = () => Ar(this, this._slider, this._internals);
+    _onNumberInput = () => Lr(this, this._slider, this._input, this._fill, this._internals);
+    _onNumberChange = () => Cr(this, this._slider, this._input, this._fill, this._internals);
+    _onNumberBlur = () => Tr(this._slider, this._input);
+  }
+  var Hr = `<div class="field">
     <span class="label"></span>
     <button class="trigger" type="button" tabindex="0"
             popovertarget="panel" popovertargetaction="toggle">
@@ -3510,7 +3497,7 @@ input[type="file"]:focus-visible + label {
 </div>
 <div hidden><slot></slot></div>
 `;
-    var ui = `:host {
+  var Sr = `:host {
     display: block;
 }
 
@@ -3577,7 +3564,7 @@ input[type="file"]:focus-visible + label {
     transition: background 0.1s;
 }
 `;
-    var pi = `.trigger:hover {
+  var zr = `.trigger:hover {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -3622,135 +3609,133 @@ input[type="file"]:focus-visible + label {
     font-weight: 600;
 }
 `;
-    var hi = (t, e) => {
-      t.forEach((r) => r.classList.toggle("selected", r.dataset.value === e));
-    }, bi = (t, e) => {
-      if (!t)
-        return;
-      t.textContent = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
-    };
-    var mi = (t, e, r) => {
-      let i = Array.from(t.querySelectorAll("option"));
-      if (e)
-        e.innerHTML = "";
-      let n = [], a = "", s = "";
-      if (i.forEach((l) => {
-        let d = document.createElement("li");
-        if (d.className = "option", d.textContent = l.textContent, d.dataset.value = l.value, d.addEventListener("click", () => r(l.value, l.textContent ?? "")), e?.appendChild(d), n.push(d), l.hasAttribute("selected") && !a)
-          a = l.value, s = l.textContent ?? "";
-      }), !a && i.length > 0)
-        a = i[0].value, s = i[0].textContent ?? "";
-      return { options: n, initialValue: a, initialLabel: s };
-    }, gi = (t, e, r, i) => {
-      if (e)
-        e.textContent = i;
-      hi(t, r);
-    };
-    var ts = ui + pi;
+  var Ir = (t, e) => {
+    t.forEach((r) => r.classList.toggle("selected", r.dataset.value === e));
+  };
+  var Pr = (t, e) => {
+    if (!t)
+      return;
+    t.textContent = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
+  };
+  var Rr = (t, e, r) => {
+    let i = Array.from(t.querySelectorAll("option"));
+    if (e)
+      e.innerHTML = "";
+    let n = [], a = "", s = "";
+    if (i.forEach((l) => {
+      let d = document.createElement("li");
+      if (d.className = "option", d.textContent = l.textContent, d.dataset.value = l.value, d.addEventListener("click", () => r(l.value, l.textContent ?? "")), e?.appendChild(d), n.push(d), l.hasAttribute("selected") && !a)
+        a = l.value, s = l.textContent ?? "";
+    }), !a && i.length > 0)
+      a = i[0].value, s = i[0].textContent ?? "";
+    return { options: n, initialValue: a, initialLabel: s };
+  };
+  var qr = (t, e, r, i) => {
+    if (e)
+      e.textContent = i;
+    Ir(t, r);
+  };
+  var Uo = Sr + zr;
 
-    class Q extends o {
-      static formAssociated = true;
-      _internals;
-      _trigger;
-      _display;
-      _list;
-      _panel;
-      _options = [];
-      _value = "";
-      _isOpen = false;
-      constructor() {
-        super({ css: ts, template: ci });
-        this._internals = this.attachInternals(), this._trigger = this.shadowRoot.querySelector(".trigger"), this._display = this.shadowRoot.querySelector(".value"), this._list = this.shadowRoot.querySelector(".list"), this._panel = this.shadowRoot.querySelector(".panel");
-      }
-      connectedCallback() {
-        bi(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
-      }
-      disconnectedCallback() {
-        if (this.shadowRoot.querySelector("slot")?.removeEventListener("slotchange", this._onSlot), this._panel?.removeEventListener("beforetoggle", this._onBeforeToggle), this._panel?.removeEventListener("toggle", this._onToggle), this._isOpen)
-          this._panel?.hidePopover?.();
-        this._unbindReposition();
-      }
-      _syncFromSlot = () => {
-        let { options: t, initialValue: e, initialLabel: r } = mi(this, this._list, (n, a) => this._select(n, a));
-        this._options = t;
-        let i = this.getAttribute("value");
-        if (i !== null) {
-          let n = t.find((a) => a.dataset.value === i);
-          if (n) {
-            this._setValue(i, n.textContent ?? "");
-            return;
-          }
-        }
-        if (e)
-          this._setValue(e, r);
-      };
-      _select(t, e) {
-        this._setValue(t, e), this._panel?.hidePopover?.(), this.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-      _setValue(t, e) {
-        this._value = t, this._internals.setFormValue(t), gi(this._options, this._display, t, e);
-      }
-      _onBeforeToggle = (t) => {
-        if (t.newState === "open")
-          this._reposition();
-      };
-      _onToggle = (t) => {
-        if (this._isOpen = t.newState === "open", this._isOpen)
-          window.addEventListener("scroll", this._reposition, { capture: true, passive: true }), window.addEventListener("resize", this._reposition);
-        else
-          this._unbindReposition();
-      };
-      _unbindReposition() {
-        window.removeEventListener("scroll", this._reposition, { capture: true }), window.removeEventListener("resize", this._reposition);
-      }
-      _reposition = () => {
-        if (!this._trigger || !this._panel)
+  class Br extends o {
+    static formAssociated = true;
+    _internals;
+    _trigger;
+    _display;
+    _list;
+    _panel;
+    _options = [];
+    _value = "";
+    _isOpen = false;
+    constructor() {
+      super({ css: Uo, template: Hr });
+      this._internals = this.attachInternals(), this._trigger = this.shadowRoot.querySelector(".trigger"), this._display = this.shadowRoot.querySelector(".value"), this._list = this.shadowRoot.querySelector(".list"), this._panel = this.shadowRoot.querySelector(".panel");
+    }
+    connectedCallback() {
+      Pr(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
+    }
+    disconnectedCallback() {
+      if (this.shadowRoot.querySelector("slot")?.removeEventListener("slotchange", this._onSlot), this._panel?.removeEventListener("beforetoggle", this._onBeforeToggle), this._panel?.removeEventListener("toggle", this._onToggle), this._isOpen)
+        this._panel?.hidePopover?.();
+      this._unbindReposition();
+    }
+    _syncFromSlot = () => {
+      let { options: t, initialValue: e, initialLabel: r } = Rr(this, this._list, (n, a) => this._select(n, a));
+      this._options = t;
+      let i = this.getAttribute("value");
+      if (i !== null) {
+        let n = t.find((a) => a.dataset.value === i);
+        if (n) {
+          this._setValue(i, n.textContent ?? "");
           return;
-        let t = this._trigger.getBoundingClientRect();
-        this._panel.style.top = `${t.bottom + 4}px`, this._panel.style.left = `${t.left}px`, this._panel.style.width = `${t.width}px`;
-      };
-      get value() {
-        return this._value;
+        }
       }
-      set value(t) {
-        let e = this._options.find((r) => r.dataset.value === t);
-        if (e)
-          this._setValue(t, e.textContent ?? "");
-      }
-      get name() {
-        return this.getAttribute("name");
-      }
-      _onSlot = () => this._syncFromSlot();
+      if (e)
+        this._setValue(e, r);
+    };
+    _select(t, e) {
+      this._setValue(t, e), this._panel?.hidePopover?.(), this.dispatchEvent(new Event("change", { bubbles: true }));
     }
-    if (!customElements.get("p9r-select"))
-      customElements.define("p9r-select", Q);
+    _setValue(t, e) {
+      this._value = t, this._internals.setFormValue(t), qr(this._options, this._display, t, e);
+    }
+    _onBeforeToggle = (t) => {
+      if (t.newState === "open")
+        this._reposition();
+    };
+    _onToggle = (t) => {
+      if (this._isOpen = t.newState === "open", this._isOpen)
+        window.addEventListener("scroll", this._reposition, { capture: true, passive: true }), window.addEventListener("resize", this._reposition);
+      else
+        this._unbindReposition();
+    };
+    _unbindReposition() {
+      window.removeEventListener("scroll", this._reposition, { capture: true }), window.removeEventListener("resize", this._reposition);
+    }
+    _reposition = () => {
+      if (!this._trigger || !this._panel)
+        return;
+      let t = this._trigger.getBoundingClientRect();
+      this._panel.style.top = `${t.bottom + 4}px`, this._panel.style.left = `${t.left}px`, this._panel.style.width = `${t.width}px`;
+    };
+    get value() {
+      return this._value;
+    }
+    set value(t) {
+      let e = this._options.find((r) => r.dataset.value === t);
+      if (e)
+        this._setValue(t, e.textContent ?? "");
+    }
+    get name() {
+      return this.getAttribute("name");
+    }
+    _onSlot = () => this._syncFromSlot();
+  }
 
-    class tt extends HTMLElement {
-      _bufferedValue = "";
-      connectedCallback() {
-        let t = this.getAttribute("label") || "Size", e = this.getAttribute("name") || "size", r = document.createElement("p9r-select");
-        if (r.setAttribute("label", t), r.setAttribute("name", e), [{ value: "none", label: "NONE" }, { value: "xs", label: "XS" }, { value: "sm", label: "S" }, { value: "md", label: "M", selected: true }, { value: "lg", label: "L" }, { value: "xl", label: "XL" }].forEach((n) => {
-          let a = document.createElement("option");
-          if (a.value = n.value, a.textContent = n.label, n.selected)
-            a.setAttribute("selected", "");
-          r.appendChild(a);
-        }), this._bufferedValue)
-          r.value = this._bufferedValue;
-        this.replaceWith(r);
-      }
-      get name() {
-        return this.getAttribute("name");
-      }
-      get value() {
-        return this._bufferedValue;
-      }
-      set value(t) {
-        this._bufferedValue = t;
-      }
+  class Dr extends HTMLElement {
+    _bufferedValue = "";
+    connectedCallback() {
+      let t = this.getAttribute("label") || "Size", e = this.getAttribute("name") || "size", r = document.createElement("p9r-select");
+      if (r.setAttribute("label", t), r.setAttribute("name", e), [{ value: "none", label: "NONE" }, { value: "xs", label: "XS" }, { value: "sm", label: "S" }, { value: "md", label: "M", selected: true }, { value: "lg", label: "L" }, { value: "xl", label: "XL" }].forEach((n) => {
+        let a = document.createElement("option");
+        if (a.value = n.value, a.textContent = n.label, n.selected)
+          a.setAttribute("selected", "");
+        r.appendChild(a);
+      }), this._bufferedValue)
+        r.value = this._bufferedValue;
+      this.replaceWith(r);
     }
-    if (!customElements.get("p9r-sizes-select"))
-      customElements.define("p9r-sizes-select", tt);
-    var fi = `<label class="radio" part="container">
+    get name() {
+      return this.getAttribute("name");
+    }
+    get value() {
+      return this._bufferedValue;
+    }
+    set value(t) {
+      this._bufferedValue = t;
+    }
+  }
+  var Fr = `<label class="radio" part="container">
     <input type="radio" id="native-input" part="input" />
     <span class="custom" part="circle" aria-hidden="true">
         <span class="dot" part="dot"></span>
@@ -3758,7 +3743,7 @@ input[type="file"]:focus-visible + label {
     <span class="label" part="label"><slot></slot></span>
 </label>
 `;
-    var vi = `:host {
+  var jr = `:host {
   display: inline-block;
 
   --_size: 18px;
@@ -3838,93 +3823,91 @@ input:focus-visible ~ .custom {
 }
 `;
 
-    class et extends o {
-      _input;
-      static get observedAttributes() {
-        return ["checked", "disabled", "value", "name"];
+  class Nr extends o {
+    _input;
+    static get observedAttributes() {
+      return ["checked", "disabled", "value", "name"];
+    }
+    constructor() {
+      super({ css: jr, template: Fr });
+      this._input = this.shadowRoot?.querySelector("input") ?? null;
+    }
+    connectedCallback() {
+      for (let t of ["checked", "disabled", "value"])
+        this._upgradeProperty(t);
+      if (this._input) {
+        if (this._input.checked = this.hasAttribute("checked"), this._input.disabled = this.hasAttribute("disabled"), this._input.value = this.getAttribute("value") ?? "", this.hasAttribute("name"))
+          this._input.name = this.getAttribute("name") ?? "";
+        this._input.addEventListener("change", this._onChange), this._input.addEventListener("click", this._onClick);
       }
-      constructor() {
-        super({ css: vi, template: fi });
-        this._input = this.shadowRoot?.querySelector("input") ?? null;
-      }
-      connectedCallback() {
-        for (let t of ["checked", "disabled", "value"])
-          this._upgradeProperty(t);
-        if (this._input) {
-          if (this._input.checked = this.hasAttribute("checked"), this._input.disabled = this.hasAttribute("disabled"), this._input.value = this.getAttribute("value") ?? "", this.hasAttribute("name"))
-            this._input.name = this.getAttribute("name") ?? "";
-          this._input.addEventListener("change", this._onChange), this._input.addEventListener("click", this._onClick);
-        }
-        if (this.setAttribute("role", "radio"), this.setAttribute("aria-checked", String(this.hasAttribute("checked"))), !this.hasAttribute("tabindex"))
-          this.setAttribute("tabindex", this.hasAttribute("checked") ? "0" : "-1");
-      }
-      disconnectedCallback() {
-        this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._input)
-          return;
-        if (t === "checked")
-          this._input.checked = r !== null, this.setAttribute("aria-checked", String(r !== null));
-        else if (t === "disabled")
-          this._input.disabled = r !== null;
-        else if (t === "value")
-          this._input.value = r ?? "";
-        else if (t === "name")
-          this._input.name = r ?? "";
-      }
-      _onChange = () => {
-        if (this._input?.checked ?? false)
-          this.setAttribute("checked", "");
-        else
-          this.removeAttribute("checked");
-        this.dispatchEvent(new Event("change", { bubbles: true }));
-      };
-      _onClick = (t) => {
-        if (this.hasAttribute("disabled"))
-          t.preventDefault(), t.stopImmediatePropagation();
-      };
-      _upgradeProperty(t) {
-        if (Object.prototype.hasOwnProperty.call(this, t)) {
-          let e = this[t];
-          delete this[t], this[t] = e;
-        }
-      }
-      get checked() {
-        return this.hasAttribute("checked");
-      }
-      set checked(t) {
-        if (t)
-          this.setAttribute("checked", "");
-        else
-          this.removeAttribute("checked");
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        if (t)
-          this.setAttribute("disabled", "");
-        else
-          this.removeAttribute("disabled");
-      }
-      get value() {
-        return this.getAttribute("value") ?? "";
-      }
-      set value(t) {
-        this.setAttribute("value", t);
+      if (this.setAttribute("role", "radio"), this.setAttribute("aria-checked", String(this.hasAttribute("checked"))), !this.hasAttribute("tabindex"))
+        this.setAttribute("tabindex", this.hasAttribute("checked") ? "0" : "-1");
+    }
+    disconnectedCallback() {
+      this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._input)
+        return;
+      if (t === "checked")
+        this._input.checked = r !== null, this.setAttribute("aria-checked", String(r !== null));
+      else if (t === "disabled")
+        this._input.disabled = r !== null;
+      else if (t === "value")
+        this._input.value = r ?? "";
+      else if (t === "name")
+        this._input.name = r ?? "";
+    }
+    _onChange = () => {
+      if (this._input?.checked ?? false)
+        this.setAttribute("checked", "");
+      else
+        this.removeAttribute("checked");
+      this.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    _onClick = (t) => {
+      if (this.hasAttribute("disabled"))
+        t.preventDefault(), t.stopImmediatePropagation();
+    };
+    _upgradeProperty(t) {
+      if (Object.prototype.hasOwnProperty.call(this, t)) {
+        let e = this[t];
+        delete this[t], this[t] = e;
       }
     }
-    if (!customElements.get("p9r-radio"))
-      customElements.define("p9r-radio", et);
-    var _i = `<fieldset class="group" part="group">
+    get checked() {
+      return this.hasAttribute("checked");
+    }
+    set checked(t) {
+      if (t)
+        this.setAttribute("checked", "");
+      else
+        this.removeAttribute("checked");
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      if (t)
+        this.setAttribute("disabled", "");
+      else
+        this.removeAttribute("disabled");
+    }
+    get value() {
+      return this.getAttribute("value") ?? "";
+    }
+    set value(t) {
+      this.setAttribute("value", t);
+    }
+  }
+  var Or = `<fieldset class="group" part="group">
     <legend class="label" part="label"></legend>
     <div class="options" part="options">
         <slot></slot>
     </div>
 </fieldset>
 `;
-    var xi = `:host {
+  var Vr = `:host {
   display: block;
 }
 
@@ -3966,149 +3949,155 @@ input:focus-visible ~ .custom {
   pointer-events: none;
 }
 `;
-    var yi = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, x = (t) => {
-      if (!t)
-        return [];
-      return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-RADIO");
-    }, as = 0, wi = () => `radiogroup-${as++}`, ki = (t, e, r) => {
-      t.forEach((i) => {
-        let n = e !== null && i.getAttribute("value") === e;
-        if (n)
-          i.setAttribute("checked", "");
-        else
-          i.removeAttribute("checked");
-        i.setAttribute("tabindex", n ? "0" : "-1");
-      }), r.setFormValue(e ?? null);
-    }, ie = (t, e) => {
-      if (t)
-        t.textContent = e ?? "";
-    }, rt = (t, e) => {
-      if (!e)
-        return;
-      t.forEach((r) => r.setAttribute("disabled", ""));
-    };
-    var ne = (t, e) => {
-      t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: e } }));
-    };
-    var ae = (t, e, r) => {
-      let i = x(e), n = t.getAttribute("name") ?? wi(), a = t.getAttribute("value");
-      if (i.forEach((s) => {
-        s.setAttribute("name", n);
-        let l = a !== null && s.getAttribute("value") === a;
-        if (l)
-          s.setAttribute("checked", "");
-        else
-          s.removeAttribute("checked");
-        s.setAttribute("tabindex", l ? "0" : "-1");
-      }), a === null && i.length > 0)
-        i[0]?.setAttribute("tabindex", "0");
-      rt(i, t.hasAttribute("disabled")), r.setFormValue(a ?? null);
-    }, Ei = (t, e) => {
-      let r = e.target;
-      if (r.tagName !== "P9R-RADIO")
-        return;
-      let i = r.getAttribute("value") ?? "";
-      if (i !== t.getAttribute("value"))
-        t.setAttribute("value", i), ne(t, i);
-    }, Ai = (t, e, r) => {
-      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
-        return;
-      let n = x(e).filter((u) => !u.hasAttribute("disabled"));
-      if (n.length === 0)
-        return;
-      let a = n.findIndex((u) => u === document.activeElement), s = a === -1 ? 0 : a, l = s;
-      switch (r.key) {
-        case "ArrowLeft":
-        case "ArrowUp":
-          l = (s - 1 + n.length) % n.length;
-          break;
-        case "ArrowRight":
-        case "ArrowDown":
-          l = (s + 1) % n.length;
-          break;
-        case "Home":
-          l = 0;
-          break;
-        case "End":
-          l = n.length - 1;
-          break;
-      }
-      r.preventDefault();
-      let d = n[l];
-      if (!d)
-        return;
-      let c = d.getAttribute("value") ?? "";
-      t.setAttribute("value", c), d.focus(), ne(t, c);
-    };
-
-    class it extends o {
-      static formAssociated = true;
-      _internals;
-      _label;
-      _slot;
-      _defaultValue = null;
-      _defaultsCaptured = false;
-      static get observedAttributes() {
-        return ["value", "label", "name", "disabled"];
-      }
-      constructor() {
-        super({ css: xi, template: _i });
-        this._internals = this.attachInternals(), this._label = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
-      }
-      connectedCallback() {
-        if (!this._defaultsCaptured)
-          this._defaultValue = this.getAttribute("value"), this._defaultsCaptured = true;
-        for (let t of ["value", "name", "disabled"])
-          yi(this, t);
-        this.setAttribute("role", "radiogroup"), ie(this._label, this.getAttribute("label")), this._slot?.addEventListener("slotchange", this._onSlotChange), this.addEventListener("change", this._onChange), this.addEventListener("keydown", this._onKey), ae(this, this._slot, this._internals);
-      }
-      disconnectedCallback() {
-        this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("change", this._onChange), this.removeEventListener("keydown", this._onKey);
-      }
-      formResetCallback() {
-        if (this._defaultValue === null)
-          this.removeAttribute("value");
-        else
-          this.setAttribute("value", this._defaultValue);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "value")
-          ki(x(this._slot), r, this._internals);
-        else if (t === "label")
-          ie(this._label, r);
-        else if (t === "disabled")
-          rt(x(this._slot), this.hasAttribute("disabled"));
-      }
-      get value() {
-        return this.getAttribute("value") ?? "";
-      }
-      set value(t) {
-        this.setAttribute("value", t);
-      }
-      get name() {
-        return this.getAttribute("name") ?? "";
-      }
-      set name(t) {
-        t ? this.setAttribute("name", t) : this.removeAttribute("name");
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      _onSlotChange = () => ae(this, this._slot, this._internals);
-      _onChange = (t) => Ei(this, t);
-      _onKey = (t) => Ai(this, this._slot, t);
+  var Kr = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("p9r-radio-group"))
-      customElements.define("p9r-radio-group", it);
-    var Li = `<div class="switch-container" part="container">
+  };
+  var x = (t) => {
+    if (!t)
+      return [];
+    return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-RADIO");
+  };
+  var Wo = 0;
+  var $r = () => `radiogroup-${Wo++}`;
+  var Ur = (t, e, r) => {
+    t.forEach((i) => {
+      let n = e !== null && i.getAttribute("value") === e;
+      if (n)
+        i.setAttribute("checked", "");
+      else
+        i.removeAttribute("checked");
+      i.setAttribute("tabindex", n ? "0" : "-1");
+    }), r.setFormValue(e ?? null);
+  };
+  var nt = (t, e) => {
+    if (t)
+      t.textContent = e ?? "";
+  };
+  var I = (t, e) => {
+    if (!e)
+      return;
+    t.forEach((r) => r.setAttribute("disabled", ""));
+  };
+  var at = (t, e) => {
+    t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: e } }));
+  };
+  var ot = (t, e, r) => {
+    let i = x(e), n = t.getAttribute("name") ?? $r(), a = t.getAttribute("value");
+    if (i.forEach((s) => {
+      s.setAttribute("name", n);
+      let l = a !== null && s.getAttribute("value") === a;
+      if (l)
+        s.setAttribute("checked", "");
+      else
+        s.removeAttribute("checked");
+      s.setAttribute("tabindex", l ? "0" : "-1");
+    }), a === null && i.length > 0)
+      i[0]?.setAttribute("tabindex", "0");
+    I(i, t.hasAttribute("disabled")), r.setFormValue(a ?? null);
+  };
+  var Yr = (t, e) => {
+    let r = e.target;
+    if (r.tagName !== "P9R-RADIO")
+      return;
+    let i = r.getAttribute("value") ?? "";
+    if (i !== t.getAttribute("value"))
+      t.setAttribute("value", i), at(t, i);
+  };
+  var Xr = (t, e, r) => {
+    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
+      return;
+    let n = x(e).filter((u) => !u.hasAttribute("disabled"));
+    if (n.length === 0)
+      return;
+    let a = n.findIndex((u) => u === document.activeElement), s = a === -1 ? 0 : a, l = s;
+    switch (r.key) {
+      case "ArrowLeft":
+      case "ArrowUp":
+        l = (s - 1 + n.length) % n.length;
+        break;
+      case "ArrowRight":
+      case "ArrowDown":
+        l = (s + 1) % n.length;
+        break;
+      case "Home":
+        l = 0;
+        break;
+      case "End":
+        l = n.length - 1;
+        break;
+    }
+    r.preventDefault();
+    let d = n[l];
+    if (!d)
+      return;
+    let c = d.getAttribute("value") ?? "";
+    t.setAttribute("value", c), d.focus(), at(t, c);
+  };
+
+  class Zr extends o {
+    static formAssociated = true;
+    _internals;
+    _label;
+    _slot;
+    _defaultValue = null;
+    _defaultsCaptured = false;
+    static get observedAttributes() {
+      return ["value", "label", "name", "disabled"];
+    }
+    constructor() {
+      super({ css: Vr, template: Or });
+      this._internals = this.attachInternals(), this._label = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
+    }
+    connectedCallback() {
+      if (!this._defaultsCaptured)
+        this._defaultValue = this.getAttribute("value"), this._defaultsCaptured = true;
+      for (let t of ["value", "name", "disabled"])
+        Kr(this, t);
+      this.setAttribute("role", "radiogroup"), nt(this._label, this.getAttribute("label")), this._slot?.addEventListener("slotchange", this._onSlotChange), this.addEventListener("change", this._onChange), this.addEventListener("keydown", this._onKey), ot(this, this._slot, this._internals);
+    }
+    disconnectedCallback() {
+      this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("change", this._onChange), this.removeEventListener("keydown", this._onKey);
+    }
+    formResetCallback() {
+      if (this._defaultValue === null)
+        this.removeAttribute("value");
+      else
+        this.setAttribute("value", this._defaultValue);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (t === "value")
+        Ur(x(this._slot), r, this._internals);
+      else if (t === "label")
+        nt(this._label, r);
+      else if (t === "disabled")
+        I(x(this._slot), this.hasAttribute("disabled"));
+    }
+    get value() {
+      return this.getAttribute("value") ?? "";
+    }
+    set value(t) {
+      this.setAttribute("value", t);
+    }
+    get name() {
+      return this.getAttribute("name") ?? "";
+    }
+    set name(t) {
+      t ? this.setAttribute("name", t) : this.removeAttribute("name");
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    _onSlotChange = () => ot(this, this._slot, this._internals);
+    _onChange = (t) => Yr(this, t);
+    _onKey = (t) => Xr(this, this._slot, t);
+  }
+  var Gr = `<div class="switch-container" part="container">
     <span class="label" id="group-label" part="label"></span>
 
     <div class="switch-wrapper" part="wrapper" role="radiogroup" aria-labelledby="group-label">
@@ -4124,7 +4113,7 @@ input:focus-visible ~ .custom {
     </span>
 </div>
 `;
-    var Ci = `:host {
+  var Wr = `:host {
   --active-index: 0;
   --total-options: 1;
   display: block;
@@ -4213,155 +4202,158 @@ input:focus-visible ~ .custom {
   pointer-events: none;
 }
 `;
-    var Ti = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, T = (t) => {
-      if (!t)
-        return [];
-      return t.assignedElements().filter((e) => e.tagName === "OPTION");
-    }, oe = (t, e) => {
-      if (t)
-        t.textContent = e;
-    }, nt = (t, e, r) => {
-      let i = e.findIndex((n) => n.getAttribute("value") === r);
-      if (i === -1)
-        return;
-      t.style.setProperty("--active-index", i.toString()), e.forEach((n, a) => {
-        let s = a === i;
-        n.setAttribute("aria-checked", s.toString()), n.setAttribute("tabindex", s ? "0" : "-1");
-      });
-    }, at = (t, e) => {
-      t.forEach((r) => {
-        if (r.getAttribute("value") === e)
-          r.setAttribute("selected", "");
-        else
-          r.removeAttribute("selected");
-      });
-    };
-    var se = (t, e) => {
-      let r = T(e);
-      t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, n) => {
-        if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
-          i.setAttribute("tabindex", n === 0 ? "0" : "-1");
-        i.onclick = () => {
-          if (t.disabled)
-            return;
-          t.value = i.getAttribute("value") ?? "", i.focus();
-        };
-      }), nt(t, r, t.value), at(r, t.value);
-    }, Mi = (t, e, r) => {
-      if (t.disabled)
-        return;
-      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
-        return;
-      let n = T(e);
-      if (n.length === 0)
-        return;
-      let a = n.findIndex((c) => c.getAttribute("value") === t.value), s = a === -1 ? 0 : a, l = s;
-      switch (r.key) {
-        case "ArrowLeft":
-        case "ArrowUp":
-          l = (s - 1 + n.length) % n.length;
-          break;
-        case "ArrowRight":
-        case "ArrowDown":
-          l = (s + 1) % n.length;
-          break;
-        case "Home":
-          l = 0;
-          break;
-        case "End":
-          l = n.length - 1;
-          break;
-      }
-      r.preventDefault();
-      let d = n[l];
-      if (!d)
-        return;
-      t.value = d.getAttribute("value") ?? "", d.focus();
-    };
-
-    class ot extends o {
-      static formAssociated = true;
-      _internals;
-      _labelEl;
-      _slot;
-      _defaultValue = "";
-      _defaultsCaptured = false;
-      _silentValueChange = false;
-      static get observedAttributes() {
-        return ["value", "disabled", "name", "label"];
-      }
-      constructor() {
-        super({ css: Ci, template: Li });
-        this._internals = this.attachInternals(), this._labelEl = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot:not([name])") ?? null;
-      }
-      connectedCallback() {
-        if (!this._defaultsCaptured)
-          this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-        for (let t of ["value", "disabled", "name", "label"])
-          Ti(this, t);
-        if (this._slot)
-          this._slot.addEventListener("slotchange", this._onSlotChange), se(this, this._slot);
-        this.addEventListener("keydown", this._onKey), oe(this._labelEl, this.getAttribute("label") ?? "");
-      }
-      disconnectedCallback() {
-        this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("keydown", this._onKey);
-      }
-      formResetCallback() {
-        this._silentValueChange = true;
-        try {
-          this.value = this._defaultValue;
-        } finally {
-          this._silentValueChange = false;
-        }
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this.shadowRoot)
-          return;
-        if (t === "value")
-          this.value = r ?? "";
-        else if (t === "label")
-          oe(this._labelEl, r ?? "");
-      }
-      get value() {
-        return this.getAttribute("value") ?? "";
-      }
-      set value(t) {
-        if (this.getAttribute("value") !== t)
-          this.setAttribute("value", t);
-        this._internals.setFormValue(t);
-        let e = T(this._slot);
-        if (nt(this, e, t), at(e, t), !this._silentValueChange)
-          this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: t } }));
-      }
-      get name() {
-        return this.getAttribute("name") ?? "";
-      }
-      set name(t) {
-        t ? this.setAttribute("name", t) : this.removeAttribute("name");
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      get label() {
-        return this.getAttribute("label") ?? "";
-      }
-      set label(t) {
-        t ? this.setAttribute("label", t) : this.removeAttribute("label");
-      }
-      _onSlotChange = () => se(this, this._slot);
-      _onKey = (t) => Mi(this, this._slot, t);
+  var Jr = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("p9r-segmented-switch"))
-      customElements.define("p9r-segmented-switch", ot);
-    var Hi = `<label class="switch" part="container">
+  };
+  var T = (t) => {
+    if (!t)
+      return [];
+    return t.assignedElements().filter((e) => e.tagName === "OPTION");
+  };
+  var st = (t, e) => {
+    if (t)
+      t.textContent = e;
+  };
+  var P = (t, e, r) => {
+    let i = e.findIndex((n) => n.getAttribute("value") === r);
+    if (i === -1)
+      return;
+    t.style.setProperty("--active-index", i.toString()), e.forEach((n, a) => {
+      let s = a === i;
+      n.setAttribute("aria-checked", s.toString()), n.setAttribute("tabindex", s ? "0" : "-1");
+    });
+  };
+  var R = (t, e) => {
+    t.forEach((r) => {
+      if (r.getAttribute("value") === e)
+        r.setAttribute("selected", "");
+      else
+        r.removeAttribute("selected");
+    });
+  };
+  var lt = (t, e) => {
+    let r = T(e);
+    t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, n) => {
+      if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
+        i.setAttribute("tabindex", n === 0 ? "0" : "-1");
+      i.onclick = () => {
+        if (t.disabled)
+          return;
+        t.value = i.getAttribute("value") ?? "", i.focus();
+      };
+    }), P(t, r, t.value), R(r, t.value);
+  };
+  var Qr = (t, e, r) => {
+    if (t.disabled)
+      return;
+    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
+      return;
+    let n = T(e);
+    if (n.length === 0)
+      return;
+    let a = n.findIndex((c) => c.getAttribute("value") === t.value), s = a === -1 ? 0 : a, l = s;
+    switch (r.key) {
+      case "ArrowLeft":
+      case "ArrowUp":
+        l = (s - 1 + n.length) % n.length;
+        break;
+      case "ArrowRight":
+      case "ArrowDown":
+        l = (s + 1) % n.length;
+        break;
+      case "Home":
+        l = 0;
+        break;
+      case "End":
+        l = n.length - 1;
+        break;
+    }
+    r.preventDefault();
+    let d = n[l];
+    if (!d)
+      return;
+    t.value = d.getAttribute("value") ?? "", d.focus();
+  };
+
+  class ti extends o {
+    static formAssociated = true;
+    _internals;
+    _labelEl;
+    _slot;
+    _defaultValue = "";
+    _defaultsCaptured = false;
+    _silentValueChange = false;
+    static get observedAttributes() {
+      return ["value", "disabled", "name", "label"];
+    }
+    constructor() {
+      super({ css: Wr, template: Gr });
+      this._internals = this.attachInternals(), this._labelEl = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot:not([name])") ?? null;
+    }
+    connectedCallback() {
+      if (!this._defaultsCaptured)
+        this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
+      for (let t of ["value", "disabled", "name", "label"])
+        Jr(this, t);
+      if (this._slot)
+        this._slot.addEventListener("slotchange", this._onSlotChange), lt(this, this._slot);
+      this.addEventListener("keydown", this._onKey), st(this._labelEl, this.getAttribute("label") ?? "");
+    }
+    disconnectedCallback() {
+      this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("keydown", this._onKey);
+    }
+    formResetCallback() {
+      this._silentValueChange = true;
+      try {
+        this.value = this._defaultValue;
+      } finally {
+        this._silentValueChange = false;
+      }
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this.shadowRoot)
+        return;
+      if (t === "value")
+        this.value = r ?? "";
+      else if (t === "label")
+        st(this._labelEl, r ?? "");
+    }
+    get value() {
+      return this.getAttribute("value") ?? "";
+    }
+    set value(t) {
+      if (this.getAttribute("value") !== t)
+        this.setAttribute("value", t);
+      this._internals.setFormValue(t);
+      let e = T(this._slot);
+      if (P(this, e, t), R(e, t), !this._silentValueChange)
+        this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: t } }));
+    }
+    get name() {
+      return this.getAttribute("name") ?? "";
+    }
+    set name(t) {
+      t ? this.setAttribute("name", t) : this.removeAttribute("name");
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    get label() {
+      return this.getAttribute("label") ?? "";
+    }
+    set label(t) {
+      t ? this.setAttribute("label", t) : this.removeAttribute("label");
+    }
+    _onSlotChange = () => lt(this, this._slot);
+    _onKey = (t) => Qr(this, this._slot, t);
+  }
+  var ei = `<label class="switch" part="container">
     <input type="checkbox" id="native-input" part="input" />
     <span class="track" part="track">
         <span class="thumb" part="thumb"></span>
@@ -4369,7 +4361,7 @@ input:focus-visible ~ .custom {
     <span class="label" part="label"><slot></slot></span>
 </label>
 `;
-    var zi = `:host {
+  var ri = `:host {
   display: inline-block;
 
   --_track-w: 36px;
@@ -4468,107 +4460,107 @@ input:focus-visible ~ .track {
   }
 }
 `;
-    var Si = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, y = (t, e, r) => {
-      let i = e?.checked ?? t.hasAttribute("checked");
-      r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
-    };
-    var Ii = (t, e, r) => {
-      if (e?.checked ?? false)
-        t.setAttribute("checked", "");
-      else
-        t.removeAttribute("checked");
-      y(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
-    }, Pi = (t, e) => {
-      if (t.hasAttribute("disabled"))
-        e.preventDefault(), e.stopImmediatePropagation();
-    };
-
-    class st extends o {
-      static formAssociated = true;
-      _internals;
-      _input;
-      _defaultChecked = false;
-      _defaultsCaptured = false;
-      static get observedAttributes() {
-        return ["checked", "disabled", "name", "value"];
-      }
-      constructor() {
-        super({ css: zi, template: Hi });
-        this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null;
-      }
-      connectedCallback() {
-        if (!this._defaultsCaptured)
-          this._defaultChecked = this.hasAttribute("checked"), this._defaultsCaptured = true;
-        for (let t of ["checked", "disabled", "name", "value"])
-          Si(this, t);
-        if (this._input) {
-          if (this._input.checked = this.hasAttribute("checked"), this._input.disabled = this.hasAttribute("disabled"), this.hasAttribute("name"))
-            this._input.name = this.getAttribute("name") ?? "";
-          if (this.hasAttribute("value"))
-            this._input.value = this.getAttribute("value") ?? "";
-          this._input.addEventListener("change", this._onChange), this._input.addEventListener("click", this._onClick);
-        }
-        this.setAttribute("role", "switch"), this.setAttribute("aria-checked", String(this.hasAttribute("checked"))), y(this, this._input, this._internals);
-      }
-      disconnectedCallback() {
-        this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
-      }
-      formResetCallback() {
-        this.checked = this._defaultChecked;
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._input)
-          return;
-        if (t === "checked")
-          this._input.checked = r !== null, this.setAttribute("aria-checked", String(r !== null)), y(this, this._input, this._internals);
-        else if (t === "disabled")
-          this._input.disabled = r !== null;
-        else if (t === "name")
-          this._input.name = r ?? "";
-        else if (t === "value")
-          this._input.value = r ?? "", y(this, this._input, this._internals);
-      }
-      _onChange = () => Ii(this, this._input, this._internals);
-      _onClick = (t) => Pi(this, t);
-      get checked() {
-        return this.hasAttribute("checked");
-      }
-      set checked(t) {
-        t ? this.setAttribute("checked", "") : this.removeAttribute("checked");
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      get name() {
-        return this.getAttribute("name") ?? "";
-      }
-      set name(t) {
-        this.setAttribute("name", t);
-      }
-      get value() {
-        return this.getAttribute("value") ?? "on";
-      }
-      set value(t) {
-        this.setAttribute("value", t);
-      }
-      get form() {
-        return this._internals.form;
-      }
-      click() {
-        this._input?.click();
-      }
+  var ii = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("p9r-switch"))
-      customElements.define("p9r-switch", st);
-    var Ri = `<div class="container" part="container">
+  };
+  var y = (t, e, r) => {
+    let i = e?.checked ?? t.hasAttribute("checked");
+    r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
+  };
+  var ni = (t, e, r) => {
+    if (e?.checked ?? false)
+      t.setAttribute("checked", "");
+    else
+      t.removeAttribute("checked");
+    y(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  var ai = (t, e) => {
+    if (t.hasAttribute("disabled"))
+      e.preventDefault(), e.stopImmediatePropagation();
+  };
+
+  class oi extends o {
+    static formAssociated = true;
+    _internals;
+    _input;
+    _defaultChecked = false;
+    _defaultsCaptured = false;
+    static get observedAttributes() {
+      return ["checked", "disabled", "name", "value"];
+    }
+    constructor() {
+      super({ css: ri, template: ei });
+      this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null;
+    }
+    connectedCallback() {
+      if (!this._defaultsCaptured)
+        this._defaultChecked = this.hasAttribute("checked"), this._defaultsCaptured = true;
+      for (let t of ["checked", "disabled", "name", "value"])
+        ii(this, t);
+      if (this._input) {
+        if (this._input.checked = this.hasAttribute("checked"), this._input.disabled = this.hasAttribute("disabled"), this.hasAttribute("name"))
+          this._input.name = this.getAttribute("name") ?? "";
+        if (this.hasAttribute("value"))
+          this._input.value = this.getAttribute("value") ?? "";
+        this._input.addEventListener("change", this._onChange), this._input.addEventListener("click", this._onClick);
+      }
+      this.setAttribute("role", "switch"), this.setAttribute("aria-checked", String(this.hasAttribute("checked"))), y(this, this._input, this._internals);
+    }
+    disconnectedCallback() {
+      this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
+    }
+    formResetCallback() {
+      this.checked = this._defaultChecked;
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._input)
+        return;
+      if (t === "checked")
+        this._input.checked = r !== null, this.setAttribute("aria-checked", String(r !== null)), y(this, this._input, this._internals);
+      else if (t === "disabled")
+        this._input.disabled = r !== null;
+      else if (t === "name")
+        this._input.name = r ?? "";
+      else if (t === "value")
+        this._input.value = r ?? "", y(this, this._input, this._internals);
+    }
+    _onChange = () => ni(this, this._input, this._internals);
+    _onClick = (t) => ai(this, t);
+    get checked() {
+      return this.hasAttribute("checked");
+    }
+    set checked(t) {
+      t ? this.setAttribute("checked", "") : this.removeAttribute("checked");
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    get name() {
+      return this.getAttribute("name") ?? "";
+    }
+    set name(t) {
+      this.setAttribute("name", t);
+    }
+    get value() {
+      return this.getAttribute("value") ?? "on";
+    }
+    set value(t) {
+      this.setAttribute("value", t);
+    }
+    get form() {
+      return this._internals.form;
+    }
+    click() {
+      this._input?.click();
+    }
+  }
+  var si = `<div class="container" part="container">
     <label for="main-input" part="label">
         <slot name="label">Tags</slot>
     </label>
@@ -4607,7 +4599,7 @@ input:focus-visible ~ .track {
     ></div>
 </div>
 `;
-    var qi = `:host {
+  var li = `:host {
     display: block;
     font-family: system-ui, -apple-system, sans-serif;
 }
@@ -4675,7 +4667,7 @@ input::placeholder {
     }
 }
 `;
-    var Bi = `input:hover:not(:disabled) {
+  var di = `input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -4753,452 +4745,306 @@ p9r-tag:hover {
     filter: brightness(0.92);
 }
 `;
-    var Di = `<span class="label" part="label"><slot></slot></span>
-<button type="button" class="remove" part="remove" aria-label="Remove" hidden>&times;</button>
-`;
-    var ji = `:host {
-    --_tag-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-    --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
-    --_tag-color: var(--text-body, oklch(45% 0.02 265));
-    --_tag-border: var(--border-default, oklch(90% 0.02 265));
-
-    --_tag-fs: 12px;
-    --_tag-padding: 2px 8px;
-    --_tag-radius: 6px;
-    --_tag-gap: 4px;
-
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--_tag-gap);
-
-    font-family: var(--_tag-font-family);
-    background-color: var(--_tag-bg);
-    color: var(--_tag-color);
-
-    font-size: var(--_tag-fs);
-    padding: var(--_tag-padding);
-    border-radius: var(--_tag-radius);
-}
-
-:host([border]) {
-    border: 1px solid var(--_tag-border);
-}
-
-.label {
-    display: inline-flex;
-    align-items: center;
-}
-
-.remove {
-    appearance: none;
-    background: transparent;
-    border: none;
-    color: inherit;
-    font: inherit;
-    line-height: 1;
-    padding: 0 2px;
-    margin: 0;
-    cursor: pointer;
-    opacity: 0.6;
-    font-size: 14px;
-}
-
-.remove:hover {
-    opacity: 1;
-}
-
-.remove:focus-visible {
-    outline: 2px solid var(--_tag-color);
-    outline-offset: 1px;
-    border-radius: 2px;
-}
-
-.remove[hidden] {
-    display: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    .remove {
-        transition: opacity 0.15s ease;
+  var ci = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-}
-`;
-    var Fi = `:host([color="info"]) {
-    --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
-    --_tag-color: var(--info-base, oklch(65% 0.12 230));
-    --_tag-border: var(--info-contrasted, oklch(25% 0.08 230));
-}
-
-:host([color="danger"]) {
-    --_tag-bg: var(--danger-muted, oklch(95% 0.02 20));
-    --_tag-color: var(--danger-base, oklch(65% 0.12 20));
-    --_tag-border: var(--danger-contrasted, oklch(25% 0.08 20));
-}
-
-:host([color="success"]) {
-    --_tag-bg: var(--success-muted, oklch(95% 0.02 120));
-    --_tag-color: var(--success-base, oklch(65% 0.12 120));
-    --_tag-border: var(--success-contrasted, oklch(25% 0.08 120));
-}
-
-:host([color="warning"]) {
-    --_tag-bg: var(--warning-muted, oklch(95% 0.02 50));
-    --_tag-color: var(--warning-base, oklch(65% 0.12 50));
-    --_tag-border: var(--warning-contrasted, oklch(25% 0.08 50));
-}
-
-:host([color="primary"]) {
-    --_tag-bg: var(--primary-muted, oklch(95% 0.02 265));
-    --_tag-color: var(--primary-base, oklch(65% 0.12 265));
-    --_tag-border: var(--primary-contrasted, oklch(25% 0.08 265));
-}
-
-:host([color="secondary"]) {
-    --_tag-bg: var(--secondary-muted, oklch(95% 0.02 265));
-    --_tag-color: var(--secondary-base, oklch(65% 0.12 265));
-    --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
-}
-`;
-    var gs = ji + Fi;
-
-    class lt extends o {
-      _removeBtn;
-      static get observedAttributes() {
-        return ["removable"];
-      }
-      constructor() {
-        super({ css: gs, template: Di });
-        this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
-      }
-      connectedCallback() {
-        for (let t of ["removable"])
-          this._upgradeProperty(t);
-        this._syncRemovable(), this._removeBtn?.addEventListener("click", this._handleRemoveClick);
-      }
-      disconnectedCallback() {
-        this._removeBtn?.removeEventListener("click", this._handleRemoveClick);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._removeBtn)
-          return;
-        if (t === "removable")
-          this._syncRemovable();
-      }
-      _syncRemovable() {
-        if (!this._removeBtn)
-          return;
-        this._removeBtn.hidden = !this.hasAttribute("removable");
-      }
-      _handleRemoveClick = (t) => {
-        if (t.stopPropagation(), !this.dispatchEvent(new CustomEvent("remove", { bubbles: true, cancelable: true, detail: { value: this.getAttribute("value") ?? this.textContent?.trim() ?? "" } })))
-          return;
-        this.remove();
-      };
-      _upgradeProperty(t) {
-        if (this.hasOwnProperty(t)) {
-          let e = this[t];
-          delete this[t], this[t] = e;
-        }
-      }
-      get removable() {
-        return this.hasAttribute("removable");
-      }
-      set removable(t) {
-        if (t)
-          this.setAttribute("removable", "");
-        else
-          this.removeAttribute("removable");
-      }
-    }
-    if (!customElements.get("p9r-tag"))
-      customElements.define("p9r-tag", lt);
-    var Ni = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, dt = (t, e) => {
-      if (!t)
-        return;
-      t.textContent = "", window.setTimeout(() => {
-        if (t)
-          t.textContent = e;
-      }, 10);
-    };
-    var le = async (t) => {
-      let e = t.getAttribute("resource");
-      if (!e)
-        return null;
-      let r = t.getAttribute("api") || "../api/tags", i = new URL(r, window.location.href);
-      i.searchParams.set("resource", e);
-      try {
-        let n = await fetch(i);
-        if (!n.ok)
-          return null;
-        return await n.json();
-      } catch {
-        return null;
-      }
-    };
-    var Oi = (t, e, r, i) => {
-      if (!t)
-        return;
-      if (t.innerHTML = "", e !== "multiple")
-        return;
-      r.forEach((n, a) => {
-        let s = document.createElement("p9r-tag");
-        s.setAttribute("color", "primary"), s.setAttribute("part", "chip"), s.setAttribute("role", "listitem"), s.textContent = n, s.title = `Remove ${n}`, s.setAttribute("aria-label", `Remove ${n}`), s.addEventListener("click", () => i(a)), t.appendChild(s);
-      });
-    }, Vi = (t, e, r, i, n, a) => {
-      if (!t || !e)
-        return;
-      if (r.length === 0) {
-        de(t, e);
-        return;
-      }
-      if (t.innerHTML = "", r.forEach((s, l) => {
-        let d = document.createElement("div");
-        d.className = "suggestion", d.id = `${n}-opt-${l}`, d.setAttribute("role", "option"), d.setAttribute("part", "option");
-        let c = l === i;
-        d.dataset.active = String(c), d.setAttribute("aria-selected", String(c));
-        let u = document.createElement("span");
-        u.className = "name", u.textContent = s.value, d.appendChild(u);
-        let m = document.createElement("p9r-tag");
-        m.setAttribute("color", "secondary"), m.setAttribute("part", "count"), m.textContent = String(s.count), d.appendChild(m), d.addEventListener("mousedown", (p) => {
-          p.preventDefault(), a(s.value);
-        }), t.appendChild(d);
-      }), t.hidden = false, e.setAttribute("aria-expanded", "true"), i >= 0)
-        e.setAttribute("aria-activedescendant", `${n}-opt-${i}`);
-      else
-        e.removeAttribute("aria-activedescendant");
-    }, de = (t, e) => {
+  };
+  var q = (t, e) => {
+    if (!t)
+      return;
+    t.textContent = "", window.setTimeout(() => {
       if (t)
-        t.hidden = true;
-      if (e)
-        e.setAttribute("aria-expanded", "false"), e.removeAttribute("aria-activedescendant");
-    };
-    var Ki = (t, e, r) => {
-      let i = t.filter((n) => !e.includes(n.value));
-      if (r === "")
-        return i.slice(0, 8);
-      return i.filter((n) => n.value.toLowerCase().includes(r)).slice(0, 8);
-    }, $i = (t, e) => {
-      if (t === "multiple")
-        return e.join(",");
-      return e[0] ?? "";
-    }, Ui = (t, e) => {
-      if (t === "multiple")
-        return e ? e.split(",").map((r) => r.trim()).filter((r) => r !== "") : [];
-      return e ? [e.trim()] : [];
-    };
-    var h = (t) => t, M = (t, e) => {
-      let r = h(t), i = t.getAttribute("mode") || "multiple", n = e.trim();
-      if (!n || !r._input)
+        t.textContent = e;
+    }, 10);
+  };
+  var dt = async (t) => {
+    let e = t.getAttribute("resource");
+    if (!e)
+      return null;
+    let r = t.getAttribute("api") || "../api/tags", i = new URL(r, window.location.href);
+    i.searchParams.set("resource", e);
+    try {
+      let n = await fetch(i);
+      if (!n.ok)
+        return null;
+      return await n.json();
+    } catch {
+      return null;
+    }
+  };
+  var ui = (t, e, r, i) => {
+    if (!t)
+      return;
+    if (t.innerHTML = "", e !== "multiple")
+      return;
+    r.forEach((n, a) => {
+      let s = document.createElement("p9r-tag");
+      s.setAttribute("color", "primary"), s.setAttribute("part", "chip"), s.setAttribute("role", "listitem"), s.textContent = n, s.title = `Remove ${n}`, s.setAttribute("aria-label", `Remove ${n}`), s.addEventListener("click", () => i(a)), t.appendChild(s);
+    });
+  };
+  var pi = (t, e, r, i, n, a) => {
+    if (!t || !e)
+      return;
+    if (r.length === 0) {
+      ct(t, e);
+      return;
+    }
+    if (t.innerHTML = "", r.forEach((s, l) => {
+      let d = document.createElement("div");
+      d.className = "suggestion", d.id = `${n}-opt-${l}`, d.setAttribute("role", "option"), d.setAttribute("part", "option");
+      let c = l === i;
+      d.dataset.active = String(c), d.setAttribute("aria-selected", String(c));
+      let u = document.createElement("span");
+      u.className = "name", u.textContent = s.value, d.appendChild(u);
+      let m = document.createElement("p9r-tag");
+      m.setAttribute("color", "secondary"), m.setAttribute("part", "count"), m.textContent = String(s.count), d.appendChild(m), d.addEventListener("mousedown", (p) => {
+        p.preventDefault(), a(s.value);
+      }), t.appendChild(d);
+    }), t.hidden = false, e.setAttribute("aria-expanded", "true"), i >= 0)
+      e.setAttribute("aria-activedescendant", `${n}-opt-${i}`);
+    else
+      e.removeAttribute("aria-activedescendant");
+  };
+  var ct = (t, e) => {
+    if (t)
+      t.hidden = true;
+    if (e)
+      e.setAttribute("aria-expanded", "false"), e.removeAttribute("aria-activedescendant");
+  };
+  var hi = (t, e, r) => {
+    let i = t.filter((n) => !e.includes(n.value));
+    if (r === "")
+      return i.slice(0, 8);
+    return i.filter((n) => n.value.toLowerCase().includes(r)).slice(0, 8);
+  };
+  var bi = (t, e) => {
+    if (t === "multiple")
+      return e.join(",");
+    return e[0] ?? "";
+  };
+  var mi = (t, e) => {
+    if (t === "multiple")
+      return e ? e.split(",").map((r) => r.trim()).filter((r) => r !== "") : [];
+    return e ? [e.trim()] : [];
+  };
+  var h = (t) => t;
+  var M = (t, e) => {
+    let r = h(t), i = t.getAttribute("mode") || "multiple", n = e.trim();
+    if (!n || !r._input)
+      return;
+    if (i === "multiple") {
+      if (!r._tags.includes(n))
+        r._tags.push(n), q(r._liveRegion, `${n} added`);
+      r._input.value = "";
+    } else
+      r._tags = [n], r._input.value = n, q(r._liveRegion, `${n} selected`);
+    r._activeIndex = -1, B(t), F(t);
+  };
+  var gi = (t, e) => {
+    let r = h(t), i = e.trim();
+    if (r._tags = i ? [i] : [], r._internals.setFormValue(r.value), r._silent)
+      return;
+    t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: r.value, tags: [...r._tags] } }));
+  };
+  var fi = (t, e) => {
+    let r = h(t), i = r._tags[e];
+    if (i === undefined)
+      return;
+    r._tags.splice(e, 1), q(r._liveRegion, `${i} removed`), B(t), r._input?.focus();
+  };
+  var vi = (t) => {
+    let e = h(t);
+    if (e._tags.length === 0)
+      return;
+    fi(t, e._tags.length - 1);
+  };
+  var B = (t) => {
+    let e = h(t);
+    if (ut(t), e._internals.setFormValue(e.value), e._silent)
+      return;
+    t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e.value, tags: [...e._tags] } }));
+  };
+  var ut = (t) => {
+    let e = h(t);
+    ui(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => fi(t, r));
+  };
+  var pt = (t, e) => {
+    let r = h(t), n = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
+    r._suggestions = hi(r._allSuggestions, n, e), r._activeIndex = -1, D(t);
+  };
+  var D = (t) => {
+    let e = h(t);
+    pi(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => M(t, r));
+  };
+  var F = (t) => {
+    let e = h(t);
+    ct(e._suggestionsEl, e._input), e._activeIndex = -1;
+  };
+  var _i = (t, e) => {
+    if (!e)
+      return;
+    pt(t, e.value.trim().toLowerCase());
+  };
+  var xi = (t) => {
+    setTimeout(() => F(t), 150);
+  };
+  var yi = (t, e) => {
+    if (!e)
+      return;
+    if (pt(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
+      gi(t, e.value);
+  };
+  var wi = (t, e, r) => {
+    if (!e)
+      return;
+    let i = t.getAttribute("mode") || "multiple", n = t;
+    if (r.key === "ArrowDown") {
+      if (r.preventDefault(), n._suggestions.length === 0)
         return;
-      if (i === "multiple") {
-        if (!r._tags.includes(n))
-          r._tags.push(n), dt(r._liveRegion, `${n} added`);
-        r._input.value = "";
-      } else
-        r._tags = [n], r._input.value = n, dt(r._liveRegion, `${n} selected`);
-      r._activeIndex = -1, ct(t), pt(t);
-    }, Yi = (t, e) => {
-      let r = h(t), i = e.trim();
-      if (r._tags = i ? [i] : [], r._internals.setFormValue(r.value), r._silent)
+      n._activeIndex = Math.min(n._activeIndex + 1, n._suggestions.length - 1), D(t);
+    } else if (r.key === "ArrowUp") {
+      if (r.preventDefault(), n._suggestions.length === 0)
         return;
-      t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: r.value, tags: [...r._tags] } }));
-    }, Xi = (t, e) => {
-      let r = h(t), i = r._tags[e];
-      if (i === undefined)
-        return;
-      r._tags.splice(e, 1), dt(r._liveRegion, `${i} removed`), ct(t), r._input?.focus();
-    }, Zi = (t) => {
-      let e = h(t);
-      if (e._tags.length === 0)
-        return;
-      Xi(t, e._tags.length - 1);
-    }, ct = (t) => {
-      let e = h(t);
-      if (ce(t), e._internals.setFormValue(e.value), e._silent)
-        return;
-      t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e.value, tags: [...e._tags] } }));
-    }, ce = (t) => {
-      let e = h(t);
-      Oi(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => Xi(t, r));
-    }, ue = (t, e) => {
-      let r = h(t), n = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
-      r._suggestions = Ki(r._allSuggestions, n, e), r._activeIndex = -1, ut(t);
-    }, ut = (t) => {
-      let e = h(t);
-      Vi(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => M(t, r));
-    }, pt = (t) => {
-      let e = h(t);
-      de(e._suggestionsEl, e._input), e._activeIndex = -1;
-    };
-    var Wi = (t, e) => {
-      if (!e)
-        return;
-      ue(t, e.value.trim().toLowerCase());
-    }, Gi = (t) => {
-      setTimeout(() => pt(t), 150);
-    }, Ji = (t, e) => {
-      if (!e)
-        return;
-      if (ue(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
-        Yi(t, e.value);
-    }, Qi = (t, e, r) => {
-      if (!e)
-        return;
-      let i = t.getAttribute("mode") || "multiple", n = t;
-      if (r.key === "ArrowDown") {
-        if (r.preventDefault(), n._suggestions.length === 0)
-          return;
-        n._activeIndex = Math.min(n._activeIndex + 1, n._suggestions.length - 1), ut(t);
-      } else if (r.key === "ArrowUp") {
-        if (r.preventDefault(), n._suggestions.length === 0)
-          return;
-        n._activeIndex = Math.max(n._activeIndex - 1, -1), ut(t);
-      } else if (r.key === "Enter") {
-        r.preventDefault();
-        let a = n._activeIndex >= 0 ? n._suggestions[n._activeIndex] : undefined;
-        if (a)
-          M(t, a.value);
-        else {
-          let s = e.value.trim();
-          if (s)
-            M(t, s);
-        }
-      } else if (r.key === "Escape")
-        r.preventDefault(), pt(t);
-      else if (r.key === "Backspace" && e.value === "" && i === "multiple")
-        Zi(t);
-      else if (r.key === "," && i === "multiple") {
-        r.preventDefault();
-        let a = e.value.trim();
-        if (a)
-          M(t, a);
+      n._activeIndex = Math.max(n._activeIndex - 1, -1), D(t);
+    } else if (r.key === "Enter") {
+      r.preventDefault();
+      let a = n._activeIndex >= 0 ? n._suggestions[n._activeIndex] : undefined;
+      if (a)
+        M(t, a.value);
+      else {
+        let s = e.value.trim();
+        if (s)
+          M(t, s);
       }
-    };
-    var fs = qi + Bi;
+    } else if (r.key === "Escape")
+      r.preventDefault(), F(t);
+    else if (r.key === "Backspace" && e.value === "" && i === "multiple")
+      vi(t);
+    else if (r.key === "," && i === "multiple") {
+      r.preventDefault();
+      let a = e.value.trim();
+      if (a)
+        M(t, a);
+    }
+  };
+  var as = li + di;
 
-    class ht extends o {
-      static formAssociated = true;
-      static get observedAttributes() {
-        return ["placeholder", "mode", "resource", "api", "disabled", "value"];
-      }
-      _internals;
-      _tags = [];
-      _suggestions = [];
-      _activeIndex = -1;
-      _input;
-      _display;
-      _suggestionsEl;
-      _liveRegion;
-      _allSuggestions = [];
-      _uid;
-      _defaultValue = "";
-      _defaultsCaptured = false;
-      _silent = false;
-      constructor() {
-        super({ css: fs, template: Ri });
-        this._internals = this.attachInternals();
-        let t = this.shadowRoot;
-        if (this._input = t.querySelector("#main-input"), this._display = t.querySelector("#tags-display"), this._suggestionsEl = t.querySelector("#suggestions"), this._liveRegion = t.querySelector("#live-region"), this._uid = `ts-${Math.random().toString(36).slice(2, 9)}`, this._suggestionsEl)
-          this._suggestionsEl.id = `${this._uid}-listbox`;
-        if (this._input)
-          this._input.setAttribute("aria-controls", `${this._uid}-listbox`);
-      }
-      connectedCallback() {
-        if (!this._defaultsCaptured)
-          this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-        ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => Ni(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), le(this).then((t) => {
-          if (t)
-            this._allSuggestions = t;
-        });
-      }
-      disconnectedCallback() {
-        this._input?.removeEventListener("input", this._onInput), this._input?.removeEventListener("keydown", this._onKeyDown), this._input?.removeEventListener("focus", this._onFocus), this._input?.removeEventListener("blur", this._onBlur);
-      }
-      formResetCallback() {
-        this._silent = true;
-        try {
-          this.value = this._defaultValue;
-        } finally {
-          this._silent = false;
-        }
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._input)
-          return;
-        if (t === "placeholder")
-          this._input.placeholder = r ?? "";
-        else if (t === "disabled")
-          this._input.disabled = this.hasAttribute("disabled");
-        else if (t === "resource" || t === "api")
-          this._allSuggestions = [], le(this).then((i) => {
-            if (i)
-              this._allSuggestions = i;
-          });
-        else if (t === "mode")
-          ce(this);
-        else if (t === "value")
-          this.value = r ?? "";
-      }
-      _onFocus = () => Wi(this, this._input);
-      _onBlur = () => Gi(this);
-      _onInput = () => Ji(this, this._input);
-      _onKeyDown = (t) => Qi(this, this._input, t);
-      get value() {
-        return $i(this.getAttribute("mode") || "multiple", this._tags);
-      }
-      set value(t) {
-        let e = this.getAttribute("mode") || "multiple";
-        if (this._tags = Ui(e, t), this._input)
-          this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
-        ct(this);
-      }
-      get name() {
-        return this.getAttribute("name") || "";
-      }
-      get placeholder() {
-        return this.getAttribute("placeholder") || "";
-      }
-      set placeholder(t) {
-        t ? this.setAttribute("placeholder", t) : this.removeAttribute("placeholder");
-      }
-      get mode() {
-        return this.getAttribute("mode") || "multiple";
-      }
-      set mode(t) {
-        t ? this.setAttribute("mode", t) : this.removeAttribute("mode");
-      }
-      get resource() {
-        return this.getAttribute("resource") || "";
-      }
-      set resource(t) {
-        t ? this.setAttribute("resource", t) : this.removeAttribute("resource");
-      }
-      get api() {
-        return this.getAttribute("api") || "";
-      }
-      set api(t) {
-        t ? this.setAttribute("api", t) : this.removeAttribute("api");
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      get tags() {
-        return [...this._tags];
+  class ki extends o {
+    static formAssociated = true;
+    static get observedAttributes() {
+      return ["placeholder", "mode", "resource", "api", "disabled", "value"];
+    }
+    _internals;
+    _tags = [];
+    _suggestions = [];
+    _activeIndex = -1;
+    _input;
+    _display;
+    _suggestionsEl;
+    _liveRegion;
+    _allSuggestions = [];
+    _uid;
+    _defaultValue = "";
+    _defaultsCaptured = false;
+    _silent = false;
+    constructor() {
+      super({ css: as, template: si });
+      this._internals = this.attachInternals();
+      let t = this.shadowRoot;
+      if (this._input = t.querySelector("#main-input"), this._display = t.querySelector("#tags-display"), this._suggestionsEl = t.querySelector("#suggestions"), this._liveRegion = t.querySelector("#live-region"), this._uid = `ts-${Math.random().toString(36).slice(2, 9)}`, this._suggestionsEl)
+        this._suggestionsEl.id = `${this._uid}-listbox`;
+      if (this._input)
+        this._input.setAttribute("aria-controls", `${this._uid}-listbox`);
+    }
+    connectedCallback() {
+      if (!this._defaultsCaptured)
+        this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
+      ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => ci(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), dt(this).then((t) => {
+        if (t)
+          this._allSuggestions = t;
+      });
+    }
+    disconnectedCallback() {
+      this._input?.removeEventListener("input", this._onInput), this._input?.removeEventListener("keydown", this._onKeyDown), this._input?.removeEventListener("focus", this._onFocus), this._input?.removeEventListener("blur", this._onBlur);
+    }
+    formResetCallback() {
+      this._silent = true;
+      try {
+        this.value = this._defaultValue;
+      } finally {
+        this._silent = false;
       }
     }
-    if (!customElements.get("p9r-tag-suggest"))
-      customElements.define("p9r-tag-suggest", ht);
-    var tn = `<div class="field" part="field">
+    attributeChangedCallback(t, e, r) {
+      if (!this._input)
+        return;
+      if (t === "placeholder")
+        this._input.placeholder = r ?? "";
+      else if (t === "disabled")
+        this._input.disabled = this.hasAttribute("disabled");
+      else if (t === "resource" || t === "api")
+        this._allSuggestions = [], dt(this).then((i) => {
+          if (i)
+            this._allSuggestions = i;
+        });
+      else if (t === "mode")
+        ut(this);
+      else if (t === "value")
+        this.value = r ?? "";
+    }
+    _onFocus = () => _i(this, this._input);
+    _onBlur = () => xi(this);
+    _onInput = () => yi(this, this._input);
+    _onKeyDown = (t) => wi(this, this._input, t);
+    get value() {
+      return bi(this.getAttribute("mode") || "multiple", this._tags);
+    }
+    set value(t) {
+      let e = this.getAttribute("mode") || "multiple";
+      if (this._tags = mi(e, t), this._input)
+        this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
+      B(this);
+    }
+    get name() {
+      return this.getAttribute("name") || "";
+    }
+    get placeholder() {
+      return this.getAttribute("placeholder") || "";
+    }
+    set placeholder(t) {
+      t ? this.setAttribute("placeholder", t) : this.removeAttribute("placeholder");
+    }
+    get mode() {
+      return this.getAttribute("mode") || "multiple";
+    }
+    set mode(t) {
+      t ? this.setAttribute("mode", t) : this.removeAttribute("mode");
+    }
+    get resource() {
+      return this.getAttribute("resource") || "";
+    }
+    set resource(t) {
+      t ? this.setAttribute("resource", t) : this.removeAttribute("resource");
+    }
+    get api() {
+      return this.getAttribute("api") || "";
+    }
+    set api(t) {
+      t ? this.setAttribute("api", t) : this.removeAttribute("api");
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    get tags() {
+      return [...this._tags];
+    }
+  }
+  var Ei = `<div class="field" part="field">
     <label class="label" part="label" for="ta"></label>
     <textarea id="ta" class="textarea" part="textarea"></textarea>
     <div class="meta" part="meta" hidden>
@@ -5207,7 +5053,7 @@ p9r-tag:hover {
     </div>
 </div>
 `;
-    var en = `:host {
+  var Ai = `:host {
   display: block;
 }
 
@@ -5262,7 +5108,7 @@ p9r-tag:hover {
 
 .meta[hidden] { display: none; }
 `;
-    var rn = `:host([resize="none"]) .textarea       { resize: none; }
+  var Li = `:host([resize="none"]) .textarea       { resize: none; }
 :host([resize="horizontal"]) .textarea { resize: horizontal; }
 :host([resize="vertical"]) .textarea   { resize: vertical; }
 :host([resize="both"]) .textarea       { resize: both; }
@@ -5316,196 +5162,209 @@ p9r-tag:hover {
   font-weight: 600;
 }
 `;
-    var nn = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, pe = (t) => {
-      let e = t.getAttribute("max-count");
-      if (e === null)
-        return null;
-      let r = parseInt(e, 10);
-      return Number.isFinite(r) && r > 0 ? r : null;
-    }, w = (t, e, r, i) => {
-      if (!e || !r || !i)
-        return;
-      let n = pe(t);
-      if (n === null)
-        return;
-      let a = e.value.length;
-      i.textContent = String(a), r.dataset.over = String(a > n);
-    }, he = (t, e, r) => {
-      if (!t || !e || !r)
-        return;
-      let i = (t.textContent ?? "").length > 0, n = !e.hidden;
-      r.hidden = !i && !n;
-    }, H = (t, e) => {
-      if (!e || !t.hasAttribute("autosize"))
-        return;
-      e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
-    };
-    var ys = (t, e) => {
-      if (!e)
-        return;
-      let r = t.getAttribute("label") ?? "";
-      e.textContent = r, e.hidden = r === "";
-    }, ws = (t, e) => {
-      if (!e)
-        return;
-      let r = t.getAttribute("placeholder");
-      if (r === null)
-        e.removeAttribute("placeholder");
-      else
-        e.setAttribute("placeholder", r);
-    }, ks = (t, e) => {
-      if (!e)
-        return;
-      let r = t.getAttribute("rows");
-      if (r)
-        e.rows = Number(r) || 3;
-    }, Es = (t, e) => {
-      if (!e)
-        return;
-      let r = t.getAttribute("maxlength");
-      if (r === null)
-        e.removeAttribute("maxlength");
-      else
-        e.setAttribute("maxlength", r);
-    }, As = (t, e) => {
-      if (e)
-        e.disabled = t.hasAttribute("disabled");
-    }, Ls = (t, e) => {
-      if (!e)
-        return;
-      let r = t.hasAttribute("required");
-      if (e.required = r, r)
-        e.setAttribute("aria-required", "true");
-      else
-        e.removeAttribute("aria-required");
-    }, Cs = (t, e, r, i) => {
-      if (!e)
-        return;
-      e.textContent = t.getAttribute("hint") ?? "", he(e, r, i);
-    }, Ts = (t, e) => {
-      if (!e)
-        return;
-      e.dataset.level = t.getAttribute("hint-level") ?? "info";
-    }, Ms = (t, e) => {
-      if (!e)
-        return;
-      if (t.hasAttribute("invalid"))
-        e.setAttribute("aria-invalid", "true");
-      else
-        e.removeAttribute("aria-invalid");
-    }, be = (t, e, r, i, n) => {
-      if (!e || !r)
-        return;
-      let a = pe(t);
-      if (a === null)
-        e.hidden = true;
-      else
-        e.hidden = false, r.textContent = String(a);
-      he(i, e, n);
-    }, me = (t, e, r, i, n, a, s) => {
-      ys(t, r), ws(t, e), ks(t, e), Es(t, e), As(t, e), Ls(t, e), Cs(t, i, a, n), Ts(t, i), Ms(t, e), be(t, a, s, i, n);
-    };
-    var an = (t, e, r, i, n) => {
-      if (!e)
-        return;
-      r.setFormValue(e.value), w(t, e, i, n), H(t, e);
-    }, on = (t, e) => {
-      if (!t)
-        return;
-      e.setFormValue(t.value);
-    };
-    var Hs = en + rn;
-
-    class bt extends o {
-      static formAssociated = true;
-      static get observedAttributes() {
-        return ["value", "label", "placeholder", "rows", "maxlength", "max-count", "hint", "hint-level", "invalid", "disabled", "required", "autosize"];
-      }
-      _internals;
-      _textarea;
-      _label;
-      _hint;
-      _meta;
-      _counter;
-      _count;
-      _max;
-      _defaultValue = "";
-      _defaultsCaptured = false;
-      constructor() {
-        super({ css: Hs, template: tn });
-        this._internals = this.attachInternals();
-        let t = this.shadowRoot;
-        this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
-      }
-      connectedCallback() {
-        if (!this._defaultsCaptured)
-          this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-        ["value", "disabled", "required"].forEach((e) => nn(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), me(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
-        let t = this.getAttribute("value");
-        if (t !== null)
-          this.value = t;
-        else
-          w(this, this._textarea, this._counter, this._count);
-      }
-      disconnectedCallback() {
-        this._textarea?.removeEventListener("input", this._onInput), this._textarea?.removeEventListener("change", this._onChange);
-      }
-      formResetCallback() {
-        this.value = this._defaultValue;
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._textarea)
-          return;
-        if (t === "value" && r !== null)
-          this.value = r;
-        else if (t === "max-count")
-          be(this, this._counter, this._max, this._hint, this._meta), w(this, this._textarea, this._counter, this._count);
-        else if (t === "autosize")
-          H(this, this._textarea);
-        else
-          me(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
-      }
-      get value() {
-        return this._textarea?.value ?? "";
-      }
-      set value(t) {
-        if (!this._textarea)
-          return;
-        this._textarea.value = t, this._internals.setFormValue(t), w(this, this._textarea, this._counter, this._count), H(this, this._textarea);
-      }
-      get name() {
-        return this.getAttribute("name") ?? "";
-      }
-      get disabled() {
-        return this._textarea?.disabled ?? false;
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      get required() {
-        return this.hasAttribute("required");
-      }
-      set required(t) {
-        t ? this.setAttribute("required", "") : this.removeAttribute("required");
-      }
-      focus() {
-        this._textarea?.focus();
-      }
-      _onInput = () => an(this, this._textarea, this._internals, this._counter, this._count);
-      _onChange = () => on(this._textarea, this._internals);
+  var Ci = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("p9r-textarea"))
-      customElements.define("p9r-textarea", bt);
-    var sn = `<div class="actions" role="toolbar" part="toolbar">
+  };
+  var ht = (t) => {
+    let e = t.getAttribute("max-count");
+    if (e === null)
+      return null;
+    let r = parseInt(e, 10);
+    return Number.isFinite(r) && r > 0 ? r : null;
+  };
+  var w = (t, e, r, i) => {
+    if (!e || !r || !i)
+      return;
+    let n = ht(t);
+    if (n === null)
+      return;
+    let a = e.value.length;
+    i.textContent = String(a), r.dataset.over = String(a > n);
+  };
+  var bt = (t, e, r) => {
+    if (!t || !e || !r)
+      return;
+    let i = (t.textContent ?? "").length > 0, n = !e.hidden;
+    r.hidden = !i && !n;
+  };
+  var H = (t, e) => {
+    if (!e || !t.hasAttribute("autosize"))
+      return;
+    e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
+  };
+  var ds = (t, e) => {
+    if (!e)
+      return;
+    let r = t.getAttribute("label") ?? "";
+    e.textContent = r, e.hidden = r === "";
+  };
+  var cs = (t, e) => {
+    if (!e)
+      return;
+    let r = t.getAttribute("placeholder");
+    if (r === null)
+      e.removeAttribute("placeholder");
+    else
+      e.setAttribute("placeholder", r);
+  };
+  var us = (t, e) => {
+    if (!e)
+      return;
+    let r = t.getAttribute("rows");
+    if (r)
+      e.rows = Number(r) || 3;
+  };
+  var ps = (t, e) => {
+    if (!e)
+      return;
+    let r = t.getAttribute("maxlength");
+    if (r === null)
+      e.removeAttribute("maxlength");
+    else
+      e.setAttribute("maxlength", r);
+  };
+  var hs = (t, e) => {
+    if (e)
+      e.disabled = t.hasAttribute("disabled");
+  };
+  var bs = (t, e) => {
+    if (!e)
+      return;
+    let r = t.hasAttribute("required");
+    if (e.required = r, r)
+      e.setAttribute("aria-required", "true");
+    else
+      e.removeAttribute("aria-required");
+  };
+  var ms = (t, e, r, i) => {
+    if (!e)
+      return;
+    e.textContent = t.getAttribute("hint") ?? "", bt(e, r, i);
+  };
+  var gs = (t, e) => {
+    if (!e)
+      return;
+    e.dataset.level = t.getAttribute("hint-level") ?? "info";
+  };
+  var fs = (t, e) => {
+    if (!e)
+      return;
+    if (t.hasAttribute("invalid"))
+      e.setAttribute("aria-invalid", "true");
+    else
+      e.removeAttribute("aria-invalid");
+  };
+  var mt = (t, e, r, i, n) => {
+    if (!e || !r)
+      return;
+    let a = ht(t);
+    if (a === null)
+      e.hidden = true;
+    else
+      e.hidden = false, r.textContent = String(a);
+    bt(i, e, n);
+  };
+  var gt = (t, e, r, i, n, a, s) => {
+    ds(t, r), cs(t, e), us(t, e), ps(t, e), hs(t, e), bs(t, e), ms(t, i, a, n), gs(t, i), fs(t, e), mt(t, a, s, i, n);
+  };
+  var Ti = (t, e, r, i, n) => {
+    if (!e)
+      return;
+    r.setFormValue(e.value), w(t, e, i, n), H(t, e);
+  };
+  var Mi = (t, e) => {
+    if (!t)
+      return;
+    e.setFormValue(t.value);
+  };
+  var vs = Ai + Li;
+
+  class Hi extends o {
+    static formAssociated = true;
+    static get observedAttributes() {
+      return ["value", "label", "placeholder", "rows", "maxlength", "max-count", "hint", "hint-level", "invalid", "disabled", "required", "autosize"];
+    }
+    _internals;
+    _textarea;
+    _label;
+    _hint;
+    _meta;
+    _counter;
+    _count;
+    _max;
+    _defaultValue = "";
+    _defaultsCaptured = false;
+    constructor() {
+      super({ css: vs, template: Ei });
+      this._internals = this.attachInternals();
+      let t = this.shadowRoot;
+      this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
+    }
+    connectedCallback() {
+      if (!this._defaultsCaptured)
+        this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
+      ["value", "disabled", "required"].forEach((e) => Ci(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), gt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+      let t = this.getAttribute("value");
+      if (t !== null)
+        this.value = t;
+      else
+        w(this, this._textarea, this._counter, this._count);
+    }
+    disconnectedCallback() {
+      this._textarea?.removeEventListener("input", this._onInput), this._textarea?.removeEventListener("change", this._onChange);
+    }
+    formResetCallback() {
+      this.value = this._defaultValue;
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._textarea)
+        return;
+      if (t === "value" && r !== null)
+        this.value = r;
+      else if (t === "max-count")
+        mt(this, this._counter, this._max, this._hint, this._meta), w(this, this._textarea, this._counter, this._count);
+      else if (t === "autosize")
+        H(this, this._textarea);
+      else
+        gt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+    }
+    get value() {
+      return this._textarea?.value ?? "";
+    }
+    set value(t) {
+      if (!this._textarea)
+        return;
+      this._textarea.value = t, this._internals.setFormValue(t), w(this, this._textarea, this._counter, this._count), H(this, this._textarea);
+    }
+    get name() {
+      return this.getAttribute("name") ?? "";
+    }
+    get disabled() {
+      return this._textarea?.disabled ?? false;
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    get required() {
+      return this.hasAttribute("required");
+    }
+    set required(t) {
+      t ? this.setAttribute("required", "") : this.removeAttribute("required");
+    }
+    focus() {
+      this._textarea?.focus();
+    }
+    _onInput = () => Ti(this, this._textarea, this._internals, this._counter, this._count);
+    _onChange = () => Mi(this._textarea, this._internals);
+  }
+  var Si = `<div class="actions" role="toolbar" part="toolbar">
     <slot></slot>
 </div>
 `;
-    var ln = `:host {
+  var zi = `:host {
   display: inline-block;
 
   --_toolbar-bg: var(--bg-overlay, #ffffff);
@@ -5597,70 +5456,68 @@ p9r-tag:hover {
 }
 `;
 
-    class mt extends o {
-      static _event = "action-click";
-      _toolbar;
-      constructor() {
-        super({ css: ln, template: sn });
-        this._toolbar = this.shadowRoot?.querySelector(".actions") ?? null;
+  class Ii extends o {
+    static _event = "action-click";
+    _toolbar;
+    constructor() {
+      super({ css: zi, template: Si });
+      this._toolbar = this.shadowRoot?.querySelector(".actions") ?? null;
+    }
+    static get observedAttributes() {
+      return ["label"];
+    }
+    connectedCallback() {
+      for (let t of ["label"])
+        this._upgradeProperty(t);
+      if (this._toolbar && !this._toolbar.hasAttribute("aria-label")) {
+        let t = this.getAttribute("label");
+        if (t)
+          this._toolbar.setAttribute("aria-label", t);
       }
-      static get observedAttributes() {
-        return ["label"];
-      }
-      connectedCallback() {
-        for (let t of ["label"])
-          this._upgradeProperty(t);
-        if (this._toolbar && !this._toolbar.hasAttribute("aria-label")) {
-          let t = this.getAttribute("label");
-          if (t)
-            this._toolbar.setAttribute("aria-label", t);
-        }
-        this.addEventListener("click", this._handleClick);
-      }
-      disconnectedCallback() {
-        this.removeEventListener("click", this._handleClick);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._toolbar)
-          return;
-        if (t === "label")
-          if (r === null)
-            this._toolbar.removeAttribute("aria-label");
-          else
-            this._toolbar.setAttribute("aria-label", r);
-      }
-      _handleClick = (t) => {
-        let r = t.composedPath().find((n) => n instanceof Element && n.hasAttribute("data-action"));
-        if (!r)
-          return;
-        t.stopPropagation();
-        let i = r.getAttribute("data-action");
-        this._dispatchAction(i, r, t);
-      };
-      _dispatchAction(t, e, r) {
-        this.dispatchEvent(new CustomEvent("action-click", { detail: { action: t, originalEvent: r, target: e }, bubbles: true, composed: true }));
-      }
-      _upgradeProperty(t) {
-        if (this.hasOwnProperty(t)) {
-          let e = this[t];
-          delete this[t], this[t] = e;
-        }
-      }
-      get label() {
-        return this.getAttribute("label");
-      }
-      set label(t) {
-        if (t === null)
-          this.removeAttribute("label");
+      this.addEventListener("click", this._handleClick);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._handleClick);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._toolbar)
+        return;
+      if (t === "label")
+        if (r === null)
+          this._toolbar.removeAttribute("aria-label");
         else
-          this.setAttribute("label", t);
+          this._toolbar.setAttribute("aria-label", r);
+    }
+    _handleClick = (t) => {
+      let r = t.composedPath().find((n) => n instanceof Element && n.hasAttribute("data-action"));
+      if (!r)
+        return;
+      t.stopPropagation();
+      let i = r.getAttribute("data-action");
+      this._dispatchAction(i, r, t);
+    };
+    _dispatchAction(t, e, r) {
+      this.dispatchEvent(new CustomEvent("action-click", { detail: { action: t, originalEvent: r, target: e }, bubbles: true, composed: true }));
+    }
+    _upgradeProperty(t) {
+      if (this.hasOwnProperty(t)) {
+        let e = this[t];
+        delete this[t], this[t] = e;
       }
     }
-    if (!customElements.get("p9r-horizontal-action-group"))
-      customElements.define("p9r-horizontal-action-group", mt);
-    var dn = `<slot></slot>
+    get label() {
+      return this.getAttribute("label");
+    }
+    set label(t) {
+      if (t === null)
+        this.removeAttribute("label");
+      else
+        this.setAttribute("label", t);
+    }
+  }
+  var Pi = `<slot></slot>
 `;
-    var cn = `:host {
+  var Ri = `:host {
     --max-width: var(--p9r-container-md, 768px);
     display: block;
     width: 100%;
@@ -5681,14 +5538,12 @@ p9r-tag:hover {
 :host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }
 `;
 
-    class gt extends o {
-      constructor() {
-        super({ css: cn, template: dn });
-      }
+  class qi extends o {
+    constructor() {
+      super({ css: Ri, template: Pi });
     }
-    if (!customElements.get("p9r-container"))
-      customElements.define("p9r-container", gt);
-    var un = `<div class="app-container" part="container">
+  }
+  var Bi = `<div class="app-container" part="container">
     <a class="skip-link" part="skip-link" href="#main-content">
         <slot name="skip-link">Skip to main content</slot>
     </a>
@@ -5704,7 +5559,7 @@ p9r-tag:hover {
     </main>
 </div>
 `;
-    var pn = `:host {
+  var Di = `:host {
     display: block;
     height: 100vh;
     width: 100vw;
@@ -5790,63 +5645,61 @@ p9r-tag:hover {
 }
 `;
 
-    class ft extends o {
-      _sidebar;
-      _content;
-      constructor() {
-        super({ css: pn, template: un });
-        this._sidebar = this.shadowRoot?.querySelector(".app-sidebar") ?? null, this._content = this.shadowRoot?.querySelector(".app-content") ?? null;
-      }
-      static get observedAttributes() {
-        return ["collapsed"];
-      }
-      connectedCallback() {
-        for (let t of ["collapsed"])
-          this._upgradeProperty(t);
-        this._syncAriaState();
-      }
-      disconnectedCallback() {}
-      _upgradeProperty(t) {
-        if (this.hasOwnProperty(t)) {
-          let e = this[t];
-          delete this[t], this[t] = e;
-        }
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._sidebar)
-          return;
-        if (e === r)
-          return;
-        if (t === "collapsed")
-          this._syncAriaState(), this.dispatchEvent(new CustomEvent("w13c-left-menu-collapse", { bubbles: true, composed: true, detail: { collapsed: r !== null } }));
-      }
-      _syncAriaState() {
-        if (!this._sidebar)
-          return;
-        let t = this.hasAttribute("collapsed");
-        this._sidebar.setAttribute("aria-expanded", String(!t)), this._sidebar.setAttribute("aria-hidden", String(t));
-      }
-      get collapsed() {
-        return this.hasAttribute("collapsed");
-      }
-      set collapsed(t) {
-        if (t)
-          this.setAttribute("collapsed", "");
-        else
-          this.removeAttribute("collapsed");
-      }
-      toggle() {
-        this.collapsed = !this.collapsed;
-      }
-      focusContent() {
-        this._content?.focus();
+  class Fi extends o {
+    _sidebar;
+    _content;
+    constructor() {
+      super({ css: Di, template: Bi });
+      this._sidebar = this.shadowRoot?.querySelector(".app-sidebar") ?? null, this._content = this.shadowRoot?.querySelector(".app-content") ?? null;
+    }
+    static get observedAttributes() {
+      return ["collapsed"];
+    }
+    connectedCallback() {
+      for (let t of ["collapsed"])
+        this._upgradeProperty(t);
+      this._syncAriaState();
+    }
+    disconnectedCallback() {}
+    _upgradeProperty(t) {
+      if (this.hasOwnProperty(t)) {
+        let e = this[t];
+        delete this[t], this[t] = e;
       }
     }
-    if (!customElements.get("w13c-left-menu-layout"))
-      customElements.define("w13c-left-menu-layout", ft);
-    var hn = `<slot></slot>
+    attributeChangedCallback(t, e, r) {
+      if (!this._sidebar)
+        return;
+      if (e === r)
+        return;
+      if (t === "collapsed")
+        this._syncAriaState(), this.dispatchEvent(new CustomEvent("w13c-left-menu-collapse", { bubbles: true, composed: true, detail: { collapsed: r !== null } }));
+    }
+    _syncAriaState() {
+      if (!this._sidebar)
+        return;
+      let t = this.hasAttribute("collapsed");
+      this._sidebar.setAttribute("aria-expanded", String(!t)), this._sidebar.setAttribute("aria-hidden", String(t));
+    }
+    get collapsed() {
+      return this.hasAttribute("collapsed");
+    }
+    set collapsed(t) {
+      if (t)
+        this.setAttribute("collapsed", "");
+      else
+        this.removeAttribute("collapsed");
+    }
+    toggle() {
+      this.collapsed = !this.collapsed;
+    }
+    focusContent() {
+      this._content?.focus();
+    }
+  }
+  var ji = `<slot></slot>
 `;
-    var bn = `:host {
+  var Ni = `:host {
     --gap: var(--p9r-space-md, 16px);
     --divider-color: var(--p9r-stack-divider, var(--border-default, rgba(0,0,0,0.1)));
     display: flex;
@@ -5891,249 +5744,12 @@ p9r-tag:hover {
 }
 `;
 
-    class vt extends o {
-      constructor() {
-        super({ css: bn, template: hn });
-      }
+  class Oi extends o {
+    constructor() {
+      super({ css: Ni, template: ji });
     }
-    if (!customElements.get("p9r-stack"))
-      customElements.define("p9r-stack", vt);
-    var mn = `<a class="menu-item" part="item" tabindex="-1">
-    <span class="icon-wrapper" part="icon">
-        <slot name="icon"></slot>
-    </span>
-    <span class="label" part="label">
-        <slot></slot>
-    </span>
-    <span class="badge" part="badge" id="badge-element"></span>
-</a>
-`;
-    var gn = `:host {
-    display: block;
-    width: 100%;
-    outline: none;
-    --item-color: var(--secondary-base, oklch(50% 0.02 260));
-    --item-color-active: var(--primary-base, oklch(60% 0.15 265));
-    --item-bg-active: var(--primary-muted, oklch(95% 0.02 265));
-    --item-contrasted: var(--primary-contrasted, oklch(98% 0.01 260));
-    --icon-size: 20px;
-}
-
-.menu-item {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0.75rem 1rem;
-    text-decoration: none;
-    color: var(--item-color);
-    font-family: system-ui, -apple-system, sans-serif;
-    font-size: 0.9rem;
-    font-weight: 500;
-    border-radius: 8px;
-    cursor: pointer;
-    user-select: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    .menu-item {
-        transition: background-color 0.2s ease, color 0.2s ease;
-    }
-}
-
-.icon-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--icon-size);
-    height: var(--icon-size);
-    flex-shrink: 0;
-}
-
-::slotted(svg), .icon-wrapper svg {
-    width: 100% !important;
-    height: 100% !important;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
-}
-
-.label {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.badge {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto;
-    padding: 2px 8px;
-    font-size: 10px;
-    font-weight: 800;
-    line-height: 1.2;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-radius: 20px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-`;
-    var fn = `.menu-item:hover {
-    background-color: var(--item-bg-active);
-    color: var(--item-color-active);
-}
-
-:host(:focus-visible) .menu-item {
-    outline: 2px solid var(--item-color-active);
-    outline-offset: 2px;
-}
-
-.menu-item.active {
-    background-color: var(--item-bg-active);
-    color: var(--item-color-active);
-    font-weight: 600;
-}
-
-.menu-item.active::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    width: 3px;
-    height: 100%;
-    background-color: var(--item-color-active);
-    border-radius: 0 4px 4px 0;
-}
-
-.menu-item.active ::slotted(svg) {
-    stroke: var(--item-color-active);
-}
-
-:host([disabled]) .menu-item {
-    cursor: not-allowed;
-    pointer-events: none;
-    opacity: 0.5;
-    filter: grayscale(1);
-    background: transparent !important;
-}
-
-.menu-item:not(.active) .badge {
-    background-color: var(--item-bg-active);
-    color: var(--item-color-active);
-    box-shadow: 0 0 0 1px color-mix(in oklab, var(--item-color-active), transparent 90%);
-}
-
-.menu-item.active .badge {
-    background-color: var(--item-color-active);
-    color: var(--item-contrasted);
-    box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
-}
-`;
-    var vn = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, ge = (t, e) => {
-      if (!t)
-        return;
-      if (e)
-        t.setAttribute("href", e);
-      else
-        t.removeAttribute("href");
-    }, fe = (t, e) => {
-      if (!t)
-        return;
-      if (e)
-        t.textContent = e, t.style.display = "inline-flex";
-      else
-        t.textContent = "", t.style.display = "none";
-    }, ve = (t, e) => {
-      if (!e || !t.hasAttribute("href"))
-        return;
-      let r = t.getAttribute("href");
-      if (!r)
-        return;
-      try {
-        let i = new URL(r, window.location.href), a = new URL(window.location.href).pathname, s = i.pathname;
-        if (s === "/" ? a === "/" : a === s || a.startsWith(s + "/"))
-          t.setAttribute("active", ""), t.setAttribute("aria-current", "page"), e.classList.add("active");
-        else
-          t.removeAttribute("active"), t.removeAttribute("aria-current"), e.classList.remove("active");
-      } catch {
-        console.warn("Invalid href in LateralMenuItem:", r);
-      }
-    };
-    var _n = (t, e, r) => {
-      if (t.hasAttribute("disabled"))
-        return;
-      if (r.key !== "Enter" && r.key !== " ")
-        return;
-      if (r.target !== t)
-        return;
-      r.preventDefault(), e?.click();
-    };
-    var Os = gn + fn;
-
-    class _t extends o {
-      _anchor;
-      _badgeEl;
-      constructor() {
-        super({ css: Os, template: mn });
-        this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
-      }
-      static get observedAttributes() {
-        return ["href", "badge", "disabled"];
-      }
-      connectedCallback() {
-        for (let t of ["href", "badge", "disabled"])
-          vn(this, t);
-        if (!this.hasAttribute("role"))
-          this.setAttribute("role", "listitem");
-        if (!this.hasAttribute("tabindex"))
-          this.setAttribute("tabindex", "0");
-        ge(this._anchor, this.getAttribute("href")), fe(this._badgeEl, this.getAttribute("badge")), ve(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
-      }
-      disconnectedCallback() {
-        window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (!this._anchor)
-          return;
-        if (t === "href")
-          ge(this._anchor, r);
-        if (t === "badge")
-          fe(this._badgeEl, r);
-        if (t === "disabled") {
-          let i = this.hasAttribute("disabled");
-          this.setAttribute("aria-disabled", i ? "true" : "false"), this.setAttribute("tabindex", i ? "-1" : "0");
-        }
-      }
-      get href() {
-        return this.getAttribute("href");
-      }
-      set href(t) {
-        t == null ? this.removeAttribute("href") : this.setAttribute("href", t);
-      }
-      get badge() {
-        return this.getAttribute("badge");
-      }
-      set badge(t) {
-        t == null ? this.removeAttribute("badge") : this.setAttribute("badge", t);
-      }
-      get disabled() {
-        return this.hasAttribute("disabled");
-      }
-      set disabled(t) {
-        t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
-      }
-      _onPopstate = () => ve(this, this._anchor);
-      _onKey = (t) => _n(this, this._anchor, t);
-    }
-    if (!customElements.get("w13c-lateral-menu-item"))
-      customElements.define("w13c-lateral-menu-item", _t);
-    var xn = `<aside class="sidebar" part="sidebar">
+  }
+  var Vi = `<aside class="sidebar" part="sidebar">
     <div class="sidebar-header" part="header">
         <slot name="header">
             <h3>Menu</h3>
@@ -6149,7 +5765,7 @@ p9r-tag:hover {
     </div>
 </aside>
 `;
-    var yn = `:host {
+  var Ki = `:host {
     display: flex;
     flex-direction: column;
     width: 260px;
@@ -6228,83 +5844,318 @@ p9r-tag:hover {
     --item-bg-hover: var(--primary-muted);
 }
 `;
-    var wn = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, kn = (t) => {
-      if (!t)
-        return [];
-      return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled"));
-    };
-    var En = (t, e) => {
-      let r = t.shadowRoot?.querySelector("slot:not([name])"), i = kn(r);
-      if (i.length === 0)
-        return;
-      let n = document.activeElement, a = i.findIndex((d) => d === n || d.contains(n)), s = -1;
-      switch (e.key) {
-        case "ArrowDown":
-          s = a < 0 ? 0 : (a + 1) % i.length;
-          break;
-        case "ArrowUp":
-          s = a < 0 ? i.length - 1 : (a - 1 + i.length) % i.length;
-          break;
-        case "Home":
-          s = 0;
-          break;
-        case "End":
-          s = i.length - 1;
-          break;
-        default:
-          return;
-      }
-      e.preventDefault();
-      let l = i[s];
-      if (l)
-        l.focus();
-    };
-
-    class xt extends o {
-      _sidebar;
-      constructor() {
-        super({ css: yn, template: xn });
-        this._sidebar = this.shadowRoot?.querySelector(".sidebar") ?? null;
-      }
-      static get observedAttributes() {
-        return ["collapsed"];
-      }
-      connectedCallback() {
-        if (wn(this, "collapsed"), !this.hasAttribute("aria-label"))
-          this.setAttribute("aria-label", "Main navigation");
-        this.addEventListener("keydown", this._onKey);
-      }
-      disconnectedCallback() {
-        this.removeEventListener("keydown", this._onKey);
-      }
-      attributeChangedCallback(t) {
-        if (!this._sidebar)
-          return;
-        if (t === "collapsed")
-          this._sidebar.classList.toggle("collapsed", this.hasAttribute("collapsed"));
-      }
-      toggle() {
-        this.collapsed = !this.collapsed;
-      }
-      get collapsed() {
-        return this.hasAttribute("collapsed");
-      }
-      set collapsed(t) {
-        if (t)
-          this.setAttribute("collapsed", "");
-        else
-          this.removeAttribute("collapsed");
-      }
-      _onKey = (t) => En(this, t);
+  var $i = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
     }
-    if (!customElements.get("w13c-lateral-menu"))
-      customElements.define("w13c-lateral-menu", xt);
-    var An = `<nav class="pagination" part="pagination" aria-label="Pagination">
+  };
+  var Ui = (t) => {
+    if (!t)
+      return [];
+    return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled"));
+  };
+  var Yi = (t, e) => {
+    let r = t.shadowRoot?.querySelector("slot:not([name])"), i = Ui(r);
+    if (i.length === 0)
+      return;
+    let n = document.activeElement, a = i.findIndex((d) => d === n || d.contains(n)), s = -1;
+    switch (e.key) {
+      case "ArrowDown":
+        s = a < 0 ? 0 : (a + 1) % i.length;
+        break;
+      case "ArrowUp":
+        s = a < 0 ? i.length - 1 : (a - 1 + i.length) % i.length;
+        break;
+      case "Home":
+        s = 0;
+        break;
+      case "End":
+        s = i.length - 1;
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+    let l = i[s];
+    if (l)
+      l.focus();
+  };
+
+  class Xi extends o {
+    _sidebar;
+    constructor() {
+      super({ css: Ki, template: Vi });
+      this._sidebar = this.shadowRoot?.querySelector(".sidebar") ?? null;
+    }
+    static get observedAttributes() {
+      return ["collapsed"];
+    }
+    connectedCallback() {
+      if ($i(this, "collapsed"), !this.hasAttribute("aria-label"))
+        this.setAttribute("aria-label", "Main navigation");
+      this.addEventListener("keydown", this._onKey);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("keydown", this._onKey);
+    }
+    attributeChangedCallback(t) {
+      if (!this._sidebar)
+        return;
+      if (t === "collapsed")
+        this._sidebar.classList.toggle("collapsed", this.hasAttribute("collapsed"));
+    }
+    toggle() {
+      this.collapsed = !this.collapsed;
+    }
+    get collapsed() {
+      return this.hasAttribute("collapsed");
+    }
+    set collapsed(t) {
+      if (t)
+        this.setAttribute("collapsed", "");
+      else
+        this.removeAttribute("collapsed");
+    }
+    _onKey = (t) => Yi(this, t);
+  }
+  var Zi = `<a class="menu-item" part="item" tabindex="-1">
+    <span class="icon-wrapper" part="icon">
+        <slot name="icon"></slot>
+    </span>
+    <span class="label" part="label">
+        <slot></slot>
+    </span>
+    <span class="badge" part="badge" id="badge-element"></span>
+</a>
+`;
+  var Gi = `:host {
+    display: block;
+    width: 100%;
+    outline: none;
+    --item-color: var(--secondary-base, oklch(50% 0.02 260));
+    --item-color-active: var(--primary-base, oklch(60% 0.15 265));
+    --item-bg-active: var(--primary-muted, oklch(95% 0.02 265));
+    --item-contrasted: var(--primary-contrasted, oklch(98% 0.01 260));
+    --icon-size: 20px;
+}
+
+.menu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--item-color);
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .menu-item {
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+}
+
+.icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex-shrink: 0;
+}
+
+::slotted(svg), .icon-wrapper svg {
+    width: 100% !important;
+    height: 100% !important;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+
+.label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.badge {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+`;
+  var Wi = `.menu-item:hover {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+}
+
+:host(:focus-visible) .menu-item {
+    outline: 2px solid var(--item-color-active);
+    outline-offset: 2px;
+}
+
+.menu-item.active {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+    font-weight: 600;
+}
+
+.menu-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background-color: var(--item-color-active);
+    border-radius: 0 4px 4px 0;
+}
+
+.menu-item.active ::slotted(svg) {
+    stroke: var(--item-color-active);
+}
+
+:host([disabled]) .menu-item {
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(1);
+    background: transparent !important;
+}
+
+.menu-item:not(.active) .badge {
+    background-color: var(--item-bg-active);
+    color: var(--item-color-active);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--item-color-active), transparent 90%);
+}
+
+.menu-item.active .badge {
+    background-color: var(--item-color-active);
+    color: var(--item-contrasted);
+    box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
+}
+`;
+  var Ji = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
+    }
+  };
+  var ft = (t, e) => {
+    if (!t)
+      return;
+    if (e)
+      t.setAttribute("href", e);
+    else
+      t.removeAttribute("href");
+  };
+  var vt = (t, e) => {
+    if (!t)
+      return;
+    if (e)
+      t.textContent = e, t.style.display = "inline-flex";
+    else
+      t.textContent = "", t.style.display = "none";
+  };
+  var _t = (t, e) => {
+    if (!e || !t.hasAttribute("href"))
+      return;
+    let r = t.getAttribute("href");
+    if (!r)
+      return;
+    try {
+      let i = new URL(r, window.location.href), a = new URL(window.location.href).pathname, s = i.pathname;
+      if (s === "/" ? a === "/" : a === s || a.startsWith(s + "/"))
+        t.setAttribute("active", ""), t.setAttribute("aria-current", "page"), e.classList.add("active");
+      else
+        t.removeAttribute("active"), t.removeAttribute("aria-current"), e.classList.remove("active");
+    } catch {
+      console.warn("Invalid href in LateralMenuItem:", r);
+    }
+  };
+  var Qi = (t, e, r) => {
+    if (t.hasAttribute("disabled"))
+      return;
+    if (r.key !== "Enter" && r.key !== " ")
+      return;
+    if (r.target !== t)
+      return;
+    r.preventDefault(), e?.click();
+  };
+  var zs = Gi + Wi;
+
+  class tn extends o {
+    _anchor;
+    _badgeEl;
+    constructor() {
+      super({ css: zs, template: Zi });
+      this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
+    }
+    static get observedAttributes() {
+      return ["href", "badge", "disabled"];
+    }
+    connectedCallback() {
+      for (let t of ["href", "badge", "disabled"])
+        Ji(this, t);
+      if (!this.hasAttribute("role"))
+        this.setAttribute("role", "listitem");
+      if (!this.hasAttribute("tabindex"))
+        this.setAttribute("tabindex", "0");
+      ft(this._anchor, this.getAttribute("href")), vt(this._badgeEl, this.getAttribute("badge")), _t(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
+    }
+    disconnectedCallback() {
+      window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._anchor)
+        return;
+      if (t === "href")
+        ft(this._anchor, r);
+      if (t === "badge")
+        vt(this._badgeEl, r);
+      if (t === "disabled") {
+        let i = this.hasAttribute("disabled");
+        this.setAttribute("aria-disabled", i ? "true" : "false"), this.setAttribute("tabindex", i ? "-1" : "0");
+      }
+    }
+    get href() {
+      return this.getAttribute("href");
+    }
+    set href(t) {
+      t == null ? this.removeAttribute("href") : this.setAttribute("href", t);
+    }
+    get badge() {
+      return this.getAttribute("badge");
+    }
+    set badge(t) {
+      t == null ? this.removeAttribute("badge") : this.setAttribute("badge", t);
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    set disabled(t) {
+      t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
+    }
+    _onPopstate = () => _t(this, this._anchor);
+    _onKey = (t) => Qi(this, this._anchor, t);
+  }
+  var en = `<nav class="pagination" part="pagination" aria-label="Pagination">
     <button class="prev" part="prev" type="button" aria-label="Previous page">
         <slot name="prev">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -6322,7 +6173,7 @@ p9r-tag:hover {
     </button>
 </nav>
 `;
-    var Ln = `:host {
+  var rn = `:host {
   display: inline-block;
 
   --_size: 32px;
@@ -6417,114 +6268,115 @@ p9r-tag:hover {
   .page, .prev, .next { transition: background-color 0.15s, color 0.15s; }
 }
 `;
-    var g = (t, e, r) => {
-      let i = parseInt(t.getAttribute(e) ?? "", 10);
-      return Number.isFinite(i) && i > 0 ? i : r;
-    }, Cn = (t, e, r, i) => {
-      let n = [], a = Math.max(1, t - r), s = Math.min(e, t + r), l = Array.from({ length: Math.min(i, e) }, (p, A) => A + 1), d = Array.from({ length: Math.min(i, e) }, (p, A) => e - A).reverse(), c = [];
-      for (let p = a;p <= s; p++)
-        c.push(p);
-      let u = Array.from(new Set([...l, ...c, ...d])).sort((p, A) => p - A), m = 0;
-      for (let p of u) {
-        if (m > 0 && p - m > 1)
-          n.push("…");
-        n.push(p), m = p;
-      }
-      return n;
-    };
-    var Tn = (t, e, r, i) => {
-      if (!e)
-        return;
-      let n = g(t, "page", 1), a = g(t, "total", 1), s = g(t, "siblings", 1), l = g(t, "boundary", 1);
-      e.innerHTML = "";
-      for (let d of Cn(n, a, s, l))
-        if (d === "…") {
-          let c = document.createElement("span");
-          c.className = "ellipsis", c.setAttribute("part", "ellipsis"), c.textContent = "…", e.appendChild(c);
-        } else {
-          let c = document.createElement("li"), u = document.createElement("button");
-          if (u.type = "button", u.className = "page", u.setAttribute("part", "page"), u.dataset.page = String(d), u.textContent = String(d), d === n)
-            u.setAttribute("aria-current", "page");
-          c.appendChild(u), e.appendChild(c);
-        }
-      if (r)
-        r.disabled = n <= 1;
-      if (i)
-        i.disabled = n >= a;
-    };
-    var yt = (t, e, r) => {
-      if (r === e)
-        return;
-      if (!t.dispatchEvent(new CustomEvent("page-change", { bubbles: true, cancelable: true, detail: { page: r } })))
-        return;
-      t.setAttribute("page", String(r));
-    };
-    var Mn = (t, e) => {
-      if (e <= 1)
-        return;
-      yt(t, e, e - 1);
-    }, Hn = (t, e, r) => {
-      if (e >= r)
-        return;
-      yt(t, e, e + 1);
-    }, zn = (t, e, r) => {
-      let i = r.target.closest(".page");
-      if (!i)
-        return;
-      let n = Number(i.dataset.page);
-      if (Number.isFinite(n))
-        yt(t, e, n);
-    };
-
-    class wt extends o {
-      _pages;
-      _prev;
-      _next;
-      static get observedAttributes() {
-        return ["page", "total", "siblings", "boundary"];
-      }
-      constructor() {
-        super({ css: Ln, template: An });
-        this._pages = this.shadowRoot?.querySelector(".pages") ?? null, this._prev = this.shadowRoot?.querySelector(".prev") ?? null, this._next = this.shadowRoot?.querySelector(".next") ?? null;
-      }
-      connectedCallback() {
-        this._prev?.addEventListener("click", this._onPrev), this._next?.addEventListener("click", this._onNext), this._pages?.addEventListener("click", this._onPageClick), this._render();
-      }
-      disconnectedCallback() {
-        this._prev?.removeEventListener("click", this._onPrev), this._next?.removeEventListener("click", this._onNext), this._pages?.removeEventListener("click", this._onPageClick);
-      }
-      attributeChangedCallback() {
-        this._render();
-      }
-      get page() {
-        return g(this, "page", 1);
-      }
-      set page(t) {
-        this.setAttribute("page", String(t));
-      }
-      get total() {
-        return g(this, "total", 1);
-      }
-      set total(t) {
-        this.setAttribute("total", String(t));
-      }
-      _render() {
-        Tn(this, this._pages, this._prev, this._next);
-      }
-      _onPrev = () => Mn(this, this.page);
-      _onNext = () => Hn(this, this.page, this.total);
-      _onPageClick = (t) => zn(this, this.page, t);
+  var g = (t, e, r) => {
+    let i = parseInt(t.getAttribute(e) ?? "", 10);
+    return Number.isFinite(i) && i > 0 ? i : r;
+  };
+  var nn = (t, e, r, i) => {
+    let n = [], a = Math.max(1, t - r), s = Math.min(e, t + r), l = Array.from({ length: Math.min(i, e) }, (p, A) => A + 1), d = Array.from({ length: Math.min(i, e) }, (p, A) => e - A).reverse(), c = [];
+    for (let p = a;p <= s; p++)
+      c.push(p);
+    let u = Array.from(new Set([...l, ...c, ...d])).sort((p, A) => p - A), m = 0;
+    for (let p of u) {
+      if (m > 0 && p - m > 1)
+        n.push("…");
+      n.push(p), m = p;
     }
-    if (!customElements.get("p9r-pagination"))
-      customElements.define("p9r-pagination", wt);
-    var Sn = `<div class="progress" part="progress" role="progressbar">
+    return n;
+  };
+  var an = (t, e, r, i) => {
+    if (!e)
+      return;
+    let n = g(t, "page", 1), a = g(t, "total", 1), s = g(t, "siblings", 1), l = g(t, "boundary", 1);
+    e.innerHTML = "";
+    for (let d of nn(n, a, s, l))
+      if (d === "…") {
+        let c = document.createElement("span");
+        c.className = "ellipsis", c.setAttribute("part", "ellipsis"), c.textContent = "…", e.appendChild(c);
+      } else {
+        let c = document.createElement("li"), u = document.createElement("button");
+        if (u.type = "button", u.className = "page", u.setAttribute("part", "page"), u.dataset.page = String(d), u.textContent = String(d), d === n)
+          u.setAttribute("aria-current", "page");
+        c.appendChild(u), e.appendChild(c);
+      }
+    if (r)
+      r.disabled = n <= 1;
+    if (i)
+      i.disabled = n >= a;
+  };
+  var j = (t, e, r) => {
+    if (r === e)
+      return;
+    if (!t.dispatchEvent(new CustomEvent("page-change", { bubbles: true, cancelable: true, detail: { page: r } })))
+      return;
+    t.setAttribute("page", String(r));
+  };
+  var on = (t, e) => {
+    if (e <= 1)
+      return;
+    j(t, e, e - 1);
+  };
+  var sn = (t, e, r) => {
+    if (e >= r)
+      return;
+    j(t, e, e + 1);
+  };
+  var ln = (t, e, r) => {
+    let i = r.target.closest(".page");
+    if (!i)
+      return;
+    let n = Number(i.dataset.page);
+    if (Number.isFinite(n))
+      j(t, e, n);
+  };
+
+  class dn extends o {
+    _pages;
+    _prev;
+    _next;
+    static get observedAttributes() {
+      return ["page", "total", "siblings", "boundary"];
+    }
+    constructor() {
+      super({ css: rn, template: en });
+      this._pages = this.shadowRoot?.querySelector(".pages") ?? null, this._prev = this.shadowRoot?.querySelector(".prev") ?? null, this._next = this.shadowRoot?.querySelector(".next") ?? null;
+    }
+    connectedCallback() {
+      this._prev?.addEventListener("click", this._onPrev), this._next?.addEventListener("click", this._onNext), this._pages?.addEventListener("click", this._onPageClick), this._render();
+    }
+    disconnectedCallback() {
+      this._prev?.removeEventListener("click", this._onPrev), this._next?.removeEventListener("click", this._onNext), this._pages?.removeEventListener("click", this._onPageClick);
+    }
+    attributeChangedCallback() {
+      this._render();
+    }
+    get page() {
+      return g(this, "page", 1);
+    }
+    set page(t) {
+      this.setAttribute("page", String(t));
+    }
+    get total() {
+      return g(this, "total", 1);
+    }
+    set total(t) {
+      this.setAttribute("total", String(t));
+    }
+    _render() {
+      an(this, this._pages, this._prev, this._next);
+    }
+    _onPrev = () => on(this, this.page);
+    _onNext = () => sn(this, this.page, this.total);
+    _onPageClick = (t) => ln(this, this.page, t);
+  }
+  var cn = `<div class="progress" part="progress" role="progressbar">
     <div class="track" part="track">
         <div class="bar" part="bar"></div>
     </div>
     <span class="label" part="label"><slot></slot></span>
 </div>
 `;
-    var In = `:host {
+  var un = `:host {
   display: block;
 
   --_height: 8px;
@@ -6605,73 +6457,71 @@ p9r-tag:hover {
 }
 `;
 
-    class kt extends o {
-      _bar;
-      _label;
-      _root;
-      static get observedAttributes() {
-        return ["value", "max", "indeterminate"];
-      }
-      constructor() {
-        super({ css: In, template: Sn });
-        this._bar = this.shadowRoot?.querySelector(".bar") ?? null, this._label = this.shadowRoot?.querySelector(".label") ?? null, this._root = this.shadowRoot?.querySelector(".progress") ?? null;
-      }
-      connectedCallback() {
-        for (let t of ["value", "max"])
-          this._upgradeProperty(t);
-        this._sync();
-      }
-      attributeChangedCallback(t, e, r) {
-        this._sync();
-      }
-      _sync() {
-        let t = this.hasAttribute("indeterminate"), e = this._parseNumber(this.getAttribute("max"), 100), r = this._parseNumber(this.getAttribute("value"), 0), i = Math.max(0, Math.min(r, e)), n = e > 0 ? i / e * 100 : 0;
-        if (t)
-          this._root?.removeAttribute("aria-valuenow"), this._root?.setAttribute("aria-valuemin", "0"), this._root?.setAttribute("aria-valuemax", "100");
-        else
-          this._root?.setAttribute("aria-valuenow", String(i)), this._root?.setAttribute("aria-valuemin", "0"), this._root?.setAttribute("aria-valuemax", String(e)), this.style.setProperty("--_value", `${n}%`);
-        if (this._label)
-          this._label.dataset.valueText = `${Math.round(n)}%`;
-      }
-      _parseNumber(t, e) {
-        if (t === null)
-          return e;
-        let r = Number(t);
-        return Number.isFinite(r) ? r : e;
-      }
-      _upgradeProperty(t) {
-        if (Object.prototype.hasOwnProperty.call(this, t)) {
-          let e = this[t];
-          delete this[t], this[t] = e;
-        }
-      }
-      get value() {
-        return this._parseNumber(this.getAttribute("value"), 0);
-      }
-      set value(t) {
-        this.setAttribute("value", String(t));
-      }
-      get max() {
-        return this._parseNumber(this.getAttribute("max"), 100);
-      }
-      set max(t) {
-        this.setAttribute("max", String(t));
-      }
-      get indeterminate() {
-        return this.hasAttribute("indeterminate");
-      }
-      set indeterminate(t) {
-        if (t)
-          this.setAttribute("indeterminate", "");
-        else
-          this.removeAttribute("indeterminate");
+  class pn extends o {
+    _bar;
+    _label;
+    _root;
+    static get observedAttributes() {
+      return ["value", "max", "indeterminate"];
+    }
+    constructor() {
+      super({ css: un, template: cn });
+      this._bar = this.shadowRoot?.querySelector(".bar") ?? null, this._label = this.shadowRoot?.querySelector(".label") ?? null, this._root = this.shadowRoot?.querySelector(".progress") ?? null;
+    }
+    connectedCallback() {
+      for (let t of ["value", "max"])
+        this._upgradeProperty(t);
+      this._sync();
+    }
+    attributeChangedCallback(t, e, r) {
+      this._sync();
+    }
+    _sync() {
+      let t = this.hasAttribute("indeterminate"), e = this._parseNumber(this.getAttribute("max"), 100), r = this._parseNumber(this.getAttribute("value"), 0), i = Math.max(0, Math.min(r, e)), n = e > 0 ? i / e * 100 : 0;
+      if (t)
+        this._root?.removeAttribute("aria-valuenow"), this._root?.setAttribute("aria-valuemin", "0"), this._root?.setAttribute("aria-valuemax", "100");
+      else
+        this._root?.setAttribute("aria-valuenow", String(i)), this._root?.setAttribute("aria-valuemin", "0"), this._root?.setAttribute("aria-valuemax", String(e)), this.style.setProperty("--_value", `${n}%`);
+      if (this._label)
+        this._label.dataset.valueText = `${Math.round(n)}%`;
+    }
+    _parseNumber(t, e) {
+      if (t === null)
+        return e;
+      let r = Number(t);
+      return Number.isFinite(r) ? r : e;
+    }
+    _upgradeProperty(t) {
+      if (Object.prototype.hasOwnProperty.call(this, t)) {
+        let e = this[t];
+        delete this[t], this[t] = e;
       }
     }
-    if (!customElements.get("p9r-progress"))
-      customElements.define("p9r-progress", kt);
-    var Pn = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
+    get value() {
+      return this._parseNumber(this.getAttribute("value"), 0);
+    }
+    set value(t) {
+      this.setAttribute("value", String(t));
+    }
+    get max() {
+      return this._parseNumber(this.getAttribute("max"), 100);
+    }
+    set max(t) {
+      this.setAttribute("max", String(t));
+    }
+    get indeterminate() {
+      return this.hasAttribute("indeterminate");
+    }
+    set indeterminate(t) {
+      if (t)
+        this.setAttribute("indeterminate", "");
+      else
+        this.removeAttribute("indeterminate");
+    }
+  }
+  var hn = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
 `;
-    var Rn = `:host {
+  var bn = `:host {
   display: block;
 
   --_bg: var(--bg-base, #f1f5f9);
@@ -6720,42 +6570,40 @@ p9r-tag:hover {
 }
 `;
 
-    class Et extends o {
-      static get observedAttributes() {
-        return ["width", "height"];
-      }
-      constructor() {
-        super({ css: Rn, template: Pn });
-      }
-      connectedCallback() {
-        this._syncSize();
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "width" || t === "height")
-          this._syncSize();
-      }
-      _syncSize() {
-        let t = this.getAttribute("width"), e = this.getAttribute("height");
-        if (t !== null)
-          this.style.setProperty("--_width", this._normalize(t));
-        else
-          this.style.removeProperty("--_width");
-        if (e !== null)
-          this.style.setProperty("--_height", this._normalize(e));
-        else
-          this.style.removeProperty("--_height");
-      }
-      _normalize(t) {
-        return /^\d+(\.\d+)?$/.test(t) ? `${t}px` : t;
-      }
+  class mn extends o {
+    static get observedAttributes() {
+      return ["width", "height"];
     }
-    if (!customElements.get("p9r-skeleton"))
-      customElements.define("p9r-skeleton", Et);
-    var qn = `<div class="spinner" part="spinner" role="status" aria-live="polite">
+    constructor() {
+      super({ css: bn, template: hn });
+    }
+    connectedCallback() {
+      this._syncSize();
+    }
+    attributeChangedCallback(t, e, r) {
+      if (t === "width" || t === "height")
+        this._syncSize();
+    }
+    _syncSize() {
+      let t = this.getAttribute("width"), e = this.getAttribute("height");
+      if (t !== null)
+        this.style.setProperty("--_width", this._normalize(t));
+      else
+        this.style.removeProperty("--_width");
+      if (e !== null)
+        this.style.setProperty("--_height", this._normalize(e));
+      else
+        this.style.removeProperty("--_height");
+    }
+    _normalize(t) {
+      return /^\d+(\.\d+)?$/.test(t) ? `${t}px` : t;
+    }
+  }
+  var gn = `<div class="spinner" part="spinner" role="status" aria-live="polite">
     <span class="visually-hidden"><slot>Loading…</slot></span>
 </div>
 `;
-    var Bn = `:host {
+  var fn = `:host {
   display: inline-block;
 
   --_size: 1.25rem;
@@ -6807,18 +6655,16 @@ p9r-tag:hover {
 }
 `;
 
-    class At extends o {
-      constructor() {
-        super({ css: Bn, template: qn });
-      }
+  class vn extends o {
+    constructor() {
+      super({ css: fn, template: gn });
     }
-    if (!customElements.get("p9r-spinner"))
-      customElements.define("p9r-spinner", At);
-    var Dn = `<ol class="stepper" part="stepper">
+  }
+  var _n = `<ol class="stepper" part="stepper">
     <slot></slot>
 </ol>
 `;
-    var jn = `:host {
+  var xn = `:host {
   display: block;
 
   --_active: var(--primary-base, #4361ee);
@@ -6842,7 +6688,49 @@ p9r-tag:hover {
   gap: 0;
 }
 `;
-    var Fn = `<li class="step" part="step">
+
+  class yn extends o {
+    static get observedAttributes() {
+      return ["current", "orientation"];
+    }
+    constructor() {
+      super({ css: xn, template: _n });
+    }
+    connectedCallback() {
+      this._sync();
+    }
+    attributeChangedCallback(t, e, r) {
+      this._sync();
+    }
+    get current() {
+      let t = parseInt(this.getAttribute("current") ?? "", 10);
+      return Number.isFinite(t) ? t : 0;
+    }
+    set current(t) {
+      this.setAttribute("current", String(t));
+    }
+    _steps() {
+      return Array.from(this.querySelectorAll("p9r-step"));
+    }
+    _sync() {
+      let t = this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal", e = this.current, r = this._steps();
+      r.forEach((i, n) => {
+        if (i.setAttribute("data-index", String(n + 1)), i.setAttribute("orientation", t), n === r.length - 1)
+          i.setAttribute("last", "");
+        else
+          i.removeAttribute("last");
+        if (i.hasAttribute("state"))
+          return;
+        if (n < e)
+          i.setAttribute("data-state", "completed");
+        else if (n === e)
+          i.setAttribute("data-state", "active");
+        else
+          i.setAttribute("data-state", "pending");
+      });
+    }
+  }
+  var wn = `<li class="step" part="step">
     <div class="indicator" part="indicator">
         <span class="bullet" part="bullet">
             <span class="number"></span>
@@ -6860,7 +6748,7 @@ p9r-tag:hover {
     </div>
 </li>
 `;
-    var Nn = `:host {
+  var kn = `:host {
   display: flex;
   flex: 1;
 
@@ -6950,7 +6838,7 @@ p9r-tag:hover {
 .description slot:empty,
 .description:has(slot:not(:has(*))) { display: none; }
 `;
-    var On = `:host([data-state="active"], [state="active"]) {
+  var En = `:host([data-state="active"], [state="active"]) {
   --_color: var(--_active);
   --_label-color: var(--_text);
 }
@@ -7011,84 +6899,38 @@ p9r-tag:hover {
   margin-top: 0.4rem;
 }
 `;
-    var nl = Nn + On;
+  var Us = kn + En;
 
-    class Lt extends o {
-      _label;
-      _number;
-      static get observedAttributes() {
-        return ["label", "data-index"];
-      }
-      constructor() {
-        super({ css: nl, template: Fn });
-        this._label = this.shadowRoot?.querySelector(".label") ?? null, this._number = this.shadowRoot?.querySelector(".number") ?? null;
-      }
-      connectedCallback() {
-        this._sync();
-      }
-      attributeChangedCallback(t, e, r) {
-        this._sync();
-      }
-      _sync() {
-        if (this._label)
-          this._label.textContent = this.getAttribute("label") ?? "";
-        if (this._number)
-          this._number.textContent = this.getAttribute("data-index") ?? "";
-      }
+  class An extends o {
+    _label;
+    _number;
+    static get observedAttributes() {
+      return ["label", "data-index"];
     }
-    if (!customElements.get("p9r-step"))
-      customElements.define("p9r-step", Lt);
-
-    class Ct extends o {
-      static get observedAttributes() {
-        return ["current", "orientation"];
-      }
-      constructor() {
-        super({ css: jn, template: Dn });
-      }
-      connectedCallback() {
-        this._sync();
-      }
-      attributeChangedCallback(t, e, r) {
-        this._sync();
-      }
-      get current() {
-        let t = parseInt(this.getAttribute("current") ?? "", 10);
-        return Number.isFinite(t) ? t : 0;
-      }
-      set current(t) {
-        this.setAttribute("current", String(t));
-      }
-      _steps() {
-        return Array.from(this.querySelectorAll("p9r-step"));
-      }
-      _sync() {
-        let t = this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal", e = this.current, r = this._steps();
-        r.forEach((i, n) => {
-          if (i.setAttribute("data-index", String(n + 1)), i.setAttribute("orientation", t), n === r.length - 1)
-            i.setAttribute("last", "");
-          else
-            i.removeAttribute("last");
-          if (i.hasAttribute("state"))
-            return;
-          if (n < e)
-            i.setAttribute("data-state", "completed");
-          else if (n === e)
-            i.setAttribute("data-state", "active");
-          else
-            i.setAttribute("data-state", "pending");
-        });
-      }
+    constructor() {
+      super({ css: Us, template: wn });
+      this._label = this.shadowRoot?.querySelector(".label") ?? null, this._number = this.shadowRoot?.querySelector(".number") ?? null;
     }
-    if (!customElements.get("p9r-stepper"))
-      customElements.define("p9r-stepper", Ct);
-    var Vn = `<div class="table-container">
+    connectedCallback() {
+      this._sync();
+    }
+    attributeChangedCallback(t, e, r) {
+      this._sync();
+    }
+    _sync() {
+      if (this._label)
+        this._label.textContent = this.getAttribute("label") ?? "";
+      if (this._number)
+        this._number.textContent = this.getAttribute("data-index") ?? "";
+    }
+  }
+  var Ln = `<div class="table-container">
   <div class="p9r-table">
     <slot name="header"></slot>
     <slot></slot>
   </div>
 </div>`;
-    var Kn = `:host {
+  var Cn = `:host {
   display: block;
   width: 100%;
 }
@@ -7121,115 +6963,15 @@ p9r-tag:hover {
 ::slotted(p9r-row:not(:first-child):hover) {
   background-color: var(--bg-base);
 }`;
-    var $n = `<slot></slot>
-`;
-    var Un = `:host {
-  display: table-row;
-}
 
-:host([href]) {
-  cursor: pointer;
-}
-
-:host(:focus-visible) {
-  outline: 2px inset var(--primary-base);
-  outline-offset: -2px;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  :host {
-    transition: background-color 0.15s ease;
-  }
-}
-`;
-    var _e = (t) => {
-      let e = t.getAttribute("href");
-      if (!e)
-        return;
-      let r = t.getAttribute("target"), i = new CustomEvent("p9r-row-click", { detail: { href: e, target: r }, bubbles: true, composed: true, cancelable: true });
-      if (!t.dispatchEvent(i))
-        return;
-      if (r === "_blank")
-        window.open(e, "_blank", "noopener,noreferrer");
-      else
-        window.location.href = e;
-    };
-    var Yn = (t) => {
-      if (!t.hasAttribute("href"))
-        return;
-      _e(t);
-    }, Xn = (t, e) => {
-      if (!t.hasAttribute("href"))
-        return;
-      if (e.key === "Enter" || e.key === " ")
-        e.preventDefault(), _e(t);
-    };
-    var Zn = (t, e) => {
-      if (Object.prototype.hasOwnProperty.call(t, e)) {
-        let r = t[e];
-        delete t[e], t[e] = r;
-      }
-    }, xe = (t) => {
-      if (t.hasAttribute("href")) {
-        if (!t.hasAttribute("tabindex"))
-          t.setAttribute("tabindex", "0");
-        if (!t.hasAttribute("role"))
-          t.setAttribute("role", "link");
-      } else {
-        if (t.getAttribute("role") === "link")
-          t.removeAttribute("role");
-        if (t.getAttribute("tabindex") === "0")
-          t.removeAttribute("tabindex");
-        if (!t.hasAttribute("role"))
-          t.setAttribute("role", "row");
-      }
-    };
-
-    class Tt extends o {
-      static get observedAttributes() {
-        return ["href"];
-      }
-      constructor() {
-        super({ css: Un, template: $n });
-      }
-      connectedCallback() {
-        for (let t of ["href", "target"])
-          Zn(this, t);
-        this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), xe(this);
-      }
-      disconnectedCallback() {
-        this.removeEventListener("click", this._onClick), this.removeEventListener("keydown", this._onKey);
-      }
-      attributeChangedCallback(t) {
-        if (t === "href")
-          xe(this);
-      }
-      _onClick = () => Yn(this);
-      _onKey = (t) => Xn(this, t);
-      get href() {
-        return this.getAttribute("href");
-      }
-      set href(t) {
-        if (t === null)
-          this.removeAttribute("href");
-        else
-          this.setAttribute("href", t);
-      }
-      get target() {
-        return this.getAttribute("target");
-      }
-      set target(t) {
-        if (t === null)
-          this.removeAttribute("target");
-        else
-          this.setAttribute("target", t);
-      }
+  class Tn extends o {
+    constructor() {
+      super({ css: Cn, template: Ln });
     }
-    if (!customElements.get("p9r-row"))
-      customElements.define("p9r-row", Tt);
-    var Wn = `<slot></slot>
+  }
+  var Mn = `<slot></slot>
 `;
-    var Gn = `:host {
+  var Hn = `:host {
   display: table-cell;
   padding: 12px 20px;
   vertical-align: middle;
@@ -7254,18 +6996,16 @@ p9r-tag:hover {
 }
 `;
 
-    class Mt extends o {
-      constructor() {
-        super({ css: Gn, template: Wn });
-      }
-      connectedCallback() {
-        if (!this.hasAttribute("role"))
-          this.setAttribute("role", "cell");
-      }
+  class Sn extends o {
+    constructor() {
+      super({ css: Hn, template: Mn });
     }
-    if (!customElements.get("p9r-cell"))
-      customElements.define("p9r-cell", Mt);
-    var Jn = `<div class="header-wrapper" part="wrapper">
+    connectedCallback() {
+      if (!this.hasAttribute("role"))
+        this.setAttribute("role", "cell");
+    }
+  }
+  var zn = `<div class="header-wrapper" part="wrapper">
   <button
     type="button"
     class="label-section"
@@ -7295,7 +7035,7 @@ p9r-tag:hover {
   </div>
 </div>
 `;
-    var Qn = `:host {
+  var In = `:host {
   display: table-cell;
   padding: 12px 20px;
   border-bottom: 2px solid var(--border-light);
@@ -7366,7 +7106,7 @@ p9r-tag:hover {
   box-sizing: border-box;
 }
 `;
-    var ta = `:host([sort]) .label-section {
+  var Pn = `:host([sort]) .label-section {
   cursor: pointer;
 }
 
@@ -7413,110 +7153,211 @@ p9r-tag:hover {
   background: var(--bg-base, #eee);
 }
 `;
-    var bl = (t) => {
-      let e = t.getAttribute("filter-name");
-      if (!e)
-        return "";
-      return new URL(window.location.href).searchParams.get(`f_${e}`) ?? "";
-    }, ye = (t, e, r) => {
-      let i = t.getAttribute("filter-name");
-      if (!e)
-        return;
-      if (!i) {
-        e.setAttribute("hidden", ""), t.removeAttribute("data-has-filter");
-        return;
-      }
-      e.removeAttribute("hidden");
-      let n = bl(t);
-      if (r)
-        r.value = n;
-      if (n)
-        t.setAttribute("data-has-filter", "");
-      else
-        t.removeAttribute("data-has-filter");
-    };
-    var ea = (t) => {
-      let e = t.getAttribute("sort");
-      if (!e)
-        return;
-      let r = new URL(window.location.href), i = r.searchParams.get("sort"), n = r.searchParams.get("direction"), a = i === e && n === "asc" ? "desc" : "asc";
-      r.searchParams.set("sort", e), r.searchParams.set("direction", a), window.location.href = r.toString();
-    }, ra = (t, e) => {
-      let r = t.getAttribute("filter-name");
-      if (!r)
-        return;
-      let i = new URL(window.location.href);
-      if (e)
-        i.searchParams.set(`f_${r}`, e);
-      else
-        i.searchParams.delete(`f_${r}`);
-      window.location.href = i.toString();
-    };
-    var ia = (t, e) => {
-      if (e.composedPath().some((r) => r instanceof HTMLInputElement))
-        return;
-      ea(t);
-    }, na = (t, e, r, i) => {
-      if (t.stopPropagation(), !r || !e)
-        return;
-      if (r.hasAttribute("hidden"))
-        r.removeAttribute("hidden"), e.setAttribute("aria-expanded", "true"), i?.focus();
-      else
-        r.setAttribute("hidden", ""), e.setAttribute("aria-expanded", "false");
-    }, aa = (t, e, r) => {
-      if (r.key !== "Enter" || !e)
-        return;
-      ra(t, e.value);
-    }, oa = (t, e) => {
-      e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
-    };
-    var ml = Qn + ta;
-
-    class Ht extends o {
-      _sortTrigger;
-      _filterBtn;
-      _filterPopover;
-      _filterInput;
-      static get observedAttributes() {
-        return ["sort", "filter-name"];
-      }
-      constructor() {
-        super({ css: ml, template: Jn });
-        this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
-      }
-      connectedCallback() {
-        ye(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
-      }
-      disconnectedCallback() {
-        this._sortTrigger?.removeEventListener("click", this._onSort), this._filterBtn?.removeEventListener("click", this._onFilterToggle), this._filterPopover?.removeEventListener("click", this._stopPropagation), this._filterInput?.removeEventListener("keydown", this._onFilterKey), window.removeEventListener("click", this._onWindowClick);
-      }
-      attributeChangedCallback() {
-        ye(this, this._filterBtn, this._filterInput);
-      }
-      _onSort = (t) => ia(this, t);
-      _onFilterToggle = (t) => na(t, this._filterBtn, this._filterPopover, this._filterInput);
-      _onFilterKey = (t) => aa(this, this._filterInput, t);
-      _onWindowClick = () => oa(this._filterBtn, this._filterPopover);
-      _stopPropagation = (t) => t.stopPropagation();
+  var tl = (t) => {
+    let e = t.getAttribute("filter-name");
+    if (!e)
+      return "";
+    return new URL(window.location.href).searchParams.get(`f_${e}`) ?? "";
+  };
+  var xt = (t, e, r) => {
+    let i = t.getAttribute("filter-name");
+    if (!e)
+      return;
+    if (!i) {
+      e.setAttribute("hidden", ""), t.removeAttribute("data-has-filter");
+      return;
     }
-    if (!customElements.get("p9r-header-cell"))
-      customElements.define("p9r-header-cell", Ht);
+    e.removeAttribute("hidden");
+    let n = tl(t);
+    if (r)
+      r.value = n;
+    if (n)
+      t.setAttribute("data-has-filter", "");
+    else
+      t.removeAttribute("data-has-filter");
+  };
+  var Rn = (t) => {
+    let e = t.getAttribute("sort");
+    if (!e)
+      return;
+    let r = new URL(window.location.href), i = r.searchParams.get("sort"), n = r.searchParams.get("direction"), a = i === e && n === "asc" ? "desc" : "asc";
+    r.searchParams.set("sort", e), r.searchParams.set("direction", a), window.location.href = r.toString();
+  };
+  var qn = (t, e) => {
+    let r = t.getAttribute("filter-name");
+    if (!r)
+      return;
+    let i = new URL(window.location.href);
+    if (e)
+      i.searchParams.set(`f_${r}`, e);
+    else
+      i.searchParams.delete(`f_${r}`);
+    window.location.href = i.toString();
+  };
+  var Bn = (t, e) => {
+    if (e.composedPath().some((r) => r instanceof HTMLInputElement))
+      return;
+    Rn(t);
+  };
+  var Dn = (t, e, r, i) => {
+    if (t.stopPropagation(), !r || !e)
+      return;
+    if (r.hasAttribute("hidden"))
+      r.removeAttribute("hidden"), e.setAttribute("aria-expanded", "true"), i?.focus();
+    else
+      r.setAttribute("hidden", ""), e.setAttribute("aria-expanded", "false");
+  };
+  var Fn = (t, e, r) => {
+    if (r.key !== "Enter" || !e)
+      return;
+    qn(t, e.value);
+  };
+  var jn = (t, e) => {
+    e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
+  };
+  var el = In + Pn;
 
-    class zt extends o {
-      constructor() {
-        super({ css: Kn, template: Vn });
-      }
+  class Nn extends o {
+    _sortTrigger;
+    _filterBtn;
+    _filterPopover;
+    _filterInput;
+    static get observedAttributes() {
+      return ["sort", "filter-name"];
     }
-    if (!customElements.get("p9r-table"))
-      customElements.define("p9r-table", zt);
-    var sa = `<div class="tabs" part="tabs">
+    constructor() {
+      super({ css: el, template: zn });
+      this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
+    }
+    connectedCallback() {
+      xt(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
+    }
+    disconnectedCallback() {
+      this._sortTrigger?.removeEventListener("click", this._onSort), this._filterBtn?.removeEventListener("click", this._onFilterToggle), this._filterPopover?.removeEventListener("click", this._stopPropagation), this._filterInput?.removeEventListener("keydown", this._onFilterKey), window.removeEventListener("click", this._onWindowClick);
+    }
+    attributeChangedCallback() {
+      xt(this, this._filterBtn, this._filterInput);
+    }
+    _onSort = (t) => Bn(this, t);
+    _onFilterToggle = (t) => Dn(t, this._filterBtn, this._filterPopover, this._filterInput);
+    _onFilterKey = (t) => Fn(this, this._filterInput, t);
+    _onWindowClick = () => jn(this._filterBtn, this._filterPopover);
+    _stopPropagation = (t) => t.stopPropagation();
+  }
+  var On = `<slot></slot>
+`;
+  var Vn = `:host {
+  display: table-row;
+}
+
+:host([href]) {
+  cursor: pointer;
+}
+
+:host(:focus-visible) {
+  outline: 2px inset var(--primary-base);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host {
+    transition: background-color 0.15s ease;
+  }
+}
+`;
+  var yt = (t) => {
+    let e = t.getAttribute("href");
+    if (!e)
+      return;
+    let r = t.getAttribute("target"), i = new CustomEvent("p9r-row-click", { detail: { href: e, target: r }, bubbles: true, composed: true, cancelable: true });
+    if (!t.dispatchEvent(i))
+      return;
+    if (r === "_blank")
+      window.open(e, "_blank", "noopener,noreferrer");
+    else
+      window.location.href = e;
+  };
+  var Kn = (t) => {
+    if (!t.hasAttribute("href"))
+      return;
+    yt(t);
+  };
+  var $n = (t, e) => {
+    if (!t.hasAttribute("href"))
+      return;
+    if (e.key === "Enter" || e.key === " ")
+      e.preventDefault(), yt(t);
+  };
+  var Un = (t, e) => {
+    if (Object.prototype.hasOwnProperty.call(t, e)) {
+      let r = t[e];
+      delete t[e], t[e] = r;
+    }
+  };
+  var wt = (t) => {
+    if (t.hasAttribute("href")) {
+      if (!t.hasAttribute("tabindex"))
+        t.setAttribute("tabindex", "0");
+      if (!t.hasAttribute("role"))
+        t.setAttribute("role", "link");
+    } else {
+      if (t.getAttribute("role") === "link")
+        t.removeAttribute("role");
+      if (t.getAttribute("tabindex") === "0")
+        t.removeAttribute("tabindex");
+      if (!t.hasAttribute("role"))
+        t.setAttribute("role", "row");
+    }
+  };
+
+  class Yn extends o {
+    static get observedAttributes() {
+      return ["href"];
+    }
+    constructor() {
+      super({ css: Vn, template: On });
+    }
+    connectedCallback() {
+      for (let t of ["href", "target"])
+        Un(this, t);
+      this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), wt(this);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._onClick), this.removeEventListener("keydown", this._onKey);
+    }
+    attributeChangedCallback(t) {
+      if (t === "href")
+        wt(this);
+    }
+    _onClick = () => Kn(this);
+    _onKey = (t) => $n(this, t);
+    get href() {
+      return this.getAttribute("href");
+    }
+    set href(t) {
+      if (t === null)
+        this.removeAttribute("href");
+      else
+        this.setAttribute("href", t);
+    }
+    get target() {
+      return this.getAttribute("target");
+    }
+    set target(t) {
+      if (t === null)
+        this.removeAttribute("target");
+      else
+        this.setAttribute("target", t);
+    }
+  }
+  var Xn = `<div class="tabs" part="tabs">
     <div class="tablist" part="tablist" role="tablist"></div>
     <div class="panels" part="panels">
         <slot></slot>
     </div>
 </div>
 `;
-    var la = `:host {
+  var Zn = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -7593,7 +7434,7 @@ p9r-tag:hover {
   .tab { transition: color 0.15s; }
 }
 `;
-    var da = `:host([variant="pills"]) .tablist {
+  var Gn = `:host([variant="pills"]) .tablist {
   border-bottom: 0;
   gap: 0.4rem;
   padding: 0.25rem;
@@ -7632,11 +7473,116 @@ p9r-tag:hover {
   padding-left: 1rem;
 }
 `;
-    var ca = `<div class="panel" part="panel">
+  var kt = (t) => {
+    if (!t)
+      return [];
+    return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
+  };
+  var sl = 0;
+  var Wn = () => `tabpanel-${sl++}`;
+  var Jn = (t, e) => {
+    t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
+  };
+  var Et = (t, e, r) => {
+    if (!e)
+      return;
+    e.innerHTML = "";
+    let i = kt(r), n = t.getAttribute("active");
+    if (!n && i.length > 0)
+      n = i[0]?.getAttribute("id") ?? null;
+    if (i.forEach((a, s) => {
+      let l = a.getAttribute("id") ?? Wn();
+      if (!a.id)
+        a.id = l;
+      let d = a.getAttribute("label") ?? `Tab ${s + 1}`, c = document.createElement("button");
+      if (c.type = "button", c.className = "tab", c.setAttribute("part", "tab"), c.setAttribute("role", "tab"), c.setAttribute("id", `tab-${l}`), c.setAttribute("aria-controls", l), c.dataset.target = l, c.textContent = d, a.hasAttribute("disabled"))
+        c.setAttribute("disabled", "");
+      e.appendChild(c), a.setAttribute("role", "tabpanel"), a.setAttribute("aria-labelledby", `tab-${l}`);
+    }), n)
+      k(t, e, r, n);
+  };
+  var k = (t, e, r, i) => {
+    let n = kt(r), a = Array.from(e?.querySelectorAll(".tab") ?? []), s = false;
+    if (n.forEach((l) => {
+      let d = l.id === i;
+      if (d)
+        s = true;
+      l.toggleAttribute("hidden", !d);
+    }), a.forEach((l) => {
+      let d = l.dataset.target === i;
+      l.setAttribute("aria-selected", String(d)), l.setAttribute("tabindex", d ? "0" : "-1");
+    }), s && t.getAttribute("active") !== i)
+      t.setAttribute("active", i), Jn(t, i);
+  };
+  var Qn = (t, e, r, i) => {
+    let n = i.target.closest(".tab");
+    if (!n || n.hasAttribute("disabled"))
+      return;
+    let a = n.dataset.target;
+    if (a)
+      k(t, e, r, a);
+  };
+  var ta = (t, e, r, i) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
+      return;
+    let n = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
+    if (n.length === 0)
+      return;
+    let a = n.findIndex((u) => u === document.activeElement), s = a === -1 ? 0 : a, l = s;
+    if (i.key === "ArrowLeft")
+      l = (s - 1 + n.length) % n.length;
+    if (i.key === "ArrowRight")
+      l = (s + 1) % n.length;
+    if (i.key === "Home")
+      l = 0;
+    if (i.key === "End")
+      l = n.length - 1;
+    i.preventDefault();
+    let d = n[l];
+    if (!d)
+      return;
+    let c = d.dataset.target;
+    if (c)
+      k(t, e, r, c);
+    d.focus();
+  };
+  var ll = Zn + Gn;
+
+  class ea extends o {
+    _tablist;
+    _slot;
+    static get observedAttributes() {
+      return ["active"];
+    }
+    constructor() {
+      super({ css: ll, template: Xn });
+      this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
+    }
+    connectedCallback() {
+      this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), Et(this, this._tablist, this._slot);
+    }
+    disconnectedCallback() {
+      this._slot?.removeEventListener("slotchange", this._onRebuild), this._tablist?.removeEventListener("click", this._onClick), this._tablist?.removeEventListener("keydown", this._onKey);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (t === "active" && r !== null)
+        k(this, this._tablist, this._slot, r);
+    }
+    get active() {
+      return this.getAttribute("active") ?? "";
+    }
+    set active(t) {
+      this.setAttribute("active", t);
+    }
+    _onRebuild = () => Et(this, this._tablist, this._slot);
+    _onClick = (t) => Qn(this, this._tablist, this._slot, t);
+    _onKey = (t) => ta(this, this._tablist, this._slot, t);
+  }
+  var ra = `<div class="panel" part="panel">
     <slot></slot>
 </div>
 `;
-    var ua = `:host {
+  var ia = `:host {
   display: block;
 }
 
@@ -7647,123 +7593,177 @@ p9r-tag:hover {
 }
 `;
 
-    class St extends o {
-      constructor() {
-        super({ css: ua, template: ca });
-      }
+  class na extends o {
+    constructor() {
+      super({ css: ia, template: ra });
     }
-    if (!customElements.get("p9r-tab-panel"))
-      customElements.define("p9r-tab-panel", St);
-    var we = (t) => {
-      if (!t)
-        return [];
-      return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
-    }, yl = 0, pa = () => `tabpanel-${yl++}`;
-    var ha = (t, e) => {
-      t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
-    };
-    var ke = (t, e, r) => {
-      if (!e)
-        return;
-      e.innerHTML = "";
-      let i = we(r), n = t.getAttribute("active");
-      if (!n && i.length > 0)
-        n = i[0]?.getAttribute("id") ?? null;
-      if (i.forEach((a, s) => {
-        let l = a.getAttribute("id") ?? pa();
-        if (!a.id)
-          a.id = l;
-        let d = a.getAttribute("label") ?? `Tab ${s + 1}`, c = document.createElement("button");
-        if (c.type = "button", c.className = "tab", c.setAttribute("part", "tab"), c.setAttribute("role", "tab"), c.setAttribute("id", `tab-${l}`), c.setAttribute("aria-controls", l), c.dataset.target = l, c.textContent = d, a.hasAttribute("disabled"))
-          c.setAttribute("disabled", "");
-        e.appendChild(c), a.setAttribute("role", "tabpanel"), a.setAttribute("aria-labelledby", `tab-${l}`);
-      }), n)
-        k(t, e, r, n);
-    }, k = (t, e, r, i) => {
-      let n = we(r), a = Array.from(e?.querySelectorAll(".tab") ?? []), s = false;
-      if (n.forEach((l) => {
-        let d = l.id === i;
-        if (d)
-          s = true;
-        l.toggleAttribute("hidden", !d);
-      }), a.forEach((l) => {
-        let d = l.dataset.target === i;
-        l.setAttribute("aria-selected", String(d)), l.setAttribute("tabindex", d ? "0" : "-1");
-      }), s && t.getAttribute("active") !== i)
-        t.setAttribute("active", i), ha(t, i);
-    };
-    var ba = (t, e, r, i) => {
-      let n = i.target.closest(".tab");
-      if (!n || n.hasAttribute("disabled"))
-        return;
-      let a = n.dataset.target;
-      if (a)
-        k(t, e, r, a);
-    }, ma = (t, e, r, i) => {
-      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
-        return;
-      let n = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
-      if (n.length === 0)
-        return;
-      let a = n.findIndex((u) => u === document.activeElement), s = a === -1 ? 0 : a, l = s;
-      if (i.key === "ArrowLeft")
-        l = (s - 1 + n.length) % n.length;
-      if (i.key === "ArrowRight")
-        l = (s + 1) % n.length;
-      if (i.key === "Home")
-        l = 0;
-      if (i.key === "End")
-        l = n.length - 1;
-      i.preventDefault();
-      let d = n[l];
-      if (!d)
-        return;
-      let c = d.dataset.target;
-      if (c)
-        k(t, e, r, c);
-      d.focus();
-    };
-    var wl = la + da;
+  }
+  var aa = `<span class="label" part="label"><slot></slot></span>
+<button type="button" class="remove" part="remove" aria-label="Remove" hidden>&times;</button>
+`;
+  var oa = `:host {
+    --_tag-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    class It extends o {
-      _tablist;
-      _slot;
-      static get observedAttributes() {
-        return ["active"];
-      }
-      constructor() {
-        super({ css: wl, template: sa });
-        this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
-      }
-      connectedCallback() {
-        this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), ke(this, this._tablist, this._slot);
-      }
-      disconnectedCallback() {
-        this._slot?.removeEventListener("slotchange", this._onRebuild), this._tablist?.removeEventListener("click", this._onClick), this._tablist?.removeEventListener("keydown", this._onKey);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "active" && r !== null)
-          k(this, this._tablist, this._slot, r);
-      }
-      get active() {
-        return this.getAttribute("active") ?? "";
-      }
-      set active(t) {
-        this.setAttribute("active", t);
-      }
-      _onRebuild = () => ke(this, this._tablist, this._slot);
-      _onClick = (t) => ba(this, this._tablist, this._slot, t);
-      _onKey = (t) => ma(this, this._tablist, this._slot, t);
+    --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
+    --_tag-color: var(--text-body, oklch(45% 0.02 265));
+    --_tag-border: var(--border-default, oklch(90% 0.02 265));
+
+    --_tag-fs: 12px;
+    --_tag-padding: 2px 8px;
+    --_tag-radius: 6px;
+    --_tag-gap: 4px;
+
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--_tag-gap);
+
+    font-family: var(--_tag-font-family);
+    background-color: var(--_tag-bg);
+    color: var(--_tag-color);
+
+    font-size: var(--_tag-fs);
+    padding: var(--_tag-padding);
+    border-radius: var(--_tag-radius);
+}
+
+:host([border]) {
+    border: 1px solid var(--_tag-border);
+}
+
+.label {
+    display: inline-flex;
+    align-items: center;
+}
+
+.remove {
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    line-height: 1;
+    padding: 0 2px;
+    margin: 0;
+    cursor: pointer;
+    opacity: 0.6;
+    font-size: 14px;
+}
+
+.remove:hover {
+    opacity: 1;
+}
+
+.remove:focus-visible {
+    outline: 2px solid var(--_tag-color);
+    outline-offset: 1px;
+    border-radius: 2px;
+}
+
+.remove[hidden] {
+    display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .remove {
+        transition: opacity 0.15s ease;
     }
-    if (!customElements.get("p9r-tabs"))
-      customElements.define("p9r-tabs", It);
-    var ga = `<div class="icon" part="icon"></div>
+}
+`;
+  var sa = `:host([color="info"]) {
+    --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
+    --_tag-color: var(--info-base, oklch(65% 0.12 230));
+    --_tag-border: var(--info-contrasted, oklch(25% 0.08 230));
+}
+
+:host([color="danger"]) {
+    --_tag-bg: var(--danger-muted, oklch(95% 0.02 20));
+    --_tag-color: var(--danger-base, oklch(65% 0.12 20));
+    --_tag-border: var(--danger-contrasted, oklch(25% 0.08 20));
+}
+
+:host([color="success"]) {
+    --_tag-bg: var(--success-muted, oklch(95% 0.02 120));
+    --_tag-color: var(--success-base, oklch(65% 0.12 120));
+    --_tag-border: var(--success-contrasted, oklch(25% 0.08 120));
+}
+
+:host([color="warning"]) {
+    --_tag-bg: var(--warning-muted, oklch(95% 0.02 50));
+    --_tag-color: var(--warning-base, oklch(65% 0.12 50));
+    --_tag-border: var(--warning-contrasted, oklch(25% 0.08 50));
+}
+
+:host([color="primary"]) {
+    --_tag-bg: var(--primary-muted, oklch(95% 0.02 265));
+    --_tag-color: var(--primary-base, oklch(65% 0.12 265));
+    --_tag-border: var(--primary-contrasted, oklch(25% 0.08 265));
+}
+
+:host([color="secondary"]) {
+    --_tag-bg: var(--secondary-muted, oklch(95% 0.02 265));
+    --_tag-color: var(--secondary-base, oklch(65% 0.12 265));
+    --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
+}
+`;
+  var bl = oa + sa;
+
+  class la extends o {
+    _removeBtn;
+    static get observedAttributes() {
+      return ["removable"];
+    }
+    constructor() {
+      super({ css: bl, template: aa });
+      this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
+    }
+    connectedCallback() {
+      for (let t of ["removable"])
+        this._upgradeProperty(t);
+      this._syncRemovable(), this._removeBtn?.addEventListener("click", this._handleRemoveClick);
+    }
+    disconnectedCallback() {
+      this._removeBtn?.removeEventListener("click", this._handleRemoveClick);
+    }
+    attributeChangedCallback(t, e, r) {
+      if (!this._removeBtn)
+        return;
+      if (t === "removable")
+        this._syncRemovable();
+    }
+    _syncRemovable() {
+      if (!this._removeBtn)
+        return;
+      this._removeBtn.hidden = !this.hasAttribute("removable");
+    }
+    _handleRemoveClick = (t) => {
+      if (t.stopPropagation(), !this.dispatchEvent(new CustomEvent("remove", { bubbles: true, cancelable: true, detail: { value: this.getAttribute("value") ?? this.textContent?.trim() ?? "" } })))
+        return;
+      this.remove();
+    };
+    _upgradeProperty(t) {
+      if (this.hasOwnProperty(t)) {
+        let e = this[t];
+        delete this[t], this[t] = e;
+      }
+    }
+    get removable() {
+      return this.hasAttribute("removable");
+    }
+    set removable(t) {
+      if (t)
+        this.setAttribute("removable", "");
+      else
+        this.removeAttribute("removable");
+    }
+  }
+  var da = `<div class="icon" part="icon"></div>
 <div class="content">
     <span class="message"><slot></slot></span>
 </div>
 <button class="close" aria-label="Dismiss">&times;</button>
 `;
-    var fa = `:host {
+  var ca = `:host {
     --_bg: var(--bg-surface, #ffffff);
     --_color: var(--text-main, #1f2937);
     --_border: var(--border-default, #e5e7eb);
@@ -7834,7 +7834,7 @@ p9r-tag:hover {
     opacity: 1;
 }
 `;
-    var va = `:host([leaving]) {
+  var ua = `:host([leaving]) {
     animation: toast-out 160ms ease-in forwards;
 }
 
@@ -7877,38 +7877,36 @@ p9r-tag:hover {
     to   { opacity: 0; transform: translateX(-20px); }
 }
 `;
-    var Ll = fa + va;
+  var vl = ca + ua;
 
-    class Pt extends o {
-      _timer = null;
-      constructor() {
-        super({ css: Ll, template: ga });
-      }
-      connectedCallback() {
-        this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
-        let e = Number(this.getAttribute("duration") ?? 3500);
-        if (e > 0)
-          this._timer = setTimeout(() => this.dismiss(), e);
-      }
-      disconnectedCallback() {
-        if (this._timer)
-          clearTimeout(this._timer);
-      }
-      dismiss() {
-        if (this.hasAttribute("leaving"))
-          return;
-        if (this.setAttribute("leaving", ""), this._timer)
-          clearTimeout(this._timer);
-        this.addEventListener("animationend", () => {
-          this.dispatchEvent(new CustomEvent("toast-dismissed", { bubbles: true })), this.remove();
-        }, { once: true });
-      }
+  class pa extends o {
+    _timer = null;
+    constructor() {
+      super({ css: vl, template: da });
     }
-    if (!customElements.get("p9r-toast"))
-      customElements.define("p9r-toast", Pt);
-    var _a = `<slot></slot>
+    connectedCallback() {
+      this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
+      let e = Number(this.getAttribute("duration") ?? 3500);
+      if (e > 0)
+        this._timer = setTimeout(() => this.dismiss(), e);
+    }
+    disconnectedCallback() {
+      if (this._timer)
+        clearTimeout(this._timer);
+    }
+    dismiss() {
+      if (this.hasAttribute("leaving"))
+        return;
+      if (this.setAttribute("leaving", ""), this._timer)
+        clearTimeout(this._timer);
+      this.addEventListener("animationend", () => {
+        this.dispatchEvent(new CustomEvent("toast-dismissed", { bubbles: true })), this.remove();
+      }, { once: true });
+    }
+  }
+  var ha = `<slot></slot>
 `;
-    var xa = `:host {
+  var ba = `:host {
     position: fixed;
     top: 24px;
     left: 24px;
@@ -7958,38 +7956,25 @@ p9r-tag:hover {
 }
 `;
 
-    class Rt extends o {
-      constructor() {
-        super({ css: xa, template: _a });
-      }
-      connectedCallback() {
-        if (!this.hasAttribute("popover"))
-          this.setAttribute("popover", "manual");
-        try {
-          this.showPopover?.();
-        } catch {}
-      }
-      push(t, e = {}) {
-        let r = document.createElement("p9r-toast");
-        if (r.setAttribute("type", e.type ?? "info"), e.duration !== undefined)
-          r.setAttribute("duration", String(e.duration));
-        return r.textContent = t, this.appendChild(r), r;
-      }
+  class ma extends o {
+    constructor() {
+      super({ css: ba, template: ha });
     }
-    if (!customElements.get("p9r-toast-stack"))
-      customElements.define("p9r-toast-stack", Rt);
-    var b = null;
-    function Ml() {
-      if (b && b.isConnected)
-        return b;
-      if (b = document.querySelector("p9r-toast-stack"), b)
-        return b;
-      return b = document.createElement("p9r-toast-stack"), document.body.appendChild(b), b;
+    connectedCallback() {
+      if (!this.hasAttribute("popover"))
+        this.setAttribute("popover", "manual");
+      try {
+        this.showPopover?.();
+      } catch {}
     }
-    function ya(t, e = {}) {
-      return Ml().push(t, e);
+    push(t, e = {}) {
+      let r = document.createElement("p9r-toast");
+      if (r.setAttribute("type", e.type ?? "info"), e.duration !== undefined)
+        r.setAttribute("duration", String(e.duration));
+      return r.textContent = t, this.appendChild(r), r;
     }
-    var wa = `<div class="trigger" part="trigger">
+  }
+  var ga = `<div class="trigger" part="trigger">
     <slot></slot>
 </div>
 <div class="tooltip" part="tooltip" role="tooltip" aria-hidden="true">
@@ -7997,7 +7982,7 @@ p9r-tag:hover {
     <span class="text"></span>
 </div>
 `;
-    var ka = `:host {
+  var fa = `:host {
   display: inline-block;
   position: relative;
 
@@ -8062,7 +8047,7 @@ p9r-tag:hover {
   border-top-color: var(--_bg);
 }
 `;
-    var Ea = `:host([position="bottom"]) .tooltip {
+  var va = `:host([position="bottom"]) .tooltip {
   top: calc(100% + var(--_offset));
   bottom: auto;
   left: 50%;
@@ -8110,407 +8095,402 @@ p9r-tag:hover {
   border-right-color: var(--_bg);
 }
 `;
-    var Il = ka + Ea;
+  var Ll = fa + va;
 
-    class qt extends o {
-      _tooltip;
-      _text;
-      _showTimer = null;
-      _hideTimer = null;
-      static get observedAttributes() {
-        return ["text"];
-      }
-      constructor() {
-        super({ css: Il, template: wa });
-        this._tooltip = this.shadowRoot?.querySelector(".tooltip") ?? null, this._text = this.shadowRoot?.querySelector(".text") ?? null;
-      }
-      connectedCallback() {
-        this._syncText(), this.addEventListener("mouseenter", this._show), this.addEventListener("mouseleave", this._hide), this.addEventListener("focusin", this._show), this.addEventListener("focusout", this._hide);
-      }
-      disconnectedCallback() {
-        if (this.removeEventListener("mouseenter", this._show), this.removeEventListener("mouseleave", this._hide), this.removeEventListener("focusin", this._show), this.removeEventListener("focusout", this._hide), this._showTimer)
-          clearTimeout(this._showTimer);
-        if (this._hideTimer)
-          clearTimeout(this._hideTimer);
-      }
-      attributeChangedCallback(t, e, r) {
-        if (t === "text")
-          this._syncText();
-      }
-      _syncText() {
-        if (this._text)
-          this._text.textContent = this.getAttribute("text") ?? "";
-      }
-      _show = () => {
-        if (this._hideTimer)
-          clearTimeout(this._hideTimer), this._hideTimer = null;
-        let t = Number(this.getAttribute("delay") ?? 100);
-        this._showTimer = setTimeout(() => {
-          this.setAttribute("open", ""), this._tooltip?.setAttribute("aria-hidden", "false");
-        }, t);
-      };
-      _hide = () => {
-        if (this._showTimer)
-          clearTimeout(this._showTimer), this._showTimer = null;
-        this._hideTimer = setTimeout(() => {
-          this.removeAttribute("open"), this._tooltip?.setAttribute("aria-hidden", "true");
-        }, 80);
-      };
+  class _a extends o {
+    _tooltip;
+    _text;
+    _showTimer = null;
+    _hideTimer = null;
+    static get observedAttributes() {
+      return ["text"];
     }
-    if (!customElements.get("p9r-tooltip"))
-      customElements.define("p9r-tooltip", qt);
-    function Ee(t, e) {
-      if (t.key !== "Enter")
-        return;
-      if (t.target.tagName === "TEXTAREA")
-        return;
-      t.preventDefault(), e.requestSubmit();
+    constructor() {
+      super({ css: Ll, template: ga });
+      this._tooltip = this.shadowRoot?.querySelector(".tooltip") ?? null, this._text = this.shadowRoot?.querySelector(".text") ?? null;
     }
-    function Bt(t) {
-      let e = new URL(t, window.location.href);
-      for (let [r, i] of new URLSearchParams(window.location.search))
-        e.searchParams.append(r, i);
-      return e;
+    connectedCallback() {
+      this._syncText(), this.addEventListener("mouseenter", this._show), this.addEventListener("mouseleave", this._hide), this.addEventListener("focusin", this._show), this.addEventListener("focusout", this._hide);
     }
-    async function Dt(t, e) {
-      t.preventDefault();
-      let r = t.target, i = new FormData(r), n = Object.fromEntries(i.entries()), a = await fetch(Bt(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(n) }), s = await a.json().catch(() => null), l = { status: a.status, body: s };
-      if (a.ok) {
-        if (r.reset(), e.dispatchEvent(new CustomEvent("form:success", { bubbles: true, composed: true, detail: l })), e.emit)
-          document.dispatchEvent(new CustomEvent(e.emit, { bubbles: true, composed: true, detail: l }));
-        if (e.redirect)
-          window.location.href = e.redirect;
-      } else
-        e.dispatchEvent(new CustomEvent("form:failed", { bubbles: true, composed: true, detail: l }));
+    disconnectedCallback() {
+      if (this.removeEventListener("mouseenter", this._show), this.removeEventListener("mouseleave", this._hide), this.removeEventListener("focusin", this._show), this.removeEventListener("focusout", this._hide), this._showTimer)
+        clearTimeout(this._showTimer);
+      if (this._hideTimer)
+        clearTimeout(this._hideTimer);
     }
+    attributeChangedCallback(t, e, r) {
+      if (t === "text")
+        this._syncText();
+    }
+    _syncText() {
+      if (this._text)
+        this._text.textContent = this.getAttribute("text") ?? "";
+    }
+    _show = () => {
+      if (this._hideTimer)
+        clearTimeout(this._hideTimer), this._hideTimer = null;
+      let t = Number(this.getAttribute("delay") ?? 100);
+      this._showTimer = setTimeout(() => {
+        this.setAttribute("open", ""), this._tooltip?.setAttribute("aria-hidden", "false");
+      }, t);
+    };
+    _hide = () => {
+      if (this._showTimer)
+        clearTimeout(this._showTimer), this._showTimer = null;
+      this._hideTimer = setTimeout(() => {
+        this.removeAttribute("open"), this._tooltip?.setAttribute("aria-hidden", "true");
+      }, 80);
+    };
+  }
+  function At(t, e) {
+    if (t.key !== "Enter")
+      return;
+    if (t.target.tagName === "TEXTAREA")
+      return;
+    t.preventDefault(), e.requestSubmit();
+  }
+  function N(t) {
+    let e = new URL(t, window.location.href);
+    for (let [r, i] of new URLSearchParams(window.location.search))
+      e.searchParams.append(r, i);
+    return e;
+  }
+  async function O(t, e) {
+    t.preventDefault();
+    let r = t.target, i = new FormData(r), n = Object.fromEntries(i.entries()), a = await fetch(N(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(n) }), s = await a.json().catch(() => null), l = { status: a.status, body: s };
+    if (a.ok) {
+      if (r.reset(), e.dispatchEvent(new CustomEvent("form:success", { bubbles: true, composed: true, detail: l })), e.emit)
+        document.dispatchEvent(new CustomEvent(e.emit, { bubbles: true, composed: true, detail: l }));
+      if (e.redirect)
+        window.location.href = e.redirect;
+    } else
+      e.dispatchEvent(new CustomEvent("form:failed", { bubbles: true, composed: true, detail: l }));
+  }
 
-    class jt extends HTMLElement {
-      _nativeForm = null;
-      static get observedAttributes() {
-        return ["redirect", "target", "method", "emit"];
-      }
-      _handleInternalSubmit = (t) => {
-        Dt(t, this);
-      };
-      connectedCallback() {
-        requestAnimationFrame(() => {
-          if (this._nativeForm)
-            return;
-          this._nativeForm = document.createElement("form");
-          let t = this.getAttribute("id");
-          if (t)
-            this._nativeForm.id = t, this.removeAttribute("id");
-          while (this.firstChild)
-            this._nativeForm.appendChild(this.firstChild);
-          this.appendChild(this._nativeForm), this._nativeForm.addEventListener("submit", this._handleInternalSubmit), this.addEventListener("keydown", (e) => Ee(e, this._nativeForm));
-        });
-      }
-      disconnectedCallback() {
-        this.removeEventListener("submit", (t) => Dt(t, this)), this.removeEventListener("keydown", (t) => Ee(t, this._nativeForm));
-      }
-      attributeChangedCallback(t, e, r) {}
-      get redirect() {
-        return this.getAttribute("redirect");
-      }
-      get target() {
-        let t = this.getAttribute("target");
-        if (!t)
-          throw Error("CmsForm target attribute should be set");
-        return t;
-      }
-      get method() {
-        return this.getAttribute("method");
-      }
-      get emit() {
-        return this.getAttribute("emit");
-      }
+  class xa extends HTMLElement {
+    _nativeForm = null;
+    static get observedAttributes() {
+      return ["redirect", "target", "method", "emit"];
     }
-    if (!customElements.get("w13c-form"))
-      customElements.define("w13c-form", jt);
-    function Aa(t) {
-      let e = {};
-      for (let r of Array.from(t.children)) {
-        if (r.tagName !== "TEMPLATE")
-          continue;
-        let i = r.getAttribute("slot") || "default";
-        if (!e[i])
-          e[i] = r;
-      }
-      return e;
-    }
-    function La(t) {
-      if (t === null || t === undefined)
-        return true;
-      if (Array.isArray(t))
-        return t.length === 0;
-      if (typeof t === "object")
-        return Object.keys(t).length === 0;
-      return false;
-    }
-    async function Ca(t, e) {
-      try {
-        let r = Bt(t), i = await fetch(r, { headers: { Accept: "application/json" }, signal: e });
-        if (!i.ok)
-          return { kind: "error", error: Error(`HTTP ${i.status}`) };
-        return { kind: "success", data: await i.json() };
-      } catch (r) {
-        if (r.name === "AbortError")
-          return { kind: "aborted" };
-        return { kind: "error", error: r };
-      }
-    }
-    function z(t, e) {
-      return e.split(".").reduce((r, i) => r != null ? r[i] : undefined, t);
-    }
-    function Ta(t) {
-      return String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-    }
-    var Pl = new Intl.NumberFormat, Ma = ["B", "KB", "MB", "GB", "TB", "PB"];
-    function Rl(t) {
-      let e = E(t);
-      if (e === null)
-        return "";
-      if (e < 1024)
-        return `${e} B`;
-      let r = e, i = 0;
-      while (r >= 1024 && i < Ma.length - 1)
-        r /= 1024, i++;
-      return `${r.toFixed(r < 10 ? 1 : 0)} ${Ma[i]}`;
-    }
-    function ql(t) {
-      let e = E(t);
-      if (e === null || e <= 0)
-        return "";
-      return new Date(e).toISOString().slice(0, 10);
-    }
-    function Bl(t) {
-      let e = E(t);
-      if (e === null || e <= 0)
-        return "";
-      return new Date(e).toISOString().replace("T", " ").slice(0, 19);
-    }
-    function Dl(t) {
-      let e = E(t);
-      if (e === null || e <= 0)
-        return "";
-      let r = Math.max(0, Date.now() - e), i = Math.floor(r / 1000);
-      if (i < 60)
-        return `${i}s ago`;
-      if (i < 3600)
-        return `${Math.floor(i / 60)}m ago`;
-      if (i < 86400)
-        return `${Math.floor(i / 3600)}h ago`;
-      return `${Math.floor(i / 86400)}d ago`;
-    }
-    function jl(t) {
-      let e = E(t);
-      return e === null ? "" : Pl.format(e);
-    }
-    function Fl(t) {
-      let e = E(t);
-      return e === null ? "" : `${Math.round(e * 100)}%`;
-    }
-    function Nl(t) {
-      if (t === true)
-        return "yes";
-      if (t === false)
-        return "no";
-      return "";
-    }
-    var Ae = { bytes: Rl, date: ql, datetime: Bl, ago: Dl, number: jl, percent: Fl, bool: Nl };
-    function E(t) {
-      if (t === null || t === undefined || t === "")
-        return null;
-      let e = typeof t === "number" ? t : Number(t);
-      return Number.isFinite(e) ? e : null;
-    }
-    function Le(t, e) {
-      if (t.nodeType === Node.TEXT_NODE) {
-        let r = t.textContent ?? "", i = Ha(r, e);
-        if (i !== r)
-          t.textContent = i;
-        return;
-      }
-      if (t.nodeType === Node.ELEMENT_NODE) {
-        let r = t;
-        if (r.tagName === "TEMPLATE")
+    _handleInternalSubmit = (t) => {
+      O(t, this);
+    };
+    connectedCallback() {
+      requestAnimationFrame(() => {
+        if (this._nativeForm)
           return;
-        if (r.tagName === "INNER-HTML" && Ol(r, e))
-          return;
-        for (let i of Array.from(r.attributes)) {
-          let n = Ha(i.value, e);
-          if (n !== i.value)
-            r.setAttribute(i.name, n);
-        }
-      }
-      for (let r of Array.from(t.childNodes))
-        Le(r, e);
-    }
-    function Ol(t, e) {
-      let i = (t.textContent?.trim() ?? "").match(/^\{\{\s*([\w.]+)\s*\}\}$/);
-      if (!i)
-        return false;
-      return t.innerHTML = String(z(e, i[1]) ?? ""), t.replaceWith(...Array.from(t.childNodes)), true;
-    }
-    function Ha(t, e) {
-      return t.replace(/\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g, (r, i, n) => {
-        let a = i === "value" ? e !== null && typeof e === "object" && "value" in e ? e.value : e : z(e, i), s = n && Ae[n] ? Ae[n](a) : a;
-        return Ta(s);
+        this._nativeForm = document.createElement("form");
+        let t = this.getAttribute("id");
+        if (t)
+          this._nativeForm.id = t, this.removeAttribute("id");
+        while (this.firstChild)
+          this._nativeForm.appendChild(this.firstChild);
+        this.appendChild(this._nativeForm), this._nativeForm.addEventListener("submit", this._handleInternalSubmit), this.addEventListener("keydown", (e) => At(e, this._nativeForm));
       });
     }
-    function Ce(t, e) {
-      let r = t.getAttribute("for"), i = document.createDocumentFragment();
-      if (r === null) {
-        let a = t.content.cloneNode(true);
-        return za(a, e), i.appendChild(a), i;
+    disconnectedCallback() {
+      this.removeEventListener("submit", (t) => O(t, this)), this.removeEventListener("keydown", (t) => At(t, this._nativeForm));
+    }
+    attributeChangedCallback(t, e, r) {}
+    get redirect() {
+      return this.getAttribute("redirect");
+    }
+    get target() {
+      let t = this.getAttribute("target");
+      if (!t)
+        throw Error("CmsForm target attribute should be set");
+      return t;
+    }
+    get method() {
+      return this.getAttribute("method");
+    }
+    get emit() {
+      return this.getAttribute("emit");
+    }
+  }
+  function ya(t) {
+    let e = {};
+    for (let r of Array.from(t.children)) {
+      if (r.tagName !== "TEMPLATE")
+        continue;
+      let i = r.getAttribute("slot") || "default";
+      if (!e[i])
+        e[i] = r;
+    }
+    return e;
+  }
+  function wa(t) {
+    if (t === null || t === undefined)
+      return true;
+    if (Array.isArray(t))
+      return t.length === 0;
+    if (typeof t === "object")
+      return Object.keys(t).length === 0;
+    return false;
+  }
+  async function ka(t, e) {
+    try {
+      let r = N(t), i = await fetch(r, { headers: { Accept: "application/json" }, signal: e });
+      if (!i.ok)
+        return { kind: "error", error: Error(`HTTP ${i.status}`) };
+      return { kind: "success", data: await i.json() };
+    } catch (r) {
+      if (r.name === "AbortError")
+        return { kind: "aborted" };
+      return { kind: "error", error: r };
+    }
+  }
+  function S(t, e) {
+    return e.split(".").reduce((r, i) => r != null ? r[i] : undefined, t);
+  }
+  function Ea(t) {
+    return String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  var Cl = new Intl.NumberFormat;
+  var Aa = ["B", "KB", "MB", "GB", "TB", "PB"];
+  function Tl(t) {
+    let e = E(t);
+    if (e === null)
+      return "";
+    if (e < 1024)
+      return `${e} B`;
+    let r = e, i = 0;
+    while (r >= 1024 && i < Aa.length - 1)
+      r /= 1024, i++;
+    return `${r.toFixed(r < 10 ? 1 : 0)} ${Aa[i]}`;
+  }
+  function Ml(t) {
+    let e = E(t);
+    if (e === null || e <= 0)
+      return "";
+    return new Date(e).toISOString().slice(0, 10);
+  }
+  function Hl(t) {
+    let e = E(t);
+    if (e === null || e <= 0)
+      return "";
+    return new Date(e).toISOString().replace("T", " ").slice(0, 19);
+  }
+  function Sl(t) {
+    let e = E(t);
+    if (e === null || e <= 0)
+      return "";
+    let r = Math.max(0, Date.now() - e), i = Math.floor(r / 1000);
+    if (i < 60)
+      return `${i}s ago`;
+    if (i < 3600)
+      return `${Math.floor(i / 60)}m ago`;
+    if (i < 86400)
+      return `${Math.floor(i / 3600)}h ago`;
+    return `${Math.floor(i / 86400)}d ago`;
+  }
+  function zl(t) {
+    let e = E(t);
+    return e === null ? "" : Cl.format(e);
+  }
+  function Il(t) {
+    let e = E(t);
+    return e === null ? "" : `${Math.round(e * 100)}%`;
+  }
+  function Pl(t) {
+    if (t === true)
+      return "yes";
+    if (t === false)
+      return "no";
+    return "";
+  }
+  var Lt = { bytes: Tl, date: Ml, datetime: Hl, ago: Sl, number: zl, percent: Il, bool: Pl };
+  function E(t) {
+    if (t === null || t === undefined || t === "")
+      return null;
+    let e = typeof t === "number" ? t : Number(t);
+    return Number.isFinite(e) ? e : null;
+  }
+  function Ct(t, e) {
+    if (t.nodeType === Node.TEXT_NODE) {
+      let r = t.textContent ?? "", i = La(r, e);
+      if (i !== r)
+        t.textContent = i;
+      return;
+    }
+    if (t.nodeType === Node.ELEMENT_NODE) {
+      let r = t;
+      if (r.tagName === "TEMPLATE")
+        return;
+      if (r.tagName === "INNER-HTML" && Rl(r, e))
+        return;
+      for (let i of Array.from(r.attributes)) {
+        let n = La(i.value, e);
+        if (n !== i.value)
+          r.setAttribute(i.name, n);
       }
-      let n = r === "." ? e : z(e, r);
-      if (!Array.isArray(n))
-        return console.warn(`cms-fetch: <template for="${r}"> expected an array, got`, n), i;
-      for (let a of n) {
-        let s = t.content.cloneNode(true);
-        za(s, a), i.appendChild(s);
-      }
-      return i;
     }
-    function za(t, e) {
-      let r = [];
-      Sa(t, r);
-      for (let i of r)
-        i.parentNode?.replaceChild(Ce(i, e), i);
-      Le(t, e);
+    for (let r of Array.from(t.childNodes))
+      Ct(r, e);
+  }
+  function Rl(t, e) {
+    let i = (t.textContent?.trim() ?? "").match(/^\{\{\s*([\w.]+)\s*\}\}$/);
+    if (!i)
+      return false;
+    return t.innerHTML = String(S(e, i[1]) ?? ""), t.replaceWith(...Array.from(t.childNodes)), true;
+  }
+  function La(t, e) {
+    return t.replace(/\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g, (r, i, n) => {
+      let a = i === "value" ? e !== null && typeof e === "object" && "value" in e ? e.value : e : S(e, i), s = n && Lt[n] ? Lt[n](a) : a;
+      return Ea(s);
+    });
+  }
+  function Tt(t, e) {
+    let r = t.getAttribute("for"), i = document.createDocumentFragment();
+    if (r === null) {
+      let a = t.content.cloneNode(true);
+      return Ca(a, e), i.appendChild(a), i;
     }
-    function Sa(t, e) {
-      for (let r of Array.from(t.childNodes)) {
-        if (r.nodeType !== Node.ELEMENT_NODE)
-          continue;
-        let i = r;
-        if (i.tagName === "TEMPLATE")
-          e.push(i);
-        else
-          Sa(i, e);
-      }
+    let n = r === "." ? e : S(e, r);
+    if (!Array.isArray(n))
+      return console.warn(`cms-fetch: <template for="${r}"> expected an array, got`, n), i;
+    for (let a of n) {
+      let s = t.content.cloneNode(true);
+      Ca(s, a), i.appendChild(s);
     }
-    function Ia(t, e, r, i) {
-      Te(i);
-      let n = t.parentNode;
-      if (!n)
-        return [];
-      let a = Ce(e, r), s = Array.from(a.childNodes);
-      return n.insertBefore(a, t), s;
+    return i;
+  }
+  function Ca(t, e) {
+    let r = [];
+    Ta(t, r);
+    for (let i of r)
+      i.parentNode?.replaceChild(Tt(i, e), i);
+    Ct(t, e);
+  }
+  function Ta(t, e) {
+    for (let r of Array.from(t.childNodes)) {
+      if (r.nodeType !== Node.ELEMENT_NODE)
+        continue;
+      let i = r;
+      if (i.tagName === "TEMPLATE")
+        e.push(i);
+      else
+        Ta(i, e);
     }
-    function Te(t) {
-      for (let e of t)
-        e.parentNode?.removeChild(e);
-    }
+  }
+  function Ma(t, e, r, i) {
+    Mt(i);
+    let n = t.parentNode;
+    if (!n)
+      return [];
+    let a = Tt(e, r), s = Array.from(a.childNodes);
+    return n.insertBefore(a, t), s;
+  }
+  function Mt(t) {
+    for (let e of t)
+      e.parentNode?.removeChild(e);
+  }
 
-    class Ft extends Event {
-      constructor(t) {
-        super(t, { bubbles: true, composed: true });
-      }
+  class V extends Event {
+    constructor(t) {
+      super(t, { bubbles: true, composed: true });
     }
+  }
 
-    class Nt extends HTMLElement {
-      static get observedAttributes() {
-        return ["url", "reload-on"];
-      }
-      _templates = {};
-      _stamped = [];
-      _reloadEvents = [];
-      _abort = null;
-      _onReloadEvent = () => {
-        if (this.isConnected)
-          this.reload();
-      };
-      connectedCallback() {
-        if (this._refreshReloadListeners(), document.addEventListener("cms-fetch:reload", this._onReloadEvent), this._templates.default) {
-          this.reload();
-          return;
-        }
-        if (document.readyState === "loading")
-          document.addEventListener("DOMContentLoaded", () => this._init(), { once: true });
-        else
-          this._init();
-      }
-      disconnectedCallback() {
-        Te(this._stamped), this._stamped = [];
-        for (let t of this._reloadEvents)
-          document.removeEventListener(t, this._onReloadEvent);
-        document.removeEventListener("cms-fetch:reload", this._onReloadEvent), this._reloadEvents = [], this._abort?.abort(), this._abort = null;
-      }
-      attributeChangedCallback(t, e, r) {
-        if (e === r)
-          return;
-        if (t === "reload-on") {
-          this._refreshReloadListeners();
-          return;
-        }
-        if (this.isConnected)
-          this.reload();
-      }
-      reload() {
-        this._run();
-      }
-      _init() {
-        if (this._templates = Aa(this), !this._templates.default) {
-          console.warn("cms-fetch: missing <template> child (default slot)");
-          return;
-        }
+  class Ha extends HTMLElement {
+    static get observedAttributes() {
+      return ["url", "reload-on"];
+    }
+    _templates = {};
+    _stamped = [];
+    _reloadEvents = [];
+    _abort = null;
+    _onReloadEvent = () => {
+      if (this.isConnected)
         this.reload();
+    };
+    connectedCallback() {
+      if (this._refreshReloadListeners(), document.addEventListener("cms-fetch:reload", this._onReloadEvent), this._templates.default) {
+        this.reload();
+        return;
       }
-      _refreshReloadListeners() {
-        for (let t of this._reloadEvents)
-          document.removeEventListener(t, this._onReloadEvent);
-        this._reloadEvents = (this.getAttribute("reload-on") || "").split(/\s+/).filter(Boolean);
-        for (let t of this._reloadEvents)
-          document.addEventListener(t, this._onReloadEvent);
-      }
-      async _run() {
-        let t = this.getAttribute("url");
-        if (!t || !this._templates.default)
-          return;
-        this._abort?.abort(), this._abort = new AbortController;
-        let e = this._abort.signal;
-        this._renderSlot("loading", null), this.dispatchEvent(new Ft("fetch:loading"));
-        let r = await Ca(t, e);
-        if (e.aborted || r.kind === "aborted")
-          return;
-        if (r.kind === "success") {
-          let i = La(r.data) && this._templates.empty ? "empty" : "default";
-          this._renderSlot(i, r.data), this.dispatchEvent(new CustomEvent("fetch:data", { bubbles: true, composed: true, detail: r.data }));
-        } else
-          this._renderSlot("error", r.error), this.dispatchEvent(new CustomEvent("fetch:error", { bubbles: true, composed: true, detail: r.error }));
-      }
-      _renderSlot(t, e) {
-        let r = this._templates[t];
-        if (!r)
-          return;
-        this._stamped = Ia(this, r, e, this._stamped);
-      }
+      if (document.readyState === "loading")
+        document.addEventListener("DOMContentLoaded", () => this._init(), { once: true });
+      else
+        this._init();
     }
-    customElements.define("w13c-fetch", Nt);
-  })();
+    disconnectedCallback() {
+      Mt(this._stamped), this._stamped = [];
+      for (let t of this._reloadEvents)
+        document.removeEventListener(t, this._onReloadEvent);
+      document.removeEventListener("cms-fetch:reload", this._onReloadEvent), this._reloadEvents = [], this._abort?.abort(), this._abort = null;
+    }
+    attributeChangedCallback(t, e, r) {
+      if (e === r)
+        return;
+      if (t === "reload-on") {
+        this._refreshReloadListeners();
+        return;
+      }
+      if (this.isConnected)
+        this.reload();
+    }
+    reload() {
+      this._run();
+    }
+    _init() {
+      if (this._templates = ya(this), !this._templates.default) {
+        console.warn("cms-fetch: missing <template> child (default slot)");
+        return;
+      }
+      this.reload();
+    }
+    _refreshReloadListeners() {
+      for (let t of this._reloadEvents)
+        document.removeEventListener(t, this._onReloadEvent);
+      this._reloadEvents = (this.getAttribute("reload-on") || "").split(/\s+/).filter(Boolean);
+      for (let t of this._reloadEvents)
+        document.addEventListener(t, this._onReloadEvent);
+    }
+    async _run() {
+      let t = this.getAttribute("url");
+      if (!t || !this._templates.default)
+        return;
+      this._abort?.abort(), this._abort = new AbortController;
+      let e = this._abort.signal;
+      this._renderSlot("loading", null), this.dispatchEvent(new V("fetch:loading"));
+      let r = await ka(t, e);
+      if (e.aborted || r.kind === "aborted")
+        return;
+      if (r.kind === "success") {
+        let i = wa(r.data) && this._templates.empty ? "empty" : "default";
+        this._renderSlot(i, r.data), this.dispatchEvent(new CustomEvent("fetch:data", { bubbles: true, composed: true, detail: r.data }));
+      } else
+        this._renderSlot("error", r.error), this.dispatchEvent(new CustomEvent("fetch:error", { bubbles: true, composed: true, detail: r.error }));
+    }
+    _renderSlot(t, e) {
+      let r = this._templates[t];
+      if (!r)
+        return;
+      this._stamped = Ma(this, r, e, this._stamped);
+    }
+  }
 
   // ../cms-blocs/dist/base.js
-  class z extends HTMLElement {
+  class z2 extends HTMLElement {
     _rawStyles = "";
     _styles = null;
-    constructor(g) {
+    constructor(g2) {
       super();
-      let j = this.attachShadow({ mode: "open" });
-      if (g) {
-        this._rawStyles = g.css, this._styles = document.createElement("style"), this._styles.innerHTML = g.css, j.appendChild(this._styles);
-        let q = document.createElement("template");
-        q.innerHTML = g.template, j.appendChild(q.content.cloneNode(true));
+      let j2 = this.attachShadow({ mode: "open" });
+      if (g2) {
+        this._rawStyles = g2.css, this._styles = document.createElement("style"), this._styles.innerHTML = g2.css, j2.appendChild(this._styles);
+        let q2 = document.createElement("template");
+        q2.innerHTML = g2.template, j2.appendChild(q2.content.cloneNode(true));
       }
     }
-    registerCSSVariables(g) {
+    registerCSSVariables(g2) {
       if (!this._styles)
         return;
-      let j = this._rawStyles;
-      Object.entries(g).forEach(([q, x]) => {
-        j = j.replaceAll("var(--" + q + ")", x);
-      }), this._styles.innerHTML = j;
+      let j2 = this._rawStyles;
+      Object.entries(g2).forEach(([q2, x2]) => {
+        j2 = j2.replaceAll("var(--" + q2 + ")", x2);
+      }), this._styles.innerHTML = j2;
     }
     connectedCallback() {}
   }
@@ -8711,28 +8691,28 @@ p9r-tag:hover {
       const gap = 8;
       const bw = this._btn.offsetWidth;
       const bh = this._btn.offsetHeight;
-      let x = 0, y = 0;
+      let x2 = 0, y2 = 0;
       switch (placement) {
         case "right":
-          x = rect.right + gap;
-          y = rect.top + rect.height / 2 - bh / 2;
+          x2 = rect.right + gap;
+          y2 = rect.top + rect.height / 2 - bh / 2;
           break;
         case "top":
-          x = rect.left + rect.width / 2 - bw / 2;
-          y = rect.top - bh - gap;
+          x2 = rect.left + rect.width / 2 - bw / 2;
+          y2 = rect.top - bh - gap;
           break;
         case "bottom":
-          x = rect.left + rect.width / 2 - bw / 2;
-          y = rect.bottom + gap;
+          x2 = rect.left + rect.width / 2 - bw / 2;
+          y2 = rect.bottom + gap;
           break;
         default:
-          x = rect.left - bw - gap;
-          y = rect.top + rect.height / 2 - bh / 2;
+          x2 = rect.left - bw - gap;
+          y2 = rect.top + rect.height / 2 - bh / 2;
       }
-      x = Math.max(4, Math.min(x, window.innerWidth - bw - 4));
-      y = Math.max(4, Math.min(y, window.innerHeight - bh - 4));
-      this._btn.style.left = `${x}px`;
-      this._btn.style.top = `${y}px`;
+      x2 = Math.max(4, Math.min(x2, window.innerWidth - bw - 4));
+      y2 = Math.max(4, Math.min(y2, window.innerHeight - bh - 4));
+      this._btn.style.left = `${x2}px`;
+      this._btn.style.top = `${y2}px`;
     }
     static _injectStyles(parent) {
       const root = parent.getRootNode();
@@ -8797,7 +8777,7 @@ p9r-tag:hover {
     propagateIdentifier(identifier) {
       if (!this._config)
         return;
-      this._config.querySelectorAll("*").forEach((el) => el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, identifier));
+      this._config.querySelectorAll("*").forEach((el2) => el2.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, identifier));
     }
     notifySyncs(opts) {
       if (this._config) {
@@ -8831,7 +8811,7 @@ p9r-tag:hover {
         customElements.upgrade(this._fragment);
       } catch {}
       const id = this.editor.identifier;
-      this._fragment.querySelectorAll("*").forEach((el) => el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, id));
+      this._fragment.querySelectorAll("*").forEach((el2) => el2.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, id));
       this._syncs = Array.from(this._fragment.querySelectorAll(SYNC_SELECTORS));
       for (const sync of this._syncs) {
         sync.prepare?.(this.editor.target, this.editor);
@@ -8875,9 +8855,9 @@ p9r-tag:hover {
       editorSystem.blocActions.open(e.clientX, e.clientY);
     }
   }
-  function isVisuallyInvisible(el) {
-    if (typeof el.checkVisibility === "function") {
-      const visible = el.checkVisibility({
+  function isVisuallyInvisible(el2) {
+    if (typeof el2.checkVisibility === "function") {
+      const visible = el2.checkVisibility({
         opacityProperty: true,
         visibilityProperty: true,
         checkOpacity: true,
@@ -8886,7 +8866,7 @@ p9r-tag:hover {
       if (!visible)
         return true;
     }
-    const r = el.getBoundingClientRect();
+    const r = el2.getBoundingClientRect();
     if (r.width === 0 && r.height === 0)
       return true;
     if (r.bottom <= 0 || r.right <= 0 || r.left >= innerWidth || r.top >= innerHeight)
@@ -8919,11 +8899,11 @@ p9r-tag:hover {
 
   // src/core/editorSystem/Editor/bodyStyle.ts
   var registry = new Map;
-  function acquireBodyStyle(tag, el) {
+  function acquireBodyStyle(tag, el2) {
     let entry = registry.get(tag);
     if (!entry) {
-      document.body.append(el);
-      entry = { el, count: 0 };
+      document.body.append(el2);
+      entry = { el: el2, count: 0 };
       registry.set(tag, entry);
     }
     entry.count++;
@@ -9107,8 +9087,8 @@ p9r-tag:hover {
       if (i >= 0)
         this.stateSyncs.splice(i, 1);
     }
-    claimChild(el) {
-      el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, this._identifier);
+    claimChild(el2) {
+      el2.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, this._identifier);
     }
     extendRichTextBar(ext) {
       return this._extensions.add("richtextbar", ext);
@@ -9174,7 +9154,7 @@ p9r-tag:hover {
       this.customActions.push(action);
     }
     get isInteractive() {
-      return this._actionBarFeatures.values().some((v) => v === true) || this.stateSyncs.length > 0 || this.customActions.length > 0 || this.hasConfigPanel;
+      return this._actionBarFeatures.values().some((v2) => v2 === true) || this.stateSyncs.length > 0 || this.customActions.length > 0 || this.hasConfigPanel;
     }
     get hasConfigPanel() {
       return this._panel.hasPanel;
@@ -9285,7 +9265,7 @@ p9r-tag:hover {
   // src/components/globals.ts
   window.p9r = {
     attr: P9R_ATTR,
-    Component: z,
+    Component: z2,
     Editor,
     registerEditor,
     registerEditor_opaque
@@ -9432,7 +9412,7 @@ p9r-tag:hover {
 </w13c-left-menu-layout>`;
 
   // src/components/admin/AdminLayout/AdminLayout.ts
-  class FixedAdminLayout extends z {
+  class FixedAdminLayout extends z2 {
     constructor() {
       super({
         css: "",
@@ -9873,8 +9853,8 @@ ${followMessage}`)) {
     const has = ref !== "";
     host._refs.trigger.classList.toggle("has-value", has);
     host._refs.clearBtn.style.display = has ? "flex" : "none";
-    host._refs.list.querySelectorAll(".option").forEach((li) => {
-      li.classList.toggle("selected", li.dataset.key === display);
+    host._refs.list.querySelectorAll(".option").forEach((li2) => {
+      li2.classList.toggle("selected", li2.dataset.key === display);
     });
   }
   function openPanel(host) {
@@ -9908,14 +9888,14 @@ ${followMessage}`)) {
   }
   function renderList(host, keys) {
     const selected = refToDisplay(host._value);
-    host._refs.list.replaceChildren(...keys.map((k) => buildOption(k, k === selected)));
+    host._refs.list.replaceChildren(...keys.map((k2) => buildOption(k2, k2 === selected)));
   }
   function buildOption(key, selected) {
-    const li = document.createElement("li");
-    li.className = "option" + (selected ? " selected" : "");
-    li.dataset.key = key;
-    li.textContent = key;
-    return li;
+    const li2 = document.createElement("li");
+    li2.className = "option" + (selected ? " selected" : "");
+    li2.dataset.key = key;
+    li2.textContent = key;
+    return li2;
   }
 
   // src/components/admin/CredentialSelect/dialog.ts
@@ -9971,8 +9951,8 @@ ${followMessage}`)) {
         this._refs = buildShadow(this, this.getAttribute("label"));
         this._wire();
       }
-      const v = this._value || this.getAttribute("value") || "";
-      setValue(this, v);
+      const v2 = this._value || this.getAttribute("value") || "";
+      setValue(this, v2);
       document.addEventListener("secret:saved", this._onSecretSaved);
     }
     disconnectedCallback() {
@@ -9981,8 +9961,8 @@ ${followMessage}`)) {
     get value() {
       return this._value;
     }
-    set value(v) {
-      setValue(this, v);
+    set value(v2) {
+      setValue(this, v2);
     }
     get name() {
       return this.getAttribute("name");
@@ -10007,15 +9987,15 @@ ${followMessage}`)) {
           closePanel(this);
       });
       r.search.addEventListener("input", () => {
-        const q = r.search.value.trim().toUpperCase();
-        const filtered = q ? this._keys.filter((k) => k.includes(q)) : this._keys;
+        const q2 = r.search.value.trim().toUpperCase();
+        const filtered = q2 ? this._keys.filter((k2) => k2.includes(q2)) : this._keys;
         renderList(this, filtered);
       });
       r.list.addEventListener("click", (e) => {
-        const li = e.target.closest(".option");
-        if (!li || !li.dataset.key)
+        const li2 = e.target.closest(".option");
+        if (!li2 || !li2.dataset.key)
           return;
-        setValue(this, keyToRef(li.dataset.key));
+        setValue(this, keyToRef(li2.dataset.key));
         this.dispatchEvent(new Event("change", { bubbles: true }));
         closePanel(this);
       });
@@ -10078,7 +10058,7 @@ ${followMessage}`)) {
 `;
 
   // src/components/admin/EmptyState/EmptyState.ts
-  class EmptyState extends z {
+  class EmptyState extends z2 {
     constructor() {
       super({
         css: style_default,
@@ -10234,15 +10214,15 @@ ${followMessage}`)) {
         this._debounce = setTimeout(() => this._set("search", val(search)), 250);
       });
       for (const key of ["visible", "tag"]) {
-        const el = this.querySelector(`[data-filter="${key}"]`);
-        el?.addEventListener("change", () => this._set(key, val(el)));
+        const el2 = this.querySelector(`[data-filter="${key}"]`);
+        el2?.addEventListener("change", () => this._set(key, val(el2)));
       }
     }
     _wireSort() {
-      this.querySelectorAll("[data-sort]").forEach((h) => {
-        h.style.cursor = "pointer";
-        h.addEventListener("click", () => {
-          const key = h.dataset.sort;
+      this.querySelectorAll("[data-sort]").forEach((h2) => {
+        h2.style.cursor = "pointer";
+        h2.addEventListener("click", () => {
+          const key = h2.dataset.sort;
           if (this._sortBy === key)
             this._sortOrder = this._sortOrder === "asc" ? "desc" : "asc";
           else {
@@ -10255,10 +10235,10 @@ ${followMessage}`)) {
       });
     }
     _renderSortIndicators() {
-      this.querySelectorAll("[data-sort]").forEach((h) => {
-        const ind = h.querySelector("[data-sort-ind]");
+      this.querySelectorAll("[data-sort]").forEach((h2) => {
+        const ind = h2.querySelector("[data-sort-ind]");
         if (ind)
-          ind.textContent = h.dataset.sort === this._sortBy ? this._sortOrder === "asc" ? "↑" : "↓" : "";
+          ind.textContent = h2.dataset.sort === this._sortBy ? this._sortOrder === "asc" ? "↑" : "↓" : "";
       });
     }
     _set(key, value) {
@@ -10295,7 +10275,7 @@ ${followMessage}`)) {
       } catch {}
     }
   }
-  var val = (el) => el.value ?? "";
+  var val = (el2) => el2.value ?? "";
   if (!customElements.get("cms-list-filter")) {
     customElements.define("cms-list-filter", CmsListFilter);
   }
@@ -10317,14 +10297,14 @@ ${followMessage}`)) {
         <div class="methods"></div>`;
       const wrap = root.querySelector(".methods");
       const returnTo = new URL(location.href).searchParams.get("returnTo") ?? "";
-      const rt = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+      const rt2 = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
       try {
         const res = await fetch(`${base}/auth/methods`);
         const methods = res.ok ? await res.json() : [];
         const redirect = methods.filter((m) => m.loginUrl);
         if (!redirect.length)
           return;
-        wrap.innerHTML = `<div class="sep">or</div>` + redirect.map((m) => `<a class="provider" href="${escapeAttr(m.loginUrl)}${rt}">${escapeText(m.displayName)}</a>`).join("");
+        wrap.innerHTML = `<div class="sep">or</div>` + redirect.map((m) => `<a class="provider" href="${escapeAttr(m.loginUrl)}${rt2}">${escapeText(m.displayName)}</a>`).join("");
       } catch {}
     }
   }
@@ -10382,7 +10362,7 @@ ${followMessage}`)) {
     }
     _render() {
       const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
-      const on = this._enabled;
+      const on2 = this._enabled;
       root.innerHTML = `
         <style>
           :host { display: inline-flex; }
@@ -10401,8 +10381,8 @@ ${followMessage}`)) {
           .remove:hover { background: var(--danger-muted, #fee2e2); }
         </style>
         <div class="row">
-          <button type="button" class="switch ${on ? "on" : ""}" role="switch" aria-checked="${on}" title="${on ? "Disable" : "Enable"}"><span class="knob"></span></button>
-          <span class="state">${on ? "Enabled" : "Disabled"}</span>
+          <button type="button" class="switch ${on2 ? "on" : ""}" role="switch" aria-checked="${on2}" title="${on2 ? "Disable" : "Enable"}"><span class="knob"></span></button>
+          <span class="state">${on2 ? "Enabled" : "Disabled"}</span>
           ${this._builtin ? "" : `<button type="button" class="btn edit">Edit</button>`}
           ${this._builtin ? "" : `<button type="button" class="btn remove">Remove</button>`}
         </div>`;
@@ -10736,10 +10716,10 @@ ${followMessage}`)) {
   // src/components/admin/Secrets/icons.ts
   var ICONS = { eye: ICON_EYE, save: ICON_SAVE, trash: ICON_TRASH };
   function injectIcons(root) {
-    root.querySelectorAll("[data-icon]").forEach((el) => {
-      const name = el.dataset.icon;
+    root.querySelectorAll("[data-icon]").forEach((el2) => {
+      const name = el2.dataset.icon;
       if (ICONS[name])
-        el.innerHTML = ICONS[name];
+        el2.innerHTML = ICONS[name];
     });
   }
 
@@ -10787,7 +10767,7 @@ ${followMessage}`)) {
   }
 
   // src/components/admin/Secrets/Secrets.ts
-  class CmsSecrets extends z {
+  class CmsSecrets extends z2 {
     _list = null;
     _rowTemplate = null;
     _empty = null;
@@ -10797,11 +10777,11 @@ ${followMessage}`)) {
       super({ css: style_default2, template: template_default3 });
     }
     connectedCallback() {
-      const sr = this.shadowRoot;
-      this._list = sr.querySelector('[data-role="list"]');
-      this._empty = sr.querySelector('[data-role="empty"]');
-      this._rowTemplate = sr.querySelector('[data-role="row-template"]');
-      sr.querySelector('[data-action="add-submit"]')?.addEventListener("click", () => this._add());
+      const sr2 = this.shadowRoot;
+      this._list = sr2.querySelector('[data-role="list"]');
+      this._empty = sr2.querySelector('[data-role="empty"]');
+      this._rowTemplate = sr2.querySelector('[data-role="row-template"]');
+      sr2.querySelector('[data-action="add-submit"]')?.addEventListener("click", () => this._add());
       document.addEventListener(SECRETS_RELOAD_EVENT, this._onReload);
       this._reload();
     }
@@ -10817,8 +10797,8 @@ ${followMessage}`)) {
       try {
         const items = await fetchSecrets(this._api);
         items.sort((a, b) => a.key.localeCompare(b.key));
-        this._knownKeys = new Set(items.map((it) => it.key));
-        this._list.replaceChildren(...items.map((it) => this._buildRow(it.key, it.value)));
+        this._knownKeys = new Set(items.map((it2) => it2.key));
+        this._list.replaceChildren(...items.map((it2) => this._buildRow(it2.key, it2.value)));
         this._empty.hidden = items.length > 0;
       } catch {
         this._empty.hidden = false;
@@ -10848,9 +10828,9 @@ ${followMessage}`)) {
       return opSaveRow(this._api, key, value);
     }
     _add() {
-      const sr = this.shadowRoot;
-      const keyEl = sr.querySelector('[data-role="add-key"]');
-      const valueEl = sr.querySelector('[data-role="add-value"]');
+      const sr2 = this.shadowRoot;
+      const keyEl = sr2.querySelector('[data-role="add-key"]');
+      const valueEl = sr2.querySelector('[data-role="add-value"]');
       return opAddSecret(this._api, keyEl, valueEl, this._knownKeys);
     }
   }
@@ -11254,11 +11234,11 @@ ${followMessage}`)) {
   }
 
   // src/components/editor/componentSync/PageLink/detect.ts
-  function isExternal(v) {
-    return /^(https?:|mailto:|tel:|\/\/)/i.test(v);
+  function isExternal(v2) {
+    return /^(https?:|mailto:|tel:|\/\/)/i.test(v2);
   }
-  function isMedia(v) {
-    return /(^|\/)media\?id=/.test(v);
+  function isMedia(v2) {
+    return /(^|\/)media\?id=/.test(v2);
   }
   function mediaLabel(src) {
     const m = src.match(/id=([^&]+)/);
@@ -11318,8 +11298,8 @@ ${followMessage}`)) {
 
   // src/components/editor/componentSync/PageLink/PageLink.picker.ts
   function filterPages(pages, query) {
-    const q = query.toLowerCase();
-    return pages.filter((p) => p.title.toLowerCase().includes(q) || p.path.toLowerCase().includes(q));
+    const q2 = query.toLowerCase();
+    return pages.filter((p) => p.title.toLowerCase().includes(q2) || p.path.toLowerCase().includes(q2));
   }
   function buildOptionList(listEl, emptyEl, pages, onSelect) {
     listEl.innerHTML = "";
@@ -11330,19 +11310,19 @@ ${followMessage}`)) {
     emptyEl.style.display = "none";
     const options = [];
     for (const page of pages) {
-      const li = document.createElement("li");
-      li.className = "option";
-      li.dataset.value = page.path;
+      const li2 = document.createElement("li");
+      li2.className = "option";
+      li2.dataset.value = page.path;
       const title = document.createElement("span");
       title.className = "option-title";
       title.textContent = page.title;
       const path = document.createElement("span");
       path.className = "option-path";
       path.textContent = page.path;
-      li.append(title, path);
-      li.addEventListener("click", () => onSelect(page));
-      listEl.appendChild(li);
-      options.push(li);
+      li2.append(title, path);
+      li2.addEventListener("click", () => onSelect(page));
+      listEl.appendChild(li2);
+      options.push(li2);
     }
     return options;
   }
@@ -11365,28 +11345,28 @@ ${followMessage}`)) {
   }
   function refresh(host, pages) {
     host._options = buildOptionList(host._refs.list, host._refs.empty, pages, (p) => select(host, p.path, p.title));
-    host._options.forEach((li) => li.classList.toggle("selected", li.dataset.value === host._value));
+    host._options.forEach((li2) => li2.classList.toggle("selected", li2.dataset.value === host._value));
   }
-  function select(host, v, label) {
-    setValue2(host, v, label);
+  function select(host, v2, label) {
+    setValue2(host, v2, label);
     closePanel2(host);
     host.dispatchEvent(new Event("change", { bubbles: true }));
   }
-  function setValue2(host, v, label) {
-    host._value = v;
+  function setValue2(host, v2, label) {
+    host._value = v2;
     const r = host._refs;
-    r.display.textContent = v ? label : "No link";
-    r.trigger.classList.toggle("has-value", !!v);
-    r.clearBtn.style.display = v ? "flex" : "none";
-    host._options.forEach((li) => li.classList.toggle("selected", li.dataset.value === v));
-    const m = isMedia(v);
-    r.mediaCurrent.textContent = m ? v : "";
+    r.display.textContent = v2 ? label : "No link";
+    r.trigger.classList.toggle("has-value", !!v2);
+    r.clearBtn.style.display = v2 ? "flex" : "none";
+    host._options.forEach((li2) => li2.classList.toggle("selected", li2.dataset.value === v2));
+    const m = isMedia(v2);
+    r.mediaCurrent.textContent = m ? v2 : "";
     r.mediaCurrent.classList.toggle("has-value", m);
   }
   function openPanel2(host) {
-    document.querySelectorAll("p9r-link, p9r-select").forEach((el) => {
-      if (el !== host && "_close" in el)
-        el._close();
+    document.querySelectorAll("p9r-link, p9r-select").forEach((el2) => {
+      if (el2 !== host && "_close" in el2)
+        el2._close();
     });
     host._isOpen = true;
     host._refs.panel.classList.add("open");
@@ -11502,25 +11482,25 @@ ${followMessage}`)) {
     async _loadPages() {
       this._pages = await fetchPages();
       refresh(this, this._pages);
-      const v = this.getAttribute("value") || "";
-      if (v)
-        this.value = v;
+      const v2 = this.getAttribute("value") || "";
+      if (v2)
+        this.value = v2;
     }
     get value() {
       return this._value;
     }
-    set value(v) {
-      if (isMedia(v)) {
+    set value(v2) {
+      if (isMedia(v2)) {
         this._mode = "media";
-        setValue2(this, v, mediaLabel(v));
-      } else if (isExternal(v)) {
+        setValue2(this, v2, mediaLabel(v2));
+      } else if (isExternal(v2)) {
         this._mode = "external";
-        this._refs.externalInput.value = v;
-        setValue2(this, v, v);
+        this._refs.externalInput.value = v2;
+        setValue2(this, v2, v2);
       } else {
         this._mode = "page";
-        const m = this._pages.find((p) => p.path === v);
-        setValue2(this, v, m ? m.title : v || "No link");
+        const m = this._pages.find((p) => p.path === v2);
+        setValue2(this, v2, m ? m.title : v2 || "No link");
       }
       applyMode(this);
     }
@@ -11755,8 +11735,8 @@ ${followMessage}`)) {
       }
     }
     _appendPanelItem(slot, index) {
-      const li = document.createElement("li");
-      li._slot = slot;
+      const li2 = document.createElement("li");
+      li2._slot = slot;
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "item";
@@ -11769,19 +11749,19 @@ ${followMessage}`)) {
         e.stopPropagation();
         this._focus(slot);
       });
-      li.append(btn);
-      this._listEl.append(li);
+      li2.append(btn);
+      this._listEl.append(li2);
     }
     _removePanelItem(removed) {
       const lis = Array.from(this._listEl.children);
-      for (const li of lis) {
-        if (li._slot === removed) {
-          li.remove();
+      for (const li2 of lis) {
+        if (li2._slot === removed) {
+          li2.remove();
           break;
         }
       }
-      Array.from(this._listEl.children).forEach((li, i) => {
-        const idx = li.querySelector(".item-index");
+      Array.from(this._listEl.children).forEach((li2, i) => {
+        const idx = li2.querySelector(".item-index");
         if (idx)
           idx.textContent = `#${i + 1}`;
       });
@@ -12378,36 +12358,36 @@ ${followMessage}`)) {
   }
 
   // src/components/editor/componentSync/sync/StateSync/parseAttrs.ts
-  function parseValues(el) {
-    const raw = el.getAttribute("values");
+  function parseValues(el2) {
+    const raw = el2.getAttribute("values");
     if (raw)
       return raw.split(",").map((s) => s.trim()).filter(Boolean);
-    const v = el.getAttribute("value") || "";
-    return v ? [v] : [];
+    const v2 = el2.getAttribute("value") || "";
+    return v2 ? [v2] : [];
   }
-  function parseLabels(el, values) {
-    const raw = el.getAttribute("labels");
+  function parseLabels(el2, values) {
+    const raw = el2.getAttribute("labels");
     if (raw)
       return raw.split(",").map((s) => s.trim());
     return values;
   }
-  function parsePlacement(el) {
-    const v = el.getAttribute("placement");
-    return v === "right" || v === "top" || v === "bottom" ? v : "left";
+  function parsePlacement(el2) {
+    const v2 = el2.getAttribute("placement");
+    return v2 === "right" || v2 === "top" || v2 === "bottom" ? v2 : "left";
   }
 
   // src/components/editor/componentSync/sync/StateSync/applyTargets.ts
   function makeStateAttrOps(attrName) {
     if (attrName === "class")
       return {
-        apply: (el, v) => el.classList.add(v),
-        clear: (el, v) => el.classList.remove(v),
-        isApplied: (el, v) => el.classList.contains(v)
+        apply: (el2, v2) => el2.classList.add(v2),
+        clear: (el2, v2) => el2.classList.remove(v2),
+        isApplied: (el2, v2) => el2.classList.contains(v2)
       };
     return {
-      apply: (el, v) => el.setAttribute(attrName, v),
-      clear: (el) => el.removeAttribute(attrName),
-      isApplied: (el, v) => el.getAttribute(attrName) === v
+      apply: (el2, v2) => el2.setAttribute(attrName, v2),
+      clear: (el2) => el2.removeAttribute(attrName),
+      isApplied: (el2, v2) => el2.getAttribute(attrName) === v2
     };
   }
 
@@ -12456,9 +12436,9 @@ ${followMessage}`)) {
         return;
       this._ops ??= makeStateAttrOps(this.attrName);
       if (this._activeValue !== null)
-        targets.forEach((el) => this._ops.clear(el, this._activeValue));
+        targets.forEach((el2) => this._ops.clear(el2, this._activeValue));
       if (value !== null)
-        targets.forEach((el) => this._ops.apply(el, value));
+        targets.forEach((el2) => this._ops.apply(el2, value));
       if (value !== null && this._observer === null)
         this._startObserver(targets);
       if (value === null)
@@ -12500,15 +12480,15 @@ ${followMessage}`)) {
     _startObserver(targets) {
       const filter = this.attrName === "class" ? ["class"] : [this.attrName];
       this._observer = new MutationObserver(() => {
-        const v = this._activeValue;
-        if (v === null)
+        const v2 = this._activeValue;
+        if (v2 === null)
           return;
-        targets.forEach((el) => {
-          if (!this._ops.isApplied(el, v))
-            this._ops.apply(el, v);
+        targets.forEach((el2) => {
+          if (!this._ops.isApplied(el2, v2))
+            this._ops.apply(el2, v2);
         });
       });
-      targets.forEach((el) => this._observer.observe(el, { attributes: true, attributeFilter: filter }));
+      targets.forEach((el2) => this._observer.observe(el2, { attributes: true, attributeFilter: filter }));
     }
     _stopObserver() {
       this._observer?.disconnect();
@@ -12520,7 +12500,7 @@ ${followMessage}`)) {
   }
 
   // src/components/editor/componentSync/SyncPanel.ts
-  class SyncPanel extends z {
+  class SyncPanel extends z2 {
     dialog = null;
     constructor() {
       super({
@@ -12773,25 +12753,25 @@ ${followMessage}`)) {
     walk(root);
     return new XMLSerializer().serializeToString(root);
   }
-  function walk(el) {
-    if (!ALLOWED_TAGS.has(el.tagName.toLowerCase())) {
-      el.remove();
+  function walk(el2) {
+    if (!ALLOWED_TAGS.has(el2.tagName.toLowerCase())) {
+      el2.remove();
       return;
     }
-    for (const attr of Array.from(el.attributes)) {
+    for (const attr of Array.from(el2.attributes)) {
       const name = attr.name.toLowerCase();
       if (name.startsWith("on")) {
-        el.removeAttribute(attr.name);
+        el2.removeAttribute(attr.name);
         continue;
       }
       if (name === "href" || name === "xlink:href") {
-        const v = attr.value.trim().toLowerCase();
-        const safe = v.startsWith("#") || v.startsWith("/") || v.startsWith("./") || v.startsWith("../") || v.startsWith("http:") || v.startsWith("https:");
+        const v2 = attr.value.trim().toLowerCase();
+        const safe = v2.startsWith("#") || v2.startsWith("/") || v2.startsWith("./") || v2.startsWith("../") || v2.startsWith("http:") || v2.startsWith("https:");
         if (!safe)
-          el.removeAttribute(attr.name);
+          el2.removeAttribute(attr.name);
       }
     }
-    for (const child of Array.from(el.children))
+    for (const child of Array.from(el2.children))
       walk(child);
   }
 
@@ -13013,22 +12993,22 @@ ${followMessage}`)) {
       let r = this.attachShadow({ mode: "open" });
       if (t) {
         this._rawStyles = t.css, this._styles = document.createElement("style"), this._styles.innerHTML = t.css, r.appendChild(this._styles);
-        let o = document.createElement("template");
-        o.innerHTML = t.template, r.appendChild(o.content.cloneNode(true));
+        let o2 = document.createElement("template");
+        o2.innerHTML = t.template, r.appendChild(o2.content.cloneNode(true));
       }
     }
     registerCSSVariables(t) {
       if (!this._styles)
         return;
       let r = this._rawStyles;
-      Object.entries(t).forEach(([o, e]) => {
-        r = r.replaceAll("var(--" + o + ")", e);
+      Object.entries(t).forEach(([o2, e]) => {
+        r = r.replaceAll("var(--" + o2 + ")", e);
       }), this._styles.innerHTML = r;
     }
     connectedCallback() {}
   }
 
-  class s extends a {
+  class b extends a {
     static _event = "action-click";
     _toolbar;
     constructor() {
@@ -13051,25 +13031,25 @@ ${followMessage}`)) {
     disconnectedCallback() {
       this.removeEventListener("click", this._handleClick);
     }
-    attributeChangedCallback(t, r, o) {
+    attributeChangedCallback(t, r, o2) {
       if (!this._toolbar)
         return;
       if (t === "label")
-        if (o === null)
+        if (o2 === null)
           this._toolbar.removeAttribute("aria-label");
         else
-          this._toolbar.setAttribute("aria-label", o);
+          this._toolbar.setAttribute("aria-label", o2);
     }
     _handleClick = (t) => {
-      let o = t.composedPath().find((i) => i instanceof Element && i.hasAttribute("data-action"));
-      if (!o)
+      let o2 = t.composedPath().find((i) => i instanceof Element && i.hasAttribute("data-action"));
+      if (!o2)
         return;
       t.stopPropagation();
-      let e = o.getAttribute("data-action");
-      this._dispatchAction(e, o, t);
+      let e = o2.getAttribute("data-action");
+      this._dispatchAction(e, o2, t);
     };
-    _dispatchAction(t, r, o) {
-      this.dispatchEvent(new CustomEvent("action-click", { detail: { action: t, originalEvent: o, target: r }, bubbles: true, composed: true }));
+    _dispatchAction(t, r, o2) {
+      this.dispatchEvent(new CustomEvent("action-click", { detail: { action: t, originalEvent: o2, target: r }, bubbles: true, composed: true }));
     }
     _upgradeProperty(t) {
       if (this.hasOwnProperty(t)) {
@@ -13087,8 +13067,6 @@ ${followMessage}`)) {
         this.setAttribute("label", t);
     }
   }
-  if (!customElements.get("p9r-horizontal-action-group"))
-    customElements.define("p9r-horizontal-action-group", s);
 
   // src/components/editor/EditorSystem/BlocActions/view/style.css
   var style_default3 = `:host {
@@ -13164,16 +13142,16 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
   function ancestorChain(editor) {
     const chain = [editor];
-    let el = editor.target;
+    let el2 = editor.target;
     for (let i = 0;i < 20; i++) {
-      const pid = el.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      const pid = el2.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
       if (!pid)
         break;
       const pEd = document.compIdentifierToEditor?.get(pid);
       if (!pEd)
         break;
       chain.unshift(pEd);
-      el = pEd.target;
+      el2 = pEd.target;
     }
     return chain;
   }
@@ -13272,20 +13250,20 @@ cms-bag-breadcrumb[data-inline="right"] {
     const visited = new Set;
     const queue = [seed];
     while (queue.length > 0) {
-      const el = queue.shift();
-      if (visited.has(el))
+      const el2 = queue.shift();
+      if (visited.has(el2))
         continue;
-      visited.add(el);
-      const id = el.getAttribute(idAttr);
+      visited.add(el2);
+      const id = el2.getAttribute(idAttr);
       const editor = id ? map?.get(id) : undefined;
       if (editor)
         out.push(...editor.listExtensions(surface));
-      const parent = el.parentElement?.closest(selector);
+      const parent = el2.parentElement?.closest(selector);
       if (parent && !visited.has(parent))
         queue.push(parent);
-      const pid = el.getAttribute(pidAttr);
+      const pid = el2.getAttribute(pidAttr);
       const pidOwner = pid ? map?.get(pid) : undefined;
-      if (pidOwner && pidOwner.target !== el && !visited.has(pidOwner.target)) {
+      if (pidOwner && pidOwner.target !== el2 && !visited.has(pidOwner.target)) {
         queue.push(pidOwner.target);
       }
     }
@@ -13363,7 +13341,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     if (trimmed.startsWith("#")) {
       return { kind: "anchor", target: trimmed.slice(1) };
     }
-    if (SPECIAL_SCHEMES.some((s2) => trimmed.toLowerCase().startsWith(s2))) {
+    if (SPECIAL_SCHEMES.some((s) => trimmed.toLowerCase().startsWith(s))) {
       return { kind: "mailto", target: trimmed };
     }
     let url;
@@ -13410,15 +13388,15 @@ cms-bag-breadcrumb[data-inline="right"] {
     if (_activeLink === link)
       return;
     _activeLink = link;
-    for (const fn of _linkListeners)
+    for (const fn2 of _linkListeners)
       try {
-        fn(link);
+        fn2(link);
       } catch {}
   }
-  function onActiveLinkChange(fn) {
-    _linkListeners.add(fn);
+  function onActiveLinkChange(fn2) {
+    _linkListeners.add(fn2);
     return () => {
-      _linkListeners.delete(fn);
+      _linkListeners.delete(fn2);
     };
   }
   function clearEditorContext() {
@@ -13542,7 +13520,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     const btn = host.querySelector('[data-action="pin-state"]');
     if (!btn)
       return;
-    const anyPinned = editor?.stateSyncs.some((s2) => s2.isPinned) ?? false;
+    const anyPinned = editor?.stateSyncs.some((s) => s.isPinned) ?? false;
     btn.toggleAttribute("data-active", anyPinned);
   }
 
@@ -13692,7 +13670,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   // src/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/Breadcrumb.ts
   var Metadata = { css: style_default4, template: template_default5 };
 
-  class Breadcrumb extends z {
+  class Breadcrumb extends z2 {
     _pill;
     constructor() {
       super(Metadata);
@@ -13746,20 +13724,20 @@ cms-bag-breadcrumb[data-inline="right"] {
     const labelled = ancestorChain(editor).map((ed) => {
       const label = observer?.getLabel(ed.target.tagName.toLowerCase());
       return label ? { editor: ed, label } : null;
-    }).filter((it) => it !== null);
+    }).filter((it2) => it2 !== null);
     if (labelled.length === 0)
       return { items: [], editorByKey: new Map };
     const collapsed = collapseChain(labelled);
     const editorByKey = new Map;
-    const items = collapsed.map((it, idx) => {
+    const items = collapsed.map((it2, idx) => {
       const isLast = idx === collapsed.length - 1;
-      if (it === null)
+      if (it2 === null)
         return { type: "ellipsis" };
       if (isLast)
-        return { type: "current", label: it.label };
-      const key = it.editor.identifier;
-      editorByKey.set(key, it.editor);
-      return { type: "parent", key, label: it.label };
+        return { type: "current", label: it2.label };
+      const key = it2.editor.identifier;
+      editorByKey.set(key, it2.editor);
+      return { type: "parent", key, label: it2.label };
     });
     return { items, editorByKey };
   }
@@ -13773,8 +13751,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       this._host = _host;
       this._onSwitch = _onSwitch;
       this._el = Breadcrumb.create();
-      const sr = this._host.shadowRoot;
-      sr.insertBefore(this._el, sr.querySelector("nav"));
+      const sr2 = this._host.shadowRoot;
+      sr2.insertBefore(this._el, sr2.querySelector("nav"));
     }
     update(editor) {
       const editorSystem = getClosestEditorSystem(this._host);
@@ -13878,7 +13856,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     template: template_default6
   };
 
-  class InsertButton extends z {
+  class InsertButton extends z2 {
     constructor() {
       super(Metadata2);
       this.shadowRoot.querySelector(".btn").addEventListener("click", () => {
@@ -13953,8 +13931,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       return null;
     const slotName = target.getAttribute("slot");
     const compSyncs = parentEditor.queryPanelChildren("p9r-comp-sync");
-    for (const cs of compSyncs) {
-      const template = cs.firstElementChild;
+    for (const cs2 of compSyncs) {
+      const template = cs2.firstElementChild;
       if (!template)
         continue;
       const tSlot = template.getAttribute("slot");
@@ -14117,7 +14095,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   // src/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinMenu.ts
   var Metadata3 = { css: style_default6, template: template_default7 };
 
-  class PinMenu extends z {
+  class PinMenu extends z2 {
     _items;
     constructor() {
       super(Metadata3);
@@ -14172,9 +14150,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     _commit(sync, change) {
       const editor = this._getEditor();
       if (editor) {
-        for (const s2 of editor.stateSyncs)
-          if (s2 !== sync && s2.isPinned)
-            s2.unpin();
+        for (const s of editor.stateSyncs)
+          if (s !== sync && s.isPinned)
+            s.unpin();
       }
       change();
       editor?.notifyPinStateChanged(sync);
@@ -14303,7 +14281,7 @@ cms-bag-breadcrumb[data-inline="right"] {
         return;
       if (deps.pinMenu()?.matches(":hover"))
         return;
-      if (deps.insertButtons().some((b) => b.matches(":hover")))
+      if (deps.insertButtons().some((b2) => b2.matches(":hover")))
         return;
       const parentEditor = to?.closest?.(`[${p9r.attr.EDITOR.IS_EDITOR}]`);
       const tgt = deps.target();
@@ -14386,9 +14364,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     const clone = target.cloneNode(true);
     clone.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
     clone.classList.remove("p9r-active");
-    clone.querySelectorAll(`[${p9r.attr.EDITOR.IS_EDITOR}]`).forEach((el) => {
-      el.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
-      el.classList.remove("p9r-active");
+    clone.querySelectorAll(`[${p9r.attr.EDITOR.IS_EDITOR}]`).forEach((el2) => {
+      el2.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
+      el2.classList.remove("p9r-active");
     });
     if (position === "before")
       target.before(clone);
@@ -14412,8 +14390,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       const detail = e.detail;
       if (detail.type === "template") {
         const fragment = document.createRange().createContextualFragment(detail.html);
-        Array.from(fragment.children).forEach((el) => {
-          el.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
+        Array.from(fragment.children).forEach((el2) => {
+          el2.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
         });
         target.replaceWith(fragment);
       } else if (detail.type === "snippet") {
@@ -14527,8 +14505,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       empty.textContent = "No options";
       group.appendChild(empty);
     } else {
-      for (const o of opts)
-        group.appendChild(buildRow(o, onPick));
+      for (const o2 of opts)
+        group.appendChild(buildRow(o2, onPick));
     }
     return group;
   }
@@ -14553,13 +14531,13 @@ cms-bag-breadcrumb[data-inline="right"] {
   class ExtensionsPopover extends HTMLElement {
     constructor() {
       super();
-      const sr = this.attachShadow({ mode: "open" });
+      const sr2 = this.attachShadow({ mode: "open" });
       const style = document.createElement("style");
       style.textContent = style_default7;
-      sr.appendChild(style);
+      sr2.appendChild(style);
       const wrap = document.createElement("div");
       wrap.id = "wrap";
-      sr.appendChild(wrap);
+      sr2.appendChild(wrap);
     }
   }
   if (!customElements.get(POPOVER_TAG))
@@ -14654,14 +14632,14 @@ cms-bag-breadcrumb[data-inline="right"] {
   // src/components/editor/EditorSystem/BlocActions/domain/lifecycle/navigate.ts
   function switchToEditor(c, target) {
     const t = c.host.style.transform;
-    const va = c.host.getAttribute("data-v-anchor");
+    const va2 = c.host.getAttribute("data-v-anchor");
     c.positionLocked = true;
     c.setEditor(target);
     c.open();
     c.host.style.transform = t;
-    if (va !== null) {
-      c.host.setAttribute("data-v-anchor", va);
-      c.lastVAnchor = va;
+    if (va2 !== null) {
+      c.host.setAttribute("data-v-anchor", va2);
+      c.lastVAnchor = va2;
       c.breadcrumb.refinePosition(c.host.getBoundingClientRect());
     }
   }
@@ -14685,25 +14663,25 @@ cms-bag-breadcrumb[data-inline="right"] {
       vAnchor = "top";
     }
     const halfWidth = barWidth / 2;
-    let x = mouseX + window.scrollX - halfWidth;
+    let x2 = mouseX + window.scrollX - halfWidth;
     const minRectX = rect.left + window.scrollX;
     const maxRectX = rect.right + window.scrollX - barWidth;
-    x = Math.max(minRectX, Math.min(maxRectX, x));
+    x2 = Math.max(minRectX, Math.min(maxRectX, x2));
     const minViewX = window.scrollX + margin;
     const maxViewX = window.scrollX + window.innerWidth - barWidth - margin;
-    x = Math.max(minViewX, Math.min(maxViewX, x));
-    let y = vAnchor === "top" ? rect.top + window.scrollY - barHeight : rect.bottom + window.scrollY;
+    x2 = Math.max(minViewX, Math.min(maxViewX, x2));
+    let y2 = vAnchor === "top" ? rect.top + window.scrollY - barHeight : rect.bottom + window.scrollY;
     const minViewY = window.scrollY + margin;
     const maxViewY = window.scrollY + window.innerHeight - barHeight - margin;
-    y = Math.max(minViewY, Math.min(maxViewY, y));
-    return { x, y, vAnchor };
+    y2 = Math.max(minViewY, Math.min(maxViewY, y2));
+    return { x: x2, y: y2, vAnchor };
   }
 
   // src/components/editor/EditorSystem/BlocActions/compute/applyBagPosition.ts
   function applyBagPosition(bag, target, editor, mouseX, mouseY, lastVAnchor) {
     const { rect, element } = resolveActionBarAnchor(target, editor);
     const my = mouseY ?? (lastVAnchor === "top" ? rect.top : rect.bottom);
-    const { x, y, vAnchor } = computeGroupPosition({
+    const { x: x2, y: y2, vAnchor } = computeGroupPosition({
       rect,
       barWidth: bag.offsetWidth,
       barHeight: bag.offsetHeight,
@@ -14711,7 +14689,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       mouseY: my
     });
     bag.setAttribute("data-v-anchor", vAnchor);
-    bag.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    bag.style.transform = `translate3d(${x2}px, ${y2}px, 0)`;
     bag.style.visibility = "visible";
     bag.style.opacity = "1";
     bag.style.pointerEvents = "auto";
@@ -14771,7 +14749,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   function attachGlobal() {
     if (onScrollOrResize)
       return;
-    onScrollOrResize = () => active.forEach((h) => h.update());
+    onScrollOrResize = () => active.forEach((h2) => h2.update());
     window.addEventListener("scroll", onScrollOrResize, { capture: true, passive: true });
     window.addEventListener("resize", onScrollOrResize);
   }
@@ -14804,11 +14782,11 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
     update() {
       const rect = this._target.getBoundingClientRect();
-      const s2 = this._box.style;
-      s2.transform = `translate(${rect.left}px, ${rect.top}px)`;
-      s2.width = `${rect.width}px`;
-      s2.height = `${rect.height}px`;
-      s2.display = rect.width === 0 && rect.height === 0 ? "none" : "block";
+      const s = this._box.style;
+      s.transform = `translate(${rect.left}px, ${rect.top}px)`;
+      s.width = `${rect.width}px`;
+      s.height = `${rect.height}px`;
+      s.display = rect.width === 0 && rect.height === 0 ? "none" : "block";
     }
     setColor(color) {
       this._box.style.borderColor = color;
@@ -14841,9 +14819,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     _unsubLink = null;
     constructor(host) {
       this.host = host;
-      const s2 = document.createElement("style");
-      s2.textContent = style_default3;
-      host.shadowRoot.appendChild(s2);
+      const s = document.createElement("style");
+      s.textContent = style_default3;
+      host.shadowRoot.appendChild(s);
       this.breadcrumb = new BreadcrumbController(host, (ed) => switchToEditor(this, ed));
       this.insertBtns = new InsertButtonsController((pos) => this.withCooldown(() => this.insertBtns.insertBlank(pos)));
       this.pin = new PinController(host, () => this.editor);
@@ -14851,7 +14829,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       this.events = buildEventManager(host, { target: () => this.target, editor: () => this.editor, hoverEl: () => this.hoverEl }, this.pin, this.insertBtns, {
         onClose: () => this.close(),
         onReflow: () => reflow(this),
-        withCooldown: (fn) => this.withCooldown(fn),
+        withCooldown: (fn2) => this.withCooldown(fn2),
         onSelectParent: () => selectParent(this)
       });
       this._unsubLink = onActiveLinkChange((link) => this._onActiveLinkChange(link));
@@ -14907,7 +14885,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       this.highlight?.dispose();
       this.highlight = null;
       this.target?.classList.remove("p9r-active");
-      document.querySelectorAll(".p9r-breadcrumb-hover").forEach((el) => el.classList.remove("p9r-breadcrumb-hover"));
+      document.querySelectorAll(".p9r-breadcrumb-hover").forEach((el2) => el2.classList.remove("p9r-breadcrumb-hover"));
       this.host.style.cssText = "visibility:hidden;opacity:0;pointer-events:none;";
       this.insertBtns.hide();
       this.ro.disconnect();
@@ -14924,8 +14902,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       }
       mountLinkSection(this.host);
     }
-    withCooldown(fn) {
-      fn();
+    withCooldown(fn2) {
+      fn2();
       this.close();
       this.cooldown = true;
       requestAnimationFrame(() => {
@@ -14935,7 +14913,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
 
   // src/components/editor/EditorSystem/BlocActions/BlocActions.ts
-  class BlocActions extends s {
+  class BlocActions extends b {
     _ctrl;
     constructor() {
       super();
@@ -15217,7 +15195,7 @@ form[method="dialog"] {
   };
   async function fetchBlocMeta() {
     const list = await fetchJson("bloc/list", []);
-    return new Map(list.map((b) => [b.id, { description: b.description }]));
+    return new Map(list.map((b2) => [b2.id, { description: b2.description }]));
   }
 
   // src/components/editor/EditorSystem/BlocLibrary/components/Card/template.html
@@ -15310,7 +15288,7 @@ form[method="dialog"] {
     template: template_default9
   };
 
-  class Card extends z {
+  class Card extends z2 {
     constructor() {
       super(Metadata4);
     }
@@ -15394,23 +15372,23 @@ form[method="dialog"] {
     template: template_default10
   };
 
-  class EmptyState2 extends z {
+  class EmptyState2 extends z2 {
     constructor() {
       super(Metadata5);
     }
     static create(opts) {
-      const el = document.createElement("cms-bloc-library-empty-state");
+      const el2 = document.createElement("cms-bloc-library-empty-state");
       const iconFragment = document.createRange().createContextualFragment(opts.icon);
       const iconRoot = iconFragment.firstElementChild;
       if (iconRoot) {
         iconRoot.setAttribute("slot", "icon");
-        el.appendChild(iconRoot);
+        el2.appendChild(iconRoot);
       }
       const messageSpan = document.createElement("span");
       messageSpan.slot = "message";
       messageSpan.textContent = opts.message;
-      el.appendChild(messageSpan);
-      return el;
+      el2.appendChild(messageSpan);
+      return el2;
     }
   }
   if (!customElements.get("cms-bloc-library-empty-state")) {
@@ -15443,7 +15421,7 @@ form[method="dialog"] {
 
   // src/components/editor/EditorSystem/BlocLibrary/sections/renderSnippets.ts
   function renderSnippets({ grid, snippets, category, onPick }) {
-    const filtered = snippets.filter((s2) => (s2.category || "Default") === category);
+    const filtered = snippets.filter((s) => (s.category || "Default") === category);
     if (filtered.length === 0) {
       grid.appendChild(EmptyState2.create({
         icon: ICON_SNIPPET_MUTED,
@@ -15464,13 +15442,13 @@ form[method="dialog"] {
 
   // src/components/editor/EditorSystem/BlocLibrary/sections/renderSearch.ts
   function renderSearch({ grid, query, blocs, blocMeta, templates, snippets, onPick }) {
-    const q = query.trim().toLowerCase();
-    const matchingBlocs = blocs.filter((b) => {
-      const desc = blocMeta.get(b.tag)?.description ?? "";
-      return b.label.toLowerCase().includes(q) || b.tag.toLowerCase().includes(q) || desc.toLowerCase().includes(q);
+    const q2 = query.trim().toLowerCase();
+    const matchingBlocs = blocs.filter((b2) => {
+      const desc = blocMeta.get(b2.tag)?.description ?? "";
+      return b2.label.toLowerCase().includes(q2) || b2.tag.toLowerCase().includes(q2) || desc.toLowerCase().includes(q2);
     });
-    const matchingTemplates = templates.filter((t) => t.name.toLowerCase().includes(q) || (t.description ?? "").toLowerCase().includes(q) || (t.category ?? "").toLowerCase().includes(q));
-    const matchingSnippets = snippets.filter((s2) => s2.name.toLowerCase().includes(q) || (s2.description ?? "").toLowerCase().includes(q) || s2.identifier.toLowerCase().includes(q) || (s2.category ?? "").toLowerCase().includes(q));
+    const matchingTemplates = templates.filter((t) => t.name.toLowerCase().includes(q2) || (t.description ?? "").toLowerCase().includes(q2) || (t.category ?? "").toLowerCase().includes(q2));
+    const matchingSnippets = snippets.filter((s) => s.name.toLowerCase().includes(q2) || (s.description ?? "").toLowerCase().includes(q2) || s.identifier.toLowerCase().includes(q2) || (s.category ?? "").toLowerCase().includes(q2));
     const total = matchingBlocs.length + matchingTemplates.length + matchingSnippets.length;
     if (total === 0) {
       grid.appendChild(EmptyState2.create({
@@ -15532,7 +15510,7 @@ form[method="dialog"] {
     template: template_default8
   };
 
-  class BlocLibrary extends z {
+  class BlocLibrary extends z2 {
     _dialog;
     _section = "blocs";
     _activeGroup = null;
@@ -15545,15 +15523,15 @@ form[method="dialog"] {
       super(Metadata6);
     }
     connectedCallback() {
-      const s2 = this.shadowRoot;
-      this._dialog = s2.querySelector("#dialog");
+      const s = this.shadowRoot;
+      this._dialog = s.querySelector("#dialog");
       this._dialog.addEventListener("click", (e) => {
         if (e.target === this._dialog)
           this.close();
       });
-      s2.getElementById("tabs").addEventListener("click", (e) => this._onTabClick(e));
-      s2.getElementById("sidebar").addEventListener("click", (e) => this._onSidebarClick(e));
-      s2.getElementById("search").addEventListener("input", (e) => this._onSearchInput(e));
+      s.getElementById("tabs").addEventListener("click", (e) => this._onTabClick(e));
+      s.getElementById("sidebar").addEventListener("click", (e) => this._onSidebarClick(e));
+      s.getElementById("search").addEventListener("input", (e) => this._onSearchInput(e));
     }
     open() {
       this._dialog.showModal();
@@ -15668,7 +15646,7 @@ form[method="dialog"] {
         return Array.from(editorSystem.observer.getGroups());
       if (this._section === "templates")
         return Array.from(new Set(this._templates.map((t) => t.category || "Default")));
-      return Array.from(new Set(this._snippets.map((s2) => s2.category || "Default")));
+      return Array.from(new Set(this._snippets.map((s) => s.category || "Default")));
     }
     _emitInsert(detail) {
       this.dispatchEvent(new CustomEvent("insert", { detail, bubbles: true, composed: true }));
@@ -15747,12 +15725,12 @@ form[method="dialog"] {
       const parent = target.parentElement;
       if (!parent)
         return false;
-      const cs = getComputedStyle(parent);
-      const display = cs.display;
+      const cs2 = getComputedStyle(parent);
+      const display = cs2.display;
       if (display.includes("inline"))
         return true;
       if (display.endsWith("flex")) {
-        return cs.flexDirection.startsWith("row");
+        return cs2.flexDirection.startsWith("row");
       }
       if (display.endsWith("grid")) {
         return true;
@@ -15760,16 +15738,16 @@ form[method="dialog"] {
       return false;
     }
     _pickTarget(e) {
-      const el = e.target?.closest?.(".editor-block");
-      if (!el)
+      const el2 = e.target?.closest?.(".editor-block");
+      if (!el2)
         return null;
-      if (el === this.draggedElement)
+      if (el2 === this.draggedElement)
         return null;
-      if (this.draggedElement && el.contains(this.draggedElement))
+      if (this.draggedElement && el2.contains(this.draggedElement))
         return null;
-      if (el.getAttribute(p9r.attr.ACTION.DISABLE_DRAGGING) === "true")
+      if (el2.getAttribute(p9r.attr.ACTION.DISABLE_DRAGGING) === "true")
         return null;
-      return el;
+      return el2;
     }
     handleDrop(e) {
       e.preventDefault();
@@ -15872,15 +15850,15 @@ form[method="dialog"] {
         return;
       const r = target.getBoundingClientRect();
       if (horizontal) {
-        const x = (after ? r.right : r.left) - 1.5;
-        this._indicator.style.left = `${x}px`;
+        const x2 = (after ? r.right : r.left) - 1.5;
+        this._indicator.style.left = `${x2}px`;
         this._indicator.style.top = `${r.top}px`;
         this._indicator.style.width = "3px";
         this._indicator.style.height = `${r.height}px`;
       } else {
-        const y = (after ? r.bottom : r.top) - 1.5;
+        const y2 = (after ? r.bottom : r.top) - 1.5;
         this._indicator.style.left = `${r.left}px`;
-        this._indicator.style.top = `${y}px`;
+        this._indicator.style.top = `${y2}px`;
         this._indicator.style.width = `${r.width}px`;
         this._indicator.style.height = "3px";
       }
@@ -16008,8 +15986,8 @@ form[method="dialog"] {
 `;
 
   // src/core/isToggable.ts
-  function isToggable(el) {
-    return "open" in el && typeof el.open === "function";
+  function isToggable(el2) {
+    return "open" in el2 && typeof el2.open === "function";
   }
 
   // src/core/editorSystem/navigationGuard.ts
@@ -16116,9 +16094,9 @@ form[method="dialog"] {
     if (_dirty)
       return;
     _dirty = true;
-    for (const fn of _listeners)
+    for (const fn2 of _listeners)
       try {
-        fn(true);
+        fn2(true);
       } catch {}
   }
   function watchForDirty(workingElement) {
@@ -16144,8 +16122,8 @@ form[method="dialog"] {
           params.set("mode", "view");
         try {
           const original = new URL(href, location.origin);
-          for (const [k, v] of original.searchParams) {
-            params.append(k, v);
+          for (const [k2, v2] of original.searchParams) {
+            params.append(k2, v2);
           }
         } catch {}
         const dest = `${getMetaBasePath()}/editor/page?${params.toString()}`;
@@ -16174,26 +16152,26 @@ form[method="dialog"] {
   function stripResidualChrome(root) {
     walk2(root);
   }
-  function walk2(el) {
-    for (const a2 of Array.from(el.attributes)) {
+  function walk2(el2) {
+    for (const a2 of Array.from(el2.attributes)) {
       if (a2.name.startsWith("p9r-"))
-        el.removeAttribute(a2.name);
+        el2.removeAttribute(a2.name);
     }
-    el.removeAttribute("contenteditable");
-    el.removeAttribute("tabindex");
-    el.removeAttribute("draggable");
-    if (el.classList.contains("editor-block")) {
-      el.classList.remove("editor-block");
-      if (!el.getAttribute("class"))
-        el.removeAttribute("class");
+    el2.removeAttribute("contenteditable");
+    el2.removeAttribute("tabindex");
+    el2.removeAttribute("draggable");
+    if (el2.classList.contains("editor-block")) {
+      el2.classList.remove("editor-block");
+      if (!el2.getAttribute("class"))
+        el2.removeAttribute("class");
     }
-    const style = el.getAttribute("style");
+    const style = el2.getAttribute("style");
     if (style && /pointer-events\s*:/.test(style))
-      el.removeAttribute("style");
-    for (const c of Array.from(el.children))
+      el2.removeAttribute("style");
+    for (const c of Array.from(el2.children))
       walk2(c);
-    if (el.tagName === "TEMPLATE") {
-      for (const c of Array.from(el.content.children))
+    if (el2.tagName === "TEMPLATE") {
+      for (const c of Array.from(el2.content.children))
         walk2(c);
     }
   }
@@ -16309,9 +16287,9 @@ form[method="dialog"] {
       super(target, cssStyle);
       if (!this.target.getAttribute("src"))
         this.target.setAttribute("src", "https://picsum.photos/200");
-      this.resizeInstance = new ResizeInstance(this.target, (w, h) => {
-        this.target.style.width = `${w}px`;
-        this.target.style.height = `${h}px`;
+      this.resizeInstance = new ResizeInstance(this.target, (w2, h2) => {
+        this.target.style.width = `${w2}px`;
+        this.target.style.height = `${h2}px`;
       });
     }
     init() {
@@ -16596,20 +16574,20 @@ form[method="dialog"] {
         return null;
       return direction === "prev" ? all[idx - 1] ?? null : all[idx + 1] ?? null;
     }
-    _focusWithCaret(el, position) {
-      el.focus();
+    _focusWithCaret(el2, position) {
+      el2.focus();
       const sel = window.getSelection();
       if (!sel)
         return;
       const range = document.createRange();
-      if (el.innerHTML === "") {
-        range.setStart(el, 0);
+      if (el2.innerHTML === "") {
+        range.setStart(el2, 0);
         range.collapse(true);
       } else if (position === "start") {
-        range.selectNodeContents(el);
+        range.selectNodeContents(el2);
         range.collapse(true);
       } else {
-        range.selectNodeContents(el);
+        range.selectNodeContents(el2);
         range.collapse(false);
       }
       sel.removeAllRanges();
@@ -16731,13 +16709,13 @@ form[method="dialog"] {
     onInput = (e) => this.handleInput(e);
     constructor(target) {
       super(target, cssStyle4);
-      let li = this.target.querySelector("li");
-      if (!li) {
-        li = document.createElement("li");
-        this.target.append(li);
+      let li2 = this.target.querySelector("li");
+      if (!li2) {
+        li2 = document.createElement("li");
+        this.target.append(li2);
       }
       if (this.target.hasAttribute(p9r.attr.EDITOR.IS_CREATING)) {
-        const firstLi = li;
+        const firstLi = li2;
         requestAnimationFrame(() => {
           if (firstLi.isConnected)
             firstLi.focus();
@@ -16815,16 +16793,16 @@ form[method="dialog"] {
       item.addEventListener("keydown", this.onKeyDown);
       item.addEventListener("input", this.onInput);
     }
-    focusAtStart(el) {
+    focusAtStart(el2) {
       requestAnimationFrame(() => {
-        if (!el.isConnected)
+        if (!el2.isConnected)
           return;
-        el.focus();
+        el2.focus();
         const sel = window.getSelection();
         if (!sel)
           return;
         const range = document.createRange();
-        range.selectNodeContents(el);
+        range.selectNodeContents(el2);
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
@@ -16897,9 +16875,9 @@ form[method="dialog"] {
       this.workingElement = host;
       this._registerEditors();
       const initialAssigned = slot.assignedElements({ flatten: true });
-      initialAssigned.forEach((el) => {
-        this.make_it_editor(el);
-        el.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
+      initialAssigned.forEach((el2) => {
+        this.make_it_editor(el2);
+        el2.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
       });
       const callback = (mutationsList) => {
         const allAdded = new Set;
@@ -16949,11 +16927,11 @@ form[method="dialog"] {
       });
       slot.addEventListener("slotchange", () => {
         const current = slot.assignedElements({ flatten: true });
-        current.forEach((el) => {
-          if (el.getAttribute(p9r.attr.EDITOR.IS_EDITOR))
+        current.forEach((el2) => {
+          if (el2.getAttribute(p9r.attr.EDITOR.IS_EDITOR))
             return;
-          this.make_it_editor(el);
-          el.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
+          this.make_it_editor(el2);
+          el2.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
         });
       });
     }
@@ -17037,10 +17015,10 @@ form[method="dialog"] {
       return this.groups;
     }
     getItemsByGroup(group) {
-      return this.editors.values().filter((v) => v.visible && v.group === group);
+      return this.editors.values().filter((v2) => v2.visible && v2.group === group);
     }
     getItems() {
-      return this.editors.values().filter((v) => v.visible);
+      return this.editors.values().filter((v2) => v2.visible);
     }
     getLabel(tag) {
       return this.editors.get(tag)?.label;
@@ -17053,7 +17031,7 @@ form[method="dialog"] {
       });
       this.groups.add(element.group || "default");
       const existingElements = this.workingElement.querySelectorAll(element.tag);
-      existingElements.forEach((el) => this.make_it_editor(el));
+      existingElements.forEach((el2) => this.make_it_editor(el2));
     }
     register_editor_opaque(element) {
       this.opaqueTags.add(element.tag);
@@ -17083,7 +17061,7 @@ form[method="dialog"] {
           visible: false
         });
         const existingElements = this.workingElement.querySelectorAll(t);
-        existingElements.forEach((el) => this.make_it_editor(el));
+        existingElements.forEach((el2) => this.make_it_editor(el2));
       });
     }
     make_it_editor(node) {
@@ -17129,17 +17107,17 @@ form[method="dialog"] {
   async function waitForScripts(ele) {
     const scriptSlot = ele.shadowRoot?.querySelector('slot[name="script"]');
     const scripts = scriptSlot.assignedElements();
-    const loaders = scripts.map((s2) => {
-      if (!s2.src || s2.dataset.loaded)
+    const loaders = scripts.map((s) => {
+      if (!s.src || s.dataset.loaded)
         return Promise.resolve(true);
       return new Promise((resolve) => {
         const done = () => {
-          s2.dataset.loaded = "true";
+          s.dataset.loaded = "true";
           resolve(true);
         };
-        s2.addEventListener("load", done, { once: true });
-        s2.addEventListener("error", () => resolve(false), { once: true });
-        if (performance.getEntriesByName(s2.src).length > 0)
+        s.addEventListener("load", done, { once: true });
+        s.addEventListener("error", () => resolve(false), { once: true });
+        if (performance.getEntriesByName(s.src).length > 0)
           done();
       });
     });
@@ -17225,14 +17203,14 @@ form[method="dialog"] {
         return true;
       if (nodes.length !== 1 || nodes[0].nodeType !== Node.ELEMENT_NODE)
         return false;
-      const el = nodes[0];
-      if (el.tagName !== "P")
+      const el2 = nodes[0];
+      if (el2.tagName !== "P")
         return false;
-      const text = (el.textContent ?? "").trim();
+      const text = (el2.textContent ?? "").trim();
       if (text !== "")
         return false;
-      const onlyBr = el.children.length === 1 && el.children[0].tagName === "BR";
-      return el.children.length === 0 || onlyBr;
+      const onlyBr = el2.children.length === 1 && el2.children[0].tagName === "BR";
+      return el2.children.length === 0 || onlyBr;
     }
     async _maybePickTemplate() {
       const picker = document.createElement("cms-template-picker");
@@ -17526,8 +17504,8 @@ dialog::backdrop {
       r?.(html);
     }
   }
-  function escapeHtml(s2) {
-    return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   if (!customElements.get("cms-template-picker")) {
     customElements.define("cms-template-picker", TemplatePicker);
@@ -17657,7 +17635,7 @@ button span {
 :host([data-mode="view"]) [data-action="switch-mode"] .icon-view { display: none; }`;
 
   // src/components/editor/EditorSystem/FloatingToolbar/FloatingToolbar.ts
-  class FloatingToolbar extends z {
+  class FloatingToolbar extends z2 {
     _startX = 0;
     _startY = 0;
     constructor() {
@@ -18320,7 +18298,7 @@ dialog::backdrop {
 `;
 
   // src/components/media/CardMedia/CardMedia.ts
-  class CardMedia extends z {
+  class CardMedia extends z2 {
     constructor() {
       super({
         css: style_default13,
@@ -18372,12 +18350,12 @@ dialog::backdrop {
     if (types && types.length > 0) {
       items = items.filter((i) => types.includes(i.type));
     }
-    items.sort((a2, b) => {
-      if (a2.type === "folder" && b.type !== "folder")
+    items.sort((a2, b2) => {
+      if (a2.type === "folder" && b2.type !== "folder")
         return -1;
-      if (a2.type !== "folder" && b.type === "folder")
+      if (a2.type !== "folder" && b2.type === "folder")
         return 1;
-      return a2.label.localeCompare(b.label);
+      return a2.label.localeCompare(b2.label);
     });
     return items;
   }
@@ -18477,11 +18455,11 @@ dialog::backdrop {
       return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   }
-  function escapeHtml2(s2) {
-    return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  function escapeHtml2(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
-  function escapeAttr2(s2) {
-    return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  function escapeAttr2(s) {
+    return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
   function variantUrl(item, _width, _height) {
     return item.absoluteURL ?? "";
@@ -18551,7 +18529,7 @@ dialog::backdrop {
   }
 
   // src/components/editor/MediaCenter/MediaCenter.ts
-  class MediaCenter extends z {
+  class MediaCenter extends z2 {
     _dialog = null;
     _grid = null;
     _btnSelect = null;
@@ -18568,29 +18546,29 @@ dialog::backdrop {
       });
     }
     connectedCallback() {
-      const s2 = this.shadowRoot;
-      this._dialog = s2.querySelector("dialog");
-      this._grid = s2.getElementById("grid");
-      this._btnSelect = s2.getElementById("btnSelect");
-      s2.getElementById("btnClose").addEventListener("click", () => this._dialog?.close());
-      s2.getElementById("btnCancel").addEventListener("click", () => this._dialog?.close());
+      const s = this.shadowRoot;
+      this._dialog = s.querySelector("dialog");
+      this._grid = s.getElementById("grid");
+      this._btnSelect = s.getElementById("btnSelect");
+      s.getElementById("btnClose").addEventListener("click", () => this._dialog?.close());
+      s.getElementById("btnCancel").addEventListener("click", () => this._dialog?.close());
       this._dialog.addEventListener("click", (e) => {
         if (e.target === this._dialog)
           this._dialog?.close();
       });
-      s2.getElementById("btnCreateFolder").addEventListener("click", () => this._openNewFolder());
-      const nfBackdrop = s2.getElementById("nf-backdrop");
-      const nfInput = s2.getElementById("nf-input");
-      s2.getElementById("nf-cancel").addEventListener("click", () => nfBackdrop.classList.remove("open"));
-      s2.getElementById("nf-confirm").addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
+      s.getElementById("btnCreateFolder").addEventListener("click", () => this._openNewFolder());
+      const nfBackdrop = s.getElementById("nf-backdrop");
+      const nfInput = s.getElementById("nf-input");
+      s.getElementById("nf-cancel").addEventListener("click", () => nfBackdrop.classList.remove("open"));
+      s.getElementById("nf-confirm").addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
       nfInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter")
           this._createFolder(nfInput, nfBackdrop);
         if (e.key === "Escape")
           nfBackdrop.classList.remove("open");
       });
-      const fileInput = s2.getElementById("file-input");
-      s2.getElementById("btnUpload").addEventListener("click", () => fileInput.click());
+      const fileInput = s.getElementById("file-input");
+      s.getElementById("btnUpload").addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", async () => {
         if (!fileInput.files?.length)
           return;
@@ -18618,7 +18596,7 @@ dialog::backdrop {
           return;
         this._confirmSelection();
       });
-      s2.getElementById("breadcrumb").addEventListener("click", (e) => {
+      s.getElementById("breadcrumb").addEventListener("click", (e) => {
         const target = e.target;
         if (!target.classList.contains("bc-item"))
           return;
@@ -18627,8 +18605,8 @@ dialog::backdrop {
         this._breadcrumb = this._breadcrumb.slice(0, index + 1);
         this._navigateTo(folder);
       });
-      const container = s2.querySelector(".modal-container");
-      const overlay = s2.getElementById("drop-overlay");
+      const container = s.querySelector(".modal-container");
+      const overlay = s.getElementById("drop-overlay");
       container.addEventListener("dragenter", (e) => {
         if (e.dataTransfer?.types.includes("Files")) {
           e.preventDefault();
@@ -18679,13 +18657,13 @@ dialog::backdrop {
       empty.style.display = this._items.length === 0 ? "flex" : "none";
       const pathDisplay = this.shadowRoot.getElementById("pathDisplay");
       if (this._breadcrumb.length > 0) {
-        pathDisplay.textContent = this._breadcrumb.map((b) => b.label).join(" / ");
+        pathDisplay.textContent = this._breadcrumb.map((b2) => b2.label).join(" / ");
       } else {
         pathDisplay.textContent = "Root";
       }
     }
     _select(card, id) {
-      this._grid.querySelectorAll("p9r-card-media.selected").forEach((el) => el.classList.remove("selected"));
+      this._grid.querySelectorAll("p9r-card-media.selected").forEach((el2) => el2.classList.remove("selected"));
       card.classList.add("selected");
       this._selectedItem = this._items.find((i) => i.id === id) || null;
       this._updateSelectButton();
@@ -18716,9 +18694,9 @@ dialog::backdrop {
       this._refresh();
     }
     _openNewFolder() {
-      const s2 = this.shadowRoot;
-      const backdrop = s2.getElementById("nf-backdrop");
-      const input = s2.getElementById("nf-input");
+      const s = this.shadowRoot;
+      const backdrop = s.getElementById("nf-backdrop");
+      const input = s.getElementById("nf-input");
       input.value = "";
       backdrop.classList.add("open");
       setTimeout(() => input.focus(), 50);
@@ -19556,8 +19534,8 @@ button.active svg {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0)
       return;
-    const el = focusElement();
-    const existingTag = el?.closest(tag);
+    const el2 = focusElement();
+    const existingTag = el2?.closest(tag);
     if (existingTag) {
       const parent = existingTag.parentNode;
       const frag = document.createDocumentFragment();
@@ -19579,8 +19557,8 @@ button.active svg {
     }
   }
   function applyBlockAlignment(align) {
-    const el = focusElement();
-    const block = el?.closest("p, div, h1, h2, h3, h4, h5, h6, li");
+    const el2 = focusElement();
+    const block = el2?.closest("p, div, h1, h2, h3, h4, h5, h6, li");
     if (block)
       block.style.textAlign = align;
   }
@@ -19588,9 +19566,9 @@ button.active svg {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed)
       return;
-    const el = focusElement();
-    if (el && el.tagName === "SPAN" && el.textContent === sel.toString()) {
-      el.style[prop] = value;
+    const el2 = focusElement();
+    if (el2 && el2.tagName === "SPAN" && el2.textContent === sel.toString()) {
+      el2.style[prop] = value;
       return;
     }
     const span = document.createElement("span");
@@ -19598,8 +19576,8 @@ button.active svg {
     wrapWithElement(span);
   }
   function removeInlineStyle(prop) {
-    const el = focusElement();
-    const span = el?.closest("span");
+    const el2 = focusElement();
+    const span = el2?.closest("span");
     if (!span)
       return;
     span.style[prop] = "";
@@ -19611,19 +19589,19 @@ button.active svg {
     }
   }
   function queryCommandState(cmd) {
-    const el = focusElement();
-    if (!el)
+    const el2 = focusElement();
+    if (!el2)
       return false;
-    const style = window.getComputedStyle(el);
+    const style = window.getComputedStyle(el2);
     switch (cmd) {
       case "bold":
-        return style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700 || !!el.closest("b, strong");
+        return style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700 || !!el2.closest("b, strong");
       case "italic":
-        return style.fontStyle === "italic" || !!el.closest("i, em");
+        return style.fontStyle === "italic" || !!el2.closest("i, em");
       case "underline":
-        return style.textDecorationLine.includes("underline") || !!el.closest("u");
+        return style.textDecorationLine.includes("underline") || !!el2.closest("u");
       case "strikeThrough":
-        return style.textDecorationLine.includes("line-through") || !!el.closest("s, strike");
+        return style.textDecorationLine.includes("line-through") || !!el2.closest("s, strike");
       case "justifyLeft":
         return style.textAlign === "left" || style.textAlign === "start";
       case "justifyCenter":
@@ -19635,34 +19613,34 @@ button.active svg {
     }
   }
   function getCurrentFontSize() {
-    const el = focusElement();
-    if (!el)
+    const el2 = focusElement();
+    if (!el2)
       return 16;
-    return Math.round(parseFloat(window.getComputedStyle(el).fontSize));
+    return Math.round(parseFloat(window.getComputedStyle(el2).fontSize));
   }
   function getCurrentColor() {
-    const el = focusElement();
-    if (!el)
+    const el2 = focusElement();
+    if (!el2)
       return null;
-    return window.getComputedStyle(el).color;
+    return window.getComputedStyle(el2).color;
   }
   function insertList(tag) {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0)
       return;
-    const el = focusElement();
-    if (!el)
+    const el2 = focusElement();
+    if (!el2)
       return;
-    const editable = el.closest("[contenteditable]");
+    const editable = el2.closest("[contenteditable]");
     if (!editable)
       return;
     const list = document.createElement(tag);
-    const li = document.createElement("li");
-    list.appendChild(li);
+    const li2 = document.createElement("li");
+    list.appendChild(li2);
     editable.replaceWith(list);
     selection.removeAllRanges();
     const newRange = document.createRange();
-    newRange.selectNodeContents(li);
+    newRange.selectNodeContents(li2);
     selection.addRange(newRange);
   }
   function applyLinkUrl(url) {
@@ -19673,8 +19651,8 @@ button.active svg {
     wrapWithElement(a2);
   }
   function removeLinkAtSelection() {
-    const el = focusElement();
-    const a2 = el?.closest("a");
+    const el2 = focusElement();
+    const a2 = el2?.closest("a");
     if (!a2)
       return;
     const parent = a2.parentNode;
@@ -19687,8 +19665,8 @@ button.active svg {
     if (!r)
       return null;
     const node = r.startContainer;
-    const el = node.nodeType === 1 ? node : node.parentElement;
-    return el?.closest("a")?.getAttribute("href") || null;
+    const el2 = node.nodeType === 1 ? node : node.parentElement;
+    return el2?.closest("a")?.getAttribute("href") || null;
   }
 
   // src/components/editor/RichTextBar/state.ts
@@ -19796,8 +19774,8 @@ button.active svg {
   function switchLinkType(self, type) {
     const root = self.shadowRoot;
     root.querySelectorAll(".link-type-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.linkType === type));
-    root.querySelectorAll(".link-field").forEach((f) => {
-      f.style.display = f.dataset.linkField === type ? "" : "none";
+    root.querySelectorAll(".link-field").forEach((f2) => {
+      f2.style.display = f2.dataset.linkField === type ? "" : "none";
     });
   }
   function applyLink(self) {
@@ -19863,8 +19841,8 @@ button.active svg {
       empty.textContent = "No fields";
       group.appendChild(empty);
     } else {
-      for (const f of fields)
-        group.appendChild(buildRow2(f, onPickField));
+      for (const f2 of fields)
+        group.appendChild(buildRow2(f2, onPickField));
     }
     return group;
   }
@@ -19903,17 +19881,17 @@ button.active svg {
   }
   // src/core/editorSystem/extensions/schemaScalars.ts
   function flattenScalars(schema, prefix = "") {
-    const s2 = unwrap(schema);
-    if (!s2)
+    const s = unwrap(schema);
+    if (!s)
       return [];
-    if (Array.isArray(s2.enum) && s2.enum.length > 0) {
-      return [{ path: prefix, label: leafLabel(prefix), type: enumTypeOf(s2) }];
+    if (Array.isArray(s.enum) && s.enum.length > 0) {
+      return [{ path: prefix, label: leafLabel(prefix), type: enumTypeOf(s) }];
     }
-    switch (s2.type) {
+    switch (s.type) {
       case "object": {
         const out = [];
-        for (const [k, v] of Object.entries(s2.properties ?? {})) {
-          out.push(...flattenScalars(v, prefix ? `${prefix}.${k}` : k));
+        for (const [k2, v2] of Object.entries(s.properties ?? {})) {
+          out.push(...flattenScalars(v2, prefix ? `${prefix}.${k2}` : k2));
         }
         return out;
       }
@@ -19928,7 +19906,7 @@ button.active svg {
       case "number":
       case "boolean":
       case "null":
-        return [{ path: prefix, label: leafLabel(prefix), type: s2.type }];
+        return [{ path: prefix, label: leafLabel(prefix), type: s.type }];
       default:
         return [];
     }
@@ -19958,15 +19936,15 @@ button.active svg {
     const dot = path.lastIndexOf(".");
     return dot >= 0 ? path.slice(dot + 1) : path;
   }
-  function enumTypeOf(s2) {
-    if (s2.type)
-      return s2.type;
-    const first = s2.enum?.[0];
+  function enumTypeOf(s) {
+    if (s.type)
+      return s.type;
+    const first = s.enum?.[0];
     return typeof first === "string" ? "string" : typeof first === "number" ? "number" : typeof first === "boolean" ? "boolean" : "string";
   }
   // src/components/editor/RichTextBar/extensions/dataAdapter.ts
   function adaptDataExtensions(fromEl) {
-    return collectAncestorExtensions(fromEl, "data").map(adaptOne).filter((x) => x !== null);
+    return collectAncestorExtensions(fromEl, "data").map(adaptOne).filter((x2) => x2 !== null);
   }
   function adaptOne(d) {
     if (d.enabled && !d.enabled())
@@ -19974,10 +19952,10 @@ button.active svg {
     const schema = d.getSchema();
     if (!schema)
       return null;
-    const fields = flattenScalars(schema).map((f) => ({
-      path: f.path ? `${d.id}.${f.path}` : d.id,
-      label: f.label,
-      type: f.type
+    const fields = flattenScalars(schema).map((f2) => ({
+      path: f2.path ? `${d.id}.${f2.path}` : d.id,
+      label: f2.label,
+      type: f2.type
     }));
     if (fields.length === 0)
       return null;
@@ -20041,8 +20019,8 @@ button.active svg {
       popover.innerHTML = `<div class="ext-empty">No completions available.</div>`;
     } else {
       for (const ext of exts)
-        popover.appendChild(buildGroup2(ext, (f) => {
-          pickField(self, ext, f);
+        popover.appendChild(buildGroup2(ext, (f2) => {
+          pickField(self, ext, f2);
           closeCompletions(self);
         }));
     }
@@ -20156,8 +20134,8 @@ button.active svg {
     const range = self.selection.range;
     if (range) {
       const anchor = range.commonAncestorContainer;
-      const el = anchor.nodeType === 1 ? anchor : anchor.parentElement;
-      const editable = el?.closest?.('[contenteditable="true"]');
+      const el2 = anchor.nodeType === 1 ? anchor : anchor.parentElement;
+      const editable = el2?.closest?.('[contenteditable="true"]');
       if (editable && path.includes(editable))
         return;
     }
@@ -20180,7 +20158,7 @@ button.active svg {
     "warning-strong"
   ];
 
-  class RichTextBar extends z {
+  class RichTextBar extends z2 {
     selection = new SelectionTracker;
     interacting = false;
     pageLink = null;
@@ -20500,7 +20478,7 @@ button.active svg {
     template: template_default17
   };
 
-  class Snippet extends z {
+  class Snippet extends z2 {
     _root;
     constructor() {
       super(SnippetMetadata);
@@ -20794,7 +20772,7 @@ button.active svg {
 `;
 
   // src/components/media/CropSystem/CropSystem.ts
-  class CropSystem extends z {
+  class CropSystem extends z2 {
     constructor() {
       super({
         css: style_default17,
@@ -20819,7 +20797,7 @@ button.active svg {
       const ratioButtons = this.shadowRoot.querySelectorAll(".ratio-btn");
       ratioButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
-          ratioButtons.forEach((b) => b.classList.remove("active"));
+          ratioButtons.forEach((b2) => b2.classList.remove("active"));
           btn.classList.add("active");
         });
       });
@@ -21087,7 +21065,7 @@ button.active svg {
 `;
 
   // src/components/media/DetailMedia/DetailMedia.ts
-  class DetailMedia extends z {
+  class DetailMedia extends z2 {
     constructor() {
       super({
         css: style_default18,
@@ -21586,8 +21564,8 @@ button.active svg {
 `;
 
   // src/components/media/GridMedia/features/context-menu.ts
-  function setupContextMenu(s2, callbacks) {
-    const menu = s2.getElementById("ctx-menu");
+  function setupContextMenu(s, callbacks) {
+    const menu = s.getElementById("ctx-menu");
     let activeItem = null;
     menu.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-action]");
@@ -21612,11 +21590,11 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/rename.ts
-  function setupRename(s2, callbacks) {
-    const backdrop = s2.getElementById("rename-backdrop");
-    const input = s2.getElementById("rename-input");
-    const confirmBtn = s2.getElementById("rename-confirm");
-    const cancelBtn = s2.getElementById("rename-cancel");
+  function setupRename(s, callbacks) {
+    const backdrop = s.getElementById("rename-backdrop");
+    const input = s.getElementById("rename-input");
+    const confirmBtn = s.getElementById("rename-confirm");
+    const cancelBtn = s.getElementById("rename-cancel");
     let currentItem = null;
     const hide = () => {
       backdrop.classList.remove("visible");
@@ -21656,11 +21634,11 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/new-folder.ts
-  function setupNewFolder(host, s2, callbacks) {
-    const backdrop = s2.getElementById("nf-backdrop");
-    const input = s2.getElementById("nf-input");
-    const confirmBtn = s2.getElementById("nf-confirm");
-    const cancelBtn = s2.getElementById("nf-cancel");
+  function setupNewFolder(host, s, callbacks) {
+    const backdrop = s.getElementById("nf-backdrop");
+    const input = s.getElementById("nf-input");
+    const confirmBtn = s.getElementById("nf-confirm");
+    const cancelBtn = s.getElementById("nf-cancel");
     const hide = () => backdrop.classList.remove("visible");
     const show = () => {
       input.value = "";
@@ -21695,16 +21673,16 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/drag-drop.ts
-  function setupDragDrop(s2, callbacks) {
-    const fileInput = s2.getElementById("file-input");
-    const dropOverlay = s2.getElementById("drop-overlay");
+  function setupDragDrop(s, callbacks) {
+    const fileInput = s.getElementById("file-input");
+    const dropOverlay = s.getElementById("drop-overlay");
     let dragCounter = 0;
     let internalDrag = false;
     fileInput.addEventListener("change", () => {
       if (fileInput.files?.length)
         callbacks.onFiles(fileInput.files);
     });
-    s2.getElementById("grid").addEventListener("dragstart", () => {
+    s.getElementById("grid").addEventListener("dragstart", () => {
       internalDrag = true;
     });
     document.addEventListener("dragend", () => {
@@ -21764,9 +21742,9 @@ button.active svg {
     const size = item.size ? formatSize(item.size) : "";
     const dims = item.width && item.height ? `${item.width}×${item.height}` : "";
     const mediaUrl = item.absoluteURL ?? "";
-    const el = document.createElement("div");
-    el.slot = "fields";
-    el.innerHTML = `
+    const el2 = document.createElement("div");
+    el2.slot = "fields";
+    el2.innerHTML = `
         <div class="detail-field">
             <label>Name</label>
             <input type="text" id="detail-label" value="${escapeAttr2(item.label)}">
@@ -21799,7 +21777,7 @@ button.active svg {
             </div>
         </div>
     `;
-    const copyBtn = el.querySelector("#btn-copy");
+    const copyBtn = el2.querySelector("#btn-copy");
     copyBtn.addEventListener("click", () => {
       navigator.clipboard.writeText(mediaUrl);
       copyBtn.innerHTML = ICON_CHECK;
@@ -21807,18 +21785,18 @@ button.active svg {
         copyBtn.innerHTML = ICON_COPY;
       }, 1500);
     });
-    return el;
+    return el2;
   }
   function buildActions() {
-    const el = document.createElement("div");
-    el.slot = "actions";
-    el.innerHTML = `
+    const el2 = document.createElement("div");
+    el2.slot = "actions";
+    el2.innerHTML = `
         <div class="detail-actions">
             <button class="btn-save" id="btn-save">Save</button>
             <button class="btn-delete" id="btn-delete">Delete</button>
         </div>
     `;
-    return el;
+    return el2;
   }
 
   // src/components/media/GridMedia/features/detail/setup.ts
@@ -21860,25 +21838,25 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/setup.ts
-  function setupFeatures(host, s2) {
+  function setupFeatures(host, s) {
     const refresh2 = () => host._refresh();
-    const ctxMenu = setupContextMenu(s2, {
+    const ctxMenu = setupContextMenu(s, {
       onRename: (item) => rename.open(item),
       onDelete: (id) => host._confirmDelete(id)
     });
-    const rename = setupRename(s2, {
+    const rename = setupRename(s, {
       onApply: async (id, name) => {
         await renameItem(id, name);
         refresh2();
       }
     });
-    setupNewFolder(host, s2, {
+    setupNewFolder(host, s, {
       onCreate: async (name) => {
         await createFolder(name, host._folder);
         refresh2();
       }
     });
-    const dragDrop = setupDragDrop(s2, {
+    const dragDrop = setupDragDrop(s, {
       onFiles: async (files) => {
         await uploadFiles(files, host._folder);
         refresh2();
@@ -21903,8 +21881,8 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/events/grid.ts
-  function wireGrid(host, s2, ctxMenu, detail) {
-    const grid = s2.getElementById("grid");
+  function wireGrid(host, s, ctxMenu, detail) {
+    const grid = s.getElementById("grid");
     grid.addEventListener("click", (e) => {
       const card = e.target.closest("p9r-card-media");
       if (!card)
@@ -21932,8 +21910,8 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/events/breadcrumb.ts
-  function wireBreadcrumb(host, s2) {
-    s2.getElementById("breadcrumb").addEventListener("click", (e) => {
+  function wireBreadcrumb(host, s) {
+    s.getElementById("breadcrumb").addEventListener("click", (e) => {
       const target = e.target;
       if (!target.classList.contains("bc-item"))
         return;
@@ -21945,7 +21923,7 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/GridMedia.ts
-  class GridMedia extends z {
+  class GridMedia extends z2 {
     _folder = null;
     _breadcrumb = [];
     _items = [];
@@ -21962,12 +21940,12 @@ button.active svg {
       return this.shadowRoot.getElementById("crop");
     }
     connectedCallback() {
-      const s2 = this.shadowRoot;
+      const s = this.shadowRoot;
       this._folder = new URL(window.location.href).searchParams.get("folder");
-      const f = setupFeatures(this, s2);
-      wireGrid(this, s2, f.ctxMenu, f.detail);
-      wireBreadcrumb(this, s2);
-      this.upload = () => f.dragDrop.trigger();
+      const f2 = setupFeatures(this, s);
+      wireGrid(this, s, f2.ctxMenu, f2.detail);
+      wireBreadcrumb(this, s);
+      this.upload = () => f2.dragDrop.trigger();
       if (this._folder) {
         resolveBreadcrumbTrail(this._folder).then((trail) => {
           this._breadcrumb = trail;
@@ -22106,19 +22084,19 @@ button.active svg {
   // src/core/dom/buildRequestUrl.ts
   function buildRequestUrl(target) {
     const u = new URL(target, window.location.href);
-    for (const [k, v] of new URLSearchParams(window.location.search))
-      u.searchParams.append(k, v);
+    for (const [k2, v2] of new URLSearchParams(window.location.search))
+      u.searchParams.append(k2, v2);
     return u;
   }
 
   // src/components/form/Form/events/onSubmit.ts
-  function onSubmit(e, me) {
+  function onSubmit(e, me2) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
-    fetch(buildRequestUrl(me.target), {
-      method: me.method || "POST",
+    fetch(buildRequestUrl(me2.target), {
+      method: me2.method || "POST",
       headers: {
         "Content-Type": "application/json"
       },
@@ -22126,12 +22104,12 @@ button.active svg {
     }).then((res) => {
       if (res.ok) {
         form.reset();
-        me.dispatchEvent(new BubblesEvent("form:success"));
-        if (me.emit) {
-          document.dispatchEvent(new BubblesEvent(me.emit));
+        me2.dispatchEvent(new BubblesEvent("form:success"));
+        if (me2.emit) {
+          document.dispatchEvent(new BubblesEvent(me2.emit));
         }
       } else {
-        me.dispatchEvent(new BubblesEvent("form:failed"));
+        me2.dispatchEvent(new BubblesEvent("form:failed"));
       }
     });
   }
@@ -22276,12 +22254,12 @@ button.active svg {
     get value() {
       return this._value;
     }
-    set value(v) {
-      this._value = v;
-      this._internals.setFormValue(v);
-      this._preview.src = v;
-      this._tile.classList.toggle("has-value", !!v);
-      this._clearBtn.style.display = v ? "flex" : "none";
+    set value(v2) {
+      this._value = v2;
+      this._internals.setFormValue(v2);
+      this._preview.src = v2;
+      this._tile.classList.toggle("has-value", !!v2);
+      this._clearBtn.style.display = v2 ? "flex" : "none";
     }
     get _types() {
       const raw = this.getAttribute("types") || "image";
@@ -22373,7 +22351,7 @@ button.active svg {
       this._debounceId = window.setTimeout(() => this._validate(), wait);
     };
     _fields() {
-      return Array.from(this.querySelectorAll("[name]")).filter((el) => typeof el.value === "string");
+      return Array.from(this.querySelectorAll("[name]")).filter((el2) => typeof el2.value === "string");
     }
     async _validate() {
       const url = this.getAttribute("url");
@@ -22381,8 +22359,8 @@ button.active svg {
         return;
       const fields = this._fields();
       const payload = {};
-      for (const f of fields)
-        payload[f.name] = f.value;
+      for (const f2 of fields)
+        payload[f2.name] = f2.value;
       this._abort?.abort();
       this._abort = new AbortController;
       let result;
@@ -22406,14 +22384,14 @@ button.active svg {
     }
     _applyResult(result, fields) {
       if (result.valid) {
-        for (const f of fields)
-          this._setValidity(f, "");
+        for (const f2 of fields)
+          this._setValidity(f2, "");
       } else if (result.errors) {
-        for (const f of fields)
-          this._setValidity(f, result.errors[f.name] ?? "");
+        for (const f2 of fields)
+          this._setValidity(f2, result.errors[f2.name] ?? "");
       } else if (result.message) {
-        for (const f of fields)
-          this._setValidity(f, "");
+        for (const f2 of fields)
+          this._setValidity(f2, "");
         const first = fields[0];
         if (first)
           this._setValidity(first, result.message);
@@ -22423,10 +22401,10 @@ button.active svg {
         detail: result
       }));
     }
-    _setValidity(el, msg) {
-      const fn = el.setCustomValidity;
-      if (typeof fn === "function")
-        fn.call(el, msg);
+    _setValidity(el2, msg) {
+      const fn2 = el2.setCustomValidity;
+      if (typeof fn2 === "function")
+        fn2.call(el2, msg);
     }
   }
   if (!customElements.get("cms-validate")) {
@@ -22475,7 +22453,7 @@ button.active svg {
 
   // src/components/data/fetch/pathHelpers.ts
   function resolve(obj, path) {
-    return path.split(".").reduce((acc, k) => acc != null ? acc[k] : undefined, obj);
+    return path.split(".").reduce((acc, k2) => acc != null ? acc[k2] : undefined, obj);
   }
 
   // src/components/data/fetch/interpolate.ts
@@ -22488,30 +22466,30 @@ button.active svg {
       return;
     }
     if (node.nodeType === Node.ELEMENT_NODE) {
-      const el = node;
-      if (el.tagName === "TEMPLATE")
+      const el2 = node;
+      if (el2.tagName === "TEMPLATE")
         return;
-      if (el.tagName === "INNER-HTML" && tryRawHtmlInject(el, context))
+      if (el2.tagName === "INNER-HTML" && tryRawHtmlInject(el2, context))
         return;
-      for (const attr of Array.from(el.attributes)) {
+      for (const attr of Array.from(el2.attributes)) {
         const replaced = interpolateString(attr.value, context);
         if (replaced !== attr.value)
-          el.setAttribute(attr.name, replaced);
+          el2.setAttribute(attr.name, replaced);
       }
-      if (el.tagName === "CMS-FETCH")
+      if (el2.tagName === "CMS-FETCH")
         return;
     }
     for (const child of Array.from(node.childNodes)) {
       interpolateNode(child, context);
     }
   }
-  function tryRawHtmlInject(el, context) {
-    const text = el.textContent?.trim() ?? "";
+  function tryRawHtmlInject(el2, context) {
+    const text = el2.textContent?.trim() ?? "";
     const m = text.match(/^\{\{\s*([\w.]+)\s*\}\}$/);
     if (!m)
       return false;
-    el.innerHTML = String(resolve(context, m[1]) ?? "");
-    el.replaceWith(...Array.from(el.childNodes));
+    el2.innerHTML = String(resolve(context, m[1]) ?? "");
+    el2.replaceWith(...Array.from(el2.childNodes));
     return true;
   }
   function interpolateString(str, context) {
@@ -22563,14 +22541,14 @@ button.active svg {
     for (const child of Array.from(root.childNodes)) {
       if (child.nodeType !== Node.ELEMENT_NODE)
         continue;
-      const el = child;
-      if (el.tagName === "TEMPLATE") {
-        out.push(el);
+      const el2 = child;
+      if (el2.tagName === "TEMPLATE") {
+        out.push(el2);
         continue;
       }
-      if (el.tagName === "CMS-FETCH")
+      if (el2.tagName === "CMS-FETCH")
         continue;
-      collectDirectTemplates(el, out);
+      collectDirectTemplates(el2, out);
     }
   }
 
@@ -22755,8 +22733,8 @@ button.active svg {
       el: container,
       read: () => {
         const out = {};
-        for (const [k, fn] of Object.entries(childReads))
-          out[k] = fn();
+        for (const [k2, fn2] of Object.entries(childReads))
+          out[k2] = fn2();
         return out;
       }
     };
@@ -22764,24 +22742,24 @@ button.active svg {
 
   // src/components/data/JsonEditor/initFromSchema.ts
   function initFromSchema(schema) {
-    const s2 = normalize(schema);
-    if (!s2)
+    const s = normalize(schema);
+    if (!s)
       return null;
-    if (Array.isArray(s2.enum) && s2.enum.length > 0)
-      return s2.enum[0];
-    if (s2.oneOf?.length)
-      return initFromSchema(s2.oneOf[0] ?? null);
-    if (s2.anyOf?.length)
-      return initFromSchema(s2.anyOf[0] ?? null);
-    switch (s2.type) {
+    if (Array.isArray(s.enum) && s.enum.length > 0)
+      return s.enum[0];
+    if (s.oneOf?.length)
+      return initFromSchema(s.oneOf[0] ?? null);
+    if (s.anyOf?.length)
+      return initFromSchema(s.anyOf[0] ?? null);
+    switch (s.type) {
       case "object": {
         const out = {};
-        for (const [k, v] of Object.entries(s2.properties ?? {}))
-          out[k] = initFromSchema(v);
+        for (const [k2, v2] of Object.entries(s.properties ?? {}))
+          out[k2] = initFromSchema(v2);
         return out;
       }
       case "array":
-        return s2.items ? [initFromSchema(s2.items)] : [];
+        return s.items ? [initFromSchema(s.items)] : [];
       case "string":
         return "";
       case "integer":
@@ -22847,19 +22825,19 @@ button.active svg {
     }
     function renumber() {
       const rows = list.querySelectorAll(".json-array__index");
-      rows.forEach((el, i) => {
-        el.textContent = String(i + 1);
+      rows.forEach((el2, i) => {
+        el2.textContent = String(i + 1);
       });
     }
-    for (const v of items)
-      addItem(v);
+    for (const v2 of items)
+      addItem(v2);
     addBtn.addEventListener("click", () => {
       addItem(initFromSchema(itemSchema));
       onChange();
     });
     return {
       el: container,
-      read: () => childReads.map((fn) => fn())
+      read: () => childReads.map((fn2) => fn2())
     };
   }
 
@@ -22885,10 +22863,10 @@ button.active svg {
       return {
         el: input2,
         read: () => {
-          const v = input2.value.trim();
-          if (v === "")
+          const v2 = input2.value.trim();
+          if (v2 === "")
             return null;
-          const n2 = Number(v);
+          const n2 = Number(v2);
           return Number.isFinite(n2) ? n2 : null;
         }
       };
@@ -22950,37 +22928,37 @@ button.active svg {
       read: () => activeRead()
     };
   }
-  function variantLabel(s2, idx) {
-    if (s2.type)
-      return `${idx + 1}. ${s2.type}`;
-    if (s2.enum?.length)
+  function variantLabel(s, idx) {
+    if (s.type)
+      return `${idx + 1}. ${s.type}`;
+    if (s.enum?.length)
       return `${idx + 1}. enum`;
     return `Variant ${idx + 1}`;
   }
   function pickInitialVariant(variants, value) {
     if (value === null) {
-      const idx2 = variants.findIndex((v) => v.type === "null");
+      const idx2 = variants.findIndex((v2) => v2.type === "null");
       return idx2 >= 0 ? idx2 : 0;
     }
     const runtime = Array.isArray(value) ? "array" : typeof value === "object" ? "object" : typeof value;
-    const idx = variants.findIndex((v) => v.type === runtime);
+    const idx = variants.findIndex((v2) => v2.type === runtime);
     return idx >= 0 ? idx : 0;
   }
 
   // src/components/data/JsonEditor/renderNode.ts
   function renderNode(schema, value, onChange) {
-    const s2 = normalize(schema);
-    if (!s2)
+    const s = normalize(schema);
+    if (!s)
       return renderUnknown(value);
-    if (s2.oneOf?.length || s2.anyOf?.length)
-      return renderVariant(s2, value, onChange, renderNode);
-    if (Array.isArray(s2.enum) && s2.enum.length > 0)
-      return renderEnum(s2, value, onChange);
-    if (s2.type === "object" || s2.properties)
-      return renderObject(s2, value, onChange, renderNode);
-    if (s2.type === "array")
-      return renderArray(s2, value, onChange, renderNode);
-    return renderPrimitive(s2, value, onChange);
+    if (s.oneOf?.length || s.anyOf?.length)
+      return renderVariant(s, value, onChange, renderNode);
+    if (Array.isArray(s.enum) && s.enum.length > 0)
+      return renderEnum(s, value, onChange);
+    if (s.type === "object" || s.properties)
+      return renderObject(s, value, onChange, renderNode);
+    if (s.type === "array")
+      return renderArray(s, value, onChange, renderNode);
+    return renderPrimitive(s, value, onChange);
   }
   function renderEnum(schema, value, onChange) {
     const select2 = document.createElement("select");
@@ -23058,9 +23036,9 @@ button.active svg {
         this._publish();
       }
     }
-    set schema(s2) {
-      this._schema = s2;
-      this._mode = s2 ? "structured" : "raw";
+    set schema(s) {
+      this._schema = s;
+      this._mode = s ? "structured" : "raw";
       if (this._content)
         this._render();
     }
@@ -23154,4 +23132,62 @@ button.active svg {
     }
   }
   customElements.define("cms-json-editor", JsonEditor);
+
+  // src/components/index.ts
+  function define(tag, constructor) {
+    if (!customElements.get(tag))
+      customElements.define(tag, constructor);
+  }
+  define("p9r-accordion", zt);
+  define("p9r-accordion-item", Rt);
+  define("p9r-alert", Ft);
+  define("p9r-avatar", Ot);
+  define("p9r-badge", $t);
+  define("p9r-breadcrumb", Xt);
+  define("p9r-breadcrumb-item", Wt);
+  define("p9r-button", Be);
+  define("p9r-card", te);
+  define("w13c-checkbox", Ue);
+  define("p9r-container", qi);
+  define("p9r-divider", Ie);
+  define("w13c-fetch", Ha);
+  define("w13c-form", xa);
+  define("p9r-form-dialog", de);
+  define("p9r-section", Je);
+  define("p9r-horizontal-action-group", Ii);
+  define("p9r-icon-button", er);
+  define("w13c-input-file", dr);
+  define("w13c-lateral-dialog", ye);
+  define("w13c-lateral-menu", Xi);
+  define("w13c-lateral-menu-item", tn);
+  define("w13c-left-menu-layout", Fi);
+  define("p9r-modal", Ce);
+  define("p9r-open-modal", He);
+  define("p9r-input", vr);
+  define("p9r-range", Mr);
+  define("p9r-select", Br);
+  define("p9r-sizes-select", Dr);
+  define("p9r-pagination", dn);
+  define("p9r-progress", pn);
+  define("p9r-radio", Nr);
+  define("p9r-radio-group", Zr);
+  define("p9r-segmented-switch", ti);
+  define("p9r-skeleton", mn);
+  define("p9r-spinner", vn);
+  define("p9r-stack", Oi);
+  define("p9r-step", An);
+  define("p9r-stepper", yn);
+  define("p9r-switch", oi);
+  define("p9r-tab-panel", na);
+  define("p9r-table", Tn);
+  define("p9r-cell", Sn);
+  define("p9r-header-cell", Nn);
+  define("p9r-row", Yn);
+  define("p9r-tabs", ea);
+  define("p9r-tag", la);
+  define("p9r-tag-suggest", ki);
+  define("p9r-textarea", Hi);
+  define("p9r-toast", pa);
+  define("p9r-toast-stack", ma);
+  define("p9r-tooltip", _a);
 })();

@@ -75,7 +75,3 @@ export class LeftMenuLayout extends Component {
         this._content?.focus();
     }
 }
-
-if (!customElements.get("w13c-left-menu-layout")) {
-    customElements.define("w13c-left-menu-layout", LeftMenuLayout);
-}

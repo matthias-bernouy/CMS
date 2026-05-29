@@ -6,8 +6,7 @@ const blocsDir = `${dist}/blocs`;
 
 // Each entry is [output-file-basename (kebab-case), entrypoint].
 // Kept in sync with src/index.ts. The abstract `Component` base is
-// intentionally omitted — it is not instantiable on its own and ships
-// inlined in every bloc that extends it.
+// intentionally omitted — it is not instantiable on its own.
 const blocs: Array<[string, string]> = [
     ["accordion", "./src/ui/Accordion/Accordion.ts"],
     ["accordion-item", "./src/ui/Accordion/AccordionItem/AccordionItem.ts"],
@@ -95,11 +94,10 @@ await rm(dist, { recursive: true, force: true });
 await mkdir(blocsDir, { recursive: true });
 
 await buildBundle("./src/base/Component.ts", dist, "base.js", "esm");
-await buildBundle("./src/index.ts", dist, "ui.js", "iife");
+await buildBundle("./src/index.ts", dist, "index.js", "esm");
 
 await Promise.all(
     blocs.flatMap(([name, entry]) => [
-        buildBundle(entry, blocsDir, `${name}.js`, "iife"),
         buildBundle(entry, blocsDir, `${name}.mjs`, "esm"),
         writeFile(`${blocsDir}/${name}.d.ts`, dtsStub(entry)),
     ]),
@@ -109,4 +107,4 @@ await cp("./src/assets/default.css", `${dist}/style.css`);
 
 await $`bunx tsc -p tsconfig.build.json`;
 
-console.log(`Built ui.js + ${blocs.length} blocs (iife + esm + d.ts) → ${dist}/`);
+console.log(`Built index.js + ${blocs.length} blocs (esm + d.ts) → ${dist}/`);

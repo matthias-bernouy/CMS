@@ -90,7 +90,3 @@ export class InputFile extends Component {
     get value() { return this._input?.files?.[0] ?? null; }
     get form() { return this._internals.form; }
 }
-
-if (!customElements.get("w13c-input-file")) {
-    customElements.define("w13c-input-file", InputFile);
-}

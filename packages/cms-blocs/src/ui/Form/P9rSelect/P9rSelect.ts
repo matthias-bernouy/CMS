@@ -124,7 +124,3 @@ export class P9rSelect extends Component {
 
     private _onSlot = () => this._syncFromSlot();
 }
-
-if (!customElements.get("p9r-select")) {
-    customElements.define("p9r-select", P9rSelect);
-}

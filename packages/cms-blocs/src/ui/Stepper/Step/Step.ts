@@ -36,7 +36,3 @@ export class Step extends Component {
         if (this._number) this._number.textContent = this.getAttribute('data-index') ?? '';
     }
 }
-
-if (!customElements.get("p9r-step")) {
-    customElements.define("p9r-step", Step);
-}

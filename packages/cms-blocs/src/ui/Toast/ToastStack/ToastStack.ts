@@ -4,8 +4,6 @@ import { Toast, type ToastType } from "../Toast/Toast";
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
 
-import "../Toast/Toast";
-
 export type ToastOptions = {
     type?: ToastType;
     duration?: number;
@@ -34,9 +32,6 @@ export class ToastStack extends Component {
     }
 }
 
-if (!customElements.get("p9r-toast-stack")) {
-    customElements.define("p9r-toast-stack", ToastStack);
-}
 
 let _stack: ToastStack | null = null;
 

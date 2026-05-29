@@ -1,4 +1,3 @@
-import "@bernouy/cms-blocs";
 import html from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
 import { Component } from "@bernouy/cms-blocs/base";

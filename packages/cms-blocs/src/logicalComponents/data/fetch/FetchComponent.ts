@@ -93,5 +93,3 @@ export class FetchComponent extends HTMLElement {
         this._stamped = stampSiblingsOf(this, tpl, context, this._stamped);
     }
 }
-
-customElements.define('w13c-fetch', FetchComponent);
