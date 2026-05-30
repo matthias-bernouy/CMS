@@ -5,7 +5,11 @@ import css from './style.css' with { type: 'text' };
 
 export class AccordionItem extends Component {
 
-    private _header: HTMLButtonElement | null;
+    // Two toggle triggers (the title button + the chevron button); the
+    // `header-actions` slot sits between them, OUTSIDE both buttons, so action
+    // controls (e.g. a delete button) neither nest inside a button nor toggle.
+    private _toggles: HTMLButtonElement[];
+    private _titleToggle: HTMLElement | null;
 
     static get observedAttributes() {
         return ['open', 'disabled'];
@@ -16,17 +20,18 @@ export class AccordionItem extends Component {
             css,
             template: template as unknown as string,
         });
-        this._header = this.shadowRoot?.querySelector('.header') ?? null;
+        this._toggles = Array.from(this.shadowRoot?.querySelectorAll('.toggle') ?? []) as HTMLButtonElement[];
+        this._titleToggle = this.shadowRoot?.querySelector('.title-toggle') ?? null;
     }
 
     override connectedCallback() {
         for (const prop of ['open', 'disabled']) this._upgradeProperty(prop);
-        this._header?.addEventListener('click', this._toggle);
+        this._toggles.forEach(t => t.addEventListener('click', this._toggle));
         this._syncAria();
     }
 
     disconnectedCallback() {
-        this._header?.removeEventListener('click', this._toggle);
+        this._toggles.forEach(t => t.removeEventListener('click', this._toggle));
     }
 
     attributeChangedCallback(name: string, _oldVal: string | null, _newVal: string | null) {
@@ -45,10 +50,12 @@ export class AccordionItem extends Component {
     };
 
     private _syncAria() {
-        if (!this._header) return;
-        this._header.setAttribute('aria-expanded', String(this.hasAttribute('open')));
-        if (this.hasAttribute('disabled')) this._header.setAttribute('disabled', '');
-        else this._header.removeAttribute('disabled');
+        this._titleToggle?.setAttribute('aria-expanded', String(this.hasAttribute('open')));
+        const disabled = this.hasAttribute('disabled');
+        for (const t of this._toggles) {
+            if (disabled) t.setAttribute('disabled', '');
+            else t.removeAttribute('disabled');
+        }
     }
 
     private _upgradeProperty(prop: string) {
