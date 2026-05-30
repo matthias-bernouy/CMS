@@ -9315,14 +9315,15 @@ p9r-tag:hover {
             Templates
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="data">
+        <w13c-lateral-menu-item data-route="gateway-providers">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <ellipse cx="12" cy="5" rx="9" ry="3" />
-                <path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
-                <path d="M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6" />
+                <path d="M12 22v-5" />
+                <path d="M9 8V2" />
+                <path d="M15 8V2" />
+                <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
             </svg>
-            Data
+            Gateway
         </w13c-lateral-menu-item>
 
         <w13c-lateral-menu-item disabled data-route="analytics" badge="upcoming">
