@@ -65,4 +65,22 @@ describe("executeEndpoint", () => {
         const res = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl });
         expect(await res.text()).toBe("hello");
     });
+
+    test("POST forwards the request body; GET never does", async () => {
+        const postFetch = okFetch();
+        await executeEndpoint(ep({ method: "POST" }), new Request("http://local/x", { method: "POST", body: "payload" }), { fetchImpl: postFetch });
+        const postInit = postFetch.mock.calls[0]![1]! as RequestInit;
+        expect(postInit.method).toBe("POST");
+        expect(postInit.body).not.toBeUndefined();
+
+        const getFetch = okFetch();
+        await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl: getFetch });
+        expect((getFetch.mock.calls[0]![1]! as RequestInit).body).toBeUndefined();
+    });
+
+    test("aborted/timed-out upstream → 504", async () => {
+        const fetchImpl = mock(async () => { const e = new Error("aborted"); e.name = "AbortError"; throw e; });
+        const res = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl });
+        expect(res.status).toBe(504);
+    });
 });

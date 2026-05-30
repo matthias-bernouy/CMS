@@ -58,7 +58,8 @@ export class MongoGatewayRepository implements GatewayRepository {
 
     async getEndpoint(urn: string): Promise<Endpoint | null> {
         const doc = await this.providers.findOne({ "endpoints.urn": urn });
-        return doc?.endpoints.find(e => e.urn === urn) ?? null;
+        const endpoint = doc?.endpoints.find(e => e.urn === urn);
+        return endpoint ? structuredClone(endpoint) : null;   // defensive clone, like the in-memory impl
     }
 }
 

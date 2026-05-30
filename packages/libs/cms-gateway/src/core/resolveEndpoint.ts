@@ -29,7 +29,7 @@ export async function resolveEndpoint(
     const endpoint = await repo.getEndpoint(urn);
     if (!endpoint) return { ok: false, reason: "not_found" };
 
-    if (endpoint.method !== method.toUpperCase()) {
+    if (endpoint.method.toUpperCase() !== method.toUpperCase()) {
         return { ok: false, reason: "method_not_allowed" };
     }
 

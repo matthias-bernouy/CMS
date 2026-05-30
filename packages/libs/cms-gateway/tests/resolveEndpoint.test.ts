@@ -26,6 +26,13 @@ describe("resolveEndpoint", () => {
         const res = await resolveEndpoint(await seededRepo(), ["shop", "getCart"], "get");
         expect(res.ok).toBe(true);
     });
+    test("tolerates a non-uppercase stored method (untyped JSON)", async () => {
+        const r = new InMemoryGatewayRepository();
+        await r.createProvider({ urn: "urn:s", endpoints: [
+            { urn: "urn:s:e", method: "post" as never, targetUrl: "https://x.com", rules: [] },
+        ] });
+        expect((await resolveEndpoint(r, ["s", "e"], "POST")).ok).toBe(true);
+    });
     test("unknown endpoint → not_found", async () => {
         expect(await resolveEndpoint(await seededRepo(), ["shop", "nope"], "GET"))
             .toEqual({ ok: false, reason: "not_found" });

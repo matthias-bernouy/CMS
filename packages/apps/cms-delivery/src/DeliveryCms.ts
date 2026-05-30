@@ -1,6 +1,7 @@
 import type { Runner } from "@bernouy/core";
 import { BunRunner } from "@bernouy/runner-bun";
 import type { Cache } from "@bernouy/cms-shared";
+import type { GatewayRepository } from "@bernouy/cms-gateway";
 import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
 import { registerDeliveryEndpoints } from "cms-delivery/registerDeliveryEndpoints";
 import type { DeliveryRepository } from "./interfaces/DeliveryRepository";
@@ -23,6 +24,11 @@ export type DeliveryCmsConfig = {
      * by Delivery itself.
      */
     headInjectors?: readonly HeadInjector[];
+    /**
+     * Optional data-gateway provider store. When set, `/.cms/gateway/<provider>/<endpoint>`
+     * resolves against it and proxies upstream; when absent, that route returns 501.
+     */
+    gateway?: GatewayRepository;
 }
 
 /**
@@ -42,6 +48,7 @@ export type DeliveryCmsConfig = {
  * Path layout for one Delivery instance:
  *   <basePath>/                — user pages, served by the default endpoint
  *   <basePath>/.cms/*          — Delivery's own assets
+ *   <basePath>/.cms/gateway/*  — data-gateway proxy (when a gateway is configured)
  *   <basePath>/robots.txt      — tenant-level crawler file
  *   <basePath>/sitemap.xml     — tenant-level sitemap
  *
@@ -54,12 +61,14 @@ export default class DeliveryCms {
     private _repository:         DeliveryRepository;
     private _cache:              Cache;
     private _headInjectors:      readonly HeadInjector[];
+    private _gateway?:           GatewayRepository;
 
     constructor(config: DeliveryCmsConfig){
         this._runner             = config.runner || new BunRunner();
         this._repository         = config.repository;
         this._cache              = config.cache || new DeliveryCache();
         this._headInjectors      = config.headInjectors ?? [];
+        this._gateway            = config.gateway;
 
         registerDeliveryEndpoints(this);
     }
@@ -78,6 +87,11 @@ export default class DeliveryCms {
 
     get headInjectors(){
         return this._headInjectors;
+    }
+
+    /** Data-gateway provider store, or `undefined` when no gateway is configured. */
+    get gateway(){
+        return this._gateway;
     }
 
     /**

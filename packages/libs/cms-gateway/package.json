@@ -6,7 +6,8 @@
     "type": "module",
     "main": "./src/index.ts",
     "exports": {
-        ".": "./src/index.ts"
+        ".":         "./src/index.ts",
+        "./presets": "./src/presets/index.ts"
     },
     "peerDependencies": {
         "mongodb":    "^7.2.0",

@@ -5,6 +5,7 @@ import RobotsServer    from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
 import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
+import GatewayServer   from "cms-delivery/endpoints/gateway.server";
 import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 
 /**
@@ -37,14 +38,12 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     runner.addEndpoint("GET", "/robots.txt",  (req) => RobotsServer (req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));
 
-    // Data-provider proxy entrypoint — stub. The real handler will mint a
-    // CMS-signed JWT and forward to the registered provider; until then any
-    // request under `/.cms/data/...` returns 501 so consumers get a clear
-    // signal rather than a misleading 404.
-    runner.group("/.cms/data", (proxyRunner) => {
-        const notImplemented = () => new Response("data-provider proxy not implemented yet", { status: 501 });
+    // Data-gateway proxy: /.cms/gateway/<provider>/<endpoint> → resolve + forward
+    // (see `gateway.server.ts`). Returns 501 when no gateway is configured on
+    // this DeliveryCms instance.
+    runner.group("/.cms/gateway", (proxyRunner) => {
         for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"] as const) {
-            proxyRunner.setDefaultEndpoint(method, notImplemented);
+            proxyRunner.setDefaultEndpoint(method, (req) => GatewayServer(req, delivery));
         }
     });
 
