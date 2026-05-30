@@ -74,8 +74,8 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         endpoints.push({ endpointId, method: method as HTTPMethod, targetUrl });
     }
 
-    if (endpoints.length === 0) throw new InvalidParam("endpoints", "require at least 1 endpoint");
-
+    // Zero endpoints is allowed: the create form makes a provider shell, and
+    // endpoints are added afterwards on the provider's edit page.
     return { id, meta: buildMeta(body, id), endpoints };
 }
 

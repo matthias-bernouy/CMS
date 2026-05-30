@@ -13,19 +13,63 @@ const rows  = (el: HTMLElement) => el.querySelectorAll('[data-role="endpoint-row
 const byName = (el: HTMLElement, name: string) => el.querySelector(`[name="${name}"]`);
 const clickAction = (el: HTMLElement, action: string, i = 0) =>
     (el.querySelectorAll(`[data-action="${action}"]`)[i] as HTMLElement)?.click();
+/** Read the collapsed-header summary text for row `i`. This is a plain light-DOM
+ *  `textContent` read (written by the component), not a p9r-tag shadow render —
+ *  so it works even though blocs elements aren't upgraded under happy-dom. */
+const header = (el: HTMLElement, i: number, key: string) =>
+    rows(el)[i]!.querySelector(`[data-display="${key}"]`)?.textContent;
 
 afterEach(() => {
     document.body.querySelectorAll("cms-endpoints-input").forEach(n => n.remove());
 });
 
 describe("<cms-endpoints-input>", () => {
-    test("create mode: one empty row, method defaults to GET", () => {
+    test("absent value attribute → one starter row, method defaults to GET", () => {
         const el = mount();
         expect(rows(el)).toHaveLength(1);
         expect(byName(el, "endpoints.0.endpointId")).not.toBeNull();
         expect(byName(el, "endpoints.0.method")).not.toBeNull();
         expect(byName(el, "endpoints.0.targetUrl")).not.toBeNull();
         expect(byName(el, "endpoints.0.method")!.getAttribute("value")).toBe("GET");
+    });
+
+    test("each endpoint is a p9r-accordion-item with a header summary", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        expect(item.tagName).toBe("P9R-ACCORDION-ITEM");
+        // default header summary
+        expect(header(el, 0, "method")).toBe("GET");
+        expect(header(el, 0, "endpointId")).toBe("(new endpoint)");
+        expect(header(el, 0, "targetUrl")).toBe("");
+        // the three named controls live in the item body
+        expect(item.querySelector('[name="endpoints.0.endpointId"]')).not.toBeNull();
+    });
+
+    test("body is a tabs shell — Infos active with the 3 fields, In/Out/Rules deferred", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const tabs = item.querySelector("p9r-tabs");
+        expect(tabs).not.toBeNull();
+        expect(tabs!.getAttribute("active")).toBe("infos-0");
+        // Infos panel holds the three named controls
+        const infos = item.querySelector("#infos-0");
+        expect(infos).not.toBeNull();
+        expect(infos!.querySelector('[name="endpoints.0.endpointId"]')).not.toBeNull();
+        expect(infos!.querySelector('[name="endpoints.0.method"]')).not.toBeNull();
+        expect(infos!.querySelector('[name="endpoints.0.targetUrl"]')).not.toBeNull();
+        // deferred tabs present and disabled
+        for (const id of ["in-0", "out-0", "rules-0"]) {
+            const panel = item.querySelector(`#${id}`);
+            expect(panel).not.toBeNull();
+            expect(panel!.hasAttribute("disabled")).toBe(true);
+        }
+    });
+
+    test("delete is a header-actions button carrying data-action=remove-endpoint", () => {
+        const el = mount();
+        const btn = rows(el)[0]!.querySelector('[data-action="remove-endpoint"]');
+        expect(btn).not.toBeNull();
+        expect(btn!.getAttribute("slot")).toBe("header-actions");
     });
 
     test("add: clicking + Add appends an indexed row", () => {
@@ -55,6 +99,11 @@ describe("<cms-endpoints-input>", () => {
         expect(byName(el, "endpoints.0.method")!.getAttribute("value")).toBe("POST");
         expect(byName(el, "endpoints.0.targetUrl")!.getAttribute("value")).toBe("https://x.com");
         expect(byName(el, "endpoints.1.endpointId")!.getAttribute("value")).toBe("b");
+        // header summary seeded from the (coerced) values
+        expect(header(el, 0, "endpointId")).toBe("a");
+        expect(header(el, 0, "method")).toBe("POST");
+        expect(header(el, 0, "targetUrl")).toBe("https://x.com");
+        expect(header(el, 1, "endpointId")).toBe("b");
     });
 
     test("seed then Add continues the index (no collision)", () => {
@@ -67,16 +116,19 @@ describe("<cms-endpoints-input>", () => {
         expect(byName(el, "endpoints.2.endpointId")).not.toBeNull();   // continues at index 2
     });
 
-    test("empty value → one empty row (create fallback)", () => {
-        const el = mount("");
-        expect(rows(el)).toHaveLength(1);
-        expect(byName(el, "endpoints.0.endpointId")!.getAttribute("value")).toBeNull();
+    test("present-but-empty value ([]) → zero rows (provider has no endpoints yet)", () => {
+        const el = mount("[]");
+        expect(rows(el)).toHaveLength(0);
+        // the "Add endpoint" affordance is still there to add the first one
+        expect(el.querySelector('[data-action="add-endpoint"]')).not.toBeNull();
     });
 
-    test("malformed value → one empty row, no throw during upgrade", () => {
-        const el = mount("not json");
-        expect(rows(el)).toHaveLength(1);
-        expect(byName(el, "endpoints.0.endpointId")).not.toBeNull();
+    test("empty-string value → zero rows", () => {
+        expect(rows(mount(""))).toHaveLength(0);
+    });
+
+    test("malformed value → zero rows, no throw during upgrade", () => {
+        expect(rows(mount("not json"))).toHaveLength(0);
     });
 
     test("attribute-timing: value set BEFORE insert is seen at connect", () => {
@@ -86,5 +138,7 @@ describe("<cms-endpoints-input>", () => {
         expect(rows(el)).toHaveLength(1);
         expect(byName(el, "endpoints.0.endpointId")!.getAttribute("value")).toBe("z");
         expect(byName(el, "endpoints.0.method")!.getAttribute("value")).toBe("PUT");
+        expect(header(el, 0, "endpointId")).toBe("z");
+        expect(header(el, 0, "method")).toBe("PUT");
     });
 });

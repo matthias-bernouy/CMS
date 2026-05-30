@@ -80,14 +80,19 @@
     };
   }
   var It = `<div class="item" part="item">
-    <button class="header" part="header" type="button" aria-expanded="false">
-        <span class="title" part="title"><slot name="header"></slot></span>
-        <span class="chevron" part="chevron" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-        </span>
-    </button>
+    <div class="header" part="header">
+        <button class="toggle title-toggle" part="title" type="button" aria-expanded="false">
+            <span class="title"><slot name="header"></slot></span>
+        </button>
+        <span class="actions" part="actions"><slot name="header-actions"></slot></span>
+        <button class="toggle chevron-toggle" type="button" tabindex="-1" aria-hidden="true">
+            <span class="chevron" part="chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </span>
+        </button>
+    </div>
     <div class="panel" part="panel" role="region">
         <div class="content" part="content">
             <slot></slot>
@@ -113,24 +118,43 @@
 
 .header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  align-items: stretch;
   width: 100%;
-  padding: var(--_padding-y) var(--_padding-x);
   background: var(--_bg);
+}
+
+.header:hover { background: var(--_hover-bg); }
+
+.toggle {
+  display: flex;
+  align-items: center;
+  background: transparent;
   border: 0;
   font: inherit;
   font-size: 14px;
   font-weight: 600;
   color: var(--_text);
-  text-align: left;
   cursor: pointer;
 }
 
-.header:hover { background: var(--_hover-bg); }
+.title-toggle {
+  flex: 1;
+  min-width: 0;
+  padding: var(--_padding-y) var(--_padding-x);
+  text-align: left;
+}
 
-.header:focus-visible {
+.chevron-toggle {
+  flex: 0 0 auto;
+  padding: var(--_padding-y) var(--_padding-x);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+}
+
+.toggle:focus-visible {
   outline: 2px solid var(--primary-base, #4361ee);
   outline-offset: -2px;
 }
@@ -181,28 +205,29 @@
   padding-bottom: var(--_padding-y);
 }
 
-:host([disabled]) .header {
+:host([disabled]) .toggle {
   opacity: 0.5;
   cursor: not-allowed;
 }
 `;
 
   class Rt extends o {
-    _header;
+    _toggles;
+    _titleToggle;
     static get observedAttributes() {
       return ["open", "disabled"];
     }
     constructor() {
       super({ css: Pt, template: It });
-      this._header = this.shadowRoot?.querySelector(".header") ?? null;
+      this._toggles = Array.from(this.shadowRoot?.querySelectorAll(".toggle") ?? []), this._titleToggle = this.shadowRoot?.querySelector(".title-toggle") ?? null;
     }
     connectedCallback() {
       for (let t of ["open", "disabled"])
         this._upgradeProperty(t);
-      this._header?.addEventListener("click", this._toggle), this._syncAria();
+      this._toggles.forEach((t) => t.addEventListener("click", this._toggle)), this._syncAria();
     }
     disconnectedCallback() {
-      this._header?.removeEventListener("click", this._toggle);
+      this._toggles.forEach((t) => t.removeEventListener("click", this._toggle));
     }
     attributeChangedCallback(t, e, r) {
       if (t === "open" || t === "disabled")
@@ -219,12 +244,13 @@
       this.dispatchEvent(new CustomEvent("accordion-item-toggle", { bubbles: true, detail: { open: t } }));
     };
     _syncAria() {
-      if (!this._header)
-        return;
-      if (this._header.setAttribute("aria-expanded", String(this.hasAttribute("open"))), this.hasAttribute("disabled"))
-        this._header.setAttribute("disabled", "");
-      else
-        this._header.removeAttribute("disabled");
+      this._titleToggle?.setAttribute("aria-expanded", String(this.hasAttribute("open")));
+      let t = this.hasAttribute("disabled");
+      for (let e of this._toggles)
+        if (t)
+          e.setAttribute("disabled", "");
+        else
+          e.removeAttribute("disabled");
     }
     _upgradeProperty(t) {
       if (Object.prototype.hasOwnProperty.call(this, t)) {
@@ -10109,6 +10135,16 @@ ${followMessage}`)) {
     }
   }
   // src/components/admin/EndpointsInput/EndpointsInput.ts
+  var liveValue = (el2) => el2.value ?? "";
+  var METHOD_COLOR = {
+    GET: "success",
+    POST: "info",
+    PUT: "warning",
+    PATCH: "warning",
+    DELETE: "danger"
+  };
+  var methodColor = (m) => METHOD_COLOR[m] ?? "primary";
+
   class CmsEndpointsInput extends HTMLElement {
     _rowCount = 0;
     _initialized = false;
@@ -10118,7 +10154,8 @@ ${followMessage}`)) {
       const addBtn = target.closest('[data-action="add-endpoint"]');
       if (addBtn && this.contains(addBtn)) {
         e.preventDefault();
-        this._addRow();
+        const item = this._addRow({});
+        item?.scrollIntoView({ block: "nearest" });
         return;
       }
       const removeBtn = target.closest('[data-action="remove-endpoint"]');
@@ -10132,10 +10169,11 @@ ${followMessage}`)) {
         this._initialized = true;
         this._render();
         const seeds = this._parseValue();
-        if (seeds.length)
+        if (seeds.length) {
           seeds.forEach((seed) => this._addRow(seed));
-        else
-          this._addRow();
+        } else if (!this.hasAttribute("value")) {
+          this._addRow({});
+        }
       }
       this.addEventListener("click", this._onClick);
     }
@@ -10157,76 +10195,143 @@ ${followMessage}`)) {
       this.style.display = "flex";
       this.style.flexDirection = "column";
       this.style.gap = "0.75rem";
-      this._rowsContainer = document.createElement("p9r-stack");
-      this._rowsContainer.setAttribute("gap", "sm");
+      this._rowsContainer = document.createElement("p9r-accordion");
       this.appendChild(this._rowsContainer);
       this.appendChild(this._makeAddButton());
     }
     _addRow(seed = {}) {
-      if (!this._rowsContainer)
-        return;
+      const container = this._rowsContainer;
+      if (!container)
+        return null;
       const idx = this._rowCount++;
-      const row = document.createElement("p9r-stack");
-      row.setAttribute("direction", "row");
-      row.setAttribute("gap", "sm");
-      row.setAttribute("align", "end");
-      row.dataset.role = "endpoint-row";
-      row.appendChild(this._makeInput(`endpoints.${idx}.endpointId`, "Endpoint id", seed.endpointId));
-      row.appendChild(this._makeMethodSelect(`endpoints.${idx}.method`, seed.method));
-      row.appendChild(this._makeInput(`endpoints.${idx}.targetUrl`, "https://api.example.com/path", seed.targetUrl));
-      row.appendChild(this._makeRemoveButton());
-      this._rowsContainer.appendChild(row);
+      const method = seed.method && HTTP_METHODS.includes(seed.method) ? seed.method : HTTP_METHODS[0];
+      const item = document.createElement("p9r-accordion-item");
+      item.dataset.role = "endpoint-row";
+      const header = document.createElement("span");
+      header.setAttribute("slot", "header");
+      header.style.cssText = "display:flex; align-items:center; gap:0.6rem; flex:1; min-width:0;";
+      const methodTag = document.createElement("p9r-tag");
+      methodTag.dataset.display = "method";
+      methodTag.setAttribute("color", methodColor(method));
+      methodTag.textContent = method;
+      const idEl = document.createElement("strong");
+      idEl.dataset.display = "endpointId";
+      idEl.textContent = seed.endpointId || "(new endpoint)";
+      idEl.style.cssText = "flex:0 0 auto; white-space:nowrap;";
+      const pathEl = document.createElement("span");
+      pathEl.dataset.display = "targetUrl";
+      pathEl.textContent = seed.targetUrl || "";
+      pathEl.style.cssText = "flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color: var(--text-muted, #94a3b8); font-family: ui-monospace, monospace; font-size:0.85em;";
+      header.append(methodTag, idEl, pathEl);
+      const tabs = document.createElement("p9r-tabs");
+      const infos = document.createElement("p9r-tab-panel");
+      infos.id = `infos-${idx}`;
+      infos.setAttribute("label", "Infos");
+      const infosBody = document.createElement("p9r-stack");
+      infosBody.setAttribute("gap", "m");
+      const idInput = this._makeInput(`endpoints.${idx}.endpointId`, "Endpoint id", "getUser", seed.endpointId);
+      const methodSelect = this._makeMethodSelect(`endpoints.${idx}.method`, method);
+      const urlInput = this._makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
+      infosBody.append(idInput, methodSelect, urlInput);
+      infos.appendChild(infosBody);
+      tabs.append(infos, this._makeDeferredPanel(`in-${idx}`, "In"), this._makeDeferredPanel(`out-${idx}`, "Out"), this._makeDeferredPanel(`rules-${idx}`, "Rules"));
+      tabs.setAttribute("active", `infos-${idx}`);
+      item.append(header, this._makeDeleteButton(), tabs);
+      this._bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
+      container.appendChild(item);
+      return item;
     }
-    _makeInput(name, placeholder, value) {
+    _bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput) {
+      const update = () => {
+        const m = liveValue(methodSelect) || HTTP_METHODS[0];
+        methodTag.textContent = m;
+        methodTag.setAttribute("color", methodColor(m));
+        idEl.textContent = liveValue(idInput).trim() || "(new endpoint)";
+        pathEl.textContent = liveValue(urlInput);
+      };
+      for (const el2 of [idInput, methodSelect, urlInput]) {
+        el2.addEventListener("input", update);
+        el2.addEventListener("change", update);
+      }
+    }
+    _makeInput(name, label, placeholder, value) {
       const input = document.createElement("p9r-input");
       input.setAttribute("name", name);
+      input.setAttribute("label", label);
       input.setAttribute("placeholder", placeholder);
       if (value != null)
         input.setAttribute("value", value);
-      input.style.flex = "1";
       return input;
     }
     _makeMethodSelect(name, value) {
       const select = document.createElement("p9r-select");
       select.setAttribute("name", name);
-      select.setAttribute("label", "");
-      select.style.minWidth = "7.5rem";
-      for (const method of HTTP_METHODS) {
+      select.setAttribute("label", "Method");
+      for (const m of HTTP_METHODS) {
         const opt = document.createElement("option");
-        opt.value = method;
-        opt.textContent = method;
+        opt.value = m;
+        opt.textContent = m;
         select.appendChild(opt);
       }
       const initial = value && HTTP_METHODS.includes(value) ? value : HTTP_METHODS[0];
       select.setAttribute("value", initial);
       return select;
     }
-    _makeRemoveButton() {
-      const btn = document.createElement("p9r-button");
+    _makeDeferredPanel(id, label) {
+      const panel = document.createElement("p9r-tab-panel");
+      panel.id = id;
+      panel.setAttribute("label", label);
+      panel.setAttribute("disabled", "");
+      const note = document.createElement("p");
+      note.textContent = "Soon.";
+      note.style.cssText = "margin:0; color: var(--text-muted, #94a3b8); font-size:13px;";
+      panel.appendChild(note);
+      return panel;
+    }
+    _makeDeleteButton() {
+      const btn = document.createElement("p9r-icon-button");
+      btn.setAttribute("slot", "header-actions");
       btn.setAttribute("variant", "ghost");
       btn.setAttribute("color", "danger");
-      btn.setAttribute("aria-label", "Remove endpoint");
+      btn.setAttribute("size", "sm");
+      btn.setAttribute("aria-label", "Delete endpoint");
       btn.dataset.action = "remove-endpoint";
       btn.innerHTML = `
-            <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
             </svg>
         `;
       return btn;
     }
     _makeAddButton() {
-      const wrapper = document.createElement("div");
-      wrapper.style.display = "flex";
-      wrapper.style.justifyContent = "flex-start";
-      const btn = document.createElement("p9r-button");
-      btn.setAttribute("variant", "ghost");
-      btn.setAttribute("color", "secondary");
+      const idle = "var(--border-default, #d1d5db)";
+      const muted = "var(--text-muted, #6b7280)";
+      const accent = "var(--primary-base, #4361ee)";
+      const btn = document.createElement("button");
+      btn.type = "button";
       btn.dataset.action = "add-endpoint";
+      btn.style.cssText = [
+        "width:100%",
+        "display:flex",
+        "align-items:center",
+        "justify-content:center",
+        "gap:0.5rem",
+        "padding:0.8rem",
+        `border:1.5px dashed ${idle}`,
+        "border-radius:8px",
+        "background:transparent",
+        `color:${muted}`,
+        "font:inherit",
+        "font-weight:600",
+        "font-size:14px",
+        "cursor:pointer",
+        "transition:border-color .15s ease, color .15s ease"
+      ].join(";");
       btn.innerHTML = `
-            <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -10234,8 +10339,15 @@ ${followMessage}`)) {
             </svg>
             Add endpoint
         `;
-      wrapper.appendChild(btn);
-      return wrapper;
+      btn.addEventListener("mouseenter", () => {
+        btn.style.borderColor = accent;
+        btn.style.color = accent;
+      });
+      btn.addEventListener("mouseleave", () => {
+        btn.style.borderColor = idle;
+        btn.style.color = muted;
+      });
+      return btn;
     }
   }
   customElements.define("cms-endpoints-input", CmsEndpointsInput);

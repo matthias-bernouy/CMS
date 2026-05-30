@@ -77,9 +77,10 @@ describe("parseProviderDto", () => {
         })).toThrow(/duplicate within provider/);
     });
 
-    test("zero endpoints → InvalidParam", () => {
-        expect(() => parseProviderDto({ id: "shop", "meta.name": "Shop" }))
-            .toThrow(/require at least 1 endpoint/);
+    test("zero endpoints → allowed (provider shell; endpoints added on the edit page)", () => {
+        const dto = parseProviderDto({ id: "shop", "meta.name": "Shop" });
+        expect(dto.endpoints).toEqual([]);
+        expect(dto.id).toBe("shop");
     });
 
     test("meta.name defaults to the id when absent", () => {

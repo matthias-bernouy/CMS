@@ -35,7 +35,7 @@
     </p9r-table>
 </w13c-fixed-admin-layout>
 
-<p9r-modal id="create-provider-modal" aria-label="Create a new gateway provider" style="--p9r-modal-width: 720px;">
+<p9r-modal id="create-provider-modal" aria-label="Create a new gateway provider">
     <span slot="title">New provider</span>
     <cms-form target="{{BASE_PATH}}/api/gateway-provider" method="POST" emit="provider:updated">
         <p9r-stack gap="m">
@@ -44,9 +44,9 @@
             <p9r-input name="meta.name" label="Name" placeholder="Shop API"></p9r-input>
             <p9r-textarea name="meta.description" label="Description" placeholder="What this provider exposes…"></p9r-textarea>
 
-            <p9r-divider></p9r-divider>
-            <strong>Endpoints</strong>
-            <cms-endpoints-input></cms-endpoints-input>
+            <p style="margin: 0; font-size: 13px; color: var(--text-muted, #94a3b8);">
+                Add endpoints on the provider page after it's created.
+            </p>
 
             <p9r-button color="primary" fullWidth type="submit">Create provider</p9r-button>
         </p9r-stack>
