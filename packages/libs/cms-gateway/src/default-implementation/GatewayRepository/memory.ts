@@ -17,6 +17,16 @@ export class InMemoryGatewayRepository implements GatewayRepository {
         return structuredClone(provider);
     }
 
+    async updateProvider(provider: Provider): Promise<Provider | null> {
+        if (!this._providers.has(provider.urn)) return null;
+        this._providers.set(provider.urn, structuredClone(provider));
+        return structuredClone(provider);
+    }
+
+    async deleteProvider(urn: string): Promise<boolean> {
+        return this._providers.delete(urn);
+    }
+
     async getProvider(urn: string): Promise<Provider | null> {
         const found = this._providers.get(urn);
         return found ? structuredClone(found) : null;

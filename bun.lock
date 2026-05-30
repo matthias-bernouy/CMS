@@ -45,6 +45,7 @@
       "dependencies": {
         "@bernouy/auth-core": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",

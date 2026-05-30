@@ -47,6 +47,25 @@ export class MongoGatewayRepository implements GatewayRepository {
         return structuredClone(provider);
     }
 
+    async updateProvider(provider: Provider): Promise<Provider | null> {
+        // Full-aggregate replace (not `$set`): a `$set` of `toDoc(provider)` would leave
+        // stale fields when the new provider drops `meta` or shrinks `endpoints`.
+        // `_id` (= urn) is the filter, so the key is immutable and the replacement
+        // must not carry it (`WithoutId`) — hence `rest`, the provider minus its urn.
+        const { urn, ...rest } = provider;
+        const doc = await this.providers.findOneAndReplace(
+            { _id: urn },
+            rest,
+            { returnDocument: "after" },
+        );
+        return fromDoc(doc);
+    }
+
+    async deleteProvider(urn: string): Promise<boolean> {
+        const res = await this.providers.deleteOne({ _id: urn });
+        return res.deletedCount > 0;
+    }
+
     async getProvider(urn: string): Promise<Provider | null> {
         return fromDoc(await this.providers.findOne({ _id: urn }));
     }
