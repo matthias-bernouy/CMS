@@ -10071,6 +10071,175 @@ ${followMessage}`)) {
     customElements.define("cms-empty-state", EmptyState);
   }
 
+  // ../../libs/cms-gateway/src/interfaces/Gateway.ts
+  var HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"];
+  // ../../libs/cms-gateway/src/default-implementation/GatewayRepository/memory.ts
+  class InMemoryGatewayRepository {
+    _providers = new Map;
+    async createProvider(provider) {
+      if (this._providers.has(provider.urn)) {
+        throw new Error(`Provider with urn "${provider.urn}" already exists`);
+      }
+      this._providers.set(provider.urn, structuredClone(provider));
+      return structuredClone(provider);
+    }
+    async updateProvider(provider) {
+      if (!this._providers.has(provider.urn))
+        return null;
+      this._providers.set(provider.urn, structuredClone(provider));
+      return structuredClone(provider);
+    }
+    async deleteProvider(urn) {
+      return this._providers.delete(urn);
+    }
+    async getProvider(urn) {
+      const found = this._providers.get(urn);
+      return found ? structuredClone(found) : null;
+    }
+    async getAllProviders() {
+      return Array.from(this._providers.values(), (p) => structuredClone(p));
+    }
+    async getEndpoint(urn) {
+      for (const provider of this._providers.values()) {
+        const endpoint = provider.endpoints.find((e) => e.urn === urn);
+        if (endpoint)
+          return structuredClone(endpoint);
+      }
+      return null;
+    }
+  }
+  // src/components/admin/EndpointsInput/EndpointsInput.ts
+  class CmsEndpointsInput extends HTMLElement {
+    _rowCount = 0;
+    _initialized = false;
+    _rowsContainer = null;
+    _onClick = (e) => {
+      const target = e.target;
+      const addBtn = target.closest('[data-action="add-endpoint"]');
+      if (addBtn && this.contains(addBtn)) {
+        e.preventDefault();
+        this._addRow();
+        return;
+      }
+      const removeBtn = target.closest('[data-action="remove-endpoint"]');
+      if (removeBtn && this.contains(removeBtn)) {
+        e.preventDefault();
+        removeBtn.closest('[data-role="endpoint-row"]')?.remove();
+      }
+    };
+    connectedCallback() {
+      if (!this._initialized) {
+        this._initialized = true;
+        this._render();
+        const seeds = this._parseValue();
+        if (seeds.length)
+          seeds.forEach((seed) => this._addRow(seed));
+        else
+          this._addRow();
+      }
+      this.addEventListener("click", this._onClick);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this._onClick);
+    }
+    _parseValue() {
+      const raw = this.getAttribute("value");
+      if (!raw)
+        return [];
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    _render() {
+      this.style.display = "flex";
+      this.style.flexDirection = "column";
+      this.style.gap = "0.75rem";
+      this._rowsContainer = document.createElement("p9r-stack");
+      this._rowsContainer.setAttribute("gap", "sm");
+      this.appendChild(this._rowsContainer);
+      this.appendChild(this._makeAddButton());
+    }
+    _addRow(seed = {}) {
+      if (!this._rowsContainer)
+        return;
+      const idx = this._rowCount++;
+      const row = document.createElement("p9r-stack");
+      row.setAttribute("direction", "row");
+      row.setAttribute("gap", "sm");
+      row.setAttribute("align", "end");
+      row.dataset.role = "endpoint-row";
+      row.appendChild(this._makeInput(`endpoints.${idx}.endpointId`, "Endpoint id", seed.endpointId));
+      row.appendChild(this._makeMethodSelect(`endpoints.${idx}.method`, seed.method));
+      row.appendChild(this._makeInput(`endpoints.${idx}.targetUrl`, "https://api.example.com/path", seed.targetUrl));
+      row.appendChild(this._makeRemoveButton());
+      this._rowsContainer.appendChild(row);
+    }
+    _makeInput(name, placeholder, value) {
+      const input = document.createElement("p9r-input");
+      input.setAttribute("name", name);
+      input.setAttribute("placeholder", placeholder);
+      if (value != null)
+        input.setAttribute("value", value);
+      input.style.flex = "1";
+      return input;
+    }
+    _makeMethodSelect(name, value) {
+      const select = document.createElement("p9r-select");
+      select.setAttribute("name", name);
+      select.setAttribute("label", "");
+      select.style.minWidth = "7.5rem";
+      for (const method of HTTP_METHODS) {
+        const opt = document.createElement("option");
+        opt.value = method;
+        opt.textContent = method;
+        select.appendChild(opt);
+      }
+      const initial = value && HTTP_METHODS.includes(value) ? value : HTTP_METHODS[0];
+      select.setAttribute("value", initial);
+      return select;
+    }
+    _makeRemoveButton() {
+      const btn = document.createElement("p9r-button");
+      btn.setAttribute("variant", "ghost");
+      btn.setAttribute("color", "danger");
+      btn.setAttribute("aria-label", "Remove endpoint");
+      btn.dataset.action = "remove-endpoint";
+      btn.innerHTML = `
+            <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        `;
+      return btn;
+    }
+    _makeAddButton() {
+      const wrapper = document.createElement("div");
+      wrapper.style.display = "flex";
+      wrapper.style.justifyContent = "flex-start";
+      const btn = document.createElement("p9r-button");
+      btn.setAttribute("variant", "ghost");
+      btn.setAttribute("color", "secondary");
+      btn.dataset.action = "add-endpoint";
+      btn.innerHTML = `
+            <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add endpoint
+        `;
+      wrapper.appendChild(btn);
+      return wrapper;
+    }
+  }
+  customElements.define("cms-endpoints-input", CmsEndpointsInput);
+
   // src/components/admin/EventToast/EventToast.ts
   class CmsEventToast extends HTMLElement {
     _attached = null;
@@ -22112,7 +22281,7 @@ button.active svg {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(data)
-    }).then((res) => {
+    }).then(async (res) => {
       if (res.ok) {
         form.reset();
         me2.dispatchEvent(new BubblesEvent("form:success"));
@@ -22120,9 +22289,21 @@ button.active svg {
           document.dispatchEvent(new BubblesEvent(me2.emit));
         }
       } else {
+        showToast(await readErrorMessage(res), { type: "error" });
         me2.dispatchEvent(new BubblesEvent("form:failed"));
       }
+    }).catch(() => {
+      showToast("Network error — please try again.", { type: "error" });
+      me2.dispatchEvent(new BubblesEvent("form:failed"));
     });
+  }
+  async function readErrorMessage(res) {
+    try {
+      const body = await res.json();
+      if (body && typeof body.error === "string" && body.error)
+        return body.error;
+    } catch {}
+    return res.statusText || `Request failed (${res.status})`;
   }
 
   // src/components/form/Form/Form.ts

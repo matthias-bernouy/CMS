@@ -1,5 +1,8 @@
 <w13c-fixed-admin-layout>
     <span slot="title">Gateway</span>
+    <p9r-open-modal modal-target="create-provider-modal" slot="action">
+        <p9r-button color="primary">+ New provider</p9r-button>
+    </p9r-open-modal>
 
     <p9r-table>
         <p9r-row slot="header">
@@ -37,3 +40,22 @@
         </cms-fetch>
     </p9r-table>
 </w13c-fixed-admin-layout>
+
+<p9r-modal id="create-provider-modal" aria-label="Create a new gateway provider" style="--p9r-modal-width: 720px;">
+    <span slot="title">New provider</span>
+    <cms-form target="{{BASE_PATH}}/api/gateway-provider" method="POST" emit="provider:updated">
+        <p9r-stack gap="m">
+            <p9r-input name="id" label="Identifier" placeholder="shop"
+                hint="Lowercase letters, numbers and dashes. Immutable after creation."></p9r-input>
+            <p9r-input name="meta.name" label="Name" placeholder="Shop API"></p9r-input>
+            <p9r-textarea name="meta.description" label="Description" placeholder="What this provider exposes…"></p9r-textarea>
+
+            <p9r-divider></p9r-divider>
+            <strong>Endpoints</strong>
+            <cms-endpoints-input></cms-endpoints-input>
+
+            <p9r-button color="primary" fullWidth type="submit">Create provider</p9r-button>
+        </p9r-stack>
+    </cms-form>
+</p9r-modal>
+
