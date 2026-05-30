@@ -1,0 +1,63 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Edit provider</span>
+    <a slot="action" href="{{BASE_PATH}}/admin/gateway-providers">← Back to providers</a>
+
+    <!-- The page URL carries `?urn=…`; `buildRequestUrl` forwards location.search
+         onto the fetch, so this GET resolves to /api/gateway-provider?urn=… without
+         the URL being hard-coded. A `<template>` with no `for` renders once against
+         the single provider object. -->
+    <cms-fetch url="{{BASE_PATH}}/api/gateway-provider" reload-on="provider:updated">
+        <template>
+            <div style="max-width: 760px;">
+                <cms-form target="{{BASE_PATH}}/api/gateway-provider" method="PUT" emit="provider:updated">
+                    <p9r-stack gap="l">
+                        <p9r-stack gap="m">
+                            <!-- Immutable key: submitted via the hidden input; the visible field is display-only. -->
+                            <input type="hidden" name="id" value="{{id}}">
+                            <p9r-input label="Identifier" value="{{id}}" disabled hint="Immutable after creation."></p9r-input>
+                            <p9r-input name="meta.name" label="Name" value="{{meta.name}}"></p9r-input>
+                            <p9r-textarea name="meta.description" label="Description" value="{{meta.description}}"></p9r-textarea>
+                        </p9r-stack>
+
+                        <p9r-stack gap="s">
+                            <strong>Endpoints</strong>
+                            <!-- Prefilled from the server-stringified array (see the GET handler);
+                                 the component parses `value` on connect and seeds one row each. -->
+                            <cms-endpoints-input value="{{endpointsJson}}"></cms-endpoints-input>
+                        </p9r-stack>
+
+                        <div>
+                            <p9r-button color="primary" type="submit">Save changes</p9r-button>
+                        </div>
+                    </p9r-stack>
+                </cms-form>
+
+                <!-- Danger zone — sibling of the form so the delete isn't part of the PUT.
+                     `{{urn}}` resolves from the fetched provider; `redirect` returns to the
+                     list once the record (and this page's subject) is gone. -->
+                <div style="margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-default, #e5e7eb);">
+                    <cms-confirm-form
+                        target="{{BASE_PATH}}/api/gateway-provider?urn={{urn}}"
+                        method="DELETE"
+                        emit="provider:updated"
+                        redirect="{{BASE_PATH}}/admin/gateway-providers"
+                        message="Delete this provider? Its endpoints are removed. This cannot be undone.">
+                        <p9r-button color="danger" variant="ghost">Delete provider</p9r-button>
+                    </cms-confirm-form>
+                </div>
+            </div>
+        </template>
+
+        <template slot="error">
+            <cms-empty-state>
+                <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <p slot="title">Provider not found</p>
+                <p slot="hint">It may have been deleted. <a href="{{BASE_PATH}}/admin/gateway-providers">Back to providers</a>.</p>
+            </cms-empty-state>
+        </template>
+    </cms-fetch>
+</w13c-fixed-admin-layout>

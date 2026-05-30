@@ -9,20 +9,14 @@
             <p9r-cell><strong>Name</strong></p9r-cell>
             <p9r-cell><strong>URN</strong></p9r-cell>
             <p9r-cell><strong>Endpoints</strong></p9r-cell>
-            <p9r-cell></p9r-cell>
         </p9r-row>
 
         <cms-fetch url="{{BASE_PATH}}/api/gateway-provider/list" reload-on="provider:updated">
             <template for=".">
-                <p9r-row>
+                <p9r-row href="{{BASE_PATH}}/admin/gateway-provider?urn={{ urn }}">
                     <p9r-cell><strong>{{ name }}</strong></p9r-cell>
                     <p9r-cell><code>{{ urn }}</code></p9r-cell>
                     <p9r-cell>{{ endpointCount }}</p9r-cell>
-                    <p9r-cell>
-                        <cms-confirm-form target="{{BASE_PATH}}/api/gateway-provider?urn={{ urn }}" method="DELETE" emit="provider:updated" message="Delete this provider? Its endpoints are removed. This cannot be undone.">
-                            <p9r-button color="danger" variant="ghost">Delete</p9r-button>
-                        </cms-confirm-form>
-                    </p9r-cell>
                 </p9r-row>
             </template>
             <template slot="empty">
