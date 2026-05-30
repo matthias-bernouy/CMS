@@ -20,7 +20,8 @@
         "@bernouy/runner-bun":   "workspace:*",
         "@bernouy/auth-core":    "workspace:*",
         "@bernouy/cms-shared":   "workspace:*",
-        "@bernouy/cms-control":  "workspace:*"
+        "@bernouy/cms-control":  "workspace:*",
+        "@bernouy/cms-gateway":  "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"

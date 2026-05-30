@@ -9,6 +9,7 @@ import type { CmsFilesMetadataRepository } from "@bernouy/cms-shared";
 import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/auth-core";
 import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/auth-core";
+import type { GatewayRepository } from "@bernouy/cms-gateway";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
@@ -57,6 +58,7 @@ export class ControlCms {
     private _identityProviders:   IdentityProviderRepository | null;
     private _pats:                PatRepository | null;
     private _credentials:         LocalCredentialStore | null;
+    private _gateway:             GatewayRepository | null;
 
     constructor(
         runner: Runner,
@@ -71,6 +73,7 @@ export class ControlCms {
         identityProviders?: IdentityProviderRepository,
         pats?: PatRepository,
         credentials?: LocalCredentialStore,
+        gateway?: GatewayRepository,
     ){
         this.configuration = configuration;
         this._auth = auth;
@@ -84,6 +87,7 @@ export class ControlCms {
         this._identityProviders = identityProviders ?? null;
         this._pats = pats ?? null;
         this._credentials = credentials ?? null;
+        this._gateway = gateway ?? null;
 
         const authGuard = createAuthGuard<CMS_ROLES>({ basePath: this.basePath, auth: this._auth, requiredRole: "admin" });
 
@@ -179,6 +183,13 @@ export class ControlCms {
     get credentials(): LocalCredentialStore {
         if (!this._credentials) throw new Error("local credential store not configured");
         return this._credentials;
+    }
+
+    /** Gateway provider store (data-gateway). Backs the admin provider CRUD;
+     *  must be the same instance Delivery reads. Throws until wired. */
+    get gateway(): GatewayRepository {
+        if (!this._gateway) throw new Error("gateway repository not configured");
+        return this._gateway;
     }
 
     /**

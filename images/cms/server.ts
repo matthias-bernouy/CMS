@@ -15,6 +15,7 @@ import {
 } from "@bernouy/core";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
+import { MongoGatewayRepository } from "@bernouy/cms-gateway";
 import { MongoClient } from "mongodb";
 import {
     MongoCmsRepository,
@@ -81,6 +82,7 @@ const users             = new MongoUsersRepository<CMS_ROLES>(db, piiCrypto);
 const identityProviders = new MongoIdentityProviderRepository(db);
 const credentials       = new MongoLocalCredentialStore(db, piiCrypto);            await credentials.init();
 const pats              = new MongoPatRepository(db);                              await pats.init();
+const gateway           = new MongoGatewayRepository(db);                          await gateway.init();
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
 const secrets           = new EncryptedMongoSecretStore({
     scopeId:      SCOPE_ID,
@@ -131,11 +133,13 @@ const auth = new LocalAuthentication<CMS_ROLES>(controlRunner, {
     cookieSecure,
     defaultHome:   "/admin/pages",
 });
-new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials);
+new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, gateway);
 
-// Delivery on its own runner/port — strictly public surface.
+// Delivery on its own runner/port — strictly public surface. Shares the SAME
+// gateway instance as Control, so providers created in the admin are immediately
+// resolvable by the `/.cms/gateway/*` proxy.
 const deliveryRunner = new BunRunner();
-new DeliveryCms({ runner: deliveryRunner, repository: repo, cache });
+new DeliveryCms({ runner: deliveryRunner, repository: repo, cache, gateway });
 
 controlRunner.start(CONTROL_PORT);
 deliveryRunner.start(DELIVERY_PORT);

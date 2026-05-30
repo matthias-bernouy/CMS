@@ -19,6 +19,7 @@ import { InMemoryUsersRepository } from "@bernouy/auth-core";
 import { InMemoryIdentityProviderRepository } from "@bernouy/auth-core";
 import { InMemoryLocalCredentialStore } from "@bernouy/auth-core";
 import { InMemoryPatRepository } from "@bernouy/auth-core";
+import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
 import type { CMS_ROLES } from "@bernouy/cms-shared";
 import { loadPushConfig } from "./push/shared/config";
 
@@ -105,13 +106,17 @@ export default async function CLI_dev(args: string[]) {
     // PAT store (authn) so the Profile → Tokens tab works in dev instead of
     // 500-ing on a missing repository.
     const pats = new InMemoryPatRepository();
+    // Gateway provider store (in-memory for dev) so the admin provider CRUD works.
+    // Dev exercises the Control write side only — this CLI does not boot Delivery,
+    // so the create→callable-in-Delivery chain isn't verifiable here.
+    const gateway = new InMemoryGatewayRepository();
 
     const runner = new BunRunner();
     // Live-reload SSE channel — registered before the ControlCms group so it
     // matches first (the group catches `/` as a fallback).
     runner.addEndpoint("GET", "/dev/reload", sseHandler(reload));
 
-    const cms = new ControlCms(runner, repo, auth, {}, undefined, undefined, files, files, users, identityProviders, pats, credentials);
+    const cms = new ControlCms(runner, repo, auth, {}, undefined, undefined, files, files, users, identityProviders, pats, credentials, gateway);
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
     // still need to drop the editor-script (consolidated bundle) and the
