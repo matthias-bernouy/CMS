@@ -26,7 +26,7 @@
     <slot></slot>
 </div>
 `;
-  var St = `:host {
+  var zt = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -55,9 +55,9 @@
 }
 `;
 
-  class zt extends o {
+  class St extends o {
     constructor() {
-      super({ css: St, template: Ht });
+      super({ css: zt, template: Ht });
     }
     connectedCallback() {
       this.addEventListener("accordion-item-toggle", this._handleItemToggle);
@@ -605,12 +605,12 @@
         this._img.hidden = true;
     };
   }
-  var Vt = `<span class="badge" part="badge">
+  var Kt = `<span class="badge" part="badge">
     <span class="dot" part="dot" aria-hidden="true"></span>
     <span class="content" part="content"><slot></slot></span>
 </span>
 `;
-  var Kt = `:host {
+  var Vt = `:host {
   display: inline-flex;
 
   --_bg: var(--secondary-muted, #f1f5f9);
@@ -680,7 +680,7 @@
 
   class $t extends o {
     constructor() {
-      super({ css: Kt, template: Vt });
+      super({ css: Vt, template: Kt });
     }
   }
   var Ut = `<nav class="breadcrumb" part="breadcrumb" aria-label="Breadcrumb">
@@ -1668,13 +1668,13 @@ dialog[open]::backdrop { opacity: 1; }
         this.removeAttribute("modal-target");
     }
   }
-  var Se = `<div class="divider" part="divider" role="separator">
+  var ze = `<div class="divider" part="divider" role="separator">
     <span class="line line-start" part="line"></span>
     <span class="label" part="label"><slot></slot></span>
     <span class="line line-end" part="line"></span>
 </div>
 `;
-  var ze = `:host {
+  var Se = `:host {
   display: block;
 
   --_color: var(--border-default, #e5e7eb);
@@ -1764,7 +1764,7 @@ dialog[open]::backdrop { opacity: 1; }
       return ["orientation"];
     }
     constructor() {
-      super({ css: ze, template: Se });
+      super({ css: Se, template: ze });
     }
     connectedCallback() {
       this._syncAria();
@@ -2011,7 +2011,7 @@ dialog[open]::backdrop { opacity: 1; }
 }
 
 .checkbox-container {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.75rem;
   cursor: pointer;
@@ -2075,8 +2075,7 @@ input {
   color: var(--cb-text);
 }
 
-.label-text:has(slot:empty),
-.label-text slot:not([name]):empty {
+.label-text.is-empty {
   display: none;
 }
 `;
@@ -2151,7 +2150,7 @@ input:focus-visible ~ .custom-box {
     if (t.hasAttribute("value"))
       e.value = t.getAttribute("value") ?? "";
   };
-  var Ve = (t, e, r, i, n) => {
+  var Ke = (t, e, r, i, n) => {
     if (!e)
       return;
     if (i === "checked")
@@ -2165,7 +2164,7 @@ input:focus-visible ~ .custom-box {
     else if (i === "value")
       e.value = n ?? "", f(t, e, r);
   };
-  var Ke = (t, e, r) => {
+  var Ve = (t, e, r) => {
     if (e?.checked ?? false)
       t.setAttribute("checked", "");
     else
@@ -2184,6 +2183,8 @@ input:focus-visible ~ .custom-box {
     static formAssociated = true;
     _internals;
     _input;
+    _labelText;
+    _labelSlot;
     _defaultChecked = false;
     _defaultIndeterminate = false;
     _defaultsCaptured = false;
@@ -2192,23 +2193,29 @@ input:focus-visible ~ .custom-box {
     }
     constructor() {
       super({ css: vo, template: De });
-      this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null;
+      this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null, this._labelText = this.shadowRoot?.querySelector(".label-text") ?? null, this._labelSlot = this.shadowRoot?.querySelector(".label-text slot:not([name])") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultChecked = this.hasAttribute("checked"), this._defaultIndeterminate = this.hasAttribute("indeterminate"), this._defaultsCaptured = true;
-      ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => Ne(this, t)), Oe(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), f(this, this._input, this._internals);
+      ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => Ne(this, t)), Oe(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), f(this, this._input, this._internals);
     }
     disconnectedCallback() {
-      this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
+      this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick), this._labelSlot?.removeEventListener("slotchange", this._syncLabel);
     }
+    _syncLabel = () => {
+      if (!this._labelText || !this._labelSlot)
+        return;
+      let t = this._labelSlot.assignedNodes({ flatten: true }).some((e) => e.nodeType === Node.ELEMENT_NODE || (e.textContent ?? "").trim() !== "");
+      this._labelText.classList.toggle("is-empty", !t);
+    };
     formResetCallback() {
       this.indeterminate = this._defaultIndeterminate, this.checked = this._defaultChecked;
     }
     attributeChangedCallback(t, e, r) {
-      Ve(this, this._input, this._internals, t, r);
+      Ke(this, this._input, this._internals, t, r);
     }
-    _onChange = () => Ke(this, this._input, this._internals);
+    _onChange = () => Ve(this, this._input, this._internals);
     _onClick = (t) => $e(this, t);
     get checked() {
       return this.hasAttribute("checked");
@@ -2346,7 +2353,7 @@ header:focus-visible {
       delete t[e], t[e] = r;
     }
   };
-  var K = (t, e) => {
+  var V = (t, e) => {
     if (e)
       e.textContent = t.getAttribute("data-title") ?? "";
   };
@@ -2383,7 +2390,7 @@ header:focus-visible {
     connectedCallback() {
       if (Ze(this, "collapsed"), this.hasAttribute("data-collapsed") && !this.hasAttribute("collapsed"))
         this.setAttribute("collapsed", "");
-      K(this, this._title), $(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
+      V(this, this._title), $(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       this._toggle?.removeEventListener("click", this._onClick), this._toggle?.removeEventListener("keydown", this._onKey);
@@ -2392,7 +2399,7 @@ header:focus-visible {
       if (t === "collapsed")
         $(this, this._toggle, this._content);
       if (t === "data-title")
-        K(this, this._title);
+        V(this, this._title);
     }
     get collapsed() {
       return this.hasAttribute("collapsed");
@@ -2710,7 +2717,7 @@ input[type="file"]:focus-visible + label {
   var X = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { files: e } }));
   };
-  var z = (t, e, r, i, n) => {
+  var S = (t, e, r, i, n) => {
     let a = e?.files;
     if (!a || a.length === 0) {
       if (r)
@@ -2747,7 +2754,7 @@ input[type="file"]:focus-visible + label {
     if (s.preventDefault(), t.removeAttribute("dragging"), t.hasAttribute("disabled"))
       return;
     if (s.dataTransfer?.files && e)
-      e.files = s.dataTransfer.files, z(t, e, r, i, n);
+      e.files = s.dataTransfer.files, S(t, e, r, i, n);
   };
 
   class dr extends o {
@@ -2806,7 +2813,7 @@ input[type="file"]:focus-visible + label {
           break;
       }
     }
-    _onChange = () => z(this, this._input, this._preview, this._liveRegion, this._internals);
+    _onChange = () => S(this, this._input, this._preview, this._liveRegion, this._internals);
     _onDragOver = (t) => or(this, t);
     _onDragLeave = (t) => sr(this, t);
     _onDrop = (t) => lr(this, this._input, this._preview, this._liveRegion, this._internals, t);
@@ -3016,12 +3023,12 @@ input[type="file"]:focus-visible + label {
     else
       e.setAttribute("placeholder", r);
   };
-  var So = (t, e) => {
+  var zo = (t, e) => {
     if (!e)
       return;
     e.setAttribute("type", t.getAttribute("type") ?? "text");
   };
-  var zo = (t, e) => {
+  var So = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
@@ -3063,7 +3070,7 @@ input[type="file"]:focus-visible + label {
     G(i, e, n);
   };
   var Q = (t, e, r, i, n, a, s) => {
-    W(t, r), Ho(t, e), So(t, e), zo(t, e), Io(t, e), Po(t, i, a, n), Ro(t, i), qo(t, e), J(t, a, s, i, n);
+    W(t, r), Ho(t, e), zo(t, e), So(t, e), Io(t, e), Po(t, i, a, n), Ro(t, i), qo(t, e), J(t, a, s, i, n);
   };
   var gr = (t, e, r, i, n) => {
     if (!e)
@@ -3523,7 +3530,7 @@ input[type="file"]:focus-visible + label {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var Sr = `:host {
+  var zr = `:host {
     display: block;
 }
 
@@ -3542,12 +3549,17 @@ input[type="file"]:focus-visible + label {
     color: var(--text-muted, #94a3b8);
 }
 
+.label[hidden] {
+    display: none;
+}
+
 .trigger {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     width: 100%;
+    text-align: left;
     padding: 7px 10px;
     border: 1px solid var(--border-default, #e2e8f0);
     border-radius: 8px;
@@ -3590,7 +3602,7 @@ input[type="file"]:focus-visible + label {
     transition: background 0.1s;
 }
 `;
-  var zr = `.trigger:hover {
+  var Sr = `.trigger:hover {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -3641,7 +3653,8 @@ input[type="file"]:focus-visible + label {
   var Pr = (t, e) => {
     if (!t)
       return;
-    t.textContent = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
+    let r = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
+    t.textContent = r, t.hidden = r === "";
   };
   var Rr = (t, e, r) => {
     let i = Array.from(t.querySelectorAll("option"));
@@ -3661,7 +3674,7 @@ input[type="file"]:focus-visible + label {
       e.textContent = i;
     Ir(t, r);
   };
-  var Uo = Sr + zr;
+  var Uo = zr + Sr;
 
   class Br extends o {
     static formAssociated = true;
@@ -3933,7 +3946,7 @@ input:focus-visible ~ .custom {
     </div>
 </fieldset>
 `;
-  var Vr = `:host {
+  var Kr = `:host {
   display: block;
 }
 
@@ -3975,7 +3988,7 @@ input:focus-visible ~ .custom {
   pointer-events: none;
 }
 `;
-  var Kr = (t, e) => {
+  var Vr = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
@@ -4074,14 +4087,14 @@ input:focus-visible ~ .custom {
       return ["value", "label", "name", "disabled"];
     }
     constructor() {
-      super({ css: Vr, template: Or });
+      super({ css: Kr, template: Or });
       this._internals = this.attachInternals(), this._label = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value"), this._defaultsCaptured = true;
       for (let t of ["value", "name", "disabled"])
-        Kr(this, t);
+        Vr(this, t);
       this.setAttribute("role", "radiogroup"), nt(this._label, this.getAttribute("label")), this._slot?.addEventListener("slotchange", this._onSlotChange), this.addEventListener("change", this._onChange), this.addEventListener("keydown", this._onKey), ot(this, this._slot, this._internals);
     }
     disconnectedCallback() {
@@ -5386,11 +5399,11 @@ p9r-tag:hover {
     _onInput = () => Ti(this, this._textarea, this._internals, this._counter, this._count);
     _onChange = () => Mi(this._textarea, this._internals);
   }
-  var Si = `<div class="actions" role="toolbar" part="toolbar">
+  var zi = `<div class="actions" role="toolbar" part="toolbar">
     <slot></slot>
 </div>
 `;
-  var zi = `:host {
+  var Si = `:host {
   display: inline-block;
 
   --_toolbar-bg: var(--bg-overlay, #ffffff);
@@ -5486,7 +5499,7 @@ p9r-tag:hover {
     static _event = "action-click";
     _toolbar;
     constructor() {
-      super({ css: zi, template: Si });
+      super({ css: Si, template: zi });
       this._toolbar = this.shadowRoot?.querySelector(".actions") ?? null;
     }
     static get observedAttributes() {
@@ -5743,6 +5756,11 @@ p9r-tag:hover {
 :host([direction="row"]) { flex-direction: row; }
 :host([wrap]) { flex-wrap: wrap; }
 
+/* \`align\` is also a legacy HTML presentational attribute that the UA stylesheet
+   maps to \`text-align\` (e.g. align="center" → text-align:center), which would
+   leak into the whole subtree. Our \`align\` only controls the flex cross-axis, so
+   neutralise that mapping and let text-align inherit normally. */
+:host([align]) { text-align: inherit; }
 :host([align="start"])    { align-items: flex-start; }
 :host([align="center"])   { align-items: center; }
 :host([align="end"])      { align-items: flex-end; }
@@ -5775,7 +5793,7 @@ p9r-tag:hover {
       super({ css: Ni, template: ji });
     }
   }
-  var Vi = `<aside class="sidebar" part="sidebar">
+  var Ki = `<aside class="sidebar" part="sidebar">
     <div class="sidebar-header" part="header">
         <slot name="header">
             <h3>Menu</h3>
@@ -5791,7 +5809,7 @@ p9r-tag:hover {
     </div>
 </aside>
 `;
-  var Ki = `:host {
+  var Vi = `:host {
     display: flex;
     flex-direction: column;
     width: 260px;
@@ -5911,7 +5929,7 @@ p9r-tag:hover {
   class Xi extends o {
     _sidebar;
     constructor() {
-      super({ css: Ki, template: Vi });
+      super({ css: Vi, template: Ki });
       this._sidebar = this.shadowRoot?.querySelector(".sidebar") ?? null;
     }
     static get observedAttributes() {
@@ -6124,13 +6142,13 @@ p9r-tag:hover {
       return;
     r.preventDefault(), e?.click();
   };
-  var zs = Gi + Wi;
+  var Ss = Gi + Wi;
 
   class tn extends o {
     _anchor;
     _badgeEl;
     constructor() {
-      super({ css: zs, template: Zi });
+      super({ css: Ss, template: Zi });
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
     }
     static get observedAttributes() {
@@ -7022,7 +7040,7 @@ p9r-tag:hover {
 }
 `;
 
-  class Sn extends o {
+  class zn extends o {
     constructor() {
       super({ css: Hn, template: Mn });
     }
@@ -7031,7 +7049,7 @@ p9r-tag:hover {
         this.setAttribute("role", "cell");
     }
   }
-  var zn = `<div class="header-wrapper" part="wrapper">
+  var Sn = `<div class="header-wrapper" part="wrapper">
   <button
     type="button"
     class="label-section"
@@ -7252,7 +7270,7 @@ p9r-tag:hover {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: el, template: zn });
+      super({ css: el, template: Sn });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
@@ -7272,7 +7290,7 @@ p9r-tag:hover {
   }
   var On = `<slot></slot>
 `;
-  var Vn = `:host {
+  var Kn = `:host {
   display: table-row;
 }
 
@@ -7303,7 +7321,7 @@ p9r-tag:hover {
     else
       window.location.href = e;
   };
-  var Kn = (t) => {
+  var Vn = (t) => {
     if (!t.hasAttribute("href"))
       return;
     yt(t);
@@ -7341,7 +7359,7 @@ p9r-tag:hover {
       return ["href"];
     }
     constructor() {
-      super({ css: Vn, template: On });
+      super({ css: Kn, template: On });
     }
     connectedCallback() {
       for (let t of ["href", "target"])
@@ -7355,7 +7373,7 @@ p9r-tag:hover {
       if (t === "href")
         wt(this);
     }
-    _onClick = () => Kn(this);
+    _onClick = () => Vn(this);
     _onKey = (t) => $n(this, t);
     get href() {
       return this.getAttribute("href");
@@ -8266,7 +8284,7 @@ p9r-tag:hover {
       return { kind: "error", error: r };
     }
   }
-  function S(t, e) {
+  function z(t, e) {
     return e.split(".").reduce((r, i) => r != null ? r[i] : undefined, t);
   }
   function Ea(t) {
@@ -8297,7 +8315,7 @@ p9r-tag:hover {
       return "";
     return new Date(e).toISOString().replace("T", " ").slice(0, 19);
   }
-  function Sl(t) {
+  function zl(t) {
     let e = E(t);
     if (e === null || e <= 0)
       return "";
@@ -8310,7 +8328,7 @@ p9r-tag:hover {
       return `${Math.floor(i / 3600)}h ago`;
     return `${Math.floor(i / 86400)}d ago`;
   }
-  function zl(t) {
+  function Sl(t) {
     let e = E(t);
     return e === null ? "" : Cl.format(e);
   }
@@ -8325,7 +8343,7 @@ p9r-tag:hover {
       return "no";
     return "";
   }
-  var Lt = { bytes: Tl, date: Ml, datetime: Hl, ago: Sl, number: zl, percent: Il, bool: Pl };
+  var Lt = { bytes: Tl, date: Ml, datetime: Hl, ago: zl, number: Sl, percent: Il, bool: Pl };
   function E(t) {
     if (t === null || t === undefined || t === "")
       return null;
@@ -8358,11 +8376,11 @@ p9r-tag:hover {
     let i = (t.textContent?.trim() ?? "").match(/^\{\{\s*([\w.]+)\s*\}\}$/);
     if (!i)
       return false;
-    return t.innerHTML = String(S(e, i[1]) ?? ""), t.replaceWith(...Array.from(t.childNodes)), true;
+    return t.innerHTML = String(z(e, i[1]) ?? ""), t.replaceWith(...Array.from(t.childNodes)), true;
   }
   function La(t, e) {
     return t.replace(/\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g, (r, i, n) => {
-      let a = i === "value" ? e !== null && typeof e === "object" && "value" in e ? e.value : e : S(e, i), s = n && Lt[n] ? Lt[n](a) : a;
+      let a = i === "value" ? e !== null && typeof e === "object" && "value" in e ? e.value : e : z(e, i), s = n && Lt[n] ? Lt[n](a) : a;
       return Ea(s);
     });
   }
@@ -8372,7 +8390,7 @@ p9r-tag:hover {
       let a = t.content.cloneNode(true);
       return Ca(a, e), i.appendChild(a), i;
     }
-    let n = r === "." ? e : S(e, r);
+    let n = r === "." ? e : z(e, r);
     if (!Array.isArray(n))
       return console.warn(`cms-fetch: <template for="${r}"> expected an array, got`, n), i;
     for (let a of n) {
@@ -8412,7 +8430,7 @@ p9r-tag:hover {
       e.parentNode?.removeChild(e);
   }
 
-  class V extends Event {
+  class K extends Event {
     constructor(t) {
       super(t, { bubbles: true, composed: true });
     }
@@ -8479,7 +8497,7 @@ p9r-tag:hover {
         return;
       this._abort?.abort(), this._abort = new AbortController;
       let e = this._abort.signal;
-      this._renderSlot("loading", null), this.dispatchEvent(new V("fetch:loading"));
+      this._renderSlot("loading", null), this.dispatchEvent(new K("fetch:loading"));
       let r = await ka(t, e);
       if (e.aborted || r.kind === "aborted")
         return;
@@ -10135,6 +10153,7 @@ ${followMessage}`)) {
     }
   }
   // src/components/admin/EndpointsInput/EndpointsInput.ts
+  var PARAM_TYPES = ["string", "number", "boolean"];
   var liveValue = (el2) => el2.value ?? "";
   var METHOD_COLOR = {
     GET: "success",
@@ -10162,6 +10181,18 @@ ${followMessage}`)) {
       if (removeBtn && this.contains(removeBtn)) {
         e.preventDefault();
         removeBtn.closest('[data-role="endpoint-row"]')?.remove();
+        return;
+      }
+      const addParam = target.closest('[data-action="add-query-param"]');
+      if (addParam && this.contains(addParam)) {
+        e.preventDefault();
+        this._addQueryParam(addParam.closest('[data-role="query-params"]'));
+        return;
+      }
+      const removeParam = target.closest('[data-action="remove-query-param"]');
+      if (removeParam && this.contains(removeParam)) {
+        e.preventDefault();
+        removeParam.closest('[data-role="query-param-row"]')?.remove();
       }
     };
     connectedCallback() {
@@ -10234,7 +10265,7 @@ ${followMessage}`)) {
       const urlInput = this._makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
       infosBody.append(idInput, methodSelect, urlInput);
       infos.appendChild(infosBody);
-      tabs.append(infos, this._makeDeferredPanel(`in-${idx}`, "In"), this._makeDeferredPanel(`out-${idx}`, "Out"), this._makeDeferredPanel(`rules-${idx}`, "Rules"));
+      tabs.append(infos, this._makeInPanel(idx, seed.params ?? []), this._makeDeferredPanel(`out-${idx}`, "Out"), this._makeDeferredPanel(`rules-${idx}`, "Rules"));
       tabs.setAttribute("active", `infos-${idx}`);
       item.append(header, this._makeDeleteButton(), tabs);
       this._bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
@@ -10257,7 +10288,8 @@ ${followMessage}`)) {
     _makeInput(name, label, placeholder, value) {
       const input = document.createElement("p9r-input");
       input.setAttribute("name", name);
-      input.setAttribute("label", label);
+      if (label)
+        input.setAttribute("label", label);
       input.setAttribute("placeholder", placeholder);
       if (value != null)
         input.setAttribute("value", value);
@@ -10276,6 +10308,91 @@ ${followMessage}`)) {
       const initial = value && HTTP_METHODS.includes(value) ? value : HTTP_METHODS[0];
       select.setAttribute("value", initial);
       return select;
+    }
+    _makeInPanel(endpointIdx, seedParams) {
+      const panel = document.createElement("p9r-tab-panel");
+      panel.id = `in-${endpointIdx}`;
+      panel.setAttribute("label", "In");
+      const wrap = document.createElement("p9r-stack");
+      wrap.setAttribute("gap", "m");
+      const heading = document.createElement("strong");
+      heading.textContent = "Query params";
+      heading.style.cssText = "font-size:13px;";
+      const queryParams = seedParams.filter((p) => (p.in ?? "query") === "query");
+      const container = document.createElement("div");
+      container.dataset.role = "query-params";
+      container.dataset.endpointIdx = String(endpointIdx);
+      container.dataset.paramCount = String(queryParams.length);
+      const rows = document.createElement("p9r-stack");
+      rows.setAttribute("gap", "sm");
+      rows.dataset.role = "query-param-rows";
+      queryParams.forEach((p, j2) => rows.appendChild(this._makeQueryParamRow(endpointIdx, j2, p)));
+      const add = document.createElement("button");
+      add.type = "button";
+      add.dataset.action = "add-query-param";
+      add.textContent = "+ Add query param";
+      add.style.cssText = "align-self:flex-start; background:transparent; border:0; color:var(--primary-base,#4361ee); font:inherit; font-weight:600; font-size:13px; cursor:pointer; padding:.25rem 0;";
+      container.append(rows, add);
+      wrap.append(heading, container);
+      panel.appendChild(wrap);
+      return panel;
+    }
+    _makeQueryParamRow(ei2, pi2, seed = {}) {
+      const row = document.createElement("p9r-stack");
+      row.setAttribute("direction", "row");
+      row.setAttribute("gap", "sm");
+      row.setAttribute("align", "center");
+      row.dataset.role = "query-param-row";
+      const name = this._makeInput(`endpoints.${ei2}.params.${pi2}.name`, "", "param name", seed.name);
+      name.style.flex = "1";
+      name.style.minWidth = "0";
+      const hiddenIn = document.createElement("input");
+      hiddenIn.type = "hidden";
+      hiddenIn.name = `endpoints.${ei2}.params.${pi2}.in`;
+      hiddenIn.value = "query";
+      const type = document.createElement("p9r-select");
+      type.setAttribute("name", `endpoints.${ei2}.params.${pi2}.type`);
+      type.setAttribute("label", "");
+      type.style.minWidth = "7rem";
+      for (const t of PARAM_TYPES) {
+        const o2 = document.createElement("option");
+        o2.value = t;
+        o2.textContent = t;
+        type.appendChild(o2);
+      }
+      const t0 = seed.type && PARAM_TYPES.includes(seed.type) ? seed.type : PARAM_TYPES[0];
+      type.setAttribute("value", t0);
+      const req = document.createElement("w13c-checkbox");
+      req.setAttribute("name", `endpoints.${ei2}.params.${pi2}.required`);
+      req.setAttribute("value", "true");
+      if (seed.required)
+        req.setAttribute("checked", "");
+      req.textContent = "Required";
+      req.style.whiteSpace = "nowrap";
+      const remove = document.createElement("p9r-icon-button");
+      remove.setAttribute("variant", "ghost");
+      remove.setAttribute("color", "danger");
+      remove.setAttribute("size", "sm");
+      remove.setAttribute("aria-label", "Remove param");
+      remove.dataset.action = "remove-query-param";
+      remove.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        `;
+      row.append(name, hiddenIn, type, req, remove);
+      return row;
+    }
+    _addQueryParam(container) {
+      if (!container)
+        return;
+      const ei2 = Number(container.dataset.endpointIdx);
+      const pi2 = Number(container.dataset.paramCount ?? "0");
+      container.dataset.paramCount = String(pi2 + 1);
+      container.querySelector('[data-role="query-param-rows"]')?.appendChild(this._makeQueryParamRow(ei2, pi2));
     }
     _makeDeferredPanel(id, label) {
       const panel = document.createElement("p9r-tab-panel");
@@ -23442,7 +23559,7 @@ button.active svg {
     if (!customElements.get(tag))
       customElements.define(tag, constructor);
   }
-  define("p9r-accordion", zt);
+  define("p9r-accordion", St);
   define("p9r-accordion-item", Rt);
   define("p9r-alert", Ft);
   define("p9r-avatar", Ot);
@@ -23484,7 +23601,7 @@ button.active svg {
   define("p9r-switch", oi);
   define("p9r-tab-panel", na);
   define("p9r-table", Tn);
-  define("p9r-cell", Sn);
+  define("p9r-cell", zn);
   define("p9r-header-cell", Nn);
   define("p9r-row", Yn);
   define("p9r-tabs", ea);

@@ -45,7 +45,7 @@ describe("<cms-endpoints-input>", () => {
         expect(item.querySelector('[name="endpoints.0.endpointId"]')).not.toBeNull();
     });
 
-    test("body is a tabs shell — Infos active with the 3 fields, In/Out/Rules deferred", () => {
+    test("body is a tabs shell — Infos active with the 3 fields; In active; Out/Rules deferred", () => {
         const el = mount();
         const item = rows(el)[0]!;
         const tabs = item.querySelector("p9r-tabs");
@@ -57,12 +57,48 @@ describe("<cms-endpoints-input>", () => {
         expect(infos!.querySelector('[name="endpoints.0.endpointId"]')).not.toBeNull();
         expect(infos!.querySelector('[name="endpoints.0.method"]')).not.toBeNull();
         expect(infos!.querySelector('[name="endpoints.0.targetUrl"]')).not.toBeNull();
-        // deferred tabs present and disabled
-        for (const id of ["in-0", "out-0", "rules-0"]) {
-            const panel = item.querySelector(`#${id}`);
-            expect(panel).not.toBeNull();
-            expect(panel!.hasAttribute("disabled")).toBe(true);
+        // In is now an active editor (Query params); Out/Rules stay deferred.
+        expect(item.querySelector("#in-0")!.hasAttribute("disabled")).toBe(false);
+        for (const id of ["out-0", "rules-0"]) {
+            expect(item.querySelector(`#${id}`)!.hasAttribute("disabled")).toBe(true);
         }
+    });
+
+    test("In tab: query params editor — add then remove (gap, no re-index)", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const paramRows = () => item.querySelectorAll('[data-role="query-param-row"]');
+        expect(paramRows()).toHaveLength(0);
+
+        clickAction(el, "add-query-param");
+        clickAction(el, "add-query-param");
+        expect(paramRows()).toHaveLength(2);
+        expect(item.querySelector('[name="endpoints.0.params.0.name"]')).not.toBeNull();
+        expect(item.querySelector('[name="endpoints.0.params.1.name"]')).not.toBeNull();
+        // each row carries a hidden in="query" + a type select defaulting to string
+        expect(item.querySelector('[name="endpoints.0.params.0.in"]')!.getAttribute("value")).toBe("query");
+        expect(item.querySelector('[name="endpoints.0.params.0.type"]')!.getAttribute("value")).toBe("string");
+
+        clickAction(el, "remove-query-param", 0);
+        expect(paramRows()).toHaveLength(1);
+        expect(item.querySelector('[name="endpoints.0.params.0.name"]')).toBeNull();      // gap left
+        expect(item.querySelector('[name="endpoints.0.params.1.name"]')).not.toBeNull();  // not renumbered
+    });
+
+    test("In tab: query params prefilled from the value JSON (incl. required checkbox)", () => {
+        const el = mount(JSON.stringify([
+            { endpointId: "list", method: "GET", targetUrl: "https://x.com", params: [
+                { name: "limit", in: "query", type: "number", required: true },
+                { name: "q",     in: "query", type: "string", required: false },
+            ] },
+        ]));
+        const item = rows(el)[0]!;
+        expect(item.querySelectorAll('[data-role="query-param-row"]')).toHaveLength(2);
+        expect(item.querySelector('[name="endpoints.0.params.0.name"]')!.getAttribute("value")).toBe("limit");
+        expect(item.querySelector('[name="endpoints.0.params.0.type"]')!.getAttribute("value")).toBe("number");
+        const checkboxes = item.querySelectorAll('w13c-checkbox');
+        expect(checkboxes[0]!.hasAttribute("checked")).toBe(true);   // required:true → checked
+        expect(checkboxes[1]!.hasAttribute("checked")).toBe(false);  // required:false → unchecked
     });
 
     test("delete is a header-actions button carrying data-action=remove-endpoint", () => {

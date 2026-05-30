@@ -2,10 +2,25 @@ import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import { HTTP_METHODS, type HTTPMethod, type GatewayMeta } from "@bernouy/cms-gateway";
 
+/** V1 param value types (scalars). Full recursive DataShape is reserved for the body. */
+const PARAM_TYPES = ["string", "number", "boolean"] as const;
+type ParamType = typeof PARAM_TYPES[number];
+/** Where a param goes upstream (see `buildUpstreamUrl`). */
+const PARAM_INS = ["path", "query", "header"] as const;
+type ParamIn = typeof PARAM_INS[number];
+
+export type EndpointParamDto = {
+    name: string;
+    in: ParamIn;
+    type: ParamType;
+    required: boolean;
+};
+
 export type EndpointDto = {
     endpointId: string;
     method: HTTPMethod;
     targetUrl: string;
+    params: EndpointParamDto[];
 };
 
 export type ProviderDto = {
@@ -16,6 +31,9 @@ export type ProviderDto = {
 
 /** Matches the flat indexed endpoint keys a `<cms-form>` posts, e.g. `endpoints.0.targetUrl`. */
 const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl)$/;
+/** Matches the flat doubly-indexed param keys, e.g. `endpoints.0.params.1.name`. */
+const PARAM_KEY = /^endpoints\.(\d+)\.params\.(\d+)\.(name|in|type|required)$/;
+type ParamFields = Partial<Record<"name" | "in" | "type" | "required", string>>;
 
 /** Same slug shape as the identity-provider create flow (lowercase kebab). */
 const slugify = (s: string): string =>
@@ -40,7 +58,20 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
 
     // ── Group flat indexed endpoint keys by row index ──
     const rows = new Map<number, Partial<Record<"endpointId" | "method" | "targetUrl", string>>>();
+    // ── Group params by endpoint index, then param index ──
+    const paramRows = new Map<number, Map<number, ParamFields>>();
     for (const [key, value] of Object.entries(body)) {
+        const pm = PARAM_KEY.exec(key);
+        if (pm) {
+            if (typeof value !== "string") throw new InvalidParam(key, "expected a string.");
+            const ei = Number(pm[1]), pi = Number(pm[2]);
+            const epParams = paramRows.get(ei) ?? new Map<number, ParamFields>();
+            const prow = epParams.get(pi) ?? {};
+            prow[pm[3] as keyof ParamFields] = value;
+            epParams.set(pi, prow);
+            paramRows.set(ei, epParams);
+            continue;
+        }
         const m = ENDPOINT_KEY.exec(key);
         if (!m) continue;
         if (typeof value !== "string") throw new InvalidParam(key, "expected a string.");
@@ -50,6 +81,34 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         row[field] = value;
         rows.set(idx, row);
     }
+
+    /** Reconstruct one endpoint's params, compacting sparse indices and dropping
+     *  unfilled (name-less) rows. */
+    const buildParams = (ei: number): EndpointParamDto[] => {
+        const epParams = paramRows.get(ei);
+        if (!epParams) return [];
+        const out: EndpointParamDto[] = [];
+        const seen = new Set<string>();
+        for (const pi of [...epParams.keys()].sort((a, b) => a - b)) {
+            const p = epParams.get(pi)!;
+            const name = (p.name ?? "").trim();
+            if (!name) continue;   // unfilled row → skip
+            if (seen.has(name)) {
+                throw new InvalidParam(`endpoints.${ei}.params.${pi}.name`, "duplicate param name");
+            }
+            seen.add(name);
+            const pin = p.in ?? "query";
+            if (!(PARAM_INS as readonly string[]).includes(pin)) {
+                throw new InvalidParam(`endpoints.${ei}.params.${pi}.in`, "must be path|query|header");
+            }
+            const type = p.type ?? "string";
+            if (!(PARAM_TYPES as readonly string[]).includes(type)) {
+                throw new InvalidParam(`endpoints.${ei}.params.${pi}.type`, "must be string|number|boolean");
+            }
+            out.push({ name, in: pin as ParamIn, type: type as ParamType, required: p.required === "true" });
+        }
+        return out;
+    };
 
     // ── Compact sparse indices ascending; validate each surviving row ──
     const endpoints: EndpointDto[] = [];
@@ -71,7 +130,7 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         }
         seenIds.add(endpointId);
 
-        endpoints.push({ endpointId, method: method as HTTPMethod, targetUrl });
+        endpoints.push({ endpointId, method: method as HTTPMethod, targetUrl, params: buildParams(idx) });
     }
 
     // Zero endpoints is allowed: the create form makes a provider shell, and

@@ -27,6 +27,14 @@ export default async function getGatewayProvider(req: Request, cms: ControlCms) 
         endpointId: parseUrn(e.urn)?.endpoint ?? "",
         method:     e.method,
         targetUrl:  e.targetUrl,
+        // Flatten input.params (scalar `type` lifted out of `schema`) so the
+        // editor can prefill the In tab's param rows.
+        params: (e.input?.params ?? []).map(p => ({
+            name:     p.name,
+            in:       p.in,
+            type:     p.schema?.type ?? "string",
+            required: !!p.required,
+        })),
     }));
     const endpointsJson = JSON.stringify(endpoints);
 

@@ -13,6 +13,8 @@ export class Checkbox extends Component {
     static formAssociated = true;
     private _internals: ElementInternals;
     private _input: HTMLInputElement | null;
+    private _labelText: HTMLElement | null;
+    private _labelSlot: HTMLSlotElement | null;
     private _defaultChecked = false;
     private _defaultIndeterminate = false;
     private _defaultsCaptured = false;
@@ -25,6 +27,8 @@ export class Checkbox extends Component {
         super({ css, template: template as unknown as string });
         this._internals = this.attachInternals();
         this._input = this.shadowRoot?.querySelector('input') ?? null;
+        this._labelText = this.shadowRoot?.querySelector('.label-text') ?? null;
+        this._labelSlot = this.shadowRoot?.querySelector('.label-text slot:not([name])') ?? null;
     }
 
     override connectedCallback() {
@@ -37,13 +41,27 @@ export class Checkbox extends Component {
         initInput(this, this._input);
         this._input?.addEventListener('change', this._onChange);
         this._input?.addEventListener('click', this._onClick);
+        this._labelSlot?.addEventListener('slotchange', this._syncLabel);
+        this._syncLabel();
         syncFormValue(this, this._input, this._internals);
     }
 
     disconnectedCallback() {
         this._input?.removeEventListener('change', this._onChange);
         this._input?.removeEventListener('click', this._onClick);
+        this._labelSlot?.removeEventListener('slotchange', this._syncLabel);
     }
+
+    /** Collapse the label area only when no label is actually provided. CSS
+     *  `:empty` can't be used on a `<slot>`: a slot is `:empty` whenever it has no
+     *  fallback children, regardless of assigned light-DOM content — so it hid the
+     *  label even when one was slotted in. Detect real slotted content instead. */
+    private _syncLabel = () => {
+        if (!this._labelText || !this._labelSlot) return;
+        const hasLabel = this._labelSlot.assignedNodes({ flatten: true })
+            .some(n => n.nodeType === Node.ELEMENT_NODE || (n.textContent ?? '').trim() !== '');
+        this._labelText.classList.toggle('is-empty', !hasLabel);
+    };
 
     formResetCallback() {
         this.indeterminate = this._defaultIndeterminate;

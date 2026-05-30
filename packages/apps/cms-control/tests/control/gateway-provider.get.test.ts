@@ -40,6 +40,27 @@ describe("GET /api/gateway-provider?urn=", () => {
         expect(JSON.parse(body.endpointsJson)).toEqual(body.endpoints); // the C2 prefill string
     });
 
+    test("flattens input.params into endpoints[].params for the editor", async () => {
+        const { cms } = makeCms();
+        await postGatewayProvider(new Request("http://localhost/cms/api/gateway-provider", {
+            method: "POST",
+            body: JSON.stringify({
+                id: "shop", "meta.name": "Shop",
+                "endpoints.0.endpointId": "list", "endpoints.0.method": "GET", "endpoints.0.targetUrl": "https://api.shop.com/x",
+                "endpoints.0.params.0.name": "limit", "endpoints.0.params.0.in": "query",
+                "endpoints.0.params.0.type": "number", "endpoints.0.params.0.required": "true",
+            }),
+            headers: { "content-type": "application/json" },
+        }), cms);
+
+        const body = await (await getGatewayProvider(get("?urn=urn:shop"), cms)).json();
+        expect(body.endpoints[0].params).toEqual([
+            { name: "limit", in: "query", type: "number", required: true },
+        ]);
+        // endpointsJson round-trips the same enriched shape (incl. params)
+        expect(JSON.parse(body.endpointsJson)[0].params).toEqual(body.endpoints[0].params);
+    });
+
     test("unknown urn → InvalidParam", async () => {
         const { cms } = makeCms();
         await expect(getGatewayProvider(get("?urn=urn:nope"), cms)).rejects.toThrow(/Invalid param urn/);

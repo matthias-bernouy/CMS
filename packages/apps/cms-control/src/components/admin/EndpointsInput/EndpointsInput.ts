@@ -25,7 +25,10 @@ import { HTTP_METHODS } from "@bernouy/cms-gateway";
  * the live DOM (see `render.ts`). A present-but-empty (`[]`) or malformed `value`
  * seeds ZERO rows; only a fully ABSENT `value` attribute seeds one starter row.
  */
-type EndpointSeed = { endpointId?: string; method?: string; targetUrl?: string };
+type ParamSeed = { name?: string; in?: string; type?: string; required?: boolean };
+type EndpointSeed = { endpointId?: string; method?: string; targetUrl?: string; params?: ParamSeed[] };
+
+const PARAM_TYPES = ["string", "number", "boolean"] as const;
 
 /** Read the current value of a p9r-input / p9r-select host (both expose `.value`). */
 const liveValue = (el: Element): string => (el as unknown as { value?: string }).value ?? '';
@@ -63,6 +66,20 @@ export class CmsEndpointsInput extends HTMLElement {
             // gap and `parseProviderDto` compacts it. The marker is on the accordion
             // item, so this removes the whole endpoint (header + body).
             removeBtn.closest('[data-role="endpoint-row"]')?.remove();
+            return;
+        }
+
+        const addParam = target.closest('[data-action="add-query-param"]');
+        if (addParam && this.contains(addParam)) {
+            e.preventDefault();
+            this._addQueryParam(addParam.closest('[data-role="query-params"]') as HTMLElement | null);
+            return;
+        }
+
+        const removeParam = target.closest('[data-action="remove-query-param"]');
+        if (removeParam && this.contains(removeParam)) {
+            e.preventDefault();
+            removeParam.closest('[data-role="query-param-row"]')?.remove();
         }
     };
 
@@ -160,12 +177,11 @@ export class CmsEndpointsInput extends HTMLElement {
         infosBody.append(idInput, methodSelect, urlInput);
         infos.appendChild(infosBody);
 
-        // Deferred tabs (disabled placeholders): params / output / auth.
         tabs.append(
             infos,
-            this._makeDeferredPanel(`in-${idx}`, 'In'),
-            this._makeDeferredPanel(`out-${idx}`, 'Out'),
-            this._makeDeferredPanel(`rules-${idx}`, 'Rules'),
+            this._makeInPanel(idx, seed.params ?? []),
+            this._makeDeferredPanel(`out-${idx}`, 'Out'),     // body DataShape — fast-follow
+            this._makeDeferredPanel(`rules-${idx}`, 'Rules'), // auth/injection — later
         );
         tabs.setAttribute('active', `infos-${idx}`);   // panels already appended → no first-rebuild race
 
@@ -205,7 +221,7 @@ export class CmsEndpointsInput extends HTMLElement {
     private _makeInput(name: string, label: string, placeholder: string, value?: string): HTMLElement {
         const input = document.createElement('p9r-input');
         input.setAttribute('name', name);
-        input.setAttribute('label', label);
+        if (label) input.setAttribute('label', label);   // empty → no label (compact rows)
         input.setAttribute('placeholder', placeholder);
         if (value != null) input.setAttribute('value', value);
         return input;
@@ -226,7 +242,116 @@ export class CmsEndpointsInput extends HTMLElement {
         return select;
     }
 
-    /** A disabled tab panel for a feature not built yet (params / output / rules). */
+    /** The "In" tab: a Query params editor (V1). Path params (auto-detected from
+     *  the URL) and Body land in follow-up increments; the "source" column comes
+     *  with Rules. Each row's controls serialize as `endpoints.<i>.params.<j>.*`
+     *  with `in="query"`, which `parseProviderDto` reconstructs into `input.params`
+     *  and the proxy (`buildUpstreamUrl`) forwards from the caller's request. */
+    private _makeInPanel(endpointIdx: number, seedParams: ParamSeed[]): HTMLElement {
+        const panel = document.createElement('p9r-tab-panel');
+        panel.id = `in-${endpointIdx}`;
+        panel.setAttribute('label', 'In');
+
+        const wrap = document.createElement('p9r-stack');
+        wrap.setAttribute('gap', 'm');
+
+        const heading = document.createElement('strong');
+        heading.textContent = 'Query params';
+        heading.style.cssText = 'font-size:13px;';
+
+        const queryParams = seedParams.filter(p => (p.in ?? 'query') === 'query');
+        const container = document.createElement('div');
+        container.dataset.role = 'query-params';
+        container.dataset.endpointIdx = String(endpointIdx);
+        container.dataset.paramCount = String(queryParams.length);
+
+        const rows = document.createElement('p9r-stack');
+        rows.setAttribute('gap', 'sm');
+        rows.dataset.role = 'query-param-rows';
+        queryParams.forEach((p, j) => rows.appendChild(this._makeQueryParamRow(endpointIdx, j, p)));
+
+        const add = document.createElement('button');
+        add.type = 'button';
+        add.dataset.action = 'add-query-param';
+        add.textContent = '+ Add query param';
+        add.style.cssText = 'align-self:flex-start; background:transparent; border:0; color:var(--primary-base,#4361ee); font:inherit; font-weight:600; font-size:13px; cursor:pointer; padding:.25rem 0;';
+
+        container.append(rows, add);
+        wrap.append(heading, container);
+        panel.appendChild(wrap);
+        return panel;
+    }
+
+    private _makeQueryParamRow(ei: number, pi: number, seed: ParamSeed = {}): HTMLElement {
+        const row = document.createElement('p9r-stack');
+        row.setAttribute('direction', 'row');
+        row.setAttribute('gap', 'sm');
+        row.setAttribute('align', 'center');
+        row.dataset.role = 'query-param-row';
+
+        const name = this._makeInput(`endpoints.${ei}.params.${pi}.name`, '', 'param name', seed.name);
+        name.style.flex = '1';
+        name.style.minWidth = '0';   // allow it to shrink so the row never overflows
+
+        const hiddenIn = document.createElement('input');
+        hiddenIn.type = 'hidden';
+        hiddenIn.name = `endpoints.${ei}.params.${pi}.in`;
+        hiddenIn.value = 'query';
+
+        const type = document.createElement('p9r-select');
+        type.setAttribute('name', `endpoints.${ei}.params.${pi}.type`);
+        type.setAttribute('label', '');
+        type.style.minWidth = '7rem';
+        for (const t of PARAM_TYPES) {
+            const o = document.createElement('option');
+            o.value = t;
+            o.textContent = t;
+            type.appendChild(o);
+        }
+        const t0 = seed.type && (PARAM_TYPES as readonly string[]).includes(seed.type) ? seed.type : PARAM_TYPES[0];
+        type.setAttribute('value', t0);
+
+        // The cms-blocs checkbox slots its own label inside the native <label> that
+        // wraps the box, so clicking either the box or the "Required" text toggles it.
+        const req = document.createElement('w13c-checkbox');
+        req.setAttribute('name', `endpoints.${ei}.params.${pi}.required`);
+        req.setAttribute('value', 'true');
+        if (seed.required) req.setAttribute('checked', '');
+        req.textContent = 'Required';
+        req.style.whiteSpace = 'nowrap';
+
+        const remove = document.createElement('p9r-icon-button');
+        remove.setAttribute('variant', 'ghost');
+        remove.setAttribute('color', 'danger');
+        remove.setAttribute('size', 'sm');
+        remove.setAttribute('aria-label', 'Remove param');
+        remove.dataset.action = 'remove-query-param';
+        remove.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        `;
+
+        row.append(name, hiddenIn, type, req, remove);
+        return row;
+    }
+
+    /** Append a fresh (empty) query-param row; the per-endpoint param index is an
+     *  increment-only counter on the container, so removes leave gaps the parser
+     *  compacts. */
+    private _addQueryParam(container: HTMLElement | null): void {
+        if (!container) return;
+        const ei = Number(container.dataset.endpointIdx);
+        const pi = Number(container.dataset.paramCount ?? '0');
+        container.dataset.paramCount = String(pi + 1);
+        container.querySelector('[data-role="query-param-rows"]')
+            ?.appendChild(this._makeQueryParamRow(ei, pi));
+    }
+
+    /** A disabled tab panel for a feature not built yet (output / rules). */
     private _makeDeferredPanel(id: string, label: string): HTMLElement {
         const panel = document.createElement('p9r-tab-panel');
         panel.id = id;

@@ -25,6 +25,54 @@ describe("parseProviderDto", () => {
 
     test("single-row body → 1 endpoint", () => {
         expect(parseProviderDto(validBody()).endpoints).toHaveLength(1);
+        expect(parseProviderDto(validBody()).endpoints[0]!.params).toEqual([]);   // no params declared
+    });
+
+    test("query params → endpoint.params", () => {
+        const dto = parseProviderDto(validBody({
+            "endpoints.0.params.0.name": "limit", "endpoints.0.params.0.in": "query",
+            "endpoints.0.params.0.type": "number", "endpoints.0.params.0.required": "true",
+            "endpoints.0.params.1.name": "q", "endpoints.0.params.1.in": "query", "endpoints.0.params.1.type": "string",
+        }));
+        expect(dto.endpoints[0]!.params).toEqual([
+            { name: "limit", in: "query", type: "number", required: true },
+            { name: "q",     in: "query", type: "string", required: false },
+        ]);
+    });
+
+    test("param row with empty name is skipped (unfilled)", () => {
+        const dto = parseProviderDto(validBody({
+            "endpoints.0.params.0.name": "", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",
+            "endpoints.0.params.1.name": "q", "endpoints.0.params.1.in": "query", "endpoints.0.params.1.type": "string",
+        }));
+        expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["q"]);
+    });
+
+    test("param gap is compacted", () => {
+        const dto = parseProviderDto(validBody({
+            "endpoints.0.params.0.name": "a", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",
+            "endpoints.0.params.2.name": "b", "endpoints.0.params.2.in": "query", "endpoints.0.params.2.type": "string",
+        }));
+        expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["a", "b"]);
+    });
+
+    test("bad param type → InvalidParam", () => {
+        expect(() => parseProviderDto(validBody({
+            "endpoints.0.params.0.name": "x", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "object",
+        }))).toThrow(/endpoints\.0\.params\.0\.type/);
+    });
+
+    test("bad param in → InvalidParam", () => {
+        expect(() => parseProviderDto(validBody({
+            "endpoints.0.params.0.name": "x", "endpoints.0.params.0.in": "body", "endpoints.0.params.0.type": "string",
+        }))).toThrow(/endpoints\.0\.params\.0\.in/);
+    });
+
+    test("duplicate param name within an endpoint → InvalidParam", () => {
+        expect(() => parseProviderDto(validBody({
+            "endpoints.0.params.0.name": "x", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",
+            "endpoints.0.params.1.name": "x", "endpoints.0.params.1.in": "query", "endpoints.0.params.1.type": "number",
+        }))).toThrow(/duplicate param name/);
     });
 
     test("gap compaction — a removed row (missing index) is skipped, result is dense", () => {

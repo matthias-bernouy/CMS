@@ -16,6 +16,11 @@
 :host([direction="row"]) { flex-direction: row; }
 :host([wrap]) { flex-wrap: wrap; }
 
+/* `align` is also a legacy HTML presentational attribute that the UA stylesheet
+   maps to `text-align` (e.g. align="center" → text-align:center), which would
+   leak into the whole subtree. Our `align` only controls the flex cross-axis, so
+   neutralise that mapping and let text-align inherit normally. */
+:host([align]) { text-align: inherit; }
 :host([align="start"])    { align-items: flex-start; }
 :host([align="center"])   { align-items: center; }
 :host([align="end"])      { align-items: flex-end; }
