@@ -9,6 +9,7 @@ export type {
     Provider, Endpoint, HTTPMethod,
     EndpointRule, EndpointRuleSource, EndpointParam, GatewayMeta,
 } from "./interfaces/Gateway";
+export { HTTP_METHODS } from "./interfaces/Gateway";
 export type { DataShape } from "./interfaces/DataShape";
 
 export type { GatewayRepository } from "./interfaces/GatewayRepository";

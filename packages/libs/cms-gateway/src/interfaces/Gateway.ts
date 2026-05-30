@@ -1,6 +1,9 @@
 import type { DataShape } from "./DataShape";
 
-export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
+/** The HTTP methods an endpoint may declare. Runtime list (single source of truth)
+ *  so callers can validate an incoming string against it; `HTTPMethod` is derived. */
+export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const;
+export type HTTPMethod = typeof HTTP_METHODS[number];
 
 /** Where a rule's value comes from. */
 export type EndpointRuleSource =
