@@ -17,6 +17,8 @@
                             <p9r-input label="Identifier" value="{{id}}" disabled hint="Immutable after creation."></p9r-input>
                             <p9r-input name="meta.name" label="Name" value="{{meta.name}}"></p9r-input>
                             <p9r-textarea name="meta.description" label="Description" value="{{meta.description}}"></p9r-textarea>
+                            <!-- icon has no editor yet; round-tripped so a save never wipes it (B1). -->
+                            <input type="hidden" name="meta.icon" value="{{meta.icon}}">
                         </p9r-stack>
 
                         <p9r-stack gap="s">

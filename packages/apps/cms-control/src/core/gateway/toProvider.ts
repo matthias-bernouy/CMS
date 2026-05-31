@@ -21,16 +21,24 @@ export function toProvider(dto: ProviderDto): Provider {
                 targetUrl: e.targetUrl,
                 rules: [],
             };
-            if (e.params.length) {
-                endpoint.input = {
-                    params: e.params.map(p => ({
+            // Build `input` from params AND/OR body — set it when either exists, so
+            // a body-only endpoint keeps its `input` and an edit never drops the body.
+            if (e.params.length || e.body) {
+                endpoint.input = {};
+                if (e.params.length) {
+                    endpoint.input.params = e.params.map(p => ({
                         name: p.name,
                         in: p.in,
                         required: p.required,
                         schema: { type: p.type },
-                    })),
-                };
+                        ...(p.description ? { description: p.description } : {}),
+                    }));
+                }
+                if (e.body) endpoint.input.body = e.body;
             }
+            // Output + meta have no editor yet but are preserved verbatim (B1 round-trip).
+            if (e.output) endpoint.output = e.output;
+            if (e.meta) endpoint.meta = e.meta;
             return endpoint;
         }),
     };

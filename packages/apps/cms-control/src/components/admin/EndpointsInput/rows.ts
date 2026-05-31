@@ -1,7 +1,7 @@
 import { HTTP_METHODS } from "@bernouy/cms-gateway";
 import { makeInput, makeMethodSelect, makeDeferredPanel, makeDeleteButton } from "./controls";
 import { makeInPanel } from "./inPanel";
-import { liveValue, methodColor, type EndpointSeed } from "./shared";
+import { readControl, methodColor, type EndpointSeed } from "./shared";
 
 /** Build one endpoint as a collapsible `<p9r-accordion-item>`: a live-synced
  *  collapsed-header summary (method tag + id + path), a header-actions delete
@@ -52,8 +52,8 @@ export function makeEndpointRow(idx: number, seed: EndpointSeed = {}): HTMLEleme
 
     tabs.append(
         infos,
-        makeInPanel(idx, seed.params ?? [], urlInput),
-        makeDeferredPanel(`out-${idx}`, 'Out'),     // body DataShape — fast-follow
+        makeInPanel(idx, seed, urlInput),
+        makeDeferredPanel(`out-${idx}`, 'Out'),     // response shape view — fast-follow
         makeDeferredPanel(`rules-${idx}`, 'Rules'), // auth/injection — later
     );
     tabs.setAttribute('active', `infos-${idx}`);   // panels already appended → no first-rebuild race
@@ -71,11 +71,11 @@ function bindHeaderSync(
     idInput: Element, methodSelect: Element, urlInput: Element,
 ): void {
     const update = () => {
-        const m = liveValue(methodSelect) || HTTP_METHODS[0];
+        const m = readControl(methodSelect) || HTTP_METHODS[0];
         methodTag.textContent = m;
         methodTag.setAttribute('color', methodColor(m));
-        idEl.textContent = liveValue(idInput).trim() || '(new endpoint)';
-        pathEl.textContent = liveValue(urlInput);
+        idEl.textContent = readControl(idInput).trim() || '(new endpoint)';
+        pathEl.textContent = readControl(urlInput);
     };
     for (const el of [idInput, methodSelect, urlInput]) {
         el.addEventListener('input', update);

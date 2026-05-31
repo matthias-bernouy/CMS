@@ -59,6 +59,78 @@ describe("POST /api/gateway-provider", () => {
         ]);
     });
 
+    test("body shape persists as endpoint.input.body (nested, validated)", async () => {
+        const { cms, gateway } = makeCms();
+        const body = { type: "object", properties: { id: { type: "string" }, tags: { type: "array", items: { type: "string" } } } };
+        await postGatewayProvider(post(validBody({
+            "endpoints.0.method": "POST",
+            "endpoints.0.body": JSON.stringify(body),
+        })), cms);
+        const stored = await gateway.getProvider("urn:shop");
+        expect(stored?.endpoints[0]!.input?.body).toEqual(body as any);
+    });
+
+    test("body `required[]` round-trips into input.body", async () => {
+        const { cms, gateway } = makeCms();
+        const body = { type: "object", properties: { id: { type: "string" }, n: { type: "number" } }, required: ["id"] };
+        await postGatewayProvider(post(validBody({ "endpoints.0.method": "POST", "endpoints.0.body": JSON.stringify(body) })), cms);
+        const stored = await gateway.getProvider("urn:shop");
+        expect(stored?.endpoints[0]!.input?.body).toEqual(body as any);
+    });
+
+    test("body-only endpoint (no params) still gets an input.body", async () => {
+        const { cms, gateway } = makeCms();
+        await postGatewayProvider(post(validBody({
+            "endpoints.0.body": JSON.stringify({ type: "object", properties: { q: { type: "string" } } }),
+        })), cms);
+        const stored = await gateway.getProvider("urn:shop");
+        expect(stored?.endpoints[0]!.input?.params).toBeUndefined();
+        expect(stored?.endpoints[0]!.input?.body).toEqual({ type: "object", properties: { q: { type: "string" } } } as any);
+    });
+
+    test("output shape round-trips verbatim (B1: edit never wipes it)", async () => {
+        const { cms, gateway } = makeCms();
+        const output = { type: "object", properties: { ok: { type: "boolean" } } };
+        await postGatewayProvider(post(validBody({ "endpoints.0.output": JSON.stringify(output) })), cms);
+        const stored = await gateway.getProvider("urn:shop");
+        expect(stored?.endpoints[0]!.output).toEqual(output as any);
+    });
+
+    test("malformed body JSON → InvalidParam (not a 500)", async () => {
+        const { cms } = makeCms();
+        await expect(postGatewayProvider(post(validBody({ "endpoints.0.body": "{not json" })), cms))
+            .rejects.toThrow(/endpoints\.0\.body/);
+    });
+
+    test("query-param description round-trips (B1: edit never wipes it)", async () => {
+        const { cms, gateway } = makeCms();
+        await postGatewayProvider(post(validBody({
+            "endpoints.0.params.0.name": "q", "endpoints.0.params.0.in": "query",
+            "endpoints.0.params.0.type": "string", "endpoints.0.params.0.description": "Search terms",
+        })), cms);
+        const stored = await gateway.getProvider("urn:shop");
+        expect(stored?.endpoints[0]!.input?.params?.[0]).toEqual(
+            { name: "q", in: "query", required: false, schema: { type: "string" }, description: "Search terms" } as any,
+        );
+    });
+
+    test("endpoint meta round-trips verbatim (B1: edit never wipes it)", async () => {
+        const { cms, gateway } = makeCms();
+        const meta = { name: "Get cart", description: "Returns the cart", icon: "cart" };
+        await postGatewayProvider(post(validBody({ "endpoints.0.meta": JSON.stringify(meta) })), cms);
+        const stored = await gateway.getProvider("urn:shop");
+        expect(stored?.endpoints[0]!.meta).toEqual(meta as any);
+    });
+
+    test("a name-less / malformed endpoint meta is DROPPED, not fatal (stays saveable)", async () => {
+        const { cms, gateway } = makeCms();
+        // editor-less round-trip field: a bad stored meta must not block the save.
+        const res = await postGatewayProvider(post(validBody({ "endpoints.0.meta": JSON.stringify({ icon: "x" }) })), cms);
+        expect(res.ok).toBe(true);
+        const stored = await gateway.getProvider("urn:shop");
+        expect(stored?.endpoints[0]!.meta).toBeUndefined();
+    });
+
     test("params are isolated per endpoint (no cross-contamination)", async () => {
         const { cms, gateway } = makeCms();
         await postGatewayProvider(post({

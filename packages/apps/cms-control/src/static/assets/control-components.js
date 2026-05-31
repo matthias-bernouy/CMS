@@ -10196,6 +10196,90 @@ cms-endpoints-input .ep-add-param {
     padding: 0.25rem 0;
 }
 
+/* ── Body shape tree ──────────────────────────────────────────────── */
+/* "Root type [select]" header */
+cms-endpoints-input .ep-root-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+/* Inline type picker; for arrays it also holds "of <elementType>" */
+cms-endpoints-input .ep-type-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+}
+cms-endpoints-input .ep-of { color: var(--text-muted, #94a3b8); font-size: 12px; }
+
+/* A nested object/array element groups its rows in a shaded, indented box */
+cms-endpoints-input .ep-box {
+    margin-top: 0.4rem;
+    margin-left: 1.1rem;
+    padding: 0.6rem;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-subtle, #f8fafc);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+/* The root object isn't boxed — it reads as the top level */
+cms-endpoints-input .ep-box-root {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+cms-endpoints-input .ep-prop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+/* One property: the row, plus any nested box below it */
+cms-endpoints-input .ep-prop {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+cms-endpoints-input .ep-prop-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+cms-endpoints-input .ep-prop-name { flex: 1; min-width: 0; }
+cms-endpoints-input .ep-required { flex: 0 0 auto; white-space: nowrap; }
+
+/* Bordered "+ Add property" button */
+cms-endpoints-input .ep-add-prop {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--border-default, #d1d5db);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-main, #1e293b);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+cms-endpoints-input .ep-add-prop:hover { border-color: var(--primary-base, #4361ee); color: var(--primary-base, #4361ee); }
+
+cms-endpoints-input .ep-remove-body {
+    align-self: flex-start;
+    background: transparent;
+    border: 0;
+    color: var(--text-muted, #94a3b8);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0.25rem 0;
+}
+cms-endpoints-input .ep-remove-body:hover { color: var(--danger-base, #ef4444); }
+
 /* Full-width dashed "Add endpoint" button (hover handled here, not in JS) */
 cms-endpoints-input .ep-add {
     width: 100%;
@@ -10283,7 +10367,8 @@ cms-endpoints-input .ep-add:hover {
   // src/components/admin/EndpointsInput/controls.ts
   function makeInput(name, label, placeholder, value) {
     const input = document.createElement("p9r-input");
-    input.setAttribute("name", name);
+    if (name)
+      input.setAttribute("name", name);
     if (label)
       input.setAttribute("label", label);
     input.setAttribute("placeholder", placeholder);
@@ -10291,20 +10376,20 @@ cms-endpoints-input .ep-add:hover {
       input.setAttribute("value", value);
     return input;
   }
-  function makeMethodSelect(name, value) {
+  function makeSelect(values, value, opts = {}) {
     const select = document.createElement("p9r-select");
-    select.setAttribute("name", name);
-    select.setAttribute("label", "Method");
-    for (const m of HTTP_METHODS) {
-      const opt = document.createElement("option");
-      opt.value = m;
-      opt.textContent = m;
-      select.appendChild(opt);
+    if (opts.name)
+      select.setAttribute("name", opts.name);
+    select.setAttribute("label", opts.label ?? "");
+    for (const v2 of values) {
+      const o2 = select.appendChild(document.createElement("option"));
+      o2.value = v2;
+      o2.textContent = v2;
     }
-    const initial = value && HTTP_METHODS.includes(value) ? value : HTTP_METHODS[0];
-    select.setAttribute("value", initial);
+    select.setAttribute("value", value && values.includes(value) ? value : values[0]);
     return select;
   }
+  var makeMethodSelect = (name, value) => makeSelect(HTTP_METHODS, value, { name, label: "Method" });
   function makeDeferredPanel(id, label) {
     const panel = document.createElement("p9r-tab-panel");
     panel.id = id;
@@ -10316,17 +10401,22 @@ cms-endpoints-input .ep-add:hover {
     panel.appendChild(note);
     return panel;
   }
-  function makeDeleteButton() {
+  function makeIconButton(svg, opts) {
     const btn = document.createElement("p9r-icon-button");
-    btn.setAttribute("slot", "header-actions");
     btn.setAttribute("variant", "ghost");
     btn.setAttribute("color", "danger");
     btn.setAttribute("size", "sm");
-    btn.setAttribute("aria-label", "Delete endpoint");
-    btn.dataset.action = "remove-endpoint";
-    btn.innerHTML = ICON_TRASH2;
+    btn.setAttribute("aria-label", opts.ariaLabel);
+    if (opts.slot)
+      btn.setAttribute("slot", opts.slot);
+    if (opts.action)
+      btn.dataset.action = opts.action;
+    if (opts.onClick)
+      btn.addEventListener("click", opts.onClick);
+    btn.innerHTML = svg;
     return btn;
   }
+  var makeDeleteButton = () => makeIconButton(ICON_TRASH2, { ariaLabel: "Delete endpoint", slot: "header-actions", action: "remove-endpoint" });
   function makeAddButton() {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -10386,7 +10476,11 @@ cms-endpoints-input .ep-add:hover {
 
   // src/components/admin/EndpointsInput/shared.ts
   var PARAM_TYPES = ["string", "number", "boolean"];
-  var liveValue = (el2) => el2.value ?? "";
+  var SHAPE_TYPES = ["string", "number", "boolean", "object", "array"];
+  var readControl = (el2) => {
+    const live = el2.value;
+    return typeof live === "string" ? live : el2.getAttribute("value") ?? "";
+  };
   var METHOD_COLOR = {
     GET: "success",
     POST: "info",
@@ -10409,18 +10503,13 @@ cms-endpoints-input .ep-add:hover {
     hiddenIn.type = "hidden";
     hiddenIn.name = `endpoints.${ei2}.params.${pi2}.in`;
     hiddenIn.value = "query";
-    const type = document.createElement("p9r-select");
+    const hiddenDesc = document.createElement("input");
+    hiddenDesc.type = "hidden";
+    hiddenDesc.name = `endpoints.${ei2}.params.${pi2}.description`;
+    if (seed.description)
+      hiddenDesc.value = seed.description;
+    const type = makeSelect(PARAM_TYPES, seed.type, { name: `endpoints.${ei2}.params.${pi2}.type` });
     type.className = "ep-type";
-    type.setAttribute("name", `endpoints.${ei2}.params.${pi2}.type`);
-    type.setAttribute("label", "");
-    for (const t of PARAM_TYPES) {
-      const o2 = document.createElement("option");
-      o2.value = t;
-      o2.textContent = t;
-      type.appendChild(o2);
-    }
-    const t0 = seed.type && PARAM_TYPES.includes(seed.type) ? seed.type : PARAM_TYPES[0];
-    type.setAttribute("value", t0);
     const req = document.createElement("w13c-checkbox");
     req.className = "ep-required";
     req.setAttribute("name", `endpoints.${ei2}.params.${pi2}.required`);
@@ -10428,19 +10517,204 @@ cms-endpoints-input .ep-add:hover {
     if (seed.required)
       req.setAttribute("checked", "");
     req.textContent = "Required";
-    const remove = document.createElement("p9r-icon-button");
-    remove.setAttribute("variant", "ghost");
-    remove.setAttribute("color", "danger");
-    remove.setAttribute("size", "sm");
-    remove.setAttribute("aria-label", "Remove param");
-    remove.dataset.action = "remove-query-param";
-    remove.innerHTML = ICON_X;
-    row.append(name, hiddenIn, type, req, remove);
+    const remove = makeIconButton(ICON_X, { ariaLabel: "Remove param", action: "remove-query-param" });
+    row.append(name, hiddenIn, hiddenDesc, type, req, remove);
     return row;
   }
 
+  // src/components/admin/EndpointsInput/bodyParts.ts
+  function makeTypeSelect(value) {
+    const select = makeSelect(SHAPE_TYPES, value);
+    select.dataset.role = "node-type";
+    select.className = "ep-type";
+    return select;
+  }
+  function makeRequiredCheckbox(checked, onChange) {
+    const cb = document.createElement("w13c-checkbox");
+    cb.dataset.role = "required";
+    cb.className = "ep-required";
+    if (checked)
+      cb.setAttribute("checked", "");
+    cb.textContent = "Required";
+    cb.addEventListener("change", onChange);
+    return cb;
+  }
+  var makeTrash = (onClick) => makeIconButton(ICON_X, { ariaLabel: "Remove property", onClick });
+  function makeAddPropButton(onClick) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.role = "add-prop";
+    btn.className = "ep-add-prop";
+    btn.setLabel = (name) => {
+      btn.textContent = name ? `+ Add property to "${name}"` : "+ Add property";
+    };
+    btn.setLabel("");
+    btn.addEventListener("click", onClick);
+    return btn;
+  }
+
+  // src/components/admin/EndpointsInput/bodyNode.ts
+  function makeNode(seed, onChange, depth = 0) {
+    const typeSelect = makeTypeSelect(seed.type);
+    const typeEl = document.createElement("span");
+    typeEl.className = "ep-type-cell";
+    typeEl.appendChild(typeSelect);
+    const childrenEl = document.createElement("div");
+    const props = [];
+    let itemsNode = null;
+    let addBtn = null;
+    const makeProp = (name, shape, required) => {
+      const nameEl = makeInput("", "", "field name", name);
+      nameEl.classList.add("ep-prop-name");
+      const child = makeNode(shape, onChange, depth + 1);
+      const reqEl = makeRequiredCheckbox(required, onChange);
+      const wrapper = document.createElement("div");
+      wrapper.className = "ep-prop";
+      const row = document.createElement("div");
+      row.className = "ep-prop-row";
+      const trash = makeTrash(() => {
+        const i = props.findIndex((p) => p.nameEl === nameEl);
+        if (i >= 0)
+          props.splice(i, 1);
+        wrapper.remove();
+        onChange();
+      });
+      nameEl.addEventListener("input", () => {
+        onChange();
+        child.setOwnerLabel(readControl(nameEl).trim());
+      });
+      row.append(nameEl, child.typeEl, reqEl, trash);
+      wrapper.append(row, child.childrenEl);
+      props.push({ nameEl, reqEl, child });
+      child.setOwnerLabel(name);
+      return wrapper;
+    };
+    const rebuild = (type, s) => {
+      props.length = 0;
+      itemsNode = null;
+      addBtn = null;
+      while (typeSelect.nextSibling)
+        typeSelect.nextSibling.remove();
+      childrenEl.replaceChildren();
+      if (type === "object") {
+        const box = document.createElement("div");
+        box.className = depth > 0 ? "ep-box" : "ep-box ep-box-root";
+        const list = document.createElement("div");
+        list.className = "ep-prop-list";
+        const req = new Set(s.required ?? []);
+        for (const [k2, v2] of Object.entries(s.properties ?? {}))
+          list.appendChild(makeProp(k2, v2, req.has(k2)));
+        addBtn = makeAddPropButton(() => {
+          list.appendChild(makeProp("", { type: "string" }, false));
+          onChange();
+        });
+        box.append(list, addBtn);
+        childrenEl.appendChild(box);
+      } else if (type === "array") {
+        itemsNode = makeNode(s.items ?? { type: "string" }, onChange, depth + 1);
+        const of = document.createElement("span");
+        of.className = "ep-of";
+        of.textContent = "of";
+        typeEl.append(of, itemsNode.typeEl);
+        childrenEl.appendChild(itemsNode.childrenEl);
+      }
+    };
+    typeSelect.addEventListener("change", () => {
+      const t = readControl(typeSelect);
+      typeSelect.setAttribute("value", t);
+      rebuild(t, { type: t });
+      onChange();
+    });
+    rebuild(seed.type, seed);
+    const read = () => {
+      const type = readControl(typeSelect);
+      if (type === "object") {
+        const properties = {};
+        const required = [];
+        for (const p of props) {
+          const n = readControl(p.nameEl).trim();
+          if (!n)
+            continue;
+          properties[n] = p.child.read();
+          if (p.reqEl.hasAttribute("checked"))
+            required.push(n);
+        }
+        const out = { type };
+        if (Object.keys(properties).length)
+          out.properties = properties;
+        if (required.length)
+          out.required = required.filter((n) => (n in properties));
+        return out;
+      }
+      if (type === "array")
+        return itemsNode ? { type, items: itemsNode.read() } : { type };
+      return { type };
+    };
+    return { typeEl, childrenEl, read, setOwnerLabel: (name) => addBtn?.setLabel(name) };
+  }
+
+  // src/components/admin/EndpointsInput/bodyEditor.ts
+  function makeBodySection(ei2, seedBody) {
+    const container = document.createElement("div");
+    container.dataset.role = "body";
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = `endpoints.${ei2}.body`;
+    const slot = document.createElement("div");
+    slot.dataset.role = "body-slot";
+    let root = null;
+    const sync = () => {
+      hidden.value = root ? JSON.stringify(root.read()) : "";
+    };
+    const showEmpty = () => {
+      root = null;
+      hidden.value = "";
+      const define = document.createElement("button");
+      define.type = "button";
+      define.className = "ep-add-param";
+      define.dataset.role = "define-body";
+      define.textContent = "+ Define request body";
+      define.addEventListener("click", () => showTree({ type: "object" }));
+      slot.replaceChildren(define);
+    };
+    const showTree = (seed) => {
+      root = makeNode(seed, sync, 0);
+      const head = document.createElement("div");
+      head.className = "ep-root-head";
+      const label = document.createElement("span");
+      label.className = "ep-meta";
+      label.textContent = "Root type";
+      head.append(label, root.typeEl);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "ep-remove-body";
+      remove.textContent = "Remove body";
+      remove.addEventListener("click", showEmpty);
+      slot.replaceChildren(head, root.childrenEl, remove);
+      hidden.value = JSON.stringify(seed);
+    };
+    if (seedBody)
+      showTree(seedBody);
+    else
+      showEmpty();
+    container.append(hidden, slot);
+    return container;
+  }
+  function makePassthrough(name, role, seed) {
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = name;
+    hidden.dataset.role = role;
+    if (seed)
+      hidden.value = JSON.stringify(seed);
+    return hidden;
+  }
+  var makeOutputField = (ei2, seedOutput) => makePassthrough(`endpoints.${ei2}.output`, "output-passthrough", seedOutput);
+  var makeMetaField = (ei2, seedMeta) => makePassthrough(`endpoints.${ei2}.meta`, "meta-passthrough", seedMeta);
+
   // src/components/admin/EndpointsInput/inPanel.ts
-  function makeInPanel(endpointIdx, seedParams, urlInput) {
+  function makeInPanel(endpointIdx, seed, urlInput) {
+    const seedParams = seed.params ?? [];
     const panel = document.createElement("p9r-tab-panel");
     panel.id = `in-${endpointIdx}`;
     panel.setAttribute("label", "In");
@@ -10470,7 +10744,7 @@ cms-endpoints-input .ep-add:hover {
     add.dataset.action = "add-query-param";
     add.textContent = "+ Add query param";
     container.append(rows, add);
-    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container);
+    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), makeOutputField(endpointIdx, seed.output), makeMetaField(endpointIdx, seed.meta));
     panel.appendChild(wrap);
     return panel;
   }
@@ -10521,7 +10795,7 @@ cms-endpoints-input .ep-add:hover {
     const urlInput = makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
     infosBody.append(idInput, methodSelect, urlInput);
     infos.appendChild(infosBody);
-    tabs.append(infos, makeInPanel(idx, seed.params ?? [], urlInput), makeDeferredPanel(`out-${idx}`, "Out"), makeDeferredPanel(`rules-${idx}`, "Rules"));
+    tabs.append(infos, makeInPanel(idx, seed, urlInput), makeDeferredPanel(`out-${idx}`, "Out"), makeDeferredPanel(`rules-${idx}`, "Rules"));
     tabs.setAttribute("active", `infos-${idx}`);
     item.append(header, makeDeleteButton(), tabs);
     bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
@@ -10529,11 +10803,11 @@ cms-endpoints-input .ep-add:hover {
   }
   function bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput) {
     const update = () => {
-      const m = liveValue(methodSelect) || HTTP_METHODS[0];
+      const m = readControl(methodSelect) || HTTP_METHODS[0];
       methodTag.textContent = m;
       methodTag.setAttribute("color", methodColor(m));
-      idEl.textContent = liveValue(idInput).trim() || "(new endpoint)";
-      pathEl.textContent = liveValue(urlInput);
+      idEl.textContent = readControl(idInput).trim() || "(new endpoint)";
+      pathEl.textContent = readControl(urlInput);
     };
     for (const el2 of [idInput, methodSelect, urlInput]) {
       el2.addEventListener("input", update);

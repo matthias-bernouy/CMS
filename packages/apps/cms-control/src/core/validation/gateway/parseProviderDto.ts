@@ -1,6 +1,7 @@
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { HTTP_METHODS, type HTTPMethod, type GatewayMeta } from "@bernouy/cms-gateway";
+import { HTTP_METHODS, type HTTPMethod, type GatewayMeta, type DataShape } from "@bernouy/cms-gateway";
+import { parseShapeField } from "./parseDataShape";
 
 /** V1 param value types (scalars). Full recursive DataShape is reserved for the body. */
 const PARAM_TYPES = ["string", "number", "boolean"] as const;
@@ -14,6 +15,9 @@ export type EndpointParamDto = {
     in: ParamIn;
     type: ParamType;
     required: boolean;
+    /** Round-tripped verbatim (not editable yet) so editing never wipes a stored
+     *  param description — e.g. the BAN preset sets one on every param. */
+    description?: string;
 };
 
 export type EndpointDto = {
@@ -21,6 +25,15 @@ export type EndpointDto = {
     method: HTTPMethod;
     targetUrl: string;
     params: EndpointParamDto[];
+    /** Request-body shape (recursive). Authored as a JSON blob in the In tab. */
+    body?: DataShape;
+    /** Response shape — round-tripped (no editor yet) so an edit never wipes a
+     *  stored output (B1). Re-validated + normalised by `parseDataShape` (unknown
+     *  DataShape vocabulary would be dropped), not byte-for-byte verbatim. */
+    output?: DataShape;
+    /** Endpoint meta (name/description/icon) — no editor yet, round-tripped (and
+     *  re-validated) so an edit never wipes it (e.g. the BAN preset names every endpoint). */
+    meta?: GatewayMeta;
 };
 
 export type ProviderDto = {
@@ -32,8 +45,11 @@ export type ProviderDto = {
 /** Matches the flat indexed endpoint keys a `<cms-form>` posts, e.g. `endpoints.0.targetUrl`. */
 const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl)$/;
 /** Matches the flat doubly-indexed param keys, e.g. `endpoints.0.params.1.name`. */
-const PARAM_KEY = /^endpoints\.(\d+)\.params\.(\d+)\.(name|in|type|required)$/;
-type ParamFields = Partial<Record<"name" | "in" | "type" | "required", string>>;
+const PARAM_KEY = /^endpoints\.(\d+)\.params\.(\d+)\.(name|in|type|required|description)$/;
+/** Matches the per-endpoint JSON blobs (a JSON string), e.g. `endpoints.0.body`. */
+const BLOB_KEY = /^endpoints\.(\d+)\.(body|output|meta)$/;
+type ParamFields = Partial<Record<"name" | "in" | "type" | "required" | "description", string>>;
+type BlobFields = Partial<Record<"body" | "output" | "meta", unknown>>;
 
 /** `{name}` placeholders in a target URL are the endpoint's path params. They are
  *  DERIVED here (not posted by the form): the URL is the single source of truth,
@@ -78,7 +94,17 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
     const rows = new Map<number, Partial<Record<"endpointId" | "method" | "targetUrl", string>>>();
     // ── Group params by endpoint index, then param index ──
     const paramRows = new Map<number, Map<number, ParamFields>>();
+    // ── Per-endpoint body/output/meta JSON blobs (round-tripped + re-validated) ──
+    const blobRows = new Map<number, BlobFields>();
     for (const [key, value] of Object.entries(body)) {
+        const sm = BLOB_KEY.exec(key);
+        if (sm) {
+            const ei = Number(sm[1]);
+            const srow = blobRows.get(ei) ?? {};
+            srow[sm[2] as keyof BlobFields] = value;
+            blobRows.set(ei, srow);
+            continue;
+        }
         const pm = PARAM_KEY.exec(key);
         if (pm) {
             if (typeof value !== "string") throw new InvalidParam(key, "expected a string.");
@@ -124,7 +150,11 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
             if (!(PARAM_TYPES as readonly string[]).includes(type)) {
                 throw new InvalidParam(`endpoints.${ei}.params.${pi}.type`, "must be string|number|boolean");
             }
-            out.push({ name, in: pin as ParamIn, type: type as ParamType, required: p.required === "true" });
+            const description = (p.description ?? "").trim();
+            out.push({
+                name, in: pin as ParamIn, type: type as ParamType, required: p.required === "true",
+                ...(description ? { description } : {}),
+            });
         }
         return out;
     };
@@ -153,9 +183,17 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         // The path names are reserved first so a query row can't reuse one.
         const pathParams = pathParamsFromUrl(targetUrl);
         const queryParams = buildParams(idx, new Set(pathParams.map(p => p.name)));
+        // Body is authored in the editor; output + meta are round-tripped + re-validated (B1 fix).
+        const blobs = blobRows.get(idx);
+        const body = parseShapeField(blobs?.body, `endpoints.${idx}.body`);
+        const output = parseShapeField(blobs?.output, `endpoints.${idx}.output`);
+        const meta = parseMetaField(blobs?.meta, `endpoints.${idx}.meta`);
         endpoints.push({
             endpointId, method: method as HTTPMethod, targetUrl,
             params: [...pathParams, ...queryParams],
+            ...(body ? { body } : {}),
+            ...(output ? { output } : {}),
+            ...(meta ? { meta } : {}),
         });
     }
 
@@ -182,4 +220,26 @@ function buildMeta(body: Record<string, unknown>, id: string): GatewayMeta {
 
 function isParsableUrl(value: string): boolean {
     try { new URL(value); return true; } catch { return false; }
+}
+
+/** Parse a per-endpoint `meta` JSON blob into a validated `GatewayMeta`, or
+ *  `undefined` when blank/un-named. This is an editor-less round-trip field, so a
+ *  malformed stored meta is DROPPED (return undefined) rather than thrown — a
+ *  name-less meta must not make the provider un-saveable through a UI that can't fix it. */
+function parseMetaField(raw: unknown, path: string): GatewayMeta | undefined {
+    if (raw == null || raw === "") return undefined;
+    if (typeof raw !== "string") return undefined;
+    let parsed: unknown;
+    try { parsed = JSON.parse(raw); } catch { return undefined; }
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined;
+    const m = parsed as Record<string, unknown>;
+    const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
+    const name = str(m.name);
+    if (!name) return undefined;   // no valid name → drop the meta (GatewayMeta requires one)
+    const meta: GatewayMeta = { name };
+    const description = str(m.description);
+    const icon = str(m.icon);
+    if (description) meta.description = description;
+    if (icon) meta.icon = icon;
+    return meta;
 }

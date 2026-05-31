@@ -1,11 +1,14 @@
 import { renderPathParams } from "./pathParams";
 import { makeQueryParamRow } from "./queryRow";
-import type { ParamSeed } from "./shared";
+import { makeBodySection, makeOutputField, makeMetaField } from "./bodyEditor";
+import type { EndpointSeed } from "./shared";
 
-/** The "In" tab: read-only Path params (auto-detected from the URL) above an
- *  editable Query params editor. Path rows re-render live as the Target URL
- *  changes (cross-tab sync); query rows post their flat keys. */
-export function makeInPanel(endpointIdx: number, seedParams: ParamSeed[], urlInput: HTMLElement): HTMLElement {
+/** The "In" tab: read-only Path params (auto-detected from the URL), an editable
+ *  Query params editor, and the recursive Body shape editor. Path rows re-render
+ *  live as the Target URL changes; query rows post flat keys; the body posts one
+ *  JSON blob. A hidden output field round-trips the (editor-less) response shape. */
+export function makeInPanel(endpointIdx: number, seed: EndpointSeed, urlInput: HTMLElement): HTMLElement {
+    const seedParams = seed.params ?? [];
     const panel = document.createElement('p9r-tab-panel');
     panel.id = `in-${endpointIdx}`;
     panel.setAttribute('label', 'In');
@@ -45,7 +48,13 @@ export function makeInPanel(endpointIdx: number, seedParams: ParamSeed[], urlInp
     add.textContent = '+ Add query param';
 
     container.append(rows, add);
-    wrap.append(heading('Path params'), pathContainer, heading('Query params'), container);
+    wrap.append(
+        heading('Path params'), pathContainer,
+        heading('Query params'), container,
+        heading('Body'), makeBodySection(endpointIdx, seed.body),
+        makeOutputField(endpointIdx, seed.output),   // hidden — round-trips the response shape
+        makeMetaField(endpointIdx, seed.meta),       // hidden — round-trips endpoint meta
+    );
     panel.appendChild(wrap);
     return panel;
 }

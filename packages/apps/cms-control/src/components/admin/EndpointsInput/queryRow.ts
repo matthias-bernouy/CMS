@@ -1,4 +1,4 @@
-import { makeInput } from "./controls";
+import { makeInput, makeSelect, makeIconButton } from "./controls";
 import { PARAM_TYPES, type ParamSeed } from "./shared";
 import { ICON_X } from "./icons";
 
@@ -20,18 +20,14 @@ export function makeQueryParamRow(ei: number, pi: number, seed: ParamSeed = {}):
     hiddenIn.name = `endpoints.${ei}.params.${pi}.in`;
     hiddenIn.value = 'query';
 
-    const type = document.createElement('p9r-select');
+    // Description isn't editable yet but is round-tripped so a save never wipes it.
+    const hiddenDesc = document.createElement('input');
+    hiddenDesc.type = 'hidden';
+    hiddenDesc.name = `endpoints.${ei}.params.${pi}.description`;
+    if (seed.description) hiddenDesc.value = seed.description;
+
+    const type = makeSelect(PARAM_TYPES, seed.type, { name: `endpoints.${ei}.params.${pi}.type` });
     type.className = 'ep-type';
-    type.setAttribute('name', `endpoints.${ei}.params.${pi}.type`);
-    type.setAttribute('label', '');
-    for (const t of PARAM_TYPES) {
-        const o = document.createElement('option');
-        o.value = t;
-        o.textContent = t;
-        type.appendChild(o);
-    }
-    const t0 = seed.type && (PARAM_TYPES as readonly string[]).includes(seed.type) ? seed.type : PARAM_TYPES[0];
-    type.setAttribute('value', t0);
 
     // The cms-blocs checkbox slots its own label inside the native <label> that
     // wraps the box, so clicking the box or the "Required" text toggles it.
@@ -42,14 +38,8 @@ export function makeQueryParamRow(ei: number, pi: number, seed: ParamSeed = {}):
     if (seed.required) req.setAttribute('checked', '');
     req.textContent = 'Required';
 
-    const remove = document.createElement('p9r-icon-button');
-    remove.setAttribute('variant', 'ghost');
-    remove.setAttribute('color', 'danger');
-    remove.setAttribute('size', 'sm');
-    remove.setAttribute('aria-label', 'Remove param');
-    remove.dataset.action = 'remove-query-param';
-    remove.innerHTML = ICON_X;
+    const remove = makeIconButton(ICON_X, { ariaLabel: 'Remove param', action: 'remove-query-param' });
 
-    row.append(name, hiddenIn, type, req, remove);
+    row.append(name, hiddenIn, hiddenDesc, type, req, remove);
     return row;
 }

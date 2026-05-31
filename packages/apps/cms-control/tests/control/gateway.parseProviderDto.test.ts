@@ -167,6 +167,16 @@ describe("parseProviderDto", () => {
         expect(dto.id).toBe("shop");
     });
 
+    test("provider meta.icon round-trips when the form posts it (B1)", () => {
+        const dto = parseProviderDto(validBody({ "meta.icon": "map-pin" }));
+        expect(dto.meta).toEqual({ name: "Shop", icon: "map-pin" } as any);
+    });
+
+    test("blank meta.icon → no icon (provider had none)", () => {
+        const dto = parseProviderDto(validBody({ "meta.icon": "" }));
+        expect(dto.meta.icon).toBeUndefined();
+    });
+
     test("meta.name defaults to the id when absent", () => {
         const dto = parseProviderDto({
             id: "shop",
@@ -179,5 +189,33 @@ describe("parseProviderDto", () => {
         const dto = parseProviderDto(validBody({ "endpoints.0.urn": "urn:evil:inject" })) as any;
         expect(dto.endpoints[0].urn).toBeUndefined();
         expect(dto.endpoints[0].endpointId).toBe("getCart");
+    });
+
+    test("body JSON blob → parsed DataShape on the DTO", () => {
+        const body = { type: "object", properties: { id: { type: "string" } } };
+        const dto = parseProviderDto(validBody({ "endpoints.0.body": JSON.stringify(body) }));
+        expect(dto.endpoints[0]!.body).toEqual(body as any);
+    });
+
+    test("output JSON blob → parsed DataShape on the DTO (round-trip)", () => {
+        const output = { type: "array", items: { type: "number" } };
+        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        expect(dto.endpoints[0]!.output).toEqual(output as any);
+    });
+
+    test("blank body field → no body on the DTO", () => {
+        const dto = parseProviderDto(validBody({ "endpoints.0.body": "" }));
+        expect(dto.endpoints[0]!.body).toBeUndefined();
+    });
+
+    test("malformed body JSON → InvalidParam scoped to the endpoint", () => {
+        expect(() => parseProviderDto(validBody({ "endpoints.0.body": "{bad" })))
+            .toThrow(/endpoints\.0\.body/);
+    });
+
+    test("body shape with a bad node type → InvalidParam", () => {
+        const bad = JSON.stringify({ type: "object", properties: { x: { type: "datetime" } } });
+        expect(() => parseProviderDto(validBody({ "endpoints.0.body": bad })))
+            .toThrow(/endpoints\.0\.body\.properties\.x\.type/);
     });
 });

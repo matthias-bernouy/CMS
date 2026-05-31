@@ -122,6 +122,88 @@ describe("<cms-endpoints-input>", () => {
         expect(item.querySelector('[data-role="path-params"]')!.textContent).toContain("placeholders");
     });
 
+    test("In tab: Body section starts empty with a '+ Define request body' affordance", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const body = item.querySelector('[data-role="body"]');
+        expect(body).not.toBeNull();
+        expect(body!.querySelector('[data-role="define-body"]')).not.toBeNull();
+        // no shape tree yet, and the hidden body field is empty (no body stored)
+        expect(body!.querySelector('[data-role="node-type"]')).toBeNull();
+        expect((item.querySelector('[name="endpoints.0.body"]') as HTMLInputElement).value).toBe("");
+    });
+
+    test("In tab: a seeded body renders the tree (incl. required) and syncs the hidden JSON", () => {
+        const body = {
+            type: "object",
+            properties: { id: { type: "string" }, tags: { type: "array", items: { type: "string" } } },
+            required: ["id"],
+        };
+        const el = mount(JSON.stringify([
+            { endpointId: "create", method: "POST", targetUrl: "https://x.com/items", body },
+        ]));
+        const item = rows(el)[0]!;
+        // root + the two property nodes + the array's items node = 4 type selects
+        expect(item.querySelectorAll('[data-role="node-type"]').length).toBeGreaterThanOrEqual(4);
+        // the "id" property's Required switch is on, "tags" is off
+        const switches = item.querySelectorAll('[data-role="body"] [data-role="required"]');
+        expect(switches[0]!.hasAttribute("checked")).toBe(true);
+        expect(switches[1]!.hasAttribute("checked")).toBe(false);
+        const hidden = item.querySelector('[name="endpoints.0.body"]') as HTMLInputElement;
+        expect(JSON.parse(hidden.value)).toEqual(body);
+    });
+
+    test("In tab: a seeded output round-trips through the hidden passthrough field", () => {
+        const output = { type: "object", properties: { ok: { type: "boolean" } } };
+        const el = mount(JSON.stringify([
+            { endpointId: "list", method: "GET", targetUrl: "https://x.com", output },
+        ]));
+        const item = rows(el)[0]!;
+        const hidden = item.querySelector('[name="endpoints.0.output"]') as HTMLInputElement;
+        expect(JSON.parse(hidden.value)).toEqual(output);
+        // output has no editor — it is a hidden passthrough field only
+        expect(hidden.getAttribute("type")).toBe("hidden");
+        expect(hidden.dataset.role).toBe("output-passthrough");
+    });
+
+    test("In tab: changing an array's element type re-syncs the body JSON", () => {
+        const body = { type: "object", properties: { tags: { type: "array", items: { type: "string" } } } };
+        const el = mount(JSON.stringify([{ endpointId: "x", method: "POST", targetUrl: "https://x.com", body }]));
+        const item = rows(el)[0]!;
+        const tagsRow = Array.from(item.querySelectorAll('.ep-prop-row'))
+            .find(r => (r.querySelector('.ep-prop-name') as Element | null)?.getAttribute('value') === 'tags')!;
+        const elemSel = tagsRow.querySelectorAll('[data-role="node-type"]')[1] as HTMLElement;
+        // happy-dom: p9r-select isn't upgraded, so readControl falls back to the attribute.
+        elemSel.setAttribute('value', 'number');
+        elemSel.dispatchEvent(new Event('change', { bubbles: true }));
+        const hidden = item.querySelector('[name="endpoints.0.body"]') as HTMLInputElement;
+        expect(JSON.parse(hidden.value).properties.tags.items).toEqual({ type: "number" });
+    });
+
+    test("In tab: a seeded query-param description round-trips via a hidden field", () => {
+        const el = mount(JSON.stringify([
+            { endpointId: "search", method: "GET", targetUrl: "https://x.com", params: [
+                { name: "q", in: "query", type: "string", required: false, description: "Search terms" },
+            ] },
+        ]));
+        const item = rows(el)[0]!;
+        const desc = item.querySelector('[name="endpoints.0.params.0.description"]') as HTMLInputElement;
+        expect(desc).not.toBeNull();
+        expect(desc.getAttribute("type")).toBe("hidden");
+        expect(desc.value).toBe("Search terms");
+    });
+
+    test("In tab: a seeded endpoint meta round-trips via the hidden passthrough", () => {
+        const meta = { name: "Search", icon: "search" };
+        const el = mount(JSON.stringify([
+            { endpointId: "search", method: "GET", targetUrl: "https://x.com", meta },
+        ]));
+        const item = rows(el)[0]!;
+        const hidden = item.querySelector('[name="endpoints.0.meta"]') as HTMLInputElement;
+        expect(JSON.parse(hidden.value)).toEqual(meta);
+        expect(hidden.dataset.role).toBe("meta-passthrough");
+    });
+
     test("delete is a header-actions button carrying data-action=remove-endpoint", () => {
         const el = mount();
         const btn = rows(el)[0]!.querySelector('[data-action="remove-endpoint"]');
