@@ -42,14 +42,13 @@ export type ProviderDto = {
     endpoints: EndpointDto[];
 };
 
-/** Matches the flat indexed endpoint keys a `<cms-form>` posts, e.g. `endpoints.0.targetUrl`. */
+/** Matches the flat indexed endpoint scalar keys, e.g. `endpoints.0.targetUrl`. */
 const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl)$/;
-/** Matches the flat doubly-indexed param keys, e.g. `endpoints.0.params.1.name`. */
-const PARAM_KEY = /^endpoints\.(\d+)\.params\.(\d+)\.(name|in|type|required|description)$/;
-/** Matches the per-endpoint JSON blobs (a JSON string), e.g. `endpoints.0.body`. */
-const BLOB_KEY = /^endpoints\.(\d+)\.(body|output|meta)$/;
-type ParamFields = Partial<Record<"name" | "in" | "type" | "required" | "description", string>>;
-type BlobFields = Partial<Record<"body" | "output" | "meta", unknown>>;
+/** Matches the per-endpoint JSON blobs (a JSON string), e.g. `endpoints.0.params`.
+ *  Every structured field (params/body/output/meta) is posted as one JSON blob —
+ *  the editor builds it, the parser validates it (no flat-key reassembly). */
+const BLOB_KEY = /^endpoints\.(\d+)\.(params|body|output|meta)$/;
+type BlobFields = Partial<Record<"params" | "body" | "output" | "meta", unknown>>;
 
 /** `{name}` placeholders in a target URL are the endpoint's path params. They are
  *  DERIVED here (not posted by the form): the URL is the single source of truth,
@@ -90,11 +89,9 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
     const id = slugify(body.id);
     if (!id) throw new InvalidParam("id", "cannot derive an id");
 
-    // ── Group flat indexed endpoint keys by row index ──
+    // ── Group flat indexed endpoint scalar keys by row index ──
     const rows = new Map<number, Partial<Record<"endpointId" | "method" | "targetUrl", string>>>();
-    // ── Group params by endpoint index, then param index ──
-    const paramRows = new Map<number, Map<number, ParamFields>>();
-    // ── Per-endpoint body/output/meta JSON blobs (round-tripped + re-validated) ──
+    // ── Per-endpoint structured JSON blobs (params/body/output/meta) ──
     const blobRows = new Map<number, BlobFields>();
     for (const [key, value] of Object.entries(body)) {
         const sm = BLOB_KEY.exec(key);
@@ -103,17 +100,6 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
             const srow = blobRows.get(ei) ?? {};
             srow[sm[2] as keyof BlobFields] = value;
             blobRows.set(ei, srow);
-            continue;
-        }
-        const pm = PARAM_KEY.exec(key);
-        if (pm) {
-            if (typeof value !== "string") throw new InvalidParam(key, "expected a string.");
-            const ei = Number(pm[1]), pi = Number(pm[2]);
-            const epParams = paramRows.get(ei) ?? new Map<number, ParamFields>();
-            const prow = epParams.get(pi) ?? {};
-            prow[pm[3] as keyof ParamFields] = value;
-            epParams.set(pi, prow);
-            paramRows.set(ei, epParams);
             continue;
         }
         const m = ENDPOINT_KEY.exec(key);
@@ -126,40 +112,7 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         rows.set(idx, row);
     }
 
-    /** Reconstruct one endpoint's query params, compacting sparse indices and
-     *  dropping unfilled (name-less) rows. `reserved` holds the path-param names
-     *  already taken by the URL, so a query param can't shadow a path placeholder. */
-    const buildParams = (ei: number, reserved: ReadonlySet<string>): EndpointParamDto[] => {
-        const epParams = paramRows.get(ei);
-        if (!epParams) return [];
-        const out: EndpointParamDto[] = [];
-        const seen = new Set<string>(reserved);
-        for (const pi of [...epParams.keys()].sort((a, b) => a - b)) {
-            const p = epParams.get(pi)!;
-            const name = (p.name ?? "").trim();
-            if (!name) continue;   // unfilled row → skip
-            if (seen.has(name)) {
-                throw new InvalidParam(`endpoints.${ei}.params.${pi}.name`, "duplicate param name");
-            }
-            seen.add(name);
-            const pin = p.in ?? "query";
-            if (!(PARAM_INS as readonly string[]).includes(pin)) {
-                throw new InvalidParam(`endpoints.${ei}.params.${pi}.in`, "must be path|query|header");
-            }
-            const type = p.type ?? "string";
-            if (!(PARAM_TYPES as readonly string[]).includes(type)) {
-                throw new InvalidParam(`endpoints.${ei}.params.${pi}.type`, "must be string|number|boolean");
-            }
-            const description = (p.description ?? "").trim();
-            out.push({
-                name, in: pin as ParamIn, type: type as ParamType, required: p.required === "true",
-                ...(description ? { description } : {}),
-            });
-        }
-        return out;
-    };
-
-    // ── Compact sparse indices ascending; validate each surviving row ──
+    // ── Compact sparse endpoint indices ascending; validate each surviving row ──
     const endpoints: EndpointDto[] = [];
     const seenIds = new Set<string>();
     for (const idx of [...rows.keys()].sort((a, b) => a - b)) {
@@ -179,15 +132,15 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         }
         seenIds.add(endpointId);
 
-        // Path params are derived from the URL; query params come from the form.
-        // The path names are reserved first so a query row can't reuse one.
-        const pathParams = pathParamsFromUrl(targetUrl);
-        const queryParams = buildParams(idx, new Set(pathParams.map(p => p.name)));
-        // Body is authored in the editor; output + meta are round-tripped + re-validated (B1 fix).
+        // Path params are derived from the URL; the rest come from the `params`
+        // JSON blob. Path names are reserved first so a posted param can't shadow one.
         const blobs = blobRows.get(idx);
+        const pathParams = pathParamsFromUrl(targetUrl);
+        const queryParams = parseParamsBlob(blobs?.params, new Set(pathParams.map(p => p.name)), `endpoints.${idx}.params`);
+        // Body is authored in the editor; output + meta are round-tripped + re-validated (B1 fix).
         const body = parseShapeField(blobs?.body, `endpoints.${idx}.body`);
         const output = parseShapeField(blobs?.output, `endpoints.${idx}.output`);
-        const meta = parseMetaField(blobs?.meta, `endpoints.${idx}.meta`);
+        const meta = parseMetaField(blobs?.meta);
         endpoints.push({
             endpointId, method: method as HTTPMethod, targetUrl,
             params: [...pathParams, ...queryParams],
@@ -222,11 +175,50 @@ function isParsableUrl(value: string): boolean {
     try { new URL(value); return true; } catch { return false; }
 }
 
+/** Parse a per-endpoint `params` JSON blob (the caller-provided query/header
+ *  params the editor authored) into validated DTOs. `reserved` holds the
+ *  URL-derived path-param names so a posted param can't shadow one. Empty-named
+ *  entries are skipped; `in:'path'` is rejected — path params are derived from the
+ *  URL, never posted. */
+function parseParamsBlob(raw: unknown, reserved: ReadonlySet<string>, path: string): EndpointParamDto[] {
+    if (raw == null || raw === "") return [];
+    if (typeof raw !== "string") throw new InvalidParam(path, "expected a JSON string");
+    let parsed: unknown;
+    try { parsed = JSON.parse(raw); } catch { throw new InvalidParam(path, "invalid JSON"); }
+    if (!Array.isArray(parsed)) throw new InvalidParam(path, "expected an array");
+
+    const out: EndpointParamDto[] = [];
+    const seen = new Set<string>(reserved);
+    parsed.forEach((el, i) => {
+        if (typeof el !== "object" || el === null) throw new InvalidParam(`${path}.${i}`, "expected an object");
+        const p = el as Record<string, unknown>;
+        const name = (typeof p.name === "string" ? p.name : "").trim();
+        if (!name) return;   // unfilled row → skip
+        if (seen.has(name)) throw new InvalidParam(`${path}.${i}.name`, "duplicate param name");
+        seen.add(name);
+        const pin = typeof p.in === "string" ? p.in : "query";
+        if (pin === "path" || !(PARAM_INS as readonly string[]).includes(pin)) {
+            throw new InvalidParam(`${path}.${i}.in`, "must be query|header");
+        }
+        const type = typeof p.type === "string" ? p.type : "string";
+        if (!(PARAM_TYPES as readonly string[]).includes(type)) {
+            throw new InvalidParam(`${path}.${i}.type`, "must be string|number|boolean");
+        }
+        const description = (typeof p.description === "string" ? p.description : "").trim();
+        out.push({
+            name, in: pin as ParamIn, type: type as ParamType,
+            required: p.required === true || p.required === "true",
+            ...(description ? { description } : {}),
+        });
+    });
+    return out;
+}
+
 /** Parse a per-endpoint `meta` JSON blob into a validated `GatewayMeta`, or
  *  `undefined` when blank/un-named. This is an editor-less round-trip field, so a
  *  malformed stored meta is DROPPED (return undefined) rather than thrown — a
  *  name-less meta must not make the provider un-saveable through a UI that can't fix it. */
-function parseMetaField(raw: unknown, path: string): GatewayMeta | undefined {
+function parseMetaField(raw: unknown): GatewayMeta | undefined {
     if (raw == null || raw === "") return undefined;
     if (typeof raw !== "string") return undefined;
     let parsed: unknown;

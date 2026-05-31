@@ -28,11 +28,12 @@ describe("parseProviderDto", () => {
         expect(parseProviderDto(validBody()).endpoints[0]!.params).toEqual([]);   // no params declared
     });
 
-    test("query params → endpoint.params", () => {
+    test("params JSON blob → endpoint.params", () => {
         const dto = parseProviderDto(validBody({
-            "endpoints.0.params.0.name": "limit", "endpoints.0.params.0.in": "query",
-            "endpoints.0.params.0.type": "number", "endpoints.0.params.0.required": "true",
-            "endpoints.0.params.1.name": "q", "endpoints.0.params.1.in": "query", "endpoints.0.params.1.type": "string",
+            "endpoints.0.params": JSON.stringify([
+                { name: "limit", in: "query", type: "number", required: true },
+                { name: "q", in: "query", type: "string", required: false },
+            ]),
         }));
         expect(dto.endpoints[0]!.params).toEqual([
             { name: "limit", in: "query", type: "number", required: true },
@@ -40,12 +41,21 @@ describe("parseProviderDto", () => {
         ]);
     });
 
-    test("param row with empty name is skipped (unfilled)", () => {
+    test("a blank-name param entry is skipped (unfilled)", () => {
         const dto = parseProviderDto(validBody({
-            "endpoints.0.params.0.name": "", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",
-            "endpoints.0.params.1.name": "q", "endpoints.0.params.1.in": "query", "endpoints.0.params.1.type": "string",
+            "endpoints.0.params": JSON.stringify([
+                { name: "", in: "query", type: "string" },
+                { name: "q", in: "query", type: "string" },
+            ]),
         }));
         expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["q"]);
+    });
+
+    test("malformed / non-array params blob → InvalidParam", () => {
+        expect(() => parseProviderDto(validBody({ "endpoints.0.params": "{not json" })))
+            .toThrow(/endpoints\.0\.params/);
+        expect(() => parseProviderDto(validBody({ "endpoints.0.params": JSON.stringify({ name: "x" }) })))
+            .toThrow(/endpoints\.0\.params/);
     });
 
     test("path params derived from URL {placeholders} (required, in:path)", () => {
@@ -66,10 +76,10 @@ describe("parseProviderDto", () => {
         expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["id"]);
     });
 
-    test("path params precede query params in the merged list", () => {
+    test("path params precede blob params in the merged list", () => {
         const dto = parseProviderDto(validBody({
             "endpoints.0.targetUrl": "https://api.shop.com/items/{id}",
-            "endpoints.0.params.0.name": "limit", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "number",
+            "endpoints.0.params": JSON.stringify([{ name: "limit", in: "query", type: "number" }]),
         }));
         expect(dto.endpoints[0]!.params).toEqual([
             { name: "id",    in: "path",  type: "string", required: true },
@@ -77,37 +87,37 @@ describe("parseProviderDto", () => {
         ]);
     });
 
-    test("a query param shadowing a path placeholder → InvalidParam", () => {
+    test("a blob param shadowing a path placeholder → InvalidParam", () => {
         expect(() => parseProviderDto(validBody({
             "endpoints.0.targetUrl": "https://api.shop.com/items/{id}",
-            "endpoints.0.params.0.name": "id", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",
+            "endpoints.0.params": JSON.stringify([{ name: "id", in: "query", type: "string" }]),
         }))).toThrow(/duplicate param name/);
     });
 
-    test("param gap is compacted", () => {
-        const dto = parseProviderDto(validBody({
-            "endpoints.0.params.0.name": "a", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",
-            "endpoints.0.params.2.name": "b", "endpoints.0.params.2.in": "query", "endpoints.0.params.2.type": "string",
-        }));
-        expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["a", "b"]);
-    });
-
-    test("bad param type → InvalidParam", () => {
+    test("bad param type → InvalidParam (scoped to the array index)", () => {
         expect(() => parseProviderDto(validBody({
-            "endpoints.0.params.0.name": "x", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "object",
+            "endpoints.0.params": JSON.stringify([{ name: "x", in: "query", type: "object" }]),
         }))).toThrow(/endpoints\.0\.params\.0\.type/);
     });
 
-    test("bad param in → InvalidParam", () => {
+    test("`in:'path'` from the blob → InvalidParam (path is URL-derived, never posted)", () => {
         expect(() => parseProviderDto(validBody({
-            "endpoints.0.params.0.name": "x", "endpoints.0.params.0.in": "body", "endpoints.0.params.0.type": "string",
+            "endpoints.0.params": JSON.stringify([{ name: "x", in: "path", type: "string" }]),
         }))).toThrow(/endpoints\.0\.params\.0\.in/);
     });
 
-    test("duplicate param name within an endpoint → InvalidParam", () => {
+    test("unknown param `in` → InvalidParam", () => {
         expect(() => parseProviderDto(validBody({
-            "endpoints.0.params.0.name": "x", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",
-            "endpoints.0.params.1.name": "x", "endpoints.0.params.1.in": "query", "endpoints.0.params.1.type": "number",
+            "endpoints.0.params": JSON.stringify([{ name: "x", in: "body", type: "string" }]),
+        }))).toThrow(/endpoints\.0\.params\.0\.in/);
+    });
+
+    test("duplicate param name in the blob → InvalidParam", () => {
+        expect(() => parseProviderDto(validBody({
+            "endpoints.0.params": JSON.stringify([
+                { name: "x", in: "query", type: "string" },
+                { name: "x", in: "query", type: "number" },
+            ]),
         }))).toThrow(/duplicate param name/);
     });
 

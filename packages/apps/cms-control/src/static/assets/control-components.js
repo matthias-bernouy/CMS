@@ -10341,30 +10341,12 @@ cms-endpoints-input .ep-add:hover {
       return null;
     }
   }
-  // src/components/admin/EndpointsInput/icons.ts
-  var ICON_PLUS = `
-<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-    stroke-linejoin="round" aria-hidden="true">
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
-</svg>`;
-  var ICON_X = `
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-    stroke-linejoin="round" aria-hidden="true">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-</svg>`;
-  var ICON_TRASH2 = `
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-    stroke-linejoin="round" aria-hidden="true">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-</svg>`;
-
   // src/components/admin/EndpointsInput/controls.ts
+  var ICON_SVG = (paths, size = 16) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+  var ICON_PLUS = ICON_SVG('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', 18);
+  var ICON_X = ICON_SVG('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
+  var ICON_TRASH2 = ICON_SVG('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>');
   function makeInput(name, label, placeholder, value) {
     const input = document.createElement("p9r-input");
     if (name)
@@ -10415,6 +10397,16 @@ cms-endpoints-input .ep-add:hover {
       btn.addEventListener("click", opts.onClick);
     btn.innerHTML = svg;
     return btn;
+  }
+  function makeRequiredCheckbox(checked, onChange) {
+    const cb = document.createElement("w13c-checkbox");
+    cb.dataset.role = "required";
+    cb.className = "ep-required";
+    if (checked)
+      cb.setAttribute("checked", "");
+    cb.textContent = "Required";
+    cb.addEventListener("change", onChange);
+    return cb;
   }
   var makeDeleteButton = () => makeIconButton(ICON_TRASH2, { ariaLabel: "Delete endpoint", slot: "header-actions", action: "remove-endpoint" });
   function makeAddButton() {
@@ -10481,6 +10473,18 @@ cms-endpoints-input .ep-add:hover {
     const live = el2.value;
     return typeof live === "string" ? live : el2.getAttribute("value") ?? "";
   };
+  function jsonField(name, role) {
+    const f2 = document.createElement("input");
+    f2.type = "hidden";
+    f2.name = name;
+    if (role)
+      f2.dataset.role = role;
+    f2.sync = (read) => {
+      const v2 = read();
+      f2.value = v2 == null || Array.isArray(v2) && v2.length === 0 ? "" : JSON.stringify(v2);
+    };
+    return f2;
+  }
   var METHOD_COLOR = {
     GET: "success",
     POST: "info",
@@ -10491,35 +10495,41 @@ cms-endpoints-input .ep-add:hover {
   var methodColor = (m) => METHOD_COLOR[m] ?? "primary";
 
   // src/components/admin/EndpointsInput/queryRow.ts
-  function makeQueryParamRow(ei2, pi2, seed = {}) {
+  function makeQueryParamRow(seed, onChange) {
     const row = document.createElement("p9r-stack");
     row.setAttribute("direction", "row");
     row.setAttribute("gap", "sm");
     row.setAttribute("align", "center");
     row.dataset.role = "query-param-row";
-    const name = makeInput(`endpoints.${ei2}.params.${pi2}.name`, "", "param name", seed.name);
-    name.className = "ep-name";
-    const hiddenIn = document.createElement("input");
-    hiddenIn.type = "hidden";
-    hiddenIn.name = `endpoints.${ei2}.params.${pi2}.in`;
-    hiddenIn.value = "query";
-    const hiddenDesc = document.createElement("input");
-    hiddenDesc.type = "hidden";
-    hiddenDesc.name = `endpoints.${ei2}.params.${pi2}.description`;
     if (seed.description)
-      hiddenDesc.value = seed.description;
-    const type = makeSelect(PARAM_TYPES, seed.type, { name: `endpoints.${ei2}.params.${pi2}.type` });
+      row.dataset.description = seed.description;
+    const name = makeInput("", "", "param name", seed.name);
+    name.className = "ep-name";
+    name.dataset.role = "param-name";
+    name.addEventListener("input", onChange);
+    const type = makeSelect(PARAM_TYPES, seed.type);
     type.className = "ep-type";
-    const req = document.createElement("w13c-checkbox");
-    req.className = "ep-required";
-    req.setAttribute("name", `endpoints.${ei2}.params.${pi2}.required`);
-    req.setAttribute("value", "true");
-    if (seed.required)
-      req.setAttribute("checked", "");
-    req.textContent = "Required";
-    const remove = makeIconButton(ICON_X, { ariaLabel: "Remove param", action: "remove-query-param" });
-    row.append(name, hiddenIn, hiddenDesc, type, req, remove);
+    type.dataset.role = "param-type";
+    type.addEventListener("change", onChange);
+    const req = makeRequiredCheckbox(!!seed.required, onChange);
+    const remove = makeIconButton(ICON_X, {
+      ariaLabel: "Remove param",
+      onClick: () => {
+        row.remove();
+        onChange();
+      }
+    });
+    row.append(name, type, req, remove);
     return row;
+  }
+  function readQueryParamRow(row) {
+    const name = readControl(row.querySelector('[data-role="param-name"]')).trim();
+    if (!name)
+      return null;
+    const type = readControl(row.querySelector('[data-role="param-type"]'));
+    const required = row.querySelector('[data-role="required"]').hasAttribute("checked");
+    const description = row.dataset.description;
+    return { name, in: "query", type, required, ...description ? { description } : {} };
   }
 
   // src/components/admin/EndpointsInput/bodyParts.ts
@@ -10528,16 +10538,6 @@ cms-endpoints-input .ep-add:hover {
     select.dataset.role = "node-type";
     select.className = "ep-type";
     return select;
-  }
-  function makeRequiredCheckbox(checked, onChange) {
-    const cb = document.createElement("w13c-checkbox");
-    cb.dataset.role = "required";
-    cb.className = "ep-required";
-    if (checked)
-      cb.setAttribute("checked", "");
-    cb.textContent = "Required";
-    cb.addEventListener("change", onChange);
-    return cb;
   }
   var makeTrash = (onClick) => makeIconButton(ICON_X, { ariaLabel: "Remove property", onClick });
   function makeAddPropButton(onClick) {
@@ -10657,18 +10657,14 @@ cms-endpoints-input .ep-add:hover {
   function makeBodySection(ei2, seedBody) {
     const container = document.createElement("div");
     container.dataset.role = "body";
-    const hidden = document.createElement("input");
-    hidden.type = "hidden";
-    hidden.name = `endpoints.${ei2}.body`;
+    const field = jsonField(`endpoints.${ei2}.body`);
     const slot = document.createElement("div");
     slot.dataset.role = "body-slot";
     let root = null;
-    const sync = () => {
-      hidden.value = root ? JSON.stringify(root.read()) : "";
-    };
+    const sync = () => field.sync(() => root?.read());
     const showEmpty = () => {
       root = null;
-      hidden.value = "";
+      sync();
       const define = document.createElement("button");
       define.type = "button";
       define.className = "ep-add-param";
@@ -10691,26 +10687,15 @@ cms-endpoints-input .ep-add:hover {
       remove.textContent = "Remove body";
       remove.addEventListener("click", showEmpty);
       slot.replaceChildren(head, root.childrenEl, remove);
-      hidden.value = JSON.stringify(seed);
+      field.sync(() => seed);
     };
     if (seedBody)
       showTree(seedBody);
     else
       showEmpty();
-    container.append(hidden, slot);
+    container.append(field, slot);
     return container;
   }
-  function makePassthrough(name, role, seed) {
-    const hidden = document.createElement("input");
-    hidden.type = "hidden";
-    hidden.name = name;
-    hidden.dataset.role = role;
-    if (seed)
-      hidden.value = JSON.stringify(seed);
-    return hidden;
-  }
-  var makeOutputField = (ei2, seedOutput) => makePassthrough(`endpoints.${ei2}.output`, "output-passthrough", seedOutput);
-  var makeMetaField = (ei2, seedMeta) => makePassthrough(`endpoints.${ei2}.meta`, "meta-passthrough", seedMeta);
 
   // src/components/admin/EndpointsInput/inPanel.ts
   function makeInPanel(endpointIdx, seed, urlInput) {
@@ -10732,29 +10717,32 @@ cms-endpoints-input .ep-add:hover {
     const queryParams = seedParams.filter((p) => (p.in ?? "query") === "query");
     const container = document.createElement("div");
     container.dataset.role = "query-params";
-    container.dataset.endpointIdx = String(endpointIdx);
-    container.dataset.paramCount = String(queryParams.length);
+    const paramsField = jsonField(`endpoints.${endpointIdx}.params`);
     const rows = document.createElement("p9r-stack");
     rows.setAttribute("gap", "sm");
     rows.dataset.role = "query-param-rows";
-    queryParams.forEach((p, j2) => rows.appendChild(makeQueryParamRow(endpointIdx, j2, p)));
+    const readRows = () => Array.from(rows.querySelectorAll('[data-role="query-param-row"]'), readQueryParamRow).filter((p) => p !== null);
+    const sync = () => paramsField.sync(readRows);
+    queryParams.forEach((p) => rows.appendChild(makeQueryParamRow(p, sync)));
     const add = document.createElement("button");
     add.type = "button";
     add.className = "ep-add-param";
-    add.dataset.action = "add-query-param";
+    add.dataset.role = "add-query-param";
     add.textContent = "+ Add query param";
-    container.append(rows, add);
-    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), makeOutputField(endpointIdx, seed.output), makeMetaField(endpointIdx, seed.meta));
+    add.addEventListener("click", () => {
+      rows.appendChild(makeQueryParamRow({}, sync));
+      sync();
+    });
+    paramsField.sync(() => queryParams);
+    container.append(paramsField, rows, add);
+    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.output`, "output-passthrough", seed.output), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta));
     panel.appendChild(wrap);
     return panel;
   }
-  function addQueryParam(container) {
-    if (!container)
-      return;
-    const ei2 = Number(container.dataset.endpointIdx);
-    const pi2 = Number(container.dataset.paramCount ?? "0");
-    container.dataset.paramCount = String(pi2 + 1);
-    container.querySelector('[data-role="query-param-rows"]')?.appendChild(makeQueryParamRow(ei2, pi2));
+  function passthrough(name, role, seed) {
+    const f2 = jsonField(name, role);
+    f2.sync(() => seed);
+    return f2;
   }
   function heading(text) {
     const h2 = document.createElement("strong");
@@ -10832,18 +10820,6 @@ cms-endpoints-input .ep-add:hover {
       if (removeBtn && this.contains(removeBtn)) {
         e.preventDefault();
         removeBtn.closest('[data-role="endpoint-row"]')?.remove();
-        return;
-      }
-      const addParam = target.closest('[data-action="add-query-param"]');
-      if (addParam && this.contains(addParam)) {
-        e.preventDefault();
-        addQueryParam(addParam.closest('[data-role="query-params"]'));
-        return;
-      }
-      const removeParam = target.closest('[data-action="remove-query-param"]');
-      if (removeParam && this.contains(removeParam)) {
-        e.preventDefault();
-        removeParam.closest('[data-role="query-param-row"]')?.remove();
       }
     };
     connectedCallback() {

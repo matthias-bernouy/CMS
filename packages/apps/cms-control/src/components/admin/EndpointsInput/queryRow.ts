@@ -1,45 +1,47 @@
-import { makeInput, makeSelect, makeIconButton } from "./controls";
-import { PARAM_TYPES, type ParamSeed } from "./shared";
-import { ICON_X } from "./icons";
+import { makeInput, makeSelect, makeRequiredCheckbox, makeIconButton, ICON_X } from "./controls";
+import { PARAM_TYPES, readControl, type ParamSeed } from "./shared";
 
-/** One editable query-param row: name + type + a `required` checkbox + remove.
- *  Serializes as `endpoints.<ei>.params.<pi>.{name,in,type,required}` with a
- *  hidden `in="query"`; the parser reconstructs these into `input.params`. */
-export function makeQueryParamRow(ei: number, pi: number, seed: ParamSeed = {}): HTMLElement {
+/** A query param as it appears in the `endpoints.<i>.params` JSON blob. */
+export type QueryParam = { name: string; in: "query"; type: string; required: boolean; description?: string };
+
+/** One editable query-param row — UI-only (no form names). Its values are read
+ *  back into the endpoint's `params` JSON blob by `onChange`. The (editor-less)
+ *  description rides on a data attribute so it round-trips. */
+export function makeQueryParamRow(seed: ParamSeed, onChange: () => void): HTMLElement {
     const row = document.createElement('p9r-stack');
     row.setAttribute('direction', 'row');
     row.setAttribute('gap', 'sm');
     row.setAttribute('align', 'center');
     row.dataset.role = 'query-param-row';
+    if (seed.description) row.dataset.description = seed.description;
 
-    const name = makeInput(`endpoints.${ei}.params.${pi}.name`, '', 'param name', seed.name);
+    const name = makeInput('', '', 'param name', seed.name);
     name.className = 'ep-name';
+    name.dataset.role = 'param-name';
+    name.addEventListener('input', onChange);
 
-    const hiddenIn = document.createElement('input');
-    hiddenIn.type = 'hidden';
-    hiddenIn.name = `endpoints.${ei}.params.${pi}.in`;
-    hiddenIn.value = 'query';
-
-    // Description isn't editable yet but is round-tripped so a save never wipes it.
-    const hiddenDesc = document.createElement('input');
-    hiddenDesc.type = 'hidden';
-    hiddenDesc.name = `endpoints.${ei}.params.${pi}.description`;
-    if (seed.description) hiddenDesc.value = seed.description;
-
-    const type = makeSelect(PARAM_TYPES, seed.type, { name: `endpoints.${ei}.params.${pi}.type` });
+    const type = makeSelect(PARAM_TYPES, seed.type);
     type.className = 'ep-type';
+    type.dataset.role = 'param-type';
+    type.addEventListener('change', onChange);
 
-    // The cms-blocs checkbox slots its own label inside the native <label> that
-    // wraps the box, so clicking the box or the "Required" text toggles it.
-    const req = document.createElement('w13c-checkbox');
-    req.className = 'ep-required';
-    req.setAttribute('name', `endpoints.${ei}.params.${pi}.required`);
-    req.setAttribute('value', 'true');
-    if (seed.required) req.setAttribute('checked', '');
-    req.textContent = 'Required';
+    const req = makeRequiredCheckbox(!!seed.required, onChange);
 
-    const remove = makeIconButton(ICON_X, { ariaLabel: 'Remove param', action: 'remove-query-param' });
+    const remove = makeIconButton(ICON_X, {
+        ariaLabel: 'Remove param',
+        onClick: () => { row.remove(); onChange(); },
+    });
 
-    row.append(name, hiddenIn, hiddenDesc, type, req, remove);
+    row.append(name, type, req, remove);
     return row;
+}
+
+/** Read one row into a `QueryParam`, or `null` when the name is blank (unfilled). */
+export function readQueryParamRow(row: HTMLElement): QueryParam | null {
+    const name = readControl(row.querySelector('[data-role="param-name"]')!).trim();
+    if (!name) return null;
+    const type = readControl(row.querySelector('[data-role="param-type"]')!);
+    const required = row.querySelector('[data-role="required"]')!.hasAttribute('checked');
+    const description = row.dataset.description;
+    return { name, in: "query", type, required, ...(description ? { description } : {}) };
 }

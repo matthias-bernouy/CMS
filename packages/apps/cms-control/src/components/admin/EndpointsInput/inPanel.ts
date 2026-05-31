@@ -1,12 +1,12 @@
 import { renderPathParams } from "./pathParams";
-import { makeQueryParamRow } from "./queryRow";
-import { makeBodySection, makeOutputField, makeMetaField } from "./bodyEditor";
-import type { EndpointSeed } from "./shared";
+import { makeQueryParamRow, readQueryParamRow } from "./queryRow";
+import { makeBodySection } from "./bodyEditor";
+import { jsonField, type EndpointSeed } from "./shared";
 
 /** The "In" tab: read-only Path params (auto-detected from the URL), an editable
- *  Query params editor, and the recursive Body shape editor. Path rows re-render
- *  live as the Target URL changes; query rows post flat keys; the body posts one
- *  JSON blob. A hidden output field round-trips the (editor-less) response shape. */
+ *  Query params editor, and the recursive Body shape editor. Every structured
+ *  field posts as ONE JSON blob (`endpoints.<i>.{params,body,output,meta}`) — the
+ *  editor builds it, the parser validates it. Path rows re-render live from the URL. */
 export function makeInPanel(endpointIdx: number, seed: EndpointSeed, urlInput: HTMLElement): HTMLElement {
     const seedParams = seed.params ?? [];
     const panel = document.createElement('p9r-tab-panel');
@@ -29,44 +29,51 @@ export function makeInPanel(endpointIdx: number, seed: EndpointSeed, urlInput: H
     urlInput.addEventListener('input', renderPath);
     urlInput.addEventListener('change', renderPath);
 
-    // ── Query params — editable rows ──
+    // ── Query params — UI rows synced into one `endpoints.<i>.params` JSON blob ──
     const queryParams = seedParams.filter(p => (p.in ?? 'query') === 'query');
     const container = document.createElement('div');
     container.dataset.role = 'query-params';
-    container.dataset.endpointIdx = String(endpointIdx);
-    container.dataset.paramCount = String(queryParams.length);
 
+    const paramsField = jsonField(`endpoints.${endpointIdx}.params`);
     const rows = document.createElement('p9r-stack');
     rows.setAttribute('gap', 'sm');
     rows.dataset.role = 'query-param-rows';
-    queryParams.forEach((p, j) => rows.appendChild(makeQueryParamRow(endpointIdx, j, p)));
+
+    const readRows = () => Array.from(rows.querySelectorAll<HTMLElement>('[data-role="query-param-row"]'), readQueryParamRow)
+        .filter((p): p is NonNullable<typeof p> => p !== null);
+    const sync = () => paramsField.sync(readRows);
+
+    queryParams.forEach(p => rows.appendChild(makeQueryParamRow(p, sync)));
 
     const add = document.createElement('button');
     add.type = 'button';
     add.className = 'ep-add-param';
-    add.dataset.action = 'add-query-param';
+    add.dataset.role = 'add-query-param';
     add.textContent = '+ Add query param';
+    add.addEventListener('click', () => { rows.appendChild(makeQueryParamRow({}, sync)); sync(); });
 
-    container.append(rows, add);
+    // Initial value = the seed verbatim: read() is unreliable until the rows are
+    // connected (p9r-select `.value` isn't populated yet); edits then sync().
+    paramsField.sync(() => queryParams);
+
+    container.append(paramsField, rows, add);
     wrap.append(
         heading('Path params'), pathContainer,
         heading('Query params'), container,
         heading('Body'), makeBodySection(endpointIdx, seed.body),
-        makeOutputField(endpointIdx, seed.output),   // hidden — round-trips the response shape
-        makeMetaField(endpointIdx, seed.meta),       // hidden — round-trips endpoint meta
+        // Editor-less response shape + endpoint meta — round-tripped verbatim (B1).
+        passthrough(`endpoints.${endpointIdx}.output`, 'output-passthrough', seed.output),
+        passthrough(`endpoints.${endpointIdx}.meta`, 'meta-passthrough', seed.meta),
     );
     panel.appendChild(wrap);
     return panel;
 }
 
-/** Append a fresh (empty) query-param row; the per-endpoint param index is an
- *  increment-only counter so removals leave gaps the parser compacts. */
-export function addQueryParam(container: HTMLElement | null): void {
-    if (!container) return;
-    const ei = Number(container.dataset.endpointIdx);
-    const pi = Number(container.dataset.paramCount ?? '0');
-    container.dataset.paramCount = String(pi + 1);
-    container.querySelector('[data-role="query-param-rows"]')?.appendChild(makeQueryParamRow(ei, pi));
+/** A hidden field round-tripping an editor-less seed value verbatim. */
+function passthrough(name: string, role: string, seed: unknown): HTMLElement {
+    const f = jsonField(name, role);
+    f.sync(() => seed);
+    return f;
 }
 
 function heading(text: string): HTMLElement {

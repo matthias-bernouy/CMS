@@ -64,28 +64,33 @@ describe("<cms-endpoints-input>", () => {
         }
     });
 
-    test("In tab: query params editor — add then remove (gap, no re-index)", () => {
+    test("In tab: query params — add / name / remove, synced into the params blob", () => {
         const el = mount();
         const item = rows(el)[0]!;
         const paramRows = () => item.querySelectorAll('[data-role="query-param-row"]');
+        const blob = () => (item.querySelector('[name="endpoints.0.params"]') as HTMLInputElement).value;
+        const addBtn = item.querySelector('[data-role="add-query-param"]') as HTMLElement;
         expect(paramRows()).toHaveLength(0);
+        expect(blob()).toBe("");
 
-        clickAction(el, "add-query-param");
-        clickAction(el, "add-query-param");
+        addBtn.click();
+        addBtn.click();
         expect(paramRows()).toHaveLength(2);
-        expect(item.querySelector('[name="endpoints.0.params.0.name"]')).not.toBeNull();
-        expect(item.querySelector('[name="endpoints.0.params.1.name"]')).not.toBeNull();
-        // each row carries a hidden in="query" + a type select defaulting to string
-        expect(item.querySelector('[name="endpoints.0.params.0.in"]')!.getAttribute("value")).toBe("query");
-        expect(item.querySelector('[name="endpoints.0.params.0.type"]')!.getAttribute("value")).toBe("string");
+        expect(blob()).toBe("");   // empty-name rows aren't serialized
 
-        clickAction(el, "remove-query-param", 0);
+        // name the first row → it appears in the blob (happy-dom: readControl reads the attribute)
+        const nameInput = paramRows()[0]!.querySelector('[data-role="param-name"]') as HTMLElement;
+        nameInput.setAttribute("value", "limit");
+        nameInput.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(JSON.parse(blob())).toEqual([{ name: "limit", in: "query", type: "string", required: false }]);
+
+        // remove the (named) first row → blob empties again
+        (paramRows()[0]!.querySelector("p9r-icon-button") as HTMLElement).click();
         expect(paramRows()).toHaveLength(1);
-        expect(item.querySelector('[name="endpoints.0.params.0.name"]')).toBeNull();      // gap left
-        expect(item.querySelector('[name="endpoints.0.params.1.name"]')).not.toBeNull();  // not renumbered
+        expect(blob()).toBe("");
     });
 
-    test("In tab: query params prefilled from the value JSON (incl. required checkbox)", () => {
+    test("In tab: query params prefilled from the value JSON (rows + blob + required)", () => {
         const el = mount(JSON.stringify([
             { endpointId: "list", method: "GET", targetUrl: "https://x.com", params: [
                 { name: "limit", in: "query", type: "number", required: true },
@@ -93,12 +98,17 @@ describe("<cms-endpoints-input>", () => {
             ] },
         ]));
         const item = rows(el)[0]!;
-        expect(item.querySelectorAll('[data-role="query-param-row"]')).toHaveLength(2);
-        expect(item.querySelector('[name="endpoints.0.params.0.name"]')!.getAttribute("value")).toBe("limit");
-        expect(item.querySelector('[name="endpoints.0.params.0.type"]')!.getAttribute("value")).toBe("number");
-        const checkboxes = item.querySelectorAll('w13c-checkbox');
-        expect(checkboxes[0]!.hasAttribute("checked")).toBe(true);   // required:true → checked
-        expect(checkboxes[1]!.hasAttribute("checked")).toBe(false);  // required:false → unchecked
+        const qrows = item.querySelectorAll('[data-role="query-param-row"]');
+        expect(qrows).toHaveLength(2);
+        expect(qrows[0]!.querySelector('[data-role="param-name"]')!.getAttribute("value")).toBe("limit");
+        expect(qrows[0]!.querySelector('[data-role="param-type"]')!.getAttribute("value")).toBe("number");
+        expect(qrows[0]!.querySelector('[data-role="required"]')!.hasAttribute("checked")).toBe(true);
+        expect(qrows[1]!.querySelector('[data-role="required"]')!.hasAttribute("checked")).toBe(false);
+        // the hidden blob is seeded from the params
+        expect(JSON.parse((item.querySelector('[name="endpoints.0.params"]') as HTMLInputElement).value)).toEqual([
+            { name: "limit", in: "query", type: "number", required: true },
+            { name: "q",     in: "query", type: "string", required: false },
+        ]);
     });
 
     test("In tab: path params auto-detected from the targetUrl (read-only, not serialized)", () => {
@@ -180,17 +190,15 @@ describe("<cms-endpoints-input>", () => {
         expect(JSON.parse(hidden.value).properties.tags.items).toEqual({ type: "number" });
     });
 
-    test("In tab: a seeded query-param description round-trips via a hidden field", () => {
+    test("In tab: a seeded query-param description round-trips in the params blob", () => {
         const el = mount(JSON.stringify([
             { endpointId: "search", method: "GET", targetUrl: "https://x.com", params: [
                 { name: "q", in: "query", type: "string", required: false, description: "Search terms" },
             ] },
         ]));
         const item = rows(el)[0]!;
-        const desc = item.querySelector('[name="endpoints.0.params.0.description"]') as HTMLInputElement;
-        expect(desc).not.toBeNull();
-        expect(desc.getAttribute("type")).toBe("hidden");
-        expect(desc.value).toBe("Search terms");
+        const blob = JSON.parse((item.querySelector('[name="endpoints.0.params"]') as HTMLInputElement).value);
+        expect(blob[0].description).toBe("Search terms");
     });
 
     test("In tab: a seeded endpoint meta round-trips via the hidden passthrough", () => {

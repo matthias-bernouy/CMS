@@ -1,5 +1,12 @@
 import { HTTP_METHODS } from "@bernouy/cms-gateway";
-import { ICON_PLUS, ICON_TRASH } from "./icons";
+
+/** Inline SVG fragments (set via `innerHTML`), shared by the icon buttons below. */
+const ICON_SVG = (paths: string, size = 16) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+export const ICON_PLUS = ICON_SVG('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', 18);
+export const ICON_X = ICON_SVG('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
+export const ICON_TRASH = ICON_SVG('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>');
 
 /** A p9r-input. Empty name → no `name` (UI-only control, e.g. a body field name
  *  that's serialised inside a JSON blob); empty label → no label (compact rows). */
@@ -61,6 +68,19 @@ export function makeIconButton(
     if (opts.onClick) btn.addEventListener('click', opts.onClick);
     btn.innerHTML = svg;
     return btn;
+}
+
+/** A "Required" toggle — the same `w13c-checkbox` for query params and body
+ *  fields. UI-only (no form name); its `checked` attribute is read back into the
+ *  enclosing JSON blob. `onChange` fires on toggle so the section re-serialises. */
+export function makeRequiredCheckbox(checked: boolean, onChange: () => void): HTMLElement {
+    const cb = document.createElement('w13c-checkbox');
+    cb.dataset.role = 'required';
+    cb.className = 'ep-required';
+    if (checked) cb.setAttribute('checked', '');
+    cb.textContent = 'Required';
+    cb.addEventListener('change', onChange);
+    return cb;
 }
 
 /** Icon-only delete in the accordion header's `header-actions` slot — a sibling

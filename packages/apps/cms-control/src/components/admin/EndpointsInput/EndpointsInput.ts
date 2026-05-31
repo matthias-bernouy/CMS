@@ -1,20 +1,20 @@
 import css from "./EndpointsInput.css" with { type: "text" };
 import { makeAddButton } from "./controls";
 import { makeEndpointRow } from "./rows";
-import { addQueryParam } from "./inPanel";
 import type { EndpointSeed } from "./shared";
 
 /**
  * `<cms-endpoints-input>` — light-DOM repeating field for gateway endpoints.
  *
  * Each endpoint is a collapsible `<p9r-accordion-item>` (built in `rows.ts`) with
- * a `<p9r-tabs>` body: Infos (the three named controls) / In (path + query
- * params) / Out / Rules. The controls sit in LIGHT DOM so the parent
- * `<cms-form>`'s native `FormData` picks them up by name; the server-side
- * `parseProviderDto` reconstructs `endpoints[]` from those flat keys.
+ * a `<p9r-tabs>` body: Infos / In (path + query params) / Out / Rules. Everything
+ * sits in LIGHT DOM so the parent `<cms-form>`'s native `FormData` picks it up:
+ * the endpoint SCALARS post as flat keys (`endpoints.<n>.endpointId|method|targetUrl`),
+ * and every STRUCTURED field posts as one JSON blob the editor syncs
+ * (`endpoints.<n>.{params,body,output,meta}`). `parseProviderDto` reassembles both.
  *
- * Index `<n>` increments per row and never reuses — removing a row leaves a gap
- * the parser compacts, so deletes never collide.
+ * The endpoint index `<n>` increments per row and never reuses — removing a row
+ * leaves a gap the parser compacts, so deletes never collide.
  *
  * Prefill (edit mode): a `value` attribute holding a JSON array of endpoint
  * seeds renders one item per element on connect (safe because the admin's
@@ -44,21 +44,9 @@ export class CmsEndpointsInput extends HTMLElement {
             // No re-index: the increment-only counter leaves a gap the parser compacts.
             e.preventDefault();
             removeBtn.closest('[data-role="endpoint-row"]')?.remove();
-            return;
         }
-
-        const addParam = target.closest('[data-action="add-query-param"]');
-        if (addParam && this.contains(addParam)) {
-            e.preventDefault();
-            addQueryParam(addParam.closest('[data-role="query-params"]') as HTMLElement | null);
-            return;
-        }
-
-        const removeParam = target.closest('[data-action="remove-query-param"]');
-        if (removeParam && this.contains(removeParam)) {
-            e.preventDefault();
-            removeParam.closest('[data-role="query-param-row"]')?.remove();
-        }
+        // Query-param + body edits are self-managed (their sections own their
+        // add/remove/sync), so the host only delegates the endpoint-level actions.
     };
 
     connectedCallback(): void {

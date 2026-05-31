@@ -1,6 +1,6 @@
-import { makeInput } from "./controls";
+import { makeInput, makeRequiredCheckbox } from "./controls";
 import { readControl } from "./shared";
-import { makeTypeSelect, makeRequiredCheckbox, makeTrash, makeAddPropButton } from "./bodyParts";
+import { makeTypeSelect, makeTrash, makeAddPropButton } from "./bodyParts";
 import type { DataShape } from "@bernouy/cms-gateway";
 
 export type NodeHandle = {

@@ -47,11 +47,10 @@ describe("POST /api/gateway-provider", () => {
             .rejects.toThrow(/endpoints\.0\.method/);
     });
 
-    test("query params persist as endpoint.input.params", async () => {
+    test("query params (JSON blob) persist as endpoint.input.params", async () => {
         const { cms, gateway } = makeCms();
         await postGatewayProvider(post(validBody({
-            "endpoints.0.params.0.name": "limit", "endpoints.0.params.0.in": "query",
-            "endpoints.0.params.0.type": "number", "endpoints.0.params.0.required": "true",
+            "endpoints.0.params": JSON.stringify([{ name: "limit", in: "query", type: "number", required: true }]),
         })), cms);
         const stored = await gateway.getProvider("urn:shop");
         expect(stored?.endpoints[0]!.input?.params).toEqual([
@@ -105,8 +104,7 @@ describe("POST /api/gateway-provider", () => {
     test("query-param description round-trips (B1: edit never wipes it)", async () => {
         const { cms, gateway } = makeCms();
         await postGatewayProvider(post(validBody({
-            "endpoints.0.params.0.name": "q", "endpoints.0.params.0.in": "query",
-            "endpoints.0.params.0.type": "string", "endpoints.0.params.0.description": "Search terms",
+            "endpoints.0.params": JSON.stringify([{ name: "q", in: "query", type: "string", description: "Search terms" }]),
         })), cms);
         const stored = await gateway.getProvider("urn:shop");
         expect(stored?.endpoints[0]!.input?.params?.[0]).toEqual(
@@ -136,9 +134,9 @@ describe("POST /api/gateway-provider", () => {
         await postGatewayProvider(post({
             id: "shop", "meta.name": "Shop",
             "endpoints.0.endpointId": "a", "endpoints.0.method": "GET", "endpoints.0.targetUrl": "https://x.com/a",
-            "endpoints.0.params.0.name": "p0", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",
+            "endpoints.0.params": JSON.stringify([{ name: "p0", in: "query", type: "string" }]),
             "endpoints.1.endpointId": "b", "endpoints.1.method": "GET", "endpoints.1.targetUrl": "https://x.com/b",
-            "endpoints.1.params.0.name": "p1", "endpoints.1.params.0.in": "query", "endpoints.1.params.0.type": "number", "endpoints.1.params.0.required": "true",
+            "endpoints.1.params": JSON.stringify([{ name: "p1", in: "query", type: "number", required: true }]),
         }), cms);
         const s = await gateway.getProvider("urn:shop");
         expect(s?.endpoints[0]!.input?.params?.map(p => p.name)).toEqual(["p0"]);

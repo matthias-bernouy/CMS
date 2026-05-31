@@ -47,8 +47,7 @@ describe("GET /api/gateway-provider?urn=", () => {
             body: JSON.stringify({
                 id: "shop", "meta.name": "Shop",
                 "endpoints.0.endpointId": "list", "endpoints.0.method": "GET", "endpoints.0.targetUrl": "https://api.shop.com/x",
-                "endpoints.0.params.0.name": "limit", "endpoints.0.params.0.in": "query",
-                "endpoints.0.params.0.type": "number", "endpoints.0.params.0.required": "true",
+                "endpoints.0.params": JSON.stringify([{ name: "limit", in: "query", type: "number", required: true }]),
             }),
             headers: { "content-type": "application/json" },
         }), cms);

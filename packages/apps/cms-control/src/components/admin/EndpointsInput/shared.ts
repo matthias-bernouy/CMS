@@ -35,6 +35,23 @@ export const readControl = (el: Element): string => {
     return typeof live === 'string' ? live : (el.getAttribute('value') ?? '');
 };
 
+/** A hidden form field carrying one structured value as a JSON blob — the single
+ *  idiom behind every `endpoints.<i>.{params,body,output,meta}`. `sync(read)` reads
+ *  the current value and serialises it (empty / null / `[]` → "" so the parser
+ *  treats it as absent). Pass-through fields just `sync(() => seed)` once. */
+export type JsonField = HTMLInputElement & { sync(read: () => unknown): void };
+export function jsonField(name: string, role?: string): JsonField {
+    const f = document.createElement('input') as JsonField;
+    f.type = 'hidden';
+    f.name = name;
+    if (role) f.dataset.role = role;
+    f.sync = (read) => {
+        const v = read();
+        f.value = (v == null || (Array.isArray(v) && v.length === 0)) ? '' : JSON.stringify(v);
+    };
+    return f;
+}
+
 /** Colour the method tag like a REST client (GET green, DELETE red, …). */
 const METHOD_COLOR: Record<string, string> = {
     GET: 'success', POST: 'info', PUT: 'warning', PATCH: 'warning', DELETE: 'danger',
