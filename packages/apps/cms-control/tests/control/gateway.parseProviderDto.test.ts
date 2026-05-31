@@ -48,6 +48,42 @@ describe("parseProviderDto", () => {
         expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["q"]);
     });
 
+    test("path params derived from URL {placeholders} (required, in:path)", () => {
+        const dto = parseProviderDto(validBody({ "endpoints.0.targetUrl": "https://api.shop.com/items/{id}" }));
+        expect(dto.endpoints[0]!.params).toEqual([
+            { name: "id", in: "path", type: "string", required: true },
+        ]);
+    });
+
+    test("multiple path params kept in URL order", () => {
+        const dto = parseProviderDto(validBody({ "endpoints.0.targetUrl": "https://api.shop.com/{org}/items/{id}" }));
+        expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["org", "id"]);
+        expect(dto.endpoints[0]!.params.every(p => p.in === "path" && p.required)).toBe(true);
+    });
+
+    test("a repeated placeholder is deduped", () => {
+        const dto = parseProviderDto(validBody({ "endpoints.0.targetUrl": "https://api.shop.com/{id}/sub/{id}" }));
+        expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["id"]);
+    });
+
+    test("path params precede query params in the merged list", () => {
+        const dto = parseProviderDto(validBody({
+            "endpoints.0.targetUrl": "https://api.shop.com/items/{id}",
+            "endpoints.0.params.0.name": "limit", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "number",
+        }));
+        expect(dto.endpoints[0]!.params).toEqual([
+            { name: "id",    in: "path",  type: "string", required: true },
+            { name: "limit", in: "query", type: "number", required: false },
+        ]);
+    });
+
+    test("a query param shadowing a path placeholder → InvalidParam", () => {
+        expect(() => parseProviderDto(validBody({
+            "endpoints.0.targetUrl": "https://api.shop.com/items/{id}",
+            "endpoints.0.params.0.name": "id", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",
+        }))).toThrow(/duplicate param name/);
+    });
+
     test("param gap is compacted", () => {
         const dto = parseProviderDto(validBody({
             "endpoints.0.params.0.name": "a", "endpoints.0.params.0.in": "query", "endpoints.0.params.0.type": "string",

@@ -101,6 +101,27 @@ describe("<cms-endpoints-input>", () => {
         expect(checkboxes[1]!.hasAttribute("checked")).toBe(false);  // required:false → unchecked
     });
 
+    test("In tab: path params auto-detected from the targetUrl (read-only, not serialized)", () => {
+        const el = mount(JSON.stringify([
+            { endpointId: "getItem", method: "GET", targetUrl: "https://api.x.com/{org}/items/{id}" },
+        ]));
+        const item = rows(el)[0]!;
+        const pathRows = item.querySelectorAll('[data-role="path-param-row"]');
+        expect(pathRows).toHaveLength(2);
+        expect(Array.from(pathRows, r => (r as HTMLElement).dataset.paramName)).toEqual(["org", "id"]);
+        // path params are derived server-side from the URL → no form fields emitted
+        expect(item.querySelector('[data-role="path-params"] [name]')).toBeNull();
+    });
+
+    test("In tab: a URL with no {placeholders} → hint, zero path rows", () => {
+        const el = mount(JSON.stringify([
+            { endpointId: "list", method: "GET", targetUrl: "https://api.x.com/items" },
+        ]));
+        const item = rows(el)[0]!;
+        expect(item.querySelectorAll('[data-role="path-param-row"]')).toHaveLength(0);
+        expect(item.querySelector('[data-role="path-params"]')!.textContent).toContain("placeholders");
+    });
+
     test("delete is a header-actions button carrying data-action=remove-endpoint", () => {
         const el = mount();
         const btn = rows(el)[0]!.querySelector('[data-action="remove-endpoint"]');

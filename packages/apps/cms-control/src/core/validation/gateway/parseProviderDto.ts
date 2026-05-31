@@ -35,6 +35,24 @@ const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl)$/;
 const PARAM_KEY = /^endpoints\.(\d+)\.params\.(\d+)\.(name|in|type|required)$/;
 type ParamFields = Partial<Record<"name" | "in" | "type" | "required", string>>;
 
+/** `{name}` placeholders in a target URL are the endpoint's path params. They are
+ *  DERIVED here (not posted by the form): the URL is the single source of truth,
+ *  so the editor only displays them read-only. Each becomes a required `in:'path'`
+ *  param — the proxy templates `{name}` from the caller's request, and an
+ *  undeclared placeholder would 500 at execution. Deduped, kept in URL order. */
+const PATH_PLACEHOLDER = /\{(\w+)\}/g;
+function pathParamsFromUrl(targetUrl: string): EndpointParamDto[] {
+    const out: EndpointParamDto[] = [];
+    const seen = new Set<string>();
+    for (const m of targetUrl.matchAll(PATH_PLACEHOLDER)) {
+        const name = m[1]!;
+        if (seen.has(name)) continue;
+        seen.add(name);
+        out.push({ name, in: "path", type: "string", required: true });
+    }
+    return out;
+}
+
 /** Same slug shape as the identity-provider create flow (lowercase kebab). */
 const slugify = (s: string): string =>
     s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -82,13 +100,14 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         rows.set(idx, row);
     }
 
-    /** Reconstruct one endpoint's params, compacting sparse indices and dropping
-     *  unfilled (name-less) rows. */
-    const buildParams = (ei: number): EndpointParamDto[] => {
+    /** Reconstruct one endpoint's query params, compacting sparse indices and
+     *  dropping unfilled (name-less) rows. `reserved` holds the path-param names
+     *  already taken by the URL, so a query param can't shadow a path placeholder. */
+    const buildParams = (ei: number, reserved: ReadonlySet<string>): EndpointParamDto[] => {
         const epParams = paramRows.get(ei);
         if (!epParams) return [];
         const out: EndpointParamDto[] = [];
-        const seen = new Set<string>();
+        const seen = new Set<string>(reserved);
         for (const pi of [...epParams.keys()].sort((a, b) => a - b)) {
             const p = epParams.get(pi)!;
             const name = (p.name ?? "").trim();
@@ -130,7 +149,14 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         }
         seenIds.add(endpointId);
 
-        endpoints.push({ endpointId, method: method as HTTPMethod, targetUrl, params: buildParams(idx) });
+        // Path params are derived from the URL; query params come from the form.
+        // The path names are reserved first so a query row can't reuse one.
+        const pathParams = pathParamsFromUrl(targetUrl);
+        const queryParams = buildParams(idx, new Set(pathParams.map(p => p.name)));
+        endpoints.push({
+            endpointId, method: method as HTTPMethod, targetUrl,
+            params: [...pathParams, ...queryParams],
+        });
     }
 
     // Zero endpoints is allowed: the create form makes a provider shell, and

@@ -10115,6 +10115,111 @@ ${followMessage}`)) {
     customElements.define("cms-empty-state", EmptyState);
   }
 
+  // src/components/admin/EndpointsInput/EndpointsInput.css
+  var EndpointsInput_default = `/* \`<cms-endpoints-input>\` is light-DOM (its named controls must stay in the
+   parent <cms-form>'s tree for FormData). This sheet is injected once into the
+   document head; every rule is scoped to the tag so nothing leaks. */
+
+cms-endpoints-input {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Collapsed-header summary (method tag + id + path) */
+cms-endpoints-input .ep-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+}
+cms-endpoints-input .ep-id {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+cms-endpoints-input .ep-path {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-muted, #94a3b8);
+    font-family: ui-monospace, monospace;
+    font-size: 0.85em;
+}
+
+/* In-tab section headings + muted hints/labels */
+cms-endpoints-input .ep-heading { font-size: 13px; }
+cms-endpoints-input .ep-hint {
+    margin: 0;
+    color: var(--text-muted, #94a3b8);
+    font-size: 13px;
+}
+cms-endpoints-input .ep-meta {
+    color: var(--text-muted, #94a3b8);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* Query-param row controls */
+cms-endpoints-input .ep-name { flex: 1; min-width: 0; }
+cms-endpoints-input .ep-type { min-width: 7rem; }
+cms-endpoints-input .ep-required { white-space: nowrap; }
+
+/* Read-only path-param name chip */
+cms-endpoints-input .ep-path-name {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 10px;
+    border: 1px dashed var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-subtle, #f8fafc);
+    color: var(--text-main, #1e293b);
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* "+ Add query param" text button */
+cms-endpoints-input .ep-add-param {
+    align-self: flex-start;
+    background: transparent;
+    border: 0;
+    color: var(--primary-base, #4361ee);
+    font: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0.25rem 0;
+}
+
+/* Full-width dashed "Add endpoint" button (hover handled here, not in JS) */
+cms-endpoints-input .ep-add {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem;
+    border: 1.5px dashed var(--border-default, #d1d5db);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted, #6b7280);
+    font: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+}
+cms-endpoints-input .ep-add:hover {
+    border-color: var(--primary-base, #4361ee);
+    color: var(--primary-base, #4361ee);
+}
+`;
+
   // ../../libs/cms-gateway/src/interfaces/Gateway.ts
   var HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"];
   // ../../libs/cms-gateway/src/default-implementation/GatewayRepository/memory.ts
@@ -10152,7 +10257,134 @@ ${followMessage}`)) {
       return null;
     }
   }
-  // src/components/admin/EndpointsInput/EndpointsInput.ts
+  // src/components/admin/EndpointsInput/icons.ts
+  var ICON_PLUS = `
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round" aria-hidden="true">
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+</svg>`;
+  var ICON_X = `
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round" aria-hidden="true">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+</svg>`;
+  var ICON_TRASH2 = `
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round" aria-hidden="true">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+</svg>`;
+
+  // src/components/admin/EndpointsInput/controls.ts
+  function makeInput(name, label, placeholder, value) {
+    const input = document.createElement("p9r-input");
+    input.setAttribute("name", name);
+    if (label)
+      input.setAttribute("label", label);
+    input.setAttribute("placeholder", placeholder);
+    if (value != null)
+      input.setAttribute("value", value);
+    return input;
+  }
+  function makeMethodSelect(name, value) {
+    const select = document.createElement("p9r-select");
+    select.setAttribute("name", name);
+    select.setAttribute("label", "Method");
+    for (const m of HTTP_METHODS) {
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = m;
+      select.appendChild(opt);
+    }
+    const initial = value && HTTP_METHODS.includes(value) ? value : HTTP_METHODS[0];
+    select.setAttribute("value", initial);
+    return select;
+  }
+  function makeDeferredPanel(id, label) {
+    const panel = document.createElement("p9r-tab-panel");
+    panel.id = id;
+    panel.setAttribute("label", label);
+    panel.setAttribute("disabled", "");
+    const note = document.createElement("p");
+    note.className = "ep-hint";
+    note.textContent = "Soon.";
+    panel.appendChild(note);
+    return panel;
+  }
+  function makeDeleteButton() {
+    const btn = document.createElement("p9r-icon-button");
+    btn.setAttribute("slot", "header-actions");
+    btn.setAttribute("variant", "ghost");
+    btn.setAttribute("color", "danger");
+    btn.setAttribute("size", "sm");
+    btn.setAttribute("aria-label", "Delete endpoint");
+    btn.dataset.action = "remove-endpoint";
+    btn.innerHTML = ICON_TRASH2;
+    return btn;
+  }
+  function makeAddButton() {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ep-add";
+    btn.dataset.action = "add-endpoint";
+    btn.innerHTML = `${ICON_PLUS} Add endpoint`;
+    return btn;
+  }
+
+  // src/components/admin/EndpointsInput/pathParams.ts
+  function extractPathNames(targetUrl) {
+    const names = [];
+    const seen = new Set;
+    for (const m of targetUrl.matchAll(/\{(\w+)\}/g)) {
+      const name = m[1];
+      if (seen.has(name))
+        continue;
+      seen.add(name);
+      names.push(name);
+    }
+    return names;
+  }
+  function makePathParamRow(name) {
+    const row = document.createElement("p9r-stack");
+    row.setAttribute("direction", "row");
+    row.setAttribute("gap", "sm");
+    row.setAttribute("align", "center");
+    row.dataset.role = "path-param-row";
+    row.dataset.paramName = name;
+    const nameEl = document.createElement("code");
+    nameEl.className = "ep-path-name";
+    nameEl.textContent = name;
+    const type = document.createElement("span");
+    type.className = "ep-meta";
+    type.textContent = "string";
+    const req = document.createElement("span");
+    req.className = "ep-meta";
+    req.textContent = "required";
+    row.append(nameEl, type, req);
+    return row;
+  }
+  function renderPathParams(container, targetUrl) {
+    const names = extractPathNames(targetUrl);
+    container.replaceChildren();
+    if (!names.length) {
+      const hint = document.createElement("p");
+      hint.className = "ep-hint";
+      hint.textContent = "Add {placeholders} to the Target URL to declare path params.";
+      container.appendChild(hint);
+      return;
+    }
+    const rows = document.createElement("p9r-stack");
+    rows.setAttribute("gap", "sm");
+    names.forEach((n) => rows.appendChild(makePathParamRow(n)));
+    container.appendChild(rows);
+  }
+
+  // src/components/admin/EndpointsInput/shared.ts
   var PARAM_TYPES = ["string", "number", "boolean"];
   var liveValue = (el2) => el2.value ?? "";
   var METHOD_COLOR = {
@@ -10164,6 +10396,152 @@ ${followMessage}`)) {
   };
   var methodColor = (m) => METHOD_COLOR[m] ?? "primary";
 
+  // src/components/admin/EndpointsInput/queryRow.ts
+  function makeQueryParamRow(ei2, pi2, seed = {}) {
+    const row = document.createElement("p9r-stack");
+    row.setAttribute("direction", "row");
+    row.setAttribute("gap", "sm");
+    row.setAttribute("align", "center");
+    row.dataset.role = "query-param-row";
+    const name = makeInput(`endpoints.${ei2}.params.${pi2}.name`, "", "param name", seed.name);
+    name.className = "ep-name";
+    const hiddenIn = document.createElement("input");
+    hiddenIn.type = "hidden";
+    hiddenIn.name = `endpoints.${ei2}.params.${pi2}.in`;
+    hiddenIn.value = "query";
+    const type = document.createElement("p9r-select");
+    type.className = "ep-type";
+    type.setAttribute("name", `endpoints.${ei2}.params.${pi2}.type`);
+    type.setAttribute("label", "");
+    for (const t of PARAM_TYPES) {
+      const o2 = document.createElement("option");
+      o2.value = t;
+      o2.textContent = t;
+      type.appendChild(o2);
+    }
+    const t0 = seed.type && PARAM_TYPES.includes(seed.type) ? seed.type : PARAM_TYPES[0];
+    type.setAttribute("value", t0);
+    const req = document.createElement("w13c-checkbox");
+    req.className = "ep-required";
+    req.setAttribute("name", `endpoints.${ei2}.params.${pi2}.required`);
+    req.setAttribute("value", "true");
+    if (seed.required)
+      req.setAttribute("checked", "");
+    req.textContent = "Required";
+    const remove = document.createElement("p9r-icon-button");
+    remove.setAttribute("variant", "ghost");
+    remove.setAttribute("color", "danger");
+    remove.setAttribute("size", "sm");
+    remove.setAttribute("aria-label", "Remove param");
+    remove.dataset.action = "remove-query-param";
+    remove.innerHTML = ICON_X;
+    row.append(name, hiddenIn, type, req, remove);
+    return row;
+  }
+
+  // src/components/admin/EndpointsInput/inPanel.ts
+  function makeInPanel(endpointIdx, seedParams, urlInput) {
+    const panel = document.createElement("p9r-tab-panel");
+    panel.id = `in-${endpointIdx}`;
+    panel.setAttribute("label", "In");
+    const wrap = document.createElement("p9r-stack");
+    wrap.setAttribute("gap", "m");
+    const pathContainer = document.createElement("div");
+    pathContainer.dataset.role = "path-params";
+    const renderPath = () => {
+      const live = urlInput.value;
+      renderPathParams(pathContainer, typeof live === "string" ? live : urlInput.getAttribute("value") ?? "");
+    };
+    renderPath();
+    urlInput.addEventListener("input", renderPath);
+    urlInput.addEventListener("change", renderPath);
+    const queryParams = seedParams.filter((p) => (p.in ?? "query") === "query");
+    const container = document.createElement("div");
+    container.dataset.role = "query-params";
+    container.dataset.endpointIdx = String(endpointIdx);
+    container.dataset.paramCount = String(queryParams.length);
+    const rows = document.createElement("p9r-stack");
+    rows.setAttribute("gap", "sm");
+    rows.dataset.role = "query-param-rows";
+    queryParams.forEach((p, j2) => rows.appendChild(makeQueryParamRow(endpointIdx, j2, p)));
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "ep-add-param";
+    add.dataset.action = "add-query-param";
+    add.textContent = "+ Add query param";
+    container.append(rows, add);
+    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container);
+    panel.appendChild(wrap);
+    return panel;
+  }
+  function addQueryParam(container) {
+    if (!container)
+      return;
+    const ei2 = Number(container.dataset.endpointIdx);
+    const pi2 = Number(container.dataset.paramCount ?? "0");
+    container.dataset.paramCount = String(pi2 + 1);
+    container.querySelector('[data-role="query-param-rows"]')?.appendChild(makeQueryParamRow(ei2, pi2));
+  }
+  function heading(text) {
+    const h2 = document.createElement("strong");
+    h2.className = "ep-heading";
+    h2.textContent = text;
+    return h2;
+  }
+
+  // src/components/admin/EndpointsInput/rows.ts
+  function makeEndpointRow(idx, seed = {}) {
+    const method = seed.method && HTTP_METHODS.includes(seed.method) ? seed.method : HTTP_METHODS[0];
+    const item = document.createElement("p9r-accordion-item");
+    item.dataset.role = "endpoint-row";
+    const header = document.createElement("span");
+    header.className = "ep-header";
+    header.setAttribute("slot", "header");
+    const methodTag = document.createElement("p9r-tag");
+    methodTag.dataset.display = "method";
+    methodTag.setAttribute("color", methodColor(method));
+    methodTag.textContent = method;
+    const idEl = document.createElement("strong");
+    idEl.className = "ep-id";
+    idEl.dataset.display = "endpointId";
+    idEl.textContent = seed.endpointId || "(new endpoint)";
+    const pathEl = document.createElement("span");
+    pathEl.className = "ep-path";
+    pathEl.dataset.display = "targetUrl";
+    pathEl.textContent = seed.targetUrl || "";
+    header.append(methodTag, idEl, pathEl);
+    const tabs = document.createElement("p9r-tabs");
+    const infos = document.createElement("p9r-tab-panel");
+    infos.id = `infos-${idx}`;
+    infos.setAttribute("label", "Infos");
+    const infosBody = document.createElement("p9r-stack");
+    infosBody.setAttribute("gap", "m");
+    const idInput = makeInput(`endpoints.${idx}.endpointId`, "Endpoint id", "getUser", seed.endpointId);
+    const methodSelect = makeMethodSelect(`endpoints.${idx}.method`, method);
+    const urlInput = makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
+    infosBody.append(idInput, methodSelect, urlInput);
+    infos.appendChild(infosBody);
+    tabs.append(infos, makeInPanel(idx, seed.params ?? [], urlInput), makeDeferredPanel(`out-${idx}`, "Out"), makeDeferredPanel(`rules-${idx}`, "Rules"));
+    tabs.setAttribute("active", `infos-${idx}`);
+    item.append(header, makeDeleteButton(), tabs);
+    bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
+    return item;
+  }
+  function bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput) {
+    const update = () => {
+      const m = liveValue(methodSelect) || HTTP_METHODS[0];
+      methodTag.textContent = m;
+      methodTag.setAttribute("color", methodColor(m));
+      idEl.textContent = liveValue(idInput).trim() || "(new endpoint)";
+      pathEl.textContent = liveValue(urlInput);
+    };
+    for (const el2 of [idInput, methodSelect, urlInput]) {
+      el2.addEventListener("input", update);
+      el2.addEventListener("change", update);
+    }
+  }
+
+  // src/components/admin/EndpointsInput/EndpointsInput.ts
   class CmsEndpointsInput extends HTMLElement {
     _rowCount = 0;
     _initialized = false;
@@ -10173,8 +10551,7 @@ ${followMessage}`)) {
       const addBtn = target.closest('[data-action="add-endpoint"]');
       if (addBtn && this.contains(addBtn)) {
         e.preventDefault();
-        const item = this._addRow({});
-        item?.scrollIntoView({ block: "nearest" });
+        this._addRow({})?.scrollIntoView({ block: "nearest" });
         return;
       }
       const removeBtn = target.closest('[data-action="remove-endpoint"]');
@@ -10186,7 +10563,7 @@ ${followMessage}`)) {
       const addParam = target.closest('[data-action="add-query-param"]');
       if (addParam && this.contains(addParam)) {
         e.preventDefault();
-        this._addQueryParam(addParam.closest('[data-role="query-params"]'));
+        addQueryParam(addParam.closest('[data-role="query-params"]'));
         return;
       }
       const removeParam = target.closest('[data-action="remove-query-param"]');
@@ -10198,13 +10575,13 @@ ${followMessage}`)) {
     connectedCallback() {
       if (!this._initialized) {
         this._initialized = true;
+        ensureStyles();
         this._render();
         const seeds = this._parseValue();
-        if (seeds.length) {
+        if (seeds.length)
           seeds.forEach((seed) => this._addRow(seed));
-        } else if (!this.hasAttribute("value")) {
+        else if (!this.hasAttribute("value"))
           this._addRow({});
-        }
       }
       this.addEventListener("click", this._onClick);
     }
@@ -10223,249 +10600,26 @@ ${followMessage}`)) {
       }
     }
     _render() {
-      this.style.display = "flex";
-      this.style.flexDirection = "column";
-      this.style.gap = "0.75rem";
       this._rowsContainer = document.createElement("p9r-accordion");
-      this.appendChild(this._rowsContainer);
-      this.appendChild(this._makeAddButton());
+      this.append(this._rowsContainer, makeAddButton());
     }
     _addRow(seed = {}) {
-      const container = this._rowsContainer;
-      if (!container)
+      if (!this._rowsContainer)
         return null;
-      const idx = this._rowCount++;
-      const method = seed.method && HTTP_METHODS.includes(seed.method) ? seed.method : HTTP_METHODS[0];
-      const item = document.createElement("p9r-accordion-item");
-      item.dataset.role = "endpoint-row";
-      const header = document.createElement("span");
-      header.setAttribute("slot", "header");
-      header.style.cssText = "display:flex; align-items:center; gap:0.6rem; flex:1; min-width:0;";
-      const methodTag = document.createElement("p9r-tag");
-      methodTag.dataset.display = "method";
-      methodTag.setAttribute("color", methodColor(method));
-      methodTag.textContent = method;
-      const idEl = document.createElement("strong");
-      idEl.dataset.display = "endpointId";
-      idEl.textContent = seed.endpointId || "(new endpoint)";
-      idEl.style.cssText = "flex:0 0 auto; white-space:nowrap;";
-      const pathEl = document.createElement("span");
-      pathEl.dataset.display = "targetUrl";
-      pathEl.textContent = seed.targetUrl || "";
-      pathEl.style.cssText = "flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color: var(--text-muted, #94a3b8); font-family: ui-monospace, monospace; font-size:0.85em;";
-      header.append(methodTag, idEl, pathEl);
-      const tabs = document.createElement("p9r-tabs");
-      const infos = document.createElement("p9r-tab-panel");
-      infos.id = `infos-${idx}`;
-      infos.setAttribute("label", "Infos");
-      const infosBody = document.createElement("p9r-stack");
-      infosBody.setAttribute("gap", "m");
-      const idInput = this._makeInput(`endpoints.${idx}.endpointId`, "Endpoint id", "getUser", seed.endpointId);
-      const methodSelect = this._makeMethodSelect(`endpoints.${idx}.method`, method);
-      const urlInput = this._makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
-      infosBody.append(idInput, methodSelect, urlInput);
-      infos.appendChild(infosBody);
-      tabs.append(infos, this._makeInPanel(idx, seed.params ?? []), this._makeDeferredPanel(`out-${idx}`, "Out"), this._makeDeferredPanel(`rules-${idx}`, "Rules"));
-      tabs.setAttribute("active", `infos-${idx}`);
-      item.append(header, this._makeDeleteButton(), tabs);
-      this._bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
-      container.appendChild(item);
+      const item = makeEndpointRow(this._rowCount++, seed);
+      this._rowsContainer.appendChild(item);
       return item;
     }
-    _bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput) {
-      const update = () => {
-        const m = liveValue(methodSelect) || HTTP_METHODS[0];
-        methodTag.textContent = m;
-        methodTag.setAttribute("color", methodColor(m));
-        idEl.textContent = liveValue(idInput).trim() || "(new endpoint)";
-        pathEl.textContent = liveValue(urlInput);
-      };
-      for (const el2 of [idInput, methodSelect, urlInput]) {
-        el2.addEventListener("input", update);
-        el2.addEventListener("change", update);
-      }
-    }
-    _makeInput(name, label, placeholder, value) {
-      const input = document.createElement("p9r-input");
-      input.setAttribute("name", name);
-      if (label)
-        input.setAttribute("label", label);
-      input.setAttribute("placeholder", placeholder);
-      if (value != null)
-        input.setAttribute("value", value);
-      return input;
-    }
-    _makeMethodSelect(name, value) {
-      const select = document.createElement("p9r-select");
-      select.setAttribute("name", name);
-      select.setAttribute("label", "Method");
-      for (const m of HTTP_METHODS) {
-        const opt = document.createElement("option");
-        opt.value = m;
-        opt.textContent = m;
-        select.appendChild(opt);
-      }
-      const initial = value && HTTP_METHODS.includes(value) ? value : HTTP_METHODS[0];
-      select.setAttribute("value", initial);
-      return select;
-    }
-    _makeInPanel(endpointIdx, seedParams) {
-      const panel = document.createElement("p9r-tab-panel");
-      panel.id = `in-${endpointIdx}`;
-      panel.setAttribute("label", "In");
-      const wrap = document.createElement("p9r-stack");
-      wrap.setAttribute("gap", "m");
-      const heading = document.createElement("strong");
-      heading.textContent = "Query params";
-      heading.style.cssText = "font-size:13px;";
-      const queryParams = seedParams.filter((p) => (p.in ?? "query") === "query");
-      const container = document.createElement("div");
-      container.dataset.role = "query-params";
-      container.dataset.endpointIdx = String(endpointIdx);
-      container.dataset.paramCount = String(queryParams.length);
-      const rows = document.createElement("p9r-stack");
-      rows.setAttribute("gap", "sm");
-      rows.dataset.role = "query-param-rows";
-      queryParams.forEach((p, j2) => rows.appendChild(this._makeQueryParamRow(endpointIdx, j2, p)));
-      const add = document.createElement("button");
-      add.type = "button";
-      add.dataset.action = "add-query-param";
-      add.textContent = "+ Add query param";
-      add.style.cssText = "align-self:flex-start; background:transparent; border:0; color:var(--primary-base,#4361ee); font:inherit; font-weight:600; font-size:13px; cursor:pointer; padding:.25rem 0;";
-      container.append(rows, add);
-      wrap.append(heading, container);
-      panel.appendChild(wrap);
-      return panel;
-    }
-    _makeQueryParamRow(ei2, pi2, seed = {}) {
-      const row = document.createElement("p9r-stack");
-      row.setAttribute("direction", "row");
-      row.setAttribute("gap", "sm");
-      row.setAttribute("align", "center");
-      row.dataset.role = "query-param-row";
-      const name = this._makeInput(`endpoints.${ei2}.params.${pi2}.name`, "", "param name", seed.name);
-      name.style.flex = "1";
-      name.style.minWidth = "0";
-      const hiddenIn = document.createElement("input");
-      hiddenIn.type = "hidden";
-      hiddenIn.name = `endpoints.${ei2}.params.${pi2}.in`;
-      hiddenIn.value = "query";
-      const type = document.createElement("p9r-select");
-      type.setAttribute("name", `endpoints.${ei2}.params.${pi2}.type`);
-      type.setAttribute("label", "");
-      type.style.minWidth = "7rem";
-      for (const t of PARAM_TYPES) {
-        const o2 = document.createElement("option");
-        o2.value = t;
-        o2.textContent = t;
-        type.appendChild(o2);
-      }
-      const t0 = seed.type && PARAM_TYPES.includes(seed.type) ? seed.type : PARAM_TYPES[0];
-      type.setAttribute("value", t0);
-      const req = document.createElement("w13c-checkbox");
-      req.setAttribute("name", `endpoints.${ei2}.params.${pi2}.required`);
-      req.setAttribute("value", "true");
-      if (seed.required)
-        req.setAttribute("checked", "");
-      req.textContent = "Required";
-      req.style.whiteSpace = "nowrap";
-      const remove = document.createElement("p9r-icon-button");
-      remove.setAttribute("variant", "ghost");
-      remove.setAttribute("color", "danger");
-      remove.setAttribute("size", "sm");
-      remove.setAttribute("aria-label", "Remove param");
-      remove.dataset.action = "remove-query-param";
-      remove.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-        `;
-      row.append(name, hiddenIn, type, req, remove);
-      return row;
-    }
-    _addQueryParam(container) {
-      if (!container)
-        return;
-      const ei2 = Number(container.dataset.endpointIdx);
-      const pi2 = Number(container.dataset.paramCount ?? "0");
-      container.dataset.paramCount = String(pi2 + 1);
-      container.querySelector('[data-role="query-param-rows"]')?.appendChild(this._makeQueryParamRow(ei2, pi2));
-    }
-    _makeDeferredPanel(id, label) {
-      const panel = document.createElement("p9r-tab-panel");
-      panel.id = id;
-      panel.setAttribute("label", label);
-      panel.setAttribute("disabled", "");
-      const note = document.createElement("p");
-      note.textContent = "Soon.";
-      note.style.cssText = "margin:0; color: var(--text-muted, #94a3b8); font-size:13px;";
-      panel.appendChild(note);
-      return panel;
-    }
-    _makeDeleteButton() {
-      const btn = document.createElement("p9r-icon-button");
-      btn.setAttribute("slot", "header-actions");
-      btn.setAttribute("variant", "ghost");
-      btn.setAttribute("color", "danger");
-      btn.setAttribute("size", "sm");
-      btn.setAttribute("aria-label", "Delete endpoint");
-      btn.dataset.action = "remove-endpoint";
-      btn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" aria-hidden="true">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-        `;
-      return btn;
-    }
-    _makeAddButton() {
-      const idle = "var(--border-default, #d1d5db)";
-      const muted = "var(--text-muted, #6b7280)";
-      const accent = "var(--primary-base, #4361ee)";
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.dataset.action = "add-endpoint";
-      btn.style.cssText = [
-        "width:100%",
-        "display:flex",
-        "align-items:center",
-        "justify-content:center",
-        "gap:0.5rem",
-        "padding:0.8rem",
-        `border:1.5px dashed ${idle}`,
-        "border-radius:8px",
-        "background:transparent",
-        `color:${muted}`,
-        "font:inherit",
-        "font-weight:600",
-        "font-size:14px",
-        "cursor:pointer",
-        "transition:border-color .15s ease, color .15s ease"
-      ].join(";");
-      btn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" aria-hidden="true">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Add endpoint
-        `;
-      btn.addEventListener("mouseenter", () => {
-        btn.style.borderColor = accent;
-        btn.style.color = accent;
-      });
-      btn.addEventListener("mouseleave", () => {
-        btn.style.borderColor = idle;
-        btn.style.color = muted;
-      });
-      return btn;
-    }
+  }
+  var stylesInjected = false;
+  function ensureStyles() {
+    if (stylesInjected || document.getElementById("cms-endpoints-input-styles"))
+      return;
+    stylesInjected = true;
+    const style = document.createElement("style");
+    style.id = "cms-endpoints-input-styles";
+    style.textContent = EndpointsInput_default;
+    document.head.appendChild(style);
   }
   customElements.define("cms-endpoints-input", CmsEndpointsInput);
 
