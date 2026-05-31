@@ -10532,67 +10532,45 @@ cms-endpoints-input .ep-add:hover {
     return { name, in: "query", type, required, ...description ? { description } : {} };
   }
 
-  // src/components/admin/EndpointsInput/bodyParts.ts
-  function makeTypeSelect(value) {
-    const select = makeSelect(SHAPE_TYPES, value);
-    select.dataset.role = "node-type";
-    select.className = "ep-type";
-    return select;
-  }
-  var makeTrash = (onClick) => makeIconButton(ICON_X, { ariaLabel: "Remove property", onClick });
-  function makeAddPropButton(onClick) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.dataset.role = "add-prop";
-    btn.className = "ep-add-prop";
-    btn.setLabel = (name) => {
-      btn.textContent = name ? `+ Add property to "${name}"` : "+ Add property";
-    };
-    btn.setLabel("");
-    btn.addEventListener("click", onClick);
-    return btn;
-  }
-
   // src/components/admin/EndpointsInput/bodyNode.ts
   function makeNode(seed, onChange, depth = 0) {
-    const typeSelect = makeTypeSelect(seed.type);
+    const typeSelect = makeSelect(SHAPE_TYPES, seed.type);
+    typeSelect.dataset.role = "node-type";
+    typeSelect.className = "ep-type";
     const typeEl = document.createElement("span");
     typeEl.className = "ep-type-cell";
     typeEl.appendChild(typeSelect);
     const childrenEl = document.createElement("div");
     const props = [];
     let itemsNode = null;
-    let addBtn = null;
     const makeProp = (name, shape, required) => {
       const nameEl = makeInput("", "", "field name", name);
       nameEl.classList.add("ep-prop-name");
+      nameEl.addEventListener("input", onChange);
       const child = makeNode(shape, onChange, depth + 1);
       const reqEl = makeRequiredCheckbox(required, onChange);
       const wrapper = document.createElement("div");
       wrapper.className = "ep-prop";
       const row = document.createElement("div");
       row.className = "ep-prop-row";
-      const trash = makeTrash(() => {
-        const i = props.findIndex((p) => p.nameEl === nameEl);
-        if (i >= 0)
-          props.splice(i, 1);
-        wrapper.remove();
-        onChange();
-      });
-      nameEl.addEventListener("input", () => {
-        onChange();
-        child.setOwnerLabel(readControl(nameEl).trim());
+      const trash = makeIconButton(ICON_X, {
+        ariaLabel: "Remove property",
+        onClick: () => {
+          const i = props.findIndex((p) => p.nameEl === nameEl);
+          if (i >= 0)
+            props.splice(i, 1);
+          wrapper.remove();
+          onChange();
+        }
       });
       row.append(nameEl, child.typeEl, reqEl, trash);
       wrapper.append(row, child.childrenEl);
       props.push({ nameEl, reqEl, child });
-      child.setOwnerLabel(name);
       return wrapper;
     };
     const rebuild = (type, s) => {
       props.length = 0;
       itemsNode = null;
-      addBtn = null;
       while (typeSelect.nextSibling)
         typeSelect.nextSibling.remove();
       childrenEl.replaceChildren();
@@ -10604,11 +10582,16 @@ cms-endpoints-input .ep-add:hover {
         const req = new Set(s.required ?? []);
         for (const [k2, v2] of Object.entries(s.properties ?? {}))
           list.appendChild(makeProp(k2, v2, req.has(k2)));
-        addBtn = makeAddPropButton(() => {
+        const add = document.createElement("button");
+        add.type = "button";
+        add.className = "ep-add-prop";
+        add.dataset.role = "add-prop";
+        add.textContent = "+ Add property";
+        add.addEventListener("click", () => {
           list.appendChild(makeProp("", { type: "string" }, false));
           onChange();
         });
-        box.append(list, addBtn);
+        box.append(list, add);
         childrenEl.appendChild(box);
       } else if (type === "array") {
         itemsNode = makeNode(s.items ?? { type: "string" }, onChange, depth + 1);
@@ -10643,14 +10626,14 @@ cms-endpoints-input .ep-add:hover {
         if (Object.keys(properties).length)
           out.properties = properties;
         if (required.length)
-          out.required = required.filter((n) => (n in properties));
+          out.required = required.filter((n) => Object.hasOwn(properties, n));
         return out;
       }
       if (type === "array")
         return itemsNode ? { type, items: itemsNode.read() } : { type };
       return { type };
     };
-    return { typeEl, childrenEl, read, setOwnerLabel: (name) => addBtn?.setLabel(name) };
+    return { typeEl, childrenEl, read };
   }
 
   // src/components/admin/EndpointsInput/bodyEditor.ts
