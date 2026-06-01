@@ -10,6 +10,7 @@ import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/auth-core";
 import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/auth-core";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
+import { registerGatewayProxy } from "./core/registerEndpoints/registerGatewayProxy";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
@@ -110,6 +111,16 @@ export class ControlCms {
         runner.addEndpoint("GET", "/",      toPages, [authGuard]);
         runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
 
+        // Data-gateway proxy at <basePath>/.cms/gateway/* (shared with delivery,
+        // but with secret resolution wired). Registered before the guarded groups
+        // so the guard never intercepts this public preview surface.
+        registerGatewayProxy({
+            runner,
+            basePath:      this.basePath,
+            gateway:       this._gateway,
+            resolveSecret: this.resolveSecret,
+        });
+
         runner.group("/", (staticRunner) => {
             serveStaticFolder(staticRunner, {
                 cache:     this._cache,
@@ -191,6 +202,21 @@ export class ControlCms {
         if (!this._gateway) throw new Error("gateway repository not configured");
         return this._gateway;
     }
+
+    /**
+     * Resolves a `secret`-sourced gateway header `ref` to its value via the
+     * secret store, for the gateway proxy's `ExecutorDeps`. NEVER throws and
+     * maps a missing key (`null`) to `undefined`, so `executeEndpoint` returns
+     * its clean 500 ("secret introuvable") rather than surfacing an unhandled
+     * throw. Arrow field → `this` stays bound when passed as a callback.
+     */
+    private resolveSecret = async (ref: string): Promise<string | undefined> => {
+        try {
+            return (await this._secrets.get(ref)) ?? undefined;
+        } catch {
+            return undefined;
+        }
+    };
 
     /**
      * Tenant-level prefix, derived from `runner.basePath`. `"/"` (root-scoped

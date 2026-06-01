@@ -16,7 +16,11 @@ export type ExecutorDeps = {
 
 const TIMEOUT_MS = 15_000;
 const REQUEST_ALLOWLIST  = ["accept", "accept-language", "content-type", "range"] as const;
-const RESPONSE_ALLOWLIST = ["content-type", "cache-control", "etag", "last-modified", "content-length", "content-encoding"] as const;
+// `fetch` transparently DECOMPRESSES the upstream body, so the re-served body is
+// plain — NEVER forward `content-encoding`/`content-length` (they describe the
+// upstream's compressed bytes; a client would then fail to gunzip / truncate).
+// The runtime sets the correct length for the streamed body.
+const RESPONSE_ALLOWLIST = ["content-type", "cache-control", "etag", "last-modified"] as const;
 
 /**
  * Executor proxy (step 0). Takes an ALREADY resolved `Endpoint` + the incoming

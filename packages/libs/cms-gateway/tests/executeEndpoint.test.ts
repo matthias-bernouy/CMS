@@ -38,6 +38,17 @@ describe("executeEndpoint", () => {
         expect(res.headers.get("access-control-allow-origin")).toBeNull();
     });
 
+    test("response headers: drops content-encoding + content-length (body is decompressed by fetch → would mismatch)", async () => {
+        const fetchImpl = mock(async () => new Response("{\"ok\":true}", { status: 200, headers: {
+            "content-type": "application/json", "content-encoding": "gzip", "content-length": "607",
+        } }));
+        const res = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl });
+        expect(res.headers.get("content-encoding")).toBeNull();
+        expect(res.headers.get("content-length")).toBeNull();
+        expect(res.headers.get("content-type")).toBe("application/json");
+        expect(await res.text()).toBe("{\"ok\":true}");   // body readable, no decompression mismatch
+    });
+
     test("missing required param → 400, no fetch", async () => {
         const fetchImpl = okFetch();
         const e = ep({ input: { params: [{ name: "lat", in: "query", required: true, schema: { type: "number" } }] } });
