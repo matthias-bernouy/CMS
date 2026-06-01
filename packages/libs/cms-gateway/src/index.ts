@@ -29,3 +29,4 @@ export { resolveEndpoint, type ResolveResult } from "./core/resolveEndpoint";
 export { seedProviders, type SeedResult } from "./core/seedProviders";
 export { buildUpstreamUrl, type BuildUpstream } from "./core/buildUpstreamUrl";
 export { executeEndpoint, type ExecutorDeps } from "./core/executeEndpoint";
+export { handleGatewayRequest } from "./core/handleGatewayRequest";

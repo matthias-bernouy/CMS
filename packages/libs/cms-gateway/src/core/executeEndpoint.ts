@@ -2,8 +2,17 @@ import type { Endpoint } from "../interfaces/Gateway";
 import { buildUpstreamUrl } from "./buildUpstreamUrl";
 import { isForbiddenHeaderName } from "./headerPolicy";
 
-/** For test/infra injection only (default = global `fetch`). Not a capability carrier. */
-export type ExecutorDeps = { fetchImpl?: typeof fetch };
+/**
+ * Injected dependencies for the executor.
+ *  - `fetchImpl`: test/infra override of the upstream call (default = global `fetch`).
+ *  - `resolveSecret`: resolves a `secret`-sourced config header's `ref` to its value
+ *    server-side. When provided, `secret` headers ARE applied; when absent, the
+ *    executor keeps the 500 seam (a raw `${KEY}` ref is never forwarded upstream).
+ */
+export type ExecutorDeps = {
+    fetchImpl?: typeof fetch;
+    resolveSecret?: (ref: string) => Promise<string | undefined>;
+};
 
 const TIMEOUT_MS = 15_000;
 const REQUEST_ALLOWLIST  = ["accept", "accept-language", "content-type", "range"] as const;
@@ -43,12 +52,19 @@ export async function executeEndpoint(
         catch { return new Response(`header-param invalide : "${name}"`, { status: 400 }); }
     }
     // Config headers win over forwarded ones (last `.set`). Defense-in-depth: skip
-    // forbidden names (the parser already drops them). Secret refs are not resolved
-    // yet → 500 (never forward a raw ref upstream).
+    // forbidden names (the parser already drops them). Secret refs are resolved via
+    // `deps.resolveSecret` when wired; without it → 500 (never forward a raw ref).
     for (const { name, source } of endpoint.headers ?? []) {
         if (isForbiddenHeaderName(name)) continue;
         if (source.from === "secret") {
-            return new Response(`secret header requires a configured secret store (not wired yet): ${name}`, { status: 500 });
+            if (!deps?.resolveSecret) {
+                return new Response(`secret header requires a configured secret store (not wired yet): ${name}`, { status: 500 });
+            }
+            const v = await deps.resolveSecret(source.ref);
+            if (v == null) return new Response(`secret introuvable : ${source.ref}`, { status: 500 });
+            try { fwd.set(name, v); }
+            catch { return new Response(`header invalide : "${name}"`, { status: 400 }); }
+            continue;
         }
         try { fwd.set(name, source.value); }
         catch { return new Response(`header invalide : "${name}"`, { status: 400 }); }

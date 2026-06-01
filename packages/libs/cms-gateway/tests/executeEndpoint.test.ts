@@ -69,11 +69,32 @@ describe("executeEndpoint", () => {
         expect(passed.get("host")).toBeNull();
     });
 
-    test("a secret config header → 500, no fetch", async () => {
+    test("a secret config header WITHOUT resolveSecret → 500 seam, no fetch", async () => {
         const fetchImpl = okFetch();
         const e = ep({ headers: [{ name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } }] });
         const res = await executeEndpoint(e, new Request("http://local/x"), { fetchImpl });
         expect(res.status).toBe(500);
+        expect(await res.text()).toBe("secret header requires a configured secret store (not wired yet): Authorization");
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    test("a secret config header WITH resolveSecret → resolved value forwarded upstream", async () => {
+        const fetchImpl = okFetch();
+        const resolveSecret = mock(async (_ref: string) => "sk_live_x");
+        const e = ep({ headers: [{ name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } }] });
+        await executeEndpoint(e, new Request("http://local/x"), { fetchImpl, resolveSecret });
+        expect(resolveSecret).toHaveBeenCalledWith("${STRIPE_KEY}");
+        const passed = fetchImpl.mock.calls[0]![1]!.headers as Headers;
+        expect(passed.get("authorization")).toBe("sk_live_x");
+    });
+
+    test("a secret config header with resolveSecret returning undefined → 500, no fetch", async () => {
+        const fetchImpl = okFetch();
+        const resolveSecret = mock(async (_ref: string) => undefined);
+        const e = ep({ headers: [{ name: "Authorization", source: { from: "secret", ref: "${MISSING}" } }] });
+        const res = await executeEndpoint(e, new Request("http://local/x"), { fetchImpl, resolveSecret });
+        expect(res.status).toBe(500);
+        expect(await res.text()).toBe("secret introuvable : ${MISSING}");
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 
