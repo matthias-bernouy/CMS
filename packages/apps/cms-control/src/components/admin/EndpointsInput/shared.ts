@@ -16,7 +16,7 @@ export type EndpointSeed = {
     params?: ParamSeed[];
     /** Request-body shape (recursive) — drives the Body tree editor. */
     body?: DataShape;
-    /** Response contract (per-status list) — no editor yet, round-tripped verbatim (B1 fix). */
+    /** Response contract (per-status list) — drives the Out tab editor. */
     output?: EndpointResponse[];
     /** Endpoint meta — no editor yet, round-tripped verbatim (B1 fix). */
     meta?: GatewayMeta;

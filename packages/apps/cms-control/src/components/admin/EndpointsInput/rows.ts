@@ -1,6 +1,7 @@
 import { HTTP_METHODS } from "@bernouy/cms-gateway";
 import { makeInput, makeMethodSelect, makeDeferredPanel, makeDeleteButton } from "./controls";
 import { makeInPanel } from "./inPanel";
+import { makeOutPanel } from "./outPanel";
 import { readControl, methodColor, type EndpointSeed } from "./shared";
 
 /** Build one endpoint as a collapsible `<p9r-accordion-item>`: a live-synced
@@ -53,7 +54,7 @@ export function makeEndpointRow(idx: number, seed: EndpointSeed = {}): HTMLEleme
     tabs.append(
         infos,
         makeInPanel(idx, seed, urlInput),
-        makeDeferredPanel(`out-${idx}`, 'Out'),     // response shape view — fast-follow
+        makeOutPanel(idx, seed),
         makeDeferredPanel(`rules-${idx}`, 'Rules'), // auth/injection — later
     );
     tabs.setAttribute('active', `infos-${idx}`);   // panels already appended → no first-rebuild race

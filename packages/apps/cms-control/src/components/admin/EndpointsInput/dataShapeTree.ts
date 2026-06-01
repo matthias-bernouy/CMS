@@ -23,6 +23,7 @@ export function makeDataShapeTree(
     const rootLabel = labels?.root ?? 'Root type';
 
     const element = document.createElement('div');
+    element.className = 'ep-tree';
     let root: NodeHandle | null = null;
 
     const showEmpty = () => {

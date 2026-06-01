@@ -49,6 +49,23 @@ cms-endpoints-input .ep-name { flex: 1; min-width: 0; }
 cms-endpoints-input .ep-type { min-width: 7rem; }
 cms-endpoints-input .ep-required { white-space: nowrap; }
 
+/* Compact response-status chooser (select + custom-code input) — not full-width,
+   so the remove ✕ sits next to it. */
+cms-endpoints-input .ep-status { flex: 0 0 auto; min-width: 7rem; }
+
+/* The DataShape tree wraps its head, property box and "Remove body" with vertical
+   gap (the root box has margin/padding/border:0, so without this they sit flush). */
+cms-endpoints-input .ep-tree { display: flex; flex-direction: column; gap: .5rem; }
+
+/* Out-tab response row — status line on top, body tree below; boxed so rows
+   (which each embed a DataShape tree) read as distinct entries. */
+cms-endpoints-input [data-role="response-row"] {
+    padding: 0.6rem;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-subtle, #f8fafc);
+}
+
 /* Read-only path-param name chip */
 cms-endpoints-input .ep-path-name {
     flex: 1;

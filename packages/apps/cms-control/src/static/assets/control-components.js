@@ -10167,6 +10167,23 @@ cms-endpoints-input .ep-name { flex: 1; min-width: 0; }
 cms-endpoints-input .ep-type { min-width: 7rem; }
 cms-endpoints-input .ep-required { white-space: nowrap; }
 
+/* Compact response-status chooser (select + custom-code input) — not full-width,
+   so the remove ✕ sits next to it. */
+cms-endpoints-input .ep-status { flex: 0 0 auto; min-width: 7rem; }
+
+/* The DataShape tree wraps its head, property box and "Remove body" with vertical
+   gap (the root box has margin/padding/border:0, so without this they sit flush). */
+cms-endpoints-input .ep-tree { display: flex; flex-direction: column; gap: .5rem; }
+
+/* Out-tab response row — status line on top, body tree below; boxed so rows
+   (which each embed a DataShape tree) read as distinct entries. */
+cms-endpoints-input [data-role="response-row"] {
+    padding: 0.6rem;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-subtle, #f8fafc);
+}
+
 /* Read-only path-param name chip */
 cms-endpoints-input .ep-path-name {
     flex: 1;
@@ -10642,6 +10659,7 @@ cms-endpoints-input .ep-add:hover {
     const removeLabel = labels?.remove ?? "Remove body";
     const rootLabel = labels?.root ?? "Root type";
     const element = document.createElement("div");
+    element.className = "ep-tree";
     let root = null;
     const showEmpty = () => {
       root = null;
@@ -10731,7 +10749,7 @@ cms-endpoints-input .ep-add:hover {
     });
     paramsField.sync(() => queryParams);
     container.append(paramsField, rows, add);
-    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.output`, "output-passthrough", seed.output), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta));
+    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta));
     panel.appendChild(wrap);
     return panel;
   }
@@ -10741,6 +10759,177 @@ cms-endpoints-input .ep-add:hover {
     return f2;
   }
   function heading(text) {
+    const h2 = document.createElement("strong");
+    h2.className = "ep-heading";
+    h2.textContent = text;
+    return h2;
+  }
+
+  // src/components/admin/EndpointsInput/statusField.ts
+  var COMMON = [
+    "200",
+    "201",
+    "202",
+    "204",
+    "301",
+    "302",
+    "304",
+    "400",
+    "401",
+    "403",
+    "404",
+    "409",
+    "422",
+    "429",
+    "500",
+    "502",
+    "503"
+  ];
+  var CUSTOM = "custom";
+  var VALID = /^[1-5][0-9][0-9]$/;
+  var isValid = (v2) => VALID.test(v2) || v2 === "default";
+  function buildSelect(value) {
+    const select = document.createElement("p9r-select");
+    select.dataset.role = "response-status";
+    select.className = "ep-status";
+    select.setAttribute("label", "");
+    const opt = (v2, label) => {
+      const o2 = select.appendChild(document.createElement("option"));
+      o2.value = v2;
+      o2.textContent = label;
+    };
+    opt("", "Status…");
+    for (const c of COMMON)
+      opt(c, c);
+    opt("default", "default");
+    opt(CUSTOM, "Custom…");
+    select.setAttribute("value", value);
+    return select;
+  }
+  function makeStatusField(seed, onChange) {
+    const custom = seed != null && seed !== "" && ![...COMMON, "default"].includes(seed);
+    const select = buildSelect(custom ? CUSTOM : seed ?? "");
+    const input = document.createElement("p9r-input");
+    input.dataset.role = "response-status-custom";
+    input.className = "ep-status";
+    input.setAttribute("placeholder", "e.g. 418");
+    if (custom)
+      input.setAttribute("value", seed);
+    input.style.display = custom ? "" : "none";
+    const validate = () => {
+      const v2 = readControl(input).trim();
+      if (readControl(select) === CUSTOM && v2 && !isValid(v2)) {
+        input.setAttribute("invalid", "");
+        input.setAttribute("hint", "Code 100–599 ou « default »");
+        input.setAttribute("hint-level", "error");
+      } else {
+        input.removeAttribute("invalid");
+        input.removeAttribute("hint");
+        input.removeAttribute("hint-level");
+      }
+    };
+    select.addEventListener("change", () => {
+      const v2 = readControl(select);
+      select.setAttribute("value", v2);
+      input.style.display = v2 === CUSTOM ? "" : "none";
+      validate();
+      onChange();
+    });
+    input.addEventListener("input", () => {
+      validate();
+      onChange();
+    });
+    if (custom)
+      validate();
+    const element = document.createElement("p9r-stack");
+    element.setAttribute("direction", "row");
+    element.setAttribute("gap", "sm");
+    element.setAttribute("align", "center");
+    element.append(select, input);
+    const read = () => {
+      const sel = readControl(select);
+      if (sel === CUSTOM) {
+        const v2 = readControl(input).trim();
+        return v2 || null;
+      }
+      return sel || null;
+    };
+    return { element, read };
+  }
+
+  // src/components/admin/EndpointsInput/responseRow.ts
+  function makeResponseRow(seed, onChange, onRemove) {
+    const row = document.createElement("p9r-stack");
+    row.setAttribute("gap", "sm");
+    row.dataset.role = "response-row";
+    const head = document.createElement("p9r-stack");
+    head.setAttribute("direction", "row");
+    head.setAttribute("gap", "sm");
+    head.setAttribute("align", "center");
+    const status = makeStatusField(seed.status, onChange);
+    const remove = makeIconButton(ICON_X, {
+      ariaLabel: "Remove response",
+      onClick: onRemove
+    });
+    head.append(status.element, remove);
+    const tree = makeDataShapeTree(seed.body, onChange, {
+      define: "+ Define body",
+      remove: "Remove body",
+      root: "Body type"
+    });
+    tree.element.dataset.role = "response-body";
+    row.append(head, tree.element);
+    const read = () => {
+      const s = status.read();
+      if (!s)
+        return null;
+      const body = tree.read();
+      return { status: s, ...body ? { body } : {} };
+    };
+    return { element: row, read };
+  }
+
+  // src/components/admin/EndpointsInput/outPanel.ts
+  function makeOutPanel(endpointIdx, seed) {
+    const panel = document.createElement("p9r-tab-panel");
+    panel.id = `out-${endpointIdx}`;
+    panel.setAttribute("label", "Out");
+    const wrap = document.createElement("p9r-stack");
+    wrap.setAttribute("gap", "m");
+    const field = jsonField(`endpoints.${endpointIdx}.output`);
+    const rows = document.createElement("p9r-stack");
+    rows.setAttribute("gap", "sm");
+    rows.dataset.role = "response-rows";
+    const handles = [];
+    const readRows = () => handles.map((h2) => h2.read()).filter((r) => r !== null);
+    const sync = () => field.sync(readRows);
+    const addRow = (r) => {
+      const handle = makeResponseRow(r, sync, () => {
+        const i = handles.indexOf(handle);
+        if (i >= 0)
+          handles.splice(i, 1);
+        handle.element.remove();
+        sync();
+      });
+      handles.push(handle);
+      rows.appendChild(handle.element);
+    };
+    (seed.output ?? []).forEach(addRow);
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "ep-add-param";
+    add.dataset.role = "add-response";
+    add.textContent = "+ Add response";
+    add.addEventListener("click", () => {
+      addRow({});
+      sync();
+    });
+    field.sync(() => seed.output);
+    wrap.append(field, heading2("Responses"), rows, add);
+    panel.appendChild(wrap);
+    return panel;
+  }
+  function heading2(text) {
     const h2 = document.createElement("strong");
     h2.className = "ep-heading";
     h2.textContent = text;
@@ -10779,7 +10968,7 @@ cms-endpoints-input .ep-add:hover {
     const urlInput = makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
     infosBody.append(idInput, methodSelect, urlInput);
     infos.appendChild(infosBody);
-    tabs.append(infos, makeInPanel(idx, seed, urlInput), makeDeferredPanel(`out-${idx}`, "Out"), makeDeferredPanel(`rules-${idx}`, "Rules"));
+    tabs.append(infos, makeInPanel(idx, seed, urlInput), makeOutPanel(idx, seed), makeDeferredPanel(`rules-${idx}`, "Rules"));
     tabs.setAttribute("active", `infos-${idx}`);
     item.append(header, makeDeleteButton(), tabs);
     bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);

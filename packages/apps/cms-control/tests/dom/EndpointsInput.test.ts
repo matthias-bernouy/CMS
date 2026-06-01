@@ -45,7 +45,7 @@ describe("<cms-endpoints-input>", () => {
         expect(item.querySelector('[name="endpoints.0.endpointId"]')).not.toBeNull();
     });
 
-    test("body is a tabs shell — Infos active with the 3 fields; In active; Out/Rules deferred", () => {
+    test("body is a tabs shell — Infos active with the 3 fields; In/Out active; Rules deferred", () => {
         const el = mount();
         const item = rows(el)[0]!;
         const tabs = item.querySelector("p9r-tabs");
@@ -57,11 +57,10 @@ describe("<cms-endpoints-input>", () => {
         expect(infos!.querySelector('[name="endpoints.0.endpointId"]')).not.toBeNull();
         expect(infos!.querySelector('[name="endpoints.0.method"]')).not.toBeNull();
         expect(infos!.querySelector('[name="endpoints.0.targetUrl"]')).not.toBeNull();
-        // In is now an active editor (Query params); Out/Rules stay deferred.
+        // In/Out are now active editors; Rules stays deferred.
         expect(item.querySelector("#in-0")!.hasAttribute("disabled")).toBe(false);
-        for (const id of ["out-0", "rules-0"]) {
-            expect(item.querySelector(`#${id}`)!.hasAttribute("disabled")).toBe(true);
-        }
+        expect(item.querySelector("#out-0")!.hasAttribute("disabled")).toBe(false);
+        expect(item.querySelector("#rules-0")!.hasAttribute("disabled")).toBe(true);
     });
 
     test("In tab: query params — add / name / remove, synced into the params blob", () => {
@@ -163,17 +162,188 @@ describe("<cms-endpoints-input>", () => {
         expect(JSON.parse(hidden.value)).toEqual(body);
     });
 
-    test("In tab: a seeded output (per-status list) round-trips through the hidden passthrough field", () => {
-        const output = [{ status: "200", body: { type: "object", properties: { ok: { type: "boolean" } } } }];
+    test("Out tab: renders, '+ Add response' adds a row, remove removes it", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const out = item.querySelector("#out-0")!;
+        expect(out.hasAttribute("disabled")).toBe(false);
+        const respRows = () => out.querySelectorAll('[data-role="response-row"]');
+        const addBtn = out.querySelector('[data-role="add-response"]') as HTMLElement;
+        expect(addBtn).not.toBeNull();
+        expect(respRows()).toHaveLength(0);
+
+        addBtn.click();
+        addBtn.click();
+        expect(respRows()).toHaveLength(2);
+        // remove the first response row
+        (respRows()[0]!.querySelector("p9r-icon-button") as HTMLElement).click();
+        expect(respRows()).toHaveLength(1);
+    });
+
+    test("Out tab: removing a FILLED response drops it from the serialised list, not just the DOM", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const out = item.querySelector("#out-0")!;
+        const blob = () => (item.querySelector('[name="endpoints.0.output"]') as HTMLInputElement).value;
+        const respRows = () => out.querySelectorAll('[data-role="response-row"]');
+        const addBtn = out.querySelector('[data-role="add-response"]') as HTMLElement;
+        const setStatus = (rowEl: Element, v: string) => {
+            const s = rowEl.querySelector('[data-role="response-status"]') as HTMLElement;
+            s.setAttribute("value", v);
+            s.dispatchEvent(new Event("change", { bubbles: true }));
+        };
+        addBtn.click();
+        addBtn.click();
+        setStatus(respRows()[0]!, "200");
+        setStatus(respRows()[1]!, "404");
+        expect(JSON.parse(blob())).toEqual([{ status: "200" }, { status: "404" }]);
+        // remove the first (200) row → the blob, not only the DOM, must drop it
+        (respRows()[0]!.querySelector("p9r-icon-button") as HTMLElement).click();
+        expect(respRows()).toHaveLength(1);
+        expect(JSON.parse(blob())).toEqual([{ status: "404" }]);
+    });
+
+    test("Out tab: a status with no body serialises to [{status}] (204-style, no body key)", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const out = item.querySelector("#out-0")!;
+        const blob = () => (item.querySelector('[name="endpoints.0.output"]') as HTMLInputElement).value;
+        (out.querySelector('[data-role="add-response"]') as HTMLElement).click();
+        const statusInput = out.querySelector('[data-role="response-status"]') as HTMLElement;
+        statusInput.setAttribute("value", "204");
+        statusInput.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(JSON.parse(blob())).toEqual([{ status: "204" }]);
+    });
+
+    test("Out tab: defining a body on a response serialises [{status, body}]", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const out = item.querySelector("#out-0")!;
+        const blob = () => (item.querySelector('[name="endpoints.0.output"]') as HTMLInputElement).value;
+        (out.querySelector('[data-role="add-response"]') as HTMLElement).click();
+        const row = out.querySelector('[data-role="response-row"]') as HTMLElement;
+        const statusInput = row.querySelector('[data-role="response-status"]') as HTMLElement;
+        statusInput.setAttribute("value", "200");
+        statusInput.dispatchEvent(new Event("change", { bubbles: true }));
+        // define a body → empty object shape
+        (row.querySelector('[data-role="define-body"]') as HTMLElement).click();
+        expect(JSON.parse(blob())).toEqual([{ status: "200", body: { type: "object" } }]);
+    });
+
+    test("Out tab: selecting a common code serialises [{status}]", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const out = item.querySelector("#out-0")!;
+        const blob = () => (item.querySelector('[name="endpoints.0.output"]') as HTMLInputElement).value;
+        (out.querySelector('[data-role="add-response"]') as HTMLElement).click();
+        const sel = out.querySelector('[data-role="response-status"]') as HTMLElement;
+        sel.setAttribute("value", "201");
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(JSON.parse(blob())).toEqual([{ status: "201" }]);
+    });
+
+    test("Out tab: choosing 'Custom…' reveals the custom input; typing 418 → [{status:'418'}]", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const out = item.querySelector("#out-0")!;
+        const blob = () => (item.querySelector('[name="endpoints.0.output"]') as HTMLInputElement).value;
+        (out.querySelector('[data-role="add-response"]') as HTMLElement).click();
+        const row = out.querySelector('[data-role="response-row"]') as HTMLElement;
+        const sel = row.querySelector('[data-role="response-status"]') as HTMLElement;
+        const custom = row.querySelector('[data-role="response-status-custom"]') as HTMLElement;
+        expect(custom.style.display).toBe("none");   // hidden until custom mode
+        sel.setAttribute("value", "custom");
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(custom.style.display).toBe("");        // revealed
+        custom.setAttribute("value", "418");
+        custom.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(JSON.parse(blob())).toEqual([{ status: "418" }]);
+    });
+
+    test("Out tab: a custom value 700 flags invalid + hint-level=error on the custom input", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const out = item.querySelector("#out-0")!;
+        (out.querySelector('[data-role="add-response"]') as HTMLElement).click();
+        const row = out.querySelector('[data-role="response-row"]') as HTMLElement;
+        const sel = row.querySelector('[data-role="response-status"]') as HTMLElement;
+        const custom = row.querySelector('[data-role="response-status-custom"]') as HTMLElement;
+        sel.setAttribute("value", "custom");
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+        custom.setAttribute("value", "700");
+        custom.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(custom.hasAttribute("invalid")).toBe(true);
+        expect(custom.getAttribute("hint-level")).toBe("error");
+
+        // leaving custom mode (pick a real code) clears the stale error on the hidden input
+        sel.setAttribute("value", "404");
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(custom.hasAttribute("invalid")).toBe(false);
+        expect(custom.hasAttribute("hint-level")).toBe(false);
+    });
+
+    test("Out tab: a seeded custom code (418) renders in custom mode with the input pre-filled", () => {
+        const el = mount(JSON.stringify([
+            { endpointId: "x", method: "GET", targetUrl: "https://x.com", output: [{ status: "418" }] },
+        ]));
+        const item = rows(el)[0]!;
+        const row = item.querySelector('[data-role="response-row"]') as HTMLElement;
+        const sel = row.querySelector('[data-role="response-status"]') as HTMLElement;
+        const custom = row.querySelector('[data-role="response-status-custom"]') as HTMLElement;
+        expect(sel.getAttribute("value")).toBe("custom");
+        expect(custom.style.display).toBe("");
+        expect(custom.getAttribute("value")).toBe("418");
+        const hidden = item.querySelector('[name="endpoints.0.output"]') as HTMLInputElement;
+        expect(JSON.parse(hidden.value)).toEqual([{ status: "418" }]);
+    });
+
+    test("Out tab: a seeded common code (404) shows the select, custom input hidden", () => {
+        const el = mount(JSON.stringify([
+            { endpointId: "x", method: "GET", targetUrl: "https://x.com", output: [{ status: "404" }] },
+        ]));
+        const item = rows(el)[0]!;
+        const row = item.querySelector('[data-role="response-row"]') as HTMLElement;
+        const sel = row.querySelector('[data-role="response-status"]') as HTMLElement;
+        const custom = row.querySelector('[data-role="response-status-custom"]') as HTMLElement;
+        expect(sel.getAttribute("value")).toBe("404");
+        expect(custom.style.display).toBe("none");
+    });
+
+    test("Out tab: a seeded output renders both rows and the hidden field equals the seed verbatim", () => {
+        const output = [
+            { status: "200", body: { type: "object", properties: { ok: { type: "boolean" } } } },
+            { status: "404" },
+        ];
         const el = mount(JSON.stringify([
             { endpointId: "list", method: "GET", targetUrl: "https://x.com", output },
         ]));
         const item = rows(el)[0]!;
+        const out = item.querySelector("#out-0")!;
+        expect(out.querySelectorAll('[data-role="response-row"]')).toHaveLength(2);
         const hidden = item.querySelector('[name="endpoints.0.output"]') as HTMLInputElement;
         expect(JSON.parse(hidden.value)).toEqual(output);
-        // output has no editor — it is a hidden passthrough field only
         expect(hidden.getAttribute("type")).toBe("hidden");
-        expect(hidden.dataset.role).toBe("output-passthrough");
+    });
+
+    test("Out tab: a blank-status row is skipped (read returns null)", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const out = item.querySelector("#out-0")!;
+        const blob = () => (item.querySelector('[name="endpoints.0.output"]') as HTMLInputElement).value;
+        (out.querySelector('[data-role="add-response"]') as HTMLElement).click();
+        (out.querySelector('[data-role="add-response"]') as HTMLElement).click();
+        expect(out.querySelectorAll('[data-role="response-row"]')).toHaveLength(2);
+        expect(blob()).toBe("");   // both blank → no output stored
+    });
+
+    test("Out tab: exactly one endpoints.<i>.output field exists (passthrough removed)", () => {
+        const el = mount(JSON.stringify([
+            { endpointId: "list", method: "GET", targetUrl: "https://x.com", output: [{ status: "200" }] },
+        ]));
+        const item = rows(el)[0]!;
+        expect(item.querySelectorAll('[name="endpoints.0.output"]')).toHaveLength(1);
+        // the old In-tab passthrough role is gone
+        expect(item.querySelector('[data-role="output-passthrough"]')).toBeNull();
     });
 
     test("In tab: changing an array's element type re-syncs the body JSON", () => {

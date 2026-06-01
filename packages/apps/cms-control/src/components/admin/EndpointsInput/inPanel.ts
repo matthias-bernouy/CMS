@@ -61,8 +61,8 @@ export function makeInPanel(endpointIdx: number, seed: EndpointSeed, urlInput: H
         heading('Path params'), pathContainer,
         heading('Query params'), container,
         heading('Body'), makeBodySection(endpointIdx, seed.body),
-        // Editor-less response shape + endpoint meta — round-tripped verbatim (B1).
-        passthrough(`endpoints.${endpointIdx}.output`, 'output-passthrough', seed.output),
+        // Editor-less endpoint meta — round-tripped verbatim (B1). Output is now
+        // owned by the Out panel (its own `endpoints.<i>.output` editor).
         passthrough(`endpoints.${endpointIdx}.meta`, 'meta-passthrough', seed.meta),
     );
     panel.appendChild(wrap);
