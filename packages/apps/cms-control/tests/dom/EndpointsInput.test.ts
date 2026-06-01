@@ -45,7 +45,7 @@ describe("<cms-endpoints-input>", () => {
         expect(item.querySelector('[name="endpoints.0.endpointId"]')).not.toBeNull();
     });
 
-    test("body is a tabs shell — Infos active with the 3 fields; In/Out active; Rules deferred", () => {
+    test("body is a tabs shell — Infos active with the 3 fields; In/Out active; no Rules tab", () => {
         const el = mount();
         const item = rows(el)[0]!;
         const tabs = item.querySelector("p9r-tabs");
@@ -57,10 +57,10 @@ describe("<cms-endpoints-input>", () => {
         expect(infos!.querySelector('[name="endpoints.0.endpointId"]')).not.toBeNull();
         expect(infos!.querySelector('[name="endpoints.0.method"]')).not.toBeNull();
         expect(infos!.querySelector('[name="endpoints.0.targetUrl"]')).not.toBeNull();
-        // In/Out are now active editors; Rules stays deferred.
+        // In/Out are active editors; the old deferred Rules tab is gone (Headers tab arrives in A2).
         expect(item.querySelector("#in-0")!.hasAttribute("disabled")).toBe(false);
         expect(item.querySelector("#out-0")!.hasAttribute("disabled")).toBe(false);
-        expect(item.querySelector("#rules-0")!.hasAttribute("disabled")).toBe(true);
+        expect(item.querySelector("#rules-0")).toBeNull();
     });
 
     test("In tab: query params — add / name / remove, synced into the params blob", () => {
@@ -380,6 +380,22 @@ describe("<cms-endpoints-input>", () => {
         const hidden = item.querySelector('[name="endpoints.0.meta"]') as HTMLInputElement;
         expect(JSON.parse(hidden.value)).toEqual(meta);
         expect(hidden.dataset.role).toBe("meta-passthrough");
+    });
+
+    test("In tab: seeded headers round-trip verbatim via the hidden headers passthrough (no Headers tab yet)", () => {
+        const headers = [
+            { name: "X-Api-Version", source: { from: "static", value: "2024-01" } },
+            { name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } },
+        ];
+        const el = mount(JSON.stringify([
+            { endpointId: "search", method: "GET", targetUrl: "https://x.com", headers },
+        ]));
+        const item = rows(el)[0]!;
+        const hidden = item.querySelector('[data-role="headers-passthrough"]') as HTMLInputElement;
+        expect(hidden.getAttribute("name")).toBe("endpoints.0.headers");
+        expect(JSON.parse(hidden.value)).toEqual(headers);
+        // A1 ships no Headers tab.
+        expect(item.querySelector("#headers-0")).toBeNull();
     });
 
     test("delete is a header-actions button carrying data-action=remove-endpoint", () => {

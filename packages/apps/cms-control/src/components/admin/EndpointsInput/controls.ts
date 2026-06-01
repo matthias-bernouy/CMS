@@ -38,19 +38,6 @@ export function makeSelect(values: readonly string[], value?: string, opts: { na
 export const makeMethodSelect = (name: string, value?: string): HTMLElement =>
     makeSelect(HTTP_METHODS, value, { name, label: 'Method' });
 
-/** A disabled tab panel for a feature not built yet (output / rules). */
-export function makeDeferredPanel(id: string, label: string): HTMLElement {
-    const panel = document.createElement('p9r-tab-panel');
-    panel.id = id;
-    panel.setAttribute('label', label);
-    panel.setAttribute('disabled', '');
-    const note = document.createElement('p');
-    note.className = 'ep-hint';
-    note.textContent = 'Soon.';
-    panel.appendChild(note);
-    return panel;
-}
-
 /** A ghost/danger icon-only button (delete endpoint, remove row/property).
  *  `action` wires the host's delegated handler, `onClick` a direct listener,
  *  `slot` places it (e.g. the accordion header's `header-actions`). */

@@ -14,7 +14,6 @@ const manifest: Provider[] = [
                 urn: "urn:open-meteo:forecast",
                 method: "GET",
                 targetUrl: "https://api.open-meteo.com/v1/forecast",
-                rules: [],
                 input: { params: [
                     { name: "latitude",  in: "query", required: true, schema: { type: "number" } },
                     { name: "longitude", in: "query", required: true, schema: { type: "number" } },
@@ -26,7 +25,7 @@ const manifest: Provider[] = [
         urn: "urn:rest-countries",
         meta: { name: "REST Countries" },
         endpoints: [
-            { urn: "urn:rest-countries:byName", method: "GET", targetUrl: "https://restcountries.com/v3.1/name", rules: [] },
+            { urn: "urn:rest-countries:byName", method: "GET", targetUrl: "https://restcountries.com/v3.1/name" },
         ],
     },
 ];

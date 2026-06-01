@@ -36,11 +36,12 @@ export default async function getGatewayProvider(req: Request, cms: ControlCms) 
             required: !!p.required,
             ...(p.description ? { description: p.description } : {}),
         })),
-        // Recursive shapes + endpoint meta ride along verbatim so the editor can
-        // prefill the body tree and round-trip the (editor-less) output list/meta (B1 fix).
+        // Recursive shapes + endpoint meta/headers ride along verbatim so the editor
+        // can prefill the body tree and round-trip the (editor-less) output/meta/headers (B1 fix).
         ...(e.input?.body ? { body: e.input.body } : {}),
         ...(e.output?.length ? { output: e.output } : {}),
         ...(e.meta ? { meta: e.meta } : {}),
+        ...(e.headers?.length ? { headers: e.headers } : {}),
     }));
     const endpointsJson = JSON.stringify(endpoints);
 

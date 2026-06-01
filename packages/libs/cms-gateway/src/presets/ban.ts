@@ -60,7 +60,6 @@ export const BAN_PROVIDER: Provider = {
             urn: "urn:ban:search",
             method: "GET",
             targetUrl: "https://api-adresse.data.gouv.fr/search/",
-            rules: [],
             meta: { name: "Recherche d'adresse", description: "Adresse → coordonnées (GeoJSON)" },
             input: {
                 params: [
@@ -78,7 +77,6 @@ export const BAN_PROVIDER: Provider = {
             urn: "urn:ban:reverse",
             method: "GET",
             targetUrl: "https://api-adresse.data.gouv.fr/reverse/",
-            rules: [],
             meta: { name: "Géocodage inverse", description: "Coordonnées → adresse" },
             input: {
                 params: [

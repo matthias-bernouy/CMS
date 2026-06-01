@@ -1,11 +1,9 @@
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { HTTP_METHODS, type HTTPMethod, type GatewayMeta, type DataShape, type EndpointResponse } from "@bernouy/cms-gateway";
+import { HTTP_METHODS, type HTTPMethod, type GatewayMeta, type DataShape, type EndpointResponse, type EndpointHeader } from "@bernouy/cms-gateway";
 import { parseShapeField } from "./parseDataShape";
-import {
-    pathParamsFromUrl, parseParamsBlob, parseMetaField, parseResponsesBlob,
-    slugify, buildMeta, isParsableUrl, type EndpointParamDto,
-} from "./gatewayValidators";
+import { pathParamsFromUrl, parseParamsBlob, parseMetaField, slugify, buildMeta, isParsableUrl, type EndpointParamDto } from "./gatewayValidators";
+import { parseResponsesBlob, parseHeadersBlob } from "./blobParsers";
 
 export type EndpointDto = {
     endpointId: string;
@@ -14,11 +12,11 @@ export type EndpointDto = {
     params: EndpointParamDto[];
     /** Request-body shape (recursive). Authored as a JSON blob in the In tab. */
     body?: DataShape;
-    /** Response contract — a per-status list, round-tripped (no editor yet) and
-     *  leniently re-validated by `parseResponsesBlob` so an edit never wipes it (B1). */
+    /** Response contract (per-status list) — round-tripped + leniently re-validated so an edit never wipes it (B1). */
     output?: EndpointResponse[];
-    /** Endpoint meta — no editor yet, round-tripped + re-validated so an edit never wipes it. */
+    /** Endpoint meta + injected request headers — no editor yet (A2), round-tripped + re-validated. */
     meta?: GatewayMeta;
+    headers?: EndpointHeader[];
 };
 
 export type ProviderDto = {
@@ -29,11 +27,10 @@ export type ProviderDto = {
 
 /** Matches the flat indexed endpoint scalar keys, e.g. `endpoints.0.targetUrl`. */
 const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl)$/;
-/** Matches the per-endpoint JSON blobs (a JSON string), e.g. `endpoints.0.params`.
- *  Every structured field (params/body/output/meta) is posted as one JSON blob —
- *  the editor builds it, the parser validates it (no flat-key reassembly). */
-const BLOB_KEY = /^endpoints\.(\d+)\.(params|body|output|meta)$/;
-type BlobFields = Partial<Record<"params" | "body" | "output" | "meta", unknown>>;
+/** Matches the per-endpoint JSON blobs, e.g. `endpoints.0.params`. Every structured field
+ *  (params/body/output/meta/headers) is posted as one JSON blob — the parser validates it. */
+const BLOB_KEY = /^endpoints\.(\d+)\.(params|body|output|meta|headers)$/;
+type BlobFields = Partial<Record<"params" | "body" | "output" | "meta" | "headers", unknown>>;
 
 /**
  * Validates a FLAT body (as emitted by `<cms-form>`'s `Object.fromEntries(FormData)`)
@@ -91,20 +88,22 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         }
         seenIds.add(endpointId);
 
-        // Path params derived from the URL (reserved first so a posted param can't
-        // shadow one); body authored in the editor; output + meta round-tripped (B1).
+        // Path params derived from the URL (reserved so a posted param can't shadow
+        // one); body authored in the editor; output/meta/headers round-tripped (B1).
         const blobs = blobRows.get(idx);
         const pathParams = pathParamsFromUrl(targetUrl);
         const queryParams = parseParamsBlob(blobs?.params, new Set(pathParams.map(p => p.name)), `endpoints.${idx}.params`);
         const body = parseShapeField(blobs?.body, `endpoints.${idx}.body`);
         const output = parseResponsesBlob(typeof blobs?.output === "string" ? blobs.output : undefined, `endpoints.${idx}.output`);
         const meta = parseMetaField(blobs?.meta);
+        const headers = parseHeadersBlob(blobs?.headers, `endpoints.${idx}.headers`);
         endpoints.push({
             endpointId, method: method as HTTPMethod, targetUrl,
             params: [...pathParams, ...queryParams],
             ...(body ? { body } : {}),
             ...(output ? { output } : {}),
             ...(meta ? { meta } : {}),
+            ...(headers ? { headers } : {}),
         });
     }
 

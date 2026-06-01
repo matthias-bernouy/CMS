@@ -6,7 +6,7 @@ import type { Provider } from "cms-gateway/interfaces/Gateway";
 const provider: Provider = {
     urn: "urn:shop",
     endpoints: [
-        { urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart", rules: [] },
+        { urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" },
     ],
 };
 
@@ -29,7 +29,7 @@ describe("resolveEndpoint", () => {
     test("tolerates a non-uppercase stored method (untyped JSON)", async () => {
         const r = new InMemoryGatewayRepository();
         await r.createProvider({ urn: "urn:s", endpoints: [
-            { urn: "urn:s:e", method: "post" as never, targetUrl: "https://x.com", rules: [] },
+            { urn: "urn:s:e", method: "post" as never, targetUrl: "https://x.com" },
         ] });
         expect((await resolveEndpoint(r, ["s", "e"], "POST")).ok).toBe(true);
     });

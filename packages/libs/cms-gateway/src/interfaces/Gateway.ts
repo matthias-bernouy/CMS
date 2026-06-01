@@ -5,23 +5,19 @@ import type { DataShape } from "./DataShape";
 export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const;
 export type HTTPMethod = typeof HTTP_METHODS[number];
 
-/** Where a rule's value comes from. */
-export type EndpointRuleSource =
-    | { from: 'static'; value: string }   // ex: "2024-01"
-    | { from: 'secret'; ref: string }     // ex: ${STRIPE_KEY} → app credential
-    | { from: 'userId' };                 // identity of the current CMS user
+/** Where a request header's value comes from.
+ *  - `static`: a plaintext fixed value injected verbatim upstream.
+ *  - `secret`: a credential reference (`${KEY}` shape) resolved server-side — NOT
+ *    applied until the secret store is wired (the executor returns 500 for it). */
+export type HeaderSource =
+    | { from: 'static'; value: string }
+    | { from: 'secret'; ref: string };
 
-/**
- * Outbound injection rules, composable, applied in order.
- * At step 0 (no auth) NONE are applied — this is the pluggable seam.
- * A rule `from: 'userId'` will require an authenticated CMS session (validated
- * when the rules are wired up).
- */
-export type EndpointRule =
-    | { place: 'bearer';                                       source: EndpointRuleSource }
-    | { place: 'header'; name: string;                         source: EndpointRuleSource }
-    | { place: 'query';  param: string;                        source: EndpointRuleSource }
-    | { place: 'jwt'; header?: string; audience?: string; signingKeyRef: string; source: EndpointRuleSource };
+/** A request header injected into the upstream call. `name` is an RFC 7230 token. */
+export type EndpointHeader = {
+    name: string;
+    source: HeaderSource;
+};
 
 /** An input parameter and its location in the upstream request. */
 export type EndpointParam = {
@@ -51,7 +47,11 @@ export type Endpoint = {
     urn: string;            // ex: "urn:provider-id:getUser" (method NOT in the urn)
     method: HTTPMethod;
     targetUrl: string;      // ex: "https://api.example.com/v1/users/{id}"
-    rules: EndpointRule[];  // step 0: [] (none applied)
+
+    /** Request headers injected into the upstream call. `static` = a plaintext
+     *  fixed value forwarded verbatim; `secret` = a credential ref resolved
+     *  server-side (NOT applied until the secret store is wired → executor 500). */
+    headers?: EndpointHeader[];
 
     meta?: GatewayMeta;
 

@@ -3,7 +3,7 @@ import { buildUpstreamUrl } from "cms-gateway/core/buildUpstreamUrl";
 import type { Endpoint } from "cms-gateway/interfaces/Gateway";
 
 const ep = (over: Partial<Endpoint> = {}): Endpoint =>
-    ({ urn: "urn:x:e", method: "GET", targetUrl: "https://api.example.com/v1/items", rules: [], ...over });
+    ({ urn: "urn:x:e", method: "GET", targetUrl: "https://api.example.com/v1/items", ...over });
 
 const q = (s: string) => new URL("http://local/?" + s).searchParams;
 

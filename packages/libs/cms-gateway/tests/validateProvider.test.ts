@@ -3,7 +3,7 @@ import { validateProvider, endpointBelongsToProvider } from "cms-gateway/core/va
 import type { Provider, Endpoint } from "cms-gateway/interfaces/Gateway";
 
 const ep = (urn: string, targetUrl = "https://api.shop.com/x"): Endpoint =>
-    ({ urn, method: "GET", targetUrl, rules: [] });
+    ({ urn, method: "GET", targetUrl });
 
 const provider = (over: Partial<Provider> = {}): Provider => ({
     urn: "urn:shop",

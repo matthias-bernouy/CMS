@@ -3,7 +3,7 @@ import { executeEndpoint } from "cms-gateway/core/executeEndpoint";
 import type { Endpoint } from "cms-gateway/interfaces/Gateway";
 
 const ep = (over: Partial<Endpoint> = {}): Endpoint =>
-    ({ urn: "urn:x:e", method: "GET", targetUrl: "https://api.example.com/v1/items", rules: [], ...over });
+    ({ urn: "urn:x:e", method: "GET", targetUrl: "https://api.example.com/v1/items", ...over });
 
 const okFetch = () => mock(async (_i: Parameters<typeof fetch>[0], _init?: Parameters<typeof fetch>[1]) => new Response("ok"));
 
@@ -46,12 +46,43 @@ describe("executeEndpoint", () => {
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 
-    test("endpoint declaring rules → 500 (step 0), no fetch", async () => {
+    test("endpoint with NO headers proxies fine", async () => {
         const fetchImpl = okFetch();
-        const e = ep({ rules: [{ place: "bearer", source: { from: "static", value: "x" } }] });
+        const res = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl });
+        expect(res.status).toBe(200);
+        expect(fetchImpl).toHaveBeenCalledTimes(1);
+    });
+
+    test("a static config header is injected upstream", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ headers: [{ name: "X-Api-Version", source: { from: "static", value: "2024-01" } }] });
+        await executeEndpoint(e, new Request("http://local/x"), { fetchImpl });
+        const passed = fetchImpl.mock.calls[0]![1]!.headers as Headers;
+        expect(passed.get("x-api-version")).toBe("2024-01");
+    });
+
+    test("a forbidden static header (host) is NOT forwarded", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ headers: [{ name: "Host", source: { from: "static", value: "evil.example.com" } }] });
+        await executeEndpoint(e, new Request("http://local/x"), { fetchImpl });
+        const passed = fetchImpl.mock.calls[0]![1]!.headers as Headers;
+        expect(passed.get("host")).toBeNull();
+    });
+
+    test("a secret config header → 500, no fetch", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ headers: [{ name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } }] });
         const res = await executeEndpoint(e, new Request("http://local/x"), { fetchImpl });
         expect(res.status).toBe(500);
         expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    test("a static config header overrides a same-named allowlist header", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ headers: [{ name: "Accept", source: { from: "static", value: "application/xml" } }] });
+        await executeEndpoint(e, new Request("http://local/x", { headers: { accept: "application/json" } }), { fetchImpl });
+        const passed = fetchImpl.mock.calls[0]![1]!.headers as Headers;
+        expect(passed.get("accept")).toBe("application/xml");
     });
 
     test("upstream throws → 502", async () => {

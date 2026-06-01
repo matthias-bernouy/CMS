@@ -1,5 +1,6 @@
 import type { Endpoint } from "../interfaces/Gateway";
 import { buildUpstreamUrl } from "./buildUpstreamUrl";
+import { isForbiddenHeaderName } from "./headerPolicy";
 
 /** For test/infra injection only (default = global `fetch`). Not a capability carrier. */
 export type ExecutorDeps = { fetchImpl?: typeof fetch };
@@ -13,23 +14,21 @@ const RESPONSE_ALLOWLIST = ["content-type", "cache-control", "etag", "last-modif
  * request, builds the upstream call and forwards it.
  *
  *  - Upstream URL: path/query from `input.params` (see `buildUpstreamUrl`);
- *  - Request headers: allowlist (accept / accept-language / content-type / range)
- *    + header-params; never cookie / authorization / host / hop-by-hop;
+ *  - Request headers: inbound allowlist (accept / accept-language / content-type /
+ *    range) — inbound cookie / authorization / host / hop-by-hop never leak — then
+ *    header-params, then config `endpoint.headers` (config wins, last `.set`). A
+ *    config header named `authorization` IS allowed (the 'never authorization'
+ *    rule applies only to INBOUND forwarding); forbidden/hop-by-hop names are skipped.
+ *  - `secret`-sourced config headers are NOT applied: they return 500 (the scoped
+ *    seam — a raw `${KEY}` ref is never forwarded upstream until the store is wired).
  *  - Response headers: allowlist; `set-cookie` / `access-control-*` / hop-by-hop dropped;
  *  - Timeout 15 s, body streamed without buffering; redirects NOT followed.
- *
- * `rules` are NOT applied at step 0: an endpoint that declares any is considered
- * misconfigured → 500 (pluggable seam).
  */
 export async function executeEndpoint(
     endpoint: Endpoint,
     request: Request,
     deps?: ExecutorDeps,
 ): Promise<Response> {
-    if (endpoint.rules.length > 0) {
-        return new Response(`endpoint "${endpoint.urn}" déclare des rules, non appliquées à l'étape 0`, { status: 500 });
-    }
-
     const built = buildUpstreamUrl(endpoint, new URL(request.url).searchParams);
     if (!built.ok) return new Response(built.message, { status: built.status });
 
@@ -42,6 +41,17 @@ export async function executeEndpoint(
     for (const [name, value] of Object.entries(built.headers)) {
         try { fwd.set(name, value); }
         catch { return new Response(`header-param invalide : "${name}"`, { status: 400 }); }
+    }
+    // Config headers win over forwarded ones (last `.set`). Defense-in-depth: skip
+    // forbidden names (the parser already drops them). Secret refs are not resolved
+    // yet → 500 (never forward a raw ref upstream).
+    for (const { name, source } of endpoint.headers ?? []) {
+        if (isForbiddenHeaderName(name)) continue;
+        if (source.from === "secret") {
+            return new Response(`secret header requires a configured secret store (not wired yet): ${name}`, { status: 500 });
+        }
+        try { fwd.set(name, source.value); }
+        catch { return new Response(`header invalide : "${name}"`, { status: 400 }); }
     }
 
     const hasBody = endpoint.method !== "GET" && endpoint.method !== "HEAD" && request.body != null;

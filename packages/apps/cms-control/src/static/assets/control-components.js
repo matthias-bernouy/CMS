@@ -10323,6 +10323,20 @@ cms-endpoints-input .ep-add:hover {
 
   // ../../libs/cms-gateway/src/interfaces/Gateway.ts
   var HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"];
+  // ../../libs/cms-gateway/src/core/headerPolicy.ts
+  var FORBIDDEN_REQUEST_HEADERS = new Set([
+    "host",
+    "connection",
+    "keep-alive",
+    "transfer-encoding",
+    "te",
+    "upgrade",
+    "proxy-connection",
+    "proxy-authorization",
+    "trailer",
+    "content-length",
+    "cookie"
+  ]);
   // ../../libs/cms-gateway/src/default-implementation/GatewayRepository/memory.ts
   class InMemoryGatewayRepository {
     _providers = new Map;
@@ -10389,17 +10403,6 @@ cms-endpoints-input .ep-add:hover {
     return select;
   }
   var makeMethodSelect = (name, value) => makeSelect(HTTP_METHODS, value, { name, label: "Method" });
-  function makeDeferredPanel(id, label) {
-    const panel = document.createElement("p9r-tab-panel");
-    panel.id = id;
-    panel.setAttribute("label", label);
-    panel.setAttribute("disabled", "");
-    const note = document.createElement("p");
-    note.className = "ep-hint";
-    note.textContent = "Soon.";
-    panel.appendChild(note);
-    return panel;
-  }
   function makeIconButton(svg, opts) {
     const btn = document.createElement("p9r-icon-button");
     btn.setAttribute("variant", "ghost");
@@ -10749,7 +10752,7 @@ cms-endpoints-input .ep-add:hover {
     });
     paramsField.sync(() => queryParams);
     container.append(paramsField, rows, add);
-    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta));
+    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta), passthrough(`endpoints.${endpointIdx}.headers`, "headers-passthrough", seed.headers));
     panel.appendChild(wrap);
     return panel;
   }
@@ -10968,7 +10971,7 @@ cms-endpoints-input .ep-add:hover {
     const urlInput = makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
     infosBody.append(idInput, methodSelect, urlInput);
     infos.appendChild(infosBody);
-    tabs.append(infos, makeInPanel(idx, seed, urlInput), makeOutPanel(idx, seed), makeDeferredPanel(`rules-${idx}`, "Rules"));
+    tabs.append(infos, makeInPanel(idx, seed, urlInput), makeOutPanel(idx, seed));
     tabs.setAttribute("active", `infos-${idx}`);
     item.append(header, makeDeleteButton(), tabs);
     bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
@@ -11082,95 +11085,6 @@ cms-endpoints-input .ep-add:hover {
     }
   }
   customElements.define("cms-event-toast", CmsEventToast);
-
-  // src/components/admin/HeadersInput/HeadersInput.ts
-  class CmsHeadersInput extends HTMLElement {
-    _rowCount = 0;
-    _rowsContainer = null;
-    _addBtn = null;
-    get _prefix() {
-      return this.getAttribute("prefix") || "specAuth";
-    }
-    get _api() {
-      return this.getAttribute("api") || "/api/secrets";
-    }
-    _onClick = (e) => {
-      const btn = e.target.closest('[data-action="add-header"]');
-      if (!btn || !this.contains(btn))
-        return;
-      e.preventDefault();
-      this._addRow();
-    };
-    connectedCallback() {
-      if (this.children.length === 0) {
-        this._render();
-        this._addRow();
-      }
-      this.addEventListener("click", this._onClick);
-    }
-    disconnectedCallback() {
-      this.removeEventListener("click", this._onClick);
-    }
-    _render() {
-      this.style.display = "flex";
-      this.style.flexDirection = "column";
-      this.style.gap = "0.75rem";
-      this._rowsContainer = document.createElement("p9r-stack");
-      this._rowsContainer.setAttribute("gap", "sm");
-      this.appendChild(this._rowsContainer);
-      this._addBtn = this._makeAddButton();
-      this.appendChild(this._addBtn);
-    }
-    _addRow() {
-      if (!this._rowsContainer)
-        return;
-      const idx = this._rowCount++;
-      const p = this._prefix;
-      const row = document.createElement("p9r-stack");
-      row.setAttribute("direction", "row");
-      row.setAttribute("gap", "sm");
-      row.setAttribute("align", "stretch");
-      row.dataset.role = "header-row";
-      row.appendChild(this._makeNameInput(`${p}.headers.${idx}.name`));
-      row.appendChild(this._makeValueInput(`${p}.headers.${idx}.value`));
-      this._rowsContainer.appendChild(row);
-    }
-    _makeNameInput(name) {
-      const input = document.createElement("p9r-input");
-      input.setAttribute("name", name);
-      input.setAttribute("placeholder", "Header name");
-      input.style.flex = "1";
-      return input;
-    }
-    _makeValueInput(name) {
-      const select = document.createElement("cms-credential-select");
-      select.setAttribute("name", name);
-      select.setAttribute("api", this._api);
-      select.style.flex = "1";
-      return select;
-    }
-    _makeAddButton() {
-      const wrapper = document.createElement("div");
-      wrapper.style.display = "flex";
-      wrapper.style.justifyContent = "flex-start";
-      const btn = document.createElement("p9r-button");
-      btn.setAttribute("variant", "ghost");
-      btn.setAttribute("color", "secondary");
-      btn.dataset.action = "add-header";
-      btn.innerHTML = `
-            <svg slot="icon-left" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" aria-hidden="true">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Add header
-        `;
-      wrapper.appendChild(btn);
-      return wrapper;
-    }
-  }
-  customElements.define("cms-headers-input", CmsHeadersInput);
 
   // src/components/admin/ListFilter/ListFilter.ts
   class CmsListFilter extends HTMLElement {

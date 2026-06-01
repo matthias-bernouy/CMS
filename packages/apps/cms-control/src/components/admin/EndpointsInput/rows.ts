@@ -1,12 +1,12 @@
 import { HTTP_METHODS } from "@bernouy/cms-gateway";
-import { makeInput, makeMethodSelect, makeDeferredPanel, makeDeleteButton } from "./controls";
+import { makeInput, makeMethodSelect, makeDeleteButton } from "./controls";
 import { makeInPanel } from "./inPanel";
 import { makeOutPanel } from "./outPanel";
 import { readControl, methodColor, type EndpointSeed } from "./shared";
 
 /** Build one endpoint as a collapsible `<p9r-accordion-item>`: a live-synced
  *  collapsed-header summary (method tag + id + path), a header-actions delete
- *  button, and a `<p9r-tabs>` body (Infos / In / Out / Rules). Always returned
+ *  button, and a `<p9r-tabs>` body (Infos / In / Out). Always returned
  *  COLLAPSED so no accordion height transition fires on insert. */
 export function makeEndpointRow(idx: number, seed: EndpointSeed = {}): HTMLElement {
     // Coerce the method once so the header tag and select never disagree on load.
@@ -55,7 +55,6 @@ export function makeEndpointRow(idx: number, seed: EndpointSeed = {}): HTMLEleme
         infos,
         makeInPanel(idx, seed, urlInput),
         makeOutPanel(idx, seed),
-        makeDeferredPanel(`rules-${idx}`, 'Rules'), // auth/injection — later
     );
     tabs.setAttribute('active', `infos-${idx}`);   // panels already appended → no first-rebuild race
 

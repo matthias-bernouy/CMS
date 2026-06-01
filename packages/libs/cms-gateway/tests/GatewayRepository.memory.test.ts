@@ -6,7 +6,7 @@ const provider = (): Provider => ({
     urn: "urn:shop",
     meta: { name: "Shop" },
     endpoints: [
-        { urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart", rules: [] },
+        { urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" },
     ],
 });
 
@@ -14,8 +14,8 @@ const provider = (): Provider => ({
 const providerTwoEndpoints = (): Provider => ({
     urn: "urn:shop",
     endpoints: [
-        { urn: "urn:shop:getCart", method: "GET",  targetUrl: "https://api.shop.com/cart",       rules: [] },
-        { urn: "urn:shop:addItem", method: "POST", targetUrl: "https://api.shop.com/cart/items", rules: [] },
+        { urn: "urn:shop:getCart", method: "GET",  targetUrl: "https://api.shop.com/cart" },
+        { urn: "urn:shop:addItem", method: "POST", targetUrl: "https://api.shop.com/cart/items" },
     ],
 });
 
@@ -67,13 +67,13 @@ describe("InMemoryGatewayRepository", () => {
             urn: "urn:shop",
             meta: { name: "Shop" },
             endpoints: [
-                { urn: "urn:shop:getCart", method: "GET",  targetUrl: "https://api.shop.com/cart",       rules: [] },
-                { urn: "urn:shop:addItem", method: "POST", targetUrl: "https://api.shop.com/cart/items", rules: [] },
+                { urn: "urn:shop:getCart", method: "GET",  targetUrl: "https://api.shop.com/cart" },
+                { urn: "urn:shop:addItem", method: "POST", targetUrl: "https://api.shop.com/cart/items" },
             ],
         });
         await r.updateProvider({
             urn: "urn:shop",
-            endpoints: [{ urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart", rules: [] }],
+            endpoints: [{ urn: "urn:shop:getCart", method: "GET", targetUrl: "https://api.shop.com/cart" }],
         });
         const p = await r.getProvider("urn:shop");
         expect(p?.endpoints).toHaveLength(1);   // the second endpoint is gone
@@ -85,7 +85,7 @@ describe("InMemoryGatewayRepository", () => {
         await r.createProvider(provider());
         const input = providerTwoEndpoints();
         await r.updateProvider(input);
-        input.endpoints.push({ urn: "urn:shop:injected", method: "GET", targetUrl: "https://x.com", rules: [] });
+        input.endpoints.push({ urn: "urn:shop:injected", method: "GET", targetUrl: "https://x.com" });
         expect((await r.getProvider("urn:shop"))?.endpoints).toHaveLength(2);
     });
 
@@ -118,7 +118,7 @@ describe("InMemoryGatewayRepository", () => {
         const r = new InMemoryGatewayRepository();
         await r.createProvider(provider());
         const p1 = await r.getProvider("urn:shop");
-        p1!.endpoints.push({ urn: "urn:shop:injected", method: "GET", targetUrl: "https://x.com", rules: [] });
+        p1!.endpoints.push({ urn: "urn:shop:injected", method: "GET", targetUrl: "https://x.com" });
         p1!.meta!.name = "HACKED";
         const p2 = await r.getProvider("urn:shop");
         expect(p2?.endpoints).toHaveLength(1);
@@ -129,7 +129,7 @@ describe("InMemoryGatewayRepository", () => {
         const r = new InMemoryGatewayRepository();
         const input = provider();
         await r.createProvider(input);
-        input.endpoints.push({ urn: "urn:shop:injected", method: "GET", targetUrl: "https://x.com", rules: [] });
+        input.endpoints.push({ urn: "urn:shop:injected", method: "GET", targetUrl: "https://x.com" });
         expect((await r.getProvider("urn:shop"))?.endpoints).toHaveLength(1);
     });
 });

@@ -32,7 +32,6 @@ describe("POST /api/gateway-provider", () => {
         expect(stored?.endpoints).toHaveLength(2);
         expect(stored?.endpoints[0]!.urn).toBe("urn:shop:getCart");
         expect(stored?.endpoints[1]!.urn).toBe("urn:shop:addItem");
-        expect(stored?.endpoints[0]!.rules).toEqual([]);
     });
 
     test("duplicate urn → InvalidParam (mapped, not a 500)", async () => {
@@ -111,6 +110,18 @@ describe("POST /api/gateway-provider", () => {
         expect(stored?.endpoints[0]!.input?.params?.[0]).toEqual(
             { name: "q", in: "query", required: false, schema: { type: "string" }, description: "Search terms" } as any,
         );
+    });
+
+    test("request headers round-trip verbatim (static + secret); no rules field stored", async () => {
+        const { cms, gateway } = makeCms();
+        const headers = [
+            { name: "X-Api-Version", source: { from: "static", value: "2024-01" } },
+            { name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } },
+        ];
+        await postGatewayProvider(post(validBody({ "endpoints.0.headers": JSON.stringify(headers) })), cms);
+        const stored = await gateway.getProvider("urn:shop");
+        expect(stored?.endpoints[0]!.headers).toEqual(headers as any);
+        expect((stored?.endpoints[0] as any).rules).toBeUndefined();
     });
 
     test("endpoint meta round-trips verbatim (B1: edit never wipes it)", async () => {

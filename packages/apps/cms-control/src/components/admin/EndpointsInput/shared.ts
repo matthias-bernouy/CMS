@@ -1,4 +1,4 @@
-import type { DataShape, GatewayMeta, EndpointResponse } from "@bernouy/cms-gateway";
+import type { DataShape, GatewayMeta, EndpointResponse, EndpointHeader } from "@bernouy/cms-gateway";
 
 /** Edit-mode prefill seeds, decoded from the `value` attribute JSON. */
 export type ParamSeed = {
@@ -20,6 +20,8 @@ export type EndpointSeed = {
     output?: EndpointResponse[];
     /** Endpoint meta — no editor yet, round-tripped verbatim (B1 fix). */
     meta?: GatewayMeta;
+    /** Injected request headers — no editor yet (Headers tab in A2), round-tripped verbatim. */
+    headers?: EndpointHeader[];
 };
 
 /** V1 query/path param value types (scalars). */

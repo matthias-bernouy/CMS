@@ -1,6 +1,5 @@
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import type { GatewayMeta, EndpointResponse, DataShape } from "@bernouy/cms-gateway";
-import { parseDataShape } from "./parseDataShape";
+import type { GatewayMeta } from "@bernouy/cms-gateway";
 
 /** V1 param value types (scalars); the full recursive DataShape is reserved for the body. */
 export const PARAM_TYPES = ["string", "number", "boolean"] as const;
@@ -34,8 +33,8 @@ export const slugify = (s: string): string =>
 export function isParsableUrl(value: string): boolean {
     try { new URL(value); return true; } catch { return false; }
 }
-/** Read a truthy string field, else `undefined`. Shared by `buildMeta`/`parseMetaField`. */
-const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
+/** Read a truthy string field, else `undefined`. Shared by `buildMeta`/`parseMetaField`/`blobParsers`. */
+export const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
 /** Provider `meta`; `meta.name` defaults to the id so a listing never shows the bare urn. */
 export function buildMeta(body: Record<string, unknown>, id: string): GatewayMeta {
     const meta: GatewayMeta = { name: str(body["meta.name"]) ?? id };
@@ -92,29 +91,4 @@ export function parseMetaField(raw: unknown): GatewayMeta | undefined {
     if (description) meta.description = description;
     if (icon) meta.icon = icon;
     return meta;
-}
-/** An HTTP status code "100".."599", or the OpenAPI fallback literal "default". */
-const STATUS_CODE = /^[1-5][0-9][0-9]$/;
-/** Parse a per-endpoint `output` JSON blob into a per-status `EndpointResponse[]`, or
- *  `undefined` when nothing valid remains. LENIENT like `parseMetaField` (never throws):
- *  bad entries dropped, status must be a code or "default", duplicates keep the FIRST; a
- *  body failing `parseDataShape` (proto/depth/node-count defenses) is dropped, status kept. */
-export function parseResponsesBlob(raw: string | undefined, path: string): EndpointResponse[] | undefined {
-    if (raw == null || raw === "") return undefined;
-    let parsed: unknown;
-    try { parsed = JSON.parse(raw); } catch { return undefined; }
-    if (!Array.isArray(parsed)) return undefined;
-    const out: EndpointResponse[] = [];
-    const seen = new Set<string>();
-    parsed.forEach((el, i) => {
-        if (typeof el !== "object" || el === null || Array.isArray(el)) return;
-        const e = el as Record<string, unknown>;
-        const status = typeof e.status === "string" ? e.status : "";
-        if ((status !== "default" && !STATUS_CODE.test(status)) || seen.has(status)) return;
-        seen.add(status);   // dedupe: keep first
-        let body: DataShape | undefined;
-        if (e.body != null) try { body = parseDataShape(e.body, `${path}[${i}].body`); } catch { /* bad body dropped */ }
-        out.push(body ? { status, body } : { status });
-    });
-    return out.length ? out : undefined;
 }

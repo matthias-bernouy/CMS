@@ -4,11 +4,9 @@ import type { ProviderDto } from "../validation/gateway/parseProviderDto";
 
 /**
  * Builds the full `Provider` aggregate from a parsed DTO. Urns are ALWAYS
- * recomputed here from `id` + `endpointId` (never trusted from the body), and
- * every endpoint ships with `rules: []` — V1 stores no outbound rules, so the
- * step-0 executor never rejects a provider authored in the admin. Declared input
- * params (`in:'query'` etc.) become `input.params`; the proxy reads them in
- * `buildUpstreamUrl` (no rules needed — values are forwarded from the caller).
+ * recomputed here from `id` + `endpointId` (never trusted from the body).
+ * Declared input params (`in:'query'` etc.) become `input.params`; the proxy
+ * reads them in `buildUpstreamUrl` (values are forwarded from the caller).
  */
 export function toProvider(dto: ProviderDto): Provider {
     return {
@@ -19,7 +17,6 @@ export function toProvider(dto: ProviderDto): Provider {
                 urn: makeEndpointUrn(dto.id, e.endpointId),
                 method: e.method,
                 targetUrl: e.targetUrl,
-                rules: [],
             };
             // Build `input` from params AND/OR body — set it when either exists, so
             // a body-only endpoint keeps its `input` and an edit never drops the body.
@@ -36,9 +33,10 @@ export function toProvider(dto: ProviderDto): Provider {
                 }
                 if (e.body) endpoint.input.body = e.body;
             }
-            // Output (per-status list) + meta have no editor yet but are preserved (B1 round-trip).
+            // Output (per-status list) + meta + headers have no editor yet but are preserved (B1 round-trip).
             if (e.output?.length) endpoint.output = e.output;
             if (e.meta) endpoint.meta = e.meta;
+            if (e.headers?.length) endpoint.headers = e.headers;
             return endpoint;
         }),
     };
