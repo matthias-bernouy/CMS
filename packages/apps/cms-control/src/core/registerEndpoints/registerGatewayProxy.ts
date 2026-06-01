@@ -12,10 +12,9 @@ const PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
  * stays unwired). The editor preview's `<cms-fetch>` blocs hit this same-origin route
  * (`{{BASE_PATH}}/.cms/gateway/<provider>/<endpoint>`) to render live gateway data.
  *
- * UNGUARDED — same as delivery: the gateway proxy is a public data-fetch surface.
- * Applying the admin guard would force a session on every proxied data call, which
- * contradicts the delivery mirror and the preview intent; it is registered before
- * control's guarded groups (first-match-wins) so the guard never intercepts it.
+ * ADMIN-GUARDED: unlike delivery's public proxy, control's preview is admin-only —
+ * the caller passes the admin `authGuard` as `middlewares`. The editor runs in the
+ * admin's authenticated same-origin session, so its preview fetches carry it and pass.
  *
  * `gateway` is the nullable repo field (NOT the throwing `get gateway()`), so an
  * unconfigured instance yields a clean 501 instead of an unhandled throw.
@@ -25,8 +24,9 @@ export function registerGatewayProxy(opts: {
     basePath: string;
     gateway: GatewayRepository | null | undefined;
     resolveSecret: (ref: string) => Promise<string | undefined>;
+    middlewares?: Parameters<Runner["group"]>[2];
 }): void {
-    const { runner, basePath, gateway, resolveSecret } = opts;
+    const { runner, basePath, gateway, resolveSecret, middlewares } = opts;
     const prefix = `${basePath}/.cms/gateway/`;
 
     runner.group("/.cms/gateway", (proxyRunner) => {
@@ -35,5 +35,5 @@ export function registerGatewayProxy(opts: {
                 handleGatewayRequest(gateway, req, { prefix, deps: { resolveSecret } }),
             );
         }
-    });
+    }, middlewares);
 }

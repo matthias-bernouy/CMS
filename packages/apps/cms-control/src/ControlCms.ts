@@ -119,6 +119,7 @@ export class ControlCms {
             basePath:      this.basePath,
             gateway:       this._gateway,
             resolveSecret: this.resolveSecret,
+            middlewares:   [authGuard],   // admin-only preview (editor carries the session same-origin)
         });
 
         runner.group("/", (staticRunner) => {
