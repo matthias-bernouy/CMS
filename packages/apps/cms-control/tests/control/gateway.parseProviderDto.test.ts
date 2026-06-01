@@ -1,5 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { parseProviderDto } from "cms-control/core/validation/gateway/parseProviderDto";
+import { toProvider } from "cms-control/core/gateway/toProvider";
 
 /** A valid single-endpoint body, as `<cms-form>` would post it (flat keys). */
 const validBody = (over: Record<string, unknown> = {}) => ({
@@ -207,8 +208,9 @@ describe("parseProviderDto", () => {
         expect(dto.endpoints[0]!.body).toEqual(body as any);
     });
 
-    test("output JSON blob → parsed DataShape on the DTO (round-trip)", () => {
-        const output = { type: "array", items: { type: "number" } };
+    test("output JSON blob → parsed per-status list on the DTO (round-trip)", () => {
+        const body = { type: "array", items: { type: "number" } };
+        const output = [{ status: "200", body }];
         const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
         expect(dto.endpoints[0]!.output).toEqual(output as any);
     });
@@ -227,5 +229,63 @@ describe("parseProviderDto", () => {
         const bad = JSON.stringify({ type: "object", properties: { x: { type: "datetime" } } });
         expect(() => parseProviderDto(validBody({ "endpoints.0.body": bad })))
             .toThrow(/endpoints\.0\.body\.properties\.x\.type/);
+    });
+
+    // ── Response list (`output`) — lenient, per-status, never throws ──
+    test("output: valid statuses (incl. \"default\") are kept, each with its body", () => {
+        const output = [
+            { status: "200", body: { type: "object", properties: { ok: { type: "boolean" } } } },
+            { status: "404", body: { type: "object" } },
+            { status: "default", body: { type: "string" } },
+        ];
+        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        expect(dto.endpoints[0]!.output).toEqual(output as any);
+    });
+
+    test("output: invalid statuses are dropped, valid ones survive", () => {
+        const output = [
+            { status: "abc", body: { type: "string" } },   // not a code
+            { status: "099", body: { type: "string" } },   // < 100
+            { status: "600", body: { type: "string" } },   // > 599
+            { status: 200,   body: { type: "string" } },   // number, not string
+            { status: "201", body: { type: "string" } },   // valid → kept
+        ];
+        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        expect(dto.endpoints[0]!.output).toEqual([{ status: "201", body: { type: "string" } }] as any);
+    });
+
+    test("output: duplicate status keeps the FIRST occurrence", () => {
+        const output = [
+            { status: "200", body: { type: "string" } },
+            { status: "200", body: { type: "number" } },
+        ];
+        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        expect(dto.endpoints[0]!.output).toEqual([{ status: "200", body: { type: "string" } }] as any);
+    });
+
+    test("output: a body-less entry (e.g. 204) is preserved as {status}", () => {
+        const output = [{ status: "204" }, { status: "200", body: { type: "object" } }];
+        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        expect(dto.endpoints[0]!.output).toEqual([{ status: "204" }, { status: "200", body: { type: "object" } }] as any);
+    });
+
+    test("output: a bad body is dropped but the status-only entry is KEPT", () => {
+        const output = [{ status: "200", body: { type: "datetime" } }];   // off-vocabulary node type
+        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        expect(dto.endpoints[0]!.output).toEqual([{ status: "200" }] as any);
+    });
+
+    test("output: malformed JSON / non-array → undefined (no crash, no output stored)", () => {
+        expect(parseProviderDto(validBody({ "endpoints.0.output": "{bad" })).endpoints[0]!.output).toBeUndefined();
+        expect(parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify({ status: "200" }) })).endpoints[0]!.output).toBeUndefined();
+        expect(parseProviderDto(validBody({ "endpoints.0.output": "[]" })).endpoints[0]!.output).toBeUndefined();
+        expect(parseProviderDto(validBody({ "endpoints.0.output": "" })).endpoints[0]!.output).toBeUndefined();
+    });
+
+    test("output: full round-trip parse → toProvider preserves the list", () => {
+        const output = [{ status: "200", body: { type: "object", properties: { id: { type: "string" } } } }, { status: "404" }];
+        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        const provider = toProvider(dto);
+        expect(provider.endpoints[0]!.output).toEqual(output as any);
     });
 });

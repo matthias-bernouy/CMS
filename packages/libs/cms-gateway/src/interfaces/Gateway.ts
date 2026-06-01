@@ -39,6 +39,14 @@ export type GatewayMeta = {
     icon?: string;
 };
 
+/** One response entry of an endpoint's contract, keyed by HTTP status.
+ *  `status` is an HTTP code "100".."599" OR the literal "default" (OpenAPI
+ *  fallback). `body` absent → a no-content response (e.g. 204). */
+export type EndpointResponse = {
+    status: string;
+    body?: DataShape;
+};
+
 export type Endpoint = {
     urn: string;            // ex: "urn:provider-id:getUser" (method NOT in the urn)
     method: HTTPMethod;
@@ -53,8 +61,10 @@ export type Endpoint = {
         body?: DataShape;
     };
 
-    /** Response contract: drives field binding on the editor side (flattenScalars). */
-    output?: DataShape;
+    /** Response contract: a per-status list. Each entry pairs an HTTP status with
+     *  an optional body `DataShape` — drives field binding on the editor side
+     *  (flattenScalars) and documents the no-content statuses. */
+    output?: EndpointResponse[];
 };
 
 export type Provider = {

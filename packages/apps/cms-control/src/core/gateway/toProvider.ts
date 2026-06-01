@@ -36,8 +36,8 @@ export function toProvider(dto: ProviderDto): Provider {
                 }
                 if (e.body) endpoint.input.body = e.body;
             }
-            // Output + meta have no editor yet but are preserved verbatim (B1 round-trip).
-            if (e.output) endpoint.output = e.output;
+            // Output (per-status list) + meta have no editor yet but are preserved (B1 round-trip).
+            if (e.output?.length) endpoint.output = e.output;
             if (e.meta) endpoint.meta = e.meta;
             return endpoint;
         }),

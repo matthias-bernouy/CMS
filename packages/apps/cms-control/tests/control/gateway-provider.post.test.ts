@@ -87,9 +87,10 @@ describe("POST /api/gateway-provider", () => {
         expect(stored?.endpoints[0]!.input?.body).toEqual({ type: "object", properties: { q: { type: "string" } } } as any);
     });
 
-    test("output shape round-trips verbatim (B1: edit never wipes it)", async () => {
+    test("output response list round-trips (B1: edit never wipes it)", async () => {
         const { cms, gateway } = makeCms();
-        const output = { type: "object", properties: { ok: { type: "boolean" } } };
+        const body = { type: "object", properties: { ok: { type: "boolean" } } };
+        const output = [{ status: "200", body }];
         await postGatewayProvider(post(validBody({ "endpoints.0.output": JSON.stringify(output) })), cms);
         const stored = await gateway.getProvider("urn:shop");
         expect(stored?.endpoints[0]!.output).toEqual(output as any);

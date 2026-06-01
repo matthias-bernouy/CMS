@@ -2,9 +2,9 @@ import type { Provider } from "../interfaces/Gateway";
 import type { DataShape } from "../interfaces/DataShape";
 
 /**
- * GeoJSON FeatureCollection returned by both BAN endpoints. Declared as the
- * endpoints' `output` so the editor can bind the returned fields
- * (`features[].properties.label`, `geometry.coordinates`, …).
+ * GeoJSON FeatureCollection returned by both BAN endpoints. Declared as the body of
+ * each endpoint's `200` response (one entry of the per-status `output` list) so the
+ * editor can bind the returned fields (`features[].properties.label`, …).
  */
 const FEATURE_COLLECTION: DataShape = {
     type: "object",
@@ -72,7 +72,7 @@ export const BAN_PROVIDER: Provider = {
                     { name: "citycode",     in: "query", schema: { type: "string" } },
                 ],
             },
-            output: FEATURE_COLLECTION,
+            output: [{ status: "200", body: FEATURE_COLLECTION }],
         },
         {
             urn: "urn:ban:reverse",
@@ -87,7 +87,7 @@ export const BAN_PROVIDER: Provider = {
                     { name: "type", in: "query", schema: { type: "string" } },
                 ],
             },
-            output: FEATURE_COLLECTION,
+            output: [{ status: "200", body: FEATURE_COLLECTION }],
         },
     ],
 };

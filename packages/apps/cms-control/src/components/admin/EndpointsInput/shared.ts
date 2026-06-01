@@ -1,4 +1,4 @@
-import type { DataShape, GatewayMeta } from "@bernouy/cms-gateway";
+import type { DataShape, GatewayMeta, EndpointResponse } from "@bernouy/cms-gateway";
 
 /** Edit-mode prefill seeds, decoded from the `value` attribute JSON. */
 export type ParamSeed = {
@@ -16,8 +16,8 @@ export type EndpointSeed = {
     params?: ParamSeed[];
     /** Request-body shape (recursive) — drives the Body tree editor. */
     body?: DataShape;
-    /** Response shape — no editor yet, round-tripped verbatim (B1 fix). */
-    output?: DataShape;
+    /** Response contract (per-status list) — no editor yet, round-tripped verbatim (B1 fix). */
+    output?: EndpointResponse[];
     /** Endpoint meta — no editor yet, round-tripped verbatim (B1 fix). */
     meta?: GatewayMeta;
 };

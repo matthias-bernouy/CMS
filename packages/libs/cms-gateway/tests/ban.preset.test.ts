@@ -43,8 +43,10 @@ describe("BAN preset", () => {
         if (!r.ok) expect(r.status).toBe(400);
     });
 
-    test("declares a response shape (output) for field binding", () => {
-        const out = endpoint("urn:ban:search").output;
+    test("declares a 200 response shape (output) for field binding", () => {
+        const resp = endpoint("urn:ban:search").output;
+        expect(resp?.[0]?.status).toBe("200");
+        const out = resp?.[0]?.body;
         expect(out?.properties?.features?.type).toBe("array");
         expect(out?.properties?.features?.items?.properties?.properties?.properties?.label?.type).toBe("string");
     });

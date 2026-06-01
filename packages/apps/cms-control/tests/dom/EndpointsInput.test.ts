@@ -163,8 +163,8 @@ describe("<cms-endpoints-input>", () => {
         expect(JSON.parse(hidden.value)).toEqual(body);
     });
 
-    test("In tab: a seeded output round-trips through the hidden passthrough field", () => {
-        const output = { type: "object", properties: { ok: { type: "boolean" } } };
+    test("In tab: a seeded output (per-status list) round-trips through the hidden passthrough field", () => {
+        const output = [{ status: "200", body: { type: "object", properties: { ok: { type: "boolean" } } } }];
         const el = mount(JSON.stringify([
             { endpointId: "list", method: "GET", targetUrl: "https://x.com", output },
         ]));
