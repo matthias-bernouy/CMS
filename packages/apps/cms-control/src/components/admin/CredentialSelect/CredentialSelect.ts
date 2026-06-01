@@ -1,6 +1,6 @@
 import { buildShadow, type Refs } from "./template";
 import { closePanel, keyToRef, openPanel, refreshList, renderList, setValue } from "./controller";
-import { openCreateDialog, submitCreate } from "./dialog";
+import { destroyCreateDialog, openCreateDialog } from "./dialog";
 
 /**
  * <cms-credential-select name="auth.bearer" label="Bearer token" value="${HUB_API_TOKEN}">
@@ -13,8 +13,9 @@ import { openCreateDialog, submitCreate } from "./dialog";
  * Surfaces use browser-native top-layer primitives:
  *   - `popover="auto"` for the dropdown — light-dismiss + escapes
  *     `transform`/`overflow:hidden` ancestors (modals, lateral dialogs).
- *   - `<dialog>.showModal()` for the create form — stacks above the
- *     parent modal, native focus trap + ESC.
+ *   - a body-level `<p9r-modal>` (built lazily in `dialog.ts`) for the
+ *     create form — appended to `document.body` so it escapes the
+ *     editor's transformed subtree and centres on the viewport.
  */
 export class CredentialSelect extends HTMLElement {
 
@@ -25,6 +26,7 @@ export class CredentialSelect extends HTMLElement {
     _value = "";
     _isOpen = false;
     _keys: string[] = [];
+    _createModal?: HTMLElement;
 
     private _onSecretSaved = () => { if (this._isOpen) void refreshList(this); };
 
@@ -50,6 +52,9 @@ export class CredentialSelect extends HTMLElement {
 
     disconnectedCallback() {
         document.removeEventListener("secret:saved", this._onSecretSaved);
+        // The editor re-stamps panels on mode switches; drop the body-level
+        // modal so reconnects don't leak orphaned copies into `document.body`.
+        destroyCreateDialog(this);
     }
 
     get value() { return this._value; }
@@ -86,8 +91,6 @@ export class CredentialSelect extends HTMLElement {
             closePanel(this);
         });
         r.createBtn.addEventListener("click", () => openCreateDialog(this));
-        r.dialogCancel.addEventListener("click", () => r.dialog.close());
-        r.dialogSubmit.addEventListener("click", () => void submitCreate(this));
     }
 }
 

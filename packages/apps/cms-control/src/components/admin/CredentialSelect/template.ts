@@ -4,12 +4,11 @@ import { ICON_KEY } from "./icons";
 /**
  * Builds the shadow DOM for `<cms-credential-select>`.
  *
- * Two top-layer surfaces, both browser-managed:
- *   - `.panel` uses `popover="auto"` → light-dismiss + escapes any
- *     `transform`/`overflow:hidden` ancestor (the editor's lateral
- *     dialog and admin modals both have those).
- *   - `<dialog>.create-dialog` uses `showModal()` → stacks above the
- *     parent modal, focus trap + ESC dismiss native.
+ * The `.panel` dropdown uses `popover="auto"` → light-dismiss + escapes
+ * any `transform`/`overflow:hidden` ancestor (the editor's lateral
+ * dialog and admin modals both have those). The create form is NOT here:
+ * it lives in a body-level `<p9r-modal>` built in `dialog.ts` so it
+ * escapes the editor's transformed subtree and centres on the viewport.
  */
 export function buildShadow(host: HTMLElement, label: string | null) {
     const shadow = host.attachShadow({ mode: "open" });
@@ -41,24 +40,6 @@ export function buildShadow(host: HTMLElement, label: string | null) {
             <ul class="list"></ul>
             <div class="empty">No credentials yet</div>
         </div>
-        <dialog class="create-dialog">
-            <form class="create-form" method="dialog">
-                <h3 class="create-title">Create credential</h3>
-                <label class="create-field">
-                    <span>Key</span>
-                    <input class="create-key" type="text" placeholder="MY_API_KEY" spellcheck="false" autocomplete="off">
-                    <small>Uppercase letters, digits, underscore</small>
-                </label>
-                <label class="create-field">
-                    <span>Value</span>
-                    <input class="create-value" type="password" placeholder="Kept server-side" autocomplete="off">
-                </label>
-                <div class="create-actions">
-                    <button type="button" class="create-cancel">Cancel</button>
-                    <button type="button" class="create-submit">Create</button>
-                </div>
-            </form>
-        </dialog>
     `;
     return {
         trigger:        shadow.querySelector(".trigger")        as HTMLElement,
@@ -69,11 +50,6 @@ export function buildShadow(host: HTMLElement, label: string | null) {
         empty:          shadow.querySelector(".empty")          as HTMLElement,
         search:         shadow.querySelector(".search")         as HTMLInputElement,
         createBtn:      shadow.querySelector(".create-btn")     as HTMLElement,
-        dialog:         shadow.querySelector(".create-dialog")  as HTMLDialogElement,
-        dialogKey:      shadow.querySelector(".create-key")     as HTMLInputElement,
-        dialogValue:    shadow.querySelector(".create-value")   as HTMLInputElement,
-        dialogCancel:   shadow.querySelector(".create-cancel")  as HTMLElement,
-        dialogSubmit:   shadow.querySelector(".create-submit")  as HTMLElement,
     };
 }
 

@@ -20,7 +20,7 @@ export type EndpointSeed = {
     output?: EndpointResponse[];
     /** Endpoint meta — no editor yet, round-tripped verbatim (B1 fix). */
     meta?: GatewayMeta;
-    /** Injected request headers — no editor yet (Headers tab in A2), round-tripped verbatim. */
+    /** Injected request headers (static value or secret ref) — drives the Headers tab editor. */
     headers?: EndpointHeader[];
 };
 

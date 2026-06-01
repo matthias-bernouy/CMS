@@ -14,8 +14,9 @@ export type EndpointDto = {
     body?: DataShape;
     /** Response contract (per-status list) — round-tripped + leniently re-validated so an edit never wipes it (B1). */
     output?: EndpointResponse[];
-    /** Endpoint meta + injected request headers — no editor yet (A2), round-tripped + re-validated. */
+    /** Endpoint meta — no editor yet, round-tripped verbatim (B1). */
     meta?: GatewayMeta;
+    /** Injected request headers (static/secret) — edited in the Headers tab; leniently re-validated. */
     headers?: EndpointHeader[];
 };
 

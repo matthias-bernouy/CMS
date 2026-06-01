@@ -57,8 +57,9 @@ describe("<cms-endpoints-input>", () => {
         expect(infos!.querySelector('[name="endpoints.0.endpointId"]')).not.toBeNull();
         expect(infos!.querySelector('[name="endpoints.0.method"]')).not.toBeNull();
         expect(infos!.querySelector('[name="endpoints.0.targetUrl"]')).not.toBeNull();
-        // In/Out are active editors; the old deferred Rules tab is gone (Headers tab arrives in A2).
+        // In/Headers/Out are active editors; the old deferred Rules tab is gone.
         expect(item.querySelector("#in-0")!.hasAttribute("disabled")).toBe(false);
+        expect(item.querySelector("#headers-0")!.hasAttribute("disabled")).toBe(false);
         expect(item.querySelector("#out-0")!.hasAttribute("disabled")).toBe(false);
         expect(item.querySelector("#rules-0")).toBeNull();
     });
@@ -382,7 +383,118 @@ describe("<cms-endpoints-input>", () => {
         expect(hidden.dataset.role).toBe("meta-passthrough");
     });
 
-    test("In tab: seeded headers round-trip verbatim via the hidden headers passthrough (no Headers tab yet)", () => {
+    test("Headers tab: renders, '+ Add header' adds a row, remove removes it", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const panel = item.querySelector("#headers-0")!;
+        expect(panel).not.toBeNull();
+        const headerRows = () => panel.querySelectorAll('[data-role="header-row"]');
+        const addBtn = panel.querySelector('[data-role="add-header"]') as HTMLElement;
+        expect(addBtn).not.toBeNull();
+        expect(headerRows()).toHaveLength(0);
+
+        addBtn.click();
+        addBtn.click();
+        expect(headerRows()).toHaveLength(2);
+        (headerRows()[0]!.querySelector("p9r-icon-button") as HTMLElement).click();
+        expect(headerRows()).toHaveLength(1);
+    });
+
+    test("Headers tab: a static header serialises [{name, source:{from:'static',value}}]", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const panel = item.querySelector("#headers-0")!;
+        const blob = () => (item.querySelector('[name="endpoints.0.headers"]') as HTMLInputElement).value;
+        (panel.querySelector('[data-role="add-header"]') as HTMLElement).click();
+        const row = panel.querySelector('[data-role="header-row"]') as HTMLElement;
+        const name = row.querySelector('[data-role="header-name"]') as HTMLElement;
+        name.setAttribute("value", "X-Api-Version");
+        name.dispatchEvent(new Event("input", { bubbles: true }));
+        const staticInput = row.querySelector('[data-role="header-value-static"]') as HTMLElement;
+        staticInput.setAttribute("value", "2024-01");
+        staticInput.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(JSON.parse(blob())).toEqual([
+            { name: "X-Api-Version", source: { from: "static", value: "2024-01" } },
+        ]);
+    });
+
+    test("Headers tab: toggling to 'secret' reveals the credential picker; its value → secret ref", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const panel = item.querySelector("#headers-0")!;
+        const blob = () => (item.querySelector('[name="endpoints.0.headers"]') as HTMLInputElement).value;
+        (panel.querySelector('[data-role="add-header"]') as HTMLElement).click();
+        const row = panel.querySelector('[data-role="header-row"]') as HTMLElement;
+        const name = row.querySelector('[data-role="header-name"]') as HTMLElement;
+        name.setAttribute("value", "Authorization");
+        name.dispatchEvent(new Event("input", { bubbles: true }));
+        const staticInput = row.querySelector('[data-role="header-value-static"]') as HTMLElement;
+        const cred = row.querySelector('[data-role="header-value-secret"]') as HTMLElement;
+        expect(cred.style.display).toBe("none");      // hidden until secret mode
+        const from = row.querySelector('[data-role="header-from"]') as HTMLElement;
+        from.setAttribute("value", "secret");
+        from.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(cred.style.display).toBe("");           // revealed
+        expect(staticInput.style.display).toBe("none");
+        cred.setAttribute("value", "${STRIPE_KEY}");
+        cred.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(JSON.parse(blob())).toEqual([
+            { name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } },
+        ]);
+    });
+
+    test("Headers tab: an invalid header name flags invalid + hint-level=error on the name input", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const panel = item.querySelector("#headers-0")!;
+        (panel.querySelector('[data-role="add-header"]') as HTMLElement).click();
+        const name = panel.querySelector('[data-role="header-name"]') as HTMLElement;
+        // a space is not a valid RFC 7230 token char
+        name.setAttribute("value", "X Api");
+        name.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(name.hasAttribute("invalid")).toBe(true);
+        expect(name.getAttribute("hint-level")).toBe("error");
+        // a forbidden (hop-by-hop) name is rejected too
+        name.setAttribute("value", "Host");
+        name.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(name.hasAttribute("invalid")).toBe(true);
+        expect(name.getAttribute("hint-level")).toBe("error");
+        // a valid name clears the error
+        name.setAttribute("value", "X-Api-Version");
+        name.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(name.hasAttribute("invalid")).toBe(false);
+        expect(name.hasAttribute("hint-level")).toBe(false);
+    });
+
+    test("Headers tab: removing a FILLED header drops it from the serialised list, not just the DOM", () => {
+        const el = mount();
+        const item = rows(el)[0]!;
+        const panel = item.querySelector("#headers-0")!;
+        const blob = () => (item.querySelector('[name="endpoints.0.headers"]') as HTMLInputElement).value;
+        const headerRows = () => panel.querySelectorAll('[data-role="header-row"]');
+        const addBtn = panel.querySelector('[data-role="add-header"]') as HTMLElement;
+        const fill = (rowEl: Element, n: string, v: string) => {
+            const name = rowEl.querySelector('[data-role="header-name"]') as HTMLElement;
+            name.setAttribute("value", n);
+            name.dispatchEvent(new Event("input", { bubbles: true }));
+            const sv = rowEl.querySelector('[data-role="header-value-static"]') as HTMLElement;
+            sv.setAttribute("value", v);
+            sv.dispatchEvent(new Event("input", { bubbles: true }));
+        };
+        addBtn.click();
+        addBtn.click();
+        fill(headerRows()[0]!, "X-One", "1");
+        fill(headerRows()[1]!, "X-Two", "2");
+        expect(JSON.parse(blob())).toEqual([
+            { name: "X-One", source: { from: "static", value: "1" } },
+            { name: "X-Two", source: { from: "static", value: "2" } },
+        ]);
+        (headerRows()[0]!.querySelector("p9r-icon-button") as HTMLElement).click();
+        expect(headerRows()).toHaveLength(1);
+        expect(JSON.parse(blob())).toEqual([{ name: "X-Two", source: { from: "static", value: "2" } }]);
+    });
+
+    test("Headers tab: a seeded headers list round-trips (static prefilled, secret in secret mode)", () => {
         const headers = [
             { name: "X-Api-Version", source: { from: "static", value: "2024-01" } },
             { name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } },
@@ -391,11 +503,34 @@ describe("<cms-endpoints-input>", () => {
             { endpointId: "search", method: "GET", targetUrl: "https://x.com", headers },
         ]));
         const item = rows(el)[0]!;
-        const hidden = item.querySelector('[data-role="headers-passthrough"]') as HTMLInputElement;
-        expect(hidden.getAttribute("name")).toBe("endpoints.0.headers");
+        const panel = item.querySelector("#headers-0")!;
+        const headerRows = panel.querySelectorAll('[data-role="header-row"]');
+        expect(headerRows).toHaveLength(2);
+        // static row: from=static, value prefilled, picker hidden
+        const r0 = headerRows[0]!;
+        expect(r0.querySelector('[data-role="header-name"]')!.getAttribute("value")).toBe("X-Api-Version");
+        expect(r0.querySelector('[data-role="header-from"]')!.getAttribute("value")).toBe("static");
+        expect(r0.querySelector('[data-role="header-value-static"]')!.getAttribute("value")).toBe("2024-01");
+        expect((r0.querySelector('[data-role="header-value-secret"]') as HTMLElement).style.display).toBe("none");
+        // secret row: from=secret, picker value prefilled + shown, static hidden
+        const r1 = headerRows[1]!;
+        expect(r1.querySelector('[data-role="header-from"]')!.getAttribute("value")).toBe("secret");
+        expect(r1.querySelector('[data-role="header-value-secret"]')!.getAttribute("value")).toBe("${STRIPE_KEY}");
+        expect((r1.querySelector('[data-role="header-value-secret"]') as HTMLElement).style.display).toBe("");
+        expect((r1.querySelector('[data-role="header-value-static"]') as HTMLElement).style.display).toBe("none");
+        // hidden field initially equals the seed verbatim
+        const hidden = item.querySelector('[name="endpoints.0.headers"]') as HTMLInputElement;
         expect(JSON.parse(hidden.value)).toEqual(headers);
-        // A1 ships no Headers tab.
-        expect(item.querySelector("#headers-0")).toBeNull();
+    });
+
+    test("Headers tab: exactly one endpoints.<i>.headers field; the In-tab passthrough is gone", () => {
+        const el = mount(JSON.stringify([
+            { endpointId: "search", method: "GET", targetUrl: "https://x.com",
+              headers: [{ name: "X-Api-Version", source: { from: "static", value: "1" } }] },
+        ]));
+        const item = rows(el)[0]!;
+        expect(item.querySelectorAll('[name="endpoints.0.headers"]')).toHaveLength(1);
+        expect(item.querySelector('[data-role="headers-passthrough"]')).toBeNull();
     });
 
     test("delete is a header-actions button carrying data-action=remove-endpoint", () => {

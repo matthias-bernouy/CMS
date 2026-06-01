@@ -61,10 +61,9 @@ export function makeInPanel(endpointIdx: number, seed: EndpointSeed, urlInput: H
         heading('Path params'), pathContainer,
         heading('Query params'), container,
         heading('Body'), makeBodySection(endpointIdx, seed.body),
-        // Editor-less endpoint meta + headers — round-tripped verbatim (B1; the
-        // Headers tab arrives in A2). Output is owned by the Out panel.
+        // Editor-less endpoint meta — round-tripped verbatim (B1). Output is owned by
+        // the Out panel; headers by the Headers panel.
         passthrough(`endpoints.${endpointIdx}.meta`, 'meta-passthrough', seed.meta),
-        passthrough(`endpoints.${endpointIdx}.headers`, 'headers-passthrough', seed.headers),
     );
     panel.appendChild(wrap);
     return panel;

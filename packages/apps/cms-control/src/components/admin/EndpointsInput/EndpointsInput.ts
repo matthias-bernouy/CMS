@@ -7,11 +7,12 @@ import type { EndpointSeed } from "./shared";
  * `<cms-endpoints-input>` — light-DOM repeating field for gateway endpoints.
  *
  * Each endpoint is a collapsible `<p9r-accordion-item>` (built in `rows.ts`) with
- * a `<p9r-tabs>` body: Infos / In (path + query params) / Out / Rules. Everything
- * sits in LIGHT DOM so the parent `<cms-form>`'s native `FormData` picks it up:
- * the endpoint SCALARS post as flat keys (`endpoints.<n>.endpointId|method|targetUrl`),
- * and every STRUCTURED field posts as one JSON blob the editor syncs
- * (`endpoints.<n>.{params,body,output,meta}`). `parseProviderDto` reassembles both.
+ * a `<p9r-tabs>` body: Infos / In (path + query params + body) / Out (per-status
+ * response shapes) / Headers (static + secret request headers). Everything sits in
+ * LIGHT DOM so the parent `<cms-form>`'s native `FormData` picks it up: the endpoint
+ * SCALARS post as flat keys (`endpoints.<n>.endpointId|method|targetUrl`), and every
+ * STRUCTURED field posts as one JSON blob the editor syncs
+ * (`endpoints.<n>.{params,body,output,headers,meta}`). `parseProviderDto` reassembles both.
  *
  * The endpoint index `<n>` increments per row and never reuses — removing a row
  * leaves a gap the parser compacts, so deletes never collide.
@@ -87,7 +88,10 @@ export class CmsEndpointsInput extends HTMLElement {
 
     private _addRow(seed: EndpointSeed = {}): HTMLElement | null {
         if (!this._rowsContainer) return null;
-        const item = makeEndpointRow(this._rowCount++, seed);
+        // Forward the secrets API base to the Headers tab's credential pickers if
+        // the host exposes one; otherwise each picker defaults to /api/secrets.
+        const api = this.getAttribute('api') ?? this.getAttribute('secrets-api') ?? undefined;
+        const item = makeEndpointRow(this._rowCount++, seed, api);
         this._rowsContainer.appendChild(item);
         return item;
     }

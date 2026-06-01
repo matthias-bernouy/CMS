@@ -2,13 +2,15 @@ import { HTTP_METHODS } from "@bernouy/cms-gateway";
 import { makeInput, makeMethodSelect, makeDeleteButton } from "./controls";
 import { makeInPanel } from "./inPanel";
 import { makeOutPanel } from "./outPanel";
+import { makeHeadersPanel } from "./headersPanel";
 import { readControl, methodColor, type EndpointSeed } from "./shared";
 
 /** Build one endpoint as a collapsible `<p9r-accordion-item>`: a live-synced
  *  collapsed-header summary (method tag + id + path), a header-actions delete
- *  button, and a `<p9r-tabs>` body (Infos / In / Out). Always returned
- *  COLLAPSED so no accordion height transition fires on insert. */
-export function makeEndpointRow(idx: number, seed: EndpointSeed = {}): HTMLElement {
+ *  button, and a `<p9r-tabs>` body (Infos / In / Headers / Out). Always returned
+ *  COLLAPSED so no accordion height transition fires on insert. `api` is the
+ *  secrets API base forwarded to the Headers tab's credential pickers. */
+export function makeEndpointRow(idx: number, seed: EndpointSeed = {}, api?: string): HTMLElement {
     // Coerce the method once so the header tag and select never disagree on load.
     const method = seed.method && (HTTP_METHODS as readonly string[]).includes(seed.method)
         ? seed.method : HTTP_METHODS[0];
@@ -55,6 +57,7 @@ export function makeEndpointRow(idx: number, seed: EndpointSeed = {}): HTMLEleme
         infos,
         makeInPanel(idx, seed, urlInput),
         makeOutPanel(idx, seed),
+        makeHeadersPanel(idx, seed, { api }),
     );
     tabs.setAttribute('active', `infos-${idx}`);   // panels already appended → no first-rebuild race
 

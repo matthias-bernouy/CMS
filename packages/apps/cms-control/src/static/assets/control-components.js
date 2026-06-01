@@ -9723,58 +9723,6 @@ ${followMessage}`)) {
 }
 .option:hover    { background: var(--bg-base, #f1f5f9); }
 .option.selected { background: var(--primary-muted, rgb(67 97 238 / 0.1)); color: var(--primary-base, #4361ee); }
-
-/* ── Create dialog (modal, top-layer) ── */
-
-.create-dialog {
-    margin: auto;
-    padding: 0;
-    border: 1px solid var(--border-default, #e2e8f0);
-    border-radius: 10px;
-    box-shadow: 0 16px 40px rgb(0 0 0 / 0.16);
-    background: var(--bg-surface, #fff);
-    color: var(--text-main, #1e293b);
-    width: 360px; max-width: calc(100vw - 32px);
-}
-.create-dialog::backdrop {
-    background: rgb(15 23 42 / 0.45);
-}
-
-.create-form { display: flex; flex-direction: column; gap: 12px; padding: 16px; margin: 0; }
-.create-title { margin: 0; font-size: 13px; font-weight: 700; color: var(--text-main, #1e293b); }
-
-.create-field { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
-.create-field > span {
-    font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
-    font-size: 10px; color: var(--text-muted, #94a3b8);
-}
-.create-field input {
-    padding: 7px 10px;
-    border: 1px solid var(--border-default, #e2e8f0); border-radius: 6px;
-    background: var(--bg-base, #f8fafc);
-    font-size: 12px; font-family: ui-monospace, monospace; color: var(--text-main, #1e293b);
-    outline: none; transition: border-color 0.15s;
-}
-.create-field input:focus { border-color: var(--primary-base, #4361ee); }
-.create-field small { color: var(--text-muted, #94a3b8); font-size: 10px; }
-
-.create-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
-.create-actions button {
-    padding: 7px 14px;
-    border: 1px solid var(--border-default, #e2e8f0); border-radius: 6px;
-    font: inherit; font-size: 11px; font-weight: 600;
-    cursor: pointer;
-    background: var(--bg-surface, #fff);
-    color: var(--text-main, #1e293b);
-    transition: background 0.1s, border-color 0.1s;
-}
-.create-actions button:hover { background: var(--bg-base, #f1f5f9); }
-.create-actions .create-submit {
-    border-color: var(--primary-base, #4361ee);
-    background: var(--primary-base, #4361ee);
-    color: #fff;
-}
-.create-actions .create-submit:hover { filter: brightness(0.96); }
 `;
 
   // src/components/admin/CredentialSelect/icons.ts
@@ -9817,24 +9765,6 @@ ${followMessage}`)) {
             <ul class="list"></ul>
             <div class="empty">No credentials yet</div>
         </div>
-        <dialog class="create-dialog">
-            <form class="create-form" method="dialog">
-                <h3 class="create-title">Create credential</h3>
-                <label class="create-field">
-                    <span>Key</span>
-                    <input class="create-key" type="text" placeholder="MY_API_KEY" spellcheck="false" autocomplete="off">
-                    <small>Uppercase letters, digits, underscore</small>
-                </label>
-                <label class="create-field">
-                    <span>Value</span>
-                    <input class="create-value" type="password" placeholder="Kept server-side" autocomplete="off">
-                </label>
-                <div class="create-actions">
-                    <button type="button" class="create-cancel">Cancel</button>
-                    <button type="button" class="create-submit">Create</button>
-                </div>
-            </form>
-        </dialog>
     `;
     return {
       trigger: shadow.querySelector(".trigger"),
@@ -9844,12 +9774,7 @@ ${followMessage}`)) {
       list: shadow.querySelector(".list"),
       empty: shadow.querySelector(".empty"),
       search: shadow.querySelector(".search"),
-      createBtn: shadow.querySelector(".create-btn"),
-      dialog: shadow.querySelector(".create-dialog"),
-      dialogKey: shadow.querySelector(".create-key"),
-      dialogValue: shadow.querySelector(".create-value"),
-      dialogCancel: shadow.querySelector(".create-cancel"),
-      dialogSubmit: shadow.querySelector(".create-submit")
+      createBtn: shadow.querySelector(".create-btn")
     };
   }
 
@@ -9945,16 +9870,58 @@ ${followMessage}`)) {
 
   // src/components/admin/CredentialSelect/dialog.ts
   var KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+  function buildModal(host) {
+    const m = document.createElement("p9r-modal");
+    m.setAttribute("aria-label", "Create credential");
+    m.innerHTML = `
+        <p9r-stack gap="md">
+            <strong class="cs-create-title">Create credential</strong>
+            <p9r-input data-role="key" label="Key" placeholder="MY_API_KEY"
+                hint="Uppercase letters, digits, underscore"></p9r-input>
+            <p9r-input data-role="value" label="Value" type="password"
+                placeholder="Kept server-side"></p9r-input>
+            <p9r-stack direction="row" gap="sm" justify="end">
+                <p9r-button data-role="cancel" variant="outlined">Cancel</p9r-button>
+                <p9r-button data-role="create" color="primary">Create</p9r-button>
+            </p9r-stack>
+        </p9r-stack>`;
+    m.querySelector('[data-role="cancel"]').addEventListener("click", () => m.removeAttribute("open"));
+    m.querySelector('[data-role="create"]').addEventListener("click", () => void submitCreate(host));
+    document.body.appendChild(m);
+    return m;
+  }
+  function inputs(m) {
+    return {
+      key: m.querySelector('[data-role="key"]'),
+      value: m.querySelector('[data-role="value"]')
+    };
+  }
   function openCreateDialog(host) {
-    host._refs.dialogKey.value = "";
-    host._refs.dialogValue.value = "";
-    host._refs.dialog.showModal();
-    setTimeout(() => host._refs.dialogKey.focus(), 0);
+    const m = host._createModal ??= buildModal(host);
+    const { key, value } = inputs(m);
+    key.value = "";
+    value.value = "";
+    key.removeAttribute("invalid");
+    key.removeAttribute("hint-level");
+    key.setAttribute("hint", "Uppercase letters, digits, underscore");
+    m.setAttribute("open", "");
+    setTimeout(() => key.focus?.(), 0);
+  }
+  function destroyCreateDialog(host) {
+    host._createModal?.remove();
+    host._createModal = undefined;
   }
   async function submitCreate(host) {
-    const key = host._refs.dialogKey.value.trim();
-    const value = host._refs.dialogValue.value;
+    const m = host._createModal;
+    if (!m)
+      return;
+    const { key: keyInput, value: valueInput } = inputs(m);
+    const key = keyInput.value.trim();
+    const value = valueInput.value;
     if (!KEY_PATTERN.test(key)) {
+      keyInput.setAttribute("invalid", "");
+      keyInput.setAttribute("hint", "Must match /^[A-Z][A-Z0-9_]*$/");
+      keyInput.setAttribute("hint-level", "error");
       showToast("Invalid key: must match /^[A-Z][A-Z0-9_]*$/", { type: "error" });
       return;
     }
@@ -9968,7 +9935,7 @@ ${followMessage}`)) {
       return;
     }
     showToast(`Credential ${key} created`, { type: "success" });
-    host._refs.dialog.close();
+    m.removeAttribute("open");
     await refreshList(host);
     setValue(host, keyToRef(key));
     host.dispatchEvent(new Event("change", { bubbles: true }));
@@ -9983,6 +9950,7 @@ ${followMessage}`)) {
     _value = "";
     _isOpen = false;
     _keys = [];
+    _createModal;
     _onSecretSaved = () => {
       if (this._isOpen)
         refreshList(this);
@@ -10002,6 +9970,7 @@ ${followMessage}`)) {
     }
     disconnectedCallback() {
       document.removeEventListener("secret:saved", this._onSecretSaved);
+      destroyCreateDialog(this);
     }
     get value() {
       return this._value;
@@ -10045,8 +10014,6 @@ ${followMessage}`)) {
         closePanel(this);
       });
       r.createBtn.addEventListener("click", () => openCreateDialog(this));
-      r.dialogCancel.addEventListener("click", () => r.dialog.close());
-      r.dialogSubmit.addEventListener("click", () => void submitCreate(this));
     }
   }
   if (!customElements.get("cms-credential-select")) {
@@ -10337,6 +10304,9 @@ cms-endpoints-input .ep-add:hover {
     "content-length",
     "cookie"
   ]);
+  var HEADER_NAME_RE = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+  var isForbiddenHeaderName = (n) => FORBIDDEN_REQUEST_HEADERS.has(n.toLowerCase());
+  var isValidHeaderName = (n) => HEADER_NAME_RE.test(n);
   // ../../libs/cms-gateway/src/default-implementation/GatewayRepository/memory.ts
   class InMemoryGatewayRepository {
     _providers = new Map;
@@ -10752,7 +10722,7 @@ cms-endpoints-input .ep-add:hover {
     });
     paramsField.sync(() => queryParams);
     container.append(paramsField, rows, add);
-    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta), passthrough(`endpoints.${endpointIdx}.headers`, "headers-passthrough", seed.headers));
+    wrap.append(heading("Path params"), pathContainer, heading("Query params"), container, heading("Body"), makeBodySection(endpointIdx, seed.body), passthrough(`endpoints.${endpointIdx}.meta`, "meta-passthrough", seed.meta));
     panel.appendChild(wrap);
     return panel;
   }
@@ -10939,8 +10909,124 @@ cms-endpoints-input .ep-add:hover {
     return h2;
   }
 
+  // src/components/admin/EndpointsInput/headerRow.ts
+  function makeHeaderRow(seed, onChange, onRemove, opts) {
+    const row = document.createElement("p9r-stack");
+    row.setAttribute("direction", "row");
+    row.setAttribute("gap", "sm");
+    row.setAttribute("align", "center");
+    row.dataset.role = "header-row";
+    const from = seed.source?.from ?? "static";
+    const name = makeInput("", "", "X-Api-Version", seed.name);
+    name.className = "ep-name";
+    name.dataset.role = "header-name";
+    const validate = () => {
+      const n = readControl(name).trim();
+      if (n && (!isValidHeaderName(n) || isForbiddenHeaderName(n))) {
+        name.setAttribute("invalid", "");
+        name.setAttribute("hint", "Nom de header invalide ou réservé");
+        name.setAttribute("hint-level", "error");
+      } else {
+        name.removeAttribute("invalid");
+        name.removeAttribute("hint");
+        name.removeAttribute("hint-level");
+      }
+    };
+    name.addEventListener("input", () => {
+      validate();
+      onChange();
+    });
+    if (seed.name)
+      validate();
+    const fromSelect = makeSelect(["static", "secret"], from);
+    fromSelect.className = "ep-status";
+    fromSelect.dataset.role = "header-from";
+    const staticInput = makeInput("", "", "value", from === "static" ? seed.source?.value : undefined);
+    staticInput.className = "ep-name";
+    staticInput.dataset.role = "header-value-static";
+    staticInput.style.display = from === "static" ? "" : "none";
+    staticInput.addEventListener("input", onChange);
+    const credSelect = document.createElement("cms-credential-select");
+    credSelect.dataset.role = "header-value-secret";
+    credSelect.className = "ep-name";
+    credSelect.setAttribute("label", "");
+    if (opts?.api)
+      credSelect.setAttribute("api", opts.api);
+    if (from === "secret")
+      credSelect.setAttribute("value", seed.source.ref ?? "");
+    credSelect.style.display = from === "secret" ? "" : "none";
+    credSelect.addEventListener("change", onChange);
+    fromSelect.addEventListener("change", () => {
+      const v2 = readControl(fromSelect);
+      fromSelect.setAttribute("value", v2);
+      staticInput.style.display = v2 === "static" ? "" : "none";
+      credSelect.style.display = v2 === "secret" ? "" : "none";
+      onChange();
+    });
+    const remove = makeIconButton(ICON_X, { ariaLabel: "Remove header", onClick: onRemove });
+    row.append(name, fromSelect, staticInput, credSelect, remove);
+    const read = () => {
+      const n = readControl(name).trim();
+      if (!n)
+        return null;
+      if (readControl(fromSelect) === "secret") {
+        const ref = (credSelect.value || credSelect.getAttribute("value") || "").trim();
+        return ref ? { name: n, source: { from: "secret", ref } } : null;
+      }
+      return { name: n, source: { from: "static", value: readControl(staticInput) } };
+    };
+    return { element: row, read };
+  }
+
+  // src/components/admin/EndpointsInput/headersPanel.ts
+  function makeHeadersPanel(endpointIdx, seed, opts) {
+    const panel = document.createElement("p9r-tab-panel");
+    panel.id = `headers-${endpointIdx}`;
+    panel.setAttribute("label", "Headers");
+    const wrap = document.createElement("p9r-stack");
+    wrap.setAttribute("gap", "m");
+    const field = jsonField(`endpoints.${endpointIdx}.headers`);
+    const rows = document.createElement("p9r-stack");
+    rows.setAttribute("gap", "sm");
+    rows.dataset.role = "header-rows";
+    const handles = [];
+    const readRows = () => handles.map((h2) => h2.read()).filter((r) => r !== null);
+    const sync = () => field.sync(readRows);
+    const addRow = (h2) => {
+      const handle = makeHeaderRow(h2, sync, () => {
+        const i = handles.indexOf(handle);
+        if (i >= 0)
+          handles.splice(i, 1);
+        handle.element.remove();
+        sync();
+      }, opts);
+      handles.push(handle);
+      rows.appendChild(handle.element);
+    };
+    (seed.headers ?? []).forEach(addRow);
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "ep-add-param";
+    add.dataset.role = "add-header";
+    add.textContent = "+ Add header";
+    add.addEventListener("click", () => {
+      addRow({});
+      sync();
+    });
+    field.sync(() => seed.headers);
+    wrap.append(field, heading3("Headers"), rows, add);
+    panel.appendChild(wrap);
+    return panel;
+  }
+  function heading3(text) {
+    const h2 = document.createElement("strong");
+    h2.className = "ep-heading";
+    h2.textContent = text;
+    return h2;
+  }
+
   // src/components/admin/EndpointsInput/rows.ts
-  function makeEndpointRow(idx, seed = {}) {
+  function makeEndpointRow(idx, seed = {}, api) {
     const method = seed.method && HTTP_METHODS.includes(seed.method) ? seed.method : HTTP_METHODS[0];
     const item = document.createElement("p9r-accordion-item");
     item.dataset.role = "endpoint-row";
@@ -10971,7 +11057,7 @@ cms-endpoints-input .ep-add:hover {
     const urlInput = makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
     infosBody.append(idInput, methodSelect, urlInput);
     infos.appendChild(infosBody);
-    tabs.append(infos, makeInPanel(idx, seed, urlInput), makeOutPanel(idx, seed));
+    tabs.append(infos, makeInPanel(idx, seed, urlInput), makeOutPanel(idx, seed), makeHeadersPanel(idx, seed, { api }));
     tabs.setAttribute("active", `infos-${idx}`);
     item.append(header, makeDeleteButton(), tabs);
     bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
@@ -11044,7 +11130,8 @@ cms-endpoints-input .ep-add:hover {
     _addRow(seed = {}) {
       if (!this._rowsContainer)
         return null;
-      const item = makeEndpointRow(this._rowCount++, seed);
+      const api = this.getAttribute("api") ?? this.getAttribute("secrets-api") ?? undefined;
+      const item = makeEndpointRow(this._rowCount++, seed, api);
       this._rowsContainer.appendChild(item);
       return item;
     }
@@ -12445,8 +12532,8 @@ cms-endpoints-input .ep-add:hover {
       }
     }
     _sync() {
-      const inputs = Array.from(this.querySelectorAll("[name]"));
-      inputs.forEach((input) => {
+      const inputs2 = Array.from(this.querySelectorAll("[name]"));
+      inputs2.forEach((input) => {
         const val2 = this._component?.getAttribute(input.name);
         if (val2) {
           input.value = val2;
