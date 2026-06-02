@@ -38,11 +38,6 @@ export function filesBase(): string {
     return `${getMetaBasePath()}/api/files`;
 }
 
-/** Raw-bytes URL for a file item — usable directly as an `<img>` src. */
-export function rawUrl(id: string): string {
-    return `${filesBase()}/raw?id=${encodeURIComponent(id)}`;
-}
-
 /**
  * Public, path-based bytes URL for a file, e.g. `/cms/.cms/files/logos/hero.png`.
  * Served by both Control (admin-guarded) and Delivery, relative to `basePath`.
@@ -63,9 +58,9 @@ export function toLocal(item: FilesItem): LocalMediaItem {
     if (item.type === "file") {
         local.mimetype    = item.mimeType;
         local.size        = item.size;
-        // Prefer the canonical path-based route; `rawUrl` is a defensive fallback
-        // for the (shouldn't-happen) case of a file item without a resolved path.
-        local.absoluteURL = item.path ? cmsFilesUrl(item.path) : rawUrl(item.id);
+        // Bytes are served by the path-based `.cms/files/<path>` route; the server
+        // always attaches `path` to file items (see api/files/files.get.ts).
+        if (item.path) local.absoluteURL = cmsFilesUrl(item.path);
     }
     return local;
 }
