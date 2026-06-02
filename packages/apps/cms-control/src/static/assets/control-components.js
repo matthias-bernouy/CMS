@@ -9104,7 +9104,6 @@ p9r-tag:hover {
       this.target.removeAttribute(p9r.attr.ACTION.DISABLE_CHANGE_COMPONENT);
       this.target.removeAttribute(p9r.attr.ACTION.DISABLE_SAVE_AS_TEMPLATE);
       this.target.removeAttribute(p9r.attr.ACTION.INLINE_ADDING);
-      this.target.removeAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE);
       this.target.removeAttribute(p9r.attr.ACTION.DISABLE_DRAGGING);
       this.target.removeAttribute(p9r.attr.TEXT.BLOC_MANAGEMENT);
       this.target.removeAttribute(p9r.attr.EDITOR.IDENTIFIER);
@@ -9282,8 +9281,7 @@ p9r-tag:hover {
       DISABLE_DUPLICATE: "p9r-action-disable-duplicate",
       DISABLE_SAVE_AS_TEMPLATE: "p9r-action-disable-save-as-template",
       DISABLE_CHANGE_COMPONENT: "p9r-action-disable-change-component",
-      INLINE_ADDING: "inline-adding",
-      ALLOW_RESIZE_IMAGE: "p9r-allow-resize-image"
+      INLINE_ADDING: "inline-adding"
     },
     TEXT: {
       DISABLE_TYPE: "p9r-text-disable-type",
@@ -13135,8 +13133,6 @@ cms-endpoints-input .ep-add:hover {
     if (slot)
       target.setAttribute("slot", slot);
     lockActions(target);
-    if (host.allowResize)
-      target.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
     host._component.appendChild(target);
     return target;
   }
@@ -13154,8 +13150,6 @@ cms-endpoints-input .ep-add:hover {
       img.setAttribute("slot", slot);
     img.setAttribute("src", defaultSrc);
     lockActions(img);
-    if (host.allowResize)
-      img.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
     host._component?.appendChild(img);
   }
 
@@ -13301,9 +13295,6 @@ cms-endpoints-input .ep-add:hover {
       this._target = resolveTarget(this);
       lockActions(this._target);
       watchTarget(this);
-      if (this._target && this.allowResize) {
-        this._target.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
-      }
       this._prepared = true;
     }
     init(opts) {
@@ -13315,9 +13306,6 @@ cms-endpoints-input .ep-add:hover {
       this._target = target;
       lockActions(this._target);
       watchTarget(this);
-      if (this._target && this.allowResize) {
-        this._target.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
-      }
       updatePreview(this, this._target?.getAttribute("src") || "");
     }
     openMediaCenter() {
@@ -13331,9 +13319,6 @@ cms-endpoints-input .ep-add:hover {
     }
     get isMultiSelect() {
       return this.hasAttribute("multi-select");
-    }
-    get allowResize() {
-      return this.hasAttribute("allow-resize");
     }
     get optionnal() {
       return this.hasAttribute("optionnal");
@@ -17170,129 +17155,26 @@ form[method="dialog"] {
     }
   }
 
-  // src/core/editorSystem/defaultEditors/ImageEditor/ResizeInstance.ts
-  class ResizeInstance {
-    isResizing = false;
-    hasMoved = false;
-    isPending = false;
-    originX = 0;
-    originY = 0;
-    lastMouseX = 0;
-    lastMouseY = 0;
-    startWidth = 0;
-    startHeight = 0;
-    aspectRatio = 1;
-    static MOVE_THRESHOLD = 4;
-    target;
-    onResizeCallback;
-    constructor(target, onResize) {
-      this.target = target;
-      this.onResizeCallback = onResize;
-      this.target.style.position = "relative";
-    }
-    start() {
-      this.target.style.cursor = "nwse-resize";
-      this.target.addEventListener("mousedown", this.onMouseDown);
-      this.target.addEventListener("click", this.preventClickIfResizing, true);
-    }
-    stop() {
-      this.target.style.cursor = "default";
-      this.target.removeEventListener("mousedown", this.onMouseDown);
-      this.target.removeEventListener("click", this.preventClickIfResizing, true);
-      this.onMouseUp();
-    }
-    onMouseDown = (e) => {
-      if (e.target === this.target) {
-        this.isPending = true;
-        this.isResizing = false;
-        this.hasMoved = false;
-        this.originX = e.clientX;
-        this.originY = e.clientY;
-        this.lastMouseX = e.clientX;
-        this.lastMouseY = e.clientY;
-        this.startWidth = this.target.offsetWidth;
-        this.startHeight = this.target.offsetHeight;
-        this.aspectRatio = this.startWidth / this.startHeight;
-        document.addEventListener("mousemove", this.onMouseMove);
-        document.addEventListener("mouseup", this.onMouseUp);
-        e.preventDefault();
-      }
-    };
-    onMouseMove = (e) => {
-      if (!this.isPending && !this.isResizing)
-        return;
-      if (this.isPending && !this.isResizing) {
-        const dx = Math.abs(e.clientX - this.originX);
-        const dy = Math.abs(e.clientY - this.originY);
-        if (dx < ResizeInstance.MOVE_THRESHOLD && dy < ResizeInstance.MOVE_THRESHOLD)
-          return;
-        this.isPending = false;
-        this.isResizing = true;
-      }
-      this.hasMoved = true;
-      const deltaX = e.clientX - this.lastMouseX;
-      const deltaY = e.clientY - this.lastMouseY;
-      let newWidth = this.target.offsetWidth + deltaX;
-      let newHeight = this.target.offsetHeight + deltaY;
-      if (!e.shiftKey) {
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          newHeight = newWidth / this.aspectRatio;
-        } else {
-          newWidth = newHeight * this.aspectRatio;
-        }
-      }
-      newWidth = Math.max(10, newWidth);
-      newHeight = Math.max(10, newHeight);
-      this.onResizeCallback(newWidth, newHeight);
-      this.lastMouseX = e.clientX;
-      this.lastMouseY = e.clientY;
-    };
-    onMouseUp = () => {
-      this.isPending = false;
-      setTimeout(() => {
-        this.isResizing = false;
-      }, 0);
-      document.removeEventListener("mousemove", this.onMouseMove);
-      document.removeEventListener("mouseup", this.onMouseUp);
-    };
-    preventClickIfResizing = (e) => {
-      if (this.hasMoved) {
-        e.stopImmediatePropagation();
-        e.preventDefault();
-        this.hasMoved = false;
-      }
-    };
-  }
-
   // src/core/editorSystem/defaultEditors/ImageEditor/ImageEditor.ts
   var cssStyle = `
     img:hover {
         opacity: 0.5;
-        cursor: nwse-resize;
+        cursor: pointer;
     }
 `;
 
   class ImageEditor extends Editor {
     _mediaCenter = null;
-    resizeInstance;
     onClick = (e) => this.handleClick(e);
     onSelectMedia = (e) => this.handleSelectMedia(e);
     constructor(target) {
       super(target, cssStyle);
       if (!this.target.getAttribute("src"))
         this.target.setAttribute("src", "https://picsum.photos/200");
-      this.resizeInstance = new ResizeInstance(this.target, (w2, h2) => {
-        this.target.style.width = `${w2}px`;
-        this.target.style.height = `${h2}px`;
-      });
     }
     init() {
       this.target.removeEventListener("click", this.onClick);
       this.target.addEventListener("click", this.onClick);
-      const insideComponent = this.target.parentElement?.closest(`[${p9r.attr.EDITOR.IS_EDITOR}]`);
-      const allowResize = !insideComponent || this.target.hasAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE);
-      if (allowResize)
-        this.resizeInstance.start();
     }
     handleSelectMedia(e) {
       this.target.setAttribute("src", e.detail.src);
@@ -17316,7 +17198,6 @@ form[method="dialog"] {
       this.target.removeEventListener("click", this.onClick);
       this._mediaCenter?.removeEventListener("select-item", this.onSelectMedia);
       this._mediaCenter?.remove();
-      this.resizeInstance.stop();
     }
   }
 

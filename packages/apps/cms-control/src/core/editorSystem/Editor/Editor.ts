@@ -153,7 +153,6 @@ export abstract class Editor {
         this.target.removeAttribute(p9r.attr.ACTION.DISABLE_CHANGE_COMPONENT);
         this.target.removeAttribute(p9r.attr.ACTION.DISABLE_SAVE_AS_TEMPLATE);
         this.target.removeAttribute(p9r.attr.ACTION.INLINE_ADDING);
-        this.target.removeAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE);
         this.target.removeAttribute(p9r.attr.ACTION.DISABLE_DRAGGING);
         this.target.removeAttribute(p9r.attr.TEXT.BLOC_MANAGEMENT);
         this.target.removeAttribute(p9r.attr.EDITOR.IDENTIFIER);

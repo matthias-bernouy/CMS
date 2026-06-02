@@ -17,7 +17,6 @@ export function ensureTarget(host: ImageSync): HTMLImageElement {
     const slot = host.slotName;
     if (slot) target.setAttribute("slot", slot);
     lockActions(target);
-    if (host.allowResize) target.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
     host._component!.appendChild(target);
     return target;
 }
@@ -36,6 +35,5 @@ export function syncDefault(host: ImageSync) {
     if (slot) img.setAttribute("slot", slot);
     img.setAttribute("src", defaultSrc);
     lockActions(img);
-    if (host.allowResize) img.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
     host._component?.appendChild(img);
 }

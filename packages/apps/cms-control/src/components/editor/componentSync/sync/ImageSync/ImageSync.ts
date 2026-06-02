@@ -57,9 +57,6 @@ export class ImageSync extends HTMLElement {
         this._target = resolveTarget(this);
         lockActions(this._target);
         watchTarget(this);
-        if (this._target && this.allowResize) {
-            this._target.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
-        }
         this._prepared = true;
     }
 
@@ -72,9 +69,6 @@ export class ImageSync extends HTMLElement {
         this._target = target;
         lockActions(this._target);
         watchTarget(this);
-        if (this._target && this.allowResize) {
-            this._target.setAttribute(p9r.attr.ACTION.ALLOW_RESIZE_IMAGE, "true");
-        }
         updatePreview(this, this._target?.getAttribute("src") || "");
     }
 
@@ -83,7 +77,6 @@ export class ImageSync extends HTMLElement {
 
     get slotName(): string  { return this.getAttribute("slotTarget") || ""; }
     get isMultiSelect()     { return this.hasAttribute("multi-select"); }
-    get allowResize()       { return this.hasAttribute("allow-resize"); }
     get optionnal()         { return this.hasAttribute("optionnal"); }
     get isCreating(): boolean {
         return this._component?.getAttribute(p9r.attr.EDITOR.IS_CREATING) === "true";

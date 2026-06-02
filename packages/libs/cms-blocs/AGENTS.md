@@ -130,6 +130,15 @@ component reads via `var(...)`:
 | Primary  | `--primary-base`, `--primary-muted`, `--primary-contrasted` |
 | Secondary| `--secondary-base`, `--secondary-muted`, `--secondary-contrasted` |
 | Status   | `--danger-*`, `--success-*`, `--info-*`, `--warning-*` (each as `-base`/`-muted`/`-contrasted`) |
+| Context  | `--ctx-bg`, `--ctx-fg`, `--ctx-fg-muted`, `--ctx-border` — the *current surface*; neutral by default, re-routed to `*-contrasted*` by colour-variant provider blocs |
+
+**Context aliases (`--ctx-*`)** implement a provider/consumer colour context.
+A *provider* — a `variant`-bearing wrapper like `base-footer` or
+`base-hero-marketing` — re-points `--ctx-bg/-fg/-fg-muted/-border` to the chosen
+variant's `*-base` / `*-contrasted*` tokens; *consumers* (slotted text, nested
+blocs, the RichText "Contextual" swatch) read `var(--ctx-fg)` so they stay
+legible on whatever surface they sit on. The neutral defaults above resolve to
+the surface/text tokens.
 
 Consumers serve `dist/style.css` at a stable URL (typically
 `<basePath>/resources/css/cms-blocs.css`) and `@import` it from
