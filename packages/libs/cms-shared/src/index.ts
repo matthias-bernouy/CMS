@@ -59,6 +59,12 @@ export * from "cms-shared/server/compression";
 export {
     buildCspContent, type CspExtras,
 } from "cms-shared/server/buildCspContent";
+export {
+    serveFilesRequest, type FilesServeDeps,
+} from "cms-shared/server/serveFilesRequest";
+
+// ── Files utils ────────────────────────────────────────────────────────
+export { pathOf } from "cms-shared/files/pathOf";
 
 // ── Constants ──────────────────────────────────────────────────────────
 export * from "cms-shared/constants/p9r-constants";

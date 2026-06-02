@@ -21,6 +21,8 @@ export type FilesItem = {
     updatedAt: string;
     size?:     number;
     mimeType?: string;
+    /** Readable tree-path ("logos/hero.png"), present on FILE items only. */
+    path?:     string;
 };
 
 export type FilesPage = {
@@ -41,6 +43,16 @@ export function rawUrl(id: string): string {
     return `${filesBase()}/raw?id=${encodeURIComponent(id)}`;
 }
 
+/**
+ * Public, path-based bytes URL for a file, e.g. `/cms/.cms/files/logos/hero.png`.
+ * Served by both Control (admin-guarded) and Delivery, relative to `basePath`.
+ * Each segment is encoded so spaces / accents in names survive.
+ */
+export function cmsFilesUrl(path: string): string {
+    const encoded = path.split("/").map(encodeURIComponent).join("/");
+    return `${getMetaBasePath()}/.cms/files/${encoded}`;
+}
+
 export function toLocal(item: FilesItem): LocalMediaItem {
     const isImage = item.type === "file" && (item.mimeType?.startsWith("image/") ?? false);
     const local: LocalMediaItem = {
@@ -51,7 +63,9 @@ export function toLocal(item: FilesItem): LocalMediaItem {
     if (item.type === "file") {
         local.mimetype    = item.mimeType;
         local.size        = item.size;
-        local.absoluteURL = rawUrl(item.id);
+        // Prefer the canonical path-based route; `rawUrl` is a defensive fallback
+        // for the (shouldn't-happen) case of a file item without a resolved path.
+        local.absoluteURL = item.path ? cmsFilesUrl(item.path) : rawUrl(item.id);
     }
     return local;
 }

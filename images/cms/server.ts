@@ -139,7 +139,7 @@ new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, fil
 // gateway instance as Control, so providers created in the admin are immediately
 // resolvable by the `/.cms/gateway/*` proxy.
 const deliveryRunner = new BunRunner();
-new DeliveryCms({ runner: deliveryRunner, repository: repo, cache, gateway });
+new DeliveryCms({ runner: deliveryRunner, repository: repo, cache, gateway, filesMetadata, filesBlob });
 
 controlRunner.start(CONTROL_PORT);
 deliveryRunner.start(DELIVERY_PORT);

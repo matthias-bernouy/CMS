@@ -5,6 +5,7 @@ import type { Cache } from "@bernouy/cms-shared";
 import { InMemoryCache } from "@bernouy/cms-shared";
 import type { SecretStore } from "@bernouy/cms-shared";
 import { InMemorySecretStore } from "@bernouy/cms-shared";
+import { serveFilesRequest } from "@bernouy/cms-shared";
 import type { CmsFilesMetadataRepository } from "@bernouy/cms-shared";
 import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/auth-core";
@@ -122,6 +123,18 @@ export class ControlCms {
             middlewares:   [authGuard],   // admin-only preview (editor carries the session same-origin)
         });
 
+        // File bytes at <basePath>/.cms/files/<readable-path> (admin-guarded;
+        // mirrors delivery's public route). The media library + editor preview
+        // fetch it in the admin's same-origin session, so the guard passes.
+        runner.group("/.cms/files", (filesRunner) => {
+            filesRunner.setDefaultEndpoint("GET", (req) =>
+                serveFilesRequest(
+                    { metadata: this.filesMetadata, blob: this.filesBlob },
+                    req,
+                    { prefix: `${this.cmsPathPrefix}/files/` },
+                ));
+        }, [authGuard]);
+
         runner.group("/", (staticRunner) => {
             serveStaticFolder(staticRunner, {
                 cache:     this._cache,
@@ -228,6 +241,15 @@ export class ControlCms {
     get basePath(){
         const base = this._runner.basePath;
         return base === "/" ? "" : base;
+    }
+
+    /**
+     * Asset sub-prefix: tenant base + `"/.cms"` (mirrors `DeliveryCms`). Where
+     * the shared `.cms/*` routes (`gateway`, `files`, …) mount. Never empty —
+     * the `/.cms` segment is always present.
+     */
+    get cmsPathPrefix(){
+        return this.basePath + "/.cms";
     }
 
     /**

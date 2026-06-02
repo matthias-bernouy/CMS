@@ -1,6 +1,7 @@
 import type { Runner } from "@bernouy/core";
 import { BunRunner } from "@bernouy/runner-bun";
 import type { Cache } from "@bernouy/cms-shared";
+import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-shared";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
 import { registerDeliveryEndpoints } from "cms-delivery/registerDeliveryEndpoints";
@@ -29,6 +30,14 @@ export type DeliveryCmsConfig = {
      * resolves against it and proxies upstream; when absent, that route returns 501.
      */
     gateway?: GatewayRepository;
+    /**
+     * File-tree metadata + opaque byte storage backing the public
+     * `<basePath>/.cms/files/<path>` route — the SAME instances Control writes
+     * to. The route is always mounted; a hit throws (→ 500) until both are
+     * wired, so wire both or neither.
+     */
+    filesMetadata?: CmsFilesMetadataRepository;
+    filesBlob?:     CmsFilesBlobStore;
 }
 
 /**
@@ -48,6 +57,7 @@ export type DeliveryCmsConfig = {
  * Path layout for one Delivery instance:
  *   <basePath>/                — user pages, served by the default endpoint
  *   <basePath>/.cms/*          — Delivery's own assets
+ *   <basePath>/.cms/files/*    — file bytes (readable path → metadata → blob)
  *   <basePath>/.cms/gateway/*  — data-gateway proxy (when a gateway is configured)
  *   <basePath>/robots.txt      — tenant-level crawler file
  *   <basePath>/sitemap.xml     — tenant-level sitemap
@@ -62,6 +72,8 @@ export default class DeliveryCms {
     private _cache:              Cache;
     private _headInjectors:      readonly HeadInjector[];
     private _gateway?:           GatewayRepository;
+    private _filesMetadata:      CmsFilesMetadataRepository | null;
+    private _filesBlob:          CmsFilesBlobStore | null;
 
     constructor(config: DeliveryCmsConfig){
         this._runner             = config.runner || new BunRunner();
@@ -69,6 +81,8 @@ export default class DeliveryCms {
         this._cache              = config.cache || new DeliveryCache();
         this._headInjectors      = config.headInjectors ?? [];
         this._gateway            = config.gateway;
+        this._filesMetadata      = config.filesMetadata ?? null;
+        this._filesBlob          = config.filesBlob ?? null;
 
         registerDeliveryEndpoints(this);
     }
@@ -92,6 +106,19 @@ export default class DeliveryCms {
     /** Data-gateway provider store, or `undefined` when no gateway is configured. */
     get gateway(){
         return this._gateway;
+    }
+
+    /** File-tree metadata (folders + file records) for the `.cms/files` route.
+     *  Throws until a files backend is wired (media transition in progress). */
+    get filesMetadata(): CmsFilesMetadataRepository {
+        if (!this._filesMetadata) throw new Error("files metadata backend not configured");
+        return this._filesMetadata;
+    }
+
+    /** Opaque byte storage for files. Throws until wired (see `filesMetadata`). */
+    get filesBlob(): CmsFilesBlobStore {
+        if (!this._filesBlob) throw new Error("files blob backend not configured");
+        return this._filesBlob;
     }
 
     /**
