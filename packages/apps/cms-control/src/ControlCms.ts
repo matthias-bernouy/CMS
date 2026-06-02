@@ -11,7 +11,7 @@ import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/auth-core";
 import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/auth-core";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
-import { registerGatewayProxy } from "./core/registerEndpoints/registerGatewayProxy";
+import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
@@ -112,20 +112,13 @@ export class ControlCms {
         runner.addEndpoint("GET", "/",      toPages, [authGuard]);
         runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
 
-        // Data-gateway proxy at <basePath>/.cms/gateway/* (shared with delivery,
-        // but with secret resolution wired). Registered before the guarded groups
-        // so the guard never intercepts this public preview surface.
-        registerGatewayProxy({
-            runner,
-            basePath:      this.basePath,
-            gateway:       this._gateway,
-            resolveSecret: this.resolveSecret,
-            middlewares:   [authGuard],   // admin-only preview (editor carries the session same-origin)
-        });
-
-        // Shared `.cms/*` mounts — the same registrars Delivery calls, just
-        // admin-guarded here: the editor preview + media library fetch them in
-        // the admin's same-origin session, so the guard passes.
+        // Shared `.cms/*` mounts — the SAME registrars Delivery calls, here
+        // admin-guarded: the editor preview + media library + gateway preview run
+        // in the admin's same-origin session, so the guard passes. Registered
+        // before the `/` and `/api` groups. Control alone wires the gateway's
+        // `resolveSecret` so `secret`-sourced headers resolve (delivery leaves it
+        // unwired → clean 500).
+        registerGatewayEndpoint({ runner, gateway: this._gateway, deps: { resolveSecret: this.resolveSecret }, middlewares: [authGuard] });
         registerFilesEndpoint({ runner, metadata: this.filesMetadata, blob: this.filesBlob, middlewares: [authGuard] });
         registerStyleEndpoint({
             runner,

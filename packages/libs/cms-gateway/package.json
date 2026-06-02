@@ -9,6 +9,9 @@
         ".":         "./src/index.ts",
         "./presets": "./src/presets/index.ts"
     },
+    "dependencies": {
+        "@bernouy/core": "workspace:*"
+    },
     "peerDependencies": {
         "mongodb":    "^7.2.0",
         "typescript": "^5.9.3"

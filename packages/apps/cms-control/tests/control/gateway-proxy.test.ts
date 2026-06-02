@@ -1,6 +1,6 @@
 import { describe, test, expect, spyOn } from "bun:test";
 import type { Runner, RouteHandler } from "@bernouy/core";
-import { registerGatewayProxy } from "cms-control/core/registerEndpoints/registerGatewayProxy";
+import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
 import type { Provider } from "@bernouy/cms-gateway";
 import { InMemorySecretStore } from "@bernouy/cms-shared";
@@ -18,8 +18,8 @@ const SECURED: Provider = {
 /**
  * Minimal `Runner` stand-in: captures the default endpoint each method registers
  * inside the `/.cms/gateway` group, so a test can invoke the REAL handler the
- * helper wired (mirrors delivery's gateway.server test, which calls the handler
- * directly rather than booting a server).
+ * helper wired — exercising `handleGatewayRequest` end-to-end without booting a
+ * server. (Delivery mounts the same `registerGatewayEndpoint` without `deps`.)
  */
 function captureRunner() {
     const handlers = new Map<string, RouteHandler>();
@@ -38,13 +38,13 @@ async function mountBan() {
     await seedProviders(gateway, [BAN_PROVIDER]);
     const secrets = new InMemorySecretStore();
     const { runner, handlers } = captureRunner();
-    registerGatewayProxy({ runner, basePath: "/cms", gateway, resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) });
+    registerGatewayEndpoint({ runner, gateway, deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) } });
     return { handlers, secrets, gateway };
 }
 
 const URL_BASE = "http://admin/cms/.cms/gateway";
 
-describe("registerGatewayProxy (control preview proxy)", () => {
+describe("registerGatewayEndpoint (control preview proxy)", () => {
     test("registers all five proxy methods", async () => {
         const { handlers } = await mountBan();
         expect([...handlers.keys()].sort()).toEqual(["DELETE", "GET", "PATCH", "POST", "PUT"]);
@@ -70,7 +70,7 @@ describe("registerGatewayProxy (control preview proxy)", () => {
         const secrets = new InMemorySecretStore();
         await secrets.set("API_KEY", "s3cr3t-token");
         const { runner, handlers } = captureRunner();
-        registerGatewayProxy({ runner, basePath: "/cms", gateway, resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) });
+        registerGatewayEndpoint({ runner, gateway, deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) } });
 
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok", { status: 200 }));
         try {
@@ -88,7 +88,7 @@ describe("registerGatewayProxy (control preview proxy)", () => {
         await seedProviders(gateway, [SECURED]);
         const secrets = new InMemorySecretStore(); // API_KEY absent
         const { runner, handlers } = captureRunner();
-        registerGatewayProxy({ runner, basePath: "/cms", gateway, resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) });
+        registerGatewayEndpoint({ runner, gateway, deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) } });
 
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("x"));
         try {
@@ -123,7 +123,7 @@ describe("registerGatewayProxy (control preview proxy)", () => {
     test("no gateway configured → 501", async () => {
         const secrets = new InMemorySecretStore();
         const { runner, handlers } = captureRunner();
-        registerGatewayProxy({ runner, basePath: "/cms", gateway: null, resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) });
+        registerGatewayEndpoint({ runner, gateway: null, deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) } });
         const res = await handlers.get("GET")!(new Request(`${URL_BASE}/ban/search?q=x`));
         expect(res.status).toBe(501);
     });

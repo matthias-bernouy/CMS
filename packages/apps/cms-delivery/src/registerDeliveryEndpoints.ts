@@ -4,7 +4,7 @@ import RobotsServer    from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
 import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
-import GatewayServer   from "cms-delivery/endpoints/gateway.server";
+import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { registerFilesEndpoint, registerStyleEndpoint } from "@bernouy/cms-shared";
 import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
 import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
@@ -38,20 +38,14 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     runner.addEndpoint("GET", "/robots.txt",  (req) => RobotsServer (req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));
 
-    // Theme CSS (/.cms/style) + file bytes (/.cms/files/<path>) — shared registrars
-    // (Control mounts the same two, admin-guarded). `generateStyleEntry` is the same
-    // producer `resolveAssets` uses for the `?v=<hash>` link, so served bytes match.
+    // Shared `.cms/*` registrars — Control mounts the same three, admin-guarded.
+    // `generateStyleEntry` is the same producer `resolveAssets` uses for the
+    // `?v=<hash>` link, so served bytes match. Gateway is public + unwired here
+    // (no `deps.resolveSecret`) → a `secret`-sourced header yields a clean 500;
+    // an unconfigured gateway yields 501.
     registerStyleEndpoint({ runner, cache: delivery.cache, generate: () => generateStyleEntry(delivery.repository) });
     registerFilesEndpoint({ runner, metadata: delivery.filesMetadata, blob: delivery.filesBlob });
-
-    // Data-gateway proxy: /.cms/gateway/<provider>/<endpoint> → resolve + forward
-    // (see `gateway.server.ts`). Returns 501 when no gateway is configured on
-    // this DeliveryCms instance.
-    runner.group("/.cms/gateway", (proxyRunner) => {
-        for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"] as const) {
-            proxyRunner.setDefaultEndpoint(method, (req) => GatewayServer(req, delivery));
-        }
-    });
+    registerGatewayEndpoint({ runner, gateway: delivery.gateway });
 
     runner.setDefaultEndpoint("GET", (req) => handlePageRequest(req, delivery));
 
