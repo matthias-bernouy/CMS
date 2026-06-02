@@ -4,11 +4,14 @@ import { runPages } from "./push/pages/run";
 import { runSnippets } from "./push/snippets/run";
 import { runTemplates } from "./push/templates/run";
 import { runSystem } from "./push/system/run";
+import { runFiles } from "./push/files/run";
 
 type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string };
 
-const TYPES = ["*", "system", "blocs", "snippets", "templates", "pages"] as const;
-const ORDER = ["system", "blocs", "snippets", "templates", "pages"] as const;
+const TYPES = ["*", "system", "files", "blocs", "snippets", "templates", "pages"] as const;
+// Files (media) ship right after system so pages/snippets that reference
+// `/.cms/files/<path>` resolve once the rest of the content lands.
+const ORDER = ["system", "files", "blocs", "snippets", "templates", "pages"] as const;
 type Stage = typeof ORDER[number];
 
 function parseFlags(args: string[]): Flags {
@@ -39,6 +42,7 @@ async function resolveAdmin(): Promise<{ adminBase: URL; token: string }> {
 async function runStage(stage: Stage, args: string[], adminBase: URL, token: string, flags: Flags): Promise<number> {
     switch (stage) {
         case "system":    return runSystem(adminBase, token, flags);
+        case "files":     return runFiles(adminBase, token, flags);
         case "blocs":     return CLI_importBloc(args);
         case "snippets":  return runSnippets(adminBase, token, flags);
         case "templates": return runTemplates(adminBase, token, flags);

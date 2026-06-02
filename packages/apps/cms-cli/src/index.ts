@@ -24,10 +24,10 @@ Usage:
   p9r dev [--port=N --host=H]      Run the editor 100% locally against site/.
                                    No remote calls, no auth. Run \`p9r pull\`
                                    first to bootstrap site/ from a tenant.
-  p9r push [flags]                 Push system/blocs/site/{snippets,templates,
+  p9r push [flags]                 Push system/files/blocs/{snippets,templates,
                                    pages} in that order to the remote CMS.
-      --type=<one>|*               One of: system, blocs, snippets, templates,
-                                   pages (default *: full pipeline).
+      --type=<one>|*               One of: system, files, blocs, snippets,
+                                   templates, pages (default *: full pipeline).
       --dry-run                    Show what would be uploaded, no writes.
       --yes | -y                   Skip the [y/N] prompt.
       --force | -f                 Bypass conflict + cross-ref validation.
