@@ -1,0 +1,31 @@
+<p9r-attr-sync>
+    <p9r-section data-title="Content zone">
+        <p9r-select name="size" label="Width">
+            <option selected value="full">Full width</option>
+            <option value="sm">Small (640px)</option>
+            <option value="md">Medium (768px)</option>
+            <option value="lg">Large (1024px)</option>
+            <option value="xl">XL (1280px)</option>
+        </p9r-select>
+        <p9r-segmented-switch name="align-self" label="Align self" value="start">
+            <option selected value="start">Start</option>
+            <option value="center">Center</option>
+            <option value="end">End</option>
+        </p9r-segmented-switch>
+    </p9r-section>
+    <p9r-section data-title="Grid">
+        <p9r-select name="min" label="Min item width">
+            <option value="sm">Small (180px)</option>
+            <option selected value="md">Medium (240px)</option>
+            <option value="lg">Large (300px)</option>
+            <option value="xl">XL (360px)</option>
+        </p9r-select>
+        <p9r-sizes-select name="gap" label="Gap"></p9r-sizes-select>
+    </p9r-section>
+</p9r-attr-sync>
+
+<p9r-section data-title="Items">
+    <p9r-comp-sync allow-multiple>
+        <base-card></base-card>
+    </p9r-comp-sync>
+</p9r-section>

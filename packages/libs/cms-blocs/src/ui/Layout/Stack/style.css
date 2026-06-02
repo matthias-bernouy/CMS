@@ -1,11 +1,34 @@
 :host {
     --gap: var(--p9r-space-md, 16px);
+    --max-width: 100%;
     --divider-color: var(--p9r-stack-divider, var(--border-default, rgba(0,0,0,0.1)));
+
     display: flex;
     flex-direction: column;
     gap: var(--gap);
+
+    /* Content zone: own width + horizontal placement within the parent.
+       Placement uses margin-inline (works under any parent), exposed in the
+       editor as "Align self" to distinguish it from "Align items" below. */
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: 0 auto;
 }
 
+/* --- Content zone width (size) --- */
+:host([size="sm"])   { --max-width: var(--p9r-container-sm, 640px); }
+:host([size="md"])   { --max-width: var(--p9r-container-md, 768px); }
+:host([size="lg"])   { --max-width: var(--p9r-container-lg, 1024px); }
+:host([size="xl"])   { --max-width: var(--p9r-container-xl, 1280px); }
+:host([size="full"]) { --max-width: 100%; }
+
+/* --- Self placement (align self) --- */
+:host([align-self="start"])  { margin-inline: 0 auto; }
+:host([align-self="center"]) { margin-inline: auto; }
+:host([align-self="end"])    { margin-inline: auto 0; }
+
+/* --- Gap --- */
 :host([gap="none"]) { --gap: 0; }
 :host([gap="xs"])   { --gap: var(--p9r-space-xs, 4px); }
 :host([gap="sm"])   { --gap: var(--p9r-space-sm, 8px); }
@@ -13,19 +36,17 @@
 :host([gap="lg"])   { --gap: var(--p9r-space-lg, 24px); }
 :host([gap="xl"])   { --gap: var(--p9r-space-xl, 32px); }
 
+/* --- Direction --- */
 :host([direction="row"]) { flex-direction: row; }
 :host([wrap]) { flex-wrap: wrap; }
 
-/* `align` is also a legacy HTML presentational attribute that the UA stylesheet
-   maps to `text-align` (e.g. align="center" → text-align:center), which would
-   leak into the whole subtree. Our `align` only controls the flex cross-axis, so
-   neutralise that mapping and let text-align inherit normally. */
-:host([align]) { text-align: inherit; }
-:host([align="start"])    { align-items: flex-start; }
-:host([align="center"])   { align-items: center; }
-:host([align="end"])      { align-items: flex-end; }
-:host([align="stretch"])  { align-items: stretch; }
+/* --- Children cross-axis (align items) --- */
+:host([align-items="start"])   { align-items: flex-start; }
+:host([align-items="center"])  { align-items: center; }
+:host([align-items="end"])     { align-items: flex-end; }
+:host([align-items="stretch"]) { align-items: stretch; }
 
+/* --- Children main-axis (justify) --- */
 :host([justify="start"])   { justify-content: flex-start; }
 :host([justify="center"])  { justify-content: center; }
 :host([justify="end"])     { justify-content: flex-end; }
@@ -33,6 +54,7 @@
 :host([justify="around"])  { justify-content: space-around; }
 :host([justify="evenly"])  { justify-content: space-evenly; }
 
+/* --- Dividers between children --- */
 :host([divider]) { gap: 0; }
 
 :host([divider]:not([direction="row"])) ::slotted(*:not(:first-child)) {
