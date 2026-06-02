@@ -62,6 +62,8 @@ export {
 export {
     serveFilesRequest, type FilesServeDeps,
 } from "cms-shared/server/serveFilesRequest";
+export { registerFilesEndpoint } from "cms-shared/server/registerFilesEndpoint";
+export { registerStyleEndpoint } from "cms-shared/server/registerStyleEndpoint";
 
 // ── Files utils ────────────────────────────────────────────────────────
 export { pathOf } from "cms-shared/files/pathOf";

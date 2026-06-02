@@ -1,12 +1,12 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import BlocServer      from "cms-delivery/endpoints/bloc.server";
-import StyleServer     from "cms-delivery/endpoints/style.server";
 import RobotsServer    from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
 import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import GatewayServer   from "cms-delivery/endpoints/gateway.server";
-import { serveFilesRequest } from "@bernouy/cms-shared";
+import { registerFilesEndpoint, registerStyleEndpoint } from "@bernouy/cms-shared";
+import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
 import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
 
 /**
@@ -32,23 +32,17 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     const runner = delivery.runner;
 
     runner.addEndpoint("GET", "/.cms/bloc",                (req) => BlocServer     (req, delivery));
-    runner.addEndpoint("GET", "/.cms/style",               (req) => StyleServer    (req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/component.js", (req) => ComponentServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/favicon",      (req) => FaviconServer  (req, delivery));
 
     runner.addEndpoint("GET", "/robots.txt",  (req) => RobotsServer (req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));
 
-    // File bytes: /.cms/files/<readable-path> → metadata.getItemByPath → blob.get
-    // (see `serveFilesRequest`). Grouped so the wildcard tail is the file path.
-    runner.group("/.cms/files", (filesRunner) => {
-        filesRunner.setDefaultEndpoint("GET", (req) =>
-            serveFilesRequest(
-                { metadata: delivery.filesMetadata, blob: delivery.filesBlob },
-                req,
-                { prefix: `${delivery.cmsPathPrefix}/files/` },
-            ));
-    });
+    // Theme CSS (/.cms/style) + file bytes (/.cms/files/<path>) — shared registrars
+    // (Control mounts the same two, admin-guarded). `generateStyleEntry` is the same
+    // producer `resolveAssets` uses for the `?v=<hash>` link, so served bytes match.
+    registerStyleEndpoint({ runner, cache: delivery.cache, generate: () => generateStyleEntry(delivery.repository) });
+    registerFilesEndpoint({ runner, metadata: delivery.filesMetadata, blob: delivery.filesBlob });
 
     // Data-gateway proxy: /.cms/gateway/<provider>/<endpoint> → resolve + forward
     // (see `gateway.server.ts`). Returns 501 when no gateway is configured on

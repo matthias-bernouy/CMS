@@ -19306,8 +19306,9 @@ dialog::backdrop {
   function filesBase() {
     return `${getMetaBasePath()}/api/files`;
   }
-  function rawUrl(id) {
-    return `${filesBase()}/raw?id=${encodeURIComponent(id)}`;
+  function cmsFilesUrl(path) {
+    const encoded = path.split("/").map(encodeURIComponent).join("/");
+    return `${getMetaBasePath()}/.cms/files/${encoded}`;
   }
   function toLocal(item) {
     const isImage = item.type === "file" && (item.mimeType?.startsWith("image/") ?? false);
@@ -19319,7 +19320,8 @@ dialog::backdrop {
     if (item.type === "file") {
       local.mimetype = item.mimeType;
       local.size = item.size;
-      local.absoluteURL = rawUrl(item.id);
+      if (item.path)
+        local.absoluteURL = cmsFilesUrl(item.path);
     }
     return local;
   }
