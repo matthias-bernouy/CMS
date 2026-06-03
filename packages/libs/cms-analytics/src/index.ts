@@ -17,3 +17,7 @@ export { classifyUserAgent } from "./core/userAgent";
 export type { UserAgentClass } from "./core/userAgent";
 export { dailySalt, visitorId } from "./core/visitor";
 export { dayKey } from "./core/buckets";
+
+// ── Default implementations (instantiated in the composition root) ──
+export { InMemoryAnalyticsStore } from "./default-implementation/AnalyticsStore/memory";
+export { MongoAnalyticsStore, type MongoAnalyticsStoreConfig } from "./default-implementation/AnalyticsStore/mongodb";

@@ -38,7 +38,7 @@ export type RangeQuery = {
 export interface AnalyticsStore {
     /** Create indexes; idempotent. Called once at boot. */
     init(): Promise<void>;
-    /** Record one event (delivery writer). Best-effort/idempotent, never throws into the caller. */
+    /** Record one event (delivery writer). Idempotent unique-visitor dedup; meant to be called fire-and-forget. */
     record(event: AnalyticsEvent): Promise<void>;
     /** Headline numbers over [from, to). */
     summary(from: Date, to: Date): Promise<AnalyticsSummary>;
