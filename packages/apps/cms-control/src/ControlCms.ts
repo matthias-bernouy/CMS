@@ -12,6 +12,7 @@ import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalC
 import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/auth-core";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
+import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
@@ -61,6 +62,7 @@ export class ControlCms {
     private _pats:                PatRepository | null;
     private _credentials:         LocalCredentialStore | null;
     private _gateway:             GatewayRepository | null;
+    private _analytics:           AnalyticsStore | null;
 
     constructor(
         runner: Runner,
@@ -76,6 +78,7 @@ export class ControlCms {
         pats?: PatRepository,
         credentials?: LocalCredentialStore,
         gateway?: GatewayRepository,
+        analytics?: AnalyticsStore,
     ){
         this.configuration = configuration;
         this._auth = auth;
@@ -90,6 +93,7 @@ export class ControlCms {
         this._pats = pats ?? null;
         this._credentials = credentials ?? null;
         this._gateway = gateway ?? null;
+        this._analytics = analytics ?? null;
 
         const authGuard = createAuthGuard<CMS_ROLES>({ basePath: this.basePath, auth: this._auth, requiredRole: "admin" });
 
@@ -207,6 +211,13 @@ export class ControlCms {
     get gateway(): GatewayRepository {
         if (!this._gateway) throw new Error("gateway repository not configured");
         return this._gateway;
+    }
+
+    /** Analytics store (reader). Backs the admin analytics dashboards;
+     *  must be the same instance Delivery writes. Throws until wired. */
+    get analytics(): AnalyticsStore {
+        if (!this._analytics) throw new Error("analytics store not configured");
+        return this._analytics;
     }
 
     /**

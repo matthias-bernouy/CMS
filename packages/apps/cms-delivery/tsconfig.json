@@ -13,6 +13,7 @@
     "references": [
         { "path": "../../libs/core" },
         { "path": "../../libs/cms-shared" },
-        { "path": "../../libs/cms-gateway" }
+        { "path": "../../libs/cms-gateway" },
+        { "path": "../../libs/cms-analytics" }
     ]
 }

@@ -27,6 +27,7 @@
         { "path": "../../libs/core" },
         { "path": "../../libs/runner-bun" },
         { "path": "../../libs/auth-core" },
-        { "path": "../../libs/cms-shared" }
+        { "path": "../../libs/cms-shared" },
+        { "path": "../../libs/cms-analytics" }
     ]
 }

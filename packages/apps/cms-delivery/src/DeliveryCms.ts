@@ -3,6 +3,7 @@ import { BunRunner } from "@bernouy/runner-bun";
 import type { Cache } from "@bernouy/cms-shared";
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-shared";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
+import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
 import { registerDeliveryEndpoints } from "cms-delivery/registerDeliveryEndpoints";
 import type { DeliveryRepository } from "./interfaces/DeliveryRepository";
@@ -30,6 +31,11 @@ export type DeliveryCmsConfig = {
      * resolves against it and proxies upstream; when absent, that route returns 501.
      */
     gateway?: GatewayRepository;
+    /**
+     * Optional analytics store (writer). When set, the page handler records a
+     * page-view per request (fire-and-forget); when absent, collection is a no-op.
+     */
+    analytics?: AnalyticsStore;
     /**
      * File-tree metadata + opaque byte storage backing the public
      * `<basePath>/.cms/files/<path>` route — the SAME instances Control writes
@@ -72,6 +78,7 @@ export default class DeliveryCms {
     private _cache:              Cache;
     private _headInjectors:      readonly HeadInjector[];
     private _gateway?:           GatewayRepository;
+    private _analytics?:         AnalyticsStore;
     private _filesMetadata:      CmsFilesMetadataRepository | null;
     private _filesBlob:          CmsFilesBlobStore | null;
 
@@ -81,6 +88,7 @@ export default class DeliveryCms {
         this._cache              = config.cache || new DeliveryCache();
         this._headInjectors      = config.headInjectors ?? [];
         this._gateway            = config.gateway;
+        this._analytics          = config.analytics;
         this._filesMetadata      = config.filesMetadata ?? null;
         this._filesBlob          = config.filesBlob ?? null;
 
@@ -106,6 +114,11 @@ export default class DeliveryCms {
     /** Data-gateway provider store, or `undefined` when no gateway is configured. */
     get gateway(){
         return this._gateway;
+    }
+
+    /** Analytics store (writer), or `undefined` when analytics is not configured. */
+    get analytics(){
+        return this._analytics;
     }
 
     /** File-tree metadata (folders + file records) for the `.cms/files` route.
