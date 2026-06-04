@@ -21,3 +21,6 @@ export { dayKey } from "./core/buckets";
 // ── Default implementations (instantiated in the composition root) ──
 export { InMemoryAnalyticsStore } from "./default-implementation/AnalyticsStore/memory";
 export { MongoAnalyticsStore, type MongoAnalyticsStoreConfig } from "./default-implementation/AnalyticsStore/mongodb";
+
+// ── HTTP API (mount in an app's admin-guarded group) ──
+export { registerAnalyticsApi } from "./core/registerAnalyticsApi";

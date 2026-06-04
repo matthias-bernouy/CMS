@@ -15,6 +15,7 @@
 #   CMS_SESSION_SECRET=$(openssl rand -hex 32)
 #   CMS_KEK_HEX=$(openssl rand -hex 32)
 #   CMS_ADMIN_PASSWORD=$(openssl rand -base64 18)
+#   ANALYTICS_SALT_SECRET=$(openssl rand -hex 32)       # optional; share across instances
 #
 # Override `MONGO_URL` to point at an external cluster (Atlas, …) — the
 # default uses the bundled mongo from `infra/compose.yml`.
@@ -38,6 +39,7 @@ services:
             CMS_ADMIN_PASSWORD:  ${CMS_ADMIN_PASSWORD:?CMS_ADMIN_PASSWORD must be set}
             CMS_FILES_DIR:       /var/lib/cms/files
             MONGO_URL:           ${MONGO_URL:-mongodb://mongo:27017/cms_${INSTANCE_ID:?INSTANCE_ID must be set when MONGO_URL is not (used as mongo db name suffix)}}
+            ANALYTICS_SALT_SECRET: ${ANALYTICS_SALT_SECRET:-}
             NODE_ENV:            production
 
             # nginx-proxy + acme-companion routing/cert directives. The

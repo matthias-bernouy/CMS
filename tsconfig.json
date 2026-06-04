@@ -6,6 +6,7 @@
         { "path": "packages/libs/auth-core" },
         { "path": "packages/libs/cms-shared" },
         { "path": "packages/libs/cms-gateway" },
+        { "path": "packages/libs/cms-analytics" },
         { "path": "packages/libs/cms-blocs" },
         { "path": "packages/apps/cms-delivery" },
         { "path": "packages/apps/cms-control" },

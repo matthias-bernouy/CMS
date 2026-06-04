@@ -12,7 +12,7 @@ import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalC
 import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/auth-core";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
-import type { AnalyticsStore } from "@bernouy/cms-analytics";
+import { registerAnalyticsApi, type AnalyticsStore } from "@bernouy/cms-analytics";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
@@ -140,6 +140,10 @@ export class ControlCms {
 
         runner.group("/api", (apiRunner) => {
             serveApi(apiRunner, join(__dirname, "./api"), this);
+            // Analytics read API lives in @bernouy/cms-analytics (lib-owned HTTP surface,
+            // like registerGatewayEndpoint) and mounts here → /api/analytics/* admin-guarded.
+            // Raw `_analytics` (not the throwing getter): skip the mount when unconfigured.
+            if (this._analytics) registerAnalyticsApi({ runner: apiRunner, store: this._analytics });
         }, [authGuard]);
     }
 

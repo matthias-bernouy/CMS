@@ -56,6 +56,10 @@ const CMS_ADMIN_EMAIL     = env("CMS_ADMIN_EMAIL");
 const CMS_ADMIN_PASSWORD  = env("CMS_ADMIN_PASSWORD");
 const CMS_FILES_DIR       = env("CMS_FILES_DIR");
 const MONGO_URL           = env("MONGO_URL");
+// Optional: shared secret salting the cookieless visitor id. Set it (and keep it
+// identical) across instances for consistent unique-visitor counts; unset → an
+// ephemeral per-boot salt (a mid-day restart recounts that day's visitors).
+const ANALYTICS_SALT_SECRET = process.env.ANALYTICS_SALT_SECRET || crypto.randomUUID();
 
 // Single-tenant for now — the scope id flows into the DEK store + PII
 // crypto + encrypted secret store. Changing it after data has been
@@ -141,7 +145,7 @@ new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, fil
 // gateway instance as Control, so providers created in the admin are immediately
 // resolvable by the `/.cms/gateway/*` proxy.
 const deliveryRunner = new BunRunner();
-new DeliveryCms({ runner: deliveryRunner, repository: repo, cache, gateway, analytics, filesMetadata, filesBlob });
+new DeliveryCms({ runner: deliveryRunner, repository: repo, cache, gateway, analytics, analyticsSalt: ANALYTICS_SALT_SECRET, filesMetadata, filesBlob });
 
 controlRunner.start(CONTROL_PORT);
 deliveryRunner.start(DELIVERY_PORT);

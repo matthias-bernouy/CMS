@@ -66,6 +66,7 @@ INSTANCE_ID=clientX
 CMS_SESSION_SECRET=$(openssl rand -hex 32)
 CMS_KEK_HEX=$(openssl rand -hex 32)
 CMS_ADMIN_PASSWORD=$(openssl rand -base64 18)
+ANALYTICS_SALT_SECRET=$(openssl rand -hex 32)
 EOF
 
 docker compose up -d
@@ -95,6 +96,7 @@ Browser:
 | `CMS_ADMIN_PASSWORD`  | bootstrap admin password. One-shot: only used the first time the credential is created (no further reset from env). |
 | `CMS_ADMIN_EMAIL`     | optional, defaults to `admin@${DOMAIN}`. |
 | `MONGO_URL`           | optional, defaults to `mongodb://mongo:27017/cms_${INSTANCE_ID}`. Override for external clusters (MongoDB Atlas, …). |
+| `ANALYTICS_SALT_SECRET` | optional. Salts the cookieless visitor id; **share the same value across instances** for consistent unique-visitor counts. Unset → ephemeral per-boot salt (a mid-day restart recounts that day's visitors). `openssl rand -hex 32`. |
 
 ## Updating an instance to a new image version
 
