@@ -37,6 +37,13 @@ export type DeliveryCmsConfig = {
      */
     analytics?: AnalyticsStore;
     /**
+     * Secret salting the cookieless visitor id (sha256(IP+UA+dailySalt)). Read
+     * from ANALYTICS_SALT_SECRET at the composition root; share the same value
+     * across instances for consistent unique-visitor counts. Absent → unsalted
+     * (still cookieless and daily-rotating).
+     */
+    analyticsSalt?: string;
+    /**
      * File-tree metadata + opaque byte storage backing the public
      * `<basePath>/.cms/files/<path>` route — the SAME instances Control writes
      * to. The route is always mounted; a hit throws (→ 500) until both are
@@ -79,6 +86,7 @@ export default class DeliveryCms {
     private _headInjectors:      readonly HeadInjector[];
     private _gateway?:           GatewayRepository;
     private _analytics?:         AnalyticsStore;
+    private _analyticsSalt?:     string;
     private _filesMetadata:      CmsFilesMetadataRepository | null;
     private _filesBlob:          CmsFilesBlobStore | null;
 
@@ -89,6 +97,7 @@ export default class DeliveryCms {
         this._headInjectors      = config.headInjectors ?? [];
         this._gateway            = config.gateway;
         this._analytics          = config.analytics;
+        this._analyticsSalt      = config.analyticsSalt;
         this._filesMetadata      = config.filesMetadata ?? null;
         this._filesBlob          = config.filesBlob ?? null;
 
@@ -119,6 +128,11 @@ export default class DeliveryCms {
     /** Analytics store (writer), or `undefined` when analytics is not configured. */
     get analytics(){
         return this._analytics;
+    }
+
+    /** Secret for the visitor-id daily salt, or `undefined` when unset. */
+    get analyticsSalt(){
+        return this._analyticsSalt;
     }
 
     /** File-tree metadata (folders + file records) for the `.cms/files` route.

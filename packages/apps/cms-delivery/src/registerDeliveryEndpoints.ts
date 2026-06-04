@@ -7,7 +7,7 @@ import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { registerFilesEndpoint, registerStyleEndpoint } from "@bernouy/cms-shared";
 import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
-import { handlePageRequest } from "cms-delivery/core/pages/handlePageRequest";
+import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
 
 /**
  * Wire every Delivery endpoint onto `delivery.runner`. Called from the
@@ -47,6 +47,6 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     registerFilesEndpoint({ runner, metadata: delivery.filesMetadata, blob: delivery.filesBlob });
     registerGatewayEndpoint({ runner, gateway: delivery.gateway });
 
-    runner.setDefaultEndpoint("GET", (req) => handlePageRequest(req, delivery));
+    runner.setDefaultEndpoint("GET", (req) => recordPageView(req, delivery));
 
 }
