@@ -51,6 +51,10 @@ import {
     Toast,
     ToastStack,
     Tooltip,
+    Stat,
+    LineChart,
+    BarList,
+    RangeTabs,
 } from "@bernouy/cms-blocs";
 
 function define(tag: string, constructor: CustomElementConstructor) {
@@ -109,6 +113,10 @@ define("p9r-textarea", Textarea);
 define("p9r-toast", Toast);
 define("p9r-toast-stack", ToastStack);
 define("p9r-tooltip", Tooltip);
+define("p9r-stat", Stat);
+define("p9r-line-chart", LineChart);
+define("p9r-bar-list", BarList);
+define("p9r-range-tabs", RangeTabs);
 
 import "./globals"
 

@@ -1,0 +1,59 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Analytics</span>
+    <p9r-badge slot="title" color="primary">Cookieless · Privacy-first</p9r-badge>
+    <p9r-range-tabs slot="action" param="range" default="7d" tabs="24h:24 h,7d:7 jours,30d:30 jours"></p9r-range-tabs>
+
+    <p9r-stack gap="lg">
+
+        <p9r-alert color="info">
+            <strong>Collecte cookieless, 100 % server-side.</strong>
+            Les statistiques apparaissent ici automatiquement — sans cookie ni configuration — dès qu'un visiteur consulte le site.
+        </p9r-alert>
+
+        <!-- Headline stat cards (one summary fetch each) -->
+        <p9r-stack direction="row" gap="md" wrap>
+            <p9r-stat url="{{BASE_PATH}}/api/analytics/summary" field="uniqueVisitors" label="Visiteurs uniques / jour" format="int"></p9r-stat>
+            <p9r-stat url="{{BASE_PATH}}/api/analytics/summary" field="views" label="Pages vues" format="int"></p9r-stat>
+            <p9r-stat url="{{BASE_PATH}}/api/analytics/summary" field="avgMs" label="Temps de réponse moyen" format="ms"></p9r-stat>
+            <p9r-stat url="{{BASE_PATH}}/api/analytics/summary" field="errorRate" label="Taux d'erreur" format="pct"></p9r-stat>
+        </p9r-stack>
+
+        <!-- Time series -->
+        <p9r-stack direction="row" gap="md" wrap>
+            <p9r-card style="flex:1;min-width:280px">
+                <span slot="header">Vues dans le temps</span>
+                <p9r-line-chart url="{{BASE_PATH}}/api/analytics/timeseries" value="count" x="bucket"
+                    empty-title="Aucune donnée à afficher" empty-hint="Les vues apparaîtront ici."></p9r-line-chart>
+            </p9r-card>
+            <p9r-card style="flex:1;min-width:280px">
+                <span slot="header">Temps de réponse moyen (ms)</span>
+                <p9r-line-chart url="{{BASE_PATH}}/api/analytics/timeseries" value="avgMs" x="bucket"
+                    empty-title="Aucune donnée à afficher" empty-hint="Le temps de réponse apparaîtra ici."></p9r-line-chart>
+            </p9r-card>
+        </p9r-stack>
+
+        <!-- Top pages -->
+        <p9r-card>
+            <span slot="header">Pages les plus vues</span>
+            <p9r-bar-list url="{{BASE_PATH}}/api/analytics/top-pages" label-field="key" value-field="count" show-count
+                empty="Aucune page consultée pour le moment"></p9r-bar-list>
+        </p9r-card>
+
+        <!-- Breakdowns -->
+        <p9r-stack direction="row" gap="md" wrap>
+            <p9r-card style="flex:1;min-width:220px">
+                <span slot="header">Codes HTTP</span>
+                <p9r-bar-list url="{{BASE_PATH}}/api/analytics/breakdown?dim=status" label-field="key" value-field="count"></p9r-bar-list>
+            </p9r-card>
+            <p9r-card style="flex:1;min-width:220px">
+                <span slot="header">Appareils</span>
+                <p9r-bar-list url="{{BASE_PATH}}/api/analytics/breakdown?dim=device" label-field="key" value-field="count"></p9r-bar-list>
+            </p9r-card>
+            <p9r-card style="flex:1;min-width:220px">
+                <span slot="header">Navigateurs</span>
+                <p9r-bar-list url="{{BASE_PATH}}/api/analytics/breakdown?dim=browser" label-field="key" value-field="count"></p9r-bar-list>
+            </p9r-card>
+        </p9r-stack>
+
+    </p9r-stack>
+</w13c-fixed-admin-layout>

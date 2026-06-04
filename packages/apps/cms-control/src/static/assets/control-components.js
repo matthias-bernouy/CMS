@@ -22,11 +22,11 @@
     }
     connectedCallback() {}
   }
-  var Ht = `<div class="accordion" part="accordion">
+  var qt = `<div class="accordion" part="accordion">
     <slot></slot>
 </div>
 `;
-  var zt = `:host {
+  var Bt = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -55,9 +55,9 @@
 }
 `;
 
-  class St extends o {
+  class Dt extends o {
     constructor() {
-      super({ css: zt, template: Ht });
+      super({ css: Bt, template: qt });
     }
     connectedCallback() {
       this.addEventListener("accordion-item-toggle", this._handleItemToggle);
@@ -79,7 +79,7 @@
           r.removeAttribute("open");
     };
   }
-  var It = `<div class="item" part="item">
+  var Ft = `<div class="item" part="item">
     <div class="header" part="header">
         <button class="toggle title-toggle" part="title" type="button" aria-expanded="false">
             <span class="title"><slot name="header"></slot></span>
@@ -100,7 +100,7 @@
     </div>
 </div>
 `;
-  var Pt = `:host {
+  var jt = `:host {
   display: block;
 
   --_text: var(--text-main, #1f2937);
@@ -211,14 +211,14 @@
 }
 `;
 
-  class Rt extends o {
+  class Nt extends o {
     _toggles;
     _titleToggle;
     static get observedAttributes() {
       return ["open", "disabled"];
     }
     constructor() {
-      super({ css: Pt, template: It });
+      super({ css: jt, template: Ft });
       this._toggles = Array.from(this.shadowRoot?.querySelectorAll(".toggle") ?? []), this._titleToggle = this.shadowRoot?.querySelector(".title-toggle") ?? null;
     }
     connectedCallback() {
@@ -277,7 +277,7 @@
         this.removeAttribute("disabled");
     }
   }
-  var qt = `<div class="alert" part="alert" role="alert">
+  var Ot = `<div class="alert" part="alert" role="alert">
     <span class="icon" part="icon" aria-hidden="true">
         <slot name="icon"></slot>
     </span>
@@ -288,7 +288,7 @@
     <button class="close" part="close" aria-label="Dismiss" hidden>&times;</button>
 </div>
 `;
-  var Bt = `:host {
+  var Kt = `:host {
   display: block;
 
   --_bg: var(--info-muted, #eff6ff);
@@ -360,7 +360,7 @@
 
 .close:hover { opacity: 1; }
 `;
-  var Dt = `:host([type="success"]) {
+  var Vt = `:host([type="success"]) {
   --_bg: var(--success-muted);
   --_color: var(--success-contrasted);
   --_accent: var(--success-base);
@@ -434,15 +434,15 @@
   to   { opacity: 0; transform: translateY(-6px); }
 }
 `;
-  var Da = Bt + Dt;
+  var so = Kt + Vt;
 
-  class Ft extends o {
+  class $t extends o {
     _close;
     static get observedAttributes() {
       return ["dismissible"];
     }
     constructor() {
-      super({ css: Da, template: qt });
+      super({ css: so, template: Ot });
       this._close = this.shadowRoot?.querySelector(".close") ?? null;
     }
     connectedCallback() {
@@ -469,13 +469,13 @@
       this._handleClose();
     }
   }
-  var jt = `<div class="avatar" part="avatar">
+  var Ut = `<div class="avatar" part="avatar">
     <img class="image" part="image" alt="" hidden />
     <span class="initials" part="initials" aria-hidden="true"></span>
     <span class="fallback" part="fallback"><slot></slot></span>
 </div>
 `;
-  var Nt = `:host {
+  var Xt = `:host {
   display: inline-block;
 
   --_size: 2.5rem;
@@ -551,14 +551,14 @@
 }
 `;
 
-  class Ot extends o {
+  class Yt extends o {
     _img;
     _initials;
     static get observedAttributes() {
       return ["src", "alt", "name", "initials"];
     }
     constructor() {
-      super({ css: Nt, template: jt });
+      super({ css: Xt, template: Ut });
       this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
     }
     connectedCallback() {
@@ -605,12 +605,12 @@
         this._img.hidden = true;
     };
   }
-  var Kt = `<span class="badge" part="badge">
+  var Zt = `<span class="badge" part="badge">
     <span class="dot" part="dot" aria-hidden="true"></span>
     <span class="content" part="content"><slot></slot></span>
 </span>
 `;
-  var Vt = `:host {
+  var Gt = `:host {
   display: inline-flex;
 
   --_bg: var(--secondary-muted, #f1f5f9);
@@ -678,18 +678,18 @@
 }
 `;
 
-  class $t extends o {
+  class Qt extends o {
     constructor() {
-      super({ css: Vt, template: Kt });
+      super({ css: Gt, template: Zt });
     }
   }
-  var Ut = `<nav class="breadcrumb" part="breadcrumb" aria-label="Breadcrumb">
+  var Wt = `<nav class="breadcrumb" part="breadcrumb" aria-label="Breadcrumb">
     <ol class="list" part="list">
         <slot></slot>
     </ol>
 </nav>
 `;
-  var Yt = `:host {
+  var Jt = `:host {
   display: block;
 
   --_separator: "/";
@@ -722,12 +722,12 @@
 }
 `;
 
-  class Xt extends o {
+  class te extends o {
     static get observedAttributes() {
       return ["separator"];
     }
     constructor() {
-      super({ css: Yt, template: Ut });
+      super({ css: Jt, template: Wt });
     }
     connectedCallback() {
       this._syncSeparator(), this._markCurrent();
@@ -746,11 +746,11 @@
         e.setAttribute("current", "");
     }
   }
-  var Zt = `<li class="item" part="item">
+  var ee = `<li class="item" part="item">
     <a class="link" part="link"><slot></slot></a>
 </li>
 `;
-  var Gt = `:host {
+  var re = `:host {
   display: inline-flex;
   align-items: center;
 
@@ -784,13 +784,13 @@
 }
 `;
 
-  class Wt extends o {
+  class ie extends o {
     _link;
     static get observedAttributes() {
       return ["href", "current"];
     }
     constructor() {
-      super({ css: Gt, template: Zt });
+      super({ css: re, template: ee });
       this._link = this.shadowRoot?.querySelector(".link") ?? null;
     }
     connectedCallback() {
@@ -820,7 +820,7 @@
         this._link.removeAttribute("aria-current");
     }
   }
-  var Jt = `<article class="card" part="card">
+  var ne = `<article class="card" part="card">
     <header class="header" part="header">
         <slot name="header"></slot>
     </header>
@@ -832,7 +832,7 @@
     </footer>
 </article>
 `;
-  var Qt = `:host {
+  var ae = `:host {
   display: block;
 
   --_bg: var(--bg-surface, #ffffff);
@@ -909,12 +909,12 @@
 }
 `;
 
-  class te extends o {
+  class oe extends o {
     constructor() {
-      super({ css: Qt, template: Jt });
+      super({ css: ae, template: ne });
     }
   }
-  var ee = `<dialog part="dialog" aria-modal="true">
+  var se = `<dialog part="dialog" aria-modal="true">
     <div class="modal-wrapper" part="wrapper">
         <form method="dialog" id="close-form"></form>
 
@@ -940,7 +940,7 @@
     </div>
 </dialog>
 `;
-  var re = `:host {
+  var le = `:host {
     --_modal-width: 500px;
     --_modal-radius: 12px;
     --_modal-bg: var(--bg-surface);
@@ -1010,7 +1010,7 @@ footer.actions {
     border-top: 1px solid var(--border-default);
 }
 `;
-  var ie = `.close-icon {
+  var de = `.close-icon {
     background: transparent;
     border: none;
     font-size: 1.5rem;
@@ -1065,19 +1065,19 @@ footer.actions {
     }
 }
 `;
-  var ne = (t, e) => {
+  var ce = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var ae = (t) => {
+  var ue = (t) => {
     t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
   };
-  var oe = (t) => {
+  var pe = (t) => {
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var se = (t, e) => {
+  var he = (t, e) => {
     let r = t.shadowRoot?.querySelector("dialog");
     if (!r)
       return;
@@ -1087,16 +1087,16 @@ footer.actions {
     if (!(i.top <= e.clientY && e.clientY <= i.top + i.height && i.left <= e.clientX && e.clientX <= i.left + i.width))
       t.close();
   };
-  var le = (t, e) => {
+  var be = (t, e) => {
     t.querySelectorAll("[name]").forEach((i) => {
       let n = i.getAttribute("name"), a = i.value;
       if (n && a !== undefined && a !== null && a !== "")
         e.formData.append(n, String(a));
     });
   };
-  var Ja = re + ie;
+  var wo = le + de;
 
-  class de extends o {
+  class me extends o {
     _dialog;
     _form;
     _previouslyFocused = null;
@@ -1104,12 +1104,12 @@ footer.actions {
       return ["action", "method", "enctype"];
     }
     constructor() {
-      super({ css: Ja, template: ee });
+      super({ css: wo, template: se });
       this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._form = this.shadowRoot?.querySelector("#form-validation") ?? null;
     }
     connectedCallback() {
       for (let t of ["action", "method", "enctype"])
-        ne(this, t);
+        ce(this, t);
       this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("close", this._onClose), this._form?.addEventListener("formdata", this._onFormData);
     }
     disconnectedCallback() {
@@ -1125,17 +1125,17 @@ footer.actions {
       if (t === "enctype")
         this._form.enctype = r ?? "application/x-www-form-urlencoded";
     }
-    _onBackdrop = (t) => se(this, t);
-    _onFormData = (t) => le(this, t);
+    _onBackdrop = (t) => he(this, t);
+    _onFormData = (t) => be(this, t);
     _onClose = () => {
       if (this._previouslyFocused instanceof HTMLElement)
         this._previouslyFocused.focus();
-      this._previouslyFocused = null, oe(this);
+      this._previouslyFocused = null, pe(this);
     };
     showModal() {
       if (!this._dialog)
         return;
-      this._previouslyFocused = document.activeElement, this._dialog.showModal(), ae(this);
+      this._previouslyFocused = document.activeElement, this._dialog.showModal(), ue(this);
     }
     close() {
       this._dialog?.close();
@@ -1159,7 +1159,7 @@ footer.actions {
       t ? this.setAttribute("enctype", t) : this.removeAttribute("enctype");
     }
   }
-  var ce = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
+  var ge = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
     <header part="header">
         <div id="title" part="title">
             <slot name="title">Dialog</slot>
@@ -1176,7 +1176,7 @@ footer.actions {
     </footer>
 </dialog>
 `;
-  var ue = `:host {
+  var fe = `:host {
     --drawer-width: 400px;
     --drawer-bg: #ffffff;
     --transition-speed: 0.4s;
@@ -1228,7 +1228,7 @@ dialog > * {
     pointer-events: auto;
 }
 `;
-  var pe = `header {
+  var ve = `header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1309,7 +1309,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     filter: brightness(0.9);
 }
 `;
-  var he = `@media (prefers-reduced-motion: no-preference) {
+  var _e = `@media (prefers-reduced-motion: no-preference) {
     dialog {
         transition:
             transform var(--transition-speed) var(--transition-curve),
@@ -1355,48 +1355,48 @@ footer slot[name="footer"]::slotted(button:hover) {
     }
 }
 `;
-  var be = (t, e) => {
+  var xe = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var me = (t) => {
+  var ye = (t) => {
     t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
   };
-  var ge = (t) => {
+  var we = (t) => {
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var fe = (t, e) => {
+  var ke = (t, e) => {
     let r = t.shadowRoot?.querySelector("dialog");
     if (e.target === r)
       t.close();
   };
-  var ve = (t, e) => {
+  var Ee = (t, e) => {
     e.preventDefault(), t.close();
   };
-  var _e = (t, e) => {
+  var Ae = (t, e) => {
     e.preventDefault(), t.close();
   };
-  var xe = (t) => {
+  var Le = (t) => {
     if (t.hasAttribute("open"))
       t.removeAttribute("open");
-    ge(t);
+    we(t);
   };
-  var io = ue + pe + he;
+  var Co = fe + ve + _e;
 
-  class ye extends o {
+  class Ce extends o {
     _dialog;
     _closeBtn;
     static get observedAttributes() {
       return ["open"];
     }
     constructor() {
-      super({ css: io, template: ce });
+      super({ css: Co, template: ge });
       this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._closeBtn = this.shadowRoot?.querySelector("#close-btn") ?? null;
     }
     connectedCallback() {
-      be(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this._closeBtn?.addEventListener("click", this._onCloseClick);
+      xe(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this._closeBtn?.addEventListener("click", this._onCloseClick);
     }
     disconnectedCallback() {
       this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this._closeBtn?.removeEventListener("click", this._onCloseClick);
@@ -1412,10 +1412,10 @@ footer slot[name="footer"]::slotted(button:hover) {
           this._dialog.close();
       }
     }
-    _onBackdrop = (t) => fe(this, t);
-    _onCloseClick = (t) => ve(this, t);
-    _onCancel = (t) => _e(this, t);
-    _onClose = () => xe(this);
+    _onBackdrop = (t) => ke(this, t);
+    _onCloseClick = (t) => Ee(this, t);
+    _onCancel = (t) => Ae(this, t);
+    _onClose = () => Le(this);
     get open() {
       return this.hasAttribute("open");
     }
@@ -1432,7 +1432,7 @@ footer slot[name="footer"]::slotted(button:hover) {
         this._dialog.showModal();
       if (!this.hasAttribute("open"))
         this.setAttribute("open", "");
-      me(this);
+      ye(this);
     }
     showModal() {
       this.show();
@@ -1444,19 +1444,19 @@ footer slot[name="footer"]::slotted(button:hover) {
         this._dialog.close();
     }
   }
-  var we = (t, e) => {
+  var Te = (t, e) => {
     if (e.target === e.currentTarget)
       t.hide();
   };
-  var ke = (t, e) => {
+  var Me = (t, e) => {
     e.preventDefault(), t.hide();
   };
-  var Ee = (t) => {
+  var He = (t) => {
     if (t.hasAttribute("open"))
       t.removeAttribute("open");
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var Ae = `<dialog part="dialog">
+  var ze = `<dialog part="dialog">
     <form method="dialog" id="m-close"></form>
     <div class="panel" part="panel">
         <header class="header" part="header">
@@ -1468,7 +1468,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     </div>
 </dialog>
 `;
-  var Le = `:host {
+  var Se = `:host {
     --modal-width: var(--p9r-modal-width, 520px);
     --modal-radius: var(--p9r-modal-radius, 12px);
     --modal-bg: var(--p9r-modal-bg, var(--bg-surface, #ffffff));
@@ -1548,16 +1548,16 @@ dialog[open]::backdrop { opacity: 1; }
 .body { padding: var(--modal-pad); overflow: auto; }
 `;
 
-  class Ce extends o {
+  class Ie extends o {
     _dialog = null;
-    _onBackdrop = (t) => we(this, t);
-    _onCancel = (t) => ke(this, t);
-    _onClose = () => Ee(this);
+    _onBackdrop = (t) => Te(this, t);
+    _onCancel = (t) => Me(this, t);
+    _onClose = () => He(this);
     static get observedAttributes() {
       return ["open", "aria-label"];
     }
     constructor() {
-      super({ css: Le, template: Ae });
+      super({ css: Se, template: ze });
     }
     connectedCallback() {
       this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null, this._upgradeProperty("open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this.addEventListener("form:success", this.hide), this._syncLabel(), this._syncOpen();
@@ -1619,17 +1619,17 @@ dialog[open]::backdrop { opacity: 1; }
         this.show();
     }
   }
-  var Te = `<slot></slot>
+  var Pe = `<slot></slot>
 `;
-  var Me = `:host {
+  var Re = `:host {
     display: contents;
     cursor: pointer;
 }
 `;
 
-  class He extends o {
+  class qe extends o {
     constructor() {
-      super({ css: Me, template: Te });
+      super({ css: Re, template: Pe });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
@@ -1668,13 +1668,13 @@ dialog[open]::backdrop { opacity: 1; }
         this.removeAttribute("modal-target");
     }
   }
-  var ze = `<div class="divider" part="divider" role="separator">
+  var Be = `<div class="divider" part="divider" role="separator">
     <span class="line line-start" part="line"></span>
     <span class="label" part="label"><slot></slot></span>
     <span class="line line-end" part="line"></span>
 </div>
 `;
-  var Se = `:host {
+  var De = `:host {
   display: block;
 
   --_color: var(--border-default, #e5e7eb);
@@ -1759,12 +1759,12 @@ dialog[open]::backdrop { opacity: 1; }
 }
 `;
 
-  class Ie extends o {
+  class Fe extends o {
     static get observedAttributes() {
       return ["orientation"];
     }
     constructor() {
-      super({ css: Se, template: ze });
+      super({ css: De, template: Be });
     }
     connectedCallback() {
       this._syncAria();
@@ -1778,7 +1778,7 @@ dialog[open]::backdrop { opacity: 1; }
       this.setAttribute("aria-orientation", t);
     }
   }
-  var Pe = `<button id="btn" class="button" part="button">
+  var je = `<button id="btn" class="button" part="button">
     <slot name="icon-left"></slot>
     <span class="label">
         <slot>Button</slot>
@@ -1786,7 +1786,7 @@ dialog[open]::backdrop { opacity: 1; }
     <slot name="icon-right"></slot>
 </button>
 `;
-  var Re = `:host {
+  var Ne = `:host {
   display: inline-block;
 
   --_btn-padding-y: 0.6rem;
@@ -1844,7 +1844,7 @@ dialog[open]::backdrop { opacity: 1; }
   width: 1.2rem;
 }
 `;
-  var qe = `:host([color="primary"]) {
+  var Oe = `:host([color="primary"]) {
   --_accent-base: var(--primary-base);
   --_accent-muted: var(--primary-muted);
   --_accent-contrast: oklch(100% 0 0);
@@ -1920,14 +1920,14 @@ dialog[open]::backdrop { opacity: 1; }
   }
 }
 `;
-  var bo = Re + qe;
+  var Bo = Ne + Oe;
 
-  class Be extends o {
+  class Ke extends o {
     static formAssociated = true;
     _internals;
     _btn;
     constructor() {
-      super({ css: bo, template: Pe });
+      super({ css: Bo, template: je });
       this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
     }
     static get observedAttributes() {
@@ -1983,7 +1983,7 @@ dialog[open]::backdrop { opacity: 1; }
         this.removeAttribute("disabled");
     }
   }
-  var De = `<label class="checkbox-container" part="container">
+  var Ve = `<label class="checkbox-container" part="container">
     <span class="input-wrapper">
         <input type="checkbox" id="native-input" part="input" />
         <span class="custom-box" part="box" aria-hidden="true">
@@ -1998,7 +1998,7 @@ dialog[open]::backdrop { opacity: 1; }
     </span>
 </label>
 `;
-  var Fe = `:host {
+  var $e = `:host {
   display: inline-block;
   --cb-size: 20px;
   --cb-border: var(--border-default, #d1d5db);
@@ -2079,7 +2079,7 @@ input {
   display: none;
 }
 `;
-  var je = `input:checked ~ .custom-box {
+  var Ue = `input:checked ~ .custom-box {
   background-color: var(--cb-active-bg);
   border-color: var(--cb-active-border);
 }
@@ -2132,17 +2132,17 @@ input:focus-visible ~ .custom-box {
   }
 }
 `;
-  var Ne = (t, e) => {
+  var Xe = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var f = (t, e, r) => {
+  var x = (t, e, r) => {
     let i = e?.checked ?? t.hasAttribute("checked");
     r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
   };
-  var Oe = (t, e) => {
+  var Ye = (t, e) => {
     if (!e)
       return;
     if (e.checked = t.hasAttribute("checked"), e.disabled = t.hasAttribute("disabled"), e.indeterminate = t.hasAttribute("indeterminate"), t.hasAttribute("name"))
@@ -2150,11 +2150,11 @@ input:focus-visible ~ .custom-box {
     if (t.hasAttribute("value"))
       e.value = t.getAttribute("value") ?? "";
   };
-  var Ke = (t, e, r, i, n) => {
+  var Ze = (t, e, r, i, n) => {
     if (!e)
       return;
     if (i === "checked")
-      e.checked = n !== null, f(t, e, r);
+      e.checked = n !== null, x(t, e, r);
     else if (i === "disabled")
       e.disabled = n !== null;
     else if (i === "indeterminate")
@@ -2162,24 +2162,24 @@ input:focus-visible ~ .custom-box {
     else if (i === "name")
       e.name = n ?? "";
     else if (i === "value")
-      e.value = n ?? "", f(t, e, r);
+      e.value = n ?? "", x(t, e, r);
   };
-  var Ve = (t, e, r) => {
+  var Ge = (t, e, r) => {
     if (e?.checked ?? false)
       t.setAttribute("checked", "");
     else
       t.removeAttribute("checked");
     if (e && e.indeterminate === false && t.hasAttribute("indeterminate"))
       t.removeAttribute("indeterminate");
-    f(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
+    x(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
   };
-  var $e = (t, e) => {
+  var Qe = (t, e) => {
     if (t.hasAttribute("disabled"))
       e.preventDefault(), e.stopImmediatePropagation();
   };
-  var vo = Fe + je;
+  var No = $e + Ue;
 
-  class Ue extends o {
+  class We extends o {
     static formAssociated = true;
     _internals;
     _input;
@@ -2192,13 +2192,13 @@ input:focus-visible ~ .custom-box {
       return ["checked", "disabled", "name", "value", "indeterminate"];
     }
     constructor() {
-      super({ css: vo, template: De });
+      super({ css: No, template: Ve });
       this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null, this._labelText = this.shadowRoot?.querySelector(".label-text") ?? null, this._labelSlot = this.shadowRoot?.querySelector(".label-text slot:not([name])") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultChecked = this.hasAttribute("checked"), this._defaultIndeterminate = this.hasAttribute("indeterminate"), this._defaultsCaptured = true;
-      ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => Ne(this, t)), Oe(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), f(this, this._input, this._internals);
+      ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => Xe(this, t)), Ye(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), x(this, this._input, this._internals);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick), this._labelSlot?.removeEventListener("slotchange", this._syncLabel);
@@ -2213,10 +2213,10 @@ input:focus-visible ~ .custom-box {
       this.indeterminate = this._defaultIndeterminate, this.checked = this._defaultChecked;
     }
     attributeChangedCallback(t, e, r) {
-      Ke(this, this._input, this._internals, t, r);
+      Ze(this, this._input, this._internals, t, r);
     }
-    _onChange = () => Ve(this, this._input, this._internals);
-    _onClick = (t) => $e(this, t);
+    _onChange = () => Ge(this, this._input, this._internals);
+    _onClick = (t) => Qe(this, t);
     get checked() {
       return this.hasAttribute("checked");
     }
@@ -2255,7 +2255,7 @@ input:focus-visible ~ .custom-box {
       this._input?.click();
     }
   }
-  var Ye = `<section class="section-container" part="container">
+  var Je = `<section class="section-container" part="container">
     <header id="toggle" part="header" role="button" tabindex="0" aria-expanded="true">
         <div class="accent-bar" part="accent"></div>
         <div class="title-wrapper" part="title"></div>
@@ -2268,7 +2268,7 @@ input:focus-visible ~ .custom-box {
     </main>
 </section>
 `;
-  var Xe = `:host {
+  var tr = `:host {
     display: block;
     margin-bottom: 8px;
 }
@@ -2347,36 +2347,36 @@ header:focus-visible {
     width: 100%;
 }
 `;
-  var Ze = (t, e) => {
+  var er = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var V = (t, e) => {
+  var Z = (t, e) => {
     if (e)
       e.textContent = t.getAttribute("data-title") ?? "";
   };
-  var $ = (t, e, r) => {
+  var G = (t, e, r) => {
     if (!e)
       return;
     let i = t.hasAttribute("collapsed");
     if (e.setAttribute("aria-expanded", String(!i)), r)
       r.hidden = i;
   };
-  var Ge = (t, e) => {
+  var rr = (t, e) => {
     t.dispatchEvent(new CustomEvent("toggle", { detail: { collapsed: e }, bubbles: true, composed: true }));
   };
-  var U = (t) => {
-    t.collapsed = !t.collapsed, Ge(t, t.collapsed);
+  var Q = (t) => {
+    t.collapsed = !t.collapsed, rr(t, t.collapsed);
   };
-  var We = (t, e) => {
+  var ir = (t, e) => {
     if (e.key !== "Enter" && e.key !== " ")
       return;
-    e.preventDefault(), U(t);
+    e.preventDefault(), Q(t);
   };
 
-  class Je extends o {
+  class nr extends o {
     static get observedAttributes() {
       return ["collapsed", "data-title"];
     }
@@ -2384,22 +2384,22 @@ header:focus-visible {
     _title;
     _content;
     constructor() {
-      super({ css: Xe, template: Ye });
+      super({ css: tr, template: Je });
       this._toggle = this.shadowRoot?.getElementById("toggle") ?? null, this._title = this.shadowRoot?.querySelector(".title-wrapper") ?? null, this._content = this.shadowRoot?.getElementById("content") ?? null;
     }
     connectedCallback() {
-      if (Ze(this, "collapsed"), this.hasAttribute("data-collapsed") && !this.hasAttribute("collapsed"))
+      if (er(this, "collapsed"), this.hasAttribute("data-collapsed") && !this.hasAttribute("collapsed"))
         this.setAttribute("collapsed", "");
-      V(this, this._title), $(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
+      Z(this, this._title), G(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       this._toggle?.removeEventListener("click", this._onClick), this._toggle?.removeEventListener("keydown", this._onKey);
     }
     attributeChangedCallback(t) {
       if (t === "collapsed")
-        $(this, this._toggle, this._content);
+        G(this, this._toggle, this._content);
       if (t === "data-title")
-        V(this, this._title);
+        Z(this, this._title);
     }
     get collapsed() {
       return this.hasAttribute("collapsed");
@@ -2407,14 +2407,14 @@ header:focus-visible {
     set collapsed(t) {
       t ? this.setAttribute("collapsed", "") : this.removeAttribute("collapsed");
     }
-    _onClick = () => U(this);
-    _onKey = (t) => We(this, t);
+    _onClick = () => Q(this);
+    _onKey = (t) => ir(this, t);
   }
-  var Qe = `<button id="btn" class="icon-button" part="button">
+  var ar = `<button id="btn" class="icon-button" part="button">
     <slot></slot>
 </button>
 `;
-  var tr = `:host {
+  var or = `:host {
   display: inline-block;
 
   --_size: 2.25rem;
@@ -2504,7 +2504,7 @@ header:focus-visible {
 }
 `;
 
-  class er extends o {
+  class sr extends o {
     static formAssociated = true;
     _internals;
     _btn;
@@ -2512,7 +2512,7 @@ header:focus-visible {
       return ["type", "disabled", "aria-label"];
     }
     constructor() {
-      super({ css: tr, template: Qe });
+      super({ css: or, template: ar });
       this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
     }
     connectedCallback() {
@@ -2576,7 +2576,7 @@ header:focus-visible {
         this.removeAttribute("disabled");
     }
   }
-  var rr = `<div class="field-header" part="header">
+  var lr = `<div class="field-header" part="header">
     <slot name="label"></slot>
 </div>
 
@@ -2599,7 +2599,7 @@ header:focus-visible {
 
 <div class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
 `;
-  var ir = `:host {
+  var dr = `:host {
     display: block;
     width: 100%;
     margin: 1.25rem 0;
@@ -2697,35 +2697,35 @@ input[type="file"]:focus-visible + label {
     }
 }
 `;
-  var nr = (t, e) => {
+  var cr = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var ar = (t) => {
+  var ur = (t) => {
     if (t < 1024)
       return `${t} B`;
     if (t < 1048576)
       return `${(t / 1024).toFixed(1)} KB`;
     return `${(t / 1048576).toFixed(1)} MB`;
   };
-  var Y = (t, e) => {
+  var W = (t, e) => {
     if (t)
       t.textContent = e;
   };
-  var X = (t, e) => {
+  var J = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { files: e } }));
   };
-  var S = (t, e, r, i, n) => {
+  var B = (t, e, r, i, n) => {
     let a = e?.files;
     if (!a || a.length === 0) {
       if (r)
         r.textContent = "No file selected";
-      n.setFormValue(null), Y(i, "No file selected"), X(t, null);
+      n.setFormValue(null), W(i, "No file selected"), J(t, null);
       return;
     }
-    let s = a.length === 1 && a[0] ? `${a[0].name} (${ar(a[0].size)})` : `${a.length} files selected`;
+    let s = a.length === 1 && a[0] ? `${a[0].name} (${ur(a[0].size)})` : `${a.length} files selected`;
     if (r)
       r.textContent = s;
     if (a.length === 1 && a[0])
@@ -2739,25 +2739,25 @@ input[type="file"]:focus-visible + label {
       }
       n.setFormValue(l);
     }
-    Y(i, `Selected: ${s}`), X(t, a);
+    W(i, `Selected: ${s}`), J(t, a);
   };
-  var or = (t, e) => {
+  var pr = (t, e) => {
     if (e.preventDefault(), t.hasAttribute("disabled"))
       return;
     t.toggleAttribute("dragging", true);
   };
-  var sr = (t, e) => {
+  var hr = (t, e) => {
     e.preventDefault(), t.toggleAttribute("dragging", false);
   };
-  var lr = (t, e, r, i, n, a) => {
+  var br = (t, e, r, i, n, a) => {
     let s = a;
     if (s.preventDefault(), t.removeAttribute("dragging"), t.hasAttribute("disabled"))
       return;
     if (s.dataTransfer?.files && e)
-      e.files = s.dataTransfer.files, S(t, e, r, i, n);
+      e.files = s.dataTransfer.files, B(t, e, r, i, n);
   };
 
-  class dr extends o {
+  class mr extends o {
     static formAssociated = true;
     _internals;
     _input;
@@ -2765,7 +2765,7 @@ input[type="file"]:focus-visible + label {
     _dropZone;
     _liveRegion;
     constructor() {
-      super({ css: ir, template: rr });
+      super({ css: dr, template: lr });
       this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector('input[type="file"]') ?? null, this._preview = this.shadowRoot?.querySelector(".file-info") ?? null, this._dropZone = this.shadowRoot?.querySelector(".drop-zone") ?? null, this._liveRegion = this.shadowRoot?.querySelector(".sr-live") ?? null;
     }
     static get observedAttributes() {
@@ -2773,7 +2773,7 @@ input[type="file"]:focus-visible + label {
     }
     connectedCallback() {
       for (let t of ["accept", "multiple", "name", "disabled", "required"])
-        nr(this, t);
+        cr(this, t);
       this._input?.addEventListener("change", this._onChange), this._dropZone?.addEventListener("dragover", this._onDragOver), this._dropZone?.addEventListener("dragleave", this._onDragLeave), this._dropZone?.addEventListener("drop", this._onDrop);
     }
     disconnectedCallback() {
@@ -2813,10 +2813,10 @@ input[type="file"]:focus-visible + label {
           break;
       }
     }
-    _onChange = () => S(this, this._input, this._preview, this._liveRegion, this._internals);
-    _onDragOver = (t) => or(this, t);
-    _onDragLeave = (t) => sr(this, t);
-    _onDrop = (t) => lr(this, this._input, this._preview, this._liveRegion, this._internals, t);
+    _onChange = () => B(this, this._input, this._preview, this._liveRegion, this._internals);
+    _onDragOver = (t) => pr(this, t);
+    _onDragLeave = (t) => hr(this, t);
+    _onDrop = (t) => br(this, this._input, this._preview, this._liveRegion, this._internals, t);
     get name() {
       return this.getAttribute("name") ?? "";
     }
@@ -2857,7 +2857,7 @@ input[type="file"]:focus-visible + label {
       return this._internals.form;
     }
   }
-  var cr = `<div class="field" part="field">
+  var gr = `<div class="field" part="field">
     <label class="label" part="label"></label>
     <input class="input" part="input" type="text" />
     <div class="meta" part="meta" hidden>
@@ -2866,7 +2866,7 @@ input[type="file"]:focus-visible + label {
     </div>
 </div>
 `;
-  var ur = `:host {
+  var fr = `:host {
     display: block;
 }
 
@@ -2938,7 +2938,7 @@ input[type="file"]:focus-visible + label {
     display: none;
 }
 `;
-  var pr = `.input:hover:not(:disabled) {
+  var vr = `.input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -2974,47 +2974,47 @@ input[type="file"]:focus-visible + label {
     font-weight: 600;
 }
 `;
-  var hr = `@media (prefers-reduced-motion: no-preference) {
+  var _r = `@media (prefers-reduced-motion: no-preference) {
     .input { transition: border-color 0.15s, box-shadow 0.15s; }
 }
 `;
-  var br = (t, e) => {
+  var xr = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var Z = (t) => {
+  var tt = (t) => {
     let e = t.getAttribute("max-count");
     if (e === null)
       return null;
     let r = parseInt(e, 10);
     return Number.isFinite(r) && r > 0 ? r : null;
   };
-  var v = (t, e, r, i) => {
+  var y = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let n = Z(t);
+    let n = tt(t);
     if (n === null)
       return;
     let a = e.value.length;
     i.textContent = String(a), r.dataset.over = String(a > n);
   };
-  var G = (t, e, r) => {
+  var et = (t, e, r) => {
     if (!t || !e || !r)
       return;
     let i = (t.textContent ?? "").length > 0, n = !e.hidden;
     r.hidden = !i && !n;
   };
-  var Mo = 0;
-  var mr = () => `p9r-input-label-${++Mo}`;
-  var W = (t, e) => {
+  var Wo = 0;
+  var yr = () => `p9r-input-label-${++Wo}`;
+  var rt = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var Ho = (t, e) => {
+  var Jo = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -3023,16 +3023,16 @@ input[type="file"]:focus-visible + label {
     else
       e.setAttribute("placeholder", r);
   };
-  var zo = (t, e) => {
+  var ts = (t, e) => {
     if (!e)
       return;
     e.setAttribute("type", t.getAttribute("type") ?? "text");
   };
-  var So = (t, e) => {
+  var es = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var Io = (t, e) => {
+  var rs = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -3041,17 +3041,17 @@ input[type="file"]:focus-visible + label {
     else
       e.removeAttribute("aria-required");
   };
-  var Po = (t, e, r, i) => {
+  var is = (t, e, r, i) => {
     if (!e)
       return;
-    e.textContent = t.getAttribute("hint") ?? "", G(e, r, i);
+    e.textContent = t.getAttribute("hint") ?? "", et(e, r, i);
   };
-  var Ro = (t, e) => {
+  var ns = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var qo = (t, e) => {
+  var as = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -3059,32 +3059,32 @@ input[type="file"]:focus-visible + label {
     else
       e.removeAttribute("aria-invalid");
   };
-  var J = (t, e, r, i, n) => {
+  var it = (t, e, r, i, n) => {
     if (!e || !r)
       return;
-    let a = Z(t);
+    let a = tt(t);
     if (a === null)
       e.hidden = true;
     else
       e.hidden = false, r.textContent = String(a);
-    G(i, e, n);
+    et(i, e, n);
   };
-  var Q = (t, e, r, i, n, a, s) => {
-    W(t, r), Ho(t, e), zo(t, e), So(t, e), Io(t, e), Po(t, i, a, n), Ro(t, i), qo(t, e), J(t, a, s, i, n);
+  var nt = (t, e, r, i, n, a, s) => {
+    rt(t, r), Jo(t, e), ts(t, e), es(t, e), rs(t, e), is(t, i, a, n), ns(t, i), as(t, e), it(t, a, s, i, n);
   };
-  var gr = (t, e, r, i, n) => {
+  var wr = (t, e, r, i, n) => {
     if (!e)
       return;
-    r.setFormValue(e.value), v(t, e, i, n);
+    r.setFormValue(e.value), y(t, e, i, n);
   };
-  var fr = (t, e) => {
+  var kr = (t, e) => {
     if (!t)
       return;
     e.setFormValue(t.value);
   };
-  var Bo = ur + pr + hr;
+  var os = fr + vr + _r;
 
-  class vr extends o {
+  class Er extends o {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "type", "hint", "hint-level", "max-count", "invalid", "disabled", "required"];
@@ -3100,23 +3100,23 @@ input[type="file"]:focus-visible + label {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: Bo, template: cr });
+      super({ css: os, template: gr });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._labelEl = t.querySelector(".label"), this._input = t.querySelector(".input"), this._hintEl = t.querySelector(".hint"), this._metaEl = t.querySelector(".meta"), this._counterEl = t.querySelector(".counter"), this._countEl = t.querySelector(".count"), this._maxEl = t.querySelector(".max");
-      let e = mr();
+      let e = yr();
       if (this._labelEl && this._input)
         this._labelEl.id = e, this._input.setAttribute("aria-labelledby", e);
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["value", "disabled", "required"].forEach((e) => br(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), Q(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+      ["value", "disabled", "required"].forEach((e) => xr(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), nt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
       else
-        v(this, this._input, this._counterEl, this._countEl);
+        y(this, this._input, this._counterEl, this._countEl);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("input", this._onInput), this._input?.removeEventListener("change", this._onChange);
@@ -3130,11 +3130,11 @@ input[type="file"]:focus-visible + label {
       if (t === "value" && r !== null)
         this.value = r;
       else if (t === "label")
-        W(this, this._labelEl);
+        rt(this, this._labelEl);
       else if (t === "max-count")
-        J(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), v(this, this._input, this._counterEl, this._countEl);
+        it(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), y(this, this._input, this._counterEl, this._countEl);
       else
-        Q(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+        nt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
     }
     get value() {
       return this._input?.value ?? "";
@@ -3142,7 +3142,7 @@ input[type="file"]:focus-visible + label {
     set value(t) {
       if (!this._input)
         return;
-      this._input.value = t, this._internals.setFormValue(t), v(this, this._input, this._counterEl, this._countEl);
+      this._input.value = t, this._internals.setFormValue(t), y(this, this._input, this._counterEl, this._countEl);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -3162,10 +3162,10 @@ input[type="file"]:focus-visible + label {
     focus() {
       this._input?.focus();
     }
-    _onInput = () => gr(this, this._input, this._internals, this._counterEl, this._countEl);
-    _onChange = () => fr(this._input, this._internals);
+    _onInput = () => wr(this, this._input, this._internals, this._counterEl, this._countEl);
+    _onChange = () => kr(this._input, this._internals);
   }
-  var _r = `<div class="field" part="field">
+  var Ar = `<div class="field" part="field">
     <div class="header" part="header">
         <span class="label" part="label"></span>
         <div class="input-wrap" part="input-wrap">
@@ -3185,7 +3185,7 @@ input[type="file"]:focus-visible + label {
     </div>
 </div>
 `;
-  var xr = `:host {
+  var Lr = `:host {
     display: block;
 }
 
@@ -3261,7 +3261,7 @@ input[type="file"]:focus-visible + label {
     margin-top: -2px;
 }
 `;
-  var yr = `:host([disabled]) {
+  var Cr = `:host([disabled]) {
     opacity: 0.55;
     pointer-events: none;
 }
@@ -3347,19 +3347,19 @@ input[type="file"]:focus-visible + label {
     border: none;
 }
 `;
-  var wr = `@media (prefers-reduced-motion: no-preference) {
+  var Tr = `@media (prefers-reduced-motion: no-preference) {
     .input-wrap { transition: border-color 0.15s; }
     .fill { transition: width 0.05s ease; }
     .slider::-webkit-slider-thumb { transition: transform 0.1s; }
 }
 `;
-  var kr = (t, e) => {
+  var Mr = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var L = (t, e) => {
+  var z = (t, e) => {
     if (!t)
       return e;
     let r = Number(t.min), i = Number(t.max);
@@ -3371,75 +3371,75 @@ input[type="file"]:focus-visible + label {
       return i;
     return e;
   };
-  var _ = (t, e) => {
+  var w = (t, e) => {
     if (!t || !e)
       return;
     let r = Number(t.min), i = Number(t.max), n = Number(t.value), a = i === r ? 0 : (n - r) / (i - r) * 100;
     e.style.width = `${a}%`;
   };
-  var tt = (t, e, r, i, n) => {
+  var at = (t, e, r, i, n) => {
     if (!e || !r || !i || !n)
       return;
     let a = t.getAttribute("min") ?? "0", s = t.getAttribute("max") ?? "100", l = t.getAttribute("step") ?? "1";
     e.min = a, e.max = s, e.step = l, r.min = a, r.max = s, r.step = l, i.textContent = a, n.textContent = s;
   };
-  var et = (t, e, r, i) => {
+  var ot = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
     let n = t.getAttribute("label") ?? t.getAttribute("name") ?? "";
     if (e.textContent = n, e.hidden = n === "", n)
       r.setAttribute("aria-label", n), i.setAttribute("aria-label", n);
   };
-  var rt = (t, e) => {
+  var st = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("unit") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var it = (t, e, r) => {
+  var lt = (t, e, r) => {
     if (!e || !r)
       return;
     let i = t.hasAttribute("disabled");
     e.disabled = i, r.disabled = i;
   };
-  var C = (t, e, r, i, n) => {
+  var S = (t, e, r, i, n) => {
     if (!t || !e)
       return;
-    let a = L(t, Number(n));
-    t.value = String(a), e.value = String(a), i.setFormValue(t.value), _(t, r);
+    let a = z(t, Number(n));
+    t.value = String(a), e.value = String(a), i.setFormValue(t.value), w(t, r);
   };
-  var Er = (t, e, r, i, n) => {
+  var Hr = (t, e, r, i, n) => {
     if (!e || !r)
       return;
-    r.value = e.value, n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    r.value = e.value, n.setFormValue(e.value), w(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
-  var Ar = (t, e, r) => {
+  var zr = (t, e, r) => {
     if (!e)
       return;
     r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
-  var Lr = (t, e, r, i, n) => {
+  var Sr = (t, e, r, i, n) => {
     if (!e || !r)
       return;
     if (r.value === "")
       return;
-    let a = L(e, Number(r.value));
-    e.value = String(a), n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    let a = z(e, Number(r.value));
+    e.value = String(a), n.setFormValue(e.value), w(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
-  var Cr = (t, e, r, i, n) => {
+  var Ir = (t, e, r, i, n) => {
     if (!e || !r)
       return;
-    let a = L(e, Number(r.value));
-    e.value = String(a), r.value = String(a), n.setFormValue(e.value), _(e, i), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    let a = z(e, Number(r.value));
+    e.value = String(a), r.value = String(a), n.setFormValue(e.value), w(e, i), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
-  var Tr = (t, e) => {
+  var Pr = (t, e) => {
     if (!t || !e)
       return;
     e.value = t.value;
   };
-  var Oo = xr + yr + wr;
+  var us = Lr + Cr + Tr;
 
-  class Mr extends o {
+  class Rr extends o {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "min", "max", "step", "unit", "disabled"];
@@ -3455,43 +3455,43 @@ input[type="file"]:focus-visible + label {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: Oo, template: _r });
+      super({ css: us, template: Ar });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._slider = t.querySelector(".slider"), this._input = t.querySelector(".number"), this._fill = t.querySelector(".fill"), this._labelEl = t.querySelector(".label"), this._unitEl = t.querySelector(".unit"), this._minEl = t.querySelector(".min-bound"), this._maxEl = t.querySelector(".max-bound");
     }
     connectedCallback() {
-      ["value", "disabled"].forEach((e) => kr(this, e)), et(this, this._labelEl, this._slider, this._input), tt(this, this._slider, this._input, this._minEl, this._maxEl), rt(this, this._unitEl), it(this, this._slider, this._input);
+      ["value", "disabled"].forEach((e) => Mr(this, e)), ot(this, this._labelEl, this._slider, this._input), at(this, this._slider, this._input, this._minEl, this._maxEl), st(this, this._unitEl), lt(this, this._slider, this._input);
       let t = this.getAttribute("value") ?? this.getAttribute("min") ?? "0";
       if (!this._defaultsCaptured)
         this._defaultValue = t, this._defaultsCaptured = true;
-      C(this._slider, this._input, this._fill, this._internals, t), this._wire("addEventListener");
+      S(this._slider, this._input, this._fill, this._internals, t), this._wire("addEventListener");
     }
     disconnectedCallback() {
       this._wire("removeEventListener");
     }
     formResetCallback() {
-      C(this._slider, this._input, this._fill, this._internals, this._defaultValue);
+      S(this._slider, this._input, this._fill, this._internals, this._defaultValue);
     }
     attributeChangedCallback(t, e, r) {
       if (!this._slider || !this._input)
         return;
       if (t === "value" && r !== null)
-        C(this._slider, this._input, this._fill, this._internals, r);
+        S(this._slider, this._input, this._fill, this._internals, r);
       else if (t === "label")
-        et(this, this._labelEl, this._slider, this._input);
+        ot(this, this._labelEl, this._slider, this._input);
       else if (t === "min" || t === "max" || t === "step")
-        tt(this, this._slider, this._input, this._minEl, this._maxEl);
+        at(this, this._slider, this._input, this._minEl, this._maxEl);
       else if (t === "unit")
-        rt(this, this._unitEl);
+        st(this, this._unitEl);
       else if (t === "disabled")
-        it(this, this._slider, this._input);
+        lt(this, this._slider, this._input);
     }
     get value() {
       return this._slider?.value ?? "";
     }
     set value(t) {
-      C(this._slider, this._input, this._fill, this._internals, String(t));
+      S(this._slider, this._input, this._fill, this._internals, String(t));
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -3508,13 +3508,13 @@ input[type="file"]:focus-visible + label {
     _wire(t) {
       this._slider?.[t]("input", this._onSliderInput), this._slider?.[t]("change", this._onSliderChange), this._input?.[t]("input", this._onNumberInput), this._input?.[t]("change", this._onNumberChange), this._input?.[t]("blur", this._onNumberBlur);
     }
-    _onSliderInput = () => Er(this, this._slider, this._input, this._fill, this._internals);
-    _onSliderChange = () => Ar(this, this._slider, this._internals);
-    _onNumberInput = () => Lr(this, this._slider, this._input, this._fill, this._internals);
-    _onNumberChange = () => Cr(this, this._slider, this._input, this._fill, this._internals);
-    _onNumberBlur = () => Tr(this._slider, this._input);
+    _onSliderInput = () => Hr(this, this._slider, this._input, this._fill, this._internals);
+    _onSliderChange = () => zr(this, this._slider, this._internals);
+    _onNumberInput = () => Sr(this, this._slider, this._input, this._fill, this._internals);
+    _onNumberChange = () => Ir(this, this._slider, this._input, this._fill, this._internals);
+    _onNumberBlur = () => Pr(this._slider, this._input);
   }
-  var Hr = `<div class="field">
+  var qr = `<div class="field">
     <span class="label"></span>
     <button class="trigger" type="button" tabindex="0"
             popovertarget="panel" popovertargetaction="toggle">
@@ -3530,7 +3530,7 @@ input[type="file"]:focus-visible + label {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var zr = `:host {
+  var Br = `:host {
     display: block;
 }
 
@@ -3602,7 +3602,7 @@ input[type="file"]:focus-visible + label {
     transition: background 0.1s;
 }
 `;
-  var Sr = `.trigger:hover {
+  var Dr = `.trigger:hover {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -3647,16 +3647,16 @@ input[type="file"]:focus-visible + label {
     font-weight: 600;
 }
 `;
-  var Ir = (t, e) => {
+  var Fr = (t, e) => {
     t.forEach((r) => r.classList.toggle("selected", r.dataset.value === e));
   };
-  var Pr = (t, e) => {
+  var jr = (t, e) => {
     if (!t)
       return;
     let r = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
     t.textContent = r, t.hidden = r === "";
   };
-  var Rr = (t, e, r) => {
+  var Nr = (t, e, r) => {
     let i = Array.from(t.querySelectorAll("option"));
     if (e)
       e.innerHTML = "";
@@ -3669,14 +3669,14 @@ input[type="file"]:focus-visible + label {
       a = i[0].value, s = i[0].textContent ?? "";
     return { options: n, initialValue: a, initialLabel: s };
   };
-  var qr = (t, e, r, i) => {
+  var Or = (t, e, r, i) => {
     if (e)
       e.textContent = i;
-    Ir(t, r);
+    Fr(t, r);
   };
-  var Uo = zr + Sr;
+  var ms = Br + Dr;
 
-  class Br extends o {
+  class Kr extends o {
     static formAssociated = true;
     _internals;
     _trigger;
@@ -3687,11 +3687,11 @@ input[type="file"]:focus-visible + label {
     _value = "";
     _isOpen = false;
     constructor() {
-      super({ css: Uo, template: Hr });
+      super({ css: ms, template: qr });
       this._internals = this.attachInternals(), this._trigger = this.shadowRoot.querySelector(".trigger"), this._display = this.shadowRoot.querySelector(".value"), this._list = this.shadowRoot.querySelector(".list"), this._panel = this.shadowRoot.querySelector(".panel");
     }
     connectedCallback() {
-      Pr(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
+      jr(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
     }
     disconnectedCallback() {
       if (this.shadowRoot.querySelector("slot")?.removeEventListener("slotchange", this._onSlot), this._panel?.removeEventListener("beforetoggle", this._onBeforeToggle), this._panel?.removeEventListener("toggle", this._onToggle), this._isOpen)
@@ -3699,7 +3699,7 @@ input[type="file"]:focus-visible + label {
       this._unbindReposition();
     }
     _syncFromSlot = () => {
-      let { options: t, initialValue: e, initialLabel: r } = Rr(this, this._list, (n, a) => this._select(n, a));
+      let { options: t, initialValue: e, initialLabel: r } = Nr(this, this._list, (n, a) => this._select(n, a));
       this._options = t;
       let i = this.getAttribute("value");
       if (i !== null) {
@@ -3716,7 +3716,7 @@ input[type="file"]:focus-visible + label {
       this._setValue(t, e), this._panel?.hidePopover?.(), this.dispatchEvent(new Event("change", { bubbles: true }));
     }
     _setValue(t, e) {
-      this._value = t, this._internals.setFormValue(t), qr(this._options, this._display, t, e);
+      this._value = t, this._internals.setFormValue(t), Or(this._options, this._display, t, e);
     }
     _onBeforeToggle = (t) => {
       if (t.newState === "open")
@@ -3751,7 +3751,7 @@ input[type="file"]:focus-visible + label {
     _onSlot = () => this._syncFromSlot();
   }
 
-  class Dr extends HTMLElement {
+  class Vr extends HTMLElement {
     _bufferedValue = "";
     connectedCallback() {
       let t = this.getAttribute("label") || "Size", e = this.getAttribute("name") || "size", r = document.createElement("p9r-select");
@@ -3774,7 +3774,7 @@ input[type="file"]:focus-visible + label {
       this._bufferedValue = t;
     }
   }
-  var Fr = `<label class="radio" part="container">
+  var $r = `<label class="radio" part="container">
     <input type="radio" id="native-input" part="input" />
     <span class="custom" part="circle" aria-hidden="true">
         <span class="dot" part="dot"></span>
@@ -3782,7 +3782,7 @@ input[type="file"]:focus-visible + label {
     <span class="label" part="label"><slot></slot></span>
 </label>
 `;
-  var jr = `:host {
+  var Ur = `:host {
   display: inline-block;
 
   --_size: 18px;
@@ -3862,13 +3862,13 @@ input:focus-visible ~ .custom {
 }
 `;
 
-  class Nr extends o {
+  class Xr extends o {
     _input;
     static get observedAttributes() {
       return ["checked", "disabled", "value", "name"];
     }
     constructor() {
-      super({ css: jr, template: Fr });
+      super({ css: Ur, template: $r });
       this._input = this.shadowRoot?.querySelector("input") ?? null;
     }
     connectedCallback() {
@@ -3939,14 +3939,14 @@ input:focus-visible ~ .custom {
       this.setAttribute("value", t);
     }
   }
-  var Or = `<fieldset class="group" part="group">
+  var Yr = `<fieldset class="group" part="group">
     <legend class="label" part="label"></legend>
     <div class="options" part="options">
         <slot></slot>
     </div>
 </fieldset>
 `;
-  var Kr = `:host {
+  var Zr = `:host {
   display: block;
 }
 
@@ -3988,20 +3988,20 @@ input:focus-visible ~ .custom {
   pointer-events: none;
 }
 `;
-  var Vr = (t, e) => {
+  var Gr = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var x = (t) => {
+  var k = (t) => {
     if (!t)
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-RADIO");
   };
-  var Wo = 0;
-  var $r = () => `radiogroup-${Wo++}`;
-  var Ur = (t, e, r) => {
+  var xs = 0;
+  var Qr = () => `radiogroup-${xs++}`;
+  var Wr = (t, e, r) => {
     t.forEach((i) => {
       let n = e !== null && i.getAttribute("value") === e;
       if (n)
@@ -4011,20 +4011,20 @@ input:focus-visible ~ .custom {
       i.setAttribute("tabindex", n ? "0" : "-1");
     }), r.setFormValue(e ?? null);
   };
-  var nt = (t, e) => {
+  var dt = (t, e) => {
     if (t)
       t.textContent = e ?? "";
   };
-  var I = (t, e) => {
+  var D = (t, e) => {
     if (!e)
       return;
     t.forEach((r) => r.setAttribute("disabled", ""));
   };
-  var at = (t, e) => {
+  var ct = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: e } }));
   };
-  var ot = (t, e, r) => {
-    let i = x(e), n = t.getAttribute("name") ?? $r(), a = t.getAttribute("value");
+  var ut = (t, e, r) => {
+    let i = k(e), n = t.getAttribute("name") ?? Qr(), a = t.getAttribute("value");
     if (i.forEach((s) => {
       s.setAttribute("name", n);
       let l = a !== null && s.getAttribute("value") === a;
@@ -4035,20 +4035,20 @@ input:focus-visible ~ .custom {
       s.setAttribute("tabindex", l ? "0" : "-1");
     }), a === null && i.length > 0)
       i[0]?.setAttribute("tabindex", "0");
-    I(i, t.hasAttribute("disabled")), r.setFormValue(a ?? null);
+    D(i, t.hasAttribute("disabled")), r.setFormValue(a ?? null);
   };
-  var Yr = (t, e) => {
+  var Jr = (t, e) => {
     let r = e.target;
     if (r.tagName !== "P9R-RADIO")
       return;
     let i = r.getAttribute("value") ?? "";
     if (i !== t.getAttribute("value"))
-      t.setAttribute("value", i), at(t, i);
+      t.setAttribute("value", i), ct(t, i);
   };
-  var Xr = (t, e, r) => {
+  var ti = (t, e, r) => {
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
       return;
-    let n = x(e).filter((u) => !u.hasAttribute("disabled"));
+    let n = k(e).filter((u) => !u.hasAttribute("disabled"));
     if (n.length === 0)
       return;
     let a = n.findIndex((u) => u === document.activeElement), s = a === -1 ? 0 : a, l = s;
@@ -4073,10 +4073,10 @@ input:focus-visible ~ .custom {
     if (!d)
       return;
     let c = d.getAttribute("value") ?? "";
-    t.setAttribute("value", c), d.focus(), at(t, c);
+    t.setAttribute("value", c), d.focus(), ct(t, c);
   };
 
-  class Zr extends o {
+  class ei extends o {
     static formAssociated = true;
     _internals;
     _label;
@@ -4087,15 +4087,15 @@ input:focus-visible ~ .custom {
       return ["value", "label", "name", "disabled"];
     }
     constructor() {
-      super({ css: Kr, template: Or });
+      super({ css: Zr, template: Yr });
       this._internals = this.attachInternals(), this._label = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value"), this._defaultsCaptured = true;
       for (let t of ["value", "name", "disabled"])
-        Vr(this, t);
-      this.setAttribute("role", "radiogroup"), nt(this._label, this.getAttribute("label")), this._slot?.addEventListener("slotchange", this._onSlotChange), this.addEventListener("change", this._onChange), this.addEventListener("keydown", this._onKey), ot(this, this._slot, this._internals);
+        Gr(this, t);
+      this.setAttribute("role", "radiogroup"), dt(this._label, this.getAttribute("label")), this._slot?.addEventListener("slotchange", this._onSlotChange), this.addEventListener("change", this._onChange), this.addEventListener("keydown", this._onKey), ut(this, this._slot, this._internals);
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("change", this._onChange), this.removeEventListener("keydown", this._onKey);
@@ -4108,11 +4108,11 @@ input:focus-visible ~ .custom {
     }
     attributeChangedCallback(t, e, r) {
       if (t === "value")
-        Ur(x(this._slot), r, this._internals);
+        Wr(k(this._slot), r, this._internals);
       else if (t === "label")
-        nt(this._label, r);
+        dt(this._label, r);
       else if (t === "disabled")
-        I(x(this._slot), this.hasAttribute("disabled"));
+        D(k(this._slot), this.hasAttribute("disabled"));
     }
     get value() {
       return this.getAttribute("value") ?? "";
@@ -4132,11 +4132,11 @@ input:focus-visible ~ .custom {
     set disabled(t) {
       t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
-    _onSlotChange = () => ot(this, this._slot, this._internals);
-    _onChange = (t) => Yr(this, t);
-    _onKey = (t) => Xr(this, this._slot, t);
+    _onSlotChange = () => ut(this, this._slot, this._internals);
+    _onChange = (t) => Jr(this, t);
+    _onKey = (t) => ti(this, this._slot, t);
   }
-  var Gr = `<div class="switch-container" part="container">
+  var ri = `<div class="switch-container" part="container">
     <span class="label" id="group-label" part="label"></span>
 
     <div class="switch-wrapper" part="wrapper" role="radiogroup" aria-labelledby="group-label">
@@ -4152,7 +4152,7 @@ input:focus-visible ~ .custom {
     </span>
 </div>
 `;
-  var Wr = `:host {
+  var ii = `:host {
   --active-index: 0;
   --total-options: 1;
   display: block;
@@ -4241,22 +4241,22 @@ input:focus-visible ~ .custom {
   pointer-events: none;
 }
 `;
-  var Jr = (t, e) => {
+  var ni = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var T = (t) => {
+  var I = (t) => {
     if (!t)
       return [];
     return t.assignedElements().filter((e) => e.tagName === "OPTION");
   };
-  var st = (t, e) => {
+  var pt = (t, e) => {
     if (t)
       t.textContent = e;
   };
-  var P = (t, e, r) => {
+  var F = (t, e, r) => {
     let i = e.findIndex((n) => n.getAttribute("value") === r);
     if (i === -1)
       return;
@@ -4265,7 +4265,7 @@ input:focus-visible ~ .custom {
       n.setAttribute("aria-checked", s.toString()), n.setAttribute("tabindex", s ? "0" : "-1");
     });
   };
-  var R = (t, e) => {
+  var j = (t, e) => {
     t.forEach((r) => {
       if (r.getAttribute("value") === e)
         r.setAttribute("selected", "");
@@ -4273,8 +4273,8 @@ input:focus-visible ~ .custom {
         r.removeAttribute("selected");
     });
   };
-  var lt = (t, e) => {
-    let r = T(e);
+  var ht = (t, e) => {
+    let r = I(e);
     t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, n) => {
       if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
         i.setAttribute("tabindex", n === 0 ? "0" : "-1");
@@ -4283,14 +4283,14 @@ input:focus-visible ~ .custom {
           return;
         t.value = i.getAttribute("value") ?? "", i.focus();
       };
-    }), P(t, r, t.value), R(r, t.value);
+    }), F(t, r, t.value), j(r, t.value);
   };
-  var Qr = (t, e, r) => {
+  var ai = (t, e, r) => {
     if (t.disabled)
       return;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
       return;
-    let n = T(e);
+    let n = I(e);
     if (n.length === 0)
       return;
     let a = n.findIndex((c) => c.getAttribute("value") === t.value), s = a === -1 ? 0 : a, l = s;
@@ -4317,7 +4317,7 @@ input:focus-visible ~ .custom {
     t.value = d.getAttribute("value") ?? "", d.focus();
   };
 
-  class ti extends o {
+  class oi extends o {
     static formAssociated = true;
     _internals;
     _labelEl;
@@ -4329,17 +4329,17 @@ input:focus-visible ~ .custom {
       return ["value", "disabled", "name", "label"];
     }
     constructor() {
-      super({ css: Wr, template: Gr });
+      super({ css: ii, template: ri });
       this._internals = this.attachInternals(), this._labelEl = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot:not([name])") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
       for (let t of ["value", "disabled", "name", "label"])
-        Jr(this, t);
+        ni(this, t);
       if (this._slot)
-        this._slot.addEventListener("slotchange", this._onSlotChange), lt(this, this._slot);
-      this.addEventListener("keydown", this._onKey), st(this._labelEl, this.getAttribute("label") ?? "");
+        this._slot.addEventListener("slotchange", this._onSlotChange), ht(this, this._slot);
+      this.addEventListener("keydown", this._onKey), pt(this._labelEl, this.getAttribute("label") ?? "");
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("keydown", this._onKey);
@@ -4358,7 +4358,7 @@ input:focus-visible ~ .custom {
       if (t === "value")
         this.value = r ?? "";
       else if (t === "label")
-        st(this._labelEl, r ?? "");
+        pt(this._labelEl, r ?? "");
     }
     get value() {
       return this.getAttribute("value") ?? "";
@@ -4367,8 +4367,8 @@ input:focus-visible ~ .custom {
       if (this.getAttribute("value") !== t)
         this.setAttribute("value", t);
       this._internals.setFormValue(t);
-      let e = T(this._slot);
-      if (P(this, e, t), R(e, t), !this._silentValueChange)
+      let e = I(this._slot);
+      if (F(this, e, t), j(e, t), !this._silentValueChange)
         this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: t } }));
     }
     get name() {
@@ -4389,10 +4389,10 @@ input:focus-visible ~ .custom {
     set label(t) {
       t ? this.setAttribute("label", t) : this.removeAttribute("label");
     }
-    _onSlotChange = () => lt(this, this._slot);
-    _onKey = (t) => Qr(this, this._slot, t);
+    _onSlotChange = () => ht(this, this._slot);
+    _onKey = (t) => ai(this, this._slot, t);
   }
-  var ei = `<label class="switch" part="container">
+  var si = `<label class="switch" part="container">
     <input type="checkbox" id="native-input" part="input" />
     <span class="track" part="track">
         <span class="thumb" part="thumb"></span>
@@ -4400,7 +4400,7 @@ input:focus-visible ~ .custom {
     <span class="label" part="label"><slot></slot></span>
 </label>
 `;
-  var ri = `:host {
+  var li = `:host {
   display: inline-block;
 
   --_track-w: 36px;
@@ -4499,29 +4499,29 @@ input:focus-visible ~ .track {
   }
 }
 `;
-  var ii = (t, e) => {
+  var di = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var y = (t, e, r) => {
+  var E = (t, e, r) => {
     let i = e?.checked ?? t.hasAttribute("checked");
     r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
   };
-  var ni = (t, e, r) => {
+  var ci = (t, e, r) => {
     if (e?.checked ?? false)
       t.setAttribute("checked", "");
     else
       t.removeAttribute("checked");
-    y(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
+    E(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
   };
-  var ai = (t, e) => {
+  var ui = (t, e) => {
     if (t.hasAttribute("disabled"))
       e.preventDefault(), e.stopImmediatePropagation();
   };
 
-  class oi extends o {
+  class pi extends o {
     static formAssociated = true;
     _internals;
     _input;
@@ -4531,14 +4531,14 @@ input:focus-visible ~ .track {
       return ["checked", "disabled", "name", "value"];
     }
     constructor() {
-      super({ css: ri, template: ei });
+      super({ css: li, template: si });
       this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultChecked = this.hasAttribute("checked"), this._defaultsCaptured = true;
       for (let t of ["checked", "disabled", "name", "value"])
-        ii(this, t);
+        di(this, t);
       if (this._input) {
         if (this._input.checked = this.hasAttribute("checked"), this._input.disabled = this.hasAttribute("disabled"), this.hasAttribute("name"))
           this._input.name = this.getAttribute("name") ?? "";
@@ -4546,7 +4546,7 @@ input:focus-visible ~ .track {
           this._input.value = this.getAttribute("value") ?? "";
         this._input.addEventListener("change", this._onChange), this._input.addEventListener("click", this._onClick);
       }
-      this.setAttribute("role", "switch"), this.setAttribute("aria-checked", String(this.hasAttribute("checked"))), y(this, this._input, this._internals);
+      this.setAttribute("role", "switch"), this.setAttribute("aria-checked", String(this.hasAttribute("checked"))), E(this, this._input, this._internals);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick);
@@ -4558,16 +4558,16 @@ input:focus-visible ~ .track {
       if (!this._input)
         return;
       if (t === "checked")
-        this._input.checked = r !== null, this.setAttribute("aria-checked", String(r !== null)), y(this, this._input, this._internals);
+        this._input.checked = r !== null, this.setAttribute("aria-checked", String(r !== null)), E(this, this._input, this._internals);
       else if (t === "disabled")
         this._input.disabled = r !== null;
       else if (t === "name")
         this._input.name = r ?? "";
       else if (t === "value")
-        this._input.value = r ?? "", y(this, this._input, this._internals);
+        this._input.value = r ?? "", E(this, this._input, this._internals);
     }
-    _onChange = () => ni(this, this._input, this._internals);
-    _onClick = (t) => ai(this, t);
+    _onChange = () => ci(this, this._input, this._internals);
+    _onClick = (t) => ui(this, t);
     get checked() {
       return this.hasAttribute("checked");
     }
@@ -4599,7 +4599,7 @@ input:focus-visible ~ .track {
       this._input?.click();
     }
   }
-  var si = `<div class="container" part="container">
+  var hi = `<div class="container" part="container">
     <label for="main-input" part="label">
         <slot name="label">Tags</slot>
     </label>
@@ -4638,7 +4638,7 @@ input:focus-visible ~ .track {
     ></div>
 </div>
 `;
-  var li = `:host {
+  var bi = `:host {
     display: block;
     font-family: system-ui, -apple-system, sans-serif;
 }
@@ -4706,7 +4706,7 @@ input::placeholder {
     }
 }
 `;
-  var di = `input:hover:not(:disabled) {
+  var mi = `input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -4784,13 +4784,13 @@ p9r-tag:hover {
     filter: brightness(0.92);
 }
 `;
-  var ci = (t, e) => {
+  var gi = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var q = (t, e) => {
+  var N = (t, e) => {
     if (!t)
       return;
     t.textContent = "", window.setTimeout(() => {
@@ -4798,7 +4798,7 @@ p9r-tag:hover {
         t.textContent = e;
     }, 10);
   };
-  var dt = async (t) => {
+  var bt = async (t) => {
     let e = t.getAttribute("resource");
     if (!e)
       return null;
@@ -4813,7 +4813,7 @@ p9r-tag:hover {
       return null;
     }
   };
-  var ui = (t, e, r, i) => {
+  var fi = (t, e, r, i) => {
     if (!t)
       return;
     if (t.innerHTML = "", e !== "multiple")
@@ -4823,11 +4823,11 @@ p9r-tag:hover {
       s.setAttribute("color", "primary"), s.setAttribute("part", "chip"), s.setAttribute("role", "listitem"), s.textContent = n, s.title = `Remove ${n}`, s.setAttribute("aria-label", `Remove ${n}`), s.addEventListener("click", () => i(a)), t.appendChild(s);
     });
   };
-  var pi = (t, e, r, i, n, a) => {
+  var vi = (t, e, r, i, n, a) => {
     if (!t || !e)
       return;
     if (r.length === 0) {
-      ct(t, e);
+      mt(t, e);
       return;
     }
     if (t.innerHTML = "", r.forEach((s, l) => {
@@ -4837,8 +4837,8 @@ p9r-tag:hover {
       d.dataset.active = String(c), d.setAttribute("aria-selected", String(c));
       let u = document.createElement("span");
       u.className = "name", u.textContent = s.value, d.appendChild(u);
-      let m = document.createElement("p9r-tag");
-      m.setAttribute("color", "secondary"), m.setAttribute("part", "count"), m.textContent = String(s.count), d.appendChild(m), d.addEventListener("mousedown", (p) => {
+      let h = document.createElement("p9r-tag");
+      h.setAttribute("color", "secondary"), h.setAttribute("part", "count"), h.textContent = String(s.count), d.appendChild(h), d.addEventListener("mousedown", (p) => {
         p.preventDefault(), a(s.value);
       }), t.appendChild(d);
     }), t.hidden = false, e.setAttribute("aria-expanded", "true"), i >= 0)
@@ -4846,131 +4846,131 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-activedescendant");
   };
-  var ct = (t, e) => {
+  var mt = (t, e) => {
     if (t)
       t.hidden = true;
     if (e)
       e.setAttribute("aria-expanded", "false"), e.removeAttribute("aria-activedescendant");
   };
-  var hi = (t, e, r) => {
+  var _i = (t, e, r) => {
     let i = t.filter((n) => !e.includes(n.value));
     if (r === "")
       return i.slice(0, 8);
     return i.filter((n) => n.value.toLowerCase().includes(r)).slice(0, 8);
   };
-  var bi = (t, e) => {
+  var xi = (t, e) => {
     if (t === "multiple")
       return e.join(",");
     return e[0] ?? "";
   };
-  var mi = (t, e) => {
+  var yi = (t, e) => {
     if (t === "multiple")
       return e ? e.split(",").map((r) => r.trim()).filter((r) => r !== "") : [];
     return e ? [e.trim()] : [];
   };
-  var h = (t) => t;
-  var M = (t, e) => {
-    let r = h(t), i = t.getAttribute("mode") || "multiple", n = e.trim();
+  var b = (t) => t;
+  var P = (t, e) => {
+    let r = b(t), i = t.getAttribute("mode") || "multiple", n = e.trim();
     if (!n || !r._input)
       return;
     if (i === "multiple") {
       if (!r._tags.includes(n))
-        r._tags.push(n), q(r._liveRegion, `${n} added`);
+        r._tags.push(n), N(r._liveRegion, `${n} added`);
       r._input.value = "";
     } else
-      r._tags = [n], r._input.value = n, q(r._liveRegion, `${n} selected`);
-    r._activeIndex = -1, B(t), F(t);
+      r._tags = [n], r._input.value = n, N(r._liveRegion, `${n} selected`);
+    r._activeIndex = -1, O(t), V(t);
   };
-  var gi = (t, e) => {
-    let r = h(t), i = e.trim();
+  var wi = (t, e) => {
+    let r = b(t), i = e.trim();
     if (r._tags = i ? [i] : [], r._internals.setFormValue(r.value), r._silent)
       return;
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: r.value, tags: [...r._tags] } }));
   };
-  var fi = (t, e) => {
-    let r = h(t), i = r._tags[e];
+  var ki = (t, e) => {
+    let r = b(t), i = r._tags[e];
     if (i === undefined)
       return;
-    r._tags.splice(e, 1), q(r._liveRegion, `${i} removed`), B(t), r._input?.focus();
+    r._tags.splice(e, 1), N(r._liveRegion, `${i} removed`), O(t), r._input?.focus();
   };
-  var vi = (t) => {
-    let e = h(t);
+  var Ei = (t) => {
+    let e = b(t);
     if (e._tags.length === 0)
       return;
-    fi(t, e._tags.length - 1);
+    ki(t, e._tags.length - 1);
   };
-  var B = (t) => {
-    let e = h(t);
-    if (ut(t), e._internals.setFormValue(e.value), e._silent)
+  var O = (t) => {
+    let e = b(t);
+    if (gt(t), e._internals.setFormValue(e.value), e._silent)
       return;
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e.value, tags: [...e._tags] } }));
   };
-  var ut = (t) => {
-    let e = h(t);
-    ui(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => fi(t, r));
+  var gt = (t) => {
+    let e = b(t);
+    fi(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => ki(t, r));
   };
-  var pt = (t, e) => {
-    let r = h(t), n = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
-    r._suggestions = hi(r._allSuggestions, n, e), r._activeIndex = -1, D(t);
+  var ft = (t, e) => {
+    let r = b(t), n = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
+    r._suggestions = _i(r._allSuggestions, n, e), r._activeIndex = -1, K(t);
   };
-  var D = (t) => {
-    let e = h(t);
-    pi(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => M(t, r));
+  var K = (t) => {
+    let e = b(t);
+    vi(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => P(t, r));
   };
-  var F = (t) => {
-    let e = h(t);
-    ct(e._suggestionsEl, e._input), e._activeIndex = -1;
+  var V = (t) => {
+    let e = b(t);
+    mt(e._suggestionsEl, e._input), e._activeIndex = -1;
   };
-  var _i = (t, e) => {
+  var Ai = (t, e) => {
     if (!e)
       return;
-    pt(t, e.value.trim().toLowerCase());
+    ft(t, e.value.trim().toLowerCase());
   };
-  var xi = (t) => {
-    setTimeout(() => F(t), 150);
+  var Li = (t) => {
+    setTimeout(() => V(t), 150);
   };
-  var yi = (t, e) => {
+  var Ci = (t, e) => {
     if (!e)
       return;
-    if (pt(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
-      gi(t, e.value);
+    if (ft(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
+      wi(t, e.value);
   };
-  var wi = (t, e, r) => {
+  var Ti = (t, e, r) => {
     if (!e)
       return;
     let i = t.getAttribute("mode") || "multiple", n = t;
     if (r.key === "ArrowDown") {
       if (r.preventDefault(), n._suggestions.length === 0)
         return;
-      n._activeIndex = Math.min(n._activeIndex + 1, n._suggestions.length - 1), D(t);
+      n._activeIndex = Math.min(n._activeIndex + 1, n._suggestions.length - 1), K(t);
     } else if (r.key === "ArrowUp") {
       if (r.preventDefault(), n._suggestions.length === 0)
         return;
-      n._activeIndex = Math.max(n._activeIndex - 1, -1), D(t);
+      n._activeIndex = Math.max(n._activeIndex - 1, -1), K(t);
     } else if (r.key === "Enter") {
       r.preventDefault();
       let a = n._activeIndex >= 0 ? n._suggestions[n._activeIndex] : undefined;
       if (a)
-        M(t, a.value);
+        P(t, a.value);
       else {
         let s = e.value.trim();
         if (s)
-          M(t, s);
+          P(t, s);
       }
     } else if (r.key === "Escape")
-      r.preventDefault(), F(t);
+      r.preventDefault(), V(t);
     else if (r.key === "Backspace" && e.value === "" && i === "multiple")
-      vi(t);
+      Ei(t);
     else if (r.key === "," && i === "multiple") {
       r.preventDefault();
       let a = e.value.trim();
       if (a)
-        M(t, a);
+        P(t, a);
     }
   };
-  var as = li + di;
+  var Ts = bi + mi;
 
-  class ki extends o {
+  class Mi extends o {
     static formAssociated = true;
     static get observedAttributes() {
       return ["placeholder", "mode", "resource", "api", "disabled", "value"];
@@ -4989,7 +4989,7 @@ p9r-tag:hover {
     _defaultsCaptured = false;
     _silent = false;
     constructor() {
-      super({ css: as, template: si });
+      super({ css: Ts, template: hi });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       if (this._input = t.querySelector("#main-input"), this._display = t.querySelector("#tags-display"), this._suggestionsEl = t.querySelector("#suggestions"), this._liveRegion = t.querySelector("#live-region"), this._uid = `ts-${Math.random().toString(36).slice(2, 9)}`, this._suggestionsEl)
@@ -5000,7 +5000,7 @@ p9r-tag:hover {
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => ci(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), dt(this).then((t) => {
+      ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => gi(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), bt(this).then((t) => {
         if (t)
           this._allSuggestions = t;
       });
@@ -5024,27 +5024,27 @@ p9r-tag:hover {
       else if (t === "disabled")
         this._input.disabled = this.hasAttribute("disabled");
       else if (t === "resource" || t === "api")
-        this._allSuggestions = [], dt(this).then((i) => {
+        this._allSuggestions = [], bt(this).then((i) => {
           if (i)
             this._allSuggestions = i;
         });
       else if (t === "mode")
-        ut(this);
+        gt(this);
       else if (t === "value")
         this.value = r ?? "";
     }
-    _onFocus = () => _i(this, this._input);
-    _onBlur = () => xi(this);
-    _onInput = () => yi(this, this._input);
-    _onKeyDown = (t) => wi(this, this._input, t);
+    _onFocus = () => Ai(this, this._input);
+    _onBlur = () => Li(this);
+    _onInput = () => Ci(this, this._input);
+    _onKeyDown = (t) => Ti(this, this._input, t);
     get value() {
-      return bi(this.getAttribute("mode") || "multiple", this._tags);
+      return xi(this.getAttribute("mode") || "multiple", this._tags);
     }
     set value(t) {
       let e = this.getAttribute("mode") || "multiple";
-      if (this._tags = mi(e, t), this._input)
+      if (this._tags = yi(e, t), this._input)
         this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
-      B(this);
+      O(this);
     }
     get name() {
       return this.getAttribute("name") || "";
@@ -5083,7 +5083,7 @@ p9r-tag:hover {
       return [...this._tags];
     }
   }
-  var Ei = `<div class="field" part="field">
+  var Hi = `<div class="field" part="field">
     <label class="label" part="label" for="ta"></label>
     <textarea id="ta" class="textarea" part="textarea"></textarea>
     <div class="meta" part="meta" hidden>
@@ -5092,7 +5092,7 @@ p9r-tag:hover {
     </div>
 </div>
 `;
-  var Ai = `:host {
+  var zi = `:host {
   display: block;
 }
 
@@ -5147,7 +5147,7 @@ p9r-tag:hover {
 
 .meta[hidden] { display: none; }
 `;
-  var Li = `:host([resize="none"]) .textarea       { resize: none; }
+  var Si = `:host([resize="none"]) .textarea       { resize: none; }
 :host([resize="horizontal"]) .textarea { resize: horizontal; }
 :host([resize="vertical"]) .textarea   { resize: vertical; }
 :host([resize="both"]) .textarea       { resize: both; }
@@ -5201,46 +5201,46 @@ p9r-tag:hover {
   font-weight: 600;
 }
 `;
-  var Ci = (t, e) => {
+  var Ii = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var ht = (t) => {
+  var vt = (t) => {
     let e = t.getAttribute("max-count");
     if (e === null)
       return null;
     let r = parseInt(e, 10);
     return Number.isFinite(r) && r > 0 ? r : null;
   };
-  var w = (t, e, r, i) => {
+  var A = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let n = ht(t);
+    let n = vt(t);
     if (n === null)
       return;
     let a = e.value.length;
     i.textContent = String(a), r.dataset.over = String(a > n);
   };
-  var bt = (t, e, r) => {
+  var _t = (t, e, r) => {
     if (!t || !e || !r)
       return;
     let i = (t.textContent ?? "").length > 0, n = !e.hidden;
     r.hidden = !i && !n;
   };
-  var H = (t, e) => {
+  var R = (t, e) => {
     if (!e || !t.hasAttribute("autosize"))
       return;
     e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
   };
-  var ds = (t, e) => {
+  var Ss = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var cs = (t, e) => {
+  var Is = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -5249,14 +5249,14 @@ p9r-tag:hover {
     else
       e.setAttribute("placeholder", r);
   };
-  var us = (t, e) => {
+  var Ps = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("rows");
     if (r)
       e.rows = Number(r) || 3;
   };
-  var ps = (t, e) => {
+  var Rs = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("maxlength");
@@ -5265,11 +5265,11 @@ p9r-tag:hover {
     else
       e.setAttribute("maxlength", r);
   };
-  var hs = (t, e) => {
+  var qs = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var bs = (t, e) => {
+  var Bs = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -5278,17 +5278,17 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-required");
   };
-  var ms = (t, e, r, i) => {
+  var Ds = (t, e, r, i) => {
     if (!e)
       return;
-    e.textContent = t.getAttribute("hint") ?? "", bt(e, r, i);
+    e.textContent = t.getAttribute("hint") ?? "", _t(e, r, i);
   };
-  var gs = (t, e) => {
+  var Fs = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var fs = (t, e) => {
+  var js = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -5296,32 +5296,32 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-invalid");
   };
-  var mt = (t, e, r, i, n) => {
+  var xt = (t, e, r, i, n) => {
     if (!e || !r)
       return;
-    let a = ht(t);
+    let a = vt(t);
     if (a === null)
       e.hidden = true;
     else
       e.hidden = false, r.textContent = String(a);
-    bt(i, e, n);
+    _t(i, e, n);
   };
-  var gt = (t, e, r, i, n, a, s) => {
-    ds(t, r), cs(t, e), us(t, e), ps(t, e), hs(t, e), bs(t, e), ms(t, i, a, n), gs(t, i), fs(t, e), mt(t, a, s, i, n);
+  var yt = (t, e, r, i, n, a, s) => {
+    Ss(t, r), Is(t, e), Ps(t, e), Rs(t, e), qs(t, e), Bs(t, e), Ds(t, i, a, n), Fs(t, i), js(t, e), xt(t, a, s, i, n);
   };
-  var Ti = (t, e, r, i, n) => {
+  var Pi = (t, e, r, i, n) => {
     if (!e)
       return;
-    r.setFormValue(e.value), w(t, e, i, n), H(t, e);
+    r.setFormValue(e.value), A(t, e, i, n), R(t, e);
   };
-  var Mi = (t, e) => {
+  var Ri = (t, e) => {
     if (!t)
       return;
     e.setFormValue(t.value);
   };
-  var vs = Ai + Li;
+  var Ns = zi + Si;
 
-  class Hi extends o {
+  class qi extends o {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "rows", "maxlength", "max-count", "hint", "hint-level", "invalid", "disabled", "required", "autosize"];
@@ -5337,7 +5337,7 @@ p9r-tag:hover {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: vs, template: Ei });
+      super({ css: Ns, template: Hi });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
@@ -5345,12 +5345,12 @@ p9r-tag:hover {
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["value", "disabled", "required"].forEach((e) => Ci(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), gt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+      ["value", "disabled", "required"].forEach((e) => Ii(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), yt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
       else
-        w(this, this._textarea, this._counter, this._count);
+        A(this, this._textarea, this._counter, this._count);
     }
     disconnectedCallback() {
       this._textarea?.removeEventListener("input", this._onInput), this._textarea?.removeEventListener("change", this._onChange);
@@ -5364,11 +5364,11 @@ p9r-tag:hover {
       if (t === "value" && r !== null)
         this.value = r;
       else if (t === "max-count")
-        mt(this, this._counter, this._max, this._hint, this._meta), w(this, this._textarea, this._counter, this._count);
+        xt(this, this._counter, this._max, this._hint, this._meta), A(this, this._textarea, this._counter, this._count);
       else if (t === "autosize")
-        H(this, this._textarea);
+        R(this, this._textarea);
       else
-        gt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+        yt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
     }
     get value() {
       return this._textarea?.value ?? "";
@@ -5376,7 +5376,7 @@ p9r-tag:hover {
     set value(t) {
       if (!this._textarea)
         return;
-      this._textarea.value = t, this._internals.setFormValue(t), w(this, this._textarea, this._counter, this._count), H(this, this._textarea);
+      this._textarea.value = t, this._internals.setFormValue(t), A(this, this._textarea, this._counter, this._count), R(this, this._textarea);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -5396,14 +5396,14 @@ p9r-tag:hover {
     focus() {
       this._textarea?.focus();
     }
-    _onInput = () => Ti(this, this._textarea, this._internals, this._counter, this._count);
-    _onChange = () => Mi(this._textarea, this._internals);
+    _onInput = () => Pi(this, this._textarea, this._internals, this._counter, this._count);
+    _onChange = () => Ri(this._textarea, this._internals);
   }
-  var zi = `<div class="actions" role="toolbar" part="toolbar">
+  var Bi = `<div class="actions" role="toolbar" part="toolbar">
     <slot></slot>
 </div>
 `;
-  var Si = `:host {
+  var Di = `:host {
   display: inline-block;
 
   --_toolbar-bg: var(--bg-overlay, #ffffff);
@@ -5495,11 +5495,11 @@ p9r-tag:hover {
 }
 `;
 
-  class Ii extends o {
+  class Fi extends o {
     static _event = "action-click";
     _toolbar;
     constructor() {
-      super({ css: Si, template: zi });
+      super({ css: Di, template: Bi });
       this._toolbar = this.shadowRoot?.querySelector(".actions") ?? null;
     }
     static get observedAttributes() {
@@ -5554,9 +5554,9 @@ p9r-tag:hover {
         this.setAttribute("label", t);
     }
   }
-  var Pi = `<slot></slot>
+  var ji = `<slot></slot>
 `;
-  var Ri = `:host {
+  var Ni = `:host {
     --max-width: var(--p9r-container-md, 768px);
     display: block;
     width: 100%;
@@ -5577,12 +5577,12 @@ p9r-tag:hover {
 :host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }
 `;
 
-  class qi extends o {
+  class Oi extends o {
     constructor() {
-      super({ css: Ri, template: Pi });
+      super({ css: Ni, template: ji });
     }
   }
-  var Bi = `<div class="app-container" part="container">
+  var Ki = `<div class="app-container" part="container">
     <a class="skip-link" part="skip-link" href="#main-content">
         <slot name="skip-link">Skip to main content</slot>
     </a>
@@ -5598,7 +5598,7 @@ p9r-tag:hover {
     </main>
 </div>
 `;
-  var Di = `:host {
+  var Vi = `:host {
     display: block;
     height: 100vh;
     width: 100vw;
@@ -5684,11 +5684,11 @@ p9r-tag:hover {
 }
 `;
 
-  class Fi extends o {
+  class $i extends o {
     _sidebar;
     _content;
     constructor() {
-      super({ css: Di, template: Bi });
+      super({ css: Vi, template: Ki });
       this._sidebar = this.shadowRoot?.querySelector(".app-sidebar") ?? null, this._content = this.shadowRoot?.querySelector(".app-content") ?? null;
     }
     static get observedAttributes() {
@@ -5736,16 +5736,39 @@ p9r-tag:hover {
       this._content?.focus();
     }
   }
-  var ji = `<slot></slot>
+  var Ui = `<slot></slot>
 `;
-  var Ni = `:host {
+  var Xi = `:host {
     --gap: var(--p9r-space-md, 16px);
+    --max-width: 100%;
     --divider-color: var(--p9r-stack-divider, var(--border-default, rgba(0,0,0,0.1)));
+
     display: flex;
     flex-direction: column;
     gap: var(--gap);
+
+    /* Content zone: own width + horizontal placement within the parent.
+       Placement uses margin-inline (works under any parent), exposed in the
+       editor as "Align self" to distinguish it from "Align items" below. */
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: 0 auto;
 }
 
+/* --- Content zone width (size) --- */
+:host([size="sm"])   { --max-width: var(--p9r-container-sm, 640px); }
+:host([size="md"])   { --max-width: var(--p9r-container-md, 768px); }
+:host([size="lg"])   { --max-width: var(--p9r-container-lg, 1024px); }
+:host([size="xl"])   { --max-width: var(--p9r-container-xl, 1280px); }
+:host([size="full"]) { --max-width: 100%; }
+
+/* --- Self placement (align self) --- */
+:host([align-self="start"])  { margin-inline: 0 auto; }
+:host([align-self="center"]) { margin-inline: auto; }
+:host([align-self="end"])    { margin-inline: auto 0; }
+
+/* --- Gap --- */
 :host([gap="none"]) { --gap: 0; }
 :host([gap="xs"])   { --gap: var(--p9r-space-xs, 4px); }
 :host([gap="sm"])   { --gap: var(--p9r-space-sm, 8px); }
@@ -5753,19 +5776,17 @@ p9r-tag:hover {
 :host([gap="lg"])   { --gap: var(--p9r-space-lg, 24px); }
 :host([gap="xl"])   { --gap: var(--p9r-space-xl, 32px); }
 
+/* --- Direction --- */
 :host([direction="row"]) { flex-direction: row; }
 :host([wrap]) { flex-wrap: wrap; }
 
-/* \`align\` is also a legacy HTML presentational attribute that the UA stylesheet
-   maps to \`text-align\` (e.g. align="center" → text-align:center), which would
-   leak into the whole subtree. Our \`align\` only controls the flex cross-axis, so
-   neutralise that mapping and let text-align inherit normally. */
-:host([align]) { text-align: inherit; }
-:host([align="start"])    { align-items: flex-start; }
-:host([align="center"])   { align-items: center; }
-:host([align="end"])      { align-items: flex-end; }
-:host([align="stretch"])  { align-items: stretch; }
+/* --- Children cross-axis (align items) --- */
+:host([align-items="start"])   { align-items: flex-start; }
+:host([align-items="center"])  { align-items: center; }
+:host([align-items="end"])     { align-items: flex-end; }
+:host([align-items="stretch"]) { align-items: stretch; }
 
+/* --- Children main-axis (justify) --- */
 :host([justify="start"])   { justify-content: flex-start; }
 :host([justify="center"])  { justify-content: center; }
 :host([justify="end"])     { justify-content: flex-end; }
@@ -5773,6 +5794,7 @@ p9r-tag:hover {
 :host([justify="around"])  { justify-content: space-around; }
 :host([justify="evenly"])  { justify-content: space-evenly; }
 
+/* --- Dividers between children --- */
 :host([divider]) { gap: 0; }
 
 :host([divider]:not([direction="row"])) ::slotted(*:not(:first-child)) {
@@ -5788,12 +5810,12 @@ p9r-tag:hover {
 }
 `;
 
-  class Oi extends o {
+  class Yi extends o {
     constructor() {
-      super({ css: Ni, template: ji });
+      super({ css: Xi, template: Ui });
     }
   }
-  var Ki = `<aside class="sidebar" part="sidebar">
+  var Zi = `<aside class="sidebar" part="sidebar">
     <div class="sidebar-header" part="header">
         <slot name="header">
             <h3>Menu</h3>
@@ -5809,7 +5831,7 @@ p9r-tag:hover {
     </div>
 </aside>
 `;
-  var Vi = `:host {
+  var Gi = `:host {
     display: flex;
     flex-direction: column;
     width: 260px;
@@ -5888,19 +5910,19 @@ p9r-tag:hover {
     --item-bg-hover: var(--primary-muted);
 }
 `;
-  var $i = (t, e) => {
+  var Qi = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var Ui = (t) => {
+  var Wi = (t) => {
     if (!t)
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled"));
   };
-  var Yi = (t, e) => {
-    let r = t.shadowRoot?.querySelector("slot:not([name])"), i = Ui(r);
+  var Ji = (t, e) => {
+    let r = t.shadowRoot?.querySelector("slot:not([name])"), i = Wi(r);
     if (i.length === 0)
       return;
     let n = document.activeElement, a = i.findIndex((d) => d === n || d.contains(n)), s = -1;
@@ -5926,17 +5948,17 @@ p9r-tag:hover {
       l.focus();
   };
 
-  class Xi extends o {
+  class tn extends o {
     _sidebar;
     constructor() {
-      super({ css: Vi, template: Ki });
+      super({ css: Gi, template: Zi });
       this._sidebar = this.shadowRoot?.querySelector(".sidebar") ?? null;
     }
     static get observedAttributes() {
       return ["collapsed"];
     }
     connectedCallback() {
-      if ($i(this, "collapsed"), !this.hasAttribute("aria-label"))
+      if (Qi(this, "collapsed"), !this.hasAttribute("aria-label"))
         this.setAttribute("aria-label", "Main navigation");
       this.addEventListener("keydown", this._onKey);
     }
@@ -5961,9 +5983,9 @@ p9r-tag:hover {
       else
         this.removeAttribute("collapsed");
     }
-    _onKey = (t) => Yi(this, t);
+    _onKey = (t) => Ji(this, t);
   }
-  var Zi = `<a class="menu-item" part="item" tabindex="-1">
+  var en = `<a class="menu-item" part="item" tabindex="-1">
     <span class="icon-wrapper" part="icon">
         <slot name="icon"></slot>
     </span>
@@ -5973,7 +5995,7 @@ p9r-tag:hover {
     <span class="badge" part="badge" id="badge-element"></span>
 </a>
 `;
-  var Gi = `:host {
+  var rn = `:host {
     display: block;
     width: 100%;
     outline: none;
@@ -6045,7 +6067,7 @@ p9r-tag:hover {
     flex-shrink: 0;
 }
 `;
-  var Wi = `.menu-item:hover {
+  var nn = `.menu-item:hover {
     background-color: var(--item-bg-active);
     color: var(--item-color-active);
 }
@@ -6095,13 +6117,13 @@ p9r-tag:hover {
     box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
 }
 `;
-  var Ji = (t, e) => {
+  var an = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var ft = (t, e) => {
+  var wt = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -6109,7 +6131,7 @@ p9r-tag:hover {
     else
       t.removeAttribute("href");
   };
-  var vt = (t, e) => {
+  var kt = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -6117,7 +6139,7 @@ p9r-tag:hover {
     else
       t.textContent = "", t.style.display = "none";
   };
-  var _t = (t, e) => {
+  var Et = (t, e) => {
     if (!e || !t.hasAttribute("href"))
       return;
     let r = t.getAttribute("href");
@@ -6133,7 +6155,7 @@ p9r-tag:hover {
       console.warn("Invalid href in LateralMenuItem:", r);
     }
   };
-  var Qi = (t, e, r) => {
+  var on = (t, e, r) => {
     if (t.hasAttribute("disabled"))
       return;
     if (r.key !== "Enter" && r.key !== " ")
@@ -6142,13 +6164,13 @@ p9r-tag:hover {
       return;
     r.preventDefault(), e?.click();
   };
-  var Ss = Gi + Wi;
+  var el = rn + nn;
 
-  class tn extends o {
+  class sn extends o {
     _anchor;
     _badgeEl;
     constructor() {
-      super({ css: Ss, template: Zi });
+      super({ css: el, template: en });
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
     }
     static get observedAttributes() {
@@ -6156,12 +6178,12 @@ p9r-tag:hover {
     }
     connectedCallback() {
       for (let t of ["href", "badge", "disabled"])
-        Ji(this, t);
+        an(this, t);
       if (!this.hasAttribute("role"))
         this.setAttribute("role", "listitem");
       if (!this.hasAttribute("tabindex"))
         this.setAttribute("tabindex", "0");
-      ft(this._anchor, this.getAttribute("href")), vt(this._badgeEl, this.getAttribute("badge")), _t(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
+      wt(this._anchor, this.getAttribute("href")), kt(this._badgeEl, this.getAttribute("badge")), Et(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
@@ -6170,9 +6192,9 @@ p9r-tag:hover {
       if (!this._anchor)
         return;
       if (t === "href")
-        ft(this._anchor, r);
+        wt(this._anchor, r);
       if (t === "badge")
-        vt(this._badgeEl, r);
+        kt(this._badgeEl, r);
       if (t === "disabled") {
         let i = this.hasAttribute("disabled");
         this.setAttribute("aria-disabled", i ? "true" : "false"), this.setAttribute("tabindex", i ? "-1" : "0");
@@ -6196,10 +6218,10 @@ p9r-tag:hover {
     set disabled(t) {
       t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
-    _onPopstate = () => _t(this, this._anchor);
-    _onKey = (t) => Qi(this, this._anchor, t);
+    _onPopstate = () => Et(this, this._anchor);
+    _onKey = (t) => on(this, this._anchor, t);
   }
-  var en = `<nav class="pagination" part="pagination" aria-label="Pagination">
+  var ln = `<nav class="pagination" part="pagination" aria-label="Pagination">
     <button class="prev" part="prev" type="button" aria-label="Previous page">
         <slot name="prev">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -6217,7 +6239,7 @@ p9r-tag:hover {
     </button>
 </nav>
 `;
-  var rn = `:host {
+  var dn = `:host {
   display: inline-block;
 
   --_size: 32px;
@@ -6312,28 +6334,28 @@ p9r-tag:hover {
   .page, .prev, .next { transition: background-color 0.15s, color 0.15s; }
 }
 `;
-  var g = (t, e, r) => {
+  var v = (t, e, r) => {
     let i = parseInt(t.getAttribute(e) ?? "", 10);
     return Number.isFinite(i) && i > 0 ? i : r;
   };
-  var nn = (t, e, r, i) => {
-    let n = [], a = Math.max(1, t - r), s = Math.min(e, t + r), l = Array.from({ length: Math.min(i, e) }, (p, A) => A + 1), d = Array.from({ length: Math.min(i, e) }, (p, A) => e - A).reverse(), c = [];
+  var cn = (t, e, r, i) => {
+    let n = [], a = Math.max(1, t - r), s = Math.min(e, t + r), l = Array.from({ length: Math.min(i, e) }, (p, f) => f + 1), d = Array.from({ length: Math.min(i, e) }, (p, f) => e - f).reverse(), c = [];
     for (let p = a;p <= s; p++)
       c.push(p);
-    let u = Array.from(new Set([...l, ...c, ...d])).sort((p, A) => p - A), m = 0;
+    let u = Array.from(new Set([...l, ...c, ...d])).sort((p, f) => p - f), h = 0;
     for (let p of u) {
-      if (m > 0 && p - m > 1)
+      if (h > 0 && p - h > 1)
         n.push("…");
-      n.push(p), m = p;
+      n.push(p), h = p;
     }
     return n;
   };
-  var an = (t, e, r, i) => {
+  var un = (t, e, r, i) => {
     if (!e)
       return;
-    let n = g(t, "page", 1), a = g(t, "total", 1), s = g(t, "siblings", 1), l = g(t, "boundary", 1);
+    let n = v(t, "page", 1), a = v(t, "total", 1), s = v(t, "siblings", 1), l = v(t, "boundary", 1);
     e.innerHTML = "";
-    for (let d of nn(n, a, s, l))
+    for (let d of cn(n, a, s, l))
       if (d === "…") {
         let c = document.createElement("span");
         c.className = "ellipsis", c.setAttribute("part", "ellipsis"), c.textContent = "…", e.appendChild(c);
@@ -6348,33 +6370,33 @@ p9r-tag:hover {
     if (i)
       i.disabled = n >= a;
   };
-  var j = (t, e, r) => {
+  var $ = (t, e, r) => {
     if (r === e)
       return;
     if (!t.dispatchEvent(new CustomEvent("page-change", { bubbles: true, cancelable: true, detail: { page: r } })))
       return;
     t.setAttribute("page", String(r));
   };
-  var on = (t, e) => {
+  var pn = (t, e) => {
     if (e <= 1)
       return;
-    j(t, e, e - 1);
+    $(t, e, e - 1);
   };
-  var sn = (t, e, r) => {
+  var hn = (t, e, r) => {
     if (e >= r)
       return;
-    j(t, e, e + 1);
+    $(t, e, e + 1);
   };
-  var ln = (t, e, r) => {
+  var bn = (t, e, r) => {
     let i = r.target.closest(".page");
     if (!i)
       return;
     let n = Number(i.dataset.page);
     if (Number.isFinite(n))
-      j(t, e, n);
+      $(t, e, n);
   };
 
-  class dn extends o {
+  class mn extends o {
     _pages;
     _prev;
     _next;
@@ -6382,7 +6404,7 @@ p9r-tag:hover {
       return ["page", "total", "siblings", "boundary"];
     }
     constructor() {
-      super({ css: rn, template: en });
+      super({ css: dn, template: ln });
       this._pages = this.shadowRoot?.querySelector(".pages") ?? null, this._prev = this.shadowRoot?.querySelector(".prev") ?? null, this._next = this.shadowRoot?.querySelector(".next") ?? null;
     }
     connectedCallback() {
@@ -6395,32 +6417,32 @@ p9r-tag:hover {
       this._render();
     }
     get page() {
-      return g(this, "page", 1);
+      return v(this, "page", 1);
     }
     set page(t) {
       this.setAttribute("page", String(t));
     }
     get total() {
-      return g(this, "total", 1);
+      return v(this, "total", 1);
     }
     set total(t) {
       this.setAttribute("total", String(t));
     }
     _render() {
-      an(this, this._pages, this._prev, this._next);
+      un(this, this._pages, this._prev, this._next);
     }
-    _onPrev = () => on(this, this.page);
-    _onNext = () => sn(this, this.page, this.total);
-    _onPageClick = (t) => ln(this, this.page, t);
+    _onPrev = () => pn(this, this.page);
+    _onNext = () => hn(this, this.page, this.total);
+    _onPageClick = (t) => bn(this, this.page, t);
   }
-  var cn = `<div class="progress" part="progress" role="progressbar">
+  var gn = `<div class="progress" part="progress" role="progressbar">
     <div class="track" part="track">
         <div class="bar" part="bar"></div>
     </div>
     <span class="label" part="label"><slot></slot></span>
 </div>
 `;
-  var un = `:host {
+  var fn = `:host {
   display: block;
 
   --_height: 8px;
@@ -6501,7 +6523,7 @@ p9r-tag:hover {
 }
 `;
 
-  class pn extends o {
+  class vn extends o {
     _bar;
     _label;
     _root;
@@ -6509,7 +6531,7 @@ p9r-tag:hover {
       return ["value", "max", "indeterminate"];
     }
     constructor() {
-      super({ css: un, template: cn });
+      super({ css: fn, template: gn });
       this._bar = this.shadowRoot?.querySelector(".bar") ?? null, this._label = this.shadowRoot?.querySelector(".label") ?? null, this._root = this.shadowRoot?.querySelector(".progress") ?? null;
     }
     connectedCallback() {
@@ -6563,9 +6585,9 @@ p9r-tag:hover {
         this.removeAttribute("indeterminate");
     }
   }
-  var hn = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
+  var _n = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
 `;
-  var bn = `:host {
+  var xn = `:host {
   display: block;
 
   --_bg: var(--bg-base, #f1f5f9);
@@ -6614,12 +6636,12 @@ p9r-tag:hover {
 }
 `;
 
-  class mn extends o {
+  class yn extends o {
     static get observedAttributes() {
       return ["width", "height"];
     }
     constructor() {
-      super({ css: bn, template: hn });
+      super({ css: xn, template: _n });
     }
     connectedCallback() {
       this._syncSize();
@@ -6643,11 +6665,11 @@ p9r-tag:hover {
       return /^\d+(\.\d+)?$/.test(t) ? `${t}px` : t;
     }
   }
-  var gn = `<div class="spinner" part="spinner" role="status" aria-live="polite">
+  var wn = `<div class="spinner" part="spinner" role="status" aria-live="polite">
     <span class="visually-hidden"><slot>Loading…</slot></span>
 </div>
 `;
-  var fn = `:host {
+  var kn = `:host {
   display: inline-block;
 
   --_size: 1.25rem;
@@ -6699,16 +6721,16 @@ p9r-tag:hover {
 }
 `;
 
-  class vn extends o {
+  class En extends o {
     constructor() {
-      super({ css: fn, template: gn });
+      super({ css: kn, template: wn });
     }
   }
-  var _n = `<ol class="stepper" part="stepper">
+  var An = `<ol class="stepper" part="stepper">
     <slot></slot>
 </ol>
 `;
-  var xn = `:host {
+  var Ln = `:host {
   display: block;
 
   --_active: var(--primary-base, #4361ee);
@@ -6733,12 +6755,12 @@ p9r-tag:hover {
 }
 `;
 
-  class yn extends o {
+  class Cn extends o {
     static get observedAttributes() {
       return ["current", "orientation"];
     }
     constructor() {
-      super({ css: xn, template: _n });
+      super({ css: Ln, template: An });
     }
     connectedCallback() {
       this._sync();
@@ -6774,7 +6796,7 @@ p9r-tag:hover {
       });
     }
   }
-  var wn = `<li class="step" part="step">
+  var Tn = `<li class="step" part="step">
     <div class="indicator" part="indicator">
         <span class="bullet" part="bullet">
             <span class="number"></span>
@@ -6792,7 +6814,7 @@ p9r-tag:hover {
     </div>
 </li>
 `;
-  var kn = `:host {
+  var Mn = `:host {
   display: flex;
   flex: 1;
 
@@ -6882,7 +6904,7 @@ p9r-tag:hover {
 .description slot:empty,
 .description:has(slot:not(:has(*))) { display: none; }
 `;
-  var En = `:host([data-state="active"], [state="active"]) {
+  var Hn = `:host([data-state="active"], [state="active"]) {
   --_color: var(--_active);
   --_label-color: var(--_text);
 }
@@ -6943,16 +6965,16 @@ p9r-tag:hover {
   margin-top: 0.4rem;
 }
 `;
-  var Us = kn + En;
+  var ml = Mn + Hn;
 
-  class An extends o {
+  class zn extends o {
     _label;
     _number;
     static get observedAttributes() {
       return ["label", "data-index"];
     }
     constructor() {
-      super({ css: Us, template: wn });
+      super({ css: ml, template: Tn });
       this._label = this.shadowRoot?.querySelector(".label") ?? null, this._number = this.shadowRoot?.querySelector(".number") ?? null;
     }
     connectedCallback() {
@@ -6968,13 +6990,13 @@ p9r-tag:hover {
         this._number.textContent = this.getAttribute("data-index") ?? "";
     }
   }
-  var Ln = `<div class="table-container">
+  var Sn = `<div class="table-container">
   <div class="p9r-table">
     <slot name="header"></slot>
     <slot></slot>
   </div>
 </div>`;
-  var Cn = `:host {
+  var In = `:host {
   display: block;
   width: 100%;
 }
@@ -7008,14 +7030,14 @@ p9r-tag:hover {
   background-color: var(--bg-base);
 }`;
 
-  class Tn extends o {
+  class Pn extends o {
     constructor() {
-      super({ css: Cn, template: Ln });
+      super({ css: In, template: Sn });
     }
   }
-  var Mn = `<slot></slot>
+  var Rn = `<slot></slot>
 `;
-  var Hn = `:host {
+  var qn = `:host {
   display: table-cell;
   padding: 12px 20px;
   vertical-align: middle;
@@ -7040,16 +7062,16 @@ p9r-tag:hover {
 }
 `;
 
-  class zn extends o {
+  class Bn extends o {
     constructor() {
-      super({ css: Hn, template: Mn });
+      super({ css: qn, template: Rn });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
         this.setAttribute("role", "cell");
     }
   }
-  var Sn = `<div class="header-wrapper" part="wrapper">
+  var Dn = `<div class="header-wrapper" part="wrapper">
   <button
     type="button"
     class="label-section"
@@ -7079,7 +7101,7 @@ p9r-tag:hover {
   </div>
 </div>
 `;
-  var In = `:host {
+  var Fn = `:host {
   display: table-cell;
   padding: 12px 20px;
   border-bottom: 2px solid var(--border-light);
@@ -7150,7 +7172,7 @@ p9r-tag:hover {
   box-sizing: border-box;
 }
 `;
-  var Pn = `:host([sort]) .label-section {
+  var jn = `:host([sort]) .label-section {
   cursor: pointer;
 }
 
@@ -7197,13 +7219,13 @@ p9r-tag:hover {
   background: var(--bg-base, #eee);
 }
 `;
-  var tl = (t) => {
+  var kl = (t) => {
     let e = t.getAttribute("filter-name");
     if (!e)
       return "";
     return new URL(window.location.href).searchParams.get(`f_${e}`) ?? "";
   };
-  var xt = (t, e, r) => {
+  var At = (t, e, r) => {
     let i = t.getAttribute("filter-name");
     if (!e)
       return;
@@ -7212,7 +7234,7 @@ p9r-tag:hover {
       return;
     }
     e.removeAttribute("hidden");
-    let n = tl(t);
+    let n = kl(t);
     if (r)
       r.value = n;
     if (n)
@@ -7220,14 +7242,14 @@ p9r-tag:hover {
     else
       t.removeAttribute("data-has-filter");
   };
-  var Rn = (t) => {
+  var Nn = (t) => {
     let e = t.getAttribute("sort");
     if (!e)
       return;
     let r = new URL(window.location.href), i = r.searchParams.get("sort"), n = r.searchParams.get("direction"), a = i === e && n === "asc" ? "desc" : "asc";
     r.searchParams.set("sort", e), r.searchParams.set("direction", a), window.location.href = r.toString();
   };
-  var qn = (t, e) => {
+  var On = (t, e) => {
     let r = t.getAttribute("filter-name");
     if (!r)
       return;
@@ -7238,12 +7260,12 @@ p9r-tag:hover {
       i.searchParams.delete(`f_${r}`);
     window.location.href = i.toString();
   };
-  var Bn = (t, e) => {
+  var Kn = (t, e) => {
     if (e.composedPath().some((r) => r instanceof HTMLInputElement))
       return;
-    Rn(t);
+    Nn(t);
   };
-  var Dn = (t, e, r, i) => {
+  var Vn = (t, e, r, i) => {
     if (t.stopPropagation(), !r || !e)
       return;
     if (r.hasAttribute("hidden"))
@@ -7251,17 +7273,17 @@ p9r-tag:hover {
     else
       r.setAttribute("hidden", ""), e.setAttribute("aria-expanded", "false");
   };
-  var Fn = (t, e, r) => {
+  var $n = (t, e, r) => {
     if (r.key !== "Enter" || !e)
       return;
-    qn(t, e.value);
+    On(t, e.value);
   };
-  var jn = (t, e) => {
+  var Un = (t, e) => {
     e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
   };
-  var el = In + Pn;
+  var El = Fn + jn;
 
-  class Nn extends o {
+  class Xn extends o {
     _sortTrigger;
     _filterBtn;
     _filterPopover;
@@ -7270,27 +7292,27 @@ p9r-tag:hover {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: el, template: Sn });
+      super({ css: El, template: Dn });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
-      xt(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
+      At(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
     }
     disconnectedCallback() {
       this._sortTrigger?.removeEventListener("click", this._onSort), this._filterBtn?.removeEventListener("click", this._onFilterToggle), this._filterPopover?.removeEventListener("click", this._stopPropagation), this._filterInput?.removeEventListener("keydown", this._onFilterKey), window.removeEventListener("click", this._onWindowClick);
     }
     attributeChangedCallback() {
-      xt(this, this._filterBtn, this._filterInput);
+      At(this, this._filterBtn, this._filterInput);
     }
-    _onSort = (t) => Bn(this, t);
-    _onFilterToggle = (t) => Dn(t, this._filterBtn, this._filterPopover, this._filterInput);
-    _onFilterKey = (t) => Fn(this, this._filterInput, t);
-    _onWindowClick = () => jn(this._filterBtn, this._filterPopover);
+    _onSort = (t) => Kn(this, t);
+    _onFilterToggle = (t) => Vn(t, this._filterBtn, this._filterPopover, this._filterInput);
+    _onFilterKey = (t) => $n(this, this._filterInput, t);
+    _onWindowClick = () => Un(this._filterBtn, this._filterPopover);
     _stopPropagation = (t) => t.stopPropagation();
   }
-  var On = `<slot></slot>
+  var Yn = `<slot></slot>
 `;
-  var Kn = `:host {
+  var Zn = `:host {
   display: table-row;
 }
 
@@ -7309,7 +7331,7 @@ p9r-tag:hover {
   }
 }
 `;
-  var yt = (t) => {
+  var Lt = (t) => {
     let e = t.getAttribute("href");
     if (!e)
       return;
@@ -7321,24 +7343,24 @@ p9r-tag:hover {
     else
       window.location.href = e;
   };
-  var Vn = (t) => {
+  var Gn = (t) => {
     if (!t.hasAttribute("href"))
       return;
-    yt(t);
+    Lt(t);
   };
-  var $n = (t, e) => {
+  var Qn = (t, e) => {
     if (!t.hasAttribute("href"))
       return;
     if (e.key === "Enter" || e.key === " ")
-      e.preventDefault(), yt(t);
+      e.preventDefault(), Lt(t);
   };
-  var Un = (t, e) => {
+  var Wn = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var wt = (t) => {
+  var Ct = (t) => {
     if (t.hasAttribute("href")) {
       if (!t.hasAttribute("tabindex"))
         t.setAttribute("tabindex", "0");
@@ -7354,27 +7376,27 @@ p9r-tag:hover {
     }
   };
 
-  class Yn extends o {
+  class Jn extends o {
     static get observedAttributes() {
       return ["href"];
     }
     constructor() {
-      super({ css: Kn, template: On });
+      super({ css: Zn, template: Yn });
     }
     connectedCallback() {
       for (let t of ["href", "target"])
-        Un(this, t);
-      this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), wt(this);
+        Wn(this, t);
+      this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), Ct(this);
     }
     disconnectedCallback() {
       this.removeEventListener("click", this._onClick), this.removeEventListener("keydown", this._onKey);
     }
     attributeChangedCallback(t) {
       if (t === "href")
-        wt(this);
+        Ct(this);
     }
-    _onClick = () => Vn(this);
-    _onKey = (t) => $n(this, t);
+    _onClick = () => Gn(this);
+    _onKey = (t) => Qn(this, t);
     get href() {
       return this.getAttribute("href");
     }
@@ -7394,14 +7416,14 @@ p9r-tag:hover {
         this.setAttribute("target", t);
     }
   }
-  var Xn = `<div class="tabs" part="tabs">
+  var ta = `<div class="tabs" part="tabs">
     <div class="tablist" part="tablist" role="tablist"></div>
     <div class="panels" part="panels">
         <slot></slot>
     </div>
 </div>
 `;
-  var Zn = `:host {
+  var ea = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -7478,7 +7500,7 @@ p9r-tag:hover {
   .tab { transition: color 0.15s; }
 }
 `;
-  var Gn = `:host([variant="pills"]) .tablist {
+  var ra = `:host([variant="pills"]) .tablist {
   border-bottom: 0;
   gap: 0.4rem;
   padding: 0.25rem;
@@ -7517,25 +7539,25 @@ p9r-tag:hover {
   padding-left: 1rem;
 }
 `;
-  var kt = (t) => {
+  var Tt = (t) => {
     if (!t)
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
   };
-  var sl = 0;
-  var Wn = () => `tabpanel-${sl++}`;
-  var Jn = (t, e) => {
+  var Hl = 0;
+  var ia = () => `tabpanel-${Hl++}`;
+  var na = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
   };
-  var Et = (t, e, r) => {
+  var Mt = (t, e, r) => {
     if (!e)
       return;
     e.innerHTML = "";
-    let i = kt(r), n = t.getAttribute("active");
+    let i = Tt(r), n = t.getAttribute("active");
     if (!n && i.length > 0)
       n = i[0]?.getAttribute("id") ?? null;
     if (i.forEach((a, s) => {
-      let l = a.getAttribute("id") ?? Wn();
+      let l = a.getAttribute("id") ?? ia();
       if (!a.id)
         a.id = l;
       let d = a.getAttribute("label") ?? `Tab ${s + 1}`, c = document.createElement("button");
@@ -7543,10 +7565,10 @@ p9r-tag:hover {
         c.setAttribute("disabled", "");
       e.appendChild(c), a.setAttribute("role", "tabpanel"), a.setAttribute("aria-labelledby", `tab-${l}`);
     }), n)
-      k(t, e, r, n);
+      L(t, e, r, n);
   };
-  var k = (t, e, r, i) => {
-    let n = kt(r), a = Array.from(e?.querySelectorAll(".tab") ?? []), s = false;
+  var L = (t, e, r, i) => {
+    let n = Tt(r), a = Array.from(e?.querySelectorAll(".tab") ?? []), s = false;
     if (n.forEach((l) => {
       let d = l.id === i;
       if (d)
@@ -7556,17 +7578,17 @@ p9r-tag:hover {
       let d = l.dataset.target === i;
       l.setAttribute("aria-selected", String(d)), l.setAttribute("tabindex", d ? "0" : "-1");
     }), s && t.getAttribute("active") !== i)
-      t.setAttribute("active", i), Jn(t, i);
+      t.setAttribute("active", i), na(t, i);
   };
-  var Qn = (t, e, r, i) => {
+  var aa = (t, e, r, i) => {
     let n = i.target.closest(".tab");
     if (!n || n.hasAttribute("disabled"))
       return;
     let a = n.dataset.target;
     if (a)
-      k(t, e, r, a);
+      L(t, e, r, a);
   };
-  var ta = (t, e, r, i) => {
+  var oa = (t, e, r, i) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
       return;
     let n = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
@@ -7587,30 +7609,30 @@ p9r-tag:hover {
       return;
     let c = d.dataset.target;
     if (c)
-      k(t, e, r, c);
+      L(t, e, r, c);
     d.focus();
   };
-  var ll = Zn + Gn;
+  var zl = ea + ra;
 
-  class ea extends o {
+  class sa extends o {
     _tablist;
     _slot;
     static get observedAttributes() {
       return ["active"];
     }
     constructor() {
-      super({ css: ll, template: Xn });
+      super({ css: zl, template: ta });
       this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
-      this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), Et(this, this._tablist, this._slot);
+      this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), Mt(this, this._tablist, this._slot);
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onRebuild), this._tablist?.removeEventListener("click", this._onClick), this._tablist?.removeEventListener("keydown", this._onKey);
     }
     attributeChangedCallback(t, e, r) {
       if (t === "active" && r !== null)
-        k(this, this._tablist, this._slot, r);
+        L(this, this._tablist, this._slot, r);
     }
     get active() {
       return this.getAttribute("active") ?? "";
@@ -7618,15 +7640,15 @@ p9r-tag:hover {
     set active(t) {
       this.setAttribute("active", t);
     }
-    _onRebuild = () => Et(this, this._tablist, this._slot);
-    _onClick = (t) => Qn(this, this._tablist, this._slot, t);
-    _onKey = (t) => ta(this, this._tablist, this._slot, t);
+    _onRebuild = () => Mt(this, this._tablist, this._slot);
+    _onClick = (t) => aa(this, this._tablist, this._slot, t);
+    _onKey = (t) => oa(this, this._tablist, this._slot, t);
   }
-  var ra = `<div class="panel" part="panel">
+  var la = `<div class="panel" part="panel">
     <slot></slot>
 </div>
 `;
-  var ia = `:host {
+  var da = `:host {
   display: block;
 }
 
@@ -7637,15 +7659,15 @@ p9r-tag:hover {
 }
 `;
 
-  class na extends o {
+  class ca extends o {
     constructor() {
-      super({ css: ia, template: ra });
+      super({ css: da, template: la });
     }
   }
-  var aa = `<span class="label" part="label"><slot></slot></span>
+  var ua = `<span class="label" part="label"><slot></slot></span>
 <button type="button" class="remove" part="remove" aria-label="Remove" hidden>&times;</button>
 `;
-  var oa = `:host {
+  var pa = `:host {
     --_tag-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
@@ -7714,7 +7736,7 @@ p9r-tag:hover {
     }
 }
 `;
-  var sa = `:host([color="info"]) {
+  var ha = `:host([color="info"]) {
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
     --_tag-color: var(--info-base, oklch(65% 0.12 230));
     --_tag-border: var(--info-contrasted, oklch(25% 0.08 230));
@@ -7750,15 +7772,15 @@ p9r-tag:hover {
     --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
 }
 `;
-  var bl = oa + sa;
+  var Bl = pa + ha;
 
-  class la extends o {
+  class ba extends o {
     _removeBtn;
     static get observedAttributes() {
       return ["removable"];
     }
     constructor() {
-      super({ css: bl, template: aa });
+      super({ css: Bl, template: ua });
       this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
     }
     connectedCallback() {
@@ -7801,13 +7823,13 @@ p9r-tag:hover {
         this.removeAttribute("removable");
     }
   }
-  var da = `<div class="icon" part="icon"></div>
+  var ma = `<div class="icon" part="icon"></div>
 <div class="content">
     <span class="message"><slot></slot></span>
 </div>
 <button class="close" aria-label="Dismiss">&times;</button>
 `;
-  var ca = `:host {
+  var ga = `:host {
     --_bg: var(--bg-surface, #ffffff);
     --_color: var(--text-main, #1f2937);
     --_border: var(--border-default, #e5e7eb);
@@ -7878,7 +7900,7 @@ p9r-tag:hover {
     opacity: 1;
 }
 `;
-  var ua = `:host([leaving]) {
+  var fa = `:host([leaving]) {
     animation: toast-out 160ms ease-in forwards;
 }
 
@@ -7921,12 +7943,12 @@ p9r-tag:hover {
     to   { opacity: 0; transform: translateX(-20px); }
 }
 `;
-  var vl = ca + ua;
+  var Nl = ga + fa;
 
-  class pa extends o {
+  class va extends o {
     _timer = null;
     constructor() {
-      super({ css: vl, template: da });
+      super({ css: Nl, template: ma });
     }
     connectedCallback() {
       this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
@@ -7948,9 +7970,9 @@ p9r-tag:hover {
       }, { once: true });
     }
   }
-  var ha = `<slot></slot>
+  var _a = `<slot></slot>
 `;
-  var ba = `:host {
+  var xa = `:host {
     position: fixed;
     top: 24px;
     left: 24px;
@@ -8000,9 +8022,9 @@ p9r-tag:hover {
 }
 `;
 
-  class ma extends o {
+  class ya extends o {
     constructor() {
-      super({ css: ba, template: ha });
+      super({ css: xa, template: _a });
     }
     connectedCallback() {
       if (!this.hasAttribute("popover"))
@@ -8018,7 +8040,7 @@ p9r-tag:hover {
       return r.textContent = t, this.appendChild(r), r;
     }
   }
-  var ga = `<div class="trigger" part="trigger">
+  var wa = `<div class="trigger" part="trigger">
     <slot></slot>
 </div>
 <div class="tooltip" part="tooltip" role="tooltip" aria-hidden="true">
@@ -8026,7 +8048,7 @@ p9r-tag:hover {
     <span class="text"></span>
 </div>
 `;
-  var fa = `:host {
+  var ka = `:host {
   display: inline-block;
   position: relative;
 
@@ -8091,7 +8113,7 @@ p9r-tag:hover {
   border-top-color: var(--_bg);
 }
 `;
-  var va = `:host([position="bottom"]) .tooltip {
+  var Ea = `:host([position="bottom"]) .tooltip {
   top: calc(100% + var(--_offset));
   bottom: auto;
   left: 50%;
@@ -8139,9 +8161,9 @@ p9r-tag:hover {
   border-right-color: var(--_bg);
 }
 `;
-  var Ll = fa + va;
+  var Zl = ka + Ea;
 
-  class _a extends o {
+  class Aa extends o {
     _tooltip;
     _text;
     _showTimer = null;
@@ -8150,7 +8172,7 @@ p9r-tag:hover {
       return ["text"];
     }
     constructor() {
-      super({ css: Ll, template: ga });
+      super({ css: Zl, template: wa });
       this._tooltip = this.shadowRoot?.querySelector(".tooltip") ?? null, this._text = this.shadowRoot?.querySelector(".text") ?? null;
     }
     connectedCallback() {
@@ -8186,22 +8208,369 @@ p9r-tag:hover {
       }, 80);
     };
   }
-  function At(t, e) {
+  function C(t) {
+    let e = new URL(t, window.location.href);
+    for (let [r, i] of new URLSearchParams(window.location.search))
+      e.searchParams.append(r, i);
+    return e;
+  }
+  async function T(t) {
+    try {
+      let e = await fetch(C(t), { headers: { Accept: "application/json" } });
+      return e.ok ? await e.json() : null;
+    } catch {
+      return null;
+    }
+  }
+  var Gl = new Intl.NumberFormat("fr-FR");
+  var Ql = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
+  var g = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
+  var Wl = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
+  function Ht(t, e) {
+    if (e === "ms")
+      return `${Math.round(t)} ms`;
+    if (e === "pct")
+      return `${(t * 100).toFixed(1).replace(".", ",")} %`;
+    return Gl.format(Math.round(t));
+  }
+  var La = (t) => {
+    let e = new Date(t);
+    return Number.isNaN(e.getTime()) ? t : Ql.format(e);
+  };
+  function U(t, e) {
+    return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${g(t)}</p>${e ? `<p class="empty-hint">${g(e)}</p>` : ""}</div>`;
+  }
+  function Ca(t) {
+    if (t.length === 0)
+      return "";
+    let e = 320, r = 140, i = 32, n = 8, a = 10, s = 22, l = e - i - n, d = r - a - s, c = a + d, u = Math.max(...t.map((_) => _.value), 1), h = t.length, p = t.map((_, H) => [i + (h === 1 ? l / 2 : H / (h - 1) * l), a + (1 - _.value / u) * d]), f = p.map(([_, H]) => `${_.toFixed(1)},${H.toFixed(1)}`).join(" "), Wa = `${p[0][0].toFixed(1)},${c} ${f} ${p[h - 1][0].toFixed(1)},${c}`, Ja = p.map(([_, H]) => `<circle class="dot" cx="${_.toFixed(1)}" cy="${H.toFixed(1)}" r="2.5"/>`).join("");
+    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${a}" x2="${i}" y2="${c}"/><line class="axis" x1="${i}" y1="${c}" x2="${e - n}" y2="${c}"/><text class="tick" x="${i - 4}" y="${a + 3}" text-anchor="end">${Wl(u)}</text><text class="tick" x="${i - 4}" y="${c}" text-anchor="end">0</text><polygon class="area" points="${Wa}" fill="url(#lc-grad)"/><polyline class="stroke" points="${f}"/>${Ja}<text class="tick" x="${i}" y="${r - 6}">${g(t[0].label)}</text><text class="tick" x="${e - n}" y="${r - 6}" text-anchor="end">${g(t[h - 1].label)}</text></svg>`;
+  }
+  function Ta(t, e) {
+    if (t.length === 0)
+      return "";
+    let r = t.reduce((i, n) => i + n.value, 0) || 1;
+    return t.map((i) => {
+      let n = i.value / r * 100, a = `${n.toFixed(1).replace(".", ",")} %`;
+      return `<div class="bar"><span class="bar-key" title="${g(i.label)}">${g(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${n.toFixed(1)}"/></svg><span class="bar-val">${e ? `${Ht(i.value, "int")} · ${a}` : a}</span></div>`;
+    }).join("");
+  }
+  var Ma = `<div class="stat">
+    <span class="label"></span>
+    <strong class="value">—</strong>
+    <span class="note"></span>
+</div>
+`;
+  var Ha = `:host {
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 1.25rem;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e7e9ee);
+    border-radius: 12px;
+}
+
+.label {
+    font-size: 13px;
+    color: var(--text-muted, #6b7280);
+}
+
+.value {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--text-main, #1f2937);
+}
+
+.value.is-empty {
+    color: var(--border-default, #cbd5e1);
+}
+
+.note {
+    font-size: 12px;
+    color: var(--text-muted, #9aa3b2);
+    min-height: 1em;
+}
+`;
+
+  class za extends o {
+    constructor() {
+      super({ css: Ha, template: Ma });
+    }
+    connectedCallback() {
+      let t = this.shadowRoot;
+      t.querySelector(".label").textContent = this.getAttribute("label") ?? "", this._load(t);
+    }
+    async _load(t) {
+      let e = t.querySelector(".value"), r = t.querySelector(".note"), i = this.getAttribute("url"), n = i ? await T(i) : null, a = n && typeof n === "object" ? n[this.getAttribute("field") ?? "value"] : undefined;
+      if (a === undefined || a === null) {
+        e.textContent = "—", e.classList.add("is-empty"), r.textContent = this.getAttribute("empty") ?? "Aucune donnée";
+        return;
+      }
+      e.classList.remove("is-empty"), e.textContent = Ht(Number(a), this.getAttribute("format") ?? "int"), r.textContent = "";
+    }
+  }
+  var Sa = `<div class="chart"></div>
+`;
+  var Ia = `:host {
+    display: block;
+}
+
+.chart {
+    width: 100%;
+}
+
+.line {
+    display: block;
+    width: 100%;
+    height: 160px;
+}
+
+.line .stroke {
+    fill: none;
+    stroke: var(--primary-base, #4f46e5);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.line .dot {
+    fill: var(--bg-surface, #fff);
+    stroke: var(--primary-base, #4f46e5);
+    stroke-width: 1.5;
+}
+
+.grad-top {
+    stop-color: var(--primary-base, #4f46e5);
+    stop-opacity: 0.18;
+}
+
+.grad-bottom {
+    stop-color: var(--primary-base, #4f46e5);
+    stop-opacity: 0;
+}
+
+.line .axis {
+    stroke: var(--border-default, #e7e9ee);
+    stroke-width: 1;
+}
+
+.line .tick {
+    fill: var(--text-muted, #9aa3b2);
+    font-size: 9px;
+}
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px 16px;
+    text-align: center;
+}
+
+.empty-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--border-default, #cbd5e1);
+}
+
+.empty-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted, #6b7280);
+}
+
+.empty-hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted, #9aa3b2);
+}
+`;
+
+  class Pa extends o {
+    constructor() {
+      super({ css: Ia, template: Sa });
+    }
+    connectedCallback() {
+      this._load();
+    }
+    async _load() {
+      let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), r = e ? await T(e) : null, i = Array.isArray(r) ? r : [];
+      if (i.length === 0) {
+        t.innerHTML = U(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
+        return;
+      }
+      let n = this.getAttribute("value") ?? "value", a = this.getAttribute("x") ?? "", s = i.map((l) => ({ label: a ? La(String(l[a] ?? "")) : "", value: Number(l[n] ?? 0) }));
+      t.innerHTML = Ca(s);
+    }
+  }
+  var Ra = `<div class="list"></div>
+`;
+  var qa = `:host {
+    display: block;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.bar-key {
+    flex: 0 0 34%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-body, #374151);
+}
+
+.bar-svg {
+    flex: 1;
+    height: 8px;
+    background: var(--border-light, #f1f3f7);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.bar-svg rect {
+    fill: var(--primary-base, #4f46e5);
+}
+
+.bar-val {
+    flex: 0 0 auto;
+    min-width: 3.5em;
+    text-align: right;
+    color: var(--text-muted, #6b7280);
+    font-variant-numeric: tabular-nums;
+}
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 28px 12px;
+    text-align: center;
+}
+
+.empty-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--border-default, #cbd5e1);
+}
+
+.empty-title {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted, #9aa3b2);
+}
+
+.empty-hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted, #9aa3b2);
+}
+`;
+
+  class Ba extends o {
+    constructor() {
+      super({ css: qa, template: Ra });
+    }
+    connectedCallback() {
+      this._load();
+    }
+    async _load() {
+      let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), r = e ? await T(e) : null, i = Array.isArray(r) ? r : [];
+      if (i.length === 0) {
+        t.innerHTML = U(this.getAttribute("empty") ?? "Aucune donnée");
+        return;
+      }
+      let n = this.getAttribute("label-field") ?? "key", a = this.getAttribute("value-field") ?? "value", s = i.map((l) => ({ label: String(l[n] ?? ""), value: Number(l[a] ?? 0) }));
+      t.innerHTML = Ta(s, this.hasAttribute("show-count"));
+    }
+  }
+  var Da = `<div class="tabs" role="group" aria-label="Période"></div>
+`;
+  var Fa = `:host {
+    display: inline-block;
+}
+
+.tabs {
+    display: inline-flex;
+    border: 1px solid var(--border-default, #e7e9ee);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-surface, #fff);
+}
+
+.tabs button {
+    appearance: none;
+    border: 0;
+    border-left: 1px solid var(--border-default, #e7e9ee);
+    background: transparent;
+    color: var(--text-body, #374151);
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.tabs button:first-child {
+    border-left: 0;
+}
+
+.tabs button:hover {
+    background: var(--primary-muted, #eef0fb);
+}
+
+.tabs button.active {
+    background: var(--primary-base, #4f46e5);
+    color: #fff;
+}
+`;
+
+  class ja extends o {
+    constructor() {
+      super({ css: Fa, template: Da });
+    }
+    connectedCallback() {
+      let t = this.getAttribute("param") ?? "range", e = new URLSearchParams(window.location.search).get(t) ?? this.getAttribute("default") ?? "", r = (this.getAttribute("tabs") ?? "").split(",").map((n) => n.split(":")).filter((n) => n[0]), i = this.shadowRoot.querySelector(".tabs");
+      i.innerHTML = r.map(([n, a]) => `<button type="button" data-v="${g(n)}"${n === e ? ' class="active"' : ""}>${g(a ?? n)}</button>`).join(""), i.addEventListener("click", (n) => {
+        let a = n.target.closest("button")?.dataset.v;
+        if (!a)
+          return;
+        let s = new URL(window.location.href);
+        s.searchParams.set(t, a), window.location.assign(s.toString());
+      });
+    }
+  }
+  function zt(t, e) {
     if (t.key !== "Enter")
       return;
     if (t.target.tagName === "TEXTAREA")
       return;
     t.preventDefault(), e.requestSubmit();
   }
-  function N(t) {
-    let e = new URL(t, window.location.href);
-    for (let [r, i] of new URLSearchParams(window.location.search))
-      e.searchParams.append(r, i);
-    return e;
-  }
-  async function O(t, e) {
+  async function X(t, e) {
     t.preventDefault();
-    let r = t.target, i = new FormData(r), n = Object.fromEntries(i.entries()), a = await fetch(N(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(n) }), s = await a.json().catch(() => null), l = { status: a.status, body: s };
+    let r = t.target, i = new FormData(r), n = Object.fromEntries(i.entries()), a = await fetch(C(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(n) }), s = await a.json().catch(() => null), l = { status: a.status, body: s };
     if (a.ok) {
       if (r.reset(), e.dispatchEvent(new CustomEvent("form:success", { bubbles: true, composed: true, detail: l })), e.emit)
         document.dispatchEvent(new CustomEvent(e.emit, { bubbles: true, composed: true, detail: l }));
@@ -8211,13 +8580,13 @@ p9r-tag:hover {
       e.dispatchEvent(new CustomEvent("form:failed", { bubbles: true, composed: true, detail: l }));
   }
 
-  class xa extends HTMLElement {
+  class Na extends HTMLElement {
     _nativeForm = null;
     static get observedAttributes() {
       return ["redirect", "target", "method", "emit"];
     }
     _handleInternalSubmit = (t) => {
-      O(t, this);
+      X(t, this);
     };
     connectedCallback() {
       requestAnimationFrame(() => {
@@ -8229,11 +8598,11 @@ p9r-tag:hover {
           this._nativeForm.id = t, this.removeAttribute("id");
         while (this.firstChild)
           this._nativeForm.appendChild(this.firstChild);
-        this.appendChild(this._nativeForm), this._nativeForm.addEventListener("submit", this._handleInternalSubmit), this.addEventListener("keydown", (e) => At(e, this._nativeForm));
+        this.appendChild(this._nativeForm), this._nativeForm.addEventListener("submit", this._handleInternalSubmit), this.addEventListener("keydown", (e) => zt(e, this._nativeForm));
       });
     }
     disconnectedCallback() {
-      this.removeEventListener("submit", (t) => O(t, this)), this.removeEventListener("keydown", (t) => At(t, this._nativeForm));
+      this.removeEventListener("submit", (t) => X(t, this)), this.removeEventListener("keydown", (t) => zt(t, this._nativeForm));
     }
     attributeChangedCallback(t, e, r) {}
     get redirect() {
@@ -8252,7 +8621,7 @@ p9r-tag:hover {
       return this.getAttribute("emit");
     }
   }
-  function ya(t) {
+  function Oa(t) {
     let e = {};
     for (let r of Array.from(t.children)) {
       if (r.tagName !== "TEMPLATE")
@@ -8263,7 +8632,7 @@ p9r-tag:hover {
     }
     return e;
   }
-  function wa(t) {
+  function Ka(t) {
     if (t === null || t === undefined)
       return true;
     if (Array.isArray(t))
@@ -8272,9 +8641,9 @@ p9r-tag:hover {
       return Object.keys(t).length === 0;
     return false;
   }
-  async function ka(t, e) {
+  async function Va(t, e) {
     try {
-      let r = N(t), i = await fetch(r, { headers: { Accept: "application/json" }, signal: e });
+      let r = C(t), i = await fetch(r, { headers: { Accept: "application/json" }, signal: e });
       if (!i.ok)
         return { kind: "error", error: Error(`HTTP ${i.status}`) };
       return { kind: "success", data: await i.json() };
@@ -8284,39 +8653,39 @@ p9r-tag:hover {
       return { kind: "error", error: r };
     }
   }
-  function z(t, e) {
+  function q(t, e) {
     return e.split(".").reduce((r, i) => r != null ? r[i] : undefined, t);
   }
-  function Ea(t) {
+  function $a(t) {
     return String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
-  var Cl = new Intl.NumberFormat;
-  var Aa = ["B", "KB", "MB", "GB", "TB", "PB"];
-  function Tl(t) {
-    let e = E(t);
+  var sd = new Intl.NumberFormat;
+  var Ua = ["B", "KB", "MB", "GB", "TB", "PB"];
+  function ld(t) {
+    let e = M(t);
     if (e === null)
       return "";
     if (e < 1024)
       return `${e} B`;
     let r = e, i = 0;
-    while (r >= 1024 && i < Aa.length - 1)
+    while (r >= 1024 && i < Ua.length - 1)
       r /= 1024, i++;
-    return `${r.toFixed(r < 10 ? 1 : 0)} ${Aa[i]}`;
+    return `${r.toFixed(r < 10 ? 1 : 0)} ${Ua[i]}`;
   }
-  function Ml(t) {
-    let e = E(t);
+  function dd(t) {
+    let e = M(t);
     if (e === null || e <= 0)
       return "";
     return new Date(e).toISOString().slice(0, 10);
   }
-  function Hl(t) {
-    let e = E(t);
+  function cd(t) {
+    let e = M(t);
     if (e === null || e <= 0)
       return "";
     return new Date(e).toISOString().replace("T", " ").slice(0, 19);
   }
-  function zl(t) {
-    let e = E(t);
+  function ud(t) {
+    let e = M(t);
     if (e === null || e <= 0)
       return "";
     let r = Math.max(0, Date.now() - e), i = Math.floor(r / 1000);
@@ -8328,31 +8697,31 @@ p9r-tag:hover {
       return `${Math.floor(i / 3600)}h ago`;
     return `${Math.floor(i / 86400)}d ago`;
   }
-  function Sl(t) {
-    let e = E(t);
-    return e === null ? "" : Cl.format(e);
+  function pd(t) {
+    let e = M(t);
+    return e === null ? "" : sd.format(e);
   }
-  function Il(t) {
-    let e = E(t);
+  function hd(t) {
+    let e = M(t);
     return e === null ? "" : `${Math.round(e * 100)}%`;
   }
-  function Pl(t) {
+  function bd(t) {
     if (t === true)
       return "yes";
     if (t === false)
       return "no";
     return "";
   }
-  var Lt = { bytes: Tl, date: Ml, datetime: Hl, ago: zl, number: Sl, percent: Il, bool: Pl };
-  function E(t) {
+  var St = { bytes: ld, date: dd, datetime: cd, ago: ud, number: pd, percent: hd, bool: bd };
+  function M(t) {
     if (t === null || t === undefined || t === "")
       return null;
     let e = typeof t === "number" ? t : Number(t);
     return Number.isFinite(e) ? e : null;
   }
-  function Ct(t, e) {
+  function It(t, e) {
     if (t.nodeType === Node.TEXT_NODE) {
-      let r = t.textContent ?? "", i = La(r, e);
+      let r = t.textContent ?? "", i = Xa(r, e);
       if (i !== r)
         t.textContent = i;
       return;
@@ -8361,52 +8730,52 @@ p9r-tag:hover {
       let r = t;
       if (r.tagName === "TEMPLATE")
         return;
-      if (r.tagName === "INNER-HTML" && Rl(r, e))
+      if (r.tagName === "INNER-HTML" && md(r, e))
         return;
       for (let i of Array.from(r.attributes)) {
-        let n = La(i.value, e);
+        let n = Xa(i.value, e);
         if (n !== i.value)
           r.setAttribute(i.name, n);
       }
     }
     for (let r of Array.from(t.childNodes))
-      Ct(r, e);
+      It(r, e);
   }
-  function Rl(t, e) {
+  function md(t, e) {
     let i = (t.textContent?.trim() ?? "").match(/^\{\{\s*([\w.]+)\s*\}\}$/);
     if (!i)
       return false;
-    return t.innerHTML = String(z(e, i[1]) ?? ""), t.replaceWith(...Array.from(t.childNodes)), true;
+    return t.innerHTML = String(q(e, i[1]) ?? ""), t.replaceWith(...Array.from(t.childNodes)), true;
   }
-  function La(t, e) {
+  function Xa(t, e) {
     return t.replace(/\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g, (r, i, n) => {
-      let a = i === "value" ? e !== null && typeof e === "object" && "value" in e ? e.value : e : z(e, i), s = n && Lt[n] ? Lt[n](a) : a;
-      return Ea(s);
+      let a = i === "value" ? e !== null && typeof e === "object" && "value" in e ? e.value : e : q(e, i), s = n && St[n] ? St[n](a) : a;
+      return $a(s);
     });
   }
-  function Tt(t, e) {
+  function Pt(t, e) {
     let r = t.getAttribute("for"), i = document.createDocumentFragment();
     if (r === null) {
       let a = t.content.cloneNode(true);
-      return Ca(a, e), i.appendChild(a), i;
+      return Ya(a, e), i.appendChild(a), i;
     }
-    let n = r === "." ? e : z(e, r);
+    let n = r === "." ? e : q(e, r);
     if (!Array.isArray(n))
       return console.warn(`cms-fetch: <template for="${r}"> expected an array, got`, n), i;
     for (let a of n) {
       let s = t.content.cloneNode(true);
-      Ca(s, a), i.appendChild(s);
+      Ya(s, a), i.appendChild(s);
     }
     return i;
   }
-  function Ca(t, e) {
+  function Ya(t, e) {
     let r = [];
-    Ta(t, r);
+    Za(t, r);
     for (let i of r)
-      i.parentNode?.replaceChild(Tt(i, e), i);
-    Ct(t, e);
+      i.parentNode?.replaceChild(Pt(i, e), i);
+    It(t, e);
   }
-  function Ta(t, e) {
+  function Za(t, e) {
     for (let r of Array.from(t.childNodes)) {
       if (r.nodeType !== Node.ELEMENT_NODE)
         continue;
@@ -8414,29 +8783,29 @@ p9r-tag:hover {
       if (i.tagName === "TEMPLATE")
         e.push(i);
       else
-        Ta(i, e);
+        Za(i, e);
     }
   }
-  function Ma(t, e, r, i) {
-    Mt(i);
+  function Ga(t, e, r, i) {
+    Rt(i);
     let n = t.parentNode;
     if (!n)
       return [];
-    let a = Tt(e, r), s = Array.from(a.childNodes);
+    let a = Pt(e, r), s = Array.from(a.childNodes);
     return n.insertBefore(a, t), s;
   }
-  function Mt(t) {
+  function Rt(t) {
     for (let e of t)
       e.parentNode?.removeChild(e);
   }
 
-  class K extends Event {
+  class Y extends Event {
     constructor(t) {
       super(t, { bubbles: true, composed: true });
     }
   }
 
-  class Ha extends HTMLElement {
+  class Qa extends HTMLElement {
     static get observedAttributes() {
       return ["url", "reload-on"];
     }
@@ -8459,7 +8828,7 @@ p9r-tag:hover {
         this._init();
     }
     disconnectedCallback() {
-      Mt(this._stamped), this._stamped = [];
+      Rt(this._stamped), this._stamped = [];
       for (let t of this._reloadEvents)
         document.removeEventListener(t, this._onReloadEvent);
       document.removeEventListener("cms-fetch:reload", this._onReloadEvent), this._reloadEvents = [], this._abort?.abort(), this._abort = null;
@@ -8478,7 +8847,7 @@ p9r-tag:hover {
       this._run();
     }
     _init() {
-      if (this._templates = ya(this), !this._templates.default) {
+      if (this._templates = Oa(this), !this._templates.default) {
         console.warn("cms-fetch: missing <template> child (default slot)");
         return;
       }
@@ -8497,12 +8866,12 @@ p9r-tag:hover {
         return;
       this._abort?.abort(), this._abort = new AbortController;
       let e = this._abort.signal;
-      this._renderSlot("loading", null), this.dispatchEvent(new K("fetch:loading"));
-      let r = await ka(t, e);
+      this._renderSlot("loading", null), this.dispatchEvent(new Y("fetch:loading"));
+      let r = await Va(t, e);
       if (e.aborted || r.kind === "aborted")
         return;
       if (r.kind === "success") {
-        let i = wa(r.data) && this._templates.empty ? "empty" : "default";
+        let i = Ka(r.data) && this._templates.empty ? "empty" : "default";
         this._renderSlot(i, r.data), this.dispatchEvent(new CustomEvent("fetch:data", { bubbles: true, composed: true, detail: r.data }));
       } else
         this._renderSlot("error", r.error), this.dispatchEvent(new CustomEvent("fetch:error", { bubbles: true, composed: true, detail: r.error }));
@@ -8511,7 +8880,7 @@ p9r-tag:hover {
       let r = this._templates[t];
       if (!r)
         return;
-      this._stamped = Ma(this, r, e, this._stamped);
+      this._stamped = Ga(this, r, e, this._stamped);
     }
   }
 
@@ -9368,7 +9737,7 @@ p9r-tag:hover {
             Gateway
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item disabled data-route="analytics" badge="upcoming">
+        <w13c-lateral-menu-item data-route="analytics">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="20" x2="18" y2="10" />
@@ -9851,7 +10220,7 @@ ${followMessage}`)) {
   }
   async function refreshList(host) {
     host._keys = await fetchKeys(host._api);
-    host._keys.sort((a, b) => a.localeCompare(b));
+    host._keys.sort((a, b2) => a.localeCompare(b2));
     renderList(host, host._keys);
   }
   function renderList(host, keys) {
@@ -10462,16 +10831,16 @@ cms-endpoints-input .ep-add:hover {
     return typeof live === "string" ? live : el2.getAttribute("value") ?? "";
   };
   function jsonField(name, role) {
-    const f2 = document.createElement("input");
-    f2.type = "hidden";
-    f2.name = name;
+    const f = document.createElement("input");
+    f.type = "hidden";
+    f.name = name;
     if (role)
-      f2.dataset.role = role;
-    f2.sync = (read) => {
+      f.dataset.role = role;
+    f.sync = (read) => {
       const v2 = read();
-      f2.value = v2 == null || Array.isArray(v2) && v2.length === 0 ? "" : JSON.stringify(v2);
+      f.value = v2 == null || Array.isArray(v2) && v2.length === 0 ? "" : JSON.stringify(v2);
     };
-    return f2;
+    return f;
   }
   var METHOD_COLOR = {
     GET: "success",
@@ -10725,15 +11094,15 @@ cms-endpoints-input .ep-add:hover {
     return panel;
   }
   function passthrough(name, role, seed) {
-    const f2 = jsonField(name, role);
-    f2.sync(() => seed);
-    return f2;
+    const f = jsonField(name, role);
+    f.sync(() => seed);
+    return f;
   }
   function heading(text) {
-    const h2 = document.createElement("strong");
-    h2.className = "ep-heading";
-    h2.textContent = text;
-    return h2;
+    const h = document.createElement("strong");
+    h.className = "ep-heading";
+    h.textContent = text;
+    return h;
   }
 
   // src/components/admin/EndpointsInput/statusField.ts
@@ -10872,7 +11241,7 @@ cms-endpoints-input .ep-add:hover {
     rows.setAttribute("gap", "sm");
     rows.dataset.role = "response-rows";
     const handles = [];
-    const readRows = () => handles.map((h2) => h2.read()).filter((r) => r !== null);
+    const readRows = () => handles.map((h) => h.read()).filter((r) => r !== null);
     const sync = () => field.sync(readRows);
     const addRow = (r) => {
       const handle = makeResponseRow(r, sync, () => {
@@ -10901,10 +11270,10 @@ cms-endpoints-input .ep-add:hover {
     return panel;
   }
   function heading2(text) {
-    const h2 = document.createElement("strong");
-    h2.className = "ep-heading";
-    h2.textContent = text;
-    return h2;
+    const h = document.createElement("strong");
+    h.className = "ep-heading";
+    h.textContent = text;
+    return h;
   }
 
   // src/components/admin/EndpointsInput/headerRow.ts
@@ -10988,10 +11357,10 @@ cms-endpoints-input .ep-add:hover {
     rows.setAttribute("gap", "sm");
     rows.dataset.role = "header-rows";
     const handles = [];
-    const readRows = () => handles.map((h2) => h2.read()).filter((r) => r !== null);
+    const readRows = () => handles.map((h) => h.read()).filter((r) => r !== null);
     const sync = () => field.sync(readRows);
-    const addRow = (h2) => {
-      const handle = makeHeaderRow(h2, sync, () => {
+    const addRow = (h) => {
+      const handle = makeHeaderRow(h, sync, () => {
         const i = handles.indexOf(handle);
         if (i >= 0)
           handles.splice(i, 1);
@@ -11017,10 +11386,10 @@ cms-endpoints-input .ep-add:hover {
     return panel;
   }
   function heading3(text) {
-    const h2 = document.createElement("strong");
-    h2.className = "ep-heading";
-    h2.textContent = text;
-    return h2;
+    const h = document.createElement("strong");
+    h.className = "ep-heading";
+    h.textContent = text;
+    return h;
   }
 
   // src/components/admin/EndpointsInput/rows.ts
@@ -11206,10 +11575,10 @@ cms-endpoints-input .ep-add:hover {
       }
     }
     _wireSort() {
-      this.querySelectorAll("[data-sort]").forEach((h2) => {
-        h2.style.cursor = "pointer";
-        h2.addEventListener("click", () => {
-          const key = h2.dataset.sort;
+      this.querySelectorAll("[data-sort]").forEach((h) => {
+        h.style.cursor = "pointer";
+        h.addEventListener("click", () => {
+          const key = h.dataset.sort;
           if (this._sortBy === key)
             this._sortOrder = this._sortOrder === "asc" ? "desc" : "asc";
           else {
@@ -11222,10 +11591,10 @@ cms-endpoints-input .ep-add:hover {
       });
     }
     _renderSortIndicators() {
-      this.querySelectorAll("[data-sort]").forEach((h2) => {
-        const ind = h2.querySelector("[data-sort-ind]");
+      this.querySelectorAll("[data-sort]").forEach((h) => {
+        const ind = h.querySelector("[data-sort-ind]");
         if (ind)
-          ind.textContent = h2.dataset.sort === this._sortBy ? this._sortOrder === "asc" ? "↑" : "↓" : "";
+          ind.textContent = h.dataset.sort === this._sortBy ? this._sortOrder === "asc" ? "↑" : "↓" : "";
       });
     }
     _set(key, value) {
@@ -11243,8 +11612,8 @@ cms-endpoints-input .ep-add:hover {
         params.set("sortBy", this._sortBy);
         params.set("sortOrder", this._sortOrder);
       }
-      const qs = params.toString();
-      this._fetch.setAttribute("url", qs ? `${this._base}?${qs}` : this._base);
+      const qs2 = params.toString();
+      this._fetch.setAttribute("url", qs2 ? `${this._base}?${qs2}` : this._base);
     }
     async _loadTags() {
       const url = this.getAttribute("tags-url");
@@ -11783,7 +12152,7 @@ cms-endpoints-input .ep-add:hover {
         return;
       try {
         const items = await fetchSecrets(this._api);
-        items.sort((a, b) => a.key.localeCompare(b.key));
+        items.sort((a, b2) => a.key.localeCompare(b2.key));
         this._knownKeys = new Set(items.map((it2) => it2.key));
         this._list.replaceChildren(...items.map((it2) => this._buildRow(it2.key, it2.value)));
         this._empty.hidden = items.length > 0;
@@ -13982,7 +14351,7 @@ cms-endpoints-input .ep-add:hover {
     connectedCallback() {}
   }
 
-  class b extends a {
+  class b2 extends a {
     static _event = "action-click";
     _toolbar;
     constructor() {
@@ -14905,8 +15274,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       return null;
     const slotName = target.getAttribute("slot");
     const compSyncs = parentEditor.queryPanelChildren("p9r-comp-sync");
-    for (const cs2 of compSyncs) {
-      const template = cs2.firstElementChild;
+    for (const cs of compSyncs) {
+      const template = cs.firstElementChild;
       if (!template)
         continue;
       const tSlot = template.getAttribute("slot");
@@ -15255,7 +15624,7 @@ cms-bag-breadcrumb[data-inline="right"] {
         return;
       if (deps.pinMenu()?.matches(":hover"))
         return;
-      if (deps.insertButtons().some((b2) => b2.matches(":hover")))
+      if (deps.insertButtons().some((b3) => b3.matches(":hover")))
         return;
       const parentEditor = to?.closest?.(`[${p9r.attr.EDITOR.IS_EDITOR}]`);
       const tgt = deps.target();
@@ -15721,7 +16090,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   function attachGlobal() {
     if (onScrollOrResize)
       return;
-    onScrollOrResize = () => active.forEach((h2) => h2.update());
+    onScrollOrResize = () => active.forEach((h) => h.update());
     window.addEventListener("scroll", onScrollOrResize, { capture: true, passive: true });
     window.addEventListener("resize", onScrollOrResize);
   }
@@ -15885,7 +16254,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
 
   // src/components/editor/EditorSystem/BlocActions/BlocActions.ts
-  class BlocActions extends b {
+  class BlocActions extends b2 {
     _ctrl;
     constructor() {
       super();
@@ -16167,7 +16536,7 @@ form[method="dialog"] {
   };
   async function fetchBlocMeta() {
     const list = await fetchJson("bloc/list", []);
-    return new Map(list.map((b2) => [b2.id, { description: b2.description }]));
+    return new Map(list.map((b3) => [b3.id, { description: b3.description }]));
   }
 
   // src/components/editor/EditorSystem/BlocLibrary/components/Card/template.html
@@ -16415,9 +16784,9 @@ form[method="dialog"] {
   // src/components/editor/EditorSystem/BlocLibrary/sections/renderSearch.ts
   function renderSearch({ grid, query, blocs, blocMeta, templates, snippets, onPick }) {
     const q2 = query.trim().toLowerCase();
-    const matchingBlocs = blocs.filter((b2) => {
-      const desc = blocMeta.get(b2.tag)?.description ?? "";
-      return b2.label.toLowerCase().includes(q2) || b2.tag.toLowerCase().includes(q2) || desc.toLowerCase().includes(q2);
+    const matchingBlocs = blocs.filter((b3) => {
+      const desc = blocMeta.get(b3.tag)?.description ?? "";
+      return b3.label.toLowerCase().includes(q2) || b3.tag.toLowerCase().includes(q2) || desc.toLowerCase().includes(q2);
     });
     const matchingTemplates = templates.filter((t) => t.name.toLowerCase().includes(q2) || (t.description ?? "").toLowerCase().includes(q2) || (t.category ?? "").toLowerCase().includes(q2));
     const matchingSnippets = snippets.filter((s) => s.name.toLowerCase().includes(q2) || (s.description ?? "").toLowerCase().includes(q2) || s.identifier.toLowerCase().includes(q2) || (s.category ?? "").toLowerCase().includes(q2));
@@ -16704,12 +17073,12 @@ form[method="dialog"] {
       const parent = target.parentElement;
       if (!parent)
         return false;
-      const cs2 = getComputedStyle(parent);
-      const display = cs2.display;
+      const cs = getComputedStyle(parent);
+      const display = cs.display;
       if (display.includes("inline"))
         return true;
       if (display.endsWith("flex")) {
-        return cs2.flexDirection.startsWith("row");
+        return cs.flexDirection.startsWith("row");
       }
       if (display.endsWith("grid")) {
         return true;
@@ -17261,6 +17630,320 @@ form[method="dialog"] {
     }
   }
 
+  // src/components/editor/RichTextBar/commands.ts
+  function focusElement() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0)
+      return null;
+    const node = sel.focusNode;
+    if (!node)
+      return null;
+    return node.nodeType === 1 ? node : node.parentElement;
+  }
+  function wrapWithElement(wrapper) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0)
+      return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed)
+      return;
+    try {
+      const contents = range.extractContents();
+      wrapper.appendChild(contents);
+      range.insertNode(wrapper);
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(wrapper);
+      sel.addRange(newRange);
+    } catch (e) {
+      console.warn("Selection spans complex markup", e);
+    }
+  }
+  function toggleFormat(tag) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0)
+      return;
+    const el2 = focusElement();
+    const existingTag = el2?.closest(tag);
+    if (existingTag) {
+      const parent = existingTag.parentNode;
+      const frag = document.createDocumentFragment();
+      while (existingTag.firstChild) {
+        frag.appendChild(existingTag.firstChild);
+      }
+      const firstNode = frag.firstChild;
+      const lastNode = frag.lastChild;
+      parent?.replaceChild(frag, existingTag);
+      if (firstNode && lastNode) {
+        const newRange = document.createRange();
+        newRange.setStartBefore(firstNode);
+        newRange.setEndAfter(lastNode);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      }
+    } else {
+      wrapWithElement(document.createElement(tag));
+    }
+  }
+  function applyBlockAlignment(align) {
+    const el2 = focusElement();
+    const block = el2?.closest("p, div, h1, h2, h3, h4, h5, h6, li");
+    if (block)
+      block.style.textAlign = align;
+  }
+  function applyInlineStyle(prop, value) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed)
+      return;
+    const el2 = focusElement();
+    if (el2 && el2.tagName === "SPAN" && el2.textContent === sel.toString()) {
+      el2.style[prop] = value;
+      return;
+    }
+    const span = document.createElement("span");
+    span.style[prop] = value;
+    wrapWithElement(span);
+  }
+  function removeInlineStyle(prop) {
+    const el2 = focusElement();
+    const span = el2?.closest("span");
+    if (!span)
+      return;
+    span.style[prop] = "";
+    if (span.style.length === 0) {
+      const parent = span.parentNode;
+      while (span.firstChild)
+        parent?.insertBefore(span.firstChild, span);
+      parent?.removeChild(span);
+    }
+  }
+  function queryCommandState(cmd) {
+    const el2 = focusElement();
+    if (!el2)
+      return false;
+    const style = window.getComputedStyle(el2);
+    switch (cmd) {
+      case "bold":
+        return style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700 || !!el2.closest("b, strong");
+      case "italic":
+        return style.fontStyle === "italic" || !!el2.closest("i, em");
+      case "underline":
+        return style.textDecorationLine.includes("underline") || !!el2.closest("u");
+      case "strikeThrough":
+        return style.textDecorationLine.includes("line-through") || !!el2.closest("s, strike");
+      case "justifyLeft":
+        return style.textAlign === "left" || style.textAlign === "start";
+      case "justifyCenter":
+        return style.textAlign === "center";
+      case "justifyRight":
+        return style.textAlign === "right";
+      default:
+        return false;
+    }
+  }
+  function getCurrentFontSize() {
+    const el2 = focusElement();
+    if (!el2)
+      return 16;
+    return Math.round(parseFloat(window.getComputedStyle(el2).fontSize));
+  }
+  function getCurrentColor() {
+    const el2 = focusElement();
+    if (!el2)
+      return null;
+    return window.getComputedStyle(el2).color;
+  }
+  function insertList(tag) {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0)
+      return;
+    const el2 = focusElement();
+    if (!el2)
+      return;
+    const editable = el2.closest("[contenteditable]");
+    if (!editable)
+      return;
+    const list = document.createElement(tag);
+    const li2 = document.createElement("li");
+    list.appendChild(li2);
+    editable.replaceWith(list);
+    selection.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.selectNodeContents(li2);
+    selection.addRange(newRange);
+  }
+  function isSafeLinkUrl(raw) {
+    const stripped = raw.trim().replace(/[\u0000-\u001F\u007F]/g, "");
+    const scheme = stripped.match(/^([a-z][a-z0-9+.-]*):/i);
+    if (!scheme)
+      return true;
+    return ["http", "https", "mailto", "tel", "sms"].includes(scheme[1].toLowerCase());
+  }
+  function applyLinkUrl(url) {
+    if (!url || !isSafeLinkUrl(url))
+      return;
+    const a2 = document.createElement("a");
+    a2.href = url;
+    wrapWithElement(a2);
+  }
+  function removeLinkAtSelection() {
+    const el2 = focusElement();
+    const a2 = el2?.closest("a");
+    if (!a2)
+      return;
+    const parent = a2.parentNode;
+    while (a2.firstChild)
+      parent?.insertBefore(a2.firstChild, a2);
+    parent?.removeChild(a2);
+  }
+  function getExistingLink(range) {
+    const r = range || window.getSelection()?.getRangeAt(0);
+    if (!r)
+      return null;
+    const node = r.startContainer;
+    const el2 = node.nodeType === 1 ? node : node.parentElement;
+    return el2?.closest("a")?.getAttribute("href") || null;
+  }
+
+  // src/components/editor/RichTextBar/sanitizePastedHtml.ts
+  var KEEP_TAGS = new Set([
+    "p",
+    "br",
+    "span",
+    "b",
+    "i",
+    "u",
+    "s",
+    "a",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "blockquote",
+    "ul",
+    "ol",
+    "li"
+  ]);
+  var RENAME_TAGS = {
+    strong: "b",
+    em: "i",
+    strike: "s",
+    del: "s",
+    ins: "u"
+  };
+  var DROP_TAGS = new Set([
+    "script",
+    "style",
+    "noscript",
+    "template",
+    "head",
+    "title",
+    "meta",
+    "link",
+    "base",
+    "iframe",
+    "object",
+    "embed",
+    "img",
+    "svg",
+    "math",
+    "canvas",
+    "picture",
+    "video",
+    "audio",
+    "source",
+    "track",
+    "form",
+    "input",
+    "button",
+    "select",
+    "option",
+    "optgroup",
+    "textarea",
+    "fieldset",
+    "legend"
+  ]);
+  var BLOCK_TAGS = new Set([
+    "p",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "blockquote",
+    "ul",
+    "ol",
+    "li"
+  ]);
+  var ALIGN_VALUES = new Set(["left", "right", "center", "justify", "start", "end"]);
+  var TEXT_NODE = 3;
+  var ELEMENT_NODE = 1;
+  function sanitizePastedHtml(html) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const container = document.createElement("div");
+    for (const node of cleanChildren(doc.body))
+      container.appendChild(node);
+    return container.innerHTML;
+  }
+  function cleanChildren(parent) {
+    const out = [];
+    for (const child of Array.from(parent.childNodes))
+      out.push(...cleanNode(child));
+    return out;
+  }
+  function cleanNode(node) {
+    if (node.nodeType === TEXT_NODE)
+      return [document.createTextNode(node.nodeValue ?? "")];
+    if (node.nodeType !== ELEMENT_NODE)
+      return [];
+    const el2 = node;
+    const tag = el2.tagName.toLowerCase();
+    if (DROP_TAGS.has(tag))
+      return [];
+    const children = cleanChildren(el2);
+    const mapped = RENAME_TAGS[tag] ?? tag;
+    if (!KEEP_TAGS.has(mapped))
+      return children;
+    const out = document.createElement(mapped);
+    copyAllowedAttributes(el2, out, mapped);
+    if ((mapped === "span" || mapped === "a") && out.attributes.length === 0)
+      return children;
+    for (const child of children)
+      out.appendChild(child);
+    return [out];
+  }
+  function copyAllowedAttributes(src, dst, tag) {
+    if (tag === "a") {
+      const href = src.getAttribute("href");
+      if (href && isSafeLinkUrl(href))
+        dst.setAttribute("href", href);
+      return;
+    }
+    if (tag === "span") {
+      copyStyle(src, dst, ["font-size", "color"]);
+      return;
+    }
+    if (BLOCK_TAGS.has(tag)) {
+      const align = src.style.getPropertyValue("text-align").trim().toLowerCase();
+      if (ALIGN_VALUES.has(align))
+        dst.style.setProperty("text-align", align);
+    }
+  }
+  function copyStyle(src, dst, props) {
+    for (const prop of props) {
+      const value = src.style.getPropertyValue(prop).trim();
+      if (value && isSafeCssValue(value))
+        dst.style.setProperty(prop, value);
+    }
+  }
+  function isSafeCssValue(value) {
+    const lower = value.toLowerCase();
+    return !lower.includes("url(") && !lower.includes("expression(") && !lower.includes("javascript:") && !lower.includes("</");
+  }
+
   // src/core/editorSystem/defaultEditors/TextEditor.ts
   var cssStyle3 = `
 :is(h1, h2, h3, h4, h5, h6, p, span, blockquote, a):empty::before {
@@ -17321,16 +18004,22 @@ form[method="dialog"] {
     }
     handlePaste(e) {
       e.preventDefault();
-      const text = e.clipboardData?.getData("text/plain") || "";
+      const clipboard = e.clipboardData;
+      if (!clipboard)
+        return;
       const selection = window.getSelection();
       if (!selection || !selection.rangeCount)
         return;
+      const html = clipboard.getData("text/html");
+      const node = html ? document.createRange().createContextualFragment(sanitizePastedHtml(html)) : document.createTextNode(clipboard.getData("text/plain") || "");
+      const tail = node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.lastChild : node;
       selection.deleteFromDocument();
-      const textNode = document.createTextNode(text);
       const range = selection.getRangeAt(0);
-      range.insertNode(textNode);
-      range.setStartAfter(textNode);
-      range.setEndAfter(textNode);
+      range.insertNode(node);
+      if (!tail)
+        return;
+      range.setStartAfter(tail);
+      range.setEndAfter(tail);
       selection.removeAllRanges();
       selection.addRange(range);
     }
@@ -19225,12 +19914,12 @@ dialog::backdrop {
     if (types && types.length > 0) {
       items = items.filter((i) => types.includes(i.type));
     }
-    items.sort((a2, b2) => {
-      if (a2.type === "folder" && b2.type !== "folder")
+    items.sort((a2, b3) => {
+      if (a2.type === "folder" && b3.type !== "folder")
         return -1;
-      if (a2.type !== "folder" && b2.type === "folder")
+      if (a2.type !== "folder" && b3.type === "folder")
         return 1;
-      return a2.label.localeCompare(b2.label);
+      return a2.label.localeCompare(b3.label);
     });
     return items;
   }
@@ -19532,7 +20221,7 @@ dialog::backdrop {
       empty.style.display = this._items.length === 0 ? "flex" : "none";
       const pathDisplay = this.shadowRoot.getElementById("pathDisplay");
       if (this._breadcrumb.length > 0) {
-        pathDisplay.textContent = this._breadcrumb.map((b2) => b2.label).join(" / ");
+        pathDisplay.textContent = this._breadcrumb.map((b3) => b3.label).join(" / ");
       } else {
         pathDisplay.textContent = "Root";
       }
@@ -20376,181 +21065,6 @@ button.active svg {
     }
   }
 
-  // src/components/editor/RichTextBar/commands.ts
-  function focusElement() {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0)
-      return null;
-    const node = sel.focusNode;
-    if (!node)
-      return null;
-    return node.nodeType === 1 ? node : node.parentElement;
-  }
-  function wrapWithElement(wrapper) {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0)
-      return;
-    const range = sel.getRangeAt(0);
-    if (range.collapsed)
-      return;
-    try {
-      const contents = range.extractContents();
-      wrapper.appendChild(contents);
-      range.insertNode(wrapper);
-      sel.removeAllRanges();
-      const newRange = document.createRange();
-      newRange.selectNodeContents(wrapper);
-      sel.addRange(newRange);
-    } catch (e) {
-      console.warn("Selection spans complex markup", e);
-    }
-  }
-  function toggleFormat(tag) {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0)
-      return;
-    const el2 = focusElement();
-    const existingTag = el2?.closest(tag);
-    if (existingTag) {
-      const parent = existingTag.parentNode;
-      const frag = document.createDocumentFragment();
-      while (existingTag.firstChild) {
-        frag.appendChild(existingTag.firstChild);
-      }
-      const firstNode = frag.firstChild;
-      const lastNode = frag.lastChild;
-      parent?.replaceChild(frag, existingTag);
-      if (firstNode && lastNode) {
-        const newRange = document.createRange();
-        newRange.setStartBefore(firstNode);
-        newRange.setEndAfter(lastNode);
-        sel.removeAllRanges();
-        sel.addRange(newRange);
-      }
-    } else {
-      wrapWithElement(document.createElement(tag));
-    }
-  }
-  function applyBlockAlignment(align) {
-    const el2 = focusElement();
-    const block = el2?.closest("p, div, h1, h2, h3, h4, h5, h6, li");
-    if (block)
-      block.style.textAlign = align;
-  }
-  function applyInlineStyle(prop, value) {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0 || sel.isCollapsed)
-      return;
-    const el2 = focusElement();
-    if (el2 && el2.tagName === "SPAN" && el2.textContent === sel.toString()) {
-      el2.style[prop] = value;
-      return;
-    }
-    const span = document.createElement("span");
-    span.style[prop] = value;
-    wrapWithElement(span);
-  }
-  function removeInlineStyle(prop) {
-    const el2 = focusElement();
-    const span = el2?.closest("span");
-    if (!span)
-      return;
-    span.style[prop] = "";
-    if (span.style.length === 0) {
-      const parent = span.parentNode;
-      while (span.firstChild)
-        parent?.insertBefore(span.firstChild, span);
-      parent?.removeChild(span);
-    }
-  }
-  function queryCommandState(cmd) {
-    const el2 = focusElement();
-    if (!el2)
-      return false;
-    const style = window.getComputedStyle(el2);
-    switch (cmd) {
-      case "bold":
-        return style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700 || !!el2.closest("b, strong");
-      case "italic":
-        return style.fontStyle === "italic" || !!el2.closest("i, em");
-      case "underline":
-        return style.textDecorationLine.includes("underline") || !!el2.closest("u");
-      case "strikeThrough":
-        return style.textDecorationLine.includes("line-through") || !!el2.closest("s, strike");
-      case "justifyLeft":
-        return style.textAlign === "left" || style.textAlign === "start";
-      case "justifyCenter":
-        return style.textAlign === "center";
-      case "justifyRight":
-        return style.textAlign === "right";
-      default:
-        return false;
-    }
-  }
-  function getCurrentFontSize() {
-    const el2 = focusElement();
-    if (!el2)
-      return 16;
-    return Math.round(parseFloat(window.getComputedStyle(el2).fontSize));
-  }
-  function getCurrentColor() {
-    const el2 = focusElement();
-    if (!el2)
-      return null;
-    return window.getComputedStyle(el2).color;
-  }
-  function insertList(tag) {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0)
-      return;
-    const el2 = focusElement();
-    if (!el2)
-      return;
-    const editable = el2.closest("[contenteditable]");
-    if (!editable)
-      return;
-    const list = document.createElement(tag);
-    const li2 = document.createElement("li");
-    list.appendChild(li2);
-    editable.replaceWith(list);
-    selection.removeAllRanges();
-    const newRange = document.createRange();
-    newRange.selectNodeContents(li2);
-    selection.addRange(newRange);
-  }
-  function isSafeLinkUrl(raw) {
-    const stripped = raw.trim().replace(/[\u0000-\u001F\u007F]/g, "");
-    const scheme = stripped.match(/^([a-z][a-z0-9+.-]*):/i);
-    if (!scheme)
-      return true;
-    return ["http", "https", "mailto", "tel", "sms"].includes(scheme[1].toLowerCase());
-  }
-  function applyLinkUrl(url) {
-    if (!url || !isSafeLinkUrl(url))
-      return;
-    const a2 = document.createElement("a");
-    a2.href = url;
-    wrapWithElement(a2);
-  }
-  function removeLinkAtSelection() {
-    const el2 = focusElement();
-    const a2 = el2?.closest("a");
-    if (!a2)
-      return;
-    const parent = a2.parentNode;
-    while (a2.firstChild)
-      parent?.insertBefore(a2.firstChild, a2);
-    parent?.removeChild(a2);
-  }
-  function getExistingLink(range) {
-    const r = range || window.getSelection()?.getRangeAt(0);
-    if (!r)
-      return null;
-    const node = r.startContainer;
-    const el2 = node.nodeType === 1 ? node : node.parentElement;
-    return el2?.closest("a")?.getAttribute("href") || null;
-  }
-
   // src/components/editor/RichTextBar/state.ts
   var FORMAT_COMMANDS = ["bold", "italic", "underline", "strikeThrough"];
   var ALIGN_COMMANDS = ["justifyLeft", "justifyCenter", "justifyRight"];
@@ -20656,8 +21170,8 @@ button.active svg {
   function switchLinkType(self, type) {
     const root = self.shadowRoot;
     root.querySelectorAll(".link-type-btn").forEach((btn) => btn.classList.toggle("active", btn.dataset.linkType === type));
-    root.querySelectorAll(".link-field").forEach((f2) => {
-      f2.style.display = f2.dataset.linkField === type ? "" : "none";
+    root.querySelectorAll(".link-field").forEach((f) => {
+      f.style.display = f.dataset.linkField === type ? "" : "none";
     });
   }
   function applyLink(self) {
@@ -20723,8 +21237,8 @@ button.active svg {
       empty.textContent = "No fields";
       group.appendChild(empty);
     } else {
-      for (const f2 of fields)
-        group.appendChild(buildRow2(f2, onPickField));
+      for (const f of fields)
+        group.appendChild(buildRow2(f, onPickField));
     }
     return group;
   }
@@ -20834,10 +21348,10 @@ button.active svg {
     const schema = d.getSchema();
     if (!schema)
       return null;
-    const fields = flattenScalars(schema).map((f2) => ({
-      path: f2.path ? `${d.id}.${f2.path}` : d.id,
-      label: f2.label,
-      type: f2.type
+    const fields = flattenScalars(schema).map((f) => ({
+      path: f.path ? `${d.id}.${f.path}` : d.id,
+      label: f.label,
+      type: f.type
     }));
     if (fields.length === 0)
       return null;
@@ -20901,8 +21415,8 @@ button.active svg {
       popover.innerHTML = `<div class="ext-empty">No completions available.</div>`;
     } else {
       for (const ext of exts)
-        popover.appendChild(buildGroup2(ext, (f2) => {
-          pickField(self, ext, f2);
+        popover.appendChild(buildGroup2(ext, (f) => {
+          pickField(self, ext, f);
           closeCompletions(self);
         }));
     }
@@ -21679,7 +22193,7 @@ button.active svg {
       const ratioButtons = this.shadowRoot.querySelectorAll(".ratio-btn");
       ratioButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
-          ratioButtons.forEach((b2) => b2.classList.remove("active"));
+          ratioButtons.forEach((b3) => b3.classList.remove("active"));
           btn.classList.add("active");
         });
       });
@@ -22824,10 +23338,10 @@ button.active svg {
     connectedCallback() {
       const s = this.shadowRoot;
       this._folder = new URL(window.location.href).searchParams.get("folder");
-      const f2 = setupFeatures(this, s);
-      wireGrid(this, s, f2.ctxMenu, f2.detail);
+      const f = setupFeatures(this, s);
+      wireGrid(this, s, f.ctxMenu, f.detail);
       wireBreadcrumb(this, s);
-      this.upload = () => f2.dragDrop.trigger();
+      this.upload = () => f.dragDrop.trigger();
       if (this._folder) {
         resolveBreadcrumbTrail(this._folder).then((trail) => {
           this._breadcrumb = trail;
@@ -23253,8 +23767,8 @@ button.active svg {
         return;
       const fields = this._fields();
       const payload = {};
-      for (const f2 of fields)
-        payload[f2.name] = f2.value;
+      for (const f of fields)
+        payload[f.name] = f.value;
       this._abort?.abort();
       this._abort = new AbortController;
       let result;
@@ -23278,14 +23792,14 @@ button.active svg {
     }
     _applyResult(result, fields) {
       if (result.valid) {
-        for (const f2 of fields)
-          this._setValidity(f2, "");
+        for (const f of fields)
+          this._setValidity(f, "");
       } else if (result.errors) {
-        for (const f2 of fields)
-          this._setValidity(f2, result.errors[f2.name] ?? "");
+        for (const f of fields)
+          this._setValidity(f, result.errors[f.name] ?? "");
       } else if (result.message) {
-        for (const f2 of fields)
-          this._setValidity(f2, "");
+        for (const f of fields)
+          this._setValidity(f, "");
         const first = fields[0];
         if (first)
           this._setValidity(first, result.message);
@@ -24032,56 +24546,60 @@ button.active svg {
     if (!customElements.get(tag))
       customElements.define(tag, constructor);
   }
-  define("p9r-accordion", St);
-  define("p9r-accordion-item", Rt);
-  define("p9r-alert", Ft);
-  define("p9r-avatar", Ot);
-  define("p9r-badge", $t);
-  define("p9r-breadcrumb", Xt);
-  define("p9r-breadcrumb-item", Wt);
-  define("p9r-button", Be);
-  define("p9r-card", te);
-  define("w13c-checkbox", Ue);
-  define("p9r-container", qi);
-  define("p9r-divider", Ie);
-  define("w13c-fetch", Ha);
-  define("w13c-form", xa);
-  define("p9r-form-dialog", de);
-  define("p9r-section", Je);
-  define("p9r-horizontal-action-group", Ii);
-  define("p9r-icon-button", er);
-  define("w13c-input-file", dr);
-  define("w13c-lateral-dialog", ye);
-  define("w13c-lateral-menu", Xi);
-  define("w13c-lateral-menu-item", tn);
-  define("w13c-left-menu-layout", Fi);
-  define("p9r-modal", Ce);
-  define("p9r-open-modal", He);
-  define("p9r-input", vr);
-  define("p9r-range", Mr);
-  define("p9r-select", Br);
-  define("p9r-sizes-select", Dr);
-  define("p9r-pagination", dn);
-  define("p9r-progress", pn);
-  define("p9r-radio", Nr);
-  define("p9r-radio-group", Zr);
-  define("p9r-segmented-switch", ti);
-  define("p9r-skeleton", mn);
-  define("p9r-spinner", vn);
-  define("p9r-stack", Oi);
-  define("p9r-step", An);
-  define("p9r-stepper", yn);
-  define("p9r-switch", oi);
-  define("p9r-tab-panel", na);
-  define("p9r-table", Tn);
-  define("p9r-cell", zn);
-  define("p9r-header-cell", Nn);
-  define("p9r-row", Yn);
-  define("p9r-tabs", ea);
-  define("p9r-tag", la);
-  define("p9r-tag-suggest", ki);
-  define("p9r-textarea", Hi);
-  define("p9r-toast", pa);
-  define("p9r-toast-stack", ma);
-  define("p9r-tooltip", _a);
+  define("p9r-accordion", Dt);
+  define("p9r-accordion-item", Nt);
+  define("p9r-alert", $t);
+  define("p9r-avatar", Yt);
+  define("p9r-badge", Qt);
+  define("p9r-breadcrumb", te);
+  define("p9r-breadcrumb-item", ie);
+  define("p9r-button", Ke);
+  define("p9r-card", oe);
+  define("w13c-checkbox", We);
+  define("p9r-container", Oi);
+  define("p9r-divider", Fe);
+  define("w13c-fetch", Qa);
+  define("w13c-form", Na);
+  define("p9r-form-dialog", me);
+  define("p9r-section", nr);
+  define("p9r-horizontal-action-group", Fi);
+  define("p9r-icon-button", sr);
+  define("w13c-input-file", mr);
+  define("w13c-lateral-dialog", Ce);
+  define("w13c-lateral-menu", tn);
+  define("w13c-lateral-menu-item", sn);
+  define("w13c-left-menu-layout", $i);
+  define("p9r-modal", Ie);
+  define("p9r-open-modal", qe);
+  define("p9r-input", Er);
+  define("p9r-range", Rr);
+  define("p9r-select", Kr);
+  define("p9r-sizes-select", Vr);
+  define("p9r-pagination", mn);
+  define("p9r-progress", vn);
+  define("p9r-radio", Xr);
+  define("p9r-radio-group", ei);
+  define("p9r-segmented-switch", oi);
+  define("p9r-skeleton", yn);
+  define("p9r-spinner", En);
+  define("p9r-stack", Yi);
+  define("p9r-step", zn);
+  define("p9r-stepper", Cn);
+  define("p9r-switch", pi);
+  define("p9r-tab-panel", ca);
+  define("p9r-table", Pn);
+  define("p9r-cell", Bn);
+  define("p9r-header-cell", Xn);
+  define("p9r-row", Jn);
+  define("p9r-tabs", sa);
+  define("p9r-tag", ba);
+  define("p9r-tag-suggest", Mi);
+  define("p9r-textarea", qi);
+  define("p9r-toast", va);
+  define("p9r-toast-stack", ya);
+  define("p9r-tooltip", Aa);
+  define("p9r-stat", za);
+  define("p9r-line-chart", Pa);
+  define("p9r-bar-list", Ba);
+  define("p9r-range-tabs", ja);
 })();
