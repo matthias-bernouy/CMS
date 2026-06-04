@@ -39,6 +39,15 @@
     --warning-muted:      oklch(96% 0.03 70);
     --warning-contrasted: oklch(35% 0.10 70);
 
+    /* Context aliases — the "current surface" a bloc sits on. Neutral defaults
+       here; colour-variant provider blocs (footer, hero, banner…) re-route
+       these to their *-contrasted* tokens so slotted content and the RichText
+       "Contextual" swatch adapt to the surface automatically. */
+    --ctx-bg:       var(--bg-base);
+    --ctx-fg:       var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border:   var(--border-default);
+
     --color-primary: var(--primary-base);
 }
 

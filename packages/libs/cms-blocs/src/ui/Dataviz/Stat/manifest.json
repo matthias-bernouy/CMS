@@ -1,0 +1,10 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Stat.ts",
+    "default-tag": "base-stat",
+    "meta": {
+        "title": "Stat",
+        "description": "Single fetched metric shown as a big formatted number.",
+        "categories": ["Dataviz"]
+    }
+}

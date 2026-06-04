@@ -1,0 +1,38 @@
+:host {
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 1.25rem;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-default, #e7e9ee);
+    border-radius: 12px;
+}
+
+.label {
+    font-size: 13px;
+    color: var(--text-muted, #6b7280);
+}
+
+.value {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--text-main, #1f2937);
+}
+
+.value.is-empty {
+    color: var(--border-default, #cbd5e1);
+}
+
+.note {
+    font-size: 12px;
+    color: var(--text-muted, #9aa3b2);
+    min-height: 1em;
+}

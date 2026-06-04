@@ -1,0 +1,36 @@
+:host {
+    display: inline-block;
+}
+
+.tabs {
+    display: inline-flex;
+    border: 1px solid var(--border-default, #e7e9ee);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-surface, #fff);
+}
+
+.tabs button {
+    appearance: none;
+    border: 0;
+    border-left: 1px solid var(--border-default, #e7e9ee);
+    background: transparent;
+    color: var(--text-body, #374151);
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.tabs button:first-child {
+    border-left: 0;
+}
+
+.tabs button:hover {
+    background: var(--primary-muted, #eef0fb);
+}
+
+.tabs button.active {
+    background: var(--primary-base, #4f46e5);
+    color: #fff;
+}

@@ -60,6 +60,11 @@ const blocs: Array<[string, string]> = [
 
     ["w13c-form", "./src/logicalComponents/Form/Form.ts"],
     ["w13c-fetch", "./src/logicalComponents/data/fetch/FetchComponent.ts"],
+
+    ["stat", "./src/ui/Dataviz/Stat/Stat.ts"],
+    ["line-chart", "./src/ui/Dataviz/LineChart/LineChart.ts"],
+    ["bar-list", "./src/ui/Dataviz/BarList/BarList.ts"],
+    ["range-tabs", "./src/ui/Dataviz/RangeTabs/RangeTabs.ts"],
 ];
 
 async function buildBundle(

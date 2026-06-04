@@ -93,6 +93,12 @@ export { ToastStack, showToast } from "./ui/Toast/ToastStack/ToastStack";
 // Tooltip
 export { Tooltip } from "./ui/Tooltip/Tooltip";
 
+// Dataviz
+export { Stat } from "./ui/Dataviz/Stat/Stat";
+export { LineChart } from "./ui/Dataviz/LineChart/LineChart";
+export { BarList } from "./ui/Dataviz/BarList/BarList";
+export { RangeTabs } from "./ui/Dataviz/RangeTabs/RangeTabs";
+
 
 
 
