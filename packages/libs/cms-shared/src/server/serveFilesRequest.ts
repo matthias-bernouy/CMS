@@ -1,6 +1,9 @@
-import type { CmsFilesMetadataRepository } from "cms-shared/interfaces/CmsFilesMetadataRepository";
+import type { CmsFilesMetadataRepository, FileItem } from "cms-shared/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
 import { publicAssetCacheControl } from "cms-shared/server/compression";
+
+/** Opaque id-addressed bytes never change — the id IS the content identity. */
+const IMMUTABLE = "public, max-age=31536000, immutable";
 
 /**
  * MIME types we are willing to serve inline. `item.mimeType` derives from the
@@ -23,16 +26,22 @@ export type FilesServeDeps = {
 const notFound = () => new Response("Not found", { status: 404 });
 
 /**
- * Serve a file's bytes addressed by its readable tree-path. Shared by Control
- * (`<basePath>/.cms/files/*`, admin-guarded) and Delivery (public): both mount a
- * `runner.group("/.cms/files", …)` whose default GET delegates here. `opts.prefix`
- * is the absolute mount prefix to strip (`${basePath}/.cms/files/`); the remainder
- * is the readable path (`logos/hero.png`), resolved to a file via the metadata
- * tree, then streamed from the blob store keyed by that file's id.
+ * Serve a file's bytes. Shared by Control (`<basePath>/.cms/files/*`,
+ * admin-guarded) and Delivery (public): both mount a `runner.group("/.cms/files",
+ * …)` whose default GET delegates here. `opts.prefix` is the absolute mount
+ * prefix to strip (`${basePath}/.cms/files/`). Two address forms share this one
+ * handler (no route-precedence dependency):
  *
- * The lookup only ever matches existing `(parentId, name)` children, so path
+ * - **`by-id/<id>`** — opaque, content-stable id (the stored form). Resolved via
+ *   `getItem(id)` and served **immutable** forever: the id changes when the bytes
+ *   change, so a cached response can never go stale.
+ * - **`<tree-path>`** (`logos/hero.png`) — the human/admin label. Resolved via
+ *   the metadata tree and served under the house cache policy
+ *   (`publicAssetCacheControl`, = revalidate for media).
+ *
+ * Path lookups only ever match existing `(parentId, name)` children, so path
  * traversal is structurally impossible; we still decode and reject `.`/`..` and
- * embedded separators defensively before resolving.
+ * embedded separators defensively. The id form takes no path, so it can't traverse.
  */
 export async function serveFilesRequest(
     deps: FilesServeDeps,
@@ -49,19 +58,33 @@ export async function serveFilesRequest(
         return notFound(); // malformed percent-encoding
     }
     segments = segments.map((s) => s.trim()).filter(Boolean);
-    if (
-        segments.length === 0 ||
-        segments.some((s) => s === "." || s === ".." || s.includes("/") || s.includes("\\"))
-    ) {
-        return notFound();
+    if (segments.length === 0) return notFound();
+
+    // ── id route: /.cms/files/by-id/<id> — opaque + immutable ──
+    if (segments[0] === "by-id") {
+        const id = segments[1];
+        if (segments.length !== 2 || !id) return notFound();
+        const item = await deps.metadata.getItem(id);
+        if (!item || item.type !== "file") return notFound(); // unknown id, or a folder id
+        const stream = await deps.blob.get(item.id);
+        if (!stream) return notFound();
+        return fileResponse(item, stream, IMMUTABLE);
     }
 
+    // ── path route: /.cms/files/<tree-path> — house cache policy ──
+    if (segments.some((s) => s === "." || s === ".." || s.includes("/") || s.includes("\\"))) {
+        return notFound();
+    }
     const item = await deps.metadata.getItemByPath(segments.join("/"));
     if (!item || item.type !== "file") return notFound();
-
     const stream = await deps.blob.get(item.id);
     if (!stream) return notFound();
+    return fileResponse(item, stream, publicAssetCacheControl(req));
+}
 
+/** Build the byte response: inline allow-list gating + the security headers,
+ *  with the caller's cache policy. Shared by the id and path routes. */
+function fileResponse(item: FileItem, stream: ReadableStream<Uint8Array>, cacheControl: string): Response {
     const inlineSafe = INLINE_SAFE_TYPES.has(item.mimeType);
     return new Response(stream, {
         headers: {
@@ -71,10 +94,7 @@ export async function serveFilesRequest(
             // download for anything off the inline allow-list (HTML/SVG/…).
             "Content-Disposition":    inlineSafe ? "inline" : "attachment",
             "X-Content-Type-Options": "nosniff",
-            // Versioned URL (`?v=<hash>`, injected on rendered media URLs) →
-            // long immutable cache; unversioned (direct hit, admin grid) →
-            // revalidate. House convention, shared with bloc/theme assets.
-            "Cache-Control":          publicAssetCacheControl(req),
+            "Cache-Control":          cacheControl,
         },
     });
 }

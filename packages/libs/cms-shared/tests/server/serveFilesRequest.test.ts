@@ -12,12 +12,13 @@ async function seed(
     metadata: InMemoryCmsFilesMetadata,
     blob: InMemoryCmsFilesBlob,
     opts: { folder: string; name: string; mimeType: string; bytes: Uint8Array },
-): Promise<void> {
+): Promise<{ folderId: string; fileId: string }> {
     const folder = await metadata.createFolder({ name: opts.folder, parentId: null });
     const file = await metadata.createFile({
         name: opts.name, parentId: folder.id, size: opts.bytes.byteLength, mimeType: opts.mimeType,
     });
     await blob.put(file.id, opts.bytes);
+    return { folderId: folder.id, fileId: file.id };
 }
 
 const req = (path: string) => new Request(`http://x${path}`);
@@ -93,5 +94,44 @@ describe("serveFilesRequest", () => {
         const blob = new InMemoryCmsFilesBlob();
         expect((await serveFilesRequest({ metadata, blob }, req(`${PREFIX}nope/x.png`), { prefix: PREFIX })).status).toBe(404);
         expect((await serveFilesRequest({ metadata, blob }, req(`${PREFIX}../secret`), { prefix: PREFIX })).status).toBe(404);
+    });
+
+    describe("by-id route", () => {
+        test("streams the bytes immutable, regardless of MODE / versioning", async () => {
+            process.env.MODE = "DEV"; // path route would be revalidate here — id route is always immutable
+            const metadata = new InMemoryCmsFilesMetadata();
+            const blob = new InMemoryCmsFilesBlob();
+            const { fileId } = await seed(metadata, blob, { folder: "logos", name: "hero.png", mimeType: "image/png", bytes: enc.encode("PNG") });
+
+            const res = await serveFilesRequest({ metadata, blob }, req(`${PREFIX}by-id/${fileId}`), { prefix: PREFIX });
+            expect(res.status).toBe(200);
+            expect(res.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
+            expect(res.headers.get("Content-Type")).toBe("image/png");
+            expect(await res.text()).toBe("PNG");
+        });
+
+        test("an unknown id → 404", async () => {
+            const metadata = new InMemoryCmsFilesMetadata();
+            const blob = new InMemoryCmsFilesBlob();
+            const res = await serveFilesRequest({ metadata, blob }, req(`${PREFIX}by-id/does-not-exist`), { prefix: PREFIX });
+            expect(res.status).toBe(404);
+        });
+
+        test("a folder id → 404 (only files are servable)", async () => {
+            const metadata = new InMemoryCmsFilesMetadata();
+            const blob = new InMemoryCmsFilesBlob();
+            const { folderId } = await seed(metadata, blob, { folder: "logos", name: "hero.png", mimeType: "image/png", bytes: enc.encode("X") });
+            const res = await serveFilesRequest({ metadata, blob }, req(`${PREFIX}by-id/${folderId}`), { prefix: PREFIX });
+            expect(res.status).toBe(404);
+        });
+
+        test("a non-inline-safe type (svg) is still sent as an attachment", async () => {
+            const metadata = new InMemoryCmsFilesMetadata();
+            const blob = new InMemoryCmsFilesBlob();
+            const { fileId } = await seed(metadata, blob, { folder: "docs", name: "x.svg", mimeType: "image/svg+xml", bytes: enc.encode("<svg/>") });
+            const res = await serveFilesRequest({ metadata, blob }, req(`${PREFIX}by-id/${fileId}`), { prefix: PREFIX });
+            expect(res.headers.get("Content-Type")).toBe("application/octet-stream");
+            expect(res.headers.get("Content-Disposition")).toBe("attachment");
+        });
     });
 });
