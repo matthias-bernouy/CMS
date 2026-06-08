@@ -1,6 +1,6 @@
 (() => {
   // ../../libs/cms-blocs/dist/index.js
-  class s extends HTMLElement {
+  class o extends HTMLElement {
     _rawStyles = "";
     _styles = null;
     constructor(t) {
@@ -22,11 +22,11 @@
     }
     connectedCallback() {}
   }
-  var Gt = `<div class="accordion" part="accordion">
+  var Ot = `<div class="accordion" part="accordion">
     <slot></slot>
 </div>
 `;
-  var Wt = `:host {
+  var $t = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -55,9 +55,9 @@
 }
 `;
 
-  class Jt extends s {
+  class Xt extends o {
     constructor() {
-      super({ css: Wt, template: Gt });
+      super({ css: $t, template: Ot });
     }
     connectedCallback() {
       this.addEventListener("accordion-item-toggle", this._handleItemToggle);
@@ -79,7 +79,7 @@
           r.removeAttribute("open");
     };
   }
-  var te = `<div class="item" part="item">
+  var Ut = `<div class="item" part="item">
     <div class="header" part="header">
         <button class="toggle title-toggle" part="title" type="button" aria-expanded="false">
             <span class="title"><slot name="header"></slot></span>
@@ -100,7 +100,7 @@
     </div>
 </div>
 `;
-  var ee = `:host {
+  var Zt = `:host {
   display: block;
 
   --_text: var(--text-main, #1f2937);
@@ -211,14 +211,14 @@
 }
 `;
 
-  class re extends s {
+  class Yt extends o {
     _toggles;
     _titleToggle;
     static get observedAttributes() {
       return ["open", "disabled"];
     }
     constructor() {
-      super({ css: ee, template: te });
+      super({ css: Zt, template: Ut });
       this._toggles = Array.from(this.shadowRoot?.querySelectorAll(".toggle") ?? []), this._titleToggle = this.shadowRoot?.querySelector(".title-toggle") ?? null;
     }
     connectedCallback() {
@@ -277,7 +277,7 @@
         this.removeAttribute("disabled");
     }
   }
-  var ie = `<div class="alert" part="alert" role="alert">
+  var Qt = `<div class="alert" part="alert" role="alert">
     <span class="icon" part="icon" aria-hidden="true">
         <slot name="icon"></slot>
     </span>
@@ -288,7 +288,7 @@
     <button class="close" part="close" aria-label="Dismiss" hidden>&times;</button>
 </div>
 `;
-  var ne = `:host {
+  var Gt = `:host {
   display: block;
 
   --_bg: var(--info-muted, #eff6ff);
@@ -360,7 +360,7 @@
 
 .close:hover { opacity: 1; }
 `;
-  var ae = `:host([type="success"]) {
+  var Jt = `:host([type="success"]) {
   --_bg: var(--success-muted);
   --_color: var(--success-contrasted);
   --_accent: var(--success-base);
@@ -434,15 +434,15 @@
   to   { opacity: 0; transform: translateY(-6px); }
 }
 `;
-  var jo = ne + ae;
+  var ko = Gt + Jt;
 
-  class oe extends s {
+  class Wt extends o {
     _close;
     static get observedAttributes() {
       return ["dismissible"];
     }
     constructor() {
-      super({ css: jo, template: ie });
+      super({ css: ko, template: Qt });
       this._close = this.shadowRoot?.querySelector(".close") ?? null;
     }
     connectedCallback() {
@@ -469,13 +469,13 @@
       this._handleClose();
     }
   }
-  var se = `<div class="avatar" part="avatar">
+  var te = `<div class="avatar" part="avatar">
     <img class="image" part="image" alt="" hidden />
     <span class="initials" part="initials" aria-hidden="true"></span>
     <span class="fallback" part="fallback"><slot></slot></span>
 </div>
 `;
-  var le = `:host {
+  var ee = `:host {
   display: inline-block;
 
   --_size: 2.5rem;
@@ -551,14 +551,14 @@
 }
 `;
 
-  class de extends s {
+  class re extends o {
     _img;
     _initials;
     static get observedAttributes() {
       return ["src", "alt", "name", "initials"];
     }
     constructor() {
-      super({ css: le, template: se });
+      super({ css: ee, template: te });
       this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
     }
     connectedCallback() {
@@ -605,12 +605,12 @@
         this._img.hidden = true;
     };
   }
-  var ce = `<span class="badge" part="badge">
+  var ie = `<span class="badge" part="badge">
     <span class="dot" part="dot" aria-hidden="true"></span>
     <span class="content" part="content"><slot></slot></span>
 </span>
 `;
-  var ue = `:host {
+  var ne = `:host {
   display: inline-flex;
 
   --_bg: var(--secondary-muted, #f1f5f9);
@@ -678,18 +678,18 @@
 }
 `;
 
-  class pe extends s {
+  class ae extends o {
     constructor() {
-      super({ css: ue, template: ce });
+      super({ css: ne, template: ie });
     }
   }
-  var he = `<nav class="breadcrumb" part="breadcrumb" aria-label="Breadcrumb">
+  var oe = `<nav class="breadcrumb" part="breadcrumb" aria-label="Breadcrumb">
     <ol class="list" part="list">
         <slot></slot>
     </ol>
 </nav>
 `;
-  var be = `:host {
+  var se = `:host {
   display: block;
 
   --_separator: "/";
@@ -722,12 +722,12 @@
 }
 `;
 
-  class me extends s {
+  class le extends o {
     static get observedAttributes() {
       return ["separator"];
     }
     constructor() {
-      super({ css: be, template: he });
+      super({ css: se, template: oe });
     }
     connectedCallback() {
       this._syncSeparator(), this._markCurrent();
@@ -746,11 +746,11 @@
         e.setAttribute("current", "");
     }
   }
-  var ge = `<li class="item" part="item">
+  var de = `<li class="item" part="item">
     <a class="link" part="link"><slot></slot></a>
 </li>
 `;
-  var fe = `:host {
+  var ce = `:host {
   display: inline-flex;
   align-items: center;
 
@@ -784,13 +784,13 @@
 }
 `;
 
-  class ve extends s {
+  class ue extends o {
     _link;
     static get observedAttributes() {
       return ["href", "current"];
     }
     constructor() {
-      super({ css: fe, template: ge });
+      super({ css: ce, template: de });
       this._link = this.shadowRoot?.querySelector(".link") ?? null;
     }
     connectedCallback() {
@@ -820,7 +820,7 @@
         this._link.removeAttribute("aria-current");
     }
   }
-  var xe = `<article class="card" part="card">
+  var pe = `<article class="card" part="card">
     <header class="header" part="header">
         <slot name="header"></slot>
     </header>
@@ -832,7 +832,7 @@
     </footer>
 </article>
 `;
-  var _e = `:host {
+  var he = `:host {
   display: block;
 
   --_bg: var(--bg-surface, #ffffff);
@@ -909,12 +909,12 @@
 }
 `;
 
-  class ye extends s {
+  class be extends o {
     constructor() {
-      super({ css: _e, template: xe });
+      super({ css: he, template: pe });
     }
   }
-  var we = `<dialog part="dialog" aria-modal="true">
+  var me = `<dialog part="dialog" aria-modal="true">
     <div class="modal-wrapper" part="wrapper">
         <form method="dialog" id="close-form"></form>
 
@@ -940,7 +940,7 @@
     </div>
 </dialog>
 `;
-  var ke = `:host {
+  var ge = `:host {
     --_modal-width: 500px;
     --_modal-radius: 12px;
     --_modal-bg: var(--bg-surface);
@@ -1010,7 +1010,7 @@ footer.actions {
     border-top: 1px solid var(--border-default);
 }
 `;
-  var Ee = `.close-icon {
+  var fe = `.close-icon {
     background: transparent;
     border: none;
     font-size: 1.5rem;
@@ -1065,19 +1065,19 @@ footer.actions {
     }
 }
 `;
-  var Ae = (t, e) => {
+  var ve = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var Le = (t) => {
+  var xe = (t) => {
     t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
   };
-  var Ce = (t) => {
+  var _e = (t) => {
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var Te = (t, e) => {
+  var ye = (t, e) => {
     let r = t.shadowRoot?.querySelector("dialog");
     if (!r)
       return;
@@ -1087,16 +1087,16 @@ footer.actions {
     if (!(i.top <= e.clientY && e.clientY <= i.top + i.height && i.left <= e.clientX && e.clientX <= i.left + i.width))
       t.close();
   };
-  var Me = (t, e) => {
+  var we = (t, e) => {
     t.querySelectorAll("[name]").forEach((i) => {
       let n = i.getAttribute("name"), a = i.value;
       if (n && a !== undefined && a !== null && a !== "")
         e.formData.append(n, String(a));
     });
   };
-  var Jo = ke + Ee;
+  var Fo = ge + fe;
 
-  class He extends s {
+  class ke extends o {
     _dialog;
     _form;
     _previouslyFocused = null;
@@ -1104,12 +1104,12 @@ footer.actions {
       return ["action", "method", "enctype"];
     }
     constructor() {
-      super({ css: Jo, template: we });
+      super({ css: Fo, template: me });
       this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._form = this.shadowRoot?.querySelector("#form-validation") ?? null;
     }
     connectedCallback() {
       for (let t of ["action", "method", "enctype"])
-        Ae(this, t);
+        ve(this, t);
       this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("close", this._onClose), this._form?.addEventListener("formdata", this._onFormData);
     }
     disconnectedCallback() {
@@ -1125,17 +1125,17 @@ footer.actions {
       if (t === "enctype")
         this._form.enctype = r ?? "application/x-www-form-urlencoded";
     }
-    _onBackdrop = (t) => Te(this, t);
-    _onFormData = (t) => Me(this, t);
+    _onBackdrop = (t) => ye(this, t);
+    _onFormData = (t) => we(this, t);
     _onClose = () => {
       if (this._previouslyFocused instanceof HTMLElement)
         this._previouslyFocused.focus();
-      this._previouslyFocused = null, Ce(this);
+      this._previouslyFocused = null, _e(this);
     };
     showModal() {
       if (!this._dialog)
         return;
-      this._previouslyFocused = document.activeElement, this._dialog.showModal(), Le(this);
+      this._previouslyFocused = document.activeElement, this._dialog.showModal(), xe(this);
     }
     close() {
       this._dialog?.close();
@@ -1159,7 +1159,7 @@ footer.actions {
       t ? this.setAttribute("enctype", t) : this.removeAttribute("enctype");
     }
   }
-  var ze = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
+  var Ee = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
     <header part="header">
         <div id="title" part="title">
             <slot name="title">Dialog</slot>
@@ -1176,7 +1176,7 @@ footer.actions {
     </footer>
 </dialog>
 `;
-  var Se = `:host {
+  var Ae = `:host {
     --drawer-width: 400px;
     --drawer-bg: #ffffff;
     --transition-speed: 0.4s;
@@ -1228,7 +1228,7 @@ dialog > * {
     pointer-events: auto;
 }
 `;
-  var Ie = `header {
+  var Le = `header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1309,7 +1309,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     filter: brightness(0.9);
 }
 `;
-  var Pe = `@media (prefers-reduced-motion: no-preference) {
+  var Ce = `@media (prefers-reduced-motion: no-preference) {
     dialog {
         transition:
             transform var(--transition-speed) var(--transition-curve),
@@ -1355,48 +1355,48 @@ footer slot[name="footer"]::slotted(button:hover) {
     }
 }
 `;
-  var qe = (t, e) => {
+  var Te = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var Be = (t) => {
+  var Me = (t) => {
     t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
   };
-  var Fe = (t) => {
+  var He = (t) => {
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var De = (t, e) => {
+  var ze = (t, e) => {
     let r = t.shadowRoot?.querySelector("dialog");
     if (e.target === r)
       t.close();
   };
-  var je = (t, e) => {
+  var Se = (t, e) => {
     e.preventDefault(), t.close();
   };
-  var Re = (t, e) => {
+  var Ie = (t, e) => {
     e.preventDefault(), t.close();
   };
-  var Ke = (t) => {
+  var Pe = (t) => {
     if (t.hasAttribute("open"))
       t.removeAttribute("open");
-    Fe(t);
+    He(t);
   };
-  var ns = Se + Ie + Pe;
+  var Vo = Ae + Le + Ce;
 
-  class Ne extends s {
+  class qe extends o {
     _dialog;
     _closeBtn;
     static get observedAttributes() {
       return ["open"];
     }
     constructor() {
-      super({ css: ns, template: ze });
+      super({ css: Vo, template: Ee });
       this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._closeBtn = this.shadowRoot?.querySelector("#close-btn") ?? null;
     }
     connectedCallback() {
-      qe(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this._closeBtn?.addEventListener("click", this._onCloseClick);
+      Te(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this._closeBtn?.addEventListener("click", this._onCloseClick);
     }
     disconnectedCallback() {
       this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this._closeBtn?.removeEventListener("click", this._onCloseClick);
@@ -1412,10 +1412,10 @@ footer slot[name="footer"]::slotted(button:hover) {
           this._dialog.close();
       }
     }
-    _onBackdrop = (t) => De(this, t);
-    _onCloseClick = (t) => je(this, t);
-    _onCancel = (t) => Re(this, t);
-    _onClose = () => Ke(this);
+    _onBackdrop = (t) => ze(this, t);
+    _onCloseClick = (t) => Se(this, t);
+    _onCancel = (t) => Ie(this, t);
+    _onClose = () => Pe(this);
     get open() {
       return this.hasAttribute("open");
     }
@@ -1432,7 +1432,7 @@ footer slot[name="footer"]::slotted(button:hover) {
         this._dialog.showModal();
       if (!this.hasAttribute("open"))
         this.setAttribute("open", "");
-      Be(this);
+      Me(this);
     }
     showModal() {
       this.show();
@@ -1444,19 +1444,19 @@ footer slot[name="footer"]::slotted(button:hover) {
         this._dialog.close();
     }
   }
-  var Ve = (t, e) => {
+  var Be = (t, e) => {
     if (e.target === e.currentTarget)
       t.hide();
   };
-  var Oe = (t, e) => {
+  var Fe = (t, e) => {
     e.preventDefault(), t.hide();
   };
-  var $e = (t) => {
+  var De = (t) => {
     if (t.hasAttribute("open"))
       t.removeAttribute("open");
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var Xe = `<dialog part="dialog">
+  var je = `<dialog part="dialog">
     <form method="dialog" id="m-close"></form>
     <div class="panel" part="panel">
         <header class="header" part="header">
@@ -1468,7 +1468,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     </div>
 </dialog>
 `;
-  var Ue = `:host {
+  var Re = `:host {
     --modal-width: var(--p9r-modal-width, 520px);
     --modal-radius: var(--p9r-modal-radius, 12px);
     --modal-bg: var(--p9r-modal-bg, var(--bg-surface, #ffffff));
@@ -1548,16 +1548,16 @@ dialog[open]::backdrop { opacity: 1; }
 .body { padding: var(--modal-pad); overflow: auto; }
 `;
 
-  class Ze extends s {
+  class Ke extends o {
     _dialog = null;
-    _onBackdrop = (t) => Ve(this, t);
-    _onCancel = (t) => Oe(this, t);
-    _onClose = () => $e(this);
+    _onBackdrop = (t) => Be(this, t);
+    _onCancel = (t) => Fe(this, t);
+    _onClose = () => De(this);
     static get observedAttributes() {
       return ["open", "aria-label"];
     }
     constructor() {
-      super({ css: Ue, template: Xe });
+      super({ css: Re, template: je });
     }
     connectedCallback() {
       this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null, this._upgradeProperty("open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this.addEventListener("form:success", this.hide), this._syncLabel(), this._syncOpen();
@@ -1619,17 +1619,17 @@ dialog[open]::backdrop { opacity: 1; }
         this.show();
     }
   }
-  var Ye = `<slot></slot>
+  var Ve = `<slot></slot>
 `;
-  var Qe = `:host {
+  var Ne = `:host {
     display: contents;
     cursor: pointer;
 }
 `;
 
-  class Ge extends s {
+  class Oe extends o {
     constructor() {
-      super({ css: Qe, template: Ye });
+      super({ css: Ne, template: Ve });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
@@ -1668,13 +1668,13 @@ dialog[open]::backdrop { opacity: 1; }
         this.removeAttribute("modal-target");
     }
   }
-  var We = `<div class="divider" part="divider" role="separator">
+  var $e = `<div class="divider" part="divider" role="separator">
     <span class="line line-start" part="line"></span>
     <span class="label" part="label"><slot></slot></span>
     <span class="line line-end" part="line"></span>
 </div>
 `;
-  var Je = `:host {
+  var Xe = `:host {
   display: block;
 
   --_color: var(--border-default, #e5e7eb);
@@ -1759,12 +1759,12 @@ dialog[open]::backdrop { opacity: 1; }
 }
 `;
 
-  class tr extends s {
+  class Ue extends o {
     static get observedAttributes() {
       return ["orientation"];
     }
     constructor() {
-      super({ css: Je, template: We });
+      super({ css: Xe, template: $e });
     }
     connectedCallback() {
       this._syncAria();
@@ -1778,7 +1778,7 @@ dialog[open]::backdrop { opacity: 1; }
       this.setAttribute("aria-orientation", t);
     }
   }
-  var er = `<button id="btn" class="button" part="button">
+  var Ze = `<button id="btn" class="button" part="button">
     <slot name="icon-left"></slot>
     <span class="label">
         <slot>Button</slot>
@@ -1786,7 +1786,7 @@ dialog[open]::backdrop { opacity: 1; }
     <slot name="icon-right"></slot>
 </button>
 `;
-  var rr = `:host {
+  var Ye = `:host {
   display: inline-block;
 
   --_btn-padding-y: 0.6rem;
@@ -1844,7 +1844,7 @@ dialog[open]::backdrop { opacity: 1; }
   width: 1.2rem;
 }
 `;
-  var ir = `:host([color="primary"]) {
+  var Qe = `:host([color="primary"]) {
   --_accent-base: var(--primary-base);
   --_accent-muted: var(--primary-muted);
   --_accent-contrast: oklch(100% 0 0);
@@ -1920,14 +1920,14 @@ dialog[open]::backdrop { opacity: 1; }
   }
 }
 `;
-  var bs = rr + ir;
+  var Jo = Ye + Qe;
 
-  class nr extends s {
+  class Ge extends o {
     static formAssociated = true;
     _internals;
     _btn;
     constructor() {
-      super({ css: bs, template: er });
+      super({ css: Jo, template: Ze });
       this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
     }
     static get observedAttributes() {
@@ -1983,7 +1983,7 @@ dialog[open]::backdrop { opacity: 1; }
         this.removeAttribute("disabled");
     }
   }
-  var ar = `<label class="checkbox-container" part="container">
+  var Je = `<label class="checkbox-container" part="container">
     <span class="input-wrapper">
         <input type="checkbox" id="native-input" part="input" />
         <span class="custom-box" part="box" aria-hidden="true">
@@ -1998,7 +1998,7 @@ dialog[open]::backdrop { opacity: 1; }
     </span>
 </label>
 `;
-  var or = `:host {
+  var We = `:host {
   display: inline-block;
   --cb-size: 20px;
   --cb-border: var(--border-default, #d1d5db);
@@ -2079,7 +2079,7 @@ input {
   display: none;
 }
 `;
-  var sr = `input:checked ~ .custom-box {
+  var tr = `input:checked ~ .custom-box {
   background-color: var(--cb-active-bg);
   border-color: var(--cb-active-border);
 }
@@ -2132,7 +2132,7 @@ input:focus-visible ~ .custom-box {
   }
 }
 `;
-  var lr = (t, e) => {
+  var er = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
@@ -2142,7 +2142,7 @@ input:focus-visible ~ .custom-box {
     let i = e?.checked ?? t.hasAttribute("checked");
     r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
   };
-  var dr = (t, e) => {
+  var rr = (t, e) => {
     if (!e)
       return;
     if (e.checked = t.hasAttribute("checked"), e.disabled = t.hasAttribute("disabled"), e.indeterminate = t.hasAttribute("indeterminate"), t.hasAttribute("name"))
@@ -2150,7 +2150,7 @@ input:focus-visible ~ .custom-box {
     if (t.hasAttribute("value"))
       e.value = t.getAttribute("value") ?? "";
   };
-  var cr = (t, e, r, i, n) => {
+  var ir = (t, e, r, i, n) => {
     if (!e)
       return;
     if (i === "checked")
@@ -2164,7 +2164,7 @@ input:focus-visible ~ .custom-box {
     else if (i === "value")
       e.value = n ?? "", w(t, e, r);
   };
-  var ur = (t, e, r) => {
+  var nr = (t, e, r) => {
     if (e?.checked ?? false)
       t.setAttribute("checked", "");
     else
@@ -2173,13 +2173,13 @@ input:focus-visible ~ .custom-box {
       t.removeAttribute("indeterminate");
     w(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
   };
-  var pr = (t, e) => {
+  var ar = (t, e) => {
     if (t.hasAttribute("disabled"))
       e.preventDefault(), e.stopImmediatePropagation();
   };
-  var vs = or + sr;
+  var rs = We + tr;
 
-  class hr extends s {
+  class or extends o {
     static formAssociated = true;
     _internals;
     _input;
@@ -2192,13 +2192,13 @@ input:focus-visible ~ .custom-box {
       return ["checked", "disabled", "name", "value", "indeterminate"];
     }
     constructor() {
-      super({ css: vs, template: ar });
+      super({ css: rs, template: Je });
       this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null, this._labelText = this.shadowRoot?.querySelector(".label-text") ?? null, this._labelSlot = this.shadowRoot?.querySelector(".label-text slot:not([name])") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultChecked = this.hasAttribute("checked"), this._defaultIndeterminate = this.hasAttribute("indeterminate"), this._defaultsCaptured = true;
-      ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => lr(this, t)), dr(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), w(this, this._input, this._internals);
+      ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => er(this, t)), rr(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), w(this, this._input, this._internals);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick), this._labelSlot?.removeEventListener("slotchange", this._syncLabel);
@@ -2213,10 +2213,10 @@ input:focus-visible ~ .custom-box {
       this.indeterminate = this._defaultIndeterminate, this.checked = this._defaultChecked;
     }
     attributeChangedCallback(t, e, r) {
-      cr(this, this._input, this._internals, t, r);
+      ir(this, this._input, this._internals, t, r);
     }
-    _onChange = () => ur(this, this._input, this._internals);
-    _onClick = (t) => pr(this, t);
+    _onChange = () => nr(this, this._input, this._internals);
+    _onClick = (t) => ar(this, t);
     get checked() {
       return this.hasAttribute("checked");
     }
@@ -2255,7 +2255,7 @@ input:focus-visible ~ .custom-box {
       this._input?.click();
     }
   }
-  var br = `<section class="section-container" part="container">
+  var sr = `<section class="section-container" part="container">
     <header id="toggle" part="header" role="button" tabindex="0" aria-expanded="true">
         <div class="accent-bar" part="accent"></div>
         <div class="title-wrapper" part="title"></div>
@@ -2268,7 +2268,7 @@ input:focus-visible ~ .custom-box {
     </main>
 </section>
 `;
-  var mr = `:host {
+  var lr = `:host {
     display: block;
     margin-bottom: 8px;
 }
@@ -2347,36 +2347,36 @@ header:focus-visible {
     width: 100%;
 }
 `;
-  var gr = (t, e) => {
+  var dr = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var it = (t, e) => {
+  var tt = (t, e) => {
     if (e)
       e.textContent = t.getAttribute("data-title") ?? "";
   };
-  var nt = (t, e, r) => {
+  var et = (t, e, r) => {
     if (!e)
       return;
     let i = t.hasAttribute("collapsed");
     if (e.setAttribute("aria-expanded", String(!i)), r)
       r.hidden = i;
   };
-  var fr = (t, e) => {
+  var cr = (t, e) => {
     t.dispatchEvent(new CustomEvent("toggle", { detail: { collapsed: e }, bubbles: true, composed: true }));
   };
-  var at = (t) => {
-    t.collapsed = !t.collapsed, fr(t, t.collapsed);
+  var rt = (t) => {
+    t.collapsed = !t.collapsed, cr(t, t.collapsed);
   };
-  var vr = (t, e) => {
+  var ur = (t, e) => {
     if (e.key !== "Enter" && e.key !== " ")
       return;
-    e.preventDefault(), at(t);
+    e.preventDefault(), rt(t);
   };
 
-  class xr extends s {
+  class pr extends o {
     static get observedAttributes() {
       return ["collapsed", "data-title"];
     }
@@ -2384,22 +2384,22 @@ header:focus-visible {
     _title;
     _content;
     constructor() {
-      super({ css: mr, template: br });
+      super({ css: lr, template: sr });
       this._toggle = this.shadowRoot?.getElementById("toggle") ?? null, this._title = this.shadowRoot?.querySelector(".title-wrapper") ?? null, this._content = this.shadowRoot?.getElementById("content") ?? null;
     }
     connectedCallback() {
-      if (gr(this, "collapsed"), this.hasAttribute("data-collapsed") && !this.hasAttribute("collapsed"))
+      if (dr(this, "collapsed"), this.hasAttribute("data-collapsed") && !this.hasAttribute("collapsed"))
         this.setAttribute("collapsed", "");
-      it(this, this._title), nt(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
+      tt(this, this._title), et(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       this._toggle?.removeEventListener("click", this._onClick), this._toggle?.removeEventListener("keydown", this._onKey);
     }
     attributeChangedCallback(t) {
       if (t === "collapsed")
-        nt(this, this._toggle, this._content);
+        et(this, this._toggle, this._content);
       if (t === "data-title")
-        it(this, this._title);
+        tt(this, this._title);
     }
     get collapsed() {
       return this.hasAttribute("collapsed");
@@ -2407,14 +2407,14 @@ header:focus-visible {
     set collapsed(t) {
       t ? this.setAttribute("collapsed", "") : this.removeAttribute("collapsed");
     }
-    _onClick = () => at(this);
-    _onKey = (t) => vr(this, t);
+    _onClick = () => rt(this);
+    _onKey = (t) => ur(this, t);
   }
-  var _r = `<button id="btn" class="icon-button" part="button">
+  var hr = `<button id="btn" class="icon-button" part="button">
     <slot></slot>
 </button>
 `;
-  var yr = `:host {
+  var br = `:host {
   display: inline-block;
 
   --_size: 2.25rem;
@@ -2504,7 +2504,7 @@ header:focus-visible {
 }
 `;
 
-  class wr extends s {
+  class mr extends o {
     static formAssociated = true;
     _internals;
     _btn;
@@ -2512,7 +2512,7 @@ header:focus-visible {
       return ["type", "disabled", "aria-label"];
     }
     constructor() {
-      super({ css: yr, template: _r });
+      super({ css: br, template: hr });
       this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
     }
     connectedCallback() {
@@ -2576,7 +2576,7 @@ header:focus-visible {
         this.removeAttribute("disabled");
     }
   }
-  var kr = `<div class="field-header" part="header">
+  var gr = `<div class="field-header" part="header">
     <slot name="label"></slot>
 </div>
 
@@ -2599,7 +2599,7 @@ header:focus-visible {
 
 <div class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
 `;
-  var Er = `:host {
+  var fr = `:host {
     display: block;
     width: 100%;
     margin: 1.25rem 0;
@@ -2697,37 +2697,37 @@ input[type="file"]:focus-visible + label {
     }
 }
 `;
-  var Ar = (t, e) => {
+  var vr = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var Lr = (t) => {
+  var xr = (t) => {
     if (t < 1024)
       return `${t} B`;
     if (t < 1048576)
       return `${(t / 1024).toFixed(1)} KB`;
     return `${(t / 1048576).toFixed(1)} MB`;
   };
-  var ot = (t, e) => {
+  var it = (t, e) => {
     if (t)
       t.textContent = e;
   };
-  var st = (t, e) => {
+  var nt = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { files: e } }));
   };
-  var K = (t, e, r, i, n) => {
+  var j = (t, e, r, i, n) => {
     let a = e?.files;
     if (!a || a.length === 0) {
       if (r)
         r.textContent = "No file selected";
-      n.setFormValue(null), ot(i, "No file selected"), st(t, null);
+      n.setFormValue(null), it(i, "No file selected"), nt(t, null);
       return;
     }
-    let o = a.length === 1 && a[0] ? `${a[0].name} (${Lr(a[0].size)})` : `${a.length} files selected`;
+    let s = a.length === 1 && a[0] ? `${a[0].name} (${xr(a[0].size)})` : `${a.length} files selected`;
     if (r)
-      r.textContent = o;
+      r.textContent = s;
     if (a.length === 1 && a[0])
       n.setFormValue(a[0]);
     else {
@@ -2739,25 +2739,25 @@ input[type="file"]:focus-visible + label {
       }
       n.setFormValue(l);
     }
-    ot(i, `Selected: ${o}`), st(t, a);
+    it(i, `Selected: ${s}`), nt(t, a);
   };
-  var Cr = (t, e) => {
+  var _r = (t, e) => {
     if (e.preventDefault(), t.hasAttribute("disabled"))
       return;
     t.toggleAttribute("dragging", true);
   };
-  var Tr = (t, e) => {
+  var yr = (t, e) => {
     e.preventDefault(), t.toggleAttribute("dragging", false);
   };
-  var Mr = (t, e, r, i, n, a) => {
-    let o = a;
-    if (o.preventDefault(), t.removeAttribute("dragging"), t.hasAttribute("disabled"))
+  var wr = (t, e, r, i, n, a) => {
+    let s = a;
+    if (s.preventDefault(), t.removeAttribute("dragging"), t.hasAttribute("disabled"))
       return;
-    if (o.dataTransfer?.files && e)
-      e.files = o.dataTransfer.files, K(t, e, r, i, n);
+    if (s.dataTransfer?.files && e)
+      e.files = s.dataTransfer.files, j(t, e, r, i, n);
   };
 
-  class Hr extends s {
+  class kr extends o {
     static formAssociated = true;
     _internals;
     _input;
@@ -2765,7 +2765,7 @@ input[type="file"]:focus-visible + label {
     _dropZone;
     _liveRegion;
     constructor() {
-      super({ css: Er, template: kr });
+      super({ css: fr, template: gr });
       this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector('input[type="file"]') ?? null, this._preview = this.shadowRoot?.querySelector(".file-info") ?? null, this._dropZone = this.shadowRoot?.querySelector(".drop-zone") ?? null, this._liveRegion = this.shadowRoot?.querySelector(".sr-live") ?? null;
     }
     static get observedAttributes() {
@@ -2773,7 +2773,7 @@ input[type="file"]:focus-visible + label {
     }
     connectedCallback() {
       for (let t of ["accept", "multiple", "name", "disabled", "required"])
-        Ar(this, t);
+        vr(this, t);
       this._input?.addEventListener("change", this._onChange), this._dropZone?.addEventListener("dragover", this._onDragOver), this._dropZone?.addEventListener("dragleave", this._onDragLeave), this._dropZone?.addEventListener("drop", this._onDrop);
     }
     disconnectedCallback() {
@@ -2813,10 +2813,10 @@ input[type="file"]:focus-visible + label {
           break;
       }
     }
-    _onChange = () => K(this, this._input, this._preview, this._liveRegion, this._internals);
-    _onDragOver = (t) => Cr(this, t);
-    _onDragLeave = (t) => Tr(this, t);
-    _onDrop = (t) => Mr(this, this._input, this._preview, this._liveRegion, this._internals, t);
+    _onChange = () => j(this, this._input, this._preview, this._liveRegion, this._internals);
+    _onDragOver = (t) => _r(this, t);
+    _onDragLeave = (t) => yr(this, t);
+    _onDrop = (t) => wr(this, this._input, this._preview, this._liveRegion, this._internals, t);
     get name() {
       return this.getAttribute("name") ?? "";
     }
@@ -2857,7 +2857,7 @@ input[type="file"]:focus-visible + label {
       return this._internals.form;
     }
   }
-  var zr = `<div class="field" part="field">
+  var Er = `<div class="field" part="field">
     <label class="label" part="label"></label>
     <input class="input" part="input" type="text" />
     <div class="meta" part="meta" hidden>
@@ -2866,7 +2866,7 @@ input[type="file"]:focus-visible + label {
     </div>
 </div>
 `;
-  var Sr = `:host {
+  var Ar = `:host {
     display: block;
 }
 
@@ -2938,7 +2938,7 @@ input[type="file"]:focus-visible + label {
     display: none;
 }
 `;
-  var Ir = `.input:hover:not(:disabled) {
+  var Lr = `.input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -2974,17 +2974,17 @@ input[type="file"]:focus-visible + label {
     font-weight: 600;
 }
 `;
-  var Pr = `@media (prefers-reduced-motion: no-preference) {
+  var Cr = `@media (prefers-reduced-motion: no-preference) {
     .input { transition: border-color 0.15s, box-shadow 0.15s; }
 }
 `;
-  var qr = (t, e) => {
+  var Tr = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var lt = (t) => {
+  var at = (t) => {
     let e = t.getAttribute("max-count");
     if (e === null)
       return null;
@@ -2994,27 +2994,27 @@ input[type="file"]:focus-visible + label {
   var k = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let n = lt(t);
+    let n = at(t);
     if (n === null)
       return;
     let a = e.value.length;
     i.textContent = String(a), r.dataset.over = String(a > n);
   };
-  var dt = (t, e, r) => {
+  var ot = (t, e, r) => {
     if (!t || !e || !r)
       return;
     let i = (t.textContent ?? "").length > 0, n = !e.hidden;
     r.hidden = !i && !n;
   };
-  var Ms = 0;
-  var Br = () => `p9r-input-label-${++Ms}`;
-  var ct = (t, e) => {
+  var hs = 0;
+  var Mr = () => `p9r-input-label-${++hs}`;
+  var st = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var Hs = (t, e) => {
+  var bs = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -3023,16 +3023,16 @@ input[type="file"]:focus-visible + label {
     else
       e.setAttribute("placeholder", r);
   };
-  var zs = (t, e) => {
+  var ms = (t, e) => {
     if (!e)
       return;
     e.setAttribute("type", t.getAttribute("type") ?? "text");
   };
-  var Ss = (t, e) => {
+  var gs = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var Is = (t, e) => {
+  var fs = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -3041,17 +3041,17 @@ input[type="file"]:focus-visible + label {
     else
       e.removeAttribute("aria-required");
   };
-  var Ps = (t, e, r, i) => {
+  var vs = (t, e, r, i) => {
     if (!e)
       return;
-    e.textContent = t.getAttribute("hint") ?? "", dt(e, r, i);
+    e.textContent = t.getAttribute("hint") ?? "", ot(e, r, i);
   };
-  var qs = (t, e) => {
+  var xs = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var Bs = (t, e) => {
+  var _s = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -3059,32 +3059,32 @@ input[type="file"]:focus-visible + label {
     else
       e.removeAttribute("aria-invalid");
   };
-  var ut = (t, e, r, i, n) => {
+  var lt = (t, e, r, i, n) => {
     if (!e || !r)
       return;
-    let a = lt(t);
+    let a = at(t);
     if (a === null)
       e.hidden = true;
     else
       e.hidden = false, r.textContent = String(a);
-    dt(i, e, n);
+    ot(i, e, n);
   };
-  var pt = (t, e, r, i, n, a, o) => {
-    ct(t, r), Hs(t, e), zs(t, e), Ss(t, e), Is(t, e), Ps(t, i, a, n), qs(t, i), Bs(t, e), ut(t, a, o, i, n);
+  var dt = (t, e, r, i, n, a, s) => {
+    st(t, r), bs(t, e), ms(t, e), gs(t, e), fs(t, e), vs(t, i, a, n), xs(t, i), _s(t, e), lt(t, a, s, i, n);
   };
-  var Fr = (t, e, r, i, n) => {
+  var Hr = (t, e, r, i, n) => {
     if (!e)
       return;
     r.setFormValue(e.value), k(t, e, i, n);
   };
-  var Dr = (t, e) => {
+  var zr = (t, e) => {
     if (!t)
       return;
     e.setFormValue(t.value);
   };
-  var Fs = Sr + Ir + Pr;
+  var ys = Ar + Lr + Cr;
 
-  class jr extends s {
+  class Sr extends o {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "type", "hint", "hint-level", "max-count", "invalid", "disabled", "required"];
@@ -3100,18 +3100,18 @@ input[type="file"]:focus-visible + label {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: Fs, template: zr });
+      super({ css: ys, template: Er });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._labelEl = t.querySelector(".label"), this._input = t.querySelector(".input"), this._hintEl = t.querySelector(".hint"), this._metaEl = t.querySelector(".meta"), this._counterEl = t.querySelector(".counter"), this._countEl = t.querySelector(".count"), this._maxEl = t.querySelector(".max");
-      let e = Br();
+      let e = Mr();
       if (this._labelEl && this._input)
         this._labelEl.id = e, this._input.setAttribute("aria-labelledby", e);
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["value", "disabled", "required"].forEach((e) => qr(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), pt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+      ["value", "disabled", "required"].forEach((e) => Tr(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), dt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
@@ -3130,11 +3130,11 @@ input[type="file"]:focus-visible + label {
       if (t === "value" && r !== null)
         this.value = r;
       else if (t === "label")
-        ct(this, this._labelEl);
+        st(this, this._labelEl);
       else if (t === "max-count")
-        ut(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), k(this, this._input, this._counterEl, this._countEl);
+        lt(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), k(this, this._input, this._counterEl, this._countEl);
       else
-        pt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+        dt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
     }
     get value() {
       return this._input?.value ?? "";
@@ -3162,10 +3162,10 @@ input[type="file"]:focus-visible + label {
     focus() {
       this._input?.focus();
     }
-    _onInput = () => Fr(this, this._input, this._internals, this._counterEl, this._countEl);
-    _onChange = () => Dr(this._input, this._internals);
+    _onInput = () => Hr(this, this._input, this._internals, this._counterEl, this._countEl);
+    _onChange = () => zr(this._input, this._internals);
   }
-  var Rr = `<div class="field" part="field">
+  var Ir = `<div class="field" part="field">
     <div class="header" part="header">
         <span class="label" part="label"></span>
         <div class="input-wrap" part="input-wrap">
@@ -3185,7 +3185,7 @@ input[type="file"]:focus-visible + label {
     </div>
 </div>
 `;
-  var Kr = `:host {
+  var Pr = `:host {
     display: block;
 }
 
@@ -3261,7 +3261,7 @@ input[type="file"]:focus-visible + label {
     margin-top: -2px;
 }
 `;
-  var Nr = `:host([disabled]) {
+  var qr = `:host([disabled]) {
     opacity: 0.55;
     pointer-events: none;
 }
@@ -3347,19 +3347,19 @@ input[type="file"]:focus-visible + label {
     border: none;
 }
 `;
-  var Vr = `@media (prefers-reduced-motion: no-preference) {
+  var Br = `@media (prefers-reduced-motion: no-preference) {
     .input-wrap { transition: border-color 0.15s; }
     .fill { transition: width 0.05s ease; }
     .slider::-webkit-slider-thumb { transition: transform 0.1s; }
 }
 `;
-  var Or = (t, e) => {
+  var Fr = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var P = (t, e) => {
+  var S = (t, e) => {
     if (!t)
       return e;
     let r = Number(t.min), i = Number(t.max);
@@ -3377,69 +3377,69 @@ input[type="file"]:focus-visible + label {
     let r = Number(t.min), i = Number(t.max), n = Number(t.value), a = i === r ? 0 : (n - r) / (i - r) * 100;
     e.style.width = `${a}%`;
   };
-  var ht = (t, e, r, i, n) => {
+  var ct = (t, e, r, i, n) => {
     if (!e || !r || !i || !n)
       return;
-    let a = t.getAttribute("min") ?? "0", o = t.getAttribute("max") ?? "100", l = t.getAttribute("step") ?? "1";
-    e.min = a, e.max = o, e.step = l, r.min = a, r.max = o, r.step = l, i.textContent = a, n.textContent = o;
+    let a = t.getAttribute("min") ?? "0", s = t.getAttribute("max") ?? "100", l = t.getAttribute("step") ?? "1";
+    e.min = a, e.max = s, e.step = l, r.min = a, r.max = s, r.step = l, i.textContent = a, n.textContent = s;
   };
-  var bt = (t, e, r, i) => {
+  var ut = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
     let n = t.getAttribute("label") ?? t.getAttribute("name") ?? "";
     if (e.textContent = n, e.hidden = n === "", n)
       r.setAttribute("aria-label", n), i.setAttribute("aria-label", n);
   };
-  var mt = (t, e) => {
+  var pt = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("unit") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var gt = (t, e, r) => {
+  var ht = (t, e, r) => {
     if (!e || !r)
       return;
     let i = t.hasAttribute("disabled");
     e.disabled = i, r.disabled = i;
   };
-  var q = (t, e, r, i, n) => {
+  var I = (t, e, r, i, n) => {
     if (!t || !e)
       return;
-    let a = P(t, Number(n));
+    let a = S(t, Number(n));
     t.value = String(a), e.value = String(a), i.setFormValue(t.value), E(t, r);
   };
-  var $r = (t, e, r, i, n) => {
+  var Dr = (t, e, r, i, n) => {
     if (!e || !r)
       return;
     r.value = e.value, n.setFormValue(e.value), E(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
-  var Xr = (t, e, r) => {
+  var jr = (t, e, r) => {
     if (!e)
       return;
     r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
-  var Ur = (t, e, r, i, n) => {
+  var Rr = (t, e, r, i, n) => {
     if (!e || !r)
       return;
     if (r.value === "")
       return;
-    let a = P(e, Number(r.value));
+    let a = S(e, Number(r.value));
     e.value = String(a), n.setFormValue(e.value), E(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
-  var Zr = (t, e, r, i, n) => {
+  var Kr = (t, e, r, i, n) => {
     if (!e || !r)
       return;
-    let a = P(e, Number(r.value));
+    let a = S(e, Number(r.value));
     e.value = String(a), r.value = String(a), n.setFormValue(e.value), E(e, i), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
-  var Yr = (t, e) => {
+  var Vr = (t, e) => {
     if (!t || !e)
       return;
     e.value = t.value;
   };
-  var Ns = Kr + Nr + Vr;
+  var Ls = Pr + qr + Br;
 
-  class Qr extends s {
+  class Nr extends o {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "min", "max", "step", "unit", "disabled"];
@@ -3455,43 +3455,43 @@ input[type="file"]:focus-visible + label {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: Ns, template: Rr });
+      super({ css: Ls, template: Ir });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._slider = t.querySelector(".slider"), this._input = t.querySelector(".number"), this._fill = t.querySelector(".fill"), this._labelEl = t.querySelector(".label"), this._unitEl = t.querySelector(".unit"), this._minEl = t.querySelector(".min-bound"), this._maxEl = t.querySelector(".max-bound");
     }
     connectedCallback() {
-      ["value", "disabled"].forEach((e) => Or(this, e)), bt(this, this._labelEl, this._slider, this._input), ht(this, this._slider, this._input, this._minEl, this._maxEl), mt(this, this._unitEl), gt(this, this._slider, this._input);
+      ["value", "disabled"].forEach((e) => Fr(this, e)), ut(this, this._labelEl, this._slider, this._input), ct(this, this._slider, this._input, this._minEl, this._maxEl), pt(this, this._unitEl), ht(this, this._slider, this._input);
       let t = this.getAttribute("value") ?? this.getAttribute("min") ?? "0";
       if (!this._defaultsCaptured)
         this._defaultValue = t, this._defaultsCaptured = true;
-      q(this._slider, this._input, this._fill, this._internals, t), this._wire("addEventListener");
+      I(this._slider, this._input, this._fill, this._internals, t), this._wire("addEventListener");
     }
     disconnectedCallback() {
       this._wire("removeEventListener");
     }
     formResetCallback() {
-      q(this._slider, this._input, this._fill, this._internals, this._defaultValue);
+      I(this._slider, this._input, this._fill, this._internals, this._defaultValue);
     }
     attributeChangedCallback(t, e, r) {
       if (!this._slider || !this._input)
         return;
       if (t === "value" && r !== null)
-        q(this._slider, this._input, this._fill, this._internals, r);
+        I(this._slider, this._input, this._fill, this._internals, r);
       else if (t === "label")
-        bt(this, this._labelEl, this._slider, this._input);
+        ut(this, this._labelEl, this._slider, this._input);
       else if (t === "min" || t === "max" || t === "step")
-        ht(this, this._slider, this._input, this._minEl, this._maxEl);
+        ct(this, this._slider, this._input, this._minEl, this._maxEl);
       else if (t === "unit")
-        mt(this, this._unitEl);
+        pt(this, this._unitEl);
       else if (t === "disabled")
-        gt(this, this._slider, this._input);
+        ht(this, this._slider, this._input);
     }
     get value() {
       return this._slider?.value ?? "";
     }
     set value(t) {
-      q(this._slider, this._input, this._fill, this._internals, String(t));
+      I(this._slider, this._input, this._fill, this._internals, String(t));
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -3508,13 +3508,13 @@ input[type="file"]:focus-visible + label {
     _wire(t) {
       this._slider?.[t]("input", this._onSliderInput), this._slider?.[t]("change", this._onSliderChange), this._input?.[t]("input", this._onNumberInput), this._input?.[t]("change", this._onNumberChange), this._input?.[t]("blur", this._onNumberBlur);
     }
-    _onSliderInput = () => $r(this, this._slider, this._input, this._fill, this._internals);
-    _onSliderChange = () => Xr(this, this._slider, this._internals);
-    _onNumberInput = () => Ur(this, this._slider, this._input, this._fill, this._internals);
-    _onNumberChange = () => Zr(this, this._slider, this._input, this._fill, this._internals);
-    _onNumberBlur = () => Yr(this._slider, this._input);
+    _onSliderInput = () => Dr(this, this._slider, this._input, this._fill, this._internals);
+    _onSliderChange = () => jr(this, this._slider, this._internals);
+    _onNumberInput = () => Rr(this, this._slider, this._input, this._fill, this._internals);
+    _onNumberChange = () => Kr(this, this._slider, this._input, this._fill, this._internals);
+    _onNumberBlur = () => Vr(this._slider, this._input);
   }
-  var Gr = `<div class="field">
+  var Or = `<div class="field">
     <span class="label"></span>
     <button class="trigger" type="button" tabindex="0"
             popovertarget="panel" popovertargetaction="toggle">
@@ -3530,7 +3530,7 @@ input[type="file"]:focus-visible + label {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var Wr = `:host {
+  var $r = `:host {
     display: block;
 }
 
@@ -3602,7 +3602,7 @@ input[type="file"]:focus-visible + label {
     transition: background 0.1s;
 }
 `;
-  var Jr = `.trigger:hover {
+  var Xr = `.trigger:hover {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -3647,36 +3647,36 @@ input[type="file"]:focus-visible + label {
     font-weight: 600;
 }
 `;
-  var ti = (t, e) => {
+  var Ur = (t, e) => {
     t.forEach((r) => r.classList.toggle("selected", r.dataset.value === e));
   };
-  var ei = (t, e) => {
+  var Zr = (t, e) => {
     if (!t)
       return;
     let r = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
     t.textContent = r, t.hidden = r === "";
   };
-  var ri = (t, e, r) => {
+  var Yr = (t, e, r) => {
     let i = Array.from(t.querySelectorAll("option"));
     if (e)
       e.innerHTML = "";
-    let n = [], a = "", o = "";
+    let n = [], a = "", s = "";
     if (i.forEach((l) => {
       let d = document.createElement("li");
       if (d.className = "option", d.textContent = l.textContent, d.dataset.value = l.value, d.addEventListener("click", () => r(l.value, l.textContent ?? "")), e?.appendChild(d), n.push(d), l.hasAttribute("selected") && !a)
-        a = l.value, o = l.textContent ?? "";
+        a = l.value, s = l.textContent ?? "";
     }), !a && i.length > 0)
-      a = i[0].value, o = i[0].textContent ?? "";
-    return { options: n, initialValue: a, initialLabel: o };
+      a = i[0].value, s = i[0].textContent ?? "";
+    return { options: n, initialValue: a, initialLabel: s };
   };
-  var ii = (t, e, r, i) => {
+  var Qr = (t, e, r, i) => {
     if (e)
       e.textContent = i;
-    ti(t, r);
+    Ur(t, r);
   };
-  var Xs = Wr + Jr;
+  var Hs = $r + Xr;
 
-  class ni extends s {
+  class Gr extends o {
     static formAssociated = true;
     _internals;
     _trigger;
@@ -3687,11 +3687,11 @@ input[type="file"]:focus-visible + label {
     _value = "";
     _isOpen = false;
     constructor() {
-      super({ css: Xs, template: Gr });
+      super({ css: Hs, template: Or });
       this._internals = this.attachInternals(), this._trigger = this.shadowRoot.querySelector(".trigger"), this._display = this.shadowRoot.querySelector(".value"), this._list = this.shadowRoot.querySelector(".list"), this._panel = this.shadowRoot.querySelector(".panel");
     }
     connectedCallback() {
-      ei(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
+      Zr(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
     }
     disconnectedCallback() {
       if (this.shadowRoot.querySelector("slot")?.removeEventListener("slotchange", this._onSlot), this._panel?.removeEventListener("beforetoggle", this._onBeforeToggle), this._panel?.removeEventListener("toggle", this._onToggle), this._isOpen)
@@ -3699,7 +3699,7 @@ input[type="file"]:focus-visible + label {
       this._unbindReposition();
     }
     _syncFromSlot = () => {
-      let { options: t, initialValue: e, initialLabel: r } = ri(this, this._list, (n, a) => this._select(n, a));
+      let { options: t, initialValue: e, initialLabel: r } = Yr(this, this._list, (n, a) => this._select(n, a));
       this._options = t;
       let i = this.getAttribute("value");
       if (i !== null) {
@@ -3716,7 +3716,7 @@ input[type="file"]:focus-visible + label {
       this._setValue(t, e), this._panel?.hidePopover?.(), this.dispatchEvent(new Event("change", { bubbles: true }));
     }
     _setValue(t, e) {
-      this._value = t, this._internals.setFormValue(t), ii(this._options, this._display, t, e);
+      this._value = t, this._internals.setFormValue(t), Qr(this._options, this._display, t, e);
     }
     _onBeforeToggle = (t) => {
       if (t.newState === "open")
@@ -3751,7 +3751,7 @@ input[type="file"]:focus-visible + label {
     _onSlot = () => this._syncFromSlot();
   }
 
-  class ai extends HTMLElement {
+  class Jr extends HTMLElement {
     _bufferedValue = "";
     connectedCallback() {
       let t = this.getAttribute("label") || "Size", e = this.getAttribute("name") || "size", r = document.createElement("p9r-select");
@@ -3774,7 +3774,7 @@ input[type="file"]:focus-visible + label {
       this._bufferedValue = t;
     }
   }
-  var oi = `<label class="radio" part="container">
+  var Wr = `<label class="radio" part="container">
     <input type="radio" id="native-input" part="input" />
     <span class="custom" part="circle" aria-hidden="true">
         <span class="dot" part="dot"></span>
@@ -3782,7 +3782,7 @@ input[type="file"]:focus-visible + label {
     <span class="label" part="label"><slot></slot></span>
 </label>
 `;
-  var si = `:host {
+  var ti = `:host {
   display: inline-block;
 
   --_size: 18px;
@@ -3862,13 +3862,13 @@ input:focus-visible ~ .custom {
 }
 `;
 
-  class li extends s {
+  class ei extends o {
     _input;
     static get observedAttributes() {
       return ["checked", "disabled", "value", "name"];
     }
     constructor() {
-      super({ css: si, template: oi });
+      super({ css: ti, template: Wr });
       this._input = this.shadowRoot?.querySelector("input") ?? null;
     }
     connectedCallback() {
@@ -3939,14 +3939,14 @@ input:focus-visible ~ .custom {
       this.setAttribute("value", t);
     }
   }
-  var di = `<fieldset class="group" part="group">
+  var ri = `<fieldset class="group" part="group">
     <legend class="label" part="label"></legend>
     <div class="options" part="options">
         <slot></slot>
     </div>
 </fieldset>
 `;
-  var ci = `:host {
+  var ii = `:host {
   display: block;
 }
 
@@ -3988,7 +3988,7 @@ input:focus-visible ~ .custom {
   pointer-events: none;
 }
 `;
-  var ui = (t, e) => {
+  var ni = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
@@ -3999,9 +3999,9 @@ input:focus-visible ~ .custom {
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-RADIO");
   };
-  var Gs = 0;
-  var pi = () => `radiogroup-${Gs++}`;
-  var hi = (t, e, r) => {
+  var qs = 0;
+  var ai = () => `radiogroup-${qs++}`;
+  var oi = (t, e, r) => {
     t.forEach((i) => {
       let n = e !== null && i.getAttribute("value") === e;
       if (n)
@@ -4011,55 +4011,55 @@ input:focus-visible ~ .custom {
       i.setAttribute("tabindex", n ? "0" : "-1");
     }), r.setFormValue(e ?? null);
   };
-  var ft = (t, e) => {
+  var bt = (t, e) => {
     if (t)
       t.textContent = e ?? "";
   };
-  var N = (t, e) => {
+  var R = (t, e) => {
     if (!e)
       return;
     t.forEach((r) => r.setAttribute("disabled", ""));
   };
-  var vt = (t, e) => {
+  var mt = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: e } }));
   };
-  var xt = (t, e, r) => {
-    let i = A(e), n = t.getAttribute("name") ?? pi(), a = t.getAttribute("value");
-    if (i.forEach((o) => {
-      o.setAttribute("name", n);
-      let l = a !== null && o.getAttribute("value") === a;
+  var gt = (t, e, r) => {
+    let i = A(e), n = t.getAttribute("name") ?? ai(), a = t.getAttribute("value");
+    if (i.forEach((s) => {
+      s.setAttribute("name", n);
+      let l = a !== null && s.getAttribute("value") === a;
       if (l)
-        o.setAttribute("checked", "");
+        s.setAttribute("checked", "");
       else
-        o.removeAttribute("checked");
-      o.setAttribute("tabindex", l ? "0" : "-1");
+        s.removeAttribute("checked");
+      s.setAttribute("tabindex", l ? "0" : "-1");
     }), a === null && i.length > 0)
       i[0]?.setAttribute("tabindex", "0");
-    N(i, t.hasAttribute("disabled")), r.setFormValue(a ?? null);
+    R(i, t.hasAttribute("disabled")), r.setFormValue(a ?? null);
   };
-  var bi = (t, e) => {
+  var si = (t, e) => {
     let r = e.target;
     if (r.tagName !== "P9R-RADIO")
       return;
     let i = r.getAttribute("value") ?? "";
     if (i !== t.getAttribute("value"))
-      t.setAttribute("value", i), vt(t, i);
+      t.setAttribute("value", i), mt(t, i);
   };
-  var mi = (t, e, r) => {
+  var li = (t, e, r) => {
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
       return;
     let n = A(e).filter((u) => !u.hasAttribute("disabled"));
     if (n.length === 0)
       return;
-    let a = n.findIndex((u) => u === document.activeElement), o = a === -1 ? 0 : a, l = o;
+    let a = n.findIndex((u) => u === document.activeElement), s = a === -1 ? 0 : a, l = s;
     switch (r.key) {
       case "ArrowLeft":
       case "ArrowUp":
-        l = (o - 1 + n.length) % n.length;
+        l = (s - 1 + n.length) % n.length;
         break;
       case "ArrowRight":
       case "ArrowDown":
-        l = (o + 1) % n.length;
+        l = (s + 1) % n.length;
         break;
       case "Home":
         l = 0;
@@ -4073,10 +4073,10 @@ input:focus-visible ~ .custom {
     if (!d)
       return;
     let c = d.getAttribute("value") ?? "";
-    t.setAttribute("value", c), d.focus(), vt(t, c);
+    t.setAttribute("value", c), d.focus(), mt(t, c);
   };
 
-  class gi extends s {
+  class di extends o {
     static formAssociated = true;
     _internals;
     _label;
@@ -4087,15 +4087,15 @@ input:focus-visible ~ .custom {
       return ["value", "label", "name", "disabled"];
     }
     constructor() {
-      super({ css: ci, template: di });
+      super({ css: ii, template: ri });
       this._internals = this.attachInternals(), this._label = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value"), this._defaultsCaptured = true;
       for (let t of ["value", "name", "disabled"])
-        ui(this, t);
-      this.setAttribute("role", "radiogroup"), ft(this._label, this.getAttribute("label")), this._slot?.addEventListener("slotchange", this._onSlotChange), this.addEventListener("change", this._onChange), this.addEventListener("keydown", this._onKey), xt(this, this._slot, this._internals);
+        ni(this, t);
+      this.setAttribute("role", "radiogroup"), bt(this._label, this.getAttribute("label")), this._slot?.addEventListener("slotchange", this._onSlotChange), this.addEventListener("change", this._onChange), this.addEventListener("keydown", this._onKey), gt(this, this._slot, this._internals);
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("change", this._onChange), this.removeEventListener("keydown", this._onKey);
@@ -4108,11 +4108,11 @@ input:focus-visible ~ .custom {
     }
     attributeChangedCallback(t, e, r) {
       if (t === "value")
-        hi(A(this._slot), r, this._internals);
+        oi(A(this._slot), r, this._internals);
       else if (t === "label")
-        ft(this._label, r);
+        bt(this._label, r);
       else if (t === "disabled")
-        N(A(this._slot), this.hasAttribute("disabled"));
+        R(A(this._slot), this.hasAttribute("disabled"));
     }
     get value() {
       return this.getAttribute("value") ?? "";
@@ -4132,11 +4132,11 @@ input:focus-visible ~ .custom {
     set disabled(t) {
       t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
-    _onSlotChange = () => xt(this, this._slot, this._internals);
-    _onChange = (t) => bi(this, t);
-    _onKey = (t) => mi(this, this._slot, t);
+    _onSlotChange = () => gt(this, this._slot, this._internals);
+    _onChange = (t) => si(this, t);
+    _onKey = (t) => li(this, this._slot, t);
   }
-  var fi = `<div class="switch-container" part="container">
+  var ci = `<div class="switch-container" part="container">
     <span class="label" id="group-label" part="label"></span>
 
     <div class="switch-wrapper" part="wrapper" role="radiogroup" aria-labelledby="group-label">
@@ -4152,7 +4152,7 @@ input:focus-visible ~ .custom {
     </span>
 </div>
 `;
-  var vi = `:host {
+  var ui = `:host {
   --active-index: 0;
   --total-options: 1;
   display: block;
@@ -4241,31 +4241,31 @@ input:focus-visible ~ .custom {
   pointer-events: none;
 }
 `;
-  var xi = (t, e) => {
+  var pi = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var B = (t) => {
+  var P = (t) => {
     if (!t)
       return [];
     return t.assignedElements().filter((e) => e.tagName === "OPTION");
   };
-  var _t = (t, e) => {
+  var ft = (t, e) => {
     if (t)
       t.textContent = e;
   };
-  var V = (t, e, r) => {
+  var K = (t, e, r) => {
     let i = e.findIndex((n) => n.getAttribute("value") === r);
     if (i === -1)
       return;
     t.style.setProperty("--active-index", i.toString()), e.forEach((n, a) => {
-      let o = a === i;
-      n.setAttribute("aria-checked", o.toString()), n.setAttribute("tabindex", o ? "0" : "-1");
+      let s = a === i;
+      n.setAttribute("aria-checked", s.toString()), n.setAttribute("tabindex", s ? "0" : "-1");
     });
   };
-  var O = (t, e) => {
+  var V = (t, e) => {
     t.forEach((r) => {
       if (r.getAttribute("value") === e)
         r.setAttribute("selected", "");
@@ -4273,8 +4273,8 @@ input:focus-visible ~ .custom {
         r.removeAttribute("selected");
     });
   };
-  var yt = (t, e) => {
-    let r = B(e);
+  var vt = (t, e) => {
+    let r = P(e);
     t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, n) => {
       if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
         i.setAttribute("tabindex", n === 0 ? "0" : "-1");
@@ -4283,25 +4283,25 @@ input:focus-visible ~ .custom {
           return;
         t.value = i.getAttribute("value") ?? "", i.focus();
       };
-    }), V(t, r, t.value), O(r, t.value);
+    }), K(t, r, t.value), V(r, t.value);
   };
-  var _i = (t, e, r) => {
+  var hi = (t, e, r) => {
     if (t.disabled)
       return;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
       return;
-    let n = B(e);
+    let n = P(e);
     if (n.length === 0)
       return;
-    let a = n.findIndex((c) => c.getAttribute("value") === t.value), o = a === -1 ? 0 : a, l = o;
+    let a = n.findIndex((c) => c.getAttribute("value") === t.value), s = a === -1 ? 0 : a, l = s;
     switch (r.key) {
       case "ArrowLeft":
       case "ArrowUp":
-        l = (o - 1 + n.length) % n.length;
+        l = (s - 1 + n.length) % n.length;
         break;
       case "ArrowRight":
       case "ArrowDown":
-        l = (o + 1) % n.length;
+        l = (s + 1) % n.length;
         break;
       case "Home":
         l = 0;
@@ -4317,7 +4317,7 @@ input:focus-visible ~ .custom {
     t.value = d.getAttribute("value") ?? "", d.focus();
   };
 
-  class yi extends s {
+  class bi extends o {
     static formAssociated = true;
     _internals;
     _labelEl;
@@ -4329,17 +4329,17 @@ input:focus-visible ~ .custom {
       return ["value", "disabled", "name", "label"];
     }
     constructor() {
-      super({ css: vi, template: fi });
+      super({ css: ui, template: ci });
       this._internals = this.attachInternals(), this._labelEl = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot:not([name])") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
       for (let t of ["value", "disabled", "name", "label"])
-        xi(this, t);
+        pi(this, t);
       if (this._slot)
-        this._slot.addEventListener("slotchange", this._onSlotChange), yt(this, this._slot);
-      this.addEventListener("keydown", this._onKey), _t(this._labelEl, this.getAttribute("label") ?? "");
+        this._slot.addEventListener("slotchange", this._onSlotChange), vt(this, this._slot);
+      this.addEventListener("keydown", this._onKey), ft(this._labelEl, this.getAttribute("label") ?? "");
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("keydown", this._onKey);
@@ -4358,7 +4358,7 @@ input:focus-visible ~ .custom {
       if (t === "value")
         this.value = r ?? "";
       else if (t === "label")
-        _t(this._labelEl, r ?? "");
+        ft(this._labelEl, r ?? "");
     }
     get value() {
       return this.getAttribute("value") ?? "";
@@ -4367,8 +4367,8 @@ input:focus-visible ~ .custom {
       if (this.getAttribute("value") !== t)
         this.setAttribute("value", t);
       this._internals.setFormValue(t);
-      let e = B(this._slot);
-      if (V(this, e, t), O(e, t), !this._silentValueChange)
+      let e = P(this._slot);
+      if (K(this, e, t), V(e, t), !this._silentValueChange)
         this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: t } }));
     }
     get name() {
@@ -4389,10 +4389,10 @@ input:focus-visible ~ .custom {
     set label(t) {
       t ? this.setAttribute("label", t) : this.removeAttribute("label");
     }
-    _onSlotChange = () => yt(this, this._slot);
-    _onKey = (t) => _i(this, this._slot, t);
+    _onSlotChange = () => vt(this, this._slot);
+    _onKey = (t) => hi(this, this._slot, t);
   }
-  var wi = `<label class="switch" part="container">
+  var mi = `<label class="switch" part="container">
     <input type="checkbox" id="native-input" part="input" />
     <span class="track" part="track">
         <span class="thumb" part="thumb"></span>
@@ -4400,7 +4400,7 @@ input:focus-visible ~ .custom {
     <span class="label" part="label"><slot></slot></span>
 </label>
 `;
-  var ki = `:host {
+  var gi = `:host {
   display: inline-block;
 
   --_track-w: 36px;
@@ -4499,7 +4499,7 @@ input:focus-visible ~ .track {
   }
 }
 `;
-  var Ei = (t, e) => {
+  var fi = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
@@ -4509,19 +4509,19 @@ input:focus-visible ~ .track {
     let i = e?.checked ?? t.hasAttribute("checked");
     r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
   };
-  var Ai = (t, e, r) => {
+  var vi = (t, e, r) => {
     if (e?.checked ?? false)
       t.setAttribute("checked", "");
     else
       t.removeAttribute("checked");
     L(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
   };
-  var Li = (t, e) => {
+  var xi = (t, e) => {
     if (t.hasAttribute("disabled"))
       e.preventDefault(), e.stopImmediatePropagation();
   };
 
-  class Ci extends s {
+  class _i extends o {
     static formAssociated = true;
     _internals;
     _input;
@@ -4531,14 +4531,14 @@ input:focus-visible ~ .track {
       return ["checked", "disabled", "name", "value"];
     }
     constructor() {
-      super({ css: ki, template: wi });
+      super({ css: gi, template: mi });
       this._internals = this.attachInternals(), this._input = this.shadowRoot?.querySelector("input") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultChecked = this.hasAttribute("checked"), this._defaultsCaptured = true;
       for (let t of ["checked", "disabled", "name", "value"])
-        Ei(this, t);
+        fi(this, t);
       if (this._input) {
         if (this._input.checked = this.hasAttribute("checked"), this._input.disabled = this.hasAttribute("disabled"), this.hasAttribute("name"))
           this._input.name = this.getAttribute("name") ?? "";
@@ -4566,8 +4566,8 @@ input:focus-visible ~ .track {
       else if (t === "value")
         this._input.value = r ?? "", L(this, this._input, this._internals);
     }
-    _onChange = () => Ai(this, this._input, this._internals);
-    _onClick = (t) => Li(this, t);
+    _onChange = () => vi(this, this._input, this._internals);
+    _onClick = (t) => xi(this, t);
     get checked() {
       return this.hasAttribute("checked");
     }
@@ -4599,7 +4599,7 @@ input:focus-visible ~ .track {
       this._input?.click();
     }
   }
-  var Ti = `<div class="container" part="container">
+  var yi = `<div class="container" part="container">
     <label for="main-input" part="label">
         <slot name="label">Tags</slot>
     </label>
@@ -4638,7 +4638,7 @@ input:focus-visible ~ .track {
     ></div>
 </div>
 `;
-  var Mi = `:host {
+  var wi = `:host {
     display: block;
     font-family: system-ui, -apple-system, sans-serif;
 }
@@ -4706,7 +4706,7 @@ input::placeholder {
     }
 }
 `;
-  var Hi = `input:hover:not(:disabled) {
+  var ki = `input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -4784,13 +4784,13 @@ p9r-tag:hover {
     filter: brightness(0.92);
 }
 `;
-  var zi = (t, e) => {
+  var Ei = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var $ = (t, e) => {
+  var N = (t, e) => {
     if (!t)
       return;
     t.textContent = "", window.setTimeout(() => {
@@ -4798,7 +4798,7 @@ p9r-tag:hover {
         t.textContent = e;
     }, 10);
   };
-  var wt = async (t) => {
+  var xt = async (t) => {
     let e = t.getAttribute("resource");
     if (!e)
       return null;
@@ -4813,164 +4813,164 @@ p9r-tag:hover {
       return null;
     }
   };
-  var Si = (t, e, r, i) => {
+  var Ai = (t, e, r, i) => {
     if (!t)
       return;
     if (t.innerHTML = "", e !== "multiple")
       return;
     r.forEach((n, a) => {
-      let o = document.createElement("p9r-tag");
-      o.setAttribute("color", "primary"), o.setAttribute("part", "chip"), o.setAttribute("role", "listitem"), o.textContent = n, o.title = `Remove ${n}`, o.setAttribute("aria-label", `Remove ${n}`), o.addEventListener("click", () => i(a)), t.appendChild(o);
+      let s = document.createElement("p9r-tag");
+      s.setAttribute("color", "primary"), s.setAttribute("part", "chip"), s.setAttribute("role", "listitem"), s.textContent = n, s.title = `Remove ${n}`, s.setAttribute("aria-label", `Remove ${n}`), s.addEventListener("click", () => i(a)), t.appendChild(s);
     });
   };
-  var Ii = (t, e, r, i, n, a) => {
+  var Li = (t, e, r, i, n, a) => {
     if (!t || !e)
       return;
     if (r.length === 0) {
-      kt(t, e);
+      _t(t, e);
       return;
     }
-    if (t.innerHTML = "", r.forEach((o, l) => {
+    if (t.innerHTML = "", r.forEach((s, l) => {
       let d = document.createElement("div");
       d.className = "suggestion", d.id = `${n}-opt-${l}`, d.setAttribute("role", "option"), d.setAttribute("part", "option");
       let c = l === i;
       d.dataset.active = String(c), d.setAttribute("aria-selected", String(c));
       let u = document.createElement("span");
-      u.className = "name", u.textContent = o.value, d.appendChild(u);
+      u.className = "name", u.textContent = s.value, d.appendChild(u);
       let h = document.createElement("p9r-tag");
-      h.setAttribute("color", "secondary"), h.setAttribute("part", "count"), h.textContent = String(o.count), d.appendChild(h), d.addEventListener("mousedown", (p) => {
-        p.preventDefault(), a(o.value);
+      h.setAttribute("color", "secondary"), h.setAttribute("part", "count"), h.textContent = String(s.count), d.appendChild(h), d.addEventListener("mousedown", (p) => {
+        p.preventDefault(), a(s.value);
       }), t.appendChild(d);
     }), t.hidden = false, e.setAttribute("aria-expanded", "true"), i >= 0)
       e.setAttribute("aria-activedescendant", `${n}-opt-${i}`);
     else
       e.removeAttribute("aria-activedescendant");
   };
-  var kt = (t, e) => {
+  var _t = (t, e) => {
     if (t)
       t.hidden = true;
     if (e)
       e.setAttribute("aria-expanded", "false"), e.removeAttribute("aria-activedescendant");
   };
-  var Pi = (t, e, r) => {
+  var Ci = (t, e, r) => {
     let i = t.filter((n) => !e.includes(n.value));
     if (r === "")
       return i.slice(0, 8);
     return i.filter((n) => n.value.toLowerCase().includes(r)).slice(0, 8);
   };
-  var qi = (t, e) => {
+  var Ti = (t, e) => {
     if (t === "multiple")
       return e.join(",");
     return e[0] ?? "";
   };
-  var Bi = (t, e) => {
+  var Mi = (t, e) => {
     if (t === "multiple")
       return e ? e.split(",").map((r) => r.trim()).filter((r) => r !== "") : [];
     return e ? [e.trim()] : [];
   };
   var b = (t) => t;
-  var F = (t, e) => {
+  var q = (t, e) => {
     let r = b(t), i = t.getAttribute("mode") || "multiple", n = e.trim();
     if (!n || !r._input)
       return;
     if (i === "multiple") {
       if (!r._tags.includes(n))
-        r._tags.push(n), $(r._liveRegion, `${n} added`);
+        r._tags.push(n), N(r._liveRegion, `${n} added`);
       r._input.value = "";
     } else
-      r._tags = [n], r._input.value = n, $(r._liveRegion, `${n} selected`);
-    r._activeIndex = -1, X(t), Z(t);
+      r._tags = [n], r._input.value = n, N(r._liveRegion, `${n} selected`);
+    r._activeIndex = -1, O(t), X(t);
   };
-  var Fi = (t, e) => {
+  var Hi = (t, e) => {
     let r = b(t), i = e.trim();
     if (r._tags = i ? [i] : [], r._internals.setFormValue(r.value), r._silent)
       return;
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: r.value, tags: [...r._tags] } }));
   };
-  var Di = (t, e) => {
+  var zi = (t, e) => {
     let r = b(t), i = r._tags[e];
     if (i === undefined)
       return;
-    r._tags.splice(e, 1), $(r._liveRegion, `${i} removed`), X(t), r._input?.focus();
+    r._tags.splice(e, 1), N(r._liveRegion, `${i} removed`), O(t), r._input?.focus();
   };
-  var ji = (t) => {
+  var Si = (t) => {
     let e = b(t);
     if (e._tags.length === 0)
       return;
-    Di(t, e._tags.length - 1);
+    zi(t, e._tags.length - 1);
   };
-  var X = (t) => {
+  var O = (t) => {
     let e = b(t);
-    if (Et(t), e._internals.setFormValue(e.value), e._silent)
+    if (yt(t), e._internals.setFormValue(e.value), e._silent)
       return;
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e.value, tags: [...e._tags] } }));
   };
-  var Et = (t) => {
+  var yt = (t) => {
     let e = b(t);
-    Si(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => Di(t, r));
+    Ai(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => zi(t, r));
   };
-  var At = (t, e) => {
+  var wt = (t, e) => {
     let r = b(t), n = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
-    r._suggestions = Pi(r._allSuggestions, n, e), r._activeIndex = -1, U(t);
+    r._suggestions = Ci(r._allSuggestions, n, e), r._activeIndex = -1, $(t);
   };
-  var U = (t) => {
+  var $ = (t) => {
     let e = b(t);
-    Ii(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => F(t, r));
+    Li(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => q(t, r));
   };
-  var Z = (t) => {
+  var X = (t) => {
     let e = b(t);
-    kt(e._suggestionsEl, e._input), e._activeIndex = -1;
+    _t(e._suggestionsEl, e._input), e._activeIndex = -1;
   };
-  var Ri = (t, e) => {
+  var Ii = (t, e) => {
     if (!e)
       return;
-    At(t, e.value.trim().toLowerCase());
+    wt(t, e.value.trim().toLowerCase());
   };
-  var Ki = (t) => {
-    setTimeout(() => Z(t), 150);
+  var Pi = (t) => {
+    setTimeout(() => X(t), 150);
   };
-  var Ni = (t, e) => {
+  var qi = (t, e) => {
     if (!e)
       return;
-    if (At(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
-      Fi(t, e.value);
+    if (wt(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
+      Hi(t, e.value);
   };
-  var Vi = (t, e, r) => {
+  var Bi = (t, e, r) => {
     if (!e)
       return;
     let i = t.getAttribute("mode") || "multiple", n = t;
     if (r.key === "ArrowDown") {
       if (r.preventDefault(), n._suggestions.length === 0)
         return;
-      n._activeIndex = Math.min(n._activeIndex + 1, n._suggestions.length - 1), U(t);
+      n._activeIndex = Math.min(n._activeIndex + 1, n._suggestions.length - 1), $(t);
     } else if (r.key === "ArrowUp") {
       if (r.preventDefault(), n._suggestions.length === 0)
         return;
-      n._activeIndex = Math.max(n._activeIndex - 1, -1), U(t);
+      n._activeIndex = Math.max(n._activeIndex - 1, -1), $(t);
     } else if (r.key === "Enter") {
       r.preventDefault();
       let a = n._activeIndex >= 0 ? n._suggestions[n._activeIndex] : undefined;
       if (a)
-        F(t, a.value);
+        q(t, a.value);
       else {
-        let o = e.value.trim();
-        if (o)
-          F(t, o);
+        let s = e.value.trim();
+        if (s)
+          q(t, s);
       }
     } else if (r.key === "Escape")
-      r.preventDefault(), Z(t);
+      r.preventDefault(), X(t);
     else if (r.key === "Backspace" && e.value === "" && i === "multiple")
-      ji(t);
+      Si(t);
     else if (r.key === "," && i === "multiple") {
       r.preventDefault();
       let a = e.value.trim();
       if (a)
-        F(t, a);
+        q(t, a);
     }
   };
-  var al = Mi + Hi;
+  var Ns = wi + ki;
 
-  class Oi extends s {
+  class Fi extends o {
     static formAssociated = true;
     static get observedAttributes() {
       return ["placeholder", "mode", "resource", "api", "disabled", "value"];
@@ -4989,7 +4989,7 @@ p9r-tag:hover {
     _defaultsCaptured = false;
     _silent = false;
     constructor() {
-      super({ css: al, template: Ti });
+      super({ css: Ns, template: yi });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       if (this._input = t.querySelector("#main-input"), this._display = t.querySelector("#tags-display"), this._suggestionsEl = t.querySelector("#suggestions"), this._liveRegion = t.querySelector("#live-region"), this._uid = `ts-${Math.random().toString(36).slice(2, 9)}`, this._suggestionsEl)
@@ -5000,7 +5000,7 @@ p9r-tag:hover {
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => zi(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), wt(this).then((t) => {
+      ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => Ei(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), xt(this).then((t) => {
         if (t)
           this._allSuggestions = t;
       });
@@ -5024,27 +5024,27 @@ p9r-tag:hover {
       else if (t === "disabled")
         this._input.disabled = this.hasAttribute("disabled");
       else if (t === "resource" || t === "api")
-        this._allSuggestions = [], wt(this).then((i) => {
+        this._allSuggestions = [], xt(this).then((i) => {
           if (i)
             this._allSuggestions = i;
         });
       else if (t === "mode")
-        Et(this);
+        yt(this);
       else if (t === "value")
         this.value = r ?? "";
     }
-    _onFocus = () => Ri(this, this._input);
-    _onBlur = () => Ki(this);
-    _onInput = () => Ni(this, this._input);
-    _onKeyDown = (t) => Vi(this, this._input, t);
+    _onFocus = () => Ii(this, this._input);
+    _onBlur = () => Pi(this);
+    _onInput = () => qi(this, this._input);
+    _onKeyDown = (t) => Bi(this, this._input, t);
     get value() {
-      return qi(this.getAttribute("mode") || "multiple", this._tags);
+      return Ti(this.getAttribute("mode") || "multiple", this._tags);
     }
     set value(t) {
       let e = this.getAttribute("mode") || "multiple";
-      if (this._tags = Bi(e, t), this._input)
+      if (this._tags = Mi(e, t), this._input)
         this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
-      X(this);
+      O(this);
     }
     get name() {
       return this.getAttribute("name") || "";
@@ -5083,7 +5083,7 @@ p9r-tag:hover {
       return [...this._tags];
     }
   }
-  var $i = `<div class="field" part="field">
+  var Di = `<div class="field" part="field">
     <label class="label" part="label" for="ta"></label>
     <textarea id="ta" class="textarea" part="textarea"></textarea>
     <div class="meta" part="meta" hidden>
@@ -5092,7 +5092,7 @@ p9r-tag:hover {
     </div>
 </div>
 `;
-  var Xi = `:host {
+  var ji = `:host {
   display: block;
 }
 
@@ -5147,7 +5147,7 @@ p9r-tag:hover {
 
 .meta[hidden] { display: none; }
 `;
-  var Ui = `:host([resize="none"]) .textarea       { resize: none; }
+  var Ri = `:host([resize="none"]) .textarea       { resize: none; }
 :host([resize="horizontal"]) .textarea { resize: horizontal; }
 :host([resize="vertical"]) .textarea   { resize: vertical; }
 :host([resize="both"]) .textarea       { resize: both; }
@@ -5201,13 +5201,13 @@ p9r-tag:hover {
   font-weight: 600;
 }
 `;
-  var Zi = (t, e) => {
+  var Ki = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var Lt = (t) => {
+  var kt = (t) => {
     let e = t.getAttribute("max-count");
     if (e === null)
       return null;
@@ -5217,30 +5217,30 @@ p9r-tag:hover {
   var C = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let n = Lt(t);
+    let n = kt(t);
     if (n === null)
       return;
     let a = e.value.length;
     i.textContent = String(a), r.dataset.over = String(a > n);
   };
-  var Ct = (t, e, r) => {
+  var Et = (t, e, r) => {
     if (!t || !e || !r)
       return;
     let i = (t.textContent ?? "").length > 0, n = !e.hidden;
     r.hidden = !i && !n;
   };
-  var D = (t, e) => {
+  var B = (t, e) => {
     if (!e || !t.hasAttribute("autosize"))
       return;
     e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
   };
-  var dl = (t, e) => {
+  var Us = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var cl = (t, e) => {
+  var Zs = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -5249,14 +5249,14 @@ p9r-tag:hover {
     else
       e.setAttribute("placeholder", r);
   };
-  var ul = (t, e) => {
+  var Ys = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("rows");
     if (r)
       e.rows = Number(r) || 3;
   };
-  var pl = (t, e) => {
+  var Qs = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("maxlength");
@@ -5265,11 +5265,11 @@ p9r-tag:hover {
     else
       e.setAttribute("maxlength", r);
   };
-  var hl = (t, e) => {
+  var Gs = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var bl = (t, e) => {
+  var Js = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -5278,17 +5278,17 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-required");
   };
-  var ml = (t, e, r, i) => {
+  var Ws = (t, e, r, i) => {
     if (!e)
       return;
-    e.textContent = t.getAttribute("hint") ?? "", Ct(e, r, i);
+    e.textContent = t.getAttribute("hint") ?? "", Et(e, r, i);
   };
-  var gl = (t, e) => {
+  var tl = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var fl = (t, e) => {
+  var el = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -5296,32 +5296,32 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-invalid");
   };
-  var Tt = (t, e, r, i, n) => {
+  var At = (t, e, r, i, n) => {
     if (!e || !r)
       return;
-    let a = Lt(t);
+    let a = kt(t);
     if (a === null)
       e.hidden = true;
     else
       e.hidden = false, r.textContent = String(a);
-    Ct(i, e, n);
+    Et(i, e, n);
   };
-  var Mt = (t, e, r, i, n, a, o) => {
-    dl(t, r), cl(t, e), ul(t, e), pl(t, e), hl(t, e), bl(t, e), ml(t, i, a, n), gl(t, i), fl(t, e), Tt(t, a, o, i, n);
+  var Lt = (t, e, r, i, n, a, s) => {
+    Us(t, r), Zs(t, e), Ys(t, e), Qs(t, e), Gs(t, e), Js(t, e), Ws(t, i, a, n), tl(t, i), el(t, e), At(t, a, s, i, n);
   };
-  var Yi = (t, e, r, i, n) => {
+  var Vi = (t, e, r, i, n) => {
     if (!e)
       return;
-    r.setFormValue(e.value), C(t, e, i, n), D(t, e);
+    r.setFormValue(e.value), C(t, e, i, n), B(t, e);
   };
-  var Qi = (t, e) => {
+  var Ni = (t, e) => {
     if (!t)
       return;
     e.setFormValue(t.value);
   };
-  var vl = Xi + Ui;
+  var rl = ji + Ri;
 
-  class Gi extends s {
+  class Oi extends o {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "rows", "maxlength", "max-count", "hint", "hint-level", "invalid", "disabled", "required", "autosize"];
@@ -5337,7 +5337,7 @@ p9r-tag:hover {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: vl, template: $i });
+      super({ css: rl, template: Di });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
@@ -5345,7 +5345,7 @@ p9r-tag:hover {
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["value", "disabled", "required"].forEach((e) => Zi(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), Mt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+      ["value", "disabled", "required"].forEach((e) => Ki(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), Lt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
@@ -5364,11 +5364,11 @@ p9r-tag:hover {
       if (t === "value" && r !== null)
         this.value = r;
       else if (t === "max-count")
-        Tt(this, this._counter, this._max, this._hint, this._meta), C(this, this._textarea, this._counter, this._count);
+        At(this, this._counter, this._max, this._hint, this._meta), C(this, this._textarea, this._counter, this._count);
       else if (t === "autosize")
-        D(this, this._textarea);
+        B(this, this._textarea);
       else
-        Mt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+        Lt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
     }
     get value() {
       return this._textarea?.value ?? "";
@@ -5376,7 +5376,7 @@ p9r-tag:hover {
     set value(t) {
       if (!this._textarea)
         return;
-      this._textarea.value = t, this._internals.setFormValue(t), C(this, this._textarea, this._counter, this._count), D(this, this._textarea);
+      this._textarea.value = t, this._internals.setFormValue(t), C(this, this._textarea, this._counter, this._count), B(this, this._textarea);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -5396,14 +5396,14 @@ p9r-tag:hover {
     focus() {
       this._textarea?.focus();
     }
-    _onInput = () => Yi(this, this._textarea, this._internals, this._counter, this._count);
-    _onChange = () => Qi(this._textarea, this._internals);
+    _onInput = () => Vi(this, this._textarea, this._internals, this._counter, this._count);
+    _onChange = () => Ni(this._textarea, this._internals);
   }
-  var Wi = `<div class="actions" role="toolbar" part="toolbar">
+  var $i = `<div class="actions" role="toolbar" part="toolbar">
     <slot></slot>
 </div>
 `;
-  var Ji = `:host {
+  var Xi = `:host {
   display: inline-block;
 
   --_toolbar-bg: var(--bg-overlay, #ffffff);
@@ -5495,11 +5495,11 @@ p9r-tag:hover {
 }
 `;
 
-  class tn extends s {
+  class Ui extends o {
     static _event = "action-click";
     _toolbar;
     constructor() {
-      super({ css: Ji, template: Wi });
+      super({ css: Xi, template: $i });
       this._toolbar = this.shadowRoot?.querySelector(".actions") ?? null;
     }
     static get observedAttributes() {
@@ -5554,9 +5554,9 @@ p9r-tag:hover {
         this.setAttribute("label", t);
     }
   }
-  var en = `<slot></slot>
+  var Zi = `<slot></slot>
 `;
-  var rn = `:host {
+  var Yi = `:host {
     --max-width: var(--p9r-container-md, 768px);
     display: block;
     width: 100%;
@@ -5577,12 +5577,12 @@ p9r-tag:hover {
 :host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }
 `;
 
-  class nn extends s {
+  class Qi extends o {
     constructor() {
-      super({ css: rn, template: en });
+      super({ css: Yi, template: Zi });
     }
   }
-  var an = `<div class="app-container" part="container">
+  var Gi = `<div class="app-container" part="container">
     <a class="skip-link" part="skip-link" href="#main-content">
         <slot name="skip-link">Skip to main content</slot>
     </a>
@@ -5598,7 +5598,7 @@ p9r-tag:hover {
     </main>
 </div>
 `;
-  var on = `:host {
+  var Ji = `:host {
     display: block;
     height: 100vh;
     width: 100vw;
@@ -5684,11 +5684,11 @@ p9r-tag:hover {
 }
 `;
 
-  class sn extends s {
+  class Wi extends o {
     _sidebar;
     _content;
     constructor() {
-      super({ css: on, template: an });
+      super({ css: Ji, template: Gi });
       this._sidebar = this.shadowRoot?.querySelector(".app-sidebar") ?? null, this._content = this.shadowRoot?.querySelector(".app-content") ?? null;
     }
     static get observedAttributes() {
@@ -5736,9 +5736,9 @@ p9r-tag:hover {
       this._content?.focus();
     }
   }
-  var ln = `<slot></slot>
+  var tn = `<slot></slot>
 `;
-  var dn = `:host {
+  var en = `:host {
     --gap: var(--p9r-space-md, 16px);
     --max-width: 100%;
     --divider-color: var(--p9r-stack-divider, var(--border-default, rgba(0,0,0,0.1)));
@@ -5810,12 +5810,12 @@ p9r-tag:hover {
 }
 `;
 
-  class cn extends s {
+  class rn extends o {
     constructor() {
-      super({ css: dn, template: ln });
+      super({ css: en, template: tn });
     }
   }
-  var un = `<aside class="sidebar" part="sidebar">
+  var nn = `<aside class="sidebar" part="sidebar">
     <div class="sidebar-header" part="header">
         <slot name="header">
             <h3>Menu</h3>
@@ -5831,7 +5831,7 @@ p9r-tag:hover {
     </div>
 </aside>
 `;
-  var pn = `:host {
+  var an = `:host {
     display: flex;
     flex-direction: column;
     width: 260px;
@@ -5910,55 +5910,55 @@ p9r-tag:hover {
     --item-bg-hover: var(--primary-muted);
 }
 `;
-  var hn = (t, e) => {
+  var on = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var bn = (t) => {
+  var sn = (t) => {
     if (!t)
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled"));
   };
-  var mn = (t, e) => {
-    let r = t.shadowRoot?.querySelector("slot:not([name])"), i = bn(r);
+  var ln = (t, e) => {
+    let r = t.shadowRoot?.querySelector("slot:not([name])"), i = sn(r);
     if (i.length === 0)
       return;
-    let n = document.activeElement, a = i.findIndex((d) => d === n || d.contains(n)), o = -1;
+    let n = document.activeElement, a = i.findIndex((d) => d === n || d.contains(n)), s = -1;
     switch (e.key) {
       case "ArrowDown":
-        o = a < 0 ? 0 : (a + 1) % i.length;
+        s = a < 0 ? 0 : (a + 1) % i.length;
         break;
       case "ArrowUp":
-        o = a < 0 ? i.length - 1 : (a - 1 + i.length) % i.length;
+        s = a < 0 ? i.length - 1 : (a - 1 + i.length) % i.length;
         break;
       case "Home":
-        o = 0;
+        s = 0;
         break;
       case "End":
-        o = i.length - 1;
+        s = i.length - 1;
         break;
       default:
         return;
     }
     e.preventDefault();
-    let l = i[o];
+    let l = i[s];
     if (l)
       l.focus();
   };
 
-  class gn extends s {
+  class dn extends o {
     _sidebar;
     constructor() {
-      super({ css: pn, template: un });
+      super({ css: an, template: nn });
       this._sidebar = this.shadowRoot?.querySelector(".sidebar") ?? null;
     }
     static get observedAttributes() {
       return ["collapsed"];
     }
     connectedCallback() {
-      if (hn(this, "collapsed"), !this.hasAttribute("aria-label"))
+      if (on(this, "collapsed"), !this.hasAttribute("aria-label"))
         this.setAttribute("aria-label", "Main navigation");
       this.addEventListener("keydown", this._onKey);
     }
@@ -5983,9 +5983,9 @@ p9r-tag:hover {
       else
         this.removeAttribute("collapsed");
     }
-    _onKey = (t) => mn(this, t);
+    _onKey = (t) => ln(this, t);
   }
-  var fn = `<a class="menu-item" part="item" tabindex="-1">
+  var cn = `<a class="menu-item" part="item" tabindex="-1">
     <span class="icon-wrapper" part="icon">
         <slot name="icon"></slot>
     </span>
@@ -5995,7 +5995,7 @@ p9r-tag:hover {
     <span class="badge" part="badge" id="badge-element"></span>
 </a>
 `;
-  var vn = `:host {
+  var un = `:host {
     display: block;
     width: 100%;
     outline: none;
@@ -6067,7 +6067,7 @@ p9r-tag:hover {
     flex-shrink: 0;
 }
 `;
-  var xn = `.menu-item:hover {
+  var pn = `.menu-item:hover {
     background-color: var(--item-bg-active);
     color: var(--item-color-active);
 }
@@ -6117,13 +6117,13 @@ p9r-tag:hover {
     box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
 }
 `;
-  var _n = (t, e) => {
+  var hn = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var Ht = (t, e) => {
+  var Ct = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -6131,7 +6131,7 @@ p9r-tag:hover {
     else
       t.removeAttribute("href");
   };
-  var zt = (t, e) => {
+  var Tt = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -6139,15 +6139,15 @@ p9r-tag:hover {
     else
       t.textContent = "", t.style.display = "none";
   };
-  var St = (t, e) => {
+  var Mt = (t, e) => {
     if (!e || !t.hasAttribute("href"))
       return;
     let r = t.getAttribute("href");
     if (!r)
       return;
     try {
-      let i = new URL(r, window.location.href), a = new URL(window.location.href).pathname, o = i.pathname;
-      if (o === "/" ? a === "/" : a === o || a.startsWith(o + "/"))
+      let i = new URL(r, window.location.href), a = new URL(window.location.href).pathname, s = i.pathname;
+      if (s === "/" ? a === "/" : a === s || a.startsWith(s + "/"))
         t.setAttribute("active", ""), t.setAttribute("aria-current", "page"), e.classList.add("active");
       else
         t.removeAttribute("active"), t.removeAttribute("aria-current"), e.classList.remove("active");
@@ -6155,7 +6155,7 @@ p9r-tag:hover {
       console.warn("Invalid href in LateralMenuItem:", r);
     }
   };
-  var yn = (t, e, r) => {
+  var bn = (t, e, r) => {
     if (t.hasAttribute("disabled"))
       return;
     if (r.key !== "Enter" && r.key !== " ")
@@ -6164,13 +6164,13 @@ p9r-tag:hover {
       return;
     r.preventDefault(), e?.click();
   };
-  var Sl = vn + xn;
+  var gl = un + pn;
 
-  class wn extends s {
+  class mn extends o {
     _anchor;
     _badgeEl;
     constructor() {
-      super({ css: Sl, template: fn });
+      super({ css: gl, template: cn });
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
     }
     static get observedAttributes() {
@@ -6178,12 +6178,12 @@ p9r-tag:hover {
     }
     connectedCallback() {
       for (let t of ["href", "badge", "disabled"])
-        _n(this, t);
+        hn(this, t);
       if (!this.hasAttribute("role"))
         this.setAttribute("role", "listitem");
       if (!this.hasAttribute("tabindex"))
         this.setAttribute("tabindex", "0");
-      Ht(this._anchor, this.getAttribute("href")), zt(this._badgeEl, this.getAttribute("badge")), St(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
+      Ct(this._anchor, this.getAttribute("href")), Tt(this._badgeEl, this.getAttribute("badge")), Mt(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
@@ -6192,9 +6192,9 @@ p9r-tag:hover {
       if (!this._anchor)
         return;
       if (t === "href")
-        Ht(this._anchor, r);
+        Ct(this._anchor, r);
       if (t === "badge")
-        zt(this._badgeEl, r);
+        Tt(this._badgeEl, r);
       if (t === "disabled") {
         let i = this.hasAttribute("disabled");
         this.setAttribute("aria-disabled", i ? "true" : "false"), this.setAttribute("tabindex", i ? "-1" : "0");
@@ -6218,10 +6218,10 @@ p9r-tag:hover {
     set disabled(t) {
       t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
-    _onPopstate = () => St(this, this._anchor);
-    _onKey = (t) => yn(this, this._anchor, t);
+    _onPopstate = () => Mt(this, this._anchor);
+    _onKey = (t) => bn(this, this._anchor, t);
   }
-  var kn = `<nav class="pagination" part="pagination" aria-label="Pagination">
+  var gn = `<nav class="pagination" part="pagination" aria-label="Pagination">
     <button class="prev" part="prev" type="button" aria-label="Previous page">
         <slot name="prev">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -6239,7 +6239,7 @@ p9r-tag:hover {
     </button>
 </nav>
 `;
-  var En = `:host {
+  var fn = `:host {
   display: inline-block;
 
   --_size: 32px;
@@ -6338,9 +6338,9 @@ p9r-tag:hover {
     let i = parseInt(t.getAttribute(e) ?? "", 10);
     return Number.isFinite(i) && i > 0 ? i : r;
   };
-  var An = (t, e, r, i) => {
-    let n = [], a = Math.max(1, t - r), o = Math.min(e, t + r), l = Array.from({ length: Math.min(i, e) }, (p, v) => v + 1), d = Array.from({ length: Math.min(i, e) }, (p, v) => e - v).reverse(), c = [];
-    for (let p = a;p <= o; p++)
+  var vn = (t, e, r, i) => {
+    let n = [], a = Math.max(1, t - r), s = Math.min(e, t + r), l = Array.from({ length: Math.min(i, e) }, (p, v) => v + 1), d = Array.from({ length: Math.min(i, e) }, (p, v) => e - v).reverse(), c = [];
+    for (let p = a;p <= s; p++)
       c.push(p);
     let u = Array.from(new Set([...l, ...c, ...d])).sort((p, v) => p - v), h = 0;
     for (let p of u) {
@@ -6350,12 +6350,12 @@ p9r-tag:hover {
     }
     return n;
   };
-  var Ln = (t, e, r, i) => {
+  var xn = (t, e, r, i) => {
     if (!e)
       return;
-    let n = x(t, "page", 1), a = x(t, "total", 1), o = x(t, "siblings", 1), l = x(t, "boundary", 1);
+    let n = x(t, "page", 1), a = x(t, "total", 1), s = x(t, "siblings", 1), l = x(t, "boundary", 1);
     e.innerHTML = "";
-    for (let d of An(n, a, o, l))
+    for (let d of vn(n, a, s, l))
       if (d === "…") {
         let c = document.createElement("span");
         c.className = "ellipsis", c.setAttribute("part", "ellipsis"), c.textContent = "…", e.appendChild(c);
@@ -6370,33 +6370,33 @@ p9r-tag:hover {
     if (i)
       i.disabled = n >= a;
   };
-  var Y = (t, e, r) => {
+  var U = (t, e, r) => {
     if (r === e)
       return;
     if (!t.dispatchEvent(new CustomEvent("page-change", { bubbles: true, cancelable: true, detail: { page: r } })))
       return;
     t.setAttribute("page", String(r));
   };
-  var Cn = (t, e) => {
+  var _n = (t, e) => {
     if (e <= 1)
       return;
-    Y(t, e, e - 1);
+    U(t, e, e - 1);
   };
-  var Tn = (t, e, r) => {
+  var yn = (t, e, r) => {
     if (e >= r)
       return;
-    Y(t, e, e + 1);
+    U(t, e, e + 1);
   };
-  var Mn = (t, e, r) => {
+  var wn = (t, e, r) => {
     let i = r.target.closest(".page");
     if (!i)
       return;
     let n = Number(i.dataset.page);
     if (Number.isFinite(n))
-      Y(t, e, n);
+      U(t, e, n);
   };
 
-  class Hn extends s {
+  class kn extends o {
     _pages;
     _prev;
     _next;
@@ -6404,7 +6404,7 @@ p9r-tag:hover {
       return ["page", "total", "siblings", "boundary"];
     }
     constructor() {
-      super({ css: En, template: kn });
+      super({ css: fn, template: gn });
       this._pages = this.shadowRoot?.querySelector(".pages") ?? null, this._prev = this.shadowRoot?.querySelector(".prev") ?? null, this._next = this.shadowRoot?.querySelector(".next") ?? null;
     }
     connectedCallback() {
@@ -6429,20 +6429,20 @@ p9r-tag:hover {
       this.setAttribute("total", String(t));
     }
     _render() {
-      Ln(this, this._pages, this._prev, this._next);
+      xn(this, this._pages, this._prev, this._next);
     }
-    _onPrev = () => Cn(this, this.page);
-    _onNext = () => Tn(this, this.page, this.total);
-    _onPageClick = (t) => Mn(this, this.page, t);
+    _onPrev = () => _n(this, this.page);
+    _onNext = () => yn(this, this.page, this.total);
+    _onPageClick = (t) => wn(this, this.page, t);
   }
-  var zn = `<div class="progress" part="progress" role="progressbar">
+  var En = `<div class="progress" part="progress" role="progressbar">
     <div class="track" part="track">
         <div class="bar" part="bar"></div>
     </div>
     <span class="label" part="label"><slot></slot></span>
 </div>
 `;
-  var Sn = `:host {
+  var An = `:host {
   display: block;
 
   --_height: 8px;
@@ -6523,7 +6523,7 @@ p9r-tag:hover {
 }
 `;
 
-  class In extends s {
+  class Ln extends o {
     _bar;
     _label;
     _root;
@@ -6531,7 +6531,7 @@ p9r-tag:hover {
       return ["value", "max", "indeterminate"];
     }
     constructor() {
-      super({ css: Sn, template: zn });
+      super({ css: An, template: En });
       this._bar = this.shadowRoot?.querySelector(".bar") ?? null, this._label = this.shadowRoot?.querySelector(".label") ?? null, this._root = this.shadowRoot?.querySelector(".progress") ?? null;
     }
     connectedCallback() {
@@ -6585,9 +6585,9 @@ p9r-tag:hover {
         this.removeAttribute("indeterminate");
     }
   }
-  var Pn = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
+  var Cn = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
 `;
-  var qn = `:host {
+  var Tn = `:host {
   display: block;
 
   --_bg: var(--bg-base, #f1f5f9);
@@ -6636,12 +6636,12 @@ p9r-tag:hover {
 }
 `;
 
-  class Bn extends s {
+  class Mn extends o {
     static get observedAttributes() {
       return ["width", "height"];
     }
     constructor() {
-      super({ css: qn, template: Pn });
+      super({ css: Tn, template: Cn });
     }
     connectedCallback() {
       this._syncSize();
@@ -6665,11 +6665,11 @@ p9r-tag:hover {
       return /^\d+(\.\d+)?$/.test(t) ? `${t}px` : t;
     }
   }
-  var Fn = `<div class="spinner" part="spinner" role="status" aria-live="polite">
+  var Hn = `<div class="spinner" part="spinner" role="status" aria-live="polite">
     <span class="visually-hidden"><slot>Loading…</slot></span>
 </div>
 `;
-  var Dn = `:host {
+  var zn = `:host {
   display: inline-block;
 
   --_size: 1.25rem;
@@ -6721,16 +6721,16 @@ p9r-tag:hover {
 }
 `;
 
-  class jn extends s {
+  class Sn extends o {
     constructor() {
-      super({ css: Dn, template: Fn });
+      super({ css: zn, template: Hn });
     }
   }
-  var Rn = `<ol class="stepper" part="stepper">
+  var In = `<ol class="stepper" part="stepper">
     <slot></slot>
 </ol>
 `;
-  var Kn = `:host {
+  var Pn = `:host {
   display: block;
 
   --_active: var(--primary-base, #4361ee);
@@ -6755,12 +6755,12 @@ p9r-tag:hover {
 }
 `;
 
-  class Nn extends s {
+  class qn extends o {
     static get observedAttributes() {
       return ["current", "orientation"];
     }
     constructor() {
-      super({ css: Kn, template: Rn });
+      super({ css: Pn, template: In });
     }
     connectedCallback() {
       this._sync();
@@ -6796,7 +6796,7 @@ p9r-tag:hover {
       });
     }
   }
-  var Vn = `<li class="step" part="step">
+  var Bn = `<li class="step" part="step">
     <div class="indicator" part="indicator">
         <span class="bullet" part="bullet">
             <span class="number"></span>
@@ -6814,7 +6814,7 @@ p9r-tag:hover {
     </div>
 </li>
 `;
-  var On = `:host {
+  var Fn = `:host {
   display: flex;
   flex: 1;
 
@@ -6904,7 +6904,7 @@ p9r-tag:hover {
 .description slot:empty,
 .description:has(slot:not(:has(*))) { display: none; }
 `;
-  var $n = `:host([data-state="active"], [state="active"]) {
+  var Dn = `:host([data-state="active"], [state="active"]) {
   --_color: var(--_active);
   --_label-color: var(--_text);
 }
@@ -6965,16 +6965,16 @@ p9r-tag:hover {
   margin-top: 0.4rem;
 }
 `;
-  var Xl = On + $n;
+  var Hl = Fn + Dn;
 
-  class Xn extends s {
+  class jn extends o {
     _label;
     _number;
     static get observedAttributes() {
       return ["label", "data-index"];
     }
     constructor() {
-      super({ css: Xl, template: Vn });
+      super({ css: Hl, template: Bn });
       this._label = this.shadowRoot?.querySelector(".label") ?? null, this._number = this.shadowRoot?.querySelector(".number") ?? null;
     }
     connectedCallback() {
@@ -6990,13 +6990,13 @@ p9r-tag:hover {
         this._number.textContent = this.getAttribute("data-index") ?? "";
     }
   }
-  var Un = `<div class="table-container">
+  var Rn = `<div class="table-container">
   <div class="p9r-table">
     <slot name="header"></slot>
     <slot></slot>
   </div>
 </div>`;
-  var Zn = `:host {
+  var Kn = `:host {
   display: block;
   width: 100%;
 }
@@ -7030,14 +7030,14 @@ p9r-tag:hover {
   background-color: var(--bg-base);
 }`;
 
-  class Yn extends s {
+  class Vn extends o {
     constructor() {
-      super({ css: Zn, template: Un });
+      super({ css: Kn, template: Rn });
     }
   }
-  var Qn = `<slot></slot>
+  var Nn = `<slot></slot>
 `;
-  var Gn = `:host {
+  var On = `:host {
   display: table-cell;
   padding: 12px 20px;
   vertical-align: middle;
@@ -7062,16 +7062,16 @@ p9r-tag:hover {
 }
 `;
 
-  class Wn extends s {
+  class $n extends o {
     constructor() {
-      super({ css: Gn, template: Qn });
+      super({ css: On, template: Nn });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
         this.setAttribute("role", "cell");
     }
   }
-  var Jn = `<div class="header-wrapper" part="wrapper">
+  var Xn = `<div class="header-wrapper" part="wrapper">
   <button
     type="button"
     class="label-section"
@@ -7101,7 +7101,7 @@ p9r-tag:hover {
   </div>
 </div>
 `;
-  var ta = `:host {
+  var Un = `:host {
   display: table-cell;
   padding: 12px 20px;
   border-bottom: 2px solid var(--border-light);
@@ -7172,7 +7172,7 @@ p9r-tag:hover {
   box-sizing: border-box;
 }
 `;
-  var ea = `:host([sort]) .label-section {
+  var Zn = `:host([sort]) .label-section {
   cursor: pointer;
 }
 
@@ -7219,13 +7219,13 @@ p9r-tag:hover {
   background: var(--bg-base, #eee);
 }
 `;
-  var td = (t) => {
+  var Dl = (t) => {
     let e = t.getAttribute("filter-name");
     if (!e)
       return "";
     return new URL(window.location.href).searchParams.get(`f_${e}`) ?? "";
   };
-  var It = (t, e, r) => {
+  var Ht = (t, e, r) => {
     let i = t.getAttribute("filter-name");
     if (!e)
       return;
@@ -7234,7 +7234,7 @@ p9r-tag:hover {
       return;
     }
     e.removeAttribute("hidden");
-    let n = td(t);
+    let n = Dl(t);
     if (r)
       r.value = n;
     if (n)
@@ -7242,14 +7242,14 @@ p9r-tag:hover {
     else
       t.removeAttribute("data-has-filter");
   };
-  var ra = (t) => {
+  var Yn = (t) => {
     let e = t.getAttribute("sort");
     if (!e)
       return;
     let r = new URL(window.location.href), i = r.searchParams.get("sort"), n = r.searchParams.get("direction"), a = i === e && n === "asc" ? "desc" : "asc";
     r.searchParams.set("sort", e), r.searchParams.set("direction", a), window.location.href = r.toString();
   };
-  var ia = (t, e) => {
+  var Qn = (t, e) => {
     let r = t.getAttribute("filter-name");
     if (!r)
       return;
@@ -7260,12 +7260,12 @@ p9r-tag:hover {
       i.searchParams.delete(`f_${r}`);
     window.location.href = i.toString();
   };
-  var na = (t, e) => {
+  var Gn = (t, e) => {
     if (e.composedPath().some((r) => r instanceof HTMLInputElement))
       return;
-    ra(t);
+    Yn(t);
   };
-  var aa = (t, e, r, i) => {
+  var Jn = (t, e, r, i) => {
     if (t.stopPropagation(), !r || !e)
       return;
     if (r.hasAttribute("hidden"))
@@ -7273,17 +7273,17 @@ p9r-tag:hover {
     else
       r.setAttribute("hidden", ""), e.setAttribute("aria-expanded", "false");
   };
-  var oa = (t, e, r) => {
+  var Wn = (t, e, r) => {
     if (r.key !== "Enter" || !e)
       return;
-    ia(t, e.value);
+    Qn(t, e.value);
   };
-  var sa = (t, e) => {
+  var ta = (t, e) => {
     e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
   };
-  var ed = ta + ea;
+  var jl = Un + Zn;
 
-  class la extends s {
+  class ea extends o {
     _sortTrigger;
     _filterBtn;
     _filterPopover;
@@ -7292,27 +7292,27 @@ p9r-tag:hover {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: ed, template: Jn });
+      super({ css: jl, template: Xn });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
-      It(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
+      Ht(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
     }
     disconnectedCallback() {
       this._sortTrigger?.removeEventListener("click", this._onSort), this._filterBtn?.removeEventListener("click", this._onFilterToggle), this._filterPopover?.removeEventListener("click", this._stopPropagation), this._filterInput?.removeEventListener("keydown", this._onFilterKey), window.removeEventListener("click", this._onWindowClick);
     }
     attributeChangedCallback() {
-      It(this, this._filterBtn, this._filterInput);
+      Ht(this, this._filterBtn, this._filterInput);
     }
-    _onSort = (t) => na(this, t);
-    _onFilterToggle = (t) => aa(t, this._filterBtn, this._filterPopover, this._filterInput);
-    _onFilterKey = (t) => oa(this, this._filterInput, t);
-    _onWindowClick = () => sa(this._filterBtn, this._filterPopover);
+    _onSort = (t) => Gn(this, t);
+    _onFilterToggle = (t) => Jn(t, this._filterBtn, this._filterPopover, this._filterInput);
+    _onFilterKey = (t) => Wn(this, this._filterInput, t);
+    _onWindowClick = () => ta(this._filterBtn, this._filterPopover);
     _stopPropagation = (t) => t.stopPropagation();
   }
-  var da = `<slot></slot>
+  var ra = `<slot></slot>
 `;
-  var ca = `:host {
+  var ia = `:host {
   display: table-row;
 }
 
@@ -7331,7 +7331,7 @@ p9r-tag:hover {
   }
 }
 `;
-  var Pt = (t) => {
+  var zt = (t) => {
     let e = t.getAttribute("href");
     if (!e)
       return;
@@ -7343,24 +7343,24 @@ p9r-tag:hover {
     else
       window.location.href = e;
   };
-  var ua = (t) => {
+  var na = (t) => {
     if (!t.hasAttribute("href"))
       return;
-    Pt(t);
+    zt(t);
   };
-  var pa = (t, e) => {
+  var aa = (t, e) => {
     if (!t.hasAttribute("href"))
       return;
     if (e.key === "Enter" || e.key === " ")
-      e.preventDefault(), Pt(t);
+      e.preventDefault(), zt(t);
   };
-  var ha = (t, e) => {
+  var oa = (t, e) => {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   };
-  var qt = (t) => {
+  var St = (t) => {
     if (t.hasAttribute("href")) {
       if (!t.hasAttribute("tabindex"))
         t.setAttribute("tabindex", "0");
@@ -7376,27 +7376,27 @@ p9r-tag:hover {
     }
   };
 
-  class ba extends s {
+  class sa extends o {
     static get observedAttributes() {
       return ["href"];
     }
     constructor() {
-      super({ css: ca, template: da });
+      super({ css: ia, template: ra });
     }
     connectedCallback() {
       for (let t of ["href", "target"])
-        ha(this, t);
-      this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), qt(this);
+        oa(this, t);
+      this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), St(this);
     }
     disconnectedCallback() {
       this.removeEventListener("click", this._onClick), this.removeEventListener("keydown", this._onKey);
     }
     attributeChangedCallback(t) {
       if (t === "href")
-        qt(this);
+        St(this);
     }
-    _onClick = () => ua(this);
-    _onKey = (t) => pa(this, t);
+    _onClick = () => na(this);
+    _onKey = (t) => aa(this, t);
     get href() {
       return this.getAttribute("href");
     }
@@ -7416,14 +7416,14 @@ p9r-tag:hover {
         this.setAttribute("target", t);
     }
   }
-  var ma = `<div class="tabs" part="tabs">
+  var la = `<div class="tabs" part="tabs">
     <div class="tablist" part="tablist" role="tablist"></div>
     <div class="panels" part="panels">
         <slot></slot>
     </div>
 </div>
 `;
-  var ga = `:host {
+  var da = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -7500,7 +7500,7 @@ p9r-tag:hover {
   .tab { transition: color 0.15s; }
 }
 `;
-  var fa = `:host([variant="pills"]) .tablist {
+  var ca = `:host([variant="pills"]) .tablist {
   border-bottom: 0;
   gap: 0.4rem;
   padding: 0.25rem;
@@ -7539,28 +7539,28 @@ p9r-tag:hover {
   padding-left: 1rem;
 }
 `;
-  var Bt = (t) => {
+  var It = (t) => {
     if (!t)
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
   };
-  var sd = 0;
-  var va = () => `tabpanel-${sd++}`;
-  var xa = (t, e) => {
+  var $l = 0;
+  var ua = () => `tabpanel-${$l++}`;
+  var pa = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
   };
-  var Ft = (t, e, r) => {
+  var Pt = (t, e, r) => {
     if (!e)
       return;
     e.innerHTML = "";
-    let i = Bt(r), n = t.getAttribute("active");
+    let i = It(r), n = t.getAttribute("active");
     if (!n && i.length > 0)
       n = i[0]?.getAttribute("id") ?? null;
-    if (i.forEach((a, o) => {
-      let l = a.getAttribute("id") ?? va();
+    if (i.forEach((a, s) => {
+      let l = a.getAttribute("id") ?? ua();
       if (!a.id)
         a.id = l;
-      let d = a.getAttribute("label") ?? `Tab ${o + 1}`, c = document.createElement("button");
+      let d = a.getAttribute("label") ?? `Tab ${s + 1}`, c = document.createElement("button");
       if (c.type = "button", c.className = "tab", c.setAttribute("part", "tab"), c.setAttribute("role", "tab"), c.setAttribute("id", `tab-${l}`), c.setAttribute("aria-controls", l), c.dataset.target = l, c.textContent = d, a.hasAttribute("disabled"))
         c.setAttribute("disabled", "");
       e.appendChild(c), a.setAttribute("role", "tabpanel"), a.setAttribute("aria-labelledby", `tab-${l}`);
@@ -7568,19 +7568,19 @@ p9r-tag:hover {
       T(t, e, r, n);
   };
   var T = (t, e, r, i) => {
-    let n = Bt(r), a = Array.from(e?.querySelectorAll(".tab") ?? []), o = false;
+    let n = It(r), a = Array.from(e?.querySelectorAll(".tab") ?? []), s = false;
     if (n.forEach((l) => {
       let d = l.id === i;
       if (d)
-        o = true;
+        s = true;
       l.toggleAttribute("hidden", !d);
     }), a.forEach((l) => {
       let d = l.dataset.target === i;
       l.setAttribute("aria-selected", String(d)), l.setAttribute("tabindex", d ? "0" : "-1");
-    }), o && t.getAttribute("active") !== i)
-      t.setAttribute("active", i), xa(t, i);
+    }), s && t.getAttribute("active") !== i)
+      t.setAttribute("active", i), pa(t, i);
   };
-  var _a = (t, e, r, i) => {
+  var ha = (t, e, r, i) => {
     let n = i.target.closest(".tab");
     if (!n || n.hasAttribute("disabled"))
       return;
@@ -7588,17 +7588,17 @@ p9r-tag:hover {
     if (a)
       T(t, e, r, a);
   };
-  var ya = (t, e, r, i) => {
+  var ba = (t, e, r, i) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
       return;
     let n = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
     if (n.length === 0)
       return;
-    let a = n.findIndex((u) => u === document.activeElement), o = a === -1 ? 0 : a, l = o;
+    let a = n.findIndex((u) => u === document.activeElement), s = a === -1 ? 0 : a, l = s;
     if (i.key === "ArrowLeft")
-      l = (o - 1 + n.length) % n.length;
+      l = (s - 1 + n.length) % n.length;
     if (i.key === "ArrowRight")
-      l = (o + 1) % n.length;
+      l = (s + 1) % n.length;
     if (i.key === "Home")
       l = 0;
     if (i.key === "End")
@@ -7612,20 +7612,20 @@ p9r-tag:hover {
       T(t, e, r, c);
     d.focus();
   };
-  var ld = ga + fa;
+  var Xl = da + ca;
 
-  class wa extends s {
+  class ma extends o {
     _tablist;
     _slot;
     static get observedAttributes() {
       return ["active"];
     }
     constructor() {
-      super({ css: ld, template: ma });
+      super({ css: Xl, template: la });
       this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
-      this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), Ft(this, this._tablist, this._slot);
+      this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), Pt(this, this._tablist, this._slot);
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onRebuild), this._tablist?.removeEventListener("click", this._onClick), this._tablist?.removeEventListener("keydown", this._onKey);
@@ -7640,15 +7640,15 @@ p9r-tag:hover {
     set active(t) {
       this.setAttribute("active", t);
     }
-    _onRebuild = () => Ft(this, this._tablist, this._slot);
-    _onClick = (t) => _a(this, this._tablist, this._slot, t);
-    _onKey = (t) => ya(this, this._tablist, this._slot, t);
+    _onRebuild = () => Pt(this, this._tablist, this._slot);
+    _onClick = (t) => ha(this, this._tablist, this._slot, t);
+    _onKey = (t) => ba(this, this._tablist, this._slot, t);
   }
-  var ka = `<div class="panel" part="panel">
+  var ga = `<div class="panel" part="panel">
     <slot></slot>
 </div>
 `;
-  var Ea = `:host {
+  var fa = `:host {
   display: block;
 }
 
@@ -7659,15 +7659,15 @@ p9r-tag:hover {
 }
 `;
 
-  class Aa extends s {
+  class va extends o {
     constructor() {
-      super({ css: Ea, template: ka });
+      super({ css: fa, template: ga });
     }
   }
-  var La = `<span class="label" part="label"><slot></slot></span>
+  var xa = `<span class="label" part="label"><slot></slot></span>
 <button type="button" class="remove" part="remove" aria-label="Remove" hidden>&times;</button>
 `;
-  var Ca = `:host {
+  var _a = `:host {
     --_tag-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
@@ -7736,7 +7736,7 @@ p9r-tag:hover {
     }
 }
 `;
-  var Ta = `:host([color="info"]) {
+  var ya = `:host([color="info"]) {
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
     --_tag-color: var(--info-base, oklch(65% 0.12 230));
     --_tag-border: var(--info-contrasted, oklch(25% 0.08 230));
@@ -7772,15 +7772,15 @@ p9r-tag:hover {
     --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
 }
 `;
-  var bd = Ca + Ta;
+  var Jl = _a + ya;
 
-  class Ma extends s {
+  class wa extends o {
     _removeBtn;
     static get observedAttributes() {
       return ["removable"];
     }
     constructor() {
-      super({ css: bd, template: La });
+      super({ css: Jl, template: xa });
       this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
     }
     connectedCallback() {
@@ -7823,13 +7823,13 @@ p9r-tag:hover {
         this.removeAttribute("removable");
     }
   }
-  var Ha = `<div class="icon" part="icon"></div>
+  var ka = `<div class="icon" part="icon"></div>
 <div class="content">
     <span class="message"><slot></slot></span>
 </div>
 <button class="close" aria-label="Dismiss">&times;</button>
 `;
-  var za = `:host {
+  var Ea = `:host {
     --_bg: var(--bg-surface, #ffffff);
     --_color: var(--text-main, #1f2937);
     --_border: var(--border-default, #e5e7eb);
@@ -7900,7 +7900,7 @@ p9r-tag:hover {
     opacity: 1;
 }
 `;
-  var Sa = `:host([leaving]) {
+  var Aa = `:host([leaving]) {
     animation: toast-out 160ms ease-in forwards;
 }
 
@@ -7943,12 +7943,12 @@ p9r-tag:hover {
     to   { opacity: 0; transform: translateX(-20px); }
 }
 `;
-  var vd = za + Sa;
+  var rd = Ea + Aa;
 
-  class Ia extends s {
+  class La extends o {
     _timer = null;
     constructor() {
-      super({ css: vd, template: Ha });
+      super({ css: rd, template: ka });
     }
     connectedCallback() {
       this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
@@ -7970,9 +7970,9 @@ p9r-tag:hover {
       }, { once: true });
     }
   }
-  var Pa = `<slot></slot>
+  var Ca = `<slot></slot>
 `;
-  var qa = `:host {
+  var Ta = `:host {
     position: fixed;
     top: 24px;
     left: 24px;
@@ -8022,9 +8022,9 @@ p9r-tag:hover {
 }
 `;
 
-  class Ba extends s {
+  class Ma extends o {
     constructor() {
-      super({ css: qa, template: Pa });
+      super({ css: Ta, template: Ca });
     }
     connectedCallback() {
       if (!this.hasAttribute("popover"))
@@ -8040,7 +8040,7 @@ p9r-tag:hover {
       return r.textContent = t, this.appendChild(r), r;
     }
   }
-  var Fa = `<div class="trigger" part="trigger">
+  var Ha = `<div class="trigger" part="trigger">
     <slot></slot>
 </div>
 <div class="tooltip" part="tooltip" role="tooltip" aria-hidden="true">
@@ -8048,7 +8048,7 @@ p9r-tag:hover {
     <span class="text"></span>
 </div>
 `;
-  var Da = `:host {
+  var za = `:host {
   display: inline-block;
   position: relative;
 
@@ -8113,7 +8113,7 @@ p9r-tag:hover {
   border-top-color: var(--_bg);
 }
 `;
-  var ja = `:host([position="bottom"]) .tooltip {
+  var Sa = `:host([position="bottom"]) .tooltip {
   top: calc(100% + var(--_offset));
   bottom: auto;
   left: 50%;
@@ -8161,9 +8161,9 @@ p9r-tag:hover {
   border-right-color: var(--_bg);
 }
 `;
-  var Ld = Da + ja;
+  var cd = za + Sa;
 
-  class Ra extends s {
+  class Ia extends o {
     _tooltip;
     _text;
     _showTimer = null;
@@ -8172,7 +8172,7 @@ p9r-tag:hover {
       return ["text"];
     }
     constructor() {
-      super({ css: Ld, template: Fa });
+      super({ css: cd, template: Ha });
       this._tooltip = this.shadowRoot?.querySelector(".tooltip") ?? null, this._text = this.shadowRoot?.querySelector(".text") ?? null;
     }
     connectedCallback() {
@@ -8208,60 +8208,60 @@ p9r-tag:hover {
       }, 80);
     };
   }
-  function M(t) {
+  function Z(t) {
     let e = new URL(t, window.location.href);
     for (let [r, i] of new URLSearchParams(window.location.search))
       e.searchParams.append(r, i);
     return e;
   }
-  async function H(t) {
+  async function M(t) {
     try {
-      let e = await fetch(M(t), { headers: { Accept: "application/json" } });
+      let e = await fetch(Z(t), { headers: { Accept: "application/json" } });
       return e.ok ? await e.json() : null;
     } catch {
       return null;
     }
   }
-  var Cd = new Intl.NumberFormat("fr-FR");
-  var Td = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
+  var ud = new Intl.NumberFormat("fr-FR");
+  var pd = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
   var g = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
-  var Md = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
-  function Dt(t, e) {
+  var hd = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
+  function qt(t, e) {
     if (e === "ms")
       return `${Math.round(t)} ms`;
     if (e === "pct")
       return `${(t * 100).toFixed(1).replace(".", ",")} %`;
-    return Cd.format(Math.round(t));
+    return ud.format(Math.round(t));
   }
-  var Ka = (t) => {
+  var Pa = (t) => {
     let e = new Date(t);
-    return Number.isNaN(e.getTime()) ? t : Td.format(e);
+    return Number.isNaN(e.getTime()) ? t : pd.format(e);
   };
-  function Q(t, e) {
+  function Y(t, e) {
     return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${g(t)}</p>${e ? `<p class="empty-hint">${g(e)}</p>` : ""}</div>`;
   }
-  function Na(t) {
+  function qa(t) {
     if (t.length === 0)
       return "";
-    let e = 320, r = 140, i = 32, n = 8, a = 10, o = 22, l = e - i - n, d = r - a - o, c = a + d, u = Math.max(...t.map((_) => _.value), 1), h = t.length, p = t.map((_, I) => [i + (h === 1 ? l / 2 : I / (h - 1) * l), a + (1 - _.value / u) * d]), v = p.map(([_, I]) => `${_.toFixed(1)},${I.toFixed(1)}`).join(" "), Ho = `${p[0][0].toFixed(1)},${c} ${v} ${p[h - 1][0].toFixed(1)},${c}`, zo = p.map(([_, I]) => `<circle class="dot" cx="${_.toFixed(1)}" cy="${I.toFixed(1)}" r="2.5"/>`).join("");
-    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${a}" x2="${i}" y2="${c}"/><line class="axis" x1="${i}" y1="${c}" x2="${e - n}" y2="${c}"/><text class="tick" x="${i - 4}" y="${a + 3}" text-anchor="end">${Md(u)}</text><text class="tick" x="${i - 4}" y="${c}" text-anchor="end">0</text><polygon class="area" points="${Ho}" fill="url(#lc-grad)"/><polyline class="stroke" points="${v}"/>${zo}<text class="tick" x="${i}" y="${r - 6}">${g(t[0].label)}</text><text class="tick" x="${e - n}" y="${r - 6}" text-anchor="end">${g(t[h - 1].label)}</text></svg>`;
+    let e = 320, r = 140, i = 32, n = 8, a = 10, s = 22, l = e - i - n, d = r - a - s, c = a + d, u = Math.max(...t.map((_) => _.value), 1), h = t.length, p = t.map((_, z) => [i + (h === 1 ? l / 2 : z / (h - 1) * l), a + (1 - _.value / u) * d]), v = p.map(([_, z]) => `${_.toFixed(1)},${z.toFixed(1)}`).join(" "), bo = `${p[0][0].toFixed(1)},${c} ${v} ${p[h - 1][0].toFixed(1)},${c}`, mo = p.map(([_, z]) => `<circle class="dot" cx="${_.toFixed(1)}" cy="${z.toFixed(1)}" r="2.5"/>`).join("");
+    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${a}" x2="${i}" y2="${c}"/><line class="axis" x1="${i}" y1="${c}" x2="${e - n}" y2="${c}"/><text class="tick" x="${i - 4}" y="${a + 3}" text-anchor="end">${hd(u)}</text><text class="tick" x="${i - 4}" y="${c}" text-anchor="end">0</text><polygon class="area" points="${bo}" fill="url(#lc-grad)"/><polyline class="stroke" points="${v}"/>${mo}<text class="tick" x="${i}" y="${r - 6}">${g(t[0].label)}</text><text class="tick" x="${e - n}" y="${r - 6}" text-anchor="end">${g(t[h - 1].label)}</text></svg>`;
   }
-  function Va(t, e) {
+  function Ba(t, e) {
     if (t.length === 0)
       return "";
     let r = t.reduce((i, n) => i + n.value, 0) || 1;
     return t.map((i) => {
       let n = i.value / r * 100, a = `${n.toFixed(1).replace(".", ",")} %`;
-      return `<div class="bar"><span class="bar-key" title="${g(i.label)}">${g(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${n.toFixed(1)}"/></svg><span class="bar-val">${e ? `${Dt(i.value, "int")} · ${a}` : a}</span></div>`;
+      return `<div class="bar"><span class="bar-key" title="${g(i.label)}">${g(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${n.toFixed(1)}"/></svg><span class="bar-val">${e ? `${qt(i.value, "int")} · ${a}` : a}</span></div>`;
     }).join("");
   }
-  var Oa = `<div class="stat">
+  var Fa = `<div class="stat">
     <span class="label"></span>
     <strong class="value">—</strong>
     <span class="note"></span>
 </div>
 `;
-  var $a = `:host {
+  var Da = `:host {
     display: block;
     flex: 1 1 0;
     min-width: 0;
@@ -8301,26 +8301,26 @@ p9r-tag:hover {
 }
 `;
 
-  class Xa extends s {
+  class ja extends o {
     constructor() {
-      super({ css: $a, template: Oa });
+      super({ css: Da, template: Fa });
     }
     connectedCallback() {
       let t = this.shadowRoot;
       t.querySelector(".label").textContent = this.getAttribute("label") ?? "", this._load(t);
     }
     async _load(t) {
-      let e = t.querySelector(".value"), r = t.querySelector(".note"), i = this.getAttribute("url"), n = i ? await H(i) : null, a = n && typeof n === "object" ? n[this.getAttribute("field") ?? "value"] : undefined;
+      let e = t.querySelector(".value"), r = t.querySelector(".note"), i = this.getAttribute("url"), n = i ? await M(i) : null, a = n && typeof n === "object" ? n[this.getAttribute("field") ?? "value"] : undefined;
       if (a === undefined || a === null) {
         e.textContent = "—", e.classList.add("is-empty"), r.textContent = this.getAttribute("empty") ?? "Aucune donnée";
         return;
       }
-      e.classList.remove("is-empty"), e.textContent = Dt(Number(a), this.getAttribute("format") ?? "int"), r.textContent = "";
+      e.classList.remove("is-empty"), e.textContent = qt(Number(a), this.getAttribute("format") ?? "int"), r.textContent = "";
     }
   }
-  var Ua = `<div class="chart"></div>
+  var Ra = `<div class="chart"></div>
 `;
-  var Za = `:host {
+  var Ka = `:host {
     display: block;
 }
 
@@ -8397,26 +8397,26 @@ p9r-tag:hover {
 }
 `;
 
-  class Ya extends s {
+  class Va extends o {
     constructor() {
-      super({ css: Za, template: Ua });
+      super({ css: Ka, template: Ra });
     }
     connectedCallback() {
       this._load();
     }
     async _load() {
-      let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), r = e ? await H(e) : null, i = Array.isArray(r) ? r : [];
+      let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), r = e ? await M(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
-        t.innerHTML = Q(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
+        t.innerHTML = Y(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
         return;
       }
-      let n = this.getAttribute("value") ?? "value", a = this.getAttribute("x") ?? "", o = i.map((l) => ({ label: a ? Ka(String(l[a] ?? "")) : "", value: Number(l[n] ?? 0) }));
-      t.innerHTML = Na(o);
+      let n = this.getAttribute("value") ?? "value", a = this.getAttribute("x") ?? "", s = i.map((l) => ({ label: a ? Pa(String(l[a] ?? "")) : "", value: Number(l[n] ?? 0) }));
+      t.innerHTML = qa(s);
     }
   }
-  var Qa = `<div class="list"></div>
+  var Na = `<div class="list"></div>
 `;
-  var Ga = `:host {
+  var Oa = `:host {
     display: block;
 }
 
@@ -8489,26 +8489,26 @@ p9r-tag:hover {
 }
 `;
 
-  class Wa extends s {
+  class $a extends o {
     constructor() {
-      super({ css: Ga, template: Qa });
+      super({ css: Oa, template: Na });
     }
     connectedCallback() {
       this._load();
     }
     async _load() {
-      let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), r = e ? await H(e) : null, i = Array.isArray(r) ? r : [];
+      let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), r = e ? await M(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
-        t.innerHTML = Q(this.getAttribute("empty") ?? "Aucune donnée");
+        t.innerHTML = Y(this.getAttribute("empty") ?? "Aucune donnée");
         return;
       }
-      let n = this.getAttribute("label-field") ?? "key", a = this.getAttribute("value-field") ?? "value", o = i.map((l) => ({ label: String(l[n] ?? ""), value: Number(l[a] ?? 0) }));
-      t.innerHTML = Va(o, this.hasAttribute("show-count"));
+      let n = this.getAttribute("label-field") ?? "key", a = this.getAttribute("value-field") ?? "value", s = i.map((l) => ({ label: String(l[n] ?? ""), value: Number(l[a] ?? 0) }));
+      t.innerHTML = Ba(s, this.hasAttribute("show-count"));
     }
   }
-  var Ja = `<div class="tabs" role="group" aria-label="Période"></div>
+  var Xa = `<div class="tabs" role="group" aria-label="Période"></div>
 `;
-  var to = `:host {
+  var Ua = `:host {
     display: inline-block;
 }
 
@@ -8546,9 +8546,9 @@ p9r-tag:hover {
 }
 `;
 
-  class eo extends s {
+  class Za extends o {
     constructor() {
-      super({ css: to, template: Ja });
+      super({ css: Ua, template: Xa });
     }
     connectedCallback() {
       let t = this.getAttribute("param") ?? "range", e = new URLSearchParams(window.location.search).get(t) ?? this.getAttribute("default") ?? "", r = (this.getAttribute("tabs") ?? "").split(",").map((n) => n.split(":")).filter((n) => n[0]), i = this.shadowRoot.querySelector(".tabs");
@@ -8556,21 +8556,21 @@ p9r-tag:hover {
         let a = n.target.closest("button")?.dataset.v;
         if (!a)
           return;
-        let o = new URL(window.location.href);
-        o.searchParams.set(t, a), window.location.assign(o.toString());
+        let s = new URL(window.location.href);
+        s.searchParams.set(t, a), window.location.assign(s.toString());
       });
     }
   }
-  function jt(t, e) {
+  function Bt(t, e) {
     if (t.key !== "Enter")
       return;
     if (t.target.tagName === "TEXTAREA")
       return;
     t.preventDefault(), e.requestSubmit();
   }
-  async function G(t, e) {
+  async function Q(t, e) {
     t.preventDefault();
-    let r = t.target, i = new FormData(r), n = Object.fromEntries(i.entries()), a = await fetch(M(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(n) }), o = await a.json().catch(() => null), l = { status: a.status, body: o };
+    let r = t.target, i = new FormData(r), n = Object.fromEntries(i.entries()), a = await fetch(Z(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(n) }), s = await a.json().catch(() => null), l = { status: a.status, body: s };
     if (a.ok) {
       if (r.reset(), e.dispatchEvent(new CustomEvent("form:success", { bubbles: true, composed: true, detail: l })), e.emit)
         document.dispatchEvent(new CustomEvent(e.emit, { bubbles: true, composed: true, detail: l }));
@@ -8580,13 +8580,13 @@ p9r-tag:hover {
       e.dispatchEvent(new CustomEvent("form:failed", { bubbles: true, composed: true, detail: l }));
   }
 
-  class ro extends HTMLElement {
+  class Ya extends HTMLElement {
     _nativeForm = null;
     static get observedAttributes() {
       return ["redirect", "target", "method", "emit"];
     }
     _handleInternalSubmit = (t) => {
-      G(t, this);
+      Q(t, this);
     };
     connectedCallback() {
       requestAnimationFrame(() => {
@@ -8598,11 +8598,11 @@ p9r-tag:hover {
           this._nativeForm.id = t, this.removeAttribute("id");
         while (this.firstChild)
           this._nativeForm.appendChild(this.firstChild);
-        this.appendChild(this._nativeForm), this._nativeForm.addEventListener("submit", this._handleInternalSubmit), this.addEventListener("keydown", (e) => jt(e, this._nativeForm));
+        this.appendChild(this._nativeForm), this._nativeForm.addEventListener("submit", this._handleInternalSubmit), this.addEventListener("keydown", (e) => Bt(e, this._nativeForm));
       });
     }
     disconnectedCallback() {
-      this.removeEventListener("submit", (t) => G(t, this)), this.removeEventListener("keydown", (t) => jt(t, this._nativeForm));
+      this.removeEventListener("submit", (t) => Q(t, this)), this.removeEventListener("keydown", (t) => Bt(t, this._nativeForm));
     }
     attributeChangedCallback(t, e, r) {}
     get redirect() {
@@ -8621,274 +8621,12 @@ p9r-tag:hover {
       return this.getAttribute("emit");
     }
   }
-  function io(t) {
-    let e = {};
-    for (let r of Array.from(t.children)) {
-      if (r.tagName !== "TEMPLATE")
-        continue;
-      let i = r.getAttribute("slot") || "default";
-      if (!e[i])
-        e[i] = r;
-    }
-    return e;
-  }
-  function no(t) {
-    if (t === null || t === undefined)
-      return true;
-    if (Array.isArray(t))
-      return t.length === 0;
-    if (typeof t === "object")
-      return Object.keys(t).length === 0;
-    return false;
-  }
-  async function ao(t, e) {
-    try {
-      let r = M(t), i = await fetch(r, { headers: { Accept: "application/json" }, signal: e });
-      if (!i.ok)
-        return { kind: "error", error: Error(`HTTP ${i.status}`) };
-      return { kind: "success", data: await i.json() };
-    } catch (r) {
-      if (r.name === "AbortError")
-        return { kind: "aborted" };
-      return { kind: "error", error: r };
-    }
-  }
-  function j(t, e) {
-    return e.split(".").reduce((r, i) => r != null ? r[i] : undefined, t);
-  }
-  function oo(t) {
-    return String(t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
-  var Dd = new Intl.NumberFormat;
-  var so = ["B", "KB", "MB", "GB", "TB", "PB"];
-  function jd(t) {
-    let e = z(t);
-    if (e === null)
-      return "";
-    if (e < 1024)
-      return `${e} B`;
-    let r = e, i = 0;
-    while (r >= 1024 && i < so.length - 1)
-      r /= 1024, i++;
-    return `${r.toFixed(r < 10 ? 1 : 0)} ${so[i]}`;
-  }
-  function Rd(t) {
-    let e = z(t);
-    if (e === null || e <= 0)
-      return "";
-    return new Date(e).toISOString().slice(0, 10);
-  }
-  function Kd(t) {
-    let e = z(t);
-    if (e === null || e <= 0)
-      return "";
-    return new Date(e).toISOString().replace("T", " ").slice(0, 19);
-  }
-  function Nd(t) {
-    let e = z(t);
-    if (e === null || e <= 0)
-      return "";
-    let r = Math.max(0, Date.now() - e), i = Math.floor(r / 1000);
-    if (i < 60)
-      return `${i}s ago`;
-    if (i < 3600)
-      return `${Math.floor(i / 60)}m ago`;
-    if (i < 86400)
-      return `${Math.floor(i / 3600)}h ago`;
-    return `${Math.floor(i / 86400)}d ago`;
-  }
-  function Vd(t) {
-    let e = z(t);
-    return e === null ? "" : Dd.format(e);
-  }
-  function Od(t) {
-    let e = z(t);
-    return e === null ? "" : `${Math.round(e * 100)}%`;
-  }
-  function $d(t) {
-    if (t === true)
-      return "yes";
-    if (t === false)
-      return "no";
-    return "";
-  }
-  var Rt = { bytes: jd, date: Rd, datetime: Kd, ago: Nd, number: Vd, percent: Od, bool: $d };
-  function z(t) {
-    if (t === null || t === undefined || t === "")
-      return null;
-    let e = typeof t === "number" ? t : Number(t);
-    return Number.isFinite(e) ? e : null;
-  }
-  function Kt(t, e) {
-    if (t.nodeType === Node.TEXT_NODE) {
-      let r = t.textContent ?? "", i = lo(r, e);
-      if (i !== r)
-        t.textContent = i;
-      return;
-    }
-    if (t.nodeType === Node.ELEMENT_NODE) {
-      let r = t;
-      if (r.tagName === "TEMPLATE")
-        return;
-      if (r.tagName === "INNER-HTML" && Xd(r, e))
-        return;
-      for (let i of Array.from(r.attributes)) {
-        let n = lo(i.value, e);
-        if (n !== i.value)
-          r.setAttribute(i.name, n);
-      }
-    }
-    for (let r of Array.from(t.childNodes))
-      Kt(r, e);
-  }
-  function Xd(t, e) {
-    let i = (t.textContent?.trim() ?? "").match(/^\{\{\s*([\w.]+)\s*\}\}$/);
-    if (!i)
-      return false;
-    return t.innerHTML = String(j(e, i[1]) ?? ""), t.replaceWith(...Array.from(t.childNodes)), true;
-  }
-  function lo(t, e) {
-    return t.replace(/\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g, (r, i, n) => {
-      let a = i === "value" ? e !== null && typeof e === "object" && "value" in e ? e.value : e : j(e, i), o = n && Rt[n] ? Rt[n](a) : a;
-      return oo(o);
-    });
-  }
-  function Nt(t, e) {
-    let r = t.getAttribute("for"), i = document.createDocumentFragment();
-    if (r === null) {
-      let a = t.content.cloneNode(true);
-      return co(a, e), i.appendChild(a), i;
-    }
-    let n = r === "." ? e : j(e, r);
-    if (!Array.isArray(n))
-      return console.warn(`cms-fetch: <template for="${r}"> expected an array, got`, n), i;
-    for (let a of n) {
-      let o = t.content.cloneNode(true);
-      co(o, a), i.appendChild(o);
-    }
-    return i;
-  }
-  function co(t, e) {
-    let r = [];
-    uo(t, r);
-    for (let i of r)
-      i.parentNode?.replaceChild(Nt(i, e), i);
-    Kt(t, e);
-  }
-  function uo(t, e) {
-    for (let r of Array.from(t.childNodes)) {
-      if (r.nodeType !== Node.ELEMENT_NODE)
-        continue;
-      let i = r;
-      if (i.tagName === "TEMPLATE")
-        e.push(i);
-      else
-        uo(i, e);
-    }
-  }
-  function po(t, e, r, i) {
-    Vt(i);
-    let n = t.parentNode;
-    if (!n)
-      return [];
-    let a = Nt(e, r), o = Array.from(a.childNodes);
-    return n.insertBefore(a, t), o;
-  }
-  function Vt(t) {
-    for (let e of t)
-      e.parentNode?.removeChild(e);
-  }
-
-  class W extends Event {
-    constructor(t) {
-      super(t, { bubbles: true, composed: true });
-    }
-  }
-
-  class ho extends HTMLElement {
-    static get observedAttributes() {
-      return ["url", "reload-on"];
-    }
-    _templates = {};
-    _stamped = [];
-    _reloadEvents = [];
-    _abort = null;
-    _onReloadEvent = () => {
-      if (this.isConnected)
-        this.reload();
-    };
-    connectedCallback() {
-      if (this._refreshReloadListeners(), document.addEventListener("cms-fetch:reload", this._onReloadEvent), this._templates.default) {
-        this.reload();
-        return;
-      }
-      if (document.readyState === "loading")
-        document.addEventListener("DOMContentLoaded", () => this._init(), { once: true });
-      else
-        this._init();
-    }
-    disconnectedCallback() {
-      Vt(this._stamped), this._stamped = [];
-      for (let t of this._reloadEvents)
-        document.removeEventListener(t, this._onReloadEvent);
-      document.removeEventListener("cms-fetch:reload", this._onReloadEvent), this._reloadEvents = [], this._abort?.abort(), this._abort = null;
-    }
-    attributeChangedCallback(t, e, r) {
-      if (e === r)
-        return;
-      if (t === "reload-on") {
-        this._refreshReloadListeners();
-        return;
-      }
-      if (this.isConnected)
-        this.reload();
-    }
-    reload() {
-      this._run();
-    }
-    _init() {
-      if (this._templates = io(this), !this._templates.default) {
-        console.warn("cms-fetch: missing <template> child (default slot)");
-        return;
-      }
-      this.reload();
-    }
-    _refreshReloadListeners() {
-      for (let t of this._reloadEvents)
-        document.removeEventListener(t, this._onReloadEvent);
-      this._reloadEvents = (this.getAttribute("reload-on") || "").split(/\s+/).filter(Boolean);
-      for (let t of this._reloadEvents)
-        document.addEventListener(t, this._onReloadEvent);
-    }
-    async _run() {
-      let t = this.getAttribute("url");
-      if (!t || !this._templates.default)
-        return;
-      this._abort?.abort(), this._abort = new AbortController;
-      let e = this._abort.signal;
-      this._renderSlot("loading", null), this.dispatchEvent(new W("fetch:loading"));
-      let r = await ao(t, e);
-      if (e.aborted || r.kind === "aborted")
-        return;
-      if (r.kind === "success") {
-        let i = no(r.data) && this._templates.empty ? "empty" : "default";
-        this._renderSlot(i, r.data), this.dispatchEvent(new CustomEvent("fetch:data", { bubbles: true, composed: true, detail: r.data }));
-      } else
-        this._renderSlot("error", r.error), this.dispatchEvent(new CustomEvent("fetch:error", { bubbles: true, composed: true, detail: r.error }));
-    }
-    _renderSlot(t, e) {
-      let r = this._templates[t];
-      if (!r)
-        return;
-      this._stamped = po(this, r, e, this._stamped);
-    }
-  }
-  async function go(t, e) {
+  async function Ja(t, e) {
     let r;
     try {
       r = await fetch(t, { headers: { Accept: "application/json" }, signal: e });
     } catch (n) {
-      return bo(n) ? { kind: "aborted" } : { kind: "error", status: null, message: mo(n) };
+      return Qa(n) ? { kind: "aborted" } : { kind: "error", status: null, message: Ga(n) };
     }
     if (!r.ok)
       return { kind: "error", status: r.status, message: `HTTP ${r.status}` };
@@ -8896,7 +8634,7 @@ p9r-tag:hover {
     try {
       i = await r.text();
     } catch (n) {
-      return bo(n) ? { kind: "aborted" } : { kind: "error", status: r.status, message: mo(n) };
+      return Qa(n) ? { kind: "aborted" } : { kind: "error", status: r.status, message: Ga(n) };
     }
     if (i.trim() === "")
       return { kind: "success", data: null };
@@ -8906,35 +8644,35 @@ p9r-tag:hover {
       return { kind: "error", status: r.status, message: "Invalid JSON response" };
     }
   }
-  function bo(t) {
+  function Qa(t) {
     return t?.name === "AbortError";
   }
-  function mo(t) {
+  function Ga(t) {
     return t instanceof Error ? t.message : String(t);
   }
-  var Ud = { found: false, value: undefined };
-  function J(t, e) {
+  var wd = { found: false, value: undefined };
+  function F(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
-      return { found: true, value: Zd(t) };
+      return { found: true, value: kd(t) };
     let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), n = r === -1 ? "" : e.slice(r + 1);
     for (let a = t;a; a = a.parent) {
       if (a.vars && i in a.vars)
-        return { found: true, value: fo(a.vars[i], n) };
-      let o = a.value;
-      if (vo(o) && i in o)
-        return { found: true, value: fo(o[i], n) };
+        return { found: true, value: Wa(a.vars[i], n) };
+      let s = a.value;
+      if (to(s) && i in s)
+        return { found: true, value: Wa(s[i], n) };
     }
-    return Ud;
+    return wd;
   }
-  function Zd(t) {
+  function kd(t) {
     let e = t.value;
-    if (vo(e) && "value" in e)
+    if (to(e) && "value" in e)
       return e.value;
     return e;
   }
-  function fo(t, e) {
+  function Wa(t, e) {
     if (e === "")
       return t;
     let r = t;
@@ -8945,84 +8683,99 @@ p9r-tag:hover {
     }
     return r;
   }
-  function vo(t) {
+  function to(t) {
     return t !== null && typeof t === "object";
   }
-  var Yd = /\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
-  function Ot(t, e, r = {}) {
-    return t.replace(Yd, (i, n, a) => {
-      let o = J(e, n);
-      if (!o.found)
+  var Ed = /\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+  function Ft(t, e, r = {}) {
+    return t.replace(Ed, (i, n, a) => {
+      let s = F(e, n);
+      if (!s.found)
         return "";
-      let l = a ? r[a] : undefined, d = l ? l(o.value) : o.value;
+      let l = a ? r[a] : undefined, d = l ? l(s.value) : s.value;
       return d == null ? "" : String(d);
     });
   }
-  var tt = "cms-repeat";
-  var Qd = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function xo(t) {
-    let e = t.match(Qd);
+  var G = "cms-repeat";
+  var Ad = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  function eo(t) {
+    let e = t.match(Ad);
     if (e)
       return { path: e[1], name: e[2] };
     return { path: t.trim() };
   }
   var f = "cms-source";
-  function $t(t, e, r = {}) {
+  function Dt(t, e, r = {}) {
     if (t.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-      yo(t, e, r);
+      io(t, e, r);
       return;
     }
-    _o(t, e, r, true);
+    ro(t, e, r, true);
   }
-  function _o(t, e, r, i) {
+  function ro(t, e, r, i) {
     if (t.nodeType === Node.TEXT_NODE) {
-      let a = t.nodeValue ?? "", o = Ot(a, e, r);
-      if (o !== a)
-        t.nodeValue = o;
+      let a = t.nodeValue ?? "", s = Ft(a, e, r);
+      if (s !== a)
+        t.nodeValue = s;
       return;
     }
     if (t.nodeType !== Node.ELEMENT_NODE)
       return;
     let n = t;
     for (let a of Array.from(n.attributes)) {
-      let o = Ot(a.value, e, r);
-      if (o !== a.value)
-        n.setAttribute(a.name, o);
+      let s = Ft(a.value, e, r);
+      if (s !== a.value)
+        n.setAttribute(a.name, s);
     }
-    if (!i && n.hasAttribute(f))
+    if (!i && (n.hasAttribute(f) || n.localName === "cms-binding-core"))
       return;
-    yo(n, e, r);
+    if (Cd(n, e))
+      return;
+    io(n, e, r);
   }
-  function yo(t, e, r) {
+  var Ld = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+  function Cd(t, e) {
+    if (t.childNodes.length !== 1)
+      return false;
+    let r = t.firstChild;
+    if (r.nodeType !== Node.TEXT_NODE)
+      return false;
+    let i = (r.nodeValue ?? "").trim().match(Ld);
+    if (!i)
+      return false;
+    let n = F(e, i[1]), a = (t.ownerDocument ?? document).createElement("template");
+    return a.innerHTML = n.found && n.value != null ? String(n.value) : "", t.replaceWith(a.content), true;
+  }
+  function io(t, e, r) {
     for (let i of Array.from(t.childNodes))
-      if (i.nodeType === Node.ELEMENT_NODE && i.hasAttribute(tt))
-        Gd(i, e, r);
+      if (i.nodeType === Node.ELEMENT_NODE && i.hasAttribute(G))
+        Td(i, e, r);
       else
-        _o(i, e, r, false);
+        ro(i, e, r, false);
   }
-  function Gd(t, e, r) {
+  function Td(t, e, r) {
     let i = t.parentNode;
     if (!i)
       return;
-    let n = xo(t.getAttribute(tt) ?? ""), a = J(e, n.path), o = document.createComment(`cms-repeat ${n.path}`);
-    if (i.replaceChild(o, t), !Array.isArray(a.value)) {
+    let n = eo(t.getAttribute(G) ?? ""), a = F(e, n.path), s = document.createComment(`cms-repeat ${n.path}`);
+    if (i.replaceChild(s, t), !Array.isArray(a.value)) {
       if (a.found && a.value != null)
         console.warn(`cms-repeat="${n.path}" expected an array, got`, a.value);
       return;
     }
     for (let l of a.value) {
       let d = t.cloneNode(true);
-      d.removeAttribute(tt);
+      d.removeAttribute(G);
       let c = n.name ? { vars: { [n.name]: l }, parent: e } : { value: l, parent: e };
-      $t(d, c, r), i.insertBefore(d, o);
+      Dt(d, c, r), i.insertBefore(d, s);
     }
   }
-  var wo = "cms-slot";
-  var Wd = ["loading", "error", "empty"];
-  function ko(t) {
+  var no = "cms-slot";
+  var Md = ["loading", "error", "empty"];
+  function ao(t) {
     let e = {}, r = document.createDocumentFragment();
     for (let i of Array.from(t.childNodes)) {
-      let n = Jd(i);
+      let n = Hd(i);
       if (!n) {
         if (i.nodeType === Node.ELEMENT_NODE && i.tagName === "TEMPLATE")
           r.appendChild(i.content), i.remove();
@@ -9030,7 +8783,7 @@ p9r-tag:hover {
           r.appendChild(i);
         continue;
       }
-      if (i.removeAttribute(wo), e[n])
+      if (i.removeAttribute(no), e[n])
         i.parentNode?.removeChild(i);
       else {
         let a = document.createDocumentFragment();
@@ -9039,13 +8792,13 @@ p9r-tag:hover {
     }
     return { body: r, slots: e };
   }
-  function R(t, e, r, i = {}) {
+  function D(t, e, r, i = {}) {
     let n = e.cloneNode(true);
     if (r)
-      $t(n, r, i);
+      Dt(n, r, i);
     t.replaceChildren(n);
   }
-  function Eo(t) {
+  function oo(t) {
     if (t == null)
       return true;
     if (Array.isArray(t))
@@ -9054,25 +8807,25 @@ p9r-tag:hover {
       return Object.keys(t).length === 0;
     return false;
   }
-  function Jd(t) {
+  function Hd(t) {
     if (t.nodeType !== Node.ELEMENT_NODE)
       return null;
-    let e = t.getAttribute(wo);
-    return e && Wd.includes(e) ? e : null;
+    let e = t.getAttribute(no);
+    return e && Md.includes(e) ? e : null;
   }
   var y = "cms-params:change";
-  var tc = /#\{\s*(\w+)\s*\}/g;
-  function Ao(t) {
+  var zd = /#\{\s*(\w+)\s*\}/g;
+  function so(t) {
     return /#\{\s*\w+\s*\}/.test(t);
   }
-  function et() {
+  function J() {
     return new URLSearchParams(typeof location > "u" ? "" : location.search);
   }
-  function Lo(t, e = et()) {
-    return t.replace(tc, (r, i) => encodeURIComponent(e.get(i) ?? ""));
+  function lo(t, e = J()) {
+    return t.replace(zd, (r, i) => encodeURIComponent(e.get(i) ?? ""));
   }
-  function Xt(t, e) {
-    let r = et();
+  function jt(t, e) {
+    let r = J();
     if (e === "")
       r.delete(t);
     else
@@ -9080,11 +8833,11 @@ p9r-tag:hover {
     let i = r.toString();
     history.replaceState(history.state, "", location.pathname + (i ? `?${i}` : "") + location.hash), document.dispatchEvent(new Event("cms-params:change"));
   }
-  var ec = "cms-reload-on";
-  var rc = "cms-source:reload";
-  var Ut = "cms-ready";
+  var Sd = "cms-reload-on";
+  var Id = "cms-source:reload";
+  var Rt = "cms-ready";
 
-  class Zt {
+  class Kt {
     el;
     filters;
     captured;
@@ -9098,20 +8851,20 @@ p9r-tag:hover {
     constructor(t, e = {}) {
       this.el = t;
       this.filters = e;
-      this.captured = ko(t);
+      this.captured = ao(t);
     }
     start() {
-      this.listen(), this.run(), this.el.setAttribute(Ut, "");
+      this.listen(), this.run(), this.el.setAttribute(Rt, "");
     }
     dispose() {
       this.abort?.abort(), this.abort = null, this.unlisten();
     }
     listen() {
-      let t = (this.el.getAttribute(ec) ?? "").split(/\s+/).filter(Boolean);
-      this.reloadEvents = [rc, ...t];
+      let t = (this.el.getAttribute(Sd) ?? "").split(/\s+/).filter(Boolean);
+      this.reloadEvents = [Id, ...t];
       for (let e of this.reloadEvents)
         document.addEventListener(e, this.onReload);
-      if (Ao(this.el.getAttribute(f) ?? ""))
+      if (so(this.el.getAttribute(f) ?? ""))
         this.paramReactive = true, document.addEventListener(y, this.onReload), window.addEventListener("popstate", this.onReload);
     }
     unlisten() {
@@ -9124,13 +8877,13 @@ p9r-tag:hover {
       let t = this.el.getAttribute(f)?.trim();
       if (!t)
         return;
-      let e = Lo(t), { slots: r, body: i } = this.captured;
+      let e = lo(t), { slots: r, body: i } = this.captured;
       if (r.loading)
-        R(this.el, r.loading, null, this.filters);
+        D(this.el, r.loading, null, this.filters);
       this.abort?.abort();
       let n = new AbortController;
       this.abort = n;
-      let a = await go(e, n.signal);
+      let a = await Ja(e, n.signal);
       if (n.signal.aborted)
         return;
       if (a.kind === "aborted")
@@ -9138,22 +8891,22 @@ p9r-tag:hover {
       if (a.kind === "error") {
         if (r.error) {
           let l = { value: { status: a.status, message: a.message } };
-          R(this.el, r.error, l, this.filters);
+          D(this.el, r.error, l, this.filters);
         } else
           this.el.replaceChildren(), console.warn(`cms-source "${e}": ${a.message}`);
         return;
       }
-      let o = a.data;
-      if (Eo(o) && r.empty)
-        R(this.el, r.empty, { value: o }, this.filters);
+      let s = a.data;
+      if (oo(s) && r.empty)
+        D(this.el, r.empty, { value: s }, this.filters);
       else
-        R(this.el, i, { value: o }, this.filters);
+        D(this.el, i, { value: s }, this.filters);
     }
   }
-  var S = "cms-param-sync";
-  var ic = 300;
+  var H = "cms-param-sync";
+  var Pd = 300;
 
-  class Yt {
+  class Vt {
     el;
     key;
     timer = null;
@@ -9171,11 +8924,11 @@ p9r-tag:hover {
     };
     constructor(t) {
       this.el = t;
-      this.key = (t.getAttribute(S) || "").trim() || t.name || "";
+      this.key = (t.getAttribute(H) || "").trim() || t.name || "";
     }
     start() {
       if (!this.key) {
-        console.warn(`${S}: no key — set ${S}="<param>" or a name attribute`, this.el);
+        console.warn(`${H}: no key — set ${H}="<param>" or a name attribute`, this.el);
         return;
       }
       this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(y, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
@@ -9190,7 +8943,7 @@ p9r-tag:hover {
     reflect() {
       if (this.timer)
         return;
-      let t = et().get(this.key) ?? "", e = this.el;
+      let t = J().get(this.key) ?? "", e = this.el;
       if (e.type === "checkbox") {
         let r = t !== "" && t === (e.value || "true");
         if (e.checked !== r)
@@ -9220,7 +8973,7 @@ p9r-tag:hover {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), ic);
+      this.timer = setTimeout(() => this.write(), Pd);
     }
     write() {
       if (this.reflecting)
@@ -9230,11 +8983,11 @@ p9r-tag:hover {
       let t = this.currentValue();
       if (t === this.last)
         return;
-      this.last = t, Xt(this.key, t);
+      this.last = t, jt(this.key, t);
     }
   }
 
-  class Qt {
+  class Nt {
     root;
     filters;
     sources = new Map;
@@ -9271,25 +9024,25 @@ p9r-tag:hover {
       return this.sources.size;
     }
     registerWithin(t) {
-      rt(t, f, (e) => {
+      W(t, f, this.root, (e) => {
         if (!e.isConnected || this.sources.has(e))
           return;
-        let r = new Zt(e, this.filters);
+        let r = new Kt(e, this.filters);
         this.sources.set(e, r), r.start();
-      }), rt(t, S, (e) => {
+      }), W(t, H, this.root, (e) => {
         if (!e.isConnected || this.paramSyncs.has(e))
           return;
-        let r = new Yt(e);
+        let r = new Vt(e);
         this.paramSyncs.set(e, r), r.start();
       });
     }
     unregisterWithin(t) {
-      rt(t, f, (e) => {
+      W(t, f, this.root, (e) => {
         let r = this.sources.get(e);
         if (!r)
           return;
         r.dispose(), this.sources.delete(e);
-      }), rt(t, S, (e) => {
+      }), W(t, H, this.root, (e) => {
         let r = this.paramSyncs.get(e);
         if (!r)
           return;
@@ -9297,36 +9050,47 @@ p9r-tag:hover {
       });
     }
   }
-  function rt(t, e, r) {
+  function W(t, e, r, i) {
     if (t.nodeType !== Node.ELEMENT_NODE)
       return;
-    let i = t;
-    if (i.hasAttribute(e))
-      r(i);
-    i.querySelectorAll(`[${e}]`).forEach(r);
+    let n = t;
+    if (co(n, r))
+      return;
+    if (n.hasAttribute(e))
+      i(n);
+    n.querySelectorAll(`[${e}]`).forEach((a) => {
+      if (!co(a, r))
+        i(a);
+    });
   }
-  var nc = "cms-binding-core";
-  var Co = "cms-binding-cloak";
-  var ac = `${nc}{display:contents}[${f}]:not([${Ut}]){visibility:hidden}`;
-  var To = {};
-  class Mo extends HTMLElement {
+  function co(t, e) {
+    for (let r = t.parentElement;r && r !== e; r = r.parentElement)
+      if (r.localName === "cms-binding-core")
+        return true;
+    return false;
+  }
+  var qd = "cms-binding-core";
+  var uo = "cms-binding-cloak";
+  var Bd = `${qd}{display:contents}[${f}]:not([${Rt}]){visibility:hidden}`;
+  var po = {};
+  class ho extends HTMLElement {
     runtime = null;
     connectedCallback() {
-      sc(this.ownerDocument ?? document), this.runtime = new Qt(this, To), this.runtime.start();
+      Dd(this.ownerDocument ?? document), this.runtime = new Nt(this, po), this.runtime.start();
     }
     disconnectedCallback() {
       this.runtime?.stop(), this.runtime = null;
     }
   }
-  function sc(t) {
-    if (t.getElementById(Co))
+  function Dd(t) {
+    if (t.getElementById(uo))
       return;
     let e = t.createElement("style");
-    e.id = Co, e.textContent = ac, (t.head ?? t.documentElement).appendChild(e);
+    e.id = uo, e.textContent = Bd, (t.head ?? t.documentElement).appendChild(e);
   }
 
   // ../../libs/cms-blocs/dist/base.js
-  class z2 extends HTMLElement {
+  class z extends HTMLElement {
     _rawStyles = "";
     _styles = null;
     constructor(g2) {
@@ -9541,7 +9305,7 @@ p9r-tag:hover {
       if (!this._btn)
         return;
       const rect = this._getAnchor().getBoundingClientRect();
-      const placement = this._stateSyncs.find((s2) => s2.isPinned)?.placement ?? "left";
+      const placement = this._stateSyncs.find((s) => s.isPinned)?.placement ?? "left";
       const gap = 8;
       const bw = this._btn.offsetWidth;
       const bh = this._btn.offsetHeight;
@@ -9631,7 +9395,7 @@ p9r-tag:hover {
     propagateIdentifier(identifier) {
       if (!this._config)
         return;
-      this._config.querySelectorAll("*").forEach((el) => el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, identifier));
+      this._config.querySelectorAll("*").forEach((el2) => el2.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, identifier));
     }
     notifySyncs(opts) {
       if (this._config) {
@@ -9665,7 +9429,7 @@ p9r-tag:hover {
         customElements.upgrade(this._fragment);
       } catch {}
       const id = this.editor.identifier;
-      this._fragment.querySelectorAll("*").forEach((el) => el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, id));
+      this._fragment.querySelectorAll("*").forEach((el2) => el2.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, id));
       this._syncs = Array.from(this._fragment.querySelectorAll(SYNC_SELECTORS));
       for (const sync of this._syncs) {
         sync.prepare?.(this.editor.target, this.editor);
@@ -9709,9 +9473,9 @@ p9r-tag:hover {
       editorSystem.blocActions.open(e.clientX, e.clientY);
     }
   }
-  function isVisuallyInvisible(el) {
-    if (typeof el.checkVisibility === "function") {
-      const visible = el.checkVisibility({
+  function isVisuallyInvisible(el2) {
+    if (typeof el2.checkVisibility === "function") {
+      const visible = el2.checkVisibility({
         opacityProperty: true,
         visibilityProperty: true,
         checkOpacity: true,
@@ -9720,7 +9484,7 @@ p9r-tag:hover {
       if (!visible)
         return true;
     }
-    const r = el.getBoundingClientRect();
+    const r = el2.getBoundingClientRect();
     if (r.width === 0 && r.height === 0)
       return true;
     if (r.bottom <= 0 || r.right <= 0 || r.left >= innerWidth || r.top >= innerHeight)
@@ -9753,11 +9517,11 @@ p9r-tag:hover {
 
   // src/core/editorSystem/Editor/bodyStyle.ts
   var registry = new Map;
-  function acquireBodyStyle(tag, el) {
+  function acquireBodyStyle(tag, el2) {
     let entry = registry.get(tag);
     if (!entry) {
-      document.body.append(el);
-      entry = { el, count: 0 };
+      document.body.append(el2);
+      entry = { el: el2, count: 0 };
       registry.set(tag, entry);
     }
     entry.count++;
@@ -9848,7 +9612,7 @@ p9r-tag:hover {
       this._hover = new HoverBinding(this);
       const pinParent = getClosestEditorSystem(this.target).shadowRoot?.querySelector("#editorSystem") ?? document.body;
       this._pinMode = new PinMode(() => this.getActionBarAnchor() ?? this.target, this.stateSyncs, () => {
-        this.stateSyncs.forEach((s2) => s2.unpin());
+        this.stateSyncs.forEach((s) => s.unpin());
         this.notifyPinStateChanged();
       }, pinParent);
       this._mode = new ModeBinding(this.target, {
@@ -9889,7 +9653,7 @@ p9r-tag:hover {
         this._hover.bind();
     }
     viewClient() {
-      this.stateSyncs.forEach((s2) => s2.unpin());
+      this.stateSyncs.forEach((s) => s.unpin());
       this._pinMode.exit();
       this.restore();
       this._extensions.clear();
@@ -9940,8 +9704,8 @@ p9r-tag:hover {
       if (i >= 0)
         this.stateSyncs.splice(i, 1);
     }
-    claimChild(el) {
-      el.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, this._identifier);
+    claimChild(el2) {
+      el2.setAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER, this._identifier);
     }
     extendRichTextBar(ext) {
       return this._extensions.add("richtextbar", ext);
@@ -9959,7 +9723,7 @@ p9r-tag:hover {
       return null;
     }
     notifyPinStateChanged(stateSync) {
-      const anyPinned = this.stateSyncs.some((s2) => s2.isPinned);
+      const anyPinned = this.stateSyncs.some((s) => s.isPinned);
       if (anyPinned) {
         _pinnedEditors.add(this);
         getClosestEditorSystem(this.target).blocActions.close();
@@ -9987,7 +9751,7 @@ p9r-tag:hover {
         this._hover.bind();
     }
     _shouldSuppressHover() {
-      if (this.stateSyncs.some((s2) => s2.isPinned))
+      if (this.stateSyncs.some((s) => s.isPinned))
         return true;
       for (const e of _pinnedEditors) {
         if (e === this)
@@ -10117,7 +9881,7 @@ p9r-tag:hover {
   // src/components/globals.ts
   window.p9r = {
     attr: P9R_ATTR,
-    Component: z2,
+    Component: z,
     Editor,
     registerEditor,
     registerEditor_opaque
@@ -10265,7 +10029,7 @@ p9r-tag:hover {
 </w13c-left-menu-layout>`;
 
   // src/components/admin/AdminLayout/AdminLayout.ts
-  class FixedAdminLayout extends z2 {
+  class FixedAdminLayout extends z {
     constructor() {
       super({
         css: "",
@@ -10411,8 +10175,8 @@ ${followMessage}`)) {
       if (lines.length)
         lines.push("");
       lines.push("Snippets:");
-      for (const s2 of snippets)
-        lines.push(`  • ${s2.name || s2.identifier}`);
+      for (const s of snippets)
+        lines.push(`  • ${s.name || s.identifier}`);
     }
     return lines.join(`
 `);
@@ -10878,7 +10642,7 @@ ${followMessage}`)) {
 `;
 
   // src/components/admin/EmptyState/EmptyState.ts
-  class EmptyState extends z2 {
+  class EmptyState extends z {
     constructor() {
       super({
         css: style_default,
@@ -11173,9 +10937,9 @@ cms-endpoints-input .ep-add:hover {
       select.setAttribute("name", opts.name);
     select.setAttribute("label", opts.label ?? "");
     for (const v of values) {
-      const o = select.appendChild(document.createElement("option"));
-      o.value = v;
-      o.textContent = v;
+      const o2 = select.appendChild(document.createElement("option"));
+      o2.value = v;
+      o2.textContent = v;
     }
     select.setAttribute("value", value && values.includes(value) ? value : values[0]);
     return select;
@@ -11267,9 +11031,9 @@ cms-endpoints-input .ep-add:hover {
   // src/components/admin/EndpointsInput/shared.ts
   var PARAM_TYPES = ["string", "number", "boolean"];
   var SHAPE_TYPES = ["string", "number", "boolean", "object", "array"];
-  var readControl = (el) => {
-    const live = el.value;
-    return typeof live === "string" ? live : el.getAttribute("value") ?? "";
+  var readControl = (el2) => {
+    const live = el2.value;
+    return typeof live === "string" ? live : el2.getAttribute("value") ?? "";
   };
   function jsonField(name, role) {
     const f2 = document.createElement("input");
@@ -11366,7 +11130,7 @@ cms-endpoints-input .ep-add:hover {
       props.push({ nameEl, reqEl, child });
       return wrapper;
     };
-    const rebuild = (type, s2) => {
+    const rebuild = (type, s) => {
       props.length = 0;
       itemsNode = null;
       while (typeSelect.nextSibling)
@@ -11377,8 +11141,8 @@ cms-endpoints-input .ep-add:hover {
         box.className = depth > 0 ? "ep-box" : "ep-box ep-box-root";
         const list = document.createElement("div");
         list.className = "ep-prop-list";
-        const req = new Set(s2.required ?? []);
-        for (const [k2, v] of Object.entries(s2.properties ?? {}))
+        const req = new Set(s.required ?? []);
+        for (const [k2, v] of Object.entries(s.properties ?? {}))
           list.appendChild(makeProp(k2, v, req.has(k2)));
         const add = document.createElement("button");
         add.type = "button";
@@ -11392,7 +11156,7 @@ cms-endpoints-input .ep-add:hover {
         box.append(list, add);
         childrenEl.appendChild(box);
       } else if (type === "array") {
-        itemsNode = makeNode(s2.items ?? { type: "string" }, onChange, depth + 1);
+        itemsNode = makeNode(s.items ?? { type: "string" }, onChange, depth + 1);
         const of = document.createElement("span");
         of.className = "ep-of";
         of.textContent = "of";
@@ -11455,8 +11219,8 @@ cms-endpoints-input .ep-add:hover {
       });
       element.replaceChildren(define);
     };
-    const showTree = (s2) => {
-      root = makeNode(s2, onChange, 0);
+    const showTree = (s) => {
+      root = makeNode(s, onChange, 0);
       const head = document.createElement("div");
       head.className = "ep-root-head";
       const label = document.createElement("span");
@@ -11575,9 +11339,9 @@ cms-endpoints-input .ep-add:hover {
     select.className = "ep-status";
     select.setAttribute("label", "");
     const opt = (v, label) => {
-      const o = select.appendChild(document.createElement("option"));
-      o.value = v;
-      o.textContent = label;
+      const o2 = select.appendChild(document.createElement("option"));
+      o2.value = v;
+      o2.textContent = label;
     };
     opt("", "Status…");
     for (const c of COMMON)
@@ -11661,11 +11425,11 @@ cms-endpoints-input .ep-add:hover {
     tree.element.dataset.role = "response-body";
     row.append(head, tree.element);
     const read = () => {
-      const s2 = status.read();
-      if (!s2)
+      const s = status.read();
+      if (!s)
         return null;
       const body = tree.read();
-      return { status: s2, ...body ? { body } : {} };
+      return { status: s, ...body ? { body } : {} };
     };
     return { element: row, read };
   }
@@ -11879,9 +11643,9 @@ cms-endpoints-input .ep-add:hover {
       idEl.textContent = readControl(idInput).trim() || "(new endpoint)";
       pathEl.textContent = readControl(urlInput);
     };
-    for (const el of [idInput, methodSelect, urlInput]) {
-      el.addEventListener("input", update);
-      el.addEventListener("change", update);
+    for (const el2 of [idInput, methodSelect, urlInput]) {
+      el2.addEventListener("input", update);
+      el2.addEventListener("change", update);
     }
   }
 
@@ -11981,102 +11745,6 @@ cms-endpoints-input .ep-add:hover {
   }
   customElements.define("cms-event-toast", CmsEventToast);
 
-  // src/components/admin/ListFilter/ListFilter.ts
-  class CmsListFilter extends HTMLElement {
-    _fetch = null;
-    _base = "";
-    _filters = {};
-    _sortBy = "";
-    _sortOrder = "asc";
-    _debounce = null;
-    connectedCallback() {
-      requestAnimationFrame(() => this._init());
-    }
-    _init() {
-      this._fetch = this.querySelector("cms-fetch");
-      if (!this._fetch)
-        return;
-      this._base = (this._fetch.getAttribute("url") || "").split("?")[0];
-      this._sortBy = this.getAttribute("default-sort") || "title";
-      this._renderSortIndicators();
-      this._wireFilters();
-      this._wireSort();
-      this._loadTags();
-    }
-    _wireFilters() {
-      const search = this.querySelector('[data-filter="search"]');
-      search?.addEventListener("input", () => {
-        if (this._debounce)
-          clearTimeout(this._debounce);
-        this._debounce = setTimeout(() => this._set("search", val(search)), 250);
-      });
-      for (const key of ["visible", "tag"]) {
-        const el = this.querySelector(`[data-filter="${key}"]`);
-        el?.addEventListener("change", () => this._set(key, val(el)));
-      }
-    }
-    _wireSort() {
-      this.querySelectorAll("[data-sort]").forEach((h) => {
-        h.style.cursor = "pointer";
-        h.addEventListener("click", () => {
-          const key = h.dataset.sort;
-          if (this._sortBy === key)
-            this._sortOrder = this._sortOrder === "asc" ? "desc" : "asc";
-          else {
-            this._sortBy = key;
-            this._sortOrder = "asc";
-          }
-          this._renderSortIndicators();
-          this._apply();
-        });
-      });
-    }
-    _renderSortIndicators() {
-      this.querySelectorAll("[data-sort]").forEach((h) => {
-        const ind = h.querySelector("[data-sort-ind]");
-        if (ind)
-          ind.textContent = h.dataset.sort === this._sortBy ? this._sortOrder === "asc" ? "↑" : "↓" : "";
-      });
-    }
-    _set(key, value) {
-      if (value)
-        this._filters[key] = value;
-      else
-        delete this._filters[key];
-      this._apply();
-    }
-    _apply() {
-      if (!this._fetch)
-        return;
-      const params = new URLSearchParams(this._filters);
-      if (this._sortBy) {
-        params.set("sortBy", this._sortBy);
-        params.set("sortOrder", this._sortOrder);
-      }
-      const qs2 = params.toString();
-      this._fetch.setAttribute("url", qs2 ? `${this._base}?${qs2}` : this._base);
-    }
-    async _loadTags() {
-      const url = this.getAttribute("tags-url");
-      const sel = this.querySelector('[data-filter="tag"]');
-      if (!url || !sel)
-        return;
-      try {
-        const tags = await (await fetch(url)).json();
-        for (const t of tags) {
-          const opt = document.createElement("option");
-          opt.value = t.value;
-          opt.textContent = `${t.value} (${t.count})`;
-          sel.appendChild(opt);
-        }
-      } catch {}
-    }
-  }
-  var val = (el) => el.value ?? "";
-  if (!customElements.get("cms-list-filter")) {
-    customElements.define("cms-list-filter", CmsListFilter);
-  }
-
   // ../../libs/auth-core/src/components/LoginMethods/LoginMethods.ts
   class CmsLoginMethods extends HTMLElement {
     async connectedCallback() {
@@ -12105,8 +11773,8 @@ cms-endpoints-input .ep-add:hover {
       } catch {}
     }
   }
-  var escapeAttr = (s2) => s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-  var escapeText = (s2) => s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  var escapeAttr = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  var escapeText = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   customElements.define("cms-login-methods", CmsLoginMethods);
 
   // src/components/admin/OpenDialog/OpenDialog.ts
@@ -12513,10 +12181,10 @@ cms-endpoints-input .ep-add:hover {
   // src/components/admin/Secrets/icons.ts
   var ICONS = { eye: ICON_EYE, save: ICON_SAVE, trash: ICON_TRASH };
   function injectIcons(root) {
-    root.querySelectorAll("[data-icon]").forEach((el) => {
-      const name = el.dataset.icon;
+    root.querySelectorAll("[data-icon]").forEach((el2) => {
+      const name = el2.dataset.icon;
       if (ICONS[name])
-        el.innerHTML = ICONS[name];
+        el2.innerHTML = ICONS[name];
     });
   }
 
@@ -12564,7 +12232,7 @@ cms-endpoints-input .ep-add:hover {
   }
 
   // src/components/admin/Secrets/Secrets.ts
-  class CmsSecrets extends z2 {
+  class CmsSecrets extends z {
     _list = null;
     _rowTemplate = null;
     _empty = null;
@@ -13161,9 +12829,9 @@ cms-endpoints-input .ep-add:hover {
     r.mediaCurrent.classList.toggle("has-value", m);
   }
   function openPanel2(host) {
-    document.querySelectorAll("p9r-link, p9r-select").forEach((el) => {
-      if (el !== host && "_close" in el)
-        el._close();
+    document.querySelectorAll("p9r-link, p9r-select").forEach((el2) => {
+      if (el2 !== host && "_close" in el2)
+        el2._close();
     });
     host._isOpen = true;
     host._refs.panel.classList.add("open");
@@ -13342,9 +13010,9 @@ cms-endpoints-input .ep-add:hover {
     _sync() {
       const inputs2 = Array.from(this.querySelectorAll("[name]"));
       inputs2.forEach((input) => {
-        const val2 = this._component?.getAttribute(input.name);
-        if (val2) {
-          input.value = val2;
+        const val = this._component?.getAttribute(input.name);
+        if (val) {
+          input.value = val;
         } else {
           if (input.value) {
             this._component?.setAttribute(input.name, input.value);
@@ -14142,21 +13810,21 @@ cms-endpoints-input .ep-add:hover {
   }
 
   // src/components/editor/componentSync/sync/StateSync/parseAttrs.ts
-  function parseValues(el) {
-    const raw = el.getAttribute("values");
+  function parseValues(el2) {
+    const raw = el2.getAttribute("values");
     if (raw)
-      return raw.split(",").map((s2) => s2.trim()).filter(Boolean);
-    const v = el.getAttribute("value") || "";
+      return raw.split(",").map((s) => s.trim()).filter(Boolean);
+    const v = el2.getAttribute("value") || "";
     return v ? [v] : [];
   }
-  function parseLabels(el, values) {
-    const raw = el.getAttribute("labels");
+  function parseLabels(el2, values) {
+    const raw = el2.getAttribute("labels");
     if (raw)
-      return raw.split(",").map((s2) => s2.trim());
+      return raw.split(",").map((s) => s.trim());
     return values;
   }
-  function parsePlacement(el) {
-    const v = el.getAttribute("placement");
+  function parsePlacement(el2) {
+    const v = el2.getAttribute("placement");
     return v === "right" || v === "top" || v === "bottom" ? v : "left";
   }
 
@@ -14164,14 +13832,14 @@ cms-endpoints-input .ep-add:hover {
   function makeStateAttrOps(attrName) {
     if (attrName === "class")
       return {
-        apply: (el, v) => el.classList.add(v),
-        clear: (el, v) => el.classList.remove(v),
-        isApplied: (el, v) => el.classList.contains(v)
+        apply: (el2, v) => el2.classList.add(v),
+        clear: (el2, v) => el2.classList.remove(v),
+        isApplied: (el2, v) => el2.classList.contains(v)
       };
     return {
-      apply: (el, v) => el.setAttribute(attrName, v),
-      clear: (el) => el.removeAttribute(attrName),
-      isApplied: (el, v) => el.getAttribute(attrName) === v
+      apply: (el2, v) => el2.setAttribute(attrName, v),
+      clear: (el2) => el2.removeAttribute(attrName),
+      isApplied: (el2, v) => el2.getAttribute(attrName) === v
     };
   }
 
@@ -14220,9 +13888,9 @@ cms-endpoints-input .ep-add:hover {
         return;
       this._ops ??= makeStateAttrOps(this.attrName);
       if (this._activeValue !== null)
-        targets.forEach((el) => this._ops.clear(el, this._activeValue));
+        targets.forEach((el2) => this._ops.clear(el2, this._activeValue));
       if (value !== null)
-        targets.forEach((el) => this._ops.apply(el, value));
+        targets.forEach((el2) => this._ops.apply(el2, value));
       if (value !== null && this._observer === null)
         this._startObserver(targets);
       if (value === null)
@@ -14267,12 +13935,12 @@ cms-endpoints-input .ep-add:hover {
         const v = this._activeValue;
         if (v === null)
           return;
-        targets.forEach((el) => {
-          if (!this._ops.isApplied(el, v))
-            this._ops.apply(el, v);
+        targets.forEach((el2) => {
+          if (!this._ops.isApplied(el2, v))
+            this._ops.apply(el2, v);
         });
       });
-      targets.forEach((el) => this._observer.observe(el, { attributes: true, attributeFilter: filter }));
+      targets.forEach((el2) => this._observer.observe(el2, { attributes: true, attributeFilter: filter }));
     }
     _stopObserver() {
       this._observer?.disconnect();
@@ -14284,7 +13952,7 @@ cms-endpoints-input .ep-add:hover {
   }
 
   // src/components/editor/componentSync/SyncPanel.ts
-  class SyncPanel extends z2 {
+  class SyncPanel extends z {
     dialog = null;
     constructor() {
       super({
@@ -14537,25 +14205,25 @@ cms-endpoints-input .ep-add:hover {
     walk(root);
     return new XMLSerializer().serializeToString(root);
   }
-  function walk(el) {
-    if (!ALLOWED_TAGS.has(el.tagName.toLowerCase())) {
-      el.remove();
+  function walk(el2) {
+    if (!ALLOWED_TAGS.has(el2.tagName.toLowerCase())) {
+      el2.remove();
       return;
     }
-    for (const attr of Array.from(el.attributes)) {
+    for (const attr of Array.from(el2.attributes)) {
       const name = attr.name.toLowerCase();
       if (name.startsWith("on")) {
-        el.removeAttribute(attr.name);
+        el2.removeAttribute(attr.name);
         continue;
       }
       if (name === "href" || name === "xlink:href") {
         const v = attr.value.trim().toLowerCase();
         const safe = v.startsWith("#") || v.startsWith("/") || v.startsWith("./") || v.startsWith("../") || v.startsWith("http:") || v.startsWith("https:");
         if (!safe)
-          el.removeAttribute(attr.name);
+          el2.removeAttribute(attr.name);
       }
     }
-    for (const child of Array.from(el.children))
+    for (const child of Array.from(el2.children))
       walk(child);
   }
 
@@ -14778,16 +14446,16 @@ cms-endpoints-input .ep-add:hover {
       let r = this.attachShadow({ mode: "open" });
       if (t) {
         this._rawStyles = t.css, this._styles = document.createElement("style"), this._styles.innerHTML = t.css, r.appendChild(this._styles);
-        let o = document.createElement("template");
-        o.innerHTML = t.template, r.appendChild(o.content.cloneNode(true));
+        let o2 = document.createElement("template");
+        o2.innerHTML = t.template, r.appendChild(o2.content.cloneNode(true));
       }
     }
     registerCSSVariables(t) {
       if (!this._styles)
         return;
       let r = this._rawStyles;
-      Object.entries(t).forEach(([o, e]) => {
-        r = r.replaceAll("var(--" + o + ")", e);
+      Object.entries(t).forEach(([o2, e]) => {
+        r = r.replaceAll("var(--" + o2 + ")", e);
       }), this._styles.innerHTML = r;
     }
     connectedCallback() {}
@@ -14816,25 +14484,25 @@ cms-endpoints-input .ep-add:hover {
     disconnectedCallback() {
       this.removeEventListener("click", this._handleClick);
     }
-    attributeChangedCallback(t, r, o) {
+    attributeChangedCallback(t, r, o2) {
       if (!this._toolbar)
         return;
       if (t === "label")
-        if (o === null)
+        if (o2 === null)
           this._toolbar.removeAttribute("aria-label");
         else
-          this._toolbar.setAttribute("aria-label", o);
+          this._toolbar.setAttribute("aria-label", o2);
     }
     _handleClick = (t) => {
-      let o = t.composedPath().find((i) => i instanceof Element && i.hasAttribute("data-action"));
-      if (!o)
+      let o2 = t.composedPath().find((i) => i instanceof Element && i.hasAttribute("data-action"));
+      if (!o2)
         return;
       t.stopPropagation();
-      let e = o.getAttribute("data-action");
-      this._dispatchAction(e, o, t);
+      let e = o2.getAttribute("data-action");
+      this._dispatchAction(e, o2, t);
     };
-    _dispatchAction(t, r, o) {
-      this.dispatchEvent(new CustomEvent("action-click", { detail: { action: t, originalEvent: o, target: r }, bubbles: true, composed: true }));
+    _dispatchAction(t, r, o2) {
+      this.dispatchEvent(new CustomEvent("action-click", { detail: { action: t, originalEvent: o2, target: r }, bubbles: true, composed: true }));
     }
     _upgradeProperty(t) {
       if (this.hasOwnProperty(t)) {
@@ -14927,16 +14595,16 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
   function ancestorChain(editor) {
     const chain = [editor];
-    let el = editor.target;
+    let el2 = editor.target;
     for (let i = 0;i < 20; i++) {
-      const pid = el.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
+      const pid = el2.getAttribute(p9r.attr.EDITOR.PARENT_IDENTIFIER);
       if (!pid)
         break;
       const pEd = document.compIdentifierToEditor?.get(pid);
       if (!pEd)
         break;
       chain.unshift(pEd);
-      el = pEd.target;
+      el2 = pEd.target;
     }
     return chain;
   }
@@ -15035,20 +14703,20 @@ cms-bag-breadcrumb[data-inline="right"] {
     const visited = new Set;
     const queue = [seed];
     while (queue.length > 0) {
-      const el = queue.shift();
-      if (visited.has(el))
+      const el2 = queue.shift();
+      if (visited.has(el2))
         continue;
-      visited.add(el);
-      const id = el.getAttribute(idAttr);
+      visited.add(el2);
+      const id = el2.getAttribute(idAttr);
       const editor = id ? map?.get(id) : undefined;
       if (editor)
         out.push(...editor.listExtensions(surface));
-      const parent = el.parentElement?.closest(selector);
+      const parent = el2.parentElement?.closest(selector);
       if (parent && !visited.has(parent))
         queue.push(parent);
-      const pid = el.getAttribute(pidAttr);
+      const pid = el2.getAttribute(pidAttr);
       const pidOwner = pid ? map?.get(pid) : undefined;
-      if (pidOwner && pidOwner.target !== el && !visited.has(pidOwner.target)) {
+      if (pidOwner && pidOwner.target !== el2 && !visited.has(pidOwner.target)) {
         queue.push(pidOwner.target);
       }
     }
@@ -15126,7 +14794,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     if (trimmed.startsWith("#")) {
       return { kind: "anchor", target: trimmed.slice(1) };
     }
-    if (SPECIAL_SCHEMES.some((s2) => trimmed.toLowerCase().startsWith(s2))) {
+    if (SPECIAL_SCHEMES.some((s) => trimmed.toLowerCase().startsWith(s))) {
       return { kind: "mailto", target: trimmed };
     }
     let url;
@@ -15305,7 +14973,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     const btn = host.querySelector('[data-action="pin-state"]');
     if (!btn)
       return;
-    const anyPinned = editor?.stateSyncs.some((s2) => s2.isPinned) ?? false;
+    const anyPinned = editor?.stateSyncs.some((s) => s.isPinned) ?? false;
     btn.toggleAttribute("data-active", anyPinned);
   }
 
@@ -15455,7 +15123,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   // src/components/editor/EditorSystem/BlocActions/sub/Breadcrumb/Breadcrumb.ts
   var Metadata = { css: style_default4, template: template_default5 };
 
-  class Breadcrumb extends z2 {
+  class Breadcrumb extends z {
     _pill;
     constructor() {
       super(Metadata);
@@ -15506,9 +15174,9 @@ cms-bag-breadcrumb[data-inline="right"] {
   // src/components/editor/EditorSystem/BlocActions/compute/breadcrumbBuilder.ts
   function buildBreadcrumb(editor, editorSystem) {
     const observer = editorSystem.observer;
-    const labelled = ancestorChain(editor).map((ed2) => {
-      const label = observer?.getLabel(ed2.target.tagName.toLowerCase());
-      return label ? { editor: ed2, label } : null;
+    const labelled = ancestorChain(editor).map((ed) => {
+      const label = observer?.getLabel(ed.target.tagName.toLowerCase());
+      return label ? { editor: ed, label } : null;
     }).filter((it2) => it2 !== null);
     if (labelled.length === 0)
       return { items: [], editorByKey: new Map };
@@ -15548,9 +15216,9 @@ cms-bag-breadcrumb[data-inline="right"] {
       }
       this._el.setItems(items, {
         onPick: (key) => {
-          const ed2 = editorByKey.get(key);
-          if (ed2)
-            this._onSwitch(ed2);
+          const ed = editorByKey.get(key);
+          if (ed)
+            this._onSwitch(ed);
         },
         onHover: (key, hovered) => {
           editorByKey.get(key)?.target.classList.toggle("p9r-breadcrumb-hover", hovered);
@@ -15641,7 +15309,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     template: template_default6
   };
 
-  class InsertButton extends z2 {
+  class InsertButton extends z {
     constructor() {
       super(Metadata2);
       this.shadowRoot.querySelector(".btn").addEventListener("click", () => {
@@ -15762,20 +15430,20 @@ cms-bag-breadcrumb[data-inline="right"] {
       parent?.appendChild(this._btnAfter);
     }
     resolveTarget(editor) {
-      let ed2 = editor;
+      let ed = editor;
       let target = editor.target;
-      while (ed2 && target) {
-        const cfg = ed2.actionBarConfiguration;
+      while (ed && target) {
+        const cfg = ed.actionBarConfiguration;
         if (cfg.get("addBefore") || cfg.get("addAfter")) {
           this._target = target;
-          this._editor = ed2;
+          this._editor = ed;
           this._show = { before: !!cfg.get("addBefore"), after: !!cfg.get("addAfter") };
           return;
         }
         const parentEd = findParentEditor(target);
         if (!parentEd)
           break;
-        ed2 = parentEd;
+        ed = parentEd;
         target = parentEd.target;
       }
       this._target = editor.target;
@@ -15880,7 +15548,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   // src/components/editor/EditorSystem/BlocActions/sub/PinMenu/PinMenu.ts
   var Metadata3 = { css: style_default6, template: template_default7 };
 
-  class PinMenu extends z2 {
+  class PinMenu extends z {
     _items;
     constructor() {
       super(Metadata3);
@@ -15935,9 +15603,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     _commit(sync, change) {
       const editor = this._getEditor();
       if (editor) {
-        for (const s2 of editor.stateSyncs)
-          if (s2 !== sync && s2.isPinned)
-            s2.unpin();
+        for (const s of editor.stateSyncs)
+          if (s !== sync && s.isPinned)
+            s.unpin();
       }
       change();
       editor?.notifyPinStateChanged(sync);
@@ -16149,9 +15817,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     const clone = target.cloneNode(true);
     clone.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
     clone.classList.remove("p9r-active");
-    clone.querySelectorAll(`[${p9r.attr.EDITOR.IS_EDITOR}]`).forEach((el) => {
-      el.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
-      el.classList.remove("p9r-active");
+    clone.querySelectorAll(`[${p9r.attr.EDITOR.IS_EDITOR}]`).forEach((el2) => {
+      el2.removeAttribute(p9r.attr.EDITOR.IS_EDITOR);
+      el2.classList.remove("p9r-active");
     });
     if (position === "before")
       target.before(clone);
@@ -16173,8 +15841,8 @@ cms-bag-breadcrumb[data-inline="right"] {
     library.open((detail) => {
       if (detail.type === "template") {
         const fragment = document.createRange().createContextualFragment(detail.html);
-        Array.from(fragment.children).forEach((el) => {
-          el.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
+        Array.from(fragment.children).forEach((el2) => {
+          el2.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
         });
         target.replaceWith(fragment);
       } else if (detail.type === "snippet") {
@@ -16288,8 +15956,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       empty.textContent = "No options";
       group.appendChild(empty);
     } else {
-      for (const o of opts)
-        group.appendChild(buildRow(o, onPick));
+      for (const o2 of opts)
+        group.appendChild(buildRow(o2, onPick));
     }
     return group;
   }
@@ -16565,11 +16233,11 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
     update() {
       const rect = this._target.getBoundingClientRect();
-      const s2 = this._box.style;
-      s2.transform = `translate(${rect.left}px, ${rect.top}px)`;
-      s2.width = `${rect.width}px`;
-      s2.height = `${rect.height}px`;
-      s2.display = rect.width === 0 && rect.height === 0 ? "none" : "block";
+      const s = this._box.style;
+      s.transform = `translate(${rect.left}px, ${rect.top}px)`;
+      s.width = `${rect.width}px`;
+      s.height = `${rect.height}px`;
+      s.display = rect.width === 0 && rect.height === 0 ? "none" : "block";
     }
     setColor(color) {
       this._box.style.borderColor = color;
@@ -16602,10 +16270,10 @@ cms-bag-breadcrumb[data-inline="right"] {
     _unsubLink = null;
     constructor(host) {
       this.host = host;
-      const s2 = document.createElement("style");
-      s2.textContent = style_default3;
-      host.shadowRoot.appendChild(s2);
-      this.breadcrumb = new BreadcrumbController(host, (ed2) => switchToEditor(this, ed2));
+      const s = document.createElement("style");
+      s.textContent = style_default3;
+      host.shadowRoot.appendChild(s);
+      this.breadcrumb = new BreadcrumbController(host, (ed) => switchToEditor(this, ed));
       this.insertBtns = new InsertButtonsController((pos) => this.withCooldown(() => this.insertBtns.insertBlank(pos)));
       this.pin = new PinController(host, () => this.editor);
       this.ro = new ResizeObserver(() => reflow(this));
@@ -16668,7 +16336,7 @@ cms-bag-breadcrumb[data-inline="right"] {
       this.highlight?.dispose();
       this.highlight = null;
       this.target?.classList.remove("p9r-active");
-      document.querySelectorAll(".p9r-breadcrumb-hover").forEach((el) => el.classList.remove("p9r-breadcrumb-hover"));
+      document.querySelectorAll(".p9r-breadcrumb-hover").forEach((el2) => el2.classList.remove("p9r-breadcrumb-hover"));
       this.host.style.cssText = "visibility:hidden;opacity:0;pointer-events:none;";
       this.insertBtns.hide();
       this.ro.disconnect();
@@ -17071,7 +16739,7 @@ form[method="dialog"] {
     template: template_default9
   };
 
-  class Card extends z2 {
+  class Card extends z {
     constructor() {
       super(Metadata4);
     }
@@ -17155,23 +16823,23 @@ form[method="dialog"] {
     template: template_default10
   };
 
-  class EmptyState2 extends z2 {
+  class EmptyState2 extends z {
     constructor() {
       super(Metadata5);
     }
     static create(opts) {
-      const el = document.createElement("cms-bloc-library-empty-state");
+      const el2 = document.createElement("cms-bloc-library-empty-state");
       const iconFragment = document.createRange().createContextualFragment(opts.icon);
       const iconRoot = iconFragment.firstElementChild;
       if (iconRoot) {
         iconRoot.setAttribute("slot", "icon");
-        el.appendChild(iconRoot);
+        el2.appendChild(iconRoot);
       }
       const messageSpan = document.createElement("span");
       messageSpan.slot = "message";
       messageSpan.textContent = opts.message;
-      el.appendChild(messageSpan);
-      return el;
+      el2.appendChild(messageSpan);
+      return el2;
     }
   }
   if (!customElements.get("cms-bloc-library-empty-state")) {
@@ -17204,7 +16872,7 @@ form[method="dialog"] {
 
   // src/components/editor/EditorSystem/BlocLibrary/sections/renderSnippets.ts
   function renderSnippets({ grid, snippets, category, onPick }) {
-    const filtered = snippets.filter((s2) => (s2.category || "Default") === category);
+    const filtered = snippets.filter((s) => (s.category || "Default") === category);
     if (filtered.length === 0) {
       grid.appendChild(EmptyState2.create({
         icon: ICON_SNIPPET_MUTED,
@@ -17231,7 +16899,7 @@ form[method="dialog"] {
       return b3.label.toLowerCase().includes(q2) || b3.tag.toLowerCase().includes(q2) || desc.toLowerCase().includes(q2);
     });
     const matchingTemplates = templates.filter((t) => t.name.toLowerCase().includes(q2) || (t.description ?? "").toLowerCase().includes(q2) || (t.category ?? "").toLowerCase().includes(q2));
-    const matchingSnippets = snippets.filter((s2) => s2.name.toLowerCase().includes(q2) || (s2.description ?? "").toLowerCase().includes(q2) || s2.identifier.toLowerCase().includes(q2) || (s2.category ?? "").toLowerCase().includes(q2));
+    const matchingSnippets = snippets.filter((s) => s.name.toLowerCase().includes(q2) || (s.description ?? "").toLowerCase().includes(q2) || s.identifier.toLowerCase().includes(q2) || (s.category ?? "").toLowerCase().includes(q2));
     const total = matchingBlocs.length + matchingTemplates.length + matchingSnippets.length;
     if (total === 0) {
       grid.appendChild(EmptyState2.create({
@@ -17293,7 +16961,7 @@ form[method="dialog"] {
     template: template_default8
   };
 
-  class BlocLibrary extends z2 {
+  class BlocLibrary extends z {
     _dialog;
     _section = "blocs";
     _activeGroup = null;
@@ -17307,8 +16975,8 @@ form[method="dialog"] {
       super(Metadata6);
     }
     connectedCallback() {
-      const s2 = this.shadowRoot;
-      this._dialog = s2.querySelector("#dialog");
+      const s = this.shadowRoot;
+      this._dialog = s.querySelector("#dialog");
       this._dialog.addEventListener("click", (e) => {
         if (e.target === this._dialog)
           this.close();
@@ -17316,9 +16984,9 @@ form[method="dialog"] {
       this._dialog.addEventListener("close", () => {
         this._onInsert = null;
       });
-      s2.getElementById("tabs").addEventListener("click", (e) => this._onTabClick(e));
-      s2.getElementById("sidebar").addEventListener("click", (e) => this._onSidebarClick(e));
-      s2.getElementById("search").addEventListener("input", (e) => this._onSearchInput(e));
+      s.getElementById("tabs").addEventListener("click", (e) => this._onTabClick(e));
+      s.getElementById("sidebar").addEventListener("click", (e) => this._onSidebarClick(e));
+      s.getElementById("search").addEventListener("input", (e) => this._onSearchInput(e));
     }
     open(onInsert) {
       this._onInsert = onInsert ?? null;
@@ -17435,7 +17103,7 @@ form[method="dialog"] {
         return Array.from(editorSystem.observer.getGroups());
       if (this._section === "templates")
         return Array.from(new Set(this._templates.map((t) => t.category || "Default")));
-      return Array.from(new Set(this._snippets.map((s2) => s2.category || "Default")));
+      return Array.from(new Set(this._snippets.map((s) => s.category || "Default")));
     }
     _emitInsert(detail) {
       const onInsert = this._onInsert;
@@ -17528,16 +17196,16 @@ form[method="dialog"] {
       return false;
     }
     _pickTarget(e) {
-      const el = e.target?.closest?.(".editor-block");
-      if (!el)
+      const el2 = e.target?.closest?.(".editor-block");
+      if (!el2)
         return null;
-      if (el === this.draggedElement)
+      if (el2 === this.draggedElement)
         return null;
-      if (this.draggedElement && el.contains(this.draggedElement))
+      if (this.draggedElement && el2.contains(this.draggedElement))
         return null;
-      if (el.getAttribute(p9r.attr.ACTION.DISABLE_DRAGGING) === "true")
+      if (el2.getAttribute(p9r.attr.ACTION.DISABLE_DRAGGING) === "true")
         return null;
-      return el;
+      return el2;
     }
     handleDrop(e) {
       e.preventDefault();
@@ -17776,8 +17444,8 @@ form[method="dialog"] {
 `;
 
   // src/core/isToggable.ts
-  function isToggable(el) {
-    return "open" in el && typeof el.open === "function";
+  function isToggable(el2) {
+    return "open" in el2 && typeof el2.open === "function";
   }
 
   // src/core/editorSystem/navigationGuard.ts
@@ -17942,26 +17610,26 @@ form[method="dialog"] {
   function stripResidualChrome(root) {
     walk2(root);
   }
-  function walk2(el) {
-    for (const a2 of Array.from(el.attributes)) {
+  function walk2(el2) {
+    for (const a2 of Array.from(el2.attributes)) {
       if (a2.name.startsWith("p9r-"))
-        el.removeAttribute(a2.name);
+        el2.removeAttribute(a2.name);
     }
-    el.removeAttribute("contenteditable");
-    el.removeAttribute("tabindex");
-    el.removeAttribute("draggable");
-    if (el.classList.contains("editor-block")) {
-      el.classList.remove("editor-block");
-      if (!el.getAttribute("class"))
-        el.removeAttribute("class");
+    el2.removeAttribute("contenteditable");
+    el2.removeAttribute("tabindex");
+    el2.removeAttribute("draggable");
+    if (el2.classList.contains("editor-block")) {
+      el2.classList.remove("editor-block");
+      if (!el2.getAttribute("class"))
+        el2.removeAttribute("class");
     }
-    const style = el.getAttribute("style");
+    const style = el2.getAttribute("style");
     if (style && /pointer-events\s*:/.test(style))
-      el.removeAttribute("style");
-    for (const c of Array.from(el.children))
+      el2.removeAttribute("style");
+    for (const c of Array.from(el2.children))
       walk2(c);
-    if (el.tagName === "TEMPLATE") {
-      for (const c of Array.from(el.content.children))
+    if (el2.tagName === "TEMPLATE") {
+      for (const c of Array.from(el2.content.children))
         walk2(c);
     }
   }
@@ -18106,8 +17774,8 @@ form[method="dialog"] {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0)
       return;
-    const el = focusElement();
-    const existingTag = el?.closest(tag);
+    const el2 = focusElement();
+    const existingTag = el2?.closest(tag);
     if (existingTag) {
       const parent = existingTag.parentNode;
       const frag = document.createDocumentFragment();
@@ -18129,8 +17797,8 @@ form[method="dialog"] {
     }
   }
   function applyBlockAlignment(align) {
-    const el = focusElement();
-    const block = el?.closest("p, div, h1, h2, h3, h4, h5, h6, li");
+    const el2 = focusElement();
+    const block = el2?.closest("p, div, h1, h2, h3, h4, h5, h6, li");
     if (block)
       block.style.textAlign = align;
   }
@@ -18138,9 +17806,9 @@ form[method="dialog"] {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed)
       return;
-    const el = focusElement();
-    if (el && el.tagName === "SPAN" && el.textContent === sel.toString()) {
-      el.style[prop] = value;
+    const el2 = focusElement();
+    if (el2 && el2.tagName === "SPAN" && el2.textContent === sel.toString()) {
+      el2.style[prop] = value;
       return;
     }
     const span = document.createElement("span");
@@ -18148,8 +17816,8 @@ form[method="dialog"] {
     wrapWithElement(span);
   }
   function removeInlineStyle(prop) {
-    const el = focusElement();
-    const span = el?.closest("span");
+    const el2 = focusElement();
+    const span = el2?.closest("span");
     if (!span)
       return;
     span.style[prop] = "";
@@ -18161,19 +17829,19 @@ form[method="dialog"] {
     }
   }
   function queryCommandState(cmd) {
-    const el = focusElement();
-    if (!el)
+    const el2 = focusElement();
+    if (!el2)
       return false;
-    const style = window.getComputedStyle(el);
+    const style = window.getComputedStyle(el2);
     switch (cmd) {
       case "bold":
-        return style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700 || !!el.closest("b, strong");
+        return style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700 || !!el2.closest("b, strong");
       case "italic":
-        return style.fontStyle === "italic" || !!el.closest("i, em");
+        return style.fontStyle === "italic" || !!el2.closest("i, em");
       case "underline":
-        return style.textDecorationLine.includes("underline") || !!el.closest("u");
+        return style.textDecorationLine.includes("underline") || !!el2.closest("u");
       case "strikeThrough":
-        return style.textDecorationLine.includes("line-through") || !!el.closest("s, strike");
+        return style.textDecorationLine.includes("line-through") || !!el2.closest("s, strike");
       case "justifyLeft":
         return style.textAlign === "left" || style.textAlign === "start";
       case "justifyCenter":
@@ -18185,25 +17853,25 @@ form[method="dialog"] {
     }
   }
   function getCurrentFontSize() {
-    const el = focusElement();
-    if (!el)
+    const el2 = focusElement();
+    if (!el2)
       return 16;
-    return Math.round(parseFloat(window.getComputedStyle(el).fontSize));
+    return Math.round(parseFloat(window.getComputedStyle(el2).fontSize));
   }
   function getCurrentColor() {
-    const el = focusElement();
-    if (!el)
+    const el2 = focusElement();
+    if (!el2)
       return null;
-    return window.getComputedStyle(el).color;
+    return window.getComputedStyle(el2).color;
   }
   function insertList(tag) {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0)
       return;
-    const el = focusElement();
-    if (!el)
+    const el2 = focusElement();
+    if (!el2)
       return;
-    const editable = el.closest("[contenteditable]");
+    const editable = el2.closest("[contenteditable]");
     if (!editable)
       return;
     const list = document.createElement(tag);
@@ -18230,8 +17898,8 @@ form[method="dialog"] {
     wrapWithElement(a2);
   }
   function removeLinkAtSelection() {
-    const el = focusElement();
-    const a2 = el?.closest("a");
+    const el2 = focusElement();
+    const a2 = el2?.closest("a");
     if (!a2)
       return;
     const parent = a2.parentNode;
@@ -18244,8 +17912,8 @@ form[method="dialog"] {
     if (!r)
       return null;
     const node = r.startContainer;
-    const el = node.nodeType === 1 ? node : node.parentElement;
-    return el?.closest("a")?.getAttribute("href") || null;
+    const el2 = node.nodeType === 1 ? node : node.parentElement;
+    return el2?.closest("a")?.getAttribute("href") || null;
   }
 
   // src/components/editor/RichTextBar/sanitizePastedHtml.ts
@@ -18342,16 +18010,16 @@ form[method="dialog"] {
       return [document.createTextNode(node.nodeValue ?? "")];
     if (node.nodeType !== ELEMENT_NODE)
       return [];
-    const el = node;
-    const tag = el.tagName.toLowerCase();
+    const el2 = node;
+    const tag = el2.tagName.toLowerCase();
     if (DROP_TAGS.has(tag))
       return [];
-    const children = cleanChildren(el);
+    const children = cleanChildren(el2);
     const mapped = RENAME_TAGS[tag] ?? tag;
     if (!KEEP_TAGS.has(mapped))
       return children;
     const out = document.createElement(mapped);
-    copyAllowedAttributes(el, out, mapped);
+    copyAllowedAttributes(el2, out, mapped);
     if ((mapped === "span" || mapped === "a") && out.attributes.length === 0)
       return children;
     for (const child of children)
@@ -18582,20 +18250,20 @@ form[method="dialog"] {
         return null;
       return direction === "prev" ? all[idx - 1] ?? null : all[idx + 1] ?? null;
     }
-    _focusWithCaret(el, position) {
-      el.focus();
+    _focusWithCaret(el2, position) {
+      el2.focus();
       const sel = window.getSelection();
       if (!sel)
         return;
       const range = document.createRange();
-      if (el.innerHTML === "") {
-        range.setStart(el, 0);
+      if (el2.innerHTML === "") {
+        range.setStart(el2, 0);
         range.collapse(true);
       } else if (position === "start") {
-        range.selectNodeContents(el);
+        range.selectNodeContents(el2);
         range.collapse(true);
       } else {
-        range.selectNodeContents(el);
+        range.selectNodeContents(el2);
         range.collapse(false);
       }
       sel.removeAllRanges();
@@ -18799,16 +18467,16 @@ form[method="dialog"] {
       item.addEventListener("keydown", this.onKeyDown);
       item.addEventListener("input", this.onInput);
     }
-    focusAtStart(el) {
+    focusAtStart(el2) {
       requestAnimationFrame(() => {
-        if (!el.isConnected)
+        if (!el2.isConnected)
           return;
-        el.focus();
+        el2.focus();
         const sel = window.getSelection();
         if (!sel)
           return;
         const range = document.createRange();
-        range.selectNodeContents(el);
+        range.selectNodeContents(el2);
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
@@ -18881,9 +18549,9 @@ form[method="dialog"] {
       this.workingElement = host;
       this._registerEditors();
       const initialAssigned = slot.assignedElements({ flatten: true });
-      initialAssigned.forEach((el) => {
-        this.make_it_editor(el);
-        el.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
+      initialAssigned.forEach((el2) => {
+        this.make_it_editor(el2);
+        el2.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
       });
       const callback = (mutationsList) => {
         const allAdded = new Set;
@@ -18933,11 +18601,11 @@ form[method="dialog"] {
       });
       slot.addEventListener("slotchange", () => {
         const current = slot.assignedElements({ flatten: true });
-        current.forEach((el) => {
-          if (el.getAttribute(p9r.attr.EDITOR.IS_EDITOR))
+        current.forEach((el2) => {
+          if (el2.getAttribute(p9r.attr.EDITOR.IS_EDITOR))
             return;
-          this.make_it_editor(el);
-          el.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
+          this.make_it_editor(el2);
+          el2.querySelectorAll("*").forEach((child) => this.make_it_editor(child));
         });
       });
     }
@@ -19037,7 +18705,7 @@ form[method="dialog"] {
       });
       this.groups.add(element.group || "default");
       const existingElements = this.workingElement.querySelectorAll(element.tag);
-      existingElements.forEach((el) => this.make_it_editor(el));
+      existingElements.forEach((el2) => this.make_it_editor(el2));
     }
     register_editor_opaque(element) {
       this.opaqueTags.add(element.tag);
@@ -19067,7 +18735,7 @@ form[method="dialog"] {
           visible: false
         });
         const existingElements = this.workingElement.querySelectorAll(t);
-        existingElements.forEach((el) => this.make_it_editor(el));
+        existingElements.forEach((el2) => this.make_it_editor(el2));
       });
     }
     make_it_editor(node) {
@@ -19080,19 +18748,19 @@ form[method="dialog"] {
       const tag = node.tagName.toLowerCase();
       if (!this.editors.has(tag))
         return;
-      const cl2 = this.editors.get(tag)?.cl;
-      if (cl2) {
+      const cl = this.editors.get(tag)?.cl;
+      if (cl) {
         try {
-          const editor = new cl2(node);
+          const editor = new cl(node);
           editor.viewEditor();
           if (getEditorContext().mode === "view")
             editor.viewClient();
         } catch (err) {
           if (!(err instanceof NearestElementRequire))
             throw err;
-          document.compIdentifierToEditor?.forEach((ed2, id) => {
-            if (ed2.target === node) {
-              ed2.dispose?.();
+          document.compIdentifierToEditor?.forEach((ed, id) => {
+            if (ed.target === node) {
+              ed.dispose?.();
               document.compIdentifierToEditor.delete(id);
             }
           });
@@ -19113,17 +18781,17 @@ form[method="dialog"] {
   async function waitForScripts(ele) {
     const scriptSlot = ele.shadowRoot?.querySelector('slot[name="script"]');
     const scripts = scriptSlot.assignedElements();
-    const loaders = scripts.map((s2) => {
-      if (!s2.src || s2.dataset.loaded)
+    const loaders = scripts.map((s) => {
+      if (!s.src || s.dataset.loaded)
         return Promise.resolve(true);
       return new Promise((resolve) => {
         const done = () => {
-          s2.dataset.loaded = "true";
+          s.dataset.loaded = "true";
           resolve(true);
         };
-        s2.addEventListener("load", done, { once: true });
-        s2.addEventListener("error", () => resolve(false), { once: true });
-        if (performance.getEntriesByName(s2.src).length > 0)
+        s.addEventListener("load", done, { once: true });
+        s.addEventListener("error", () => resolve(false), { once: true });
+        if (performance.getEntriesByName(s.src).length > 0)
           done();
       });
     });
@@ -19209,14 +18877,14 @@ form[method="dialog"] {
         return true;
       if (nodes.length !== 1 || nodes[0].nodeType !== Node.ELEMENT_NODE)
         return false;
-      const el = nodes[0];
-      if (el.tagName !== "P")
+      const el2 = nodes[0];
+      if (el2.tagName !== "P")
         return false;
-      const text = (el.textContent ?? "").trim();
+      const text = (el2.textContent ?? "").trim();
       if (text !== "")
         return false;
-      const onlyBr = el.children.length === 1 && el.children[0].tagName === "BR";
-      return el.children.length === 0 || onlyBr;
+      const onlyBr = el2.children.length === 1 && el2.children[0].tagName === "BR";
+      return el2.children.length === 0 || onlyBr;
     }
     async _maybePickTemplate() {
       const picker = document.createElement("cms-template-picker");
@@ -19510,8 +19178,8 @@ dialog::backdrop {
       r?.(html);
     }
   }
-  function escapeHtml(s2) {
-    return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   if (!customElements.get("cms-template-picker")) {
     customElements.define("cms-template-picker", TemplatePicker);
@@ -19641,7 +19309,7 @@ button span {
 :host([data-mode="view"]) [data-action="switch-mode"] .icon-view { display: none; }`;
 
   // src/components/editor/EditorSystem/FloatingToolbar/FloatingToolbar.ts
-  class FloatingToolbar extends z2 {
+  class FloatingToolbar extends z {
     _startX = 0;
     _startY = 0;
     constructor() {
@@ -20304,7 +19972,7 @@ dialog::backdrop {
 `;
 
   // src/components/media/CardMedia/CardMedia.ts
-  class CardMedia extends z2 {
+  class CardMedia extends z {
     constructor() {
       super({
         css: style_default13,
@@ -20471,11 +20139,11 @@ dialog::backdrop {
       return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   }
-  function escapeHtml2(s2) {
-    return s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  function escapeHtml2(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
-  function escapeAttr2(s2) {
-    return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  function escapeAttr2(s) {
+    return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
   function variantUrl(item, _width, _height) {
     const url = item.absoluteURL ?? "";
@@ -20548,7 +20216,7 @@ dialog::backdrop {
   }
 
   // src/components/editor/MediaCenter/MediaCenter.ts
-  class MediaCenter extends z2 {
+  class MediaCenter extends z {
     _dialog = null;
     _grid = null;
     _btnSelect = null;
@@ -20565,29 +20233,29 @@ dialog::backdrop {
       });
     }
     connectedCallback() {
-      const s2 = this.shadowRoot;
-      this._dialog = s2.querySelector("dialog");
-      this._grid = s2.getElementById("grid");
-      this._btnSelect = s2.getElementById("btnSelect");
-      s2.getElementById("btnClose").addEventListener("click", () => this._dialog?.close());
-      s2.getElementById("btnCancel").addEventListener("click", () => this._dialog?.close());
+      const s = this.shadowRoot;
+      this._dialog = s.querySelector("dialog");
+      this._grid = s.getElementById("grid");
+      this._btnSelect = s.getElementById("btnSelect");
+      s.getElementById("btnClose").addEventListener("click", () => this._dialog?.close());
+      s.getElementById("btnCancel").addEventListener("click", () => this._dialog?.close());
       this._dialog.addEventListener("click", (e) => {
         if (e.target === this._dialog)
           this._dialog?.close();
       });
-      s2.getElementById("btnCreateFolder").addEventListener("click", () => this._openNewFolder());
-      const nfBackdrop = s2.getElementById("nf-backdrop");
-      const nfInput = s2.getElementById("nf-input");
-      s2.getElementById("nf-cancel").addEventListener("click", () => nfBackdrop.classList.remove("open"));
-      s2.getElementById("nf-confirm").addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
+      s.getElementById("btnCreateFolder").addEventListener("click", () => this._openNewFolder());
+      const nfBackdrop = s.getElementById("nf-backdrop");
+      const nfInput = s.getElementById("nf-input");
+      s.getElementById("nf-cancel").addEventListener("click", () => nfBackdrop.classList.remove("open"));
+      s.getElementById("nf-confirm").addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
       nfInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter")
           this._createFolder(nfInput, nfBackdrop);
         if (e.key === "Escape")
           nfBackdrop.classList.remove("open");
       });
-      const fileInput = s2.getElementById("file-input");
-      s2.getElementById("btnUpload").addEventListener("click", () => fileInput.click());
+      const fileInput = s.getElementById("file-input");
+      s.getElementById("btnUpload").addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", async () => {
         if (!fileInput.files?.length)
           return;
@@ -20615,7 +20283,7 @@ dialog::backdrop {
           return;
         this._confirmSelection();
       });
-      s2.getElementById("breadcrumb").addEventListener("click", (e) => {
+      s.getElementById("breadcrumb").addEventListener("click", (e) => {
         const target = e.target;
         if (!target.classList.contains("bc-item"))
           return;
@@ -20624,8 +20292,8 @@ dialog::backdrop {
         this._breadcrumb = this._breadcrumb.slice(0, index + 1);
         this._navigateTo(folder);
       });
-      const container = s2.querySelector(".modal-container");
-      const overlay = s2.getElementById("drop-overlay");
+      const container = s.querySelector(".modal-container");
+      const overlay = s.getElementById("drop-overlay");
       container.addEventListener("dragenter", (e) => {
         if (e.dataTransfer?.types.includes("Files")) {
           e.preventDefault();
@@ -20682,7 +20350,7 @@ dialog::backdrop {
       }
     }
     _select(card, id) {
-      this._grid.querySelectorAll("p9r-card-media.selected").forEach((el) => el.classList.remove("selected"));
+      this._grid.querySelectorAll("p9r-card-media.selected").forEach((el2) => el2.classList.remove("selected"));
       card.classList.add("selected");
       this._selectedItem = this._items.find((i) => i.id === id) || null;
       this._updateSelectButton();
@@ -20713,9 +20381,9 @@ dialog::backdrop {
       this._refresh();
     }
     _openNewFolder() {
-      const s2 = this.shadowRoot;
-      const backdrop = s2.getElementById("nf-backdrop");
-      const input = s2.getElementById("nf-input");
+      const s = this.shadowRoot;
+      const backdrop = s.getElementById("nf-backdrop");
+      const input = s.getElementById("nf-input");
       input.value = "";
       backdrop.classList.add("open");
       setTimeout(() => input.focus(), 50);
@@ -21732,16 +21400,16 @@ button.active svg {
   }
   // src/core/editorSystem/extensions/schemaScalars.ts
   function flattenScalars(schema, prefix = "") {
-    const s2 = unwrap(schema);
-    if (!s2)
+    const s = unwrap(schema);
+    if (!s)
       return [];
-    if (Array.isArray(s2.enum) && s2.enum.length > 0) {
-      return [{ path: prefix, label: leafLabel(prefix), type: enumTypeOf(s2) }];
+    if (Array.isArray(s.enum) && s.enum.length > 0) {
+      return [{ path: prefix, label: leafLabel(prefix), type: enumTypeOf(s) }];
     }
-    switch (s2.type) {
+    switch (s.type) {
       case "object": {
         const out = [];
-        for (const [k2, v] of Object.entries(s2.properties ?? {})) {
+        for (const [k2, v] of Object.entries(s.properties ?? {})) {
           out.push(...flattenScalars(v, prefix ? `${prefix}.${k2}` : k2));
         }
         return out;
@@ -21757,7 +21425,7 @@ button.active svg {
       case "number":
       case "boolean":
       case "null":
-        return [{ path: prefix, label: leafLabel(prefix), type: s2.type }];
+        return [{ path: prefix, label: leafLabel(prefix), type: s.type }];
       default:
         return [];
     }
@@ -21787,10 +21455,10 @@ button.active svg {
     const dot = path.lastIndexOf(".");
     return dot >= 0 ? path.slice(dot + 1) : path;
   }
-  function enumTypeOf(s2) {
-    if (s2.type)
-      return s2.type;
-    const first = s2.enum?.[0];
+  function enumTypeOf(s) {
+    if (s.type)
+      return s.type;
+    const first = s.enum?.[0];
     return typeof first === "string" ? "string" : typeof first === "number" ? "number" : typeof first === "boolean" ? "boolean" : "string";
   }
 
@@ -22002,8 +21670,8 @@ button.active svg {
     const range = self.selection.range;
     if (range) {
       const anchor = range.commonAncestorContainer;
-      const el = anchor.nodeType === 1 ? anchor : anchor.parentElement;
-      const editable = el?.closest?.('[contenteditable="true"]');
+      const el2 = anchor.nodeType === 1 ? anchor : anchor.parentElement;
+      const editable = el2?.closest?.('[contenteditable="true"]');
       if (editable && path.includes(editable))
         return;
     }
@@ -22026,7 +21694,7 @@ button.active svg {
     "warning-strong"
   ];
 
-  class RichTextBar extends z2 {
+  class RichTextBar extends z {
     selection = new SelectionTracker;
     interacting = false;
     pageLink = null;
@@ -22346,7 +22014,7 @@ button.active svg {
     template: template_default17
   };
 
-  class Snippet extends z2 {
+  class Snippet extends z {
     _root;
     constructor() {
       super(SnippetMetadata);
@@ -22640,7 +22308,7 @@ button.active svg {
 `;
 
   // src/components/media/CropSystem/CropSystem.ts
-  class CropSystem extends z2 {
+  class CropSystem extends z {
     constructor() {
       super({
         css: style_default17,
@@ -22933,7 +22601,7 @@ button.active svg {
 `;
 
   // src/components/media/DetailMedia/DetailMedia.ts
-  class DetailMedia extends z2 {
+  class DetailMedia extends z {
     constructor() {
       super({
         css: style_default18,
@@ -23396,8 +23064,8 @@ button.active svg {
 `;
 
   // src/components/media/GridMedia/features/context-menu.ts
-  function setupContextMenu(s2, callbacks) {
-    const menu = s2.getElementById("ctx-menu");
+  function setupContextMenu(s, callbacks) {
+    const menu = s.getElementById("ctx-menu");
     let activeItem = null;
     menu.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-action]");
@@ -23422,11 +23090,11 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/rename.ts
-  function setupRename(s2, callbacks) {
-    const backdrop = s2.getElementById("rename-backdrop");
-    const input = s2.getElementById("rename-input");
-    const confirmBtn = s2.getElementById("rename-confirm");
-    const cancelBtn = s2.getElementById("rename-cancel");
+  function setupRename(s, callbacks) {
+    const backdrop = s.getElementById("rename-backdrop");
+    const input = s.getElementById("rename-input");
+    const confirmBtn = s.getElementById("rename-confirm");
+    const cancelBtn = s.getElementById("rename-cancel");
     let currentItem = null;
     const hide = () => {
       backdrop.classList.remove("visible");
@@ -23466,11 +23134,11 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/new-folder.ts
-  function setupNewFolder(host, s2, callbacks) {
-    const backdrop = s2.getElementById("nf-backdrop");
-    const input = s2.getElementById("nf-input");
-    const confirmBtn = s2.getElementById("nf-confirm");
-    const cancelBtn = s2.getElementById("nf-cancel");
+  function setupNewFolder(host, s, callbacks) {
+    const backdrop = s.getElementById("nf-backdrop");
+    const input = s.getElementById("nf-input");
+    const confirmBtn = s.getElementById("nf-confirm");
+    const cancelBtn = s.getElementById("nf-cancel");
     const hide = () => backdrop.classList.remove("visible");
     const show = () => {
       input.value = "";
@@ -23505,16 +23173,16 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/drag-drop.ts
-  function setupDragDrop(s2, callbacks) {
-    const fileInput = s2.getElementById("file-input");
-    const dropOverlay = s2.getElementById("drop-overlay");
+  function setupDragDrop(s, callbacks) {
+    const fileInput = s.getElementById("file-input");
+    const dropOverlay = s.getElementById("drop-overlay");
     let dragCounter = 0;
     let internalDrag = false;
     fileInput.addEventListener("change", () => {
       if (fileInput.files?.length)
         callbacks.onFiles(fileInput.files);
     });
-    s2.getElementById("grid").addEventListener("dragstart", () => {
+    s.getElementById("grid").addEventListener("dragstart", () => {
       internalDrag = true;
     });
     document.addEventListener("dragend", () => {
@@ -23573,9 +23241,9 @@ button.active svg {
     const size = item.size ? formatSize(item.size) : "";
     const dims = item.width && item.height ? `${item.width}×${item.height}` : "";
     const mediaUrl = item.absoluteURL ?? "";
-    const el = document.createElement("div");
-    el.slot = "fields";
-    el.innerHTML = `
+    const el2 = document.createElement("div");
+    el2.slot = "fields";
+    el2.innerHTML = `
         <div class="detail-field">
             <label>Name</label>
             <input type="text" id="detail-label" value="${escapeAttr2(item.label)}">
@@ -23608,7 +23276,7 @@ button.active svg {
             </div>
         </div>
     `;
-    const copyBtn = el.querySelector("#btn-copy");
+    const copyBtn = el2.querySelector("#btn-copy");
     copyBtn.addEventListener("click", () => {
       navigator.clipboard.writeText(mediaUrl);
       copyBtn.innerHTML = ICON_CHECK;
@@ -23616,20 +23284,20 @@ button.active svg {
         copyBtn.innerHTML = ICON_COPY;
       }, 1500);
     });
-    return el;
+    return el2;
   }
   function buildActions(item) {
     const canReplace = item.type !== "folder";
-    const el = document.createElement("div");
-    el.slot = "actions";
-    el.innerHTML = `
+    const el2 = document.createElement("div");
+    el2.slot = "actions";
+    el2.innerHTML = `
         <div class="detail-actions">
             <p9r-button id="btn-save" variant="filled" color="primary">Save</p9r-button>
             ${canReplace ? `<p9r-button id="btn-replace" variant="outlined">Replace</p9r-button>` : ""}
             <p9r-button id="btn-delete" variant="ghost" color="danger">Delete</p9r-button>
         </div>
     `;
-    return el;
+    return el2;
   }
 
   // src/components/media/GridMedia/features/detail/setup.ts
@@ -23686,25 +23354,25 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/setup.ts
-  function setupFeatures(host, s2) {
+  function setupFeatures(host, s) {
     const refresh2 = () => host._refresh();
-    const ctxMenu = setupContextMenu(s2, {
+    const ctxMenu = setupContextMenu(s, {
       onRename: (item) => rename.open(item),
       onDelete: (id) => host._confirmDelete(id)
     });
-    const rename = setupRename(s2, {
+    const rename = setupRename(s, {
       onApply: async (id, name) => {
         await renameItem(id, name);
         refresh2();
       }
     });
-    setupNewFolder(host, s2, {
+    setupNewFolder(host, s, {
       onCreate: async (name) => {
         await createFolder(name, host._folder);
         refresh2();
       }
     });
-    const dragDrop = setupDragDrop(s2, {
+    const dragDrop = setupDragDrop(s, {
       onFiles: async (files) => {
         await uploadFiles(files, host._folder);
         refresh2();
@@ -23735,8 +23403,8 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/events/grid.ts
-  function wireGrid(host, s2, ctxMenu, detail) {
-    const grid = s2.getElementById("grid");
+  function wireGrid(host, s, ctxMenu, detail) {
+    const grid = s.getElementById("grid");
     grid.addEventListener("click", (e) => {
       const card = e.target.closest("p9r-card-media");
       if (!card)
@@ -23764,8 +23432,8 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/events/breadcrumb.ts
-  function wireBreadcrumb(host, s2) {
-    s2.getElementById("breadcrumb").addEventListener("click", (e) => {
+  function wireBreadcrumb(host, s) {
+    s.getElementById("breadcrumb").addEventListener("click", (e) => {
       const target = e.target;
       if (!target.classList.contains("bc-item"))
         return;
@@ -23777,7 +23445,7 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/GridMedia.ts
-  class GridMedia extends z2 {
+  class GridMedia extends z {
     _folder = null;
     _breadcrumb = [];
     _items = [];
@@ -23794,11 +23462,11 @@ button.active svg {
       return this.shadowRoot.getElementById("crop");
     }
     connectedCallback() {
-      const s2 = this.shadowRoot;
+      const s = this.shadowRoot;
       this._folder = new URL(window.location.href).searchParams.get("folder");
-      const f2 = setupFeatures(this, s2);
-      wireGrid(this, s2, f2.ctxMenu, f2.detail);
-      wireBreadcrumb(this, s2);
+      const f2 = setupFeatures(this, s);
+      wireGrid(this, s, f2.ctxMenu, f2.detail);
+      wireBreadcrumb(this, s);
       this.upload = () => f2.dragDrop.trigger();
       if (this._folder) {
         resolveBreadcrumbTrail(this._folder).then((trail) => {
@@ -24016,10 +23684,10 @@ button.active svg {
       return this.getAttribute("redirect");
     }
     get target() {
-      const val2 = this.getAttribute("target");
-      if (!val2)
+      const val = this.getAttribute("target");
+      if (!val)
         throw new Error("CmsForm target attribute should be set");
-      return val2;
+      return val;
     }
     get method() {
       return this.getAttribute("method");
@@ -24217,7 +23885,7 @@ button.active svg {
       this._debounceId = window.setTimeout(() => this._validate(), wait);
     };
     _fields() {
-      return Array.from(this.querySelectorAll("[name]")).filter((el) => typeof el.value === "string");
+      return Array.from(this.querySelectorAll("[name]")).filter((el2) => typeof el2.value === "string");
     }
     async _validate() {
       const url = this.getAttribute("url");
@@ -24267,266 +23935,15 @@ button.active svg {
         detail: result
       }));
     }
-    _setValidity(el, msg) {
-      const fn2 = el.setCustomValidity;
+    _setValidity(el2, msg) {
+      const fn2 = el2.setCustomValidity;
       if (typeof fn2 === "function")
-        fn2.call(el, msg);
+        fn2.call(el2, msg);
     }
   }
   if (!customElements.get("cms-validate")) {
     customElements.define("cms-validate", CmsValidate);
   }
-
-  // src/components/data/fetch/templates.ts
-  function collectTemplates(host) {
-    const map = {};
-    for (const child of Array.from(host.children)) {
-      if (child.tagName !== "TEMPLATE")
-        continue;
-      const slot = child.getAttribute("slot") || "default";
-      if (!map[slot])
-        map[slot] = child;
-    }
-    return map;
-  }
-
-  // src/components/data/fetch/state.ts
-  function isEmpty(data) {
-    if (data === null || data === undefined)
-      return true;
-    if (Array.isArray(data))
-      return data.length === 0;
-    if (typeof data === "object")
-      return Object.keys(data).length === 0;
-    return false;
-  }
-
-  // src/components/data/fetch/fetcher.ts
-  async function runFetch(url, signal) {
-    try {
-      const u = buildRequestUrl(url);
-      const res = await fetch(u, { headers: { Accept: "application/json" }, signal });
-      if (!res.ok)
-        return { kind: "error", error: new Error(`HTTP ${res.status}`) };
-      const data = await res.json();
-      return { kind: "success", data };
-    } catch (error) {
-      if (error.name === "AbortError")
-        return { kind: "aborted" };
-      return { kind: "error", error };
-    }
-  }
-
-  // src/components/data/fetch/pathHelpers.ts
-  function resolve(obj, path) {
-    return path.split(".").reduce((acc, k2) => acc != null ? acc[k2] : undefined, obj);
-  }
-
-  // src/components/data/fetch/interpolate.ts
-  function interpolateNode(node, context) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const original = node.textContent ?? "";
-      const replaced = interpolateString(original, context);
-      if (replaced !== original)
-        node.textContent = replaced;
-      return;
-    }
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      const el = node;
-      if (el.tagName === "TEMPLATE")
-        return;
-      if (el.tagName === "INNER-HTML" && tryRawHtmlInject(el, context))
-        return;
-      for (const attr of Array.from(el.attributes)) {
-        const replaced = interpolateString(attr.value, context);
-        if (replaced !== attr.value)
-          el.setAttribute(attr.name, replaced);
-      }
-      if (el.tagName === "CMS-FETCH")
-        return;
-    }
-    for (const child of Array.from(node.childNodes)) {
-      interpolateNode(child, context);
-    }
-  }
-  function tryRawHtmlInject(el, context) {
-    const text = el.textContent?.trim() ?? "";
-    const m = text.match(/^\{\{\s*([\w.]+)\s*\}\}$/);
-    if (!m)
-      return false;
-    el.innerHTML = String(resolve(context, m[1]) ?? "");
-    el.replaceWith(...Array.from(el.childNodes));
-    return true;
-  }
-  function interpolateString(str, context) {
-    return str.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, path) => {
-      if (path === "value") {
-        if (context !== null && typeof context === "object" && "value" in context) {
-          return stringify(context.value);
-        }
-        return stringify(context);
-      }
-      return stringify(resolve(context, path));
-    });
-  }
-  function stringify(value) {
-    return String(value ?? "");
-  }
-
-  // src/components/data/fetch/render.ts
-  function processTemplate(tpl, context) {
-    const forKey = tpl.getAttribute("for");
-    const out = document.createDocumentFragment();
-    if (forKey === null) {
-      const clone = tpl.content.cloneNode(true);
-      renderFragment(clone, context);
-      out.appendChild(clone);
-      return out;
-    }
-    const items = forKey === "." ? context : resolve(context, forKey);
-    if (!Array.isArray(items)) {
-      console.warn(`cms-fetch: <template for="${forKey}"> expected an array, got`, items);
-      return out;
-    }
-    for (const item of items) {
-      const clone = tpl.content.cloneNode(true);
-      renderFragment(clone, item);
-      out.appendChild(clone);
-    }
-    return out;
-  }
-  function renderFragment(root, context) {
-    const templates = [];
-    collectDirectTemplates(root, templates);
-    for (const tpl of templates) {
-      tpl.parentNode?.replaceChild(processTemplate(tpl, context), tpl);
-    }
-    interpolateNode(root, context);
-  }
-  function collectDirectTemplates(root, out) {
-    for (const child of Array.from(root.childNodes)) {
-      if (child.nodeType !== Node.ELEMENT_NODE)
-        continue;
-      const el = child;
-      if (el.tagName === "TEMPLATE") {
-        out.push(el);
-        continue;
-      }
-      if (el.tagName === "CMS-FETCH")
-        continue;
-      collectDirectTemplates(el, out);
-    }
-  }
-
-  // src/components/data/fetch/stamp.ts
-  function stampSiblingsOf(host, tpl, context, previous) {
-    clearStamped(previous);
-    const parent = host.parentNode;
-    if (!parent)
-      return [];
-    const fragment = processTemplate(tpl, context);
-    const newNodes = Array.from(fragment.childNodes);
-    parent.insertBefore(fragment, host);
-    return newNodes;
-  }
-  function clearStamped(nodes) {
-    for (const n2 of nodes)
-      n2.parentNode?.removeChild(n2);
-  }
-
-  // src/components/data/fetch/FetchComponent.ts
-  class FetchComponent extends HTMLElement {
-    static get observedAttributes() {
-      return ["url", "reload-on"];
-    }
-    _templates = {};
-    _stamped = [];
-    _reloadEvents = [];
-    _abort = null;
-    _onReloadEvent = () => {
-      if (this.isConnected)
-        this.reload();
-    };
-    connectedCallback() {
-      this._refreshReloadListeners();
-      document.addEventListener("cms-fetch:reload", this._onReloadEvent);
-      if (this._templates.default) {
-        this.reload();
-        return;
-      }
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", () => this._init(), { once: true });
-      } else {
-        this._init();
-      }
-    }
-    disconnectedCallback() {
-      clearStamped(this._stamped);
-      this._stamped = [];
-      for (const ev of this._reloadEvents)
-        document.removeEventListener(ev, this._onReloadEvent);
-      document.removeEventListener("cms-fetch:reload", this._onReloadEvent);
-      this._reloadEvents = [];
-      this._abort?.abort();
-      this._abort = null;
-    }
-    attributeChangedCallback(name, oldVal, newVal) {
-      if (oldVal === newVal)
-        return;
-      if (name === "reload-on") {
-        this._refreshReloadListeners();
-        return;
-      }
-      if (this.isConnected)
-        this.reload();
-    }
-    reload() {
-      this._run();
-    }
-    _init() {
-      this._templates = collectTemplates(this);
-      if (!this._templates.default) {
-        console.warn("cms-fetch: missing <template> child (default slot)");
-        return;
-      }
-      this.reload();
-    }
-    _refreshReloadListeners() {
-      for (const ev of this._reloadEvents)
-        document.removeEventListener(ev, this._onReloadEvent);
-      this._reloadEvents = (this.getAttribute("reload-on") || "").split(/\s+/).filter(Boolean);
-      for (const ev of this._reloadEvents)
-        document.addEventListener(ev, this._onReloadEvent);
-    }
-    async _run() {
-      const urlAttr = this.getAttribute("url");
-      if (!urlAttr || !this._templates.default)
-        return;
-      this._abort?.abort();
-      this._abort = new AbortController;
-      const signal = this._abort.signal;
-      this._renderSlot("loading", null);
-      this.dispatchEvent(new BubblesEvent("fetch:loading"));
-      const outcome = await runFetch(urlAttr, signal);
-      if (signal.aborted || outcome.kind === "aborted")
-        return;
-      if (outcome.kind === "success") {
-        const slot = isEmpty(outcome.data) && this._templates.empty ? "empty" : "default";
-        this._renderSlot(slot, outcome.data);
-        this.dispatchEvent(new CustomEvent("fetch:data", { bubbles: true, composed: true, detail: outcome.data }));
-      } else {
-        this._renderSlot("error", outcome.error);
-        this.dispatchEvent(new CustomEvent("fetch:error", { bubbles: true, composed: true, detail: outcome.error }));
-      }
-    }
-    _renderSlot(slot, context) {
-      const tpl = this._templates[slot];
-      if (!tpl)
-        return;
-      this._stamped = stampSiblingsOf(this, tpl, context, this._stamped);
-    }
-  }
-  customElements.define("cms-fetch", FetchComponent);
 
   // src/components/data/JsonEditor/normalize.ts
   function normalize(schema) {
@@ -24608,24 +24025,24 @@ button.active svg {
 
   // src/components/data/JsonEditor/initFromSchema.ts
   function initFromSchema(schema) {
-    const s2 = normalize(schema);
-    if (!s2)
+    const s = normalize(schema);
+    if (!s)
       return null;
-    if (Array.isArray(s2.enum) && s2.enum.length > 0)
-      return s2.enum[0];
-    if (s2.oneOf?.length)
-      return initFromSchema(s2.oneOf[0] ?? null);
-    if (s2.anyOf?.length)
-      return initFromSchema(s2.anyOf[0] ?? null);
-    switch (s2.type) {
+    if (Array.isArray(s.enum) && s.enum.length > 0)
+      return s.enum[0];
+    if (s.oneOf?.length)
+      return initFromSchema(s.oneOf[0] ?? null);
+    if (s.anyOf?.length)
+      return initFromSchema(s.anyOf[0] ?? null);
+    switch (s.type) {
       case "object": {
         const out = {};
-        for (const [k2, v] of Object.entries(s2.properties ?? {}))
+        for (const [k2, v] of Object.entries(s.properties ?? {}))
           out[k2] = initFromSchema(v);
         return out;
       }
       case "array":
-        return s2.items ? [initFromSchema(s2.items)] : [];
+        return s.items ? [initFromSchema(s.items)] : [];
       case "string":
         return "";
       case "integer":
@@ -24691,8 +24108,8 @@ button.active svg {
     }
     function renumber() {
       const rows = list.querySelectorAll(".json-array__index");
-      rows.forEach((el, i) => {
-        el.textContent = String(i + 1);
+      rows.forEach((el2, i) => {
+        el2.textContent = String(i + 1);
       });
     }
     for (const v of items)
@@ -24794,10 +24211,10 @@ button.active svg {
       read: () => activeRead()
     };
   }
-  function variantLabel(s2, idx) {
-    if (s2.type)
-      return `${idx + 1}. ${s2.type}`;
-    if (s2.enum?.length)
+  function variantLabel(s, idx) {
+    if (s.type)
+      return `${idx + 1}. ${s.type}`;
+    if (s.enum?.length)
       return `${idx + 1}. enum`;
     return `Variant ${idx + 1}`;
   }
@@ -24813,18 +24230,18 @@ button.active svg {
 
   // src/components/data/JsonEditor/renderNode.ts
   function renderNode(schema, value, onChange) {
-    const s2 = normalize(schema);
-    if (!s2)
+    const s = normalize(schema);
+    if (!s)
       return renderUnknown(value);
-    if (s2.oneOf?.length || s2.anyOf?.length)
-      return renderVariant(s2, value, onChange, renderNode);
-    if (Array.isArray(s2.enum) && s2.enum.length > 0)
-      return renderEnum(s2, value, onChange);
-    if (s2.type === "object" || s2.properties)
-      return renderObject(s2, value, onChange, renderNode);
-    if (s2.type === "array")
-      return renderArray(s2, value, onChange, renderNode);
-    return renderPrimitive(s2, value, onChange);
+    if (s.oneOf?.length || s.anyOf?.length)
+      return renderVariant(s, value, onChange, renderNode);
+    if (Array.isArray(s.enum) && s.enum.length > 0)
+      return renderEnum(s, value, onChange);
+    if (s.type === "object" || s.properties)
+      return renderObject(s, value, onChange, renderNode);
+    if (s.type === "array")
+      return renderArray(s, value, onChange, renderNode);
+    return renderPrimitive(s, value, onChange);
   }
   function renderEnum(schema, value, onChange) {
     const select2 = document.createElement("select");
@@ -24902,9 +24319,9 @@ button.active svg {
         this._publish();
       }
     }
-    set schema(s2) {
-      this._schema = s2;
-      this._mode = s2 ? "structured" : "raw";
+    set schema(s) {
+      this._schema = s;
+      this._mode = s ? "structured" : "raw";
       if (this._content)
         this._render();
     }
@@ -25004,61 +24421,60 @@ button.active svg {
     if (!customElements.get(tag))
       customElements.define(tag, constructor);
   }
-  define("cms-binding-core", Mo);
-  define("p9r-accordion", Jt);
-  define("p9r-accordion-item", re);
-  define("p9r-alert", oe);
-  define("p9r-avatar", de);
-  define("p9r-badge", pe);
-  define("p9r-breadcrumb", me);
-  define("p9r-breadcrumb-item", ve);
-  define("p9r-button", nr);
-  define("p9r-card", ye);
-  define("w13c-checkbox", hr);
-  define("p9r-container", nn);
-  define("p9r-divider", tr);
-  define("w13c-fetch", ho);
-  define("w13c-form", ro);
-  define("p9r-form-dialog", He);
-  define("p9r-section", xr);
-  define("p9r-horizontal-action-group", tn);
-  define("p9r-icon-button", wr);
-  define("w13c-input-file", Hr);
-  define("w13c-lateral-dialog", Ne);
-  define("w13c-lateral-menu", gn);
-  define("w13c-lateral-menu-item", wn);
-  define("w13c-left-menu-layout", sn);
-  define("p9r-modal", Ze);
-  define("p9r-open-modal", Ge);
-  define("p9r-input", jr);
-  define("p9r-range", Qr);
-  define("p9r-select", ni);
-  define("p9r-sizes-select", ai);
-  define("p9r-pagination", Hn);
-  define("p9r-progress", In);
-  define("p9r-radio", li);
-  define("p9r-radio-group", gi);
-  define("p9r-segmented-switch", yi);
-  define("p9r-skeleton", Bn);
-  define("p9r-spinner", jn);
-  define("p9r-stack", cn);
-  define("p9r-step", Xn);
-  define("p9r-stepper", Nn);
-  define("p9r-switch", Ci);
-  define("p9r-tab-panel", Aa);
-  define("p9r-table", Yn);
-  define("p9r-cell", Wn);
-  define("p9r-header-cell", la);
-  define("p9r-row", ba);
-  define("p9r-tabs", wa);
-  define("p9r-tag", Ma);
-  define("p9r-tag-suggest", Oi);
-  define("p9r-textarea", Gi);
-  define("p9r-toast", Ia);
-  define("p9r-toast-stack", Ba);
-  define("p9r-tooltip", Ra);
-  define("p9r-stat", Xa);
-  define("p9r-line-chart", Ya);
-  define("p9r-bar-list", Wa);
-  define("p9r-range-tabs", eo);
+  define("cms-binding-core", ho);
+  define("p9r-accordion", Xt);
+  define("p9r-accordion-item", Yt);
+  define("p9r-alert", Wt);
+  define("p9r-avatar", re);
+  define("p9r-badge", ae);
+  define("p9r-breadcrumb", le);
+  define("p9r-breadcrumb-item", ue);
+  define("p9r-button", Ge);
+  define("p9r-card", be);
+  define("w13c-checkbox", or);
+  define("p9r-container", Qi);
+  define("p9r-divider", Ue);
+  define("w13c-form", Ya);
+  define("p9r-form-dialog", ke);
+  define("p9r-section", pr);
+  define("p9r-horizontal-action-group", Ui);
+  define("p9r-icon-button", mr);
+  define("w13c-input-file", kr);
+  define("w13c-lateral-dialog", qe);
+  define("w13c-lateral-menu", dn);
+  define("w13c-lateral-menu-item", mn);
+  define("w13c-left-menu-layout", Wi);
+  define("p9r-modal", Ke);
+  define("p9r-open-modal", Oe);
+  define("p9r-input", Sr);
+  define("p9r-range", Nr);
+  define("p9r-select", Gr);
+  define("p9r-sizes-select", Jr);
+  define("p9r-pagination", kn);
+  define("p9r-progress", Ln);
+  define("p9r-radio", ei);
+  define("p9r-radio-group", di);
+  define("p9r-segmented-switch", bi);
+  define("p9r-skeleton", Mn);
+  define("p9r-spinner", Sn);
+  define("p9r-stack", rn);
+  define("p9r-step", jn);
+  define("p9r-stepper", qn);
+  define("p9r-switch", _i);
+  define("p9r-tab-panel", va);
+  define("p9r-table", Vn);
+  define("p9r-cell", $n);
+  define("p9r-header-cell", ea);
+  define("p9r-row", sa);
+  define("p9r-tabs", ma);
+  define("p9r-tag", wa);
+  define("p9r-tag-suggest", Fi);
+  define("p9r-textarea", Oi);
+  define("p9r-toast", La);
+  define("p9r-toast-stack", Ma);
+  define("p9r-tooltip", Ia);
+  define("p9r-stat", ja);
+  define("p9r-line-chart", Va);
+  define("p9r-bar-list", $a);
+  define("p9r-range-tabs", Za);
 })();

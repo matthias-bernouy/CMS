@@ -11,7 +11,6 @@ import {
     Checkbox,
     Container,
     Divider,
-    FetchComponent as BlocsFetchComponent,
     Form as BlocsForm,
     FormDialog,
     FormSection,
@@ -75,7 +74,6 @@ define("p9r-card", Card);
 define("w13c-checkbox", Checkbox);
 define("p9r-container", Container);
 define("p9r-divider", Divider);
-define("w13c-fetch", BlocsFetchComponent);
 define("w13c-form", BlocsForm);
 define("p9r-form-dialog", FormDialog);
 define("p9r-section", FormSection);
@@ -129,7 +127,6 @@ import "./admin/CredentialSelect/CredentialSelect"
 import "./admin/EmptyState/EmptyState"
 import "./admin/EndpointsInput/EndpointsInput"
 import "./admin/EventToast/EventToast"
-import "./admin/ListFilter/ListFilter"
 import "@bernouy/auth-core/components"
 import "./admin/OpenDialog/OpenDialog"
 import "./admin/ProviderActions/ProviderActions"
@@ -172,5 +169,4 @@ import "./media/MediaAdmin/MediaAdmin"
 import "./form/Form/Form";
 import "./form/MediaInput/MediaInput";
 import "./form/Validate/Validate";
-import "./data/fetch/FetchComponent"
 import "./data/JsonEditor/JsonEditor"

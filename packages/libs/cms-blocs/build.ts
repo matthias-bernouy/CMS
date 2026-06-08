@@ -59,7 +59,6 @@ const blocs: Array<[string, string]> = [
     ["tooltip", "./src/ui/Tooltip/Tooltip.ts"],
 
     ["w13c-form", "./src/logicalComponents/Form/Form.ts"],
-    ["w13c-fetch", "./src/logicalComponents/data/fetch/FetchComponent.ts"],
 
     ["stat", "./src/ui/Dataviz/Stat/Stat.ts"],
     ["line-chart", "./src/ui/Dataviz/LineChart/LineChart.ts"],
