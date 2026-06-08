@@ -1,4 +1,4 @@
-<cms-fetch url="{{BASE_PATH}}/api/template">
+<div cms-source="{{BASE_PATH}}/api/template?id=#{id}">
 
     <template>
 
@@ -29,10 +29,10 @@
                 </p9r-section>
             </cms-editor-configuration>
 
-            <inner-html>{{content}}</inner-html>
+            <inner-html>{{ content | innerHTML }}</inner-html>
 
         </cms-editor-system>
 
     </template>
 
-</cms-fetch>
+</div>
