@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { lookup, type Scope } from "../src/binding/scope";
 
-describe("lookup — presence vs absence (the verbatim guarantee)", () => {
+describe("lookup — presence vs absence (drives blank-on-miss)", () => {
     test("present scalar → found, exact value", () => {
         expect(lookup({ value: { title: "Hi" } }, "title")).toEqual({ found: true, value: "Hi" });
     });
@@ -18,7 +18,7 @@ describe("lookup — presence vs absence (the verbatim guarantee)", () => {
         expect(lookup({ value: { x: undefined } }, "x")).toEqual({ found: true, value: undefined });
     });
 
-    test("absent head at every level → not found (token left verbatim)", () => {
+    test("absent head at every level → not found (→ blanks)", () => {
         expect(lookup({ value: { title: "Hi" } }, "BASE_PATH")).toEqual({ found: false, value: undefined });
     });
 
@@ -27,7 +27,7 @@ describe("lookup — presence vs absence (the verbatim guarantee)", () => {
     });
 });
 
-describe("lookup — head decides found-ness, deep miss is empty not verbatim", () => {
+describe("lookup — head decides found-ness, deep miss is empty", () => {
     test("head owned but deep key missing → found, undefined", () => {
         // `order` is in scope but has no `id` → ours, render empty (not literal braces).
         expect(lookup({ value: { order: {} } }, "order.id")).toEqual({ found: true, value: undefined });

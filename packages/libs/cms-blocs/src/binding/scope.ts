@@ -14,10 +14,9 @@
  *              its data, or page globals → `{ query, route, user }`.
  *
  * `lookup` returns `{ found }` so callers can distinguish "resolved to
- * null/undefined" (found → substitute) from "no such path in any frame" (not
- * found → leave the `{{ token }}` verbatim). This is the safety foundation that
- * lets the runtime run over arbitrary HTML without erasing tokens it does not
- * own (another source's token, a server-side `{{ BASE_PATH }}`, a literal).
+ * null/undefined" from "no such path in any frame". The interpolator renders
+ * both as empty (an absent field blanks, like the old fetch renderer) but keeps
+ * the distinction so it never runs a filter on a missing value.
  *
  * Found-ness is decided at the HEAD segment: once a frame owns the head, deeper
  * missing keys yield `undefined` (found stays true) rather than bubbling to a

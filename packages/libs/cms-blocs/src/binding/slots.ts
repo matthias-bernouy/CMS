@@ -30,6 +30,13 @@ export type Captured = {
  * element empty and ready to render a state into. Slot children lose their
  * `cms-slot` attribute (it has served its purpose); only the first node per
  * slot is kept, extras are dropped.
+ *
+ * A `<template>` body is captured INERT (its `.content`): the custom elements
+ * inside never upgraded, so they can't pre-render with raw tokens or duplicate
+ * their light-DOM UI when the body is cloned and stamped. Use it whenever the
+ * body holds active components (forms, media inputs). Live (non-template)
+ * children are captured as-is — fine for idempotent elements like table rows,
+ * and required where rows must be direct children for `<slot>` distribution.
  */
 export function captureContent(el: Element): Captured {
     const slots: Partial<Record<SlotName, DocumentFragment>> = {};
@@ -38,7 +45,12 @@ export function captureContent(el: Element): Captured {
     for (const child of Array.from(el.childNodes)) {
         const slot = slotOf(child);
         if (!slot) {
-            body.appendChild(child); // moves it out of el
+            if (child.nodeType === Node.ELEMENT_NODE && (child as Element).tagName === "TEMPLATE") {
+                body.appendChild((child as HTMLTemplateElement).content); // inert
+                (child as Element).remove();
+            } else {
+                body.appendChild(child); // live — moves it out of el
+            }
             continue;
         }
         (child as Element).removeAttribute(SLOT_ATTR);

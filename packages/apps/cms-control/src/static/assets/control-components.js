@@ -8953,7 +8953,7 @@ p9r-tag:hover {
     return t.replace(Yd, (i, n, a) => {
       let o = J(e, n);
       if (!o.found)
-        return i;
+        return "";
       let l = a ? r[a] : undefined, d = l ? l(o.value) : o.value;
       return d == null ? "" : String(d);
     });
@@ -9024,7 +9024,10 @@ p9r-tag:hover {
     for (let i of Array.from(t.childNodes)) {
       let n = Jd(i);
       if (!n) {
-        r.appendChild(i);
+        if (i.nodeType === Node.ELEMENT_NODE && i.tagName === "TEMPLATE")
+          r.appendChild(i.content), i.remove();
+        else
+          r.appendChild(i);
         continue;
       }
       if (i.removeAttribute(wo), e[n])
@@ -20330,6 +20333,7 @@ dialog::backdrop {
     if (item.type === "file") {
       local.mimetype = item.mimeType;
       local.size = item.size;
+      local.contentHash = item.contentHash;
       local.absoluteURL = cmsFilesIdUrl(item.id);
     }
     return local;
@@ -20474,7 +20478,10 @@ dialog::backdrop {
     return s2.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
   function variantUrl(item, _width, _height) {
-    return item.absoluteURL ?? "";
+    const url = item.absoluteURL ?? "";
+    if (!url || !item.contentHash)
+      return url;
+    return url.includes("?") ? `${url}&v=${item.contentHash}` : `${url}?v=${item.contentHash}`;
   }
 
   // src/components/media/GridMedia/view/render.ts
@@ -20502,7 +20509,7 @@ dialog::backdrop {
     if (isImage || isSvg) {
       const img = document.createElement("img");
       img.slot = "image";
-      img.src = localPreview(item.id) ?? (isSvg ? item.absoluteURL ?? "" : variantUrl(item, 400, 300));
+      img.src = localPreview(item.id) ?? variantUrl(item, 400, 300);
       img.alt = item.alt || item.label;
       img.loading = "lazy";
       card.appendChild(img);
@@ -23555,10 +23562,9 @@ button.active svg {
     const isImage = item.type === "image" || item.mimetype === "image/svg+xml";
     if (!isImage)
       return null;
-    const isSvg = item.mimetype === "image/svg+xml";
     const img = document.createElement("img");
     img.slot = "preview";
-    img.src = isSvg ? item.absoluteURL ?? "" : variantUrl(item, 800, 600);
+    img.src = variantUrl(item, 800, 600);
     img.alt = item.alt || item.label;
     return img;
   }

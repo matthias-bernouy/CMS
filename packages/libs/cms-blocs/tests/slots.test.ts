@@ -33,6 +33,14 @@ describe("captureContent — partition", () => {
         expect(slots.empty!.firstElementChild!.hasAttribute("cms-slot")).toBe(false);
     });
 
+    test("a <template> body is captured as its inert content", () => {
+        const src = el(`<div cms-source="/x"><template><p class="row">{{ name }}</p></template><div cms-slot="empty">none</div></div>`);
+        const { body, slots } = captureContent(src);
+        expect(src.childNodes.length).toBe(0);
+        expect(body.querySelector(".row")?.textContent).toBe("{{ name }}");
+        expect(slots.empty).toBeDefined();
+    });
+
     test("only the first node per slot is kept", () => {
         const src = el(`<div cms-source="/x"><b cms-slot="empty">A</b><b cms-slot="empty">B</b></div>`);
         const { slots } = captureContent(src);

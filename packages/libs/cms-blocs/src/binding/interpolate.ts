@@ -4,11 +4,12 @@
  * substituted string. No DOM here; `bindSubtree` applies this to text nodes and
  * attribute values via the DOM APIs.
  *
- * Two rules carried over from the scope contract:
- *  - **Verbatim on miss.** A token whose path is not owned by any frame is left
- *    exactly as written. This is what lets the runtime run over arbitrary HTML
- *    without erasing tokens it does not own — a sibling source's `{{ x }}`, a
- *    server-side `{{ BASE_PATH }}`, or a literal in prose.
+ * Two rules:
+ *  - **Blank on miss.** A token whose path resolves nowhere in the scope chain
+ *    renders empty — it's an absent optional field, like the old fetch renderer.
+ *    This is safe in this runtime: a nested source's tokens are never bound by
+ *    an ancestor (the pass stops at the `[cms-source]` boundary), and
+ *    `{{ BASE_PATH }}` is server-substituted before the client ever sees it.
  *  - **Raw, not HTML-escaped.** The resolved value is stringified as-is. Safety
  *    is the consumer's job and comes for free from the DOM APIs: `bindSubtree`
  *    writes through `textContent`/`setAttribute`, which insert literal strings
@@ -34,7 +35,7 @@ const TOKEN = /\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
 export function interpolateString(str: string, scope: Scope, filters: FilterMap = {}): string {
     return str.replace(TOKEN, (whole: string, path: string, filter: string | undefined) => {
         const res = lookup(scope, path);
-        if (!res.found) return whole; // not ours — leave the token untouched
+        if (!res.found) return ""; // absent in the whole scope chain → blank
         const fn = filter ? filters[filter] : undefined;
         const value = fn ? fn(res.value) : res.value;
         return value == null ? "" : String(value);

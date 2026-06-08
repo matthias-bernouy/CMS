@@ -22,17 +22,17 @@ describe("interpolateString — substitution", () => {
     });
 });
 
-describe("interpolateString — the verbatim guarantee", () => {
-    test("unresolved token is left exactly as written", () => {
-        expect(interpolateString("go {{ BASE_PATH }}/x", s({ name: "z" }))).toBe("go {{ BASE_PATH }}/x");
+describe("interpolateString — blank on miss", () => {
+    test("a token not in scope renders empty", () => {
+        expect(interpolateString("go {{ BASE_PATH }}/x", s({ name: "z" }))).toBe("go /x");
     });
 
-    test("resolved and unresolved tokens coexist in one string", () => {
-        expect(interpolateString("{{ name }} {{ other }}", s({ name: "z" }))).toBe("z {{ other }}");
+    test("resolved and absent tokens coexist in one string", () => {
+        expect(interpolateString("{{ name }} {{ other }}", s({ name: "z" }))).toBe("z ");
     });
 
-    test("empty scope leaves every token verbatim", () => {
-        expect(interpolateString("{{ a }}{{ b }}", {})).toBe("{{ a }}{{ b }}");
+    test("empty scope blanks every token", () => {
+        expect(interpolateString("{{ a }}{{ b }}", {})).toBe("");
     });
 });
 
