@@ -64,11 +64,34 @@ function walk(node: Node, scope: Scope, filters: FilterMap, isRoot: boolean): vo
         if (replaced !== attr.value) el.setAttribute(attr.name, replaced);
     }
 
-    // A nested source is a scope boundary: its attrs are bound above (against
-    // the parent scope), but its subtree belongs to its own pass.
-    if (!isRoot && el.hasAttribute(SOURCE_ATTR)) return;
+    // Boundaries — bind this element's own attrs above, but don't descend:
+    //  - a nested source owns its subtree (its own data pass);
+    //  - a nested `<cms-binding-core>` is a separate, isolated binding island.
+    if (!isRoot && (el.hasAttribute(SOURCE_ATTR) || el.localName === "cms-binding-core")) return;
+
+    // Raw-HTML injection: an element whose sole content is `{{ path | innerHTML }}`
+    // is REPLACED by the resolved value parsed as HTML (unescaped, unwrapped) —
+    // so the markup lands in place (e.g. as direct children of the editor canvas,
+    // not stuck inside a leftover wrapper). Explicit opt-in for trusted content
+    // (a page's own stored blocs); everything else is escaped text.
+    if (injectRawHtml(el, scope)) return;
 
     bindChildren(el, scope, filters);
+}
+
+const RAW_HTML = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+
+function injectRawHtml(el: Element, scope: Scope): boolean {
+    if (el.childNodes.length !== 1) return false;
+    const only = el.firstChild!;
+    if (only.nodeType !== Node.TEXT_NODE) return false;
+    const m = (only.nodeValue ?? "").trim().match(RAW_HTML);
+    if (!m) return false;
+    const res = lookup(scope, m[1]!);
+    const tpl = (el.ownerDocument ?? document).createElement("template");
+    tpl.innerHTML = res.found && res.value != null ? String(res.value) : "";
+    el.replaceWith(tpl.content);
+    return true;
 }
 
 function bindChildren(parent: Node, scope: Scope, filters: FilterMap): void {

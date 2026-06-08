@@ -116,6 +116,30 @@ describe("Source — #{param} reactivity", () => {
     });
 });
 
+describe("BindingRuntime — nested core isolation", () => {
+    test("the outer runtime ignores sources inside a nested <cms-binding-core>", async () => {
+        routes({
+            "/outer": () => res(200, JSON.stringify([{ v: "o" }])),
+            "/inner": () => res(200, JSON.stringify([{ v: "i" }])),
+        });
+        const root = el(`
+            <div>
+                <div cms-source="/outer"><span cms-repeat="."></span></div>
+                <cms-binding-core>
+                    <div cms-source="/inner"><span cms-repeat="."></span></div>
+                </cms-binding-core>
+            </div>
+        `);
+        document.body.appendChild(root);
+        const rt = new BindingRuntime(root);
+        rt.start();
+        await waitFor(() => rt.size >= 1);
+        await settle();
+        expect(rt.size).toBe(1); // only /outer — the nested core owns /inner
+        rt.stop();
+    });
+});
+
 describe("BindingRuntime — discovery", () => {
     test("start() activates a top-level source", async () => {
         routes({ "/x": () => res(200, JSON.stringify({ name: "Ada" })) });

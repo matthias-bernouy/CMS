@@ -80,13 +80,13 @@ export class BindingRuntime {
         // snapshot still lists a nested source even after registering its parent
         // captured (and so detached) it. The nested one re-surfaces — attached
         // and with its URL interpolated — when the parent renders it.
-        eachMatching(node, SOURCE_ATTR, (el) => {
+        eachMatching(node, SOURCE_ATTR, this.root, (el) => {
             if (!el.isConnected || this.sources.has(el)) return;
             const src = new Source(el, this.filters);
             this.sources.set(el, src);
             src.start();
         });
-        eachMatching(node, PARAM_SYNC_ATTR, (el) => {
+        eachMatching(node, PARAM_SYNC_ATTR, this.root, (el) => {
             if (!el.isConnected || this.paramSyncs.has(el)) return;
             const ps = new ParamSync(el);
             this.paramSyncs.set(el, ps);
@@ -95,13 +95,13 @@ export class BindingRuntime {
     }
 
     private unregisterWithin(node: Node): void {
-        eachMatching(node, SOURCE_ATTR, (el) => {
+        eachMatching(node, SOURCE_ATTR, this.root, (el) => {
             const src = this.sources.get(el);
             if (!src) return;
             src.dispose();
             this.sources.delete(el);
         });
-        eachMatching(node, PARAM_SYNC_ATTR, (el) => {
+        eachMatching(node, PARAM_SYNC_ATTR, this.root, (el) => {
             const ps = this.paramSyncs.get(el);
             if (!ps) return;
             ps.dispose();
@@ -110,10 +110,26 @@ export class BindingRuntime {
     }
 }
 
-/** Invoke `cb` for `node` itself (if it carries `attr`) and every descendant. */
-function eachMatching(node: Node, attr: string, cb: (el: Element) => void): void {
+/**
+ * Invoke `cb` for `node` and every descendant carrying `attr`, but NEVER cross
+ * into a nested `<cms-binding-core>`: that core owns its own subtree (its own
+ * data), and isolating it is what stops the CMS chrome's binding from mixing
+ * with a site page's binding when one is nested in the other.
+ */
+function eachMatching(node: Node, attr: string, root: Element, cb: (el: Element) => void): void {
     if (node.nodeType !== Node.ELEMENT_NODE) return;
     const el = node as Element;
+    if (inNestedCore(el, root)) return;
     if (el.hasAttribute(attr)) cb(el);
-    el.querySelectorAll(`[${attr}]`).forEach(cb);
+    el.querySelectorAll(`[${attr}]`).forEach((inner) => {
+        if (!inNestedCore(inner, root)) cb(inner);
+    });
+}
+
+/** True if a `<cms-binding-core>` sits strictly between `el` and `root`. */
+function inNestedCore(el: Element, root: Element): boolean {
+    for (let p = el.parentElement; p && p !== root; p = p.parentElement) {
+        if (p.localName === "cms-binding-core") return true;
+    }
+    return false;
 }

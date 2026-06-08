@@ -23,10 +23,10 @@ describe("bindSubtree — text nodes", () => {
         expect(root.querySelector("b")!.textContent).toBe("2");
     });
 
-    test("unresolved token stays verbatim in text", () => {
+    test("a token not in scope renders empty in text", () => {
         const root = el(`<p>{{ name }} — {{ missing }}</p>`);
         bindSubtree(root, { value: { name: "Ada" } });
-        expect(root.textContent).toBe("Ada — {{ missing }}");
+        expect(root.textContent).toBe("Ada — ");
     });
 });
 
@@ -43,10 +43,10 @@ describe("bindSubtree — attributes", () => {
         expect(root.getAttribute("title")).toBe("a & b < c");
     });
 
-    test("unresolved attribute token stays verbatim", () => {
+    test("a token not in scope renders empty in an attribute", () => {
         const root = el(`<a href="{{ BASE_PATH }}/x">x</a>`);
         bindSubtree(root, { value: {} });
-        expect(root.getAttribute("href")).toBe("{{ BASE_PATH }}/x");
+        expect(root.getAttribute("href")).toBe("/x");
     });
 });
 
@@ -94,6 +94,41 @@ describe("bindSubtree — nested source boundary", () => {
         const root = el(`<div cms-source="/api/x"><span>{{ id }}</span></div>`);
         bindSubtree(root, { value: { id: "ROOT" } });
         expect(root.querySelector("span")!.textContent).toBe("ROOT");
+    });
+
+    test("does not descend into a nested <cms-binding-core> (isolated island)", () => {
+        const root = el(`
+            <div>
+                <span class="outer">{{ id }}</span>
+                <cms-binding-core><span class="inner">{{ id }}</span></cms-binding-core>
+            </div>
+        `);
+        bindSubtree(root, { value: { id: "OUT" } });
+        expect(root.querySelector(".outer")!.textContent).toBe("OUT");
+        expect(root.querySelector(".inner")!.textContent!.trim()).toBe("{{ id }}"); // untouched
+    });
+});
+
+describe("bindSubtree — raw HTML injection (| innerHTML)", () => {
+    test("a lone {{ x | innerHTML }} replaces its placeholder with unescaped HTML", () => {
+        const root = el(`<div><inner-html>{{ content | innerHTML }}</inner-html></div>`);
+        bindSubtree(root, { value: { content: "<b>hi</b> <span>there</span>" } });
+        expect(root.querySelector("inner-html")).toBeNull();   // placeholder unwrapped
+        expect(root.querySelector("b")!.textContent).toBe("hi");
+        expect(root.children.length).toBe(2);                  // b + span are direct children now
+    });
+
+    test("absent value → placeholder removed, nothing injected", () => {
+        const root = el(`<div><inner-html>{{ missing | innerHTML }}</inner-html></div>`);
+        bindSubtree(root, { value: {} });
+        expect(root.innerHTML).toBe("");
+    });
+
+    test("a normal token stays escaped text (no injection)", () => {
+        const root = el(`<div>{{ content }}</div>`);
+        bindSubtree(root, { value: { content: "<b>hi</b>" } });
+        expect(root.children.length).toBe(0);
+        expect(root.textContent).toBe("<b>hi</b>");
     });
 });
 
