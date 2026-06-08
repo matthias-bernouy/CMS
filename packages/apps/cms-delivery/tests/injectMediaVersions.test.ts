@@ -1,8 +1,9 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
 import type { CmsFilesMetadataRepository, FilesItem } from "@bernouy/cms-shared";
-import { InMemoryCmsFilesMetadata } from "@bernouy/cms-shared";
+import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-shared";
 import { injectMediaVersions } from "cms-delivery/core/html/injectMediaVersions";
+import { manifestKey } from "cms-delivery/core/images/imageVariants";
 
 /** Files metadata stub: id → contentHash. A missing id resolves to `null`; a
  *  present id with `undefined` hash resolves to a file with no contentHash. */
@@ -15,7 +16,7 @@ const stubFiles = (hashes: Record<string, string | undefined>): CmsFilesMetadata
 
 async function render(bodyHtml: string, files: CmsFilesMetadataRepository | undefined): Promise<string> {
     const { document } = parseHTML(`<!DOCTYPE html><html><head></head><body>${bodyHtml}</body></html>`);
-    await injectMediaVersions(document as unknown as Document, files);
+    await injectMediaVersions(document as unknown as Document, { files });
     return document.toString();
 }
 
@@ -64,7 +65,7 @@ describe("injectMediaVersions", () => {
 
         const renderedSrc = async (): Promise<string> => {
             const { document } = parseHTML(`<!DOCTYPE html><html><head></head><body><img src="/.cms/files/by-id/${f.id}"></body></html>`);
-            await injectMediaVersions(document as unknown as Document, meta);
+            await injectMediaVersions(document as unknown as Document, { files: meta });
             return document.querySelector("img")!.getAttribute("src")!;
         };
 
@@ -86,5 +87,53 @@ describe("injectMediaVersions", () => {
         const out = await render(`<img src="/.cms/files/by-id/same"><img src="/.cms/files/by-id/same">`, counting);
         expect(calls).toBe(1);
         expect([...out.matchAll(/\?v=h/g)]).toHaveLength(2);
+    });
+});
+
+describe("injectMediaVersions — responsive expansion (B3b)", () => {
+    async function setup(mime: string, withManifest: boolean) {
+        const files = new InMemoryCmsFilesMetadata();
+        const variantStore = new InMemoryCmsFilesBlob();
+        const f = await files.createFile({ name: "hero", parentId: null, size: 9, mimeType: mime, contentHash: "h9" });
+        if (withManifest) await variantStore.put(manifestKey("h9"), new TextEncoder().encode(JSON.stringify({ format: "webp", widths: [320, 640] })));
+        return { files, variantStore, id: f.id };
+    }
+    async function run(id: string, files: InMemoryCmsFilesMetadata, variantStore?: InMemoryCmsFilesBlob) {
+        const { document } = parseHTML(`<!DOCTYPE html><html><head></head><body><img src="/.cms/files/by-id/${id}"></body></html>`);
+        const unoptimized = await injectMediaVersions(document as unknown as Document, { files, variantStore });
+        const img = document.querySelector("img")!;
+        return { unoptimized, src: img.getAttribute("src"), srcset: img.getAttribute("srcset"), sizes: img.getAttribute("sizes") };
+    }
+
+    test("a raster image with a ready manifest expands to a srcset (variant URLs carry ?v); original stays the src", async () => {
+        const { files, variantStore, id } = await setup("image/png", true);
+        const r = await run(id, files, variantStore);
+        expect(r.unoptimized).toEqual([]);
+        expect(r.srcset).toBe(`/.cms/img/${id}/320.webp?v=h9 320w, /.cms/img/${id}/640.webp?v=h9 640w`);
+        expect(r.sizes).toBe("100vw");
+        expect(r.src).toBe(`/.cms/files/by-id/${id}?v=h9`);
+    });
+
+    test("a raster image with NO manifest yet → versioned original + returned for background optimization", async () => {
+        const { files, variantStore, id } = await setup("image/png", false);
+        const r = await run(id, files, variantStore);
+        expect(r.unoptimized).toEqual([id]);
+        expect(r.srcset).toBeNull();
+        expect(r.src).toBe(`/.cms/files/by-id/${id}?v=h9`);
+    });
+
+    test("an SVG is never rasterized: no srcset, not enqueued", async () => {
+        const { files, variantStore, id } = await setup("image/svg+xml", false);
+        const r = await run(id, files, variantStore);
+        expect(r.unoptimized).toEqual([]);
+        expect(r.srcset).toBeNull();
+    });
+
+    test("without a variant store: versioned original only, nothing enqueued", async () => {
+        const { files, id } = await setup("image/png", false);
+        const r = await run(id, files, undefined);
+        expect(r.unoptimized).toEqual([]);
+        expect(r.srcset).toBeNull();
+        expect(r.src).toBe(`/.cms/files/by-id/${id}?v=h9`);
     });
 });

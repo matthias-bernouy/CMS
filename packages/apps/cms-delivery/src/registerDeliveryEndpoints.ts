@@ -6,6 +6,7 @@ import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { registerFilesEndpoint, registerStyleEndpoint } from "@bernouy/cms-shared";
+import { registerImageVariantEndpoint } from "cms-delivery/core/images/serveVariant";
 import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
 
@@ -46,6 +47,17 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     registerStyleEndpoint({ runner, cache: delivery.cache, generate: () => generateStyleEntry(delivery.repository) });
     registerFilesEndpoint({ runner, metadata: delivery.filesMetadata, blob: delivery.filesBlob });
     registerGatewayEndpoint({ runner, gateway: delivery.gateway });
+
+    // Responsive image variants at `/.cms/img/<id>/<width>.webp` — mounted only
+    // when a variant store is wired (else the renderer just serves originals).
+    if (delivery.variantStoreOrNull && delivery.filesMetadataOrNull && delivery.filesBlobOrNull) {
+        registerImageVariantEndpoint({
+            runner,
+            metadata:     delivery.filesMetadata,
+            sourceBlob:   delivery.filesBlob,
+            variantStore: delivery.variantStoreOrNull,
+        });
+    }
 
     runner.setDefaultEndpoint("GET", (req) => recordPageView(req, delivery));
 

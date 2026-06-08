@@ -8,7 +8,8 @@ process.env.MODE = "DEV";
 import { relative } from "node:path";
 import { BunRunner } from "@bernouy/runner-bun";
 import { ControlCms } from "@bernouy/cms-control";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { DeliveryCms } from "@bernouy/cms-delivery";
+import { P9R_CACHE, LocalFsCmsFilesBlob } from "@bernouy/cms-shared";
 import { InMemoryAuthentication } from "@bernouy/cms-control";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
@@ -139,10 +140,23 @@ export default async function CLI_dev(args: string[]) {
 
     runner.start(port);
 
+    // Public Delivery preview on a SECOND port — the actual rendered site
+    // (pages, srcset image optimization, theme) that the editor authors. Shares
+    // the same repo + files; variants land in a hidden `.cms-variants/` blob so
+    // you can watch an <img> upgrade to a responsive `srcset` on refresh.
+    // (In MODE=DEV the render cache bypasses, so a refresh re-renders and the
+    // srcset appears once the background worker has generated — no PROD needed.)
+    const deliveryPort = port + 1;
+    const deliveryRunner = new BunRunner();
+    const variantStore = new LocalFsCmsFilesBlob(`${config.siteDir}/.cms-variants`);
+    new DeliveryCms({ runner: deliveryRunner, repository: repo, filesMetadata: files, filesBlob: files, variantStore });
+    deliveryRunner.start(deliveryPort);
+
     console.log("");
     console.log(`✓ Dev server ready on http://${host}:${port}`);
     console.log(`  Editor   : http://${host}:${port}/editor/page?id=/`);
     console.log(`  Admin    : http://${host}:${port}/admin/pages`);
+    console.log(`  Public   : http://${host}:${deliveryPort}/  (rendered site + image optimization)`);
     console.log(`  Repo     : ${config.siteDir} (writes go straight to disk)`);
     console.log(`  Profile  : dev-admin / current password "${DEV_PASSWORD}" (Profile → Password)`);
     console.log(`  Watching : ${blocs.length} bloc folder(s) — edit + auto-reload`);

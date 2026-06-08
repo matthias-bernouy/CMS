@@ -2,9 +2,12 @@ import type { Runner } from "@bernouy/core";
 import { BunRunner } from "@bernouy/runner-bun";
 import type { Cache } from "@bernouy/cms-shared";
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-shared";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
+import { OptimizeQueue } from "cms-delivery/core/images/optimizeQueue";
+import { optimizePageImages } from "cms-delivery/core/images/optimizePageJob";
 import { registerDeliveryEndpoints } from "cms-delivery/registerDeliveryEndpoints";
 import type { DeliveryRepository } from "./interfaces/DeliveryRepository";
 import type { HeadInjector } from "./interfaces/HeadInjector";
@@ -51,6 +54,10 @@ export type DeliveryCmsConfig = {
      */
     filesMetadata?: CmsFilesMetadataRepository;
     filesBlob?:     CmsFilesBlobStore;
+    /** Shared store for derived image variants (S3 prefix in prod). When wired,
+     *  the `<basePath>/.cms/img/<id>/<width>.webp` route is mounted; otherwise
+     *  the renderer falls back to the originals everywhere. */
+    variantStore?:  CmsFilesBlobStore;
 }
 
 /**
@@ -89,6 +96,8 @@ export default class DeliveryCms {
     private _analyticsSalt?:     string;
     private _filesMetadata:      CmsFilesMetadataRepository | null;
     private _filesBlob:          CmsFilesBlobStore | null;
+    private _variantStore:       CmsFilesBlobStore | null;
+    private readonly _optimizeQueue = new OptimizeQueue();
 
     constructor(config: DeliveryCmsConfig){
         this._runner             = config.runner || new BunRunner();
@@ -100,6 +109,7 @@ export default class DeliveryCms {
         this._analyticsSalt      = config.analyticsSalt;
         this._filesMetadata      = config.filesMetadata ?? null;
         this._filesBlob          = config.filesBlob ?? null;
+        this._variantStore       = config.variantStore ?? null;
 
         registerDeliveryEndpoints(this);
     }
@@ -148,9 +158,37 @@ export default class DeliveryCms {
         return this._filesMetadata;
     }
 
+    /** Derived image-variant store, or `null` when unconfigured (the variant
+     *  route is then not mounted and the renderer serves originals). */
+    get variantStoreOrNull(): CmsFilesBlobStore | null {
+        return this._variantStore;
+    }
+
+    /**
+     * Enqueue background variant generation for a page's not-yet-optimized
+     * images, then invalidate that page so the next render emits the responsive
+     * `srcset`. Fire-and-forget; deduped per path. No-op until files + variant
+     * backends are wired. The invalidation is reliable here — unlike Control, the
+     * worker runs IN the Delivery process, so it clears the cache it serves from.
+     */
+    optimizePage(path: string, imageIds: string[]): void {
+        if (!this._filesMetadata || !this._filesBlob || !this._variantStore || imageIds.length === 0) return;
+        const deps = { metadata: this._filesMetadata, sourceBlob: this._filesBlob, variantStore: this._variantStore };
+        this._optimizeQueue.enqueue(path, async () => {
+            await optimizePageImages(deps, imageIds);
+            this._cache.delete(P9R_CACHE.page(path));
+        });
+    }
+
     /** Opaque byte storage for files. Throws until wired (see `filesMetadata`). */
     get filesBlob(): CmsFilesBlobStore {
         if (!this._filesBlob) throw new Error("files blob backend not configured");
+        return this._filesBlob;
+    }
+
+    /** Like `filesBlob` but `null` instead of throwing — for the optional
+     *  image-variant mount guard. */
+    get filesBlobOrNull(): CmsFilesBlobStore | null {
         return this._filesBlob;
     }
 

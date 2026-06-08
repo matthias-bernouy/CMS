@@ -1,4 +1,4 @@
-import type { CmsFilesMetadataRepository } from "@bernouy/cms-shared";
+import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-shared";
 import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
 import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";
 import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
@@ -26,4 +26,10 @@ export type RenderContext = {
      *  for the cache-busting `?v=` token. Optional — absent when no files
      *  backend is wired, in which case media URLs render unversioned. */
     filesMetadata?: CmsFilesMetadataRepository;
+    /** Shared variant store — read for manifests to build responsive `srcset`s.
+     *  Absent → images render as the (versioned) original. */
+    variantStore?: CmsFilesBlobStore;
+    /** Enqueue background optimization for a page's not-yet-optimized images.
+     *  Absent → no optimization (originals only). */
+    optimizePage?: (path: string, imageIds: string[]) => void;
 };

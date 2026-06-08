@@ -79,9 +79,11 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     buildStylesheetLink(document, head, assets);
     buildScriptTags    (document, head, assets);
 
-    // Stamp every by-id media URL (body <img>, favicon <link>) with its current
-    // content hash (`?v=`) so an in-place file update busts the immutable cache.
-    await injectMediaVersions(document, ctx.filesMetadata);
+    // Stamp every by-id media URL with `?v=<contentHash>` (cache bust), expand
+    // raster <img>s whose variants are ready into responsive srcsets, and collect
+    // the rest for background optimization (served as originals until ready).
+    const unoptimized = await injectMediaVersions(document, { files: ctx.filesMetadata, variantStore: ctx.variantStore });
+    if (unoptimized.length > 0) ctx.optimizePage?.(page.path, unoptimized);
 
     return compress(document.toString(), "text/html");
 }

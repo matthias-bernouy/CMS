@@ -16,6 +16,7 @@
         { "path": "../../libs/runner-bun" },
         { "path": "../../libs/auth-core" },
         { "path": "../../libs/cms-shared" },
-        { "path": "../cms-control" }
+        { "path": "../cms-control" },
+        { "path": "../cms-delivery" }
     ]
 }

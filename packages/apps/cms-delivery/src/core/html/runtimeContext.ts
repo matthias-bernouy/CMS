@@ -15,5 +15,7 @@ export function makeRuntimeRenderContext(delivery: DeliveryCms): RenderContext {
         defaultFaviconUrl: `${delivery.cmsPathPrefix}/assets/favicon`,
         headInjectors: delivery.headInjectors,
         filesMetadata: delivery.filesMetadataOrNull ?? undefined,
+        variantStore: delivery.variantStoreOrNull ?? undefined,
+        optimizePage: (path, imageIds) => delivery.optimizePage(path, imageIds),
     };
 }
