@@ -35,20 +35,17 @@
 <w13c-fixed-admin-layout>
     <span slot="title">Profile</span>
 
-    <cms-fetch url="{{BASE_PATH}}/api/profil">
-        <template>
-            <a slot="action" href="{{ logoutUrl }}">
-                <p9r-button color="danger">Log out</p9r-button>
-            </a>
-        </template>
-    </cms-fetch>
+    <div slot="action" cms-source="{{BASE_PATH}}/api/profil">
+        <a href="{{ logoutUrl }}">
+            <p9r-button color="danger">Log out</p9r-button>
+        </a>
+    </div>
 
     <p9r-container size="md">
         <p9r-tabs active="profile">
 
             <p9r-tab-panel id="profile" label="Profile">
-                <cms-fetch url="{{BASE_PATH}}/api/profil" reload-on="profil:updated">
-                    <template>
+                <div cms-source="{{BASE_PATH}}/api/profil" cms-reload-on="profil:updated">
                         <p9r-stack gap="lg">
                             <div class="profil-hero">
                                 <p9r-avatar size="xl" color="primary" name="{{ displayName }}"></p9r-avatar>
@@ -71,8 +68,7 @@
                                 </cms-form>
                             </p9r-card>
 
-                            <template for="passwordCard">
-                                <p9r-card>
+                            <p9r-card cms-repeat="passwordCard">
                                     <span slot="header">Password</span>
                                     <cms-form target="{{BASE_PATH}}/api/profil/password" emit="password:changed">
                                         <p9r-stack gap="md">
@@ -84,7 +80,6 @@
                                         </p9r-stack>
                                     </cms-form>
                                 </p9r-card>
-                            </template>
 
                             <p9r-card>
                                 <span slot="header">Danger zone</span>
@@ -98,8 +93,7 @@
                                 </p9r-stack>
                             </p9r-card>
                         </p9r-stack>
-                    </template>
-                </cms-fetch>
+                </div>
             </p9r-tab-panel>
 
             <p9r-tab-panel id="tokens" label="Tokens">
@@ -115,41 +109,37 @@
                         </p9r-open-modal>
                     </p9r-stack>
 
-                    <cms-fetch url="{{BASE_PATH}}/api/pats" reload-on="pat:changed">
-                        <template slot="empty">
-                            <cms-empty-state>
-                                <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="7.5" cy="15.5" r="5.5"/>
-                                    <path d="m21 2-9.6 9.6"/>
-                                    <path d="m15.5 7.5 3 3L22 7l-3-3"/>
-                                </svg>
-                                <p slot="title">No access tokens yet</p>
-                                <p slot="hint">Create one to authenticate the CLI or server-to-server calls. The secret is shown once, at creation.</p>
-                            </cms-empty-state>
-                        </template>
-                        <template>
-                            <p9r-table>
-                                <p9r-row slot="header">
-                                    <p9r-cell><strong>Name</strong></p9r-cell>
-                                    <p9r-cell><strong>Created</strong></p9r-cell>
-                                    <p9r-cell><strong>Last used</strong></p9r-cell>
-                                    <p9r-cell></p9r-cell>
-                                </p9r-row>
-                                <template for=".">
-                                    <p9r-row>
-                                        <p9r-cell><strong>{{ name }}</strong></p9r-cell>
-                                        <p9r-cell>{{ createdLabel }}</p9r-cell>
-                                        <p9r-cell>{{ lastUsedLabel }}</p9r-cell>
-                                        <p9r-cell>
-                                            <cms-confirm-form target="{{BASE_PATH}}/api/pats?id={{ id }}" method="DELETE" emit="pat:changed" message="Revoke this token? Any client using it stops working immediately.">
-                                                <p9r-button color="danger" variant="ghost">Revoke</p9r-button>
-                                            </cms-confirm-form>
-                                        </p9r-cell>
-                                    </p9r-row>
-                                </template>
-                            </p9r-table>
-                        </template>
-                    </cms-fetch>
+                    <div cms-source="{{BASE_PATH}}/api/pats" cms-reload-on="pat:changed">
+                        <p9r-table>
+                            <p9r-row slot="header">
+                                <p9r-cell><strong>Name</strong></p9r-cell>
+                                <p9r-cell><strong>Created</strong></p9r-cell>
+                                <p9r-cell><strong>Last used</strong></p9r-cell>
+                                <p9r-cell></p9r-cell>
+                            </p9r-row>
+
+                            <p9r-row cms-repeat=".">
+                                <p9r-cell><strong>{{ name }}</strong></p9r-cell>
+                                <p9r-cell>{{ createdLabel }}</p9r-cell>
+                                <p9r-cell>{{ lastUsedLabel }}</p9r-cell>
+                                <p9r-cell>
+                                    <cms-confirm-form target="{{BASE_PATH}}/api/pats?id={{ id }}" method="DELETE" emit="pat:changed" message="Revoke this token? Any client using it stops working immediately.">
+                                        <p9r-button color="danger" variant="ghost">Revoke</p9r-button>
+                                    </cms-confirm-form>
+                                </p9r-cell>
+                            </p9r-row>
+                        </p9r-table>
+
+                        <cms-empty-state cms-slot="empty">
+                            <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="7.5" cy="15.5" r="5.5"/>
+                                <path d="m21 2-9.6 9.6"/>
+                                <path d="m15.5 7.5 3 3L22 7l-3-3"/>
+                            </svg>
+                            <p slot="title">No access tokens yet</p>
+                            <p slot="hint">Create one to authenticate the CLI or server-to-server calls. The secret is shown once, at creation.</p>
+                        </cms-empty-state>
+                    </div>
                 </p9r-stack>
             </p9r-tab-panel>
 

@@ -4,34 +4,29 @@
         <p9r-button color="primary">+ New provider</p9r-button>
     </p9r-open-modal>
 
-    <p9r-table>
+    <p9r-table cms-source="{{BASE_PATH}}/api/gateway-provider/list" cms-reload-on="provider:updated">
         <p9r-row slot="header">
             <p9r-cell><strong>Name</strong></p9r-cell>
             <p9r-cell><strong>URN</strong></p9r-cell>
             <p9r-cell><strong>Endpoints</strong></p9r-cell>
         </p9r-row>
 
-        <cms-fetch url="{{BASE_PATH}}/api/gateway-provider/list" reload-on="provider:updated">
-            <template for=".">
-                <p9r-row href="{{BASE_PATH}}/admin/gateway-provider?urn={{ urn }}">
-                    <p9r-cell><strong>{{ name }}</strong></p9r-cell>
-                    <p9r-cell><code>{{ urn }}</code></p9r-cell>
-                    <p9r-cell>{{ endpointCount }}</p9r-cell>
-                </p9r-row>
-            </template>
-            <template slot="empty">
-                <cms-empty-state>
-                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 22v-5" />
-                        <path d="M9 8V2" />
-                        <path d="M15 8V2" />
-                        <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
-                    </svg>
-                    <p slot="title">No gateway providers yet</p>
-                    <p slot="hint">Register an external API as a provider to proxy it through Delivery.</p>
-                </cms-empty-state>
-            </template>
-        </cms-fetch>
+        <p9r-row cms-repeat="." href="{{BASE_PATH}}/admin/gateway-provider?urn={{ urn }}">
+            <p9r-cell><strong>{{ name }}</strong></p9r-cell>
+            <p9r-cell><code>{{ urn }}</code></p9r-cell>
+            <p9r-cell>{{ endpointCount }}</p9r-cell>
+        </p9r-row>
+
+        <cms-empty-state cms-slot="empty">
+            <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22v-5" />
+                <path d="M9 8V2" />
+                <path d="M15 8V2" />
+                <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
+            </svg>
+            <p slot="title">No gateway providers yet</p>
+            <p slot="hint">Register an external API as a provider to proxy it through Delivery.</p>
+        </cms-empty-state>
     </p9r-table>
 </w13c-fixed-admin-layout>
 

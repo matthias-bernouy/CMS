@@ -6,7 +6,7 @@
          onto the fetch, so this GET resolves to /api/gateway-provider?urn=… without
          the URL being hard-coded. A `<template>` with no `for` renders once against
          the single provider object. -->
-    <cms-fetch url="{{BASE_PATH}}/api/gateway-provider" reload-on="provider:updated">
+    <div cms-source="{{BASE_PATH}}/api/gateway-provider?urn=#{urn}" cms-reload-on="provider:updated">
         <template>
             <div style="max-width: 760px;">
                 <cms-form target="{{BASE_PATH}}/api/gateway-provider" method="PUT" emit="provider:updated">
@@ -50,8 +50,7 @@
             </div>
         </template>
 
-        <template slot="error">
-            <cms-empty-state style="display: flex">
+        <cms-empty-state cms-slot="error" style="display: flex">
                 <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="8" x2="12" y2="12" />
@@ -59,7 +58,6 @@
                 </svg>
                 <p slot="title">Provider not found</p>
                 <p slot="hint">It may have been deleted. <a href="{{BASE_PATH}}/admin/gateway-providers">Back to providers</a>.</p>
-            </cms-empty-state>
-        </template>
-    </cms-fetch>
+        </cms-empty-state>
+    </div>
 </w13c-fixed-admin-layout>

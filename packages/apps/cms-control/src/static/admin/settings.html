@@ -5,7 +5,7 @@
         <p9r-tabs active="general">
 
             <p9r-tab-panel id="general" label="General">
-                <cms-fetch url="{{BASE_PATH}}/api/system/settings" reload-on="settings:saved">
+                <div cms-source="{{BASE_PATH}}/api/system/settings" cms-reload-on="settings:saved">
                     <template>
                         <cms-form id="settings-form" target="{{BASE_PATH}}/api/system/settings" emit="settings:saved">
                             <p9r-stack gap="lg">
@@ -30,15 +30,11 @@
                                         </p9r-select>
                                         <p9r-select name="site.notFound" label="404 page" value="{{ site.notFound.path }}">
                                             <option value="">— None —</option>
-                                            <template for="pages">
-                                                <option value="{{ path }}">{{ title }}</option>
-                                            </template>
+                                            <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
                                         </p9r-select>
                                         <p9r-select name="site.serverError" label="500 page" value="{{ site.serverError.path }}">
                                             <option value="">— None —</option>
-                                            <template for="pages">
-                                                <option value="{{ path }}">{{ title }}</option>
-                                            </template>
+                                            <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
                                         </p9r-select>
                                     </p9r-stack>
                                 </p9r-card>
@@ -47,9 +43,7 @@
                                     <span slot="header">Editor</span>
                                     <p9r-select name="editor.layoutCategory" label="Layout category" value="{{ editor.layoutCategory }}">
                                         <option value="">— None —</option>
-                                        <template for="layoutCategories">
-                                            <option value="{{value}}">{{value}}</option>
-                                        </template>
+                                        <option cms-repeat="layoutCategories" value="{{value}}">{{value}}</option>
                                     </p9r-select>
                                 </p9r-card>
 
@@ -64,7 +58,7 @@
                             </p9r-stack>
                         </cms-form>
                     </template>
-                </cms-fetch>
+                </div>
             </p9r-tab-panel>
 
             <p9r-tab-panel id="secrets" label="Secrets">
@@ -79,43 +73,39 @@
                         </p9r-open-modal>
                     </p9r-stack>
 
-                    <p9r-table>
+                    <p9r-table cms-source="{{BASE_PATH}}/api/identity/providers" cms-reload-on="idp:changed">
                         <p9r-row slot="header">
                             <p9r-cell><strong>Provider</strong></p9r-cell>
                             <p9r-cell><strong>Kind</strong></p9r-cell>
                             <p9r-cell><strong>Manage</strong></p9r-cell>
                         </p9r-row>
-                        <cms-fetch url="{{BASE_PATH}}/api/identity/providers" reload-on="idp:changed">
-                            <template for=".">
-                                <p9r-row>
-                                    <p9r-cell><strong>{{ displayName }}</strong></p9r-cell>
-                                    <p9r-cell><p9r-tag>{{ kind }}</p9r-tag></p9r-cell>
-                                    <p9r-cell>
-                                        <cms-provider-actions provider-id="{{ id }}" kind="{{ kind }}" enabled="{{ enabled }}" base-url="{{BASE_PATH}}/api/identity/provider" emit="idp:changed"></cms-provider-actions>
-                                        <p9r-modal id="edit-{{ id }}" aria-label="Edit provider">
-                                            <span slot="title">Edit provider</span>
-                                            <cms-form target="{{BASE_PATH}}/api/identity/provider" method="PATCH" emit="idp:changed">
-                                                <p9r-stack gap="md">
-                                                    <input type="hidden" name="id" value="{{ id }}">
-                                                    <p9r-input name="displayName" label="Name" value="{{ displayName }}"></p9r-input>
-                                                    <p9r-input name="issuer" label="Issuer URL" value="{{ issuer }}"></p9r-input>
-                                                    <p9r-input name="clientId" label="Client ID" value="{{ clientId }}"></p9r-input>
-                                                    <cms-credential-select name="clientSecretRef" label="Client secret" value="{{ clientSecretRef }}" api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
-                                                    <p9r-input name="scopes" label="Scopes" value="{{ scopes }}"></p9r-input>
-                                                    <p9r-button type="submit" color="primary" fullWidth>Save</p9r-button>
-                                                </p9r-stack>
-                                            </cms-form>
-                                        </p9r-modal>
-                                    </p9r-cell>
-                                </p9r-row>
-                            </template>
-                            <template slot="empty">
-                                <cms-empty-state>
-                                    <p slot="title">No providers</p>
-                                    <p slot="hint">The local email/password provider is seeded at provisioning; add Google/OIDC for more.</p>
-                                </cms-empty-state>
-                            </template>
-                        </cms-fetch>
+
+                        <p9r-row cms-repeat=".">
+                            <p9r-cell><strong>{{ displayName }}</strong></p9r-cell>
+                            <p9r-cell><p9r-tag>{{ kind }}</p9r-tag></p9r-cell>
+                            <p9r-cell>
+                                <cms-provider-actions provider-id="{{ id }}" kind="{{ kind }}" enabled="{{ enabled }}" base-url="{{BASE_PATH}}/api/identity/provider" emit="idp:changed"></cms-provider-actions>
+                                <p9r-modal id="edit-{{ id }}" aria-label="Edit provider">
+                                    <span slot="title">Edit provider</span>
+                                    <cms-form target="{{BASE_PATH}}/api/identity/provider" method="PATCH" emit="idp:changed">
+                                        <p9r-stack gap="md">
+                                            <input type="hidden" name="id" value="{{ id }}">
+                                            <p9r-input name="displayName" label="Name" value="{{ displayName }}"></p9r-input>
+                                            <p9r-input name="issuer" label="Issuer URL" value="{{ issuer }}"></p9r-input>
+                                            <p9r-input name="clientId" label="Client ID" value="{{ clientId }}"></p9r-input>
+                                            <cms-credential-select name="clientSecretRef" label="Client secret" value="{{ clientSecretRef }}" api="{{BASE_PATH}}/api/secrets"></cms-credential-select>
+                                            <p9r-input name="scopes" label="Scopes" value="{{ scopes }}"></p9r-input>
+                                            <p9r-button type="submit" color="primary" fullWidth>Save</p9r-button>
+                                        </p9r-stack>
+                                    </cms-form>
+                                </p9r-modal>
+                            </p9r-cell>
+                        </p9r-row>
+
+                        <cms-empty-state cms-slot="empty">
+                            <p slot="title">No providers</p>
+                            <p slot="hint">The local email/password provider is seeded at provisioning; add Google/OIDC for more.</p>
+                        </cms-empty-state>
                     </p9r-table>
                 </p9r-stack>
             </p9r-tab-panel>

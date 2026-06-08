@@ -4,7 +4,7 @@
         <p9r-button color="primary">+ Add user</p9r-button>
     </p9r-open-modal>
 
-    <p9r-table>
+    <p9r-table cms-source="{{BASE_PATH}}/api/users" cms-reload-on="user:updated">
         <p9r-row slot="header">
             <p9r-cell><strong>User</strong></p9r-cell>
             <p9r-cell><strong>Email</strong></p9r-cell>
@@ -13,35 +13,30 @@
             <p9r-cell></p9r-cell>
         </p9r-row>
 
-        <cms-fetch url="{{BASE_PATH}}/api/users" reload-on="user:updated">
-            <template for=".">
-                <p9r-row>
-                    <p9r-cell><strong>{{ displayName }}</strong></p9r-cell>
-                    <p9r-cell>{{ email }}</p9r-cell>
-                    <p9r-cell><p9r-tag>{{ provider }}</p9r-tag></p9r-cell>
-                    <p9r-cell>
-                        <cms-role-select sub="{{ sub }}" value="{{ role }}" url="{{BASE_PATH}}/api/users/role" emit="user:updated"></cms-role-select>
-                    </p9r-cell>
-                    <p9r-cell>
-                        <cms-confirm-form target="{{BASE_PATH}}/api/users?sub={{ sub }}" method="DELETE" emit="user:updated" message="Delete this user? Their account, local password and access tokens are removed. This cannot be undone.">
-                            <p9r-button color="danger" variant="ghost">Delete</p9r-button>
-                        </cms-confirm-form>
-                    </p9r-cell>
-                </p9r-row>
-            </template>
-            <template slot="empty">
-                <cms-empty-state>
-                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                    <p slot="title">No users yet</p>
-                    <p slot="hint">Users appear here after their first login.</p>
-                </cms-empty-state>
-            </template>
-        </cms-fetch>
+        <p9r-row cms-repeat=".">
+            <p9r-cell><strong>{{ displayName }}</strong></p9r-cell>
+            <p9r-cell>{{ email }}</p9r-cell>
+            <p9r-cell><p9r-tag>{{ provider }}</p9r-tag></p9r-cell>
+            <p9r-cell>
+                <cms-role-select sub="{{ sub }}" value="{{ role }}" url="{{BASE_PATH}}/api/users/role" emit="user:updated"></cms-role-select>
+            </p9r-cell>
+            <p9r-cell>
+                <cms-confirm-form target="{{BASE_PATH}}/api/users?sub={{ sub }}" method="DELETE" emit="user:updated" message="Delete this user? Their account, local password and access tokens are removed. This cannot be undone.">
+                    <p9r-button color="danger" variant="ghost">Delete</p9r-button>
+                </cms-confirm-form>
+            </p9r-cell>
+        </p9r-row>
+
+        <cms-empty-state cms-slot="empty">
+            <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <p slot="title">No users yet</p>
+            <p slot="hint">Users appear here after their first login.</p>
+        </cms-empty-state>
     </p9r-table>
 </w13c-fixed-admin-layout>
 

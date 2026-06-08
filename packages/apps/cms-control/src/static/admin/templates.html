@@ -4,7 +4,7 @@
         <p9r-button color="primary">+ New template</p9r-button>
     </p9r-open-modal>
 
-    <p9r-table>
+    <p9r-table cms-source="{{BASE_PATH}}/api/template/list" cms-reload-on="new:template">
         <p9r-row slot="header">
             <p9r-cell><strong>Tag</strong></p9r-cell>
             <p9r-cell><strong>Name</strong></p9r-cell>
@@ -13,28 +13,23 @@
             <p9r-cell></p9r-cell>
         </p9r-row>
 
-        <cms-fetch url="{{BASE_PATH}}/api/template/list" reload-on="new:template">
-            <template for=".">
-                <p9r-row href="{{BASE_PATH}}/editor/template?id={{id}}">
-                    <p9r-cell><code>{{ identifier }}</code></p9r-cell>
-                    <p9r-cell>{{ name }}</p9r-cell>
-                    <p9r-cell>{{ category }}</p9r-cell>
-                    <p9r-cell>{{ createdAt }}</p9r-cell>
-                    <p9r-cell></p9r-cell>
-                </p9r-row>
-            </template>
-            <template slot="empty">
-                <cms-empty-state>
-                    <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/>
-                        <path d="M3 9h18"/>
-                        <path d="M9 21V9"/>
-                    </svg>
-                    <p slot="title">No templates yet</p>
-                    <p slot="hint">Create your first template to reuse layouts across pages.</p>
-                </cms-empty-state>
-            </template>
-        </cms-fetch>
+        <p9r-row cms-repeat="." href="{{BASE_PATH}}/editor/template?id={{id}}">
+            <p9r-cell><code>{{ identifier }}</code></p9r-cell>
+            <p9r-cell>{{ name }}</p9r-cell>
+            <p9r-cell>{{ category }}</p9r-cell>
+            <p9r-cell>{{ createdAt }}</p9r-cell>
+            <p9r-cell></p9r-cell>
+        </p9r-row>
+
+        <cms-empty-state cms-slot="empty">
+            <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M3 9h18"/>
+                <path d="M9 21V9"/>
+            </svg>
+            <p slot="title">No templates yet</p>
+            <p slot="hint">Create your first template to reuse layouts across pages.</p>
+        </cms-empty-state>
     </p9r-table>
 </w13c-fixed-admin-layout>
 
