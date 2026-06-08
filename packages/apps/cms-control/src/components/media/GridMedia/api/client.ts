@@ -21,8 +21,6 @@ export type FilesItem = {
     updatedAt: string;
     size?:     number;
     mimeType?: string;
-    /** Readable tree-path ("logos/hero.png"), present on FILE items only. */
-    path?:     string;
 };
 
 export type FilesPage = {
@@ -39,13 +37,13 @@ export function filesBase(): string {
 }
 
 /**
- * Public, path-based bytes URL for a file, e.g. `/cms/.cms/files/logos/hero.png`.
- * Served by both Control (admin-guarded) and Delivery, relative to `basePath`.
- * Each segment is encoded so spaces / accents in names survive.
+ * Public, opaque-id bytes URL for a file, e.g. `/cms/.cms/files/by-id/<id>`.
+ * This is the form STORED in content: the id is immutable per content and stable
+ * across rename/move, so the URL caches forever (served `immutable`) and survives
+ * a media-tree reorg. Served by both Control (admin-guarded) and Delivery.
  */
-export function cmsFilesUrl(path: string): string {
-    const encoded = path.split("/").map(encodeURIComponent).join("/");
-    return `${getMetaBasePath()}/.cms/files/${encoded}`;
+export function cmsFilesIdUrl(id: string): string {
+    return `${getMetaBasePath()}/.cms/files/by-id/${encodeURIComponent(id)}`;
 }
 
 export function toLocal(item: FilesItem): LocalMediaItem {
@@ -58,9 +56,10 @@ export function toLocal(item: FilesItem): LocalMediaItem {
     if (item.type === "file") {
         local.mimetype    = item.mimeType;
         local.size        = item.size;
-        // Bytes are served by the path-based `.cms/files/<path>` route; the server
-        // always attaches `path` to file items (see api/files/files.get.ts).
-        if (item.path) local.absoluteURL = cmsFilesUrl(item.path);
+        // Address bytes by opaque id (immutable + rename-proof). The grid
+        // thumbnail, detail preview, copy-URL, and what gets stored in content
+        // all read this one field.
+        local.absoluteURL = cmsFilesIdUrl(item.id);
     }
     return local;
 }

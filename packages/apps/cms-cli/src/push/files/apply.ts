@@ -55,9 +55,11 @@ async function listChildren(adminBase: URL, token: string, parentId: string | nu
 }
 
 /**
- * Push every "new"/"update" entry: ensure its parent folders exist, delete the
- * stale remote on an update (upload rejects a name clash, so we replace), then
- * upload the bytes.
+ * Push every "new"/"update" entry: ensure its parent folders exist, then upload
+ * the bytes carrying the dev registry uuid as the `id`. The upload UPSERTS on a
+ * supplied id, so an update overwrites the existing row in place — we do NOT
+ * delete-then-reupload, which would change the `_id` and 404 the by-id URL during
+ * the window.
  */
 export async function applyPushFiles(
     adminBase: URL,
@@ -72,7 +74,6 @@ export async function applyPushFiles(
         const { file } = e;
         try {
             const parentId = await ensureFolder(adminBase, token, file.dir, tree.folderIdByPath);
-            if (e.status === "update" && e.remoteId) await deleteItem(adminBase, token, e.remoteId);
             await uploadOne(adminBase, token, file, parentId);
             result.pushed.push({ path: file.path, hash: file.hash, size: file.size });
         } catch (err) {
@@ -123,16 +124,11 @@ async function uploadOne(adminBase: URL, token: string, file: LocalFile, parentI
     // isn't the absolute path.
     form.append("file", Bun.file(file.abs), file.name);
     if (parentId) form.append("parentId", parentId);
+    // Carry the dev registry uuid so the remote adopts it as the _id (upsert).
+    if (file.id) form.append("id", file.id);
     // No Content-Type header — fetch sets the multipart boundary itself.
     const res = await fetch(url, { method: "POST", headers: auth(token), body: form });
     if (!res.ok) throw new Error(`POST ${url} → HTTP ${res.status}${await tail(res)}`);
-}
-
-async function deleteItem(adminBase: URL, token: string, id: string): Promise<void> {
-    const url = new URL("api/files", adminBase);
-    url.searchParams.set("id", id);
-    const res = await fetch(url.href, { method: "DELETE", headers: auth(token) });
-    if (!res.ok) throw new Error(`DELETE ${url.href} → HTTP ${res.status}${await tail(res)}`);
 }
 
 async function tail(res: Response): Promise<string> {

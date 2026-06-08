@@ -71,6 +71,23 @@ describe("scanFiles", () => {
         // sanity: the joined fs path used the platform separator, the tree path did not
         if (sep !== "/") expect(files[0]!.path).not.toContain(sep);
     });
+
+    test("carries the registry uuid into each file's id", async () => {
+        const dir = makeSite({ "logo.png": "A", "images/hero.png": "BB" });
+        writeFileSync(join(dir, ".cms-files-registry.json"), JSON.stringify({
+            version: 1,
+            byPath: { "logo.png": "uuid-logo", "images": "uuid-dir", "images/hero.png": "uuid-hero" },
+        }));
+        const files = await scanFiles(dir);
+        expect(files.find(f => f.path === "logo.png")!.id).toBe("uuid-logo");
+        expect(files.find(f => f.path === "images/hero.png")!.id).toBe("uuid-hero");
+    });
+
+    test("leaves id undefined when the registry is missing the path (no lazy-mint)", async () => {
+        const dir = makeSite({ "logo.png": "A" });   // no registry written
+        const files = await scanFiles(dir);
+        expect(files[0]!.id).toBeUndefined();
+    });
 });
 
 describe("classifyFiles", () => {

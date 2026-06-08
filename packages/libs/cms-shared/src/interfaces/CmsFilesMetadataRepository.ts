@@ -57,7 +57,15 @@ export type FilesPage = {
 };
 
 export type NewFolder = { name: string; parentId: string | null };
-export type NewFile   = { name: string; parentId: string | null; size: number; mimeType: string };
+export type NewFile   = {
+    name: string; parentId: string | null; size: number; mimeType: string;
+    /** Optional caller-supplied id, used VERBATIM as the item's id. The CLI push
+     *  passes the dev registry uuid here so dev and remote agree on every file's
+     *  id (immutable `by-id` URLs survive the push). When supplied, `createFile`
+     *  UPSERTS (a re-push updates in place instead of duplicating). UI uploads
+     *  omit it → a fresh id is minted. */
+    id?: string;
+};
 export type ItemPatch = { name?: string; parentId?: string | null };
 
 export interface CmsFilesMetadataRepository {

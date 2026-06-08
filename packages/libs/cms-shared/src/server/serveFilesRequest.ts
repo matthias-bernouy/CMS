@@ -2,8 +2,15 @@ import type { CmsFilesMetadataRepository, FileItem } from "cms-shared/interfaces
 import type { CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
 import { publicAssetCacheControl } from "cms-shared/server/compression";
 
-/** Opaque id-addressed bytes never change — the id IS the content identity. */
-const IMMUTABLE = "public, max-age=31536000, immutable";
+/**
+ * Cache policy for an id-addressed response. In prod the bytes at a given id are
+ * stable (replacing a file's content goes through a NEW id), so the id URL caches
+ * forever. In dev (`MODE=DEV`) nothing is cached — you edit files on disk and the
+ * same id keeps serving the latest bytes, so it must always revalidate (matches
+ * `publicAssetCacheControl`'s dev posture).
+ */
+const idCacheControl = (): string =>
+    process.env.MODE === "DEV" ? "no-cache, must-revalidate" : "public, max-age=31536000, immutable";
 
 /**
  * MIME types we are willing to serve inline. `item.mimeType` derives from the
@@ -32,9 +39,11 @@ const notFound = () => new Response("Not found", { status: 404 });
  * prefix to strip (`${basePath}/.cms/files/`). Two address forms share this one
  * handler (no route-precedence dependency):
  *
- * - **`by-id/<id>`** — opaque, content-stable id (the stored form). Resolved via
- *   `getItem(id)` and served **immutable** forever: the id changes when the bytes
- *   change, so a cached response can never go stale.
+ * - **`by-id/<id>`** — opaque id (the stored form). Resolved via `getItem(id)`.
+ *   In prod the bytes at an id are stable — replacing a file's content goes
+ *   through a new id (re-pick), never an in-place overwrite — so it is served
+ *   **immutable**. In dev it revalidates (`idCacheControl`): you edit files on
+ *   disk and the same id keeps serving the latest bytes.
  * - **`<tree-path>`** (`logos/hero.png`) — the human/admin label. Resolved via
  *   the metadata tree and served under the house cache policy
  *   (`publicAssetCacheControl`, = revalidate for media).
@@ -60,7 +69,7 @@ export async function serveFilesRequest(
     segments = segments.map((s) => s.trim()).filter(Boolean);
     if (segments.length === 0) return notFound();
 
-    // ── id route: /.cms/files/by-id/<id> — opaque + immutable ──
+    // ── id route: /.cms/files/by-id/<id> — opaque + immutable (prod) ──
     if (segments[0] === "by-id") {
         const id = segments[1];
         if (segments.length !== 2 || !id) return notFound();
@@ -68,7 +77,7 @@ export async function serveFilesRequest(
         if (!item || item.type !== "file") return notFound(); // unknown id, or a folder id
         const stream = await deps.blob.get(item.id);
         if (!stream) return notFound();
-        return fileResponse(item, stream, IMMUTABLE);
+        return fileResponse(item, stream, idCacheControl());
     }
 
     // ── path route: /.cms/files/<tree-path> — house cache policy ──

@@ -97,8 +97,8 @@ describe("serveFilesRequest", () => {
     });
 
     describe("by-id route", () => {
-        test("streams the bytes immutable, regardless of MODE / versioning", async () => {
-            process.env.MODE = "DEV"; // path route would be revalidate here — id route is always immutable
+        test("streams the bytes immutable in prod (no `?v` needed)", async () => {
+            process.env.MODE = "PROD";
             const metadata = new InMemoryCmsFilesMetadata();
             const blob = new InMemoryCmsFilesBlob();
             const { fileId } = await seed(metadata, blob, { folder: "logos", name: "hero.png", mimeType: "image/png", bytes: enc.encode("PNG") });
@@ -108,6 +108,16 @@ describe("serveFilesRequest", () => {
             expect(res.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
             expect(res.headers.get("Content-Type")).toBe("image/png");
             expect(await res.text()).toBe("PNG");
+        });
+
+        test("in DEV the id route revalidates (you edit files on disk; nothing is cached)", async () => {
+            process.env.MODE = "DEV";
+            const metadata = new InMemoryCmsFilesMetadata();
+            const blob = new InMemoryCmsFilesBlob();
+            const { fileId } = await seed(metadata, blob, { folder: "logos", name: "hero.png", mimeType: "image/png", bytes: enc.encode("PNG") });
+
+            const res = await serveFilesRequest({ metadata, blob }, req(`${PREFIX}by-id/${fileId}`), { prefix: PREFIX });
+            expect(res.headers.get("Cache-Control")).toBe("no-cache, must-revalidate");
         });
 
         test("an unknown id → 404", async () => {

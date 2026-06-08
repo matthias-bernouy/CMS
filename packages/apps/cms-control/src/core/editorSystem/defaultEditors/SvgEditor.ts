@@ -59,11 +59,13 @@ export class SvgEditor extends Editor {
 
     private async handleSelectMedia(e: Event) {
         const src = (e as CustomEvent).detail?.src as string | undefined;
+        const mimetype = (e as CustomEvent).detail?.mimetype as string | undefined;
         this._mediaCenter?.removeEventListener("select-item", this.onSelectMedia);
         this._mediaCenter?.remove();
         this._mediaCenter = null;
 
-        if (!src || !/\.svg($|\?)/i.test(src)) return;
+        // Gate on the real mime type, not the URL — id URLs carry no `.svg`.
+        if (!src || mimetype !== "image/svg+xml") return;
 
         try {
             const svgText = await fetch(src).then(r => r.text());

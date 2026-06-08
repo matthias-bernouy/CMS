@@ -90,6 +90,23 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
     async createFile(input: NewFile): Promise<FileItem> {
         await this._assertParent(input.parentId);
         const now = new Date();
+        if (input.id) {
+            // Caller-supplied id (CLI push carrying the dev registry uuid): UPSERT
+            // so a re-push updates the existing row in place and the by-id URL stays
+            // continuously live, instead of 409-ing on the duplicate _id. A genuine
+            // (parentId,name) clash with a DIFFERENT _id still surfaces as 11000.
+            try {
+                const d = await this.col.findOneAndUpdate(
+                    { _id: input.id },
+                    {
+                        $set: { type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, updatedAt: now },
+                        $setOnInsert: { createdAt: now },
+                    },
+                    { upsert: true, returnDocument: "after" },
+                );
+                return fromDoc(d!) as FileItem;
+            } catch (e) { throw clashOr(e); }
+        }
         const doc: ItemDoc = { _id: randomUUIDv7(), type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, createdAt: now, updatedAt: now };
         await this._insert(doc);
         return fromDoc(doc) as FileItem;

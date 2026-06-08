@@ -21,6 +21,23 @@ describe("InMemoryCmsFilesMetadata", () => {
         await expect(repo.createFolder({ name: "images", parentId: null })).rejects.toThrow(/already exists/);
     });
 
+    test("createFile honors a caller-supplied id", async () => {
+        const repo = new InMemoryCmsFilesMetadata();
+        const f = await repo.createFile({ name: "hero.png", parentId: null, size: 1, mimeType: "image/png", id: "fixed-id" });
+        expect(f.id).toBe("fixed-id");
+        expect((await repo.getItem("fixed-id"))?.name).toBe("hero.png");
+    });
+
+    test("a supplied id UPSERTS: re-creating the same id updates in place, not a duplicate", async () => {
+        const repo = new InMemoryCmsFilesMetadata();
+        const a = await repo.createFile({ name: "hero.png", parentId: null, size: 1, mimeType: "image/png", id: "fixed-id" });
+        const b = await repo.createFile({ name: "hero.png", parentId: null, size: 999, mimeType: "image/png", id: "fixed-id" });
+        expect(b.id).toBe("fixed-id");
+        expect(b.size).toBe(999);                               // updated
+        expect(b.createdAt).toEqual(a.createdAt);               // preserved across the upsert
+        expect((await repo.listChildren(null)).total).toBe(1);  // no duplicate row
+    });
+
     test("resolves a readable path to its item (id stays stable)", async () => {
         const repo = new InMemoryCmsFilesMetadata();
         const images = await repo.createFolder({ name: "images", parentId: null });

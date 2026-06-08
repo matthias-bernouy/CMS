@@ -73,10 +73,14 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
 
     async createFile(input: NewFile): Promise<FileItem> {
         this._assertParent(input.parentId);
-        this._assertNoClash(input.parentId, input.name);
         const now = new Date();
-        const item: FileItem = { id: randomUUIDv7(), type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, createdAt: now, updatedAt: now };
-        this._items.set(item.id, item);
+        // Caller-supplied id → UPSERT (re-push updates in place); clash check
+        // excludes self so re-creating the same id under the same name is fine.
+        const id = input.id ?? randomUUIDv7();
+        this._assertNoClash(input.parentId, input.name, input.id ? id : undefined);
+        const existing = input.id ? this._items.get(id) : undefined;
+        const item: FileItem = { id, type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, createdAt: existing?.createdAt ?? now, updatedAt: now };
+        this._items.set(id, item);
         return clone(item) as FileItem;
     }
 

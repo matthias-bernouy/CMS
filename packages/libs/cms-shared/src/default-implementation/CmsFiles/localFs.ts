@@ -117,7 +117,12 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
             await this._assertFree(path);
             await mkdir(this._abs(parentOf(path) ?? ""), { recursive: true });
             await writeFile(this._abs(path), "");            // touch; uploadFile's blob.put writes the bytes
-            return (await this._stat(path)) as FileItem;     // mints uuid + hash(empty) via _resolveId
+            if (input.id) {                                  // honor a caller-supplied id (record it, don't mint)
+                this.registry!.byId[input.id] = { path, hash: sha256Hex(new Uint8Array()) };
+                this.registry!.byPath[path] = input.id;
+                this.dirty = true;
+            }
+            return (await this._stat(path)) as FileItem;     // _resolveId returns input.id, or mints if absent
         } finally { await this._flush(); }
     }
 

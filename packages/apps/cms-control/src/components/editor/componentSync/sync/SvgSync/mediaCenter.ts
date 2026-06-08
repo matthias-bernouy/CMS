@@ -19,10 +19,12 @@ export function openPicker(host: SvgSync) {
     const handler = async (e: Event) => {
         mc.removeEventListener("select-item", handler);
         const src = (e as CustomEvent).detail?.src as string | undefined;
+        const mimetype = (e as CustomEvent).detail?.mimetype as string | undefined;
         mc.remove();
         if (!src) return;
-        if (!/\.svg($|\?)/i.test(src)) {
-            host._showError("Please pick an SVG file (.svg).");
+        // Gate on the real mime type, not the URL — id URLs carry no `.svg`.
+        if (mimetype !== "image/svg+xml") {
+            host._showError("Please pick an SVG file.");
             return;
         }
         try {

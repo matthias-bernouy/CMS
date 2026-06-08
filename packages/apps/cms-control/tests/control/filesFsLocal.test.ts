@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtemp, mkdir, rm, rename, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsCmsFiles, sha256Hex, pathOf } from "@bernouy/cms-shared";
+import { LocalFsCmsFiles, sha256Hex } from "@bernouy/cms-shared";
 import { uploadFile } from "cms-control/core/files/uploadFile";
 import { deleteFileTree } from "cms-control/core/files/deleteFileTree";
 
@@ -61,13 +61,22 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
         expect(await read(await fs.get(hero.id))).toBe("DATA");
     });
 
+    test("createFile honors a caller-supplied id (CLI push path)", async () => {
+        const f = await fs.createFile({ name: "hero.png", parentId: null, size: 0, mimeType: "image/png", id: "given-uuid" });
+        expect(f.id).toBe("given-uuid");
+        expect((await fs.getItem("given-uuid"))?.name).toBe("hero.png");
+        expect((await registry()).byPath["hero.png"]).toBe("given-uuid");
+    });
+
     test("parentId/id symmetry: child.parentId resolves back to the folder", async () => {
         const dir = await fs.createFolder({ name: "logos", parentId: null });
         const f = await uploadFile(fs, fs, file("hero.png", "x"), dir.id);
         const child = (await fs.listChildren(dir.id)).items[0]!;
+        expect(child.id).toBe(f.id);
         expect(child.parentId).toBe(dir.id);
         expect((await fs.getItem(child.parentId!))?.id).toBe(dir.id);
-        expect(await pathOf(fs, f.id)).toBe("logos/hero.png");
+        // walking parentId reconstructs the path → the inverse of getItemByPath
+        expect((await fs.getItemByPath("logos/hero.png"))?.id).toBe(f.id);
     });
 
     test("recursive delete removes the subtree and reports the file ids (uuids)", async () => {

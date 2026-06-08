@@ -1,9 +1,10 @@
-import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
+import { sha256Hex } from "@bernouy/cms-shared";
 
-const FILES_SUBDIR = "files";
+const FILES_SUBDIR    = "files";
+const REGISTRY_FILE   = ".cms-files-registry.json";
 
 export type LocalFile = {
     /** POSIX path relative to `<siteDir>/files`, e.g. "images/hero.png". */
@@ -17,6 +18,10 @@ export type LocalFile = {
     size: number;
     /** sha256 of the file bytes — drives change detection. */
     hash: string;
+    /** The dev registry uuid for this path, sent as the upload `id` so the remote
+     *  `_id` matches dev. Undefined only when the registry is missing the path
+     *  (stale/uncommitted) — the remote then mints its own id (warned at scan). */
+    id?:  string;
 };
 
 /**
@@ -32,7 +37,38 @@ export async function scanFiles(siteDir: string): Promise<LocalFile[]> {
     const out: LocalFile[] = [];
     await walk(root, "", out);
     out.sort((a, b) => a.path.localeCompare(b.path));
+
+    // Carry the dev registry uuid into each file so `apply` can send it as the
+    // upload `id` (remote `_id` === dev id === id baked into by-id URLs). We TRUST
+    // the committed registry — `p9r dev` / `p9r files reindex` guarantee every
+    // on-disk file has a `byPath` entry. A miss means the registry is stale or
+    // uncommitted: warn loudly and let the remote mint (no lazy-mint here — that
+    // would bake a machine-specific uuid into the remote).
+    const byPath = await loadRegistryByPath(siteDir);
+    const missing: string[] = [];
+    for (const f of out) {
+        const id = byPath[f.path];
+        if (id) f.id = id; else missing.push(f.path);
+    }
+    if (missing.length) {
+        console.warn(`! ${missing.length} media file(s) have no id in ${REGISTRY_FILE}:`);
+        for (const p of missing.slice(0, 10)) console.warn(`    ${p}`);
+        if (missing.length > 10) console.warn(`    … and ${missing.length - 10} more`);
+        console.warn(`  Run \`p9r files reindex\` and commit ${REGISTRY_FILE} before pushing —`);
+        console.warn(`  otherwise the remote mints its own ids and their by-id URLs will not match.`);
+    }
     return out;
+}
+
+/** Read the committed `path → uuid` map; tolerate absent/corrupt (→ all-missing
+ *  warning above, and the reindex/gate steps are where that gets fixed). */
+async function loadRegistryByPath(siteDir: string): Promise<Record<string, string>> {
+    const p = join(siteDir, REGISTRY_FILE);
+    if (!existsSync(p)) return {};
+    try {
+        const reg = JSON.parse(await readFile(p, "utf-8")) as { byPath?: Record<string, string> };
+        return reg.byPath ?? {};
+    } catch { return {}; }
 }
 
 async function walk(absDir: string, relDir: string, out: LocalFile[]): Promise<void> {
@@ -51,7 +87,7 @@ async function walk(absDir: string, relDir: string, out: LocalFile[]): Promise<v
                 dir:  relDir,
                 abs,
                 size: bytes.byteLength,
-                hash: createHash("sha256").update(bytes).digest("hex"),
+                hash: sha256Hex(bytes),
             });
         }
     }

@@ -192,7 +192,9 @@ export class MediaCenter extends Component {
         if (!this._selectedItem) return;
         const src = this._selectedItem.absoluteURL ?? "";
         this.dispatchEvent(new CustomEvent("select-item", {
-            detail: { src, alt: this._selectedItem.label },
+            // `mimetype` lets consumers gate on the real type — id URLs carry no
+            // extension, so SVG detection can't sniff the URL anymore.
+            detail: { src, alt: this._selectedItem.label, mimetype: this._selectedItem.mimetype },
             bubbles: true,
             composed: true
         }));
