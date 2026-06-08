@@ -18004,6 +18004,7 @@ form[method="dialog"] {
     }
     handlePaste(e) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       const clipboard = e.clipboardData;
       if (!clipboard)
         return;

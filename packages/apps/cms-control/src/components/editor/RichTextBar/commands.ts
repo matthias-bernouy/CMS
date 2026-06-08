@@ -175,7 +175,7 @@ export function insertList(tag: "ul" | "ol") {
  * saved page content. Control chars are stripped first since browsers ignore
  * them when resolving a scheme (`java\nscript:` → `javascript:`).
  */
-function isSafeLinkUrl(raw: string): boolean {
+export function isSafeLinkUrl(raw: string): boolean {
     const stripped = raw.trim().replace(/[\u0000-\u001F\u007F]/g, "");
     const scheme = stripped.match(/^([a-z][a-z0-9+.-]*):/i);
     if (!scheme) return true; // relative URL, anchor or query — no scheme

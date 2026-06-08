@@ -1,4 +1,5 @@
 import { BlocLibrary } from "cms-control/components/editor/EditorSystem/BlocLibrary/BlocLibrary";
+import { sanitizePastedHtml } from "cms-control/components/editor/RichTextBar/sanitizePastedHtml";
 import { Editor } from "../Editor/Editor";
 import getClosestEditorSystem from "../../dom/editor/getClosestEditorSystem";
 import type { EDITOR_SYSTEM_MODE } from "types/w13c/EditorSystem";
@@ -74,19 +75,36 @@ export class TextEditor extends Editor {
 
     private handlePaste(e: ClipboardEvent) {
         e.preventDefault();
-        const text = e.clipboardData?.getData("text/plain") || "";
+        // Inline-formatting tags (span, a, b, i, u) are editorized as their own
+        // TextEditor, so a paste inside e.g. a <b> nested in a <p> fires here on
+        // the inner editor AND bubbles to the outer one — each inserting the
+        // clipboard once, doubling the content. Stop the event the moment the
+        // closest editor handles it (mirrors handleKeyDown's Enter handling).
+        e.stopImmediatePropagation();
+        const clipboard = e.clipboardData;
+        if (!clipboard) return;
 
         const selection = window.getSelection();
         if (!selection || !selection.rangeCount) return;
 
+        // Keep the inline formatting (bold/italic/underline/strike/links/colour)
+        // and block structures the editor itself produces; strip div wrappers,
+        // scripts and Word/Docs chrome. Fall back to plain text with no HTML.
+        const html = clipboard.getData("text/html");
+        const node: Node = html
+            ? document.createRange().createContextualFragment(sanitizePastedHtml(html))
+            : document.createTextNode(clipboard.getData("text/plain") || "");
+
+        // Capture the tail before insertNode empties the fragment.
+        const tail = node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.lastChild : node;
+
         selection.deleteFromDocument();
-        const textNode = document.createTextNode(text);
-
         const range = selection.getRangeAt(0);
-        range.insertNode(textNode);
+        range.insertNode(node);
 
-        range.setStartAfter(textNode);
-        range.setEndAfter(textNode);
+        if (!tail) return;
+        range.setStartAfter(tail);
+        range.setEndAfter(tail);
         selection.removeAllRanges();
         selection.addRange(range);
     }
