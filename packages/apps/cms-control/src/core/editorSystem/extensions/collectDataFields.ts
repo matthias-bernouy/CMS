@@ -8,7 +8,7 @@ import { flattenScalars } from "./schemaScalars";
  * source schema itself is a primitive — token = `{{ <sourceId> }}`).
  *
  * Inserted token convention: `{{ <sourceId>[.<path>] }}`. The runtime
- * renderer (e.g. `<cms-fetch>`) substitutes scalars at template time.
+ * renderer (`cms-source`) substitutes scalars at render time.
  */
 export type DataField = {
     sourceId:    string;

@@ -4,8 +4,9 @@ CMS blocs and admin custom elements toolkit. Two component flavors:
 
 - **`<p9r-*>`** — visual UI components (Button, Card, Tabs, Toast,
   Input, Select, …) consumed by every CMS admin page and by blocs.
-- **`<w13c-*>`** — logical components (`<w13c-form>`, `<w13c-fetch>`)
-  that handle declarative submit/fetch with no per-page JS.
+- **`<w13c-*>`** — logical components (`<w13c-form>`) for declarative
+  submit with no per-page JS. Declarative **data binding** lives in
+  `src/binding/` (attribute-driven runtime; see below).
 
 Published to npm as `@bernouy/cms-blocs` (MIT). Other workspace
 packages (`@bernouy/cms-control`) consume the **built bundle**
@@ -23,9 +24,9 @@ src/
 │   ├── Layout/     Menu/     Pagination/  Progress/  Skeleton/
 │   ├── Spinner/    Stepper/  Table/  Tabs/  Tag/  Toast/  Tooltip/
 │   └── …
-├── logicalComponents/        all <w13c-*> behavioral components
-│   ├── Form/Form.ts          <w13c-form> — declarative submit
-│   └── data/fetch/           <w13c-fetch> — declarative fetch + slot stamp
+├── logicalComponents/        <w13c-*> behavioral components
+│   └── Form/Form.ts          <w13c-form> — declarative submit
+├── binding/                  data-binding runtime — <cms-binding-core> + cms-source/cms-repeat/{{ }}/#{}/cms-param-sync
 ├── assets/
 │   └── default.css           global theme tokens (--primary-*, --bg-*, --text-*, --border-*, --danger-*, …)
 ├── types/                    shared TS types
@@ -106,16 +107,30 @@ forward values — `ElementInternals.setFormValue()` is the right tool.
 `<w13c-form>` wraps an inner `<form>`, posts JSON to `target` on
 submit, dispatches `form:success` / `form:failed` (bubbles + composed
 via `BubblesEvent`). `emit="some:event"` re-dispatches on success so a
-sibling `<w13c-fetch reload-on>` can refresh.
+`cms-source` with a matching `cms-reload-on` refreshes. Uses
+`BubblesEvent` (a `CustomEvent` with `bubbles + composed = true`) so
+events escape shadow boundaries.
 
-`<w13c-fetch>` fetches JSON from `url`, stamps a child `<template>`
-against the response, inserts the result as siblings. Slots: `default`
-(data), `loading`, `error`, `empty`. `reload-on="event-name"` listens
-on `document` for refresh triggers; `cms-fetch:reload` is built in.
-Public `el.reload()`.
+## Data-binding runtime (`src/binding/`)
 
-Both use `BubblesEvent` (a `CustomEvent`-equivalent with `bubbles +
-composed = true`) so events escape shadow boundaries.
+Attribute-driven, activated only inside a `<cms-binding-core>` custom
+element (the activation root; nested cores are isolated islands — no data
+mixing). Replaced the old `<cms-fetch>` / `<template for>` system.
+
+- `cms-source="url"` — fetch JSON, render the element's body against it.
+  States via `cms-slot="loading|error|empty"`; reload via
+  `cms-reload-on="event-name"` (document events). A `<template>` body is
+  captured **inert** (for active components that pre-render their light
+  DOM); live body otherwise (e.g. `<p9r-table>` rows that must be direct
+  children for `<slot>`).
+- `cms-repeat="path"` / `"path as name"` — iterate an array.
+- `{{ path }}` — interpolate against the scope chain (blank on miss; raw,
+  not HTML-escaped — DOM-API safety). `{{ x | innerHTML }}` injects raw
+  HTML (unwraps the placeholder; trusted content only).
+- `#{param}` — REACTIVE query-param ref, resolved per fetch; the source
+  reloads on change. Use it to forward a param (`?id=#{id}`) — sources do
+  NOT auto-forward `location.search`.
+- `cms-param-sync` on an input — two-way value↔query-param.
 
 ## Theme variables
 

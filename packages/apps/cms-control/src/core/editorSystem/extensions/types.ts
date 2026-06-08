@@ -67,7 +67,7 @@ export type BlocActionContext = {
 /**
  * Contract for the per-bloc action bar (BAG). Hierarchical like richtextbar:
  * the BAG of any descendant of the publishing Editor surfaces these actions.
- * Use case: a `<base-fetch>` exposes "Iterate from data.items" so the user can
+ * Use case: a data-source bloc exposes "Iterate from data.items" so the user can
  * pick a child bloc and wrap it in `<base-list-foreach>` from its own BAG.
  */
 export interface BlocActionExtension {

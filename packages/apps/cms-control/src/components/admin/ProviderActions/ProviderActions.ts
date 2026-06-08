@@ -5,7 +5,7 @@ import { showToast } from "cms-control/core/showToast";
  * cell for one identity-provider row. Renders a clean enable/disable toggle
  * (PATCH on click) and, for non-builtin providers only, a Remove button
  * (DELETE). The builtin `local` provider is a singleton — toggle only, never
- * removable. Emits `emit` on success so a `<cms-fetch reload-on>` refreshes.
+ * removable. Emits `emit` on success so a `cms-source` with `cms-reload-on` refreshes.
  */
 class CmsProviderActions extends HTMLElement {
 

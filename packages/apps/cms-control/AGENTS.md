@@ -48,7 +48,7 @@ packages/cms-control/
     │   └── profil.get.ts              admin Profile page payload
     │
     ├── components/          browser TS bundled into `control-components.js`
-    │   ├── admin/           admin-page custom elements (`<cms-fetch>`, `<cms-form>`,
+    │   ├── admin/           admin-page custom elements (`<cms-form>`,
     │   │                    AdminLayout, Secrets, Tokens, ProviderActions, RoleSelect, …)
     │   ├── editor/          visual editor (EditorRoot, BlocActions, BlocLibrary,
     │   │                    MediaCenter, RichTextBar, FloatingToolbar, snippet/, componentSync/)
@@ -178,8 +178,8 @@ pages compose web components that handle dynamic behavior themselves.
 Building blocks consumed by every admin page:
 
 - `<w13c-fixed-admin-layout>` — page chrome with `slot="title"` + `slot="action"`.
-- `<cms-fetch>` — fetches JSON, stamps a `<template>` against the response, inserts as siblings. Slots: `default` (data), `loading`, `error`, `empty`. `reload-on="event-name"` listens on `document` for refresh triggers; `cms-fetch:reload` is built in. Public `el.reload()`.
-- `<cms-form>` — wraps an inner `<form>`, posts JSON to `target` on submit, dispatches `form:success` / `form:failed` (bubbles + composed via `BubblesEvent`). `emit="some:event"` re-dispatches on success so a `<cms-fetch reload-on>` refreshes.
+- **Data binding** (`@bernouy/cms-blocs` `src/binding/`) — attribute-driven, activated inside `<cms-binding-core>` (in the page shell). `cms-source="url"` fetches + renders the body (states via `cms-slot="loading|error|empty"`, reload via `cms-reload-on="evt"`); `cms-repeat` iterates; `{{ path }}` interpolates (blank on miss; `{{ x | innerHTML }}` for raw HTML); `#{param}` is a reactive query-param (use `?id=#{id}` to forward — sources don't auto-forward `location.search`); `cms-param-sync` two-way-binds an input to a query param. Replaced the old `<cms-fetch>`.
+- `<cms-form>` — wraps an inner `<form>`, posts JSON to `target` on submit, dispatches `form:success` / `form:failed` (bubbles + composed via `BubblesEvent`). `emit="some:event"` re-dispatches on success so a `cms-source` with `cms-reload-on` refreshes.
 - `<cms-validate>` — display-transparent (`display: contents`) wrapper. Reads child `[name]` values, POSTs to `url`, applies `setCustomValidity` per field from `{ valid, message?, errors? }`.
 - `<cms-media-admin>` — media admin page in a single tag. Header buttons (`+ New folder`, `Upload`) hit the `/api/files` endpoints directly (no form post) and refresh the embedded `<p9r-grid-media>`.
 - `<cms-editor-system>` — editor root, mounted on every editor page (page / template / snippet flavor). Handles the editor's shadow DOM, initial bloc registration, and orchestrates `ObserverManager`, `DragManager`, `BlocActions`, `BlocLibrary`.
@@ -232,7 +232,7 @@ The bloc's config panel (`<p9r-config-panel>`, lives in `components/editor/compo
 
 ## Custom element prefix conventions
 
-- **`cms-*`** — internal CMS components (admin shell, editor system, form/data utilities). E.g. `cms-form`, `cms-validate`, `cms-fetch`, `cms-editor-system`, `cms-bloc-actions`, `cms-bloc-library`, `cms-floating-toolbar`, `cms-media-center`, `cms-media-admin`.
+- **`cms-*`** — internal CMS components (admin shell, editor system, form/data utilities). E.g. `cms-form`, `cms-validate`, `cms-binding-core`, `cms-editor-system`, `cms-bloc-actions`, `cms-bloc-library`, `cms-floating-toolbar`, `cms-media-center`, `cms-media-admin`.
 - **`p9r-*`** — public custom elements provided by the framework (from `@bernouy/cms-blocs`), used inside bloc configurations and editor panels. Reserved system-only — never scaffold a bloc with a `p9r-*` tag.
 - **`w13c-*`** — public custom elements from `@bernouy/cms-blocs` (admin chrome, generic UI). Reserved system-only.
 

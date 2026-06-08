@@ -11,7 +11,7 @@ import { ICON_DATABASE } from "cms-control/components/icons";
  * Pure presentation layer over `collectDataFields` — the scope walk + schema
  * flattening live there (single source of truth). Here we only group the flat
  * field list back by source and map each field to its `{{ <sourceId>[.<path>] }}`
- * insert token via `tokenOf`. The runtime renderer (e.g. `<cms-fetch>`)
+ * insert token via `tokenOf`. The runtime renderer (`cms-source`)
  * substitutes scalars at template time.
  */
 export function adaptDataExtensions(fromEl: Element): RichTextBarExtension[] {

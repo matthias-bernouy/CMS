@@ -15,8 +15,8 @@ import { collectAncestorExtensions } from 'cms-control/core/editorSystem/extensi
  * Why the walk starts at `target` (not `target.parentElement`): the
  * `p9r-parent-identifier` fallback inside `collectAncestorExtensions` is
  * how stamped descendants reach a publishing ancestor that isn't a real
- * DOM parent (e.g. `<base-fetch>` stamps siblings; an inserted card
- * carries `p9r-parent-identifier` pointing at the fetch). The pid lives
+ * DOM parent (e.g. a bloc that stamps siblings; an inserted card
+ * carries `p9r-parent-identifier` pointing at the publisher). The pid lives
  * ON the target itself, so starting one level higher misses it. We add
  * the explicit self-filter below to preserve the original intent.
  */

@@ -26,7 +26,7 @@ export function resolveTargetForLink(req: NavigationRequest): void {
             // the user was previewing, they stay previewing on the next page.
             if (ctx.mode === "view") params.set("mode", "view");
             // Forward the original href's query params so page-level blocs
-            // that rely on URL state (e.g. `<base-fetch url="…?id=eq.{{ query.i }}">`
+            // that rely on URL state (e.g. `<div cms-source="…?id=#{i}">`
             // on `/annonce?i=<uuid>`) still receive their inputs through
             // the cross-editor jump. Page params coexist with the editor's
             // own `id` / `mode` — namespace collisions are the caller's
