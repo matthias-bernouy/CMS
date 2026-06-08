@@ -9,6 +9,10 @@ export type MediaItem = {
      * are derived on the admin side.
      */
     absoluteURL?: string;
+    /** sha256 of the bytes — the cache-bust token for the DISPLAY url only (see
+     *  `variantUrl`). Kept off `absoluteURL` so the copied / picked-into-content
+     *  value stays the clean `/by-id/<id>` (the renderer injects the live `?v`). */
+    contentHash?: string;
     mimetype?: string;
     size?: number;
     width?: number;
@@ -36,12 +40,17 @@ export function escapeAttr(s: string): string {
 }
 
 /**
- * Returns the URL to render for a `MediaItem`. The signature still accepts
- * `width` / `height` so existing call sites stay unchanged, but admin no
- * longer derives variant URLs — the CDN interface doesn't expose
- * `formatImageUrl` (it's a pure object store, not an image-resize service).
- * Folders carry no URL, so the empty-string fallback survives.
+ * The URL to DISPLAY a `MediaItem` in the admin (grid thumbnail, detail
+ * preview). It is `absoluteURL` plus a `?v=<contentHash>` cache-bust so a
+ * replaced file (same id, new bytes) repaints instead of showing the immutable
+ * cached image. The token is added HERE only — `absoluteURL` itself stays the
+ * clean `/by-id/<id>` for copy-URL and for what gets stored when picked.
+ *
+ * `width`/`height` are still accepted (call sites unchanged) but ignored: admin
+ * derives no resize variants — the seam for Milestone B's variant URLs.
  */
 export function variantUrl(item: MediaItem, _width?: number, _height?: number): string {
-    return item.absoluteURL ?? "";
+    const url = item.absoluteURL ?? "";
+    if (!url || !item.contentHash) return url;
+    return url.includes("?") ? `${url}&v=${item.contentHash}` : `${url}?v=${item.contentHash}`;
 }

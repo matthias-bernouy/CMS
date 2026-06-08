@@ -19,8 +19,9 @@ export type FilesItem = {
     type:      "folder" | "file";
     createdAt: string;
     updatedAt: string;
-    size?:     number;
-    mimeType?: string;
+    size?:        number;
+    mimeType?:    string;
+    contentHash?: string;
 };
 
 export type FilesPage = {
@@ -56,9 +57,10 @@ export function toLocal(item: FilesItem): LocalMediaItem {
     if (item.type === "file") {
         local.mimetype    = item.mimeType;
         local.size        = item.size;
-        // Address bytes by opaque id (immutable + rename-proof). The grid
-        // thumbnail, detail preview, copy-URL, and what gets stored in content
-        // all read this one field.
+        local.contentHash = item.contentHash;   // display cache-bust (see variantUrl)
+        // Address bytes by opaque id (immutable + rename-proof). `absoluteURL`
+        // stays the clean id URL — copy-URL and what gets stored in content read
+        // it as-is; only the display src (variantUrl) appends `?v=contentHash`.
         local.absoluteURL = cmsFilesIdUrl(item.id);
     }
     return local;

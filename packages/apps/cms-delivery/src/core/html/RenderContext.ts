@@ -1,3 +1,4 @@
+import type { CmsFilesMetadataRepository } from "@bernouy/cms-shared";
 import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
 import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";
 import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
@@ -21,4 +22,8 @@ export type RenderContext = {
      *  uploaded default SVG. */
     defaultFaviconUrl: string;
     headInjectors: readonly HeadInjector[];
+    /** Files metadata, used to resolve each `by-id` media URL's `contentHash`
+     *  for the cache-busting `?v=` token. Optional — absent when no files
+     *  backend is wired, in which case media URLs render unversioned. */
+    filesMetadata?: CmsFilesMetadataRepository;
 };

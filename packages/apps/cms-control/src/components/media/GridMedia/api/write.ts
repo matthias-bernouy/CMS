@@ -58,6 +58,22 @@ export async function uploadFiles(files: FileList, folder: string | null): Promi
 }
 
 /**
+ * Replace a file's BYTES in place, keeping its id/name/location. The stored
+ * `by-id` URL is unchanged — only its `?v` content-hash token changes — so every
+ * page that references the file updates at once (the endpoint invalidates the
+ * affected pages' cache). Repaints the grid from the bytes the browser already
+ * holds, since the unchanged URL would otherwise keep showing the cached image.
+ */
+export async function replaceFileContent(id: string, file: File): Promise<boolean> {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("id", id);
+    const res = await fetch(`${filesBase()}/content`, { method: "PUT", body: form });
+    if (res.ok) _localPreview.set(id, URL.createObjectURL(file));
+    return res.ok;
+}
+
+/**
  * The endpoint only accepts `name` and `parentId`. The old repository
  * contract accepted a free-form metadata bag (`alt`, tags, …); those fields
  * are silently dropped now.

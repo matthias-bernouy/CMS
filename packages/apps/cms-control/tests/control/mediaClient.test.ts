@@ -1,9 +1,10 @@
 import { describe, test, expect } from "bun:test";
 import { toLocal, cmsFilesIdUrl, type FilesItem } from "cms-control/components/media/GridMedia/api/client";
+import { variantUrl } from "cms-control/components/media/GridMedia/types";
 
 const fileItem = (over: Partial<FilesItem> = {}): FilesItem => ({
     id: "01h-abc", name: "hero.png", parentId: null, type: "file",
-    createdAt: "", updatedAt: "", size: 3, mimeType: "image/png",
+    createdAt: "", updatedAt: "", size: 3, mimeType: "image/png", contentHash: "abc123",
     ...over,
 });
 
@@ -23,6 +24,20 @@ describe("GridMedia client — id-addressed URLs", () => {
 
     test("cmsFilesIdUrl encodes the id", () => {
         expect(cmsFilesIdUrl("a b")).toBe("/.cms/files/by-id/a%20b");
+    });
+
+    test("the DISPLAY url is cache-busted with ?v=contentHash; absoluteURL stays clean", () => {
+        const local = toLocal(fileItem());
+        expect(local.contentHash).toBe("abc123");
+        // absoluteURL = the clean stored/copied form (no ?v)
+        expect(local.absoluteURL).toBe("/.cms/files/by-id/01h-abc");
+        // variantUrl = the display form, busted so a replaced file repaints
+        expect(variantUrl(local)).toBe("/.cms/files/by-id/01h-abc?v=abc123");
+    });
+
+    test("variantUrl is the plain url when there is no contentHash", () => {
+        const local = toLocal(fileItem({ contentHash: undefined }));
+        expect(variantUrl(local)).toBe("/.cms/files/by-id/01h-abc");
     });
 
     test("folders carry no URL", () => {

@@ -45,6 +45,51 @@ export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: s
 }
 
 /**
+ * Invalidate every cached rendered page that references a given file id —
+ * directly (a `<img src="/.cms/files/by-id/<id>">`) or transitively via a
+ * snippet. Called after a file's bytes are updated in place: the cached HTML
+ * carries the file's old `?v=<contentHash>`, so it must regenerate to pick up
+ * the new hash. If the file is the site favicon, every page changes → all.
+ *
+ * Pages that don't reference the file keep serving from cache.
+ */
+export async function invalidatePagesReferencingFile(cms: ControlCms, fileId: string): Promise<void> {
+    const ref = `by-id/${fileId}`; // precise: ids are unique, so a substring match is safe
+
+    const [pages, snippets, settings] = await Promise.all([
+        cms.repository.getAllPages(),
+        cms.repository.getAllSnippets(),
+        cms.repository.getSystem(),
+    ]);
+
+    // The favicon lives in site settings, not page content — if it points at
+    // this file, its `?v` changes on every page.
+    if (settings.site?.favicon?.includes(ref)) { invalidateAllPages(cms); return; }
+
+    const affectedSnippetIds = new Set(
+        snippets.filter(s => s.content.includes(ref)).map(s => s.identifier),
+    );
+
+    for (const page of pages) {
+        let matches = page.content.includes(ref);
+        if (!matches && affectedSnippetIds.size > 0) {
+            for (const id of affectedSnippetIds) {
+                if (
+                    page.content.includes(`identifier="${id}"`) ||
+                    page.content.includes(`identifier='${id}'`)
+                ) {
+                    matches = true;
+                    break;
+                }
+            }
+        }
+        if (matches) {
+            cms.cache.delete(P9R_CACHE.page(page.path));
+        }
+    }
+}
+
+/**
  * Invalidate every cached rendered page. Used when a global asset (theme
  * CSS, site settings) changes — the new hash affects every page's `<link>`
  * / `<script>` tags, so they all must be re-rendered.

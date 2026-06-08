@@ -2,8 +2,9 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtemp, mkdir, rm, rename, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsCmsFiles, sha256Hex } from "@bernouy/cms-shared";
+import { LocalFsCmsFiles, sha256Hex, InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, type FileItem } from "@bernouy/cms-shared";
 import { uploadFile } from "cms-control/core/files/uploadFile";
+import { updateFileContent } from "cms-control/core/files/updateFileContent";
 import { deleteFileTree } from "cms-control/core/files/deleteFileTree";
 
 const file = (name: string, content: string, type = "text/plain") => new File([content], name, { type });
@@ -59,6 +60,43 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
         expect((await fs.getItem(dir.id))?.name).toBe("archive");   // same uuid, new name
         expect((await fs.getItem(hero.id))?.id).toBe(hero.id);       // file uuid preserved through folder rename
         expect(await read(await fs.get(hero.id))).toBe("DATA");
+    });
+
+    test("uploadFile computes the contentHash (= sha256 of the bytes) and stores it", async () => {
+        const meta = new InMemoryCmsFilesMetadata();
+        const blob = new InMemoryCmsFilesBlob();
+        const expected = sha256Hex(new TextEncoder().encode("PNGDATA"));
+        const f = await uploadFile(meta, blob, file("a.png", "PNGDATA", "image/png"), null);
+        expect(f.contentHash).toBe(expected);
+        expect((await meta.getItem(f.id) as FileItem).contentHash).toBe(expected);
+    });
+
+    test("localFs derives contentHash from disk (registry hash)", async () => {
+        const f = await uploadFile(fs, fs, file("hero.png", "DATA"), null);
+        const item = await fs.getItem(f.id);
+        expect(item && item.type === "file" ? item.contentHash : null).toBe(sha256Hex(new TextEncoder().encode("DATA")));
+    });
+
+    test("updateFileContent swaps bytes in place: same id + name, refreshed hash (memory store)", async () => {
+        const meta = new InMemoryCmsFilesMetadata();
+        const blob = new InMemoryCmsFilesBlob();
+        const f = await uploadFile(meta, blob, file("logo.png", "V1", "image/png"), null);
+        const updated = await updateFileContent(meta, blob, f.id, file("ignored-name.png", "V2-longer", "image/png"));
+        expect(updated?.id).toBe(f.id);                 // same id
+        expect(updated?.name).toBe("logo.png");          // name preserved, not "ignored-name.png"
+        expect(updated?.size).toBe("V2-longer".length);
+        expect(updated?.contentHash).toBe(sha256Hex(new TextEncoder().encode("V2-longer")));
+        expect(updated?.contentHash).not.toBe(f.contentHash);
+        expect(await read(await blob.get(f.id))).toBe("V2-longer"); // bytes replaced
+    });
+
+    test("updateFileContent on localFs re-derives the hash from disk; null for unknown id", async () => {
+        const f = await uploadFile(fs, fs, file("logo.png", "V1"), null);
+        const updated = await updateFileContent(fs, fs, f.id, file("logo.png", "V2"));
+        expect(updated?.id).toBe(f.id);
+        expect(updated?.contentHash).toBe(sha256Hex(new TextEncoder().encode("V2")));
+        expect(await read(await fs.get(f.id))).toBe("V2");
+        expect(await updateFileContent(fs, fs, "no-such-id", file("x.png", "x"))).toBeNull();
     });
 
     test("createFile honors a caller-supplied id (CLI push path)", async () => {

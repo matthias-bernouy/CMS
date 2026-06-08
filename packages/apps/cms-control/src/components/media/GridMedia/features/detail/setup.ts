@@ -4,6 +4,7 @@ import { buildPreview, buildFields, buildActions } from "./builders";
 
 type DetailCallbacks = {
     onSave: (id: string, data: Record<string, string>) => void;
+    onReplace: (id: string, file: File) => void;
     onDelete: (id: string) => void;
     onClose: () => void;
 };
@@ -21,11 +22,15 @@ export function setupDetail(detail: DetailMedia, callbacks: DetailCallbacks) {
             const fields = buildFields(item);
             detail.appendChild(fields);
 
-            const actions = buildActions();
+            const actions = buildActions(item);
             detail.appendChild(actions);
 
             actions.querySelector("#btn-save")!.addEventListener("click", () => {
                 callbacks.onSave(item.id, readFields(detail));
+            });
+            actions.querySelector("#btn-replace")?.addEventListener("click", async () => {
+                const file = await pickFile(item.type === "image" ? "image/*" : "");
+                if (file) callbacks.onReplace(item.id, file);
             });
             actions.querySelector("#btn-delete")!.addEventListener("click", () => {
                 callbacks.onDelete(item.id);
@@ -40,6 +45,17 @@ export function setupDetail(detail: DetailMedia, callbacks: DetailCallbacks) {
             detail.open(item.label);
         }
     };
+}
+
+/** Open the native file picker and resolve with the chosen file (or null). */
+function pickFile(accept: string): Promise<File | null> {
+    return new Promise((resolve) => {
+        const input = document.createElement("input");
+        input.type = "file";
+        if (accept) input.accept = accept;
+        input.addEventListener("change", () => resolve(input.files?.[0] ?? null), { once: true });
+        input.click();
+    });
 }
 
 function readFields(detail: DetailMedia): Record<string, string> {

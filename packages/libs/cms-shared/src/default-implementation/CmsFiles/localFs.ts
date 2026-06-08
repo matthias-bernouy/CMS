@@ -150,6 +150,13 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
         } finally { await this._flush(); }
     }
 
+    async updateFileContent(id: string, _fields: { size: number; mimeType: string; contentHash: string }): Promise<FileItem | null> {
+        // Content fields derive from disk: a preceding `put(id, bytes)` already
+        // rewrote the bytes and refreshed the registry hash, so just re-stat.
+        const item = await this.getItem(id);
+        return item && item.type === "file" ? item : null;
+    }
+
     async deleteItem(id: string, opts: { recursive?: boolean } = {}): Promise<{ deletedFileIds: string[] }> {
         await this._ensureRegistry();
         try {
@@ -320,7 +327,8 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
         const base = { id, name: path.split("/").pop()!, parentId, createdAt: s.birthtime, updatedAt: s.mtime };
         if (s.isDirectory()) return { ...base, type: "folder" };
         const f = Bun.file(this._abs(path));
-        return { ...base, type: "file", size: s.size, mimeType: f.type || "application/octet-stream" };
+        // The registry hash IS the content hash (kept disk-accurate by put/reconcile).
+        return { ...base, type: "file", size: s.size, mimeType: f.type || "application/octet-stream", contentHash: this.registry!.byId[id]!.hash ?? undefined };
     }
 
     /** uuid for a path — from the registry, or minted (recording the on-disk

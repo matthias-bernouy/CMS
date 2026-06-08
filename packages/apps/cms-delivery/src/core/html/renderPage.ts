@@ -10,6 +10,7 @@ import { buildAssetPreloads, buildFoucShell, buildStylesheetLink } from "cms-del
 import { buildPreconnect } from "cms-delivery/core/head/buildPreconnect";
 import { buildScriptTags } from "cms-delivery/core/head/buildScriptTags";
 import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
+import { injectMediaVersions } from "cms-delivery/core/html/injectMediaVersions";
 import type { RenderContext } from "cms-delivery/core/html/RenderContext";
 
 /**
@@ -77,6 +78,10 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     defineMetaTags     (document, head, page, settings, ctx.defaultFaviconUrl);
     buildStylesheetLink(document, head, assets);
     buildScriptTags    (document, head, assets);
+
+    // Stamp every by-id media URL (body <img>, favicon <link>) with its current
+    // content hash (`?v=`) so an in-place file update busts the immutable cache.
+    await injectMediaVersions(document, ctx.filesMetadata);
 
     return compress(document.toString(), "text/html");
 }

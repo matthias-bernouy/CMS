@@ -30,9 +30,13 @@ type BaseItem = {
 export type FolderItem = BaseItem & { type: "folder" };
 
 export type FileItem = BaseItem & {
-    type:     "file";
-    size:     number;             // bytes
-    mimeType: string;
+    type:        "file";
+    size:        number;          // bytes
+    mimeType:    string;
+    /** sha256-hex of the bytes. Changes on every content edit → the cache token
+     *  (`?v=<contentHash>`) the renderer appends to a `by-id` URL so an in-place
+     *  update busts the immutable cache. Optional: legacy rows may predate it. */
+    contentHash?: string;
 };
 
 export type FilesItem = FolderItem | FileItem;
@@ -65,6 +69,9 @@ export type NewFile   = {
      *  UPSERTS (a re-push updates in place instead of duplicating). UI uploads
      *  omit it → a fresh id is minted. */
     id?: string;
+    /** sha256-hex of the bytes, supplied by the upload flow (which sees them).
+     *  `localFs` ignores it — it derives the hash from disk via its registry. */
+    contentHash?: string;
 };
 export type ItemPatch = { name?: string; parentId?: string | null };
 
@@ -87,6 +94,10 @@ export interface CmsFilesMetadataRepository {
     /** Rename and/or move. Rejects a name clash in the destination, or moving a
      *  folder into its own subtree. Returns `null` when `id` is unknown. */
     updateItem(id: string, patch: ItemPatch): Promise<FilesItem | null>;
+    /** After a file's bytes change IN PLACE (same id), refresh the
+     *  content-derived fields (`size`, `mimeType`, `contentHash`) + `updatedAt`,
+     *  keeping `name`/`parentId`. Returns `null` if `id` is unknown or a folder. */
+    updateFileContent(id: string, fields: { size: number; mimeType: string; contentHash: string }): Promise<FileItem | null>;
     /** Delete an item. `recursive` is required to delete a non-empty folder.
      *  Returns the ids of the deleted FILES so the caller can purge their bytes. */
     deleteItem(id: string, opts?: { recursive?: boolean }): Promise<{ deletedFileIds: string[] }>;

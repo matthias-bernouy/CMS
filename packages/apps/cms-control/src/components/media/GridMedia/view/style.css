@@ -360,39 +360,3 @@
     display: flex;
     gap: 8px;
 }
-
-.btn-save {
-    padding: 7px 14px;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.15s;
-}
-
-.btn-save:hover {
-    background: var(--primary-hover);
-}
-
-.btn-delete {
-    padding: 7px 14px;
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-family: inherit;
-    transition: color 0.15s, border-color 0.15s, background 0.15s;
-}
-
-.btn-delete:hover {
-    color: var(--danger);
-    border-color: var(--danger);
-    background: rgba(239, 68, 68, 0.04);
-}

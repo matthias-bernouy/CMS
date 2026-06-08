@@ -21,6 +21,27 @@ describe("InMemoryCmsFilesMetadata", () => {
         await expect(repo.createFolder({ name: "images", parentId: null })).rejects.toThrow(/already exists/);
     });
 
+    test("createFile stores contentHash and getItem returns it", async () => {
+        const repo = new InMemoryCmsFilesMetadata();
+        const f = await repo.createFile({ name: "a.png", parentId: null, size: 3, mimeType: "image/png", contentHash: "deadbeef" });
+        expect(f.contentHash).toBe("deadbeef");
+        expect((await repo.getItem(f.id))?.type === "file" ? (await repo.getItem(f.id) as { contentHash?: string }).contentHash : undefined).toBe("deadbeef");
+    });
+
+    test("updateFileContent refreshes content fields, keeps name/parentId; null for unknown/folder", async () => {
+        const repo = new InMemoryCmsFilesMetadata();
+        const dir = await repo.createFolder({ name: "d", parentId: null });
+        const f = await repo.createFile({ name: "a.png", parentId: dir.id, size: 1, mimeType: "image/png", contentHash: "h1" });
+        const u = await repo.updateFileContent(f.id, { size: 9, mimeType: "image/webp", contentHash: "h2" });
+        expect(u?.name).toBe("a.png");          // preserved
+        expect(u?.parentId).toBe(dir.id);        // preserved
+        expect(u?.size).toBe(9);
+        expect(u?.mimeType).toBe("image/webp");
+        expect(u?.contentHash).toBe("h2");
+        expect(await repo.updateFileContent("nope", { size: 1, mimeType: "x", contentHash: "h" })).toBeNull();
+        expect(await repo.updateFileContent(dir.id, { size: 1, mimeType: "x", contentHash: "h" })).toBeNull(); // a folder
+    });
+
     test("createFile honors a caller-supplied id", async () => {
         const repo = new InMemoryCmsFilesMetadata();
         const f = await repo.createFile({ name: "hero.png", parentId: null, size: 1, mimeType: "image/png", id: "fixed-id" });

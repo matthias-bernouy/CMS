@@ -99,7 +99,7 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
                 const d = await this.col.findOneAndUpdate(
                     { _id: input.id },
                     {
-                        $set: { type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, updatedAt: now },
+                        $set: { type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, contentHash: input.contentHash, updatedAt: now },
                         $setOnInsert: { createdAt: now },
                     },
                     { upsert: true, returnDocument: "after" },
@@ -107,7 +107,7 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
                 return fromDoc(d!) as FileItem;
             } catch (e) { throw clashOr(e); }
         }
-        const doc: ItemDoc = { _id: randomUUIDv7(), type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, createdAt: now, updatedAt: now };
+        const doc: ItemDoc = { _id: randomUUIDv7(), type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, contentHash: input.contentHash, createdAt: now, updatedAt: now };
         await this._insert(doc);
         return fromDoc(doc) as FileItem;
     }
@@ -126,6 +126,15 @@ export class MongoCmsFilesMetadata implements CmsFilesMetadataRepository {
             const d = await this.col.findOneAndUpdate({ _id: id }, { $set }, { returnDocument: "after" });
             return d ? fromDoc(d) : null;
         } catch (e) { throw clashOr(e); }
+    }
+
+    async updateFileContent(id: string, fields: { size: number; mimeType: string; contentHash: string }): Promise<FileItem | null> {
+        const d = await this.col.findOneAndUpdate(
+            { _id: id, type: "file" },
+            { $set: { size: fields.size, mimeType: fields.mimeType, contentHash: fields.contentHash, updatedAt: new Date() } },
+            { returnDocument: "after" },
+        );
+        return d ? (fromDoc(d) as FileItem) : null;
     }
 
     async deleteItem(id: string, opts: { recursive?: boolean } = {}): Promise<{ deletedFileIds: string[] }> {

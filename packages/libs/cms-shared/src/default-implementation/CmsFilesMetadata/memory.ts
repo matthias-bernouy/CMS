@@ -79,7 +79,7 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
         const id = input.id ?? randomUUIDv7();
         this._assertNoClash(input.parentId, input.name, input.id ? id : undefined);
         const existing = input.id ? this._items.get(id) : undefined;
-        const item: FileItem = { id, type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, createdAt: existing?.createdAt ?? now, updatedAt: now };
+        const item: FileItem = { id, type: "file", name: input.name, parentId: input.parentId, size: input.size, mimeType: input.mimeType, contentHash: input.contentHash, createdAt: existing?.createdAt ?? now, updatedAt: now };
         this._items.set(id, item);
         return clone(item) as FileItem;
     }
@@ -97,6 +97,14 @@ export class InMemoryCmsFilesMetadata implements CmsFilesMetadataRepository {
         const updated = { ...item, name: nextName, parentId: nextParent, updatedAt: new Date() } as FilesItem;
         this._items.set(id, updated);
         return clone(updated);
+    }
+
+    async updateFileContent(id: string, fields: { size: number; mimeType: string; contentHash: string }): Promise<FileItem | null> {
+        const item = this._items.get(id);
+        if (!item || item.type !== "file") return null;
+        const updated: FileItem = { ...item, size: fields.size, mimeType: fields.mimeType, contentHash: fields.contentHash, updatedAt: new Date() };
+        this._items.set(id, updated);
+        return clone(updated) as FileItem;
     }
 
     async deleteItem(id: string, opts: { recursive?: boolean } = {}): Promise<{ deletedFileIds: string[] }> {

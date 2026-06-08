@@ -32,11 +32,10 @@ function appendMediaPreview(card: HTMLElement, item: MediaItem) {
     if (isImage || isSvg) {
         const img = document.createElement("img");
         img.slot = "image";
-        // CDN doesn't expose a URL builder; admin always renders the raw
-        // `absoluteURL`. Width/height args to `variantUrl` are kept for
-        // signature compatibility but currently ignored.
-        img.src = localPreview(item.id)
-            ?? (isSvg ? (item.absoluteURL ?? "") : variantUrl(item, 400, 300));
+        // `variantUrl` is the display URL (absoluteURL + `?v=contentHash`), SVG
+        // included — its width/height args are ignored for now. A just-replaced
+        // file paints from the in-memory `localPreview` first.
+        img.src = localPreview(item.id) ?? variantUrl(item, 400, 300);
         img.alt = item.alt || item.label;
         img.loading = "lazy";
         card.appendChild(img);

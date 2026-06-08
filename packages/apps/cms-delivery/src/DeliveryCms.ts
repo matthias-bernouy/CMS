@@ -142,6 +142,12 @@ export default class DeliveryCms {
         return this._filesMetadata;
     }
 
+    /** Like `filesMetadata` but `null` instead of throwing when unconfigured —
+     *  for optional consumers such as the renderer's media-version injection. */
+    get filesMetadataOrNull(): CmsFilesMetadataRepository | null {
+        return this._filesMetadata;
+    }
+
     /** Opaque byte storage for files. Throws until wired (see `filesMetadata`). */
     get filesBlob(): CmsFilesBlobStore {
         if (!this._filesBlob) throw new Error("files blob backend not configured");

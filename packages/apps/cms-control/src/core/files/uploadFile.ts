@@ -1,5 +1,6 @@
 import type { CmsFilesMetadataRepository, FileItem } from "@bernouy/cms-shared";
 import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
+import { sha256Hex } from "@bernouy/cms-shared";
 
 /**
  * Upload a file: create its metadata record (which mints the id, or adopts the
@@ -18,15 +19,19 @@ export async function uploadFile(
     parentId: string | null,
     id?: string,
 ): Promise<FileItem> {
+    // Read the bytes once: hash them for `contentHash` AND store them, so we
+    // never re-read and the hash always matches what `put` writes.
+    const bytes = new Uint8Array(await file.arrayBuffer());
     const item = await metadata.createFile({
-        name:     file.name,
+        name:        file.name,
         parentId,
-        size:     file.size,
-        mimeType: file.type || "application/octet-stream",
+        size:        file.size,
+        mimeType:    file.type || "application/octet-stream",
+        contentHash: sha256Hex(bytes),
         ...(id ? { id } : {}),
     });
     try {
-        await blob.put(item.id, file);
+        await blob.put(item.id, bytes);
     } catch (err) {
         await metadata.deleteItem(item.id).catch(() => {}); // rollback, best-effort
         throw err;

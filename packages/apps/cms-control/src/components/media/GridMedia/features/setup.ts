@@ -46,6 +46,12 @@ export function setupFeatures(host: GridMedia, s: ShadowRoot) {
         onSave: async (id, data) => {
             if (await api.saveItemMetadata(id, data)) host.detail.close();
         },
+        onReplace: async (id, file) => {
+            if (await api.replaceFileContent(id, file)) {
+                host.detail.close();
+                refresh();
+            }
+        },
         onDelete: async (id) => {
             if (!confirm("Delete this file?")) return;
             if (await api.deleteItem(id)) {

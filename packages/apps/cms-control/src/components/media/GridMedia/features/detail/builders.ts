@@ -7,10 +7,9 @@ const ICON_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" 
 export function buildPreview(item: MediaItem): HTMLElement | null {
     const isImage = item.type === "image" || item.mimetype === "image/svg+xml";
     if (!isImage) return null;
-    const isSvg = item.mimetype === "image/svg+xml";
     const img = document.createElement("img");
     img.slot = "preview";
-    img.src = isSvg ? (item.absoluteURL ?? "") : variantUrl(item, 800, 600);
+    img.src = variantUrl(item, 800, 600); // display URL = absoluteURL + ?v=contentHash
     img.alt = item.alt || item.label;
     return img;
 }
@@ -67,13 +66,15 @@ export function buildFields(item: MediaItem): HTMLElement {
     return el;
 }
 
-export function buildActions(): HTMLElement {
+export function buildActions(item: MediaItem): HTMLElement {
+    const canReplace = item.type !== "folder"; // bytes-only operation
     const el = document.createElement("div");
     el.slot = "actions";
     el.innerHTML = `
         <div class="detail-actions">
-            <button class="btn-save" id="btn-save">Save</button>
-            <button class="btn-delete" id="btn-delete">Delete</button>
+            <p9r-button id="btn-save" variant="filled" color="primary">Save</p9r-button>
+            ${canReplace ? `<p9r-button id="btn-replace" variant="outlined">Replace</p9r-button>` : ""}
+            <p9r-button id="btn-delete" variant="ghost" color="danger">Delete</p9r-button>
         </div>
     `;
     return el;
