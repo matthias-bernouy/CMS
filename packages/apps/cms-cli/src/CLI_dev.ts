@@ -88,6 +88,15 @@ export default async function CLI_dev(args: string[]) {
     // the media tree (folder = directory, name = filename, bytes = content) —
     // a plain, push-able folder. One object serves both metadata + blob.
     const files = new LocalFsCmsFiles(`${config.siteDir}/files`);
+    // Re-link the media registry to what is actually on disk before serving:
+    // heal files moved/renamed in the IDE (by content hash), mint ids for new
+    // ones, drop orphans. The reconciled registry is committed to git — that is
+    // what makes ids deterministic across clones. Silent on a clean boot.
+    const recon = await files.reconcile();
+    if (recon.healed.length)  console.log(`→ Reconciled ${recon.healed.length} moved file(s).`);
+    if (recon.minted.length)  console.log(`→ Minted ids for ${recon.minted.length} new file(s)/folder(s).`);
+    if (recon.deleted.length) console.log(`→ Dropped ${recon.deleted.length} orphaned registry entry/entries.`);
+    for (const e of recon.errors) console.warn(`  ! ${e.path}: ${e.error}`);
 
     // Auth surfaces (in-memory for dev): the membership store (authz) seeded
     // with a couple of users so the Settings → Users tab shows data, plus an

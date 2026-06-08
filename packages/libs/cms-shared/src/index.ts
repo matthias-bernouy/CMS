@@ -67,6 +67,7 @@ export { registerStyleEndpoint } from "cms-shared/server/registerStyleEndpoint";
 
 // ── Files utils ────────────────────────────────────────────────────────
 export { pathOf } from "cms-shared/files/pathOf";
+export { sha256Hex } from "cms-shared/files/hashBytes";
 
 // ── Constants ──────────────────────────────────────────────────────────
 export * from "cms-shared/constants/p9r-constants";

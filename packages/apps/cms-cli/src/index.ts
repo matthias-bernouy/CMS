@@ -7,6 +7,7 @@ import CLI_new from "./CLI_new";
 import CLI_installSkill from "./CLI_installSkill";
 import CLI_listBlocs from "./CLI_listBlocs";
 import CLI_secrets from "./CLI_secrets";
+import CLI_filesReindex from "./CLI_filesReindex";
 
 const [command, ...rest] = process.argv.slice(2);
 
@@ -37,6 +38,11 @@ Usage:
                                    to skip the overwrite confirmation.
   p9r list-blocs [--json]          List blocs registered on the remote CMS
                                    (id, name, group, description).
+  p9r files reindex [--force]      Scan the media tree, heal files you moved or
+                                   renamed in your IDE (by content hash), mint
+                                   ids for new files. Commit
+                                   .cms-files-registry.json afterward. Run
+                                   before pushing; do not run while \`dev\` is up.
   p9r secrets <sub>                Operate on the remote's secret store.
       template [--output=<path>] [--force]
                                    Write an .env.example with the remote's
@@ -87,6 +93,9 @@ try {
             break;
         case "secrets":
             await CLI_secrets(rest);
+            break;
+        case "files":
+            await CLI_filesReindex(rest);
             break;
         case undefined:
         case "help":
