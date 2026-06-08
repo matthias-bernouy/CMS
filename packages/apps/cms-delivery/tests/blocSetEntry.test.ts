@@ -30,9 +30,14 @@ describe("generateBlocSetEntry", () => {
         expect(out).toContain(";/* b */");
     });
 
-    test("throws on an unknown tag", () => {
-        expect(generateBlocSetEntry(["a", "missing"], repoWith({ a: "AAA();" })))
-            .rejects.toThrow("Bloc not found: missing");
+    test("skips a vanished bloc and bundles the survivors", async () => {
+        const out = decode(await generateBlocSetEntry(["a", "missing"], repoWith({ a: "AAA();" })));
+        expect(out).toContain("AAA();");
+        expect(out).not.toContain("missing");
+    });
+
+    test("throws only when no tag resolves", () => {
+        expect(generateBlocSetEntry(["x", "y"], repoWith({}))).rejects.toThrow();
     });
 
     test("throws on an empty tag set", () => {

@@ -32,18 +32,21 @@ export async function generateBlocEntry(tag: string, repository: DeliveryReposit
  * can't ASI-merge with the next chunk's leading `(` — a hazard that doesn't
  * exist when each bloc is its own <script>, but appears once they share a file.
  *
- * Throws on any unknown tag (same contract as `generateBlocEntry`); the
- * endpoint swallows that into `Response.error()`.
+ * Unlike `generateBlocEntry` (single bloc → throw), a SET tolerates a vanished
+ * member: a tag whose viewJS is missing is SKIPPED, not fatal, so a stable
+ * group bundle still serves its surviving blocs if one is deleted between
+ * manifest recomputes. Throws only if the set is empty or nothing resolves.
  */
 export async function generateBlocSetEntry(tags: string[], repository: DeliveryRepository): Promise<CacheEntry> {
     const sorted = [...new Set(tags)].sort();
     if (sorted.length === 0) throw new Error("generateBlocSetEntry: empty tag set");
 
-    const sources = await Promise.all(sorted.map(async tag => {
+    const chunks = await Promise.all(sorted.map(async tag => {
         const js = await repository.getBlocViewJS(tag);
-        if (!js) throw new Error(`Bloc not found: ${tag}`);
-        return `;/* ${tag} */\n${js}\n`;
+        return js ? `;/* ${tag} */\n${js}\n` : null;
     }));
+    const sources = chunks.filter((c): c is string => c !== null);
+    if (sources.length === 0) throw new Error(`generateBlocSetEntry: no viewJS for any of [${sorted.join(", ")}]`);
 
     return compress(sources.join(""), "text/javascript");
 }

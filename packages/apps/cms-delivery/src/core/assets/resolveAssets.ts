@@ -1,6 +1,7 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { getOrGenerateEntryAsync } from "@bernouy/cms-shared";
 import { generateBlocSetEntry } from "cms-delivery/core/blocs/buildBloc";
+import { getBlocGroupManifest } from "cms-delivery/core/blocs/blocGroupManifest";
 import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
 import { generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { P9R_CACHE } from "@bernouy/cms-shared";
@@ -27,11 +28,16 @@ export type AssetsManifest = {
  * hashed URLs under `<cmsPathPrefix>/`. Used by the live serving path; the
  * build pipeline has its own resolver that uploads to the CDN instead.
  *
- * The page's blocs ship as ONE `/blocset` bundle (their viewJS concatenated
- * + compressed once) instead of one `/bloc?tag=` request each: fewer requests
- * and a single brotli stream that shares its dictionary across blocs. The set
- * is sorted so any page using the same blocs hits the same immutable bundle.
- * The per-bloc `/bloc?tag=` endpoint stays for the editor/dev (unhashed) path.
+ * Blocs ship as `/blocset` bundles chosen by the signature grouping (see
+ * `blocGroupManifest`): the page's tags are mapped to the STABLE groups that
+ * cover them, so a group bundle has the same content-hashed URL on every page
+ * that uses it → cross-page / cross-visitor immutable cache reuse. Each group
+ * is emitted whole (its full membership) — lossless, since co-signature blocs
+ * always co-occur. Any tag the manifest doesn't yet know (a brand-new bloc, or
+ * a manifest gone briefly stale) falls into one per-page bundle, so rendering
+ * is always correct; when the manifest is empty this degrades cleanly to a
+ * single per-page bundle. The per-bloc `/bloc?tag=` endpoint stays for the
+ * editor/dev (unhashed) path.
  *
  * Parallel resolution is a no-op on the warm path and only pays when the
  * process just started.
@@ -43,24 +49,38 @@ export async function resolveRuntimeAssets(
     const prefix              = delivery.cmsPathPrefix;
     const componentJsUrl      = `${prefix}/assets/component.js`;
     const componentJsCacheKey = P9R_CACHE.js(componentJsUrl);
-    const sortedTags          = [...new Set(usedTags)].sort();
 
-    const [componentEntry, styleEntry, blocSetEntry] = await Promise.all([
+    // Partition the page's blocs into the stable signature groups that cover
+    // them + a fallback bundle for any tag the manifest doesn't know yet.
+    const manifest  = await getBlocGroupManifest(delivery);
+    const groupIds  = new Set<string>();
+    const uncovered: string[] = [];
+    for (const tag of new Set(usedTags)) {
+        const gid = manifest.tagToGroup.get(tag);
+        if (gid) groupIds.add(gid);
+        else uncovered.push(tag);
+    }
+
+    // One sorted tag set per bundle. Deterministic order → a stable <script>
+    // sequence. Group tags come from the manifest (already the full group);
+    // the uncovered remainder is its own per-page bundle.
+    const bundles: string[][] = [
+        ...[...groupIds].sort().map(gid => manifest.groups.get(gid)!),
+        ...(uncovered.length ? [uncovered.sort()] : []),
+    ];
+
+    const [componentEntry, styleEntry, ...bundleEntries] = await Promise.all([
         getOrGenerateEntryAsync(componentJsCacheKey, delivery.cache, generateComponentJsEntry),
         getOrGenerateEntryAsync(P9R_CACHE.STYLE,     delivery.cache, () => generateStyleEntry(delivery.repository)),
-        sortedTags.length
-            ? getOrGenerateEntryAsync(
-                P9R_CACHE.blocset(sortedTags), delivery.cache,
-                () => generateBlocSetEntry(sortedTags, delivery.repository),
-              )
-            : Promise.resolve(null),
+        ...bundles.map(tags => getOrGenerateEntryAsync(
+            P9R_CACHE.blocset(tags), delivery.cache, () => generateBlocSetEntry(tags, delivery.repository),
+        )),
     ]);
 
     const componentUrl = `${componentJsUrl}?v=${componentEntry!.hash}`;
     const styleUrl     = `${prefix}/style?v=${styleEntry!.hash}`;
-    const blocUrls     = blocSetEntry
-        ? [`${prefix}/blocset?tags=${sortedTags.join(",")}&v=${blocSetEntry.hash}`]
-        : [];
+    const blocUrls     = bundles.map((tags, i) =>
+        `${prefix}/blocset?tags=${[...tags].sort().join(",")}&v=${bundleEntries[i]!.hash}`);
     const scriptUrls   = [componentUrl, ...blocUrls];
 
     return { componentUrl, styleUrl, blocUrls, scriptUrls };
