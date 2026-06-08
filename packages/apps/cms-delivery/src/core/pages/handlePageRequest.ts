@@ -28,8 +28,12 @@ export async function handlePageRequest(req: Request, delivery: DeliveryCms): Pr
         return new Response("Not Found", { status: 404 });
     }
 
+    // Drafts (`visible: false`) live in the same store as published pages —
+    // the shared repository can't filter them (the admin needs unfiltered
+    // access for path-collision checks), so Delivery gates publication here.
+    // A draft is indistinguishable from a missing page to the public.
     const page = await delivery.repository.getPage(pathname);
-    if (!page) return renderRef(req, delivery, "notFound", 404, "Page not found");
+    if (!page || !page.visible) return renderRef(req, delivery, "notFound", 404, "Page not found");
 
     return renderWithFallbacks(req, page, pathname, delivery);
 }
