@@ -1,5 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import BlocServer      from "cms-delivery/endpoints/bloc.server";
+import BlocSetServer   from "cms-delivery/endpoints/blocset.server";
 import RobotsServer    from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
 import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
@@ -33,6 +34,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     const runner = delivery.runner;
 
     runner.addEndpoint("GET", "/.cms/bloc",                (req) => BlocServer     (req, delivery));
+    runner.addEndpoint("GET", "/.cms/blocset",             (req) => BlocSetServer  (req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/component.js", (req) => ComponentServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/favicon",      (req) => FaviconServer  (req, delivery));
 

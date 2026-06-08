@@ -1,6 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { getOrGenerateEntryAsync } from "@bernouy/cms-shared";
-import { generateBlocEntry } from "cms-delivery/core/blocs/buildBloc";
+import { generateBlocSetEntry } from "cms-delivery/core/blocs/buildBloc";
 import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
 import { generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { P9R_CACHE } from "@bernouy/cms-shared";
@@ -14,7 +14,9 @@ import { P9R_CACHE } from "@bernouy/cms-shared";
 export type AssetsManifest = {
     componentUrl: string;
     styleUrl:     string;
-    /** Parallel array with the `usedTags` passed in. */
+    /** The bloc-bundle URL(s) covering the page's blocs — one `/blocset`
+     *  bundle today (the page's exact set); becomes several stable group
+     *  URLs once blocs are grouped by signature. */
     blocUrls:     string[];
     /** `[componentUrl, ...blocUrls]` — convenience for emission in order. */
     scriptUrls:   string[];
@@ -24,6 +26,12 @@ export type AssetsManifest = {
  * Runtime asset resolution: warms the delivery cache on miss and produces
  * hashed URLs under `<cmsPathPrefix>/`. Used by the live serving path; the
  * build pipeline has its own resolver that uploads to the CDN instead.
+ *
+ * The page's blocs ship as ONE `/blocset` bundle (their viewJS concatenated
+ * + compressed once) instead of one `/bloc?tag=` request each: fewer requests
+ * and a single brotli stream that shares its dictionary across blocs. The set
+ * is sorted so any page using the same blocs hits the same immutable bundle.
+ * The per-bloc `/bloc?tag=` endpoint stays for the editor/dev (unhashed) path.
  *
  * Parallel resolution is a no-op on the warm path and only pays when the
  * process just started.
@@ -35,18 +43,24 @@ export async function resolveRuntimeAssets(
     const prefix              = delivery.cmsPathPrefix;
     const componentJsUrl      = `${prefix}/assets/component.js`;
     const componentJsCacheKey = P9R_CACHE.js(componentJsUrl);
+    const sortedTags          = [...new Set(usedTags)].sort();
 
-    const [componentEntry, styleEntry, ...blocEntries] = await Promise.all([
+    const [componentEntry, styleEntry, blocSetEntry] = await Promise.all([
         getOrGenerateEntryAsync(componentJsCacheKey, delivery.cache, generateComponentJsEntry),
         getOrGenerateEntryAsync(P9R_CACHE.STYLE,     delivery.cache, () => generateStyleEntry(delivery.repository)),
-        ...usedTags.map(tag => getOrGenerateEntryAsync(
-            P9R_CACHE.bloc(tag), delivery.cache, () => generateBlocEntry(tag, delivery.repository),
-        )),
+        sortedTags.length
+            ? getOrGenerateEntryAsync(
+                P9R_CACHE.blocset(sortedTags), delivery.cache,
+                () => generateBlocSetEntry(sortedTags, delivery.repository),
+              )
+            : Promise.resolve(null),
     ]);
 
     const componentUrl = `${componentJsUrl}?v=${componentEntry!.hash}`;
     const styleUrl     = `${prefix}/style?v=${styleEntry!.hash}`;
-    const blocUrls     = usedTags.map((tag, i) => `${prefix}/bloc?tag=${tag}&v=${blocEntries[i]!.hash}`);
+    const blocUrls     = blocSetEntry
+        ? [`${prefix}/blocset?tags=${sortedTags.join(",")}&v=${blocSetEntry.hash}`]
+        : [];
     const scriptUrls   = [componentUrl, ...blocUrls];
 
     return { componentUrl, styleUrl, blocUrls, scriptUrls };

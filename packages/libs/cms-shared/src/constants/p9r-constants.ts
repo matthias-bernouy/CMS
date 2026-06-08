@@ -33,6 +33,9 @@ export const P9R_ID = {
  */
 export const P9R_CACHE = {
     bloc: (id: string) => `bloc:${id}`,
+    /** A signature-grouped bundle = several blocs concatenated. Keyed on the
+     *  deduped+sorted tag set so any page using the same set shares the entry. */
+    blocset: (tags: string[]) => `blocset:${[...new Set(tags)].sort().join(",")}`,
     page: (path: string) => `page:${path}`,
     css:  (url: string) => `css:${url}`,
     js:   (url: string) => `js:${url}`,
