@@ -42,3 +42,14 @@ export function collectDataFields(fromEl: Element): DataField[] {
     }
     return out;
 }
+
+/**
+ * The insert token content for a field (without the `{{ }}` braces):
+ * `<sourceId>[.<path>]`. An empty `path` resolves to the source itself
+ * (`{{ <sourceId> }}`). Single source of truth for the token convention shared
+ * by the richtextbar and the future Dynamic picker — the runtime interpolator
+ * must resolve this same prefixed shape.
+ */
+export function tokenOf(f: DataField): string {
+    return f.path ? `${f.sourceId}.${f.path}` : f.sourceId;
+}
