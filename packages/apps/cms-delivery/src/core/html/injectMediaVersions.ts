@@ -82,6 +82,16 @@ export async function injectMediaVersions(
             const base = t.url.replace("/.cms/files/by-id/", "/.cms/img/"); // <prefix>/.cms/img/<id>
             t.el.setAttribute("srcset", rec!.manifest.widths.map(w => `${base}/${w}.webp?v=${hash} ${w}w`).join(", "));
             if (!t.el.getAttribute("sizes")) t.el.setAttribute("sizes", DEFAULT_SIZES);
+            // Intrinsic w/h → the browser reserves the box before load: kills CLS
+            // and makes `loading="lazy"` reliable (off-screen images stay off-
+            // screen instead of collapsing to 0px and all loading at once). CSS
+            // still scales the display; only the ratio matters. Respect any
+            // author-set dimensions.
+            const dim = rec!.manifest.intrinsic;
+            if (dim && !t.el.hasAttribute("width") && !t.el.hasAttribute("height")) {
+                t.el.setAttribute("width",  String(dim.width));
+                t.el.setAttribute("height", String(dim.height));
+            }
         }
         t.el.setAttribute("src", withVersion(t.url, hash)); // fallback src (+ cache token)
         if (variantStore && isRaster(rec!.mime) && !rec!.manifest) unoptimized.add(t.id);

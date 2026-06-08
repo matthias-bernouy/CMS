@@ -95,23 +95,25 @@ describe("injectMediaVersions — responsive expansion (B3b)", () => {
         const files = new InMemoryCmsFilesMetadata();
         const variantStore = new InMemoryCmsFilesBlob();
         const f = await files.createFile({ name: "hero", parentId: null, size: 9, mimeType: mime, contentHash: "h9" });
-        if (withManifest) await variantStore.put(manifestKey("h9"), new TextEncoder().encode(JSON.stringify({ format: "webp", widths: [320, 640] })));
+        if (withManifest) await variantStore.put(manifestKey("h9"), new TextEncoder().encode(JSON.stringify({ format: "webp", widths: [320, 640], intrinsic: { width: 640, height: 480 } })));
         return { files, variantStore, id: f.id };
     }
     async function run(id: string, files: InMemoryCmsFilesMetadata, variantStore?: InMemoryCmsFilesBlob) {
         const { document } = parseHTML(`<!DOCTYPE html><html><head></head><body><img src="/.cms/files/by-id/${id}"></body></html>`);
         const unoptimized = await injectMediaVersions(document as unknown as Document, { files, variantStore });
         const img = document.querySelector("img")!;
-        return { unoptimized, src: img.getAttribute("src"), srcset: img.getAttribute("srcset"), sizes: img.getAttribute("sizes") };
+        return { unoptimized, src: img.getAttribute("src"), srcset: img.getAttribute("srcset"), sizes: img.getAttribute("sizes"), width: img.getAttribute("width"), height: img.getAttribute("height") };
     }
 
-    test("a raster image with a ready manifest expands to a srcset (variant URLs carry ?v); original stays the src", async () => {
+    test("a raster image with a ready manifest expands to a srcset (variant URLs carry ?v); original stays the src; intrinsic w/h reserve the box", async () => {
         const { files, variantStore, id } = await setup("image/png", true);
         const r = await run(id, files, variantStore);
         expect(r.unoptimized).toEqual([]);
         expect(r.srcset).toBe(`/.cms/img/${id}/320.webp?v=h9 320w, /.cms/img/${id}/640.webp?v=h9 640w`);
         expect(r.sizes).toBe("100vw");
         expect(r.src).toBe(`/.cms/files/by-id/${id}?v=h9`);
+        expect(r.width).toBe("640");
+        expect(r.height).toBe("480");
     });
 
     test("a raster image with NO manifest yet → versioned original + returned for background optimization", async () => {

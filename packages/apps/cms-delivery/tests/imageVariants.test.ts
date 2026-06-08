@@ -37,6 +37,13 @@ describe("image variants (sharp)", () => {
         expect((await readManifest(store, "h1"))?.widths).toEqual([100, 200, 400]);
     });
 
+    test("records the source aspect ratio (largest variant's intrinsic w/h) in the manifest", async () => {
+        const store = new InMemoryCmsFilesBlob();
+        const manifest = await ensureVariants(store, "h2", await sourcePng(400, 300), [100, 200, 800]); // 800 → source 400×300
+        expect(manifest.intrinsic).toEqual({ width: 400, height: 300 });
+        expect((await readManifest(store, "h2"))?.intrinsic).toEqual({ width: 400, height: 300 });
+    });
+
     test("ensureVariants is idempotent: a present manifest short-circuits (no regen)", async () => {
         const store = new InMemoryCmsFilesBlob();
         const src = await sourcePng(400, 300);

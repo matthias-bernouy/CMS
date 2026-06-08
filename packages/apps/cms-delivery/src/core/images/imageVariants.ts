@@ -43,7 +43,18 @@ export function variantKey(contentHash: string, spec: VariantSpec): string {
 /** What variants exist for a source, recorded by the worker and read by the
  *  renderer to build the `srcset`. `widths` are the DISTINCT ACTUAL widths
  *  produced (ascending), capped at the source's intrinsic width. */
-export type VariantManifest = { format: VariantFormat; widths: number[] };
+export type VariantManifest = {
+    format: VariantFormat;
+    widths: number[];
+    /** Intrinsic dimensions of the largest variant — i.e. the source's aspect
+     *  ratio. The renderer emits these as the `<img>` `width`/`height` so the
+     *  browser reserves the right box BEFORE the image loads: no layout shift
+     *  (CLS), and `loading="lazy"` works deterministically (off-screen images
+     *  stay off-screen instead of all collapsing to 0px and loading at once).
+     *  Optional: absent on manifests written before this field existed — clear
+     *  the variant store to backfill them on the next render. */
+    intrinsic?: { width: number; height: number };
+};
 
 export function manifestKey(contentHash: string): string {
     return `${contentHash}-manifest.json`;
@@ -73,14 +84,20 @@ export async function ensureVariants(
     const existing = await readManifest(store, contentHash);
     if (existing) return existing;
 
-    const widths = new Set<number>();
+    const dims = new Map<number, number>();    // actual width → actual height
     for (const rung of ladder) {
-        const { bytes, width } = await generateImageVariant(source, { width: rung, format: "webp" });
-        if (widths.has(width)) continue;       // ladder rung past the source → same bytes, skip
-        widths.add(width);
+        const { bytes, width, height } = await generateImageVariant(source, { width: rung, format: "webp" });
+        if (dims.has(width)) continue;          // ladder rung past the source → same bytes, skip
+        dims.set(width, height);
         await store.put(variantKey(contentHash, { width, format: "webp" }), bytes);
     }
-    const manifest: VariantManifest = { format: "webp", widths: [...widths].sort((a, b) => a - b) };
+    const widths = [...dims.keys()].sort((a, b) => a - b);
+    const maxW   = widths[widths.length - 1];   // largest variant carries the source's aspect ratio
+    const manifest: VariantManifest = {
+        format: "webp",
+        widths,
+        ...(maxW !== undefined ? { intrinsic: { width: maxW, height: dims.get(maxW)! } } : {}),
+    };
     await store.put(manifestKey(contentHash), new TextEncoder().encode(JSON.stringify(manifest)));
     return manifest;
 }
