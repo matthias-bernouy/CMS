@@ -55,12 +55,14 @@ import {
     LineChart,
     BarList,
     RangeTabs,
+    BindingCore,
 } from "@bernouy/cms-blocs";
 
 function define(tag: string, constructor: CustomElementConstructor) {
     if (!customElements.get(tag)) customElements.define(tag, constructor);
 }
 
+define("cms-binding-core", BindingCore);
 define("p9r-accordion", Accordion);
 define("p9r-accordion-item", AccordionItem);
 define("p9r-alert", Alert);
