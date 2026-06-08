@@ -1,5 +1,6 @@
 import type { CmsFilesMetadataRepository } from "cms-shared/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
+import { publicAssetCacheControl } from "cms-shared/server/compression";
 
 /**
  * MIME types we are willing to serve inline. `item.mimeType` derives from the
@@ -70,6 +71,10 @@ export async function serveFilesRequest(
             // download for anything off the inline allow-list (HTML/SVG/…).
             "Content-Disposition":    inlineSafe ? "inline" : "attachment",
             "X-Content-Type-Options": "nosniff",
+            // Versioned URL (`?v=<hash>`, injected on rendered media URLs) →
+            // long immutable cache; unversioned (direct hit, admin grid) →
+            // revalidate. House convention, shared with bloc/theme assets.
+            "Cache-Control":          publicAssetCacheControl(req),
         },
     });
 }

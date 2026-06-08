@@ -1,0 +1,77 @@
+:host {
+    --nav-bg: var(--bg-base, #fff);
+    --nav-fg: var(--text-main, #1e293b);
+    --nav-border: var(--border-default, rgba(0, 0, 0, 0.1));
+    --nav-gap: var(--p9r-space-md, 16px);
+    --nav-pad-x: var(--p9r-space-lg, 24px);
+    --nav-pad-y: var(--p9r-space-sm, 8px);
+
+    display: block;
+    background: var(--nav-bg);
+    color: var(--nav-fg);
+    border-bottom: 1px solid var(--nav-border);
+}
+
+.navbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nav-gap);
+    max-width: var(--p9r-container-xl, 1280px);
+    margin-inline: auto;
+    padding: var(--nav-pad-y) var(--nav-pad-x);
+}
+
+.brand { display: inline-flex; align-items: center; }
+.brand ::slotted(*) { display: block; max-height: 40px; width: auto; }
+
+.panel {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--nav-gap);
+}
+
+.links, .actions { display: flex; align-items: center; gap: var(--nav-gap); }
+
+.burger { display: none; }
+
+:host([sticky="yes"])        { position: sticky; top: 0; z-index: 50; }
+:host([variant="surface"])   { --nav-bg: var(--bg-surface, #f8fafc); }
+:host([variant="primary"])   { --nav-bg: var(--primary-base, #4361ee); --nav-fg: #fff; --nav-border: transparent; }
+:host([variant="secondary"]) { --nav-bg: var(--secondary-base, #3a0ca3); --nav-fg: #fff; --nav-border: transparent; }
+
+@media (max-width: 768px) {
+    .burger {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        width: 40px;
+        height: 40px;
+        padding: 9px;
+        background: transparent;
+        border: 0;
+        color: inherit;
+        cursor: pointer;
+    }
+    .burger-bar { height: 2px; background: currentColor; border-radius: 2px; }
+
+    .panel {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--nav-pad-y);
+        padding: var(--nav-pad-x);
+        background: var(--nav-bg);
+        border-bottom: 1px solid var(--nav-border);
+    }
+    .navbar.is-open .panel { display: flex; }
+    .links, .actions { flex-direction: column; align-items: stretch; }
+}
