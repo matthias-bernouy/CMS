@@ -13,6 +13,7 @@ import { P9R_CACHE, LocalFsCmsFilesBlob } from "@bernouy/cms-shared";
 import { InMemoryAuthentication } from "@bernouy/cms-control";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
+import { loadDevGateways } from "./dev-server/gateways";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
 import { LocalFsCmsFiles } from "@bernouy/cms-shared";
@@ -20,7 +21,7 @@ import { InMemoryUsersRepository } from "@bernouy/auth-core";
 import { InMemoryIdentityProviderRepository } from "@bernouy/auth-core";
 import { InMemoryLocalCredentialStore } from "@bernouy/auth-core";
 import { InMemoryPatRepository } from "@bernouy/auth-core";
-import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
+import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
 import type { CMS_ROLES } from "@bernouy/cms-shared";
 import { loadPushConfig } from "./push/shared/config";
 
@@ -116,10 +117,16 @@ export default async function CLI_dev(args: string[]) {
     // PAT store (authn) so the Profile → Tokens tab works in dev instead of
     // 500-ing on a missing repository.
     const pats = new InMemoryPatRepository();
-    // Gateway provider store (in-memory for dev) so the admin provider CRUD works.
-    // Dev exercises the Control write side only — this CLI does not boot Delivery,
-    // so the create→callable-in-Delivery chain isn't verifiable here.
+    // Gateway provider store (in-memory for dev). Seeded from `siteDir/gateways/*.json`
+    // (one Provider manifest per file) and shared by BOTH Control (admin CRUD +
+    // preview) and Delivery (the public proxy at `/.cms/gateway/*`), so the
+    // create→callable-in-Delivery chain is exercised end-to-end.
     const gateway = new InMemoryGatewayRepository();
+    const gatewayProviders = await loadDevGateways(config.siteDir);
+    if (gatewayProviders.length > 0) {
+        const { created, skipped } = await seedProviders(gateway, gatewayProviders);
+        console.log(`→ Gateways : ${created.length} seeded${skipped.length ? `, ${skipped.length} skipped` : ""} (${gatewayProviders.map(p => p.urn).join(", ")})`);
+    }
 
     const runner = new BunRunner();
     // Live-reload SSE channel — registered before the ControlCms group so it
@@ -149,7 +156,7 @@ export default async function CLI_dev(args: string[]) {
     const deliveryPort = port + 1;
     const deliveryRunner = new BunRunner();
     const variantStore = new LocalFsCmsFilesBlob(`${config.siteDir}/.cms-variants`);
-    new DeliveryCms({ runner: deliveryRunner, repository: repo, filesMetadata: files, filesBlob: files, variantStore });
+    new DeliveryCms({ runner: deliveryRunner, repository: repo, filesMetadata: files, filesBlob: files, variantStore, gateway });
     deliveryRunner.start(deliveryPort);
 
     console.log("");
