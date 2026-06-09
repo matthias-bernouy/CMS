@@ -1,7 +1,7 @@
 import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-shared";
 import type { CacheEntry } from "@bernouy/cms-shared";
-import { compress, sanitizeDomTree } from "@bernouy/cms-shared";
+import { compress, sanitizeDomTree, DEFAULT_SHELL } from "@bernouy/cms-shared";
 import { expandSnippets } from "cms-delivery/core/html/expandSnippets";
 import { findUsedBlocTags } from "cms-delivery/core/blocs/findUsedBlocs";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
@@ -33,7 +33,17 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
 
     const settings = await ctx.repository.getSystem();
 
-    const expandedContent = await expandSnippets(page.content, ctx.repository);
+    // Wrap the page content in the site-wide Shell (header / nav / footer +
+    // the <cms-binding-core> activation root); `{{CONTENT}}` marks the slot.
+    // Function replacement so `$&`/`$1` inside user content aren't interpreted
+    // as replacement patterns. Fall back to the default Shell when the
+    // configured one lost its marker (systems predating the field, bad save).
+    const shell = settings.editor.shell?.includes("{{CONTENT}}")
+        ? settings.editor.shell
+        : DEFAULT_SHELL;
+    const composed = shell.replace("{{CONTENT}}", () => page.content);
+
+    const expandedContent = await expandSnippets(composed, ctx.repository);
     document.body.innerHTML = expandedContent;
     // Authoritative stored-XSS guard at the actual innerHTML sink: strip
     // scripts / on* handlers / dangerous URL schemes from the parsed tree
@@ -78,6 +88,17 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     defineMetaTags     (document, head, page, settings, ctx.defaultFaviconUrl);
     buildStylesheetLink(document, head, assets);
     buildScriptTags    (document, head, assets);
+
+    // System bloc: load the data-binding runtime only when the page actually
+    // uses the activation root. The default Shell wraps content in it; a custom
+    // Shell that drops it never loads the engine → binding stays swappable.
+    // Same-origin script → no CSP host to whitelist.
+    if (document.querySelector("cms-binding-core")) {
+        const bindingCoreScript = document.createElement("script");
+        bindingCoreScript.setAttribute("defer", "");
+        bindingCoreScript.setAttribute("src", assets.bindingCoreUrl);
+        head.appendChild(bindingCoreScript);
+    }
 
     // Stamp every by-id media URL with `?v=<contentHash>` (cache bust), expand
     // raster <img>s whose variants are ready into responsive srcsets, and collect

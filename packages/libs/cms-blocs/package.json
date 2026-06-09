@@ -41,6 +41,12 @@
       "import": "./dist/base.js",
       "default": "./dist/base.js"
     },
+    "./binding": {
+      "types": "./dist/binding/bindingCore.d.ts",
+      "bun": "./src/binding/bindingCore.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
     "./style.css": "./dist/style.css",
     "./blocs/*": {
       "types": "./dist/blocs/*.d.ts",

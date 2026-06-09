@@ -21,6 +21,7 @@ export { filterAndSortPages } from "cms-shared/default-implementation/CmsReposit
 export type {
     TPage, TBloc, TTemplate, TSnippet, TSystem, TPageRef,
 } from "cms-shared/interfaces/models";
+export { DEFAULT_SHELL } from "cms-shared/interfaces/models";
 export type { Cache, CacheEntry } from "cms-shared/interfaces/Cache";
 export type { SecretStore }       from "cms-shared/interfaces/SecretStore";
 export type {

@@ -4,6 +4,7 @@ import { generateBlocSetEntry } from "cms-delivery/core/blocs/buildBloc";
 import { getBlocGroupManifest } from "cms-delivery/core/blocs/blocGroupManifest";
 import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
 import { generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
+import { generateBindingCoreJsEntry } from "cms-delivery/core/assets/buildBindingCore";
 import { P9R_CACHE } from "@bernouy/cms-shared";
 
 /**
@@ -14,6 +15,10 @@ import { P9R_CACHE } from "@bernouy/cms-shared";
  */
 export type AssetsManifest = {
     componentUrl: string;
+    /** System bloc: the data-binding activation root. Resolved on every page;
+     *  `renderPage` injects its `<script>` only when the composed HTML uses
+     *  the `<cms-binding-core>` tag (default Shell does; a custom one may not). */
+    bindingCoreUrl: string;
     styleUrl:     string;
     /** The bloc-bundle URL(s) covering the page's blocs — one `/blocset`
      *  bundle today (the page's exact set); becomes several stable group
@@ -49,6 +54,8 @@ export async function resolveRuntimeAssets(
     const prefix              = delivery.cmsPathPrefix;
     const componentJsUrl      = `${prefix}/assets/component.js`;
     const componentJsCacheKey = P9R_CACHE.js(componentJsUrl);
+    const bindingCoreJsUrl      = `${prefix}/assets/cms-binding-core.js`;
+    const bindingCoreJsCacheKey = P9R_CACHE.js(bindingCoreJsUrl);
 
     // Partition the page's blocs into the stable signature groups that cover
     // them + a fallback bundle for any tag the manifest doesn't know yet.
@@ -69,19 +76,21 @@ export async function resolveRuntimeAssets(
         ...(uncovered.length ? [uncovered.sort()] : []),
     ];
 
-    const [componentEntry, styleEntry, ...bundleEntries] = await Promise.all([
-        getOrGenerateEntryAsync(componentJsCacheKey, delivery.cache, generateComponentJsEntry),
-        getOrGenerateEntryAsync(P9R_CACHE.STYLE,     delivery.cache, () => generateStyleEntry(delivery.repository)),
+    const [componentEntry, bindingCoreEntry, styleEntry, ...bundleEntries] = await Promise.all([
+        getOrGenerateEntryAsync(componentJsCacheKey,   delivery.cache, generateComponentJsEntry),
+        getOrGenerateEntryAsync(bindingCoreJsCacheKey, delivery.cache, generateBindingCoreJsEntry),
+        getOrGenerateEntryAsync(P9R_CACHE.STYLE,       delivery.cache, () => generateStyleEntry(delivery.repository)),
         ...bundles.map(tags => getOrGenerateEntryAsync(
             P9R_CACHE.blocset(tags), delivery.cache, () => generateBlocSetEntry(tags, delivery.repository),
         )),
     ]);
 
-    const componentUrl = `${componentJsUrl}?v=${componentEntry!.hash}`;
-    const styleUrl     = `${prefix}/style?v=${styleEntry!.hash}`;
-    const blocUrls     = bundles.map((tags, i) =>
+    const componentUrl   = `${componentJsUrl}?v=${componentEntry!.hash}`;
+    const bindingCoreUrl = `${bindingCoreJsUrl}?v=${bindingCoreEntry!.hash}`;
+    const styleUrl       = `${prefix}/style?v=${styleEntry!.hash}`;
+    const blocUrls       = bundles.map((tags, i) =>
         `${prefix}/blocset?tags=${[...tags].sort().join(",")}&v=${bundleEntries[i]!.hash}`);
-    const scriptUrls   = [componentUrl, ...blocUrls];
+    const scriptUrls     = [componentUrl, ...blocUrls];
 
-    return { componentUrl, styleUrl, blocUrls, scriptUrls };
+    return { componentUrl, bindingCoreUrl, styleUrl, blocUrls, scriptUrls };
 }

@@ -1,6 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-shared/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "cms-shared/interfaces/models";
+import { DEFAULT_SHELL } from "cms-shared/interfaces/models";
 import { filterAndSortPages } from "cms-shared/default-implementation/CmsRepository/pagesQuery";
 
 /**
@@ -303,7 +304,7 @@ function defaultSystem(): TSystem {
             notFound:    null,
             serverError: null,
         },
-        editor:   { layoutCategory: "" },
+        editor:   { layoutCategory: "", shell: DEFAULT_SHELL },
         security: { connectExtras: [], mediaExtras: [] },
     };
 }

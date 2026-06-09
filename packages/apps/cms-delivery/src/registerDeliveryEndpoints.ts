@@ -5,6 +5,7 @@ import RobotsServer    from "cms-delivery/endpoints/robots.txt.server";
 import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
 import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
+import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { registerFilesEndpoint, registerStyleEndpoint } from "@bernouy/cms-shared";
 import { registerImageVariantEndpoint } from "cms-delivery/core/images/serveVariant";
@@ -35,8 +36,9 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
 
     runner.addEndpoint("GET", "/.cms/bloc",                (req) => BlocServer     (req, delivery));
     runner.addEndpoint("GET", "/.cms/blocset",             (req) => BlocSetServer  (req, delivery));
-    runner.addEndpoint("GET", "/.cms/assets/component.js", (req) => ComponentServer(req, delivery));
-    runner.addEndpoint("GET", "/.cms/assets/favicon",      (req) => FaviconServer  (req, delivery));
+    runner.addEndpoint("GET", "/.cms/assets/component.js",        (req) => ComponentServer  (req, delivery));
+    runner.addEndpoint("GET", "/.cms/assets/cms-binding-core.js", (req) => BindingCoreServer(req, delivery));
+    runner.addEndpoint("GET", "/.cms/assets/favicon",             (req) => FaviconServer    (req, delivery));
 
     runner.addEndpoint("GET", "/robots.txt",  (req) => RobotsServer (req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));

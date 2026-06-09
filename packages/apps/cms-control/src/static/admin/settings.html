@@ -61,6 +61,28 @@
                 </div>
             </p9r-tab-panel>
 
+            <p9r-tab-panel id="shell" label="Shell">
+                <div cms-source="{{BASE_PATH}}/api/system/settings" cms-reload-on="settings:saved">
+                    <template>
+                        <cms-form target="{{BASE_PATH}}/api/system/settings" emit="settings:saved">
+                            <p9r-stack gap="lg">
+                                <p9r-card>
+                                    <span slot="header">Page shell</span>
+                                    <p9r-stack gap="md">
+                                        <p>The HTML every page's content is wrapped in — header, navigation, footer, and the binding root. Keep the content marker (the literal CONTENT wrapped in double braces) where the page's own content should appear; remove it to plug in a custom binding system.</p>
+                                        <p9r-textarea name="editor.shell" rows="12" autosize value="{{ editor.shell }}"></p9r-textarea>
+                                    </p9r-stack>
+                                </p9r-card>
+
+                                <p9r-stack direction="row" justify="end">
+                                    <p9r-button type="submit" color="primary">Save</p9r-button>
+                                </p9r-stack>
+                            </p9r-stack>
+                        </cms-form>
+                    </template>
+                </div>
+            </p9r-tab-panel>
+
             <p9r-tab-panel id="secrets" label="Secrets">
                 <cms-secrets api="{{BASE_PATH}}/api/secrets"></cms-secrets>
             </p9r-tab-panel>

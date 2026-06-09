@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { TPageRef, TSystem } from "@bernouy/cms-shared";
+import { DEFAULT_SHELL } from "@bernouy/cms-shared";
 
 const SYSTEM_FILE = "system.json";
 const THEME_FILE  = "theme.css";
@@ -32,6 +33,7 @@ export class SystemStore {
             },
             editor: {
                 layoutCategory: json.editor?.layoutCategory ?? "",
+                shell:          typeof json.editor?.shell === "string" ? json.editor.shell : DEFAULT_SHELL,
             },
             security: {
                 connectExtras: Array.isArray(json.security?.connectExtras) ? json.security.connectExtras : [],
