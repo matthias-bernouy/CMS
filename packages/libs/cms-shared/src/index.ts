@@ -13,6 +13,16 @@
 // ── Domain roles ───────────────────────────────────────────────────────
 export type CMS_ROLES = "admin" | "user";
 
+// ── Permissions (roles vocabulary + pure decision helpers) ─────────────
+export {
+    CMS_PERMISSION_CATALOGUE, CMS_PERMISSIONS, cmsPermission,
+    ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE, defaultRoleDefinitions,
+    grantsFor, can,
+} from "cms-shared/permissions/permissions";
+export type {
+    CmsFeature, Grant, RoleDefinition, RolesConfig,
+} from "cms-shared/permissions/permissions";
+
 // ── Content interfaces ─────────────────────────────────────────────────
 export type {
     CmsRepository, BlocListItemResponse, PageLink, PageMeta, PagesQuery,

@@ -13,6 +13,7 @@ function makeCtx(shell: string): RenderContext {
         site: { name: "Site", favicon: "", visible: true, host: "", language: "", theme: "", notFound: null, serverError: null },
         editor: { layoutCategory: "", shell },
         security: { connectExtras: [], mediaExtras: [] },
+        roles: { definitions: [] },
     };
     return {
         repository: {
