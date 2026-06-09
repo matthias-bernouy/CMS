@@ -52,7 +52,7 @@ export class ControlCms {
     private configuration:    Configuration;
     private _repository:      CmsRepository;
     private _runner:          Runner;
-    private _auth:            Authentication;
+    private _auth:            Authentication<CMS_ROLES>;
     private _cache:           Cache;
     private _secrets:         SecretStore;
     private _filesMetadata:   CmsFilesMetadataRepository | null;

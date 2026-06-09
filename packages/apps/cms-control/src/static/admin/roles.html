@@ -1,0 +1,41 @@
+<w13c-fixed-admin-layout>
+    <span slot="title">Roles</span>
+    <p9r-open-modal modal-target="create-role-modal" slot="action">
+        <p9r-button color="primary">+ Add role</p9r-button>
+    </p9r-open-modal>
+
+    <p9r-table cms-source="{{BASE_PATH}}/api/roles" cms-reload-on="role:updated">
+        <p9r-row slot="header">
+            <p9r-cell><strong>Role</strong></p9r-cell>
+            <p9r-cell><strong>Identifier</strong></p9r-cell>
+            <p9r-cell><strong>Type</strong></p9r-cell>
+            <p9r-cell><strong>Permissions</strong></p9r-cell>
+            <p9r-cell></p9r-cell>
+        </p9r-row>
+
+        <p9r-row cms-repeat=".">
+            <p9r-cell><strong>{{ label }}</strong></p9r-cell>
+            <p9r-cell><code>{{ id }}</code></p9r-cell>
+            <p9r-cell><p9r-tag>{{ kind }}</p9r-tag></p9r-cell>
+            <p9r-cell>{{ permissions }}</p9r-cell>
+            <p9r-cell>
+                <span style="{{ hideDelete }}">
+                    <cms-confirm-form target="{{BASE_PATH}}/api/roles?id={{ id }}" method="DELETE" emit="role:updated" message="Delete this role? This cannot be undone.">
+                        <p9r-button color="danger" variant="ghost">Delete</p9r-button>
+                    </cms-confirm-form>
+                </span>
+            </p9r-cell>
+        </p9r-row>
+    </p9r-table>
+</w13c-fixed-admin-layout>
+
+<p9r-modal id="create-role-modal" aria-label="Add a role">
+    <span slot="title">Add role</span>
+    <cms-form target="{{BASE_PATH}}/api/roles" emit="role:updated">
+        <p9r-stack gap="md">
+            <p9r-input name="label" label="Name" placeholder="Editor" required></p9r-input>
+            <p9r-input name="id" label="Identifier" placeholder="editor (a-z, 0-9, -, _)" required></p9r-input>
+            <p9r-button color="primary" fullWidth type="submit">Create role</p9r-button>
+        </p9r-stack>
+    </cms-form>
+</p9r-modal>

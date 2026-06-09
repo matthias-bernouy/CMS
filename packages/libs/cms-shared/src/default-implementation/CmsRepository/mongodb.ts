@@ -227,7 +227,9 @@ export class MongoCmsRepository implements CmsRepository {
         const doc = await this.system.findOne({ _id: SYSTEM_ID });
         if (doc) {
             const { _id, ...rest } = doc;
-            return rest;
+            // Backfill `roles` for documents created before the section existed,
+            // so callers always get the seeded built-ins (never undefined).
+            return { ...rest, roles: rest.roles ?? { definitions: defaultRoleDefinitions() } };
         }
         // Lazy creation on first access — keeps the contract synchronous-feeling
         // for callers and avoids requiring a separate `seed()` step.

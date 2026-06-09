@@ -1,5 +1,8 @@
 <w13c-fixed-admin-layout>
     <span slot="title">Users</span>
+    <a href="{{BASE_PATH}}/admin/roles" slot="action" style="text-decoration:none">
+        <p9r-button variant="ghost">Manage roles</p9r-button>
+    </a>
     <p9r-open-modal modal-target="create-user-modal" slot="action">
         <p9r-button color="primary">+ Add user</p9r-button>
     </p9r-open-modal>
@@ -47,10 +50,10 @@
             <p9r-input name="email" type="email" label="Email" placeholder="user@example.com" required></p9r-input>
             <p9r-input name="password" type="password" label="Password" placeholder="At least 8 characters" required></p9r-input>
             <p9r-input name="displayName" label="Display name" placeholder="Jane Doe"></p9r-input>
-            <p9r-select name="role" label="Role" value="user">
-                <option value="user">user</option>
-                <option value="admin">admin</option>
-            </p9r-select>
+            <div>
+                <label style="display:block;font-size:.8rem;color:var(--text-muted,#666);margin-bottom:.25rem">Role</label>
+                <cms-role-select name="role" value="user"></cms-role-select>
+            </div>
             <p9r-button color="primary" fullWidth type="submit">Create user</p9r-button>
         </p9r-stack>
     </cms-form>

@@ -1,34 +1,75 @@
 import { showToast } from "cms-control/core/showToast";
 
-const ROLES = ["user", "admin"] as const;
+type RoleOption = { id: string; label: string };
+
+const esc = (s: string) =>
+    s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 
 /**
- * `<cms-role-select sub value url emit>` — a role dropdown that auto-saves
- * on change (POST `{ sub, role }`), with a toast. No Save button. Emits
- * `emit` on success.
+ * `<cms-role-select>` — a role dropdown whose options are fetched from
+ * `GET /api/roles/list` (the roles assignable to a person). Two modes:
+ *   - auto-save (users table): given `sub`, POSTs `{ sub, role }` to `url` on
+ *     change, toasts, and dispatches `emit` on success.
+ *   - form (create-user modal): given `name` and no `sub`, it is form-associated
+ *     and contributes its value to the enclosing `<cms-form>` via FormData.
  */
 class CmsRoleSelect extends HTMLElement {
 
+    static formAssociated = true;
     static get observedAttributes() { return ["sub", "value"]; }
 
-    connectedCallback() { this._render(); }
+    private internals: ElementInternals;
+    private roles: RoleOption[] = [];
+
+    constructor() {
+        super();
+        this.internals = this.attachInternals();
+    }
+
+    connectedCallback() {
+        // Seed the form value from the initial attribute so a submit that happens
+        // before the options arrive still carries the default.
+        this.internals.setFormValue(this._value);
+        void this._load();
+    }
     attributeChangedCallback() { if (this.isConnected) this._render(); }
 
-    private get _url()   { return this.getAttribute("url") ?? "/api/users/role"; }
-    private get _sub()   { return this.getAttribute("sub") ?? ""; }
-    private get _value() { return this.getAttribute("value") ?? "user"; }
-    private get _emit()  { return this.getAttribute("emit"); }
+    private get _url()     { return this.getAttribute("url") ?? "/api/users/role"; }
+    private get _listUrl() { return this.getAttribute("list-url") ?? "/api/roles/list"; }
+    private get _sub()     { return this.getAttribute("sub") ?? ""; }
+    private get _value()   { return this.getAttribute("value") ?? "user"; }
+    private get _emit()    { return this.getAttribute("emit"); }
+
+    private async _load() {
+        try {
+            const res = await fetch(this._listUrl, { headers: { Accept: "application/json" } });
+            this.roles = res.ok ? await res.json() : [];
+        } catch {
+            this.roles = [];
+        }
+        this._render();
+    }
 
     private _render() {
         const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
+        const current = this._value;
+        // Fall back to the current value as a lone option so the control still
+        // shows something if the list failed or hasn't arrived.
+        const opts = this.roles.length ? this.roles : [{ id: current, label: current }];
         root.innerHTML = `
         <style>
           select { font: inherit; padding: .35rem .5rem; border-radius: var(--radius-sm, 6px);
                    border: 1px solid var(--border-default, #ddd); background: var(--bg-surface, #fff); color: var(--text-body, #333); }
         </style>
-        <select>${ROLES.map(r => `<option value="${r}"${r === this._value ? " selected" : ""}>${r}</option>`).join("")}</select>`;
+        <select>${opts.map((r) => `<option value="${esc(r.id)}"${r.id === current ? " selected" : ""}>${esc(r.label)}</option>`).join("")}</select>`;
         const sel = root.querySelector("select")!;
-        sel.addEventListener("change", () => this._save(sel.value));
+        this.internals.setFormValue(sel.value);
+        sel.addEventListener("change", () => this._onChange(sel.value));
+    }
+
+    private _onChange(role: string) {
+        this.internals.setFormValue(role);     // form mode (harmless otherwise)
+        if (this._sub) void this._save(role);  // auto-save mode
     }
 
     private async _save(role: string) {
@@ -47,6 +88,8 @@ class CmsRoleSelect extends HTMLElement {
             showToast("Network error", { type: "error" });
         }
     }
+
+    get name() { return this.getAttribute("name"); }
 }
 
 customElements.define("cms-role-select", CmsRoleSelect);

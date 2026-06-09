@@ -1,8 +1,5 @@
-
-
-type CMS_ROLES_LIST = [
-    "admin",
-    "user"
-];
-
-export type CMS_ROLES = CMS_ROLES_LIST[number];
+// Roles are manager-defined data (see TSystem.roles), not a closed compile-time
+// set, so the control app's role type is just `string`. The privileged `admin`
+// super-role and the no-lockout invariants stay enforced at runtime
+// (isLastAdmin / _adminReachability) and via the permissions helpers.
+export type CMS_ROLES = string;

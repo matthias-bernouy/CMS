@@ -1,11 +1,10 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { CMS_ROLES } from "types/roles";
 import { internalUserId } from "@bernouy/auth-core";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import { assignableRoles } from "cms-control/core/roles/rolesView";
 
-const ROLES: CMS_ROLES[] = ["admin", "user"];
 const MIN_PASSWORD = 8;
 
 /** POST /api/users { email, password, displayName?, role? } — create a local
@@ -21,12 +20,13 @@ export default async function createUser(req: Request, cms: ControlCms) {
     const displayName = typeof body.displayName === "string" && body.displayName.trim()
         ? body.displayName.trim()
         : undefined;
-    const role = (typeof body.role === "string" ? body.role : "user") as CMS_ROLES;
+    const role = typeof body.role === "string" ? body.role : "user";
 
     if (!email)    throw new MissingParam("email");
     if (!password) throw new MissingParam("password");
     if (password.length < MIN_PASSWORD) throw new InvalidParam("password", `at least ${MIN_PASSWORD} characters`);
-    if (!ROLES.includes(role))          throw new InvalidParam("role", "expected one of: admin, user");
+    const allowed = await assignableRoles(cms);
+    if (!allowed.some((r) => r.id === role)) throw new InvalidParam("role", "unknown or unassignable role");
 
     // The store also rejects duplicates, but checking first lets us return a
     // clear validation error instead of a generic store failure.
