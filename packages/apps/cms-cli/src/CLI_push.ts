@@ -5,13 +5,16 @@ import { runSnippets } from "./push/snippets/run";
 import { runTemplates } from "./push/templates/run";
 import { runSystem } from "./push/system/run";
 import { runFiles } from "./push/files/run";
+import { runGateways } from "./push/gateways/run";
 
 type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string };
 
-const TYPES = ["*", "system", "files", "blocs", "snippets", "templates", "pages"] as const;
+const TYPES = ["*", "system", "gateways", "files", "blocs", "snippets", "templates", "pages"] as const;
 // Files (media) ship right after system so pages/snippets that reference
-// `/.cms/files/<path>` resolve once the rest of the content lands.
-const ORDER = ["system", "files", "blocs", "snippets", "templates", "pages"] as const;
+// `/.cms/files/<path>` resolve once the rest of the content lands. Gateways
+// (data providers) ship right after system too — independent config the rest
+// of the content may reference at runtime via `/.cms/gateway/*`.
+const ORDER = ["system", "gateways", "files", "blocs", "snippets", "templates", "pages"] as const;
 type Stage = typeof ORDER[number];
 
 function parseFlags(args: string[]): Flags {
@@ -42,6 +45,7 @@ async function resolveAdmin(): Promise<{ adminBase: URL; token: string }> {
 async function runStage(stage: Stage, args: string[], adminBase: URL, token: string, flags: Flags): Promise<number> {
     switch (stage) {
         case "system":    return runSystem(adminBase, token, flags);
+        case "gateways":  return runGateways(adminBase, token, flags);
         case "files":     return runFiles(adminBase, token, flags);
         case "blocs":     return CLI_importBloc(args);
         case "snippets":  return runSnippets(adminBase, token, flags);

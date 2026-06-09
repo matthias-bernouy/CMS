@@ -27,8 +27,8 @@ Usage:
                                    first to bootstrap site/ from a tenant.
   p9r push [flags]                 Push system/files/blocs/{snippets,templates,
                                    pages} in that order to the remote CMS.
-      --type=<one>|*               One of: system, files, blocs, snippets,
-                                   templates, pages (default *: full pipeline).
+      --type=<one>|*               One of: system, gateways, files, blocs,
+                                   snippets, templates, pages (default *).
       --dry-run                    Show what would be uploaded, no writes.
       --yes | -y                   Skip the [y/N] prompt.
       --force | -f                 Bypass conflict + cross-ref validation.
