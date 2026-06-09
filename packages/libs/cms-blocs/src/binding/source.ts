@@ -37,7 +37,17 @@ export class Source {
     private abort: AbortController | null = null;
     private reloadEvents: string[] = [];
     private paramReactive = false;
+    private lastUrl: string | null = null;
+    /** Named/global reloads (`cms-reload-on`, `cms-source:reload`) always re-run:
+     *  they mean "the data changed, refetch". */
     private readonly onReload = () => { if (this.el.isConnected) void this.run(); };
+    /** Param-reactive reloads (`cms-params:change` / `popstate`) fire GLOBALLY for
+     *  ANY param. Only re-run when THIS source's resolved URL actually changed, so
+     *  an unrelated param (e.g. a sibling input syncing `#{q}`) doesn't re-fetch +
+     *  re-render us — in the editor the page-source `#{id}` wraps the whole canvas,
+     *  so an unrelated reload would re-render everything and drop the typed input's
+     *  focus. */
+    private readonly onParamsChange = () => { if (this.el.isConnected) void this.run({ onlyIfUrlChanged: true }); };
 
     constructor(private readonly el: Element, private readonly filters: FilterMap = {}) {
         this.captured = captureContent(el);
@@ -69,8 +79,8 @@ export class Source {
         // via setParam (PARAMS_CHANGE_EVENT) or the browser back/forward (popstate).
         if (hasParamTokens(this.el.getAttribute(SOURCE_ATTR) ?? "")) {
             this.paramReactive = true;
-            document.addEventListener(PARAMS_CHANGE_EVENT, this.onReload);
-            window.addEventListener("popstate", this.onReload);
+            document.addEventListener(PARAMS_CHANGE_EVENT, this.onParamsChange);
+            window.addEventListener("popstate", this.onParamsChange);
         }
     }
 
@@ -78,17 +88,23 @@ export class Source {
         for (const ev of this.reloadEvents) document.removeEventListener(ev, this.onReload);
         this.reloadEvents = [];
         if (this.paramReactive) {
-            document.removeEventListener(PARAMS_CHANGE_EVENT, this.onReload);
-            window.removeEventListener("popstate", this.onReload);
+            document.removeEventListener(PARAMS_CHANGE_EVENT, this.onParamsChange);
+            window.removeEventListener("popstate", this.onParamsChange);
             this.paramReactive = false;
         }
     }
 
-    async run(): Promise<void> {
+    async run(opts?: { onlyIfUrlChanged?: boolean }): Promise<void> {
         const raw = this.el.getAttribute(SOURCE_ATTR)?.trim();
         if (!raw) return;
         // Resolve `#{param}` against the current query string just before fetch.
         const url = resolveParams(raw);
+        // Param-reactive trigger whose resolved URL didn't change → skip: the
+        // cms-params:change event is global, so an unrelated param must not
+        // re-fetch + re-render this source (set synchronously so back-to-back
+        // changes compare against the in-flight URL).
+        if (opts?.onlyIfUrlChanged && url === this.lastUrl) return;
+        this.lastUrl = url;
 
         const { slots, body } = this.captured;
         if (slots.loading) renderContent(this.el, slots.loading, null, this.filters);
