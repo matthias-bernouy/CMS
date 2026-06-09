@@ -28,8 +28,11 @@ export type RoleRow = {
     /** Display for the permissions column: "Full access" for the admin super-role
      *  (it bypasses every check), else the grant count as text. */
     permissions: string;
+    /** Inline style hiding the per-row edit control (admin is not editable; the
+     *  data-binding has no conditional rendering). */
+    hideEdit: string;
     /** Inline style hiding the per-row delete control for non-deletable rows
-     *  (the data-binding has no conditional rendering). */
+     *  (built-ins / admin). */
     hideDelete: string;
 };
 
@@ -42,9 +45,9 @@ export type RoleRow = {
 export async function manageableRoles(cms: ControlCms): Promise<RoleRow[]> {
     const { roles } = await cms.repository.getSystem();
     const rows: RoleRow[] = [
-        // The virtual super-role: shown read-only as full-access, never as a
-        // misleading "0 permissions" (it actually has them all).
-        { id: ADMIN_ROLE, label: "Admin", kind: "System", permissions: "Full access", hideDelete: "display:none" },
+        // The virtual super-role: shown read-only as full-access (not editable,
+        // not deletable), never as a misleading "0 permissions".
+        { id: ADMIN_ROLE, label: "Admin", kind: "System", permissions: "Full access", hideEdit: "display:none", hideDelete: "display:none" },
     ];
     for (const d of roles.definitions) {
         rows.push({
@@ -52,6 +55,7 @@ export async function manageableRoles(cms: ControlCms): Promise<RoleRow[]> {
             label:       d.label,
             kind:        d.builtin ? "System" : "Custom",
             permissions: String(d.grants.length),
+            hideEdit:    "",                                  // user / public / custom are all editable
             hideDelete:  d.builtin ? "display:none" : "",
         });
     }

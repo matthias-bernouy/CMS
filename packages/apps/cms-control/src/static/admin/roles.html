@@ -19,6 +19,11 @@
             <p9r-cell><p9r-tag>{{ kind }}</p9r-tag></p9r-cell>
             <p9r-cell>{{ permissions }}</p9r-cell>
             <p9r-cell>
+                <span style="{{ hideEdit }}">
+                    <a href="{{BASE_PATH}}/admin/roles/edit?id={{ id }}" style="text-decoration:none">
+                        <p9r-button variant="ghost">Edit</p9r-button>
+                    </a>
+                </span>
                 <span style="{{ hideDelete }}">
                     <cms-confirm-form target="{{BASE_PATH}}/api/roles?id={{ id }}" method="DELETE" emit="role:updated" message="Delete this role? This cannot be undone.">
                         <p9r-button color="danger" variant="ghost">Delete</p9r-button>

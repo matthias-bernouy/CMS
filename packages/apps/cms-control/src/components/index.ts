@@ -131,6 +131,7 @@ import "@bernouy/auth-core/components"
 import "./admin/OpenDialog/OpenDialog"
 import "./admin/ProviderActions/ProviderActions"
 import "./admin/RoleSelect/RoleSelect"
+import "./admin/RoleEditor/RoleEditor"
 import "./admin/Tokens/TokenCreate"
 import "./admin/Secrets/Secrets"
 
