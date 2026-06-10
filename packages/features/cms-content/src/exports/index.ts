@@ -27,7 +27,6 @@ export { expandSnippets, type SnippetReader } from "cms-content/core/expandSnipp
 export { assertContentRefsExist, type ContentRefsReader } from "cms-content/core/assertContentRefsExist";
 export { hardenStoredHtml } from "cms-content/core/hardenStoredHtml";
 export { ContentValidationError, ContentConflictError } from "cms-content/core/errors";
-export { upsertRole, deleteRole, type RoleDto, type RoleHolderCounter } from "cms-content/core/roles";
 
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
 export { registerStyleEndpoint } from "cms-content/http/registerStyleEndpoint";

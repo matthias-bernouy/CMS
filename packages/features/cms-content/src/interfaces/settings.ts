@@ -1,4 +1,3 @@
-import type { RolesConfig } from "@bernouy/cms-permissions";
 import type { TPageRef } from "cms-content/interfaces/pages";
 
 export type TSystem = {
@@ -65,16 +64,9 @@ export type TSystem = {
         mediaExtras:   string[];
     },
 
-    /**
-     * Authorization roles defined by the manager. `definitions` holds every
-     * editable role — the built-in `user` (authenticated default) and `public`
-     * (anonymous visitor), plus any custom role — each carrying its permission
-     * `grants`. The `admin` super-role is virtual and NOT stored here: it bypasses
-     * every check. Consumed by the permissions helpers (`grantsFor` / `can`);
-     * enforcement is wired separately (admin guard + gateway proxy). Seeded with
-     * the two built-ins via `defaultRoleDefinitions()`.
-     */
-    roles: RolesConfig
+    // Roles are NOT stored here — they live in their own `RolesRepository`
+    // (@bernouy/cms-permissions), a dedicated collection independent of the
+    // content aggregate.
 
 }
 

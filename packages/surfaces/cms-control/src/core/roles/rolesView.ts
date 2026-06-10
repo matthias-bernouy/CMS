@@ -11,9 +11,9 @@ export type RoleSummary = { id: string; label: string };
  * validation (`/api/roles/list`, `role.post`, `users.post`).
  */
 export async function assignableRoles(cms: ControlCms): Promise<RoleSummary[]> {
-    const { roles } = await cms.repository.getSystem();
+    const definitions = await cms.roles.list();
     const out: RoleSummary[] = [{ id: ADMIN_ROLE, label: "Admin" }];
-    for (const d of roles.definitions) {
+    for (const d of definitions) {
         if (d.id === PUBLIC_ROLE || d.id === ADMIN_ROLE) continue;
         out.push({ id: d.id, label: d.label });
     }
@@ -43,13 +43,13 @@ export type RoleRow = {
  * deletable).
  */
 export async function manageableRoles(cms: ControlCms): Promise<RoleRow[]> {
-    const { roles } = await cms.repository.getSystem();
+    const definitions = await cms.roles.list();
     const rows: RoleRow[] = [
         // The virtual super-role: shown read-only as full-access (not editable,
         // not deletable), never as a misleading "0 permissions".
         { id: ADMIN_ROLE, label: "Admin", kind: "System", permissions: "Full access", hideEdit: "display:none", hideDelete: "display:none" },
     ];
-    for (const d of roles.definitions) {
+    for (const d of definitions) {
         rows.push({
             id:          d.id,
             label:       d.label,

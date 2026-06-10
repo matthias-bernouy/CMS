@@ -21,6 +21,7 @@ import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { MongoCmsFilesMetadata } from "@bernouy/cms-files/mongo";
 import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
 import { type CMS_ROLES } from "@bernouy/cms-permissions";
+import { MongoRolesRepository } from "@bernouy/cms-permissions/mongo";
 import {
     SignedCookieCodec,
     SubjectResolver,
@@ -90,6 +91,7 @@ const pats              = new MongoPatRepository(db);                           
 const gateway           = new MongoGatewayRepository(db);                          await gateway.init();
 const analytics         = new MongoAnalyticsStore(db);                             await analytics.init();
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
+const roles             = new MongoRolesRepository(db.collection("cms_roles"));    await roles.init();
 const secrets           = new EncryptedMongoSecretStore({
     scopeId:      SCOPE_ID,
     collection:   db.collection("cms_secrets"),
@@ -139,7 +141,7 @@ const auth = new LocalAuthentication<CMS_ROLES>({
     defaultHome:   "/admin/pages",
 });
 registerAuthRoutes(controlRunner, { basePath: "/auth", local: auth });
-new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, gateway, analytics);
+new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, gateway, analytics, roles);
 
 // Delivery on its own runner/port — strictly public surface. Shares the SAME
 // gateway instance as Control, so providers created in the admin are immediately

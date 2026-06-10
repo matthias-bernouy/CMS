@@ -7,7 +7,6 @@ import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TSystem } from "cms-content/interfaces/settings";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import { DEFAULT_SHELL } from "cms-content/interfaces/settings";
-import { defaultRoleDefinitions } from "@bernouy/cms-permissions";
 import { escapeRegex } from "cms-content/core/utils/escapeRegex";
 
 /**
@@ -232,9 +231,7 @@ export class MongoCmsRepository implements CmsRepository {
         const doc = await this.system.findOne({ _id: SYSTEM_ID });
         if (doc) {
             const { _id, ...rest } = doc;
-            // Backfill `roles` for documents created before the section existed,
-            // so callers always get the seeded built-ins (never undefined).
-            return { ...rest, roles: rest.roles ?? { definitions: defaultRoleDefinitions() } };
+            return rest;
         }
         // Lazy creation on first access — keeps the contract synchronous-feeling
         // for callers and avoids requiring a separate `seed()` step.
@@ -426,6 +423,5 @@ function defaultSystem(): TSystem {
         },
         editor:   { layoutCategory: "", shell: DEFAULT_SHELL },
         security: { connectExtras: [], mediaExtras: [] },
-        roles:    { definitions: defaultRoleDefinitions() },
     };
 }

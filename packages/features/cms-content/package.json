@@ -12,7 +12,6 @@
     },
     "dependencies": {
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/cms-permissions": "workspace:*",
         "linkedom": "^0.18.12"
     },
     "peerDependencies": {

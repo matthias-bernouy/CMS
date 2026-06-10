@@ -6,7 +6,6 @@ import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TSystem } from "cms-content/interfaces/settings";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import { DEFAULT_SHELL } from "cms-content/interfaces/settings";
-import { defaultRoleDefinitions } from "@bernouy/cms-permissions";
 import { filterAndSortPages } from "cms-content/core/pagesQuery";
 import { escapeRegex } from "cms-content/core/utils/escapeRegex";
 
@@ -312,6 +311,5 @@ function defaultSystem(): TSystem {
         },
         editor:   { layoutCategory: "", shell: DEFAULT_SHELL },
         security: { connectExtras: [], mediaExtras: [] },
-        roles:    { definitions: defaultRoleDefinitions() },
     };
 }

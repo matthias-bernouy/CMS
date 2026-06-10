@@ -10,7 +10,6 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
-        { "path": "../../foundation/http-runner" },
-        { "path": "../cms-permissions" }
+        { "path": "../../foundation/http-runner" }
     ]
 }

@@ -1,8 +1,8 @@
 import { CMS_PERMISSIONS, type Grant } from "@bernouy/cms-permissions";
-import type { RoleDto } from "@bernouy/cms-content";
+import type { RoleDto } from "@bernouy/cms-permissions";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
-export type { RoleDto } from "@bernouy/cms-content";
+export type { RoleDto } from "@bernouy/cms-permissions";
 
 /** Parse + validate a `POST /api/roles` body into a `RoleDto`. */
 export function parseRoleDto(body: Record<string, unknown>): RoleDto {

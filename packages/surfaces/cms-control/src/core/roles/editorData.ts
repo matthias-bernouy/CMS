@@ -24,8 +24,7 @@ export type RoleEditorData = {
 export async function roleEditorData(cms: ControlCms, id: string): Promise<RoleEditorData> {
     if (id === ADMIN_ROLE) throw new InvalidParam("id", "the admin super-role is not editable");
 
-    const system = await cms.repository.getSystem();
-    const def = system.roles.definitions.find((d) => d.id === id);
+    const def = await cms.roles.get(id);
     if (!def) throw new InvalidParam("id", "unknown role");
 
     const cmsGroups: CmsPermGroup[] = CMS_PERMISSION_CATALOGUE.map((f) => ({

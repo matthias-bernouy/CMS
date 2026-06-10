@@ -13,6 +13,8 @@ import type { CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { CmsFilesBlobStore } from "@bernouy/cms-files";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/cms-auth";
 import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/cms-auth";
+import type { RolesRepository } from "@bernouy/cms-permissions";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { registerAnalyticsApi, type AnalyticsStore } from "@bernouy/cms-analytics";
@@ -66,6 +68,7 @@ export class ControlCms {
     private _credentials:         LocalCredentialStore | null;
     private _gateway:             GatewayRepository | null;
     private _analytics:           AnalyticsStore | null;
+    private _roles:               RolesRepository;
 
     constructor(
         runner: Runner,
@@ -82,6 +85,7 @@ export class ControlCms {
         credentials?: LocalCredentialStore,
         gateway?: GatewayRepository,
         analytics?: AnalyticsStore,
+        roles?: RolesRepository,
     ){
         this.configuration = configuration;
         this._auth = auth;
@@ -97,6 +101,7 @@ export class ControlCms {
         this._credentials = credentials ?? null;
         this._gateway = gateway ?? null;
         this._analytics = analytics ?? null;
+        this._roles = roles ?? new InMemoryRolesRepository();
 
         const authGuard = createAuthGuard<CMS_ROLES>({ basePath: this.basePath, auth: this._auth, requiredRole: "admin" });
 
@@ -188,6 +193,10 @@ export class ControlCms {
     }
 
     /** CMS membership store (authz: `sub → role`). Throws until wired. */
+    get roles(): RolesRepository {
+        return this._roles;
+    }
+
     get users(): UsersRepository<CMS_ROLES> {
         if (!this._users) throw new Error("users repository not configured");
         return this._users;
