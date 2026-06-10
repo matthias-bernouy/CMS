@@ -7,6 +7,8 @@ import { installLinkInterceptor } from "cms-control/core/editorSystem/installLin
 import { watchForDirty, isDirty } from "cms-control/core/editorSystem/dirtyState";
 import { resolveTargetForLink } from "./linkNavigation";
 import { stripResidualChrome } from "./stripResidualChrome";
+import { BINDING_CORE_TAG, BIND_STOP_ATTR, clearRuntimeStamps } from "@bernouy/cms-blocs/binding";
+import { findContentRegion, isRegionEmpty, applyPickedTemplate } from "./contentRegion";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import type { EDITOR_SYSTEM_MODE } from "types/w13c/EditorSystem";
 import { ObserverManager } from "cms-control/components/editor/EditorSystem/ObserverManager";
@@ -16,6 +18,10 @@ import type { BlocLibrary } from "../BlocLibrary/BlocLibrary";
 import { waitForScripts } from "./waitForScripts";
 import type { TemplatePicker } from "./TemplatePicker/TemplatePicker";
 
+type BindingCoreElement = HTMLElement & {
+    runtime: { deactivate(): void } | null;
+    startRuntime(): void;
+};
 
 export default class EditorRoot extends HTMLElement {
 
@@ -115,20 +121,33 @@ export default class EditorRoot extends HTMLElement {
         }).catch(() => { /* offline / auth — keep empty set */ });
     }
 
-    private _isWorkingEmpty(): boolean {
+    /** The canvas's content region — the [data-cms-content] marker for a page, or
+     *  the [cms-bind-stop] wrapper for a template/snippet. Shared by the empty
+     *  check and the save harvest so both agree on what "the content" is. */
+    private _contentRegion(): Element | null {
         const slot = this.shadowRoot!.querySelector("#workingElement slot") as HTMLSlotElement;
-        const nodes = slot.assignedNodes({ flatten: true }).filter(n =>
-            n.nodeType === Node.ELEMENT_NODE ||
-            (n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim() !== "")
-        );
-        if (nodes.length === 0) return true;
-        if (nodes.length !== 1 || nodes[0]!.nodeType !== Node.ELEMENT_NODE) return false;
-        const el = nodes[0] as Element;
-        if (el.tagName !== "P") return false;
-        const text = (el.textContent ?? "").trim();
-        if (text !== "") return false;
-        const onlyBr = el.children.length === 1 && el.children[0]!.tagName === "BR";
-        return el.children.length === 0 || onlyBr;
+        return findContentRegion(slot.assignedElements({ flatten: true }));
+    }
+
+    private _contentWrapper(): Element | null {
+        const slot = this.shadowRoot!.querySelector("#workingElement slot") as HTMLSlotElement;
+        return slot.assignedElements({ flatten: true }).find(el => el.hasAttribute(BIND_STOP_ATTR)) ?? null;
+    }
+
+    private _bindingCoresInContent(): BindingCoreElement[] {
+        const wrapper = this._contentWrapper();
+        if (!wrapper) return [];
+        const cores: BindingCoreElement[] = [];
+        if (wrapper.localName === BINDING_CORE_TAG) cores.push(wrapper as BindingCoreElement);
+        wrapper.querySelectorAll(BINDING_CORE_TAG).forEach((el) => cores.push(el as BindingCoreElement));
+        return cores;
+    }
+
+    private _isWorkingEmpty(): boolean {
+        // Look INSIDE the canvas wrapper: the slotted cms-bind-stop/Shell wrapper
+        // is a <div>, never the bare empty <p>, so checking the slot directly
+        // would hide a fresh page's emptiness and skip the template picker.
+        return isRegionEmpty(this._contentRegion());
     }
 
     private async _maybePickTemplate(): Promise<void> {
@@ -137,22 +156,10 @@ export default class EditorRoot extends HTMLElement {
         const html = await picker.open();
         picker.remove();
         if (!html) return;
-        // Surgical: only replace the default-slotted children (the page
-        // content). Named slots — `style` / `script` / `configuration` —
-        // must survive, otherwise the editor loses its config panel.
-        Array.from(this.children).forEach(c => { if (!c.hasAttribute("slot")) c.remove(); });
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = html;
-        while (wrapper.firstChild) this.appendChild(wrapper.firstChild);
-    }
-
-    save(){
-        const ele = this.shadowRoot?.querySelector("#workingElement") as HTMLElement;
-        const content = ele.innerHTML;
-        this.dispatchEvent(new CustomEvent("editor-system-save", {
-            bubbles: true,
-            detail: content
-        }))
+        // Inject INTO the content region (inside the cms-bind-stop / Shell
+        // wrapper), never in place of it: pageContent + the empty check locate
+        // content via that wrapper, so destroying it would orphan the save.
+        applyPickedTemplate(this, this._contentRegion(), html);
     }
 
     openConfig() {
@@ -240,24 +247,28 @@ export default class EditorRoot extends HTMLElement {
     }
 
     get pageContent(){
-        this.switchMode("view");
-        const slot = this.shadowRoot!.querySelector('#workingElement slot') as HTMLSlotElement;
-        const nodes = slot.assignedNodes({ flatten: true });
-        // Belt-and-braces strip of editor-only artifacts. The per-Editor
-        // viewClient() pass triggered by switchMode("view") above already
-        // cleans every editorized target, but elements outside the Editor
-        // system (e.g. <template> light children of a bloc — inert content
-        // the observer brushed with action-disable + parent-identifier
-        // attrs) escape that pass. Walking the captured subtree once
-        // catches those gaps and makes "no p9r-* in saved HTML" an
-        // invariant we don't have to re-prove for every new bloc pattern.
-        for (const n of nodes) if (n instanceof Element) stripResidualChrome(n);
-        const html = nodes
-            .filter(n => n.nodeName !== "#text")
-            .map(n => n instanceof Element ? n.outerHTML : n.textContent ?? '')
-            .join('');
-        this.switchMode("editor");
-        return html;
+        // The canvas renders the page inside its Shell (the cms-bind-stop wrapper +
+        // header/footer + the <cms-binding-core>). Save must persist only the page's
+        // OWN content: for a page that's the [data-cms-content] region (the Shell's
+        // {{CONTENT}} slot); for templates/snippets (no Shell) it's everything under
+        // cms-bind-stop. It MUST be read in EDITOR mode — there the binding core is
+        // paused, so the canvas holds the authored TEMPLATE, not the live render.
+        // If we're in view mode, pause ONLY the Shell binding cores while cloning:
+        // this avoids a global editor->view mode cascade and URL churn during save.
+        // The live editor is briefly restored afterwards.
+        const wasView = this._mode === "view";
+        const cores = wasView ? this._bindingCoresInContent() : [];
+        if (wasView) cores.forEach((core) => core.runtime?.deactivate());
+        try {
+            const region = this._contentRegion();
+            if (!region) return "";
+            const clone = region.cloneNode(true) as Element;
+            stripResidualChrome(clone);   // editor chrome (p9r-*, editor-block, contenteditable, …)
+            clearRuntimeStamps(clone);    // binding runtime stamps (cms-ready) — owned by cms-blocs
+            return clone.innerHTML;
+        } finally {
+            if (wasView) cores.forEach((core) => core.startRuntime());
+        }
     }
 
 }

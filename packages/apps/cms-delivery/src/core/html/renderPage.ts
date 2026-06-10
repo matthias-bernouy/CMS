@@ -1,7 +1,7 @@
 import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-shared";
 import type { CacheEntry } from "@bernouy/cms-shared";
-import { compress, sanitizeDomTree, DEFAULT_SHELL } from "@bernouy/cms-shared";
+import { compress, sanitizeDomTree, composeShell } from "@bernouy/cms-shared";
 import { expandSnippets } from "cms-delivery/core/html/expandSnippets";
 import { findUsedBlocTags } from "cms-delivery/core/blocs/findUsedBlocs";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
@@ -35,13 +35,7 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
 
     // Wrap the page content in the site-wide Shell (header / nav / footer +
     // the <cms-binding-core> activation root); `{{CONTENT}}` marks the slot.
-    // Function replacement so `$&`/`$1` inside user content aren't interpreted
-    // as replacement patterns. Fall back to the default Shell when the
-    // configured one lost its marker (systems predating the field, bad save).
-    const shell = settings.editor.shell?.includes("{{CONTENT}}")
-        ? settings.editor.shell
-        : DEFAULT_SHELL;
-    const composed = shell.replace("{{CONTENT}}", () => page.content);
+    const composed = composeShell(settings.editor.shell, page.content);
 
     const expandedContent = await expandSnippets(composed, ctx.repository);
     document.body.innerHTML = expandedContent;

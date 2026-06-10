@@ -31,7 +31,10 @@
                 </p9r-section>
             </cms-editor-configuration>
 
-            <inner-html>{{ content | innerHTML }}</inner-html>
+            <!-- cms-bind-stop walls this region off from the chrome runtime: the content
+                 is injected (chrome scope) but its cms-source/{{ }} stay an inert editable
+                 template — rendering with data is delivery's job (the Shell). -->
+            <div cms-bind-stop style="display:contents"><inner-html>{{ content | innerHTML }}</inner-html></div>
 
         </cms-editor-system>
 

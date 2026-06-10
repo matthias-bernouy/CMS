@@ -105,6 +105,13 @@ export { RangeTabs } from "./ui/Dataviz/RangeTabs/RangeTabs";
 export { Form } from "./logicalComponents/Form/Form";
 
 // Data-binding runtime
-export { BindingCore, setBindingFilters } from "./binding/bindingCore";
+export {
+    BindingCore,
+    setBindingFilters,
+    clearRuntimeStamps,
+    BINDING_CORE_TAG,
+    BIND_STOP_ATTR,
+    READY_ATTR,
+} from "./binding/bindingCore";
 export { setParam, PARAMS_CHANGE_EVENT } from "./binding/params";
 export type { FilterMap, Filter } from "./binding/interpolate";

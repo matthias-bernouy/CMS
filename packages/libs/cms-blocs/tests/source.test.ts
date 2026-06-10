@@ -102,6 +102,56 @@ describe("Source — loading state", () => {
     });
 });
 
+describe("Source — editor template restore", () => {
+    test("renderTemplate() restores the authored body and state slots with cms-slot attrs", async () => {
+        respond(200, JSON.stringify({ name: "Ada" }));
+        const src = el(`
+            <div cms-source="/x">
+                <p class="data">{{ name }}</p>
+                <div cms-slot="loading">Loading</div>
+                <div cms-slot="error">Failed: {{ status }}</div>
+                <div cms-slot="empty">Nothing</div>
+            </div>
+        `);
+        const source = new Source(src);
+
+        await source.run();
+        expect(text(src.querySelector(".data"))).toBe("Ada");
+        expect(src.querySelector("[cms-slot]")).toBeNull();
+
+        source.renderTemplate();
+
+        expect(text(src.querySelector(".data"))).toBe("{{ name }}");
+        expect(text(src.querySelector('[cms-slot="loading"]'))).toBe("Loading");
+        expect(text(src.querySelector('[cms-slot="error"]'))).toBe("Failed: {{ status }}");
+        expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("Nothing");
+        expect(Array.from(src.children).map((el) => el.getAttribute("cms-slot") ?? "body"))
+            .toEqual(["body", "loading", "error", "empty"]);
+    });
+
+    test("renderTemplate() preserves an authored <template> wrapper", async () => {
+        respond(200, JSON.stringify({ name: "Ada" }));
+        const src = el(`
+            <div cms-source="/x">
+                <template><my-card>{{ name }}</my-card></template>
+                <div cms-slot="empty">Nothing</div>
+            </div>
+        `);
+        const source = new Source(src);
+
+        await source.run();
+        expect(text(src.querySelector("my-card"))).toBe("Ada");
+        expect(src.querySelector("template")).toBeNull();
+
+        source.renderTemplate();
+
+        const template = src.querySelector("template") as HTMLTemplateElement | null;
+        expect(template).not.toBeNull();
+        expect(text(template!.content.querySelector("my-card"))).toBe("{{ name }}");
+        expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("Nothing");
+    });
+});
+
 describe("Source — no-op", () => {
     test("empty url → nothing rendered", async () => {
         respond(200, JSON.stringify({ name: "Ada" }));

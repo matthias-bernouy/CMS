@@ -19,6 +19,8 @@ export type SlotName = "loading" | "error" | "empty";
 const SLOT_NAMES: readonly SlotName[] = ["loading", "error", "empty"];
 
 export type Captured = {
+    /** Authored editable template, including state slots with their attrs. */
+    template: DocumentFragment;
     /** Default content — the data template, bound on success. */
     body: DocumentFragment;
     /** State slots, when present. */
@@ -41,8 +43,10 @@ export type Captured = {
 export function captureContent(el: Element): Captured {
     const slots: Partial<Record<SlotName, DocumentFragment>> = {};
     const body = document.createDocumentFragment();
+    const template = document.createDocumentFragment();
 
     for (const child of Array.from(el.childNodes)) {
+        template.appendChild(cloneAuthoredNode(child));
         const slot = slotOf(child);
         if (!slot) {
             if (child.nodeType === Node.ELEMENT_NODE && (child as Element).tagName === "TEMPLATE") {
@@ -62,7 +66,7 @@ export function captureContent(el: Element): Captured {
             slots[slot] = frag;
         }
     }
-    return { body, slots };
+    return { template, body, slots };
 }
 
 /**
@@ -96,4 +100,8 @@ function slotOf(node: Node): SlotName | null {
     if (node.nodeType !== Node.ELEMENT_NODE) return null;
     const v = (node as Element).getAttribute(SLOT_ATTR);
     return v && (SLOT_NAMES as readonly string[]).includes(v) ? (v as SlotName) : null;
+}
+
+function cloneAuthoredNode(node: Node): Node {
+    return node.cloneNode(true);
 }

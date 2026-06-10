@@ -7,6 +7,7 @@ import { EmptyEditor } from "../../../core/editorSystem/registerEditor";
 import { TextEditor, textTags } from "cms-control/core/editorSystem/defaultEditors/TextEditor";
 import { ListEditor } from "cms-control/core/editorSystem/defaultEditors/ListEditor";
 import { SnippetEditor } from "cms-control/core/editorSystem/defaultEditors/SnippetEditor";
+import { BindingCoreEditor } from "cms-control/core/editorSystem/defaultEditors/BindingCoreEditor";
 import { getEditorContext } from "cms-control/core/editorSystem/editorContext";
 
 export type TagElement = {
@@ -161,6 +162,16 @@ export class ObserverManager {
             tag: "w13c-snippet",
             cl: SnippetEditor,
             label: "snippet",
+            visible: false
+        });
+
+        // The Shell's data-binding root, rendered into the canvas. Invisible
+        // (empty label → no breadcrumb, visible:false → no picker, non-interactive
+        // → no BAG); it only toggles the runtime with the editor mode.
+        this.register_editor({
+            tag: "cms-binding-core",
+            cl: BindingCoreEditor,
+            label: "",
             visible: false
         });
 

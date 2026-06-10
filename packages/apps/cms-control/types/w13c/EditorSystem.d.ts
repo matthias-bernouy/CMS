@@ -5,8 +5,7 @@ export type EDITOR_SYSTEM_MODE = "view" | "editor";
 export declare global {
 
     interface HTMLElementEventMap {
-        "editor-system-switch-mode": CMSEvent<EDITOR_SYSTEM_MODE>,
-        "editor-system-save":        CMSEvent<string>
+        "editor-system-switch-mode": CMSEvent<EDITOR_SYSTEM_MODE>
     }
 
     interface HTMLElementTagNameMap {

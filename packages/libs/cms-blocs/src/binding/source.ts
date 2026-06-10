@@ -21,17 +21,13 @@ import { captureContent, renderContent, isEmpty, type Captured } from "./slots";
 import { type FilterMap } from "./interpolate";
 import { SOURCE_ATTR } from "./bindSubtree";
 import { resolveParams, hasParamTokens, PARAMS_CHANGE_EVENT } from "./params";
+import { READY_ATTR } from "./attrs";
 
 /** Space-separated event names in this attribute re-run the source. */
 export const RELOAD_ATTR = "cms-reload-on";
 /** Always-listened global event — `document.dispatchEvent(new Event(...))`
  *  reloads every live source. */
 export const RELOAD_EVENT = "cms-source:reload";
-/** Set on a source once it has been activated; the cloak CSS reveals it.
- *  Until then `[cms-source]:not([cms-ready])` is hidden, so the raw template
- *  (un-interpolated tokens) never paints. */
-export const READY_ATTR = "cms-ready";
-
 export class Source {
     private readonly captured: Captured;
     private abort: AbortController | null = null;
@@ -68,6 +64,15 @@ export class Source {
         this.abort?.abort();
         this.abort = null;
         this.unlisten();
+    }
+
+    /** Editor support: replace the live render with the authored template (raw,
+     *  un-interpolated — `{{ }}` literal, `cms-repeat` intact), aborting any
+     *  in-flight fetch. The core reveals freshly-cloned nested sources. */
+    renderTemplate(): void {
+        this.abort?.abort();
+        this.abort = null;
+        renderContent(this.el, this.captured.template, null, this.filters);
     }
 
     private listen(): void {
@@ -136,4 +141,15 @@ export class Source {
             renderContent(this.el, body, { value: data }, this.filters);
         }
     }
+}
+
+/**
+ * Strip runtime-only stamps (currently `cms-ready`) from `root` and its subtree.
+ * Used when serializing an editor canvas back to authored content: the runtime's
+ * bookkeeping must not leak into saved HTML, or on the next load the cloak would
+ * reveal an un-rendered source (a raw `{{ }}` flash) before its fetch resolves.
+ */
+export function clearRuntimeStamps(root: Element): void {
+    if (root.hasAttribute(READY_ATTR)) root.removeAttribute(READY_ATTR);
+    root.querySelectorAll(`[${READY_ATTR}]`).forEach((el) => el.removeAttribute(READY_ATTR));
 }

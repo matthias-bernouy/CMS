@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from "bun:test";
-import { Source, RELOAD_EVENT } from "../src/binding/source";
+import { Source, RELOAD_EVENT, clearRuntimeStamps } from "../src/binding/source";
 import { BindingRuntime } from "../src/binding/runtime";
 import { PARAMS_CHANGE_EVENT } from "../src/binding/params";
 
@@ -140,6 +140,95 @@ describe("BindingRuntime — nested core isolation", () => {
     });
 });
 
+describe("BindingRuntime — cms-bind-stop boundary", () => {
+    test("the runtime never registers OR fetches sources inside a [cms-bind-stop] region", async () => {
+        let walledFetches = 0;
+        routes({
+            "/outer":  () => res(200, JSON.stringify([{ v: "o" }])),
+            "/walled": () => { walledFetches++; return res(200, JSON.stringify([{ v: "w" }])); },
+        });
+        const root = el(`
+            <div>
+                <div cms-source="/outer"><span cms-repeat="."></span></div>
+                <div cms-bind-stop>
+                    <div cms-source="/walled"><span cms-repeat="."></span></div>
+                </div>
+            </div>
+        `);
+        document.body.appendChild(root);
+        const rt = new BindingRuntime(root);
+        rt.start();
+        await waitFor(() => rt.size >= 1);
+        await settle();
+        expect(rt.size).toBe(1);        // only /outer — the walled source is never registered
+        expect(walledFetches).toBe(0);  // and never executed → stays an inert template
+        rt.stop();
+    });
+
+    test("sources inside a [cms-bind-stop] region are revealed as inert editable templates", async () => {
+        routes({ "/walled": () => res(200, JSON.stringify([{ v: "w" }])) });
+        const root = el(`
+            <div>
+                <div cms-bind-stop>
+                    <div cms-source="/walled"><p>{{ v }}</p></div>
+                </div>
+            </div>
+        `);
+        document.body.appendChild(root);
+        const walled = root.querySelector("[cms-source]")!;
+        const rt = new BindingRuntime(root);
+
+        rt.start();
+        await settle();
+
+        expect(rt.size).toBe(0);
+        expect(walled.hasAttribute("cms-ready")).toBe(true);
+        expect(text(walled.querySelector("p"))).toBe("{{ v }}");
+        rt.stop();
+    });
+
+    test("a nested <cms-binding-core>'s OWN runtime still drives its sources inside a [cms-bind-stop] region", async () => {
+        routes({ "/inner": () => res(200, JSON.stringify([{ v: "i" }])) });
+        const root = el(`
+            <div>
+                <div cms-bind-stop>
+                    <cms-binding-core>
+                        <div cms-source="/inner"><span cms-repeat="."></span></div>
+                    </cms-binding-core>
+                </div>
+            </div>
+        `);
+        document.body.appendChild(root);
+        const outer = new BindingRuntime(root);                          // chrome-like outer runtime
+        outer.start();
+        const inner = new BindingRuntime(root.querySelector("cms-binding-core")!); // the core's OWN runtime
+        inner.start();
+        await waitFor(() => inner.size === 1);
+        await settle();
+        expect(outer.size).toBe(0);  // outer ignores everything behind bind-stop
+        expect(inner.size).toBe(1);  // but the core's OWN runtime is unaffected by bind-stop above it
+        outer.stop();
+        inner.stop();
+    });
+
+    test("a source injected into a [cms-bind-stop] region after start is ignored by the observer", async () => {
+        let walledFetches = 0;
+        routes({ "/walled": () => { walledFetches++; return res(200, "[]"); } });
+        const root = el(`<div><div cms-bind-stop></div></div>`);
+        document.body.appendChild(root);
+        const rt = new BindingRuntime(root);
+        rt.start();
+        await settle();
+
+        // Mirror the editor's inner-html injection: add a cms-source under the boundary.
+        root.querySelector("[cms-bind-stop]")!.innerHTML = `<div cms-source="/walled"></div>`;
+        await settle();
+        expect(rt.size).toBe(0);
+        expect(walledFetches).toBe(0);
+        rt.stop();
+    });
+});
+
 describe("BindingRuntime — discovery", () => {
     test("start() activates a top-level source", async () => {
         routes({ "/x": () => res(200, JSON.stringify({ name: "Ada" })) });
@@ -211,5 +300,74 @@ describe("BindingRuntime — no leak on reload", () => {
         await waitFor(() => rt.size === 1);
         rt.stop();
         expect(rt.size).toBe(0);
+    });
+});
+
+describe("BindingRuntime — deactivate / resume (editor pause)", () => {
+    test("deactivate() reverts to the raw template + reveals it; a fresh runtime re-renders", async () => {
+        routes({ "/x": () => res(200, JSON.stringify({ name: "Ada" })) });
+        const root = el(`<div><div cms-source="/x"><p>{{ name }}</p></div></div>`);
+        document.body.appendChild(root);
+        const src = root.querySelector("[cms-source]")!;
+
+        const rt = new BindingRuntime(root);
+        rt.start();
+        await waitFor(() => text(root.querySelector("p")) === "Ada");   // live render
+
+        rt.deactivate();
+        await settle();
+        expect(text(root.querySelector("p"))).toBe("{{ name }}");        // authored template restored
+        expect(src.hasAttribute("cms-ready")).toBe(true);                // revealed — cloak won't hide it
+        expect(rt.size).toBe(0);                                         // torn down
+        expect(rt.isStopped).toBe(true);                                 // single-use
+
+        // Resume = a FRESH runtime (the editor's startRuntime): re-discovers the
+        // restored template and renders it with data again.
+        const rt2 = new BindingRuntime(root);
+        rt2.start();
+        await waitFor(() => text(root.querySelector("p")) === "Ada");
+        expect(rt2.size).toBe(1);
+        rt2.stop();
+    });
+
+    test("deactivate() restores authored <template> wrappers and state slots for save", async () => {
+        routes({ "/x": () => res(200, JSON.stringify({ name: "Ada" })) });
+        const root = el(`
+            <div>
+                <div cms-source="/x">
+                    <template><my-card>{{ name }}</my-card></template>
+                    <p cms-slot="empty">Nothing</p>
+                    <p cms-slot="error">Failed</p>
+                </div>
+            </div>
+        `);
+        document.body.appendChild(root);
+        const rt = new BindingRuntime(root);
+
+        rt.start();
+        await waitFor(() => text(root.querySelector("my-card")) === "Ada");
+        rt.deactivate();
+
+        const src = root.querySelector("[cms-source]")!;
+        const template = src.querySelector("template") as HTMLTemplateElement | null;
+        expect(template).not.toBeNull();
+        expect(text(template!.content.querySelector("my-card"))).toBe("{{ name }}");
+        expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("Nothing");
+        expect(text(src.querySelector('[cms-slot="error"]'))).toBe("Failed");
+        expect(src.innerHTML).toContain("<template>");
+    });
+});
+
+describe("clearRuntimeStamps", () => {
+    test("removes cms-ready from root + subtree, leaving authored directives intact", () => {
+        const root = el(`<div cms-ready><div cms-source="/x" cms-ready><span cms-repeat="items">{{ name }}</span></div></div>`);
+        clearRuntimeStamps(root);
+        expect(root.hasAttribute("cms-ready")).toBe(false);
+        const src = root.querySelector("[cms-source]")!;
+        expect(src.hasAttribute("cms-ready")).toBe(false);
+        // authored binding directives must NOT be touched
+        expect(src.getAttribute("cms-source")).toBe("/x");
+        expect(root.querySelector("[cms-repeat]")).not.toBeNull();
+        expect(root.innerHTML).toContain("{{ name }}");
     });
 });

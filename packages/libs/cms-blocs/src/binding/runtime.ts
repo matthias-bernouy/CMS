@@ -23,7 +23,19 @@ import { Source } from "./source";
 import { ParamSync, PARAM_SYNC_ATTR } from "./paramSync";
 import { SOURCE_ATTR } from "./bindSubtree";
 import { type FilterMap } from "./interpolate";
+import { BINDING_CORE_TAG, BIND_STOP_ATTR, READY_ATTR } from "./attrs";
 
+/**
+ * Marks a subtree this runtime must NOT discover sources within. Unlike a
+ * nested `<cms-binding-core>` (which owns its own data), a `[cms-bind-stop]`
+ * region is left INERT: the editor wraps the injected page content in it so the
+ * chrome core still INJECTS the content (`bindSubtree` traverses it — the
+ * `{{ content | innerHTML }}` interpolation runs) but never registers or
+ * executes the content's own `cms-source` / `cms-param-sync`. The content stays
+ * an editable template; rendering it with data is delivery's job. RUNTIME-
+ * discovery boundary only (it does NOT stop `bindSubtree`), and a complete
+ * no-op in delivery where no element carries it.
+ */
 export class BindingRuntime {
     private readonly sources = new Map<Element, Source>();
     private readonly paramSyncs = new Map<Element, ParamSync>();
@@ -49,11 +61,15 @@ export class BindingRuntime {
 
     private activate(): void {
         if (this.stopped) return;
+        revealInertSources(this.root);
         this.registerWithin(this.root);
         this.observer = new MutationObserver((records) => {
             for (const r of records) {
                 r.removedNodes.forEach((n) => this.unregisterWithin(n));
-                r.addedNodes.forEach((n) => this.registerWithin(n));
+                r.addedNodes.forEach((n) => {
+                    revealInertSources(n);
+                    this.registerWithin(n);
+                });
             }
         });
         this.observer.observe(this.root, { childList: true, subtree: true });
@@ -61,13 +77,45 @@ export class BindingRuntime {
 
     /** Tear everything down — disconnect the observer and dispose all features. */
     stop(): void {
+        this.teardown();
+    }
+
+    /**
+     * Stop fetching and revert the DOM to the authored template: re-render every
+     * source's captured body raw (un-interpolated `{{ }}`, intact `cms-repeat`),
+     * then tear down (abort fetches, drop listeners, stop observing). A generic
+     * runtime primitive — the CMS editor calls it to pause binding in edit mode,
+     * but the runtime itself knows nothing about modes. Like `stop()`, single-use
+     * after; build a fresh runtime to resume.
+     */
+    deactivate(): void {
+        this.teardown({
+            beforeSourceDispose: (src) => src.renderTemplate(),
+            afterDispose: () => revealSources(this.root),
+        });
+    }
+
+    private teardown(hooks?: {
+        beforeSourceDispose?: (src: Source) => void;
+        afterDispose?: () => void;
+    }): void {
+        if (this.stopped) return;
         this.stopped = true;
         this.observer?.disconnect();
         this.observer = null;
-        for (const src of this.sources.values()) src.dispose();
+        for (const src of this.sources.values()) {
+            hooks?.beforeSourceDispose?.(src);
+            src.dispose();
+        }
         for (const ps of this.paramSyncs.values()) ps.dispose();
         this.sources.clear();
         this.paramSyncs.clear();
+        hooks?.afterDispose?.();
+    }
+
+    /** True once stopped/deactivated — `BindingRuntime` is single-use. */
+    get isStopped(): boolean {
+        return this.stopped;
     }
 
     /** Test/introspection hook: number of live sources. */
@@ -119,17 +167,47 @@ export class BindingRuntime {
 function eachMatching(node: Node, attr: string, root: Element, cb: (el: Element) => void): void {
     if (node.nodeType !== Node.ELEMENT_NODE) return;
     const el = node as Element;
-    if (inNestedCore(el, root)) return;
+    // `el === root` is THIS runtime's own scan root — it is never "behind a
+    // boundary" relative to itself. Skipping the guard here is what lets a core
+    // nested inside an outer boundary (a `[cms-bind-stop]` region, or another
+    // core) still drive its OWN subtree: `crossesBoundary(root, root)` would
+    // otherwise walk ABOVE root, hit that outer boundary, and wrongly bail.
+    // Only a descendant / observer-added node can legitimately be behind a
+    // boundary relative to root (handled by the per-element check below).
+    if (el !== root && crossesBoundary(el, root)) return;
     if (el.hasAttribute(attr)) cb(el);
     el.querySelectorAll(`[${attr}]`).forEach((inner) => {
-        if (!inNestedCore(inner, root)) cb(inner);
+        if (!crossesBoundary(inner, root)) cb(inner);
     });
 }
 
-/** True if a `<cms-binding-core>` sits strictly between `el` and `root`. */
-function inNestedCore(el: Element, root: Element): boolean {
+/**
+ * True if a discovery boundary sits strictly between `el` and `root`: a nested
+ * `<cms-binding-core>` (which owns its own data) OR a `[cms-bind-stop]` region
+ * (the editor's inert canvas content). Either isolates that subtree from this
+ * runtime, so its sources are never registered/executed here.
+ */
+function crossesBoundary(el: Element, root: Element): boolean {
     for (let p = el.parentElement; p && p !== root; p = p.parentElement) {
-        if (p.localName === "cms-binding-core") return true;
+        if (p.localName === BINDING_CORE_TAG || p.hasAttribute(BIND_STOP_ATTR)) return true;
     }
     return false;
+}
+
+export function revealSources(root: Node): void {
+    if (root.nodeType !== Node.ELEMENT_NODE) return;
+    const el = root as Element;
+    if (el.hasAttribute(SOURCE_ATTR)) el.setAttribute(READY_ATTR, "");
+    el.querySelectorAll(`[${SOURCE_ATTR}]:not([${READY_ATTR}])`)
+        .forEach((source) => source.setAttribute(READY_ATTR, ""));
+}
+
+function revealInertSources(root: Node): void {
+    if (root.nodeType !== Node.ELEMENT_NODE) return;
+    const el = root as Element;
+    if (el.hasAttribute(BIND_STOP_ATTR)) {
+        revealSources(el);
+        return;
+    }
+    el.querySelectorAll(`[${BIND_STOP_ATTR}]`).forEach(revealSources);
 }

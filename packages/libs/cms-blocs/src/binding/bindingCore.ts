@@ -13,12 +13,15 @@
  * the page-global scope (query / route / user) shared by every source within.
  */
 
-import { BindingRuntime } from "./runtime";
+import { BindingRuntime, revealSources } from "./runtime";
 import { type FilterMap } from "./interpolate";
 import { SOURCE_ATTR } from "./bindSubtree";
-import { READY_ATTR } from "./source";
+import { BINDING_CORE_TAG, BIND_STOP_ATTR, READY_ATTR } from "./attrs";
 
-export const BINDING_CORE_TAG = "cms-binding-core";
+/** Re-exported through `@bernouy/cms-blocs/binding` so the editor's save can
+ *  strip the runtime's own stamps from serialized canvas content. */
+export { clearRuntimeStamps } from "./source";
+export { BINDING_CORE_TAG, BIND_STOP_ATTR, READY_ATTR } from "./attrs";
 
 const CLOAK_ID = "cms-binding-cloak";
 // The core wraps arbitrary content (often the whole page shell), so it must be
@@ -37,17 +40,42 @@ export function setBindingFilters(filters: FilterMap): void {
 }
 
 export class BindingCore extends HTMLElement {
-    private runtime: BindingRuntime | null = null;
+    private _runtime: BindingRuntime | null = null;
 
     connectedCallback(): void {
         injectCloak(this.ownerDocument ?? document);
-        this.runtime = new BindingRuntime(this, FILTERS);
-        this.runtime.start();
+        if (this.closest(`[${BIND_STOP_ATTR}]`)) {
+            revealSources(this);
+            return;
+        }
+        this.startRuntime();
     }
 
     disconnectedCallback(): void {
-        this.runtime?.stop();
-        this.runtime = null;
+        this._runtime?.stop();
+        this._runtime = null;
+    }
+
+    /**
+     * The live binding runtime over this subtree, or null while torn down.
+     * Exposed so an external controller — the CMS editor — can pause the binding
+     * (`core.runtime?.deactivate()`) WITHOUT this element carrying any editor-mode
+     * concept: deciding WHEN to pause/resume is the editor's job, not the runtime
+     * element's.
+     */
+    get runtime(): BindingRuntime | null {
+        return this._runtime;
+    }
+
+    /**
+     * (Re)build and start the runtime — on connect, and when the editor resumes
+     * binding after a pause. `BindingRuntime` is single-use (stop/deactivate are
+     * permanent), so resuming needs a fresh instance. No-op if one is running.
+     */
+    startRuntime(): void {
+        if (this._runtime && !this._runtime.isStopped) return;
+        this._runtime = new BindingRuntime(this, FILTERS);
+        this._runtime.start();
     }
 }
 

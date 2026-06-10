@@ -43,7 +43,11 @@
                 </p9r-section>
             </cms-editor-configuration>
 
-            <inner-html>{{ content | innerHTML }}</inner-html>
+            <!-- The page composed into its Shell exactly like delivery (header/footer +
+                 its own <cms-binding-core>), so the canvas mirrors the published page.
+                 cms-bind-stop keeps the EDITOR's chrome core OUT of this region — the
+                 Shell's own runtime drives the binding inside; the chrome never binds it. -->
+            <div cms-bind-stop style="display:contents"><inner-html>{{ composed | innerHTML }}</inner-html></div>
 
 
         </cms-editor-system>

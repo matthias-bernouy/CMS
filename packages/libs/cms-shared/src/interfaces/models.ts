@@ -137,3 +137,16 @@ export type TSystem = {
  * gives every rendered page the data-binding runtime out of the box.
  */
 export const DEFAULT_SHELL = "<cms-binding-core>{{CONTENT}}</cms-binding-core>";
+
+/**
+ * Compose a page's body by dropping its `content` into the Shell's `{{CONTENT}}`
+ * slot. Falls back to {@link DEFAULT_SHELL} when the configured shell lost the
+ * marker (systems predating the field, a bad save). Function replacement so
+ * `$&` / `$1` inside user content aren't treated as replacement patterns.
+ * Shared by delivery (`renderPage`) and the control editor (`page.get`) so the
+ * editor canvas mirrors the published composition byte-for-byte.
+ */
+export function composeShell(shell: string | undefined, content: string): string {
+    const tpl = shell?.includes("{{CONTENT}}") ? shell : DEFAULT_SHELL;
+    return tpl.replace("{{CONTENT}}", () => content);
+}
