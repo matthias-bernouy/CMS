@@ -1,6 +1,7 @@
 import type { CmsFilesMetadataRepository, FileItem } from "cms-files/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 import { sha256Hex } from "cms-files/core/hashBytes";
+import { validateUploadSize } from "cms-files/core/validation";
 
 /**
  * Replace a file's BYTES in place, keeping its id (and name/parentId). Used by
@@ -22,6 +23,7 @@ export async function updateFileContent(
     const cur = await metadata.getItem(id);
     if (!cur || cur.type !== "file") return null;
 
+    validateUploadSize(file.size);
     const bytes = new Uint8Array(await file.arrayBuffer());
     await blob.put(id, bytes);
     return metadata.updateFileContent(id, {

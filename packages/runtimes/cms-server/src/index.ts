@@ -11,6 +11,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
 import { MongoDekRepository, createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
+import { ValidatingSecretStore } from "@bernouy/cms-secrets";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { MongoGatewayRepository } from "@bernouy/cms-gateway";
@@ -94,11 +95,11 @@ const gateway           = new MongoGatewayRepository(db);                       
 const analytics         = new MongoAnalyticsStore(db);                             await analytics.init();
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
 const roles             = new MongoRolesRepository(db.collection("cms_roles"));    await roles.init();
-const secrets           = new EncryptedMongoSecretStore({
+const secrets           = new ValidatingSecretStore(new EncryptedMongoSecretStore({
     scopeId:      SCOPE_ID,
     collection:   db.collection("cms_secrets"),
     secretCrypto,
-});
+}));
 const cache = new InMemoryCache();
 
 // Seed the builtin `local` identity provider (idempotent).

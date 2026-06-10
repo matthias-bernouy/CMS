@@ -14,3 +14,4 @@ export { InMemorySecretStore }  from "cms-secrets/default-implementation/InMemor
 export { resolveSecretRefs }    from "cms-secrets/core/resolveSecretRefs";
 export { createSecretResolver } from "cms-secrets/core/createSecretResolver";
 export { SecretNotFound }       from "cms-secrets/core/SecretNotFound";
+export { ValidatingSecretStore, validateSecretKey, SecretValidationError } from "cms-secrets/core/ValidatingSecretStore";

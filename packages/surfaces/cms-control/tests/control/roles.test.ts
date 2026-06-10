@@ -34,10 +34,6 @@ describe("parseRoleDto", () => {
         expect(() => parseRoleDto({ id: "x", label: "X", grants: "nope" })).toThrow(InvalidParam);
     });
 
-    test("rejects an unknown urn:cms permission", () => {
-        expect(() => parseRoleDto({ id: "x", label: "X", grants: [{ permission: "urn:cms:users:fly" }] })).toThrow(InvalidParam);
-    });
-
     test("accepts a known CMS permission and a gateway urn, dropping condition", () => {
         const dto = parseRoleDto({ id: "x", label: "X", grants: [
             { permission: cmsPermission("users", "view"), condition: { foo: 1 } },
@@ -104,6 +100,12 @@ describe("upsertRole", () => {
     test("rejects an invalid slug on create", async () => {
         const { cms } = makeCms();
         await expect(upsertRole(cms.roles, { id: "Bad Id!", label: "X", grants: [] })).rejects.toThrow(RoleValidationError);
+    });
+
+    test("rejects an unknown urn:cms permission grant", async () => {
+        const { cms } = makeCms();
+        await expect(upsertRole(cms.roles, { id: "editor", label: "X", grants: [{ permission: "urn:cms:users:fly" }] }))
+            .rejects.toThrow(RoleValidationError);
     });
 
     test("updates a custom role's label + grants", async () => {

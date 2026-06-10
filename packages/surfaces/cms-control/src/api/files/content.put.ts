@@ -1,10 +1,9 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { updateFileContent } from "@bernouy/cms-files";
+import { updateFileContent, MAX_UPLOAD_BYTES } from "@bernouy/cms-files";
 import { invalidatePagesReferencingFile } from "cms-control/core/server/cache/invalidation";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 /** Hard cap on a single uploaded file, enforced server-side (mirrors upload). */
-const MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // 100 MB
 
 /**
  * PUT /api/files/content (multipart: `file` + `id`) — replace an existing file's
@@ -20,7 +19,6 @@ export default async function updateFileContentEndpoint(req: Request, cms: Contr
     const form = await req.formData();
     const file = form.get("file");
     if (!(file instanceof File)) throw new InvalidParam("file", "multipart `file` expected.");
-    if (file.size > MAX_UPLOAD_BYTES) throw new InvalidParam("file", `File exceeds the ${MAX_UPLOAD_BYTES}-byte limit.`);
     const idRaw = form.get("id");
     const id = typeof idRaw === "string" && idRaw ? idRaw : null;
     if (!id) throw new InvalidParam("id", "`id` of the file to update is required.");

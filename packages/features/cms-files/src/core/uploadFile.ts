@@ -1,6 +1,7 @@
 import type { CmsFilesMetadataRepository, FileItem } from "cms-files/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 import { sha256Hex } from "cms-files/core/hashBytes";
+import { validateUploadSize } from "cms-files/core/validation";
 
 /**
  * Upload a file: create its metadata record (which mints the id, or adopts the
@@ -21,6 +22,7 @@ export async function uploadFile(
 ): Promise<FileItem> {
     // Read the bytes once: hash them for `contentHash` AND store them, so we
     // never re-read and the hash always matches what `put` writes.
+    validateUploadSize(file.size);
     const bytes = new Uint8Array(await file.arrayBuffer());
     const item = await metadata.createFile({
         name:        file.name,

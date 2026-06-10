@@ -23,6 +23,7 @@ export { LocalFsCmsFiles, type ReconcileResult } from "cms-files/default-impleme
 
 // ── Core ───────────────────────────────────────────────────────────────
 export { sha256Hex } from "cms-files/core/hashBytes";
+export { MAX_UPLOAD_BYTES, validateUploadSize, validateFolderName, FileValidationError } from "cms-files/core/validation";
 
 // ── File lifecycle (domain rules — create w/ rollback, in-place update, tree delete) ─
 export { uploadFile }        from "cms-files/core/uploadFile";

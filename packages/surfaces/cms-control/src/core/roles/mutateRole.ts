@@ -1,10 +1,11 @@
-import { CMS_PERMISSIONS, type Grant } from "@bernouy/cms-permissions";
+import type { Grant } from "@bernouy/cms-permissions";
 import type { RoleDto } from "@bernouy/cms-permissions";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 export type { RoleDto } from "@bernouy/cms-permissions";
 
-/** Parse + validate a `POST /api/roles` body into a `RoleDto`. */
+/** Parse a `POST /api/roles` body into a `RoleDto`: presence + shape coercion.
+ *  The grant catalogue rule lives in `upsertRole` (cms-permissions). */
 export function parseRoleDto(body: Record<string, unknown>): RoleDto {
     const id    = typeof body.id    === "string" ? body.id.trim()    : "";
     const label = typeof body.label === "string" ? body.label.trim() : "";
@@ -13,9 +14,8 @@ export function parseRoleDto(body: Record<string, unknown>): RoleDto {
     return { id, label, grants: parseGrants(body.grants) };
 }
 
-/** Validate the optional `grants` payload. CMS-namespaced permissions
- *  (`urn:cms:*`) must exist in the catalogue; other ids (gateway endpoint urns)
- *  are accepted as-is. `condition` is reserved (V1) and dropped. */
+/** Extract the optional `grants` payload into typed `Grant[]` (shape only;
+ *  `condition` reserved/dropped). Catalogue validation is done at write time. */
 function parseGrants(raw: unknown): Grant[] {
     if (raw === undefined || raw === null) return [];
     if (!Array.isArray(raw)) throw new InvalidParam("grants", "array expected");
@@ -24,9 +24,6 @@ function parseGrants(raw: unknown): Grant[] {
             ? (g as { permission: string }).permission.trim()
             : "";
         if (!permission) throw new InvalidParam("grants", "each grant needs a permission");
-        if (permission.startsWith("urn:cms:") && !CMS_PERMISSIONS.includes(permission)) {
-            throw new InvalidParam("grants", `unknown CMS permission ${permission}`);
-        }
         return { permission };
     });
 }

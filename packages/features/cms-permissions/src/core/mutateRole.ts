@@ -1,4 +1,4 @@
-import { ADMIN_ROLE, type Grant, type RoleDefinition } from "cms-permissions/core/permissions";
+import { ADMIN_ROLE, CMS_PERMISSIONS, type Grant, type RoleDefinition } from "cms-permissions/core/permissions";
 import type { RolesRepository, RoleHolderCounter } from "cms-permissions/interfaces/RolesRepository";
 import { RoleValidationError, RoleConflictError } from "cms-permissions/core/errors";
 
@@ -6,6 +6,16 @@ import { RoleValidationError, RoleConflictError } from "cms-permissions/core/err
 const ID_RE = /^[a-z][a-z0-9_-]{1,31}$/;
 
 export type RoleDto = { id: string; label: string; grants: Grant[] };
+
+/** Grants rule: CMS-namespaced permissions (`urn:cms:*`) must exist in the
+ *  catalogue; other ids (gateway endpoint urns) are accepted as-is. */
+function validateGrants(grants: Grant[]): void {
+    for (const g of grants) {
+        if (g.permission.startsWith("urn:cms:") && !CMS_PERMISSIONS.includes(g.permission)) {
+            throw new RoleValidationError("grants", `unknown CMS permission ${g.permission}`);
+        }
+    }
+}
 
 /**
  * Create or update a role definition. `admin` is the virtual super-role and is
@@ -17,6 +27,7 @@ export async function upsertRole(roles: RolesRepository, dto: RoleDto): Promise<
     if (dto.id === ADMIN_ROLE) {
         throw new RoleValidationError("id", "the admin super-role is built-in and cannot be edited");
     }
+    validateGrants(dto.grants);
 
     const existing = await roles.get(dto.id);
     let saved: RoleDefinition;

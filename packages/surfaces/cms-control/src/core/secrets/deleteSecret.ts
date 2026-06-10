@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { validateSecretKey } from "cms-control/core/validation/secrets/parseSecretDto";
+import { validateSecretKey } from "@bernouy/cms-secrets";
 
 export async function deleteSecret(cms: ControlCms, key: string): Promise<void> {
     validateSecretKey(key);
