@@ -1,0 +1,16 @@
+{
+    "name": "@bernouy/envelope-crypto",
+    "version": "0.1.0",
+    "description": "Envelope-encryption substrate — per-scope DEKs wrapped by a process-level KEK (`EnvelopeSecretCrypto`, `KekProvider`/`LocalKekProvider`, `DekRepository`, AES-GCM helpers). One platform-wide instance serves every encrypted-at-rest consumer (secret store, PII). The Mongo-backed DEK repository lives under the `./mongo` subpath; the root export stays dependency-free.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".":       "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts"
+    },
+    "peerDependencies": {
+        "mongodb":    "^7.2.0",
+        "typescript": "^5.9.3"
+    }
+}

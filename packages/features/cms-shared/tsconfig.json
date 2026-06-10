@@ -1,0 +1,17 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir":   "dist",
+        "rootDir":  "./src",
+        "baseUrl":  "./src",
+        "paths": {
+            "cms-shared/*": ["./*"]
+        },
+        "resolveJsonModule": true
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../../foundation/core" },
+        { "path": "../auth-core" }
+    ]
+}

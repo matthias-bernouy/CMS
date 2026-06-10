@@ -1,0 +1,22 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir":   "dist",
+        "rootDir":  "./src",
+        "baseUrl":  ".",
+        "paths": {
+            "cms-cli/*": ["./src/*"]
+        },
+        "resolveJsonModule": true
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["src/resources/**"],
+    "references": [
+        { "path": "../../foundation/core" },
+        { "path": "../../foundation/runner-bun" },
+        { "path": "../../features/auth-core" },
+        { "path": "../../features/cms-shared" },
+        { "path": "../../surfaces/cms-control" },
+        { "path": "../../surfaces/cms-delivery" }
+    ]
+}

@@ -1,0 +1,71 @@
+{
+    "name": "@bernouy/cms-control",
+    "version": "0.1.0",
+    "description": "Admin layer of the CMS — REST API (file-routed under /api), server-rendered admin pages (under /admin), the visual editor (web components in /assets/control-components.js), and the `ControlCms` composition class. Consumes `@bernouy/cms-shared` for content / files / secrets stores and `@bernouy/auth-core` for the auth chain.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./index.ts",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "bun": "./index.ts",
+            "default": "./index.ts"
+        },
+        "./component": {
+            "bun": "./component.ts",
+            "default": "./component.ts"
+        },
+        "./editor": {
+            "bun": "./editor.ts",
+            "default": "./editor.ts"
+        },
+        "./data": {
+            "bun": "./data.ts",
+            "default": "./data.ts"
+        }
+    },
+    "files": [
+        "index.ts",
+        "component.ts",
+        "editor.ts",
+        "data.ts",
+        "src/",
+        "types/",
+        "dist/",
+        ".claude/skills/",
+        "tsconfig.json",
+        "README.md",
+        "CLAUDE.md"
+    ],
+    "scripts": {
+        "build": "bun run build.ts",
+        "typecheck": "bun x tsc --noEmit",
+        "test": "bun test",
+        "prepublishOnly": "bun run build"
+    },
+    "devDependencies": {
+        "@happy-dom/global-registrator": "^20.8.9",
+        "@types/bun": "latest",
+        "happy-dom": "^20.8.9",
+        "typescript": "^5.9.3"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3",
+        "mongodb": "^7.2.0"
+    },
+    "dependencies": {
+        "@bernouy/core":          "workspace:*",
+        "@bernouy/runner-bun":    "workspace:*",
+        "@bernouy/auth-core":     "workspace:*",
+        "@bernouy/cms-shared":    "workspace:*",
+        "@bernouy/cms-secrets":   "workspace:*",
+        "@bernouy/cms-blocs":     "workspace:*",
+        "@bernouy/cms-gateway":   "workspace:*",
+        "@bernouy/cms-analytics": "workspace:*",
+        "linkedom": "^0.18.12"
+    },
+    "engines": {
+        "bun": ">=1.3.0"
+    }
+}

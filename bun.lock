@@ -12,8 +12,10 @@
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/core": "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
         "@types/bun": "latest",
         "bun-types": "^1.3.6",
@@ -23,7 +25,97 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/apps/cms-cli": {
+    "packages/features/auth-core": {
+      "name": "@bernouy/auth-core",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/core": "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*",
+        "jose": "^6.2.1",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/features/cms-analytics": {
+      "name": "@bernouy/cms-analytics",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/core": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/features/cms-blocs": {
+      "name": "@bernouy/cms-blocs",
+      "version": "0.1.2",
+      "devDependencies": {
+        "@happy-dom/global-registrator": "^20.8.9",
+        "@types/bun": "latest",
+        "happy-dom": "^20.8.9",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/features/cms-gateway": {
+      "name": "@bernouy/cms-gateway",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/core": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/features/cms-secrets": {
+      "name": "@bernouy/cms-secrets",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/core": "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/features/cms-shared": {
+      "name": "@bernouy/cms-shared",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/auth-core": "workspace:*",
+        "@bernouy/core": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/foundation/core": {
+      "name": "@bernouy/core",
+      "version": "0.1.0",
+    },
+    "packages/foundation/envelope-crypto": {
+      "name": "@bernouy/envelope-crypto",
+      "version": "0.1.0",
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/foundation/runner-bun": {
+      "name": "@bernouy/runner-bun",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/core": "workspace:*",
+      },
+    },
+    "packages/runtimes/cms-cli": {
       "name": "@bernouy/cms-cli",
       "version": "0.1.0",
       "bin": {
@@ -42,7 +134,7 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/apps/cms-control": {
+    "packages/surfaces/cms-control": {
       "name": "@bernouy/cms-control",
       "version": "0.1.0",
       "dependencies": {
@@ -50,6 +142,7 @@
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/core": "workspace:*",
         "@bernouy/runner-bun": "workspace:*",
@@ -66,7 +159,7 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/apps/cms-delivery": {
+    "packages/surfaces/cms-delivery": {
       "name": "@bernouy/cms-delivery",
       "version": "0.1.0",
       "dependencies": {
@@ -84,96 +177,31 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/libs/auth-core": {
-      "name": "@bernouy/auth-core",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/core": "workspace:*",
-        "jose": "^6.2.1",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/libs/cms-analytics": {
-      "name": "@bernouy/cms-analytics",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/core": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/libs/cms-blocs": {
-      "name": "@bernouy/cms-blocs",
-      "version": "0.1.2",
-      "devDependencies": {
-        "@happy-dom/global-registrator": "^20.8.9",
-        "@types/bun": "latest",
-        "happy-dom": "^20.8.9",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
-      },
-    },
-    "packages/libs/cms-gateway": {
-      "name": "@bernouy/cms-gateway",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/core": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/libs/cms-shared": {
-      "name": "@bernouy/cms-shared",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/auth-core": "workspace:*",
-        "@bernouy/core": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/libs/core": {
-      "name": "@bernouy/core",
-      "version": "0.1.0",
-    },
-    "packages/libs/runner-bun": {
-      "name": "@bernouy/runner-bun",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/core": "workspace:*",
-      },
-    },
   },
   "packages": {
-    "@bernouy/auth-core": ["@bernouy/auth-core@workspace:packages/libs/auth-core"],
+    "@bernouy/auth-core": ["@bernouy/auth-core@workspace:packages/features/auth-core"],
 
-    "@bernouy/cms-analytics": ["@bernouy/cms-analytics@workspace:packages/libs/cms-analytics"],
+    "@bernouy/cms-analytics": ["@bernouy/cms-analytics@workspace:packages/features/cms-analytics"],
 
-    "@bernouy/cms-blocs": ["@bernouy/cms-blocs@workspace:packages/libs/cms-blocs"],
+    "@bernouy/cms-blocs": ["@bernouy/cms-blocs@workspace:packages/features/cms-blocs"],
 
-    "@bernouy/cms-cli": ["@bernouy/cms-cli@workspace:packages/apps/cms-cli"],
+    "@bernouy/cms-cli": ["@bernouy/cms-cli@workspace:packages/runtimes/cms-cli"],
 
-    "@bernouy/cms-control": ["@bernouy/cms-control@workspace:packages/apps/cms-control"],
+    "@bernouy/cms-control": ["@bernouy/cms-control@workspace:packages/surfaces/cms-control"],
 
-    "@bernouy/cms-delivery": ["@bernouy/cms-delivery@workspace:packages/apps/cms-delivery"],
+    "@bernouy/cms-delivery": ["@bernouy/cms-delivery@workspace:packages/surfaces/cms-delivery"],
 
-    "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/libs/cms-gateway"],
+    "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/features/cms-gateway"],
 
-    "@bernouy/cms-shared": ["@bernouy/cms-shared@workspace:packages/libs/cms-shared"],
+    "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 
-    "@bernouy/core": ["@bernouy/core@workspace:packages/libs/core"],
+    "@bernouy/cms-shared": ["@bernouy/cms-shared@workspace:packages/features/cms-shared"],
 
-    "@bernouy/runner-bun": ["@bernouy/runner-bun@workspace:packages/libs/runner-bun"],
+    "@bernouy/core": ["@bernouy/core@workspace:packages/foundation/core"],
+
+    "@bernouy/envelope-crypto": ["@bernouy/envelope-crypto@workspace:packages/foundation/envelope-crypto"],
+
+    "@bernouy/runner-bun": ["@bernouy/runner-bun@workspace:packages/foundation/runner-bun"],
 
     "@emnapi/runtime": ["@emnapi/runtime@1.11.0", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-55coeOFKHv1ywEcUXJtWU5f+Jr/W5tZDvZig8DLKSwUN1JpROQ4rk/SNOQiFWmaR/VKF4zuFyW1B8JduOSv6Pg=="],
 

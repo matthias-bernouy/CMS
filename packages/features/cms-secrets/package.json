@@ -1,0 +1,20 @@
+{
+    "name": "@bernouy/cms-secrets",
+    "version": "0.1.0",
+    "description": "Secrets at rest — the admin-managed `SecretStore` contract with in-memory and envelope-encrypted Mongo implementations (envelope crypto provided by `@bernouy/envelope-crypto`). The Mongo adapter lives under the `./mongo` subpath; the root export stays dependency-free.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".":       "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts"
+    },
+    "dependencies": {
+        "@bernouy/core":       "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb":    "^7.2.0",
+        "typescript": "^5.9.3"
+    }
+}

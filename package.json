@@ -2,8 +2,10 @@
     "name": "@bernouy/cms-core",
     "private": true,
     "workspaces": [
-        "packages/libs/*",
-        "packages/apps/*"
+        "packages/foundation/*",
+        "packages/features/*",
+        "packages/surfaces/*",
+        "packages/runtimes/*"
     ],
     "scripts": {
         "build": "bun run build.ts",
@@ -22,6 +24,8 @@
         "@bernouy/runner-bun": "workspace:*",
         "@bernouy/auth-core": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*",
+        "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-analytics": "workspace:*",

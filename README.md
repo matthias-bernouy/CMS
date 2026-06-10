@@ -19,8 +19,8 @@ CmsCore/
 │   ├── cms-blocs/               @bernouy/cms-blocs    admin UI toolkit (`<p9r-*>`, `<w13c-*>`), built bundle + style.css. Published to npm (MIT). Consumed by cms-control.
 │   └── cms-cli/                 @bernouy/cms-cli      `p9r` CLI — scaffold blocs (`p9r init`) + CMS apps (`p9r new`), run a local editor (`p9r dev`), push/pull/list content (`p9r push`/`pull`/`list-blocs`/`secrets`)
 │
-├── images/                      # deployment artefacts
-│   └── cms/                     basic CMS image — one Bun process (Control + Delivery) + nginx-proxy + Mongo. Multi-instance per server. See images/cms/README.md.
+├── infra/images/                      # deployment artefacts
+│   └── cms/                     basic CMS image — one Bun process (Control + Delivery) + nginx-proxy + Mongo. Multi-instance per server. See infra/images/cms/README.md.
 │
 ├── build.ts                     orchestrated build (see below)
 ├── tsconfig.base.json           shared TS compilerOptions
@@ -93,14 +93,14 @@ bundle step, `bun link` consumers resolve straight to `src/`.
 
 ## Deployment
 
-`images/cms/` ships the deployment artefact: a `Dockerfile`, a `server.ts`
+`infra/images/cms/` ships the deployment artefact: a `Dockerfile`, a `server.ts`
 composition (Control + Delivery on one Bun process), a per-instance
 `compose.yml`, and a shared `infra/compose.yml` (`nginx-proxy` +
 `acme-companion` + `mongo`). The design hosts **many instances on one
 server** sharing one nginx + one Mongo, each instance routed by domain via
 `VIRTUAL_HOST_MULTIPORTS` (`DOMAIN` for Delivery, `admin.DOMAIN` for
 Control). Content / users / secrets live in MongoDB; file blobs in a
-per-instance folder. See [`images/cms/README.md`](./images/cms/README.md) for
+per-instance folder. See [`infra/images/cms/README.md`](./infra/images/cms/README.md) for
 the quick start.
 
 ## License

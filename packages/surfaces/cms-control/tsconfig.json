@@ -1,0 +1,34 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir":   "dist",
+        "rootDir":  ".",
+        "baseUrl":  ".",
+        "paths": {
+            "@bernouy/cms-control":           ["index.ts"],
+            "@bernouy/cms-control/component": ["component.ts"],
+            "@bernouy/cms-control/editor":    ["editor.ts"],
+            "@bernouy/cms-control/data":      ["data.ts"],
+            "cms-control/*":                  ["src/*"]
+        }
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.json",
+        "index.ts",
+        "component.ts",
+        "editor.ts",
+        "data.ts",
+        "build.ts",
+        "types/**/*.ts",
+        "tests/**/*.ts"
+    ],
+    "references": [
+        { "path": "../../foundation/core" },
+        { "path": "../../foundation/runner-bun" },
+        { "path": "../../features/auth-core" },
+        { "path": "../../features/cms-shared" },
+        { "path": "../../features/cms-secrets" },
+        { "path": "../../features/cms-analytics" }
+    ]
+}
