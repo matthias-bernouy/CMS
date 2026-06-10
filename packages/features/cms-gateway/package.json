@@ -6,14 +6,14 @@
     "type": "module",
     "main": "./src/index.ts",
     "exports": {
-        ".":         "./src/index.ts",
+        ".": "./src/index.ts",
         "./presets": "./src/presets/index.ts"
     },
     "dependencies": {
-        "@bernouy/core": "workspace:*"
+        "@bernouy/http-runner": "workspace:*"
     },
     "peerDependencies": {
-        "mongodb":    "^7.2.0",
+        "mongodb": "^7.2.0",
         "typescript": "^5.9.3"
     }
 }

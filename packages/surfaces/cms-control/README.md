@@ -32,7 +32,7 @@ today.
 runner with `runner.group("/cms", …)` if you want everything under `/cms`:
 
 ```ts
-import { BunRunner } from "@bernouy/runner-bun";
+import { BunRunner } from "@bernouy/http-runner";
 import { SignedCookieCodec } from "@bernouy/core";
 import {
     ControlCms,

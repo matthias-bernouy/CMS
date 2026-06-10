@@ -24,8 +24,7 @@
         "tests/**/*.ts"
     ],
     "references": [
-        { "path": "../../foundation/core" },
-        { "path": "../../foundation/runner-bun" },
+        { "path": "../../foundation/http-runner" },
         { "path": "../../features/auth-core" },
         { "path": "../../features/cms-shared" },
         { "path": "../../features/cms-secrets" },

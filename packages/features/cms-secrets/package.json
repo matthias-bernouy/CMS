@@ -10,7 +10,6 @@
         "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
-        "@bernouy/core":       "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*"
     },
     "peerDependencies": {

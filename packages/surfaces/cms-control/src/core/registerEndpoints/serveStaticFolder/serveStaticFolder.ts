@@ -1,4 +1,4 @@
-import type { Runner } from "@bernouy/core";
+import type { Runner } from "@bernouy/http-runner";
 import { extname } from "node:path";
 import type { Cache } from "@bernouy/cms-shared";
 import {

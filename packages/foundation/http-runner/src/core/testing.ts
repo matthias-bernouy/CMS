@@ -1,4 +1,4 @@
-import { BunRunner } from "./BunRunner";
+import { BunRunner } from "http-runner/default-implementation/BunRunner";
 
 export interface TestServer {
     /** Base URL of the started server, e.g. `http://localhost:54321`. */

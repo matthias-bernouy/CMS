@@ -3,7 +3,7 @@
  * interpolation into an `innerHTML` / template-literal string — correct for
  * both text content and double-quoted attribute values. Pure string ops, so it
  * is safe in browser-bundled components. Canonical escaper for cms-control's
- * web components; mirrors `@bernouy/core`'s server-side `escapeHtml`.
+ * web components; mirrors `@bernouy/http-runner`’s server-side `escapeHtml`.
  */
 export function escapeHtml(value: string): string {
     return value

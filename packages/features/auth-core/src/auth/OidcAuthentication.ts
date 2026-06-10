@@ -1,6 +1,7 @@
 import { randomBytes, createHash } from "node:crypto";
 import { jwtVerify, createRemoteJWKSet, type JWTPayload } from "jose";
-import type { Runner, SignedCookieCodec } from "@bernouy/core";
+import type { SignedCookieCodec } from "auth-core/auth/SignedCookieCodec";
+import type { Runner } from "@bernouy/http-runner";
 import type { SecretReader } from "auth-core/interfaces/SecretReader";
 import type { IdentityProviderRepository, IdentityProvider } from "auth-core/interfaces/IdentityProvider";
 import type { SubjectResolver } from "auth-core/auth/SubjectResolver";

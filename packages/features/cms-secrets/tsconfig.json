@@ -10,7 +10,6 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
-        { "path": "../../foundation/core" },
         { "path": "../../foundation/envelope-crypto" }
     ]
 }

@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import type { Runner } from "@bernouy/core";
-import { SignedCookieCodec } from "@bernouy/core";
+import type { Runner } from "@bernouy/http-runner";
+import { SignedCookieCodec } from "@bernouy/auth-core";
 import { LocalAuthentication } from "auth-core/auth/LocalAuthentication";
 import { SubjectResolver } from "auth-core/auth/SubjectResolver";
 import { InMemoryUsersRepository } from "auth-core/default-implementation/UsersRepository/memory";

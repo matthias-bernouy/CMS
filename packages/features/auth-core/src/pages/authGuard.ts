@@ -1,4 +1,5 @@
-import type { Middleware, Authentication } from "@bernouy/core";
+import type { Authentication } from "auth-core/interfaces/Authentication";
+import type { Middleware } from "@bernouy/http-runner";
 import { renderForbiddenPage } from "./forbiddenPage";
 
 /**

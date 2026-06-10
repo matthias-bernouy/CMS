@@ -16,8 +16,7 @@
         "README.md"
     ],
     "dependencies": {
-        "@bernouy/core":         "workspace:*",
-        "@bernouy/runner-bun":   "workspace:*",
+        "@bernouy/http-runner":   "workspace:*",
         "@bernouy/auth-core":    "workspace:*",
         "@bernouy/cms-shared":   "workspace:*",
         "@bernouy/cms-control":  "workspace:*",

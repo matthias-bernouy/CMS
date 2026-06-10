@@ -1,5 +1,5 @@
-import type { Runner, RouteHandler, Middleware } from "@bernouy/core";
-import { setRequestIP, getRequestIP as readRequestIP } from "@bernouy/core";
+import type { Runner, RouteHandler, Middleware } from "http-runner/interfaces/Runner";
+import { setRequestIP, getRequestIP as readRequestIP } from "http-runner/core/requestIP";
 
 function urlJoin(...parts: string[]): string {
     return ("/" + parts.join("/")).replace(/\/+/g, "/") || "/";

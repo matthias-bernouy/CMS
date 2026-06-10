@@ -1,4 +1,4 @@
-import { escapeHtml } from "@bernouy/core";
+import { escapeHtml } from "@bernouy/http-runner";
 import template from "./forbidden.html" with { type: "text" };
 import { renderAuthPage } from "./renderAuthPage";
 

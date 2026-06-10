@@ -1,4 +1,4 @@
-import { htmlResponse } from "@bernouy/core";
+import { htmlResponse } from "@bernouy/http-runner";
 
 /**
  * Render a standalone auth page: substitute `{{KEY}}` placeholders from `subs`

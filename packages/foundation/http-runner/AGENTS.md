@@ -1,4 +1,4 @@
-# @bernouy/runner-bun
+# @bernouy/http-runner
 
 `Runner` implementation backed by `Bun.serve`. Two files:
 `src/BunRunner.ts` (the runner itself) and `src/registerStaticFolder.ts`

@@ -1,5 +1,5 @@
-import type { Runner } from "@bernouy/core";
-import { BunRunner } from "@bernouy/runner-bun";
+import type { Runner } from "@bernouy/http-runner";
+import { BunRunner } from "@bernouy/http-runner";
 import type { Cache } from "@bernouy/cms-shared";
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-shared";
 import { P9R_CACHE } from "@bernouy/cms-shared";

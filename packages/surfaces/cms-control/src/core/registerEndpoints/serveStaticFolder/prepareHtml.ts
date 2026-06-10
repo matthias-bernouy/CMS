@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import type { Runner } from "@bernouy/core";
+import type { Runner } from "@bernouy/http-runner";
 import replaceBasePath from "./replaceBasePath";
 import { STATIC_ROOT_DIR } from "./scanStaticFolder";
 

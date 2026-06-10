@@ -9,6 +9,7 @@
  */
 
 export { encryptAesGcm, decryptAesGcm, type EncryptedBlob } from "envelope-crypto/core/aesGcm";
+export { asBuffer }                                         from "envelope-crypto/core/buffer";
 export { loadKek }                                          from "envelope-crypto/core/loadKek";
 export type { KekProvider }                                 from "envelope-crypto/interfaces/KekProvider";
 export type { SecretCrypto }                                from "envelope-crypto/interfaces/SecretCrypto";

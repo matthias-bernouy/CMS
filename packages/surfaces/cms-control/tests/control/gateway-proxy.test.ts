@@ -1,5 +1,5 @@
 import { describe, test, expect, spyOn } from "bun:test";
-import type { Runner, RouteHandler } from "@bernouy/core";
+import type { Runner, RouteHandler } from "@bernouy/http-runner";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
 import type { Provider } from "@bernouy/cms-gateway";

@@ -1,4 +1,4 @@
-import type { Runner } from "@bernouy/core";
+import type { Runner } from "@bernouy/http-runner";
 import type { AnalyticsStore } from "../interfaces/AnalyticsStore";
 import { parseRange } from "./parseRange";
 

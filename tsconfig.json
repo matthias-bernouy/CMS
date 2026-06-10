@@ -1,8 +1,7 @@
 {
     "files": [],
     "references": [
-        { "path": "packages/foundation/core" },
-        { "path": "packages/foundation/runner-bun" },
+        { "path": "packages/foundation/http-runner" },
         { "path": "packages/foundation/envelope-crypto" },
         { "path": "packages/features/auth-core" },
         { "path": "packages/features/cms-secrets" },

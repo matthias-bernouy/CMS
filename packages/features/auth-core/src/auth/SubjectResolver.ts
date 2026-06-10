@@ -1,4 +1,4 @@
-import type { Subject } from "@bernouy/core";
+import type { Subject } from "auth-core/interfaces/Authentication";
 import type { Identity, TUser, UsersRepository } from "auth-core/interfaces/UsersRepository";
 
 /**

@@ -1,4 +1,4 @@
-import { getRequestIP } from "@bernouy/core";
+import { getRequestIP } from "@bernouy/http-runner";
 import { classifyUserAgent, dailySalt, visitorId, dayKey } from "@bernouy/cms-analytics";
 import type { AnalyticsEvent } from "@bernouy/cms-analytics";
 import type DeliveryCms from "cms-delivery/DeliveryCms";

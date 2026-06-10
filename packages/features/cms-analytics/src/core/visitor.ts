@@ -4,7 +4,7 @@
  * UTC day so visitors cannot be tracked across days.
  */
 
-import { sha256HexAsync } from "@bernouy/core";
+import { sha256HexAsync } from "cms-analytics/core/sha256Hex";
 
 /** Per-day salt = sha256(secret | utcDay). Rotates daily; pair with `dayKey`. */
 export function dailySalt(secret: string, day: string): Promise<string> {

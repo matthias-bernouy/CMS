@@ -1,4 +1,6 @@
-import type { Authentication, Runner, Subject, SignedCookieCodec } from "@bernouy/core";
+import type { Authentication, Subject } from "auth-core/interfaces/Authentication";
+import type { SignedCookieCodec } from "auth-core/auth/SignedCookieCodec";
+import type { Runner } from "@bernouy/http-runner";
 import type { LocalCredentialStore } from "auth-core/interfaces/LocalCredentialStore";
 import type { SubjectResolver } from "auth-core/auth/SubjectResolver";
 import type { PatRepository } from "auth-core/interfaces/PatRepository";

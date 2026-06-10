@@ -14,9 +14,8 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
-        "@bernouy/core": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
-        "@bernouy/runner-bun": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
         "@types/bun": "latest",
         "bun-types": "^1.3.6",
         "image-size": "^2.0.2",
@@ -29,8 +28,8 @@
       "name": "@bernouy/auth-core",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/core": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
         "jose": "^6.2.1",
       },
       "peerDependencies": {
@@ -42,7 +41,7 @@
       "name": "@bernouy/cms-analytics",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/core": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
@@ -65,7 +64,7 @@
       "name": "@bernouy/cms-gateway",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/core": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
@@ -76,7 +75,6 @@
       "name": "@bernouy/cms-secrets",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/core": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
       },
       "peerDependencies": {
@@ -89,16 +87,12 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/auth-core": "workspace:*",
-        "@bernouy/core": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
         "typescript": "^5.9.3",
       },
-    },
-    "packages/foundation/core": {
-      "name": "@bernouy/core",
-      "version": "0.1.0",
     },
     "packages/foundation/envelope-crypto": {
       "name": "@bernouy/envelope-crypto",
@@ -108,11 +102,11 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/foundation/runner-bun": {
-      "name": "@bernouy/runner-bun",
+    "packages/foundation/http-runner": {
+      "name": "@bernouy/http-runner",
       "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/core": "workspace:*",
+      "peerDependencies": {
+        "typescript": "^5.9.3",
       },
     },
     "packages/runtimes/cms-cli": {
@@ -127,8 +121,7 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
-        "@bernouy/core": "workspace:*",
-        "@bernouy/runner-bun": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -144,8 +137,7 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
-        "@bernouy/core": "workspace:*",
-        "@bernouy/runner-bun": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.12",
       },
       "devDependencies": {
@@ -167,7 +159,7 @@
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
-        "@bernouy/core": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
         "@img/sharp-libvips-linux-x64": "^1.2.4",
         "@img/sharp-linux-x64": "^0.34.5",
         "linkedom": "^0.18.12",
@@ -197,11 +189,9 @@
 
     "@bernouy/cms-shared": ["@bernouy/cms-shared@workspace:packages/features/cms-shared"],
 
-    "@bernouy/core": ["@bernouy/core@workspace:packages/foundation/core"],
-
     "@bernouy/envelope-crypto": ["@bernouy/envelope-crypto@workspace:packages/foundation/envelope-crypto"],
 
-    "@bernouy/runner-bun": ["@bernouy/runner-bun@workspace:packages/foundation/runner-bun"],
+    "@bernouy/http-runner": ["@bernouy/http-runner@workspace:packages/foundation/http-runner"],
 
     "@emnapi/runtime": ["@emnapi/runtime@1.11.0", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-55coeOFKHv1ywEcUXJtWU5f+Jr/W5tZDvZig8DLKSwUN1JpROQ4rk/SNOQiFWmaR/VKF4zuFyW1B8JduOSv6Pg=="],
 

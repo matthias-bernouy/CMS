@@ -7,8 +7,8 @@
 // All non-default envs are validated by docker-compose's ${VAR:?msg}
 // before the container starts; this file assumes they're present.
 
-import { BunRunner } from "@bernouy/runner-bun";
-import { SignedCookieCodec } from "@bernouy/core";
+import { BunRunner } from "@bernouy/http-runner";
+import { SignedCookieCodec } from "@bernouy/auth-core";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
 import { MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";

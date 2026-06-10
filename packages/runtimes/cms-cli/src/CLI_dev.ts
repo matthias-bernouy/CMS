@@ -6,7 +6,7 @@
 process.env.MODE = "DEV";
 
 import { relative } from "node:path";
-import { BunRunner } from "@bernouy/runner-bun";
+import { BunRunner } from "@bernouy/http-runner";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { P9R_CACHE, LocalFsCmsFilesBlob } from "@bernouy/cms-shared";

@@ -103,7 +103,7 @@ NOT intercepted — each call site bundles inline.
 ## Mounting
 
 ```ts
-import { BunRunner } from "@bernouy/runner-bun";
+import { BunRunner } from "@bernouy/http-runner";
 import { LocalAuthentication } from "@bernouy/auth-core";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";

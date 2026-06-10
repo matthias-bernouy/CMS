@@ -1,6 +1,6 @@
 import type { Collection } from "mongodb";
 
-import { asBuffer } from "@bernouy/core";
+import { asBuffer } from "@bernouy/envelope-crypto";
 import type { SecretCrypto } from "@bernouy/envelope-crypto";
 import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
 

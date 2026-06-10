@@ -1,6 +1,6 @@
 import { readdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import type { Runner } from "@bernouy/core";
+import type { Runner } from "http-runner/interfaces/Runner";
 
 /**
  * Recursively registers every file under `folderEntry` as a GET route on

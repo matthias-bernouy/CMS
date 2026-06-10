@@ -1,4 +1,4 @@
-import type { Runner, Middleware } from "@bernouy/core";
+import type { Runner, Middleware } from "@bernouy/http-runner";
 import type { GatewayRepository } from "../interfaces/GatewayRepository";
 import type { ExecutorDeps } from "./executeEndpoint";
 import { handleGatewayRequest } from "./handleGatewayRequest";

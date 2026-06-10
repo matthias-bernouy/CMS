@@ -5,11 +5,8 @@
         "rootDir": "./src",
         "baseUrl": "./src",
         "paths": {
-            "cms-gateway/*": ["./*"]
+            "http-runner/*": ["./*"]
         }
     },
-    "include": ["src/**/*.ts"],
-    "references": [
-        { "path": "../../foundation/http-runner" }
-    ]
+    "include": ["src/**/*.ts"]
 }

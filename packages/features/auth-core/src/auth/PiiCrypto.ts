@@ -1,6 +1,6 @@
 import { createHmac, randomBytes } from "node:crypto";
 import type { Collection, Db } from "mongodb";
-import { asBuffer } from "@bernouy/core";
+import { asBuffer } from "@bernouy/envelope-crypto";
 import type { EncryptedBlob, SecretCrypto } from "@bernouy/envelope-crypto";
 
 /**

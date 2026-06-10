@@ -1,5 +1,6 @@
-import type { Authentication, Runner } from "@bernouy/core";
-import { redirect } from "@bernouy/core";
+import type { Authentication } from "@bernouy/auth-core";
+import type { Runner } from "@bernouy/http-runner";
+import { redirect } from "@bernouy/http-runner";
 import type { CmsRepository } from "@bernouy/cms-shared";
 import type { Cache } from "@bernouy/cms-shared";
 import { InMemoryCache } from "@bernouy/cms-shared";

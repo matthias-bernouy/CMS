@@ -12,6 +12,8 @@
  */
 
 // ── Authentication ─────────────────────────────────────────────────────
+export type { Authentication, Subject, DefaultRole }  from "auth-core/interfaces/Authentication";
+export { SignedCookieCodec }                           from "auth-core/auth/SignedCookieCodec";
 export { LocalAuthentication, type LocalAuthConfig } from "auth-core/auth/LocalAuthentication";
 export { OidcAuthentication, type OidcAuthConfig }   from "auth-core/auth/OidcAuthentication";
 export { SubjectResolver, internalUserId }            from "auth-core/auth/SubjectResolver";
