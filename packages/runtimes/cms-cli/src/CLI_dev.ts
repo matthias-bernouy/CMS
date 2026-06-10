@@ -23,7 +23,7 @@ import { InMemoryIdentityProviderRepository } from "@bernouy/cms-auth";
 import { InMemoryLocalCredentialStore } from "@bernouy/cms-auth";
 import { InMemoryPatRepository } from "@bernouy/cms-auth";
 import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
-import type { CMS_ROLES } from "@bernouy/cms-shared";
+import type { CMS_ROLES } from "@bernouy/cms-permissions";
 import { loadPushConfig } from "./push/shared/config";
 
 /** Seeded password for the dev `dev-admin` local credential — only used to

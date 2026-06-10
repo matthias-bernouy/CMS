@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { can, grantsFor, defaultRoleDefinitions, cmsPermission, CMS_PERMISSIONS, CMS_PERMISSION_CATALOGUE, USER_ROLE, PUBLIC_ROLE, ADMIN_ROLE, type RolesConfig, type Grant } from "@bernouy/cms-shared";
+import { can, grantsFor, defaultRoleDefinitions, cmsPermission, CMS_PERMISSIONS, CMS_PERMISSION_CATALOGUE, USER_ROLE, PUBLIC_ROLE, ADMIN_ROLE, type RolesConfig, type Grant } from "@bernouy/cms-permissions";
 
 const roles = (definitions: RolesConfig["definitions"]): RolesConfig => ({ definitions });
 

@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { ADMIN_ROLE, CMS_PERMISSION_CATALOGUE, cmsPermission } from "@bernouy/cms-shared";
+import { ADMIN_ROLE, CMS_PERMISSION_CATALOGUE, cmsPermission } from "@bernouy/cms-permissions";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import { parseUrn } from "@bernouy/cms-gateway";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";

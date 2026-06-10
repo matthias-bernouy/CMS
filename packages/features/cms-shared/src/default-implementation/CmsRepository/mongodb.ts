@@ -3,7 +3,7 @@ import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-shared/interfaces/CmsRepository";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "cms-shared/interfaces/models";
 import { DEFAULT_SHELL } from "cms-shared/interfaces/models";
-import { defaultRoleDefinitions } from "cms-shared/permissions/permissions";
+import { defaultRoleDefinitions } from "@bernouy/cms-permissions";
 import { escapeRegex } from "cms-shared/utils/escapeRegex";
 
 /**

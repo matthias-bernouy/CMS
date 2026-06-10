@@ -1,4 +1,4 @@
-import type { RolesConfig } from "cms-shared/permissions/permissions";
+import type { RolesConfig } from "@bernouy/cms-permissions";
 
 export type TBloc = {
     id: string;

@@ -1,26 +1,13 @@
 /**
  * @bernouy/cms-shared — what remains of the CMS grab-bag while it gets
- * dissolved into feature packages (cms-files and cms-secrets are out;
- * permissions, model and content are next).
+ * dissolved into feature packages (cms-files, cms-secrets and
+ * cms-permissions are out; model and content are next).
  *
  * Currently holds: the content contracts (CmsRepository + models) and their
- * implementations, the permissions vocabulary, the bloc compile pipeline
+ * implementations, the bloc compile pipeline
  * (`prepare_bloc`, `validateBloc`, `p9rExternalsPlugin`), the theme style
  * endpoint, the p9r-* constants, and shared utils.
  */
-
-// ── Domain roles ───────────────────────────────────────────────────────
-export type CMS_ROLES = "admin" | "user";
-
-// ── Permissions (roles vocabulary + pure decision helpers) ─────────────
-export {
-    CMS_PERMISSION_CATALOGUE, CMS_PERMISSIONS, cmsPermission,
-    ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE, defaultRoleDefinitions,
-    grantsFor, can,
-} from "cms-shared/permissions/permissions";
-export type {
-    CmsFeature, Grant, RoleDefinition, RolesConfig,
-} from "cms-shared/permissions/permissions";
 
 // ── Content interfaces ─────────────────────────────────────────────────
 export type {

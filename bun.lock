@@ -13,6 +13,7 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
@@ -87,6 +88,13 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/features/cms-permissions": {
+      "name": "@bernouy/cms-permissions",
+      "version": "0.1.0",
+      "peerDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/features/cms-secrets": {
       "name": "@bernouy/cms-secrets",
       "version": "0.1.0",
@@ -102,6 +110,7 @@
       "name": "@bernouy/cms-shared",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
       },
       "peerDependencies": {
@@ -144,6 +153,7 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
       },
@@ -160,6 +170,7 @@
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -212,6 +223,8 @@
     "@bernouy/cms-files": ["@bernouy/cms-files@workspace:packages/features/cms-files"],
 
     "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/features/cms-gateway"],
+
+    "@bernouy/cms-permissions": ["@bernouy/cms-permissions@workspace:packages/features/cms-permissions"],
 
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 

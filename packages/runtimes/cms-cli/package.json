@@ -22,7 +22,8 @@
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-files": "workspace:*"
+        "@bernouy/cms-files": "workspace:*",
+        "@bernouy/cms-permissions": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"

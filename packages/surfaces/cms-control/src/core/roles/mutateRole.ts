@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { ADMIN_ROLE, CMS_PERMISSIONS, type Grant, type RoleDefinition } from "@bernouy/cms-shared";
+import { ADMIN_ROLE, CMS_PERMISSIONS, type Grant, type RoleDefinition } from "@bernouy/cms-permissions";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import HttpError from "cms-control/errors/Http/HttpError";
 

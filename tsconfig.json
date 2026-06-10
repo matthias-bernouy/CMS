@@ -7,6 +7,7 @@
         { "path": "packages/features/cms-auth" },
         { "path": "packages/features/cms-secrets" },
         { "path": "packages/features/cms-files" },
+        { "path": "packages/features/cms-permissions" },
         { "path": "packages/features/cms-shared" },
         { "path": "packages/features/cms-gateway" },
         { "path": "packages/features/cms-analytics" },

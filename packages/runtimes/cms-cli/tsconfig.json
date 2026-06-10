@@ -12,6 +12,7 @@
     "include": ["src/**/*.ts"],
     "exclude": ["src/resources/**"],
     "references": [
+        { "path": "../../features/cms-permissions" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-shared" },

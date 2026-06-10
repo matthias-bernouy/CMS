@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { ADMIN_ROLE, PUBLIC_ROLE } from "@bernouy/cms-shared";
+import { ADMIN_ROLE, PUBLIC_ROLE } from "@bernouy/cms-permissions";
 
 export type RoleSummary = { id: string; label: string };
 

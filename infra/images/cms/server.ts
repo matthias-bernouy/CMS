@@ -19,7 +19,8 @@ import { MongoClient } from "mongodb";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { MongoCmsFilesMetadata } from "@bernouy/cms-files/mongo";
-import { MongoCmsRepository, type CMS_ROLES } from "@bernouy/cms-shared";
+import { MongoCmsRepository } from "@bernouy/cms-shared";
+import { type CMS_ROLES } from "@bernouy/cms-permissions";
 import {
     SignedCookieCodec,
     SubjectResolver,

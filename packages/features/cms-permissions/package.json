@@ -1,0 +1,14 @@
+{
+    "name": "@bernouy/cms-permissions",
+    "version": "0.1.0",
+    "description": "CMS roles & permissions vocabulary — the `urn:cms:<feature>:<verb>` permission catalogue, role definitions with their grants (built-ins: admin / user / public-anon), and the pure `can()` decision helper. Dependency-free; storage, assignment and enforcement live with their owners.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    }
+}

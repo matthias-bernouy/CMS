@@ -10,7 +10,8 @@
         "./constants": "./src/constants/index.ts"
     },
     "dependencies": {
-        "@bernouy/http-runner": "workspace:*"
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/cms-permissions": "workspace:*"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

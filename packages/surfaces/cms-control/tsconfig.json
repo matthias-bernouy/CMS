@@ -24,6 +24,7 @@
         "tests/**/*.ts"
     ],
     "references": [
+        { "path": "../../features/cms-permissions" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-shared" },

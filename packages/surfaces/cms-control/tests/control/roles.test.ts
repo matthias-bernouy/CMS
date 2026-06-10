@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { InMemoryCmsRepository } from "@bernouy/cms-shared";
 import { InMemoryUsersRepository } from "@bernouy/cms-auth";
 import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
-import { cmsPermission, ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE } from "@bernouy/cms-shared";
+import { cmsPermission, ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE } from "@bernouy/cms-permissions";
 import type { ControlCms } from "cms-control/ControlCms";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import HttpError from "cms-control/errors/Http/HttpError";

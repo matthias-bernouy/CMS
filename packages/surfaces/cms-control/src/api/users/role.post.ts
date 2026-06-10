@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { ADMIN_ROLE } from "@bernouy/cms-shared";
+import { ADMIN_ROLE } from "@bernouy/cms-permissions";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
