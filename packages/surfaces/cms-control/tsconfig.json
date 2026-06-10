@@ -25,7 +25,7 @@
     ],
     "references": [
         { "path": "../../foundation/http-runner" },
-        { "path": "../../features/auth-core" },
+        { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-shared" },
         { "path": "../../features/cms-secrets" },
         { "path": "../../features/cms-analytics" }

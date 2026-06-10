@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { TUser } from "@bernouy/auth-core";
+import type { TUser } from "@bernouy/cms-auth";
 import type { CMS_ROLES } from "types/roles";
 
 /**

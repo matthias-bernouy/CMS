@@ -8,7 +8,7 @@
 // before the container starts; this file assumes they're present.
 
 import { BunRunner } from "@bernouy/http-runner";
-import { SignedCookieCodec } from "@bernouy/auth-core";
+import { SignedCookieCodec } from "@bernouy/cms-auth";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
 import { MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
@@ -25,16 +25,18 @@ import {
     type CMS_ROLES,
 } from "@bernouy/cms-shared";
 import {
+    SubjectResolver,
+    LocalAuthentication,
+    createPiiCrypto,
+    internalUserId,
+} from "@bernouy/cms-auth";
+import {
     MongoUsersRepository,
     MongoIdentityProviderRepository,
     MongoLocalCredentialStore,
     MongoPatRepository,
     MongoRateLimiter,
-    SubjectResolver,
-    LocalAuthentication,
-    createPiiCrypto,
-    internalUserId,
-} from "@bernouy/auth-core";
+} from "@bernouy/cms-auth/mongo";
 
 const env = (k: string, d?: string): string => {
     const v = process.env[k];

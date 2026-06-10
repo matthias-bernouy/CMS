@@ -9,7 +9,7 @@
 //   3. cms-control `bun run build` → runs prebuildControl (control-components.js
 //      bundle, depends on cms-blocs/dist) + emits its own d.ts.
 //
-// Other packages (core, http-runner, auth-core, cms-shared, cms-delivery,
+// Other packages (core, http-runner, cms-auth, cms-shared, cms-delivery,
 // cms-gateway, cms-cli) ship sources directly via their `exports` field — no
 // bundle step needed.
 

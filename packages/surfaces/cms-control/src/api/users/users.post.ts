@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { internalUserId } from "@bernouy/auth-core";
+import { internalUserId } from "@bernouy/cms-auth";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";

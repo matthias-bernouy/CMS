@@ -10,7 +10,7 @@ Pair it with:
 - **`@bernouy/cms-delivery`** for the public-facing rendering layer.
 - **`@bernouy/cms-shared`** for the persistence stores (content / files
   / secrets) and bloc compilation.
-- **`@bernouy/auth-core`** for the auth chain (login + signed cookie +
+- **`@bernouy/cms-auth`** for the auth chain (login + signed cookie +
   PATs).
 
 A working composition of all of the above lives in `images/cms/server.ts`
@@ -43,7 +43,7 @@ import {
     InMemoryUsersRepository, InMemoryIdentityProviderRepository,
     InMemoryLocalCredentialStore, InMemoryPatRepository,
     InMemoryRateLimiter,
-} from "@bernouy/auth-core";
+} from "@bernouy/cms-auth";
 import {
     InMemoryCmsRepository,
     InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob,
@@ -153,7 +153,7 @@ local editor is reachable without a backend.
 | `<basePath>/assets/*`                    | public    | `control-components.js` + `control-styles.css` |
 | `<basePath>/resources/*`                 | public    | Fonts + theme CSS (`@bernouy/cms-blocs`) |
 
-The auth guard (`createAuthGuard` from `@bernouy/auth-core`) checks the
+The auth guard (`createAuthGuard` from `@bernouy/cms-auth`) checks the
 `subject.role === "admin"` and redirects unauth'd browser navigations to
 `<basePath>/login`. JSON API calls get a 401 / 403 instead.
 
@@ -187,7 +187,7 @@ each call site bundles inline.
 - **Not a persistence layer.** Repos / stores live in
   `@bernouy/cms-shared`; pass impls in via the constructor.
 - **Not the auth chain.** `LocalAuthentication` + `OidcAuthentication`
-  live in `@bernouy/auth-core`; assemble them and pass the result as
+  live in `@bernouy/cms-auth`; assemble them and pass the result as
   `auth`.
 
 For a working full-stack image (admin + delivery + nginx, all in

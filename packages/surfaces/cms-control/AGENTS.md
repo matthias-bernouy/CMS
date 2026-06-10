@@ -104,7 +104,7 @@ NOT intercepted — each call site bundles inline.
 
 ```ts
 import { BunRunner } from "@bernouy/http-runner";
-import { LocalAuthentication } from "@bernouy/auth-core";
+import { LocalAuthentication } from "@bernouy/cms-auth";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { InMemoryCmsRepository, ... } from "@bernouy/cms-shared";

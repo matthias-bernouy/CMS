@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-control",
     "version": "0.1.0",
-    "description": "Admin layer of the CMS — REST API (file-routed under /api), server-rendered admin pages (under /admin), the visual editor (web components in /assets/control-components.js), and the `ControlCms` composition class. Consumes `@bernouy/cms-shared` for content / files / secrets stores and `@bernouy/auth-core` for the auth chain.",
+    "description": "Admin layer of the CMS — REST API (file-routed under /api), server-rendered admin pages (under /admin), the visual editor (web components in /assets/control-components.js), and the `ControlCms` composition class. Consumes `@bernouy/cms-shared` for content / files / secrets stores and `@bernouy/cms-auth` for the auth chain.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./index.ts",
@@ -56,7 +56,7 @@
     },
     "dependencies": {
         "@bernouy/http-runner":    "workspace:*",
-        "@bernouy/auth-core":     "workspace:*",
+        "@bernouy/cms-auth":     "workspace:*",
         "@bernouy/cms-shared":    "workspace:*",
         "@bernouy/cms-secrets":   "workspace:*",
         "@bernouy/cms-blocs":     "workspace:*",

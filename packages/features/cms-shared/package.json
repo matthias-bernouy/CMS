@@ -10,7 +10,6 @@
         "./constants": "./src/constants/index.ts"
     },
     "dependencies": {
-        "@bernouy/auth-core": "workspace:*",
         "@bernouy/http-runner": "workspace:*"
     },
     "peerDependencies": {

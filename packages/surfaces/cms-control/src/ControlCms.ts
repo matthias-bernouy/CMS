@@ -1,4 +1,4 @@
-import type { Authentication } from "@bernouy/auth-core";
+import type { Authentication } from "@bernouy/cms-auth";
 import type { Runner } from "@bernouy/http-runner";
 import { redirect } from "@bernouy/http-runner";
 import type { CmsRepository } from "@bernouy/cms-shared";
@@ -9,8 +9,8 @@ import { InMemorySecretStore, createSecretResolver } from "@bernouy/cms-secrets"
 import { registerFilesEndpoint, registerStyleEndpoint, compress } from "@bernouy/cms-shared";
 import type { CmsFilesMetadataRepository } from "@bernouy/cms-shared";
 import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
-import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/auth-core";
-import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/auth-core";
+import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/cms-auth";
+import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/cms-auth";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { registerAnalyticsApi, type AnalyticsStore } from "@bernouy/cms-analytics";

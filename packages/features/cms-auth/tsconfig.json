@@ -3,19 +3,15 @@
     "compilerOptions": {
         "outDir":   "dist",
         "rootDir":  "./src",
-        "baseUrl":  ".",
+        "baseUrl":  "./src",
         "paths": {
-            "cms-cli/*": ["./src/*"]
+            "cms-auth/*": ["./*"]
         },
         "resolveJsonModule": true
     },
     "include": ["src/**/*.ts"],
-    "exclude": ["src/resources/**"],
     "references": [
         { "path": "../../foundation/http-runner" },
-        { "path": "../../features/cms-auth" },
-        { "path": "../../features/cms-shared" },
-        { "path": "../../surfaces/cms-control" },
-        { "path": "../../surfaces/cms-delivery" }
+        { "path": "../../foundation/envelope-crypto" }
     ]
 }

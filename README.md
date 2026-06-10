@@ -12,7 +12,7 @@ CmsCore/
 ├── packages/                    # workspace members (workspaces: ["packages/*"])
 │   ├── core/                    @bernouy/core         interfaces (Runner, Authentication) + serve helpers (serveApiFolder, serveStaticFolder) + signed-cookie codec + envelope crypto + low-level utilities. Browser-safe by default.
 │   ├── http-runner/              @bernouy/http-runner   Runner contract implemented on `Bun.serve` (+ registerStaticFolder helper)
-│   ├── auth-core/               @bernouy/auth-core    CMS-owned auth chain — LocalAuth + OidcAuth + PATs + signed cookies + Users / IdP / Credential / RateLimiter stores + login / forbidden page renderers + authGuard. Provider-agnostic.
+│   ├── cms-auth/               @bernouy/cms-auth    CMS-owned auth chain — LocalAuth + OidcAuth + PATs + signed cookies + Users / IdP / Credential / RateLimiter stores + login / forbidden page renderers + authGuard. Provider-agnostic.
 │   ├── cms-shared/              @bernouy/cms-shared   CMS domain primitives shared by control + delivery + cli — content interfaces (Pages/Blocs/Templates/Snippets/Files/Secrets) + in-memory/Mongo/S3 impls + bloc compilation (prepare_bloc) + CSP/compression helpers + p9r constants
 │   ├── cms-delivery/            @bernouy/cms-delivery public-facing rendering layer — `DeliveryCms` mounts page resolution, bloc bundles, theme CSS, favicon. On-demand rendering, reads a DeliveryRepository (read-only subset of CmsRepository).
 │   ├── cms-control/             @bernouy/cms-control  admin layer — REST API (/api), server-rendered admin pages (/admin), visual editor (/assets), the `ControlCms` composition class
@@ -34,13 +34,13 @@ Workspace edges, taken from each package's `package.json`:
 
 ```
 core ─┬─ http-runner
-      ├─ auth-core                  (+ jose ; peer: mongodb, typescript)
-      ├─ cms-shared ◄── auth-core   (peer: mongodb, typescript)
+      ├─ cms-auth                  (+ jose ; peer: mongodb, typescript)
+      ├─ cms-shared ◄── cms-auth   (peer: mongodb, typescript)
       │     ▲
       │     ├── cms-delivery        (+ linkedom)
-      │     └── cms-control ◄── http-runner, auth-core, cms-blocs   (peer: mongodb, typescript)
+      │     └── cms-control ◄── http-runner, cms-auth, cms-blocs   (peer: mongodb, typescript)
       │              ▲
-      │              └── cms-cli ◄── http-runner, auth-core, cms-shared
+      │              └── cms-cli ◄── http-runner, cms-auth, cms-shared
       │
       └── cms-blocs (no runtime deps; published standalone; consumed by cms-control)
 ```
@@ -52,7 +52,7 @@ Rules of thumb:
   (`crypto`, `html`, `requestIP`) + envelope-encryption primitives
   (`EnvelopeSecretCrypto`, `LocalKekProvider`, `KekProvider`). Browser-safe
   except `loadKek`.
-- `@bernouy/auth-core` owns the **CMS-owned auth chain** — local provider
+- `@bernouy/cms-auth` owns the **CMS-owned auth chain** — local provider
   (email/password) + dynamic OIDC (any IdP, configured as data) + signed
   session cookies + PAT bearers + the membership / IdP / credential stores.
   No package in this repo is tied to a specific IdP — Keycloak / Auth0 /
@@ -87,7 +87,7 @@ at type-check time:
 3. `packages/cms-control` → control-side prebuild (`control-components.js`
    bundle, depends on `cms-blocs/dist`) + own `.d.ts` emit.
 
-Every other package (`core`, `http-runner`, `auth-core`, `cms-shared`,
+Every other package (`core`, `http-runner`, `cms-auth`, `cms-shared`,
 `cms-delivery`, `cms-cli`) ships **source** through its `exports` field — no
 bundle step, `bun link` consumers resolve straight to `src/`.
 
