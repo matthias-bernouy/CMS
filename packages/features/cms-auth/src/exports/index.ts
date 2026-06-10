@@ -20,6 +20,7 @@ export { LocalAuthentication, type LocalAuthConfig } from "cms-auth/default-impl
 export { OidcAuthentication, type OidcAuthConfig }   from "cms-auth/default-implementation/OidcAuthentication";
 export { SubjectResolver, internalUserId }            from "cms-auth/core/SubjectResolver";
 export { toLoginMethod }                              from "cms-auth/core/toLoginMethod";
+export { validatePassword, validateProviderKind, validatePatName, AuthValidationError } from "cms-auth/core/validation";
 export { deleteUserCompletely, type UserDeletionStores } from "cms-auth/core/deleteUserCompletely";
 export { isLastAdmin }                                 from "cms-auth/core/isLastAdmin";
 

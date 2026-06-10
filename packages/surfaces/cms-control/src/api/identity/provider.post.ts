@@ -1,11 +1,11 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import type { IdentityProviderKind, NewIdentityProvider } from "@bernouy/cms-auth";
+import { validateProviderKind } from "@bernouy/cms-auth";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import { slugify } from "cms-control/core/validation/gateway/gatewayValidators";
 
-const KINDS: IdentityProviderKind[] = ["oidc", "local"];
 
 /** POST /api/identity/provider — create a login provider (config ONLY; the
  *  clientSecret is stored separately in the SecretStore under `clientSecretRef`).
@@ -17,8 +17,7 @@ export default async function createProvider(req: Request, cms: ControlCms) {
     const b = await readJsonBody(req);
     if (typeof b.displayName !== "string" || !b.displayName) throw new MissingParam("displayName");
 
-    const kind = (typeof b.kind === "string" && b.kind ? b.kind : "oidc") as IdentityProviderKind;
-    if (!KINDS.includes(kind)) throw new InvalidParam("kind", "oidc|local");
+    const kind = validateProviderKind(typeof b.kind === "string" && b.kind ? b.kind : "oidc");
 
     const id = typeof b.id === "string" && b.id ? slugify(b.id) : slugify(b.displayName);
     if (!id) throw new InvalidParam("displayName", "cannot derive an id");

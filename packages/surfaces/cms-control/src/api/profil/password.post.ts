@@ -2,8 +2,8 @@ import type { ControlCms } from "cms-control/ControlCms";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import { validatePassword } from "@bernouy/cms-auth";
 
-const MIN_PASSWORD = 8;
 
 /** POST /api/profil/password { currentPassword, newPassword } — the current
  *  user changes their own local password. Re-authenticates with the current
@@ -24,7 +24,7 @@ export default async function changePassword(req: Request, cms: ControlCms) {
     const newPassword     = typeof body.newPassword === "string" ? body.newPassword : "";
     if (!currentPassword) throw new MissingParam("currentPassword");
     if (!newPassword)     throw new MissingParam("newPassword");
-    if (newPassword.length < MIN_PASSWORD) throw new InvalidParam("newPassword", `at least ${MIN_PASSWORD} characters`);
+    validatePassword(newPassword);
 
     // Re-auth with the current password. `verify` returns the identity (raw
     // credential `sub`) we then target with `setPassword`.

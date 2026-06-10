@@ -33,6 +33,7 @@ export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
 export { validatePagePath, validatePageTitle, validatePagePatch }   from "cms-content/core/validation/pages";
 export { validateSnippetIdentifier, validateSnippetPatch }          from "cms-content/core/validation/snippets";
 export { validateTemplateIdentifier, validateTemplatePatch }        from "cms-content/core/validation/templates";
+export { validateSettingsPatch } from "cms-content/core/validation/settings";
 
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
 export { registerStyleEndpoint } from "cms-content/http/registerStyleEndpoint";

@@ -10,6 +10,7 @@ import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-cont
 import { validateSnippetPatch } from "cms-content/core/validation/snippets";
 import { validateTemplatePatch } from "cms-content/core/validation/templates";
 import { assertContentRefsExist } from "cms-content/core/validation/assertContentRefsExist";
+import { validateSettingsPatch } from "cms-content/core/validation/settings";
 
 /**
  * Decorator that VALIDATES + NORMALIZES every authored-content write before
@@ -78,7 +79,7 @@ export class ValidatingCmsRepository implements CmsRepository {
 
     // ── Pass-through: system (settings validated elsewhere) ────────────────
     getSystem(): Promise<TSystem> { return this.inner.getSystem(); }
-    updateSystem(system: Partial<TSystem>): Promise<TSystem> { return this.inner.updateSystem(system); }
+    updateSystem(system: Partial<TSystem>): Promise<TSystem> { return this.inner.updateSystem(validateSettingsPatch(system)); }
 
     // ── Pass-through: template/snippet reads + deletes ─────────────────────
     getTemplateById(id: string)               { return this.inner.getTemplateById(id); }

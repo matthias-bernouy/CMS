@@ -38,29 +38,13 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
     return dto;
 }
 
-/**
- * Parse a multiline origin list (one URL per line, as emitted by a
- * `<textarea>` in the admin form). Each non-empty line must be a valid
- * absolute URL with a non-null origin; the value is normalised to its
- * `URL.origin` form (default ports + trailing slash stripped) and
- * duplicates are dropped.
- */
+/** Split a multiline origin list (one per line) into trimmed non-empty
+ *  strings. The URL-validity + normalization rule runs at write time in
+ *  cms-content's `validateSettingsPatch`. */
 function parseOriginList(raw: unknown, paramName: string): string[] {
     if (raw === undefined || raw === null || raw === "") return [];
     if (typeof raw !== "string") throw new InvalidParam(paramName, "expected a string.");
-    const out = new Set<string>();
-    for (const line of raw.split(/\r?\n/)) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        let origin: string;
-        try { origin = new URL(trimmed).origin; }
-        catch { throw new InvalidParam(paramName, `invalid URL: "${trimmed}"`); }
-        if (!origin || origin === "null") {
-            throw new InvalidParam(paramName, `URL has no origin: "${trimmed}"`);
-        }
-        out.add(origin);
-    }
-    return [...out];
+    return raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 }
 
 function hasSectionKey(body: Record<string, unknown>, prefix: string): boolean {

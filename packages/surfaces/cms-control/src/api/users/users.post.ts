@@ -1,11 +1,10 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { internalUserId } from "@bernouy/cms-auth";
+import { internalUserId, validatePassword } from "@bernouy/cms-auth";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import { assignableRoles } from "cms-control/core/roles/rolesView";
 
-const MIN_PASSWORD = 8;
 
 /** POST /api/users { email, password, displayName?, role? } — create a local
  *  (email/password) user by hand. Writes BOTH the credential (authn secret) and
@@ -24,7 +23,7 @@ export default async function createUser(req: Request, cms: ControlCms) {
 
     if (!email)    throw new MissingParam("email");
     if (!password) throw new MissingParam("password");
-    if (password.length < MIN_PASSWORD) throw new InvalidParam("password", `at least ${MIN_PASSWORD} characters`);
+    validatePassword(password);
     const allowed = await assignableRoles(cms);
     if (!allowed.some((r) => r.id === role)) throw new InvalidParam("role", "unknown or unassignable role");
 
