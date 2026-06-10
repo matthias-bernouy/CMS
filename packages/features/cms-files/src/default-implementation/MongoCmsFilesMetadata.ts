@@ -4,7 +4,7 @@ import type {
     CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem,
     FilesListOptions, FilesPage, NewFolder, NewFile, ItemPatch,
 } from "cms-files/interfaces/CmsFilesMetadataRepository";
-import { escapeRegex } from "@bernouy/cms-shared";
+import { escapeRegex } from "@bernouy/cms-content";
 
 /**
  * MongoDB `CmsFilesMetadataRepository`. One collection (`<prefix>filesMeta`),

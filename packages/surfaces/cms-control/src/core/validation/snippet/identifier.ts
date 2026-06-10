@@ -1,5 +1,5 @@
 import InvalidParam from 'cms-control/errors/Http/InvalidParam';
-import { isValidSnippetIdentifier } from '@bernouy/cms-shared';
+import { isValidSnippetIdentifier } from '@bernouy/cms-content';
 
 export function assertValidSnippetIdentifier(value: unknown): asserts value is string {
     if (typeof value !== 'string' || value.length === 0) {

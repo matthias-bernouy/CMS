@@ -1,5 +1,5 @@
 import type { SystemPayload } from "./scan";
-import type { TPageRef } from "@bernouy/cms-shared";
+import type { TPageRef } from "@bernouy/cms-content";
 
 const HEADERS_JSON = (token: string) => ({
     "Authorization": `Bearer ${token}`,

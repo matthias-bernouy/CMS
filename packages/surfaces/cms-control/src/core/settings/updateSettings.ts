@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 import { invalidateAllPages } from "cms-control/core/server/cache/invalidation";
 import type { SettingsUpdateDto } from "cms-control/core/validation/settings/parseUpdateDto";
 

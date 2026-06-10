@@ -10,7 +10,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 import { InMemoryAuthentication } from "@bernouy/cms-control";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";

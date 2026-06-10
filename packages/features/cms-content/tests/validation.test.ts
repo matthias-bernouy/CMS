@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { isValidPathFormat, isValidSnippetIdentifier, isValidCustomElementTag } from "@bernouy/cms-shared";
+import { isValidPathFormat, isValidSnippetIdentifier, isValidCustomElementTag } from "@bernouy/cms-content";
 
 describe("isValidPathFormat", () => {
     test("accepts root", () => {

@@ -2,8 +2,8 @@ import type { EditorManager } from "cms-control/core/editorSystem/runtime/Editor
 import type { Editor } from "cms-control/core/editorSystem/Editor/Editor";
 import type { Component } from "@bernouy/cms-blocs/base";
 import type { registerEditor, registerEditor_opaque } from "cms-control/core/editorSystem/registerEditor";
-import { P9R_ATTR } from "@bernouy/cms-shared";
-import { P9R_CACHE, P9R_EVENT, P9R_ID, P9R_MODE } from "@bernouy/cms-shared";
+import { P9R_ATTR } from "@bernouy/cms-content";
+import { P9R_CACHE, P9R_EVENT, P9R_ID, P9R_MODE } from "@bernouy/cms-content";
 
 // NOTE: wildcard module declarations for `*.css` / `*.html` live in
 // `./assets.d.ts`, NOT here. This file has top-level imports and is

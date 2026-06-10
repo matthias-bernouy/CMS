@@ -1,4 +1,4 @@
-import { isValidCategoryFolder } from "@bernouy/cms-shared";
+import { isValidCategoryFolder } from "@bernouy/cms-content";
 
 /**
  * Snippets and templates carry a `category` whose value is the parent

@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
-import type { TPage, TSystem } from "@bernouy/cms-shared";
+import type { TPage, TSystem } from "@bernouy/cms-content";
 import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
 
 const page = { title: "Home", description: "d", path: "/" } as TPage;

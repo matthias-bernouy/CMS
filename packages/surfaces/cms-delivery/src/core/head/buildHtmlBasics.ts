@@ -1,4 +1,4 @@
-import type { TSystem } from "@bernouy/cms-shared";
+import type { TSystem } from "@bernouy/cms-content";
 
 /**
  * HTML basics every page needs: `<html lang>` when a language is configured,

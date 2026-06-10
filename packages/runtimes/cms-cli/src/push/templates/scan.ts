@@ -4,7 +4,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parseFrontmatter } from "cms-cli/push/shared/frontmatter";
 import { folderToCategory } from "cms-cli/push/shared/categoryFolder";
-import { isValidCategoryFolder } from "@bernouy/cms-shared";
+import { isValidCategoryFolder } from "@bernouy/cms-content";
 
 export type TemplateMeta = {
     name:        string;

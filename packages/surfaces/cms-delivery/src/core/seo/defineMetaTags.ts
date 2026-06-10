@@ -1,4 +1,4 @@
-import type { TPage, TSystem } from "@bernouy/cms-shared";
+import type { TPage, TSystem } from "@bernouy/cms-content";
 
 /**
  * Emit the head tags carrying SEO / browser-metadata weight: title,

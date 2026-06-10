@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { TPage, PageMeta, PagesQuery } from "@bernouy/cms-shared";
-import { filterAndSortPages } from "@bernouy/cms-shared";
+import type { TPage, PageMeta, PagesQuery } from "@bernouy/cms-content";
+import { filterAndSortPages } from "@bernouy/cms-content";
 import { scanPages } from "cms-cli/push/pages/scan";
 import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
 

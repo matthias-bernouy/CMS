@@ -16,6 +16,7 @@
         { "path": "../../foundation/http-runner" },
         { "path": "../../features/cms-auth" },
         { "path": "../../features/cms-shared" },
+        { "path": "../../features/cms-content" },
         { "path": "../../features/cms-files" },
         { "path": "../../surfaces/cms-control" },
         { "path": "../../surfaces/cms-delivery" }

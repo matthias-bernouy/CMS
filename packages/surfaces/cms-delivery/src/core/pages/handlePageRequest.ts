@@ -1,10 +1,10 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import type { TPage } from "@bernouy/cms-shared";
+import type { TPage } from "@bernouy/cms-content";
 import { cachedResponseAsync } from "@bernouy/http-runner";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 import { renderRef } from "cms-delivery/core/pages/renderRef";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 
 /**
  * Shared entry point for every dynamic page GET registered by Delivery.

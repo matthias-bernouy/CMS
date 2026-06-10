@@ -1,5 +1,5 @@
-import { isValidCustomElementTag } from "cms-shared/utils/validation";
-import { RESERVED_PREFIXES } from "cms-shared/utils/contentRefs";
+import { isValidCustomElementTag } from "@bernouy/cms-content";
+import { RESERVED_PREFIXES } from "@bernouy/cms-content";
 
 /**
  * Inputs passed to `validateBloc`. All HTML/source fields are optional —

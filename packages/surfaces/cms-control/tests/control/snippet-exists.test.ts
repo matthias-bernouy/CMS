@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import snippetExists from "cms-control/api/snippet/exists.get";
-import type { TSnippet } from "@bernouy/cms-shared";
+import type { TSnippet } from "@bernouy/cms-content";
 
 function makeSystem(identifiers: string[]) {
     const cms: any = {

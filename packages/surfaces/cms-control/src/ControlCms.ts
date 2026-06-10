@@ -1,14 +1,14 @@
 import type { Authentication } from "@bernouy/cms-auth";
 import type { Runner } from "@bernouy/http-runner";
 import { redirect } from "@bernouy/http-runner";
-import type { CmsRepository } from "@bernouy/cms-shared";
+import type { CmsRepository } from "@bernouy/cms-content";
 import type { Cache } from "@bernouy/http-runner";
 import { InMemoryCache } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { InMemorySecretStore, createSecretResolver } from "@bernouy/cms-secrets";
 import { compress } from "@bernouy/http-runner";
 import { registerFilesEndpoint } from "@bernouy/cms-files";
-import { registerStyleEndpoint } from "@bernouy/cms-shared";
+import { registerStyleEndpoint } from "@bernouy/cms-content";
 import type { CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { CmsFilesBlobStore } from "@bernouy/cms-files";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/cms-auth";

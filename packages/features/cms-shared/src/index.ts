@@ -1,42 +1,10 @@
 /**
- * @bernouy/cms-shared — what remains of the CMS grab-bag while it gets
- * dissolved into feature packages (cms-files, cms-secrets and
- * cms-permissions are out; model and content are next).
- *
- * Currently holds: the content contracts (CmsRepository + models) and their
- * implementations, the bloc compile pipeline
- * (`prepare_bloc`, `validateBloc`, `p9rExternalsPlugin`), the theme style
- * endpoint, the p9r-* constants, and shared utils.
+ * @bernouy/cms-shared — last survivor of the dissolved grab-bag: the bloc
+ * compile pipeline only (`prepare_bloc`, `validateBloc`,
+ * `p9rExternalsPlugin`). Slated to become `cms-bloc-compile` once the
+ * `prepare_bloc` → cms-control editor-registration inversion is designed.
  */
 
-// ── Content interfaces ─────────────────────────────────────────────────
-export type {
-    CmsRepository, BlocListItemResponse, PageLink, PageMeta, PagesQuery,
-} from "cms-shared/interfaces/CmsRepository";
-export { filterAndSortPages } from "cms-shared/default-implementation/CmsRepository/pagesQuery";
-export type {
-    TPage, TBloc, TTemplate, TSnippet, TSystem, TPageRef,
-} from "cms-shared/interfaces/models";
-export { DEFAULT_SHELL, composeShell } from "cms-shared/interfaces/models";
-
-// ── Default implementations ────────────────────────────────────────────
-export { InMemoryCmsRepository } from "cms-shared/default-implementation/CmsRepository/memory";
-export { MongoCmsRepository }    from "cms-shared/default-implementation/CmsRepository/mongodb";
-
-// ── Bloc compile pipeline ──────────────────────────────────────────────
 export { prepare_bloc }                  from "cms-shared/blocs/prepare_bloc";
 export { validateBloc, validateBlocTag } from "cms-shared/blocs/validateBloc";
 export { p9rExternalsPlugin }            from "cms-shared/blocs/p9rExternalsPlugin";
-
-// ── Server helpers ─────────────────────────────────────────────────────
-export { registerStyleEndpoint } from "cms-shared/server/registerStyleEndpoint";
-
-// ── Constants ──────────────────────────────────────────────────────────
-export * from "cms-shared/constants/p9r-constants";
-export * from "cms-shared/constants/editorAttributes";
-
-// ── Utils ──────────────────────────────────────────────────────────────
-export * from "cms-shared/utils/validation";
-export * from "cms-shared/utils/contentRefs";
-export { sanitizeDomTree } from "cms-shared/utils/sanitizeDomTree";
-export { escapeRegex } from "cms-shared/utils/escapeRegex";

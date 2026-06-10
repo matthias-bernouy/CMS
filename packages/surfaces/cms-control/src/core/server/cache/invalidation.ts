@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 
 /**
  * Invalidate every cached rendered page that references a given bloc tag —

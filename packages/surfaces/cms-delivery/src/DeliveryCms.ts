@@ -2,7 +2,7 @@ import type { Runner } from "@bernouy/http-runner";
 import { BunRunner } from "@bernouy/http-runner";
 import type { Cache } from "@bernouy/http-runner";
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import { DeliveryCache } from "cms-delivery/core/DeliveryCache";

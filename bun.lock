@@ -9,6 +9,7 @@
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-cli": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
@@ -65,11 +66,23 @@
         "typescript": "^5",
       },
     },
+    "packages/features/cms-content": {
+      "name": "@bernouy/cms-content",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms-permissions": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
+      },
+      "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/features/cms-files": {
       "name": "@bernouy/cms-files",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/cms-shared": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
       },
       "peerDependencies": {
@@ -110,8 +123,7 @@
       "name": "@bernouy/cms-shared",
       "version": "0.1.0",
       "dependencies": {
-        "@bernouy/cms-permissions": "workspace:*",
-        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
@@ -149,6 +161,7 @@
       },
       "dependencies": {
         "@bernouy/cms-auth": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
@@ -168,6 +181,7 @@
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
@@ -193,6 +207,7 @@
       "dependencies": {
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
@@ -215,6 +230,8 @@
     "@bernouy/cms-blocs": ["@bernouy/cms-blocs@workspace:packages/features/cms-blocs"],
 
     "@bernouy/cms-cli": ["@bernouy/cms-cli@workspace:packages/runtimes/cms-cli"],
+
+    "@bernouy/cms-content": ["@bernouy/cms-content@workspace:packages/features/cms-content"],
 
     "@bernouy/cms-control": ["@bernouy/cms-control@workspace:packages/surfaces/cms-control"],
 

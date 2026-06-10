@@ -1,10 +1,14 @@
 import { randomUUIDv7 } from "bun";
-import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-shared/interfaces/CmsRepository";
-import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "cms-shared/interfaces/models";
-import { DEFAULT_SHELL } from "cms-shared/interfaces/models";
+import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
+import type { TBloc } from "cms-content/interfaces/blocs";
+import type { TPage } from "cms-content/interfaces/pages";
+import type { TSnippet } from "cms-content/interfaces/snippets";
+import type { TSystem } from "cms-content/interfaces/settings";
+import type { TTemplate } from "cms-content/interfaces/templates";
+import { DEFAULT_SHELL } from "cms-content/interfaces/settings";
 import { defaultRoleDefinitions } from "@bernouy/cms-permissions";
-import { filterAndSortPages } from "cms-shared/default-implementation/CmsRepository/pagesQuery";
-import { escapeRegex } from "cms-shared/utils/escapeRegex";
+import { filterAndSortPages } from "cms-content/core/pagesQuery";
+import { escapeRegex } from "cms-content/core/utils/escapeRegex";
 
 /**
  * In-memory implementation of `CmsRepository` for local dev and tests. No

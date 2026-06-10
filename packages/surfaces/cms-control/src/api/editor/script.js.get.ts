@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { cachedResponseAsync, compress, publicAssetCacheControl } from "@bernouy/http-runner";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 
 export default async function editorScriptGet(req: Request, cms: ControlCms) {
     return cachedResponseAsync(req, P9R_CACHE.EDITOR_SCRIPT, cms.cache, async () => {

@@ -1,7 +1,7 @@
 import type { Runner, Middleware } from "@bernouy/http-runner";
 import type { Cache, CacheEntry } from "@bernouy/http-runner";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
-import { P9R_CACHE } from "cms-shared/constants/p9r-constants";
+import { P9R_CACHE } from "cms-content/core/constants/p9r-constants";
 
 /**
  * Mount the theme CSS route at `<basePath>/.cms/style` on `runner`, cached under

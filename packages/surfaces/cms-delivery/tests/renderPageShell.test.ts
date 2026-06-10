@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import type { RenderContext } from "cms-delivery/core/html/RenderContext";
 import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
-import { DEFAULT_SHELL, type TPage, type TSystem } from "@bernouy/cms-shared";
+import { DEFAULT_SHELL, type TPage, type TSystem } from "@bernouy/cms-content";
 
 const BINDING_CORE_URL = "/.cms/assets/cms-binding-core.js?v=core";
 

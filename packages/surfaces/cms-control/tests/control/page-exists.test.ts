@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import pageExists from "cms-control/api/page/exists.get";
-import type { TPage } from "@bernouy/cms-shared";
+import type { TPage } from "@bernouy/cms-content";
 
 function makeSystem(paths: string[]) {
     const cms: any = {

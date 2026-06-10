@@ -1,8 +1,8 @@
 import { parseHTML } from "linkedom";
-import type { TPage } from "@bernouy/cms-shared";
+import type { TPage } from "@bernouy/cms-content";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
-import { sanitizeDomTree, composeShell } from "@bernouy/cms-shared";
+import { sanitizeDomTree, composeShell } from "@bernouy/cms-content";
 import { expandSnippets } from "cms-delivery/core/html/expandSnippets";
 import { findUsedBlocTags } from "cms-delivery/core/blocs/findUsedBlocs";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";

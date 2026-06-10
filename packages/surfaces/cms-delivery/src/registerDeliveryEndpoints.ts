@@ -8,7 +8,7 @@ import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { registerFilesEndpoint } from "@bernouy/cms-files";
-import { registerStyleEndpoint } from "@bernouy/cms-shared";
+import { registerStyleEndpoint } from "@bernouy/cms-content";
 import { registerImageVariantEndpoint } from "cms-delivery/core/images/serveVariant";
 import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";

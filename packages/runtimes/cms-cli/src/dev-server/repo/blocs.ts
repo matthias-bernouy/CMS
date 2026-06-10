@@ -1,4 +1,4 @@
-import type { BlocListItemResponse } from "@bernouy/cms-shared";
+import type { BlocListItemResponse } from "@bernouy/cms-content";
 import type { BuiltBloc } from "../build";
 import { bundleBlocSource } from "cms-cli/push/blocs/bundle";
 

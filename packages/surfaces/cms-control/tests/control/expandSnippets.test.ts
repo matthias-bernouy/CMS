@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { expandSnippets } from "cms-control/core/expandSnippets";
 import type { ControlCms } from "cms-control/ControlCms";
-import type { TSnippet } from "@bernouy/cms-shared";
+import type { TSnippet } from "@bernouy/cms-content";
 
 function makeSystem(snippets: Record<string, string>) {
     const fetchLog: string[] = [];

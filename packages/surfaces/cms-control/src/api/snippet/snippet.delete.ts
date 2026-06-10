@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 
 export default async function deleteSnippet(req: Request, cms: ControlCms) {
     const url = new URL(req.url);

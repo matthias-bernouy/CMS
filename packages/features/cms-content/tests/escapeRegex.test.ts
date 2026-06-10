@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { escapeRegex } from "cms-shared/utils/escapeRegex";
+import { escapeRegex } from "@bernouy/cms-content";
 
 describe("escapeRegex", () => {
     test("backslash-prefixes every regex metacharacter", () => {

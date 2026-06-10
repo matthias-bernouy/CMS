@@ -1,4 +1,4 @@
-import type { TPage, TSnippet, TSystem } from "@bernouy/cms-shared";
+import type { TPage, TSnippet, TSystem } from "@bernouy/cms-content";
 
 /**
  * Read-only data contract consumed by the Delivery layer. Mirrors the subset

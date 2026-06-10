@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { extractRefs } from "@bernouy/cms-shared";
+import { extractRefs } from "@bernouy/cms-content";
 
 /**
  * Reject content that references a bloc tag or snippet identifier missing

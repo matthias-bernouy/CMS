@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-shared";
+import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { InMemoryUsersRepository } from "@bernouy/cms-auth";
 import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
 import { cmsPermission, ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE } from "@bernouy/cms-permissions";

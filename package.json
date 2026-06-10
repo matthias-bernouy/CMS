@@ -28,6 +28,7 @@
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-analytics": "workspace:*",

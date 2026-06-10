@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { TPageRef, TSystem } from "@bernouy/cms-shared";
+import type { TPageRef, TSystem } from "@bernouy/cms-content";
 
 /** Subset of `TSystem` actually pushable from disk. */
 export type SystemPayload = {

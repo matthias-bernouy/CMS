@@ -1,4 +1,4 @@
-import { extractRefs } from "@bernouy/cms-shared";
+import { extractRefs } from "@bernouy/cms-content";
 
 export { extractRefs };
 

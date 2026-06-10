@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { TPage, TSnippet } from "@bernouy/cms-shared";
+import type { TPage, TSnippet } from "@bernouy/cms-content";
 import { scanSnippets } from "cms-cli/push/snippets/scan";
 import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
 import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";

@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { TPageRef, TSystem } from "@bernouy/cms-shared";
-import { DEFAULT_SHELL } from "@bernouy/cms-shared";
+import type { TPageRef, TSystem } from "@bernouy/cms-content";
+import { DEFAULT_SHELL } from "@bernouy/cms-content";
 import { defaultRoleDefinitions } from "@bernouy/cms-permissions";
 
 const SYSTEM_FILE = "system.json";

@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-shared";
+import { InMemoryCmsRepository } from "@bernouy/cms-content";
 
 /** Seed three pages with distinct titles/paths/tags/visibility. */
 async function seeded() {

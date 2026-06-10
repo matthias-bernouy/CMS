@@ -1,4 +1,4 @@
-import { isValidPathFormat } from '@bernouy/cms-shared';
+import { isValidPathFormat } from '@bernouy/cms-content';
 import InvalidParam from 'cms-control/errors/Http/InvalidParam';
 
 export function assertValidPagePath(value: unknown): asserts value is string {

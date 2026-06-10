@@ -1,5 +1,5 @@
 import { parseHTML } from "linkedom";
-import { sanitizeDomTree } from "@bernouy/cms-shared";
+import { sanitizeDomTree } from "@bernouy/cms-content";
 
 /**
  * Server-side hardening for stored rich-text/page HTML, applied at write time so

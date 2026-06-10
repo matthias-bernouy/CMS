@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { prepare_bloc } from "@bernouy/cms-shared";
 import { validateBloc } from "@bernouy/cms-shared";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 import { invalidatePagesReferencingBloc } from "cms-control/core/server/cache/invalidation";
 
 export default async function importBloc(req: Request, cms: ControlCms) {

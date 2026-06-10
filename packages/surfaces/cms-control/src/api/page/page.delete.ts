@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 
 /** DELETE /api/page?id= — remove a page. Pages aren't referenced by other
  *  content (templates/snippets are referenced BY pages, not the reverse), so

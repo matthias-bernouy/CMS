@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { P9R_CACHE } from "@bernouy/cms-shared";
-import type { TPage, TSnippet } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
+import type { TPage, TSnippet } from "@bernouy/cms-content";
 import { invalidatePagesReferencingFile } from "cms-control/core/server/cache/invalidation";
 
 const page = (path: string, content: string): TPage =>

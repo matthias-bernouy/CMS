@@ -1,6 +1,6 @@
 import type { ControlCms } from 'cms-control/ControlCms';
 import InvalidParam from 'cms-control/errors/Http/InvalidParam';
-import { P9R_CACHE } from '@bernouy/cms-shared';
+import { P9R_CACHE } from '@bernouy/cms-content';
 import type { SnippetUpdateDto } from '../validation/snippet/parseUpdateDto';
 import { assertContentRefsExist } from '../validation/contentRefs';
 

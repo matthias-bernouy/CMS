@@ -1,5 +1,5 @@
 import { getAccessToken } from "./credentials";
-import { RESERVED_PREFIXES } from "@bernouy/cms-shared";
+import { RESERVED_PREFIXES } from "@bernouy/cms-content";
 
 type RemoteBlocMeta = {
     id:          string;

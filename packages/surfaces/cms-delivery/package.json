@@ -18,7 +18,8 @@
         "linkedom": "^0.18.12",
         "sharp": "^0.34.5",
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/cms-files": "workspace:*"
+        "@bernouy/cms-files": "workspace:*",
+        "@bernouy/cms-content": "workspace:*"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"

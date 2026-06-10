@@ -1,4 +1,4 @@
-import type { P9RMode } from "@bernouy/cms-shared";
+import type { P9RMode } from "@bernouy/cms-content";
 
 export interface SwitchModeEvent extends CustomEvent {
     readonly detail: P9RMode;

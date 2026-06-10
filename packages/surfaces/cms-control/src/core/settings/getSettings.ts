@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { PageLink } from "@bernouy/cms-shared";
-import type { TSystem } from "@bernouy/cms-shared";
+import type { PageLink } from "@bernouy/cms-content";
+import type { TSystem } from "@bernouy/cms-content";
 
 export type SettingsResponse = {
     site:     TSystem["site"];

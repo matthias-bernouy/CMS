@@ -5,7 +5,7 @@ import { getBlocGroupManifest } from "cms-delivery/core/blocs/blocGroupManifest"
 import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
 import { generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { generateBindingCoreJsEntry } from "cms-delivery/core/assets/buildBindingCore";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 
 /**
  * Content-addressed URLs for every asset a page references. The hash is the

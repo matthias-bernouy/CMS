@@ -1,6 +1,6 @@
 import { describe, test, expect, mock } from "bun:test";
-import { P9R_CACHE } from "@bernouy/cms-shared";
-import type { TBloc } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
+import type { TBloc } from "@bernouy/cms-content";
 
 // Stub prepare_bloc so tests never touch the filesystem or run Bun.build.
 // Must be registered before importBloc is imported.

@@ -4,7 +4,7 @@ import DeliveryCms from "cms-delivery/DeliveryCms";
 import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
 import { type CacheEntry } from "@bernouy/http-runner";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-files";
-import { P9R_CACHE } from "@bernouy/cms-shared";
+import { P9R_CACHE } from "@bernouy/cms-content";
 import { readManifest } from "cms-delivery/core/images/imageVariants";
 import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
 

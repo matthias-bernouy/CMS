@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { PagesQuery } from "@bernouy/cms-shared";
+import type { PagesQuery } from "@bernouy/cms-content";
 
 export type PageListItem = {
     id: string;

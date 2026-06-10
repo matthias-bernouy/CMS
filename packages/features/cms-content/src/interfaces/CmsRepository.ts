@@ -1,4 +1,8 @@
-import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "./models";
+import type { TBloc } from "cms-content/interfaces/blocs";
+import type { TPage } from "cms-content/interfaces/pages";
+import type { TSnippet } from "cms-content/interfaces/snippets";
+import type { TSystem } from "cms-content/interfaces/settings";
+import type { TTemplate } from "cms-content/interfaces/templates";
 
 export type BlocListItemResponse = {
     id: string, 

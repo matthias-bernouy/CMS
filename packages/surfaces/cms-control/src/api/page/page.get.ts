@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/errors/Http/MissingParam";
-import { composeShell } from "@bernouy/cms-shared";
+import { composeShell } from "@bernouy/cms-content";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystem/contentRegionAttrs";
 
 export default async function getPage(req: Request, cms: ControlCms) {
