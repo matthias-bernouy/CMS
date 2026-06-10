@@ -3,6 +3,7 @@ import type { IdentityProviderKind, NewIdentityProvider } from "@bernouy/auth-co
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import { slugify } from "cms-control/core/validation/gateway/gatewayValidators";
 
 const KINDS: IdentityProviderKind[] = ["oidc", "local"];
 
@@ -33,6 +34,3 @@ export default async function createProvider(req: Request, cms: ControlCms) {
 
     return Response.json(await cms.identityProviders.create(input));
 }
-
-const slugify = (s: string): string =>
-    s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");

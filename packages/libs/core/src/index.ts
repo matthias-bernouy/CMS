@@ -11,7 +11,7 @@ export { SignedCookieCodec } from "./auth/SignedCookieCodec";
 
 // Utilities
 export { getRequestIP, setRequestIP } from "./utilities/requestIP";
-export { sha256Hex, randomBase64Url } from "./utilities/crypto";
+export { sha256HexAsync, randomBase64Url } from "./utilities/crypto";
 export * from "./utilities/html";
 
 // Envelope encryption (KEK + per-scope DEK + cached unwrap). The only KEK

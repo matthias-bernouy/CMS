@@ -4,6 +4,7 @@ import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "cms-shared/inte
 import { DEFAULT_SHELL } from "cms-shared/interfaces/models";
 import { defaultRoleDefinitions } from "cms-shared/permissions/permissions";
 import { filterAndSortPages } from "cms-shared/default-implementation/CmsRepository/pagesQuery";
+import { escapeRegex } from "cms-shared/utils/escapeRegex";
 
 /**
  * In-memory implementation of `CmsRepository` for local dev and tests. No
@@ -281,7 +282,7 @@ export class InMemoryCmsRepository implements CmsRepository {
     }
 
     async findPagesUsingSnippet(identifier: string): Promise<TPage[]> {
-        const escaped = identifier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const escaped = escapeRegex(identifier);
         const regex = new RegExp(
             `<w13c-snippet[^>]*\\bidentifier\\s*=\\s*["']${escaped}["']`,
             "i",

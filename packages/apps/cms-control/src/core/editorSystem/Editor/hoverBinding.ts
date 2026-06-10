@@ -1,4 +1,5 @@
 import getClosestEditorSystem from '../../dom/editor/getClosestEditorSystem';
+import { isVisuallyInvisible } from 'cms-control/core/dom/isVisuallyInvisible';
 import type { Editor } from './Editor';
 
 export class HoverBinding {
@@ -62,47 +63,4 @@ export class HoverBinding {
         editorSystem.blocActions.setEditor(this.editor);
         editorSystem.blocActions.open(e.clientX, e.clientY);
     }
-}
-
-/**
- * Returns true when the element should not be considered visible for
- * editor hover.
- *
- * Uses `Element.checkVisibility()` because it walks the **flat tree**
- * (rendering tree), not the light-DOM `parentElement` chain — critical
- * for the slotted-into-shadow case: an editor target lives in light DOM
- * but its visual context (a `<div class="dropdown" style="opacity:0">`
- * wrapping a `<slot>`) lives in the parent bloc's shadow root. A manual
- * `parentElement` walk never crosses that boundary and misses the
- * opacity on the wrapper.
- *
- * Covered:
- * - `display: none` (own or ancestor) — default of `checkVisibility`.
- * - `visibility: hidden` — `visibilityProperty: true`.
- * - `opacity: 0` (own or ancestor, including shadow ancestors of the
- *   slot host) — `opacityProperty: true`.
- *
- * The rect check stays for off-viewport positioning (transform, top:
- * -9999px) — `checkVisibility` doesn't consider geometry, only style.
- *
- * `checkVisibility` is supported in Chrome 105+, Safari 17.4+, Firefox
- * 125+ — well within the admin's modern-browser target. We feature-test
- * defensively and pass both legacy (`checkOpacity` / `checkVisibilityCSS`)
- * and current (`opacityProperty` / `visibilityProperty`) option names so
- * engines on either side of the rename accept the call.
- */
-function isVisuallyInvisible(el: HTMLElement): boolean {
-    if (typeof el.checkVisibility === "function") {
-        const visible = el.checkVisibility({
-            opacityProperty: true,
-            visibilityProperty: true,
-            checkOpacity: true,
-            checkVisibilityCSS: true,
-        } as CheckVisibilityOptions);
-        if (!visible) return true;
-    }
-    const r = el.getBoundingClientRect();
-    if (r.width === 0 && r.height === 0) return true;
-    if (r.bottom <= 0 || r.right <= 0 || r.left >= innerWidth || r.top >= innerHeight) return true;
-    return false;
 }

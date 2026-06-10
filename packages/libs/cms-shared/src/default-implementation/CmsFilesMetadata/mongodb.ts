@@ -4,6 +4,7 @@ import type {
     CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem,
     FilesListOptions, FilesPage, NewFolder, NewFile, ItemPatch,
 } from "cms-shared/interfaces/CmsFilesMetadataRepository";
+import { escapeRegex } from "cms-shared/utils/escapeRegex";
 
 /**
  * MongoDB `CmsFilesMetadataRepository`. One collection (`<prefix>filesMeta`),
@@ -174,8 +175,6 @@ function fromDoc(d: ItemDoc): FilesItem {
     const { _id, ...rest } = d;
     return { id: _id, ...rest } as FilesItem;
 }
-
-const escapeRegex = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 function clashOr(e: unknown): unknown {
     if (e && typeof e === "object" && (e as { code?: number }).code === 11000) {

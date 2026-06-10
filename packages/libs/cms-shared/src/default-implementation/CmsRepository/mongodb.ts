@@ -4,6 +4,7 @@ import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuer
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "cms-shared/interfaces/models";
 import { DEFAULT_SHELL } from "cms-shared/interfaces/models";
 import { defaultRoleDefinitions } from "cms-shared/permissions/permissions";
+import { escapeRegex } from "cms-shared/utils/escapeRegex";
 
 /**
  * MongoDB implementation of `CmsRepository`. Designed for small/medium
@@ -182,7 +183,7 @@ export class MongoCmsRepository implements CmsRepository {
         const filter: Record<string, unknown> = {};
         const search = opts.search?.trim();
         if (search) {
-            const rx = { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+            const rx = { $regex: escapeRegex(search), $options: "i" };
             filter.$or = [{ title: rx }, { path: rx }];
         }
         if (opts.tag)                     filter.tags = opts.tag;
@@ -361,7 +362,7 @@ export class MongoCmsRepository implements CmsRepository {
     }
 
     async findPagesUsingSnippet(identifier: string): Promise<TPage[]> {
-        const escaped = identifier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const escaped = escapeRegex(identifier);
         const pattern = `<w13c-snippet[^>]*\\bidentifier\\s*=\\s*["']${escaped}["']`;
         const docs = await this.pages.find({ content: { $regex: pattern, $options: "i" } }).toArray();
         return docs.map(d => fromPageDoc(d)!);

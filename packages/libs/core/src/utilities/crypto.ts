@@ -3,7 +3,7 @@
  * storage: we keep the hash, never the raw token — if the DB leaks, the
  * tokens remain unusable without a preimage break.
  */
-export async function sha256Hex(input: string): Promise<string> {
+export async function sha256HexAsync(input: string): Promise<string> {
     const data = new TextEncoder().encode(input);
     const digest = await crypto.subtle.digest("SHA-256", data);
     return Array.from(new Uint8Array(digest))

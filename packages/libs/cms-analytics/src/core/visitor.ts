@@ -4,14 +4,14 @@
  * UTC day so visitors cannot be tracked across days. See §1/§4.4 of ANALYTICS_PLAN.md.
  */
 
-import { sha256Hex } from "@bernouy/core";
+import { sha256HexAsync } from "@bernouy/core";
 
 /** Per-day salt = sha256(secret | utcDay). Rotates daily; pair with `dayKey`. */
 export function dailySalt(secret: string, day: string): Promise<string> {
-    return sha256Hex(`${secret}|${day}`);
+    return sha256HexAsync(`${secret}|${day}`);
 }
 
 /** Anonymous visitor id = sha256(ip | ua | dailySalt). IP/UA never leave this call. */
 export function visitorId(ip: string, ua: string, salt: string): Promise<string> {
-    return sha256Hex(`${ip}|${ua}|${salt}`);
+    return sha256HexAsync(`${ip}|${ua}|${salt}`);
 }
