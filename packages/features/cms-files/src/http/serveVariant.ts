@@ -1,6 +1,7 @@
 import type { Runner } from "@bernouy/http-runner";
-import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
-import { variantKey } from "cms-delivery/core/images/imageVariants";
+import type { CmsFilesMetadataRepository } from "cms-files/interfaces/CmsFilesMetadataRepository";
+import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
+import { variantKey } from "cms-files/core/imageVariants";
 
 export type VariantServeDeps = {
     metadata:     CmsFilesMetadataRepository;

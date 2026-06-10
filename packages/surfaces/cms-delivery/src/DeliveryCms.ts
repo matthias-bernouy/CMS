@@ -6,15 +6,15 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import { TtlCache } from "@bernouy/http-runner";
-import { OptimizeQueue } from "cms-delivery/core/images/optimizeQueue";
-import { optimizePageImages } from "cms-delivery/core/images/optimizePageJob";
+import { OptimizeQueue } from "@bernouy/cms-files";
+import { optimizePageImages } from "@bernouy/cms-files";
 import { registerDeliveryEndpoints } from "cms-delivery/registerDeliveryEndpoints";
-import type { DeliveryRepository } from "./interfaces/DeliveryRepository";
+import type { ContentReader } from "@bernouy/cms-content";
 import type { HeadInjector } from "./interfaces/HeadInjector";
 
 export type DeliveryCmsConfig = {
     runner?:     Runner;
-    repository:  DeliveryRepository;
+    repository:  ContentReader;
     cache?:      Cache;
     /**
      * Extension hook called by `renderPage` for each rendered document.
@@ -89,7 +89,7 @@ export type DeliveryCmsConfig = {
 export default class DeliveryCms {
 
     private _runner:             Runner;
-    private _repository:         DeliveryRepository;
+    private _repository:         ContentReader;
     private _cache:              Cache;
     private _headInjectors:      readonly HeadInjector[];
     private _gateway?:           GatewayRepository;

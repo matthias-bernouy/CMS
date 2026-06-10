@@ -17,6 +17,7 @@ export type { TSystem }          from "cms-content/interfaces/settings";
 export { DEFAULT_SHELL, composeShell } from "cms-content/interfaces/settings";
 
 // ── Repository seam ────────────────────────────────────────────────────
+export type { ContentReader } from "cms-content/interfaces/ContentReader";
 export type {
     CmsRepository, BlocListItemResponse, PageLink, PageMeta, PagesQuery,
 } from "cms-content/interfaces/CmsRepository";

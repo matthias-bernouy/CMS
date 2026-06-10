@@ -29,6 +29,15 @@ export { uploadFile }        from "cms-files/core/uploadFile";
 export { updateFileContent } from "cms-files/core/updateFileContent";
 export { deleteFileTree }    from "cms-files/core/deleteFileTree";
 
+// ── Image variants (sharp — lazily imported at generation time) ────────
+export {
+    generateImageVariant, variantKey, manifestKey, readManifest, ensureVariants,
+    type VariantFormat, type VariantSpec, type VariantManifest,
+} from "cms-files/core/imageVariants";
+export { OptimizeQueue } from "cms-files/core/optimizeQueue";
+export { optimizePageImages, DEFAULT_LADDER, type OptimizeDeps } from "cms-files/core/optimizePageJob";
+
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
+export { serveVariantRequest, registerImageVariantEndpoint, type VariantServeDeps } from "cms-files/http/serveVariant";
 export { serveFilesRequest, type FilesServeDeps } from "cms-files/http/serveFilesRequest";
 export { registerFilesEndpoint }                  from "cms-files/http/registerFilesEndpoint";

@@ -3,7 +3,7 @@
  *
  * `DeliveryCms` mounts page resolution, bloc bundles, theme CSS, the
  * component runtime, and the default favicon under whatever runner the
- * consumer provides. Reads from a `DeliveryRepository` (the read-only
+ * consumer provides. Reads from a `ContentReader` (the read-only
  * subset of `CmsRepository`); a `MongoCmsRepository` / `InMemoryCmsRepository`
  * from `@bernouy/cms-shared` satisfies it by structural typing.
  *
@@ -12,5 +12,5 @@
 
 export { default as DeliveryCms }      from "cms-delivery/DeliveryCms";
 export type { DeliveryCmsConfig }      from "cms-delivery/DeliveryCms";
-export type { DeliveryRepository }     from "cms-delivery/interfaces/DeliveryRepository";
+export type { ContentReader }     from "@bernouy/cms-content";
 export type { HeadInjector, HeadInjectorContext } from "cms-delivery/interfaces/HeadInjector";

@@ -80,6 +80,9 @@ const fieldCrypto    = await createFieldCrypto(SCOPE_ID, secretCrypto, db);
 const repo              = new MongoCmsRepository(db);                              await repo.init();
 const filesMetadata     = new MongoCmsFilesMetadata(db);                           await filesMetadata.init();
 const filesBlob         = new LocalFsCmsFilesBlob(CMS_FILES_DIR);
+// Content-addressed store for the generated image variants (`<hash>-<w>.webp`).
+// Lives next to the originals; safe to wipe — variants regenerate on demand.
+const variantStore      = new LocalFsCmsFilesBlob(`${CMS_FILES_DIR}/.variants`);
 const users             = new MongoUsersRepository<CMS_ROLES>(db, fieldCrypto);
 const identityProviders = new MongoIdentityProviderRepository(db);
 const credentials       = new MongoLocalCredentialStore(db, fieldCrypto);            await credentials.init();
@@ -142,7 +145,7 @@ new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, fil
 // gateway instance as Control, so providers created in the admin are immediately
 // resolvable by the `/.cms/gateway/*` proxy.
 const deliveryRunner = new BunRunner();
-new DeliveryCms({ runner: deliveryRunner, repository: repo, cache, gateway, analytics, analyticsSalt: ANALYTICS_SALT_SECRET, filesMetadata, filesBlob });
+new DeliveryCms({ runner: deliveryRunner, repository: repo, cache, gateway, analytics, analyticsSalt: ANALYTICS_SALT_SECRET, filesMetadata, filesBlob, variantStore });
 
 controlRunner.start(CONTROL_PORT);
 deliveryRunner.start(DELIVERY_PORT);

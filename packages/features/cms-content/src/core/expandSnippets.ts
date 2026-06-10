@@ -1,5 +1,5 @@
-/** Minimal reader — both `CmsRepository` and delivery's `DeliveryRepository`
- *  satisfy it structurally. */
+/** Minimal reader — any `ContentReader` (and thus any `CmsRepository`)
+ *  satisfies it structurally. */
 export type SnippetReader = {
     getSnippetByIdentifier(identifier: string): Promise<{ content: string } | null>;
 };

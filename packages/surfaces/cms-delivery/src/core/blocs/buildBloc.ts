@@ -1,4 +1,4 @@
-import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
+import type { ContentReader } from "@bernouy/cms-content";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 
@@ -12,7 +12,7 @@ import { compress } from "@bernouy/http-runner";
  * swallows that into `Response.error()` and `renderPage`'s `Promise.all`
  * propagates it to the page's renderer fallback.
  */
-export async function generateBlocEntry(tag: string, repository: DeliveryRepository): Promise<CacheEntry> {
+export async function generateBlocEntry(tag: string, repository: ContentReader): Promise<CacheEntry> {
     const js = await repository.getBlocViewJS(tag);
     if (!js) throw new Error(`Bloc not found: ${tag}`);
     return compress(js, "text/javascript");
@@ -37,7 +37,7 @@ export async function generateBlocEntry(tag: string, repository: DeliveryReposit
  * group bundle still serves its surviving blocs if one is deleted between
  * manifest recomputes. Throws only if the set is empty or nothing resolves.
  */
-export async function generateBlocSetEntry(tags: string[], repository: DeliveryRepository): Promise<CacheEntry> {
+export async function generateBlocSetEntry(tags: string[], repository: ContentReader): Promise<CacheEntry> {
     const sorted = [...new Set(tags)].sort();
     if (sorted.length === 0) throw new Error("generateBlocSetEntry: empty tag set");
 

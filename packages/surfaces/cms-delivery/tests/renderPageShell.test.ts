@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import type { RenderContext } from "cms-delivery/core/html/RenderContext";
-import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
+import type { ContentReader } from "@bernouy/cms-content";
 import { DEFAULT_SHELL, type TPage, type TSystem } from "@bernouy/cms-content";
 
 const BINDING_CORE_URL = "/.cms/assets/cms-binding-core.js?v=core";
@@ -20,7 +20,7 @@ function makeCtx(shell: string): RenderContext {
             getSystem: async () => system,
             getBlocsList: async () => [],
             getSnippetByIdentifier: async () => null,
-        } as unknown as DeliveryRepository,
+        } as unknown as ContentReader,
         resolveAssets: async () => ({
             componentUrl:   "/.cms/assets/component.js?v=c",
             bindingCoreUrl: BINDING_CORE_URL,

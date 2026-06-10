@@ -12,7 +12,10 @@
     },
     "dependencies": {
         "@bernouy/http-runner": "workspace:*",
-        "@bernouy/cms-content": "workspace:*"
+        "@bernouy/cms-content": "workspace:*",
+        "sharp": "^0.34.5",
+        "@img/sharp-libvips-linux-x64": "^1.2.4",
+        "@img/sharp-linux-x64": "^0.34.5"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

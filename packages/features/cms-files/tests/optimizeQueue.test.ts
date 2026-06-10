@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { OptimizeQueue } from "cms-delivery/core/images/optimizeQueue";
+import { OptimizeQueue } from "@bernouy/cms-files";
 
 const tick = () => new Promise((r) => setTimeout(r, 5));
 const until = async (cond: () => boolean) => { while (!cond()) await tick(); };

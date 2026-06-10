@@ -1,5 +1,5 @@
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
-import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
+import type { ContentReader } from "@bernouy/cms-content";
 import type { HeadInjector } from "cms-delivery/interfaces/HeadInjector";
 import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
 
@@ -15,7 +15,7 @@ import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
  * to inject into `<head>`.
  */
 export type RenderContext = {
-    repository: DeliveryRepository;
+    repository: ContentReader;
     resolveAssets: (usedTags: string[]) => Promise<AssetsManifest>;
     /** URL emitted as `<link rel="icon">` when `site.favicon` is empty.
      *  Runtime: `<cmsPathPrefix>/assets/favicon`. Build: CDN URL of the

@@ -1,5 +1,5 @@
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
-import { readManifest, type VariantManifest } from "cms-delivery/core/images/imageVariants";
+import { readManifest, type VariantManifest } from "@bernouy/cms-files";
 
 /** Matches `…/.cms/files/by-id/<id>` (any tenant prefix), capturing the id. */
 const BY_ID_RE = /\/\.cms\/files\/by-id\/([^/?#]+)/;

@@ -1,5 +1,6 @@
-import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
-import { ensureVariants } from "cms-delivery/core/images/imageVariants";
+import type { CmsFilesMetadataRepository } from "cms-files/interfaces/CmsFilesMetadataRepository";
+import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
+import { ensureVariants } from "cms-files/core/imageVariants";
 
 /** Placeholder width ladder (B3). B4 replaces this with headless-measured,
  *  per-image widths; `ensureVariants` already caps each rung at the source. */

@@ -5,11 +5,11 @@ import { TtlCache } from "@bernouy/http-runner";
 import { type CacheEntry } from "@bernouy/http-runner";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
-import { readManifest } from "cms-delivery/core/images/imageVariants";
-import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
+import { readManifest } from "@bernouy/cms-files";
+import type { ContentReader } from "@bernouy/cms-content";
 
 // optimizePage never touches the repository, so an empty stub is fine.
-const stubRepo = {} as unknown as DeliveryRepository;
+const stubRepo = {} as unknown as ContentReader;
 const fakeEntry = (): CacheEntry => { const b = new Uint8Array([1]); return { raw: b, brotli: b, gzip: b, contentType: "text/html", hash: "x" }; };
 const until = async (cond: () => boolean) => { for (let i = 0; i < 300 && !cond(); i++) await new Promise((r) => setTimeout(r, 10)); };
 

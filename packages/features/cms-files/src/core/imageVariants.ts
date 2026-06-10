@@ -1,4 +1,4 @@
-import type { CmsFilesBlobStore } from "@bernouy/cms-files";
+import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 
 /** V1 ships WebP only (fast encode); AVIF is a later add. */
 export type VariantFormat = "webp";

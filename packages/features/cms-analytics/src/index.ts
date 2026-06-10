@@ -24,3 +24,4 @@ export { MongoAnalyticsStore, type MongoAnalyticsStoreConfig } from "./default-i
 
 // ── HTTP API (mount in an app's admin-guarded group) ──
 export { registerAnalyticsApi } from "./core/registerAnalyticsApi";
+export { buildPageViewEvent } from "./core/buildPageViewEvent";

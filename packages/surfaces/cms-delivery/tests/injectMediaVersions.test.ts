@@ -3,7 +3,7 @@ import { parseHTML } from "linkedom";
 import type { CmsFilesMetadataRepository, FilesItem } from "@bernouy/cms-files";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-files";
 import { injectMediaVersions } from "cms-delivery/core/html/injectMediaVersions";
-import { manifestKey } from "cms-delivery/core/images/imageVariants";
+import { manifestKey } from "@bernouy/cms-files";
 
 /** Files metadata stub: id → contentHash. A missing id resolves to `null`; a
  *  present id with `undefined` hash resolves to a file with no contentHash. */

@@ -1,9 +1,11 @@
-import type { TPage, TSnippet, TSystem } from "@bernouy/cms-content";
+import type { TPage } from "cms-content/interfaces/pages";
+import type { TSnippet } from "cms-content/interfaces/snippets";
+import type { TSystem } from "cms-content/interfaces/settings";
 
 /**
- * Read-only data contract consumed by the Delivery layer. Mirrors the subset
- * of `CmsRepository` that public rendering needs — no create/update/delete
- * paths, no editor bundles, no templates.
+ * Read-only view of the content aggregate — the subset public rendering
+ * needs: no create/update/delete paths, no editor bundles, no templates.
+ * `CmsRepository` extends it, so any repository satisfies a reader.
  *
  * Unlike the admin side, Delivery addresses pages by path only: identifier
  * variants are an authoring concern and don't exist in the public URL space.
@@ -12,7 +14,7 @@ import type { TPage, TSnippet, TSystem } from "@bernouy/cms-content";
  * to satisfy this contract; longer term, Delivery can bypass the admin DB
  * entirely and read from a projection (file export, S3 snapshot, etc.).
  */
-export interface DeliveryRepository {
+export interface ContentReader {
 
     // PAGE
     getPage(path: string): Promise<TPage | null>;

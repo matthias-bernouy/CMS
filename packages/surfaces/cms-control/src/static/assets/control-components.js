@@ -9783,7 +9783,7 @@ p9r-tag:hover {
       group: props.group
     });
   }
-  // ../../features/cms-shared/src/constants/editorAttributes.ts
+  // ../../features/cms-content/src/core/constants/editorAttributes.ts
   var P9R_ATTR = {
     ACTION: {
       DISABLE_DELETE: "p9r-action-disable-delete",
@@ -11827,12 +11827,11 @@ cms-endpoints-input .ep-add:hover {
   }
   customElements.define("cms-provider-actions", CmsProviderActions);
 
-  // src/core/dom/escapeHtml.ts
-  function escapeHtml(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  // ../../foundation/http-runner/src/core/html.ts
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
   var escapeAttr = escapeHtml;
-
   // src/components/admin/RoleSelect/RoleSelect.ts
   class CmsRoleSelect extends HTMLElement {
     static formAssociated = true;
@@ -22044,16 +22043,16 @@ button.active svg {
       });
     }
     _setupDelete() {
-      const redirect = this.getAttribute("delete-redirect");
+      const redirect2 = this.getAttribute("delete-redirect");
       const confirmForm = this.shadowRoot?.querySelector("#delete-form");
-      if (!confirmForm || !redirect)
+      if (!confirmForm || !redirect2)
         return;
       const id2 = new URL(window.location.href).searchParams.get("id");
       if (!id2)
         return;
       confirmForm.setAttribute("target", `${this.url}?id=${encodeURIComponent(id2)}`);
       confirmForm.setAttribute("method", "DELETE");
-      confirmForm.setAttribute("redirect", redirect);
+      confirmForm.setAttribute("redirect", redirect2);
       confirmForm.setAttribute("message", this.getAttribute("delete-message") || "Delete this permanently? This cannot be undone.");
       const label = this.getAttribute("delete-label");
       if (label)

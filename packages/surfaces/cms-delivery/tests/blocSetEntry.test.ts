@@ -1,10 +1,10 @@
 import { describe, test, expect } from "bun:test";
 import { generateBlocSetEntry } from "cms-delivery/core/blocs/buildBloc";
-import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
+import type { ContentReader } from "@bernouy/cms-content";
 
 /** Minimal repository stub — only `getBlocViewJS` is exercised here. */
-function repoWith(map: Record<string, string | null>): DeliveryRepository {
-    return { getBlocViewJS: async (tag: string) => map[tag] ?? null } as unknown as DeliveryRepository;
+function repoWith(map: Record<string, string | null>): ContentReader {
+    return { getBlocViewJS: async (tag: string) => map[tag] ?? null } as unknown as ContentReader;
 }
 const decode = (e: { raw: Uint8Array }) => new TextDecoder().decode(e.raw);
 

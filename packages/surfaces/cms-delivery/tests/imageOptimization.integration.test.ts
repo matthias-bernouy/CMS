@@ -3,8 +3,8 @@ import { parseHTML } from "linkedom";
 import sharp from "sharp";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-files";
 import { injectMediaVersions } from "cms-delivery/core/html/injectMediaVersions";
-import { optimizePageImages } from "cms-delivery/core/images/optimizePageJob";
-import { serveVariantRequest } from "cms-delivery/core/images/serveVariant";
+import { optimizePageImages } from "@bernouy/cms-files";
+import { serveVariantRequest } from "@bernouy/cms-files";
 
 /**
  * End-to-end: a real image flows through the REAL render → enqueue → generate →

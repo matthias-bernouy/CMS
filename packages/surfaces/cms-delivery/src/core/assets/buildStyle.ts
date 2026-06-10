@@ -1,4 +1,4 @@
-import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
+import type { ContentReader } from "@bernouy/cms-content";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 
@@ -8,7 +8,7 @@ import { compress } from "@bernouy/http-runner";
  * augmentation (runtime tokens, inlined critical CSS, etc.) belongs here
  * rather than in the endpoint handler.
  */
-export async function generateStyleEntry(repository: DeliveryRepository): Promise<CacheEntry> {
+export async function generateStyleEntry(repository: ContentReader): Promise<CacheEntry> {
     const settings = await repository.getSystem();
     return compress(settings.site?.theme || "", "text/css");
 }

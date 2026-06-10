@@ -13,10 +13,7 @@
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
-        "@img/sharp-libvips-linux-x64": "^1.2.4",
-        "@img/sharp-linux-x64": "^0.34.5",
         "linkedom": "^0.18.12",
-        "sharp": "^0.34.5",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-content": "workspace:*"

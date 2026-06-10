@@ -1,7 +1,7 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-files";
-import { serveVariantRequest } from "cms-delivery/core/images/serveVariant";
-import { variantKey } from "cms-delivery/core/images/imageVariants";
+import { serveVariantRequest } from "@bernouy/cms-files";
+import { variantKey } from "@bernouy/cms-files";
 
 const PREFIX = "/.cms/img/";
 const enc = new TextEncoder();
