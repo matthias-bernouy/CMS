@@ -18,8 +18,9 @@ export function validateUploadSize(size: number): void {
     }
 }
 
-/** Folder/file name rule: required, trimmed. Returns the normalized name. */
-export function validateFolderName(name: unknown): string {
+/** Item (folder/file) name rule: required, trimmed. Returns the normalized
+ *  name. Enforced at the seam by `ValidatingCmsFilesMetadata`. */
+export function validateItemName(name: unknown): string {
     if (typeof name !== "string" || !name.trim()) {
         throw new FileValidationError("name", "required");
     }

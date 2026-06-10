@@ -1,8 +1,9 @@
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { HTTP_METHODS, type HTTPMethod, type GatewayMeta, type DataShape, type EndpointResponse, type EndpointHeader } from "@bernouy/cms-gateway";
-import { parseShapeField } from "./parseDataShape";
-import { pathParamsFromUrl, parseParamsBlob, parseMetaField, slugify, buildMeta, isParsableUrl, type EndpointParamDto } from "./gatewayValidators";
+import { HTTP_METHODS, isParsableUrl, type HTTPMethod, type GatewayMeta, type DataShape, type EndpointResponse, type EndpointHeader } from "@bernouy/cms-gateway";
+import { slugify } from "cms-control/core/validation/slugify";
+import { parseShapeField } from "./parseShapeField";
+import { pathParamsFromUrl, parseParamsBlob, parseMetaField, buildMeta, type EndpointParamDto } from "./gatewayValidators";
 import { parseResponsesBlob, parseHeadersBlob } from "./blobParsers";
 
 export type EndpointDto = {

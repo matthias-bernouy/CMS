@@ -19,10 +19,16 @@ export type EndpointHeader = {
     source: HeaderSource;
 };
 
+/** Where an input param goes in the upstream request. Runtime list (single source
+ *  of truth) so callers can validate an incoming string against it; `ParamIn` is
+ *  derived. `'path'` → templated into `targetUrl` as `{name}`. */
+export const PARAM_INS = ['path', 'query', 'header'] as const;
+export type ParamIn = typeof PARAM_INS[number];
+
 /** An input parameter and its location in the upstream request. */
 export type EndpointParam = {
     name: string;
-    in: 'path' | 'query' | 'header';   // 'path' → templated into `targetUrl` as {name}
+    in: ParamIn;
     required?: boolean;
     description?: string;
     schema: DataShape;

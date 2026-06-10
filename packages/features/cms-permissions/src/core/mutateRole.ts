@@ -3,13 +3,14 @@ import type { RolesRepository, RoleHolderCounter } from "cms-permissions/interfa
 import { RoleValidationError, RoleConflictError } from "cms-permissions/core/errors";
 
 /** Role id format: starts with a letter, then 1-31 of [a-z0-9_-]. */
-const ID_RE = /^[a-z][a-z0-9_-]{1,31}$/;
+export const ROLE_ID_RE = /^[a-z][a-z0-9_-]{1,31}$/;
 
 export type RoleDto = { id: string; label: string; grants: Grant[] };
 
 /** Grants rule: CMS-namespaced permissions (`urn:cms:*`) must exist in the
- *  catalogue; other ids (gateway endpoint urns) are accepted as-is. */
-function validateGrants(grants: Grant[]): void {
+ *  catalogue; other ids (gateway endpoint urns) are accepted as-is. Shared with
+ *  `ValidatingRolesRepository` (the unbypassable seam enforcement). */
+export function validateGrants(grants: Grant[]): void {
     for (const g of grants) {
         if (g.permission.startsWith("urn:cms:") && !CMS_PERMISSIONS.includes(g.permission)) {
             throw new RoleValidationError("grants", `unknown CMS permission ${g.permission}`);
@@ -38,7 +39,7 @@ export async function upsertRole(roles: RolesRepository, dto: RoleDto): Promise<
             ...(existing.builtin ? {} : { label: dto.label }),   // built-in labels are fixed
         };
     } else {
-        if (!ID_RE.test(dto.id)) {
+        if (!ROLE_ID_RE.test(dto.id)) {
             throw new RoleValidationError("id", "use 2-32 chars: a-z, 0-9, -, _ (start with a letter)");
         }
         saved = { id: dto.id, label: dto.label, grants: dto.grants };

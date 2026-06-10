@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { parseDataShape, parseShapeField } from "cms-control/core/validation/gateway/parseDataShape";
-import type { DataShape } from "@bernouy/cms-gateway";
+import { parseDataShape } from "cms-gateway/core/parseDataShape";
+import type { DataShape } from "cms-gateway/interfaces/DataShape";
 
 describe("parseDataShape", () => {
     test("scalar leaf passes through", () => {
@@ -41,16 +41,23 @@ describe("parseDataShape", () => {
         expect(parseDataShape({ type: "object", properties: {} }, "body")).toEqual({ type: "object" });
     });
 
-    test("invalid type → InvalidParam", () => {
+    test("invalid type → GatewayValidationError", () => {
         expect(() => parseDataShape({ type: "datetime" } as any, "body")).toThrow(/body\.type/);
     });
 
-    test("non-object value → InvalidParam", () => {
+    test("non-object value → GatewayValidationError", () => {
         expect(() => parseDataShape("nope" as any, "body")).toThrow(/body/);
         expect(() => parseDataShape(["x"] as any, "body")).toThrow(/body/);
     });
 
-    test("empty property name → InvalidParam", () => {
+    test("unsafe property name (__proto__/constructor/prototype) → GatewayValidationError", () => {
+        const props = JSON.parse('{"__proto__": {"type": "string"}}');
+        expect(() => parseDataShape({ type: "object", properties: props }, "body")).toThrow(/unsafe property name/);
+        expect(() => parseDataShape({ type: "object", properties: { constructor: { type: "string" } } } as any, "body"))
+            .toThrow(/unsafe property name/);
+    });
+
+    test("empty property name → GatewayValidationError", () => {
         expect(() => parseDataShape({ type: "object", properties: { "": { type: "string" } } }, "body"))
             .toThrow(/body\.properties/);
     });
@@ -62,30 +69,18 @@ describe("parseDataShape", () => {
         expect(() => parseDataShape(wrap(50), "body")).toThrow(/too deep/);
     });
 
-    test("a too-wide object (node-count cap) → InvalidParam", () => {
+    test("a too-wide object (node-count cap) → GatewayValidationError", () => {
         const properties: Record<string, unknown> = {};
         for (let i = 0; i < 600; i++) properties[`f${i}`] = { type: "string" };
         expect(() => parseDataShape({ type: "object", properties } as any, "body")).toThrow(/too many nodes/);
     });
-});
 
-describe("parseShapeField", () => {
-    test("blank / null → undefined (no shape)", () => {
-        expect(parseShapeField("", "body")).toBeUndefined();
-        expect(parseShapeField(null, "body")).toBeUndefined();
-        expect(parseShapeField(undefined, "body")).toBeUndefined();
-    });
-
-    test("valid JSON string → DataShape", () => {
-        expect(parseShapeField(JSON.stringify({ type: "object", properties: { a: { type: "string" } } }), "body"))
-            .toEqual({ type: "object", properties: { a: { type: "string" } } });
-    });
-
-    test("malformed JSON → InvalidParam", () => {
-        expect(() => parseShapeField("{not json", "body")).toThrow(/body/);
-    });
-
-    test("non-string value → InvalidParam", () => {
-        expect(() => parseShapeField({ type: "string" } as any, "body")).toThrow(/body/);
+    test("the thrown error carries .status 400", () => {
+        try {
+            parseDataShape({ type: "datetime" } as any, "body");
+            expect.unreachable();
+        } catch (err) {
+            expect((err as { status?: number }).status).toBe(400);
+        }
     });
 });

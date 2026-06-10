@@ -1,26 +1,23 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { validateProvider } from "@bernouy/cms-gateway";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import type { ProviderDto } from "../validation/gateway/parseProviderDto";
 import { toProvider } from "./toProvider";
 
 /**
- * Creates a gateway provider. `validateProvider` runs before the write (urn shape,
- * endpoint membership, duplicate endpoint urns, targetUrl parseability). A duplicate
- * provider urn is mapped to a 400 — the repo throws a plain Error (InMemory) /
- * E11000 (Mongo), neither of which carries a `.status`, so without the mapping it
+ * Creates a gateway provider. The domain rules (urn shape, endpoint membership,
+ * duplicate urns, targetUrl, header/param/status policies) are enforced by the
+ * `ValidatingGatewayRepository` decorator wired at the composition root — its
+ * `GatewayValidationError` carries `.status` 400. A duplicate provider urn is
+ * mapped to a 400 here — the repo throws a plain Error (InMemory) / E11000
+ * (Mongo), neither of which carries a `.status`, so without the mapping it
  * would surface as a 500.
  */
 export async function createProvider(cms: ControlCms, dto: ProviderDto): Promise<void> {
-    const provider = toProvider(dto);
-    const errs = validateProvider(provider);
-    if (errs.length) throw new InvalidParam("provider", errs.join("; "));
-
     try {
-        await cms.gateway.createProvider(provider);
+        await cms.gateway.createProvider(toProvider(dto));
     } catch (err) {
         if (isDuplicateKey(err)) throw new InvalidParam("urn", "provider already exists");
-        throw err;   // genuine infra error → propagate (500), don't mislabel it
+        throw err;   // validation (.status 400) or genuine infra error → propagate
     }
 }
 

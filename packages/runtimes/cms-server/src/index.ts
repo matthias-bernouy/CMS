@@ -14,15 +14,15 @@ import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
 import { ValidatingSecretStore } from "@bernouy/cms-secrets";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
-import { MongoGatewayRepository } from "@bernouy/cms-gateway";
+import { MongoGatewayRepository, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoClient } from "mongodb";
 import { InMemoryCache } from "@bernouy/http-runner";
-import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
+import { LocalFsCmsFilesBlob, ValidatingCmsFilesMetadata } from "@bernouy/cms-files";
 import { MongoCmsFilesMetadata } from "@bernouy/cms-files/mongo";
 import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
-import { type CMS_ROLES } from "@bernouy/cms-permissions";
+import { type CMS_ROLES, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 import { MongoRolesRepository } from "@bernouy/cms-permissions/mongo";
 import {
     SignedCookieCodec,
@@ -82,7 +82,8 @@ const fieldCrypto    = await createFieldCrypto(SCOPE_ID, secretCrypto, db);
 
 const innerRepo         = new MongoCmsRepository(db);                              await innerRepo.init();
 const repo              = new ValidatingCmsRepository(innerRepo);
-const filesMetadata     = new MongoCmsFilesMetadata(db);                           await filesMetadata.init();
+const mongoFilesMeta    = new MongoCmsFilesMetadata(db);                           await mongoFilesMeta.init();
+const filesMetadata     = new ValidatingCmsFilesMetadata(mongoFilesMeta);
 const filesBlob         = new LocalFsCmsFilesBlob(CMS_FILES_DIR);
 // Content-addressed store for the generated image variants (`<hash>-<w>.webp`).
 // Lives next to the originals; safe to wipe — variants regenerate on demand.
@@ -91,10 +92,12 @@ const users             = new MongoUsersRepository<CMS_ROLES>(db, fieldCrypto);
 const identityProviders = new MongoIdentityProviderRepository(db);
 const credentials       = new MongoLocalCredentialStore(db, fieldCrypto);            await credentials.init();
 const pats              = new MongoPatRepository(db);                              await pats.init();
-const gateway           = new MongoGatewayRepository(db);                          await gateway.init();
+const mongoGateway      = new MongoGatewayRepository(db);                          await mongoGateway.init();
+const gateway           = new ValidatingGatewayRepository(mongoGateway);
 const analytics         = new MongoAnalyticsStore(db);                             await analytics.init();
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
-const roles             = new MongoRolesRepository(db.collection("cms_roles"));    await roles.init();
+const mongoRoles        = new MongoRolesRepository(db.collection("cms_roles"));    await mongoRoles.init();
+const roles             = new ValidatingRolesRepository(mongoRoles);
 const secrets           = new ValidatingSecretStore(new EncryptedMongoSecretStore({
     scopeId:      SCOPE_ID,
     collection:   db.collection("cms_secrets"),

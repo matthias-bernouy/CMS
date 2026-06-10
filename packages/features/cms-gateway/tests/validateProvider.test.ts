@@ -35,6 +35,63 @@ describe("validateProvider", () => {
         const errs = validateProvider(provider({ endpoints: [ep("urn:shop:x", "not a url")] }));
         expect(errs.some(e => e.includes("targetUrl"))).toBe(true);
     });
+    test("unknown HTTP method", () => {
+        const errs = validateProvider(provider({ endpoints: [{ ...ep("urn:shop:x"), method: "FETCH" as any }] }));
+        expect(errs.some(e => e.includes("méthode invalide"))).toBe(true);
+    });
+    test("param with an unknown `in`", () => {
+        const e = { ...ep("urn:shop:x"), input: { params: [{ name: "q", in: "cookie" as any, schema: { type: "string" as const } }] } };
+        const errs = validateProvider(provider({ endpoints: [e] }));
+        expect(errs.some(m => m.includes("emplacement de paramètre invalide"))).toBe(true);
+    });
+    test("duplicate param name", () => {
+        const p = { name: "q", in: "query" as const, schema: { type: "string" as const } };
+        const e = { ...ep("urn:shop:x"), input: { params: [p, { ...p }] } };
+        const errs = validateProvider(provider({ endpoints: [e] }));
+        expect(errs.some(m => m.includes("paramètre dupliqué"))).toBe(true);
+    });
+    test("header-param with a forbidden name (host/cookie) is rejected", () => {
+        const e = { ...ep("urn:shop:x"), input: { params: [{ name: "Host", in: "header" as const, schema: { type: "string" as const } }] } };
+        const errs = validateProvider(provider({ endpoints: [e] }));
+        expect(errs.some(m => m.includes("paramètre header interdit"))).toBe(true);
+    });
+    test("config header: forbidden name, control-char value, secret without ref", () => {
+        const e = { ...ep("urn:shop:x"), headers: [
+            { name: "cookie",   source: { from: "static" as const, value: "x" } },
+            { name: "X-Bad",    source: { from: "static" as const, value: "a\r\nb" } },
+            { name: "X-Secret", source: { from: "secret" as const, ref: "" } },
+        ] };
+        const errs = validateProvider(provider({ endpoints: [e] }));
+        expect(errs.some(m => m.includes("nom de header interdit"))).toBe(true);
+        expect(errs.some(m => m.includes("valeur de header invalide"))).toBe(true);
+        expect(errs.some(m => m.includes("header secret sans ref"))).toBe(true);
+    });
+    test("duplicate header name (case-insensitive)", () => {
+        const e = { ...ep("urn:shop:x"), headers: [
+            { name: "X-Api-Key", source: { from: "static" as const, value: "a" } },
+            { name: "x-api-key", source: { from: "static" as const, value: "b" } },
+        ] };
+        const errs = validateProvider(provider({ endpoints: [e] }));
+        expect(errs.some(m => m.includes("header dupliqué"))).toBe(true);
+    });
+    test("invalid + duplicate response status", () => {
+        const e = { ...ep("urn:shop:x"), output: [{ status: "200" }, { status: "200" }, { status: "2xx" }] };
+        const errs = validateProvider(provider({ endpoints: [e] }));
+        expect(errs.some(m => m.includes("status de réponse invalide"))).toBe(true);
+        expect(errs.some(m => m.includes("status de réponse dupliqué"))).toBe(true);
+    });
+    test("a fully-furnished valid endpoint stays valid", () => {
+        const e = {
+            ...ep("urn:shop:x"),
+            input: { params: [
+                { name: "q", in: "query" as const, schema: { type: "string" as const } },
+                { name: "X-Trace-Id", in: "header" as const, schema: { type: "string" as const } },
+            ] },
+            headers: [{ name: "Authorization", source: { from: "secret" as const, ref: "${KEY}" } }],
+            output: [{ status: "200" }, { status: "default" }],
+        };
+        expect(validateProvider(provider({ endpoints: [e] }))).toEqual([]);
+    });
 });
 
 describe("endpointBelongsToProvider", () => {

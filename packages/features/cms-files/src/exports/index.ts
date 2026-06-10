@@ -20,10 +20,11 @@ export { InMemoryCmsFilesMetadata }            from "cms-files/default-implement
 export { InMemoryCmsFilesBlob }                from "cms-files/default-implementation/InMemoryCmsFilesBlob";
 export { LocalFsCmsFilesBlob }                 from "cms-files/default-implementation/LocalFsCmsFilesBlob";
 export { LocalFsCmsFiles, type ReconcileResult } from "cms-files/default-implementation/LocalFsCmsFiles";
+export { ValidatingCmsFilesMetadata }            from "cms-files/core/ValidatingCmsFilesMetadata";
 
 // ── Core ───────────────────────────────────────────────────────────────
 export { sha256Hex } from "cms-files/core/hashBytes";
-export { MAX_UPLOAD_BYTES, validateUploadSize, validateFolderName, FileValidationError } from "cms-files/core/validation";
+export { MAX_UPLOAD_BYTES, validateUploadSize, validateItemName, FileValidationError } from "cms-files/core/validation";
 
 // ── File lifecycle (domain rules — create w/ rollback, in-place update, tree delete) ─
 export { uploadFile }        from "cms-files/core/uploadFile";

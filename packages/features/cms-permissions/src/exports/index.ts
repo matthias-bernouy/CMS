@@ -23,7 +23,8 @@ export type { CMS_ROLES } from "cms-permissions/core/roles";
 // ── Roles storage seam ─────────────────────────────────────────────────
 export type { RolesRepository, RoleHolderCounter } from "cms-permissions/interfaces/RolesRepository";
 export { InMemoryRolesRepository } from "cms-permissions/default-implementation/memory/InMemoryRolesRepository";
+export { ValidatingRolesRepository } from "cms-permissions/core/ValidatingRolesRepository";
 
 // ── Role mutation rules ────────────────────────────────────────────────
-export { upsertRole, deleteRole, type RoleDto } from "cms-permissions/core/mutateRole";
+export { upsertRole, deleteRole, validateGrants, ROLE_ID_RE, type RoleDto } from "cms-permissions/core/mutateRole";
 export { RoleValidationError, RoleConflictError } from "cms-permissions/core/errors";

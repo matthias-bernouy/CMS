@@ -4,6 +4,24 @@ export type BuildUpstream =
     | { ok: true;  url: string; headers: Record<string, string> }
     | { ok: false; status: 400 | 500 | 502; message: string };
 
+/** The `{name}` placeholder grammar of `targetUrl` — what this module substitutes. */
+const PATH_PLACEHOLDER = /\{(\w+)\}/g;
+
+/** The `{name}` placeholders of a `targetUrl`, deduped in URL order. Each is a
+ *  DERIVED required `in:'path'` param — the config side builds its param list
+ *  from this so a posted param can never shadow a placeholder. */
+export function extractPathParamNames(targetUrl: string): string[] {
+    const out: string[] = [];
+    const seen = new Set<string>();
+    for (const m of targetUrl.matchAll(PATH_PLACEHOLDER)) {
+        const name = m[1]!;
+        if (seen.has(name)) continue;
+        seen.add(name);
+        out.push(name);
+    }
+    return out;
+}
+
 /**
  * Builds the upstream URL for an endpoint from the incoming input values (read
  * from the public request's query string). PURE.

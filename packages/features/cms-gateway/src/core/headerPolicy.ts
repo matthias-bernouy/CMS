@@ -18,3 +18,21 @@ export const HEADER_NAME_RE = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
 
 export const isForbiddenHeaderName = (n: string): boolean => FORBIDDEN_REQUEST_HEADERS.has(n.toLowerCase());
 export const isValidHeaderName = (n: string): boolean => HEADER_NAME_RE.test(n);
+
+/** Max stored request headers per endpoint — a defensive cap (the editor never
+ *  authors near it), mirroring `parseDataShape`'s bounding intent. */
+export const MAX_ENDPOINT_HEADERS = 50;
+/** Max length of a `static` header value. */
+export const MAX_HEADER_VALUE_LENGTH = 8192;
+
+/** A `static` header value rule: capped length and no control char other than
+ *  HTAB (0x09) — CR/LF/NUL etc. would make the executor's `Headers.set` throw
+ *  at request time, so they are rejected at validation. */
+export function isValidHeaderValue(v: string): boolean {
+    if (v.length > MAX_HEADER_VALUE_LENGTH) return false;
+    for (let i = 0; i < v.length; i++) {
+        const c = v.charCodeAt(i);
+        if ((c < 0x20 && c !== 0x09) || c === 0x7f) return false;
+    }
+    return true;
+}

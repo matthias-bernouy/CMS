@@ -18,12 +18,12 @@ import { loadDevGateways } from "./dev-server/gateways";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
-import { LocalFsCmsFiles } from "@bernouy/cms-files";
+import { LocalFsCmsFiles, ValidatingCmsFilesMetadata } from "@bernouy/cms-files";
 import { InMemoryUsersRepository } from "@bernouy/cms-auth";
 import { InMemoryIdentityProviderRepository } from "@bernouy/cms-auth";
 import { InMemoryLocalCredentialStore } from "@bernouy/cms-auth";
 import { InMemoryPatRepository } from "@bernouy/cms-auth";
-import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
+import { InMemoryGatewayRepository, ValidatingGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
 import type { CMS_ROLES } from "@bernouy/cms-permissions";
 import { loadPushConfig } from "./push/shared/config";
 
@@ -101,6 +101,9 @@ export default async function CLI_dev(args: string[]) {
     if (recon.minted.length)  console.log(`→ Minted ids for ${recon.minted.length} new file(s)/folder(s).`);
     if (recon.deleted.length) console.log(`→ Dropped ${recon.deleted.length} orphaned registry entry/entries.`);
     for (const e of recon.errors) console.warn(`  ! ${e.path}: ${e.error}`);
+    // The metadata WRITE seam goes through the validating decorator (name rule);
+    // `files` stays the blob store + the reconcile()-capable raw handle.
+    const filesMetadata = new ValidatingCmsFilesMetadata(files);
 
     // Auth surfaces (in-memory for dev): the membership store (authz) seeded
     // with a couple of users so the Settings → Users tab shows data, plus an
@@ -123,7 +126,7 @@ export default async function CLI_dev(args: string[]) {
     // (one Provider manifest per file) and shared by BOTH Control (admin CRUD +
     // preview) and Delivery (the public proxy at `/.cms/gateway/*`), so the
     // create→callable-in-Delivery chain is exercised end-to-end.
-    const gateway = new InMemoryGatewayRepository();
+    const gateway = new ValidatingGatewayRepository(new InMemoryGatewayRepository());
     const gatewayProviders = await loadDevGateways(config.siteDir);
     if (gatewayProviders.length > 0) {
         const { created, skipped } = await seedProviders(gateway, gatewayProviders);
@@ -135,7 +138,7 @@ export default async function CLI_dev(args: string[]) {
     // matches first (the group catches `/` as a fallback).
     runner.addEndpoint("GET", "/dev/reload", sseHandler(reload));
 
-    const cms = new ControlCms(runner, repo, auth, {}, undefined, undefined, files, files, users, identityProviders, pats, credentials, gateway);
+    const cms = new ControlCms(runner, repo, auth, {}, undefined, undefined, filesMetadata, files, users, identityProviders, pats, credentials, gateway);
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
     // still need to drop the editor-script (consolidated bundle) and the
@@ -158,7 +161,7 @@ export default async function CLI_dev(args: string[]) {
     const deliveryPort = port + 1;
     const deliveryRunner = new BunRunner();
     const variantStore = new LocalFsCmsFilesBlob(`${config.siteDir}/.cms-variants`);
-    new DeliveryCms({ runner: deliveryRunner, repository: repo, filesMetadata: files, filesBlob: files, variantStore, gateway });
+    new DeliveryCms({ runner: deliveryRunner, repository: repo, filesMetadata, filesBlob: files, variantStore, gateway });
     deliveryRunner.start(deliveryPort);
 
     console.log("");

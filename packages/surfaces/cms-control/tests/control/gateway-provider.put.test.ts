@@ -1,10 +1,11 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
 import putGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.put";
-import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
+import { InMemoryGatewayRepository, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
 
+// Decorated like the composition roots — the domain rules live in the repo seam.
 const makeCms = () => {
-    const gateway = new InMemoryGatewayRepository();
+    const gateway = new ValidatingGatewayRepository(new InMemoryGatewayRepository());
     return { cms: { gateway } as any, gateway };
 };
 

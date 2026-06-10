@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { slugify } from "cms-control/core/validation/gateway/gatewayValidators";
+import { slugify } from "cms-control/core/validation/slugify";
 
 describe("slugify", () => {
     test("lowercases and kebab-cases spaces", () => {

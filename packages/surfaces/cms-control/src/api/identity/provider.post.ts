@@ -4,7 +4,7 @@ import { validateProviderKind } from "@bernouy/cms-auth";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { slugify } from "cms-control/core/validation/gateway/gatewayValidators";
+import { slugify } from "cms-control/core/validation/slugify";
 
 
 /** POST /api/identity/provider — create a login provider (config ONLY; the

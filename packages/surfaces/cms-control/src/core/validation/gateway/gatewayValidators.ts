@@ -1,12 +1,11 @@
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import type { GatewayMeta } from "@bernouy/cms-gateway";
+import type { GatewayMeta, ParamIn } from "@bernouy/cms-gateway";
+import { PARAM_INS, extractPathParamNames } from "@bernouy/cms-gateway";
 
-/** V1 param value types (scalars); the full recursive DataShape is reserved for the body. */
+/** V1 param value types (scalars) — an EDITOR restriction; the gateway model
+ *  allows any `DataShape`, the full recursive shape is reserved for the body. */
 export const PARAM_TYPES = ["string", "number", "boolean"] as const;
 export type ParamType = typeof PARAM_TYPES[number];
-/** Where a param goes upstream (see `buildUpstreamUrl`). */
-export const PARAM_INS = ["path", "query", "header"] as const;
-export type ParamIn = typeof PARAM_INS[number];
 export type EndpointParamDto = {
     name: string;
     in: ParamIn;
@@ -15,23 +14,8 @@ export type EndpointParamDto = {
     description?: string;   // round-tripped verbatim (not editable yet) — never wiped on edit
 };
 /** `{name}` placeholders in a URL are DERIVED required `in:'path'` params, deduped in URL order. */
-const PATH_PLACEHOLDER = /\{(\w+)\}/g;
 export function pathParamsFromUrl(targetUrl: string): EndpointParamDto[] {
-    const out: EndpointParamDto[] = [];
-    const seen = new Set<string>();
-    for (const m of targetUrl.matchAll(PATH_PLACEHOLDER)) {
-        const name = m[1]!;
-        if (seen.has(name)) continue;
-        seen.add(name);
-        out.push({ name, in: "path", type: "string", required: true });
-    }
-    return out;
-}
-/** Same slug shape as the identity-provider create flow (lowercase kebab). */
-export const slugify = (s: string): string =>
-    s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-export function isParsableUrl(value: string): boolean {
-    try { new URL(value); return true; } catch { return false; }
+    return extractPathParamNames(targetUrl).map(name => ({ name, in: "path" as const, type: "string" as const, required: true }));
 }
 /** Read a truthy string field, else `undefined`. Shared by `buildMeta`/`parseMetaField`/`blobParsers`. */
 export const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);

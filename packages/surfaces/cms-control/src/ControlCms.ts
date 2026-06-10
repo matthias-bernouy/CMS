@@ -14,7 +14,7 @@ import type { CmsFilesBlobStore } from "@bernouy/cms-files";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/cms-auth";
 import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
-import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
+import { InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { registerAnalyticsApi, type AnalyticsStore } from "@bernouy/cms-analytics";
@@ -101,7 +101,7 @@ export class ControlCms {
         this._credentials = credentials ?? null;
         this._gateway = gateway ?? null;
         this._analytics = analytics ?? null;
-        this._roles = roles ?? new InMemoryRolesRepository();
+        this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
 
         const authGuard = createAuthGuard<CMS_ROLES>({ basePath: this.basePath, auth: this._auth, requiredRole: "admin" });
 
