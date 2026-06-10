@@ -22,6 +22,11 @@ export type {
 } from "cms-content/interfaces/CmsRepository";
 export { InMemoryCmsRepository } from "cms-content/default-implementation/InMemoryCmsRepository";
 export { filterAndSortPages }    from "cms-content/core/pagesQuery";
+export { expandSnippets, type SnippetReader } from "cms-content/core/expandSnippets";
+export { assertContentRefsExist, type ContentRefsReader } from "cms-content/core/assertContentRefsExist";
+export { hardenStoredHtml } from "cms-content/core/hardenStoredHtml";
+export { ContentValidationError, ContentConflictError } from "cms-content/core/errors";
+export { upsertRole, deleteRole, type RoleDto, type RoleHolderCounter } from "cms-content/core/roles";
 
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
 export { registerStyleEndpoint } from "cms-content/http/registerStyleEndpoint";

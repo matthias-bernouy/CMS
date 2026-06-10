@@ -12,6 +12,11 @@ export function escapeHtml(str: string): string {
         .replace(/'/g, "&#39;");
 }
 
+/** Alias of {@link escapeHtml}; escaping all five characters is safe in a
+ *  double-quoted attribute context too, so text and attribute escaping share
+ *  one implementation. */
+export const escapeAttr = escapeHtml;
+
 export function htmlResponse(html: string, status = 200): Response {
     return new Response(html, {
         status,

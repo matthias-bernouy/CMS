@@ -1,21 +1,16 @@
-import { describe, test, expect, afterEach } from "bun:test";
+import { describe, test, expect } from "bun:test";
 import type { CacheEntry } from "@bernouy/http-runner";
-import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
+import { TtlCache } from "@bernouy/http-runner";
 
 const entry = (s: string): CacheEntry => {
     const raw = new TextEncoder().encode(s);
     return { raw, brotli: raw, gzip: raw, contentType: "text/html", hash: "h" };
 };
 
-// `isDev` is read at construction → set MODE before `new DeliveryCache()`.
-const savedMode = process.env.MODE;
-afterEach(() => { if (savedMode === undefined) delete process.env.MODE; else process.env.MODE = savedMode; });
-
-describe("DeliveryCache TTL", () => {
+describe("TtlCache", () => {
     test("serves a fresh entry within the TTL, then expires it", () => {
-        process.env.MODE = "PROD";
         let t = 1000;
-        const cache = new DeliveryCache({ ttlMs: 100, now: () => t });
+        const cache = new TtlCache({ ttlMs: 100, now: () => t });
         cache.set("page:/a", entry("A"));
 
         expect(cache.get("page:/a")?.raw).toEqual(entry("A").raw); // fresh
@@ -26,9 +21,8 @@ describe("DeliveryCache TTL", () => {
     });
 
     test("a re-set after expiry starts a fresh window", () => {
-        process.env.MODE = "PROD";
         let t = 0;
-        const cache = new DeliveryCache({ ttlMs: 10, now: () => t });
+        const cache = new TtlCache({ ttlMs: 10, now: () => t });
         cache.set("k", entry("x"));
         t = 100;
         expect(cache.get("k")).toBeNull();        // expired + dropped
@@ -37,8 +31,7 @@ describe("DeliveryCache TTL", () => {
     });
 
     test("delete + deleteMatching are unaffected by the TTL", () => {
-        process.env.MODE = "PROD";
-        const cache = new DeliveryCache({ ttlMs: 10_000, now: () => 0 });
+        const cache = new TtlCache({ ttlMs: 10_000, now: () => 0 });
         cache.set("page:/a", entry("a"));
         cache.set("page:/b", entry("b"));
         cache.set("bloc:x",  entry("c"));
@@ -51,9 +44,8 @@ describe("DeliveryCache TTL", () => {
         expect(cache.get("bloc:x")).not.toBeNull(); // non-page entry kept
     });
 
-    test("DEV mode bypasses entirely (get null, set no-op)", () => {
-        process.env.MODE = "DEV";
-        const cache = new DeliveryCache({ ttlMs: 10_000, now: () => 0 });
+    test("bypass mode disables the cache entirely (get null, set no-op)", () => {
+        const cache = new TtlCache({ ttlMs: 10_000, bypass: true, now: () => 0 });
         cache.set("page:/a", entry("a"));
         expect(cache.get("page:/a")).toBeNull();
     });

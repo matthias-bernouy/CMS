@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { parseSpec } from "cms-control/core/data/parseSpec";
-import { SpecParseError } from "cms-control/errors/SpecParseError";
+import { parseSpec } from "@bernouy/cms-gateway";
+import { SpecParseError } from "@bernouy/cms-gateway";
 
 const minimal = (over: Record<string, unknown> = {}) => JSON.stringify({
     openapi: "3.0.0",

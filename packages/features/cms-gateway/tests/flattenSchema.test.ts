@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { flattenSchema } from "cms-control/core/data/helpers/flattenSchema";
+import { flattenSchema } from "@bernouy/cms-gateway";
 
 describe("flattenSchema", () => {
     test("returns empty for an empty/undefined schema", () => {

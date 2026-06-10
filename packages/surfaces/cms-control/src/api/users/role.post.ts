@@ -3,7 +3,7 @@ import { ADMIN_ROLE } from "@bernouy/cms-permissions";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { isLastAdmin } from "cms-control/core/users/lastAdmin";
+import { isLastAdmin } from "@bernouy/cms-auth";
 import { assignableRoles } from "cms-control/core/roles/rolesView";
 
 /** POST /api/users/role { sub, role } — the explicit, server-side role
@@ -23,7 +23,7 @@ export default async function setUserRole(req: Request, cms: ControlCms) {
     }
 
     // Never strip the last admin — that would lock everyone out of the tenant.
-    if (role !== ADMIN_ROLE && await isLastAdmin(cms, sub)) {
+    if (role !== ADMIN_ROLE && await isLastAdmin(cms.users, sub)) {
         throw new InvalidParam("role", "cannot demote the last admin");
     }
 

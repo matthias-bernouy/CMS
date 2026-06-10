@@ -1,7 +1,7 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import sharp from "sharp";
 import DeliveryCms from "cms-delivery/DeliveryCms";
-import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
+import { TtlCache } from "@bernouy/http-runner";
 import { type CacheEntry } from "@bernouy/http-runner";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
@@ -19,7 +19,7 @@ afterEach(() => { if (savedMode === undefined) delete process.env.MODE; else pro
 describe("optimizePage — PROD cache flow (the pickup that dev-mode + the integration test skip)", () => {
     test("a cached page is invalidated once its images are optimized → re-renders with the srcset", async () => {
         process.env.MODE = "PROD";
-        const cache = new DeliveryCache();
+        const cache = new TtlCache({ bypass: process.env.MODE === "DEV" });
         const files = new InMemoryCmsFilesMetadata();
         const sourceBlob = new InMemoryCmsFilesBlob();
         const variantStore = new InMemoryCmsFilesBlob();
@@ -44,7 +44,7 @@ describe("optimizePage — PROD cache flow (the pickup that dev-mode + the integ
 
     test("a page with nothing to optimize is left cached (no needless invalidation)", async () => {
         process.env.MODE = "PROD";
-        const cache = new DeliveryCache();
+        const cache = new TtlCache({ bypass: process.env.MODE === "DEV" });
         const delivery = new DeliveryCms({
             repository: stubRepo, cache,
             filesMetadata: new InMemoryCmsFilesMetadata(), filesBlob: new InMemoryCmsFilesBlob(), variantStore: new InMemoryCmsFilesBlob(),

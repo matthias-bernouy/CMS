@@ -1,4 +1,4 @@
-import type { JSONSchema } from "../types";
+import type { JSONSchema } from "./types";
 
 /**
  * Walk a (dereferenced) schema and emit one entry per leaf path. Object

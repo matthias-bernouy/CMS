@@ -1,5 +1,5 @@
-import { resolveRef } from "../resolveRef";
-import type { JSONSchema, ParsedSpec } from "../types";
+import { resolveRef } from "./resolveRef";
+import type { JSONSchema, ParsedSpec } from "./types";
 
 const MAX_DEPTH = 10;
 

@@ -1,6 +1,11 @@
-import type { ControlCms } from "cms-control/ControlCms";
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { extractRefs } from "@bernouy/cms-content";
+import { extractRefs } from "cms-content/core/utils/contentRefs";
+import { ContentValidationError } from "cms-content/core/errors";
+
+/** Minimal reader — `CmsRepository` satisfies it structurally. */
+export type ContentRefsReader = {
+    getBlocsList(): Promise<Array<{ id: string }>>;
+    getSnippetsMetadata(): Promise<Array<{ identifier: string }>>;
+};
 
 /**
  * Reject content that references a bloc tag or snippet identifier missing
@@ -12,7 +17,7 @@ import { extractRefs } from "@bernouy/cms-content";
  * at most: the bloc list and the snippet metadata, each fetched only when
  * the content actually contains refs of that kind.
  */
-export async function assertContentRefsExist(cms: ControlCms, content: string): Promise<void> {
+export async function assertContentRefsExist(repository: ContentRefsReader, content: string): Promise<void> {
     if (!content) return;
 
     const { blocs, snippets } = extractRefs(content);
@@ -21,16 +26,16 @@ export async function assertContentRefsExist(cms: ControlCms, content: string): 
     const missing: string[] = [];
 
     if (blocs.size > 0) {
-        const known = new Set((await cms.repository.getBlocsList()).map(b => b.id));
+        const known = new Set((await repository.getBlocsList()).map(b => b.id));
         for (const tag of blocs) if (!known.has(tag)) missing.push(`bloc "${tag}"`);
     }
 
     if (snippets.size > 0) {
-        const known = new Set((await cms.repository.getSnippetsMetadata()).map(s => s.identifier));
+        const known = new Set((await repository.getSnippetsMetadata()).map(s => s.identifier));
         for (const id of snippets) if (!known.has(id)) missing.push(`snippet "${id}"`);
     }
 
     if (missing.length > 0) {
-        throw new InvalidParam("content", `unknown reference(s): ${missing.join(", ")}`);
+        throw new ContentValidationError("content", `unknown reference(s): ${missing.join(", ")}`);
     }
 }

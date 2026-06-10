@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
-import { hardenStoredHtml } from "cms-control/core/validation/hardenStoredHtml";
+import { hardenStoredHtml } from "@bernouy/cms-content";
 
 /** Re-parse sanitized HTML and collect any surviving `on*` event-handler
  *  attribute names — the semantically precise "did a handler survive?" check

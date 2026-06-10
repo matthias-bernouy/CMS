@@ -1,6 +1,6 @@
-import { SpecParseError } from "cms-control/errors/SpecParseError";
+import { SpecParseError } from "./SpecParseError";
 import type { JSONSchema, ParsedSpec, PathItem } from "./types";
-import { swagger2to3 } from "./helpers/swagger2to3";
+import { swagger2to3 } from "./swagger2to3";
 
 /**
  * Parse an OpenAPI 3.x JSON spec from a raw string. Validates only the

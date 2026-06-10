@@ -1,14 +1,12 @@
 import { describe, test, expect } from "bun:test";
-import { assertContentRefsExist } from "cms-control/core/validation/contentRefs";
+import { assertContentRefsExist } from "@bernouy/cms-content";
 
 function makeSystem(opts: { blocs?: string[]; snippets?: string[] } = {}) {
     const cms: any = {
-        repository: {
             getBlocsList: async () => (opts.blocs ?? []).map(id => ({ id, name: id, group: "", description: "" })),
             getSnippetsMetadata: async () => (opts.snippets ?? []).map(identifier => ({
                 id: `id-${identifier}`, identifier, name: identifier, category: "", updatedAt: "",
             })),
-        },
     };
     return cms;
 }
@@ -55,10 +53,8 @@ describe("assertContentRefsExist", () => {
     test("does not query bloc list when content has no bloc refs", async () => {
         let blocCalls = 0;
         const cms: any = {
-            repository: {
-                getBlocsList:        async () => { blocCalls++; return []; },
-                getSnippetsMetadata: async () => [{ id: "x", identifier: "header", name: "h", category: "", updatedAt: "" }],
-            },
+            getBlocsList:        async () => { blocCalls++; return []; },
+            getSnippetsMetadata: async () => [{ id: "x", identifier: "header", name: "h", category: "", updatedAt: "" }],
         };
         await assertContentRefsExist(cms, `<w13c-snippet identifier="header"></w13c-snippet>`);
         expect(blocCalls).toBe(0);

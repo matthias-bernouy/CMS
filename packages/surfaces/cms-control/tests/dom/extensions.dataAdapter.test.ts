@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { adaptDataExtensions } from "cms-control/components/editor/RichTextBar/extensions/dataAdapter";
 import type { DataExtension } from "cms-control/core/editorSystem/extensions/types";
-import type { JSONSchema } from "cms-control/core/data/types";
+import type { JSONSchema } from "@bernouy/cms-gateway";
 
 function resetDom() {
     document.body.querySelectorAll("*").forEach((n) => {

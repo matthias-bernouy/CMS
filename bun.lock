@@ -72,6 +72,7 @@
       "dependencies": {
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+        "linkedom": "^0.18.12",
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",

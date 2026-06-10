@@ -1,13 +1,11 @@
 import { describe, test, expect } from "bun:test";
-import { expandSnippets } from "cms-control/core/expandSnippets";
-import type { ControlCms } from "cms-control/ControlCms";
+import { expandSnippets, type SnippetReader } from "@bernouy/cms-content";
 import type { TSnippet } from "@bernouy/cms-content";
 
 function makeSystem(snippets: Record<string, string>) {
     const fetchLog: string[] = [];
-    const cms = {
-        repository: {
-            getSnippetByIdentifier: async (id: string): Promise<TSnippet | null> => {
+    const cms: SnippetReader = {
+        getSnippetByIdentifier: async (id: string): Promise<TSnippet | null> => {
                 fetchLog.push(id);
                 if (id in snippets) {
                     return {
@@ -23,8 +21,7 @@ function makeSystem(snippets: Record<string, string>) {
                 }
                 return null;
             },
-        },
-    } as unknown as ControlCms;
+    };
     return { cms, fetchLog };
 }
 

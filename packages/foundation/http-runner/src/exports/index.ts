@@ -10,11 +10,12 @@
 export type { Runner, RouteHandler, Middleware } from "http-runner/interfaces/Runner";
 export { BunRunner }                             from "http-runner/default-implementation/BunRunner";
 export { getRequestIP, setRequestIP }            from "http-runner/core/requestIP";
-export { escapeHtml, htmlResponse, redirect }    from "http-runner/core/html";
+export { escapeHtml, escapeAttr, htmlResponse, redirect } from "http-runner/core/html";
 
 // HTTP response toolkit — caching contract, compression/negotiation, CSP.
 export type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
 export { InMemoryCache }          from "http-runner/default-implementation/InMemoryCache";
+export { TtlCache }               from "http-runner/default-implementation/TtlCache";
 export {
     securityHeaders, htmlCspHeader, publicAssetCacheControl,
     compress, getOrGenerateEntry, getOrGenerateEntryAsync,

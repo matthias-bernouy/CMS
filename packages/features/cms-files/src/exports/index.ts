@@ -24,6 +24,11 @@ export { LocalFsCmsFiles, type ReconcileResult } from "cms-files/default-impleme
 // ── Core ───────────────────────────────────────────────────────────────
 export { sha256Hex } from "cms-files/core/hashBytes";
 
+// ── File lifecycle (domain rules — create w/ rollback, in-place update, tree delete) ─
+export { uploadFile }        from "cms-files/core/uploadFile";
+export { updateFileContent } from "cms-files/core/updateFileContent";
+export { deleteFileTree }    from "cms-files/core/deleteFileTree";
+
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
 export { serveFilesRequest, type FilesServeDeps } from "cms-files/http/serveFilesRequest";
 export { registerFilesEndpoint }                  from "cms-files/http/registerFilesEndpoint";

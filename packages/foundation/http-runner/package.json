@@ -6,8 +6,9 @@
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {
-        ".":         "./src/exports/index.ts",
-        "./testing": "./src/exports/testing.ts"
+        ".": "./src/exports/index.ts",
+        "./testing": "./src/exports/testing.ts",
+        "./html": "./src/exports/html.ts"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"

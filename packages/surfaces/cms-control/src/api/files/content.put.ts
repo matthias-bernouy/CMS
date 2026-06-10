@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { updateFileContent } from "cms-control/core/files/updateFileContent";
+import { updateFileContent } from "@bernouy/cms-files";
 import { invalidatePagesReferencingFile } from "cms-control/core/server/cache/invalidation";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 

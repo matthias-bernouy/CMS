@@ -2,8 +2,8 @@ import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import HttpError from "cms-control/errors/Http/HttpError";
-import { isLastAdmin } from "cms-control/core/users/lastAdmin";
-import { deleteUserCompletely } from "cms-control/core/users/deleteUser";
+import { isLastAdmin } from "@bernouy/cms-auth";
+import { deleteUserCompletely } from "@bernouy/cms-auth";
 
 /** DELETE /api/users?sub= — admin removes another user. Refuses to delete the
  *  last admin (would lock everyone out). Purges the user across the membership,
@@ -14,8 +14,8 @@ export default async function deleteUser(req: Request, cms: ControlCms) {
 
     const user = await cms.users.getBySub(sub);
     if (!user) throw new InvalidParam("sub", "unknown user");
-    if (await isLastAdmin(cms, sub)) throw new HttpError(403, "Cannot delete the last admin — promote another admin first.");
+    if (await isLastAdmin(cms.users, sub)) throw new HttpError(403, "Cannot delete the last admin — promote another admin first.");
 
-    await deleteUserCompletely(cms, user);
+    await deleteUserCompletely({ users: cms.users, credentials: cms.credentials, pats: cms.pats }, user);
     return Response.json({ ok: true });
 }

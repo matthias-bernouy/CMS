@@ -9,8 +9,8 @@ import type {
     ResponseChoice,
     SlimEndpoint,
 } from "./types";
-import { deref } from "./helpers/deref";
-import { flattenSchema } from "./helpers/flattenSchema";
+import { deref } from "./deref";
+import { flattenSchema } from "./flattenSchema";
 import { stubFromSchema } from "./stubFromSchema";
 
 const HTTP_METHODS = ["get", "post", "put", "delete", "patch", "head", "options"] as const;

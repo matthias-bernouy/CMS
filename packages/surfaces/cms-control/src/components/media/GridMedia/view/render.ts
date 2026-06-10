@@ -1,5 +1,5 @@
 import type { MediaItem, BreadcrumbEntry } from "../types";
-import { escapeHtml, escapeAttr } from "cms-control/core/dom/escapeHtml";
+import { escapeHtml, escapeAttr } from "@bernouy/http-runner/html";
 import { variantUrl } from "../types";
 import { localPreview } from "../api/write";
 

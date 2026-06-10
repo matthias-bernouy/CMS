@@ -1,5 +1,5 @@
 import InvalidParam from 'cms-control/errors/Http/InvalidParam';
-import { hardenStoredHtml } from 'cms-control/core/validation/hardenStoredHtml';
+import { hardenStoredHtml } from "@bernouy/cms-content";
 
 const MAX_CONTENT = 5_000_000;
 

@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { uploadFile } from "cms-control/core/files/uploadFile";
+import { uploadFile } from "@bernouy/cms-files";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 /** Hard cap on a single uploaded file, enforced server-side. */

@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { deleteFileTree } from "cms-control/core/files/deleteFileTree";
+import { deleteFileTree } from "@bernouy/cms-files";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 
 /** DELETE /api/files?id=&recursive= — delete an item (folder needs `recursive=true`)

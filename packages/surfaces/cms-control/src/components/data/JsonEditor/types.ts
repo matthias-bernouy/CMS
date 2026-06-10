@@ -1,4 +1,4 @@
-import type { JSONSchema } from "cms-control/core/data/types";
+import type { JSONSchema } from "@bernouy/cms-gateway";
 
 export type { JSONSchema };
 

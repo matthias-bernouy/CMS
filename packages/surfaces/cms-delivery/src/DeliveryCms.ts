@@ -5,7 +5,7 @@ import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms
 import { P9R_CACHE } from "@bernouy/cms-content";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
-import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
+import { TtlCache } from "@bernouy/http-runner";
 import { OptimizeQueue } from "cms-delivery/core/images/optimizeQueue";
 import { optimizePageImages } from "cms-delivery/core/images/optimizePageJob";
 import { registerDeliveryEndpoints } from "cms-delivery/registerDeliveryEndpoints";
@@ -103,7 +103,7 @@ export default class DeliveryCms {
     constructor(config: DeliveryCmsConfig){
         this._runner             = config.runner || new BunRunner();
         this._repository         = config.repository;
-        this._cache              = config.cache || new DeliveryCache();
+        this._cache              = config.cache || new TtlCache({ bypass: process.env.MODE === "DEV" });
         this._headInjectors      = config.headInjectors ?? [];
         this._gateway            = config.gateway;
         this._analytics          = config.analytics;

@@ -1,5 +1,5 @@
 import { showToast } from "cms-control/core/showToast";
-import { escapeHtml as esc } from "cms-control/core/dom/escapeHtml";
+import { escapeHtml as esc } from "@bernouy/http-runner/html";
 
 type CmsGroup = { feature: string; label: string; permissions: { id: string; verb: string }[] };
 type GwGroup  = { provider: string; label: string; endpoints: { id: string; label: string }[] };

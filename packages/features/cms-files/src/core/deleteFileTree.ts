@@ -1,5 +1,5 @@
-import type { CmsFilesMetadataRepository } from "@bernouy/cms-files";
-import type { CmsFilesBlobStore } from "@bernouy/cms-files";
+import type { CmsFilesMetadataRepository } from "cms-files/interfaces/CmsFilesMetadataRepository";
+import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 
 /**
  * Delete a file or folder from the tree, then purge the bytes of every file

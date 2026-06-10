@@ -2,10 +2,10 @@ import type { ControlCms } from 'cms-control/ControlCms';
 import InvalidParam from 'cms-control/errors/Http/InvalidParam';
 import { P9R_CACHE } from '@bernouy/cms-content';
 import type { SnippetUpdateDto } from '../validation/snippet/parseUpdateDto';
-import { assertContentRefsExist } from '../validation/contentRefs';
+import { assertContentRefsExist } from "@bernouy/cms-content";
 
 export async function updateSnippet(cms: ControlCms, dto: SnippetUpdateDto): Promise<void> {
-    await assertContentRefsExist(cms, dto.content);
+    await assertContentRefsExist(cms.repository, dto.content);
 
     const updated = await cms.repository.updateSnippet(dto.id, {
         name: dto.name,

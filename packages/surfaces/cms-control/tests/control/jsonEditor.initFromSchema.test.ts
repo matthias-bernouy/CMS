@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { initFromSchema } from "cms-control/components/data/JsonEditor/initFromSchema";
-import type { JSONSchema } from "cms-control/core/data/types";
+import type { JSONSchema } from "@bernouy/cms-gateway";
 
 describe("initFromSchema", () => {
     test("returns null for null / unsupported schemas", () => {

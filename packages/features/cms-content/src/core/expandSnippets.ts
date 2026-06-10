@@ -1,13 +1,22 @@
-import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
+/** Minimal reader — both `CmsRepository` and delivery's `DeliveryRepository`
+ *  satisfy it structurally. */
+export type SnippetReader = {
+    getSnippetByIdentifier(identifier: string): Promise<{ content: string } | null>;
+};
 
 /**
  * Replace `<w13c-snippet identifier="...">...</w13c-snippet>` wrappers with
  * the current snippet content fetched from the repository. The wrapper itself
  * is preserved to keep usage traceable in the rendered HTML.
  *
+ * Used both by the public article renderer (so visitors see the latest content)
+ * and by the admin editor server (so the ObserverManager sees pre-expanded
+ * content instead of having to fetch it client-side — which created an ordering
+ * bug where the snippet would disappear on reload).
+ *
  * v1 note: nested snippets are not supported. Single pass, no recursion.
  */
-export async function expandSnippets(content: string, repository: DeliveryRepository): Promise<string> {
+export async function expandSnippets(content: string, repository: SnippetReader): Promise<string> {
     const regex = /<w13c-snippet\b([^>]*)>([\s\S]*?)<\/w13c-snippet>/gi;
     const matches = [...content.matchAll(regex)];
     if (matches.length === 0) return content;

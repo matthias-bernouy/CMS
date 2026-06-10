@@ -12,6 +12,5 @@
 
 export { default as DeliveryCms }      from "cms-delivery/DeliveryCms";
 export type { DeliveryCmsConfig }      from "cms-delivery/DeliveryCms";
-export { DeliveryCache }               from "cms-delivery/core/DeliveryCache";
 export type { DeliveryRepository }     from "cms-delivery/interfaces/DeliveryRepository";
 export type { HeadInjector, HeadInjectorContext } from "cms-delivery/interfaces/HeadInjector";
