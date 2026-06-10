@@ -2,12 +2,12 @@ import { describe, test, expect, mock } from "bun:test";
 
 // Capture the blocId prepare_bloc receives so we can assert the handler
 // rejects dangerous tags BEFORE any filesystem work happens. The mock spreads
-// the real `@bernouy/cms-shared` module so `validateBloc`, `P9R_CACHE` and
+// the real `@bernouy/cms-bloc-compile` module so `validateBloc`, `P9R_CACHE` and
 // every other symbol the handler reads keeps its real behavior — only the
 // expensive `prepare_bloc` call is stubbed.
-const realShared = await import("@bernouy/cms-shared");
+const realShared = await import("@bernouy/cms-bloc-compile");
 const prepareBlocCalls: string[] = [];
-mock.module("@bernouy/cms-shared", () => ({
+mock.module("@bernouy/cms-bloc-compile", () => ({
     ...realShared,
     prepare_bloc: async (
         _v: File, _e: File | null, label: string, group: string, description: string, blocId: string,

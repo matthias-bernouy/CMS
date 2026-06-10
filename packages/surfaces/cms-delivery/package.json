@@ -12,7 +12,6 @@
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-shared": "workspace:*",
         "linkedom": "^0.18.12",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-files": "workspace:*",

@@ -1,6 +1,6 @@
 import type { Runner, Middleware } from "@bernouy/http-runner";
 import type { GatewayRepository } from "../interfaces/GatewayRepository";
-import type { ExecutorDeps } from "./executeEndpoint";
+import type { ExecutorDeps } from "../core/executeEndpoint";
 import { handleGatewayRequest } from "./handleGatewayRequest";
 
 /** Methods the gateway proxy answers for. */

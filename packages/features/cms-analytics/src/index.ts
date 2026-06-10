@@ -23,5 +23,5 @@ export { InMemoryAnalyticsStore } from "./default-implementation/AnalyticsStore/
 export { MongoAnalyticsStore, type MongoAnalyticsStoreConfig } from "./default-implementation/AnalyticsStore/mongodb";
 
 // ── HTTP API (mount in an app's admin-guarded group) ──
-export { registerAnalyticsApi } from "./core/registerAnalyticsApi";
+export { registerAnalyticsApi } from "./http/registerAnalyticsApi";
 export { buildPageViewEvent } from "./core/buildPageViewEvent";

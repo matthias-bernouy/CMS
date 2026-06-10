@@ -18,7 +18,7 @@
     "dependencies": {
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-shared": "workspace:*",
+        "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",

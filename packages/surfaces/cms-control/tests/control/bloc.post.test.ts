@@ -4,7 +4,7 @@ import type { TBloc } from "@bernouy/cms-content";
 
 // Stub prepare_bloc so tests never touch the filesystem or run Bun.build.
 // Must be registered before importBloc is imported.
-mock.module("@bernouy/cms-shared", () => ({
+mock.module("@bernouy/cms-bloc-compile", () => ({
     prepare_bloc: async (
         _view: File,
         _editor: File | null,

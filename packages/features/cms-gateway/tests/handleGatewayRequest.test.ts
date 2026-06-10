@@ -1,5 +1,5 @@
 import { describe, test, expect, mock } from "bun:test";
-import { handleGatewayRequest } from "cms-gateway/core/handleGatewayRequest";
+import { handleGatewayRequest } from "cms-gateway/http/handleGatewayRequest";
 import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/GatewayRepository/memory";
 import type { Provider } from "cms-gateway/interfaces/Gateway";
 

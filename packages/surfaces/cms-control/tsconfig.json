@@ -27,7 +27,7 @@
         { "path": "../../features/cms-permissions" },
         { "path": "../../foundation/http-runner" },
         { "path": "../../features/cms-auth" },
-        { "path": "../../features/cms-shared" },
+        { "path": "../../features/cms-bloc-compile" },
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-files" },
         { "path": "../../features/cms-secrets" },

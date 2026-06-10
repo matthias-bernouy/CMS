@@ -1,71 +1,70 @@
 # CmsCore — Bernouy CMS platform
 
-Bun + TypeScript monorepo (`@bernouy/cms-core`) bundling the infrastructure
-contracts, the CMS split into Control (admin) + Delivery (rendering) + shared
-domain, the admin UI toolkit, the `p9r` CLI, and the deployment artefacts that
-run them on a bare VPS.
+Bun + TypeScript monorepo (`@bernouy/cms-core`). Packages are organized in
+four layers with a one-way dependency rule:
+
+> **runtimes → surfaces → features → foundation**
+
+- **foundation/** — generic, zero CMS knowledge; a non-CMS product could use
+  these as-is (no `cms-` prefix).
+- **features/** — the CMS domain, one package per persistence seam. Each
+  exports contracts + dependency-free implementations from its root, network
+  adapters under `./mongo` / `./s3` subpaths, and its mountable HTTP values
+  (handlers, registrars, middlewares, page renderers) under `src/http/`.
+- **surfaces/** — mountable HTTP modules: define behavior, decide nothing
+  (everything injected; no `process.env`, no `listen`).
+- **runtimes/** — executables: read env, pick adapters, mount surfaces, listen.
 
 ## Layout
 
 ```
 CmsCore/
-├── packages/                    # workspace members (workspaces: ["packages/*"])
-│   ├── core/                    @bernouy/core         interfaces (Runner, Authentication) + serve helpers (serveApiFolder, serveStaticFolder) + signed-cookie codec + envelope crypto + low-level utilities. Browser-safe by default.
-│   ├── http-runner/              @bernouy/http-runner   Runner contract implemented on `Bun.serve` (+ registerStaticFolder helper)
-│   ├── cms-auth/               @bernouy/cms-auth    CMS-owned auth chain — LocalAuth + OidcAuth + PATs + signed cookies + Users / IdP / Credential / RateLimiter stores + login / forbidden page renderers + authGuard. Provider-agnostic.
-│   ├── cms-shared/              @bernouy/cms-shared   CMS domain primitives shared by control + delivery + cli — content interfaces (Pages/Blocs/Templates/Snippets/Files/Secrets) + in-memory/Mongo/S3 impls + bloc compilation (prepare_bloc) + CSP/compression helpers + p9r constants
-│   ├── cms-delivery/            @bernouy/cms-delivery public-facing rendering layer — `DeliveryCms` mounts page resolution, bloc bundles, theme CSS, favicon. On-demand rendering, reads a DeliveryRepository (read-only subset of CmsRepository).
-│   ├── cms-control/             @bernouy/cms-control  admin layer — REST API (/api), server-rendered admin pages (/admin), visual editor (/assets), the `ControlCms` composition class
-│   ├── cms-blocs/               @bernouy/cms-blocs    admin UI toolkit (`<p9r-*>`, `<w13c-*>`), built bundle + style.css. Published to npm (MIT). Consumed by cms-control.
-│   └── cms-cli/                 @bernouy/cms-cli      `p9r` CLI — scaffold blocs (`p9r init`) + CMS apps (`p9r new`), run a local editor (`p9r dev`), push/pull/list content (`p9r push`/`pull`/`list-blocs`/`secrets`)
+├── packages/
+│   ├── foundation/
+│   │   ├── http-runner/       @bernouy/http-runner     Runner contract + BunRunner + HTTP toolkit (Cache/TtlCache, compression, CSP, html helpers — `./html` is browser-safe) + serveForTest under ./testing
+│   │   ├── envelope-crypto/   @bernouy/envelope-crypto envelope encryption (DEK/KEK, EnvelopeSecretCrypto) + queryable field encryption (FieldCrypto, blind index); ./mongo = MongoDekRepository + createFieldCrypto
+│   │   └── rate-limiter/      @bernouy/rate-limiter    fixed-window rate limiting; ./mongo = cross-instance counter
+│   ├── features/
+│   │   ├── cms-content/       @bernouy/cms-content     the content aggregate behind CmsRepository — pages, blocs, templates, snippets, settings (one interface file per entity) + ContentReader read view + expandSnippets/contentRefs/hardenStoredHtml/roles rules + p9r constants; ./mongo
+│   │   ├── cms-files/         @bernouy/cms-files       media files — metadata + blob contracts, file lifecycle (upload/update/delete), sharp image variants + optimize queue, /.cms/files + image-variant endpoints; ./mongo, ./s3
+│   │   ├── cms-secrets/       @bernouy/cms-secrets     admin-managed secrets — SecretStore/SecretReader, ${VAR} resolution, gateway secret resolver; ./mongo = envelope-encrypted store
+│   │   ├── cms-permissions/   @bernouy/cms-permissions roles & permissions vocabulary (urn catalogue, grants, can()) — dependency-free
+│   │   ├── cms-auth/          @bernouy/cms-auth        CMS-owned auth chain — LocalAuth + dynamic OIDC + PATs + signed cookies + Users/IdP/Credential stores + registerAuthRoutes/authGuard/login pages; ./mongo, ./components
+│   │   ├── cms-gateway/       @bernouy/cms-gateway     data-gateway substrate — providers/endpoints, request resolution + execution, OpenAPI spec machinery; ./presets
+│   │   ├── cms-analytics/     @bernouy/cms-analytics   cookieless server-side analytics — collection (buildPageViewEvent) + counters-at-write store + dashboard API registrar
+│   │   ├── cms-blocs/         @bernouy/cms-blocs       UI toolkit (`<p9r-*>`, `<w13c-*>`) + data-binding runtime. Published to npm (MIT).
+│   │   └── cms-bloc-compile/  @bernouy/cms-bloc-compile bloc build pipeline (prepare_bloc, validateBloc, p9rExternalsPlugin)
+│   ├── surfaces/
+│   │   ├── cms-control/       @bernouy/cms-control     admin — REST API (/api), admin pages (/admin), the visual editor; ControlCms mounts it all on an injected runner
+│   │   └── cms-delivery/      @bernouy/cms-delivery    public rendering — DeliveryCms: page render pipeline, signature-grouped bloc bundles, theme, sitemap/robots
+│   └── runtimes/
+│       ├── cms-cli/           @bernouy/cms-cli         `p9r` CLI — scaffold blocs/apps, local editor (p9r dev), push/pull content
+│       └── cms-server/        @bernouy/cms-server      production composition root — Mongo + FS stores, crypto, auth; Control + Delivery on two ports. The only place reading process.env.
 │
-├── infra/images/                      # deployment artefacts
-│   └── cms/                     basic CMS image — one Bun process (Control + Delivery) + nginx-proxy + Mongo. Multi-instance per server. See infra/images/cms/README.md.
+├── infra/
+│   └── images/cms/            Docker image (Dockerfile runs cms-server) + per-instance compose + shared nginx-proxy/acme/mongo compose. Multi-instance per server.
 │
-├── build.ts                     orchestrated build (see below)
-├── tsconfig.base.json           shared TS compilerOptions
-├── tsconfig.json                `references` to every package (project refs)
-└── package.json                 `workspaces: ["packages/*"]`
+├── build.ts                   orchestrated build (see below)
+├── tsconfig.base.json         shared TS compilerOptions
+├── tsconfig.json              `references` to every package (project refs)
+└── package.json               workspaces: packages/{foundation,features,surfaces,runtimes}/*
 ```
 
-## Dependency graph
+## Dependency rules
 
-Workspace edges, taken from each package's `package.json`:
-
-```
-core ─┬─ http-runner
-      ├─ cms-auth                  (+ jose ; peer: mongodb, typescript)
-      ├─ cms-shared ◄── cms-auth   (peer: mongodb, typescript)
-      │     ▲
-      │     ├── cms-delivery        (+ linkedom)
-      │     └── cms-control ◄── http-runner, cms-auth, cms-blocs   (peer: mongodb, typescript)
-      │              ▲
-      │              └── cms-cli ◄── http-runner, cms-auth, cms-shared
-      │
-      └── cms-blocs (no runtime deps; published standalone; consumed by cms-control)
-```
-
-Rules of thumb:
-- `@bernouy/core` owns every cross-cutting `interface` (`Runner`,
-  `Authentication`) + transport helpers (`serveApiFolder`,
-  `serveStaticFolder`) + the `SignedCookieCodec` + low-level utilities
-  (`crypto`, `html`, `requestIP`) + envelope-encryption primitives
-  (`EnvelopeSecretCrypto`, `LocalKekProvider`, `KekProvider`). Browser-safe
-  except `loadKek`.
-- `@bernouy/cms-auth` owns the **CMS-owned auth chain** — local provider
-  (email/password) + dynamic OIDC (any IdP, configured as data) + signed
-  session cookies + PAT bearers + the membership / IdP / credential stores.
-  No package in this repo is tied to a specific IdP — Keycloak / Auth0 /
-  Okta / Google plug in as one OIDC backend among many.
-- `@bernouy/cms-shared` is the single home for the content domain
-  (interfaces + in-memory / Mongo / S3 implementations) plus bloc
-  compilation. Both `cms-control` and `cms-delivery` consume it; pick the
-  store impls that fit your deployment and pass them in.
-- `@bernouy/cms-control` (admin) and `@bernouy/cms-delivery` (public) are
-  separate mountables — compose them on one runner for a single process, or
-  split them across processes.
-- `@bernouy/cms-blocs` is the only place admin UI custom elements live;
-  everything visual in `cms-control` consumes its built bundle.
+- One direction only: `runtimes → surfaces → features → foundation`. Never
+  upward, never surface→surface (compose through features).
+- Lateral feature→feature edges are allowed when one feature consumes
+  another's contract (e.g. cms-auth → cms-secrets for `SecretReader`,
+  cms-content → cms-permissions for `RolesConfig`).
+- Network adapters are only imported by runtimes (`./mongo`, `./s3`
+  subpaths); surfaces consume contracts and receive instances injected.
+- Features may define HTTP values (handlers, registrars under `src/http/`)
+  but never hold a runner, read env, or pick their own guards — surfaces and
+  runtimes decide the composition.
+- Domain errors thrown by features carry a `.status` (e.g.
+  `ContentValidationError` → 400); surfaces never lend their error classes
+  downward.
 
 ## Working in the workspace
 
@@ -80,31 +79,28 @@ bun test                    # workspace test runner
 `build.ts` is sequenced because downstream packages need upstream artefacts
 at type-check time:
 
-1. `packages/cms-blocs` → `dist/{ui.js, style.css, index.d.ts, blocs/*.d.ts}`.
+1. `packages/features/cms-blocs` → `dist/{ui.js, style.css, index.d.ts, blocs/*.d.ts}`.
    `cms-blocs` ships its built bundle as `main`; consumers import the IIFE
    bundle to register every tag at once, so it must build first.
 2. `tsc --build` → emits `.d.ts` for every other package via project refs.
-3. `packages/cms-control` → control-side prebuild (`control-components.js`
-   bundle, depends on `cms-blocs/dist`) + own `.d.ts` emit.
+3. `packages/surfaces/cms-control` → control-side prebuild
+   (`control-components.js` bundle, depends on `cms-blocs/dist`) + own `.d.ts` emit.
 
-Every other package (`core`, `http-runner`, `cms-auth`, `cms-shared`,
-`cms-delivery`, `cms-cli`) ships **source** through its `exports` field — no
-bundle step, `bun link` consumers resolve straight to `src/`.
+Every other package ships **source** through its `exports` field — no bundle
+step, consumers resolve straight to `src/`.
 
 ## Deployment
 
-`infra/images/cms/` ships the deployment artefact: a `Dockerfile`, a `server.ts`
-composition (Control + Delivery on one Bun process), a per-instance
-`compose.yml`, and a shared `infra/compose.yml` (`nginx-proxy` +
-`acme-companion` + `mongo`). The design hosts **many instances on one
-server** sharing one nginx + one Mongo, each instance routed by domain via
-`VIRTUAL_HOST_MULTIPORTS` (`DOMAIN` for Delivery, `admin.DOMAIN` for
-Control). Content / users / secrets live in MongoDB; file blobs in a
-per-instance folder. See [`infra/images/cms/README.md`](./infra/images/cms/README.md) for
-the quick start.
+`infra/images/cms/` ships the deployment artefact: a `Dockerfile` (runs
+`packages/runtimes/cms-server`), a per-instance `compose.yml`, and a shared
+`infra/compose.yml` (`nginx-proxy` + `acme-companion` + `mongo`). The design
+hosts **many instances on one server** sharing one nginx + one Mongo, each
+instance routed by domain via `VIRTUAL_HOST_MULTIPORTS` (`DOMAIN` for
+Delivery, `admin.DOMAIN` for Control). Content / users / secrets live in
+MongoDB; file blobs (and generated image variants) in a per-instance folder.
+See [`infra/images/cms/README.md`](./infra/images/cms/README.md) for the
+quick start.
 
 ## License
 
 MIT — see [`LICENSE`](./LICENSE).
-</content>
-</invoke>

@@ -5,7 +5,7 @@
  * component runtime, and the default favicon under whatever runner the
  * consumer provides. Reads from a `ContentReader` (the read-only
  * subset of `CmsRepository`); a `MongoCmsRepository` / `InMemoryCmsRepository`
- * from `@bernouy/cms-shared` satisfies it by structural typing.
+ * from `@bernouy/cms-content` satisfies it by structural typing.
  *
  * Pure on-demand rendering — no Playwright, no build-time pre-rendering.
  */

@@ -1,8 +1,8 @@
 import { writeFile, unlink, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import type { DevBloc } from "./scan";
-import { p9rExternalsPlugin } from "@bernouy/cms-shared";
-import { validateBloc } from "@bernouy/cms-shared";
+import { p9rExternalsPlugin } from "@bernouy/cms-bloc-compile";
+import { validateBloc } from "@bernouy/cms-bloc-compile";
 
 export type BuiltBloc = {
     tag: string;

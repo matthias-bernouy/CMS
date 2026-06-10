@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { validateBloc, validateBlocTag } from "@bernouy/cms-shared";
+import { validateBloc, validateBlocTag } from "@bernouy/cms-bloc-compile";
 
 describe("validateBlocTag", () => {
     test.each([

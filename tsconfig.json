@@ -9,12 +9,13 @@
         { "path": "packages/features/cms-files" },
         { "path": "packages/features/cms-permissions" },
         { "path": "packages/features/cms-content" },
-        { "path": "packages/features/cms-shared" },
+        { "path": "packages/features/cms-bloc-compile" },
         { "path": "packages/features/cms-gateway" },
         { "path": "packages/features/cms-analytics" },
         { "path": "packages/features/cms-blocs" },
         { "path": "packages/surfaces/cms-delivery" },
         { "path": "packages/surfaces/cms-control" },
-        { "path": "packages/runtimes/cms-cli" }
+        { "path": "packages/runtimes/cms-cli" },
+        { "path": "packages/runtimes/cms-server" }
     ]
 }

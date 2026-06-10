@@ -1,0 +1,29 @@
+{
+    "name": "@bernouy/cms-server",
+    "version": "0.1.0",
+    "description": "Production composition root — wires Mongo + local-FS stores, envelope crypto, auth chain, and mounts ControlCms + DeliveryCms on two BunRunners. The ONLY place that reads process.env and listens. Shipped by infra/images/cms.",
+    "license": "UNLICENSED",
+    "private": true,
+    "type": "module",
+    "main": "./src/index.ts",
+    "scripts": {
+        "start": "bun run src/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/http-runner":     "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*",
+        "@bernouy/rate-limiter":    "workspace:*",
+        "@bernouy/cms-auth":        "workspace:*",
+        "@bernouy/cms-secrets":     "workspace:*",
+        "@bernouy/cms-content":     "workspace:*",
+        "@bernouy/cms-files":       "workspace:*",
+        "@bernouy/cms-gateway":     "workspace:*",
+        "@bernouy/cms-analytics":   "workspace:*",
+        "@bernouy/cms-control":     "workspace:*",
+        "@bernouy/cms-delivery":    "workspace:*",
+        "mongodb": "^7.2.0"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    }
+}

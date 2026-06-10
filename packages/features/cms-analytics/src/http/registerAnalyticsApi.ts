@@ -1,6 +1,6 @@
 import type { Runner } from "@bernouy/http-runner";
 import type { AnalyticsStore } from "../interfaces/AnalyticsStore";
-import { parseRange } from "./parseRange";
+import { parseRange } from "../core/parseRange";
 
 /**
  * Mount the read-only analytics API under `<base>/analytics/*` on `runner`.

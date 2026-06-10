@@ -29,8 +29,8 @@ export { resolveEndpoint, type ResolveResult } from "./core/resolveEndpoint";
 export { seedProviders, type SeedResult } from "./core/seedProviders";
 export { buildUpstreamUrl, type BuildUpstream } from "./core/buildUpstreamUrl";
 export { executeEndpoint, type ExecutorDeps } from "./core/executeEndpoint";
-export { handleGatewayRequest } from "./core/handleGatewayRequest";
-export { registerGatewayEndpoint } from "./core/registerGatewayEndpoint";
+export { handleGatewayRequest } from "./http/handleGatewayRequest";
+export { registerGatewayEndpoint } from "./http/registerGatewayEndpoint";
 
 // ── OpenAPI spec machinery (provider endpoint schemas) ────────────────
 export { parseSpec }      from "./core/openapi/parseSpec";

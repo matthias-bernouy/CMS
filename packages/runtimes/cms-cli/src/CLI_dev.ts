@@ -1,7 +1,7 @@
 // `p9r dev` is the local development entry point. Flag the runtime so the
 // socle's security headers (CSP, COOP) downgrade to Report-Only and the
 // asset cache is bypassed — both already gated on `MODE === "DEV"`. Set
-// before the lazy-evaluated helpers in `@bernouy/cms-shared/server/compression`
+// before the lazy-evaluated helpers in `@bernouy/cms-bloc-compile/server/compression`
 // observe it (they read at call time, not at import time).
 process.env.MODE = "DEV";
 

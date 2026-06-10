@@ -7,6 +7,7 @@
       "devDependencies": {
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
+        "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-cli": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
@@ -16,7 +17,6 @@
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-shared": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
@@ -51,6 +51,16 @@
       },
       "peerDependencies": {
         "mongodb": "^7.2.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/features/cms-bloc-compile": {
+      "name": "@bernouy/cms-bloc-compile",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms-content": "workspace:*",
+      },
+      "peerDependencies": {
         "typescript": "^5.9.3",
       },
     },
@@ -123,17 +133,6 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/features/cms-shared": {
-      "name": "@bernouy/cms-shared",
-      "version": "0.1.0",
-      "dependencies": {
-        "@bernouy/cms-content": "workspace:*",
-      },
-      "peerDependencies": {
-        "mongodb": "^7.2.0",
-        "typescript": "^5.9.3",
-      },
-    },
     "packages/foundation/envelope-crypto": {
       "name": "@bernouy/envelope-crypto",
       "version": "0.1.0",
@@ -165,14 +164,35 @@
       },
       "dependencies": {
         "@bernouy/cms-auth": "workspace:*",
+        "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
-        "@bernouy/cms-shared": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
+      },
+      "peerDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/runtimes/cms-server": {
+      "name": "@bernouy/cms-server",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bernouy/cms-analytics": "workspace:*",
+        "@bernouy/cms-auth": "workspace:*",
+        "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-control": "workspace:*",
+        "@bernouy/cms-delivery": "workspace:*",
+        "@bernouy/cms-files": "workspace:*",
+        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-secrets": "workspace:*",
+        "@bernouy/envelope-crypto": "workspace:*",
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/rate-limiter": "workspace:*",
+        "mongodb": "^7.2.0",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",
@@ -184,13 +204,13 @@
       "dependencies": {
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
+        "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-blocs": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
-        "@bernouy/cms-shared": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.12",
       },
@@ -214,7 +234,6 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
-        "@bernouy/cms-shared": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.12",
       },
@@ -227,6 +246,8 @@
     "@bernouy/cms-analytics": ["@bernouy/cms-analytics@workspace:packages/features/cms-analytics"],
 
     "@bernouy/cms-auth": ["@bernouy/cms-auth@workspace:packages/features/cms-auth"],
+
+    "@bernouy/cms-bloc-compile": ["@bernouy/cms-bloc-compile@workspace:packages/features/cms-bloc-compile"],
 
     "@bernouy/cms-blocs": ["@bernouy/cms-blocs@workspace:packages/features/cms-blocs"],
 
@@ -246,7 +267,7 @@
 
     "@bernouy/cms-secrets": ["@bernouy/cms-secrets@workspace:packages/features/cms-secrets"],
 
-    "@bernouy/cms-shared": ["@bernouy/cms-shared@workspace:packages/features/cms-shared"],
+    "@bernouy/cms-server": ["@bernouy/cms-server@workspace:packages/runtimes/cms-server"],
 
     "@bernouy/envelope-crypto": ["@bernouy/envelope-crypto@workspace:packages/foundation/envelope-crypto"],
 

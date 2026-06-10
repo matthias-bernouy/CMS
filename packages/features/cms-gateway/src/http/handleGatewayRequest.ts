@@ -1,6 +1,6 @@
 import type { GatewayRepository } from "../interfaces/GatewayRepository";
-import { resolveEndpoint } from "./resolveEndpoint";
-import { executeEndpoint, type ExecutorDeps } from "./executeEndpoint";
+import { resolveEndpoint } from "../core/resolveEndpoint";
+import { executeEndpoint, type ExecutorDeps } from "../core/executeEndpoint";
 
 /**
  * Shared proxy glue used by both delivery (publication) and control (preview):

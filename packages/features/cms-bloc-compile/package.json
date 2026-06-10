@@ -1,0 +1,17 @@
+{
+    "name": "@bernouy/cms-bloc-compile",
+    "version": "0.1.0",
+    "description": "Bloc compile pipeline — builds a bloc's view + editor browser bundles from author sources (`prepare_bloc`), validates tags (`validateBloc`), and rewrites the authoring import specifiers (`@bernouy/cms-blocs/base`, `@bernouy/cms-control/editor`, …) to the `window.p9r` globals via `p9rExternalsPlugin`. Those specifiers are an authoring CONVENTION intercepted at build time — never resolved from disk, so this package depends on no surface.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts"
+    },
+    "dependencies": {
+        "@bernouy/cms-content": "workspace:*"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    }
+}

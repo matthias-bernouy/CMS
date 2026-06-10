@@ -24,4 +24,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["bun", "run", "infra/images/cms/server.ts"]
+CMD ["bun", "run", "packages/runtimes/cms-server/src/index.ts"]

@@ -23,7 +23,7 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
-        "@bernouy/cms-shared": "workspace:*",
+        "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
