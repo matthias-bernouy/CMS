@@ -12,8 +12,8 @@ import { generateBlocSetEntry } from "cms-delivery/core/blocs/buildBloc";
  * set hits the same immutable bytes. Mirrors `bloc.server.ts`; the `?v` hash
  * flips `publicAssetCacheControl` to `immutable` exactly as for single blocs.
  *
- * Additive for now — nothing emits these URLs yet; `resolveAssets` keeps
- * emitting one `/bloc?tag=` per bloc until the grouping switch (next stage).
+ * This is the live grouped path: `resolveAssets` emits `/blocset?tags=…&v=`
+ * for each signature-grouped bundle (the `/bloc?tag=` route is dev/editor only).
  */
 export default async function BlocSetServer(req: Request, delivery: DeliveryCms){
 

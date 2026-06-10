@@ -6,7 +6,7 @@
 
   position: fixed;
   top: 100px;
-  right: 20px; /* Default position on the right */
+  right: 20px;
   z-index: 9999;
   touch-action: none; /* Prevent scrolling during drag on mobile */
 }
@@ -44,7 +44,7 @@
   gap: 4px;
 }
 
-/* Style for buttons injected via slot */
+/* Buttons injected via slot */
 button {
   display: flex;
   align-items: center;
@@ -66,7 +66,6 @@ button:hover {
   color: var(--accent-color);
 }
 
-/* Hide text if the toolbar is too narrow (optional) */
 button span {
   display: inline-block;
 }

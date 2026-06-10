@@ -3,9 +3,10 @@ import { showToast } from "cms-control/core/showToast";
 /**
  * `<cms-provider-actions provider-id kind enabled base-url emit>` — the actions
  * cell for one identity-provider row. Renders a clean enable/disable toggle
- * (PATCH on click) and, for non-builtin providers only, a Remove button
- * (DELETE). The builtin `local` provider is a singleton — toggle only, never
- * removable. Emits `emit` on success so a `cms-source` with `cms-reload-on` refreshes.
+ * (PATCH on click) and, for non-builtin providers only, Edit + Remove buttons
+ * (Edit opens the row's editor dialog; Remove DELETEs). The builtin `local`
+ * provider is a singleton — toggle only, never editable or removable. Emits
+ * `emit` on success so a `cms-source` with `cms-reload-on` refreshes.
  */
 class CmsProviderActions extends HTMLElement {
 

@@ -54,7 +54,7 @@ function walk(node: Node, scope: Scope, filters: FilterMap, isRoot: boolean): vo
         return;
     }
 
-    if (node.nodeType !== Node.ELEMENT_NODE) return; // comments, etc.
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
     const el = node as Element;
 
     // Snapshot attributes before mutating — interpolation only changes values,

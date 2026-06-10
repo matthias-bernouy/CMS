@@ -44,9 +44,9 @@ export type EndpointResponse = {
 };
 
 export type Endpoint = {
-    urn: string;            // ex: "urn:provider-id:getUser" (method NOT in the urn)
+    urn: string;            // e.g. "urn:provider-id:getUser" (method NOT in the urn)
     method: HTTPMethod;
-    targetUrl: string;      // ex: "https://api.example.com/v1/users/{id}"
+    targetUrl: string;      // e.g. "https://api.example.com/v1/users/{id}"
 
     /** Request headers injected into the upstream call. `static` = a plaintext
      *  fixed value forwarded verbatim; `secret` = a credential ref resolved
@@ -68,7 +68,7 @@ export type Endpoint = {
 };
 
 export type Provider = {
-    urn: string;            // ex: "urn:provider-id"
+    urn: string;            // e.g. "urn:provider-id"
     meta?: GatewayMeta;
     endpoints: Endpoint[];
 };

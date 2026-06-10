@@ -8,7 +8,7 @@ import type { Surface, SurfaceExtensionMap } from "./types";
  * Ordering is **inner-first** — the closest editor's extensions come before its
  * outer ancestors, so consumers can prioritize the most-specific scope when
  * rendering (e.g. a richtextbar caret nested inside a `<base-list>` inside a
- * a data-source bloc sees the list's extensions first, then the source's).
+ * data-source bloc sees the list's extensions first, then the source's).
  *
  * Panel-input shortcut: when `fromEl` lives in a config panel (detached
  * from the bloc DOM tree, so `closest([p9r-identifier])` finds nothing)
@@ -18,8 +18,8 @@ import type { Surface, SurfaceExtensionMap } from "./types";
  * plumbing the lookup itself.
  *
  * `PARENT_IDENTIFIER` is treated as an *additional* edge at every step,
- * not just a fallback. A bloc that publishes DOM siblings (e.g.
- * a bloc that stamps DOM siblings, not children) is reached through
+ * not just a fallback. A bloc that publishes DOM siblings, not children,
+ * is reached through
  * the pid posted on its stamps; the stamps' own DOM parent leads
  * elsewhere (the document root, an article wrapper, …). Walking only
  * via DOM ancestors would miss the publisher in that case. We therefore

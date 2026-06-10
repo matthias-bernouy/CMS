@@ -1,7 +1,7 @@
 /**
  * Gateway URN helpers. Grammar:
- *   - provider : `urn:<providerId>`            (ex: "urn:shop")
- *   - endpoint : `urn:<providerId>:<endpointId>` (ex: "urn:shop:getCart")
+ *   - provider : `urn:<providerId>`            (e.g. "urn:shop")
+ *   - endpoint : `urn:<providerId>:<endpointId>` (e.g. "urn:shop:getCart")
  * Pure, zero dependencies.
  */
 

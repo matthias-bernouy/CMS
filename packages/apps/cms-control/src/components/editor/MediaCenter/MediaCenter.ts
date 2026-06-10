@@ -32,7 +32,6 @@ export class MediaCenter extends Component {
         this._grid = s.getElementById("grid");
         this._btnSelect = s.getElementById("btnSelect") as HTMLButtonElement;
 
-        // Close
         s.getElementById("btnClose")!.addEventListener("click", () => this._dialog?.close());
         s.getElementById("btnCancel")!.addEventListener("click", () => this._dialog?.close());
         this._dialog!.addEventListener("click", (e) => {
@@ -51,7 +50,6 @@ export class MediaCenter extends Component {
             if (e.key === "Escape") nfBackdrop.classList.remove("open");
         });
 
-        // Upload
         const fileInput = s.getElementById("file-input") as HTMLInputElement;
         s.getElementById("btnUpload")!.addEventListener("click", () => fileInput.click());
         fileInput.addEventListener("change", async () => {
@@ -61,10 +59,8 @@ export class MediaCenter extends Component {
             this._refresh();
         });
 
-        // Select
         this._btnSelect!.addEventListener("click", () => this._confirmSelection());
 
-        // Grid clicks
         this._grid!.addEventListener("click", (e) => {
             const card = (e.target as HTMLElement).closest("p9r-card-media") as HTMLElement;
             if (!card) return;
@@ -87,7 +83,6 @@ export class MediaCenter extends Component {
             this._confirmSelection();
         });
 
-        // Breadcrumb clicks
         s.getElementById("breadcrumb")!.addEventListener("click", (e) => {
             const target = e.target as HTMLElement;
             if (!target.classList.contains("bc-item")) return;
@@ -158,11 +153,9 @@ export class MediaCenter extends Component {
             this._breadcrumb
         );
 
-        // Show/hide empty state
         const empty = this.shadowRoot!.getElementById("empty")!;
         empty.style.display = this._items.length === 0 ? "flex" : "none";
 
-        // Path info
         const pathDisplay = this.shadowRoot!.getElementById("pathDisplay")!;
         if (this._breadcrumb.length > 0) {
             pathDisplay.textContent = this._breadcrumb.map(b => b.label).join(" / ");
@@ -172,7 +165,6 @@ export class MediaCenter extends Component {
     }
 
     private _select(card: HTMLElement, id: string) {
-        // Deselect previous
         this._grid!.querySelectorAll("p9r-card-media.selected").forEach(el =>
             el.classList.remove("selected")
         );

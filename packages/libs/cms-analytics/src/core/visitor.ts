@@ -1,7 +1,7 @@
 /**
  * Cookieless visitor identity. Pure given its inputs: the secret/IP/UA are passed in
  * (never read from env here, never persisted) and the daily salt rotates the id every
- * UTC day so visitors cannot be tracked across days. See §1/§4.4 of ANALYTICS_PLAN.md.
+ * UTC day so visitors cannot be tracked across days.
  */
 
 import { sha256HexAsync } from "@bernouy/core";

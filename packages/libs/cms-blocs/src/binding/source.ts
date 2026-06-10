@@ -1,8 +1,8 @@
 /**
- * The `cms-source` controller — one fetch→render cycle for a single source
- * element. Reload (`cms-reload-on`) and the lifecycle (MutationObserver,
- * teardown) come next; this class already holds the AbortController so a later
- * run supersedes an in-flight one ("last write wins" at the render).
+ * The `cms-source` controller — the fetch→render cycle for a single source
+ * element, plus reload (`cms-reload-on` / a global event / param-reactive) and
+ * teardown. It holds the AbortController so a later run supersedes an in-flight
+ * one ("last write wins" at the render).
  *
  * On construction it captures the element's content (body + state slots),
  * leaving the element empty. `run()` then:

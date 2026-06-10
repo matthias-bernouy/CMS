@@ -58,8 +58,9 @@ export async function scanPages(siteDir: string): Promise<LocalPage[]> {
 }
 
 /**
- * Stable hash of a page payload — same fields the API will receive. Used
- * locally and remotely so equality means "same content".
+ * Stable hash of a page payload, recomputed identically on the remote side so
+ * equality means "same content". This is the comparison projection (tags sorted),
+ * not the wire payload.
  */
 export function canonicalHash(payload: PageFrontmatter & { content: string }): string {
     const canonical = JSON.stringify({

@@ -20,8 +20,7 @@ export type PageUpdateDto = {
 /**
  * Validates a JSON body against the page-update contract and produces a
  * fully-typed DTO. Throws `MissingParam` for absent required fields and
- * `InvalidParam` for malformed values — caller doesn't need to redo any
- * runtime checks on the returned object.
+ * `InvalidParam` for malformed values.
  */
 export function parsePageUpdateDto(body: Record<string, unknown>): PageUpdateDto {
     const { id, title, path } = body;

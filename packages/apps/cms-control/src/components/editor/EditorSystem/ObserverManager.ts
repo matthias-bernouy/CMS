@@ -77,8 +77,6 @@ export class ObserverManager {
                     mutation.addedNodes.forEach((node: Node) => {
                         if (!(node instanceof HTMLElement)) return;
 
-                        //if (node.hasAttribute("slot")) return;
-
                         if (node.getAttribute(p9r.attr.EDITOR.IS_EDITOR)) {
                             const newParentId = node.parentElement?.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
                             if (newParentId) {

@@ -28,7 +28,7 @@ type Target = { el: Element; attr: string; url: string; id: string };
  *   manifest exists) is expanded to a `srcset` of `/.cms/img/<id>/<w>.webp?v=…`
  *   candidates + a `sizes` hint, keeping the original as the `src` fallback.
  * - **Background optimization**: a raster `<img>` with NO manifest yet is left
- *   on the original (served "à l'arrache") and its id is RETURNED so the caller
+ *   on the original (served best-effort) and its id is RETURNED so the caller
  *   can enqueue generation — the page upgrades to the `srcset` on a later render.
  *
  * No-op without a files backend; SVGs / legacy rows (no hash) are left as-is.
@@ -82,11 +82,9 @@ export async function injectMediaVersions(
             const base = t.url.replace("/.cms/files/by-id/", "/.cms/img/"); // <prefix>/.cms/img/<id>
             t.el.setAttribute("srcset", rec!.manifest.widths.map(w => `${base}/${w}.webp?v=${hash} ${w}w`).join(", "));
             if (!t.el.getAttribute("sizes")) t.el.setAttribute("sizes", DEFAULT_SIZES);
-            // Intrinsic w/h → the browser reserves the box before load: kills CLS
-            // and makes `loading="lazy"` reliable (off-screen images stay off-
-            // screen instead of collapsing to 0px and all loading at once). CSS
-            // still scales the display; only the ratio matters. Respect any
-            // author-set dimensions.
+            // Emit intrinsic w/h so the browser reserves the box before load
+            // (kills CLS, makes lazy-loading reliable — see `VariantManifest.
+            // intrinsic`). CSS still scales the display. Respect author-set dims.
             const dim = rec!.manifest.intrinsic;
             if (dim && !t.el.hasAttribute("width") && !t.el.hasAttribute("height")) {
                 t.el.setAttribute("width",  String(dim.width));

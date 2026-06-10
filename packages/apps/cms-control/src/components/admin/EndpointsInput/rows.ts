@@ -7,7 +7,7 @@ import { readControl, methodColor, type EndpointSeed } from "./shared";
 
 /** Build one endpoint as a collapsible `<p9r-accordion-item>`: a live-synced
  *  collapsed-header summary (method tag + id + path), a header-actions delete
- *  button, and a `<p9r-tabs>` body (Infos / In / Headers / Out). Always returned
+ *  button, and a `<p9r-tabs>` body (Infos / In / Out / Headers). Always returned
  *  COLLAPSED so no accordion height transition fires on insert. `api` is the
  *  secrets API base forwarded to the Headers tab's credential pickers. */
 export function makeEndpointRow(idx: number, seed: EndpointSeed = {}, api?: string): HTMLElement {

@@ -49,11 +49,6 @@ export function securityHeaders(): Record<string, string> {
  * responses — CSP governs how the *loading* document may fetch sub-resources,
  * so it belongs on the document itself).
  *
- * Report-Only mode: violations are logged to the browser console but nothing
- * is actually blocked. The goal of this phase is observation — we want to
- * discover which inline styles / innerHTML patterns / external sources would
- * break under an enforcing policy before switching over.
- *
  * Directives chosen to be as strict as possible so *any* real-world deviation
  * surfaces:
  * - default-src 'self': no external sub-resource by default
@@ -63,8 +58,7 @@ export function securityHeaders(): Record<string, string> {
  * - frame-ancestors 'none': superset of X-Frame-Options: DENY
  *
  * Add a `report-uri` (or `report-to` group) once a collector endpoint exists.
- */
-/**
+ *
  * `style-src 'self' 'unsafe-inline'` is pragmatic: every Web Component in
  * this codebase ships its shadow-DOM CSS via an inline `<style>` tag inside
  * its template (and configuration panels use `style="..."` attributes).

@@ -1,5 +1,5 @@
 /**
- * Maps one AnalyticsEvent to the list of counter upserts it produces (§4.1). Pure and
+ * Maps one AnalyticsEvent to the list of counter upserts it produces. Pure and
  * testable: it returns plain rollup descriptors, the Mongo layer turns them into
  * bulkWrite ops. Bots produce no writes — they are excluded from view/visitor counters.
  */

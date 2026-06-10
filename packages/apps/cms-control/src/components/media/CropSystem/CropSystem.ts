@@ -28,7 +28,6 @@ export class CropSystem extends Component {
             this.close();
         });
 
-        // Ratio buttons
         const ratioButtons = this.shadowRoot!.querySelectorAll(".ratio-btn");
         ratioButtons.forEach(btn => {
             btn.addEventListener("click", () => {

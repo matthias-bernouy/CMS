@@ -13,7 +13,7 @@ export async function sha256HexAsync(input: string): Promise<string> {
 
 /**
  * Cryptographically-strong random bytes, base64url-encoded (no padding).
- * `bytes = 48` gives ~256 bits of entropy which is well above any practical
+ * `bytes = 48` gives 384 bits of entropy, far above any practical
  * brute-force threshold for bearer tokens.
  */
 export function randomBase64Url(bytes: number): string {

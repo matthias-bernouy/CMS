@@ -3,8 +3,8 @@
  * paired with `CmsFilesMetadataRepository` (the tree). Keyed by the file's `id`
  * (`id` IS the key): this layer knows nothing about folders, names or paths.
  *
- * Pluggable backend — in-memory + local FS now; an S3 / CDN-provider impl
- * later (that's where "going live" comes back). Consumed only server-side: the
+ * Pluggable backend — in-memory, local FS, and an S3-compatible impl (AWS /
+ * OVH / R2 / MinIO via Bun's native S3Client). Consumed only server-side: the
  * browser never touches it, it talks to the CMS which proxies through here.
  */
 

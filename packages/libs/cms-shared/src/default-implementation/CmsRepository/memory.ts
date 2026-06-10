@@ -160,8 +160,8 @@ export class InMemoryCmsRepository implements CmsRepository {
 
     async updateSystem(update: Partial<TSystem>): Promise<TSystem> {
         // Section-level shallow merge: top-level scalars overwrite, top-level
-        // objects (`site`, `editor`) deep-merge one level. Mirrors the
-        // Mongo provider's behaviour.
+        // object sections (`site`, `editor`, `security`, `roles`) deep-merge
+        // one level. Mirrors the Mongo provider's behaviour.
         for (const [section, value] of Object.entries(update) as [keyof TSystem, unknown][]) {
             if (section === "initializationStep") {
                 this._system.initializationStep = value as number;

@@ -21,7 +21,7 @@ export default class CmsForm extends CustomHTMLElement {
 
     connectedCallback() {
         requestAnimationFrame(() => {
-            // Sécurité si déjà initialisé
+            // Guard against re-init
             if (this._nativeForm) return;
 
             this._nativeForm = document.createElement('form');
@@ -48,7 +48,6 @@ export default class CmsForm extends CustomHTMLElement {
     }
 
     override attributeChangedCallback(name: any, oldValue: any, newValue: any): void {
-        // throw new Error("Method not implemented.");
     }
 
     get redirect() { return this.getAttribute("redirect");  }

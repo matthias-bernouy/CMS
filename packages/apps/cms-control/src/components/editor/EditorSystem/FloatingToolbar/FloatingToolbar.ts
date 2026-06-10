@@ -56,11 +56,9 @@ export class FloatingToolbar extends Component {
     }
 
     _onPointerMove(e: any) {
-        // Calculate new positions
         let newX = e.clientX - this._startX;
         let newY = e.clientY - this._startY;
 
-        // Clamp to viewport bounds
         newX = Math.max(0, Math.min(newX, window.innerWidth - this.offsetWidth));
         newY = Math.max(0, Math.min(newY, window.innerHeight - this.offsetHeight));
 

@@ -40,10 +40,8 @@ const notFound = () => new Response("Not found", { status: 404 });
  * handler (no route-precedence dependency):
  *
  * - **`by-id/<id>`** — opaque id (the stored form). Resolved via `getItem(id)`.
- *   In prod the bytes at an id are stable — replacing a file's content goes
- *   through a new id (re-pick), never an in-place overwrite — so it is served
- *   **immutable**. In dev it revalidates (`idCacheControl`): you edit files on
- *   disk and the same id keeps serving the latest bytes.
+ *   Served under `idCacheControl` (immutable in prod, revalidate in dev — see
+ *   that helper for the rationale).
  * - **`<tree-path>`** (`logos/hero.png`) — the human/admin label. Resolved via
  *   the metadata tree and served under the house cache policy
  *   (`publicAssetCacheControl`, = revalidate for media).

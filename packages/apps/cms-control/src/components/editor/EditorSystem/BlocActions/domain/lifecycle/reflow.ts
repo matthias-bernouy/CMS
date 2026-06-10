@@ -4,7 +4,7 @@ import type { BagController } from './BagController';
 /**
  * Re-pins BAG against its target after a layout change (ResizeObserver
  * fires, or the user moves the cursor over a tracked element). When
- * `positionLocked` is true (e.g. after `_switchTo`), the visual transform
+ * `positionLocked` is true (e.g. after `switchToEditor`), the visual transform
  * is held in place — only the breadcrumb fallback + insert buttons reflow.
  */
 export function reflow(c: BagController) {

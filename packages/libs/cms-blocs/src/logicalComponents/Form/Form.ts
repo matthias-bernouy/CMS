@@ -20,7 +20,7 @@ export class Form extends HTMLElement {
 
     connectedCallback() {
         requestAnimationFrame(() => {
-            // Sécurité si déjà initialisé
+            // guard: already initialized
             if (this._nativeForm) return;
 
             this._nativeForm = document.createElement('form');
@@ -47,7 +47,6 @@ export class Form extends HTMLElement {
     }
 
     attributeChangedCallback(name: any, oldValue: any, newValue: any): void {
-        // throw new Error("Method not implemented.");
     }
 
     get redirect() { return this.getAttribute("redirect");  }

@@ -64,8 +64,6 @@ export async function createPiiCrypto(
 
     const existing = await col.findOne({ _id: PII_INDEX_KEY });
     if (existing) {
-        // Mongo returns stored Buffers as BSON `Binary` — convert back before
-        // decrypt (its `.length` would otherwise be a function, not a number).
         const hex = await crypto.decrypt(scopeId, { ciphertext: asBuffer(existing.ciphertext), iv: asBuffer(existing.iv) });
         return new PiiCrypto(scopeId, crypto, Buffer.from(hex, "hex"));
     }

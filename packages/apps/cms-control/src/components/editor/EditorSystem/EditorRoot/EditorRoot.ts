@@ -271,8 +271,8 @@ export default class EditorRoot extends HTMLElement {
             const region = this._contentRegion();
             if (!region) return "";
             const clone = region.cloneNode(true) as Element;
-            stripResidualChrome(clone);   // editor chrome (p9r-*, editor-block, contenteditable, …)
-            clearRuntimeStamps(clone);    // binding runtime stamps (cms-ready) — owned by cms-blocs
+            stripResidualChrome(clone);
+            clearRuntimeStamps(clone);    // owned by cms-blocs
             return clone.innerHTML;
         } finally {
             if (wasView) cores.forEach((core) => core.startRuntime());

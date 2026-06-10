@@ -32,7 +32,7 @@ export default async function serveStaticFolder(runner: Runner, template: string
         }
 
 
-        // All cases
+        // Non-HTML: serve the file as-is
         runner.get(file.relativePath, () => {
             return new Response(Bun.file(file.absolutePath))
         })

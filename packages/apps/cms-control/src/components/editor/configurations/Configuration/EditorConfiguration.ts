@@ -8,8 +8,7 @@ import { getFormData } from "../../../../core/dom/getFormData";
 import { clearDirty } from "cms-control/core/editorSystem/dirtyState";
 
 /**
- * This class is used to add the "content" key from the editorSystem to the fetch.
- * And add the id resource.
+ * Submits editor pageContent + resource id (from URL) to the configured endpoint.
  */
 export default class EditorConfiguration extends CustomHTMLElement {
 
@@ -88,7 +87,6 @@ export default class EditorConfiguration extends CustomHTMLElement {
     }
 
     override attributeChangedCallback(name: any, oldValue: any, newValue: any): void {
-        //throw new Error("Method not implemented.");
     }
 
     open(){

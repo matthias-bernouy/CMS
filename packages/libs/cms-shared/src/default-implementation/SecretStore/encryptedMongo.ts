@@ -18,10 +18,9 @@ export type EncryptedSecretDocument = {
 export type EncryptedMongoSecretStoreConfig = {
     /** DEK lookup scope. In a multi-tenant setup: the tenantId. */
     scopeId: string;
-    /** Mongo collection holding encrypted secret docs. the consuming runtime
-     *  uses one collection per tenant (typically
-     *  `tenant_<id>__secrets`), so the docs are pre-isolated; the
-     *  `scopeId` is only used for routing the DEK lookup. */
+    /** Mongo collection holding encrypted secret docs. Consuming runtime uses
+     *  one collection per tenant (typically `tenant_<id>__secrets`), so docs
+     *  are pre-isolated; `scopeId` only routes the DEK lookup. */
     collection: Collection<EncryptedSecretDocument>;
     /** Envelope-encryption surface — typically a single
      *  `EnvelopeSecretCrypto(kekProvider, dekRepo)` instance shared

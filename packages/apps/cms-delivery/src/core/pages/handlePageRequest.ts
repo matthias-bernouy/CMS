@@ -11,11 +11,12 @@ import { P9R_CACHE } from "@bernouy/cms-shared";
  * Looks the page up by URL path, renders through the cache, and falls back
  * to `site.notFound` / `site.serverError` on miss or render failure.
  *
- * On a cold cache hit the request blocks on page enhancement before
- * returning — Playwright measures the page at every viewport, rewrites
- * `<img>` tags, and replaces the cached entry. The caller (often a CDN)
- * therefore sees the enhanced HTML on its very first fetch rather than
- * caching the un-enhanced first pass for the duration of its TTL.
+ * Image optimization does NOT block the response. The first render serves the
+ * page with original `<img>` sources and fire-and-forget enqueues variant
+ * generation (`DeliveryCms.optimizePage` → `OptimizeQueue`, sharp off the
+ * request path). When the worker finishes it invalidates the page cache, so the
+ * responsive `srcset` only appears on a LATER render — the very first fetch
+ * (often a CDN's) gets the un-enhanced page.
  */
 export async function handlePageRequest(req: Request, delivery: DeliveryCms): Promise<Response> {
     const pathname = new URL(req.url).pathname;

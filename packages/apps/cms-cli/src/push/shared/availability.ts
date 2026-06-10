@@ -31,7 +31,7 @@ export async function scanLocalBlocs(siteDir: string): Promise<Set<string>> {
     return new Set(blocs.map(b => b.tag));
 }
 
-/** Snippet identifiers pending a future PR-2 push. Filename without extension. */
+/** Snippet identifiers on disk — filename without extension. */
 export async function scanLocalSnippets(siteDir: string): Promise<Set<string>> {
     const root = join(siteDir, "snippets");
     if (!existsSync(root)) return new Set();

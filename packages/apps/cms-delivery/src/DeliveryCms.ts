@@ -71,8 +71,9 @@ export type DeliveryCmsConfig = {
  * written admin-side are visible immediately (subject to cache invalidation).
  *
  * Runtime-only: every request renders fresh through `handlePageRequest`
- * and caches. A build-time pre-render / image-variant pipeline used to
- * live alongside this package and was removed during the CmsCore refocus.
+ * and caches. A build-time pre-render pipeline used to live alongside this
+ * package and was removed during the CmsCore refocus (image variants are
+ * now generated at runtime in this class — see `optimizePage`).
  *
  * Path layout for one Delivery instance:
  *   <basePath>/                — user pages, served by the default endpoint

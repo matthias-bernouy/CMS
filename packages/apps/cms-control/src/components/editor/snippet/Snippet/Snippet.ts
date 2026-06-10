@@ -13,7 +13,7 @@ const SnippetMetadata: ComponentMetadata = {
  * Custom element that renders a synchronized snippet.
  *
  * In editor mode, the snippet content is SSR-expanded in the light DOM by
- * `expandSnippets()` (see `@bernouy/cms-delivery (`core/html/expandSnippets`)`). On upgrade we
+ * `expandSnippets()` (see `@bernouy/cms-delivery` core/html/expandSnippets). On upgrade we
  * move that content into the shadow DOM so the ObserverManager (which walks
  * the light DOM) cannot pick it up for inline editing, then we clear the
  * light DOM so that serialization via `EditorManager.getContent()` always

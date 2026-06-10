@@ -1,7 +1,7 @@
 /**
  * A fixed-window counter, keyed by an arbitrary string. Used to throttle
- * brute-force / credential-stuffing on the login path (keyed by email and by
- * IP) BEFORE the expensive argon2 verify runs, so it also caps CPU-DoS.
+ * brute-force / credential-stuffing on the login path (today keyed by email)
+ * BEFORE the expensive argon2 verify runs, so it also caps CPU-DoS.
  *
  * `hit` records one attempt and reports whether it is still allowed; `reset`
  * clears a key (called on a successful login so a legitimate user's earlier
@@ -13,7 +13,7 @@ export type RateLimitResult = {
     retryAfterSeconds?: number;
 };
 
-/** Window policy: at most `limit` hits per rolling `windowSeconds`. */
+/** Window policy: at most `limit` hits per fixed `windowSeconds` window. */
 export type RateLimitPolicy = { limit: number; windowSeconds: number };
 
 export interface RateLimiter {

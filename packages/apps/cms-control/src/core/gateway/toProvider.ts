@@ -33,7 +33,7 @@ export function toProvider(dto: ProviderDto): Provider {
                 }
                 if (e.body) endpoint.input.body = e.body;
             }
-            // Output (per-status list) + meta + headers have no editor yet but are preserved (B1 round-trip).
+            // Output (per-status list) + meta have no editor yet but are preserved (B1 round-trip).
             if (e.output?.length) endpoint.output = e.output;
             if (e.meta) endpoint.meta = e.meta;
             if (e.headers?.length) endpoint.headers = e.headers;

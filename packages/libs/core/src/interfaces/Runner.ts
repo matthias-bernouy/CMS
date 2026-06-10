@@ -1,6 +1,5 @@
 /**
- * Represents the handler function for an endpoint.
- * It can return a standard Response or a Promise of a Response.
+ * Endpoint handler: may return a Response synchronously or as a Promise.
  */
 export type RouteHandler = (req: Request) => Response | Promise<Response>;
 

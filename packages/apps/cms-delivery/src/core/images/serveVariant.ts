@@ -4,7 +4,7 @@ import { variantKey } from "cms-delivery/core/images/imageVariants";
 
 export type VariantServeDeps = {
     metadata:     CmsFilesMetadataRepository;
-    /** Source bytes (the originals), for the "à l'arrache" fallback. */
+    /** Source bytes (the originals), for the best-effort fallback. */
     sourceBlob:   CmsFilesBlobStore;
     /** Shared variant store (S3 in prod), where the worker writes variants. */
     variantStore: CmsFilesBlobStore;
@@ -21,8 +21,8 @@ const notFound = () => new Response("Not found", { status: 404 });
  *  - variant present in the shared store → stream it **immutable** (it is
  *    content-addressed by the source's `contentHash`, so it can never go stale);
  *  - variant absent (not generated yet, or an arbitrary width) → stream the
- *    **original** bytes with `no-cache`, so the page works immediately ("à
- *    l'arrache") and the browser re-fetches once the variant exists.
+ *    **original** bytes with `no-cache`, so the page works immediately
+ *    (best-effort) and the browser re-fetches once the variant exists.
  *
  * Because nothing is generated on the request path, an attacker requesting
  * arbitrary widths only ever gets the original — no resize-DoS vector.

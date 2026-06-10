@@ -242,9 +242,10 @@ export class MongoCmsRepository implements CmsRepository {
     async updateSystem(update: Partial<TSystem>): Promise<TSystem> {
         const current = await this.getSystem();
         // Section-level shallow merge: top-level scalars overwrite, top-level
-        // objects (`site`, `editor`) deep-merge one level. Mirrors the
-        // in-memory behaviour so callers can keep doing partial updates like
-        // `{ site: { name: "..." } }` without clobbering the rest of `site`.
+        // object sections (`site`, `editor`, `security`, `roles`) deep-merge
+        // one level. Mirrors the in-memory behaviour so callers can keep doing
+        // partial updates like `{ site: { name: "..." } }` without clobbering
+        // the rest of `site`.
         const merged = { ...current };
         for (const [section, value] of Object.entries(update) as [keyof TSystem, unknown][]) {
             if (section === "initializationStep") {

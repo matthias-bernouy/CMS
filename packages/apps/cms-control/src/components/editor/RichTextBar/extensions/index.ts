@@ -74,9 +74,7 @@ function toggle(self: RichTextBar, anchor: HTMLElement): void {
             closeCompletions(self);
         }));
     }
-    // First commit at anchor's offset, then shift left if it'd overflow the
-    // viewport right edge (no horizontal page scroll on most editor layouts —
-    // popover is non-scrollable container, must fit on screen).
+    // Place at anchor offset, shift left if it overflows the viewport right edge.
     popover.style.left = `${anchor.offsetLeft}px`;
     popover.hidden = false;
     clampPopoverToViewport(self, popover);

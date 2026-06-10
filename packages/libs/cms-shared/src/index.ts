@@ -3,7 +3,7 @@
  * `cms-delivery`, and `cms-cli`.
  *
  * Holds the persistence contracts (CmsRepository, CmsFilesMetadataRepository,
- * CmsFilesBlobStore, Cache, KVStore, SecretStore) + their in-memory / Mongo /
+ * CmsFilesBlobStore, Cache, SecretStore) + their in-memory / Mongo /
  * local-FS / S3 implementations, the bloc compile pipeline used by the admin
  * `bloc.post.ts` and the dev CLI (`prepare_bloc`, `validateBloc`,
  * `p9rExternalsPlugin`), the HTTP serving helpers (compression, CSP), the

@@ -11,7 +11,7 @@
  *   - `mediaExtras` → emitted as `media-src 'self' <urls>`. Same omission
  *     rule.
  *
- * `img-src` keeps `'self' data: https:` regardless: tightening it would
+ * `img-src` keeps `'self' data: https: blob:` regardless: tightening it would
  * break every bloc that references CDN images, with no upside (images can't
  * execute code). `frame-ancestors`, `base-uri`, `form-action`, `object-src`
  * stay constant.

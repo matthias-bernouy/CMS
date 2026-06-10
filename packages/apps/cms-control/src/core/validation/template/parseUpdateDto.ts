@@ -16,8 +16,7 @@ export type TemplateUpdateDto = {
 /**
  * Validates a JSON body against the template-update contract and produces a
  * fully-typed DTO. Throws `MissingParam` for absent required fields and
- * `InvalidParam` for malformed values — caller doesn't need to redo any
- * runtime checks on the returned object.
+ * `InvalidParam` for malformed values.
  */
 export function parseTemplateUpdateDto(body: Record<string, unknown>): TemplateUpdateDto {
     const { id, name } = body;
