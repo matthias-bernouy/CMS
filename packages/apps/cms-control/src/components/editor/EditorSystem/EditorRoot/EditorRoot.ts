@@ -4,7 +4,7 @@ import { isToggable } from "cms-control/core/isToggable";
 import { setEditorContext, clearEditorContext } from "cms-control/core/editorSystem/editorContext";
 import { installNavigationGuard, rawReplaceState } from "cms-control/core/editorSystem/navigationGuard";
 import { installLinkInterceptor } from "cms-control/core/editorSystem/installLinkInterceptor";
-import { watchForDirty, isDirty } from "cms-control/core/editorSystem/dirtyState";
+import { armDirty, isDirty } from "cms-control/core/editorSystem/dirtyState";
 import { resolveTargetForLink } from "./linkNavigation";
 import { stripResidualChrome } from "./stripResidualChrome";
 import { BINDING_CORE_TAG, BIND_STOP_ATTR, clearRuntimeStamps } from "@bernouy/cms-blocs/binding";
@@ -100,7 +100,11 @@ export default class EditorRoot extends HTMLElement {
             requestNavigation: resolveTargetForLink,
         });
         this._navGuardOff     = installNavigationGuard();
-        this._dirtyWatchOff   = watchForDirty(workingElement);
+        // Dirty = the saved content (pageContent) diverged from the baseline
+        // captured at the user's first interaction. Snapshot, not mutation
+        // watching: components self-mutate the canvas at boot (snippets expand,
+        // blocs reflect attrs) and that must NOT read as an edit.
+        this._dirtyWatchOff   = armDirty(this, () => this.pageContent);
         this._linkIntercptOff = installLinkInterceptor();
 
         // Fire-and-forget: pages list is read-only and small. We tolerate
@@ -195,6 +199,10 @@ export default class EditorRoot extends HTMLElement {
      * button doesn't bounce between the same URL with stale mode state.
      */
     toggleMode() {
+        // The toggle is a full reload — unsaved work would be silently
+        // discarded. location.replace can't be intercepted, so a confirm
+        // is the practical guard.
+        if (isDirty() && !confirm("You have unsaved changes — switching mode will discard them. Continue?")) return;
         const next = this._mode === "editor" ? "view" : "editor";
         const url = new URL(location.href);
         if (next === "view") url.searchParams.set("mode", "view");

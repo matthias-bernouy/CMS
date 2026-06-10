@@ -5,6 +5,7 @@ import css  from "./style.css"     with { type: "text" }
 import getClosestEditorSystem from "cms-control/core/dom/editor/getClosestEditorSystem";
 import type { LateralDialog } from "@bernouy/cms-blocs";
 import { getFormData } from "../../../../core/dom/getFormData";
+import { clearDirty } from "cms-control/core/editorSystem/dirtyState";
 
 /**
  * This class is used to add the "content" key from the editorSystem to the fetch.
@@ -41,7 +42,11 @@ export default class EditorConfiguration extends CustomHTMLElement {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({...data, content, id})
-        })
+        }).then(res => {
+            // The dirty watcher (EditorRoot) only re-marks on NEW mutations,
+            // so clear once the server has accepted this snapshot.
+            if (res.ok) clearDirty();
+        }).catch(() => { /* network failure — keep dirty */ })
     }
     
     override connectedCallback(): void {

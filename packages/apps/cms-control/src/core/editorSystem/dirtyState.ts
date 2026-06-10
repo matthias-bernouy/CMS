@@ -1,48 +1,60 @@
 /**
- * Tracks whether the editor has unsaved changes since the last load/save.
- * Wired by EditorRoot at boot — a `MutationObserver` on the working area
- * marks dirty on any DOM mutation. Listeners react when navigation might
- * lose work (LinkEditor confirm dialog, navigationGuard `beforeunload`).
+ * Tracks whether the editor has unsaved changes since load/save — by comparing
+ * the SERIALIZED authored content against a baseline, NOT by observing DOM
+ * mutations.
  *
- * Reset hook: callers (Editor save flow, snippet expansion etc.) call
- * `clearDirty()` after a successful save / fresh load.
+ * Why snapshot, not mutation-observation: the canvas is full of components that
+ * mutate their OWN DOM with no user involvement — `<w13c-snippet>` expands,
+ * blocs reflect attributes on upgrade, custom elements hydrate. A mutation
+ * watcher (even with a chrome-attr denylist) can't tell those apart from a real
+ * edit, so it false-marks dirty at boot. Instead we snapshot the content the
+ * SAVE would persist (`EditorRoot.pageContent` — chrome-stripped, runtime-stamp
+ * free, proven byte-stable across component self-mutation) and diff on demand.
+ *
+ * The baseline is captured LAZILY, on the user's FIRST interaction in the
+ * editor: before any user gesture nothing is an edit (all boot churn is the
+ * framework's), so `isDirty()` is false; the first pointerdown/keydown/paste/
+ * drop — which fire BEFORE the mutation they cause — freezes the pre-edit state
+ * as the baseline. `clearDirty()` re-baselines after a successful save.
  */
 
-let _dirty = false;
-const _listeners = new Set<(dirty: boolean) => void>();
+let _getContent: (() => string) | null = null;
+let _baseline: string | null = null;
 
-export function isDirty(): boolean { return _dirty; }
-
-export function markDirty(): void {
-    if (_dirty) return;
-    _dirty = true;
-    for (const fn of _listeners) try { fn(true); } catch {}
+/** True once a baseline exists (the user has interacted) AND the serialized
+ *  content has diverged from it. Cheap: one `getContent()` per call, and
+ *  callers (the view-toggle guard, link/unload confirms) ask infrequently. */
+export function isDirty(): boolean {
+    return _baseline !== null && _getContent !== null && _getContent() !== _baseline;
 }
 
+/** After a successful save (or a programmatic re-sync): the current content
+ *  becomes the new clean baseline. */
 export function clearDirty(): void {
-    if (!_dirty) return;
-    _dirty = false;
-    for (const fn of _listeners) try { fn(false); } catch {}
+    if (_getContent) _baseline = _getContent();
 }
 
-/** Subscribe to dirty state changes. Returns an unsubscribe function. */
-export function onDirtyChange(fn: (dirty: boolean) => void): () => void {
-    _listeners.add(fn);
-    return () => { _listeners.delete(fn); };
-}
+/** Events that fire BEFORE the DOM mutation they trigger — so capturing the
+ *  baseline here freezes the state just before the user's first edit. (`input`
+ *  is deliberately excluded: it fires AFTER the change.) */
+const FIRST_INTERACTION = ["pointerdown", "keydown", "paste", "drop"] as const;
 
 /**
- * Wire a `MutationObserver` on the given element. Any structural or
- * attribute change inside is treated as a user edit. Returns a `stop`
- * function so the consumer can disconnect on EditorRoot teardown.
+ * Arm snapshot dirty-tracking on the editor `host`. `getContent` returns the
+ * content the save would persist (pass `() => editorRoot.pageContent`). No
+ * baseline is captured yet — the first user interaction freezes it. Returns a
+ * disarm function for teardown.
  */
-export function watchForDirty(workingElement: Element): () => void {
-    const observer = new MutationObserver(() => markDirty());
-    observer.observe(workingElement, {
-        childList:        true,
-        subtree:          true,
-        attributes:       true,
-        characterData:    true,
-    });
-    return () => observer.disconnect();
+export function armDirty(host: Element, getContent: () => string): () => void {
+    _getContent = getContent;
+    _baseline = null;
+
+    const capture = () => { if (_baseline === null && _getContent) _baseline = _getContent(); };
+    for (const ev of FIRST_INTERACTION) host.addEventListener(ev, capture, true);
+
+    return () => {
+        for (const ev of FIRST_INTERACTION) host.removeEventListener(ev, capture, true);
+        _getContent = null;
+        _baseline = null;
+    };
 }

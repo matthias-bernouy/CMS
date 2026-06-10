@@ -9,8 +9,10 @@
  *    is-editor, action-disable-*, text-placeholder, is-creating, …)
  *  - `contenteditable`, `tabindex`, `draggable`
  *  - the `editor-block` class
- *  - inline `pointer-events:` styles (kept by the editor to override the
- *    host bloc's CSS during edit)
+ *  - the inline `pointer-events` DECLARATION (kept by the editor to
+ *    override the host bloc's CSS during edit) — other authored inline
+ *    styles on the same element survive; the attribute is only dropped
+ *    when nothing remains
  *
  * Walks into `<template>.content` so chrome that the observer might brush
  * onto template children (a stamp source the bloc holds in DOM-detached
@@ -31,8 +33,11 @@ function walk(el: Element): void {
         el.classList.remove('editor-block');
         if (!el.getAttribute('class')) el.removeAttribute('class');
     }
-    const style = el.getAttribute('style');
-    if (style && /pointer-events\s*:/.test(style)) el.removeAttribute('style');
+    const style = (el as HTMLElement).style;
+    if (style?.getPropertyValue('pointer-events')) {
+        style.removeProperty('pointer-events');
+        if (style.length === 0) el.removeAttribute('style');
+    }
 
     for (const c of Array.from(el.children)) walk(c);
     if (el.tagName === 'TEMPLATE') {
