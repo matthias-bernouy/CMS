@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
-import { sha256Hex } from "@bernouy/cms-shared";
+import { sha256Hex } from "@bernouy/cms-files";
 
 const FILES_SUBDIR    = "files";
 const REGISTRY_FILE   = ".cms-files-registry.json";

@@ -1,4 +1,4 @@
-import type { Cache, CacheEntry } from "@bernouy/cms-shared";
+import type { Cache, CacheEntry } from "@bernouy/http-runner";
 
 /** Default render-cache lifetime. Short on purpose: it is the freshness↔load
  *  knob for cross-process deployments — Control and Delivery run as separate

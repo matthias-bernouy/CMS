@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryCmsFilesMetadata } from "@bernouy/cms-shared";
-import { InMemoryCmsFilesBlob } from "@bernouy/cms-shared";
+import { InMemoryCmsFilesMetadata } from "@bernouy/cms-files";
+import { InMemoryCmsFilesBlob } from "@bernouy/cms-files";
 import { uploadFile } from "cms-control/core/files/uploadFile";
 import { deleteFileTree } from "cms-control/core/files/deleteFileTree";
 

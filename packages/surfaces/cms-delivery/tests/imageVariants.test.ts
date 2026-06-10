@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
-import { InMemoryCmsFilesBlob, LocalFsCmsFilesBlob } from "@bernouy/cms-shared";
+import { InMemoryCmsFilesBlob, LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { generateImageVariant, variantKey, ensureVariants, readManifest, manifestKey } from "cms-delivery/core/images/imageVariants";
 
 // Note: requires libvips on the loader path (LD_LIBRARY_PATH in dev / system

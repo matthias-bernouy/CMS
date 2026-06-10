@@ -1,4 +1,4 @@
-import type { BlobInput, CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
+import type { BlobInput, CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 
 /**
  * In-memory `CmsFilesBlobStore` for dev and tests. Bytes live in a Map keyed by

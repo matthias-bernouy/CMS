@@ -1,5 +1,5 @@
-import type { CacheEntry } from "@bernouy/cms-shared";
-import { compress } from "@bernouy/cms-shared";
+import type { CacheEntry } from "@bernouy/http-runner";
+import { compress } from "@bernouy/http-runner";
 
 /**
  * Inline SVG used as the default favicon when `site.favicon` is empty.

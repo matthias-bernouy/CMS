@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdtemp, mkdir, rm, rename, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { LocalFsCmsFiles, sha256Hex, InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, type FileItem } from "@bernouy/cms-shared";
+import { LocalFsCmsFiles, sha256Hex, InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, type FileItem } from "@bernouy/cms-files";
 import { uploadFile } from "cms-control/core/files/uploadFile";
 import { updateFileContent } from "cms-control/core/files/updateFileContent";
 import { deleteFileTree } from "cms-control/core/files/deleteFileTree";

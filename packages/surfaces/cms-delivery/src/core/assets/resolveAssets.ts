@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { getOrGenerateEntryAsync } from "@bernouy/cms-shared";
+import { getOrGenerateEntryAsync } from "@bernouy/http-runner";
 import { generateBlocSetEntry } from "cms-delivery/core/blocs/buildBloc";
 import { getBlocGroupManifest } from "cms-delivery/core/blocs/blocGroupManifest";
 import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";

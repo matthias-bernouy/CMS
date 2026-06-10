@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from "bun:test";
-import type { CacheEntry } from "@bernouy/cms-shared";
+import type { CacheEntry } from "@bernouy/http-runner";
 import { DeliveryCache } from "cms-delivery/core/DeliveryCache";
 
 const entry = (s: string): CacheEntry => {

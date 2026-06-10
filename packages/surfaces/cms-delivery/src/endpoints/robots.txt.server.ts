@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { compress, sendCompressed } from "@bernouy/cms-shared";
+import { compress, sendCompressed } from "@bernouy/http-runner";
 
 export default async function RobotsServer(req: Request, delivery: DeliveryCms) {
     const origin = new URL(req.url).origin;

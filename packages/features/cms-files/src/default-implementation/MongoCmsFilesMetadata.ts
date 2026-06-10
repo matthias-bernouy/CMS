@@ -3,8 +3,8 @@ import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type {
     CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem,
     FilesListOptions, FilesPage, NewFolder, NewFile, ItemPatch,
-} from "cms-shared/interfaces/CmsFilesMetadataRepository";
-import { escapeRegex } from "cms-shared/utils/escapeRegex";
+} from "cms-files/interfaces/CmsFilesMetadataRepository";
+import { escapeRegex } from "@bernouy/cms-shared";
 
 /**
  * MongoDB `CmsFilesMetadataRepository`. One collection (`<prefix>filesMeta`),

@@ -2,13 +2,15 @@ import type { Authentication } from "@bernouy/cms-auth";
 import type { Runner } from "@bernouy/http-runner";
 import { redirect } from "@bernouy/http-runner";
 import type { CmsRepository } from "@bernouy/cms-shared";
-import type { Cache } from "@bernouy/cms-shared";
-import { InMemoryCache } from "@bernouy/cms-shared";
+import type { Cache } from "@bernouy/http-runner";
+import { InMemoryCache } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { InMemorySecretStore, createSecretResolver } from "@bernouy/cms-secrets";
-import { registerFilesEndpoint, registerStyleEndpoint, compress } from "@bernouy/cms-shared";
-import type { CmsFilesMetadataRepository } from "@bernouy/cms-shared";
-import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
+import { compress } from "@bernouy/http-runner";
+import { registerFilesEndpoint } from "@bernouy/cms-files";
+import { registerStyleEndpoint } from "@bernouy/cms-shared";
+import type { CmsFilesMetadataRepository } from "@bernouy/cms-files";
+import type { CmsFilesBlobStore } from "@bernouy/cms-files";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/cms-auth";
 import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/cms-auth";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
@@ -18,7 +20,7 @@ import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path"
-import type { CspExtras } from "@bernouy/cms-shared";
+import type { CspExtras } from "@bernouy/http-runner";
 
 type Configuration = {
     /**

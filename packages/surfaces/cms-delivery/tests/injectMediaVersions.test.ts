@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
-import type { CmsFilesMetadataRepository, FilesItem } from "@bernouy/cms-shared";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-shared";
+import type { CmsFilesMetadataRepository, FilesItem } from "@bernouy/cms-files";
+import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-files";
 import { injectMediaVersions } from "cms-delivery/core/html/injectMediaVersions";
 import { manifestKey } from "cms-delivery/core/images/imageVariants";
 

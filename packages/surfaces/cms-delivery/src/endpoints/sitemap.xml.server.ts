@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { compress, sendCompressed } from "@bernouy/cms-shared";
+import { compress, sendCompressed } from "@bernouy/http-runner";
 
 const XML_ESCAPE: Record<string, string> = {
     "<": "&lt;",

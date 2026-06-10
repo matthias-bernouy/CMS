@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { CacheEntry } from "@bernouy/cms-shared";
-import { cachedResponseAsync, compress, publicAssetCacheControl } from "@bernouy/cms-shared";
+import type { CacheEntry } from "@bernouy/http-runner";
+import { cachedResponseAsync, compress, publicAssetCacheControl } from "@bernouy/http-runner";
 import { P9R_CACHE } from "@bernouy/cms-shared";
 
 /**

@@ -1,4 +1,4 @@
-import { LocalFsCmsFiles } from "@bernouy/cms-shared";
+import { LocalFsCmsFiles } from "@bernouy/cms-files";
 import { loadPushConfig } from "./push/shared/config";
 
 /**

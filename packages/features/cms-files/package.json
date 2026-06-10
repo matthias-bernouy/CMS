@@ -1,0 +1,21 @@
+{
+    "name": "@bernouy/cms-files",
+    "version": "0.1.0",
+    "description": "CMS media files — the `CmsFilesMetadataRepository` (tree, ids, contentHash) and `CmsFilesBlobStore` (bytes) contracts with in-memory and local-FS implementations, the `/.cms/files/<path>` serving handlers under `http/`, and content hashing. Network adapters live under the `./mongo` and `./s3` subpaths; the root export stays adapter-free.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".":       "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts",
+        "./s3":    "./src/exports/s3.ts"
+    },
+    "dependencies": {
+        "@bernouy/http-runner": "workspace:*",
+        "@bernouy/cms-shared":  "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb":    "^7.2.0",
+        "typescript": "^5.9.3"
+    }
+}

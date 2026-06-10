@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import sharp from "sharp";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-shared";
+import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-files";
 import { optimizePageImages } from "cms-delivery/core/images/optimizePageJob";
 import { readManifest, variantKey } from "cms-delivery/core/images/imageVariants";
 

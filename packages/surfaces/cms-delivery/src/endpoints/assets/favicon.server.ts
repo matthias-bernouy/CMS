@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { sendCompressed } from "@bernouy/cms-shared";
+import { sendCompressed } from "@bernouy/http-runner";
 import { generateFaviconEntry } from "cms-delivery/core/assets/defaultFavicon";
 
 /**

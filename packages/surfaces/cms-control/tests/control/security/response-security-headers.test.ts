@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { compress, sendCompressed } from "@bernouy/cms-shared";
+import { compress, sendCompressed } from "@bernouy/http-runner";
 
 /**
  * COOP is emitted as `Cross-Origin-Opener-Policy` in production but as

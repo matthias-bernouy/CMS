@@ -1,4 +1,4 @@
-import type { Cache, CacheEntry } from "cms-shared/interfaces/Cache";
+import type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
 
 /**
  * In-process cache backed by a `Map`. Used by `ControlCms` for the admin

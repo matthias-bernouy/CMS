@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from "bun:test";
-import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-shared";
+import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-files";
 import { serveVariantRequest } from "cms-delivery/core/images/serveVariant";
 import { variantKey } from "cms-delivery/core/images/imageVariants";
 

@@ -4,9 +4,9 @@ import { randomUUIDv7 } from "bun";
 import type {
     CmsFilesMetadataRepository, FilesItem, FolderItem, FileItem,
     FilesListOptions, FilesPage, NewFolder, NewFile, ItemPatch,
-} from "cms-shared/interfaces/CmsFilesMetadataRepository";
-import type { BlobInput, CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
-import { sha256Hex } from "cms-shared/files/hashBytes";
+} from "cms-files/interfaces/CmsFilesMetadataRepository";
+import type { BlobInput, CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
+import { sha256Hex } from "cms-files/core/hashBytes";
 
 /**
  * Filesystem-native files store for local dev (`p9r dev`): the `<root>` dir IS

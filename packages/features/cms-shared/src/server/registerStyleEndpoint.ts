@@ -1,6 +1,6 @@
 import type { Runner, Middleware } from "@bernouy/http-runner";
-import type { Cache, CacheEntry } from "cms-shared/interfaces/Cache";
-import { cachedResponseAsync, publicAssetCacheControl } from "cms-shared/server/compression";
+import type { Cache, CacheEntry } from "@bernouy/http-runner";
+import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { P9R_CACHE } from "cms-shared/constants/p9r-constants";
 
 /**

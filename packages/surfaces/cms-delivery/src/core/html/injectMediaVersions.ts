@@ -1,4 +1,4 @@
-import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-shared";
+import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
 import { readManifest, type VariantManifest } from "cms-delivery/core/images/imageVariants";
 
 /** Matches `…/.cms/files/by-id/<id>` (any tenant prefix), capturing the id. */

@@ -16,13 +16,10 @@ import { DeliveryCms } from "@bernouy/cms-delivery";
 import { MongoGatewayRepository } from "@bernouy/cms-gateway";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoClient } from "mongodb";
-import {
-    MongoCmsRepository,
-    MongoCmsFilesMetadata,
-    LocalFsCmsFilesBlob,
-    InMemoryCache,
-    type CMS_ROLES,
-} from "@bernouy/cms-shared";
+import { InMemoryCache } from "@bernouy/http-runner";
+import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
+import { MongoCmsFilesMetadata } from "@bernouy/cms-files/mongo";
+import { MongoCmsRepository, type CMS_ROLES } from "@bernouy/cms-shared";
 import {
     SignedCookieCodec,
     SubjectResolver,

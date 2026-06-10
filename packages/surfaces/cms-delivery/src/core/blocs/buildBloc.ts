@@ -1,6 +1,6 @@
 import type { DeliveryRepository } from "cms-delivery/interfaces/DeliveryRepository";
-import type { CacheEntry } from "@bernouy/cms-shared";
-import { compress } from "@bernouy/cms-shared";
+import type { CacheEntry } from "@bernouy/http-runner";
+import { compress } from "@bernouy/http-runner";
 
 /**
  * Build the view bundle entry for a bloc. The repository returns the raw

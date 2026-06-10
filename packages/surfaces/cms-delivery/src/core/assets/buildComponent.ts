@@ -1,6 +1,6 @@
 import { join } from "node:path";
-import type { CacheEntry } from "@bernouy/cms-shared";
-import { compress } from "@bernouy/cms-shared";
+import type { CacheEntry } from "@bernouy/http-runner";
+import { compress } from "@bernouy/http-runner";
 
 /**
  * Source of the component runtime bundle. Lives under `endpoints/assets/`

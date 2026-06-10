@@ -1,6 +1,6 @@
-import type { CmsFilesMetadataRepository, FileItem } from "@bernouy/cms-shared";
-import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
-import { sha256Hex } from "@bernouy/cms-shared";
+import type { CmsFilesMetadataRepository, FileItem } from "@bernouy/cms-files";
+import type { CmsFilesBlobStore } from "@bernouy/cms-files";
+import { sha256Hex } from "@bernouy/cms-files";
 
 /**
  * Replace a file's BYTES in place, keeping its id (and name/parentId). Used by

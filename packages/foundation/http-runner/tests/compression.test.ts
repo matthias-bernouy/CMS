@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { compress, cachedResponse, cachedResponseAsync } from "@bernouy/cms-shared";
-import type { Cache, CacheEntry } from "@bernouy/cms-shared";
+import { compress, cachedResponse, cachedResponseAsync } from "@bernouy/http-runner";
+import type { Cache, CacheEntry } from "@bernouy/http-runner";
 
 class MemCache implements Cache {
     store = new Map<string, CacheEntry>();

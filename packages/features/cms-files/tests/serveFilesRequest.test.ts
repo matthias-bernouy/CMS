@@ -1,9 +1,5 @@
 import { describe, test, expect, afterEach } from "bun:test";
-import {
-    serveFilesRequest,
-    InMemoryCmsFilesMetadata,
-    InMemoryCmsFilesBlob,
-} from "@bernouy/cms-shared";
+import { serveFilesRequest, InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-files";
 
 const PREFIX = "/.cms/files/";
 const enc = new TextEncoder();

@@ -1,5 +1,5 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/cms-shared";
+import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { generateBindingCoreJsEntry } from "cms-delivery/core/assets/buildBindingCore";
 import { P9R_CACHE } from "@bernouy/cms-shared";
 

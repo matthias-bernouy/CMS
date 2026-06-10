@@ -1,13 +1,8 @@
 import type { Runner } from "@bernouy/http-runner";
 import { extname } from "node:path";
-import type { Cache } from "@bernouy/cms-shared";
-import {
-    cachedResponseAsync,
-    compress,
-    publicAssetCacheControl,
-    securityHeaders,
-} from "@bernouy/cms-shared";
-import type { CspExtras } from "@bernouy/cms-shared";
+import type { Cache } from "@bernouy/http-runner";
+import { cachedResponseAsync, compress, publicAssetCacheControl, securityHeaders } from "@bernouy/http-runner";
+import type { CspExtras } from "@bernouy/http-runner";
 import { scanStaticFolder } from "./scanStaticFolder";
 import prepareHtml from "./prepareHtml";
 

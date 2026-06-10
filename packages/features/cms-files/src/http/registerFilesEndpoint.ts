@@ -1,7 +1,7 @@
 import type { Runner, Middleware } from "@bernouy/http-runner";
-import type { CmsFilesMetadataRepository } from "cms-shared/interfaces/CmsFilesMetadataRepository";
-import type { CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
-import { serveFilesRequest } from "cms-shared/server/serveFilesRequest";
+import type { CmsFilesMetadataRepository } from "cms-files/interfaces/CmsFilesMetadataRepository";
+import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
+import { serveFilesRequest } from "cms-files/http/serveFilesRequest";
 
 /**
  * Mount the path-based file-bytes route at `<basePath>/.cms/files/<tree-path>` on

@@ -5,16 +5,12 @@
         "rootDir": "./src",
         "baseUrl": "./src",
         "paths": {
-            "cms-delivery/*": ["./*"]
-        },
-        "resolveJsonModule": true
+            "cms-files/*": ["./*"]
+        }
     },
     "include": ["src/**/*.ts"],
     "references": [
         { "path": "../../foundation/http-runner" },
-        { "path": "../../features/cms-shared" },
-        { "path": "../../features/cms-files" },
-        { "path": "../../features/cms-gateway" },
-        { "path": "../../features/cms-analytics" }
+        { "path": "../cms-shared" }
     ]
 }

@@ -1,4 +1,4 @@
-import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-shared";
+import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
 import { ensureVariants } from "cms-delivery/core/images/imageVariants";
 
 /** Placeholder width ladder (B3). B4 replaces this with headless-measured,

@@ -1,6 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import type { TPage } from "@bernouy/cms-shared";
-import { cachedResponseAsync } from "@bernouy/cms-shared";
+import { cachedResponseAsync } from "@bernouy/http-runner";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
 import { renderRef } from "cms-delivery/core/pages/renderRef";

@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryCmsFilesBlob } from "@bernouy/cms-shared";
+import { InMemoryCmsFilesBlob } from "@bernouy/cms-files";
 
 const bytes = (s: string) => new TextEncoder().encode(s);
 const read = async (stream: ReadableStream<Uint8Array> | null): Promise<Uint8Array | null> =>

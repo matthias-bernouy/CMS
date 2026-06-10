@@ -1,6 +1,6 @@
-import type { CmsFilesMetadataRepository, FileItem } from "@bernouy/cms-shared";
-import type { CmsFilesBlobStore } from "@bernouy/cms-shared";
-import { sha256Hex } from "@bernouy/cms-shared";
+import type { CmsFilesMetadataRepository, FileItem } from "@bernouy/cms-files";
+import type { CmsFilesBlobStore } from "@bernouy/cms-files";
+import { sha256Hex } from "@bernouy/cms-files";
 
 /**
  * Upload a file: create its metadata record (which mints the id, or adopts the

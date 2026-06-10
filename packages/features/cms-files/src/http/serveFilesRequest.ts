@@ -1,6 +1,6 @@
-import type { CmsFilesMetadataRepository, FileItem } from "cms-shared/interfaces/CmsFilesMetadataRepository";
-import type { CmsFilesBlobStore } from "cms-shared/interfaces/CmsFilesBlobStore";
-import { publicAssetCacheControl } from "cms-shared/server/compression";
+import type { CmsFilesMetadataRepository, FileItem } from "cms-files/interfaces/CmsFilesMetadataRepository";
+import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
+import { publicAssetCacheControl } from "@bernouy/http-runner";
 
 /**
  * Cache policy for an id-addressed response. In prod the bytes at a given id are

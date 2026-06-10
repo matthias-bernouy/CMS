@@ -1,5 +1,5 @@
 import type { Runner } from "@bernouy/http-runner";
-import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-shared";
+import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
 import { variantKey } from "cms-delivery/core/images/imageVariants";
 
 export type VariantServeDeps = {
