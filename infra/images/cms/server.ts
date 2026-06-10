@@ -8,9 +8,8 @@
 // before the container starts; this file assumes they're present.
 
 import { BunRunner } from "@bernouy/http-runner";
-import { SignedCookieCodec } from "@bernouy/cms-auth";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
-import { MongoDekRepository } from "@bernouy/envelope-crypto/mongo";
+import { MongoDekRepository, createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
@@ -25,9 +24,10 @@ import {
     type CMS_ROLES,
 } from "@bernouy/cms-shared";
 import {
+    SignedCookieCodec,
     SubjectResolver,
     LocalAuthentication,
-    createPiiCrypto,
+    registerAuthRoutes,
     internalUserId,
 } from "@bernouy/cms-auth";
 import {
@@ -35,8 +35,8 @@ import {
     MongoIdentityProviderRepository,
     MongoLocalCredentialStore,
     MongoPatRepository,
-    MongoRateLimiter,
 } from "@bernouy/cms-auth/mongo";
+import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 
 const env = (k: string, d?: string): string => {
     const v = process.env[k];
@@ -77,14 +77,14 @@ const db = mongo.db();
 const kekProvider  = new LocalKekProvider(Buffer.from(CMS_KEK_HEX, "hex"));
 const dekRepo      = new MongoDekRepository(db.collection("cms_deks"));
 const secretCrypto = new EnvelopeSecretCrypto(kekProvider, dekRepo);
-const piiCrypto    = await createPiiCrypto(SCOPE_ID, secretCrypto, db);
+const fieldCrypto    = await createFieldCrypto(SCOPE_ID, secretCrypto, db);
 
 const repo              = new MongoCmsRepository(db);                              await repo.init();
 const filesMetadata     = new MongoCmsFilesMetadata(db);                           await filesMetadata.init();
 const filesBlob         = new LocalFsCmsFilesBlob(CMS_FILES_DIR);
-const users             = new MongoUsersRepository<CMS_ROLES>(db, piiCrypto);
+const users             = new MongoUsersRepository<CMS_ROLES>(db, fieldCrypto);
 const identityProviders = new MongoIdentityProviderRepository(db);
-const credentials       = new MongoLocalCredentialStore(db, piiCrypto);            await credentials.init();
+const credentials       = new MongoLocalCredentialStore(db, fieldCrypto);            await credentials.init();
 const pats              = new MongoPatRepository(db);                              await pats.init();
 const gateway           = new MongoGatewayRepository(db);                          await gateway.init();
 const analytics         = new MongoAnalyticsStore(db);                             await analytics.init();
@@ -127,9 +127,8 @@ const cookieSecure = CONTROL_PUBLIC_URL.startsWith("https");
 // Control admin on its own runner/port — root-mounted (no `/cms` prefix;
 // the port already isolates the admin surface from Delivery).
 const controlRunner = new BunRunner();
-const auth = new LocalAuthentication<CMS_ROLES>(controlRunner, {
+const auth = new LocalAuthentication<CMS_ROLES>({
     providerId:    "local",
-    basePath:      "/auth",
     loginPagePath: "/login",
     logoutPath:    "/auth/logout",
     credentials, resolver, codec, pats,
@@ -138,6 +137,7 @@ const auth = new LocalAuthentication<CMS_ROLES>(controlRunner, {
     cookieSecure,
     defaultHome:   "/admin/pages",
 });
+registerAuthRoutes(controlRunner, { basePath: "/auth", local: auth });
 new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, gateway, analytics);
 
 // Delivery on its own runner/port — strictly public surface. Shares the SAME

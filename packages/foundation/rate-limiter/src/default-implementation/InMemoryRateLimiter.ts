@@ -1,4 +1,4 @@
-import type { RateLimiter, RateLimitResult, RateLimitPolicy } from "cms-auth/interfaces/RateLimiter";
+import type { RateLimiter, RateLimitResult, RateLimitPolicy } from "rate-limiter/interfaces/RateLimiter";
 
 /**
  * In-memory fixed-window `RateLimiter` for dev / single-node. State is a

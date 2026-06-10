@@ -1,10 +1,9 @@
 import type { Authentication, Subject } from "cms-auth/interfaces/Authentication";
 import type { SignedCookieCodec } from "cms-auth/core/SignedCookieCodec";
-import type { Runner } from "@bernouy/http-runner";
 import type { LocalCredentialStore } from "cms-auth/interfaces/LocalCredentialStore";
 import type { SubjectResolver } from "cms-auth/core/SubjectResolver";
 import type { PatRepository } from "cms-auth/interfaces/PatRepository";
-import type { RateLimiter } from "cms-auth/interfaces/RateLimiter";
+import type { RateLimiter } from "@bernouy/rate-limiter";
 import { readCookie, setCookie, clearCookie, sanitizeReturnTo } from "cms-auth/core/cookies";
 
 type SessionPayload = { kind: "session"; sub: string };
@@ -12,12 +11,10 @@ type SessionPayload = { kind: "session"; sub: string };
 export type LocalAuthConfig<Role extends string> = {
     /** Identity-provider id this backend represents (provenance tag, e.g. "local"). */
     providerId:        string;
-    /** Prefix the login/logout endpoints mount under (e.g. "/auth"). */
-    basePath:          string;
     /** Page to send unauthenticated users to (used by `buildLoginUrl`). Full path. */
     loginPagePath:     string;
-    /** Full path of the logout endpoint (used by `buildLogoutUrl`). Differs from
-     *  `basePath` which is route-registration-relative to the tenant runner. */
+    /** Full path of the logout endpoint (used by `buildLogoutUrl`) — must match
+     *  where `registerAuthRoutes` mounts it. */
     logoutPath:        string;
     credentials:       LocalCredentialStore;
     resolver:          SubjectResolver<Role>;
@@ -38,7 +35,9 @@ export type LocalAuthConfig<Role extends string> = {
 
 /**
  * Credential-style `Authentication` backend over a `LocalCredentialStore`
- * (email/password). Registers `POST <basePath>/login` and `GET <basePath>/logout`.
+ * (email/password). Passive: exposes the `login`/`logout` handlers — the
+ * surface or runtime mounts them via `registerAuthRoutes` (http/), so the
+ * caller decides paths, runner, and middlewares.
  *
  * The CMS terminates the session: on a successful `verify`, the identity flows
  * through `SubjectResolver` (authn → authz) and a signed session cookie is
@@ -53,15 +52,10 @@ export class LocalAuthentication<Role extends string = string> implements Authen
 
     private readonly _ttl: number;
 
-    constructor(runner: Runner, private readonly cfg: LocalAuthConfig<Role>) {
+    constructor(private readonly cfg: LocalAuthConfig<Role>) {
         this._ttl     = cfg.sessionTtlSeconds ?? 3600;
         this.loginUrl  = cfg.loginPagePath;
         this.logoutUrl = cfg.logoutPath;
-
-        runner.group(cfg.basePath, (r) => {
-            r.addEndpoint("POST", "/login",  (req) => this._login(req));
-            r.addEndpoint("GET",  "/logout", (req) => this._logout(req));
-        });
     }
 
     buildLoginUrl(returnTo: string): string {
@@ -90,7 +84,8 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         return this.cfg.resolver.fromSub(payload.sub);
     }
 
-    private async _login(req: Request): Promise<Response> {
+    /** `POST <basePath>/login` handler — mounted by `registerAuthRoutes`. */
+    async login(req: Request): Promise<Response> {
         const { email, password, returnTo } = await readCredentials(req);
         const back = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : "";
 
@@ -118,7 +113,8 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         });
     }
 
-    private _logout(req: Request): Response {
+    /** `GET <basePath>/logout` handler — mounted by `registerAuthRoutes`. */
+    logout(req: Request): Response {
         const dest = sanitizeReturnTo(new URL(req.url).searchParams.get("returnTo"), this.cfg.defaultHome ?? "/");
         return new Response(null, {
             status:  302,

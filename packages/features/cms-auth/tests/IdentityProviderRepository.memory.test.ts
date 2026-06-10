@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryIdentityProviderRepository } from "cms-auth/default-implementation/InMemoryIdentityProviderRepository";
+import { InMemoryIdentityProviderRepository } from "cms-auth/default-implementation/memory/InMemoryIdentityProviderRepository";
 import type { NewIdentityProvider } from "cms-auth/interfaces/IdentityProvider";
 
 const repo = () => new InMemoryIdentityProviderRepository();

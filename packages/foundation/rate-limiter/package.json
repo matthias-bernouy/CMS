@@ -1,0 +1,16 @@
+{
+    "name": "@bernouy/rate-limiter",
+    "version": "0.1.0",
+    "description": "Fixed-window rate limiting behind a substitutable `RateLimiter` contract — in-memory for dev/tests/single-process, Mongo-backed (under `./mongo`) for multi-instance counting. Generic: keys are caller-defined (login email, IP, endpoint id, …).",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".":       "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts"
+    },
+    "peerDependencies": {
+        "mongodb":    "^7.2.0",
+        "typescript": "^5.9.3"
+    }
+}

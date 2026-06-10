@@ -3,6 +3,7 @@
     "references": [
         { "path": "packages/foundation/http-runner" },
         { "path": "packages/foundation/envelope-crypto" },
+        { "path": "packages/foundation/rate-limiter" },
         { "path": "packages/features/cms-auth" },
         { "path": "packages/features/cms-secrets" },
         { "path": "packages/features/cms-shared" },

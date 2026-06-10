@@ -2,16 +2,17 @@ import { describe, test, expect } from "bun:test";
 import type { Runner } from "@bernouy/http-runner";
 import { SignedCookieCodec } from "@bernouy/cms-auth";
 import { LocalAuthentication } from "cms-auth/default-implementation/LocalAuthentication";
+import { registerAuthRoutes } from "cms-auth/http/registerAuthRoutes";
 import { SubjectResolver } from "cms-auth/core/SubjectResolver";
-import { InMemoryUsersRepository } from "cms-auth/default-implementation/InMemoryUsersRepository";
-import { InMemoryLocalCredentialStore } from "cms-auth/default-implementation/InMemoryLocalCredentialStore";
-import { InMemoryPatRepository } from "cms-auth/default-implementation/InMemoryPatRepository";
-import { InMemoryRateLimiter } from "cms-auth/default-implementation/InMemoryRateLimiter";
+import { InMemoryUsersRepository } from "cms-auth/default-implementation/memory/InMemoryUsersRepository";
+import { InMemoryLocalCredentialStore } from "cms-auth/default-implementation/memory/InMemoryLocalCredentialStore";
+import { InMemoryPatRepository } from "cms-auth/default-implementation/memory/InMemoryPatRepository";
+import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 
 type Role = "admin" | "user";
 type Handler = (req: Request) => Promise<Response> | Response;
 
-/** Captures the handlers LocalAuthentication registers on its runner. */
+/** Captures the handlers registerAuthRoutes registers on its runner. */
 function captureRunner() {
     const routes: Record<string, Handler> = {};
     const runner = {
@@ -29,9 +30,8 @@ function setup(opts: { rateLimit?: InMemoryRateLimiter } = {}) {
     const credentials = new InMemoryLocalCredentialStore();
     const pats = new InMemoryPatRepository();
     const codec = new SignedCookieCodec(new TextEncoder().encode("test-secret-key-at-least-16-bytes"));
-    const auth = new LocalAuthentication<Role>(runner, {
+    const auth = new LocalAuthentication<Role>({
         providerId: "local",
-        basePath: "/auth",
         loginPagePath: "/cms/t/login",
         logoutPath: "/cms/t/auth/logout",
         credentials, resolver, codec, pats,
@@ -39,6 +39,7 @@ function setup(opts: { rateLimit?: InMemoryRateLimiter } = {}) {
         defaultHome: "/cms/t/admin/pages",
         ...(opts.rateLimit ? { rateLimit: opts.rateLimit } : {}),
     });
+    registerAuthRoutes(runner, { basePath: "/auth", local: auth });
     return { auth, routes, users, resolver, credentials, pats, codec };
 }
 

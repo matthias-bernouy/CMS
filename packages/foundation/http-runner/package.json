@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/http-runner",
     "version": "0.1.0",
-    "description": "HTTP mounting seam — the `Runner` contract (endpoints, middlewares, route groups, dynamic teardown) with the default `BunRunner` implementation, static-folder registration, request-IP stamping, and the shared `serveForTest` harness under `./testing`.",
+    "description": "HTTP mounting seam — the `Runner` contract (endpoints, middlewares, route groups, dynamic teardown) with the default `BunRunner` implementation, request-IP stamping, and the shared `serveForTest` harness under `./testing`.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",

@@ -3,7 +3,7 @@ import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { EncryptedBlob } from "@bernouy/envelope-crypto";
 import type { Identity } from "cms-auth/interfaces/UsersRepository";
 import type { LocalCredentialStore, LocalCredential, NewCredential } from "cms-auth/interfaces/LocalCredentialStore";
-import type { PiiCrypto } from "cms-auth/core/PiiCrypto";
+import type { FieldCrypto } from "@bernouy/envelope-crypto";
 import { dummyPasswordVerify } from "cms-auth/core/passwordTiming";
 
 /**
@@ -12,7 +12,7 @@ import { dummyPasswordVerify } from "cms-auth/core/passwordTiming";
  *
  * Two layers of protection:
  *  - the **password** is hashed with `Bun.password` (argon2id) — one-way.
- *  - the **email** (PII) is encrypted at rest under the tenant DEK (`PiiCrypto`),
+ *  - the **email** (PII) is encrypted at rest under the tenant DEK (`FieldCrypto`),
  *    with a UNIQUE blind index `emailIndex` (HMAC) for exact-match login lookup
  *    + uniqueness. The plaintext email is never persisted.
  *
@@ -35,7 +35,7 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
 
     constructor(
         private readonly db: Db,
-        private readonly pii: PiiCrypto,
+        private readonly fieldCrypto: FieldCrypto,
         config: MongoLocalCredentialConfig = {},
     ) {
         this._prefix = config.collectionPrefix ?? "";
@@ -54,8 +54,8 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
         const now = new Date();
         const doc: CredentialDoc = {
             _id:        randomUUIDv7(),
-            emailEnc:   await this.pii.encrypt(email),
-            emailIndex: this.pii.blindIndex(email),
+            emailEnc:   await this.fieldCrypto.encrypt(email),
+            emailIndex: this.fieldCrypto.blindIndex(email),
             hash:       await Bun.password.hash(input.password),
             createdAt:  now,
             updatedAt:  now,
@@ -69,7 +69,7 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
     }
 
     async verify(email: string, password: string): Promise<Identity | null> {
-        const doc = await this.col.findOne({ emailIndex: this.pii.blindIndex(email) });
+        const doc = await this.col.findOne({ emailIndex: this.fieldCrypto.blindIndex(email) });
         // Spend a verify's worth of time on an unknown email too, so timing
         // doesn't reveal which emails are registered.
         if (!doc) { await dummyPasswordVerify(password); return null; }
@@ -77,7 +77,7 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
         // No `displayName`: the credential store doesn't own one. Returning the
         // email here would overwrite the user's real displayName on every login
         // (SubjectResolver.upsert only updates provided fields).
-        const stored = await this.pii.decrypt(doc.emailEnc);
+        const stored = await this.fieldCrypto.decrypt(doc.emailEnc);
         return { sub: doc._id, email: stored };
     }
 
@@ -90,7 +90,7 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
     }
 
     async getByEmail(email: string): Promise<LocalCredential | null> {
-        const d = await this.col.findOne({ emailIndex: this.pii.blindIndex(email) });
+        const d = await this.col.findOne({ emailIndex: this.fieldCrypto.blindIndex(email) });
         return d ? this._fromDoc(d) : null;
     }
 
@@ -105,6 +105,6 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
     }
 
     private async _fromDoc(d: CredentialDoc): Promise<LocalCredential> {
-        return { sub: d._id, email: await this.pii.decrypt(d.emailEnc), createdAt: d.createdAt, updatedAt: d.updatedAt };
+        return { sub: d._id, email: await this.fieldCrypto.decrypt(d.emailEnc), createdAt: d.createdAt, updatedAt: d.updatedAt };
     }
 }

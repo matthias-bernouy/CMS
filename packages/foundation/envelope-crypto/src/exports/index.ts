@@ -16,3 +16,4 @@ export type { SecretCrypto }                                from "envelope-crypt
 export type { DekRepository, DekRecord }                    from "envelope-crypto/interfaces/DekRepository";
 export { LocalKekProvider, serializeBlob, parseBlob }       from "envelope-crypto/default-implementation/LocalKekProvider";
 export { EnvelopeSecretCrypto }                             from "envelope-crypto/default-implementation/EnvelopeSecretCrypto";
+export { FieldCrypto }                                        from "envelope-crypto/core/FieldCrypto";

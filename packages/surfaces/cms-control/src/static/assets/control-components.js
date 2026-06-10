@@ -11683,7 +11683,7 @@ cms-endpoints-input .ep-add:hover {
   }
   customElements.define("cms-event-toast", CmsEventToast);
 
-  // ../../features/auth-core/src/components/LoginMethods/LoginMethods.ts
+  // ../../features/cms-auth/src/components/LoginMethods/LoginMethods.ts
   class CmsLoginMethods extends HTMLElement {
     async connectedCallback() {
       const base = this.getAttribute("base") ?? "";
@@ -11713,7 +11713,6 @@ cms-endpoints-input .ep-add:hover {
   }
   var esc = (s2) => s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   customElements.define("cms-login-methods", CmsLoginMethods);
-
   // src/components/admin/OpenDialog/OpenDialog.ts
   class OpenDialog extends HTMLElement {
     connectedCallback() {

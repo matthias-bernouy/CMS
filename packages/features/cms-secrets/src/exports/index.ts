@@ -9,6 +9,7 @@
  */
 
 export type { SecretStore }     from "cms-secrets/interfaces/SecretStore";
+export type { SecretReader }    from "cms-secrets/interfaces/SecretReader";
 export { InMemorySecretStore }  from "cms-secrets/default-implementation/InMemorySecretStore";
 export { resolveSecretRefs }    from "cms-secrets/core/resolveSecretRefs";
 export { createSecretResolver } from "cms-secrets/core/createSecretResolver";

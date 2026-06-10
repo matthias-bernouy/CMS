@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { SubjectResolver, internalUserId } from "cms-auth/core/SubjectResolver";
-import { InMemoryUsersRepository } from "cms-auth/default-implementation/InMemoryUsersRepository";
+import { InMemoryUsersRepository } from "cms-auth/default-implementation/memory/InMemoryUsersRepository";
 
 type Role = "admin" | "user";
 const make = () => {

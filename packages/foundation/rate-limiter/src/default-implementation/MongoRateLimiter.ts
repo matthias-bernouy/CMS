@@ -1,5 +1,5 @@
 import type { Collection, Db } from "mongodb";
-import type { RateLimiter, RateLimitResult, RateLimitPolicy } from "cms-auth/interfaces/RateLimiter";
+import type { RateLimiter, RateLimitResult, RateLimitPolicy } from "rate-limiter/interfaces/RateLimiter";
 
 /**
  * MongoDB fixed-window `RateLimiter` — shared state across every node, which is

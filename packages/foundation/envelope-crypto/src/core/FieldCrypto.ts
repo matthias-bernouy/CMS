@@ -1,25 +1,27 @@
 import { createHmac, randomBytes } from "node:crypto";
 import type { Collection, Db } from "mongodb";
-import { asBuffer } from "@bernouy/envelope-crypto";
-import type { EncryptedBlob, SecretCrypto } from "@bernouy/envelope-crypto";
+import { asBuffer } from "envelope-crypto/core/buffer";
+import type { EncryptedBlob } from "envelope-crypto/core/aesGcm";
+import type { SecretCrypto } from "envelope-crypto/interfaces/SecretCrypto";
 
 /**
- * Per-tenant PII protection for the Mongo stores. Two concerns:
+ * Queryable field encryption, scoped per tenant. Two concerns:
  *
- *  - **Confidentiality** — `encrypt`/`decrypt` route through the tenant DEK
+ *  - **Confidentiality** — `encrypt`/`decrypt` route through the scope's DEK
  *    (`SecretCrypto`, scopeId = tenantId, KEK-wrapped). Non-deterministic, so
- *    a DB dump never reveals an email/displayName in clear.
+ *    a DB dump never reveals a stored field (an email, a display name, …)
+ *    in clear.
  *  - **Lookup** — `blindIndex(value)` is a DETERMINISTIC keyed digest
  *    (HMAC-SHA256 over the normalized value) stored alongside the ciphertext.
  *    It enables exact-match queries + uniqueness on encrypted fields.
  *    **Exact match only** (Option A) — no substring, no sort on encrypted
  *    fields.
  *
- * The HMAC index key is per-tenant, generated once and persisted **encrypted**
+ * The HMAC index key is per-scope, generated once and persisted **encrypted**
  * (via the same DEK) in a `<prefix>system_keys` doc — never in plaintext at
- * rest, and never in the user-facing SecretStore. Build via `createPiiCrypto`.
+ * rest, and never in the user-facing SecretStore. Build via `createFieldCrypto`.
  */
-export class PiiCrypto {
+export class FieldCrypto {
     constructor(
         private readonly scopeId:  string,
         private readonly crypto:   SecretCrypto,
@@ -43,41 +45,41 @@ export class PiiCrypto {
 }
 
 type SystemKeyDoc = { _id: string; ciphertext: Buffer; iv: Buffer };
-const PII_INDEX_KEY = "pii_index";
+const FIELD_INDEX_KEY = "field_index";
 
 /**
  * Load (or generate + persist) the per-tenant blind-index key, then build a
- * `PiiCrypto`. The key is stored encrypted under the tenant DEK in
+ * `FieldCrypto`. The key is stored encrypted under the tenant DEK in
  * `<prefix>system_keys` — out of the user-facing SecretStore.
  */
-export async function createPiiCrypto(
+export async function createFieldCrypto(
     scopeId: string,
     crypto: SecretCrypto,
     db: Db,
     collectionPrefix = "",
-): Promise<PiiCrypto> {
+): Promise<FieldCrypto> {
     const col: Collection<SystemKeyDoc> = db.collection<SystemKeyDoc>(collectionPrefix + "system_keys");
 
-    const existing = await col.findOne({ _id: PII_INDEX_KEY });
+    const existing = await col.findOne({ _id: FIELD_INDEX_KEY });
     if (existing) {
         const hex = await crypto.decrypt(scopeId, { ciphertext: asBuffer(existing.ciphertext), iv: asBuffer(existing.iv) });
-        return new PiiCrypto(scopeId, crypto, Buffer.from(hex, "hex"));
+        return new FieldCrypto(scopeId, crypto, Buffer.from(hex, "hex"));
     }
 
     const hex  = randomBytes(32).toString("hex");
     const blob = await crypto.encrypt(scopeId, hex);
     try {
-        await col.insertOne({ _id: PII_INDEX_KEY, ciphertext: blob.ciphertext, iv: blob.iv });
+        await col.insertOne({ _id: FIELD_INDEX_KEY, ciphertext: blob.ciphertext, iv: blob.iv });
     } catch (e) {
         // Lost a creation race — re-read the winner's key.
         if (e && typeof e === "object" && (e as { code?: number }).code === 11000) {
-            const winner = await col.findOne({ _id: PII_INDEX_KEY });
+            const winner = await col.findOne({ _id: FIELD_INDEX_KEY });
             if (winner) {
                 const hx = await crypto.decrypt(scopeId, { ciphertext: winner.ciphertext, iv: winner.iv });
-                return new PiiCrypto(scopeId, crypto, Buffer.from(hx, "hex"));
+                return new FieldCrypto(scopeId, crypto, Buffer.from(hx, "hex"));
             }
         }
         throw e;
     }
-    return new PiiCrypto(scopeId, crypto, Buffer.from(hex, "hex"));
+    return new FieldCrypto(scopeId, crypto, Buffer.from(hex, "hex"));
 }

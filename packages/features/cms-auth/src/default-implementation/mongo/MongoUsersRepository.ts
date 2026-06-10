@@ -3,13 +3,13 @@ import type { EncryptedBlob } from "@bernouy/envelope-crypto";
 import type {
     UsersRepository, Identity, TUser, UsersListOptions, UsersPage,
 } from "cms-auth/interfaces/UsersRepository";
-import type { PiiCrypto } from "cms-auth/core/PiiCrypto";
+import type { FieldCrypto } from "@bernouy/envelope-crypto";
 
 /**
  * MongoDB `UsersRepository`. One collection (`<prefix>users`), the identity
  * `sub` stored as `_id`. `collectionPrefix` isolates a tenant.
  *
- * PII is encrypted at rest under the tenant DEK (`PiiCrypto`): `email` and
+ * PII is encrypted at rest under the tenant DEK (`FieldCrypto`): `email` and
  * `displayName` are stored as ciphertext blobs, never in clear. `emailIndex`
  * is a blind index (HMAC) enabling EXACT-match search only — substring search
  * and sorting on PII are not possible, so `list` sorts by `createdAt` /
@@ -34,7 +34,7 @@ export class MongoUsersRepository<Role extends string = string> implements Users
 
     constructor(
         private readonly db: Db,
-        private readonly pii: PiiCrypto,
+        private readonly fieldCrypto: FieldCrypto,
         config: MongoUsersConfig = {},
     ) {
         this._prefix = config.collectionPrefix ?? "";
@@ -48,11 +48,11 @@ export class MongoUsersRepository<Role extends string = string> implements Users
         const now = new Date();
         const $set: Partial<UserDoc<Role>> = { lastSeenAt: now };
         if (identity.email !== undefined) {
-            $set.emailEnc   = await this.pii.encrypt(identity.email);
-            $set.emailIndex = this.pii.blindIndex(identity.email);
+            $set.emailEnc   = await this.fieldCrypto.encrypt(identity.email);
+            $set.emailIndex = this.fieldCrypto.blindIndex(identity.email);
         }
         if (identity.displayName !== undefined) {
-            $set.displayNameEnc = await this.pii.encrypt(identity.displayName);
+            $set.displayNameEnc = await this.fieldCrypto.encrypt(identity.displayName);
         }
         if (identity.provider !== undefined) $set.provider = identity.provider;
         const d = await this.col.findOneAndUpdate(
@@ -79,7 +79,7 @@ export class MongoUsersRepository<Role extends string = string> implements Users
 
     async setProfile(sub: string, patch: { displayName?: string }): Promise<TUser<Role> | null> {
         const $set: Partial<UserDoc<Role>> = {};
-        if (patch.displayName !== undefined) $set.displayNameEnc = await this.pii.encrypt(patch.displayName);
+        if (patch.displayName !== undefined) $set.displayNameEnc = await this.fieldCrypto.encrypt(patch.displayName);
         if (Object.keys($set).length === 0) return this.getBySub(sub);
         const d = await this.col.findOneAndUpdate({ _id: sub }, { $set }, { returnDocument: "after" });
         return d ? this._fromDoc(d) : null;
@@ -93,7 +93,7 @@ export class MongoUsersRepository<Role extends string = string> implements Users
     async list(opts: UsersListOptions = {}): Promise<UsersPage<Role>> {
         const filter: Record<string, unknown> = {};
         if (opts.role)   filter.role = opts.role;
-        if (opts.search) filter.emailIndex = this.pii.blindIndex(opts.search); // exact email only
+        if (opts.search) filter.emailIndex = this.fieldCrypto.blindIndex(opts.search); // exact email only
 
         // PII can't be sorted server-side (encrypted); fall back to createdAt.
         const sortField = opts.sortBy === "createdAt" || opts.sortBy === "lastSeenAt" ? opts.sortBy : "createdAt";
@@ -113,8 +113,8 @@ export class MongoUsersRepository<Role extends string = string> implements Users
     private async _fromDoc(d: UserDoc<Role>): Promise<TUser<Role>> {
         const out: TUser<Role> = { sub: d._id, role: d.role, createdAt: d.createdAt, lastSeenAt: d.lastSeenAt };
         if (d.provider)       out.provider    = d.provider;
-        if (d.emailEnc)       out.email       = await this.pii.decrypt(d.emailEnc);
-        if (d.displayNameEnc) out.displayName = await this.pii.decrypt(d.displayNameEnc);
+        if (d.emailEnc)       out.email       = await this.fieldCrypto.decrypt(d.emailEnc);
+        if (d.displayNameEnc) out.displayName = await this.fieldCrypto.decrypt(d.displayNameEnc);
         return out;
     }
 }

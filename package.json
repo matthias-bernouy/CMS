@@ -21,6 +21,7 @@
         "image-size": "^2.0.2",
         "jose": "^6.2.1",
         "@bernouy/http-runner": "workspace:*",
+        "@bernouy/rate-limiter": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-shared": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",

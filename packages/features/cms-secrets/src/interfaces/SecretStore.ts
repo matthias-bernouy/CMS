@@ -1,3 +1,5 @@
+import type { SecretReader } from "cms-secrets/interfaces/SecretReader";
+
 /**
  * Storage contract for admin-managed secrets (API keys, bearer tokens,
  * webhook signing keys…). Strictly distinct from the public `TSystem`
@@ -16,11 +18,7 @@
  * `^[A-Z][A-Z0-9_]*$` — env-var style, matches the `${KEY_NAME}` reference
  * pattern already used in data-provider config.
  */
-export interface SecretStore {
-    /** Returns the raw value, or `null` when the key isn't set. Server-side
-     *  callers (delivery substitution, etc.) consume this directly. */
-    get(key: string): Promise<string | null>;
-
+export interface SecretStore extends SecretReader {
     /** Upsert. Replaces any existing value at `key`. */
     set(key: string, value: string): Promise<void>;
 

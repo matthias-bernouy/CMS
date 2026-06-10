@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryPatRepository } from "cms-auth/default-implementation/InMemoryPatRepository";
+import { InMemoryPatRepository } from "cms-auth/default-implementation/memory/InMemoryPatRepository";
 
 const repo = () => new InMemoryPatRepository();
 

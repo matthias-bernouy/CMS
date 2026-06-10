@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryRateLimiter } from "cms-auth/default-implementation/InMemoryRateLimiter";
+import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 
 describe("InMemoryRateLimiter", () => {
     test("allows up to the limit, then blocks with a retry hint", async () => {

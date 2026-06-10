@@ -1,8 +1,7 @@
 import { randomBytes, createHash } from "node:crypto";
 import { jwtVerify, createRemoteJWKSet, type JWTPayload } from "jose";
 import type { SignedCookieCodec } from "cms-auth/core/SignedCookieCodec";
-import type { Runner } from "@bernouy/http-runner";
-import type { SecretReader } from "cms-auth/interfaces/SecretReader";
+import type { SecretReader } from "@bernouy/cms-secrets";
 import type { IdentityProviderRepository, IdentityProvider } from "cms-auth/interfaces/IdentityProvider";
 import type { SubjectResolver } from "cms-auth/core/SubjectResolver";
 import { readCookie, setCookie, clearCookie, sanitizeReturnTo } from "cms-auth/core/cookies";
@@ -11,7 +10,6 @@ type FlightPayload = { kind: "oidc-flight"; state: string; nonce: string; codeVe
 type Meta = { authorization_endpoint: string; token_endpoint: string; jwks_uri: string };
 
 export type OidcAuthConfig<Role extends string> = {
-    basePath:          string;   // "/auth" → routes at /auth/:provider/{login,callback}
     /** Absolute base for callback URLs: `<appBaseUrl><pathPrefix>/auth`. */
     callbackBase:      string;
     providers:         IdentityProviderRepository;
@@ -31,12 +29,14 @@ export type OidcAuthConfig<Role extends string> = {
 
 /**
  * Dynamic OIDC login backend — ONE instance serves EVERY configured
- * redirect-style provider. Registers `<base>/:provider/login` and
- * `<base>/:provider/callback`; the provider config + client secret are
- * resolved from the stores AT REQUEST TIME, so adding/editing/enabling a
- * provider in the admin takes effect with no remount. Authorization Code +
- * PKCE; on a verified id_token the identity flows through `SubjectResolver`
- * (keyed `provider:sub`) and the CMS issues its shared session cookie.
+ * redirect-style provider. Passive: exposes the `login`/`callback` handlers,
+ * mounted at `<basePath>/:provider/login|callback` by `registerAuthRoutes`
+ * (http/) — the surface or runtime decides where. The provider config +
+ * client secret are resolved from the stores AT REQUEST TIME, so
+ * adding/editing/enabling a provider in the admin takes effect with no
+ * remount. Authorization Code + PKCE; on a verified id_token the identity
+ * flows through `SubjectResolver` (keyed `provider:sub`) and the CMS issues
+ * its shared session cookie.
  */
 export class OidcAuthentication<Role extends string = string> {
 
@@ -44,12 +44,8 @@ export class OidcAuthentication<Role extends string = string> {
     private readonly _meta = new Map<string, Promise<Meta>>();
     private readonly _jwks = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
-    constructor(runner: Runner, private readonly cfg: OidcAuthConfig<Role>) {
+    constructor(private readonly cfg: OidcAuthConfig<Role>) {
         this._ttl = cfg.sessionTtlSeconds ?? 3600;
-        runner.group(cfg.basePath, (r) => {
-            r.addEndpoint("GET", "/:provider/login",    (req) => this._login(req));
-            r.addEndpoint("GET", "/:provider/callback", (req) => this._callback(req));
-        });
     }
 
     private async _resolve(req: Request): Promise<{ p: IdentityProvider; secret: string } | null> {
@@ -118,7 +114,8 @@ export class OidcAuthentication<Role extends string = string> {
 
     private _flightCookie(id: string) { return `${this.cfg.cookieName}-oidc-${id}`; }
 
-    private async _login(req: Request): Promise<Response> {
+    /** `GET <basePath>/:provider/login` handler — mounted by `registerAuthRoutes`. */
+    async login(req: Request): Promise<Response> {
         const r = await this._resolve(req);
         if (!r) return new Response("Unknown provider", { status: 404 });
         const { p } = r;
@@ -147,7 +144,8 @@ export class OidcAuthentication<Role extends string = string> {
         });
     }
 
-    private async _callback(req: Request): Promise<Response> {
+    /** `GET <basePath>/:provider/callback` handler — mounted by `registerAuthRoutes`. */
+    async callback(req: Request): Promise<Response> {
         const r = await this._resolve(req);
         if (!r) return new Response("Unknown provider", { status: 404 });
         const { p, secret } = r;

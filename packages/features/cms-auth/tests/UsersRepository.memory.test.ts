@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryUsersRepository } from "cms-auth/default-implementation/InMemoryUsersRepository";
+import { InMemoryUsersRepository } from "cms-auth/default-implementation/memory/InMemoryUsersRepository";
 
 type Role = "admin" | "user";
 const repo = () => new InMemoryUsersRepository<Role>();

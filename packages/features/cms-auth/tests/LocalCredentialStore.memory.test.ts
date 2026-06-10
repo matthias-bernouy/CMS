@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryLocalCredentialStore } from "cms-auth/default-implementation/InMemoryLocalCredentialStore";
+import { InMemoryLocalCredentialStore } from "cms-auth/default-implementation/memory/InMemoryLocalCredentialStore";
 
 const store = () => new InMemoryLocalCredentialStore();
 
