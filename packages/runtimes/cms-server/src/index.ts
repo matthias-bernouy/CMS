@@ -20,6 +20,7 @@ import { InMemoryCache } from "@bernouy/http-runner";
 import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { MongoCmsFilesMetadata } from "@bernouy/cms-files/mongo";
 import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { type CMS_ROLES } from "@bernouy/cms-permissions";
 import { MongoRolesRepository } from "@bernouy/cms-permissions/mongo";
 import {
@@ -78,7 +79,8 @@ const dekRepo      = new MongoDekRepository(db.collection("cms_deks"));
 const secretCrypto = new EnvelopeSecretCrypto(kekProvider, dekRepo);
 const fieldCrypto    = await createFieldCrypto(SCOPE_ID, secretCrypto, db);
 
-const repo              = new MongoCmsRepository(db);                              await repo.init();
+const innerRepo         = new MongoCmsRepository(db);                              await innerRepo.init();
+const repo              = new ValidatingCmsRepository(innerRepo);
 const filesMetadata     = new MongoCmsFilesMetadata(db);                           await filesMetadata.init();
 const filesBlob         = new LocalFsCmsFilesBlob(CMS_FILES_DIR);
 // Content-addressed store for the generated image variants (`<hash>-<w>.webp`).

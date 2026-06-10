@@ -90,9 +90,4 @@ describe("PUT /api/snippet (update)", () => {
         expect(deleteSpy).toHaveLength(0);
     });
 
-    test("name is trimmed before persistence", async () => {
-        const { cms, updateCalls } = makeSystem();
-        await putSnippet(makeRequest({ id: "snip-1", name: "  New  " }), cms);
-        expect(updateCalls[0]?.data.name).toBe("New");
-    });
 });

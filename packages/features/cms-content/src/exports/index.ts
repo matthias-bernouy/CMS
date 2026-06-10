@@ -24,9 +24,15 @@ export type {
 export { InMemoryCmsRepository } from "cms-content/default-implementation/InMemoryCmsRepository";
 export { filterAndSortPages }    from "cms-content/core/pagesQuery";
 export { expandSnippets, type SnippetReader } from "cms-content/core/expandSnippets";
-export { assertContentRefsExist, type ContentRefsReader } from "cms-content/core/assertContentRefsExist";
-export { hardenStoredHtml } from "cms-content/core/hardenStoredHtml";
 export { ContentValidationError, ContentConflictError } from "cms-content/core/errors";
+
+// ── Validation (rules live here; the decorator is the unbypassable barrier) ─
+export { ValidatingCmsRepository } from "cms-content/core/validation/ValidatingCmsRepository";
+export { assertContentRefsExist, type ContentRefsReader } from "cms-content/core/validation/assertContentRefsExist";
+export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
+export { validatePagePath, validatePageTitle, validatePagePatch }   from "cms-content/core/validation/pages";
+export { validateSnippetIdentifier, validateSnippetPatch }          from "cms-content/core/validation/snippets";
+export { validateTemplateIdentifier, validateTemplatePatch }        from "cms-content/core/validation/templates";
 
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
 export { registerStyleEndpoint } from "cms-content/http/registerStyleEndpoint";
@@ -34,7 +40,7 @@ export { registerStyleEndpoint } from "cms-content/http/registerStyleEndpoint";
 // ── Constants & utils ──────────────────────────────────────────────────
 export * from "cms-content/core/constants/p9r-constants";
 export * from "cms-content/core/constants/editorAttributes";
-export * from "cms-content/core/utils/validation";
+export * from "cms-content/core/validation/predicates";
 export * from "cms-content/core/utils/contentRefs";
 export { sanitizeDomTree } from "cms-content/core/utils/sanitizeDomTree";
 export { escapeRegex }     from "cms-content/core/utils/escapeRegex";

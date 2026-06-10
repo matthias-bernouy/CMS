@@ -34,18 +34,6 @@ describe("POST /api/page (create)", () => {
             .rejects.toThrow(/Missing param path/);
     });
 
-    test("throws when path format is invalid", async () => {
-        const { cms } = makeSystem();
-        await expect(postPage(makeRequest({ title: "About", path: "about" }), cms))
-            .rejects.toThrow(/Invalid param path/);
-    });
-
-    test("throws when title is empty after trim", async () => {
-        const { cms } = makeSystem();
-        await expect(postPage(makeRequest({ title: "   ", path: "/about" }), cms))
-            .rejects.toThrow();
-    });
-
     test("happy path: calls insertPage and returns ok", async () => {
         const { cms, insertCalls } = makeSystem();
         const res = await postPage(makeRequest({ title: "About", path: "/about" }), cms);
@@ -53,9 +41,4 @@ describe("POST /api/page (create)", () => {
         expect(insertCalls).toEqual([{ path: "/about", title: "About" }]);
     });
 
-    test("title is trimmed before persistence", async () => {
-        const { cms, insertCalls } = makeSystem();
-        await postPage(makeRequest({ title: "  About  ", path: "/about" }), cms);
-        expect(insertCalls[0]?.title).toBe("About");
-    });
 });

@@ -1,5 +1,5 @@
 import type { ControlCms } from 'cms-control/ControlCms';
-import { DEFAULT_TEMPLATE_CONTENT } from '../validation/template/content';
+import { DEFAULT_TEMPLATE_CONTENT } from '../validation/contentDefaults';
 import type { TemplateCreateDto } from '../validation/template/parseCreateDto';
 
 export async function createTemplate(cms: ControlCms, dto: TemplateCreateDto): Promise<void> {

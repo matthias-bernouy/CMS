@@ -1,6 +1,6 @@
 import type { ControlCms } from 'cms-control/ControlCms';
 import InvalidParam from 'cms-control/errors/Http/InvalidParam';
-import { DEFAULT_SNIPPET_CONTENT } from '../validation/snippet/content';
+import { DEFAULT_SNIPPET_CONTENT } from '../validation/contentDefaults';
 import type { SnippetCreateDto } from '../validation/snippet/parseCreateDto';
 
 export async function createSnippet(cms: ControlCms, dto: SnippetCreateDto): Promise<void> {

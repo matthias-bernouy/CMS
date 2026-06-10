@@ -33,12 +33,6 @@ describe("POST /api/template (create)", () => {
             .rejects.toThrow(/Missing param name/);
     });
 
-    test("rejects an identifier that isn't kebab-case", async () => {
-        const { cms } = makeSystem();
-        await expect(postTemplate(makeRequest({ identifier: "Hero Section", name: "Hero" }), cms))
-            .rejects.toThrow(/identifier/);
-    });
-
     test("happy path: persists identifier + category + default content + empty description", async () => {
         const { cms, createCalls } = makeSystem();
         const res = await postTemplate(
@@ -54,12 +48,6 @@ describe("POST /api/template (create)", () => {
         expect(t.description).toBe("");
         expect(t.content.length).toBeGreaterThan(0);
         expect(t.createdAt).toBeInstanceOf(Date);
-    });
-
-    test("name is trimmed before persistence", async () => {
-        const { cms, createCalls } = makeSystem();
-        await postTemplate(makeRequest({ identifier: "hero", name: "  Hero  " }), cms);
-        expect(createCalls[0]?.name).toBe("Hero");
     });
 
     test("category is sanitized to a string when not provided", async () => {

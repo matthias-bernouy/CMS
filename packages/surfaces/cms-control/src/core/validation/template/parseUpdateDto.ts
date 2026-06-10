@@ -1,9 +1,5 @@
 import MissingParam from 'cms-control/errors/Http/MissingParam';
-import { assertValidTemplateId } from './id';
-import { assertValidTemplateName } from './name';
-import { sanitizeTemplateCategory } from './category';
-import { sanitizeTemplateDescription } from './description';
-import { sanitizeTemplateContent } from './content';
+import { DEFAULT_TEMPLATE_CONTENT } from '../contentDefaults';
 
 export type TemplateUpdateDto = {
     id: string;
@@ -14,23 +10,19 @@ export type TemplateUpdateDto = {
 };
 
 /**
- * Validates a JSON body against the template-update contract and produces a
- * fully-typed DTO. Throws `MissingParam` for absent required fields and
- * `InvalidParam` for malformed values.
+ * Extract the template-update body: presence + shape coercion. `identifier`
+ * is intentionally absent (immutable). Domain rules run at write time.
  */
 export function parseTemplateUpdateDto(body: Record<string, unknown>): TemplateUpdateDto {
     const { id, name } = body;
     if (!id)   throw new MissingParam('id');
     if (!name) throw new MissingParam('name');
-
-    assertValidTemplateId(id);
-    assertValidTemplateName(name);
-
+    const content = body.content == null || String(body.content).trim() === '' ? DEFAULT_TEMPLATE_CONTENT : String(body.content);
     return {
-        id,
-        name: name.trim(),
-        category:    sanitizeTemplateCategory(body.category),
-        description: sanitizeTemplateDescription(body.description),
-        content:     sanitizeTemplateContent(body.content),
+        id:          String(id),
+        name:        String(name),
+        category:    body.category    == null ? '' : String(body.category),
+        description: body.description == null ? '' : String(body.description),
+        content,
     };
 }

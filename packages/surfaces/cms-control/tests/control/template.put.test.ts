@@ -65,9 +65,4 @@ describe("PUT /api/template (update)", () => {
         expect(updateCalls[0]?.data.category).toBe("landing");
     });
 
-    test("name is trimmed before persistence", async () => {
-        const { cms, updateCalls } = makeSystem();
-        await putTemplate(makeRequest({ id: "tpl-1", name: "  New  " }), cms);
-        expect(updateCalls[0]?.data.name).toBe("New");
-    });
 });

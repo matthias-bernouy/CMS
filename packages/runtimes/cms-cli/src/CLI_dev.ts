@@ -17,6 +17,7 @@ import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { loadDevGateways } from "./dev-server/gateways";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
+import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { LocalFsCmsFiles } from "@bernouy/cms-files";
 import { InMemoryUsersRepository } from "@bernouy/cms-auth";
 import { InMemoryIdentityProviderRepository } from "@bernouy/cms-auth";
@@ -82,7 +83,7 @@ export default async function CLI_dev(args: string[]) {
     if (blocs.length > 0) console.log(`→ Built ${built.size}/${blocs.length} bloc(s).`);
 
     const reload = createReloadEmitter();
-    const repo   = new LocalFsCmsRepository(config.siteDir, built);
+    const repo   = new ValidatingCmsRepository(new LocalFsCmsRepository(config.siteDir, built));
     // `identifier` matches the seeded `dev-admin` membership row below so the
     // Profile page (getSubject → users.getBySub) resolves to a real user and
     // self-service edits work in dev.

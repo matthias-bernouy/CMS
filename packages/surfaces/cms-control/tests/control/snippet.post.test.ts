@@ -45,19 +45,6 @@ describe("POST /api/snippet (create)", () => {
             .rejects.toThrow(/Missing param name/);
     });
 
-    test.each([
-        ["Hero"],
-        ["hero_section"],
-        ["hero section"],
-        ["-leading"],
-        ["trailing-"],
-        ["double--dash"],
-    ])("throws on invalid kebab identifier %p", async (identifier) => {
-        const { cms } = makeSystem();
-        await expect(postSnippet(makeRequest({ identifier, name: "n" }), cms))
-            .rejects.toThrow();
-    });
-
     test.each([["hero"], ["hero-section"], ["a1-b2-c3"], ["x"]])(
         "succeeds on valid kebab identifier %p",
         async (identifier) => {
@@ -93,9 +80,4 @@ describe("POST /api/snippet (create)", () => {
         expect(s.createdAt).toBe(s.updatedAt);
     });
 
-    test("name is trimmed before persistence", async () => {
-        const { cms, createCalls } = makeSystem();
-        await postSnippet(makeRequest({ identifier: "hero", name: "  Hero  " }), cms);
-        expect(createCalls[0]?.name).toBe("Hero");
-    });
 });
