@@ -1,6 +1,6 @@
 import { describe, test, expect, mock } from "bun:test";
 import { handleGatewayRequest } from "cms-gateway/http/handleGatewayRequest";
-import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/GatewayRepository/memory";
+import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/InMemoryGatewayRepository";
 import type { Provider } from "cms-gateway/interfaces/Gateway";
 
 const PREFIX = "/base/.cms/gateway/";

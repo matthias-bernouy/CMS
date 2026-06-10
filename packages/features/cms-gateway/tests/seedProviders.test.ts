@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { seedProviders } from "cms-gateway/core/seedProviders";
-import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/GatewayRepository/memory";
+import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/InMemoryGatewayRepository";
 import type { Provider } from "cms-gateway/interfaces/Gateway";
 
 // Sample manifest (no-auth, public) — also used as a fixture for developing

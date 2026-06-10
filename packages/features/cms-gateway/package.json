@@ -4,10 +4,11 @@
     "description": "Data-gateway substrate — declares providers and their endpoints (call contract, input/output JSON Schemas, outbound injection rules). CMS- and persistence-agnostic; consumed by cms-delivery (proxy) and the cms-control editor.",
     "license": "UNLICENSED",
     "type": "module",
-    "main": "./src/index.ts",
+    "main": "./src/exports/index.ts",
     "exports": {
-        ".": "./src/index.ts",
-        "./presets": "./src/presets/index.ts"
+        ".": "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts",
+        "./presets": "./src/exports/presets.ts"
     },
     "dependencies": {
         "@bernouy/http-runner": "workspace:*"

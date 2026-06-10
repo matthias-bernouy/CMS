@@ -10853,7 +10853,7 @@ cms-endpoints-input .ep-add:hover {
   var HEADER_NAME_RE = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
   var isForbiddenHeaderName = (n) => FORBIDDEN_REQUEST_HEADERS.has(n.toLowerCase());
   var isValidHeaderName = (n) => HEADER_NAME_RE.test(n);
-  // ../../features/cms-gateway/src/default-implementation/GatewayRepository/memory.ts
+  // ../../features/cms-gateway/src/default-implementation/InMemoryGatewayRepository.ts
   class InMemoryGatewayRepository {
     _providers = new Map;
     async createProvider(provider) {

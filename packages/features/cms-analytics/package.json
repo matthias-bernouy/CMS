@@ -4,9 +4,10 @@
     "description": "Server-side, privacy-first web analytics — cookieless page-view + latency collection (delivery) and write-time pre-aggregated counters behind a substitutable AnalyticsStore interface.",
     "license": "UNLICENSED",
     "type": "module",
-    "main": "./src/index.ts",
+    "main": "./src/exports/index.ts",
     "exports": {
-        ".": "./src/index.ts"
+        ".": "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
         "@bernouy/http-runner": "workspace:*"

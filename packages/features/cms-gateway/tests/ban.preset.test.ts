@@ -4,7 +4,7 @@ import { validateProvider } from "cms-gateway/core/validateProvider";
 import { seedProviders } from "cms-gateway/core/seedProviders";
 import { resolveEndpoint } from "cms-gateway/core/resolveEndpoint";
 import { buildUpstreamUrl } from "cms-gateway/core/buildUpstreamUrl";
-import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/GatewayRepository/memory";
+import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/InMemoryGatewayRepository";
 
 const q = (s: string) => new URL("http://local/?" + s).searchParams;
 const endpoint = (urn: string) => BAN_PROVIDER.endpoints.find(e => e.urn === urn)!;

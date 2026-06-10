@@ -1,5 +1,5 @@
-import type { GatewayRepository } from "../../interfaces/GatewayRepository";
-import type { Provider, Endpoint } from "../../interfaces/Gateway";
+import type { GatewayRepository } from "../interfaces/GatewayRepository";
+import type { Provider, Endpoint } from "../interfaces/Gateway";
 
 /**
  * In-memory implementation of `GatewayRepository` — the dep-free default, for

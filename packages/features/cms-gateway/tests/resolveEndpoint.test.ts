@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { resolveEndpoint } from "cms-gateway/core/resolveEndpoint";
-import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/GatewayRepository/memory";
+import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/InMemoryGatewayRepository";
 import type { Provider } from "cms-gateway/interfaces/Gateway";
 
 const provider: Provider = {

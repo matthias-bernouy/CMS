@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { ValidatingGatewayRepository } from "cms-gateway/core/ValidatingGatewayRepository";
-import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/GatewayRepository/memory";
+import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/InMemoryGatewayRepository";
 import { GatewayValidationError } from "cms-gateway/core/errors";
 import type { Provider } from "cms-gateway/interfaces/Gateway";
 

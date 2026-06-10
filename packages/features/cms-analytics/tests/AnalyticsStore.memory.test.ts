@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryAnalyticsStore } from "cms-analytics/default-implementation/AnalyticsStore/memory";
+import { InMemoryAnalyticsStore } from "cms-analytics/default-implementation/InMemoryAnalyticsStore";
 import type { AnalyticsEvent } from "cms-analytics/interfaces/AnalyticsEvent";
 
 const ev = (over: Partial<AnalyticsEvent> = {}): AnalyticsEvent => ({
