@@ -1,4 +1,4 @@
-import { showToast } from "cms-control/core/showToast";
+import { showToast } from "@bernouy/components";
 import { escapeHtml as esc } from "@bernouy/http-runner/html";
 
 type RoleOption = { id: string; label: string };

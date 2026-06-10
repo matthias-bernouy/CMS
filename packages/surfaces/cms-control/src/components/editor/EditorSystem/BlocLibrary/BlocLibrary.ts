@@ -11,7 +11,6 @@ import { renderSearch } from './sections/renderSearch';
 import type { BlocMeta, InsertDetail, Section, SnippetItem, TemplateItem } from './types';
 
 import './components/Card/Card';
-import './components/EmptyState/EmptyState';
 
 const Metadata: ComponentMetadata = {
     css,

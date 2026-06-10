@@ -1,5 +1,5 @@
 import { Card } from '../components/Card/Card';
-import { EmptyState } from '../components/EmptyState/EmptyState';
+import { EmptyState } from 'cms-control/components/admin/EmptyState/EmptyState';
 import { ICON_COMPONENT, ICON_SNIPPET, ICON_TEMPLATE } from '../../../../icons';
 import { fetchTemplateContent } from '../api';
 import type { BlocMeta, OnPick, SnippetItem, TagElement, TemplateItem } from '../types';
@@ -39,7 +39,7 @@ export function renderSearch({ grid, query, blocs, blocMeta, templates, snippets
     if (total === 0) {
         grid.appendChild(EmptyState.create({
             icon: ICON_COMPONENT,
-            message: `No results for "${query}"`,
+            title: `No results for "${query}"`,
         }));
         return;
     }

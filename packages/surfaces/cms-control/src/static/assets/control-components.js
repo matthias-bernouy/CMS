@@ -7908,6 +7908,17 @@ p9r-tag:hover {
       return r.textContent = t, this.appendChild(r), r;
     }
   }
+  var v = null;
+  function Wl() {
+    if (v && v.isConnected)
+      return v;
+    if (v = document.querySelector("p9r-toast-stack"), v)
+      return v;
+    return v = document.createElement("p9r-toast-stack"), document.body.appendChild(v), v;
+  }
+  function Yl(t, e = {}) {
+    return Wl().push(t, e);
+  }
   var _n = `<div class="trigger" part="trigger">
     <slot></slot>
 </div>
@@ -9709,7 +9720,7 @@ p9r-tag:hover {
       this.customActions.push(action);
     }
     get isInteractive() {
-      return this._actionBarFeatures.values().some((v) => v === true) || this.stateSyncs.length > 0 || this.customActions.length > 0 || this.hasConfigPanel;
+      return this._actionBarFeatures.values().some((v2) => v2 === true) || this.stateSyncs.length > 0 || this.customActions.length > 0 || this.hasConfigPanel;
     }
     get hasConfigPanel() {
       return this._panel.hasPanel;
@@ -10002,16 +10013,6 @@ p9r-tag:hover {
     }
   }
 
-  // src/core/showToast.ts
-  function showToast(message, options) {
-    let stack = document.querySelector("p9r-toast-stack");
-    if (!stack) {
-      stack = document.createElement("p9r-toast-stack");
-      document.body.appendChild(stack);
-    }
-    stack.push(message, options);
-  }
-
   // src/components/admin/ConfirmForm/ConfirmForm.ts
   class CmsConfirmForm extends HTMLElement {
     _busy = false;
@@ -10043,7 +10044,7 @@ p9r-tag:hover {
       const target = this.getAttribute("target");
       const method = this.getAttribute("method") || "POST";
       if (!target) {
-        showToast("cms-confirm-form: missing target", { type: "error" });
+        Yl("cms-confirm-form: missing target", { type: "error" });
         return;
       }
       const url = force ? withForce(target) : target;
@@ -10051,7 +10052,7 @@ p9r-tag:hover {
       try {
         res = await fetch(url, { method });
       } catch (e) {
-        showToast(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
+        Yl(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
         return;
       }
       if (res.ok) {
@@ -10078,7 +10079,7 @@ ${followMessage}`)) {
         if (body?.error)
           message = body.error;
       } catch {}
-      showToast(message || `HTTP ${res.status}`, { type: "error" });
+      Yl(message || `HTTP ${res.status}`, { type: "error" });
     }
     _onSuccess() {
       const emit = this.getAttribute("emit");
@@ -10293,7 +10294,7 @@ ${followMessage}`)) {
   async function fetchKeys(api) {
     const res = await fetch(`${api}/keys`, { headers: { Accept: "application/json" } });
     if (!res.ok) {
-      showToast("Failed to load credentials", { type: "error" });
+      Yl("Failed to load credentials", { type: "error" });
       return [];
     }
     return res.json();
@@ -10432,19 +10433,19 @@ ${followMessage}`)) {
       keyInput.setAttribute("invalid", "");
       keyInput.setAttribute("hint", "Must match /^[A-Z][A-Z0-9_]*$/");
       keyInput.setAttribute("hint-level", "error");
-      showToast("Invalid key: must match /^[A-Z][A-Z0-9_]*$/", { type: "error" });
+      Yl("Invalid key: must match /^[A-Z][A-Z0-9_]*$/", { type: "error" });
       return;
     }
     if (host._keys.includes(key)) {
-      showToast(`Credential ${key} already exists`, { type: "warning" });
+      Yl(`Credential ${key} already exists`, { type: "warning" });
       return;
     }
     const r = await createCredential(host._api, key, value);
     if (!r.ok) {
-      showToast(`Create failed: ${r.error}`, { type: "error" });
+      Yl(`Create failed: ${r.error}`, { type: "error" });
       return;
     }
-    showToast(`Credential ${key} created`, { type: "success" });
+    Yl(`Credential ${key} created`, { type: "success" });
     m.removeAttribute("open");
     await refreshList(host);
     setValue(host, keyToRef(key));
@@ -10474,8 +10475,8 @@ ${followMessage}`)) {
         this._refs = buildShadow(this, this.getAttribute("label"));
         this._wire();
       }
-      const v = this._value || this.getAttribute("value") || "";
-      setValue(this, v);
+      const v2 = this._value || this.getAttribute("value") || "";
+      setValue(this, v2);
       document.addEventListener("secret:saved", this._onSecretSaved);
     }
     disconnectedCallback() {
@@ -10485,8 +10486,8 @@ ${followMessage}`)) {
     get value() {
       return this._value;
     }
-    set value(v) {
-      setValue(this, v);
+    set value(v2) {
+      setValue(this, v2);
     }
     get name() {
       return this.getAttribute("name");
@@ -10545,6 +10546,13 @@ ${followMessage}`)) {
     height: 320px;
 }
 
+/* \`fluid\` — normal-flow variant for grid/panel contexts (vs the table-row
+   default used as the empty slot of p9r-table listings). */
+:host([fluid]) {
+    display: block;
+    height: auto;
+}
+
 .cell {
     position: absolute;
     inset: 0;
@@ -10556,6 +10564,11 @@ ${followMessage}`)) {
     padding: 24px;
     text-align: center;
     color: var(--text-muted);
+}
+
+:host([fluid]) .cell {
+    position: static;
+    padding: 48px 24px;
 }
 
 ::slotted([slot="icon"]) {
@@ -10586,6 +10599,29 @@ ${followMessage}`)) {
         css: style_default,
         template: template_default2
       });
+    }
+    static create(opts) {
+      const el = document.createElement("cms-empty-state");
+      el.setAttribute("fluid", "");
+      if (opts.icon) {
+        const fragment = document.createRange().createContextualFragment(opts.icon);
+        const iconRoot = fragment.firstElementChild;
+        if (iconRoot) {
+          iconRoot.setAttribute("slot", "icon");
+          el.appendChild(iconRoot);
+        }
+      }
+      const title = document.createElement("p");
+      title.slot = "title";
+      title.textContent = opts.title;
+      el.appendChild(title);
+      if (opts.hint) {
+        const hint = document.createElement("p");
+        hint.slot = "hint";
+        hint.textContent = opts.hint;
+        el.appendChild(hint);
+      }
+      return el;
     }
   }
   if (!customElements.get("cms-empty-state")) {
@@ -10874,10 +10910,10 @@ cms-endpoints-input .ep-add:hover {
     if (opts.name)
       select.setAttribute("name", opts.name);
     select.setAttribute("label", opts.label ?? "");
-    for (const v of values) {
+    for (const v2 of values) {
       const o = select.appendChild(document.createElement("option"));
-      o.value = v;
-      o.textContent = v;
+      o.value = v2;
+      o.textContent = v2;
     }
     select.setAttribute("value", value && values.includes(value) ? value : values[0]);
     return select;
@@ -10980,8 +11016,8 @@ cms-endpoints-input .ep-add:hover {
     if (role)
       f2.dataset.role = role;
     f2.sync = (read) => {
-      const v = read();
-      f2.value = v == null || Array.isArray(v) && v.length === 0 ? "" : JSON.stringify(v);
+      const v2 = read();
+      f2.value = v2 == null || Array.isArray(v2) && v2.length === 0 ? "" : JSON.stringify(v2);
     };
     return f2;
   }
@@ -11080,8 +11116,8 @@ cms-endpoints-input .ep-add:hover {
         const list = document.createElement("div");
         list.className = "ep-prop-list";
         const req = new Set(s2.required ?? []);
-        for (const [k, v] of Object.entries(s2.properties ?? {}))
-          list.appendChild(makeProp(k, v, req.has(k)));
+        for (const [k, v2] of Object.entries(s2.properties ?? {}))
+          list.appendChild(makeProp(k, v2, req.has(k)));
         const add = document.createElement("button");
         add.type = "button";
         add.className = "ep-add-prop";
@@ -11270,15 +11306,15 @@ cms-endpoints-input .ep-add:hover {
   ];
   var CUSTOM = "custom";
   var VALID = /^[1-5][0-9][0-9]$/;
-  var isValid = (v) => VALID.test(v) || v === "default";
+  var isValid = (v2) => VALID.test(v2) || v2 === "default";
   function buildSelect(value) {
     const select = document.createElement("p9r-select");
     select.dataset.role = "response-status";
     select.className = "ep-status";
     select.setAttribute("label", "");
-    const opt = (v, label) => {
+    const opt = (v2, label) => {
       const o = select.appendChild(document.createElement("option"));
-      o.value = v;
+      o.value = v2;
       o.textContent = label;
     };
     opt("", "Status…");
@@ -11300,8 +11336,8 @@ cms-endpoints-input .ep-add:hover {
       input.setAttribute("value", seed);
     input.style.display = custom ? "" : "none";
     const validate = () => {
-      const v = readControl(input).trim();
-      if (readControl(select) === CUSTOM && v && !isValid(v)) {
+      const v2 = readControl(input).trim();
+      if (readControl(select) === CUSTOM && v2 && !isValid(v2)) {
         input.setAttribute("invalid", "");
         input.setAttribute("hint", "Code 100–599 ou « default »");
         input.setAttribute("hint-level", "error");
@@ -11312,9 +11348,9 @@ cms-endpoints-input .ep-add:hover {
       }
     };
     select.addEventListener("change", () => {
-      const v = readControl(select);
-      select.setAttribute("value", v);
-      input.style.display = v === CUSTOM ? "" : "none";
+      const v2 = readControl(select);
+      select.setAttribute("value", v2);
+      input.style.display = v2 === CUSTOM ? "" : "none";
       validate();
       onChange();
     });
@@ -11332,8 +11368,8 @@ cms-endpoints-input .ep-add:hover {
     const read = () => {
       const sel = readControl(select);
       if (sel === CUSTOM) {
-        const v = readControl(input).trim();
-        return v || null;
+        const v2 = readControl(input).trim();
+        return v2 || null;
       }
       return sel || null;
     };
@@ -11467,10 +11503,10 @@ cms-endpoints-input .ep-add:hover {
     credSelect.style.display = from === "secret" ? "" : "none";
     credSelect.addEventListener("change", onChange);
     fromSelect.addEventListener("change", () => {
-      const v = readControl(fromSelect);
-      fromSelect.setAttribute("value", v);
-      staticInput.style.display = v === "static" ? "" : "none";
-      credSelect.style.display = v === "secret" ? "" : "none";
+      const v2 = readControl(fromSelect);
+      fromSelect.setAttribute("value", v2);
+      staticInput.style.display = v2 === "static" ? "" : "none";
+      credSelect.style.display = v2 === "secret" ? "" : "none";
       onChange();
     });
     const remove = makeIconButton(ICON_X, { ariaLabel: "Remove header", onClick: onRemove });
@@ -11665,7 +11701,7 @@ cms-endpoints-input .ep-add:hover {
       const message = this.getAttribute("message") ?? "";
       const type = this.getAttribute("type") ?? "success";
       if (message)
-        showToast(message, { type });
+        Yl(message, { type });
     };
     connectedCallback() {
       this.style.display = "none";
@@ -11777,7 +11813,7 @@ cms-endpoints-input .ep-add:hover {
       const next = !this._enabled;
       if (await this._send("PATCH", { id: this._id, enabled: next })) {
         this.setAttribute("enabled", String(next));
-        showToast(next ? "Provider enabled" : "Provider disabled", { type: "success" });
+        Yl(next ? "Provider enabled" : "Provider disabled", { type: "success" });
         this._fire();
       }
     }
@@ -11785,7 +11821,7 @@ cms-endpoints-input .ep-add:hover {
       if (!confirm(`Remove provider "${this._id}"?`))
         return;
       if (await this._send("DELETE", { id: this._id })) {
-        showToast("Provider removed", { type: "success" });
+        Yl("Provider removed", { type: "success" });
         this._fire();
       }
     }
@@ -11793,12 +11829,12 @@ cms-endpoints-input .ep-add:hover {
       try {
         const res = await fetch(this._base, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
         if (!res.ok) {
-          showToast("Action failed", { type: "error" });
+          Yl("Action failed", { type: "error" });
           return false;
         }
         return true;
       } catch {
-        showToast("Network error", { type: "error" });
+        Yl("Network error", { type: "error" });
         return false;
       }
     }
@@ -11885,14 +11921,14 @@ cms-endpoints-input .ep-add:hover {
           body: JSON.stringify({ sub: this._sub, role })
         });
         if (res.ok) {
-          showToast("Role updated", { type: "success" });
+          Yl("Role updated", { type: "success" });
           if (this._emit)
             document.dispatchEvent(new Event(this._emit, { bubbles: true }));
         } else {
-          showToast("Failed to update role", { type: "error" });
+          Yl("Failed to update role", { type: "error" });
         }
       } catch {
-        showToast("Network error", { type: "error" });
+        Yl("Network error", { type: "error" });
       }
     }
     get name() {
@@ -12003,13 +12039,13 @@ cms-endpoints-input .ep-add:hover {
           body: JSON.stringify({ id: this.data.role.id, label: this.data.role.label, grants })
         });
         if (res.ok) {
-          showToast("Role permissions saved", { type: "success" });
+          Yl("Role permissions saved", { type: "success" });
           location.href = this._back;
         } else {
-          showToast("Failed to save permissions", { type: "error" });
+          Yl("Failed to save permissions", { type: "error" });
         }
       } catch {
-        showToast("Network error", { type: "error" });
+        Yl("Network error", { type: "error" });
       }
     }
   }
@@ -12052,7 +12088,7 @@ cms-endpoints-input .ep-add:hover {
           body: JSON.stringify({ name })
         });
         if (!res.ok) {
-          showToast("Could not create token", { type: "error" });
+          Yl("Could not create token", { type: "error" });
           return;
         }
         const { token } = await res.json();
@@ -12062,14 +12098,14 @@ cms-endpoints-input .ep-add:hover {
         this._q('[data-role="reveal"]').hidden = false;
         document.dispatchEvent(new Event(this._emit, { bubbles: true }));
       } catch {
-        showToast("Network error", { type: "error" });
+        Yl("Network error", { type: "error" });
       } finally {
         btn.removeAttribute("disabled");
       }
     }
     _copy() {
       navigator.clipboard?.writeText(this._token);
-      showToast("Token copied", { type: "success" });
+      Yl("Token copied", { type: "success" });
     }
     _reset() {
       this._token = "";
@@ -12259,32 +12295,32 @@ cms-endpoints-input .ep-add:hover {
   async function opSaveRow(api, key, value) {
     const r = await postSecret(api, key, value);
     if (r.ok)
-      showToast(`Secret ${key} updated`, { type: "success" });
+      Yl(`Secret ${key} updated`, { type: "success" });
     else
-      showToast(`Update failed: ${r.error}`, { type: "error" });
+      Yl(`Update failed: ${r.error}`, { type: "error" });
   }
   async function opAddSecret(api, keyEl, valueEl, knownKeys) {
     const key = keyEl.value.trim();
     const value = valueEl.value;
     if (!key) {
-      showToast("Key is required", { type: "error" });
+      Yl("Key is required", { type: "error" });
       return;
     }
     if (!KEY_PATTERN2.test(key)) {
-      showToast(`Invalid key: must match /^[A-Z][A-Z0-9_]*$/`, { type: "error" });
+      Yl(`Invalid key: must match /^[A-Z][A-Z0-9_]*$/`, { type: "error" });
       return;
     }
     if (knownKeys.has(key)) {
-      showToast(`Secret ${key} already exists — edit it inline below`, { type: "warning" });
+      Yl(`Secret ${key} already exists — edit it inline below`, { type: "warning" });
       return;
     }
     const r = await postSecret(api, key, value);
     if (r.ok) {
       keyEl.value = "";
       valueEl.value = "";
-      showToast(`Secret ${key} created`, { type: "success" });
+      Yl(`Secret ${key} created`, { type: "success" });
     } else {
-      showToast(`Create failed: ${r.error}`, { type: "error" });
+      Yl(`Create failed: ${r.error}`, { type: "error" });
     }
   }
   async function opDeleteSecret(api, key) {
@@ -12292,9 +12328,9 @@ cms-endpoints-input .ep-add:hover {
       return;
     const r = await deleteSecret(api, key);
     if (r.ok)
-      showToast(`Secret ${key} deleted`, { type: "success" });
+      Yl(`Secret ${key} deleted`, { type: "success" });
     else
-      showToast(`Delete failed: ${r.error}`, { type: "error" });
+      Yl(`Delete failed: ${r.error}`, { type: "error" });
   }
 
   // src/components/admin/Secrets/Secrets.ts
@@ -12765,11 +12801,11 @@ cms-endpoints-input .ep-add:hover {
   }
 
   // src/components/editor/componentSync/PageLink/detect.ts
-  function isExternal(v) {
-    return /^(https?:|mailto:|tel:|\/\/)/i.test(v);
+  function isExternal(v2) {
+    return /^(https?:|mailto:|tel:|\/\/)/i.test(v2);
   }
-  function isMedia(v) {
-    return /(^|\/)media\?id=/.test(v);
+  function isMedia(v2) {
+    return /(^|\/)media\?id=/.test(v2);
   }
   function mediaLabel(src) {
     const m = src.match(/id=([^&]+)/);
@@ -12878,20 +12914,20 @@ cms-endpoints-input .ep-add:hover {
     host._options = buildOptionList(host._refs.list, host._refs.empty, pages, (p) => select(host, p.path, p.title));
     host._options.forEach((li2) => li2.classList.toggle("selected", li2.dataset.value === host._value));
   }
-  function select(host, v, label) {
-    setValue2(host, v, label);
+  function select(host, v2, label) {
+    setValue2(host, v2, label);
     closePanel2(host);
     host.dispatchEvent(new Event("change", { bubbles: true }));
   }
-  function setValue2(host, v, label) {
-    host._value = v;
+  function setValue2(host, v2, label) {
+    host._value = v2;
     const r = host._refs;
-    r.display.textContent = v ? label : "No link";
-    r.trigger.classList.toggle("has-value", !!v);
-    r.clearBtn.style.display = v ? "flex" : "none";
-    host._options.forEach((li2) => li2.classList.toggle("selected", li2.dataset.value === v));
-    const m = isMedia(v);
-    r.mediaCurrent.textContent = m ? v : "";
+    r.display.textContent = v2 ? label : "No link";
+    r.trigger.classList.toggle("has-value", !!v2);
+    r.clearBtn.style.display = v2 ? "flex" : "none";
+    host._options.forEach((li2) => li2.classList.toggle("selected", li2.dataset.value === v2));
+    const m = isMedia(v2);
+    r.mediaCurrent.textContent = m ? v2 : "";
     r.mediaCurrent.classList.toggle("has-value", m);
   }
   function openPanel2(host) {
@@ -13013,25 +13049,25 @@ cms-endpoints-input .ep-add:hover {
     async _loadPages() {
       this._pages = await fetchPages();
       refresh(this, this._pages);
-      const v = this.getAttribute("value") || "";
-      if (v)
-        this.value = v;
+      const v2 = this.getAttribute("value") || "";
+      if (v2)
+        this.value = v2;
     }
     get value() {
       return this._value;
     }
-    set value(v) {
-      if (isMedia(v)) {
+    set value(v2) {
+      if (isMedia(v2)) {
         this._mode = "media";
-        setValue2(this, v, mediaLabel(v));
-      } else if (isExternal(v)) {
+        setValue2(this, v2, mediaLabel(v2));
+      } else if (isExternal(v2)) {
         this._mode = "external";
-        this._refs.externalInput.value = v;
-        setValue2(this, v, v);
+        this._refs.externalInput.value = v2;
+        setValue2(this, v2, v2);
       } else {
         this._mode = "page";
-        const m = this._pages.find((p) => p.path === v);
-        setValue2(this, v, m ? m.title : v || "No link");
+        const m = this._pages.find((p) => p.path === v2);
+        setValue2(this, v2, m ? m.title : v2 || "No link");
       }
       applyMode(this);
     }
@@ -13880,8 +13916,8 @@ cms-endpoints-input .ep-add:hover {
     const raw = el.getAttribute("values");
     if (raw)
       return raw.split(",").map((s2) => s2.trim()).filter(Boolean);
-    const v = el.getAttribute("value") || "";
-    return v ? [v] : [];
+    const v2 = el.getAttribute("value") || "";
+    return v2 ? [v2] : [];
   }
   function parseLabels(el, values) {
     const raw = el.getAttribute("labels");
@@ -13890,22 +13926,22 @@ cms-endpoints-input .ep-add:hover {
     return values;
   }
   function parsePlacement(el) {
-    const v = el.getAttribute("placement");
-    return v === "right" || v === "top" || v === "bottom" ? v : "left";
+    const v2 = el.getAttribute("placement");
+    return v2 === "right" || v2 === "top" || v2 === "bottom" ? v2 : "left";
   }
 
   // src/components/editor/componentSync/sync/StateSync/applyTargets.ts
   function makeStateAttrOps(attrName) {
     if (attrName === "class")
       return {
-        apply: (el, v) => el.classList.add(v),
-        clear: (el, v) => el.classList.remove(v),
-        isApplied: (el, v) => el.classList.contains(v)
+        apply: (el, v2) => el.classList.add(v2),
+        clear: (el, v2) => el.classList.remove(v2),
+        isApplied: (el, v2) => el.classList.contains(v2)
       };
     return {
-      apply: (el, v) => el.setAttribute(attrName, v),
+      apply: (el, v2) => el.setAttribute(attrName, v2),
       clear: (el) => el.removeAttribute(attrName),
-      isApplied: (el, v) => el.getAttribute(attrName) === v
+      isApplied: (el, v2) => el.getAttribute(attrName) === v2
     };
   }
 
@@ -13998,12 +14034,12 @@ cms-endpoints-input .ep-add:hover {
     _startObserver(targets) {
       const filter = this.attrName === "class" ? ["class"] : [this.attrName];
       this._observer = new MutationObserver(() => {
-        const v = this._activeValue;
-        if (v === null)
+        const v2 = this._activeValue;
+        if (v2 === null)
           return;
         targets.forEach((el) => {
-          if (!this._ops.isApplied(el, v))
-            this._ops.apply(el, v);
+          if (!this._ops.isApplied(el, v2))
+            this._ops.apply(el, v2);
         });
       });
       targets.forEach((el) => this._observer.observe(el, { attributes: true, attributeFilter: filter }));
@@ -14283,8 +14319,8 @@ cms-endpoints-input .ep-add:hover {
         continue;
       }
       if (name === "href" || name === "xlink:href") {
-        const v = attr.value.trim().toLowerCase();
-        const safe = v.startsWith("#") || v.startsWith("/") || v.startsWith("./") || v.startsWith("../") || v.startsWith("http:") || v.startsWith("https:");
+        const v2 = attr.value.trim().toLowerCase();
+        const safe = v2.startsWith("#") || v2.startsWith("/") || v2.startsWith("./") || v2.startsWith("../") || v2.startsWith("http:") || v2.startsWith("https:");
         if (!safe)
           el.removeAttribute(attr.name);
       }
@@ -16668,6 +16704,10 @@ form[method="dialog"] {
     align-content: start;
 }
 
+.blocs-grid cms-empty-state {
+    grid-column: 1 / -1;
+}
+
 .section-header {
     grid-column: 1 / -1;
     font-size: 11px;
@@ -16847,78 +16887,13 @@ form[method="dialog"] {
     }
   }
 
-  // src/components/editor/EditorSystem/BlocLibrary/components/EmptyState/template.html
-  var template_default10 = `<div class="empty-state">
-    <slot name="icon"></slot>
-    <p><slot name="message"></slot></p>
-</div>
-`;
-
-  // src/components/editor/EditorSystem/BlocLibrary/components/EmptyState/style.css
-  var style_default10 = `:host {
-    display: contents;
-}
-
-.empty-state {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 48px 24px;
-    color: var(--text-secondary, #666);
-    text-align: center;
-}
-
-::slotted(svg) {
-    width: 40px;
-    height: 40px;
-    opacity: 0.3;
-}
-
-.empty-state p {
-    margin: 0;
-    font-size: 13px;
-}
-`;
-
-  // src/components/editor/EditorSystem/BlocLibrary/components/EmptyState/EmptyState.ts
-  var Metadata5 = {
-    css: style_default10,
-    template: template_default10
-  };
-
-  class EmptyState2 extends A2 {
-    constructor() {
-      super(Metadata5);
-    }
-    static create(opts) {
-      const el = document.createElement("cms-bloc-library-empty-state");
-      const iconFragment = document.createRange().createContextualFragment(opts.icon);
-      const iconRoot = iconFragment.firstElementChild;
-      if (iconRoot) {
-        iconRoot.setAttribute("slot", "icon");
-        el.appendChild(iconRoot);
-      }
-      const messageSpan = document.createElement("span");
-      messageSpan.slot = "message";
-      messageSpan.textContent = opts.message;
-      el.appendChild(messageSpan);
-      return el;
-    }
-  }
-  if (!customElements.get("cms-bloc-library-empty-state")) {
-    customElements.define("cms-bloc-library-empty-state", EmptyState2);
-  }
-
   // src/components/editor/EditorSystem/BlocLibrary/sections/renderTemplates.ts
   function renderTemplates({ grid, templates, category, onPick }) {
     const filtered = templates.filter((t) => (t.category || "Default") === category);
     if (filtered.length === 0) {
-      grid.appendChild(EmptyState2.create({
+      grid.appendChild(EmptyState.create({
         icon: ICON_TEMPLATE_MUTED,
-        message: "No templates in this category"
+        title: "No templates in this category"
       }));
       return;
     }
@@ -16940,9 +16915,9 @@ form[method="dialog"] {
   function renderSnippets({ grid, snippets, category, onPick }) {
     const filtered = snippets.filter((s3) => (s3.category || "Default") === category);
     if (filtered.length === 0) {
-      grid.appendChild(EmptyState2.create({
+      grid.appendChild(EmptyState.create({
         icon: ICON_SNIPPET_MUTED,
-        message: "No snippets in this category"
+        title: "No snippets in this category"
       }));
       return;
     }
@@ -16968,9 +16943,9 @@ form[method="dialog"] {
     const matchingSnippets = snippets.filter((s3) => s3.name.toLowerCase().includes(q2) || (s3.description ?? "").toLowerCase().includes(q2) || s3.identifier.toLowerCase().includes(q2) || (s3.category ?? "").toLowerCase().includes(q2));
     const total = matchingBlocs.length + matchingTemplates.length + matchingSnippets.length;
     if (total === 0) {
-      grid.appendChild(EmptyState2.create({
+      grid.appendChild(EmptyState.create({
         icon: ICON_COMPONENT,
-        message: `No results for "${query}"`
+        title: `No results for "${query}"`
       }));
       return;
     }
@@ -17022,7 +16997,7 @@ form[method="dialog"] {
   }
 
   // src/components/editor/EditorSystem/BlocLibrary/BlocLibrary.ts
-  var Metadata6 = {
+  var Metadata5 = {
     css: style_default8,
     template: template_default8
   };
@@ -17038,7 +17013,7 @@ form[method="dialog"] {
     _dataLoaded = false;
     _onInsert = null;
     constructor() {
-      super(Metadata6);
+      super(Metadata5);
     }
     connectedCallback() {
       const s3 = this.shadowRoot;
@@ -17410,7 +17385,7 @@ form[method="dialog"] {
   }
 
   // src/components/editor/EditorSystem/EditorRoot/template.html
-  var template_default11 = `<div>
+  var template_default10 = `<div>
     <slot name="style"></slot>
     <slot name="script"></slot>
     <div id="workingElement">
@@ -17648,8 +17623,8 @@ form[method="dialog"] {
           params.set("mode", "view");
         try {
           const original = new URL(href, location.origin);
-          for (const [k, v] of original.searchParams) {
-            params.append(k, v);
+          for (const [k, v2] of original.searchParams) {
+            params.append(k, v2);
           }
         } catch {}
         const dest = `${getMetaBasePath()}/editor/page?${params.toString()}`;
@@ -18835,10 +18810,10 @@ form[method="dialog"] {
       return this.groups;
     }
     getItemsByGroup(group) {
-      return this.editors.values().filter((v) => v.visible && v.group === group);
+      return this.editors.values().filter((v2) => v2.visible && v2.group === group);
     }
     getItems() {
-      return this.editors.values().filter((v) => v.visible);
+      return this.editors.values().filter((v2) => v2.visible);
     }
     getLabel(tag) {
       return this.editors.get(tag)?.label;
@@ -18961,7 +18936,7 @@ form[method="dialog"] {
       style.textContent = EditorRoot_style_default;
       this.shadowRoot?.append(style);
       const template = document.createElement("template");
-      template.innerHTML = template_default11;
+      template.innerHTML = template_default10;
       this.shadowRoot?.append(template.content.cloneNode(true));
     }
     connectedCallback() {
@@ -19328,7 +19303,7 @@ dialog::backdrop {
   }
 
   // src/components/editor/EditorSystem/FloatingToolbar/template.html
-  var template_default12 = `<div id="toolbar-container">
+  var template_default11 = `<div id="toolbar-container">
     <div id="drag-handle" title="Move">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path
@@ -19368,7 +19343,7 @@ dialog::backdrop {
 </div>`;
 
   // src/components/editor/EditorSystem/FloatingToolbar/style.css
-  var style_default11 = `:host {
+  var style_default10 = `:host {
   --toolbar-bg: #ffffff;
   --toolbar-border: #e5e7eb;
   --toolbar-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -19455,8 +19430,8 @@ button span {
     _startY = 0;
     constructor() {
       super({
-        css: style_default11,
-        template: template_default12
+        css: style_default10,
+        template: template_default11
       });
       this._onPointerMove = this._onPointerMove.bind(this);
       this._onPointerUp = this._onPointerUp.bind(this);
@@ -19512,7 +19487,7 @@ button span {
   }
 
   // src/components/editor/MediaCenter/template.html
-  var template_default13 = `<dialog>
+  var template_default12 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -19580,7 +19555,7 @@ button span {
 `;
 
   // src/components/editor/MediaCenter/style.css
-  var style_default12 = `:host {
+  var style_default11 = `:host {
     --mc-bg: #ffffff;
     --mc-border: #e2e8f0;
     --mc-text: #1e293b;
@@ -19969,7 +19944,7 @@ dialog::backdrop {
 `;
 
   // src/components/media/CardMedia/template.html
-  var template_default14 = `<div class="card">
+  var template_default13 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -19991,7 +19966,7 @@ dialog::backdrop {
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default13 = `:host {
+  var style_default12 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -20116,8 +20091,8 @@ dialog::backdrop {
   class CardMedia extends A2 {
     constructor() {
       super({
-        css: style_default13,
-        template: template_default14
+        css: style_default12,
+        template: template_default13
       });
     }
   }
@@ -20363,8 +20338,8 @@ dialog::backdrop {
     _dragCounter = 0;
     constructor() {
       super({
-        css: style_default12,
-        template: template_default13
+        css: style_default11,
+        template: template_default12
       });
     }
     connectedCallback() {
@@ -20535,7 +20510,7 @@ dialog::backdrop {
   customElements.define("cms-media-center", MediaCenter);
 
   // src/components/editor/RichTextBar/template.html
-  var template_default15 = `<div class="toolbar">
+  var template_default14 = `<div class="toolbar">
     <!-- Format -->
     <button data-command="bold" title="Bold">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -20785,7 +20760,7 @@ dialog::backdrop {
 `;
 
   // src/components/editor/RichTextBar/style.css
-  var style_default14 = `:host {
+  var style_default13 = `:host {
     position: absolute;
     z-index: 9999999999;
     display: none;
@@ -21544,8 +21519,8 @@ button.active svg {
     switch (s3.type) {
       case "object": {
         const out = [];
-        for (const [k, v] of Object.entries(s3.properties ?? {})) {
-          out.push(...flattenScalars(v, prefix ? `${prefix}.${k}` : k));
+        for (const [k, v2] of Object.entries(s3.properties ?? {})) {
+          out.push(...flattenScalars(v2, prefix ? `${prefix}.${k}` : k));
         }
         return out;
       }
@@ -21847,8 +21822,8 @@ button.active svg {
     _rootListenersAttached = false;
     constructor() {
       super({
-        css: style_default14,
-        template: template_default15
+        css: style_default13,
+        template: template_default14
       });
     }
     connectedCallback() {
@@ -21939,7 +21914,7 @@ button.active svg {
   }
 
   // src/components/editor/configurations/Configuration/template.html
-  var template_default16 = `<w13c-lateral-dialog>
+  var template_default15 = `<w13c-lateral-dialog>
 
     <h3 slot="title"><slot name="title"></slot></h3>
 
@@ -21962,7 +21937,7 @@ button.active svg {
 </w13c-lateral-dialog>`;
 
   // src/components/editor/configurations/Configuration/style.css
-  var style_default15 = `form{
+  var style_default14 = `form{
     display: flex;
     flex-direction: column;
 }`;
@@ -21995,7 +21970,7 @@ button.active svg {
       return ["url", "method", "delete-redirect", "delete-label"];
     }
     constructor() {
-      super(template_default16, style_default15, true);
+      super(template_default15, style_default14, true);
     }
     _handleSubmit = (e2) => {
       e2.preventDefault();
@@ -22064,11 +22039,11 @@ button.active svg {
   }
 
   // src/components/editor/snippet/Snippet/template.html
-  var template_default17 = `<div class="snippet-root"></div>
+  var template_default16 = `<div class="snippet-root"></div>
 `;
 
   // src/components/editor/snippet/Snippet/style.css
-  var style_default16 = `:host {
+  var style_default15 = `:host {
     display: block;
     position: relative;
     min-height: 40px;
@@ -22147,8 +22122,8 @@ button.active svg {
 
   // src/components/editor/snippet/Snippet/Snippet.ts
   var SnippetMetadata = {
-    css: style_default16,
-    template: template_default17
+    css: style_default15,
+    template: template_default16
   };
 
   class Snippet extends A2 {
@@ -22207,7 +22182,7 @@ button.active svg {
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default18 = `<div class="backdrop" id="backdrop">
+  var template_default17 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -22246,7 +22221,7 @@ button.active svg {
 `;
 
   // src/components/media/CropSystem/style.css
-  var style_default17 = `:host {
+  var style_default16 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -22448,8 +22423,8 @@ button.active svg {
   class CropSystem extends A2 {
     constructor() {
       super({
-        css: style_default17,
-        template: template_default18
+        css: style_default16,
+        template: template_default17
       });
     }
     connectedCallback() {
@@ -22486,7 +22461,7 @@ button.active svg {
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default19 = `<div class="backdrop" id="backdrop">
+  var template_default18 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -22528,7 +22503,7 @@ button.active svg {
 `;
 
   // src/components/media/DetailMedia/style.css
-  var style_default18 = `:host {
+  var style_default17 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -22741,8 +22716,8 @@ button.active svg {
   class DetailMedia extends A2 {
     constructor() {
       super({
-        css: style_default18,
-        template: template_default19
+        css: style_default17,
+        template: template_default18
       });
     }
     connectedCallback() {
@@ -22774,7 +22749,7 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default20 = `<div class="toolbar">
+  var template_default19 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -22836,7 +22811,7 @@ button.active svg {
 `;
 
   // src/components/media/GridMedia/view/style.css
-  var style_default19 = `:host {
+  var style_default18 = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
     --empty-color: var(--text-muted, #94a3b8);
@@ -23588,8 +23563,8 @@ button.active svg {
     _items = [];
     constructor() {
       super({
-        css: style_default19,
-        template: template_default20
+        css: style_default18,
+        template: template_default19
       });
     }
     get detail() {
@@ -23743,8 +23718,8 @@ button.active svg {
   // src/core/dom/buildRequestUrl.ts
   function buildRequestUrl(target) {
     const u = new URL(target, window.location.href);
-    for (const [k, v] of new URLSearchParams(window.location.search))
-      u.searchParams.append(k, v);
+    for (const [k, v2] of new URLSearchParams(window.location.search))
+      u.searchParams.append(k, v2);
     return u;
   }
 
@@ -23768,11 +23743,11 @@ button.active svg {
           document.dispatchEvent(new BubblesEvent(me2.emit));
         }
       } else {
-        showToast(await readErrorMessage(res), { type: "error" });
+        Yl(await readErrorMessage(res), { type: "error" });
         me2.dispatchEvent(new BubblesEvent("form:failed"));
       }
     }).catch(() => {
-      showToast("Network error — please try again.", { type: "error" });
+      Yl("Network error — please try again.", { type: "error" });
       me2.dispatchEvent(new BubblesEvent("form:failed"));
     });
   }
@@ -23928,12 +23903,12 @@ button.active svg {
     get value() {
       return this._value;
     }
-    set value(v) {
-      this._value = v;
-      this._internals.setFormValue(v);
-      this._preview.src = v;
-      this._tile.classList.toggle("has-value", !!v);
-      this._clearBtn.style.display = v ? "flex" : "none";
+    set value(v2) {
+      this._value = v2;
+      this._internals.setFormValue(v2);
+      this._preview.src = v2;
+      this._tile.classList.toggle("has-value", !!v2);
+      this._clearBtn.style.display = v2 ? "flex" : "none";
     }
     get _types() {
       const raw = this.getAttribute("types") || "image";

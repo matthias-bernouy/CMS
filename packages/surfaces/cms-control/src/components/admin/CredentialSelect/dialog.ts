@@ -1,5 +1,5 @@
 import type { CredentialSelect } from "./CredentialSelect";
-import { showToast } from "cms-control/core/showToast";
+import { showToast } from "@bernouy/components";
 import { createCredential } from "./flows";
 import { closePanel, keyToRef, refreshList, setValue } from "./controller";
 

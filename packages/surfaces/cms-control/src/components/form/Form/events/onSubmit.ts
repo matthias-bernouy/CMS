@@ -1,6 +1,6 @@
 import BubblesEvent from "cms-control/core/dom/BubblesEvent";
 import { buildRequestUrl } from "cms-control/core/dom/buildRequestUrl";
-import { showToast } from "cms-control/core/showToast";
+import { showToast } from "@bernouy/components";
 import type CmsForm from "../Form";
 
 

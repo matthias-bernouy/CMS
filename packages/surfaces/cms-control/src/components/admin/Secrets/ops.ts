@@ -1,4 +1,4 @@
-import { showToast } from "cms-control/core/showToast";
+import { showToast } from "@bernouy/components";
 import { postSecret, deleteSecret } from "./actions";
 
 const KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;

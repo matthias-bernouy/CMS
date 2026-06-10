@@ -1,5 +1,5 @@
 import BubblesEvent from "cms-control/core/dom/BubblesEvent";
-import { showToast } from "cms-control/core/showToast";
+import { showToast } from "@bernouy/components";
 
 const SAVED_EVENT = "secret:saved";
 

@@ -4,6 +4,13 @@
     height: 320px;
 }
 
+/* `fluid` — normal-flow variant for grid/panel contexts (vs the table-row
+   default used as the empty slot of p9r-table listings). */
+:host([fluid]) {
+    display: block;
+    height: auto;
+}
+
 .cell {
     position: absolute;
     inset: 0;
@@ -15,6 +22,11 @@
     padding: 24px;
     text-align: center;
     color: var(--text-muted);
+}
+
+:host([fluid]) .cell {
+    position: static;
+    padding: 48px 24px;
 }
 
 ::slotted([slot="icon"]) {

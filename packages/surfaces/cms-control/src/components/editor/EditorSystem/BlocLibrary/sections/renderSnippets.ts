@@ -1,5 +1,5 @@
 import { Card } from '../components/Card/Card';
-import { EmptyState } from '../components/EmptyState/EmptyState';
+import { EmptyState } from 'cms-control/components/admin/EmptyState/EmptyState';
 import { ICON_SNIPPET, ICON_SNIPPET_MUTED } from '../../../../icons';
 import type { OnPick, SnippetItem } from '../types';
 
@@ -16,7 +16,7 @@ export function renderSnippets({ grid, snippets, category, onPick }: RenderSnipp
     if (filtered.length === 0) {
         grid.appendChild(EmptyState.create({
             icon: ICON_SNIPPET_MUTED,
-            message: 'No snippets in this category',
+            title: 'No snippets in this category',
         }));
         return;
     }

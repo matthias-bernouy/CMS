@@ -87,8 +87,8 @@ export { TabPanel } from "./ui/Tabs/TabPanel/TabPanel";
 export { Tag } from "./ui/Tag/Tag";
 
 // Toast
-export { Toast } from "./ui/Toast/Toast/Toast";
-export { ToastStack, showToast } from "./ui/Toast/ToastStack/ToastStack";
+export { Toast, type ToastType } from "./ui/Toast/Toast/Toast";
+export { ToastStack, showToast, type ToastOptions } from "./ui/Toast/ToastStack/ToastStack";
 
 // Tooltip
 export { Tooltip } from "./ui/Tooltip/Tooltip";

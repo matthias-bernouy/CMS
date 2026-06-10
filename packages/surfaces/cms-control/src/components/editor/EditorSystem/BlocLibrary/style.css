@@ -188,6 +188,10 @@ form[method="dialog"] {
     align-content: start;
 }
 
+.blocs-grid cms-empty-state {
+    grid-column: 1 / -1;
+}
+
 .section-header {
     grid-column: 1 / -1;
     font-size: 11px;
