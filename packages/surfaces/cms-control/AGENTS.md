@@ -52,8 +52,7 @@ packages/cms-control/
     │   │                    AdminLayout, Secrets, Tokens, ProviderActions, RoleSelect, …)
     │   ├── editor/          visual editor (EditorRoot, BlocActions, BlocLibrary,
     │   │                    MediaCenter, RichTextBar, FloatingToolbar, snippet/, componentSync/)
-    │   ├── data/            JsonEditor + FetchComponent shim
-    │   ├── form/            <cms-form>, <cms-validate>
+    │   ├── form/            <cms-form>, <cms-media-input>
     │   ├── media/           MediaAdmin, GridMedia, CardMedia, CropSystem, DetailMedia
     │   ├── globals.ts       wires `window.p9r.*` constants for browser
     │   └── index.ts         build entry — side-effect-imports every component (self-register)
@@ -180,7 +179,6 @@ Building blocks consumed by every admin page:
 - `<w13c-fixed-admin-layout>` — page chrome with `slot="title"` + `slot="action"`.
 - **Data binding** (`@bernouy/components` `src/binding/`) — attribute-driven, activated inside `<cms-binding-core>` (in the page shell). `cms-source="url"` fetches + renders the body (states via `cms-slot="loading|error|empty"`, reload via `cms-reload-on="evt"`); `cms-repeat` iterates; `{{ path }}` interpolates (blank on miss; `{{ x | innerHTML }}` for raw HTML); `#{param}` is a reactive query-param (use `?id=#{id}` to forward — sources don't auto-forward `location.search`); `cms-param-sync` two-way-binds an input to a query param. Replaced the old `<cms-fetch>`.
 - `<cms-form>` — wraps an inner `<form>`, posts JSON to `target` on submit, dispatches `form:success` / `form:failed` (bubbles + composed via `BubblesEvent`). `emit="some:event"` re-dispatches on success so a `cms-source` with `cms-reload-on` refreshes.
-- `<cms-validate>` — display-transparent (`display: contents`) wrapper. Reads child `[name]` values, POSTs to `url`, applies `setCustomValidity` per field from `{ valid, message?, errors? }`.
 - `<cms-media-admin>` — media admin page in a single tag. Header buttons (`+ New folder`, `Upload`) hit the `/api/files` endpoints directly (no form post) and refresh the embedded `<p9r-grid-media>`.
 - `<cms-editor-system>` — editor root, mounted on every editor page (page / template / snippet flavor). Handles the editor's shadow DOM, initial bloc registration, and orchestrates `ObserverManager`, `DragManager`, `BlocActions`, `BlocLibrary`.
 
@@ -232,7 +230,7 @@ The bloc's config panel (`<p9r-config-panel>`, lives in `components/editor/compo
 
 ## Custom element prefix conventions
 
-- **`cms-*`** — internal CMS components (admin shell, editor system, form/data utilities). E.g. `cms-form`, `cms-validate`, `cms-binding-core`, `cms-editor-system`, `cms-bloc-actions`, `cms-bloc-library`, `cms-floating-toolbar`, `cms-media-center`, `cms-media-admin`.
+- **`cms-*`** — internal CMS components (admin shell, editor system, form/data utilities). E.g. `cms-form`, `cms-binding-core`, `cms-editor-system`, `cms-bloc-actions`, `cms-bloc-library`, `cms-floating-toolbar`, `cms-media-center`, `cms-media-admin`.
 - **`p9r-*`** — public custom elements provided by the framework (from `@bernouy/components`), used inside bloc configurations and editor panels. Reserved system-only — never scaffold a bloc with a `p9r-*` tag.
 - **`w13c-*`** — public custom elements from `@bernouy/components` (admin chrome, generic UI). Reserved system-only.
 

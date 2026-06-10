@@ -128,7 +128,6 @@ import "./admin/EmptyState/EmptyState"
 import "./admin/EndpointsInput/EndpointsInput"
 import "./admin/EventToast/EventToast"
 import "@bernouy/cms-auth/components"
-import "./admin/OpenDialog/OpenDialog"
 import "./admin/ProviderActions/ProviderActions"
 import "./admin/RoleSelect/RoleSelect"
 import "./admin/RoleEditor/RoleEditor"
@@ -169,5 +168,3 @@ import "./media/MediaAdmin/MediaAdmin"
 // Form
 import "./form/Form/Form";
 import "./form/MediaInput/MediaInput";
-import "./form/Validate/Validate";
-import "./data/JsonEditor/JsonEditor"

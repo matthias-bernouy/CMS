@@ -33,6 +33,6 @@ Pas de JS ni de CSS dans les fichiers de `static/`. Le styling et l'interactivit
 
 ## Composants UI (cms-blocs)
 
-`@bernouy/cms-blocs` fournit les custom elements visuels (`<p9r-*>`), le logique `<w13c-form>` (soumission déclarative), et le **runtime de data-binding** (`<cms-binding-core>` + `cms-source`/`cms-repeat`/`{{ }}`/`#{}`) — fetch + rendu déclaratifs, sans JS de page. Côté CMS admin, `@bernouy/cms-control` ajoute ses propres tags `<cms-*>` (`<cms-form>`, `<cms-binding-core>`, `<cms-validate>`, …).
+`@bernouy/cms-blocs` fournit les custom elements visuels (`<p9r-*>`), le logique `<w13c-form>` (soumission déclarative), et le **runtime de data-binding** (`<cms-binding-core>` + `cms-source`/`cms-repeat`/`{{ }}`/`#{}`) — fetch + rendu déclaratifs, sans JS de page. Côté CMS admin, `@bernouy/cms-control` ajoute ses propres tags `<cms-*>` (`<cms-form>`, `<cms-binding-core>`, …).
 
 Voir la documentation de `@bernouy/cms-blocs` (README + `conventions/`) pour la liste complète.
