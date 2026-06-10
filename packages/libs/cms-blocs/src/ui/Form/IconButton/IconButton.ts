@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component, upgradeProperty } from "@bernouy/cms-blocs/base";
 
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
@@ -20,7 +20,7 @@ export class IconButton extends Component {
 
     override connectedCallback() {
         for (const prop of ['type', 'disabled']) {
-            this._upgradeProperty(prop);
+            upgradeProperty(this, prop);
         }
 
         if (!this.hasAttribute('type'))    this.setAttribute('type', 'button');
@@ -59,14 +59,6 @@ export class IconButton extends Component {
         if (type === 'submit') form.requestSubmit();
         if (type === 'reset')  form.reset();
     };
-
-    private _upgradeProperty(prop: string) {
-        if (Object.prototype.hasOwnProperty.call(this, prop)) {
-            const value = (this as any)[prop];
-            delete (this as any)[prop];
-            (this as any)[prop] = value;
-        }
-    }
 
     get disabled() { return this.hasAttribute('disabled'); }
     set disabled(val: boolean) {

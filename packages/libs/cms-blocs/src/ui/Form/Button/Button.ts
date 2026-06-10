@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component, upgradeProperty } from "@bernouy/cms-blocs/base";
 
 import template from './template.html' with { type: 'text' };
 import baseCss from './base.css' with { type: 'text' };
@@ -22,7 +22,7 @@ export class Button extends Component {
 
     override connectedCallback() {
         for (const prop of ['type', 'disabled']) {
-            this._upgradeProperty(prop);
+            upgradeProperty(this, prop);
         }
 
         if (!this.hasAttribute('type')) this.setAttribute('type', 'button');
@@ -48,14 +48,6 @@ export class Button extends Component {
         if (type === 'submit') form.requestSubmit();
         if (type === 'reset') form.reset();
     };
-
-    private _upgradeProperty(prop: string) {
-        if (this.hasOwnProperty(prop)) {
-            let value = (this as any)[prop];
-            delete (this as any)[prop];
-            (this as any)[prop] = value;
-        }
-    }
 
     attributeChangedCallback(name: string, _oldVal: string | null, newVal: string | null) {
         if (!this._btn) return;

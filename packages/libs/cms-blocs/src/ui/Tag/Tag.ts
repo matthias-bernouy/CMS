@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component, upgradeProperty } from "@bernouy/cms-blocs/base";
 
 import html from './Tag.template.html' with { type: 'text' };
 import baseCss from './Tag.base.css' with { type: 'text' };
@@ -23,7 +23,7 @@ export class Tag extends Component {
 
     override connectedCallback() {
         for (const prop of ['removable']) {
-            this._upgradeProperty(prop);
+            upgradeProperty(this, prop);
         }
 
         this._syncRemovable();
@@ -54,14 +54,6 @@ export class Tag extends Component {
         if (cancelled) return;
         this.remove();
     };
-
-    private _upgradeProperty(prop: string) {
-        if (this.hasOwnProperty(prop)) {
-            let value = (this as any)[prop];
-            delete (this as any)[prop];
-            (this as any)[prop] = value;
-        }
-    }
 
     get removable() {
         return this.hasAttribute('removable');

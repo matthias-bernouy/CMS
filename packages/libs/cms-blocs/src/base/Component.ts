@@ -43,3 +43,19 @@ export abstract class Component extends HTMLElement {
      *  Subclasses override this to wire DOM references and listeners. */
     connectedCallback() { /* override in subclasses */ }
 }
+
+/**
+ * "Upgrade" a property that may have been assigned on the element instance
+ * BEFORE its class definition ran (e.g. `el.checked = true` while the bundle is
+ * still loading). Such a value sits as an own-property shadowing the prototype
+ * accessor and is silently lost; deleting then re-assigning routes it through
+ * the setter. Shared by every custom element in the toolkit — call once per
+ * observed property in `connectedCallback`.
+ */
+export function upgradeProperty(host: HTMLElement, prop: string): void {
+    if (Object.prototype.hasOwnProperty.call(host, prop)) {
+        const value = (host as any)[prop];
+        delete (host as any)[prop];
+        (host as any)[prop] = value;
+    }
+}

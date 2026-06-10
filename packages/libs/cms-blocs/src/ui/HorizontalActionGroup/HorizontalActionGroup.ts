@@ -1,6 +1,6 @@
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component, upgradeProperty } from "@bernouy/cms-blocs/base";
 
 export class HorizontalActionGroup extends Component {
 
@@ -22,7 +22,7 @@ export class HorizontalActionGroup extends Component {
 
     override connectedCallback() {
         for (const prop of ['label']) {
-            this._upgradeProperty(prop);
+            upgradeProperty(this, prop);
         }
 
         if (this._toolbar && !this._toolbar.hasAttribute('aria-label')) {
@@ -68,14 +68,6 @@ export class HorizontalActionGroup extends Component {
             bubbles: true,
             composed: true
         }));
-    }
-
-    private _upgradeProperty(prop: string) {
-        if (this.hasOwnProperty(prop)) {
-            let value = (this as any)[prop];
-            delete (this as any)[prop];
-            (this as any)[prop] = value;
-        }
     }
 
     get label() {

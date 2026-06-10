@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component, upgradeProperty } from "@bernouy/cms-blocs/base";
 
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
@@ -25,7 +25,7 @@ export class AccordionItem extends Component {
     }
 
     override connectedCallback() {
-        for (const prop of ['open', 'disabled']) this._upgradeProperty(prop);
+        for (const prop of ['open', 'disabled']) upgradeProperty(this, prop);
         this._toggles.forEach(t => t.addEventListener('click', this._toggle));
         this._syncAria();
     }
@@ -55,14 +55,6 @@ export class AccordionItem extends Component {
         for (const t of this._toggles) {
             if (disabled) t.setAttribute('disabled', '');
             else t.removeAttribute('disabled');
-        }
-    }
-
-    private _upgradeProperty(prop: string) {
-        if (Object.prototype.hasOwnProperty.call(this, prop)) {
-            const value = (this as any)[prop];
-            delete (this as any)[prop];
-            (this as any)[prop] = value;
         }
     }
 

@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component, upgradeProperty } from "@bernouy/cms-blocs/base";
 
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
@@ -24,7 +24,7 @@ export class Progress extends Component {
     }
 
     override connectedCallback() {
-        for (const prop of ['value', 'max']) this._upgradeProperty(prop);
+        for (const prop of ['value', 'max']) upgradeProperty(this, prop);
         this._sync();
     }
 
@@ -59,14 +59,6 @@ export class Progress extends Component {
         if (raw === null) return fallback;
         const n = Number(raw);
         return Number.isFinite(n) ? n : fallback;
-    }
-
-    private _upgradeProperty(prop: string) {
-        if (Object.prototype.hasOwnProperty.call(this, prop)) {
-            const value = (this as any)[prop];
-            delete (this as any)[prop];
-            (this as any)[prop] = value;
-        }
     }
 
     get value(): number { return this._parseNumber(this.getAttribute('value'), 0); }

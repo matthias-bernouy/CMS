@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component, upgradeProperty } from "@bernouy/cms-blocs/base";
 
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
@@ -20,7 +20,7 @@ export class Radio extends Component {
     }
 
     override connectedCallback() {
-        for (const prop of ['checked', 'disabled', 'value']) this._upgradeProperty(prop);
+        for (const prop of ['checked', 'disabled', 'value']) upgradeProperty(this, prop);
 
         if (this._input) {
             this._input.checked = this.hasAttribute('checked');
@@ -68,14 +68,6 @@ export class Radio extends Component {
             e.stopImmediatePropagation();
         }
     };
-
-    private _upgradeProperty(prop: string) {
-        if (Object.prototype.hasOwnProperty.call(this, prop)) {
-            const value = (this as any)[prop];
-            delete (this as any)[prop];
-            (this as any)[prop] = value;
-        }
-    }
 
     get checked() { return this.hasAttribute('checked'); }
     set checked(v: boolean) {

@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { FormControlElement } from "../FormControlElement";
 
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
@@ -6,27 +6,19 @@ import css from './style.css' with { type: 'text' };
 import { upgradeProperty, syncFormValue } from './compute';
 import { handleChange, handleClick } from './listener';
 
-export class Switch extends Component {
+export class Switch extends FormControlElement {
 
-    static formAssociated = true;
-    private _internals: ElementInternals;
     private _input: HTMLInputElement | null;
-    private _defaultChecked = false;
-    private _defaultsCaptured = false;
 
     static get observedAttributes() { return ['checked', 'disabled', 'name', 'value']; }
 
     constructor() {
         super({ css, template: template as unknown as string });
-        this._internals = this.attachInternals();
         this._input = this.shadowRoot?.querySelector('input') ?? null;
     }
 
     override connectedCallback() {
-        if (!this._defaultsCaptured) {
-            this._defaultChecked = this.hasAttribute('checked');
-            this._defaultsCaptured = true;
-        }
+        this._captureDefaults();
 
         for (const prop of ['checked', 'disabled', 'name', 'value']) upgradeProperty(this, prop);
 
@@ -49,8 +41,6 @@ export class Switch extends Component {
         this._input?.removeEventListener('click', this._onClick);
     }
 
-    formResetCallback() { this.checked = this._defaultChecked; }
-
     attributeChangedCallback(name: string, _oldVal: string | null, newVal: string | null) {
         if (!this._input) return;
         if (name === 'checked') {
@@ -69,20 +59,6 @@ export class Switch extends Component {
 
     private _onChange = () => handleChange(this, this._input, this._internals);
     private _onClick = (e: Event) => handleClick(this, e);
-
-    get checked() { return this.hasAttribute('checked'); }
-    set checked(v: boolean) { v ? this.setAttribute('checked', '') : this.removeAttribute('checked'); }
-
-    get disabled() { return this.hasAttribute('disabled'); }
-    set disabled(v: boolean) { v ? this.setAttribute('disabled', '') : this.removeAttribute('disabled'); }
-
-    get name() { return this.getAttribute('name') ?? ''; }
-    set name(v: string) { this.setAttribute('name', v); }
-
-    get value() { return this.getAttribute('value') ?? 'on'; }
-    set value(v: string) { this.setAttribute('value', v); }
-
-    get form() { return this._internals.form; }
 
     override click() { this._input?.click(); }
 }

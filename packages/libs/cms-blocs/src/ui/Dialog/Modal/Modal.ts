@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component, upgradeProperty } from "@bernouy/cms-blocs/base";
 import { handleBackdropClick, handleCancel, handleClose } from './listener';
 
 import template from './template.html' with { type: 'text' };
@@ -19,7 +19,7 @@ export class Modal extends Component {
 
     override connectedCallback() {
         this._dialog ??= this.shadowRoot?.querySelector('dialog') ?? null;
-        this._upgradeProperty('open');
+        upgradeProperty(this, 'open');
         this._dialog?.addEventListener('click', this._onBackdrop);
         this._dialog?.addEventListener('cancel', this._onCancel);
         this._dialog?.addEventListener('close', this._onClose);
@@ -55,14 +55,6 @@ export class Modal extends Component {
             this.dispatchEvent(new CustomEvent('open', { bubbles: true, composed: true }));
         } else if (!shouldOpen && this._dialog.open) {
             this._dialog.close();
-        }
-    }
-
-    private _upgradeProperty(prop: string) {
-        if (Object.prototype.hasOwnProperty.call(this, prop)) {
-            const val = (this as unknown as Record<string, unknown>)[prop];
-            delete (this as unknown as Record<string, unknown>)[prop];
-            (this as unknown as Record<string, unknown>)[prop] = val;
         }
     }
 

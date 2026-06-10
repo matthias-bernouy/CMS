@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component, upgradeProperty } from "@bernouy/cms-blocs/base";
 
 import template from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
@@ -19,7 +19,7 @@ export class LeftMenuLayout extends Component {
 
     override connectedCallback() {
         for (const prop of ['collapsed']) {
-            this._upgradeProperty(prop);
+            upgradeProperty(this, prop);
         }
 
         this._syncAriaState();
@@ -27,14 +27,6 @@ export class LeftMenuLayout extends Component {
 
     disconnectedCallback() {
         // no instance listeners bound today; keep hook for symmetry with addEventListener pairs
-    }
-
-    private _upgradeProperty(prop: string) {
-        if (this.hasOwnProperty(prop)) {
-            const value = (this as any)[prop];
-            delete (this as any)[prop];
-            (this as any)[prop] = value;
-        }
     }
 
     attributeChangedCallback(name: string, oldVal: string | null, newVal: string | null) {
