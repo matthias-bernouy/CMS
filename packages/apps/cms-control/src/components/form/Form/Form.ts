@@ -15,6 +15,10 @@ export default class CmsForm extends CustomHTMLElement {
         onSubmit(e as SubmitEvent, this);
     }
 
+    private _handleKeydown = (e: KeyboardEvent) => {
+        onKeyboardEvent(e, this._nativeForm!);
+    }
+
     connectedCallback() {
         requestAnimationFrame(() => {
             // Sécurité si déjà initialisé
@@ -34,13 +38,13 @@ export default class CmsForm extends CustomHTMLElement {
 
             this.appendChild(this._nativeForm);
             this._nativeForm.addEventListener("submit", this._handleInternalSubmit);
-            this.addEventListener("keydown", (e) => onKeyboardEvent(e, this._nativeForm!));
+            this.addEventListener("keydown", this._handleKeydown);
         });
     }
 
     override disconnectedCallback(): void {
-        this.removeEventListener("submit",  (e) => onSubmit(e, this));
-        this.removeEventListener("keydown", (e) => onKeyboardEvent(e, this._nativeForm!));
+        this._nativeForm?.removeEventListener("submit", this._handleInternalSubmit);
+        this.removeEventListener("keydown", this._handleKeydown);
     }
 
     override attributeChangedCallback(name: any, oldValue: any, newValue: any): void {

@@ -1,4 +1,5 @@
 import { showToast } from "cms-control/core/showToast";
+import { escapeHtml as esc } from "cms-control/core/dom/escapeHtml";
 
 type CmsGroup = { feature: string; label: string; permissions: { id: string; verb: string }[] };
 type GwGroup  = { provider: string; label: string; endpoints: { id: string; label: string }[] };
@@ -6,9 +7,6 @@ type EditorData = {
     role:    { id: string; label: string; builtin: boolean; grants: string[] };
     catalog: { cms: CmsGroup[]; gateway: GwGroup[] };
 };
-
-const esc = (s: string) =>
-    s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 
 /**
  * `<cms-role-editor api back>` — grant editor for one role (id read from the

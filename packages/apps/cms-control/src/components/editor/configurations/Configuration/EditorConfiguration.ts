@@ -79,8 +79,7 @@ export default class EditorConfiguration extends CustomHTMLElement {
     }
 
     override disconnectedCallback(): void {
-        const form = this.shadowRoot?.querySelector("form")!;
-        form.addEventListener("submit", this._handleSubmit)
+        this.shadowRoot?.querySelector("form")?.removeEventListener("submit", this._handleSubmit);
     }
 
     override attributeChangedCallback(name: any, oldValue: any, newValue: any): void {

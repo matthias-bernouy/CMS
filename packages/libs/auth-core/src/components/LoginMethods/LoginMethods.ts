@@ -31,14 +31,14 @@ class CmsLoginMethods extends HTMLElement {
             const redirect = methods.filter((m) => m.loginUrl);
             if (!redirect.length) return;
             wrap.innerHTML = `<div class="sep">or</div>` + redirect.map((m) =>
-                `<a class="provider" href="${escapeAttr(m.loginUrl!)}${rt}">${escapeText(m.displayName)}</a>`).join("");
+                `<a class="provider" href="${esc(m.loginUrl!)}${rt}">${esc(m.displayName)}</a>`).join("");
         } catch {
             /* no providers shown on failure */
         }
     }
 }
 
-const escapeAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-const escapeText = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 customElements.define("cms-login-methods", CmsLoginMethods);

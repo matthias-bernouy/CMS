@@ -1,4 +1,5 @@
 import resolveApiUrl from "cms-control/core/dom/meta/resolveApiUrl";
+import { escapeHtml } from "cms-control/core/dom/escapeHtml";
 import css from "./TemplatePicker.style.css" with { type: "text" };
 
 const ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>`;
@@ -107,10 +108,6 @@ export class TemplatePicker extends HTMLElement {
         this._resolve = null;
         r?.(html);
     }
-}
-
-function escapeHtml(s: string): string {
-    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 if (!customElements.get("cms-template-picker")) {

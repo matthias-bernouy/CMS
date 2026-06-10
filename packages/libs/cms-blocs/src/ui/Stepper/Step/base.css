@@ -85,5 +85,4 @@
   color: var(--_muted);
 }
 
-.description slot:empty,
-.description:has(slot:not(:has(*))) { display: none; }
+.description.is-empty { display: none; }

@@ -1,5 +1,6 @@
 import type { MediaItem, BreadcrumbEntry } from "../types";
-import { escapeHtml, escapeAttr, variantUrl } from "../types";
+import { escapeHtml, escapeAttr } from "cms-control/core/dom/escapeHtml";
+import { variantUrl } from "../types";
 import { localPreview } from "../api/write";
 
 export function renderGrid(grid: HTMLElement, items: MediaItem[]) {

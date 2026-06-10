@@ -1,9 +1,7 @@
 import { showToast } from "cms-control/core/showToast";
+import { escapeHtml as esc } from "cms-control/core/dom/escapeHtml";
 
 type RoleOption = { id: string; label: string };
-
-const esc = (s: string) =>
-    s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 
 /**
  * `<cms-role-select>` — a role dropdown whose options are fetched from

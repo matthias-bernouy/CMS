@@ -52,7 +52,7 @@
   display: none;
 }
 
-.message slot:empty {
+.message.is-empty {
   display: none;
 }
 

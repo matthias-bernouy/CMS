@@ -14,6 +14,10 @@ export class Form extends HTMLElement {
         onSubmit(e as SubmitEvent, this);
     }
 
+    private _handleKeydown = (e: KeyboardEvent) => {
+        onKeyboardEvent(e, this._nativeForm!);
+    }
+
     connectedCallback() {
         requestAnimationFrame(() => {
             // Sécurité si déjà initialisé
@@ -33,13 +37,13 @@ export class Form extends HTMLElement {
 
             this.appendChild(this._nativeForm);
             this._nativeForm.addEventListener("submit", this._handleInternalSubmit);
-            this.addEventListener("keydown", (e) => onKeyboardEvent(e, this._nativeForm!));
+            this.addEventListener("keydown", this._handleKeydown);
         });
     }
 
     disconnectedCallback(): void {
-        this.removeEventListener("submit",  (e) => onSubmit(e, this));
-        this.removeEventListener("keydown", (e) => onKeyboardEvent(e, this._nativeForm!));
+        this._nativeForm?.removeEventListener("submit", this._handleInternalSubmit);
+        this.removeEventListener("keydown", this._handleKeydown);
     }
 
     attributeChangedCallback(name: any, oldValue: any, newValue: any): void {

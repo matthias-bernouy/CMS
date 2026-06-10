@@ -86,5 +86,4 @@ export * from "cms-shared/constants/editorAttributes";
 // ── Utils ──────────────────────────────────────────────────────────────
 export * from "cms-shared/utils/validation";
 export * from "cms-shared/utils/contentRefs";
-export { escapeHtml } from "cms-shared/utils/escapeHtml";
 export { sanitizeDomTree } from "cms-shared/utils/sanitizeDomTree";

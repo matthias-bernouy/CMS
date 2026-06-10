@@ -29,14 +29,8 @@
   white-space: nowrap;
 }
 
-.label:has(slot:empty),
-.label slot:not([name]):empty {
+.label.is-empty {
   display: none;
-}
-
-.label:has(slot:empty) ~ .line-end,
-.divider:not(:has(.label slot:not([name]):empty)) .line-end {
-  /* placeholder so :has fallback still renders both lines */
 }
 
 :host(:not([align="start"]):not([align="end"])) .line-start,
