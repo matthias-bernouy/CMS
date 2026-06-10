@@ -5,7 +5,7 @@ import type { CmsRepository } from "@bernouy/cms-content";
 import type { Cache } from "@bernouy/http-runner";
 import { InMemoryCache } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/cms-secrets";
-import { InMemorySecretStore, createSecretResolver } from "@bernouy/cms-secrets";
+import { InMemorySecretStore, ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
 import { compress } from "@bernouy/http-runner";
 import { registerFilesEndpoint } from "@bernouy/cms-files";
 import { registerStyleEndpoint } from "@bernouy/cms-content";
@@ -92,7 +92,7 @@ export class ControlCms {
         this._runner = runner;
         this._repository = repository;
         this._cache = cache || new InMemoryCache();
-        this._secrets = secrets || new InMemorySecretStore();
+        this._secrets = secrets || new ValidatingSecretStore(new InMemorySecretStore());
         this._filesMetadata = filesMetadata ?? null;
         this._filesBlob = filesBlob ?? null;
         this._users = users ?? null;
