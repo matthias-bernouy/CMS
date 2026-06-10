@@ -189,7 +189,13 @@ export class OidcAuthentication<Role extends string = string> {
 
         const sub = String(claims.sub ?? "");
         if (!sub) return this._fail(p.id, "no_sub");
-        const email = typeof claims.email === "string" ? claims.email : undefined;
+        // Only trust `email` when the provider asserts it is verified. A provider
+        // that lets users self-set an unverified address would otherwise seed a
+        // forged email/displayName into the CMS user list (impersonation in the
+        // admin surfaces). `email_verified` is a boolean per OIDC spec; tolerate
+        // the common "true" string variant too.
+        const emailVerified = claims.email_verified === true || claims.email_verified === "true";
+        const email = emailVerified && typeof claims.email === "string" ? claims.email : undefined;
         const displayName = String(claims.name ?? claims.preferred_username ?? email ?? sub);
 
         const subject = await this.cfg.resolver.fromIdentity({ sub, email, displayName, provider: p.id });
