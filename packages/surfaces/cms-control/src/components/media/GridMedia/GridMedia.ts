@@ -1,6 +1,6 @@
 import template from './view/template.html' with { type: 'text' };
 import css from './view/style.css' with { type: 'text' };
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component } from "@bernouy/components/base";
 import type { DetailMedia } from "../DetailMedia/DetailMedia";
 import type { CropSystem } from "../CropSystem/CropSystem";
 import type { MediaItem, BreadcrumbEntry } from "./types";

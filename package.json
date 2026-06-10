@@ -32,7 +32,7 @@
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-analytics": "workspace:*",
-        "@bernouy/cms-blocs": "workspace:*",
+        "@bernouy/components": "workspace:*",
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-cli": "workspace:*"
     }

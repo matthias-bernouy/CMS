@@ -1,4 +1,4 @@
-import type { ToastStack } from "@bernouy/cms-blocs";
+import type { ToastStack } from "@bernouy/components";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 

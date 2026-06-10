@@ -1,7 +1,7 @@
 import type { BunPlugin } from "bun";
 
 /**
- * Bloc bundles must not re-bundle `@bernouy/cms-blocs/base`, legacy component
+ * Bloc bundles must not re-bundle `@bernouy/components/base`, legacy component
  * aliases, or `/editor`. Those base classes are shipped once per page via
  * `src/core/global.ts`, which installs them on `window.p9r`. This plugin
  * rewrites those import specifiers to read from that global, so each
@@ -11,7 +11,7 @@ export const p9rExternalsPlugin: BunPlugin = {
     name: "p9r-externals",
     setup(build) {
         build.onResolve(
-            { filter: /^@bernouy\/(?:cms-blocs\/base|cms(?:-control)?\/(?:component|editor))$/ },
+            { filter: /^@bernouy\/(?:components\/base|cms(?:-control)?\/(?:component|editor))$/ },
             (args) => ({ path: args.path, namespace: "p9r-extern" }),
         );
 
@@ -19,7 +19,7 @@ export const p9rExternalsPlugin: BunPlugin = {
             { filter: /.*/, namespace: "p9r-extern" },
             (args) => {
                 if (
-                    args.path === "@bernouy/cms-blocs/base" ||
+                    args.path === "@bernouy/components/base" ||
                     args.path === "@bernouy/cms/component" ||
                     args.path === "@bernouy/cms-control/component"
                 ) {

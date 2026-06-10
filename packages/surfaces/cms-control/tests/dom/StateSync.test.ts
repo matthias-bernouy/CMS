@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import "cms-control/components/editor/componentSync/sync/StateSync/StateSync";
 import type { StateSync } from "cms-control/components/editor/componentSync/sync/StateSync/StateSync";
-import type { Component } from "@bernouy/cms-blocs/base";
+import type { Component } from "@bernouy/components/base";
 import type { Editor } from "cms-control/core/editorSystem/Editor/Editor";
 
 function nextFrame(): Promise<void> {

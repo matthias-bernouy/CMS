@@ -1,4 +1,4 @@
-import type { Component } from "@bernouy/cms-blocs/base";
+import type { Component } from "@bernouy/components/base";
 import type { Editor }    from "cms-control/core/editorSystem/Editor/Editor";
 import { parseValues, parseLabels, parsePlacement } from "./parseAttrs";
 import { makeStateAttrOps, type StateAttrOps }      from "./applyTargets";

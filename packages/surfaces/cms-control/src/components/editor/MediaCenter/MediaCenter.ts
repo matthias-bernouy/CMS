@@ -1,6 +1,6 @@
 import html from './template.html' with { type: 'text' };
 import css from './style.css' with { type: 'text' };
-import { Component } from '@bernouy/cms-blocs/base';
+import { Component } from '@bernouy/components/base';
 
 import "cms-control/components/media/CardMedia/CardMedia";
 import type { MediaItem, BreadcrumbEntry } from "cms-control/components/media/GridMedia/types";

@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component } from "@bernouy/components/base";
 import "cms-control/components/editor/componentSync/PageLink/PageLink";
 
 import template from "./template.html" with { type: "text" };

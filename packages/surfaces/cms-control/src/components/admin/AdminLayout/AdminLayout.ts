@@ -1,4 +1,4 @@
-import { Component } from "@bernouy/cms-blocs/base";
+import { Component } from "@bernouy/components/base";
 
 import template from './template.html' with { type: 'text' };
 

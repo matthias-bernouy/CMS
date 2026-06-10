@@ -7,7 +7,7 @@ import { installLinkInterceptor } from "cms-control/core/editorSystem/installLin
 import { armDirty, isDirty } from "cms-control/core/editorSystem/dirtyState";
 import { resolveTargetForLink } from "./linkNavigation";
 import { stripResidualChrome } from "./stripResidualChrome";
-import { BINDING_CORE_TAG, BIND_STOP_ATTR, clearRuntimeStamps } from "@bernouy/cms-blocs/binding";
+import { BINDING_CORE_TAG, BIND_STOP_ATTR, clearRuntimeStamps } from "@bernouy/components/binding";
 import { findContentRegion, isRegionEmpty, applyPickedTemplate } from "./contentRegion";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
 import type { EDITOR_SYSTEM_MODE } from "types/w13c/EditorSystem";

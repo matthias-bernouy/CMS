@@ -1,1 +1,1 @@
-export { Component, type ComponentMetadata } from "@bernouy/cms-blocs/base";
+export { Component, type ComponentMetadata } from "@bernouy/components/base";

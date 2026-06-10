@@ -1,4 +1,4 @@
-import { BindingCore } from "@bernouy/cms-blocs/binding";
+import { BindingCore } from "@bernouy/components/binding";
 
 /**
  * Delivery-runtime registration for the `<cms-binding-core>` system bloc.

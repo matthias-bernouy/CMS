@@ -1,4 +1,4 @@
-import { Component, type ComponentMetadata } from '@bernouy/cms-blocs/base';
+import { Component, type ComponentMetadata } from '@bernouy/components/base';
 import { renderRow } from './render';
 import html from './template.html' with { type: 'text' };
 import css  from './style.css'     with { type: 'text' };

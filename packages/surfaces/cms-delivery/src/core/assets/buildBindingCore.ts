@@ -11,7 +11,7 @@ import { compress } from "@bernouy/http-runner";
 const SOURCE = join(import.meta.dir, "../../endpoints/assets/bindingCore.client.ts");
 
 export async function generateBindingCoreJsEntry(): Promise<CacheEntry> {
-    // `conditions: ["bun"]` forces the `@bernouy/cms-blocs/binding` import to
+    // `conditions: ["bun"]` forces the `@bernouy/components/binding` import to
     // resolve via the package's `bun`→source export (as the Bun runtime does)
     // instead of falling back to `import`→`dist/index.js`. That keeps the
     // bundle to just the binding engine (~18KB, tree-shaken — vs ~60KB pulling

@@ -55,7 +55,7 @@ import {
     BarList,
     RangeTabs,
     BindingCore,
-} from "@bernouy/cms-blocs";
+} from "@bernouy/components";
 
 function define(tag: string, constructor: CustomElementConstructor) {
     if (!customElements.get(tag)) customElements.define(tag, constructor);

@@ -12,7 +12,7 @@
         { "path": "packages/features/cms-bloc-compile" },
         { "path": "packages/features/cms-gateway" },
         { "path": "packages/features/cms-analytics" },
-        { "path": "packages/features/cms-blocs" },
+        { "path": "packages/foundation/components" },
         { "path": "packages/surfaces/cms-delivery" },
         { "path": "packages/surfaces/cms-control" },
         { "path": "packages/runtimes/cms-cli" },

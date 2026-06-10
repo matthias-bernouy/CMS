@@ -178,7 +178,7 @@ pages compose web components that handle dynamic behavior themselves.
 Building blocks consumed by every admin page:
 
 - `<w13c-fixed-admin-layout>` — page chrome with `slot="title"` + `slot="action"`.
-- **Data binding** (`@bernouy/cms-blocs` `src/binding/`) — attribute-driven, activated inside `<cms-binding-core>` (in the page shell). `cms-source="url"` fetches + renders the body (states via `cms-slot="loading|error|empty"`, reload via `cms-reload-on="evt"`); `cms-repeat` iterates; `{{ path }}` interpolates (blank on miss; `{{ x | innerHTML }}` for raw HTML); `#{param}` is a reactive query-param (use `?id=#{id}` to forward — sources don't auto-forward `location.search`); `cms-param-sync` two-way-binds an input to a query param. Replaced the old `<cms-fetch>`.
+- **Data binding** (`@bernouy/components` `src/binding/`) — attribute-driven, activated inside `<cms-binding-core>` (in the page shell). `cms-source="url"` fetches + renders the body (states via `cms-slot="loading|error|empty"`, reload via `cms-reload-on="evt"`); `cms-repeat` iterates; `{{ path }}` interpolates (blank on miss; `{{ x | innerHTML }}` for raw HTML); `#{param}` is a reactive query-param (use `?id=#{id}` to forward — sources don't auto-forward `location.search`); `cms-param-sync` two-way-binds an input to a query param. Replaced the old `<cms-fetch>`.
 - `<cms-form>` — wraps an inner `<form>`, posts JSON to `target` on submit, dispatches `form:success` / `form:failed` (bubbles + composed via `BubblesEvent`). `emit="some:event"` re-dispatches on success so a `cms-source` with `cms-reload-on` refreshes.
 - `<cms-validate>` — display-transparent (`display: contents`) wrapper. Reads child `[name]` values, POSTs to `url`, applies `setCustomValidity` per field from `{ valid, message?, errors? }`.
 - `<cms-media-admin>` — media admin page in a single tag. Header buttons (`+ New folder`, `Upload`) hit the `/api/files` endpoints directly (no form post) and refresh the embedded `<p9r-grid-media>`.
@@ -186,11 +186,11 @@ Building blocks consumed by every admin page:
 
 ### Admin UI dependencies
 
-- **`@bernouy/cms-blocs`** ships every `<p9r-*>` / `<w13c-*>` admin custom element. Its `.` entry is an **IIFE bundle** — a single bare `import "@bernouy/cms-blocs"` registers every tag. Never import from `@bernouy/core` for UI.
+- **`@bernouy/components`** ships every `<p9r-*>` / `<w13c-*>` admin custom element. Its `.` entry is an **IIFE bundle** — a single bare `import "@bernouy/components"` registers every tag. Never import from `@bernouy/core` for UI.
 - **`@bernouy/core`** is for infrastructure only: `Runner`, `Authentication`, `Subject`, `Middleware`, envelope crypto. Never pull UI from it.
 - **`@bernouy/cms-shared/constants`** is the browser-safe sub-entry exposing `P9R_ATTR`, `P9R_MODE`, `P9R_EVENT`, `P9R_ID`, `P9R_CACHE` — imported by `src/components/globals.ts` to wire `window.p9r.*`. Don't import the main `@bernouy/cms-shared` barrel from `components/` — it transitively reaches Mongo / Bun modules and breaks the browser bundle.
 - **`showToast`** lives at `src/core/showToast.ts`. Lazily mounts a `<p9r-toast-stack>` and calls its `push()`.
-- **Design tokens** (`--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, …) come from `@bernouy/cms-blocs/style.css`, exposed at `<basePath>/resources/css/cms-blocs.css`. Admin's `style.css` `@import`s it so every admin page inherits the tokens before any component renders.
+- **Design tokens** (`--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, …) come from `@bernouy/components/style.css`, exposed at `<basePath>/resources/css/cms-blocs.css`. Admin's `style.css` `@import`s it so every admin page inherits the tokens before any component renders.
 
 ## Editor system
 
@@ -227,14 +227,14 @@ The bloc's config panel (`<p9r-config-panel>`, lives in `components/editor/compo
 - CSS `attr()` only works for simple numeric values with px fallback: `attr(radius px, 16px)`.
 - For enum-like attributes (e.g. background names mapping to CSS variables), always use `:host([attr="value"])` selectors.
 - All CSS variables must be self-contained in the component's `style.css`.
-- Global design tokens: `--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, etc. — defined in `@bernouy/cms-blocs/style.css` and pulled in via `<basePath>/resources/css/cms-blocs.css`.
+- Global design tokens: `--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, etc. — defined in `@bernouy/components/style.css` and pulled in via `<basePath>/resources/css/cms-blocs.css`.
 - Admin resources live in `src/static/assets/` (built `control-components.js` + `control-styles.css`) — no compression pipeline; admin is authenticated and low-traffic. `style.css` `@import`s `cms-blocs.css` so design tokens are in scope before anything else.
 
 ## Custom element prefix conventions
 
 - **`cms-*`** — internal CMS components (admin shell, editor system, form/data utilities). E.g. `cms-form`, `cms-validate`, `cms-binding-core`, `cms-editor-system`, `cms-bloc-actions`, `cms-bloc-library`, `cms-floating-toolbar`, `cms-media-center`, `cms-media-admin`.
-- **`p9r-*`** — public custom elements provided by the framework (from `@bernouy/cms-blocs`), used inside bloc configurations and editor panels. Reserved system-only — never scaffold a bloc with a `p9r-*` tag.
-- **`w13c-*`** — public custom elements from `@bernouy/cms-blocs` (admin chrome, generic UI). Reserved system-only.
+- **`p9r-*`** — public custom elements provided by the framework (from `@bernouy/components`), used inside bloc configurations and editor panels. Reserved system-only — never scaffold a bloc with a `p9r-*` tag.
+- **`w13c-*`** — public custom elements from `@bernouy/components` (admin chrome, generic UI). Reserved system-only.
 
 ## Key rules
 

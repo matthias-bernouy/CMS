@@ -6,4 +6,4 @@
  * ObserverManager, …) is reachable from this entry — even transitively — so
  * the bundle that visitors download never contains editor code.
  */
-export { Component, type ComponentMetadata } from "@bernouy/cms-blocs/base";
+export { Component, type ComponentMetadata } from "@bernouy/components/base";

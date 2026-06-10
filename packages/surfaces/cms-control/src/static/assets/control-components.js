@@ -1,5 +1,5 @@
 (() => {
-  // ../../features/cms-blocs/dist/index.js
+  // ../../foundation/components/dist/index.js
   class s extends HTMLElement {
     _rawStyles = "";
     _styles = null;
@@ -477,13 +477,13 @@
       this._handleClose();
     }
   }
-  var ne = `<div class="avatar" part="avatar">
+  var oe = `<div class="avatar" part="avatar">
     <img class="image" part="image" alt="" hidden />
     <span class="initials" part="initials" aria-hidden="true"></span>
     <span class="fallback" part="fallback"><slot></slot></span>
 </div>
 `;
-  var oe = `:host {
+  var ne = `:host {
   display: inline-block;
 
   --_size: 2.5rem;
@@ -566,7 +566,7 @@
       return ["src", "alt", "name", "initials"];
     }
     constructor() {
-      super({ css: oe, template: ne });
+      super({ css: ne, template: oe });
       this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
     }
     connectedCallback() {
@@ -1091,9 +1091,9 @@ footer.actions {
   };
   var Ae = (t, e) => {
     t.querySelectorAll("[name]").forEach((i) => {
-      let n = i.getAttribute("name"), o = i.value;
-      if (n && o !== undefined && o !== null && o !== "")
-        e.formData.append(n, String(o));
+      let o = i.getAttribute("name"), n = i.value;
+      if (o && n !== undefined && n !== null && n !== "")
+        e.formData.append(o, String(n));
     });
   };
   var Ha = _e + ye;
@@ -2180,21 +2180,21 @@ input:focus-visible ~ .custom-box {
     if (t.hasAttribute("value"))
       e.value = t.getAttribute("value") ?? "";
   };
-  var nr = (t, e, r, i, n) => {
+  var or = (t, e, r, i, o) => {
     if (!e)
       return;
     if (i === "checked")
-      e.checked = n !== null, A(t, e, r);
+      e.checked = o !== null, A(t, e, r);
     else if (i === "disabled")
-      e.disabled = n !== null;
+      e.disabled = o !== null;
     else if (i === "indeterminate")
-      e.indeterminate = n !== null;
+      e.indeterminate = o !== null;
     else if (i === "name")
-      e.name = n ?? "";
+      e.name = o ?? "";
     else if (i === "value")
-      e.value = n ?? "", A(t, e, r);
+      e.value = o ?? "", A(t, e, r);
   };
-  var or = (t, e, r) => {
+  var nr = (t, e, r) => {
     if (e?.checked ?? false)
       t.setAttribute("checked", "");
     else
@@ -2242,9 +2242,9 @@ input:focus-visible ~ .custom-box {
       this.indeterminate = this._defaultIndeterminate, super.formResetCallback();
     }
     attributeChangedCallback(t, e, r) {
-      nr(this, this._input, this._internals, t, r);
+      or(this, this._input, this._internals, t, r);
     }
-    _onChange = () => or(this, this._input, this._internals);
+    _onChange = () => nr(this, this._input, this._internals);
     _onClick = (t) => ar(this, t);
     get indeterminate() {
       return this._input?.indeterminate ?? this.hasAttribute("indeterminate");
@@ -2349,7 +2349,7 @@ header:focus-visible {
     width: 100%;
 }
 `;
-  var ot = (t, e) => {
+  var nt = (t, e) => {
     if (e)
       e.textContent = t.getAttribute("data-title") ?? "";
   };
@@ -2386,7 +2386,7 @@ header:focus-visible {
     connectedCallback() {
       if (d(this, "collapsed"), this.hasAttribute("data-collapsed") && !this.hasAttribute("collapsed"))
         this.setAttribute("collapsed", "");
-      ot(this, this._title), at(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
+      nt(this, this._title), at(this, this._toggle, this._content), this._toggle?.addEventListener("click", this._onClick), this._toggle?.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       this._toggle?.removeEventListener("click", this._onClick), this._toggle?.removeEventListener("keydown", this._onKey);
@@ -2395,7 +2395,7 @@ header:focus-visible {
       if (t === "collapsed")
         at(this, this._toggle, this._content);
       if (t === "data-title")
-        ot(this, this._title);
+        nt(this, this._title);
     }
     get collapsed() {
       return this.hasAttribute("collapsed");
@@ -2701,29 +2701,29 @@ input[type="file"]:focus-visible + label {
   var dt = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { files: e } }));
   };
-  var X = (t, e, r, i, n) => {
-    let o = e?.files;
-    if (!o || o.length === 0) {
+  var X = (t, e, r, i, o) => {
+    let n = e?.files;
+    if (!n || n.length === 0) {
       if (r)
         r.textContent = "No file selected";
-      n.setFormValue(null), lt(i, "No file selected"), dt(t, null);
+      o.setFormValue(null), lt(i, "No file selected"), dt(t, null);
       return;
     }
-    let a = o.length === 1 && o[0] ? `${o[0].name} (${vr(o[0].size)})` : `${o.length} files selected`;
+    let a = n.length === 1 && n[0] ? `${n[0].name} (${vr(n[0].size)})` : `${n.length} files selected`;
     if (r)
       r.textContent = a;
-    if (o.length === 1 && o[0])
-      n.setFormValue(o[0]);
+    if (n.length === 1 && n[0])
+      o.setFormValue(n[0]);
     else {
       let l = new FormData, c = t.getAttribute("name") ?? "";
-      for (let p = 0;p < o.length; p++) {
-        let u = o.item(p);
+      for (let p = 0;p < n.length; p++) {
+        let u = n.item(p);
         if (u)
           l.append(c, u);
       }
-      n.setFormValue(l);
+      o.setFormValue(l);
     }
-    lt(i, `Selected: ${a}`), dt(t, o);
+    lt(i, `Selected: ${a}`), dt(t, n);
   };
   var xr = (t, e) => {
     if (e.preventDefault(), t.hasAttribute("disabled"))
@@ -2733,12 +2733,12 @@ input[type="file"]:focus-visible + label {
   var _r = (t, e) => {
     e.preventDefault(), t.toggleAttribute("dragging", false);
   };
-  var yr = (t, e, r, i, n, o) => {
-    let a = o;
+  var yr = (t, e, r, i, o, n) => {
+    let a = n;
     if (a.preventDefault(), t.removeAttribute("dragging"), t.hasAttribute("disabled"))
       return;
     if (a.dataTransfer?.files && e)
-      e.files = a.dataTransfer.files, X(t, e, r, i, n);
+      e.files = a.dataTransfer.files, X(t, e, r, i, o);
   };
 
   class wr extends s {
@@ -2972,20 +2972,20 @@ input[type="file"]:focus-visible + label {
   var L = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let n = ct(t);
-    if (n === null)
+    let o = ct(t);
+    if (o === null)
       return;
-    let o = e.value.length;
-    i.textContent = String(o), r.dataset.over = String(o > n);
+    let n = e.value.length;
+    i.textContent = String(n), r.dataset.over = String(n > o);
   };
   var pt = (t, e, r) => {
     if (!t || !e || !r)
       return;
-    let i = (t.textContent ?? "").length > 0, n = !e.hidden;
-    r.hidden = !i && !n;
+    let i = (t.textContent ?? "").length > 0, o = !e.hidden;
+    r.hidden = !i && !o;
   };
-  var os = 0;
-  var Cr = () => `p9r-input-label-${++os}`;
+  var ns = 0;
+  var Cr = () => `p9r-input-label-${++ns}`;
   var ut = (t, e) => {
     if (!e)
       return;
@@ -3037,23 +3037,23 @@ input[type="file"]:focus-visible + label {
     else
       e.removeAttribute("aria-invalid");
   };
-  var ht = (t, e, r, i, n) => {
+  var ht = (t, e, r, i, o) => {
     if (!e || !r)
       return;
-    let o = ct(t);
-    if (o === null)
+    let n = ct(t);
+    if (n === null)
       e.hidden = true;
     else
-      e.hidden = false, r.textContent = String(o);
-    pt(i, e, n);
+      e.hidden = false, r.textContent = String(n);
+    pt(i, e, o);
   };
-  var bt = (t, e, r, i, n, o, a) => {
-    ut(t, r), as(t, e), ss(t, e), ls(t, e), ds(t, e), cs(t, i, o, n), ps(t, i), us(t, e), ht(t, o, a, i, n);
+  var bt = (t, e, r, i, o, n, a) => {
+    ut(t, r), as(t, e), ss(t, e), ls(t, e), ds(t, e), cs(t, i, n, o), ps(t, i), us(t, e), ht(t, n, a, i, o);
   };
-  var Mr = (t, e, r, i, n) => {
+  var Mr = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), L(t, e, i, n);
+    r.setFormValue(e.value), L(t, e, i, o);
   };
   var Hr = (t, e) => {
     if (!t)
@@ -3346,21 +3346,21 @@ input[type="file"]:focus-visible + label {
   var C = (t, e) => {
     if (!t || !e)
       return;
-    let r = Number(t.min), i = Number(t.max), n = Number(t.value), o = i === r ? 0 : (n - r) / (i - r) * 100;
-    e.style.width = `${o}%`;
+    let r = Number(t.min), i = Number(t.max), o = Number(t.value), n = i === r ? 0 : (o - r) / (i - r) * 100;
+    e.style.width = `${n}%`;
   };
-  var mt = (t, e, r, i, n) => {
-    if (!e || !r || !i || !n)
+  var mt = (t, e, r, i, o) => {
+    if (!e || !r || !i || !o)
       return;
-    let o = t.getAttribute("min") ?? "0", a = t.getAttribute("max") ?? "100", l = t.getAttribute("step") ?? "1";
-    e.min = o, e.max = a, e.step = l, r.min = o, r.max = a, r.step = l, i.textContent = o, n.textContent = a;
+    let n = t.getAttribute("min") ?? "0", a = t.getAttribute("max") ?? "100", l = t.getAttribute("step") ?? "1";
+    e.min = n, e.max = a, e.step = l, r.min = n, r.max = a, r.step = l, i.textContent = n, o.textContent = a;
   };
   var gt = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let n = t.getAttribute("label") ?? t.getAttribute("name") ?? "";
-    if (e.textContent = n, e.hidden = n === "", n)
-      r.setAttribute("aria-label", n), i.setAttribute("aria-label", n);
+    let o = t.getAttribute("label") ?? t.getAttribute("name") ?? "";
+    if (e.textContent = o, e.hidden = o === "", o)
+      r.setAttribute("aria-label", o), i.setAttribute("aria-label", o);
   };
   var ft = (t, e) => {
     if (!e)
@@ -3374,35 +3374,35 @@ input[type="file"]:focus-visible + label {
     let i = t.hasAttribute("disabled");
     e.disabled = i, r.disabled = i;
   };
-  var D = (t, e, r, i, n) => {
+  var D = (t, e, r, i, o) => {
     if (!t || !e)
       return;
-    let o = K(t, Number(n));
-    t.value = String(o), e.value = String(o), i.setFormValue(t.value), C(t, r);
+    let n = K(t, Number(o));
+    t.value = String(n), e.value = String(n), i.setFormValue(t.value), C(t, r);
   };
-  var Fr = (t, e, r, i, n) => {
+  var Fr = (t, e, r, i, o) => {
     if (!e || !r)
       return;
-    r.value = e.value, n.setFormValue(e.value), C(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    r.value = e.value, o.setFormValue(e.value), C(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
   var Pr = (t, e, r) => {
     if (!e)
       return;
     r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
-  var Br = (t, e, r, i, n) => {
+  var Br = (t, e, r, i, o) => {
     if (!e || !r)
       return;
     if (r.value === "")
       return;
-    let o = K(e, Number(r.value));
-    e.value = String(o), n.setFormValue(e.value), C(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+    let n = K(e, Number(r.value));
+    e.value = String(n), o.setFormValue(e.value), C(e, i), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
-  var Kr = (t, e, r, i, n) => {
+  var Kr = (t, e, r, i, o) => {
     if (!e || !r)
       return;
-    let o = K(e, Number(r.value));
-    e.value = String(o), r.value = String(o), n.setFormValue(e.value), C(e, i), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+    let n = K(e, Number(r.value));
+    e.value = String(n), r.value = String(n), o.setFormValue(e.value), C(e, i), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
   var Dr = (t, e) => {
     if (!t || !e)
@@ -3632,14 +3632,14 @@ input[type="file"]:focus-visible + label {
     let i = Array.from(t.querySelectorAll("option"));
     if (e)
       e.innerHTML = "";
-    let n = [], o = "", a = "";
+    let o = [], n = "", a = "";
     if (i.forEach((l) => {
       let c = document.createElement("li");
-      if (c.className = "option", c.textContent = l.textContent, c.dataset.value = l.value, c.addEventListener("click", () => r(l.value, l.textContent ?? "")), e?.appendChild(c), n.push(c), l.hasAttribute("selected") && !o)
-        o = l.value, a = l.textContent ?? "";
-    }), !o && i.length > 0)
-      o = i[0].value, a = i[0].textContent ?? "";
-    return { options: n, initialValue: o, initialLabel: a };
+      if (c.className = "option", c.textContent = l.textContent, c.dataset.value = l.value, c.addEventListener("click", () => r(l.value, l.textContent ?? "")), e?.appendChild(c), o.push(c), l.hasAttribute("selected") && !n)
+        n = l.value, a = l.textContent ?? "";
+    }), !n && i.length > 0)
+      n = i[0].value, a = i[0].textContent ?? "";
+    return { options: o, initialValue: n, initialLabel: a };
   };
   var Ur = (t, e, r, i) => {
     if (e)
@@ -3671,13 +3671,13 @@ input[type="file"]:focus-visible + label {
       this._unbindReposition();
     }
     _syncFromSlot = () => {
-      let { options: t, initialValue: e, initialLabel: r } = Zr(this, this._list, (n, o) => this._select(n, o));
+      let { options: t, initialValue: e, initialLabel: r } = Zr(this, this._list, (o, n) => this._select(o, n));
       this._options = t;
       let i = this.getAttribute("value");
       if (i !== null) {
-        let n = t.find((o) => o.dataset.value === i);
-        if (n) {
-          this._setValue(i, n.textContent ?? "");
+        let o = t.find((n) => n.dataset.value === i);
+        if (o) {
+          this._setValue(i, o.textContent ?? "");
           return;
         }
       }
@@ -3727,11 +3727,11 @@ input[type="file"]:focus-visible + label {
     _bufferedValue = "";
     connectedCallback() {
       let t = this.getAttribute("label") || "Size", e = this.getAttribute("name") || "size", r = document.createElement("p9r-select");
-      if (r.setAttribute("label", t), r.setAttribute("name", e), [{ value: "none", label: "NONE" }, { value: "xs", label: "XS" }, { value: "sm", label: "S" }, { value: "md", label: "M", selected: true }, { value: "lg", label: "L" }, { value: "xl", label: "XL" }].forEach((n) => {
-        let o = document.createElement("option");
-        if (o.value = n.value, o.textContent = n.label, n.selected)
-          o.setAttribute("selected", "");
-        r.appendChild(o);
+      if (r.setAttribute("label", t), r.setAttribute("name", e), [{ value: "none", label: "NONE" }, { value: "xs", label: "XS" }, { value: "sm", label: "S" }, { value: "md", label: "M", selected: true }, { value: "lg", label: "L" }, { value: "xl", label: "XL" }].forEach((o) => {
+        let n = document.createElement("option");
+        if (n.value = o.value, n.textContent = o.label, o.selected)
+          n.setAttribute("selected", "");
+        r.appendChild(n);
       }), this._bufferedValue)
         r.value = this._bufferedValue;
       this.replaceWith(r);
@@ -3963,12 +3963,12 @@ input:focus-visible ~ .custom {
   var ei = () => `radiogroup-${Cs++}`;
   var ri = (t, e, r) => {
     t.forEach((i) => {
-      let n = e !== null && i.getAttribute("value") === e;
-      if (n)
+      let o = e !== null && i.getAttribute("value") === e;
+      if (o)
         i.setAttribute("checked", "");
       else
         i.removeAttribute("checked");
-      i.setAttribute("tabindex", n ? "0" : "-1");
+      i.setAttribute("tabindex", o ? "0" : "-1");
     }), r.setFormValue(e ?? null);
   };
   var xt = (t, e) => {
@@ -3984,18 +3984,18 @@ input:focus-visible ~ .custom {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: e } }));
   };
   var yt = (t, e, r) => {
-    let i = M(e), n = t.getAttribute("name") ?? ei(), o = t.getAttribute("value");
+    let i = M(e), o = t.getAttribute("name") ?? ei(), n = t.getAttribute("value");
     if (i.forEach((a) => {
-      a.setAttribute("name", n);
-      let l = o !== null && a.getAttribute("value") === o;
+      a.setAttribute("name", o);
+      let l = n !== null && a.getAttribute("value") === n;
       if (l)
         a.setAttribute("checked", "");
       else
         a.removeAttribute("checked");
       a.setAttribute("tabindex", l ? "0" : "-1");
-    }), o === null && i.length > 0)
+    }), n === null && i.length > 0)
       i[0]?.setAttribute("tabindex", "0");
-    Z(i, t.hasAttribute("disabled")), r.setFormValue(o ?? null);
+    Z(i, t.hasAttribute("disabled")), r.setFormValue(n ?? null);
   };
   var ii = (t, e) => {
     let r = e.target;
@@ -4005,38 +4005,38 @@ input:focus-visible ~ .custom {
     if (i !== t.getAttribute("value"))
       t.setAttribute("value", i), _t(t, i);
   };
-  var ni = (t, e, r) => {
+  var oi = (t, e, r) => {
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
       return;
-    let n = M(e).filter((u) => !u.hasAttribute("disabled"));
-    if (n.length === 0)
+    let o = M(e).filter((u) => !u.hasAttribute("disabled"));
+    if (o.length === 0)
       return;
-    let o = n.findIndex((u) => u === document.activeElement), a = o === -1 ? 0 : o, l = a;
+    let n = o.findIndex((u) => u === document.activeElement), a = n === -1 ? 0 : n, l = a;
     switch (r.key) {
       case "ArrowLeft":
       case "ArrowUp":
-        l = (a - 1 + n.length) % n.length;
+        l = (a - 1 + o.length) % o.length;
         break;
       case "ArrowRight":
       case "ArrowDown":
-        l = (a + 1) % n.length;
+        l = (a + 1) % o.length;
         break;
       case "Home":
         l = 0;
         break;
       case "End":
-        l = n.length - 1;
+        l = o.length - 1;
         break;
     }
     r.preventDefault();
-    let c = n[l];
+    let c = o[l];
     if (!c)
       return;
     let p = c.getAttribute("value") ?? "";
     t.setAttribute("value", p), c.focus(), _t(t, p);
   };
 
-  class oi extends s {
+  class ni extends s {
     static formAssociated = true;
     _internals;
     _label;
@@ -4094,7 +4094,7 @@ input:focus-visible ~ .custom {
     }
     _onSlotChange = () => yt(this, this._slot, this._internals);
     _onChange = (t) => ii(this, t);
-    _onKey = (t) => ni(this, this._slot, t);
+    _onKey = (t) => oi(this, this._slot, t);
   }
   var ai = `<div class="switch-container" part="container">
     <span class="label" id="group-label" part="label"></span>
@@ -4211,12 +4211,12 @@ input:focus-visible ~ .custom {
       t.textContent = e;
   };
   var U = (t, e, r) => {
-    let i = e.findIndex((n) => n.getAttribute("value") === r);
+    let i = e.findIndex((o) => o.getAttribute("value") === r);
     if (i === -1)
       return;
-    t.style.setProperty("--active-index", i.toString()), e.forEach((n, o) => {
-      let a = o === i;
-      n.setAttribute("aria-checked", a.toString()), n.setAttribute("tabindex", a ? "0" : "-1");
+    t.style.setProperty("--active-index", i.toString()), e.forEach((o, n) => {
+      let a = n === i;
+      o.setAttribute("aria-checked", a.toString()), o.setAttribute("tabindex", a ? "0" : "-1");
     });
   };
   var Q = (t, e) => {
@@ -4229,9 +4229,9 @@ input:focus-visible ~ .custom {
   };
   var kt = (t, e) => {
     let r = j(e);
-    t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, n) => {
+    t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, o) => {
       if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
-        i.setAttribute("tabindex", n === 0 ? "0" : "-1");
+        i.setAttribute("tabindex", o === 0 ? "0" : "-1");
       i.onclick = () => {
         if (t.disabled)
           return;
@@ -4244,28 +4244,28 @@ input:focus-visible ~ .custom {
       return;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
       return;
-    let n = j(e);
-    if (n.length === 0)
+    let o = j(e);
+    if (o.length === 0)
       return;
-    let o = n.findIndex((p) => p.getAttribute("value") === t.value), a = o === -1 ? 0 : o, l = a;
+    let n = o.findIndex((p) => p.getAttribute("value") === t.value), a = n === -1 ? 0 : n, l = a;
     switch (r.key) {
       case "ArrowLeft":
       case "ArrowUp":
-        l = (a - 1 + n.length) % n.length;
+        l = (a - 1 + o.length) % o.length;
         break;
       case "ArrowRight":
       case "ArrowDown":
-        l = (a + 1) % n.length;
+        l = (a + 1) % o.length;
         break;
       case "Home":
         l = 0;
         break;
       case "End":
-        l = n.length - 1;
+        l = o.length - 1;
         break;
     }
     r.preventDefault();
-    let c = n[l];
+    let c = o[l];
     if (!c)
       return;
     t.value = c.getAttribute("value") ?? "", c.focus();
@@ -4712,10 +4712,10 @@ p9r-tag:hover {
     let r = t.getAttribute("api") || "../api/tags", i = new URL(r, window.location.href);
     i.searchParams.set("resource", e);
     try {
-      let n = await fetch(i);
-      if (!n.ok)
+      let o = await fetch(i);
+      if (!o.ok)
         return null;
-      return await n.json();
+      return await o.json();
     } catch {
       return null;
     }
@@ -4725,12 +4725,12 @@ p9r-tag:hover {
       return;
     if (t.innerHTML = "", e !== "multiple")
       return;
-    r.forEach((n, o) => {
+    r.forEach((o, n) => {
       let a = document.createElement("p9r-tag");
-      a.setAttribute("color", "primary"), a.setAttribute("part", "chip"), a.setAttribute("role", "listitem"), a.textContent = n, a.title = `Remove ${n}`, a.setAttribute("aria-label", `Remove ${n}`), a.addEventListener("click", () => i(o)), t.appendChild(a);
+      a.setAttribute("color", "primary"), a.setAttribute("part", "chip"), a.setAttribute("role", "listitem"), a.textContent = o, a.title = `Remove ${o}`, a.setAttribute("aria-label", `Remove ${o}`), a.addEventListener("click", () => i(n)), t.appendChild(a);
     });
   };
-  var xi = (t, e, r, i, n, o) => {
+  var xi = (t, e, r, i, o, n) => {
     if (!t || !e)
       return;
     if (r.length === 0) {
@@ -4739,17 +4739,17 @@ p9r-tag:hover {
     }
     if (t.innerHTML = "", r.forEach((a, l) => {
       let c = document.createElement("div");
-      c.className = "suggestion", c.id = `${n}-opt-${l}`, c.setAttribute("role", "option"), c.setAttribute("part", "option");
+      c.className = "suggestion", c.id = `${o}-opt-${l}`, c.setAttribute("role", "option"), c.setAttribute("part", "option");
       let p = l === i;
       c.dataset.active = String(p), c.setAttribute("aria-selected", String(p));
       let u = document.createElement("span");
       u.className = "name", u.textContent = a.value, c.appendChild(u);
       let m = document.createElement("p9r-tag");
       m.setAttribute("color", "secondary"), m.setAttribute("part", "count"), m.textContent = String(a.count), c.appendChild(m), c.addEventListener("mousedown", (h) => {
-        h.preventDefault(), o(a.value);
+        h.preventDefault(), n(a.value);
       }), t.appendChild(c);
     }), t.hidden = false, e.setAttribute("aria-expanded", "true"), i >= 0)
-      e.setAttribute("aria-activedescendant", `${n}-opt-${i}`);
+      e.setAttribute("aria-activedescendant", `${o}-opt-${i}`);
     else
       e.removeAttribute("aria-activedescendant");
   };
@@ -4760,10 +4760,10 @@ p9r-tag:hover {
       e.setAttribute("aria-expanded", "false"), e.removeAttribute("aria-activedescendant");
   };
   var _i = (t, e, r) => {
-    let i = t.filter((n) => !e.includes(n.value));
+    let i = t.filter((o) => !e.includes(o.value));
     if (r === "")
       return i.slice(0, 8);
-    return i.filter((n) => n.value.toLowerCase().includes(r)).slice(0, 8);
+    return i.filter((o) => o.value.toLowerCase().includes(r)).slice(0, 8);
   };
   var yi = (t, e) => {
     if (t === "multiple")
@@ -4777,15 +4777,15 @@ p9r-tag:hover {
   };
   var f = (t) => t;
   var V = (t, e) => {
-    let r = f(t), i = t.getAttribute("mode") || "multiple", n = e.trim();
-    if (!n || !r._input)
+    let r = f(t), i = t.getAttribute("mode") || "multiple", o = e.trim();
+    if (!o || !r._input)
       return;
     if (i === "multiple") {
-      if (!r._tags.includes(n))
-        r._tags.push(n), G(r._liveRegion, `${n} added`);
+      if (!r._tags.includes(o))
+        r._tags.push(o), G(r._liveRegion, `${o} added`);
       r._input.value = "";
     } else
-      r._tags = [n], r._input.value = n, G(r._liveRegion, `${n} selected`);
+      r._tags = [o], r._input.value = o, G(r._liveRegion, `${o} selected`);
     r._activeIndex = -1, J(t), Y(t);
   };
   var ki = (t, e) => {
@@ -4817,8 +4817,8 @@ p9r-tag:hover {
     vi(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => Ei(t, r));
   };
   var Ct = (t, e) => {
-    let r = f(t), n = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
-    r._suggestions = _i(r._allSuggestions, n, e), r._activeIndex = -1, W(t);
+    let r = f(t), o = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
+    r._suggestions = _i(r._allSuggestions, o, e), r._activeIndex = -1, W(t);
   };
   var W = (t) => {
     let e = f(t);
@@ -4845,20 +4845,20 @@ p9r-tag:hover {
   var Hi = (t, e, r) => {
     if (!e)
       return;
-    let i = t.getAttribute("mode") || "multiple", n = t;
+    let i = t.getAttribute("mode") || "multiple", o = t;
     if (r.key === "ArrowDown") {
-      if (r.preventDefault(), n._suggestions.length === 0)
+      if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      n._activeIndex = Math.min(n._activeIndex + 1, n._suggestions.length - 1), W(t);
+      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), W(t);
     } else if (r.key === "ArrowUp") {
-      if (r.preventDefault(), n._suggestions.length === 0)
+      if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      n._activeIndex = Math.max(n._activeIndex - 1, -1), W(t);
+      o._activeIndex = Math.max(o._activeIndex - 1, -1), W(t);
     } else if (r.key === "Enter") {
       r.preventDefault();
-      let o = n._activeIndex >= 0 ? n._suggestions[n._activeIndex] : undefined;
-      if (o)
-        V(t, o.value);
+      let n = o._activeIndex >= 0 ? o._suggestions[o._activeIndex] : undefined;
+      if (n)
+        V(t, n.value);
       else {
         let a = e.value.trim();
         if (a)
@@ -4870,9 +4870,9 @@ p9r-tag:hover {
       Ai(t);
     else if (r.key === "," && i === "multiple") {
       r.preventDefault();
-      let o = e.value.trim();
-      if (o)
-        V(t, o);
+      let n = e.value.trim();
+      if (n)
+        V(t, n);
     }
   };
   var Fs = gi + fi;
@@ -5118,17 +5118,17 @@ p9r-tag:hover {
   var T = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let n = Mt(t);
-    if (n === null)
+    let o = Mt(t);
+    if (o === null)
       return;
-    let o = e.value.length;
-    i.textContent = String(o), r.dataset.over = String(o > n);
+    let n = e.value.length;
+    i.textContent = String(n), r.dataset.over = String(n > o);
   };
   var Ht = (t, e, r) => {
     if (!t || !e || !r)
       return;
-    let i = (t.textContent ?? "").length > 0, n = !e.hidden;
-    r.hidden = !i && !n;
+    let i = (t.textContent ?? "").length > 0, o = !e.hidden;
+    r.hidden = !i && !o;
   };
   var N = (t, e) => {
     if (!e || !t.hasAttribute("autosize"))
@@ -5197,23 +5197,23 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-invalid");
   };
-  var Tt = (t, e, r, i, n) => {
+  var Tt = (t, e, r, i, o) => {
     if (!e || !r)
       return;
-    let o = Mt(t);
-    if (o === null)
+    let n = Mt(t);
+    if (n === null)
       e.hidden = true;
     else
-      e.hidden = false, r.textContent = String(o);
-    Ht(i, e, n);
+      e.hidden = false, r.textContent = String(n);
+    Ht(i, e, o);
   };
-  var zt = (t, e, r, i, n, o, a) => {
-    Ds(t, r), js(t, e), Vs(t, e), Ns(t, e), $s(t, e), Rs(t, e), Xs(t, i, o, n), Zs(t, i), Us(t, e), Tt(t, o, a, i, n);
+  var zt = (t, e, r, i, o, n, a) => {
+    Ds(t, r), js(t, e), Vs(t, e), Ns(t, e), $s(t, e), Rs(t, e), Xs(t, i, n, o), Zs(t, i), Us(t, e), Tt(t, n, a, i, o);
   };
-  var qi = (t, e, r, i, n) => {
+  var qi = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), T(t, e, i, n), N(t, e);
+    r.setFormValue(e.value), T(t, e, i, o), N(t, e);
   };
   var Fi = (t, e) => {
     if (!t)
@@ -5429,7 +5429,7 @@ p9r-tag:hover {
           this._toolbar.setAttribute("aria-label", r);
     }
     _handleClick = (t) => {
-      let r = t.composedPath().find((n) => n instanceof Element && n.hasAttribute("data-action"));
+      let r = t.composedPath().find((o) => o instanceof Element && o.hasAttribute("data-action"));
       if (!r)
         return;
       t.stopPropagation();
@@ -5808,13 +5808,13 @@ p9r-tag:hover {
     let r = t.shadowRoot?.querySelector("slot:not([name])"), i = Wi(r);
     if (i.length === 0)
       return;
-    let n = document.activeElement, o = i.findIndex((c) => c === n || c.contains(n)), a = -1;
+    let o = document.activeElement, n = i.findIndex((c) => c === o || c.contains(o)), a = -1;
     switch (e.key) {
       case "ArrowDown":
-        a = o < 0 ? 0 : (o + 1) % i.length;
+        a = n < 0 ? 0 : (n + 1) % i.length;
         break;
       case "ArrowUp":
-        a = o < 0 ? i.length - 1 : (o - 1 + i.length) % i.length;
+        a = n < 0 ? i.length - 1 : (n - 1 + i.length) % i.length;
         break;
       case "Home":
         a = 0;
@@ -5868,7 +5868,7 @@ p9r-tag:hover {
     }
     _onKey = (t) => Yi(this, t);
   }
-  var tn = `<a class="menu-item" part="item" tabindex="-1">
+  var to = `<a class="menu-item" part="item" tabindex="-1">
     <span class="icon-wrapper" part="icon">
         <slot name="icon"></slot>
     </span>
@@ -5878,7 +5878,7 @@ p9r-tag:hover {
     <span class="badge" part="badge" id="badge-element"></span>
 </a>
 `;
-  var en = `:host {
+  var eo = `:host {
     display: block;
     width: 100%;
     outline: none;
@@ -5950,7 +5950,7 @@ p9r-tag:hover {
     flex-shrink: 0;
 }
 `;
-  var rn = `.menu-item:hover {
+  var ro = `.menu-item:hover {
     background-color: var(--item-bg-active);
     color: var(--item-color-active);
 }
@@ -6023,8 +6023,8 @@ p9r-tag:hover {
     if (!r)
       return;
     try {
-      let i = new URL(r, window.location.href), o = new URL(window.location.href).pathname, a = i.pathname;
-      if (a === "/" ? o === "/" : o === a || o.startsWith(a + "/"))
+      let i = new URL(r, window.location.href), n = new URL(window.location.href).pathname, a = i.pathname;
+      if (a === "/" ? n === "/" : n === a || n.startsWith(a + "/"))
         t.setAttribute("active", ""), t.setAttribute("aria-current", "page"), e.classList.add("active");
       else
         t.removeAttribute("active"), t.removeAttribute("aria-current"), e.classList.remove("active");
@@ -6032,7 +6032,7 @@ p9r-tag:hover {
       console.warn("Invalid href in LateralMenuItem:", r);
     }
   };
-  var nn = (t, e, r) => {
+  var io = (t, e, r) => {
     if (t.hasAttribute("disabled"))
       return;
     if (r.key !== "Enter" && r.key !== " ")
@@ -6041,13 +6041,13 @@ p9r-tag:hover {
       return;
     r.preventDefault(), e?.click();
   };
-  var ll = en + rn;
+  var ll = eo + ro;
 
-  class on extends s {
+  class oo extends s {
     _anchor;
     _badgeEl;
     constructor() {
-      super({ css: ll, template: tn });
+      super({ css: ll, template: to });
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
     }
     static get observedAttributes() {
@@ -6096,9 +6096,9 @@ p9r-tag:hover {
       t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
     _onPopstate = () => qt(this, this._anchor);
-    _onKey = (t) => nn(this, this._anchor, t);
+    _onKey = (t) => io(this, this._anchor, t);
   }
-  var an = `<nav class="pagination" part="pagination" aria-label="Pagination">
+  var no = `<nav class="pagination" part="pagination" aria-label="Pagination">
     <button class="prev" part="prev" type="button" aria-label="Previous page">
         <slot name="prev">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -6116,7 +6116,7 @@ p9r-tag:hover {
     </button>
 </nav>
 `;
-  var sn = `:host {
+  var ao = `:host {
   display: inline-block;
 
   --_size: 32px;
@@ -6215,37 +6215,37 @@ p9r-tag:hover {
     let i = parseInt(t.getAttribute(e) ?? "", 10);
     return Number.isFinite(i) && i > 0 ? i : r;
   };
-  var ln = (t, e, r, i) => {
-    let n = [], o = Math.max(1, t - r), a = Math.min(e, t + r), l = Array.from({ length: Math.min(i, e) }, (h, _) => _ + 1), c = Array.from({ length: Math.min(i, e) }, (h, _) => e - _).reverse(), p = [];
-    for (let h = o;h <= a; h++)
+  var so = (t, e, r, i) => {
+    let o = [], n = Math.max(1, t - r), a = Math.min(e, t + r), l = Array.from({ length: Math.min(i, e) }, (h, _) => _ + 1), c = Array.from({ length: Math.min(i, e) }, (h, _) => e - _).reverse(), p = [];
+    for (let h = n;h <= a; h++)
       p.push(h);
     let u = Array.from(new Set([...l, ...p, ...c])).sort((h, _) => h - _), m = 0;
     for (let h of u) {
       if (m > 0 && h - m > 1)
-        n.push("…");
-      n.push(h), m = h;
+        o.push("…");
+      o.push(h), m = h;
     }
-    return n;
+    return o;
   };
-  var dn = (t, e, r, i) => {
+  var lo = (t, e, r, i) => {
     if (!e)
       return;
-    let n = y(t, "page", 1), o = y(t, "total", 1), a = y(t, "siblings", 1), l = y(t, "boundary", 1);
+    let o = y(t, "page", 1), n = y(t, "total", 1), a = y(t, "siblings", 1), l = y(t, "boundary", 1);
     e.innerHTML = "";
-    for (let c of ln(n, o, a, l))
+    for (let c of so(o, n, a, l))
       if (c === "…") {
         let p = document.createElement("span");
         p.className = "ellipsis", p.setAttribute("part", "ellipsis"), p.textContent = "…", e.appendChild(p);
       } else {
         let p = document.createElement("li"), u = document.createElement("button");
-        if (u.type = "button", u.className = "page", u.setAttribute("part", "page"), u.dataset.page = String(c), u.textContent = String(c), c === n)
+        if (u.type = "button", u.className = "page", u.setAttribute("part", "page"), u.dataset.page = String(c), u.textContent = String(c), c === o)
           u.setAttribute("aria-current", "page");
         p.appendChild(u), e.appendChild(p);
       }
     if (r)
-      r.disabled = n <= 1;
+      r.disabled = o <= 1;
     if (i)
-      i.disabled = n >= o;
+      i.disabled = o >= n;
   };
   var O = (t, e, r) => {
     if (r === e)
@@ -6254,26 +6254,26 @@ p9r-tag:hover {
       return;
     t.setAttribute("page", String(r));
   };
-  var cn = (t, e) => {
+  var co = (t, e) => {
     if (e <= 1)
       return;
     O(t, e, e - 1);
   };
-  var pn = (t, e, r) => {
+  var po = (t, e, r) => {
     if (e >= r)
       return;
     O(t, e, e + 1);
   };
-  var un = (t, e, r) => {
+  var uo = (t, e, r) => {
     let i = r.target.closest(".page");
     if (!i)
       return;
-    let n = Number(i.dataset.page);
-    if (Number.isFinite(n))
-      O(t, e, n);
+    let o = Number(i.dataset.page);
+    if (Number.isFinite(o))
+      O(t, e, o);
   };
 
-  class hn extends s {
+  class ho extends s {
     _pages;
     _prev;
     _next;
@@ -6281,7 +6281,7 @@ p9r-tag:hover {
       return ["page", "total", "siblings", "boundary"];
     }
     constructor() {
-      super({ css: sn, template: an });
+      super({ css: ao, template: no });
       this._pages = this.shadowRoot?.querySelector(".pages") ?? null, this._prev = this.shadowRoot?.querySelector(".prev") ?? null, this._next = this.shadowRoot?.querySelector(".next") ?? null;
     }
     connectedCallback() {
@@ -6306,20 +6306,20 @@ p9r-tag:hover {
       this.setAttribute("total", String(t));
     }
     _render() {
-      dn(this, this._pages, this._prev, this._next);
+      lo(this, this._pages, this._prev, this._next);
     }
-    _onPrev = () => cn(this, this.page);
-    _onNext = () => pn(this, this.page, this.total);
-    _onPageClick = (t) => un(this, this.page, t);
+    _onPrev = () => co(this, this.page);
+    _onNext = () => po(this, this.page, this.total);
+    _onPageClick = (t) => uo(this, this.page, t);
   }
-  var bn = `<div class="progress" part="progress" role="progressbar">
+  var bo = `<div class="progress" part="progress" role="progressbar">
     <div class="track" part="track">
         <div class="bar" part="bar"></div>
     </div>
     <span class="label" part="label"><slot></slot></span>
 </div>
 `;
-  var mn = `:host {
+  var mo = `:host {
   display: block;
 
   --_height: 8px;
@@ -6400,7 +6400,7 @@ p9r-tag:hover {
 }
 `;
 
-  class gn extends s {
+  class go extends s {
     _bar;
     _label;
     _root;
@@ -6408,7 +6408,7 @@ p9r-tag:hover {
       return ["value", "max", "indeterminate"];
     }
     constructor() {
-      super({ css: mn, template: bn });
+      super({ css: mo, template: bo });
       this._bar = this.shadowRoot?.querySelector(".bar") ?? null, this._label = this.shadowRoot?.querySelector(".label") ?? null, this._root = this.shadowRoot?.querySelector(".progress") ?? null;
     }
     connectedCallback() {
@@ -6420,13 +6420,13 @@ p9r-tag:hover {
       this._sync();
     }
     _sync() {
-      let t = this.hasAttribute("indeterminate"), e = this._parseNumber(this.getAttribute("max"), 100), r = this._parseNumber(this.getAttribute("value"), 0), i = Math.max(0, Math.min(r, e)), n = e > 0 ? i / e * 100 : 0;
+      let t = this.hasAttribute("indeterminate"), e = this._parseNumber(this.getAttribute("max"), 100), r = this._parseNumber(this.getAttribute("value"), 0), i = Math.max(0, Math.min(r, e)), o = e > 0 ? i / e * 100 : 0;
       if (t)
         this._root?.removeAttribute("aria-valuenow"), this._root?.setAttribute("aria-valuemin", "0"), this._root?.setAttribute("aria-valuemax", "100");
       else
-        this._root?.setAttribute("aria-valuenow", String(i)), this._root?.setAttribute("aria-valuemin", "0"), this._root?.setAttribute("aria-valuemax", String(e)), this.style.setProperty("--_value", `${n}%`);
+        this._root?.setAttribute("aria-valuenow", String(i)), this._root?.setAttribute("aria-valuemin", "0"), this._root?.setAttribute("aria-valuemax", String(e)), this.style.setProperty("--_value", `${o}%`);
       if (this._label)
-        this._label.dataset.valueText = `${Math.round(n)}%`;
+        this._label.dataset.valueText = `${Math.round(o)}%`;
     }
     _parseNumber(t, e) {
       if (t === null)
@@ -6456,9 +6456,9 @@ p9r-tag:hover {
         this.removeAttribute("indeterminate");
     }
   }
-  var fn = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
+  var fo = `<div class="skeleton" part="skeleton" aria-hidden="true"></div>
 `;
-  var vn = `:host {
+  var vo = `:host {
   display: block;
 
   --_bg: var(--bg-base, #f1f5f9);
@@ -6507,12 +6507,12 @@ p9r-tag:hover {
 }
 `;
 
-  class xn extends s {
+  class xo extends s {
     static get observedAttributes() {
       return ["width", "height"];
     }
     constructor() {
-      super({ css: vn, template: fn });
+      super({ css: vo, template: fo });
     }
     connectedCallback() {
       this._syncSize();
@@ -6536,11 +6536,11 @@ p9r-tag:hover {
       return /^\d+(\.\d+)?$/.test(t) ? `${t}px` : t;
     }
   }
-  var _n = `<div class="spinner" part="spinner" role="status" aria-live="polite">
+  var _o = `<div class="spinner" part="spinner" role="status" aria-live="polite">
     <span class="visually-hidden"><slot>Loading…</slot></span>
 </div>
 `;
-  var yn = `:host {
+  var yo = `:host {
   display: inline-block;
 
   --_size: 1.25rem;
@@ -6592,16 +6592,16 @@ p9r-tag:hover {
 }
 `;
 
-  class wn extends s {
+  class wo extends s {
     constructor() {
-      super({ css: yn, template: _n });
+      super({ css: yo, template: _o });
     }
   }
-  var kn = `<ol class="stepper" part="stepper">
+  var ko = `<ol class="stepper" part="stepper">
     <slot></slot>
 </ol>
 `;
-  var En = `:host {
+  var Eo = `:host {
   display: block;
 
   --_active: var(--primary-base, #4361ee);
@@ -6626,12 +6626,12 @@ p9r-tag:hover {
 }
 `;
 
-  class An extends s {
+  class Ao extends s {
     static get observedAttributes() {
       return ["current", "orientation"];
     }
     constructor() {
-      super({ css: En, template: kn });
+      super({ css: Eo, template: ko });
     }
     connectedCallback() {
       this._sync();
@@ -6651,23 +6651,23 @@ p9r-tag:hover {
     }
     _sync() {
       let t = this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal", e = this.current, r = this._steps();
-      r.forEach((i, n) => {
-        if (i.setAttribute("data-index", String(n + 1)), i.setAttribute("orientation", t), n === r.length - 1)
+      r.forEach((i, o) => {
+        if (i.setAttribute("data-index", String(o + 1)), i.setAttribute("orientation", t), o === r.length - 1)
           i.setAttribute("last", "");
         else
           i.removeAttribute("last");
         if (i.hasAttribute("state"))
           return;
-        if (n < e)
+        if (o < e)
           i.setAttribute("data-state", "completed");
-        else if (n === e)
+        else if (o === e)
           i.setAttribute("data-state", "active");
         else
           i.setAttribute("data-state", "pending");
       });
     }
   }
-  var Ln = `<li class="step" part="step">
+  var Lo = `<li class="step" part="step">
     <div class="indicator" part="indicator">
         <span class="bullet" part="bullet">
             <span class="number"></span>
@@ -6685,7 +6685,7 @@ p9r-tag:hover {
     </div>
 </li>
 `;
-  var Cn = `:host {
+  var Co = `:host {
   display: flex;
   flex: 1;
 
@@ -6774,7 +6774,7 @@ p9r-tag:hover {
 
 .description.is-empty { display: none; }
 `;
-  var Mn = `:host([data-state="active"], [state="active"]) {
+  var Mo = `:host([data-state="active"], [state="active"]) {
   --_color: var(--_active);
   --_label-color: var(--_text);
 }
@@ -6835,9 +6835,9 @@ p9r-tag:hover {
   margin-top: 0.4rem;
 }
 `;
-  var wl = Cn + Mn;
+  var wl = Co + Mo;
 
-  class Hn extends s {
+  class Ho extends s {
     _label;
     _number;
     _description;
@@ -6846,7 +6846,7 @@ p9r-tag:hover {
       return ["label", "data-index"];
     }
     constructor() {
-      super({ css: wl, template: Ln });
+      super({ css: wl, template: Lo });
       this._label = this.shadowRoot?.querySelector(".label") ?? null, this._number = this.shadowRoot?.querySelector(".number") ?? null, this._description = this.shadowRoot?.querySelector(".description") ?? null, this._descriptionSlot = this.shadowRoot?.querySelector(".description slot") ?? null;
     }
     connectedCallback() {
@@ -6871,13 +6871,13 @@ p9r-tag:hover {
         this._number.textContent = this.getAttribute("data-index") ?? "";
     }
   }
-  var Tn = `<div class="table-container">
+  var To = `<div class="table-container">
   <div class="p9r-table">
     <slot name="header"></slot>
     <slot></slot>
   </div>
 </div>`;
-  var zn = `:host {
+  var zo = `:host {
   display: block;
   width: 100%;
 }
@@ -6910,14 +6910,14 @@ p9r-tag:hover {
   background-color: var(--bg-base);
 }`;
 
-  class Sn extends s {
+  class So extends s {
     constructor() {
-      super({ css: zn, template: Tn });
+      super({ css: zo, template: To });
     }
   }
-  var In = `<slot></slot>
+  var Io = `<slot></slot>
 `;
-  var qn = `:host {
+  var qo = `:host {
   display: table-cell;
   padding: 12px 20px;
   vertical-align: middle;
@@ -6942,16 +6942,16 @@ p9r-tag:hover {
 }
 `;
 
-  class Fn extends s {
+  class Fo extends s {
     constructor() {
-      super({ css: qn, template: In });
+      super({ css: qo, template: Io });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
         this.setAttribute("role", "cell");
     }
   }
-  var Pn = `<div class="header-wrapper" part="wrapper">
+  var Po = `<div class="header-wrapper" part="wrapper">
   <button
     type="button"
     class="label-section"
@@ -6981,7 +6981,7 @@ p9r-tag:hover {
   </div>
 </div>
 `;
-  var Bn = `:host {
+  var Bo = `:host {
   display: table-cell;
   padding: 12px 20px;
   border-bottom: 2px solid var(--border-light);
@@ -7052,7 +7052,7 @@ p9r-tag:hover {
   box-sizing: border-box;
 }
 `;
-  var Kn = `:host([sort]) .label-section {
+  var Ko = `:host([sort]) .label-section {
   cursor: pointer;
 }
 
@@ -7114,22 +7114,22 @@ p9r-tag:hover {
       return;
     }
     e.removeAttribute("hidden");
-    let n = Tl(t);
+    let o = Tl(t);
     if (r)
-      r.value = n;
-    if (n)
+      r.value = o;
+    if (o)
       t.setAttribute("data-has-filter", "");
     else
       t.removeAttribute("data-has-filter");
   };
-  var Dn = (t) => {
+  var Do = (t) => {
     let e = t.getAttribute("sort");
     if (!e)
       return;
-    let r = new URL(window.location.href), i = r.searchParams.get("sort"), n = r.searchParams.get("direction"), o = i === e && n === "asc" ? "desc" : "asc";
-    r.searchParams.set("sort", e), r.searchParams.set("direction", o), window.location.href = r.toString();
+    let r = new URL(window.location.href), i = r.searchParams.get("sort"), o = r.searchParams.get("direction"), n = i === e && o === "asc" ? "desc" : "asc";
+    r.searchParams.set("sort", e), r.searchParams.set("direction", n), window.location.href = r.toString();
   };
-  var jn = (t, e) => {
+  var jo = (t, e) => {
     let r = t.getAttribute("filter-name");
     if (!r)
       return;
@@ -7140,12 +7140,12 @@ p9r-tag:hover {
       i.searchParams.delete(`f_${r}`);
     window.location.href = i.toString();
   };
-  var Vn = (t, e) => {
+  var Vo = (t, e) => {
     if (e.composedPath().some((r) => r instanceof HTMLInputElement))
       return;
-    Dn(t);
+    Do(t);
   };
-  var Nn = (t, e, r, i) => {
+  var No = (t, e, r, i) => {
     if (t.stopPropagation(), !r || !e)
       return;
     if (r.hasAttribute("hidden"))
@@ -7153,17 +7153,17 @@ p9r-tag:hover {
     else
       r.setAttribute("hidden", ""), e.setAttribute("aria-expanded", "false");
   };
-  var $n = (t, e, r) => {
+  var $o = (t, e, r) => {
     if (r.key !== "Enter" || !e)
       return;
-    jn(t, e.value);
+    jo(t, e.value);
   };
-  var Rn = (t, e) => {
+  var Ro = (t, e) => {
     e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
   };
-  var zl = Bn + Kn;
+  var zl = Bo + Ko;
 
-  class Xn extends s {
+  class Xo extends s {
     _sortTrigger;
     _filterBtn;
     _filterPopover;
@@ -7172,7 +7172,7 @@ p9r-tag:hover {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: zl, template: Pn });
+      super({ css: zl, template: Po });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
@@ -7184,15 +7184,15 @@ p9r-tag:hover {
     attributeChangedCallback() {
       Ft(this, this._filterBtn, this._filterInput);
     }
-    _onSort = (t) => Vn(this, t);
-    _onFilterToggle = (t) => Nn(t, this._filterBtn, this._filterPopover, this._filterInput);
-    _onFilterKey = (t) => $n(this, this._filterInput, t);
-    _onWindowClick = () => Rn(this._filterBtn, this._filterPopover);
+    _onSort = (t) => Vo(this, t);
+    _onFilterToggle = (t) => No(t, this._filterBtn, this._filterPopover, this._filterInput);
+    _onFilterKey = (t) => $o(this, this._filterInput, t);
+    _onWindowClick = () => Ro(this._filterBtn, this._filterPopover);
     _stopPropagation = (t) => t.stopPropagation();
   }
-  var Zn = `<slot></slot>
+  var Zo = `<slot></slot>
 `;
-  var Un = `:host {
+  var Uo = `:host {
   display: table-row;
 }
 
@@ -7223,12 +7223,12 @@ p9r-tag:hover {
     else
       window.location.href = e;
   };
-  var Qn = (t) => {
+  var Qo = (t) => {
     if (!t.hasAttribute("href"))
       return;
     Pt(t);
   };
-  var Gn = (t, e) => {
+  var Go = (t, e) => {
     if (!t.hasAttribute("href"))
       return;
     if (e.key === "Enter" || e.key === " ")
@@ -7250,12 +7250,12 @@ p9r-tag:hover {
     }
   };
 
-  class Jn extends s {
+  class Jo extends s {
     static get observedAttributes() {
       return ["href"];
     }
     constructor() {
-      super({ css: Un, template: Zn });
+      super({ css: Uo, template: Zo });
     }
     connectedCallback() {
       for (let t of ["href", "target"])
@@ -7269,8 +7269,8 @@ p9r-tag:hover {
       if (t === "href")
         Bt(this);
     }
-    _onClick = () => Qn(this);
-    _onKey = (t) => Gn(this, t);
+    _onClick = () => Qo(this);
+    _onKey = (t) => Go(this, t);
     get href() {
       return this.getAttribute("href");
     }
@@ -7290,14 +7290,14 @@ p9r-tag:hover {
         this.setAttribute("target", t);
     }
   }
-  var Wn = `<div class="tabs" part="tabs">
+  var Wo = `<div class="tabs" part="tabs">
     <div class="tablist" part="tablist" role="tablist"></div>
     <div class="panels" part="panels">
         <slot></slot>
     </div>
 </div>
 `;
-  var Yn = `:host {
+  var Yo = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -7374,7 +7374,7 @@ p9r-tag:hover {
   .tab { transition: color 0.15s; }
 }
 `;
-  var On = `:host([variant="pills"]) .tablist {
+  var Oo = `:host([variant="pills"]) .tablist {
   border-bottom: 0;
   gap: 0.4rem;
   padding: 0.25rem;
@@ -7419,66 +7419,66 @@ p9r-tag:hover {
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
   };
   var Bl = 0;
-  var to = () => `tabpanel-${Bl++}`;
-  var eo = (t, e) => {
+  var tn = () => `tabpanel-${Bl++}`;
+  var en = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
   };
   var Dt = (t, e, r) => {
     if (!e)
       return;
     e.innerHTML = "";
-    let i = Kt(r), n = t.getAttribute("active");
-    if (!n && i.length > 0)
-      n = i[0]?.getAttribute("id") ?? null;
-    if (i.forEach((o, a) => {
-      let l = o.getAttribute("id") ?? to();
-      if (!o.id)
-        o.id = l;
-      let c = o.getAttribute("label") ?? `Tab ${a + 1}`, p = document.createElement("button");
-      if (p.type = "button", p.className = "tab", p.setAttribute("part", "tab"), p.setAttribute("role", "tab"), p.setAttribute("id", `tab-${l}`), p.setAttribute("aria-controls", l), p.dataset.target = l, p.textContent = c, o.hasAttribute("disabled"))
+    let i = Kt(r), o = t.getAttribute("active");
+    if (!o && i.length > 0)
+      o = i[0]?.getAttribute("id") ?? null;
+    if (i.forEach((n, a) => {
+      let l = n.getAttribute("id") ?? tn();
+      if (!n.id)
+        n.id = l;
+      let c = n.getAttribute("label") ?? `Tab ${a + 1}`, p = document.createElement("button");
+      if (p.type = "button", p.className = "tab", p.setAttribute("part", "tab"), p.setAttribute("role", "tab"), p.setAttribute("id", `tab-${l}`), p.setAttribute("aria-controls", l), p.dataset.target = l, p.textContent = c, n.hasAttribute("disabled"))
         p.setAttribute("disabled", "");
-      e.appendChild(p), o.setAttribute("role", "tabpanel"), o.setAttribute("aria-labelledby", `tab-${l}`);
-    }), n)
-      z(t, e, r, n);
+      e.appendChild(p), n.setAttribute("role", "tabpanel"), n.setAttribute("aria-labelledby", `tab-${l}`);
+    }), o)
+      z(t, e, r, o);
   };
   var z = (t, e, r, i) => {
-    let n = Kt(r), o = Array.from(e?.querySelectorAll(".tab") ?? []), a = false;
-    if (n.forEach((l) => {
+    let o = Kt(r), n = Array.from(e?.querySelectorAll(".tab") ?? []), a = false;
+    if (o.forEach((l) => {
       let c = l.id === i;
       if (c)
         a = true;
       l.toggleAttribute("hidden", !c);
-    }), o.forEach((l) => {
+    }), n.forEach((l) => {
       let c = l.dataset.target === i;
       l.setAttribute("aria-selected", String(c)), l.setAttribute("tabindex", c ? "0" : "-1");
     }), a && t.getAttribute("active") !== i)
-      t.setAttribute("active", i), eo(t, i);
+      t.setAttribute("active", i), en(t, i);
   };
-  var ro = (t, e, r, i) => {
-    let n = i.target.closest(".tab");
-    if (!n || n.hasAttribute("disabled"))
+  var rn = (t, e, r, i) => {
+    let o = i.target.closest(".tab");
+    if (!o || o.hasAttribute("disabled"))
       return;
-    let o = n.dataset.target;
-    if (o)
-      z(t, e, r, o);
+    let n = o.dataset.target;
+    if (n)
+      z(t, e, r, n);
   };
-  var io = (t, e, r, i) => {
+  var on = (t, e, r, i) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
       return;
-    let n = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
-    if (n.length === 0)
+    let o = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
+    if (o.length === 0)
       return;
-    let o = n.findIndex((u) => u === document.activeElement), a = o === -1 ? 0 : o, l = a;
+    let n = o.findIndex((u) => u === document.activeElement), a = n === -1 ? 0 : n, l = a;
     if (i.key === "ArrowLeft")
-      l = (a - 1 + n.length) % n.length;
+      l = (a - 1 + o.length) % o.length;
     if (i.key === "ArrowRight")
-      l = (a + 1) % n.length;
+      l = (a + 1) % o.length;
     if (i.key === "Home")
       l = 0;
     if (i.key === "End")
-      l = n.length - 1;
+      l = o.length - 1;
     i.preventDefault();
-    let c = n[l];
+    let c = o[l];
     if (!c)
       return;
     let p = c.dataset.target;
@@ -7486,16 +7486,16 @@ p9r-tag:hover {
       z(t, e, r, p);
     c.focus();
   };
-  var Kl = Yn + On;
+  var Kl = Yo + Oo;
 
-  class no extends s {
+  class nn extends s {
     _tablist;
     _slot;
     static get observedAttributes() {
       return ["active"];
     }
     constructor() {
-      super({ css: Kl, template: Wn });
+      super({ css: Kl, template: Wo });
       this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
@@ -7515,14 +7515,14 @@ p9r-tag:hover {
       this.setAttribute("active", t);
     }
     _onRebuild = () => Dt(this, this._tablist, this._slot);
-    _onClick = (t) => ro(this, this._tablist, this._slot, t);
-    _onKey = (t) => io(this, this._tablist, this._slot, t);
+    _onClick = (t) => rn(this, this._tablist, this._slot, t);
+    _onKey = (t) => on(this, this._tablist, this._slot, t);
   }
-  var oo = `<div class="panel" part="panel">
+  var an = `<div class="panel" part="panel">
     <slot></slot>
 </div>
 `;
-  var ao = `:host {
+  var sn = `:host {
   display: block;
 }
 
@@ -7533,15 +7533,15 @@ p9r-tag:hover {
 }
 `;
 
-  class so extends s {
+  class ln extends s {
     constructor() {
-      super({ css: ao, template: oo });
+      super({ css: sn, template: an });
     }
   }
-  var lo = `<span class="label" part="label"><slot></slot></span>
+  var dn = `<span class="label" part="label"><slot></slot></span>
 <button type="button" class="remove" part="remove" aria-label="Remove" hidden>&times;</button>
 `;
-  var co = `:host {
+  var cn = `:host {
     --_tag-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
@@ -7610,7 +7610,7 @@ p9r-tag:hover {
     }
 }
 `;
-  var po = `:host([color="info"]) {
+  var pn = `:host([color="info"]) {
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
     --_tag-color: var(--info-base, oklch(65% 0.12 230));
     --_tag-border: var(--info-contrasted, oklch(25% 0.08 230));
@@ -7646,15 +7646,15 @@ p9r-tag:hover {
     --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
 }
 `;
-  var Rl = co + po;
+  var Rl = cn + pn;
 
-  class uo extends s {
+  class un extends s {
     _removeBtn;
     static get observedAttributes() {
       return ["removable"];
     }
     constructor() {
-      super({ css: Rl, template: lo });
+      super({ css: Rl, template: dn });
       this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
     }
     connectedCallback() {
@@ -7691,13 +7691,13 @@ p9r-tag:hover {
         this.removeAttribute("removable");
     }
   }
-  var ho = `<div class="icon" part="icon"></div>
+  var hn = `<div class="icon" part="icon"></div>
 <div class="content">
     <span class="message"><slot></slot></span>
 </div>
 <button class="close" aria-label="Dismiss">&times;</button>
 `;
-  var bo = `:host {
+  var bn = `:host {
     --_bg: var(--bg-surface, #ffffff);
     --_color: var(--text-main, #1f2937);
     --_border: var(--border-default, #e5e7eb);
@@ -7768,7 +7768,7 @@ p9r-tag:hover {
     opacity: 1;
 }
 `;
-  var mo = `:host([leaving]) {
+  var mn = `:host([leaving]) {
     animation: toast-out 160ms ease-in forwards;
 }
 
@@ -7811,12 +7811,12 @@ p9r-tag:hover {
     to   { opacity: 0; transform: translateX(-20px); }
 }
 `;
-  var Ql = bo + mo;
+  var Ql = bn + mn;
 
-  class go extends s {
+  class gn extends s {
     _timer = null;
     constructor() {
-      super({ css: Ql, template: ho });
+      super({ css: Ql, template: hn });
     }
     connectedCallback() {
       this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
@@ -7838,9 +7838,9 @@ p9r-tag:hover {
       }, { once: true });
     }
   }
-  var fo = `<slot></slot>
+  var fn = `<slot></slot>
 `;
-  var vo = `:host {
+  var vn = `:host {
     position: fixed;
     top: 24px;
     left: 24px;
@@ -7890,9 +7890,9 @@ p9r-tag:hover {
 }
 `;
 
-  class xo extends s {
+  class xn extends s {
     constructor() {
-      super({ css: vo, template: fo });
+      super({ css: vn, template: fn });
     }
     connectedCallback() {
       if (!this.hasAttribute("popover"))
@@ -7908,7 +7908,7 @@ p9r-tag:hover {
       return r.textContent = t, this.appendChild(r), r;
     }
   }
-  var _o = `<div class="trigger" part="trigger">
+  var _n = `<div class="trigger" part="trigger">
     <slot></slot>
 </div>
 <div class="tooltip" part="tooltip" role="tooltip" aria-hidden="true">
@@ -7916,7 +7916,7 @@ p9r-tag:hover {
     <span class="text"></span>
 </div>
 `;
-  var yo = `:host {
+  var yn = `:host {
   display: inline-block;
   position: relative;
 
@@ -7981,7 +7981,7 @@ p9r-tag:hover {
   border-top-color: var(--_bg);
 }
 `;
-  var wo = `:host([position="bottom"]) .tooltip {
+  var wn = `:host([position="bottom"]) .tooltip {
   top: calc(100% + var(--_offset));
   bottom: auto;
   left: 50%;
@@ -8029,9 +8029,9 @@ p9r-tag:hover {
   border-right-color: var(--_bg);
 }
 `;
-  var rd = yo + wo;
+  var rd = yn + wn;
 
-  class ko extends s {
+  class kn extends s {
     _tooltip;
     _text;
     _showTimer = null;
@@ -8040,7 +8040,7 @@ p9r-tag:hover {
       return ["text"];
     }
     constructor() {
-      super({ css: rd, template: _o });
+      super({ css: rd, template: _n });
       this._tooltip = this.shadowRoot?.querySelector(".tooltip") ?? null, this._text = this.shadowRoot?.querySelector(".text") ?? null;
     }
     connectedCallback() {
@@ -8091,9 +8091,9 @@ p9r-tag:hover {
     }
   }
   var id = new Intl.NumberFormat("fr-FR");
-  var nd = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
+  var od = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
   var x = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
-  var od = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
+  var nd = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
   function jt(t, e) {
     if (e === "ms")
       return `${Math.round(t)} ms`;
@@ -8101,35 +8101,35 @@ p9r-tag:hover {
       return `${(t * 100).toFixed(1).replace(".", ",")} %`;
     return id.format(Math.round(t));
   }
-  var Eo = (t) => {
+  var En = (t) => {
     let e = new Date(t);
-    return Number.isNaN(e.getTime()) ? t : nd.format(e);
+    return Number.isNaN(e.getTime()) ? t : od.format(e);
   };
   function et(t, e) {
     return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${x(t)}</p>${e ? `<p class="empty-hint">${x(e)}</p>` : ""}</div>`;
   }
-  function Ao(t) {
+  function An(t) {
     if (t.length === 0)
       return "";
-    let e = 320, r = 140, i = 32, n = 8, o = 10, a = 22, l = e - i - n, c = r - o - a, p = o + c, u = Math.max(...t.map((k) => k.value), 1), m = t.length, h = t.map((k, P) => [i + (m === 1 ? l / 2 : P / (m - 1) * l), o + (1 - k.value / u) * c]), _ = h.map(([k, P]) => `${k.toFixed(1)},${P.toFixed(1)}`).join(" "), aa = `${h[0][0].toFixed(1)},${p} ${_} ${h[m - 1][0].toFixed(1)},${p}`, sa = h.map(([k, P]) => `<circle class="dot" cx="${k.toFixed(1)}" cy="${P.toFixed(1)}" r="2.5"/>`).join("");
-    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${o}" x2="${i}" y2="${p}"/><line class="axis" x1="${i}" y1="${p}" x2="${e - n}" y2="${p}"/><text class="tick" x="${i - 4}" y="${o + 3}" text-anchor="end">${od(u)}</text><text class="tick" x="${i - 4}" y="${p}" text-anchor="end">0</text><polygon class="area" points="${aa}" fill="url(#lc-grad)"/><polyline class="stroke" points="${_}"/>${sa}<text class="tick" x="${i}" y="${r - 6}">${x(t[0].label)}</text><text class="tick" x="${e - n}" y="${r - 6}" text-anchor="end">${x(t[m - 1].label)}</text></svg>`;
+    let e = 320, r = 140, i = 32, o = 8, n = 10, a = 22, l = e - i - o, c = r - n - a, p = n + c, u = Math.max(...t.map((k) => k.value), 1), m = t.length, h = t.map((k, P) => [i + (m === 1 ? l / 2 : P / (m - 1) * l), n + (1 - k.value / u) * c]), _ = h.map(([k, P]) => `${k.toFixed(1)},${P.toFixed(1)}`).join(" "), aa = `${h[0][0].toFixed(1)},${p} ${_} ${h[m - 1][0].toFixed(1)},${p}`, sa = h.map(([k, P]) => `<circle class="dot" cx="${k.toFixed(1)}" cy="${P.toFixed(1)}" r="2.5"/>`).join("");
+    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${n}" x2="${i}" y2="${p}"/><line class="axis" x1="${i}" y1="${p}" x2="${e - o}" y2="${p}"/><text class="tick" x="${i - 4}" y="${n + 3}" text-anchor="end">${nd(u)}</text><text class="tick" x="${i - 4}" y="${p}" text-anchor="end">0</text><polygon class="area" points="${aa}" fill="url(#lc-grad)"/><polyline class="stroke" points="${_}"/>${sa}<text class="tick" x="${i}" y="${r - 6}">${x(t[0].label)}</text><text class="tick" x="${e - o}" y="${r - 6}" text-anchor="end">${x(t[m - 1].label)}</text></svg>`;
   }
-  function Lo(t, e) {
+  function Ln(t, e) {
     if (t.length === 0)
       return "";
-    let r = t.reduce((i, n) => i + n.value, 0) || 1;
+    let r = t.reduce((i, o) => i + o.value, 0) || 1;
     return t.map((i) => {
-      let n = i.value / r * 100, o = `${n.toFixed(1).replace(".", ",")} %`;
-      return `<div class="bar"><span class="bar-key" title="${x(i.label)}">${x(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${n.toFixed(1)}"/></svg><span class="bar-val">${e ? `${jt(i.value, "int")} · ${o}` : o}</span></div>`;
+      let o = i.value / r * 100, n = `${o.toFixed(1).replace(".", ",")} %`;
+      return `<div class="bar"><span class="bar-key" title="${x(i.label)}">${x(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${o.toFixed(1)}"/></svg><span class="bar-val">${e ? `${jt(i.value, "int")} · ${n}` : n}</span></div>`;
     }).join("");
   }
-  var Co = `<div class="stat">
+  var Cn = `<div class="stat">
     <span class="label"></span>
     <strong class="value">—</strong>
     <span class="note"></span>
 </div>
 `;
-  var Mo = `:host {
+  var Mn = `:host {
     display: block;
     flex: 1 1 0;
     min-width: 0;
@@ -8169,26 +8169,26 @@ p9r-tag:hover {
 }
 `;
 
-  class Ho extends s {
+  class Hn extends s {
     constructor() {
-      super({ css: Mo, template: Co });
+      super({ css: Mn, template: Cn });
     }
     connectedCallback() {
       let t = this.shadowRoot;
       t.querySelector(".label").textContent = this.getAttribute("label") ?? "", this._load(t);
     }
     async _load(t) {
-      let e = t.querySelector(".value"), r = t.querySelector(".note"), i = this.getAttribute("url"), n = i ? await S(i) : null, o = n && typeof n === "object" ? n[this.getAttribute("field") ?? "value"] : undefined;
-      if (o === undefined || o === null) {
+      let e = t.querySelector(".value"), r = t.querySelector(".note"), i = this.getAttribute("url"), o = i ? await S(i) : null, n = o && typeof o === "object" ? o[this.getAttribute("field") ?? "value"] : undefined;
+      if (n === undefined || n === null) {
         e.textContent = "—", e.classList.add("is-empty"), r.textContent = this.getAttribute("empty") ?? "Aucune donnée";
         return;
       }
-      e.classList.remove("is-empty"), e.textContent = jt(Number(o), this.getAttribute("format") ?? "int"), r.textContent = "";
+      e.classList.remove("is-empty"), e.textContent = jt(Number(n), this.getAttribute("format") ?? "int"), r.textContent = "";
     }
   }
-  var To = `<div class="chart"></div>
+  var Tn = `<div class="chart"></div>
 `;
-  var zo = `:host {
+  var zn = `:host {
     display: block;
 }
 
@@ -8265,9 +8265,9 @@ p9r-tag:hover {
 }
 `;
 
-  class So extends s {
+  class Sn extends s {
     constructor() {
-      super({ css: zo, template: To });
+      super({ css: zn, template: Tn });
     }
     connectedCallback() {
       this._load();
@@ -8278,13 +8278,13 @@ p9r-tag:hover {
         t.innerHTML = et(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
         return;
       }
-      let n = this.getAttribute("value") ?? "value", o = this.getAttribute("x") ?? "", a = i.map((l) => ({ label: o ? Eo(String(l[o] ?? "")) : "", value: Number(l[n] ?? 0) }));
-      t.innerHTML = Ao(a);
+      let o = this.getAttribute("value") ?? "value", n = this.getAttribute("x") ?? "", a = i.map((l) => ({ label: n ? En(String(l[n] ?? "")) : "", value: Number(l[o] ?? 0) }));
+      t.innerHTML = An(a);
     }
   }
-  var Io = `<div class="list"></div>
+  var In = `<div class="list"></div>
 `;
-  var qo = `:host {
+  var qn = `:host {
     display: block;
 }
 
@@ -8357,9 +8357,9 @@ p9r-tag:hover {
 }
 `;
 
-  class Fo extends s {
+  class Fn extends s {
     constructor() {
-      super({ css: qo, template: Io });
+      super({ css: qn, template: In });
     }
     connectedCallback() {
       this._load();
@@ -8370,13 +8370,13 @@ p9r-tag:hover {
         t.innerHTML = et(this.getAttribute("empty") ?? "Aucune donnée");
         return;
       }
-      let n = this.getAttribute("label-field") ?? "key", o = this.getAttribute("value-field") ?? "value", a = i.map((l) => ({ label: String(l[n] ?? ""), value: Number(l[o] ?? 0) }));
-      t.innerHTML = Lo(a, this.hasAttribute("show-count"));
+      let o = this.getAttribute("label-field") ?? "key", n = this.getAttribute("value-field") ?? "value", a = i.map((l) => ({ label: String(l[o] ?? ""), value: Number(l[n] ?? 0) }));
+      t.innerHTML = Ln(a, this.hasAttribute("show-count"));
     }
   }
-  var Po = `<div class="tabs" role="group" aria-label="Période"></div>
+  var Pn = `<div class="tabs" role="group" aria-label="Période"></div>
 `;
-  var Bo = `:host {
+  var Bn = `:host {
     display: inline-block;
 }
 
@@ -8414,22 +8414,22 @@ p9r-tag:hover {
 }
 `;
 
-  class Ko extends s {
+  class Kn extends s {
     constructor() {
-      super({ css: Bo, template: Po });
+      super({ css: Bn, template: Pn });
     }
     connectedCallback() {
-      let t = this.getAttribute("param") ?? "range", e = new URLSearchParams(window.location.search).get(t) ?? this.getAttribute("default") ?? "", r = (this.getAttribute("tabs") ?? "").split(",").map((n) => n.split(":")).filter((n) => n[0]), i = this.shadowRoot.querySelector(".tabs");
-      i.innerHTML = r.map(([n, o]) => `<button type="button" data-v="${x(n)}"${n === e ? ' class="active"' : ""}>${x(o ?? n)}</button>`).join(""), i.addEventListener("click", (n) => {
-        let o = n.target.closest("button")?.dataset.v;
-        if (!o)
+      let t = this.getAttribute("param") ?? "range", e = new URLSearchParams(window.location.search).get(t) ?? this.getAttribute("default") ?? "", r = (this.getAttribute("tabs") ?? "").split(",").map((o) => o.split(":")).filter((o) => o[0]), i = this.shadowRoot.querySelector(".tabs");
+      i.innerHTML = r.map(([o, n]) => `<button type="button" data-v="${x(o)}"${o === e ? ' class="active"' : ""}>${x(n ?? o)}</button>`).join(""), i.addEventListener("click", (o) => {
+        let n = o.target.closest("button")?.dataset.v;
+        if (!n)
           return;
         let a = new URL(window.location.href);
-        a.searchParams.set(t, o), window.location.assign(a.toString());
+        a.searchParams.set(t, n), window.location.assign(a.toString());
       });
     }
   }
-  function Do(t, e) {
+  function Dn(t, e) {
     if (t.key !== "Enter")
       return;
     if (t.target.tagName === "TEXTAREA")
@@ -8438,8 +8438,8 @@ p9r-tag:hover {
   }
   async function Vt(t, e) {
     t.preventDefault();
-    let r = t.target, i = new FormData(r), n = Object.fromEntries(i.entries()), o = await fetch(tt(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(n) }), a = await o.json().catch(() => null), l = { status: o.status, body: a };
-    if (o.ok) {
+    let r = t.target, i = new FormData(r), o = Object.fromEntries(i.entries()), n = await fetch(tt(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(o) }), a = await n.json().catch(() => null), l = { status: n.status, body: a };
+    if (n.ok) {
       if (r.reset(), e.dispatchEvent(new CustomEvent("form:success", { bubbles: true, composed: true, detail: l })), e.emit)
         document.dispatchEvent(new CustomEvent(e.emit, { bubbles: true, composed: true, detail: l }));
       if (e.redirect)
@@ -8448,7 +8448,7 @@ p9r-tag:hover {
       e.dispatchEvent(new CustomEvent("form:failed", { bubbles: true, composed: true, detail: l }));
   }
 
-  class jo extends HTMLElement {
+  class jn extends HTMLElement {
     _nativeForm = null;
     static get observedAttributes() {
       return ["redirect", "target", "method", "emit"];
@@ -8457,7 +8457,7 @@ p9r-tag:hover {
       Vt(t, this);
     };
     _handleKeydown = (t) => {
-      Do(t, this._nativeForm);
+      Dn(t, this._nativeForm);
     };
     connectedCallback() {
       requestAnimationFrame(() => {
@@ -8492,20 +8492,20 @@ p9r-tag:hover {
       return this.getAttribute("emit");
     }
   }
-  async function $o(t, e) {
+  async function $n(t, e) {
     let r;
     try {
       r = await fetch(t, { headers: { Accept: "application/json" }, signal: e });
-    } catch (n) {
-      return Vo(n) ? { kind: "aborted" } : { kind: "error", status: null, message: No(n) };
+    } catch (o) {
+      return Vn(o) ? { kind: "aborted" } : { kind: "error", status: null, message: Nn(o) };
     }
     if (!r.ok)
       return { kind: "error", status: r.status, message: `HTTP ${r.status}` };
     let i;
     try {
       i = await r.text();
-    } catch (n) {
-      return Vo(n) ? { kind: "aborted" } : { kind: "error", status: r.status, message: No(n) };
+    } catch (o) {
+      return Vn(o) ? { kind: "aborted" } : { kind: "error", status: r.status, message: Nn(o) };
     }
     if (i.trim() === "")
       return { kind: "success", data: null };
@@ -8515,10 +8515,10 @@ p9r-tag:hover {
       return { kind: "error", status: r.status, message: "Invalid JSON response" };
     }
   }
-  function Vo(t) {
+  function Vn(t) {
     return t?.name === "AbortError";
   }
-  function No(t) {
+  function Nn(t) {
     return t instanceof Error ? t.message : String(t);
   }
   var bd = { found: false, value: undefined };
@@ -8527,23 +8527,23 @@ p9r-tag:hover {
       return { found: true, value: t.value };
     if (e === "value")
       return { found: true, value: md(t) };
-    let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), n = r === -1 ? "" : e.slice(r + 1);
-    for (let o = t;o; o = o.parent) {
-      if (o.vars && i in o.vars)
-        return { found: true, value: Ro(o.vars[i], n) };
-      let a = o.value;
-      if (Xo(a) && i in a)
-        return { found: true, value: Ro(a[i], n) };
+    let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), o = r === -1 ? "" : e.slice(r + 1);
+    for (let n = t;n; n = n.parent) {
+      if (n.vars && i in n.vars)
+        return { found: true, value: Rn(n.vars[i], o) };
+      let a = n.value;
+      if (Xn(a) && i in a)
+        return { found: true, value: Rn(a[i], o) };
     }
     return bd;
   }
   function md(t) {
     let e = t.value;
-    if (Xo(e) && "value" in e)
+    if (Xn(e) && "value" in e)
       return e.value;
     return e;
   }
-  function Ro(t, e) {
+  function Rn(t, e) {
     if (e === "")
       return t;
     let r = t;
@@ -8554,22 +8554,22 @@ p9r-tag:hover {
     }
     return r;
   }
-  function Xo(t) {
+  function Xn(t) {
     return t !== null && typeof t === "object";
   }
   var gd = /\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
   function Nt(t, e, r = {}) {
-    return t.replace(gd, (i, n, o) => {
-      let a = $(e, n);
+    return t.replace(gd, (i, o, n) => {
+      let a = $(e, o);
       if (!a.found)
         return "";
-      let l = o ? r[o] : undefined, c = l ? l(a.value) : a.value;
+      let l = n ? r[n] : undefined, c = l ? l(a.value) : a.value;
       return c == null ? "" : String(c);
     });
   }
   var rt = "cms-repeat";
   var fd = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function Zo(t) {
+  function Zn(t) {
     let e = t.match(fd);
     if (e)
       return { path: e[1], name: e[2] };
@@ -8578,31 +8578,31 @@ p9r-tag:hover {
   var g = "cms-source";
   function $t(t, e, r = {}) {
     if (t.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-      Qo(t, e, r);
+      Qn(t, e, r);
       return;
     }
-    Uo(t, e, r, true);
+    Un(t, e, r, true);
   }
-  function Uo(t, e, r, i) {
+  function Un(t, e, r, i) {
     if (t.nodeType === Node.TEXT_NODE) {
-      let o = t.nodeValue ?? "", a = Nt(o, e, r);
-      if (a !== o)
+      let n = t.nodeValue ?? "", a = Nt(n, e, r);
+      if (a !== n)
         t.nodeValue = a;
       return;
     }
     if (t.nodeType !== Node.ELEMENT_NODE)
       return;
-    let n = t;
-    for (let o of Array.from(n.attributes)) {
-      let a = Nt(o.value, e, r);
-      if (a !== o.value)
-        n.setAttribute(o.name, a);
+    let o = t;
+    for (let n of Array.from(o.attributes)) {
+      let a = Nt(n.value, e, r);
+      if (a !== n.value)
+        o.setAttribute(n.name, a);
     }
-    if (!i && (n.hasAttribute(g) || n.localName === "cms-binding-core"))
+    if (!i && (o.hasAttribute(g) || o.localName === "cms-binding-core"))
       return;
-    if (xd(n, e))
+    if (xd(o, e))
       return;
-    Qo(n, e, r);
+    Qn(o, e, r);
   }
   var vd = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
   function xd(t, e) {
@@ -8614,63 +8614,63 @@ p9r-tag:hover {
     let i = (r.nodeValue ?? "").trim().match(vd);
     if (!i)
       return false;
-    let n = $(e, i[1]), o = (t.ownerDocument ?? document).createElement("template");
-    return o.innerHTML = n.found && n.value != null ? String(n.value) : "", t.replaceWith(o.content), true;
+    let o = $(e, i[1]), n = (t.ownerDocument ?? document).createElement("template");
+    return n.innerHTML = o.found && o.value != null ? String(o.value) : "", t.replaceWith(n.content), true;
   }
-  function Qo(t, e, r) {
+  function Qn(t, e, r) {
     for (let i of Array.from(t.childNodes))
       if (i.nodeType === Node.ELEMENT_NODE && i.hasAttribute(rt))
         _d(i, e, r);
       else
-        Uo(i, e, r, false);
+        Un(i, e, r, false);
   }
   function _d(t, e, r) {
     let i = t.parentNode;
     if (!i)
       return;
-    let n = Zo(t.getAttribute(rt) ?? ""), o = $(e, n.path), a = document.createComment(`cms-repeat ${n.path}`);
-    if (i.replaceChild(a, t), !Array.isArray(o.value)) {
-      if (o.found && o.value != null)
-        console.warn(`cms-repeat="${n.path}" expected an array, got`, o.value);
+    let o = Zn(t.getAttribute(rt) ?? ""), n = $(e, o.path), a = document.createComment(`cms-repeat ${o.path}`);
+    if (i.replaceChild(a, t), !Array.isArray(n.value)) {
+      if (n.found && n.value != null)
+        console.warn(`cms-repeat="${o.path}" expected an array, got`, n.value);
       return;
     }
-    for (let l of o.value) {
+    for (let l of n.value) {
       let c = t.cloneNode(true);
       c.removeAttribute(rt);
-      let p = n.name ? { vars: { [n.name]: l }, parent: e } : { value: l, parent: e };
+      let p = o.name ? { vars: { [o.name]: l }, parent: e } : { value: l, parent: e };
       $t(c, p, r), i.insertBefore(c, a);
     }
   }
-  var Go = "cms-slot";
+  var Gn = "cms-slot";
   var yd = ["loading", "error", "empty"];
-  function Jo(t) {
+  function Jn(t) {
     let e = {}, r = document.createDocumentFragment(), i = document.createDocumentFragment();
-    for (let n of Array.from(t.childNodes)) {
-      i.appendChild(kd(n));
-      let o = wd(n);
-      if (!o) {
-        if (n.nodeType === Node.ELEMENT_NODE && n.tagName === "TEMPLATE")
-          r.appendChild(n.content), n.remove();
+    for (let o of Array.from(t.childNodes)) {
+      i.appendChild(kd(o));
+      let n = wd(o);
+      if (!n) {
+        if (o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
+          r.appendChild(o.content), o.remove();
         else
-          r.appendChild(n);
+          r.appendChild(o);
         continue;
       }
-      if (n.removeAttribute(Go), e[o])
-        n.parentNode?.removeChild(n);
+      if (o.removeAttribute(Gn), e[n])
+        o.parentNode?.removeChild(o);
       else {
         let a = document.createDocumentFragment();
-        a.appendChild(n), e[o] = a;
+        a.appendChild(o), e[n] = a;
       }
     }
     return { template: i, body: r, slots: e };
   }
   function I(t, e, r, i = {}) {
-    let n = e.cloneNode(true);
+    let o = e.cloneNode(true);
     if (r)
-      $t(n, r, i);
-    t.replaceChildren(n);
+      $t(o, r, i);
+    t.replaceChildren(o);
   }
-  function Wo(t) {
+  function Wn(t) {
     if (t == null)
       return true;
     if (Array.isArray(t))
@@ -8682,7 +8682,7 @@ p9r-tag:hover {
   function wd(t) {
     if (t.nodeType !== Node.ELEMENT_NODE)
       return null;
-    let e = t.getAttribute(Go);
+    let e = t.getAttribute(Gn);
     return e && yd.includes(e) ? e : null;
   }
   function kd(t) {
@@ -8690,13 +8690,13 @@ p9r-tag:hover {
   }
   var E = "cms-params:change";
   var Ed = /#\{\s*(\w+)\s*\}/g;
-  function Yo(t) {
+  function Yn(t) {
     return /#\{\s*\w+\s*\}/.test(t);
   }
   function it() {
     return new URLSearchParams(typeof location > "u" ? "" : location.search);
   }
-  function Oo(t, e = it()) {
+  function On(t, e = it()) {
     return t.replace(Ed, (r, i) => encodeURIComponent(e.get(i) ?? ""));
   }
   function Rt(t, e) {
@@ -8733,7 +8733,7 @@ p9r-tag:hover {
     constructor(t, e = {}) {
       this.el = t;
       this.filters = e;
-      this.captured = Jo(t);
+      this.captured = Jn(t);
     }
     start() {
       this.listen(), this.run(), this.el.setAttribute(b, "");
@@ -8749,7 +8749,7 @@ p9r-tag:hover {
       this.reloadEvents = [Ld, ...t];
       for (let e of this.reloadEvents)
         document.addEventListener(e, this.onReload);
-      if (Yo(this.el.getAttribute(g) ?? ""))
+      if (Yn(this.el.getAttribute(g) ?? ""))
         this.paramReactive = true, document.addEventListener(E, this.onParamsChange), window.addEventListener("popstate", this.onParamsChange);
     }
     unlisten() {
@@ -8762,18 +8762,18 @@ p9r-tag:hover {
       let e = this.el.getAttribute(g)?.trim();
       if (!e)
         return;
-      let r = Oo(e);
+      let r = On(e);
       if (t?.onlyIfUrlChanged && r === this.lastUrl)
         return;
       this.lastUrl = r;
-      let { slots: i, body: n } = this.captured;
+      let { slots: i, body: o } = this.captured;
       if (i.loading)
         I(this.el, i.loading, null, this.filters);
       this.abort?.abort();
-      let o = new AbortController;
-      this.abort = o;
-      let a = await $o(r, o.signal);
-      if (o.signal.aborted)
+      let n = new AbortController;
+      this.abort = n;
+      let a = await $n(r, n.signal);
+      if (n.signal.aborted)
         return;
       if (a.kind === "aborted")
         return;
@@ -8786,10 +8786,10 @@ p9r-tag:hover {
         return;
       }
       let l = a.data;
-      if (Wo(l) && i.empty)
+      if (Wn(l) && i.empty)
         I(this.el, i.empty, { value: l }, this.filters);
       else
-        I(this.el, n, { value: l }, this.filters);
+        I(this.el, o, { value: l }, this.filters);
     }
   }
   function ta(t) {
@@ -8931,12 +8931,12 @@ p9r-tag:hover {
       return this.sources.size;
     }
     registerWithin(t) {
-      nt(t, g, this.root, (e) => {
+      ot(t, g, this.root, (e) => {
         if (!e.isConnected || this.sources.has(e))
           return;
         let r = new Xt(e, this.filters);
         this.sources.set(e, r), r.start();
-      }), nt(t, F, this.root, (e) => {
+      }), ot(t, F, this.root, (e) => {
         if (!e.isConnected || this.paramSyncs.has(e))
           return;
         let r = new Zt(e);
@@ -8944,12 +8944,12 @@ p9r-tag:hover {
       });
     }
     unregisterWithin(t) {
-      nt(t, g, this.root, (e) => {
+      ot(t, g, this.root, (e) => {
         let r = this.sources.get(e);
         if (!r)
           return;
         r.dispose(), this.sources.delete(e);
-      }), nt(t, F, this.root, (e) => {
+      }), ot(t, F, this.root, (e) => {
         let r = this.paramSyncs.get(e);
         if (!r)
           return;
@@ -8957,17 +8957,17 @@ p9r-tag:hover {
       });
     }
   }
-  function nt(t, e, r, i) {
+  function ot(t, e, r, i) {
     if (t.nodeType !== Node.ELEMENT_NODE)
       return;
-    let n = t;
-    if (n !== r && ea(n, r))
+    let o = t;
+    if (o !== r && ea(o, r))
       return;
-    if (n.hasAttribute(e))
-      i(n);
-    n.querySelectorAll(`[${e}]`).forEach((o) => {
-      if (!ea(o, r))
-        i(o);
+    if (o.hasAttribute(e))
+      i(o);
+    o.querySelectorAll(`[${e}]`).forEach((n) => {
+      if (!ea(n, r))
+        i(n);
     });
   }
   function ea(t, e) {
@@ -8996,8 +8996,8 @@ p9r-tag:hover {
   }
   var ia = "cms-binding-cloak";
   var Md = `${q}{display:contents}[${g}]:not([${b}]){visibility:hidden}`;
-  var na = {};
-  class oa extends HTMLElement {
+  var oa = {};
+  class na extends HTMLElement {
     _runtime = null;
     connectedCallback() {
       if (Td(this.ownerDocument ?? document), this.closest(`[${w}]`)) {
@@ -9015,7 +9015,7 @@ p9r-tag:hover {
     startRuntime() {
       if (this._runtime && !this._runtime.isStopped)
         return;
-      this._runtime = new Ut(this, na), this._runtime.start();
+      this._runtime = new Ut(this, oa), this._runtime.start();
     }
   }
   function Td(t) {
@@ -9025,7 +9025,7 @@ p9r-tag:hover {
     e.id = ia, e.textContent = Md, (t.head ?? t.documentElement).appendChild(e);
   }
 
-  // ../../features/cms-blocs/dist/base.js
+  // ../../foundation/components/dist/base.js
   class A2 extends HTMLElement {
     _rawStyles = "";
     _styles = null;
@@ -14425,7 +14425,7 @@ cms-endpoints-input .ep-add:hover {
     customElements.define("p9r-svg-sync", SvgSync);
   }
 
-  // ../../features/cms-blocs/dist/blocs/horizontal-action-group.mjs
+  // ../../foundation/components/dist/blocs/horizontal-action-group.mjs
   var l = `<div class="actions" role="toolbar" part="toolbar">
     <slot></slot>
 </div>
@@ -24579,7 +24579,7 @@ button.active svg {
     if (!customElements.get(tag))
       customElements.define(tag, constructor);
   }
-  define("cms-binding-core", oa);
+  define("cms-binding-core", na);
   define("p9r-accordion", Jt);
   define("p9r-accordion-item", Ot);
   define("p9r-alert", ie);
@@ -24592,7 +24592,7 @@ button.active svg {
   define("w13c-checkbox", sr);
   define("p9r-container", Ni);
   define("p9r-divider", Ge);
-  define("w13c-form", jo);
+  define("w13c-form", jn);
   define("p9r-form-dialog", Le);
   define("p9r-section", ur);
   define("p9r-horizontal-action-group", Di);
@@ -24600,7 +24600,7 @@ button.active svg {
   define("w13c-input-file", wr);
   define("w13c-lateral-dialog", Be);
   define("w13c-lateral-menu", Oi);
-  define("w13c-lateral-menu-item", on);
+  define("w13c-lateral-menu-item", oo);
   define("w13c-left-menu-layout", Xi);
   define("p9r-modal", $e);
   define("p9r-open-modal", Ze);
@@ -24608,31 +24608,31 @@ button.active svg {
   define("p9r-range", jr);
   define("p9r-select", Qr);
   define("p9r-sizes-select", Gr);
-  define("p9r-pagination", hn);
-  define("p9r-progress", gn);
+  define("p9r-pagination", ho);
+  define("p9r-progress", go);
   define("p9r-radio", Yr);
-  define("p9r-radio-group", oi);
+  define("p9r-radio-group", ni);
   define("p9r-segmented-switch", di);
-  define("p9r-skeleton", xn);
-  define("p9r-spinner", wn);
+  define("p9r-skeleton", xo);
+  define("p9r-spinner", wo);
   define("p9r-stack", Qi);
-  define("p9r-step", Hn);
-  define("p9r-stepper", An);
+  define("p9r-step", Ho);
+  define("p9r-stepper", Ao);
   define("p9r-switch", bi);
-  define("p9r-tab-panel", so);
-  define("p9r-table", Sn);
-  define("p9r-cell", Fn);
-  define("p9r-header-cell", Xn);
-  define("p9r-row", Jn);
-  define("p9r-tabs", no);
-  define("p9r-tag", uo);
+  define("p9r-tab-panel", ln);
+  define("p9r-table", So);
+  define("p9r-cell", Fo);
+  define("p9r-header-cell", Xo);
+  define("p9r-row", Jo);
+  define("p9r-tabs", nn);
+  define("p9r-tag", un);
   define("p9r-tag-suggest", Ti);
   define("p9r-textarea", Pi);
-  define("p9r-toast", go);
-  define("p9r-toast-stack", xo);
-  define("p9r-tooltip", ko);
-  define("p9r-stat", Ho);
-  define("p9r-line-chart", So);
-  define("p9r-bar-list", Fo);
-  define("p9r-range-tabs", Ko);
+  define("p9r-toast", gn);
+  define("p9r-toast-stack", xn);
+  define("p9r-tooltip", kn);
+  define("p9r-stat", Hn);
+  define("p9r-line-chart", Sn);
+  define("p9r-bar-list", Fn);
+  define("p9r-range-tabs", Kn);
 })();

@@ -1,5 +1,5 @@
-import type { LateralDialog } from "@bernouy/cms-blocs";
-import { Component } from "@bernouy/cms-blocs/base";
+import type { LateralDialog } from "@bernouy/components";
+import { Component } from "@bernouy/components/base";
 
 import "./sync/AttrSync";
 import "./sync/CompSync";

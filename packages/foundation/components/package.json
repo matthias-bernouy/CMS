@@ -1,0 +1,74 @@
+{
+  "name": "@bernouy/components",
+  "version": "0.1.2",
+  "description": "CMS blocs and admin custom elements built with Bun and TypeScript. Each component extends a minimal base that attaches an open Shadow Root and inlines its CSS + HTML template.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "license": "MIT",
+  "author": "Matthias <matthias@bernouy.fr>",
+  "homepage": "https://github.com/matthias-bernouy/CmsCore#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matthias-bernouy/CmsCore.git"
+  },
+  "bugs": {
+    "url": "https://github.com/matthias-bernouy/CmsCore/issues"
+  },
+  "keywords": [
+    "web-components",
+    "custom-elements",
+    "shadow-dom",
+    "ui",
+    "toolkit",
+    "bun",
+    "typescript"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./base": {
+      "types": "./dist/base/Component.d.ts",
+      "bun": "./src/base/Component.ts",
+      "import": "./dist/base.js",
+      "default": "./dist/base.js"
+    },
+    "./binding": {
+      "types": "./dist/binding/bindingCore.d.ts",
+      "bun": "./src/binding/bindingCore.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css",
+    "./blocs/*": {
+      "types": "./dist/blocs/*.d.ts",
+      "import": "./dist/blocs/*.mjs",
+      "default": "./dist/blocs/*.mjs"
+    },
+    "./package.json": "./package.json",
+    "./README.md": "./README.md"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun run build.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^20.8.9",
+    "@types/bun": "latest",
+    "happy-dom": "^20.8.9"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

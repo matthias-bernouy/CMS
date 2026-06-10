@@ -19,7 +19,7 @@ async function run(cmd: string[], cwd?: string): Promise<void> {
     if (exit !== 0) throw new Error(`${cmd.join(" ")} (cwd=${cwd ?? "."}) exited with ${exit}`);
 }
 
-await run(["bun", "run", "build"], "packages/features/cms-blocs");
+await run(["bun", "run", "build"], "packages/foundation/components");
 await run(["bunx", "tsc", "--build"]);
 await run(["bun", "run", "build"], "packages/surfaces/cms-control");
 

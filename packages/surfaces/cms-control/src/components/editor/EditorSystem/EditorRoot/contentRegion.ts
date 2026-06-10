@@ -1,4 +1,4 @@
-import { BIND_STOP_ATTR } from "@bernouy/cms-blocs/binding";
+import { BIND_STOP_ATTR } from "@bernouy/components/binding";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystem/contentRegionAttrs";
 
 const CONTENT_REGION_SELECTOR = `[${CONTENT_REGION_ATTR}]`;

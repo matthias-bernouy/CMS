@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "@bernouy/cms-analytics": "workspace:*",
-        "@bernouy/cms-blocs": "workspace:*",
+        "@bernouy/components": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "linkedom": "^0.18.12",
         "@bernouy/http-runner": "workspace:*",

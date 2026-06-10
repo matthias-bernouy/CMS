@@ -151,7 +151,7 @@ local editor is reachable without a backend.
 | `<basePath>/admin/*`                     | gated     | Static admin pages (Pages, Files, …)      |
 | `<basePath>/api/*`                       | gated     | File-routed REST endpoints                |
 | `<basePath>/assets/*`                    | public    | `control-components.js` + `control-styles.css` |
-| `<basePath>/resources/*`                 | public    | Fonts + theme CSS (`@bernouy/cms-blocs`) |
+| `<basePath>/resources/*`                 | public    | Fonts + theme CSS (`@bernouy/components`) |
 
 The auth guard (`createAuthGuard` from `@bernouy/cms-auth`) checks the
 `subject.role === "admin"` and redirects unauth'd browser navigations to
