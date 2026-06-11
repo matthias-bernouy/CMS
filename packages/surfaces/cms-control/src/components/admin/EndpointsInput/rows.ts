@@ -1,4 +1,4 @@
-import { HTTP_METHODS } from "@bernouy/cms-gateway";
+import { HTTP_METHODS } from "@bernouy/cms-gateway/browser";
 import { makeInput, makeMethodSelect, makeDeleteButton } from "./controls";
 import { makeInPanel } from "./inPanel";
 import { makeOutPanel } from "./outPanel";

@@ -43,7 +43,9 @@ export {
     cmsFilesByIdRef,
     isCmsFilesByIdUrl,
     mediaIdFromUrl,
+    parseCmsFilesByIdUrl,
     withFileVersion,
+    type CmsFilesByIdUrl,
 } from "cms-files/core/fileUrls";
 
 // ── File lifecycle (domain rules — create w/ rollback, in-place update, tree delete) ─

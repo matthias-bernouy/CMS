@@ -1,4 +1,4 @@
-import { parseUrn, type Provider } from "@bernouy/cms-gateway";
+import { providerToFlatDto, type Provider } from "@bernouy/cms-gateway";
 import type { ClassifiedGateway, RemoteGatewayItem } from "./classify";
 
 export type ApplyResult = {
@@ -55,27 +55,7 @@ async function sendProvider(adminBase: URL, token: string, method: "POST" | "PUT
  * recomputes every urn from `id` + `endpointId` (its namespace invariant).
  */
 export function flattenProvider(p: Provider): Record<string, string> {
-    const flat: Record<string, string> = { id: parseUrn(p.urn)?.provider ?? "" };
-    if (p.meta?.name)        flat["meta.name"]        = p.meta.name;
-    if (p.meta?.description) flat["meta.description"] = p.meta.description;
-    if (p.meta?.icon)        flat["meta.icon"]        = p.meta.icon;
-
-    p.endpoints.forEach((e, i) => {
-        flat[`endpoints.${i}.endpointId`] = parseUrn(e.urn)?.endpoint ?? "";
-        flat[`endpoints.${i}.method`]     = e.method;
-        flat[`endpoints.${i}.targetUrl`]  = e.targetUrl;
-
-        const params = (e.input?.params ?? []).map(pp => ({
-            name: pp.name, in: pp.in, type: pp.schema?.type ?? "string",
-            required: !!pp.required, ...(pp.description ? { description: pp.description } : {}),
-        }));
-        if (params.length)     flat[`endpoints.${i}.params`]  = JSON.stringify(params);
-        if (e.input?.body)     flat[`endpoints.${i}.body`]    = JSON.stringify(e.input.body);
-        if (e.output?.length)  flat[`endpoints.${i}.output`]  = JSON.stringify(e.output);
-        if (e.meta)            flat[`endpoints.${i}.meta`]    = JSON.stringify(e.meta);
-        if (e.headers?.length) flat[`endpoints.${i}.headers`] = JSON.stringify(e.headers);
-    });
-    return flat;
+    return providerToFlatDto(p);
 }
 
 async function tail(res: Response): Promise<string> {

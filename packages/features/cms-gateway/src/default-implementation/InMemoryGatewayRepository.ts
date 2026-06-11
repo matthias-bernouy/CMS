@@ -1,5 +1,6 @@
 import type { GatewayRepository } from "../interfaces/GatewayRepository";
 import type { Provider, Endpoint } from "../interfaces/Gateway";
+import { DuplicateProviderError } from "../core/errors";
 
 /**
  * In-memory implementation of `GatewayRepository` — the dep-free default, for
@@ -11,7 +12,7 @@ export class InMemoryGatewayRepository implements GatewayRepository {
 
     async createProvider(provider: Provider): Promise<Provider> {
         if (this._providers.has(provider.urn)) {
-            throw new Error(`Provider with urn "${provider.urn}" already exists`);
+            throw new DuplicateProviderError(provider.urn);
         }
         this._providers.set(provider.urn, structuredClone(provider));
         return structuredClone(provider);

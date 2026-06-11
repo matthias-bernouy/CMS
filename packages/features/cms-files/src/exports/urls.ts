@@ -11,5 +11,7 @@ export {
     cmsFilesByIdRef,
     isCmsFilesByIdUrl,
     mediaIdFromUrl,
+    parseCmsFilesByIdUrl,
     withFileVersion,
+    type CmsFilesByIdUrl,
 } from "cms-files/core/fileUrls";

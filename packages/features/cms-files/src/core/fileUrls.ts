@@ -30,12 +30,14 @@ export function withFileVersion(url: string, hash: string): string {
     return url.includes("?") ? `${url}&v=${hash}` : `${url}?v=${hash}`;
 }
 
+export type CmsFilesByIdUrl = { id: string; prefix: string };
+
 export function mediaIdFromUrl(urlOrPath: string): string | null {
     return parseCmsFilesByIdUrl(urlOrPath)?.id ?? null;
 }
 
 export function isCmsFilesByIdUrl(urlOrPath: string): boolean {
-    return mediaIdFromUrl(urlOrPath) !== null;
+    return parseCmsFilesByIdUrl(urlOrPath) !== null;
 }
 
 export function cmsFilesByIdRef(id: string): string {
@@ -54,7 +56,7 @@ export function cmsImageVariantBaseUrlFromByIdUrl(byIdUrl: string): string | nul
     return `${parsed.prefix}${CMS_IMAGE_VARIANT_ROUTE}/${encodeURIComponent(parsed.id)}`;
 }
 
-function parseCmsFilesByIdUrl(urlOrPath: string): { id: string; prefix: string } | null {
+export function parseCmsFilesByIdUrl(urlOrPath: string): CmsFilesByIdUrl | null {
     const idx = urlOrPath.indexOf(CMS_FILES_BY_ID_MARKER);
     if (idx < 0) return null;
 

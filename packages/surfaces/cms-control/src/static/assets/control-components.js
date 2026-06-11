@@ -10891,40 +10891,24 @@ cms-endpoints-input .ep-add:hover {
   var HEADER_NAME_RE = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
   var isForbiddenHeaderName = (n) => FORBIDDEN_REQUEST_HEADERS.has(n.toLowerCase());
   var isValidHeaderName = (n) => HEADER_NAME_RE.test(n);
-  // ../../features/cms-gateway/src/default-implementation/InMemoryGatewayRepository.ts
-  class InMemoryGatewayRepository {
-    _providers = new Map;
-    async createProvider(provider) {
-      if (this._providers.has(provider.urn)) {
-        throw new Error(`Provider with urn "${provider.urn}" already exists`);
-      }
-      this._providers.set(provider.urn, structuredClone(provider));
-      return structuredClone(provider);
+  // ../../features/cms-gateway/src/core/validateProvider.ts
+  var RESPONSE_STATUS = /^[1-5][0-9][0-9]$/;
+  function isValidResponseStatus(status) {
+    return status === "default" || RESPONSE_STATUS.test(status);
+  }
+  // ../../features/cms-gateway/src/core/buildUpstreamUrl.ts
+  var PATH_PLACEHOLDER = /\{(\w+)\}/g;
+  function extractPathParamNames(targetUrl) {
+    const out = [];
+    const seen = new Set;
+    for (const m of targetUrl.matchAll(PATH_PLACEHOLDER)) {
+      const name = m[1];
+      if (seen.has(name))
+        continue;
+      seen.add(name);
+      out.push(name);
     }
-    async updateProvider(provider) {
-      if (!this._providers.has(provider.urn))
-        return null;
-      this._providers.set(provider.urn, structuredClone(provider));
-      return structuredClone(provider);
-    }
-    async deleteProvider(urn) {
-      return this._providers.delete(urn);
-    }
-    async getProvider(urn) {
-      const found = this._providers.get(urn);
-      return found ? structuredClone(found) : null;
-    }
-    async getAllProviders() {
-      return Array.from(this._providers.values(), (p) => structuredClone(p));
-    }
-    async getEndpoint(urn) {
-      for (const provider of this._providers.values()) {
-        const endpoint = provider.endpoints.find((e) => e.urn === urn);
-        if (endpoint)
-          return structuredClone(endpoint);
-      }
-      return null;
-    }
+    return out;
   }
   // src/components/admin/EndpointsInput/controls.ts
   var ICON_SVG = (paths, size = 16) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
@@ -10993,18 +10977,7 @@ cms-endpoints-input .ep-add:hover {
   }
 
   // src/components/admin/EndpointsInput/pathParams.ts
-  function extractPathNames(targetUrl) {
-    const names = [];
-    const seen = new Set;
-    for (const m of targetUrl.matchAll(/\{(\w+)\}/g)) {
-      const name = m[1];
-      if (seen.has(name))
-        continue;
-      seen.add(name);
-      names.push(name);
-    }
-    return names;
-  }
+  var extractPathNames = extractPathParamNames;
   function makePathParamRow(name) {
     const row = document.createElement("p9r-stack");
     row.setAttribute("direction", "row");
@@ -11343,8 +11316,6 @@ cms-endpoints-input .ep-add:hover {
     "503"
   ];
   var CUSTOM = "custom";
-  var VALID = /^[1-5][0-9][0-9]$/;
-  var isValid = (v2) => VALID.test(v2) || v2 === "default";
   function buildSelect(value) {
     const select = document.createElement("p9r-select");
     select.dataset.role = "response-status";
@@ -11375,9 +11346,9 @@ cms-endpoints-input .ep-add:hover {
     input.style.display = custom ? "" : "none";
     const validate = () => {
       const v2 = readControl(input).trim();
-      if (readControl(select) === CUSTOM && v2 && !isValid(v2)) {
+      if (readControl(select) === CUSTOM && v2 && !isValidResponseStatus(v2)) {
         input.setAttribute("invalid", "");
-        input.setAttribute("hint", "Code 100–599 ou « default »");
+        input.setAttribute("hint", 'Code 100-599 or "default"');
         input.setAttribute("hint-level", "error");
       } else {
         input.removeAttribute("invalid");
@@ -11508,7 +11479,7 @@ cms-endpoints-input .ep-add:hover {
       const n = readControl(name).trim();
       if (n && (!isValidHeaderName(n) || isForbiddenHeaderName(n))) {
         name.setAttribute("invalid", "");
-        name.setAttribute("hint", "Nom de header invalide ou réservé");
+        name.setAttribute("hint", "Invalid or reserved header name");
         name.setAttribute("hint-level", "error");
       } else {
         name.removeAttribute("invalid");
@@ -12840,7 +12811,9 @@ cms-endpoints-input .ep-add:hover {
 
   // ../../features/cms-files/src/core/fileUrls.ts
   var CMS_FILES_ROUTE = "/.cms/files";
-  var CMS_FILES_BY_ID_ROUTE = `${CMS_FILES_ROUTE}/by-id`;
+  var CMS_FILES_BY_ID_SEGMENT = "by-id";
+  var CMS_FILES_BY_ID_ROUTE = `${CMS_FILES_ROUTE}/${CMS_FILES_BY_ID_SEGMENT}`;
+  var CMS_FILES_BY_ID_MARKER = `${CMS_FILES_BY_ID_ROUTE}/`;
   function joinBase(base, path) {
     const b2 = base === "/" ? "" : base.replace(/\/$/, "");
     return `${b2}${path}`;
@@ -12854,26 +12827,37 @@ cms-endpoints-input .ep-add:hover {
   function withFileVersion(url, hash) {
     return url.includes("?") ? `${url}&v=${hash}` : `${url}?v=${hash}`;
   }
-  function mediaIdFromUrl(urlOrPath) {
-    const m = /(?:^|\/)\.cms\/files\/by-id\/([^/?#]+)/.exec(urlOrPath);
-    if (!m)
+  function parseCmsFilesByIdUrl(urlOrPath) {
+    const idx = urlOrPath.indexOf(CMS_FILES_BY_ID_MARKER);
+    if (idx < 0)
+      return null;
+    const idStart = idx + CMS_FILES_BY_ID_MARKER.length;
+    const idEnd = findIdEnd(urlOrPath, idStart);
+    const encodedId = urlOrPath.slice(idStart, idEnd);
+    if (!encodedId)
       return null;
     try {
-      return decodeURIComponent(m[1]);
+      return { id: decodeURIComponent(encodedId), prefix: urlOrPath.slice(0, idx) };
     } catch {
       return null;
     }
+  }
+  function findIdEnd(urlOrPath, start) {
+    const queryIdx = urlOrPath.indexOf("?", start);
+    const hashIdx = urlOrPath.indexOf("#", start);
+    const slashIdx = urlOrPath.indexOf("/", start);
+    return Math.min(...[queryIdx, hashIdx, slashIdx].filter((idx) => idx >= 0), urlOrPath.length);
   }
   // src/components/editor/componentSync/PageLink/detect.ts
   function isExternal(v2) {
     return /^(https?:|mailto:|tel:|\/\/)/i.test(v2);
   }
   function isMedia(v2) {
-    return mediaIdFromUrl(v2) !== null;
+    return parseCmsFilesByIdUrl(v2) !== null;
   }
   function mediaLabel(src) {
-    const id2 = mediaIdFromUrl(src);
-    return id2 ? `Media ${id2}` : src;
+    const parsed = parseCmsFilesByIdUrl(src);
+    return parsed ? `Media ${parsed.id}` : src;
   }
 
   // src/core/dom/meta/getMetaBasePath.ts
@@ -14308,6 +14292,48 @@ cms-endpoints-input .ep-add:hover {
     }
   }
 
+  // ../../features/cms-content/src/core/utils/sanitizeSvgTree.ts
+  var DANGEROUS_SVG_TAGS = new Set([
+    "ANIMATE",
+    "ANIMATECOLOR",
+    "ANIMATEMOTION",
+    "ANIMATETRANSFORM",
+    "DISCARD",
+    "FOREIGNOBJECT",
+    "SCRIPT",
+    "SET"
+  ]);
+  var SVG_URL_ATTRS = new Set(["href", "xlink:href"]);
+  function sanitizeSvgTree(root) {
+    const elements = [
+      ...(root.tagName || "").toUpperCase() === "SVG" ? [root] : [],
+      ...Array.from(root.querySelectorAll("svg, svg *"))
+    ];
+    for (const el of elements) {
+      if (DANGEROUS_SVG_TAGS.has((el.tagName || "").toUpperCase())) {
+        el.remove();
+        continue;
+      }
+      for (const name of el.getAttributeNames()) {
+        const lower = name.toLowerCase();
+        if (lower.startsWith("on")) {
+          el.removeAttribute(name);
+          continue;
+        }
+        if (SVG_URL_ATTRS.has(lower)) {
+          const value = el.getAttribute(name);
+          if (value && !isSafeSvgUrl(value))
+            el.removeAttribute(name);
+        }
+      }
+    }
+  }
+  function isSafeSvgUrl(value) {
+    const v2 = value.replace(/[\u0000-\u0020]/g, "").toLowerCase();
+    if (v2.startsWith("data:image/svg"))
+      return false;
+    return v2.startsWith("#") || v2.startsWith("/") && !v2.startsWith("//") || v2.startsWith("./") || v2.startsWith("../") || v2.startsWith("data:image/") || v2.startsWith("http:") || v2.startsWith("https:");
+  }
   // src/components/editor/componentSync/sync/SvgSync/sanitize.ts
   var ALLOWED_TAGS = new Set([
     "svg",
@@ -14368,6 +14394,7 @@ cms-endpoints-input .ep-add:hover {
     if (!root || root.tagName.toLowerCase() !== "svg") {
       throw new Error(`Expected <svg> root element, got <${root?.tagName ?? "null"}>.`);
     }
+    sanitizeSvgTree(root);
     walk(root);
     return new XMLSerializer().serializeToString(root);
   }
@@ -14375,19 +14402,6 @@ cms-endpoints-input .ep-add:hover {
     if (!ALLOWED_TAGS.has(el.tagName.toLowerCase())) {
       el.remove();
       return;
-    }
-    for (const attr of Array.from(el.attributes)) {
-      const name = attr.name.toLowerCase();
-      if (name.startsWith("on")) {
-        el.removeAttribute(attr.name);
-        continue;
-      }
-      if (name === "href" || name === "xlink:href") {
-        const v2 = attr.value.trim().toLowerCase();
-        const safe = v2.startsWith("#") || v2.startsWith("/") || v2.startsWith("./") || v2.startsWith("../") || v2.startsWith("http:") || v2.startsWith("https:");
-        if (!safe)
-          el.removeAttribute(attr.name);
-      }
     }
     for (const child of Array.from(el.children))
       walk(child);

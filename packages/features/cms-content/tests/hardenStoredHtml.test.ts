@@ -79,6 +79,11 @@ describe("hardenStoredHtml — preserves legitimate content", () => {
         expect(out).toContain("data:image/png");
     });
 
+    test("drops SVG data documents from SVG resource URLs", () => {
+        const out = hardenStoredHtml(`<svg><image href="data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+"></image></svg>`);
+        expect(out).not.toContain("data:image/svg");
+    });
+
     test("drops protocol-relative SVG resource URLs", () => {
         const out = hardenStoredHtml(`<svg><image href="//attacker.example/track.svg"></image></svg>`);
         expect(out).not.toContain("//attacker.example");

@@ -1,4 +1,4 @@
-import { sanitizeSvgTree } from "@bernouy/cms-content";
+import { sanitizeSvgTree } from "@bernouy/cms-content/browser";
 
 /**
  * Whitelist of SVG elements safe to inline in the editor / public site.
@@ -23,10 +23,10 @@ const ALLOWED_TAGS = new Set([
 
 /**
  * Sanitize a raw SVG string before inlining it into the bloc shadow. Drops
- * disallowed tags, strips every `on*` attribute and any `href` / `xlink:href`
- * that could resolve to a script context. Returns serialized markup ready to
- * inject. Throws when the input doesn't parse as `<svg>` so the caller can
- * surface a clear error to the user.
+ * disallowed tags; shared content sanitization strips dangerous SVG tags,
+ * event attributes, and unsafe SVG URL attributes. Returns serialized markup
+ * ready to inject. Throws when the input doesn't parse as `<svg>` so the
+ * caller can surface a clear error to the user.
  */
 export function sanitizeSvg(raw: string): string {
     const doc = new DOMParser().parseFromString(raw, "image/svg+xml");
@@ -46,10 +46,6 @@ function walk(el: Element): void {
     if (!ALLOWED_TAGS.has(el.tagName.toLowerCase())) {
         el.remove();
         return;
-    }
-    for (const attr of Array.from(el.attributes)) {
-        const name = attr.name.toLowerCase();
-        if (name.startsWith("on")) el.removeAttribute(attr.name);
     }
     for (const child of Array.from(el.children)) walk(child);
 }

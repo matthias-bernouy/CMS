@@ -1,9 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { safeJoin } from "cms-cli/push/shared/safeJoin";
 import {
-    parseUrn, makeEndpointUrn,
-    type Provider, type Endpoint, type EndpointParam, type GatewayMeta,
-    type EndpointHeader, type EndpointResponse, type HTTPMethod, type DataShape,
+    parseUrn, providerDtoToProvider,
+    type Provider, type ProviderDto,
 } from "@bernouy/cms-gateway";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
@@ -11,12 +10,15 @@ const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 export type PullGatewaysResult = { pulled: string[]; failed: { urn: string; error: string }[] };
 
 /** The edit-form-enriched shape returned by `GET /api/gateway-provider?urn=`. */
-type EnrichedParam    = { name: string; in: string; type?: string; required?: boolean; description?: string };
-type EnrichedEndpoint = {
-    endpointId: string; method: string; targetUrl: string;
-    params?: EnrichedParam[]; body?: unknown; output?: unknown[]; meta?: unknown; headers?: unknown[];
+type EnrichedEndpoint = Omit<ProviderDto["endpoints"][number], "params"> & {
+    params?: ProviderDto["endpoints"][number]["params"];
 };
-type EnrichedProvider = { urn: string; id: string; meta?: unknown; endpoints?: EnrichedEndpoint[] };
+type EnrichedProvider = {
+    urn: string;
+    id: string;
+    meta?: ProviderDto["meta"];
+    endpoints?: EnrichedEndpoint[];
+};
 
 /** Materialize the remote gateway providers into `<siteDir>/gateways/<id>.json`. */
 export async function pullGateways(adminBase: URL, token: string, siteDir: string): Promise<PullGatewaysResult> {
@@ -53,33 +55,26 @@ async function fetchProvider(adminBase: URL, token: string, urn: string): Promis
  * `schema`. body / output / meta / headers ride along verbatim.
  */
 export function reconstructProvider(r: EnrichedProvider): Provider {
-    return {
-        urn:  r.urn,
-        meta: (r.meta ?? { name: r.id }) as GatewayMeta,
-        endpoints: (r.endpoints ?? []).map(e => reconstructEndpoint(r.id, e)),
-    };
-}
-
-function reconstructEndpoint(providerId: string, e: EnrichedEndpoint): Endpoint {
-    const params: EndpointParam[] = (e.params ?? []).map(p => ({
-        name: p.name,
-        in:   p.in as EndpointParam["in"],
-        ...(p.required ? { required: true } : {}),
-        ...(p.description ? { description: p.description } : {}),
-        schema: { type: p.type ?? "string" } as DataShape,
-    }));
-    const body = e.body != null ? (e.body as DataShape) : undefined;
-    const input = (params.length || body) ? { ...(params.length ? { params } : {}), ...(body ? { body } : {}) } : undefined;
-
-    return {
-        urn:       makeEndpointUrn(providerId, e.endpointId),
-        method:    e.method as HTTPMethod,
-        targetUrl: e.targetUrl,
-        ...(e.headers?.length ? { headers: e.headers as EndpointHeader[] } : {}),
-        ...(e.meta            ? { meta:    e.meta    as GatewayMeta }       : {}),
-        ...(input             ? { input }                                   : {}),
-        ...(e.output?.length  ? { output:  e.output  as EndpointResponse[] }: {}),
-    };
+    return providerDtoToProvider({
+        id: r.id,
+        meta: r.meta ?? { name: r.id },
+        endpoints: (r.endpoints ?? []).map(e => ({
+            endpointId: e.endpointId,
+            method: e.method,
+            targetUrl: e.targetUrl,
+            params: (e.params ?? []).map(p => ({
+                name: p.name,
+                in: p.in,
+                ...(p.type ? { type: p.type } : {}),
+                ...(p.required ? { required: true } : {}),
+                ...(p.description ? { description: p.description } : {}),
+            })),
+            ...(e.body !== undefined ? { body: e.body } : {}),
+            ...(e.output !== undefined ? { output: e.output } : {}),
+            ...(e.meta !== undefined ? { meta: e.meta } : {}),
+            ...(e.headers !== undefined ? { headers: e.headers } : {}),
+        })),
+    });
 }
 
 async function writeGateway(siteDir: string, provider: Provider): Promise<void> {

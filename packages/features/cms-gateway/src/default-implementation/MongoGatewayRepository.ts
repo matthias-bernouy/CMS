@@ -1,6 +1,7 @@
 import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { GatewayRepository } from "../interfaces/GatewayRepository";
 import type { Provider, Endpoint } from "../interfaces/Gateway";
+import { DuplicateProviderError } from "../core/errors";
 
 /**
  * MongoDB implementation of `GatewayRepository`. One `Provider` = one document,
@@ -42,8 +43,12 @@ export class MongoGatewayRepository implements GatewayRepository {
     }
 
     async createProvider(provider: Provider): Promise<Provider> {
-        // _id = urn → a duplicate urn causes the insert to fail (Mongo code 11000).
-        await this.providers.insertOne(toDoc(provider) as OptionalUnlessRequiredId<ProviderDoc>);
+        try {
+            await this.providers.insertOne(toDoc(provider) as OptionalUnlessRequiredId<ProviderDoc>);
+        } catch (e) {
+            if (isDuplicateKey(e)) throw new DuplicateProviderError(provider.urn);
+            throw e;
+        }
         return structuredClone(provider);
     }
 
@@ -91,4 +96,8 @@ function fromDoc(doc: ProviderDoc | null): Provider | null {
     if (!doc) return null;
     const { _id, ...rest } = doc;
     return { urn: _id, ...rest };
+}
+
+function isDuplicateKey(e: unknown): boolean {
+    return !!e && typeof e === "object" && (e as { code?: number }).code === 11000;
 }

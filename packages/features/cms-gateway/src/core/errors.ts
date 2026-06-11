@@ -7,3 +7,11 @@ export class GatewayValidationError extends Error {
         this.name = "GatewayValidationError";
     }
 }
+
+export class DuplicateProviderError extends Error {
+    status = 400;
+    constructor(urn: string) {
+        super(`Provider with urn "${urn}" already exists`);
+        this.name = "DuplicateProviderError";
+    }
+}

@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { parseProviderDto } from "cms-control/core/validation/gateway/parseProviderDto";
-import { toProvider } from "cms-control/core/gateway/toProvider";
+import { providerDtoToProvider } from "@bernouy/cms-gateway";
 
 /** A valid single-endpoint body, as `<cms-form>` would post it (flat keys). */
 const validBody = (over: Record<string, unknown> = {}) => ({
@@ -285,7 +285,7 @@ describe("parseProviderDto", () => {
     test("output: full round-trip parse → toProvider preserves the list", () => {
         const output = [{ status: "200", body: { type: "object", properties: { id: { type: "string" } } } }, { status: "404" }];
         const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
-        const provider = toProvider(dto);
+        const provider = providerDtoToProvider(dto);
         expect(provider.endpoints[0]!.output).toEqual(output as any);
     });
 
@@ -364,7 +364,7 @@ describe("parseProviderDto", () => {
     test("headers: full round-trip parse → toProvider sets endpoint.headers; never sets rules", () => {
         const h = [{ name: "X-Api-Version", source: { from: "static", value: "2024-01" } }];
         const dto = parseProviderDto(validBody({ "endpoints.0.headers": JSON.stringify(h) }));
-        const provider = toProvider(dto);
+        const provider = providerDtoToProvider(dto);
         expect(provider.endpoints[0]!.headers).toEqual(h as any);
         expect((provider.endpoints[0] as any).rules).toBeUndefined();
     });

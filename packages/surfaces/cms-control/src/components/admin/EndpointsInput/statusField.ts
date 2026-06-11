@@ -1,3 +1,4 @@
+import { isValidResponseStatus } from "@bernouy/cms-gateway/browser";
 import { readControl } from "./shared";
 
 /** Common HTTP status codes offered in the response-status chooser. */
@@ -8,8 +9,6 @@ export const COMMON = [
 
 /** Sentinel select value that switches the row into free-text ("custom") mode. */
 const CUSTOM = "custom";
-const VALID = /^[1-5][0-9][0-9]$/;
-const isValid = (v: string): boolean => VALID.test(v) || v === "default";
 
 /** Build a `<p9r-select>` with distinct option labels (which `makeSelect` can't do):
  *  an empty "Status…" placeholder, the common codes, "default", then "Custom…". */
@@ -54,9 +53,9 @@ export function makeStatusField(
     const validate = () => {
         const v = readControl(input).trim();
         // Only the visible custom input can be invalid; leaving custom mode clears it.
-        if (readControl(select) === CUSTOM && v && !isValid(v)) {
+        if (readControl(select) === CUSTOM && v && !isValidResponseStatus(v)) {
             input.setAttribute('invalid', '');
-            input.setAttribute('hint', 'Code 100–599 ou « default »');
+            input.setAttribute('hint', 'Code 100-599 or "default"');
             input.setAttribute('hint-level', 'error');
         } else {
             input.removeAttribute('invalid');

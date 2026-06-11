@@ -1,6 +1,6 @@
 import { makeInput, makeSelect, makeIconButton, ICON_X } from "./controls";
 import { readControl } from "./shared";
-import { isValidHeaderName, isForbiddenHeaderName, type EndpointHeader } from "@bernouy/cms-gateway";
+import { isValidHeaderName, isForbiddenHeaderName, type EndpointHeader } from "@bernouy/cms-gateway/browser";
 
 /** Handle for one header row: its element + a `read()` assembling the
  *  `EndpointHeader` (or `null` when the name is blank). */
@@ -38,7 +38,7 @@ export function makeHeaderRow(
         const n = readControl(name).trim();
         if (n && (!isValidHeaderName(n) || isForbiddenHeaderName(n))) {
             name.setAttribute('invalid', '');
-            name.setAttribute('hint', 'Nom de header invalide ou réservé');
+            name.setAttribute('hint', 'Invalid or reserved header name');
             name.setAttribute('hint-level', 'error');
         } else {
             name.removeAttribute('invalid');

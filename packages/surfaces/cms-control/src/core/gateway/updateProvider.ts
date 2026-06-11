@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import { providerDtoToProvider } from "@bernouy/cms-gateway";
 import type { ProviderDto } from "../validation/gateway/parseProviderDto";
-import { toProvider } from "./toProvider";
 
 /**
  * Updates a gateway provider. The urn (derived from `dto.id`) is the immutable key,
@@ -10,6 +10,6 @@ import { toProvider } from "./toProvider";
  * decorator wired at the composition root; an unknown urn (repo returned `null`) is a 400.
  */
 export async function updateProvider(cms: ControlCms, dto: ProviderDto): Promise<void> {
-    const updated = await cms.gateway.updateProvider(toProvider(dto));
+    const updated = await cms.gateway.updateProvider(providerDtoToProvider(dto));
     if (!updated) throw new InvalidParam("urn", "unknown provider");
 }

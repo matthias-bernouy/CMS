@@ -1,5 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/InMemoryGatewayRepository";
+import { DuplicateProviderError } from "cms-gateway/core/errors";
 import type { Provider } from "cms-gateway/interfaces/Gateway";
 
 const provider = (): Provider => ({
@@ -32,6 +33,7 @@ describe("InMemoryGatewayRepository", () => {
         const r = new InMemoryGatewayRepository();
         await r.createProvider(provider());
         await expect(r.createProvider(provider())).rejects.toThrow(/already exists/);
+        await expect(r.createProvider(provider())).rejects.toBeInstanceOf(DuplicateProviderError);
     });
 
     test("getProvider miss → null", async () => {

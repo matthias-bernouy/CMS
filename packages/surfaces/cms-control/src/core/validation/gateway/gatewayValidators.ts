@@ -1,17 +1,14 @@
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import type { GatewayMeta, ParamIn } from "@bernouy/cms-gateway";
+import type { GatewayMeta, ParamIn, ProviderParamDto } from "@bernouy/cms-gateway";
 import { PARAM_INS, extractPathParamNames } from "@bernouy/cms-gateway";
 
 /** V1 param value types (scalars) — an EDITOR restriction; the gateway model
  *  allows any `DataShape`, the full recursive shape is reserved for the body. */
 export const PARAM_TYPES = ["string", "number", "boolean"] as const;
 export type ParamType = typeof PARAM_TYPES[number];
-export type EndpointParamDto = {
-    name: string;
-    in: ParamIn;
+export type EndpointParamDto = Omit<ProviderParamDto, "type" | "required"> & {
     type: ParamType;
     required: boolean;
-    description?: string;   // round-tripped verbatim (not editable yet) — never wiped on edit
 };
 /** `{name}` placeholders in a URL are DERIVED required `in:'path'` params, deduped in URL order. */
 export function pathParamsFromUrl(targetUrl: string): EndpointParamDto[] {

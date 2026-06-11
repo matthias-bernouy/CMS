@@ -6,6 +6,7 @@ import {
     cmsImageVariantPath,
     cmsImageVariantUrlFromByIdUrl,
     mediaIdFromUrl,
+    parseCmsFilesByIdUrl,
     withFileVersion,
 } from "@bernouy/cms-files/urls";
 
@@ -22,6 +23,14 @@ describe("cms-files URL helpers", () => {
         expect(mediaIdFromUrl("/cms/.cms/files/by-id/01h?v=x")).toBe("01h");
         expect(mediaIdFromUrl("https://cdn.example/cms/.cms/files/by-id/01h#x")).toBe("01h");
         expect(mediaIdFromUrl("/.cms/files/path/logo.png")).toBeNull();
+    });
+
+    test("parses by-id URLs once when callers need id and prefix", () => {
+        expect(parseCmsFilesByIdUrl("/cms/.cms/files/by-id/a%20b?v=x")).toEqual({
+            id: "a b",
+            prefix: "/cms",
+        });
+        expect(parseCmsFilesByIdUrl("/.cms/files/path/logo.png")).toBeNull();
     });
 
     test("builds variant URLs from by-id URLs without string replacement in callers", () => {

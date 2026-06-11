@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { parseUrn, type Provider } from "@bernouy/cms-gateway";
+import { providerToCanonicalDto, type Provider } from "@bernouy/cms-gateway";
 
 export type LocalGateway = {
     /** Provider urn (e.g. "urn:ban") — the primary key on the server. */
@@ -50,22 +50,5 @@ export async function scanGateways(siteDir: string): Promise<LocalGateway[]> {
  *  compared against the same builder's output stored in state, so it just has
  *  to be deterministic — not byte-identical to any server projection. */
 export function canonicalGatewayHash(p: Provider): string {
-    const comparable = {
-        id:   parseUrn(p.urn)?.provider ?? "",
-        meta: { name: p.meta?.name ?? "", description: p.meta?.description ?? "", icon: p.meta?.icon ?? "" },
-        endpoints: p.endpoints.map(e => ({
-            endpointId: parseUrn(e.urn)?.endpoint ?? "",
-            method:     e.method,
-            targetUrl:  e.targetUrl,
-            params:     (e.input?.params ?? []).map(pp => ({
-                name: pp.name, in: pp.in, type: pp.schema?.type ?? "string",
-                required: !!pp.required, description: pp.description ?? "",
-            })),
-            body:    e.input?.body ?? null,
-            output:  e.output ?? null,
-            meta:    e.meta ?? null,
-            headers: e.headers ?? null,
-        })),
-    };
-    return createHash("sha256").update(JSON.stringify(comparable)).digest("hex");
+    return createHash("sha256").update(JSON.stringify(providerToCanonicalDto(p))).digest("hex");
 }

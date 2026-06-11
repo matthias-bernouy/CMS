@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { parseUrn } from "@bernouy/cms-gateway";
+import { providerToDto } from "@bernouy/cms-gateway";
 
 /**
  * GET /api/gateway-provider?urn= — the full provider, enriched for the edit page.
@@ -22,30 +22,10 @@ export default async function getGatewayProvider(req: Request, cms: ControlCms) 
     const provider = await cms.gateway.getProvider(urn);
     if (!provider) throw new InvalidParam("urn", "Unknown provider.");
 
-    const id = parseUrn(provider.urn)?.provider ?? "";
-    const endpoints = provider.endpoints.map(e => ({
-        endpointId: parseUrn(e.urn)?.endpoint ?? "",
-        method:     e.method,
-        targetUrl:  e.targetUrl,
-        // Flatten input.params (scalar `type` lifted out of `schema`) so the
-        // editor can prefill the In tab's param rows.
-        params: (e.input?.params ?? []).map(p => ({
-            name:     p.name,
-            in:       p.in,
-            type:     p.schema?.type ?? "string",
-            required: !!p.required,
-            ...(p.description ? { description: p.description } : {}),
-        })),
-        // Recursive shapes + endpoint meta/headers ride along verbatim so the editor
-        // can prefill the body tree and round-trip the (editor-less) output/meta/headers (B1 fix).
-        ...(e.input?.body ? { body: e.input.body } : {}),
-        ...(e.output?.length ? { output: e.output } : {}),
-        ...(e.meta ? { meta: e.meta } : {}),
-        ...(e.headers?.length ? { headers: e.headers } : {}),
-    }));
-    const endpointsJson = JSON.stringify(endpoints);
+    const dto = providerToDto(provider);
+    const endpointsJson = JSON.stringify(dto.endpoints);
 
-    return new Response(JSON.stringify({ ...provider, id, endpoints, endpointsJson }), {
+    return new Response(JSON.stringify({ ...provider, id: dto.id, endpoints: dto.endpoints, endpointsJson }), {
         headers: { "Content-Type": "application/json" },
     });
 }

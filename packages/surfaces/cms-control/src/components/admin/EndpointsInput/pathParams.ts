@@ -1,3 +1,5 @@
+import { extractPathParamNames } from "@bernouy/cms-gateway/browser";
+
 /**
  * Path params — derived (not posted) from the Target URL's `{placeholders}`.
  * The URL is the single source of truth: the server-side `pathParamsFromUrl`
@@ -5,20 +7,7 @@
  * the URL changes.
  */
 
-/** Extract `{name}` placeholders from a URL template — deduped, in order.
- *  Mirrors the server-side `pathParamsFromUrl` so the read-only display matches
- *  exactly what `parseProviderDto` derives on submit. */
-export function extractPathNames(targetUrl: string): string[] {
-    const names: string[] = [];
-    const seen = new Set<string>();
-    for (const m of targetUrl.matchAll(/\{(\w+)\}/g)) {
-        const name = m[1]!;
-        if (seen.has(name)) continue;
-        seen.add(name);
-        names.push(name);
-    }
-    return names;
-}
+export const extractPathNames = extractPathParamNames;
 
 /** A read-only path-param row: the name (from the URL, not editable), a fixed
  *  `string` type and a `required` marker. No form fields are emitted. */

@@ -46,6 +46,7 @@ export function sanitizeSvgTree(root: SanitizableElement): void {
 
 function isSafeSvgUrl(value: string): boolean {
     const v = value.replace(/[\u0000-\u0020]/g, "").toLowerCase();
+    if (v.startsWith("data:image/svg")) return false;
     return (
         v.startsWith("#") ||
         (v.startsWith("/") && !v.startsWith("//")) ||

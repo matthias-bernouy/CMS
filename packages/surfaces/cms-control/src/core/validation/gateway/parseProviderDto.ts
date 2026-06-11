@@ -1,31 +1,11 @@
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { HTTP_METHODS, isParsableUrl, type HTTPMethod, type GatewayMeta, type DataShape, type EndpointResponse, type EndpointHeader } from "@bernouy/cms-gateway";
+import { HTTP_METHODS, isParsableUrl, type HTTPMethod, type DataShape, type ProviderDto } from "@bernouy/cms-gateway";
 import { slugify } from "cms-control/core/validation/slugify";
 import { parseShapeField } from "./parseShapeField";
 import { pathParamsFromUrl, parseParamsBlob, parseMetaField, buildMeta, type EndpointParamDto } from "./gatewayValidators";
 import { parseResponsesBlob, parseHeadersBlob } from "./blobParsers";
-
-export type EndpointDto = {
-    endpointId: string;
-    method: HTTPMethod;
-    targetUrl: string;
-    params: EndpointParamDto[];
-    /** Request-body shape (recursive). Authored as a JSON blob in the In tab. */
-    body?: DataShape;
-    /** Response contract (per-status list) — round-tripped + leniently re-validated so an edit never wipes it (B1). */
-    output?: EndpointResponse[];
-    /** Endpoint meta — no editor yet, round-tripped verbatim (B1). */
-    meta?: GatewayMeta;
-    /** Injected request headers (static/secret) — edited in the Headers tab; leniently re-validated. */
-    headers?: EndpointHeader[];
-};
-
-export type ProviderDto = {
-    id: string;
-    meta: GatewayMeta;
-    endpoints: EndpointDto[];
-};
+export type { ProviderDto };
 
 /** Matches the flat indexed endpoint scalar keys, e.g. `endpoints.0.targetUrl`. */
 const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl)$/;
@@ -71,7 +51,7 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
     }
 
     // Compact sparse endpoint indices ascending; validate each surviving row.
-    const endpoints: EndpointDto[] = [];
+    const endpoints: ProviderDto["endpoints"] = [];
     const seenIds = new Set<string>();
     for (const idx of [...rows.keys()].sort((a, b) => a - b)) {
         const row = rows.get(idx)!;

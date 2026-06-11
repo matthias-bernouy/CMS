@@ -26,8 +26,20 @@ export {
     type ParsedUrn,
 } from "../core/urn";
 export { validateProvider, endpointBelongsToProvider, isParsableUrl, isValidResponseStatus } from "../core/validateProvider";
-export { GatewayValidationError } from "../core/errors";
+export { GatewayValidationError, DuplicateProviderError } from "../core/errors";
 export { parseDataShape } from "../core/parseDataShape";
+export {
+    providerDtoToProvider,
+    providerToDto,
+    providerToFlatDto,
+    providerToCanonicalDto,
+    type ProviderDto,
+    type EndpointDto,
+    type ProviderParamDto,
+    type ProviderFlatDto,
+    type CanonicalEndpointDto,
+    type CanonicalProviderDto,
+} from "../core/providerDto";
 export { resolveEndpoint, type ResolveResult } from "../core/resolveEndpoint";
 export { seedProviders, type SeedResult } from "../core/seedProviders";
 export { buildUpstreamUrl, extractPathParamNames, type BuildUpstream } from "../core/buildUpstreamUrl";

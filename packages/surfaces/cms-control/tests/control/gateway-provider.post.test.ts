@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
-import { InMemoryGatewayRepository, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
+import { DuplicateProviderError, InMemoryGatewayRepository, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
 
 // Decorated like the composition roots — the domain rules live in the repo seam.
 const makeCms = () => {
@@ -35,10 +35,11 @@ describe("POST /api/gateway-provider", () => {
         expect(stored?.endpoints[1]!.urn).toBe("urn:shop:addItem");
     });
 
-    test("duplicate urn → InvalidParam (mapped, not a 500)", async () => {
+    test("duplicate urn → domain error with HTTP status (not a 500)", async () => {
         const { cms } = makeCms();
         await postGatewayProvider(post(validBody()), cms);
-        await expect(postGatewayProvider(post(validBody()), cms)).rejects.toThrow(/Invalid param urn/);
+        await expect(postGatewayProvider(post(validBody()), cms)).rejects.toBeInstanceOf(DuplicateProviderError);
+        await expect(postGatewayProvider(post(validBody()), cms)).rejects.toMatchObject({ status: 400 });
     });
 
     test("bad method → throws", async () => {
