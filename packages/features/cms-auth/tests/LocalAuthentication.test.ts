@@ -87,6 +87,18 @@ describe("LocalAuthentication login", () => {
         // Counter cleared: without the reset this 3rd attempt would be rate_limited.
         expect(loc(await login(routes, "a@x.com", "no"))).toContain("error=1");
     });
+
+    test("unsafe returnTo falls back to the configured home", async () => {
+        const { routes, credentials } = setup();
+        await credentials.create({ email: "a@x.com", password: "pw" });
+        const req = new Request("http://x/cms/t/auth/login", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ email: "a@x.com", password: "pw", returnTo: "/\\evil.com" }),
+        });
+        const res = await routes["POST /login"]!(req);
+        expect(loc(res)).toBe("/cms/t/admin/pages");
+    });
 });
 
 describe("LocalAuthentication.getSubject", () => {

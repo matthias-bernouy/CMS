@@ -20,8 +20,8 @@ export function clearCookie(name: string, secure: boolean): string {
 }
 
 /** Same-site path only — rejects absolute URLs and protocol-relative `//host`
- *  to prevent open redirects after login/logout. */
+ *  or `/\host` variants to prevent open redirects after login/logout. */
 export function sanitizeReturnTo(value: string | null | undefined, fallback: string): string {
-    if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback;
+    if (!value || !value.startsWith("/") || /^\/[\/\\]/.test(value)) return fallback;
     return value;
 }

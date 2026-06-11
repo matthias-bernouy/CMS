@@ -31,7 +31,8 @@ import {
     SubjectResolver,
     LocalAuthentication,
     registerAuthRoutes,
-    internalUserId,
+    AuthValidationError,
+    createLocalUser,
 } from "@bernouy/cms-auth";
 import {
     MongoUsersRepository,
@@ -121,15 +122,19 @@ if (!(await identityProviders.get("local"))) {
 // from the admin UI (or wipe the credentials collection).
 const existingAdmin = await credentials.getByEmail(CMS_ADMIN_EMAIL);
 if (!existingAdmin) {
-    const identity = await credentials.create({
-        email:       CMS_ADMIN_EMAIL,
-        password:    CMS_ADMIN_PASSWORD,
-        displayName: "Administrator",
-    });
-    await users.upsert(
-        { ...identity, sub: internalUserId("local", identity.sub), provider: "local" },
-        "admin",
-    );
+    try {
+        await createLocalUser({ credentials, users }, {
+            email:       CMS_ADMIN_EMAIL,
+            password:    CMS_ADMIN_PASSWORD,
+            displayName: "Administrator",
+            role:        "admin",
+        });
+    } catch (err) {
+        if (err instanceof AuthValidationError) {
+            throw new Error(`Invalid CMS_ADMIN_PASSWORD for first admin bootstrap: ${err.message}`);
+        }
+        throw err;
+    }
 }
 
 const codec        = new SignedCookieCodec(new TextEncoder().encode(CMS_SESSION_SECRET));

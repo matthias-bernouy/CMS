@@ -37,6 +37,7 @@ export { validateSettingsPatch } from "cms-content/core/validation/settings";
 
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
 export { registerStyleEndpoint } from "cms-content/http/registerStyleEndpoint";
+export { generateStyleEntry }    from "cms-content/http/generateStyleEntry";
 
 // ── Constants & utils ──────────────────────────────────────────────────
 export * from "cms-content/core/constants/p9r-constants";

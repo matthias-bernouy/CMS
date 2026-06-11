@@ -22,6 +22,7 @@ export { SubjectResolver, internalUserId }            from "cms-auth/core/Subjec
 export { toLoginMethod }                              from "cms-auth/core/toLoginMethod";
 export { validatePassword, validateProviderKind, validatePatName, AuthValidationError } from "cms-auth/core/validation";
 export { deleteUserCompletely, type UserDeletionStores } from "cms-auth/core/deleteUserCompletely";
+export { createLocalUser, type CreateLocalUserInput, type CreateLocalUserStores } from "cms-auth/core/createLocalUser";
 export { isLastAdmin }                                 from "cms-auth/core/isLastAdmin";
 
 // ── Interfaces ─────────────────────────────────────────────────────────
@@ -38,6 +39,7 @@ export { InMemoryUsersRepository }            from "cms-auth/default-implementat
 export { InMemoryIdentityProviderRepository } from "cms-auth/default-implementation/memory/InMemoryIdentityProviderRepository";
 export { InMemoryLocalCredentialStore }       from "cms-auth/default-implementation/memory/InMemoryLocalCredentialStore";
 export { InMemoryPatRepository }              from "cms-auth/default-implementation/memory/InMemoryPatRepository";
+export { InMemoryAuthentication, type InMemoryAuthConfig } from "cms-auth/default-implementation/memory/InMemoryAuthentication";
 
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
 export { registerAuthRoutes, type AuthRoutesConfig }         from "cms-auth/http/registerAuthRoutes";

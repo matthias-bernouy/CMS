@@ -1,11 +1,10 @@
 import type { CredentialSelect } from "./CredentialSelect";
+import { secretKeyToRef, secretRefToKey } from "@bernouy/cms-secrets";
 import { fetchKeys } from "./flows";
 
-const REF_PATTERN = /^\$\{([A-Z][A-Z0-9_]*)\}$/;
-
 /** Storage `${KEY}` ↔ display `KEY`. */
-export function refToDisplay(ref: string): string  { return ref.match(REF_PATTERN)?.[1] ?? ""; }
-export function keyToRef   (key: string): string   { return `\${${key}}`; }
+export function refToDisplay(ref: string): string  { return secretRefToKey(ref) ?? ""; }
+export function keyToRef   (key: string): string   { return secretKeyToRef(key); }
 
 export function setValue(host: CredentialSelect, ref: string): void {
     host._value = ref;
@@ -69,4 +68,3 @@ function buildOption(key: string, selected: boolean): HTMLLIElement {
     li.textContent = key;
     return li;
 }
-

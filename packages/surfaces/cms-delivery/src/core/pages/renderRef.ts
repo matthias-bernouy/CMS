@@ -1,6 +1,19 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
+import { cachedResponseAsync, compress, sendCompressed } from "@bernouy/http-runner";
+import { P9R_CACHE } from "@bernouy/cms-content";
 import { renderPage } from "cms-delivery/core/html/renderPage";
 import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext";
+
+const TEXT_FALLBACKS = new Map<string, ReturnType<typeof compress>>();
+
+function textFallbackEntry(text: string) {
+    let entry = TEXT_FALLBACKS.get(text);
+    if (!entry) {
+        entry = compress(text, "text/plain; charset=utf-8");
+        TEXT_FALLBACKS.set(text, entry);
+    }
+    return entry;
+}
 
 /**
  * Render the configured fallback page for `site.notFound` / `site.serverError`
@@ -9,9 +22,8 @@ import { makeRuntimeRenderContext } from "cms-delivery/core/html/runtimeContext"
  *  - the referenced page no longer exists
  *  - the fallback render itself throws (no recursion on errors)
  *
- * `renderPage` returns a pre-compressed `CacheEntry`, so we honour the
- * client's `accept-encoding` directly instead of going through
- * `sendCompressed` (which doesn't allow overriding the status code).
+ * `renderPage` returns a pre-compressed `CacheEntry`; `sendCompressed` handles
+ * negotiation, security headers and conditional requests.
  */
 export async function renderRef(
     req: Request,
@@ -26,34 +38,18 @@ export async function renderRef(
         if (ref) {
             const page = await delivery.repository.getPage(ref.path);
             if (page) {
-                const entry  = await renderPage(page, makeRuntimeRenderContext(delivery));
-                const accept = req.headers.get("accept-encoding") || "";
-                if (accept.includes("br")) {
-                    return new Response(entry.brotli as BodyInit, {
-                        status,
-                        headers: {
-                            "Content-Type":     entry.contentType,
-                            "Content-Encoding": "br",
-                        },
-                    });
-                }
-                if (accept.includes("gzip")) {
-                    return new Response(entry.gzip as BodyInit, {
-                        status,
-                        headers: {
-                            "Content-Type":     entry.contentType,
-                            "Content-Encoding": "gzip",
-                        },
-                    });
-                }
-                return new Response(entry.raw as BodyInit, {
-                    status,
-                    headers: { "Content-Type": entry.contentType },
-                });
+                return await cachedResponseAsync(
+                    req,
+                    P9R_CACHE.page(ref.path),
+                    delivery.cache,
+                    () => renderPage(page, makeRuntimeRenderContext(delivery)),
+                    undefined,
+                    { status, skipCspHeader: true },
+                );
             }
         }
     } catch (err) {
         console.error(`Failed to render ${field} fallback:`, err);
     }
-    return new Response(fallbackText, { status });
+    return sendCompressed(req, textFallbackEntry(fallbackText), undefined, { status });
 }

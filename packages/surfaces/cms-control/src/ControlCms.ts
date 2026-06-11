@@ -6,7 +6,6 @@ import type { Cache } from "@bernouy/http-runner";
 import { InMemoryCache } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { InMemorySecretStore, ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
-import { compress } from "@bernouy/http-runner";
 import { registerFilesEndpoint } from "@bernouy/cms-files";
 import { registerStyleEndpoint } from "@bernouy/cms-content";
 import type { CmsFilesMetadataRepository } from "@bernouy/cms-files";
@@ -135,7 +134,7 @@ export class ControlCms {
         registerStyleEndpoint({
             runner,
             cache:       this._cache,
-            generate:    async () => compress((await this._repository.getSystem()).site?.theme ?? "", "text/css"),
+            repository:  this._repository,
             middlewares: [authGuard],
         });
 

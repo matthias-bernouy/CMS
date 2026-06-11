@@ -1,9 +1,8 @@
 import type { CredentialSelect } from "./CredentialSelect";
 import { showToast } from "@bernouy/components";
+import { secretKeyError } from "@bernouy/cms-secrets";
 import { createCredential } from "./flows";
 import { closePanel, keyToRef, refreshList, setValue } from "./controller";
-
-const KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
 
 type P9rInput = HTMLElement & { value: string };
 
@@ -71,11 +70,12 @@ export async function submitCreate(host: CredentialSelect): Promise<void> {
     const { key: keyInput, value: valueInput } = inputs(m);
     const key   = keyInput.value.trim();
     const value = valueInput.value;
-    if (!KEY_PATTERN.test(key)) {
+    const keyError = secretKeyError(key);
+    if (keyError) {
         keyInput.setAttribute("invalid", "");
-        keyInput.setAttribute("hint", "Must match /^[A-Z][A-Z0-9_]*$/");
+        keyInput.setAttribute("hint", keyError);
         keyInput.setAttribute("hint-level", "error");
-        showToast("Invalid key: must match /^[A-Z][A-Z0-9_]*$/", { type: "error" });
+        showToast(`Invalid key: ${keyError}`, { type: "error" });
         return;
     }
     if (host._keys.includes(key)) {

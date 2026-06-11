@@ -11,7 +11,6 @@ import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
-import { InMemoryAuthentication } from "@bernouy/cms-control";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { loadDevGateways } from "./dev-server/gateways";
@@ -23,6 +22,8 @@ import { InMemoryUsersRepository } from "@bernouy/cms-auth";
 import { InMemoryIdentityProviderRepository } from "@bernouy/cms-auth";
 import { InMemoryLocalCredentialStore } from "@bernouy/cms-auth";
 import { InMemoryPatRepository } from "@bernouy/cms-auth";
+import { InMemoryAuthentication } from "@bernouy/cms-auth";
+import { createLocalUser } from "@bernouy/cms-auth";
 import { InMemoryGatewayRepository, ValidatingGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
 import type { CMS_ROLES } from "@bernouy/cms-permissions";
 import { loadPushConfig } from "./push/shared/config";
@@ -84,10 +85,6 @@ export default async function CLI_dev(args: string[]) {
 
     const reload = createReloadEmitter();
     const repo   = new ValidatingCmsRepository(new LocalFsCmsRepository(config.siteDir, built));
-    // `identifier` matches the seeded `dev-admin` membership row below so the
-    // Profile page (getSubject → users.getBySub) resolves to a real user and
-    // self-service edits work in dev.
-    const auth   = new InMemoryAuthentication({ role: "admin", identifier: "dev-admin", displayName: "p9r dev" });
     // Files backend for the new /api/files surface: the site's `files/` dir IS
     // the media tree (folder = directory, name = filename, bytes = content) —
     // a plain, push-able folder. One object serves both metadata + blob.
@@ -109,16 +106,18 @@ export default async function CLI_dev(args: string[]) {
     // with a couple of users so the Settings → Users tab shows data, plus an
     // empty identity-provider store for the Settings → Identity tab.
     const users = new InMemoryUsersRepository<CMS_ROLES>();
-    // `dev-admin` is tagged `local` so the Profile → Password card shows and the
-    // password-change flow (which only applies to local accounts) is testable.
-    await users.upsert({ sub: "dev-admin", displayName: "p9r dev", email: "dev@example.com", provider: "local" }, "admin");
-    await users.upsert({ sub: "demo-user", displayName: "Demo User", email: "demo@example.com" }, "user");
-    const identityProviders = new InMemoryIdentityProviderRepository();
     // Local credential store (authn) so the Users page can create local
     // email/password users by hand in dev, just like production. Seed one for
-    // `dev-admin` so "current password" re-auth works when testing the change.
+    // the fixed dev subject so "current password" re-auth works in Profile.
     const credentials = new InMemoryLocalCredentialStore();
-    await credentials.create({ email: "dev@example.com", password: DEV_PASSWORD, displayName: "p9r dev" });
+    const devAdmin = await createLocalUser({ credentials, users }, {
+        email: "dev@example.com", password: DEV_PASSWORD, displayName: "p9r dev", role: "admin",
+    });
+    await users.upsert({ sub: "demo-user", displayName: "Demo User", email: "demo@example.com" }, "user");
+    const identityProviders = new InMemoryIdentityProviderRepository();
+    // `identifier` matches the seeded membership row so the Profile page
+    // resolves to a real user and self-service edits work in dev.
+    const auth = new InMemoryAuthentication({ role: "admin", identifier: devAdmin.sub, displayName: "p9r dev" });
     // PAT store (authn) so the Profile → Tokens tab works in dev instead of
     // 500-ing on a missing repository.
     const pats = new InMemoryPatRepository();
@@ -170,7 +169,7 @@ export default async function CLI_dev(args: string[]) {
     console.log(`  Admin    : http://${host}:${port}/admin/pages`);
     console.log(`  Public   : http://${host}:${deliveryPort}/  (rendered site + image optimization)`);
     console.log(`  Repo     : ${config.siteDir} (writes go straight to disk)`);
-    console.log(`  Profile  : dev-admin / current password "${DEV_PASSWORD}" (Profile → Password)`);
+    console.log(`  Profile  : ${devAdmin.sub} / current password "${DEV_PASSWORD}" (Profile → Password)`);
     console.log(`  Watching : ${blocs.length} bloc folder(s) — edit + auto-reload`);
     console.log("");
     console.log("Press Ctrl+C to stop.");

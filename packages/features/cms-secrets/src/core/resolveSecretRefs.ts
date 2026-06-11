@@ -1,15 +1,6 @@
 import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
 import { SecretNotFound } from "cms-secrets/core/SecretNotFound";
-
-/**
- * Pattern matching an env-var-style secret reference. Mirrors the picker's
- * emit format and the validation regex (`^[A-Z][A-Z0-9_]*$`).
- *
- * The `\$\{…\}` wrapper makes refs unambiguous next to the templating
- * `{{ … }}` used elsewhere — the two channels never collide.
- */
-const PATTERN = /\$\{([A-Z][A-Z0-9_]*)\}/g;
-
+import { secretRefGlobalPattern } from "cms-secrets/core/secretRef";
 /**
  * Replaces every `${KEY}` in `input` with the value stored under `KEY`.
  * Multi-occurrences supported (`https://${USER}:${PASS}@host`). Returns
@@ -23,7 +14,8 @@ const PATTERN = /\$\{([A-Z][A-Z0-9_]*)\}/g;
 export async function resolveSecretRefs(input: string, secrets: SecretStore): Promise<string> {
     if (!input.includes("${")) return input;
 
-    const refs = [...input.matchAll(PATTERN)];
+    const pattern = secretRefGlobalPattern();
+    const refs = [...input.matchAll(pattern)];
     if (refs.length === 0) return input;
 
     const cache = new Map<string, string>();
@@ -35,5 +27,5 @@ export async function resolveSecretRefs(input: string, secrets: SecretStore): Pr
         cache.set(key, value);
     }
 
-    return input.replace(PATTERN, (_, key: string) => cache.get(key) as string);
+    return input.replace(secretRefGlobalPattern(), (_, key: string) => cache.get(key) as string);
 }

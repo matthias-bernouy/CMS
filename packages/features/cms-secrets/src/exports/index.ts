@@ -15,3 +15,14 @@ export { resolveSecretRefs }    from "cms-secrets/core/resolveSecretRefs";
 export { createSecretResolver } from "cms-secrets/core/createSecretResolver";
 export { SecretNotFound }       from "cms-secrets/core/SecretNotFound";
 export { ValidatingSecretStore, validateSecretKey, SecretValidationError } from "cms-secrets/core/ValidatingSecretStore";
+export {
+    SECRET_KEY_MAX_LENGTH,
+    SECRET_KEY_PATTERN,
+    SECRET_KEY_PATTERN_DESCRIPTION,
+    SECRET_REF_PATTERN,
+    isValidSecretKey,
+    secretKeyError,
+    secretKeyToRef,
+    secretRefToKey,
+    secretRefGlobalPattern,
+} from "cms-secrets/core/secretRef";

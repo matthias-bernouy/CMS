@@ -224,11 +224,48 @@ export async function cachedResponseAsync(
  * header dynamically with the provided extras instead of the empty-extras
  * baseline. Used by the admin static-page path to whitelist the CDN
  * origin + any settings extras without resorting to a separate meta tag.
+ *
+ * `status` — HTTP status for the body response. Conditional requests still
+ * return 304 when the ETag matches.
  */
 export type SendCompressedOptions = {
     skipCspHeader?: boolean;
     cspExtras?:     CspExtras;
+    status?:        number;
 };
+
+type Encoding = "br" | "gzip" | "identity";
+
+function responseEncoding(accept: string): Encoding {
+    if (accept.includes("br")) return "br";
+    if (accept.includes("gzip")) return "gzip";
+    return "identity";
+}
+
+function assertBodyStatus(status: number): void {
+    if (status < 200 || status > 599 || status === 204 || status === 205 || status === 304) {
+        throw new RangeError(`sendCompressed status must allow a response body, got ${status}`);
+    }
+}
+
+function etagFor(hash: string, encoding: Encoding): string {
+    return `"${hash}-${encoding}"`;
+}
+
+function representationHeaders(entry: CacheEntry, encoding: Encoding, etag: string): Record<string, string> {
+    return {
+        "Content-Type": entry.contentType,
+        ...(encoding === "identity" ? {} : { "Content-Encoding": encoding }),
+        "Vary": "Accept-Encoding",
+        ETag: etag,
+    };
+}
+
+function bodyFor(entry: CacheEntry, encoding: Encoding): BodyInit {
+    if (encoding === "br") return entry.brotli as BodyInit;
+    if (encoding === "gzip") return entry.gzip as BodyInit;
+    return entry.raw as BodyInit;
+}
 
 export function sendCompressed(
     req: Request,
@@ -237,63 +274,39 @@ export function sendCompressed(
     opts?: SendCompressedOptions,
 ): Response {
     const accept = req.headers.get("accept-encoding") || "";
+    const encoding = responseEncoding(accept);
 
     const csp = opts?.skipCspHeader ? {} : buildCspHeaderForEntry(entry.contentType, opts?.cspExtras);
     const cc: Record<string, string> = cacheControl ? { "Cache-Control": cacheControl } : {};
+    const common = { ...securityHeaders(), ...csp, ...cc };
+    const status = opts?.status ?? 200;
+    assertBodyStatus(status);
 
     // Conditional GET — answer 304 when the client already has the
-    // current build. The entry's `hash` is a stable digest of the raw
-    // bytes (cf. `compress()`), so we use it as the ETag value. Pairs
+    // current representation. The entry's `hash` is a stable digest of the raw
+    // bytes (cf. `compress()`), suffixed by encoding so strong ETags don't
+    // identify different wire representations as identical. Pairs
     // with the relaxed `Cache-Control` for DEV: the browser keeps a
     // disk-cached copy, sends `If-None-Match` on every load, and we
     // skip the body entirely when nothing changed.
-    const etag = `"${entry.hash}"`;
+    const etag = etagFor(entry.hash, encoding);
     const ifNoneMatch = req.headers.get("if-none-match");
     if (ifNoneMatch && ifNoneMatch === etag) {
         return new Response(null, {
             status: 304,
             headers: {
+                "Vary": "Accept-Encoding",
                 ETag: etag,
-                ...securityHeaders(),
-                ...csp,
-                ...cc,
+                ...common,
             },
         });
     }
 
-    if (accept.includes("br")) {
-        return new Response(entry.brotli as BodyInit, {
-            headers: {
-                "Content-Type": entry.contentType,
-                "Content-Encoding": "br",
-                ETag: etag,
-                ...securityHeaders(),
-                ...csp,
-                ...cc,
-            },
-        });
-    }
-
-    if (accept.includes("gzip")) {
-        return new Response(entry.gzip as BodyInit, {
-            headers: {
-                "Content-Type": entry.contentType,
-                "Content-Encoding": "gzip",
-                ETag: etag,
-                ...securityHeaders(),
-                ...csp,
-                ...cc,
-            },
-        });
-    }
-
-    return new Response(entry.raw as BodyInit, {
+    return new Response(bodyFor(entry, encoding), {
+        status,
         headers: {
-            "Content-Type": entry.contentType,
-            ETag: etag,
-            ...securityHeaders(),
-            ...csp,
-            ...cc,
+            ...representationHeaders(entry, encoding, etag),
+            ...common,
         },
     });
 }

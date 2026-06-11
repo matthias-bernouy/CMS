@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { internalUserId, validatePassword } from "@bernouy/cms-auth";
+import { createLocalUser } from "@bernouy/cms-auth";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
@@ -23,7 +23,6 @@ export default async function createUser(req: Request, cms: ControlCms) {
 
     if (!email)    throw new MissingParam("email");
     if (!password) throw new MissingParam("password");
-    validatePassword(password);
     const allowed = await assignableRoles(cms);
     if (!allowed.some((r) => r.id === role)) throw new InvalidParam("role", "unknown or unassignable role");
 
@@ -31,10 +30,6 @@ export default async function createUser(req: Request, cms: ControlCms) {
     // clear validation error instead of a generic store failure.
     if (await cms.credentials.getByEmail(email)) throw new InvalidParam("email", "already in use");
 
-    const identity = await cms.credentials.create({ email, password, displayName });
-    const user = await cms.users.upsert(
-        { ...identity, sub: internalUserId("local", identity.sub), provider: "local" },
-        role,
-    );
+    const user = await createLocalUser({ credentials: cms.credentials, users: cms.users }, { email, password, displayName, role });
     return Response.json(user);
 }

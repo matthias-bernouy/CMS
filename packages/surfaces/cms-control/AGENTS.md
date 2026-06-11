@@ -20,7 +20,7 @@ placeholders, and labels MUST be written in English.** No French in code.
 
 ```
 packages/cms-control/
-├── index.ts                 main barrel — exports ControlCms + InMemoryAuthentication
+├── index.ts                 main barrel — exports ControlCms
 ├── component.ts             /component sub-entry — view-side Bloc authoring (Component base)
 ├── editor.ts                /editor    sub-entry — editor-side Bloc authoring (Editor + registerEditor)
 ├── data.ts                  /data      sub-entry — pure utility helpers for blocs
@@ -29,7 +29,6 @@ packages/cms-control/
 ├── types/                   ambient TS types (HTMLElements, w13c, endpoint, assets, …)
 └── src/
     ├── ControlCms.ts        composition root — wires runner + auth + repos + routes
-    ├── InMemoryAuthentication.ts   no-op `Authentication<CMS_ROLES>` for `p9r dev` + manual harness
     ├── prebuildControl.ts   `Bun.build` step that bundles `components/index.ts` → `static/assets/control-components.js`
     │
     ├── api/                 file-routed REST endpoints (see "API convention" below)
@@ -86,7 +85,7 @@ packages/cms-control/
 The `package.json` `exports` field declares four entry points, mapped via
 the local `tsconfig.json` `paths`:
 
-- `@bernouy/cms-control`           → `index.ts` (server-side; ControlCms + InMemoryAuthentication)
+- `@bernouy/cms-control`           → `index.ts` (server-side; ControlCms)
 - `@bernouy/cms-control/component` → `component.ts` (view-side Bloc authoring — only re-exports `Component`)
 - `@bernouy/cms-control/editor`    → `editor.ts`    (editor-side Bloc authoring — `Editor`, `registerEditor`, `registerEditor_opaque`)
 - `@bernouy/cms-control/data`      → `data.ts`      (pure helpers for `BlocEditor.ts` — `getFields`, `collectAncestorExtensions`, extension types)
@@ -94,7 +93,7 @@ the local `tsconfig.json` `paths`:
 `component.ts` and `editor.ts` are isolated **by design**: the view bundle
 visitors download must never transitively reach editor code (ObserverManager,
 ConfigPanel, BlocActions, …). Bun's `p9rExternalsPlugin` (from
-`@bernouy/cms-shared`) intercepts `@bernouy/cms-control/editor` so its
+`@bernouy/cms-bloc-compile`) intercepts `@bernouy/cms-control/editor` so its
 symbols read from `window.p9r.*` (singleton across blocs), preserving
 `instanceof` checks across BlocEditor instances. The `data` entry is
 NOT intercepted — each call site bundles inline.
@@ -106,7 +105,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import { LocalAuthentication } from "@bernouy/cms-auth";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
-import { InMemoryCmsRepository, ... } from "@bernouy/cms-shared";
+import { InMemoryCmsRepository, ... } from "@bernouy/cms-content";
 
 const runner = new BunRunner();
 
@@ -186,7 +185,7 @@ Building blocks consumed by every admin page:
 
 - **`@bernouy/components`** ships every `<p9r-*>` / `<w13c-*>` admin custom element. Its `.` entry is an **IIFE bundle** — a single bare `import "@bernouy/components"` registers every tag. Never import from `@bernouy/core` for UI.
 - **`@bernouy/core`** is for infrastructure only: `Runner`, `Authentication`, `Subject`, `Middleware`, envelope crypto. Never pull UI from it.
-- **`@bernouy/cms-shared/constants`** is the browser-safe sub-entry exposing `P9R_ATTR`, `P9R_MODE`, `P9R_EVENT`, `P9R_ID`, `P9R_CACHE` — imported by `src/components/globals.ts` to wire `window.p9r.*`. Don't import the main `@bernouy/cms-shared` barrel from `components/` — it transitively reaches Mongo / Bun modules and breaks the browser bundle.
+- **`@bernouy/cms-content/constants`** is the browser-safe sub-entry exposing `P9R_ATTR`, `P9R_MODE`, `P9R_EVENT`, `P9R_ID`, `P9R_CACHE` — imported by `src/components/globals.ts` to wire `window.p9r.*`. Don't import the main `@bernouy/cms-content` barrel from `components/` when only constants are needed.
 - **`showToast`** lives at `src/core/showToast.ts`. Lazily mounts a `<p9r-toast-stack>` and calls its `push()`.
 - **Design tokens** (`--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, …) come from `@bernouy/components/style.css`, exposed at `<basePath>/resources/css/cms-blocs.css`. Admin's `style.css` `@import`s it so every admin page inherits the tokens before any component renders.
 

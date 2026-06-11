@@ -1,7 +1,6 @@
 import { showToast } from "@bernouy/components";
+import { secretKeyError } from "@bernouy/cms-secrets";
 import { postSecret, deleteSecret } from "./actions";
-
-const KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
 
 /**
  * Per-operation handlers that bridge the network layer (`actions.ts`) to
@@ -24,8 +23,9 @@ export async function opAddSecret(
     const key   = keyEl.value.trim();
     const value = valueEl.value;
     if (!key)                 { showToast('Key is required', { type: 'error' }); return; }
-    if (!KEY_PATTERN.test(key)) {
-        showToast(`Invalid key: must match /^[A-Z][A-Z0-9_]*$/`, { type: 'error' });
+    const keyError = secretKeyError(key);
+    if (keyError) {
+        showToast(`Invalid key: ${keyError}`, { type: 'error' });
         return;
     }
     if (knownKeys.has(key)) {

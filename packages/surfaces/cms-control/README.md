@@ -8,8 +8,8 @@ source directly.
 Pair it with:
 
 - **`@bernouy/cms-delivery`** for the public-facing rendering layer.
-- **`@bernouy/cms-shared`** for the persistence stores (content / files
-  / secrets) and bloc compilation.
+- **`@bernouy/cms-content`**, **`@bernouy/cms-files`** and
+  **`@bernouy/cms-secrets`** for persistence contracts and default stores.
 - **`@bernouy/cms-auth`** for the auth chain (login + signed cookie +
   PATs).
 
@@ -33,23 +33,20 @@ runner with `runner.group("/cms", …)` if you want everything under `/cms`:
 
 ```ts
 import { BunRunner } from "@bernouy/http-runner";
-import { SignedCookieCodec } from "@bernouy/core";
+import { InMemoryCache } from "@bernouy/http-runner";
+import { ControlCms } from "@bernouy/cms-control";
 import {
-    ControlCms,
     InMemoryAuthentication,        // dev / harness only
-} from "@bernouy/cms-control";
-import {
     LocalAuthentication, SubjectResolver,
     InMemoryUsersRepository, InMemoryIdentityProviderRepository,
     InMemoryLocalCredentialStore, InMemoryPatRepository,
-    InMemoryRateLimiter,
+    SignedCookieCodec,
 } from "@bernouy/cms-auth";
-import {
-    InMemoryCmsRepository,
-    InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob,
-    InMemoryCache, InMemorySecretStore,
-    type CMS_ROLES,
-} from "@bernouy/cms-shared";
+import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
+import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob } from "@bernouy/cms-files";
+import { InMemorySecretStore } from "@bernouy/cms-secrets";
+import type { CMS_ROLES } from "@bernouy/cms-permissions";
 
 const runner = new BunRunner();
 
@@ -58,16 +55,16 @@ runner.group("/cms", (sub) => {
     // for InMemoryAuthentication and skip the seeding step below.
     const codec    = new SignedCookieCodec(new TextEncoder().encode(SESSION_SECRET));
     const users    = new InMemoryUsersRepository<CMS_ROLES>();
+    const pats     = new InMemoryPatRepository();
     const resolver = new SubjectResolver<CMS_ROLES>(users, "user");
 
-    const auth = new LocalAuthentication<CMS_ROLES>(sub, {
+    const auth = new LocalAuthentication<CMS_ROLES>({
         providerId:    "local",
-        basePath:      "/auth",
         loginPagePath: "/cms/login",
         logoutPath:    "/cms/auth/logout",
         credentials:   new InMemoryLocalCredentialStore(),
         resolver, codec,
-        pats:          new InMemoryPatRepository(),
+        pats,
         rateLimit:     new InMemoryRateLimiter({ limit: 8, windowSeconds: 300 }),
         cookieName:    "cms-session",
         defaultHome:   "/cms/admin/pages",
@@ -83,7 +80,7 @@ runner.group("/cms", (sub) => {
         new InMemoryCmsFilesBlob(),
         users,
         new InMemoryIdentityProviderRepository(),
-        // pats — pass the same instance the auth chain got if you want PATs
+        pats,
     );
 });
 
@@ -126,9 +123,11 @@ silently disables the admin surface that needs it:
 Use it as a drop-in `Authentication<CMS_ROLES>` when you want to skip
 the login flow during local dev or in the manual test harness. It
 returns a fixed `Subject` for every request — never use it in
-production.
+production. Import it from `@bernouy/cms-auth`.
 
 ```ts
+import { InMemoryAuthentication } from "@bernouy/cms-auth";
+
 const auth = new InMemoryAuthentication({ role: "admin", displayName: "p9r dev" });
 new ControlCms(sub, repo, auth, {}, …);
 ```
@@ -174,7 +173,7 @@ visitor bundle (`Bloc.ts`) must NEVER reach editor code:
   may pull when wiring runtime data binding.
 
 The `editor` entry is intercepted by `p9rExternalsPlugin` (in
-`@bernouy/cms-shared/blocs/p9rExternalsPlugin`) so its symbols read
+`@bernouy/cms-bloc-compile`) so its symbols read
 from `window.p9r.*` — same canonical class across every bloc,
 preserving `instanceof` checks. The `data` entry is NOT intercepted;
 each call site bundles inline.
@@ -184,8 +183,8 @@ each call site bundles inline.
 ## What this package is NOT
 
 - **Not the public renderer.** Use `@bernouy/cms-delivery` for that.
-- **Not a persistence layer.** Repos / stores live in
-  `@bernouy/cms-shared`; pass impls in via the constructor.
+- **Not a persistence layer.** Repos / stores live in the feature packages;
+  pass impls in via the constructor.
 - **Not the auth chain.** `LocalAuthentication` + `OidcAuthentication`
   live in `@bernouy/cms-auth`; assemble them and pass the result as
   `auth`.

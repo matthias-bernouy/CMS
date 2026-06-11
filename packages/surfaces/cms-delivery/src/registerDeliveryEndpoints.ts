@@ -10,7 +10,6 @@ import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
 import { registerFilesEndpoint } from "@bernouy/cms-files";
 import { registerStyleEndpoint } from "@bernouy/cms-content";
 import { registerImageVariantEndpoint } from "@bernouy/cms-files";
-import { generateStyleEntry } from "cms-delivery/core/assets/buildStyle";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
 
 /**
@@ -49,7 +48,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     // `?v=<hash>` link, so served bytes match. Gateway is public + unwired here
     // (no `deps.resolveSecret`) → a `secret`-sourced header yields a clean 500;
     // an unconfigured gateway yields 501.
-    registerStyleEndpoint({ runner, cache: delivery.cache, generate: () => generateStyleEntry(delivery.repository) });
+    registerStyleEndpoint({ runner, cache: delivery.cache, repository: delivery.repository });
     registerFilesEndpoint({ runner, metadata: delivery.filesMetadata, blob: delivery.filesBlob });
     registerGatewayEndpoint({ runner, gateway: delivery.gateway });
 

@@ -58,6 +58,8 @@ describe("cachedResponse — encoding negotiation", () => {
         const cache = new MemCache();
         const res = cachedResponse(reqWithAccept("br, gzip"), "k", cache, generate);
         expect(bytesEqual(await res.arrayBuffer(), entry.brotli)).toBe(true);
+        expect(res.headers.get("vary")).toBe("Accept-Encoding");
+        expect(res.headers.get("etag")).toBe(`"${entry.hash}-br"`);
         // Sanity: brotli should differ from raw for non-trivial inputs.
         expect(bytesEqual(await new Response(entry.brotli as BodyInit).arrayBuffer(), entry.raw)).toBe(false);
     });
@@ -66,6 +68,8 @@ describe("cachedResponse — encoding negotiation", () => {
         const cache = new MemCache();
         const res = cachedResponse(reqWithAccept("gzip"), "k", cache, generate);
         expect(bytesEqual(await res.arrayBuffer(), entry.gzip)).toBe(true);
+        expect(res.headers.get("vary")).toBe("Accept-Encoding");
+        expect(res.headers.get("etag")).toBe(`"${entry.hash}-gzip"`);
     });
 
     test("caches the generated entry across calls", () => {
@@ -80,6 +84,34 @@ describe("cachedResponse — encoding negotiation", () => {
         expect(generateCalls).toBe(1);
         expect(cache.setCalls).toBe(1);
         expect(cache.getCalls).toBe(3);
+    });
+
+    test("supports a custom body status", async () => {
+        const cache = new MemCache();
+        const res = cachedResponse(reqWithAccept(null), "k", cache, generate, undefined, { status: 404 });
+        expect(res.status).toBe(404);
+        expect(bytesEqual(await res.arrayBuffer(), entry.raw)).toBe(true);
+    });
+
+    test("custom status does not override ETag revalidation", () => {
+        const cache = new MemCache();
+        const first = cachedResponse(reqWithAccept(null), "k", cache, generate, undefined, { status: 404 });
+        const req = new Request("http://localhost/", { headers: { "if-none-match": first.headers.get("etag")! } });
+        const res = cachedResponse(req, "k", cache, generate, undefined, { status: 404 });
+        expect(res.status).toBe(304);
+        expect(res.headers.get("vary")).toBe("Accept-Encoding");
+    });
+
+    test("rejects statuses that cannot carry a body", () => {
+        const cache = new MemCache();
+        expect(() => cachedResponse(reqWithAccept(null), "k", cache, generate, undefined, { status: 204 })).toThrow(RangeError);
+        expect(() => cachedResponse(reqWithAccept(null), "k", cache, generate, undefined, { status: 304 })).toThrow(RangeError);
+    });
+
+    test("rejects bodyless custom status before conditional handling", () => {
+        const cache = new MemCache();
+        const req = new Request("http://localhost/", { headers: { "if-none-match": `"${entry.hash}-identity"` } });
+        expect(() => cachedResponse(req, "k", cache, generate, undefined, { status: 304 })).toThrow(RangeError);
     });
 });
 

@@ -10289,6 +10289,45 @@ ${followMessage}`)) {
     };
   }
 
+  // ../../features/cms-secrets/src/default-implementation/InMemorySecretStore.ts
+  class InMemorySecretStore {
+    _data = new Map;
+    async get(key) {
+      return this._data.get(key) ?? null;
+    }
+    async set(key, value) {
+      this._data.set(key, value);
+    }
+    async delete(key) {
+      this._data.delete(key);
+    }
+    async list() {
+      return Array.from(this._data, ([key, value]) => ({ key, value }));
+    }
+    async listKeys() {
+      return Array.from(this._data.keys());
+    }
+  }
+  // ../../features/cms-secrets/src/core/secretRef.ts
+  var SECRET_KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+  var SECRET_KEY_MAX_LENGTH = 128;
+  var SECRET_KEY_PATTERN_DESCRIPTION = "/^[A-Z][A-Z0-9_]*$/";
+  var EXACT_SECRET_REF_PATTERN = /^\$\{([A-Z][A-Z0-9_]*)\}$/;
+  function secretKeyError(key) {
+    if (key.length === 0)
+      return "secret key is required";
+    if (!SECRET_KEY_PATTERN.test(key))
+      return `secret key must match ${SECRET_KEY_PATTERN_DESCRIPTION} (env-var style)`;
+    if (key.length > SECRET_KEY_MAX_LENGTH)
+      return `secret key too long; max ${SECRET_KEY_MAX_LENGTH} characters`;
+    return null;
+  }
+  function secretKeyToRef(key) {
+    return `\${${key}}`;
+  }
+  function secretRefToKey(ref) {
+    return ref.match(EXACT_SECRET_REF_PATTERN)?.[1] ?? null;
+  }
   // src/components/admin/CredentialSelect/flows.ts
   var SAVED_EVENT = "secret:saved";
   async function fetchKeys(api) {
@@ -10319,12 +10358,11 @@ ${followMessage}`)) {
   }
 
   // src/components/admin/CredentialSelect/controller.ts
-  var REF_PATTERN = /^\$\{([A-Z][A-Z0-9_]*)\}$/;
   function refToDisplay(ref) {
-    return ref.match(REF_PATTERN)?.[1] ?? "";
+    return secretRefToKey(ref) ?? "";
   }
   function keyToRef(key) {
-    return `\${${key}}`;
+    return secretKeyToRef(key);
   }
   function setValue(host, ref) {
     host._value = ref;
@@ -10380,7 +10418,6 @@ ${followMessage}`)) {
   }
 
   // src/components/admin/CredentialSelect/dialog.ts
-  var KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
   function buildModal(host) {
     const m = document.createElement("p9r-modal");
     m.setAttribute("aria-label", "Create credential");
@@ -10429,11 +10466,12 @@ ${followMessage}`)) {
     const { key: keyInput, value: valueInput } = inputs(m);
     const key = keyInput.value.trim();
     const value = valueInput.value;
-    if (!KEY_PATTERN.test(key)) {
+    const keyError = secretKeyError(key);
+    if (keyError) {
       keyInput.setAttribute("invalid", "");
-      keyInput.setAttribute("hint", "Must match /^[A-Z][A-Z0-9_]*$/");
+      keyInput.setAttribute("hint", keyError);
       keyInput.setAttribute("hint-level", "error");
-      Yl("Invalid key: must match /^[A-Z][A-Z0-9_]*$/", { type: "error" });
+      Yl(`Invalid key: ${keyError}`, { type: "error" });
       return;
     }
     if (host._keys.includes(key)) {
@@ -12291,7 +12329,6 @@ cms-endpoints-input .ep-add:hover {
   }
 
   // src/components/admin/Secrets/ops.ts
-  var KEY_PATTERN2 = /^[A-Z][A-Z0-9_]*$/;
   async function opSaveRow(api, key, value) {
     const r = await postSecret(api, key, value);
     if (r.ok)
@@ -12306,8 +12343,9 @@ cms-endpoints-input .ep-add:hover {
       Yl("Key is required", { type: "error" });
       return;
     }
-    if (!KEY_PATTERN2.test(key)) {
-      Yl(`Invalid key: must match /^[A-Z][A-Z0-9_]*$/`, { type: "error" });
+    const keyError = secretKeyError(key);
+    if (keyError) {
+      Yl(`Invalid key: ${keyError}`, { type: "error" });
       return;
     }
     if (knownKeys.has(key)) {

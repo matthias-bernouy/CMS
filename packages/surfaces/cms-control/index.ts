@@ -14,12 +14,6 @@
 // ── Admin composition root ─────────────────────────────────────────────
 export { ControlCms, ControlCms as Cms } from "./src/ControlCms";
 
-// ── Dev / test helper ──────────────────────────────────────────────────
-// `InMemoryAuthentication` is a no-op `Authentication<CMS_ROLES>` used by
-// the `p9r dev` CLI and the manual test harness — it returns a fixed
-// `Subject` so the local editor is reachable without a login flow.
-export { InMemoryAuthentication } from "./src/InMemoryAuthentication";
-
 // Browser-safe bloc authoring symbols live in three sub-entries:
 //   • `@bernouy/cms-control/component` — exposes only `Component`.
 //   • `@bernouy/cms-control/editor`    — exposes `Editor` + `registerEditor`.
