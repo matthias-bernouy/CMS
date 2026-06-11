@@ -5,7 +5,7 @@ import type { IdentityProvider, LoginMethod } from "cms-auth/interfaces/Identity
  * public `/auth/methods` endpoint exposes. The form-vs-redirect distinction is
  * DERIVED from `kind`: `local` gets `fields` (a credentials form), everything
  * else gets a `loginUrl` (`<authBasePath>/<id>/login`) the bloc redirects to.
- * Disabled-provider filtering is owned by the auth HTTP registrar.
+ * Disabled-provider and mounted-kind filtering is owned by the auth methods handler.
  */
 export function toLoginMethod(p: IdentityProvider, authBasePath: string): LoginMethod {
     const base: LoginMethod = {

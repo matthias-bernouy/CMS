@@ -30,7 +30,7 @@ export type OidcAuthConfig<Role extends string> = {
 /**
  * Dynamic OIDC login backend — ONE instance serves EVERY configured
  * redirect-style provider. Passive: exposes the `login`/`callback` handlers,
- * mounted at `<basePath>/:provider/login|callback` by `registerAuthRoutes`
+ * mounted at `<basePath>/:provider/login|callback` by the surface
  * (http/) — the surface or runtime decides where. The provider config +
  * client secret are resolved from the stores AT REQUEST TIME, so
  * adding/editing/enabling a provider in the admin takes effect with no
@@ -114,7 +114,7 @@ export class OidcAuthentication<Role extends string = string> {
 
     private _flightCookie(id: string) { return `${this.cfg.cookieName}-oidc-${id}`; }
 
-    /** `GET <basePath>/:provider/login` handler — mounted by `registerAuthRoutes`. */
+    /** `GET <basePath>/:provider/login` handler — mounted by the surface. */
     async login(req: Request): Promise<Response> {
         const r = await this._resolve(req);
         if (!r) return new Response("Unknown provider", { status: 404 });
@@ -144,7 +144,7 @@ export class OidcAuthentication<Role extends string = string> {
         });
     }
 
-    /** `GET <basePath>/:provider/callback` handler — mounted by `registerAuthRoutes`. */
+    /** `GET <basePath>/:provider/callback` handler — mounted by the surface. */
     async callback(req: Request): Promise<Response> {
         const r = await this._resolve(req);
         if (!r) return new Response("Unknown provider", { status: 404 });

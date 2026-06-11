@@ -35,6 +35,8 @@ export {
     CMS_FILES_BY_ID_SEGMENT,
     CMS_FILES_BY_ID_ROUTE,
     CMS_IMAGE_VARIANT_ROUTE,
+    filesPrefix,
+    imageVariantPrefix,
     cmsFilesByIdPath,
     cmsFilesByIdUrl,
     cmsImageVariantPath,
@@ -62,7 +64,6 @@ export { OptimizeQueue } from "cms-files/core/optimizeQueue";
 export { optimizePageImages, DEFAULT_LADDER, type OptimizeDeps } from "cms-files/core/optimizePageJob";
 export { injectMediaVersions } from "cms-files/core/injectMediaVersions";
 
-// ── HTTP (mountable by surfaces) ───────────────────────────────────────
-export { serveVariantRequest, registerImageVariantEndpoint, type VariantServeDeps } from "cms-files/http/serveVariant";
+// ── HTTP handlers (mounted by surfaces) ────────────────────────────────
+export { serveVariantRequest, type VariantServeDeps } from "cms-files/http/serveVariant";
 export { serveFilesRequest, type FilesServeDeps } from "cms-files/http/serveFilesRequest";
-export { registerFilesEndpoint }                  from "cms-files/http/registerFilesEndpoint";

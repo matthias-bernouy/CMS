@@ -3,6 +3,8 @@ export {
     CMS_FILES_BY_ID_SEGMENT,
     CMS_FILES_BY_ID_ROUTE,
     CMS_IMAGE_VARIANT_ROUTE,
+    filesPrefix,
+    imageVariantPrefix,
     cmsFilesByIdPath,
     cmsFilesByIdUrl,
     cmsImageVariantPath,

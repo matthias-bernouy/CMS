@@ -81,6 +81,11 @@ runner.group("/cms", (sub) => {
         users,
         new InMemoryIdentityProviderRepository(),
         pats,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { local: auth },
     );
 });
 
@@ -102,6 +107,11 @@ new ControlCms(
     users?:              UsersRepository<CMS_ROLES>,
     identityProviders?:  IdentityProviderRepository,
     pats?:               PatRepository,
+    credentials?:        LocalCredentialStore,
+    gateway?:            GatewayRepository,
+    analytics?:          AnalyticsStore,
+    roles?:              RolesRepository,
+    authBackends?:       { local?: LocalAuthentication<CMS_ROLES>; oidc?: OidcAuthentication<CMS_ROLES> },
 )
 ```
 
@@ -117,6 +127,8 @@ silently disables the admin surface that needs it:
 | `users`              | Users admin page throws "not configured"      |
 | `identityProviders`  | Settings → Identity tab throws                |
 | `pats`               | Profile → Tokens tab throws                   |
+| `authBackends.local` | Local login/logout routes are not mounted     |
+| `authBackends.oidc`  | OIDC login/callback routes are not mounted    |
 
 ### `InMemoryAuthentication` (dev only)
 

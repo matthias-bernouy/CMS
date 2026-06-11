@@ -2,6 +2,14 @@ import type { GatewayRepository } from "../interfaces/GatewayRepository";
 import { resolveEndpoint } from "../core/resolveEndpoint";
 import { executeEndpoint, type ExecutorDeps } from "../core/executeEndpoint";
 
+export const CMS_GATEWAY_ROUTE = "/.cms/gateway";
+export const GATEWAY_PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
+
+export function gatewayPrefix(basePath: string): string {
+    const base = basePath === "/" ? "" : basePath.replace(/\/$/, "");
+    return `${base}${CMS_GATEWAY_ROUTE}/`;
+}
+
 /**
  * Shared proxy glue used by both delivery (publication) and control (preview):
  * each host passes its own base-path-relative `prefix` (e.g. `<basePath>/.cms/gateway/`)

@@ -42,9 +42,8 @@ export { validateTemplateIdentifier, validateTemplatePatch }        from "cms-co
 export { validateSettingsPatch } from "cms-content/core/validation/settings";
 export { coercePageRef, pageRefToString } from "cms-content/core/validation/pageRef";
 
-// ── HTTP (mountable by surfaces) ───────────────────────────────────────
-export { registerStyleEndpoint } from "cms-content/http/registerStyleEndpoint";
-export { generateStyleEntry }    from "cms-content/http/generateStyleEntry";
+// ── HTTP handlers (mounted by surfaces) ────────────────────────────────
+export { generateStyleEntry } from "cms-content/http/generateStyleEntry";
 
 // ── Constants & utils ──────────────────────────────────────────────────
 export * from "cms-content/core/constants/p9r-constants";

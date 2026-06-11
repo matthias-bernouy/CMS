@@ -30,7 +30,6 @@ import {
     SignedCookieCodec,
     SubjectResolver,
     LocalAuthentication,
-    registerAuthRoutes,
     AuthValidationError,
     createLocalUser,
 } from "@bernouy/cms-auth";
@@ -154,8 +153,7 @@ const auth = new LocalAuthentication<CMS_ROLES>({
     cookieSecure,
     defaultHome:   "/admin/pages",
 });
-registerAuthRoutes(controlRunner, { basePath: "/auth", local: auth });
-new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, gateway, analytics, roles);
+new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, gateway, analytics, roles, { local: auth });
 
 // Delivery on its own runner/port — strictly public surface. Shares the SAME
 // gateway instance as Control, so providers created in the admin are immediately

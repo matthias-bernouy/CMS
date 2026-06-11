@@ -1,6 +1,6 @@
 import { describe, test, expect, spyOn } from "bun:test";
-import type { Runner, RouteHandler } from "@bernouy/http-runner";
-import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
+import type { RouteHandler } from "@bernouy/http-runner";
+import { GATEWAY_PROXY_METHODS, handleGatewayRequest } from "@bernouy/cms-gateway";
 import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
 import type { Provider } from "@bernouy/cms-gateway";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
@@ -16,20 +16,20 @@ const SECURED: Provider = {
 };
 
 /**
- * Minimal `Runner` stand-in: captures the default endpoint each method registers
- * inside the `/.cms/gateway` group, so a test can invoke the REAL handler the
- * helper wired — exercising `handleGatewayRequest` end-to-end without booting a
- * server. (Delivery mounts the same `registerGatewayEndpoint` without `deps`.)
+ * Minimal surface mount: captures the default endpoint each method would
+ * register inside the `/.cms/gateway` group, so a test can invoke the real
+ * handler end-to-end without booting a server.
  */
-function captureRunner() {
+function mountGateway(gateway: InMemoryGatewayRepository | null, secrets: InMemorySecretStore) {
     const handlers = new Map<string, RouteHandler>();
-    const runner = {
-        basePath: "/cms",
-        group(_prefix: string, cb: (r: Runner) => void) {
-            cb({ setDefaultEndpoint: (m: string, h: RouteHandler) => handlers.set(m, h) } as unknown as Runner);
-        },
-    } as unknown as Runner;
-    return { runner, handlers };
+    const prefix = "/cms/.cms/gateway/";
+    for (const method of GATEWAY_PROXY_METHODS) {
+        handlers.set(method, (req) => handleGatewayRequest(gateway, req, {
+            prefix,
+            deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) },
+        }));
+    }
+    return handlers;
 }
 
 async function mountBan() {
@@ -37,14 +37,13 @@ async function mountBan() {
     const { BAN_PROVIDER } = await import("@bernouy/cms-gateway/presets");
     await seedProviders(gateway, [BAN_PROVIDER]);
     const secrets = new InMemorySecretStore();
-    const { runner, handlers } = captureRunner();
-    registerGatewayEndpoint({ runner, gateway, deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) } });
+    const handlers = mountGateway(gateway, secrets);
     return { handlers, secrets, gateway };
 }
 
 const URL_BASE = "http://admin/cms/.cms/gateway";
 
-describe("registerGatewayEndpoint (control preview proxy)", () => {
+describe("gateway preview proxy", () => {
     test("registers all five proxy methods", async () => {
         const { handlers } = await mountBan();
         expect([...handlers.keys()].sort()).toEqual(["DELETE", "GET", "PATCH", "POST", "PUT"]);
@@ -69,8 +68,7 @@ describe("registerGatewayEndpoint (control preview proxy)", () => {
         await seedProviders(gateway, [SECURED]);
         const secrets = new InMemorySecretStore();
         await secrets.set("API_KEY", "s3cr3t-token");
-        const { runner, handlers } = captureRunner();
-        registerGatewayEndpoint({ runner, gateway, deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) } });
+        const handlers = mountGateway(gateway, secrets);
 
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok", { status: 200 }));
         try {
@@ -87,8 +85,7 @@ describe("registerGatewayEndpoint (control preview proxy)", () => {
         const gateway = new InMemoryGatewayRepository();
         await seedProviders(gateway, [SECURED]);
         const secrets = new InMemorySecretStore(); // API_KEY absent
-        const { runner, handlers } = captureRunner();
-        registerGatewayEndpoint({ runner, gateway, deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) } });
+        const handlers = mountGateway(gateway, secrets);
 
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("x"));
         try {
@@ -122,8 +119,7 @@ describe("registerGatewayEndpoint (control preview proxy)", () => {
 
     test("no gateway configured → 501", async () => {
         const secrets = new InMemorySecretStore();
-        const { runner, handlers } = captureRunner();
-        registerGatewayEndpoint({ runner, gateway: null, deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) } });
+        const handlers = mountGateway(null, secrets);
         const res = await handlers.get("GET")!(new Request(`${URL_BASE}/ban/search?q=x`));
         expect(res.status).toBe(501);
     });

@@ -113,7 +113,8 @@ runner.group("/cms", (sub) => {
     const auth = new LocalAuthentication<CMS_ROLES>(sub, { ... });
     new ControlCms(sub, repo, auth, {},
         cache, secrets, filesMetadata, filesBlob,
-        users, identityProviders, pats);
+        users, identityProviders, pats, credentials,
+        gateway, analytics, roles, { local: auth });
 });
 
 new DeliveryCms({ runner, repository: repo, cache });
@@ -136,6 +137,11 @@ new ControlCms(
     users?: UsersRepository<CMS_ROLES>,
     identityProviders?: IdentityProviderRepository,
     pats?: PatRepository,
+    credentials?: LocalCredentialStore,
+    gateway?: GatewayRepository,
+    analytics?: AnalyticsStore,
+    roles?: RolesRepository,
+    authBackends?: { local?: LocalAuthentication<CMS_ROLES>; oidc?: OidcAuthentication<CMS_ROLES> },
 )
 ```
 

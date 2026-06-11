@@ -6,10 +6,10 @@ import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
 import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
-import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
-import { registerFilesEndpoint } from "@bernouy/cms-files";
-import { registerStyleEndpoint } from "@bernouy/cms-content";
-import { registerImageVariantEndpoint } from "@bernouy/cms-files";
+import { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "@bernouy/cms-gateway";
+import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE, filesPrefix, imageVariantPrefix, serveFilesRequest, serveVariantRequest } from "@bernouy/cms-files";
+import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
+import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
 
 /**
@@ -43,23 +43,44 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     runner.addEndpoint("GET", "/robots.txt",  (req) => RobotsServer (req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));
 
-    // Shared `.cms/*` registrars — Control mounts the same three, admin-guarded.
+    // Shared `.cms/*` handlers — Control mounts the same three, admin-guarded.
     // `generateStyleEntry` is the same producer `resolveAssets` uses for the
     // `?v=<hash>` link, so served bytes match. Gateway is public + unwired here
     // (no `deps.resolveSecret`) → a `secret`-sourced header yields a clean 500;
     // an unconfigured gateway yields 501.
-    registerStyleEndpoint({ runner, cache: delivery.cache, repository: delivery.repository });
-    registerFilesEndpoint({ runner, metadata: delivery.filesMetadata, blob: delivery.filesBlob });
-    registerGatewayEndpoint({ runner, gateway: delivery.gateway });
+    runner.addEndpoint("GET", "/.cms/style", (req) =>
+        cachedResponseAsync(
+            req,
+            P9R_CACHE.STYLE,
+            delivery.cache,
+            () => generateStyleEntry(delivery.repository),
+            publicAssetCacheControl(req),
+        ));
+
+    runner.group(CMS_FILES_ROUTE, (filesRunner) => {
+        const prefix = filesPrefix(runner.basePath);
+        filesRunner.setDefaultEndpoint("GET", (req) =>
+            serveFilesRequest({ metadata: delivery.filesMetadata, blob: delivery.filesBlob }, req, { prefix }));
+    });
+
+    runner.group(CMS_GATEWAY_ROUTE, (proxyRunner) => {
+        const prefix = gatewayPrefix(runner.basePath);
+        for (const method of GATEWAY_PROXY_METHODS) {
+            proxyRunner.setDefaultEndpoint(method, (req) =>
+                handleGatewayRequest(delivery.gateway, req, { prefix }));
+        }
+    });
 
     // Responsive image variants at `/.cms/img/<id>/<width>.webp` — mounted only
     // when a variant store is wired (else the renderer just serves originals).
     if (delivery.variantStoreOrNull && delivery.filesMetadataOrNull && delivery.filesBlobOrNull) {
-        registerImageVariantEndpoint({
-            runner,
-            metadata:     delivery.filesMetadata,
-            sourceBlob:   delivery.filesBlob,
-            variantStore: delivery.variantStoreOrNull,
+        runner.group(CMS_IMAGE_VARIANT_ROUTE, (imgRunner) => {
+            const prefix = imageVariantPrefix(runner.basePath);
+            imgRunner.setDefaultEndpoint("GET", (req) => serveVariantRequest({
+                metadata:     delivery.filesMetadata,
+                sourceBlob:   delivery.filesBlob,
+                variantStore: delivery.variantStoreOrNull!,
+            }, req, { prefix }));
         });
     }
 

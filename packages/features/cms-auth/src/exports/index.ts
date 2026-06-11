@@ -3,8 +3,8 @@
  *
  * Surface intentionally narrow: the auth chain (LocalAuth + OidcAuth + signed
  * session cookie + PAT verification), the membership / identity-provider /
- * credential stores, and the page renderers (login, forbidden)
- * + middleware (authGuard) the host runtime needs to gate admin surfaces.
+ * credential stores, and the auth handlers + middleware the host surface needs
+ * to gate admin surfaces.
  *
  * The web component `<cms-login-methods>` lives under the `./components`
  * subpath so consumers can import it into their browser bundle without
@@ -48,12 +48,14 @@ export { InMemoryLocalCredentialStore }       from "cms-auth/default-implementat
 export { InMemoryPatRepository }              from "cms-auth/default-implementation/memory/InMemoryPatRepository";
 export { InMemoryAuthentication, type InMemoryAuthConfig } from "cms-auth/default-implementation/memory/InMemoryAuthentication";
 
-// ── HTTP (mountable by surfaces) ───────────────────────────────────────
+// ── HTTP handlers (mounted by surfaces) ────────────────────────────────
 export {
-    registerAuthRoutes,
-    registerAuthMethodsRoute,
-    type AuthRoutesConfig,
+    AUTH_ROUTES,
+    localLoginHandler,
+    localLogoutHandler,
+    oidcLoginHandler,
+    oidcCallbackHandler,
+    authMethodsHandler,
     type AuthMethodsRoutesConfig,
-} from "cms-auth/http/registerAuthRoutes";
-export { renderLoginPage }                                   from "cms-auth/http/loginPage";
+} from "cms-auth/http/authHandlers";
 export { createAuthGuard, type AuthGuardContext }            from "cms-auth/http/authGuard";

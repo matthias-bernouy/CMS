@@ -10,6 +10,14 @@ function joinBase(base: string, path: string): string {
     return `${b}${path}`;
 }
 
+export function filesPrefix(basePath: string): string {
+    return `${joinBase(basePath, CMS_FILES_ROUTE)}/`;
+}
+
+export function imageVariantPrefix(basePath: string): string {
+    return `${joinBase(basePath, CMS_IMAGE_VARIANT_ROUTE)}/`;
+}
+
 export function cmsFilesByIdPath(id: string): string {
     return `${CMS_FILES_BY_ID_ROUTE}/${encodeURIComponent(id)}`;
 }

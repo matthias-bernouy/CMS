@@ -35,8 +35,7 @@ const notFound = () => new Response("Not found", { status: 404 });
 
 /**
  * Serve a file's bytes. Shared by Control (`<basePath>/.cms/files/*`,
- * admin-guarded) and Delivery (public): both mount a `runner.group("/.cms/files",
- * …)` whose default GET delegates here. `opts.prefix` is the absolute mount
+ * admin-guarded) and Delivery (public). `opts.prefix` is the absolute mount
  * prefix to strip (`${basePath}/.cms/files/`). Two address forms share this one
  * handler (no route-precedence dependency):
  *

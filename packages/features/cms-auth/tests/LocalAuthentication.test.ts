@@ -1,8 +1,7 @@
 import { describe, test, expect } from "bun:test";
-import type { Runner } from "@bernouy/http-runner";
 import { SignedCookieCodec } from "@bernouy/cms-auth";
 import { LocalAuthentication } from "cms-auth/default-implementation/LocalAuthentication";
-import { registerAuthRoutes } from "cms-auth/http/registerAuthRoutes";
+import { localLoginHandler } from "cms-auth/http/authHandlers";
 import { SubjectResolver } from "cms-auth/core/SubjectResolver";
 import { InMemoryUsersRepository } from "cms-auth/default-implementation/memory/InMemoryUsersRepository";
 import { InMemoryLocalCredentialStore } from "cms-auth/default-implementation/memory/InMemoryLocalCredentialStore";
@@ -12,19 +11,7 @@ import { InMemoryRateLimiter } from "@bernouy/rate-limiter";
 type Role = "admin" | "user";
 type Handler = (req: Request) => Promise<Response> | Response;
 
-/** Captures the handlers registerAuthRoutes registers on its runner. */
-function captureRunner() {
-    const routes: Record<string, Handler> = {};
-    const runner = {
-        group(_prefix: string, cb: (r: { addEndpoint: (m: string, p: string, h: Handler) => void }) => void) {
-            cb({ addEndpoint: (m, p, h) => { routes[`${m} ${p}`] = h; } });
-        },
-    } as unknown as Runner;
-    return { runner, routes };
-}
-
 function setup(opts: { rateLimit?: InMemoryRateLimiter } = {}) {
-    const { runner, routes } = captureRunner();
     const users = new InMemoryUsersRepository<Role>();
     const resolver = new SubjectResolver<Role>(users, "user");
     const credentials = new InMemoryLocalCredentialStore();
@@ -39,7 +26,9 @@ function setup(opts: { rateLimit?: InMemoryRateLimiter } = {}) {
         defaultHome: "/cms/t/admin/pages",
         ...(opts.rateLimit ? { rateLimit: opts.rateLimit } : {}),
     });
-    registerAuthRoutes(runner, { basePath: "/auth", local: auth });
+    const routes: Record<string, Handler> = {
+        "POST /login": (req) => localLoginHandler(auth, req),
+    };
     return { auth, routes, users, resolver, credentials, pats, codec };
 }
 

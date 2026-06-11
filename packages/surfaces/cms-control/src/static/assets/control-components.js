@@ -11728,6 +11728,10 @@ cms-endpoints-input .ep-add:hover {
   }
   customElements.define("cms-event-toast", CmsEventToast);
 
+  // ../../features/cms-auth/src/core/validation.ts
+  function isBuiltinProvider(kind) {
+    return kind === "local";
+  }
   // ../../features/cms-auth/src/components/LoginMethods/LoginMethods.ts
   class CmsLoginMethods extends HTMLElement {
     async connectedCallback() {
@@ -11786,7 +11790,7 @@ cms-endpoints-input .ep-add:hover {
       return this.getAttribute("emit");
     }
     get _builtin() {
-      return this._kind === "local";
+      return isBuiltinProvider(this._kind);
     }
     _render() {
       const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });

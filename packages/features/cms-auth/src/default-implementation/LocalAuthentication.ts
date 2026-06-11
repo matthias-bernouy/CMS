@@ -14,7 +14,7 @@ export type LocalAuthConfig<Role extends string> = {
     /** Page to send unauthenticated users to (used by `buildLoginUrl`). Full path. */
     loginPagePath:     string;
     /** Full path of the logout endpoint (used by `buildLogoutUrl`) — must match
-     *  where `registerAuthRoutes` mounts it. */
+     *  where the surface mounts `localLogoutHandler`. */
     logoutPath:        string;
     credentials:       LocalCredentialStore;
     resolver:          SubjectResolver<Role>;
@@ -36,8 +36,8 @@ export type LocalAuthConfig<Role extends string> = {
 /**
  * Credential-style `Authentication` backend over a `LocalCredentialStore`
  * (email/password). Passive: exposes the `login`/`logout` handlers — the
- * surface or runtime mounts them via `registerAuthRoutes` (http/), so the
- * caller decides paths, runner, and middlewares.
+ * surface mounts them through cms-auth's HTTP handlers, so the caller decides
+ * paths, runner, and middlewares.
  *
  * The CMS terminates the session: on a successful `verify`, the identity flows
  * through `SubjectResolver` (authn → authz) and a signed session cookie is
@@ -84,7 +84,7 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         return this.cfg.resolver.fromSub(payload.sub);
     }
 
-    /** `POST <basePath>/login` handler — mounted by `registerAuthRoutes`. */
+    /** `POST <basePath>/login` handler — mounted by the surface. */
     async login(req: Request): Promise<Response> {
         const { email, password, returnTo } = await readCredentials(req);
         const back = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : "";
@@ -113,7 +113,7 @@ export class LocalAuthentication<Role extends string = string> implements Authen
         });
     }
 
-    /** `GET <basePath>/logout` handler — mounted by `registerAuthRoutes`. */
+    /** `GET <basePath>/logout` handler — mounted by the surface. */
     logout(req: Request): Response {
         const dest = sanitizeReturnTo(new URL(req.url).searchParams.get("returnTo"), this.cfg.defaultHome ?? "/");
         return new Response(null, {

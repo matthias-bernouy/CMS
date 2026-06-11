@@ -1,27 +1,43 @@
-import type { Authentication } from "@bernouy/cms-auth";
+import type { Authentication, LocalAuthentication, OidcAuthentication } from "@bernouy/cms-auth";
 import type { Runner } from "@bernouy/http-runner";
-import { redirect } from "@bernouy/http-runner";
+import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
 import type { CmsRepository } from "@bernouy/cms-content";
 import type { Cache } from "@bernouy/http-runner";
 import { InMemoryCache } from "@bernouy/http-runner";
 import type { SecretStore } from "@bernouy/cms-secrets";
 import { InMemorySecretStore, ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
-import { registerFilesEndpoint } from "@bernouy/cms-files";
-import { registerStyleEndpoint } from "@bernouy/cms-content";
+import { CMS_FILES_ROUTE, filesPrefix, serveFilesRequest } from "@bernouy/cms-files";
+import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import type { CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { CmsFilesBlobStore } from "@bernouy/cms-files";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/cms-auth";
-import { createAuthGuard, registerAuthMethodsRoute, renderLoginPage } from "@bernouy/cms-auth";
+import {
+    AUTH_ROUTES,
+    authMethodsHandler,
+    createAuthGuard,
+    localLoginHandler,
+    localLogoutHandler,
+    oidcCallbackHandler,
+    oidcLoginHandler,
+} from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import { InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
-import { registerGatewayEndpoint } from "@bernouy/cms-gateway";
-import { registerAnalyticsApi, type AnalyticsStore } from "@bernouy/cms-analytics";
+import { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "@bernouy/cms-gateway";
+import {
+    ANALYTICS_ROUTES,
+    analyticsBreakdownHandler,
+    analyticsSummaryHandler,
+    analyticsTimeseriesHandler,
+    analyticsTopPagesHandler,
+    type AnalyticsStore,
+} from "@bernouy/cms-analytics";
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path"
 import type { CspExtras } from "@bernouy/http-runner";
+import { renderForbiddenPage, renderLoginPage } from "cms-control/core/auth/authPages";
 
 type Configuration = {
     /**
@@ -33,6 +49,11 @@ type Configuration = {
      */
     deliveryUrl?: string;
 }
+
+type ControlAuthBackends = {
+    local?: LocalAuthentication<CMS_ROLES>;
+    oidc?:  OidcAuthentication<CMS_ROLES>;
+};
 
 /**
  * Admin + API layer of the CMS. Mounts under whatever `basePath` the runner
@@ -85,6 +106,7 @@ export class ControlCms {
         gateway?: GatewayRepository,
         analytics?: AnalyticsStore,
         roles?: RolesRepository,
+        authBackends: ControlAuthBackends = {},
     ){
         this.configuration = configuration;
         this._auth = auth;
@@ -102,17 +124,35 @@ export class ControlCms {
         this._analytics = analytics ?? null;
         this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
 
-        const authGuard = createAuthGuard<CMS_ROLES>({ basePath: this.basePath, auth: this._auth, requiredRole: "admin" });
+        const authGuard = createAuthGuard<CMS_ROLES>({
+            basePath:     this.basePath,
+            auth:         this._auth,
+            requiredRole: "admin",
+            onForbidden:  (_req, ctx) => renderForbiddenPage(ctx.basePath, ctx.logoutUrl),
+        });
 
         // Unguarded: the standalone login page. The guard redirects
         // unauthenticated users here via `buildLoginUrl`; registered before the
         // guarded groups so it is reachable without a session (first-match-wins).
         runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, this.basePath));
 
-        registerAuthMethodsRoute(runner, {
-            basePath:       "/auth",
-            publicBasePath: `${this.basePath}/auth`,
-            identityProviders: this._identityProviders,
+        runner.group(AUTH_ROUTES.base, (authRunner) => {
+            const supportedKinds: ("local" | "oidc")[] = [];
+            if (authBackends.local) {
+                supportedKinds.push("local");
+                authRunner.addEndpoint("POST", AUTH_ROUTES.login,  (req) => localLoginHandler(authBackends.local!, req));
+                authRunner.addEndpoint("GET",  AUTH_ROUTES.logout, (req) => localLogoutHandler(authBackends.local!, req));
+            }
+            if (authBackends.oidc) {
+                supportedKinds.push("oidc");
+                authRunner.addEndpoint("GET", AUTH_ROUTES.oidcLogin,    (req) => oidcLoginHandler(authBackends.oidc!, req));
+                authRunner.addEndpoint("GET", AUTH_ROUTES.oidcCallback, (req) => oidcCallbackHandler(authBackends.oidc!, req));
+            }
+            authRunner.addEndpoint("GET", AUTH_ROUTES.methods, () => authMethodsHandler({
+                publicBasePath:    `${this.basePath}${AUTH_ROUTES.base}`,
+                identityProviders: this._identityProviders,
+                supportedKinds,
+            }));
         });
 
         // Bare tenant root / `/admin` land on the Pages list instead of the
@@ -121,20 +161,39 @@ export class ControlCms {
         runner.addEndpoint("GET", "/",      toPages, [authGuard]);
         runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
 
-        // Shared `.cms/*` mounts — the SAME registrars Delivery calls, here
+        // Shared `.cms/*` mounts — the same feature handlers Delivery calls, here
         // admin-guarded: the editor preview + media library + gateway preview run
         // in the admin's same-origin session, so the guard passes. Registered
         // before the `/` and `/api` groups. Control alone wires the gateway's
         // `resolveSecret` so `secret`-sourced headers resolve (delivery leaves it
         // unwired → clean 500).
-        registerGatewayEndpoint({ runner, gateway: this._gateway, deps: { resolveSecret: createSecretResolver(this._secrets) }, middlewares: [authGuard] });
-        registerFilesEndpoint({ runner, metadata: this.filesMetadata, blob: this.filesBlob, middlewares: [authGuard] });
-        registerStyleEndpoint({
-            runner,
-            cache:       this._cache,
-            repository:  this._repository,
-            middlewares: [authGuard],
-        });
+        const resolveSecret = createSecretResolver(this._secrets);
+        runner.group(CMS_GATEWAY_ROUTE, (proxyRunner) => {
+            const prefix = gatewayPrefix(runner.basePath);
+            for (const method of GATEWAY_PROXY_METHODS) {
+                proxyRunner.setDefaultEndpoint(method, (req) =>
+                    handleGatewayRequest(this._gateway, req, {
+                        prefix,
+                        deps: { resolveSecret },
+                    }));
+            }
+        }, [authGuard]);
+
+        runner.group(CMS_FILES_ROUTE, (filesRunner) => {
+            const prefix = filesPrefix(runner.basePath);
+            filesRunner.setDefaultEndpoint("GET", (req) =>
+                serveFilesRequest({ metadata: this.filesMetadata, blob: this.filesBlob }, req, { prefix }));
+        }, [authGuard]);
+
+        runner.addEndpoint("GET", "/.cms/style", (req) =>
+            cachedResponseAsync(
+                req,
+                P9R_CACHE.STYLE,
+                this._cache,
+                () => generateStyleEntry(this._repository),
+                publicAssetCacheControl(req),
+            ),
+        [authGuard]);
 
         runner.group("/", (staticRunner) => {
             serveStaticFolder(staticRunner, {
@@ -145,10 +204,13 @@ export class ControlCms {
 
         runner.group("/api", (apiRunner) => {
             serveApi(apiRunner, join(__dirname, "./api"), this);
-            // Analytics read API lives in @bernouy/cms-analytics (lib-owned HTTP surface,
-            // like registerGatewayEndpoint) and mounts here → /api/analytics/* admin-guarded.
-            // Raw `_analytics` (not the throwing getter): skip the mount when unconfigured.
-            if (this._analytics) registerAnalyticsApi({ runner: apiRunner, store: this._analytics });
+            if (this._analytics) {
+                const analytics = this._analytics;
+                apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.summary,    (req) => analyticsSummaryHandler(analytics, req));
+                apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.timeseries, (req) => analyticsTimeseriesHandler(analytics, req));
+                apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.topPages,   (req) => analyticsTopPagesHandler(analytics, req));
+                apiRunner.addEndpoint("GET", ANALYTICS_ROUTES.breakdown,  (req) => analyticsBreakdownHandler(analytics, req));
+            }
         }, [authGuard]);
     }
 

@@ -23,5 +23,11 @@ export { InMemoryAnalyticsStore } from "../default-implementation/InMemoryAnalyt
 export { ValidatingAnalyticsStore, validateAnalyticsEvent, AnalyticsValidationError } from "../core/ValidatingAnalyticsStore";
 
 // ── HTTP API (mount in an app's admin-guarded group) ──
-export { registerAnalyticsApi } from "../http/registerAnalyticsApi";
+export {
+    ANALYTICS_ROUTES,
+    analyticsSummaryHandler,
+    analyticsTimeseriesHandler,
+    analyticsTopPagesHandler,
+    analyticsBreakdownHandler,
+} from "../http/analyticsHandlers";
 export { buildPageViewEvent } from "../core/buildPageViewEvent";

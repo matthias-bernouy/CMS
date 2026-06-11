@@ -44,8 +44,7 @@ export { resolveEndpoint, type ResolveResult } from "../core/resolveEndpoint";
 export { seedProviders, type SeedResult } from "../core/seedProviders";
 export { buildUpstreamUrl, extractPathParamNames, type BuildUpstream } from "../core/buildUpstreamUrl";
 export { executeEndpoint, type ExecutorDeps } from "../core/executeEndpoint";
-export { handleGatewayRequest } from "../http/handleGatewayRequest";
-export { registerGatewayEndpoint } from "../http/registerGatewayEndpoint";
+export { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "../http/handleGatewayRequest";
 
 // ── OpenAPI spec machinery (provider endpoint schemas) ────────────────
 export { parseSpec }      from "../core/openapi/parseSpec";

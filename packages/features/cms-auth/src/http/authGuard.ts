@@ -1,6 +1,5 @@
 import type { Authentication } from "cms-auth/interfaces/Authentication";
 import type { Middleware } from "@bernouy/http-runner";
-import { renderForbiddenPage } from "./forbiddenPage";
 
 /**
  * What `createAuthGuard` needs from the host runtime — kept narrow so any
@@ -12,6 +11,7 @@ export interface AuthGuardContext<Role extends string> {
     basePath:     string;
     auth:         Authentication<Role>;
     requiredRole: Role;
+    onForbidden?:       (req: Request, ctx: { basePath: string; logoutUrl: string }) => Response | Promise<Response>;
 }
 
 export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>): Middleware => {
@@ -64,7 +64,13 @@ export const createAuthGuard = <Role extends string>(ctx: AuthGuardContext<Role>
         }
         if (subject.role !== ctx.requiredRole) {
             if (url.pathname.startsWith(`${ctx.basePath}/api/`)) return new Response("Forbidden", { status: 403 });
-            return renderForbiddenPage(ctx.basePath, ctx.auth.buildLogoutUrl(`${ctx.basePath}/login`));
+            if (ctx.onForbidden) {
+                return ctx.onForbidden(req, {
+                    basePath:     ctx.basePath,
+                    logoutUrl:    ctx.auth.buildLogoutUrl(`${ctx.basePath}/login`),
+                });
+            }
+            return new Response("Forbidden", { status: 403 });
         }
 
         return await next();

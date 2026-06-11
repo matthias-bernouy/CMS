@@ -1,8 +1,6 @@
-import type { Runner } from "@bernouy/http-runner";
 import type { CmsFilesMetadataRepository } from "cms-files/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 import { variantKey } from "cms-files/core/imageVariants";
-import { CMS_IMAGE_VARIANT_ROUTE } from "cms-files/core/fileUrls";
 
 export type VariantServeDeps = {
     metadata:     CmsFilesMetadataRepository;
@@ -80,19 +78,4 @@ function imageResponse(body: ReadableStream<Uint8Array>, contentType: string, ca
     };
     if (length !== undefined) headers["Content-Length"] = String(length);
     return new Response(body, { headers });
-}
-
-/** Mount `<basePath>/.cms/img/<id>/<width>.webp` (public, Delivery-only). */
-export function registerImageVariantEndpoint(opts: {
-    runner:       Runner;
-    metadata:     CmsFilesMetadataRepository;
-    sourceBlob:   CmsFilesBlobStore;
-    variantStore: CmsFilesBlobStore;
-}): void {
-    const base   = opts.runner.basePath === "/" ? "" : opts.runner.basePath;
-    const prefix = `${base}${CMS_IMAGE_VARIANT_ROUTE}/`;
-    opts.runner.group(CMS_IMAGE_VARIANT_ROUTE, (imgRunner) => {
-        imgRunner.setDefaultEndpoint("GET", (req) => serveVariantRequest(
-            { metadata: opts.metadata, sourceBlob: opts.sourceBlob, variantStore: opts.variantStore }, req, { prefix }));
-    });
 }
