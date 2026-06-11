@@ -18,3 +18,10 @@ export class ContentConflictError extends Error {
         this.name = "ContentConflictError";
     }
 }
+
+export class DuplicateBlocTagError extends ContentConflictError {
+    constructor(tag: string) {
+        super(`Bloc with tag "${tag}" already exists`);
+        this.name = "DuplicateBlocTagError";
+    }
+}

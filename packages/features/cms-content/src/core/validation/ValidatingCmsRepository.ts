@@ -71,11 +71,15 @@ export class ValidatingCmsRepository implements CmsRepository {
     // ── Pass-through: page reads + non-content writes ──────────────────────
     getPage(path: string)    { return this.inner.getPage(path); }
     getAllPages()            { return this.inner.getAllPages(); }
+    getPublishedPage(path: string) { return this.inner.getPublishedPage(path); }
+    getPublishedPages()      { return this.inner.getPublishedPages(); }
     getPageById(id: string)  { return this.inner.getPageById(id); }
     deletePage(id: string)   { return this.inner.deletePage(id); }
     getLinks(): Promise<PageLink[]> { return this.inner.getLinks(); }
     getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]> { return this.inner.getPagesMetadata(opts); }
     getTemplatesMetadata()   { return this.inner.getTemplatesMetadata(); }
+    getTagCounts()           { return this.inner.getTagCounts(); }
+    getCategoryCounts(resource: "snippets" | "templates") { return this.inner.getCategoryCounts(resource); }
 
     // ── Pass-through: system (settings validated elsewhere) ────────────────
     getSystem(): Promise<TSystem> { return this.inner.getSystem(); }

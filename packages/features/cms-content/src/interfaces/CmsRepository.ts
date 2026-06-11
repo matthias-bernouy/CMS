@@ -25,6 +25,11 @@ export type PageMeta = {
     visible: boolean;
 }
 
+export type ValueCount = {
+    value: string;
+    count: number;
+}
+
 /**
  * Filter + sort for the admin Pages listing. Optional everywhere — an empty
  * query lists every page (title asc). Each implementation honours this the best
@@ -59,6 +64,8 @@ export interface CmsRepository extends ContentReader {
     // PAGE
     getPage(path: string): Promise<TPage | null>;
     getAllPages(): Promise<TPage[]>;
+    getPublishedPage(path: string): Promise<TPage | null>;
+    getPublishedPages(): Promise<TPage[]>;
     insertPage(path: string, title: string): Promise<void>;
     getPageById(id: string): Promise<TPage | null>;
     updatePage(page: Partial<TPage>): Promise<void>;
@@ -66,6 +73,8 @@ export interface CmsRepository extends ContentReader {
     getLinks(): Promise<PageLink[]>
     getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]>
     getTemplatesMetadata(): Promise<{id: string, identifier: string, name: string, category: string, createdAt: string}[]>
+    getTagCounts(): Promise<ValueCount[]>;
+    getCategoryCounts(resource: "snippets" | "templates"): Promise<ValueCount[]>;
 
 
     // SYSTEM

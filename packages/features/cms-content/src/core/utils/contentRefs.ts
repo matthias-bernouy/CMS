@@ -9,6 +9,8 @@
  * write-time gate so both end up rejecting the same set of references.
  */
 
+import { escapeRegex } from "cms-content/core/utils/escapeRegex";
+
 /**
  * Custom-element prefixes reserved by the system — never valid bloc tags. Single
  * source of truth shared by `extractRefs` (render-time ref extraction),
@@ -35,4 +37,8 @@ export function extractRefs(html: string): { blocs: Set<string>; snippets: Set<s
         blocs.add(tag);
     }
     return { blocs, snippets };
+}
+
+export function snippetRefPattern(identifier: string): string {
+    return `<${SNIPPET_TAG}\\b[^>]*\\bidentifier\\s*=\\s*["']${escapeRegex(identifier)}["']`;
 }

@@ -71,4 +71,16 @@ describe("hardenStoredHtml — preserves legitimate content", () => {
         expect(hardenStoredHtml(`<a href="mailto:a@b.co">l</a>`)).toContain("mailto:a@b.co");
         expect(hardenStoredHtml(`<img src="data:image/png;base64,iVBORw0KGgo=">`)).toContain("data:image/png");
     });
+
+    test("keeps safe SVG links and data:image resources", () => {
+        const out = hardenStoredHtml(`<svg><a href="/x"><rect></rect></a><image href="data:image/png;base64,iVBORw0KGgo="></image></svg>`);
+        expect(out.toLowerCase()).toContain("<a");
+        expect(out).toContain('href="/x"');
+        expect(out).toContain("data:image/png");
+    });
+
+    test("drops protocol-relative SVG resource URLs", () => {
+        const out = hardenStoredHtml(`<svg><image href="//attacker.example/track.svg"></image></svg>`);
+        expect(out).not.toContain("//attacker.example");
+    });
 });

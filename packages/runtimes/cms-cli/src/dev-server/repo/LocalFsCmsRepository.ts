@@ -1,4 +1,5 @@
 import type { CmsRepository, BlocListItemResponse, PageLink, PagesQuery } from "@bernouy/cms-content";
+import { countValues, isPublishedPage, normalizeTags } from "@bernouy/cms-content";
 import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "@bernouy/cms-content";
 import type { BuiltBloc } from "../build";
 import { PagesStore } from "./pages";
@@ -43,12 +44,28 @@ export class LocalFsCmsRepository implements CmsRepository {
     getPage(path: string):                     Promise<TPage | null> { return this._pages.getByPath(path); }
     getPageById(id: string):                   Promise<TPage | null> { return this._pages.getById(id); }
     getAllPages():                             Promise<TPage[]>      { return this._pages.getAll(); }
+    async getPublishedPage(path: string): Promise<TPage | null> {
+        const page = await this.getPage(path);
+        return isPublishedPage(page) ? page : null;
+    }
+    async getPublishedPages(): Promise<TPage[]> {
+        return (await this.getAllPages()).filter(isPublishedPage);
+    }
     insertPage(path: string, title: string):   Promise<void>         { return this._pages.insert(path, title); }
     updatePage(page: Partial<TPage>):          Promise<void>         { return this._pages.update(page); }
     deletePage(id: string):                    Promise<void>         { return this._pages.delete(id); }
     getLinks():                                Promise<PageLink[]>   { return this._pages.links(); }
     getPagesMetadata(opts?: PagesQuery) { return this._pages.metadata(opts); }
     getTemplatesMetadata() { return this._templates.metadata(); }
+    async getTagCounts() {
+        return countValues((await this._pages.getAll()).flatMap(p => normalizeTags((p as { tags: unknown }).tags)));
+    }
+    async getCategoryCounts(resource: "snippets" | "templates") {
+        const values = resource === "snippets"
+            ? (await this._snippets.getAll()).map(s => s.category)
+            : (await this._templates.getAll()).map(t => t.category);
+        return countValues(values);
+    }
 
     // ── System ──
     getSystem():                               Promise<TSystem> { return this._system.get(); }

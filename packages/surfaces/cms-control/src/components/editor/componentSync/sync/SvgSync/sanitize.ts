@@ -1,3 +1,5 @@
+import { sanitizeSvgTree } from "@bernouy/cms-content";
+
 /**
  * Whitelist of SVG elements safe to inline in the editor / public site.
  * Everything outside this list is stripped — `<script>`, `<foreignObject>`,
@@ -35,6 +37,7 @@ export function sanitizeSvg(raw: string): string {
     if (!root || root.tagName.toLowerCase() !== "svg") {
         throw new Error(`Expected <svg> root element, got <${root?.tagName ?? "null"}>.`);
     }
+    sanitizeSvgTree(root);
     walk(root);
     return new XMLSerializer().serializeToString(root);
 }
@@ -46,21 +49,7 @@ function walk(el: Element): void {
     }
     for (const attr of Array.from(el.attributes)) {
         const name = attr.name.toLowerCase();
-        if (name.startsWith("on")) {
-            el.removeAttribute(attr.name);
-            continue;
-        }
-        if (name === "href" || name === "xlink:href") {
-            const v = attr.value.trim().toLowerCase();
-            const safe =
-                v.startsWith("#") ||
-                v.startsWith("/") ||
-                v.startsWith("./") ||
-                v.startsWith("../") ||
-                v.startsWith("http:") ||
-                v.startsWith("https:");
-            if (!safe) el.removeAttribute(attr.name);
-        }
+        if (name.startsWith("on")) el.removeAttribute(attr.name);
     }
     for (const child of Array.from(el.children)) walk(child);
 }

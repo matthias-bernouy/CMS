@@ -1,7 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { CacheEntry } from "@bernouy/http-runner";
-import { cachedResponseAsync, compress, publicAssetCacheControl } from "@bernouy/http-runner";
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
+import { generateBlocEntry, P9R_CACHE } from "@bernouy/cms-content";
 
 /**
  * Serves a bloc's compiled view JS so the editor preview can register the
@@ -15,12 +14,6 @@ import { P9R_CACHE } from "@bernouy/cms-content";
  * the two caches stay in sync through the bloc-upload invalidation path
  * (`bloc.post.ts` → `cache.delete(P9R_CACHE.bloc(tag))`).
  */
-async function generateBlocEntry(tag: string, cms: ControlCms): Promise<CacheEntry> {
-    const js = await cms.repository.getBlocViewJS(tag);
-    if (!js) throw new Error(`Bloc not found: ${tag}`);
-    return compress(js, "text/javascript");
-}
-
 export default async function BlocGet(req: Request, cms: ControlCms) {
     const url = new URL(req.url);
     const tag = url.searchParams.get("tag");
@@ -30,7 +23,7 @@ export default async function BlocGet(req: Request, cms: ControlCms) {
         req,
         P9R_CACHE.bloc(tag),
         cms.cache,
-        () => generateBlocEntry(tag, cms),
+        () => generateBlocEntry(tag, cms.repository),
         publicAssetCacheControl(req),
     ).catch(() => Response.error());
 }

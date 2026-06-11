@@ -1,10 +1,12 @@
 import { describe, test, expect, mock } from "bun:test";
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { DuplicateBlocTagError, P9R_CACHE } from "@bernouy/cms-content";
 import type { TBloc } from "@bernouy/cms-content";
 
 // Stub prepare_bloc so tests never touch the filesystem or run Bun.build.
 // Must be registered before importBloc is imported.
+const realBlocCompile = await import("@bernouy/cms-bloc-compile");
 mock.module("@bernouy/cms-bloc-compile", () => ({
+    ...realBlocCompile,
     prepare_bloc: async (
         _view: File,
         _editor: File | null,
@@ -28,7 +30,7 @@ type CreateBlocCall = { bloc: TBloc };
 
 function makeSystem(opts: {
     existingTags?: string[];
-    throwOnCreate?: { code: number };
+    throwOnCreate?: unknown;
 } = {}) {
     const createBlocCalls: CreateBlocCall[] = [];
     const deleteSpy: string[] = [];
@@ -108,8 +110,8 @@ describe("bloc.post", () => {
         expect(createBlocCalls).toHaveLength(0);
     });
 
-    test("409 on race: createBloc throws Mongo duplicate-key (11000)", async () => {
-        const { cms } = makeSystem({ throwOnCreate: { code: 11000 } });
+    test("409 on race: createBloc throws duplicate bloc domain error", async () => {
+        const { cms } = makeSystem({ throwOnCreate: new DuplicateBlocTagError("my-bloc") });
         const res = await importBloc(
             makeRequest({ name: "My", tag: "my-bloc", group: "g", viewJS: viewFile() }),
             cms

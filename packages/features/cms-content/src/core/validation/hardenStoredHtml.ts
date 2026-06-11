@@ -1,5 +1,6 @@
 import { parseHTML } from "linkedom";
 import { sanitizeDomTree } from "cms-content/core/utils/sanitizeDomTree";
+import { sanitizeSvgTree } from "cms-content/core/utils/sanitizeSvgTree";
 
 /**
  * Server-side hardening for stored rich-text/page HTML, applied at write time so
@@ -15,5 +16,6 @@ export function hardenStoredHtml(html: string): string {
     const { document } = parseHTML("<!DOCTYPE html><html><head></head><body></body></html>");
     document.body.innerHTML = html;
     sanitizeDomTree(document.body);
+    sanitizeSvgTree(document.body);
     return document.body.innerHTML;
 }

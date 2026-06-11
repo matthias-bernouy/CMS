@@ -5,9 +5,12 @@ import type { TPage } from "cms-content/interfaces/pages";
 import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TSystem } from "cms-content/interfaces/settings";
 import type { TTemplate } from "cms-content/interfaces/templates";
-import { DEFAULT_SHELL } from "cms-content/interfaces/settings";
 import { filterAndSortPages } from "cms-content/core/pagesQuery";
-import { escapeRegex } from "cms-content/core/utils/escapeRegex";
+import { snippetRefPattern } from "cms-content/core/utils/contentRefs";
+import { defaultSystem, mergeSystemUpdate } from "cms-content/core/system";
+import { countValues, normalizeTags } from "cms-content/core/counts";
+import { DuplicateBlocTagError } from "cms-content/core/errors";
+import { isPublishedPage } from "cms-content/core/publication";
 
 /**
  * In-memory implementation of `CmsRepository` for local dev and tests. No
@@ -33,7 +36,7 @@ export class InMemoryCmsRepository implements CmsRepository {
 
     async createBloc(bloc: TBloc): Promise<TBloc> {
         if (this._blocs.has(bloc.id)) {
-            throw new Error(`Bloc with id "${bloc.id}" already exists`);
+            throw new DuplicateBlocTagError(bloc.id);
         }
         this._blocs.set(bloc.id, { ...bloc });
         return bloc;
@@ -79,6 +82,15 @@ export class InMemoryCmsRepository implements CmsRepository {
 
     async getAllPages(): Promise<TPage[]> {
         return Array.from(this._pages.values()).map(p => ({ ...p }));
+    }
+
+    async getPublishedPage(path: string): Promise<TPage | null> {
+        const page = await this.getPage(path);
+        return isPublishedPage(page) ? page : null;
+    }
+
+    async getPublishedPages(): Promise<TPage[]> {
+        return (await this.getAllPages()).filter(isPublishedPage);
     }
 
     async insertPage(path: string, title: string): Promise<void> {
@@ -148,6 +160,19 @@ export class InMemoryCmsRepository implements CmsRepository {
         }));
     }
 
+    async getTagCounts() {
+        return countValues(
+            Array.from(this._pages.values()).flatMap(p => normalizeTags((p as { tags: unknown }).tags)),
+        );
+    }
+
+    async getCategoryCounts(resource: "snippets" | "templates") {
+        const values = resource === "snippets"
+            ? Array.from(this._snippets.values()).map(s => s.category)
+            : Array.from(this._templates.values()).map(t => t.category);
+        return countValues(values);
+    }
+
     private _findPageEntryById(id: string): [string, TPage] | null {
         for (const [path, page] of this._pages) {
             if (page.id === id) return [path, page];
@@ -162,19 +187,7 @@ export class InMemoryCmsRepository implements CmsRepository {
     }
 
     async updateSystem(update: Partial<TSystem>): Promise<TSystem> {
-        // Section-level shallow merge: top-level scalars overwrite, top-level
-        // object sections (`site`, `editor`, `security`, `roles`) deep-merge
-        // one level. Mirrors the Mongo provider's behaviour.
-        for (const [section, value] of Object.entries(update) as [keyof TSystem, unknown][]) {
-            if (section === "initializationStep") {
-                this._system.initializationStep = value as number;
-            } else if (typeof value === "object" && value !== null) {
-                (this._system as any)[section] = {
-                    ...(this._system as any)[section],
-                    ...value,
-                };
-            }
-        }
+        this._system = mergeSystemUpdate(this._system, update);
         return this.getSystem();
     }
 
@@ -285,31 +298,9 @@ export class InMemoryCmsRepository implements CmsRepository {
     }
 
     async findPagesUsingSnippet(identifier: string): Promise<TPage[]> {
-        const escaped = escapeRegex(identifier);
-        const regex = new RegExp(
-            `<w13c-snippet[^>]*\\bidentifier\\s*=\\s*["']${escaped}["']`,
-            "i",
-        );
+        const regex = new RegExp(snippetRefPattern(identifier), "i");
         return Array.from(this._pages.values())
             .filter(p => regex.test(p.content ?? ""))
             .map(p => ({ ...p }));
     }
-}
-
-function defaultSystem(): TSystem {
-    return {
-        initializationStep: 0,
-        site: {
-            name:        "",
-            favicon:     "",
-            visible:     true,
-            host:        "",
-            language:    "",
-            theme:       "",
-            notFound:    null,
-            serverError: null,
-        },
-        editor:   { layoutCategory: "", shell: DEFAULT_SHELL },
-        security: { connectExtras: [], mediaExtras: [] },
-    };
 }

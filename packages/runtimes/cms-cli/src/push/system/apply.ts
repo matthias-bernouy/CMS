@@ -1,5 +1,6 @@
 import type { SystemPayload } from "./scan";
 import type { TPageRef } from "@bernouy/cms-content";
+import { pageRefToString } from "@bernouy/cms-content";
 
 const HEADERS_JSON = (token: string) => ({
     "Authorization": `Bearer ${token}`,
@@ -44,10 +45,6 @@ export function flatten(payload: SystemPayload): Record<string, string> {
         if (typeof v === "string") body[`editor.${k}`] = v;
     }
     return body;
-}
-
-function pageRefToString(ref: TPageRef | undefined): string {
-    return ref && typeof ref === "object" && "path" in ref ? ref.path : "";
 }
 
 export async function postSystem(adminBase: URL, token: string, body: Record<string, string>): Promise<void> {

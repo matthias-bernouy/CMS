@@ -6,8 +6,12 @@ import type { TPage } from "cms-content/interfaces/pages";
 import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TSystem } from "cms-content/interfaces/settings";
 import type { TTemplate } from "cms-content/interfaces/templates";
-import { DEFAULT_SHELL } from "cms-content/interfaces/settings";
 import { escapeRegex } from "cms-content/core/utils/escapeRegex";
+import { snippetRefPattern } from "cms-content/core/utils/contentRefs";
+import { defaultSystem, mergeSystemUpdate } from "cms-content/core/system";
+import { countValues, normalizeTags } from "cms-content/core/counts";
+import { DuplicateBlocTagError } from "cms-content/core/errors";
+import { isPublishedPage } from "cms-content/core/publication";
 
 /**
  * MongoDB implementation of `CmsRepository`. Designed for small/medium
@@ -24,9 +28,8 @@ import { escapeRegex } from "cms-content/core/utils/escapeRegex";
  *   - The model's `id: string` is stored as Mongo's `_id` (not a separate
  *     field, not an `ObjectId`). On reads we project `_id` back to `id` so
  *     the public contract stays unchanged.
- *   - For blocs, `_id` IS the custom-element tag — so `createBloc` on a
- *     duplicate tag throws Mongo error code `11000`, which `bloc.post.ts`
- *     inspects to map to a 409. Don't swallow it here.
+ *   - For blocs, `_id` IS the custom-element tag; duplicate tags are surfaced
+ *     as `DuplicateBlocTagError` so HTTP surfaces do not inspect Mongo codes.
  *   - System is a singleton: a single document with `_id: "singleton"`,
  *     created lazily on first read.
  */
@@ -82,7 +85,12 @@ export class MongoCmsRepository implements CmsRepository {
     // ── Blocs ──
 
     async createBloc(bloc: TBloc): Promise<TBloc> {
-        await this.blocs.insertOne(toDoc(bloc) as OptionalUnlessRequiredId<BlocDoc>);
+        try {
+            await this.blocs.insertOne(toDoc(bloc) as OptionalUnlessRequiredId<BlocDoc>);
+        } catch (e) {
+            if ((e as { code?: number }).code === 11000) throw new DuplicateBlocTagError(bloc.id);
+            throw e;
+        }
         return bloc;
     }
 
@@ -142,6 +150,15 @@ export class MongoCmsRepository implements CmsRepository {
     async getAllPages(): Promise<TPage[]> {
         const docs = await this.pages.find().toArray();
         return docs.map(d => fromPageDoc(d)!);
+    }
+
+    async getPublishedPage(path: string): Promise<TPage | null> {
+        const page = await this.getPage(path);
+        return isPublishedPage(page) ? page : null;
+    }
+
+    async getPublishedPages(): Promise<TPage[]> {
+        return (await this.getAllPages()).filter(isPublishedPage);
     }
 
     async insertPage(path: string, title: string): Promise<void> {
@@ -225,6 +242,17 @@ export class MongoCmsRepository implements CmsRepository {
         }));
     }
 
+    async getTagCounts() {
+        const docs = await this.pages.find({}, { projection: { tags: 1 } }).toArray();
+        return countValues(docs.flatMap(d => normalizeTags((d as { tags: unknown }).tags)));
+    }
+
+    async getCategoryCounts(resource: "snippets" | "templates") {
+        const collection = resource === "snippets" ? this.snippets : this.templates;
+        const docs = await collection.find({}, { projection: { category: 1 } }).toArray();
+        return countValues(docs.map(d => d.category));
+    }
+
     // ── System ──
 
     async getSystem(): Promise<TSystem> {
@@ -242,22 +270,7 @@ export class MongoCmsRepository implements CmsRepository {
 
     async updateSystem(update: Partial<TSystem>): Promise<TSystem> {
         const current = await this.getSystem();
-        // Section-level shallow merge: top-level scalars overwrite, top-level
-        // object sections (`site`, `editor`, `security`, `roles`) deep-merge
-        // one level. Mirrors the in-memory behaviour so callers can keep doing
-        // partial updates like `{ site: { name: "..." } }` without clobbering
-        // the rest of `site`.
-        const merged = { ...current };
-        for (const [section, value] of Object.entries(update) as [keyof TSystem, unknown][]) {
-            if (section === "initializationStep") {
-                merged.initializationStep = value as number;
-            } else if (typeof value === "object" && value !== null) {
-                (merged as any)[section] = {
-                    ...(current as any)[section],
-                    ...value,
-                };
-            }
-        }
+        const merged = mergeSystemUpdate(current, update);
         await this.system.replaceOne(
             { _id: SYSTEM_ID },
             merged,
@@ -364,8 +377,7 @@ export class MongoCmsRepository implements CmsRepository {
     }
 
     async findPagesUsingSnippet(identifier: string): Promise<TPage[]> {
-        const escaped = escapeRegex(identifier);
-        const pattern = `<w13c-snippet[^>]*\\bidentifier\\s*=\\s*["']${escaped}["']`;
+        const pattern = snippetRefPattern(identifier);
         const docs = await this.pages.find({ content: { $regex: pattern, $options: "i" } }).toArray();
         return docs.map(d => fromPageDoc(d)!);
     }
@@ -406,22 +418,4 @@ function fromTemplateDoc(d: TemplateDoc | null): TTemplate | null {
     if (!d) return null;
     const { _id, ...rest } = d;
     return { id: _id, ...rest };
-}
-
-function defaultSystem(): TSystem {
-    return {
-        initializationStep: 0,
-        site: {
-            name: "",
-            favicon: "",
-            visible: true,
-            host: "",
-            language: "",
-            theme: "",
-            notFound: null,
-            serverError: null,
-        },
-        editor:   { layoutCategory: "", shell: DEFAULT_SHELL },
-        security: { connectExtras: [], mediaExtras: [] },
-    };
 }

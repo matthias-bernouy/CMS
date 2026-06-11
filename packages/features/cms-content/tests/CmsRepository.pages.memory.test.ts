@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { InMemoryCmsRepository } from "@bernouy/cms-content";
+import { countValues, InMemoryCmsRepository, isPublishedPage } from "@bernouy/cms-content";
 
 /** Seed three pages with distinct titles/paths/tags/visibility. */
 async function seeded() {
@@ -45,5 +45,18 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
     test("sorts by path desc", async () => {
         const rows = await (await seeded()).getPagesMetadata({ sortBy: "path", sortOrder: "desc" });
         expect(rows.map(r => r.path)).toEqual(["/contact", "/blog", "/about"]);
+    });
+
+    test("published helper preserves legacy truthy visible values", () => {
+        expect(isPublishedPage({ visible: true } as any)).toBe(true);
+        expect(isPublishedPage({ visible: "true" } as any)).toBe(true);
+        expect(isPublishedPage({ visible: false } as any)).toBe(false);
+    });
+
+    test("value counts use value asc as a stable tie-break", () => {
+        expect(countValues(["beta", "alpha"])).toEqual([
+            { value: "alpha", count: 1 },
+            { value: "beta", count: 1 },
+        ]);
     });
 });

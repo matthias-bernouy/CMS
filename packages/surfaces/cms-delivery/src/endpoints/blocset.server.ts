@@ -1,7 +1,7 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { P9R_CACHE } from "@bernouy/cms-content";
-import { generateBlocSetEntry } from "cms-delivery/core/blocs/buildBloc";
+import { generateBlocSetEntry } from "@bernouy/cms-content";
 
 /**
  * Serve ONE bundle = the concatenated viewJS of several blocs, for the

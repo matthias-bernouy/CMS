@@ -1,5 +1,6 @@
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import type { TPageRef, TSystem } from "@bernouy/cms-content";
+import { coercePageRef } from "@bernouy/cms-content";
 
 export type SettingsUpdateDto = Partial<TSystem>;
 
@@ -76,7 +77,8 @@ function collectStringSection(
 }
 
 function asPageRef(raw: unknown): TPageRef {
-    if (raw === undefined || raw === null || raw === "") return null;
-    if (typeof raw !== "string") throw new InvalidParam("page reference", "expected a string.");
-    return { path: raw };
+    if (raw !== undefined && raw !== null && raw !== "" && typeof raw !== "string") {
+        throw new InvalidParam("page reference", "expected a string.");
+    }
+    return coercePageRef(raw);
 }

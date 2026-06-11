@@ -1,8 +1,7 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { getOrGenerateEntryAsync } from "@bernouy/http-runner";
-import { generateBlocSetEntry } from "cms-delivery/core/blocs/buildBloc";
 import { getBlocGroupManifest } from "cms-delivery/core/blocs/blocGroupManifest";
-import { generateStyleEntry } from "@bernouy/cms-content";
+import { generateBlocSetEntry, generateStyleEntry } from "@bernouy/cms-content";
 import { generateComponentJsEntry } from "cms-delivery/core/assets/buildComponent";
 import { generateBindingCoreJsEntry } from "cms-delivery/core/assets/buildBindingCore";
 import { P9R_CACHE } from "@bernouy/cms-content";

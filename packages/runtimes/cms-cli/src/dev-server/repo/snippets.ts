@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { TPage, TSnippet } from "@bernouy/cms-content";
+import { snippetRefPattern } from "@bernouy/cms-content";
 import { scanSnippets } from "cms-cli/push/snippets/scan";
 import { serializeFrontmatter } from "cms-cli/push/shared/frontmatterWrite";
 import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
@@ -66,7 +67,7 @@ export class SnippetsStore {
 
     /** Pages whose content references `<w13c-snippet identifier="X">`. */
     async findPagesUsing(identifier: string, pages: TPage[]): Promise<TPage[]> {
-        const re = new RegExp(`<w13c-snippet\\b[^>]*\\bidentifier\\s*=\\s*["']${escapeRegExp(identifier)}["']`, "i");
+        const re = new RegExp(snippetRefPattern(identifier), "i");
         return pages.filter(p => re.test(p.content));
     }
 
@@ -87,8 +88,4 @@ export class SnippetsStore {
         await mkdir(dirname(file), { recursive: true });
         await writeFile(file, serializeFrontmatter({ name, description }) + content, "utf-8");
     }
-}
-
-function escapeRegExp(s: string): string {
-    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

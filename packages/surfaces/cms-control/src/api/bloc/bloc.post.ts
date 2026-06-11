@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { validateBloc } from "@bernouy/cms-bloc-compile";
-import { P9R_CACHE } from "@bernouy/cms-content";
+import { DuplicateBlocTagError, P9R_CACHE } from "@bernouy/cms-content";
 import { invalidatePagesReferencingBloc } from "cms-control/core/server/cache/invalidation";
 
 export default async function importBloc(req: Request, cms: ControlCms) {
@@ -50,7 +50,7 @@ export default async function importBloc(req: Request, cms: ControlCms) {
         if (force) await cms.repository.replaceBloc(bloc);
         else       await cms.repository.createBloc(bloc);
     } catch (e) {
-        if (!force && (e as { code?: number }).code === 11000) {
+        if (!force && e instanceof DuplicateBlocTagError) {
             return new Response(`Bloc with tag "${bloc.id}" already exists`, { status: 409 });
         }
         throw e;

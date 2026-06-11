@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { TPageRef, TSystem } from "@bernouy/cms-content";
-import { DEFAULT_SHELL } from "@bernouy/cms-content";
+import type { TSystem } from "@bernouy/cms-content";
+import { coercePageRef, defaultSystem, mergeSystemUpdate } from "@bernouy/cms-content";
 
 const SYSTEM_FILE = "system.json";
 const THEME_FILE  = "theme.css";
@@ -19,43 +19,39 @@ export class SystemStore {
     async get(): Promise<TSystem> {
         const json = await this._readJson();
         const theme = await this._readTheme();
-        return {
-            initializationStep: 1,
+        const base = defaultSystem();
+        return mergeSystemUpdate(base, {
+            initializationStep: typeof json.initializationStep === "number" ? json.initializationStep : 1,
             site: {
-                name:        json.site?.name        ?? "",
-                favicon:     json.site?.favicon     ?? "",
-                visible:     json.site?.visible     ?? true,
-                host:        json.site?.host        ?? "",
-                language:    json.site?.language    ?? "",
+                name:        typeof json.site?.name        === "string"  ? json.site.name        : base.site.name,
+                favicon:     typeof json.site?.favicon     === "string"  ? json.site.favicon     : base.site.favicon,
+                visible:     typeof json.site?.visible     === "boolean" ? json.site.visible     : base.site.visible,
+                host:        typeof json.site?.host        === "string"  ? json.site.host        : base.site.host,
+                language:    typeof json.site?.language    === "string"  ? json.site.language    : base.site.language,
                 theme:       theme,
                 notFound:    coercePageRef(json.site?.notFound),
                 serverError: coercePageRef(json.site?.serverError),
             },
             editor: {
-                layoutCategory: json.editor?.layoutCategory ?? "",
-                shell:          typeof json.editor?.shell === "string" ? json.editor.shell : DEFAULT_SHELL,
+                layoutCategory: typeof json.editor?.layoutCategory === "string" ? json.editor.layoutCategory : base.editor.layoutCategory,
+                shell:          typeof json.editor?.shell          === "string" ? json.editor.shell          : base.editor.shell,
             },
             security: {
-                connectExtras: Array.isArray(json.security?.connectExtras) ? json.security.connectExtras : [],
-                mediaExtras:   Array.isArray(json.security?.mediaExtras)   ? json.security.mediaExtras   : [],
+                connectExtras: Array.isArray(json.security?.connectExtras) ? json.security.connectExtras : base.security.connectExtras,
+                mediaExtras:   Array.isArray(json.security?.mediaExtras)   ? json.security.mediaExtras   : base.security.mediaExtras,
             },
-        };
+        });
     }
 
     async update(patch: Partial<TSystem>): Promise<TSystem> {
         const current = await this.get();
-        const merged: TSystem = {
-            initializationStep: patch.initializationStep ?? current.initializationStep,
-            site:               { ...current.site,     ...(patch.site     ?? {}) },
-            editor:             { ...current.editor,   ...(patch.editor   ?? {}) },
-            security:           { ...current.security, ...(patch.security ?? {}) },
-        };
+        const merged = mergeSystemUpdate(current, patch);
         await this._writeJson(merged);
         if (typeof patch.site?.theme === "string") await this._writeTheme(patch.site.theme);
         return merged;
     }
 
-    private async _readJson(): Promise<{ site?: any; editor?: any; security?: any }> {
+    private async _readJson(): Promise<{ initializationStep?: any; site?: any; editor?: any; security?: any }> {
         const file = join(this.siteDir, SYSTEM_FILE);
         if (!existsSync(file)) return {};
         try { return JSON.parse(await readFile(file, "utf-8")); }
@@ -79,14 +75,4 @@ export class SystemStore {
         await mkdir(this.siteDir, { recursive: true });
         await writeFile(join(this.siteDir, THEME_FILE), theme, "utf-8");
     }
-}
-
-function coercePageRef(raw: unknown): TPageRef {
-    if (raw === null || raw === undefined || raw === "") return null;
-    if (typeof raw === "string") return { path: raw };
-    if (typeof raw === "object" && raw !== null && "path" in raw) {
-        const path = (raw as { path: unknown }).path;
-        return typeof path === "string" && path !== "" ? { path } : null;
-    }
-    return null;
 }

@@ -1,6 +1,6 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
 import { expandSnippets } from "@bernouy/cms-content";
-import { findUsedBlocTags } from "cms-delivery/core/blocs/findUsedBlocs";
+import { findUsedBlocTags } from "@bernouy/cms-content";
 import { groupBlocsBySignature, type BlocGroups } from "cms-delivery/core/blocs/groupBlocsBySignature";
 
 /**

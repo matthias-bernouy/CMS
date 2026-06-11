@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { generateBlocSetEntry } from "cms-delivery/core/blocs/buildBloc";
+import { generateBlocSetEntry } from "@bernouy/cms-content";
 import type { ContentReader } from "@bernouy/cms-content";
 
 /** Minimal repository stub — only `getBlocViewJS` is exercised here. */

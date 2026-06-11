@@ -19,42 +19,11 @@ export default async function getTags(req: Request, cms: ControlCms) {
         );
     }
 
-    const counts = new Map<string, number>();
-
-    if (resource === "pages") {
-        const pages = await cms.repository.getAllPages();
-        for (const page of pages) {
-            const tags = normalizeTags(page.tags);
-            for (const tag of tags) counts.set(tag, (counts.get(tag) || 0) + 1);
-        }
-    } else if (resource === "snippets") {
-        const snippets = await cms.repository.getAllSnippets();
-        for (const snippet of snippets) {
-            if (snippet.category) counts.set(snippet.category, (counts.get(snippet.category) || 0) + 1);
-        }
-    } else {
-        const templates = await cms.repository.getAllTemplates();
-        for (const template of templates) {
-            if (template.category) counts.set(template.category, (counts.get(template.category) || 0) + 1);
-        }
-    }
-
-    const result = Array.from(counts.entries())
-        .map(([value, count]) => ({ value, count }))
-        .sort((a, b) => b.count - a.count);
+    const result = resource === "pages"
+        ? await cms.repository.getTagCounts()
+        : await cms.repository.getCategoryCounts(resource);
 
     return new Response(JSON.stringify(result), {
         headers: { "Content-Type": "application/json" },
     });
-}
-
-function normalizeTags(raw: unknown): string[] {
-    if (Array.isArray(raw)) return raw.filter((t): t is string => typeof t === "string");
-    if (typeof raw === "string" && raw.trim().startsWith("[")) {
-        try {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) return parsed.filter((t): t is string => typeof t === "string");
-        } catch { /* fall through */ }
-    }
-    return [];
 }

@@ -19,12 +19,18 @@ export { DEFAULT_SHELL, composeShell } from "cms-content/interfaces/settings";
 // ── Repository seam ────────────────────────────────────────────────────
 export type { ContentReader } from "cms-content/interfaces/ContentReader";
 export type {
-    CmsRepository, BlocListItemResponse, PageLink, PageMeta, PagesQuery,
+    CmsRepository, BlocListItemResponse, PageLink, PageMeta, PagesQuery, ValueCount,
 } from "cms-content/interfaces/CmsRepository";
 export { InMemoryCmsRepository } from "cms-content/default-implementation/InMemoryCmsRepository";
 export { filterAndSortPages }    from "cms-content/core/pagesQuery";
+export { defaultSystem, mergeSystemUpdate } from "cms-content/core/system";
+export { countValues, normalizeTags } from "cms-content/core/counts";
+export { isPublishedPage } from "cms-content/core/publication";
 export { expandSnippets, type SnippetReader } from "cms-content/core/expandSnippets";
-export { ContentValidationError, ContentConflictError } from "cms-content/core/errors";
+export { ContentValidationError, ContentConflictError, DuplicateBlocTagError } from "cms-content/core/errors";
+export { findPagesReferencingBloc, findPagesReferencingText } from "cms-content/core/dependencies/pagesReferencing";
+export { findUsedBlocTags } from "cms-content/core/blocs/findUsedBlocTags";
+export { generateBlocEntry, generateBlocSetEntry } from "cms-content/core/blocs/buildBlocEntries";
 
 // ── Validation (rules live here; the decorator is the unbypassable barrier) ─
 export { ValidatingCmsRepository } from "cms-content/core/validation/ValidatingCmsRepository";
@@ -34,6 +40,7 @@ export { validatePagePath, validatePageTitle, validatePagePatch }   from "cms-co
 export { validateSnippetIdentifier, validateSnippetPatch }          from "cms-content/core/validation/snippets";
 export { validateTemplateIdentifier, validateTemplatePatch }        from "cms-content/core/validation/templates";
 export { validateSettingsPatch } from "cms-content/core/validation/settings";
+export { coercePageRef, pageRefToString } from "cms-content/core/validation/pageRef";
 
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
 export { registerStyleEndpoint } from "cms-content/http/registerStyleEndpoint";
@@ -45,4 +52,5 @@ export * from "cms-content/core/constants/editorAttributes";
 export * from "cms-content/core/validation/predicates";
 export * from "cms-content/core/utils/contentRefs";
 export { sanitizeDomTree } from "cms-content/core/utils/sanitizeDomTree";
+export { sanitizeSvgTree } from "cms-content/core/utils/sanitizeSvgTree";
 export { escapeRegex }     from "cms-content/core/utils/escapeRegex";

@@ -19,6 +19,8 @@ export interface ContentReader {
     // PAGE
     getPage(path: string): Promise<TPage | null>;
     getAllPages(): Promise<TPage[]>;
+    getPublishedPage(path: string): Promise<TPage | null>;
+    getPublishedPages(): Promise<TPage[]>;
 
     // BLOC (view only — editor bundles live in the admin)
     getBlocsList(): Promise<{ id: string; name: string; group: string; description: string }[]>;

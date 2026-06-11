@@ -27,12 +27,11 @@ function isReservedForDelivery(path: string, prefix: string): boolean {
 export default async function SitemapServer(req: Request, delivery: DeliveryCms) {
     const origin = new URL(req.url).origin;
     const prefix = delivery.cmsPathPrefix;
-    const pages  = await delivery.repository.getAllPages();
+    const pages  = await delivery.repository.getPublishedPages();
 
     const urls: string[] = [];
     const seen = new Set<string>();
     for (const p of pages) {
-        if (!p.visible) continue;
         if (isReservedForDelivery(p.path, prefix)) continue;
         if (seen.has(p.path)) continue;
         seen.add(p.path);
