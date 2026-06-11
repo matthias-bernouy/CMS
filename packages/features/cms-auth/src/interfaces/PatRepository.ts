@@ -34,6 +34,6 @@ export interface PatRepository {
     verify(token: string): Promise<PatPrincipal | null>;
     /** A user's tokens (no secrets) — for the "Access tokens" admin panel. */
     list(sub: string): Promise<Pat[]>;
-    /** Revoke by record id. `false` when unknown. */
-    revoke(id: string): Promise<boolean>;
+    /** Revoke one of a user's tokens by record id. `false` when unknown or not owned by `sub`. */
+    revoke(sub: string, id: string): Promise<boolean>;
 }

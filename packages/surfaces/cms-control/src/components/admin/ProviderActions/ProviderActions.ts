@@ -1,4 +1,5 @@
 import { showToast } from "@bernouy/components";
+import { isBuiltinProvider } from "@bernouy/cms-auth/components";
 
 /**
  * `<cms-provider-actions provider-id kind enabled base-url emit>` — the actions
@@ -20,7 +21,7 @@ class CmsProviderActions extends HTMLElement {
     private get _kind()    { return this.getAttribute("kind") ?? ""; }
     private get _enabled() { return this.getAttribute("enabled") === "true"; }
     private get _emit()    { return this.getAttribute("emit"); }
-    private get _builtin() { return this._kind === "local"; }
+    private get _builtin() { return isBuiltinProvider(this._kind); }
 
     private _render() {
         const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });

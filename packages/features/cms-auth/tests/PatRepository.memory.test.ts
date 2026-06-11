@@ -26,9 +26,16 @@ describe("InMemoryPatRepository", () => {
     test("revoke makes the token unusable", async () => {
         const r = repo();
         const { token, pat } = await r.create({ sub: "u1", name: "cli" });
-        expect(await r.revoke(pat.id)).toBe(true);
+        expect(await r.revoke("u1", pat.id)).toBe(true);
         expect(await r.verify(token)).toBeNull();
-        expect(await r.revoke(pat.id)).toBe(false);
+        expect(await r.revoke("u1", pat.id)).toBe(false);
+    });
+
+    test("revoke is scoped to the owner sub", async () => {
+        const r = repo();
+        const { token, pat } = await r.create({ sub: "u1", name: "cli" });
+        expect(await r.revoke("u2", pat.id)).toBe(false);
+        expect(await r.verify(token)).toEqual({ sub: "u1", scopes: [] });
     });
 
     test("list is scoped to the owner sub", async () => {

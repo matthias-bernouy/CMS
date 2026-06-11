@@ -20,9 +20,16 @@ export { LocalAuthentication, type LocalAuthConfig } from "cms-auth/default-impl
 export { OidcAuthentication, type OidcAuthConfig }   from "cms-auth/default-implementation/OidcAuthentication";
 export { SubjectResolver, internalUserId }            from "cms-auth/core/SubjectResolver";
 export { toLoginMethod }                              from "cms-auth/core/toLoginMethod";
-export { validatePassword, validateProviderKind, validatePatName, AuthValidationError } from "cms-auth/core/validation";
+export { validatePassword, validateProviderKind, validatePatName, isBuiltinProvider, AuthValidationError } from "cms-auth/core/validation";
 export { deleteUserCompletely, type UserDeletionStores } from "cms-auth/core/deleteUserCompletely";
 export { createLocalUser, type CreateLocalUserInput, type CreateLocalUserStores } from "cms-auth/core/createLocalUser";
+export { changeOwnPassword, type ChangeOwnPasswordStores } from "cms-auth/core/changeOwnPassword";
+export {
+    deleteIdentityProvider,
+    updateIdentityProvider,
+    isAdminReachableAfterRemoving,
+    type IdentityProviderStores,
+} from "cms-auth/core/identityProviderRules";
 export { isLastAdmin }                                 from "cms-auth/core/isLastAdmin";
 
 // ── Interfaces ─────────────────────────────────────────────────────────
@@ -42,6 +49,11 @@ export { InMemoryPatRepository }              from "cms-auth/default-implementat
 export { InMemoryAuthentication, type InMemoryAuthConfig } from "cms-auth/default-implementation/memory/InMemoryAuthentication";
 
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
-export { registerAuthRoutes, type AuthRoutesConfig }         from "cms-auth/http/registerAuthRoutes";
+export {
+    registerAuthRoutes,
+    registerAuthMethodsRoute,
+    type AuthRoutesConfig,
+    type AuthMethodsRoutesConfig,
+} from "cms-auth/http/registerAuthRoutes";
 export { renderLoginPage }                                   from "cms-auth/http/loginPage";
 export { createAuthGuard, type AuthGuardContext }            from "cms-auth/http/authGuard";

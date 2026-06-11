@@ -27,6 +27,6 @@ export async function deleteUserCompletely<Role extends string>(
         if (cred) await stores.credentials.delete(cred.sub);
     }
     const pats = await stores.pats.list(user.sub);
-    for (const p of pats) await stores.pats.revoke(p.id);
+    for (const p of pats) await stores.pats.revoke(user.sub, p.id);
     await stores.users.delete(user.sub);
 }

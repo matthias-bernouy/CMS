@@ -41,8 +41,10 @@ export class InMemoryPatRepository implements PatRepository {
         return [...this._byId.values()].filter(p => p.sub === sub).map(p => ({ ...p }));
     }
 
-    async revoke(id: string): Promise<boolean> {
-        if (!this._byId.delete(id)) return false;
+    async revoke(sub: string, id: string): Promise<boolean> {
+        const pat = this._byId.get(id);
+        if (!pat || pat.sub !== sub) return false;
+        this._byId.delete(id);
         for (const [h, pid] of this._idByHash) if (pid === id) this._idByHash.delete(h);
         return true;
     }

@@ -11,7 +11,7 @@ import { registerStyleEndpoint } from "@bernouy/cms-content";
 import type { CmsFilesMetadataRepository } from "@bernouy/cms-files";
 import type { CmsFilesBlobStore } from "@bernouy/cms-files";
 import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalCredentialStore } from "@bernouy/cms-auth";
-import { createAuthGuard, renderLoginPage, toLoginMethod } from "@bernouy/cms-auth";
+import { createAuthGuard, registerAuthMethodsRoute, renderLoginPage } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import { InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
@@ -109,12 +109,10 @@ export class ControlCms {
         // guarded groups so it is reachable without a session (first-match-wins).
         runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, this.basePath));
 
-        // Unguarded discovery: the enabled login methods, consumed by the login
-        // page (and auth blocs) to render the local form + provider buttons.
-        runner.addEndpoint("GET", "/auth/methods", async () => {
-            const providers = this._identityProviders ? await this._identityProviders.list() : [];
-            const methods = providers.filter((p) => p.enabled).map((p) => toLoginMethod(p, `${this.basePath}/auth`));
-            return Response.json(methods);
+        registerAuthMethodsRoute(runner, {
+            basePath:       "/auth",
+            publicBasePath: `${this.basePath}/auth`,
+            identityProviders: this._identityProviders,
         });
 
         // Bare tenant root / `/admin` land on the Pages list instead of the

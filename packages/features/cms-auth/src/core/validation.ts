@@ -4,8 +4,8 @@ import type { IdentityProviderKind } from "cms-auth/interfaces/IdentityProvider"
  *  HTTP surface maps it to a 400 without importing surface error classes. */
 export class AuthValidationError extends Error {
     status = 400;
-    constructor(field: string, message: string) {
-        super(`Invalid ${field}: ${message}`);
+    constructor(readonly field: string, readonly reason: string) {
+        super(`Invalid ${field}: ${reason}`);
         this.name = "AuthValidationError";
     }
 }
@@ -20,6 +20,10 @@ export function validatePassword(password: string): void {
 }
 
 const PROVIDER_KINDS: IdentityProviderKind[] = ["oidc", "local"];
+
+export function isBuiltinProvider(kind: IdentityProviderKind | string): boolean {
+    return kind === "local";
+}
 
 /** Identity-provider kind whitelist. Returns the validated kind. */
 export function validateProviderKind(kind: string): IdentityProviderKind {

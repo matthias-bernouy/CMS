@@ -62,8 +62,8 @@ export class MongoPatRepository implements PatRepository {
         return (await this.col.find({ sub }).sort({ createdAt: 1 }).toArray()).map(fromDoc);
     }
 
-    async revoke(id: string): Promise<boolean> {
-        const r = await this.col.deleteOne({ _id: id });
+    async revoke(sub: string, id: string): Promise<boolean> {
+        const r = await this.col.deleteOne({ _id: id, sub });
         return r.deletedCount === 1;
     }
 }

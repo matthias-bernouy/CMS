@@ -1,8 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";
-import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { assertAdminReachableAfterRemoving } from "./_adminReachability";
+import { deleteIdentityProvider } from "@bernouy/cms-auth";
 
 /** DELETE /api/identity/provider { id } — remove a login provider. The builtin
  *  `local` provider is a singleton and cannot be removed — only toggled (see
@@ -13,15 +12,6 @@ export default async function deleteProvider(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
     if (typeof body.id !== "string" || !body.id) throw new MissingParam("id");
 
-    const provider = await cms.identityProviders.get(body.id);
-    if (provider && provider.kind === "local") {
-        throw new InvalidParam("id", "builtin provider cannot be removed (disable it instead)");
-    }
-
-    if (provider?.enabled) {
-        await assertAdminReachableAfterRemoving(cms, body.id, "id", "cannot remove: no admin could sign in afterwards");
-    }
-
-    await cms.identityProviders.delete(body.id);
+    await deleteIdentityProvider(cms, body.id);
     return new Response();
 }
