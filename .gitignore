@@ -15,3 +15,7 @@ build/
 # OS / editor cruft
 .DS_Store
 *.log
+
+.claude/
+.codex/
+.playwright-mcp/
