@@ -14521,186 +14521,6 @@ cms-endpoints-input .ep-add:hover {
     customElements.define("p9r-svg-sync", SvgSync);
   }
 
-  // ../../foundation/components/dist/blocs/horizontal-action-group.mjs
-  var l = `<div class="actions" role="toolbar" part="toolbar">
-    <slot></slot>
-</div>
-`;
-  var n = `:host {
-  display: inline-block;
-
-  --_toolbar-bg: var(--bg-overlay, #ffffff);
-  --_toolbar-border: var(--border-default, #e5e7eb);
-  --_toolbar-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --_toolbar-radius: 12px;
-  --_toolbar-padding: 6px;
-  --_toolbar-gap: 4px;
-
-  --_color: var(--info-contrasted, #3b82f6);
-  --_hover-color: var(--primary-contrasted, #3b82f6);
-
-  --_bg-color: var(--bg-overlay, white);
-  --_bg-hover-color: var(--primary-muted, #3b82f6);
-
-  --_border-color: var(--border-default, #e5e7eb);
-
-  touch-action: none;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  background: var(--_toolbar-bg);
-  border: 1px solid var(--_toolbar-border);
-  border-radius: var(--_toolbar-radius);
-  box-shadow: var(--_toolbar-shadow);
-  overflow: hidden;
-  width: fit-content;
-  padding: var(--_toolbar-padding);
-  gap: var(--_toolbar-gap);
-}
-
-:host([align="start"]) .actions { justify-content: flex-start; }
-:host([align="center"]) .actions { justify-content: center; }
-:host([align="end"]) .actions { justify-content: flex-end; }
-
-:host([fullwidth]),
-:host([fullwidth]) .actions {
-  width: 100%;
-}
-
-::slotted([hidden]) {
-  display: none !important;
-}
-
-::slotted([data-action]) {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  background: var(--_bg-color);
-  border: none;
-  border-radius: 8px;
-  color: var(--_color);
-  cursor: pointer;
-  font-family: system-ui, sans-serif;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-::slotted([data-action]:hover) {
-  background-color: var(--_bg-hover-color);
-  color: var(--_hover-color);
-}
-
-::slotted([data-action]:focus-visible) {
-  outline: 2px solid var(--_color);
-  outline-offset: 2px;
-}
-
-::slotted([data-action][disabled]),
-::slotted([data-action][aria-disabled="true"]) {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-::slotted(.separator) {
-  width: 1px;
-  height: 1.7rem;
-  background-color: var(--_border-color);
-  margin: 0 4px;
-  align-self: center;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  ::slotted([data-action]) {
-    transition: background-color 0.2s ease, color 0.2s ease;
-  }
-}
-`;
-
-  class e extends HTMLElement {
-    _rawStyles = "";
-    _styles = null;
-    constructor(t) {
-      super();
-      let o = this.attachShadow({ mode: "open" });
-      if (t) {
-        this._rawStyles = t.css, this._styles = document.createElement("style"), this._styles.innerHTML = t.css, o.appendChild(this._styles);
-        let r = document.createElement("template");
-        r.innerHTML = t.template, o.appendChild(r.content.cloneNode(true));
-      }
-    }
-    registerCSSVariables(t) {
-      if (!this._styles)
-        return;
-      let o = this._rawStyles;
-      Object.entries(t).forEach(([r, a]) => {
-        o = o.replaceAll("var(--" + r + ")", a);
-      }), this._styles.innerHTML = o;
-    }
-    connectedCallback() {}
-  }
-  function s2(t, o) {
-    if (Object.prototype.hasOwnProperty.call(t, o)) {
-      let r = t[o];
-      delete t[o], t[o] = r;
-    }
-  }
-
-  class d2 extends e {
-    static _event = "action-click";
-    _toolbar;
-    constructor() {
-      super({ css: n, template: l });
-      this._toolbar = this.shadowRoot?.querySelector(".actions") ?? null;
-    }
-    static get observedAttributes() {
-      return ["label"];
-    }
-    connectedCallback() {
-      for (let t of ["label"])
-        s2(this, t);
-      if (this._toolbar && !this._toolbar.hasAttribute("aria-label")) {
-        let t = this.getAttribute("label");
-        if (t)
-          this._toolbar.setAttribute("aria-label", t);
-      }
-      this.addEventListener("click", this._handleClick);
-    }
-    disconnectedCallback() {
-      this.removeEventListener("click", this._handleClick);
-    }
-    attributeChangedCallback(t, o, r) {
-      if (!this._toolbar)
-        return;
-      if (t === "label")
-        if (r === null)
-          this._toolbar.removeAttribute("aria-label");
-        else
-          this._toolbar.setAttribute("aria-label", r);
-    }
-    _handleClick = (t) => {
-      let r = t.composedPath().find((i) => i instanceof Element && i.hasAttribute("data-action"));
-      if (!r)
-        return;
-      t.stopPropagation();
-      let a = r.getAttribute("data-action");
-      this._dispatchAction(a, r, t);
-    };
-    _dispatchAction(t, o, r) {
-      this.dispatchEvent(new CustomEvent("action-click", { detail: { action: t, originalEvent: r, target: o }, bubbles: true, composed: true }));
-    }
-    get label() {
-      return this.getAttribute("label");
-    }
-    set label(t) {
-      if (t === null)
-        this.removeAttribute("label");
-      else
-        this.setAttribute("label", t);
-    }
-  }
-
   // src/components/editor/EditorSystem/BlocActions/view/style.css
   var style_default3 = `:host {
     position: absolute;
@@ -14911,7 +14731,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     const myId = target.getAttribute(p9r.attr.EDITOR.IDENTIFIER);
     const myEditor = myId ? document.compIdentifierToEditor?.get(myId) : undefined;
     const ownExts = myEditor ? new Set(myEditor.listExtensions("blocActions")) : new Set;
-    const all = collectAncestorExtensions(target, "blocActions").filter((e2) => e2.enabled?.({ target }) !== false).filter((e2) => !ownExts.has(e2));
+    const all = collectAncestorExtensions(target, "blocActions").filter((e) => e.enabled?.({ target }) !== false).filter((e) => !ownExts.has(e));
     return Array.from(new Set(all));
   }
   function buildExtensionsButton() {
@@ -14974,7 +14794,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     if (trimmed.startsWith("#")) {
       return { kind: "anchor", target: trimmed.slice(1) };
     }
-    if (SPECIAL_SCHEMES.some((s3) => trimmed.toLowerCase().startsWith(s3))) {
+    if (SPECIAL_SCHEMES.some((s2) => trimmed.toLowerCase().startsWith(s2))) {
       return { kind: "mailto", target: trimmed };
     }
     let url;
@@ -15080,9 +14900,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     action.type = "button";
     action.textContent = `${icon} ${label}`;
     action.dataset["kind"] = cls.kind;
-    action.addEventListener("click", (e2) => {
-      e2.preventDefault();
-      e2.stopPropagation();
+    action.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const ctx = getEditorContext();
       const c = classifyLink(href, location.origin, ctx.knownPagePaths);
       ctx.requestNavigation({ href, classification: c, via: "popover-action" });
@@ -15153,7 +14973,7 @@ cms-bag-breadcrumb[data-inline="right"] {
     const btn = host.querySelector('[data-action="pin-state"]');
     if (!btn)
       return;
-    const anyPinned = editor?.stateSyncs.some((s3) => s3.isPinned) ?? false;
+    const anyPinned = editor?.stateSyncs.some((s2) => s2.isPinned) ?? false;
     btn.toggleAttribute("data-active", anyPinned);
   }
 
@@ -15284,9 +15104,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     btn.type = "button";
     btn.className = "parent";
     btn.textContent = label;
-    btn.addEventListener("click", (e2) => {
-      e2.stopPropagation();
-      e2.preventDefault();
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
       cb.onPick(key);
     });
     btn.addEventListener("mouseenter", () => cb.onHover(key, true));
@@ -15657,8 +15477,8 @@ cms-bag-breadcrumb[data-inline="right"] {
     btn.querySelector(".label").textContent = row.label;
     if (row.isActive)
       btn.setAttribute("data-active", "");
-    btn.addEventListener("click", (e2) => {
-      e2.stopPropagation();
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
       row.onClick();
     });
     return btn;
@@ -15783,9 +15603,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     _commit(sync, change) {
       const editor = this._getEditor();
       if (editor) {
-        for (const s3 of editor.stateSyncs)
-          if (s3 !== sync && s3.isPinned)
-            s3.unpin();
+        for (const s2 of editor.stateSyncs)
+          if (s2 !== sync && s2.isPinned)
+            s2.unpin();
       }
       change();
       editor?.notifyPinStateChanged(sync);
@@ -15828,8 +15648,8 @@ cms-bag-breadcrumb[data-inline="right"] {
 
   // src/components/editor/EditorSystem/BlocActions/events/actionDispatcher.ts
   function createActionDispatcher(deps) {
-    return (e2) => {
-      switch (e2.detail.action) {
+    return (e) => {
+      switch (e.detail.action) {
         case "delete":
           return deps.onDelete();
         case "edit":
@@ -15843,9 +15663,9 @@ cms-bag-breadcrumb[data-inline="right"] {
         case "select-parent":
           return deps.onSelectParent();
         case "extensions":
-          return deps.onExtensions(e2);
+          return deps.onExtensions(e);
         default: {
-          const custom = deps.editor()?.customActions.find((a) => a.action === e2.detail.action);
+          const custom = deps.editor()?.customActions.find((a) => a.action === e.detail.action);
           custom?.handler();
         }
       }
@@ -15854,12 +15674,12 @@ cms-bag-breadcrumb[data-inline="right"] {
 
   // src/components/editor/EditorSystem/BlocActions/events/keyboardHandler.ts
   function createKeyDownHandler(deps) {
-    return (e2) => {
-      if (e2.key === "Escape") {
+    return (e) => {
+      if (e.key === "Escape") {
         deps.onClose();
         return;
       }
-      if (e2.key !== "Delete" && e2.key !== "Backspace")
+      if (e.key !== "Delete" && e.key !== "Backspace")
         return;
       const target = deps.target();
       if (!target)
@@ -15869,7 +15689,7 @@ cms-bag-breadcrumb[data-inline="right"] {
         return;
       if (!deps.canDelete())
         return;
-      e2.preventDefault();
+      e.preventDefault();
       target.remove();
       deps.onClose();
     };
@@ -15880,9 +15700,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     let lastX = 0;
     let lastY = 0;
     let raf = null;
-    const onMouseMove = (e2) => {
-      lastX = e2.clientX;
-      lastY = e2.clientY;
+    const onMouseMove = (e) => {
+      lastX = e.clientX;
+      lastY = e.clientY;
       if (raf !== null)
         return;
       raf = requestAnimationFrame(() => {
@@ -15890,8 +15710,8 @@ cms-bag-breadcrumb[data-inline="right"] {
         deps.onReflow();
       });
     };
-    const onClickOutside = (e2) => {
-      const t = e2.target;
+    const onClickOutside = (e) => {
+      const t = e.target;
       if (deps.host.contains(t))
         return;
       if (deps.pinMenu()?.contains(t))
@@ -15902,8 +15722,8 @@ cms-bag-breadcrumb[data-inline="right"] {
         return;
       deps.onClose();
     };
-    const onLeave = (e2) => {
-      const to2 = e2.relatedTarget;
+    const onLeave = (e) => {
+      const to2 = e.relatedTarget;
       if (deps.host.contains(to2))
         return;
       if (deps.pinMenu()?.contains(to2))
@@ -15920,8 +15740,8 @@ cms-bag-breadcrumb[data-inline="right"] {
       const tgt = deps.target();
       if (parentEditor && tgt && parentEditor.contains(tgt)) {
         parentEditor.dispatchEvent(new MouseEvent("mouseenter", {
-          clientX: e2.clientX,
-          clientY: e2.clientY,
+          clientX: e.clientX,
+          clientY: e.clientY,
           bubbles: false
         }));
         return;
@@ -16148,9 +15968,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     row.innerHTML = `<span class="row-label"></span><span class="row-path"></span>`;
     row.querySelector(".row-label").textContent = opt.label;
     row.querySelector(".row-path").textContent = opt.path;
-    row.addEventListener("mousedown", (e2) => e2.preventDefault());
-    row.addEventListener("click", (e2) => {
-      e2.stopPropagation();
+    row.addEventListener("mousedown", (e) => e.preventDefault());
+    row.addEventListener("click", (e) => {
+      e.stopPropagation();
       onPick(opt);
     });
     return row;
@@ -16191,9 +16011,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     document.querySelectorAll(POPOVER_TAG).forEach((p) => p.remove());
     document.removeEventListener("mousedown", dismissOnOutside, { capture: true });
   }
-  function dismissOnOutside(e2) {
-    const path = e2.composedPath();
-    if (path.some((n2) => n2?.tagName?.toLowerCase?.() === POPOVER_TAG))
+  function dismissOnOutside(e) {
+    const path = e.composedPath();
+    if (path.some((n) => n?.tagName?.toLowerCase?.() === POPOVER_TAG))
       return;
     closeExtensionsPopover();
   }
@@ -16413,11 +16233,11 @@ cms-bag-breadcrumb[data-inline="right"] {
     }
     update() {
       const rect = this._target.getBoundingClientRect();
-      const s3 = this._box.style;
-      s3.transform = `translate(${rect.left}px, ${rect.top}px)`;
-      s3.width = `${rect.width}px`;
-      s3.height = `${rect.height}px`;
-      s3.display = rect.width === 0 && rect.height === 0 ? "none" : "block";
+      const s2 = this._box.style;
+      s2.transform = `translate(${rect.left}px, ${rect.top}px)`;
+      s2.width = `${rect.width}px`;
+      s2.height = `${rect.height}px`;
+      s2.display = rect.width === 0 && rect.height === 0 ? "none" : "block";
     }
     setColor(color) {
       this._box.style.borderColor = color;
@@ -16450,9 +16270,9 @@ cms-bag-breadcrumb[data-inline="right"] {
     _unsubLink = null;
     constructor(host) {
       this.host = host;
-      const s3 = document.createElement("style");
-      s3.textContent = style_default3;
-      host.shadowRoot.appendChild(s3);
+      const s2 = document.createElement("style");
+      s2.textContent = style_default3;
+      host.shadowRoot.appendChild(s2);
       this.breadcrumb = new BreadcrumbController(host, (ed) => switchToEditor(this, ed));
       this.insertBtns = new InsertButtonsController((pos) => this.withCooldown(() => this.insertBtns.insertBlank(pos)));
       this.pin = new PinController(host, () => this.editor);
@@ -16544,7 +16364,7 @@ cms-bag-breadcrumb[data-inline="right"] {
   }
 
   // src/components/editor/EditorSystem/BlocActions/BlocActions.ts
-  class BlocActions extends d2 {
+  class BlocActions extends Di {
     _ctrl;
     constructor() {
       super();
@@ -16809,8 +16629,8 @@ form[method="dialog"] {
       if (!res.ok)
         return fallback;
       return await res.json();
-    } catch (e2) {
-      console.log(e2);
+    } catch (e) {
+      console.log(e);
       return fallback;
     }
   }
@@ -16823,8 +16643,8 @@ form[method="dialog"] {
         return "";
       const tpl = await res.json();
       return tpl.content ?? "";
-    } catch (e2) {
-      console.log(e2);
+    } catch (e) {
+      console.log(e);
       return "";
     }
   };
@@ -16991,7 +16811,7 @@ form[method="dialog"] {
 
   // src/components/editor/EditorSystem/BlocLibrary/sections/renderSnippets.ts
   function renderSnippets({ grid, snippets, category, onPick }) {
-    const filtered = snippets.filter((s3) => (s3.category || "Default") === category);
+    const filtered = snippets.filter((s2) => (s2.category || "Default") === category);
     if (filtered.length === 0) {
       grid.appendChild(EmptyState.create({
         icon: ICON_SNIPPET_MUTED,
@@ -17018,7 +16838,7 @@ form[method="dialog"] {
       return b2.label.toLowerCase().includes(q2) || b2.tag.toLowerCase().includes(q2) || desc.toLowerCase().includes(q2);
     });
     const matchingTemplates = templates.filter((t) => t.name.toLowerCase().includes(q2) || (t.description ?? "").toLowerCase().includes(q2) || (t.category ?? "").toLowerCase().includes(q2));
-    const matchingSnippets = snippets.filter((s3) => s3.name.toLowerCase().includes(q2) || (s3.description ?? "").toLowerCase().includes(q2) || s3.identifier.toLowerCase().includes(q2) || (s3.category ?? "").toLowerCase().includes(q2));
+    const matchingSnippets = snippets.filter((s2) => s2.name.toLowerCase().includes(q2) || (s2.description ?? "").toLowerCase().includes(q2) || s2.identifier.toLowerCase().includes(q2) || (s2.category ?? "").toLowerCase().includes(q2));
     const total = matchingBlocs.length + matchingTemplates.length + matchingSnippets.length;
     if (total === 0) {
       grid.appendChild(EmptyState.create({
@@ -17094,18 +16914,18 @@ form[method="dialog"] {
       super(Metadata5);
     }
     connectedCallback() {
-      const s3 = this.shadowRoot;
-      this._dialog = s3.querySelector("#dialog");
-      this._dialog.addEventListener("click", (e2) => {
-        if (e2.target === this._dialog)
+      const s2 = this.shadowRoot;
+      this._dialog = s2.querySelector("#dialog");
+      this._dialog.addEventListener("click", (e) => {
+        if (e.target === this._dialog)
           this.close();
       });
       this._dialog.addEventListener("close", () => {
         this._onInsert = null;
       });
-      s3.getElementById("tabs").addEventListener("click", (e2) => this._onTabClick(e2));
-      s3.getElementById("sidebar").addEventListener("click", (e2) => this._onSidebarClick(e2));
-      s3.getElementById("search").addEventListener("input", (e2) => this._onSearchInput(e2));
+      s2.getElementById("tabs").addEventListener("click", (e) => this._onTabClick(e));
+      s2.getElementById("sidebar").addEventListener("click", (e) => this._onSidebarClick(e));
+      s2.getElementById("search").addEventListener("input", (e) => this._onSearchInput(e));
     }
     open(onInsert) {
       this._onInsert = onInsert ?? null;
@@ -17136,23 +16956,23 @@ form[method="dialog"] {
       this._render();
       this.shadowRoot.getElementById("search").focus();
     }
-    _onTabClick(e2) {
-      const tab = e2.target.closest(".tab");
+    _onTabClick(e) {
+      const tab = e.target.closest(".tab");
       if (!tab || !tab.dataset.section)
         return;
       this._section = tab.dataset.section;
       this._activeGroup = null;
       this._render();
     }
-    _onSidebarClick(e2) {
-      const item = e2.target.closest(".sidebar-item");
+    _onSidebarClick(e) {
+      const item = e.target.closest(".sidebar-item");
       if (!item)
         return;
       this._activeGroup = item.dataset.group ?? null;
       this._render();
     }
-    _onSearchInput(e2) {
-      this._query = e2.target.value;
+    _onSearchInput(e) {
+      this._query = e.target.value;
       this._render();
     }
     _render() {
@@ -17222,7 +17042,7 @@ form[method="dialog"] {
         return Array.from(editorSystem.observer.getGroups());
       if (this._section === "templates")
         return Array.from(new Set(this._templates.map((t) => t.category || "Default")));
-      return Array.from(new Set(this._snippets.map((s3) => s3.category || "Default")));
+      return Array.from(new Set(this._snippets.map((s2) => s2.category || "Default")));
     }
     _emitInsert(detail) {
       const onInsert = this._onInsert;
@@ -17245,9 +17065,9 @@ form[method="dialog"] {
     _indicator = null;
     _dropTarget = null;
     _dropPosition = null;
-    _onDragStart = (e2) => this.handleDragStart(e2);
-    _onDragOver = (e2) => this.handleDragOver(e2);
-    _onDrop = (e2) => this.handleDrop(e2);
+    _onDragStart = (e) => this.handleDragStart(e);
+    _onDragOver = (e) => this.handleDragOver(e);
+    _onDrop = (e) => this.handleDrop(e);
     _onDragEnd = () => this.handleDragEnd();
     _container;
     constructor(container) {
@@ -17264,12 +17084,12 @@ form[method="dialog"] {
       this._container.removeEventListener("dragend", this._onDragEnd);
       this._finalize();
     }
-    handleDragStart(e2) {
-      this.draggedElement = e2.target.closest(".editor-block");
+    handleDragStart(e) {
+      this.draggedElement = e.target.closest(".editor-block");
       if (!this.draggedElement)
         return;
-      e2.dataTransfer?.setData("text/plain", "");
-      this._setGhostImage(e2);
+      e.dataTransfer?.setData("text/plain", "");
+      this._setGhostImage(e);
       this.draggedElement.classList.add("dragging");
       const root = this._container.getRootNode();
       root.querySelector("cms-bloc-actions")?.close();
@@ -17282,18 +17102,18 @@ form[method="dialog"] {
       }, 0);
       this._createIndicator();
     }
-    handleDragOver(e2) {
-      e2.preventDefault();
+    handleDragOver(e) {
+      e.preventDefault();
       if (!this.draggedElement)
         return;
-      const target = this._pickTarget(e2);
+      const target = this._pickTarget(e);
       if (!target) {
         this._hideIndicator();
         return;
       }
       const rect = target.getBoundingClientRect();
       const horizontal = this._isHorizontalFlow(target);
-      const after = horizontal ? (e2.clientX - rect.left) / (rect.right - rect.left) > 0.5 : (e2.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+      const after = horizontal ? (e.clientX - rect.left) / (rect.right - rect.left) > 0.5 : (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
       this._dropTarget = target;
       this._dropPosition = after ? "after" : "before";
       this._showIndicator(target, after, horizontal);
@@ -17314,8 +17134,8 @@ form[method="dialog"] {
       }
       return false;
     }
-    _pickTarget(e2) {
-      const el = e2.target?.closest?.(".editor-block");
+    _pickTarget(e) {
+      const el = e.target?.closest?.(".editor-block");
       if (!el)
         return null;
       if (el === this.draggedElement)
@@ -17326,8 +17146,8 @@ form[method="dialog"] {
         return null;
       return el;
     }
-    handleDrop(e2) {
-      e2.preventDefault();
+    handleDrop(e) {
+      e.preventDefault();
       this._commitDrop();
       this._finalize();
     }
@@ -17359,8 +17179,8 @@ form[method="dialog"] {
         this.draggedElement.removeAttribute("slot");
       }
     }
-    _setGhostImage(e2) {
-      if (!e2.dataTransfer || !this.draggedElement)
+    _setGhostImage(e) {
+      if (!e.dataTransfer || !this.draggedElement)
         return;
       const ghost = document.createElement("div");
       ghost.className = "p9r-drag-ghost";
@@ -17400,7 +17220,7 @@ form[method="dialog"] {
         `;
       ghost.querySelector("span").textContent = `<${this.draggedElement.tagName.toLowerCase()}>`;
       document.body.appendChild(ghost);
-      e2.dataTransfer.setDragImage(ghost, 16, DRAG_PILL_HEIGHT / 2);
+      e.dataTransfer.setDragImage(ghost, 16, DRAG_PILL_HEIGHT / 2);
       this._ghost = ghost;
     }
     _createIndicator() {
@@ -17620,15 +17440,15 @@ form[method="dialog"] {
       const bar = document.createElement("cms-link-bar");
       document.body.appendChild(bar);
     };
-    const findAnchor = (e2) => {
-      for (const n2 of e2.composedPath()) {
-        if (n2 instanceof HTMLAnchorElement)
-          return n2;
+    const findAnchor = (e) => {
+      for (const n of e.composedPath()) {
+        if (n instanceof HTMLAnchorElement)
+          return n;
       }
       return null;
     };
-    const onClick = (e2) => {
-      const anchor = findAnchor(e2);
+    const onClick = (e) => {
+      const anchor = findAnchor(e);
       if (!anchor) {
         setActiveLink(null);
         return;
@@ -17636,20 +17456,20 @@ form[method="dialog"] {
       const href = anchor.getAttribute("href") || "";
       const ctx = getEditorContext();
       if (ctx.mode === "view") {
-        e2.preventDefault();
-        e2.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
         ctx.requestNavigation({ href, classification: cls, via: "link-click" });
         return;
       }
-      if (e2.ctrlKey || e2.metaKey || e2.shiftKey) {
-        e2.preventDefault();
-        e2.stopPropagation();
+      if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
         const cls = classifyLink(href, location.origin, ctx.knownPagePaths);
         ctx.requestNavigation({ href, classification: cls, via: "modifier-click" });
         return;
       }
-      e2.preventDefault();
+      e.preventDefault();
       ensureLinkBar();
       setActiveLink(anchor);
     };
@@ -17770,7 +17590,7 @@ form[method="dialog"] {
   function isRegionEmpty(region) {
     if (!region)
       return true;
-    const nodes = Array.from(region.childNodes).filter((n2) => n2.nodeType === Node.ELEMENT_NODE || n2.nodeType === Node.TEXT_NODE && (n2.textContent ?? "").trim() !== "");
+    const nodes = Array.from(region.childNodes).filter((n) => n.nodeType === Node.ELEMENT_NODE || n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim() !== "");
     if (nodes.length === 0)
       return true;
     if (nodes.length !== 1 || nodes[0].nodeType !== Node.ELEMENT_NODE)
@@ -17808,8 +17628,8 @@ form[method="dialog"] {
 
   class ImageEditor extends Editor {
     _mediaCenter = null;
-    onClick = (e2) => this.handleClick(e2);
-    onSelectMedia = (e2) => this.handleSelectMedia(e2);
+    onClick = (e) => this.handleClick(e);
+    onSelectMedia = (e) => this.handleSelectMedia(e);
     constructor(target) {
       super(target, cssStyle);
       if (!this.target.getAttribute("src"))
@@ -17819,15 +17639,15 @@ form[method="dialog"] {
       this.target.removeEventListener("click", this.onClick);
       this.target.addEventListener("click", this.onClick);
     }
-    handleSelectMedia(e2) {
-      this.target.setAttribute("src", e2.detail.src);
-      this.target.setAttribute("alt", e2.detail.alt);
+    handleSelectMedia(e) {
+      this.target.setAttribute("src", e.detail.src);
+      this.target.setAttribute("alt", e.detail.alt);
       this._mediaCenter?.removeEventListener("select-item", this.onSelectMedia);
       this._mediaCenter?.remove();
     }
-    handleClick(e2) {
-      e2.preventDefault();
-      e2.stopImmediatePropagation();
+    handleClick(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
       const mediaCenter = document.createElement("cms-media-center");
       document.body.append(mediaCenter);
       requestAnimationFrame(() => {
@@ -17854,8 +17674,8 @@ form[method="dialog"] {
 
   class SvgEditor extends Editor {
     _mediaCenter = null;
-    onClick = (e2) => this.handleClick(e2);
-    onSelectMedia = (e2) => this.handleSelectMedia(e2);
+    onClick = (e) => this.handleClick(e);
+    onSelectMedia = (e) => this.handleSelectMedia(e);
     constructor(target) {
       super(target, cssStyle2);
     }
@@ -17869,9 +17689,9 @@ form[method="dialog"] {
       this._mediaCenter?.remove();
       this._mediaCenter = null;
     }
-    handleClick(e2) {
-      e2.preventDefault();
-      e2.stopImmediatePropagation();
+    handleClick(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
       const mediaCenter = document.createElement("cms-media-center");
       document.body.append(mediaCenter);
       requestAnimationFrame(() => {
@@ -17881,9 +17701,9 @@ form[method="dialog"] {
         mediaCenter.show(["folder", "image"]);
       });
     }
-    async handleSelectMedia(e2) {
-      const src = e2.detail?.src;
-      const mimetype = e2.detail?.mimetype;
+    async handleSelectMedia(e) {
+      const src = e.detail?.src;
+      const mimetype = e.detail?.mimetype;
       this._mediaCenter?.removeEventListener("select-item", this.onSelectMedia);
       this._mediaCenter?.remove();
       this._mediaCenter = null;
@@ -17930,8 +17750,8 @@ form[method="dialog"] {
       const newRange = document.createRange();
       newRange.selectNodeContents(wrapper);
       sel.addRange(newRange);
-    } catch (e2) {
-      console.warn("Selection spans complex markup", e2);
+    } catch (e) {
+      console.warn("Selection spans complex markup", e);
     }
   }
   function toggleFormat(tag) {
@@ -18240,9 +18060,9 @@ form[method="dialog"] {
   var textTags = new Set(["p", "span", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "a", "b", "i", "u"]);
 
   class TextEditor extends Editor {
-    onKeyDown = (e2) => this.handleKeyDown(e2);
-    onInput = (e2) => this.handleInput(e2);
-    onPaste = (e2) => this.handlePaste(e2);
+    onKeyDown = (e) => this.handleKeyDown(e);
+    onInput = (e) => this.handleInput(e);
+    onPaste = (e) => this.handlePaste(e);
     isInitializing = false;
     constructor(target) {
       super(target, cssStyle3);
@@ -18277,10 +18097,10 @@ form[method="dialog"] {
         this.attrObserver.disconnect();
       }
     }
-    handlePaste(e2) {
-      e2.preventDefault();
-      e2.stopImmediatePropagation();
-      const clipboard = e2.clipboardData;
+    handlePaste(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const clipboard = e.clipboardData;
       if (!clipboard)
         return;
       const selection = window.getSelection();
@@ -18321,12 +18141,12 @@ form[method="dialog"] {
       element.setAttribute(p9r.attr.EDITOR.IS_CREATING, "true");
       return element;
     }
-    handleKeyDown(e2) {
-      if (e2.key === "Enter") {
-        if (e2.shiftKey)
+    handleKeyDown(e) {
+      if (e.key === "Enter") {
+        if (e.shiftKey)
           return;
-        e2.preventDefault();
-        e2.stopImmediatePropagation();
+        e.preventDefault();
+        e.stopImmediatePropagation();
         if (this.isAddAfterDisabled)
           return;
         const nextEl = this.createElement("p");
@@ -18347,14 +18167,14 @@ form[method="dialog"] {
         if (observer) {
           observer.make_it_editor(nextEl);
         } else {
-          const e3 = new TextEditor(nextEl);
-          e3.viewEditor();
+          const e2 = new TextEditor(nextEl);
+          e2.viewEditor();
         }
         this._focusWithCaret(nextEl, "start");
       }
-      if (e2.key === "Backspace" && this.target.innerHTML === "" && !this.isDeleteDisabled) {
-        e2.preventDefault();
-        e2.stopImmediatePropagation();
+      if (e.key === "Backspace" && this.target.innerHTML === "" && !this.isDeleteDisabled) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
         this.restore();
         const previous = this.target.previousElementSibling;
         const next = this.target.nextElementSibling;
@@ -18364,16 +18184,16 @@ form[method="dialog"] {
           next.focus();
         this.target.remove();
       }
-      if ((e2.key === "ArrowUp" || e2.key === "ArrowDown") && !e2.shiftKey && !e2.ctrlKey && !e2.metaKey && !e2.altKey) {
-        const isUp = e2.key === "ArrowUp";
+      if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const isUp = e.key === "ArrowUp";
         const onEdge = isUp ? this._isCaretOnFirstLine() : this._isCaretOnLastLine();
         if (!onEdge)
           return;
         const adjacent = this._findAdjacentTextEditor(isUp ? "prev" : "next");
         if (!adjacent)
           return;
-        e2.preventDefault();
-        e2.stopImmediatePropagation();
+        e.preventDefault();
+        e.stopImmediatePropagation();
         this._focusWithCaret(adjacent, isUp ? "end" : "start");
       }
     }
@@ -18433,14 +18253,14 @@ form[method="dialog"] {
       sel.removeAllRanges();
       sel.addRange(range);
     }
-    handleInput(e2) {
+    handleInput(e) {
       const editorRoot = getClosestEditorSystem(this.target);
       if (this.target.innerHTML === "<br>") {
         this.target.innerHTML = "";
       }
       if (this.target.innerText === "/" && this.isBlocManagementEnabled && !this.isChangeComponentDisabled) {
-        e2.stopPropagation();
-        e2.stopImmediatePropagation();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         editorRoot.blocLibrary.open((detail) => {
           if (detail.type === "template") {
             const fragment = document.createRange().createContextualFragment(detail.html);
@@ -18543,8 +18363,8 @@ form[method="dialog"] {
 `;
 
   class ListEditor extends Editor {
-    onKeyDown = (e2) => this.handleKeyDown(e2);
-    onInput = (e2) => this.handleInput(e2);
+    onKeyDown = (e) => this.handleKeyDown(e);
+    onInput = (e) => this.handleInput(e);
     constructor(target) {
       super(target, cssStyle4);
       let li2 = this.target.querySelector("li");
@@ -18560,20 +18380,20 @@ form[method="dialog"] {
         });
       }
     }
-    handleKeyDown(e2) {
-      const item = e2.target;
-      if (e2.key === "Enter" && !e2.shiftKey) {
-        e2.preventDefault();
-        e2.stopImmediatePropagation();
+    handleKeyDown(e) {
+      const item = e.target;
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
         if (item.innerHTML === "")
           this.exitListWithParagraph(item);
         else
           this.splitItem(item);
         return;
       }
-      if (e2.key === "Backspace" && item.innerHTML === "") {
-        e2.preventDefault();
-        e2.stopImmediatePropagation();
+      if (e.key === "Backspace" && item.innerHTML === "") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
         this.removeEmptyItem(item);
       }
     }
@@ -18646,8 +18466,8 @@ form[method="dialog"] {
         sel.addRange(range);
       });
     }
-    handleInput(e2) {
-      const item = e2.target;
+    handleInput(e) {
+      const item = e.target;
       if (item.innerHTML === "<br>")
         item.innerHTML = "";
     }
@@ -18980,17 +18800,17 @@ form[method="dialog"] {
   async function waitForScripts(ele) {
     const scriptSlot = ele.shadowRoot?.querySelector('slot[name="script"]');
     const scripts = scriptSlot.assignedElements();
-    const loaders = scripts.map((s3) => {
-      if (!s3.src || s3.dataset.loaded)
+    const loaders = scripts.map((s2) => {
+      if (!s2.src || s2.dataset.loaded)
         return Promise.resolve(true);
       return new Promise((resolve) => {
         const done = () => {
-          s3.dataset.loaded = "true";
+          s2.dataset.loaded = "true";
           resolve(true);
         };
-        s3.addEventListener("load", done, { once: true });
-        s3.addEventListener("error", () => resolve(false), { once: true });
-        if (performance.getEntriesByName(s3.src).length > 0)
+        s2.addEventListener("load", done, { once: true });
+        s2.addEventListener("error", () => resolve(false), { once: true });
+        if (performance.getEntriesByName(s2.src).length > 0)
           done();
       });
     });
@@ -19355,8 +19175,8 @@ dialog::backdrop {
       });
       dialog.querySelector(".skip").addEventListener("click", () => this._close(null));
       dialog.addEventListener("cancel", () => this._close(null));
-      dialog.addEventListener("click", (e2) => {
-        if (e2.target === dialog)
+      dialog.addEventListener("click", (e) => {
+        if (e.target === dialog)
           this._close(null);
       });
       this.shadowRoot.appendChild(dialog);
@@ -19518,8 +19338,8 @@ button span {
       const EditorSystem = getClosestEditorSystem(this);
       const handle = this.shadowRoot?.getElementById("drag-handle");
       handle?.addEventListener("pointerdown", this._onPointerDown.bind(this));
-      this.shadowRoot?.querySelector(".actions")?.addEventListener("click", (e2) => {
-        const btn = e2.target.closest("[data-action]");
+      this.shadowRoot?.querySelector(".actions")?.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-action]");
         if (!btn)
           return;
         switch (btn.dataset.action) {
@@ -19535,27 +19355,27 @@ button span {
         }
       });
       this.setAttribute("data-mode", EditorSystem.mode);
-      EditorSystem.addEventListener("editor-system-switch-mode", (e2) => {
-        this.setAttribute("data-mode", e2.detail);
+      EditorSystem.addEventListener("editor-system-switch-mode", (e) => {
+        this.setAttribute("data-mode", e.detail);
       });
     }
-    _onPointerDown(e2) {
-      this._startX = e2.clientX - this.offsetLeft;
-      this._startY = e2.clientY - this.offsetTop;
-      e2.target.setPointerCapture(e2.pointerId);
+    _onPointerDown(e) {
+      this._startX = e.clientX - this.offsetLeft;
+      this._startY = e.clientY - this.offsetTop;
+      e.target.setPointerCapture(e.pointerId);
       window.addEventListener("pointermove", this._onPointerMove);
       window.addEventListener("pointerup", this._onPointerUp);
     }
-    _onPointerMove(e2) {
-      let newX = e2.clientX - this._startX;
-      let newY = e2.clientY - this._startY;
+    _onPointerMove(e) {
+      let newX = e.clientX - this._startX;
+      let newY = e.clientY - this._startY;
       newX = Math.max(0, Math.min(newX, window.innerWidth - this.offsetWidth));
       newY = Math.max(0, Math.min(newY, window.innerHeight - this.offsetHeight));
       this.style.left = `${newX}px`;
       this.style.top = `${newY}px`;
       this.style.right = "auto";
     }
-    _onPointerUp(e2) {
+    _onPointerUp(e) {
       window.removeEventListener("pointermove", this._onPointerMove);
       window.removeEventListener("pointerup", this._onPointerUp);
     }
@@ -20421,29 +20241,29 @@ dialog::backdrop {
       });
     }
     connectedCallback() {
-      const s3 = this.shadowRoot;
-      this._dialog = s3.querySelector("dialog");
-      this._grid = s3.getElementById("grid");
-      this._btnSelect = s3.getElementById("btnSelect");
-      s3.getElementById("btnClose").addEventListener("click", () => this._dialog?.close());
-      s3.getElementById("btnCancel").addEventListener("click", () => this._dialog?.close());
-      this._dialog.addEventListener("click", (e2) => {
-        if (e2.target === this._dialog)
+      const s2 = this.shadowRoot;
+      this._dialog = s2.querySelector("dialog");
+      this._grid = s2.getElementById("grid");
+      this._btnSelect = s2.getElementById("btnSelect");
+      s2.getElementById("btnClose").addEventListener("click", () => this._dialog?.close());
+      s2.getElementById("btnCancel").addEventListener("click", () => this._dialog?.close());
+      this._dialog.addEventListener("click", (e) => {
+        if (e.target === this._dialog)
           this._dialog?.close();
       });
-      s3.getElementById("btnCreateFolder").addEventListener("click", () => this._openNewFolder());
-      const nfBackdrop = s3.getElementById("nf-backdrop");
-      const nfInput = s3.getElementById("nf-input");
-      s3.getElementById("nf-cancel").addEventListener("click", () => nfBackdrop.classList.remove("open"));
-      s3.getElementById("nf-confirm").addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
-      nfInput.addEventListener("keydown", (e2) => {
-        if (e2.key === "Enter")
+      s2.getElementById("btnCreateFolder").addEventListener("click", () => this._openNewFolder());
+      const nfBackdrop = s2.getElementById("nf-backdrop");
+      const nfInput = s2.getElementById("nf-input");
+      s2.getElementById("nf-cancel").addEventListener("click", () => nfBackdrop.classList.remove("open"));
+      s2.getElementById("nf-confirm").addEventListener("click", () => this._createFolder(nfInput, nfBackdrop));
+      nfInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter")
           this._createFolder(nfInput, nfBackdrop);
-        if (e2.key === "Escape")
+        if (e.key === "Escape")
           nfBackdrop.classList.remove("open");
       });
-      const fileInput = s3.getElementById("file-input");
-      s3.getElementById("btnUpload").addEventListener("click", () => fileInput.click());
+      const fileInput = s2.getElementById("file-input");
+      s2.getElementById("btnUpload").addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", async () => {
         if (!fileInput.files?.length)
           return;
@@ -20452,8 +20272,8 @@ dialog::backdrop {
         this._refresh();
       });
       this._btnSelect.addEventListener("click", () => this._confirmSelection());
-      this._grid.addEventListener("click", (e2) => {
-        const card = e2.target.closest("p9r-card-media");
+      this._grid.addEventListener("click", (e) => {
+        const card = e.target.closest("p9r-card-media");
         if (!card)
           return;
         const id2 = card.dataset.id;
@@ -20465,14 +20285,14 @@ dialog::backdrop {
           this._select(card, id2);
         }
       });
-      this._grid.addEventListener("dblclick", (e2) => {
-        const card = e2.target.closest("p9r-card-media");
+      this._grid.addEventListener("dblclick", (e) => {
+        const card = e.target.closest("p9r-card-media");
         if (!card || card.dataset.type === "folder")
           return;
         this._confirmSelection();
       });
-      s3.getElementById("breadcrumb").addEventListener("click", (e2) => {
-        const target = e2.target;
+      s2.getElementById("breadcrumb").addEventListener("click", (e) => {
+        const target = e.target;
         if (!target.classList.contains("bc-item"))
           return;
         const folder = target.dataset.folder || null;
@@ -20480,11 +20300,11 @@ dialog::backdrop {
         this._breadcrumb = this._breadcrumb.slice(0, index + 1);
         this._navigateTo(folder);
       });
-      const container = s3.querySelector(".modal-container");
-      const overlay = s3.getElementById("drop-overlay");
-      container.addEventListener("dragenter", (e2) => {
-        if (e2.dataTransfer?.types.includes("Files")) {
-          e2.preventDefault();
+      const container = s2.querySelector(".modal-container");
+      const overlay = s2.getElementById("drop-overlay");
+      container.addEventListener("dragenter", (e) => {
+        if (e.dataTransfer?.types.includes("Files")) {
+          e.preventDefault();
           this._dragCounter++;
           overlay.classList.add("active");
         }
@@ -20496,13 +20316,13 @@ dialog::backdrop {
           overlay.classList.remove("active");
         }
       });
-      container.addEventListener("dragover", (e2) => e2.preventDefault());
-      container.addEventListener("drop", async (e2) => {
-        e2.preventDefault();
+      container.addEventListener("dragover", (e) => e.preventDefault());
+      container.addEventListener("drop", async (e) => {
+        e.preventDefault();
         this._dragCounter = 0;
         overlay.classList.remove("active");
-        if (e2.dataTransfer?.files.length) {
-          await uploadFiles(e2.dataTransfer.files, this._folder);
+        if (e.dataTransfer?.files.length) {
+          await uploadFiles(e.dataTransfer.files, this._folder);
           this._refresh();
         }
       });
@@ -20569,9 +20389,9 @@ dialog::backdrop {
       this._refresh();
     }
     _openNewFolder() {
-      const s3 = this.shadowRoot;
-      const backdrop = s3.getElementById("nf-backdrop");
-      const input = s3.getElementById("nf-input");
+      const s2 = this.shadowRoot;
+      const backdrop = s2.getElementById("nf-backdrop");
+      const input = s2.getElementById("nf-input");
       input.value = "";
       backdrop.classList.add("open");
       setTimeout(() => input.focus(), 50);
@@ -21520,11 +21340,11 @@ button.active svg {
     btn.className = "ext-btn";
     btn.title = "Insert dynamic content";
     btn.innerHTML = ICON_BRACES;
-    btn.addEventListener("mousedown", (e2) => {
-      e2.preventDefault();
+    btn.addEventListener("mousedown", (e) => {
+      e.preventDefault();
     });
-    btn.addEventListener("click", (e2) => {
-      e2.stopPropagation();
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
       onClick(btn);
     });
     return btn;
@@ -21560,11 +21380,11 @@ button.active svg {
     row.innerHTML = `<span class="ext-row-label"></span><span class="ext-row-path"></span>`;
     row.querySelector(".ext-row-label").textContent = field.label;
     row.querySelector(".ext-row-path").textContent = field.path;
-    row.addEventListener("mousedown", (e2) => {
-      e2.preventDefault();
+    row.addEventListener("mousedown", (e) => {
+      e.preventDefault();
     });
-    row.addEventListener("click", (e2) => {
-      e2.stopPropagation();
+    row.addEventListener("click", (e) => {
+      e.stopPropagation();
       onPick(field);
     });
     return row;
@@ -21588,16 +21408,16 @@ button.active svg {
   }
   // src/core/editorSystem/extensions/schemaScalars.ts
   function flattenScalars(schema, prefix = "") {
-    const s3 = unwrap(schema);
-    if (!s3)
+    const s2 = unwrap(schema);
+    if (!s2)
       return [];
-    if (Array.isArray(s3.enum) && s3.enum.length > 0) {
-      return [{ path: prefix, label: leafLabel(prefix), type: enumTypeOf(s3) }];
+    if (Array.isArray(s2.enum) && s2.enum.length > 0) {
+      return [{ path: prefix, label: leafLabel(prefix), type: enumTypeOf(s2) }];
     }
-    switch (s3.type) {
+    switch (s2.type) {
       case "object": {
         const out = [];
-        for (const [k, v2] of Object.entries(s3.properties ?? {})) {
+        for (const [k, v2] of Object.entries(s2.properties ?? {})) {
           out.push(...flattenScalars(v2, prefix ? `${prefix}.${k}` : k));
         }
         return out;
@@ -21613,7 +21433,7 @@ button.active svg {
       case "number":
       case "boolean":
       case "null":
-        return [{ path: prefix, label: leafLabel(prefix), type: s3.type }];
+        return [{ path: prefix, label: leafLabel(prefix), type: s2.type }];
       default:
         return [];
     }
@@ -21643,10 +21463,10 @@ button.active svg {
     const dot = path.lastIndexOf(".");
     return dot >= 0 ? path.slice(dot + 1) : path;
   }
-  function enumTypeOf(s3) {
-    if (s3.type)
-      return s3.type;
-    const first = s3.enum?.[0];
+  function enumTypeOf(s2) {
+    if (s2.type)
+      return s2.type;
+    const first = s2.enum?.[0];
     return typeof first === "string" ? "string" : typeof first === "number" ? "number" : typeof first === "boolean" ? "boolean" : "string";
   }
 
@@ -21702,7 +21522,7 @@ button.active svg {
     if (self._lastEditable === startEl)
       return;
     self._lastEditable = startEl;
-    const richExts = collectAncestorExtensions(startEl, "richtextbar").filter((e2) => e2.enabled?.() !== false);
+    const richExts = collectAncestorExtensions(startEl, "richtextbar").filter((e) => e.enabled?.() !== false);
     const dataExts = adaptDataExtensions(startEl);
     const exts = [...richExts, ...dataExts];
     self._currentExtensions = exts;
@@ -21769,14 +21589,14 @@ button.active svg {
   }
 
   // src/components/editor/RichTextBar/listener.ts
-  function handleCustomColorInput(self, e2) {
-    const input = e2.target;
+  function handleCustomColorInput(self, e) {
+    const input = e.target;
     if (!input.classList.contains("color-custom-input"))
       return;
     applyColor(self, input.value);
   }
-  function handleClick(self, e2) {
-    const target = e2.target;
+  function handleClick(self, e) {
+    const target = e.target;
     const btn = target.closest("button");
     if (!btn)
       return;
@@ -21836,23 +21656,23 @@ button.active svg {
     updateState(self);
     refreshExtensions(self);
   }
-  function handleRootMousedown(self, e2) {
-    const target = e2.target;
+  function handleRootMousedown(self, e) {
+    const target = e.target;
     self.interacting = true;
     if (target.tagName === "INPUT" || target.tagName.includes("-") || target.closest("p9r-link")) {
       return;
     }
-    e2.preventDefault();
+    e.preventDefault();
   }
   function handleRootMouseup(self) {
     setTimeout(() => {
       self.interacting = false;
     }, 50);
   }
-  function handleOutsideMouseDown(self, e2) {
+  function handleOutsideMouseDown(self, e) {
     if (!self.classList.contains("visible"))
       return;
-    const path = e2.composedPath();
+    const path = e.composedPath();
     if (path.includes(self) || path.includes(self.shadowRoot))
       return;
     const range = self.selection.range;
@@ -21888,12 +21708,12 @@ button.active svg {
     pageLink = null;
     _lastEditable = null;
     _currentExtensions = [];
-    _onRootMousedown = (e2) => handleRootMousedown(this, e2);
+    _onRootMousedown = (e) => handleRootMousedown(this, e);
     _onRootMouseup = () => handleRootMouseup(this);
-    _onRootClick = (e2) => handleClick(this, e2);
-    _onRootChange = (e2) => handleCustomColorInput(this, e2);
+    _onRootClick = (e) => handleClick(this, e);
+    _onRootChange = (e) => handleCustomColorInput(this, e);
     _onSelectionChange = () => handleSelection(this);
-    _onOutsideMousedown = (e2) => handleOutsideMouseDown(this, e2);
+    _onOutsideMousedown = (e) => handleOutsideMouseDown(this, e);
     _onExtensionsInvalidated = () => {
       this._lastEditable = null;
     };
@@ -22050,14 +21870,14 @@ button.active svg {
     constructor() {
       super(template_default15, style_default14, true);
     }
-    _handleSubmit = (e2) => {
-      e2.preventDefault();
+    _handleSubmit = (e) => {
+      e.preventDefault();
       const editorSystem = getClosestEditorSystem(this);
       const content = editorSystem.pageContent;
       const id2 = new URL(window.location.href).searchParams.get("id");
       if (!id2)
         throw new Error("Id is missing");
-      const formData = getFormData(e2.target, this.shadowRoot?.querySelector("form slot"));
+      const formData = getFormData(e.target, this.shadowRoot?.querySelector("form slot"));
       const data = Object.fromEntries(formData.entries());
       fetch(this.url, {
         method: this.method,
@@ -22235,8 +22055,8 @@ button.active svg {
         }
         const snippet = await res.json();
         this._render(snippet.content, identifier);
-      } catch (e2) {
-        this._renderError(e2?.message || "Failed to load snippet");
+      } catch (e) {
+        this._renderError(e?.message || "Failed to load snippet");
       }
     }
     _render(content, identifier) {
@@ -22512,8 +22332,8 @@ button.active svg {
       const applyBtn = this.shadowRoot.getElementById("btn-apply");
       closeBtn.addEventListener("click", () => this.close());
       cancelBtn.addEventListener("click", () => this.close());
-      backdrop.addEventListener("click", (e2) => {
-        if (e2.target === backdrop)
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop)
           this.close();
       });
       applyBtn.addEventListener("click", () => {
@@ -22802,12 +22622,12 @@ button.active svg {
       const backdrop = this.shadowRoot.getElementById("backdrop");
       const closeBtn = this.shadowRoot.getElementById("close-btn");
       closeBtn.addEventListener("click", () => this.close());
-      backdrop.addEventListener("click", (e2) => {
-        if (e2.target === backdrop)
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop)
           this.close();
       });
-      document.addEventListener("keydown", (e2) => {
-        if (e2.key === "Escape" && this.hasAttribute("open"))
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && this.hasAttribute("open"))
           this.close();
       });
     }
@@ -23254,11 +23074,11 @@ button.active svg {
 `;
 
   // src/components/media/GridMedia/features/context-menu.ts
-  function setupContextMenu(s3, callbacks) {
-    const menu = s3.getElementById("ctx-menu");
+  function setupContextMenu(s2, callbacks) {
+    const menu = s2.getElementById("ctx-menu");
     let activeItem = null;
-    menu.addEventListener("click", (e2) => {
-      const btn = e2.target.closest("[data-action]");
+    menu.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-action]");
       if (!btn || !activeItem)
         return;
       const action = btn.dataset.action;
@@ -23270,21 +23090,21 @@ button.active svg {
     });
     document.addEventListener("click", () => menu.classList.remove("visible"));
     return {
-      show(e2, item) {
+      show(e, item) {
         activeItem = item;
-        menu.style.left = e2.clientX + "px";
-        menu.style.top = e2.clientY + "px";
+        menu.style.left = e.clientX + "px";
+        menu.style.top = e.clientY + "px";
         menu.classList.add("visible");
       }
     };
   }
 
   // src/components/media/GridMedia/features/rename.ts
-  function setupRename(s3, callbacks) {
-    const backdrop = s3.getElementById("rename-backdrop");
-    const input = s3.getElementById("rename-input");
-    const confirmBtn = s3.getElementById("rename-confirm");
-    const cancelBtn = s3.getElementById("rename-cancel");
+  function setupRename(s2, callbacks) {
+    const backdrop = s2.getElementById("rename-backdrop");
+    const input = s2.getElementById("rename-input");
+    const confirmBtn = s2.getElementById("rename-confirm");
+    const cancelBtn = s2.getElementById("rename-cancel");
     let currentItem = null;
     const hide = () => {
       backdrop.classList.remove("visible");
@@ -23300,14 +23120,14 @@ button.active svg {
     };
     confirmBtn.addEventListener("click", apply);
     cancelBtn.addEventListener("click", hide);
-    backdrop.addEventListener("click", (e2) => {
-      if (e2.target === backdrop)
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop)
         hide();
     });
-    input.addEventListener("keydown", (e2) => {
-      if (e2.key === "Enter")
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter")
         apply();
-      if (e2.key === "Escape")
+      if (e.key === "Escape")
         hide();
     });
     return {
@@ -23324,11 +23144,11 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/new-folder.ts
-  function setupNewFolder(host, s3, callbacks) {
-    const backdrop = s3.getElementById("nf-backdrop");
-    const input = s3.getElementById("nf-input");
-    const confirmBtn = s3.getElementById("nf-confirm");
-    const cancelBtn = s3.getElementById("nf-cancel");
+  function setupNewFolder(host, s2, callbacks) {
+    const backdrop = s2.getElementById("nf-backdrop");
+    const input = s2.getElementById("nf-input");
+    const confirmBtn = s2.getElementById("nf-confirm");
+    const cancelBtn = s2.getElementById("nf-cancel");
     const hide = () => backdrop.classList.remove("visible");
     const show = () => {
       input.value = "";
@@ -23345,66 +23165,66 @@ button.active svg {
     host.addEventListener("new-folder", show);
     confirmBtn.addEventListener("click", create);
     cancelBtn.addEventListener("click", hide);
-    backdrop.addEventListener("click", (e2) => {
-      if (e2.target === backdrop)
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop)
         hide();
     });
-    input.addEventListener("keydown", (e2) => {
-      if (e2.key === "Enter")
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter")
         create();
-      if (e2.key === "Escape")
+      if (e.key === "Escape")
         hide();
     });
-    document.addEventListener("keydown", (e2) => {
-      if (e2.key === "Escape" && backdrop.classList.contains("visible")) {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && backdrop.classList.contains("visible")) {
         hide();
       }
     });
   }
 
   // src/components/media/GridMedia/features/drag-drop.ts
-  function setupDragDrop(s3, callbacks) {
-    const fileInput = s3.getElementById("file-input");
-    const dropOverlay = s3.getElementById("drop-overlay");
+  function setupDragDrop(s2, callbacks) {
+    const fileInput = s2.getElementById("file-input");
+    const dropOverlay = s2.getElementById("drop-overlay");
     let dragCounter = 0;
     let internalDrag = false;
     fileInput.addEventListener("change", () => {
       if (fileInput.files?.length)
         callbacks.onFiles(fileInput.files);
     });
-    s3.getElementById("grid").addEventListener("dragstart", () => {
+    s2.getElementById("grid").addEventListener("dragstart", () => {
       internalDrag = true;
     });
     document.addEventListener("dragend", () => {
       internalDrag = false;
     });
-    document.addEventListener("dragenter", (e2) => {
-      e2.preventDefault();
+    document.addEventListener("dragenter", (e) => {
+      e.preventDefault();
       if (internalDrag)
         return;
       dragCounter++;
       if (dragCounter === 1)
         dropOverlay.classList.add("visible");
     });
-    document.addEventListener("dragleave", (e2) => {
-      e2.preventDefault();
+    document.addEventListener("dragleave", (e) => {
+      e.preventDefault();
       if (internalDrag)
         return;
       dragCounter--;
       if (dragCounter === 0)
         dropOverlay.classList.remove("visible");
     });
-    document.addEventListener("dragover", (e2) => e2.preventDefault());
-    document.addEventListener("drop", (e2) => {
-      e2.preventDefault();
+    document.addEventListener("dragover", (e) => e.preventDefault());
+    document.addEventListener("drop", (e) => {
+      e.preventDefault();
       dragCounter = 0;
       dropOverlay.classList.remove("visible");
       if (internalDrag) {
         internalDrag = false;
         return;
       }
-      if (e2.dataTransfer?.files.length)
-        callbacks.onFiles(e2.dataTransfer.files);
+      if (e.dataTransfer?.files.length)
+        callbacks.onFiles(e.dataTransfer.files);
     });
     return {
       trigger() {
@@ -23514,9 +23334,9 @@ button.active svg {
         actions.querySelector("#btn-delete").addEventListener("click", () => {
           callbacks.onDelete(item.id);
         });
-        fields.addEventListener("keydown", (e2) => {
-          if (e2.key === "Enter") {
-            e2.preventDefault();
+        fields.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
             callbacks.onSave(item.id, readFields(detail));
           }
         });
@@ -23544,25 +23364,25 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/features/setup.ts
-  function setupFeatures(host, s3) {
+  function setupFeatures(host, s2) {
     const refresh2 = () => host._refresh();
-    const ctxMenu = setupContextMenu(s3, {
+    const ctxMenu = setupContextMenu(s2, {
       onRename: (item) => rename.open(item),
       onDelete: (id2) => host._confirmDelete(id2)
     });
-    const rename = setupRename(s3, {
+    const rename = setupRename(s2, {
       onApply: async (id2, name) => {
         await renameItem(id2, name);
         refresh2();
       }
     });
-    setupNewFolder(host, s3, {
+    setupNewFolder(host, s2, {
       onCreate: async (name) => {
         await createFolder(name, host._folder);
         refresh2();
       }
     });
-    const dragDrop = setupDragDrop(s3, {
+    const dragDrop = setupDragDrop(s2, {
       onFiles: async (files) => {
         await uploadFiles(files, host._folder);
         refresh2();
@@ -23593,10 +23413,10 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/events/grid.ts
-  function wireGrid(host, s3, ctxMenu, detail) {
-    const grid = s3.getElementById("grid");
-    grid.addEventListener("click", (e2) => {
-      const card = e2.target.closest("p9r-card-media");
+  function wireGrid(host, s2, ctxMenu, detail) {
+    const grid = s2.getElementById("grid");
+    grid.addEventListener("click", (e) => {
+      const card = e.target.closest("p9r-card-media");
       if (!card)
         return;
       const id2 = card.dataset.id;
@@ -23609,22 +23429,22 @@ button.active svg {
           detail.open(item);
       }
     });
-    grid.addEventListener("contextmenu", (e2) => {
-      const card = e2.target.closest("p9r-card-media");
+    grid.addEventListener("contextmenu", (e) => {
+      const card = e.target.closest("p9r-card-media");
       if (!card)
         return;
       const item = host._items.find((i) => i.id === card.dataset.id);
       if (!item)
         return;
-      e2.preventDefault();
-      ctxMenu.show(e2, item);
+      e.preventDefault();
+      ctxMenu.show(e, item);
     });
   }
 
   // src/components/media/GridMedia/events/breadcrumb.ts
-  function wireBreadcrumb(host, s3) {
-    s3.getElementById("breadcrumb").addEventListener("click", (e2) => {
-      const target = e2.target;
+  function wireBreadcrumb(host, s2) {
+    s2.getElementById("breadcrumb").addEventListener("click", (e) => {
+      const target = e.target;
       if (!target.classList.contains("bc-item"))
         return;
       const folder = target.dataset.folder || null;
@@ -23652,11 +23472,11 @@ button.active svg {
       return this.shadowRoot.getElementById("crop");
     }
     connectedCallback() {
-      const s3 = this.shadowRoot;
+      const s2 = this.shadowRoot;
       this._folder = new URL(window.location.href).searchParams.get("folder");
-      const f2 = setupFeatures(this, s3);
-      wireGrid(this, s3, f2.ctxMenu, f2.detail);
-      wireBreadcrumb(this, s3);
+      const f2 = setupFeatures(this, s2);
+      wireGrid(this, s2, f2.ctxMenu, f2.detail);
+      wireBreadcrumb(this, s2);
       this.upload = () => f2.dragDrop.trigger();
       if (this._folder) {
         resolveBreadcrumbTrail(this._folder).then((trail) => {
@@ -23745,9 +23565,9 @@ button.active svg {
       this.querySelector('[data-action="upload"]')?.addEventListener("click", () => this._fileInput?.click());
       this._fileInput?.addEventListener("change", () => this._handleUpload());
       this.querySelector('[data-action="create-folder"]')?.addEventListener("click", () => this._handleCreateFolder());
-      this.querySelector('[data-role="folder-name"]')?.addEventListener("keydown", (e2) => {
-        if (e2.key === "Enter") {
-          e2.preventDefault();
+      this.querySelector('[data-role="folder-name"]')?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
           this._handleCreateFolder();
         }
       });
@@ -23783,13 +23603,13 @@ button.active svg {
     customElements.define("cms-media-admin", MediaAdmin);
 
   // src/components/form/Form/events/onKeyboardEvent.ts
-  function onKeyboardEvent(e2, nativeForm) {
-    if (e2.key !== "Enter")
+  function onKeyboardEvent(e, nativeForm) {
+    if (e.key !== "Enter")
       return;
-    const target = e2.target;
+    const target = e.target;
     if (target.tagName === "TEXTAREA")
       return;
-    e2.preventDefault();
+    e.preventDefault();
     nativeForm.requestSubmit();
   }
 
@@ -23802,9 +23622,9 @@ button.active svg {
   }
 
   // src/components/form/Form/events/onSubmit.ts
-  function onSubmit(e2, me2) {
-    e2.preventDefault();
-    const form = e2.target;
+  function onSubmit(e, me2) {
+    e.preventDefault();
+    const form = e.target;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     fetch(buildRequestUrl(me2.target), {
@@ -23844,11 +23664,11 @@ button.active svg {
     static get observedAttributes() {
       return ["redirect", "target", "method", "emit"];
     }
-    _handleInternalSubmit = (e2) => {
-      onSubmit(e2, this);
+    _handleInternalSubmit = (e) => {
+      onSubmit(e, this);
     };
-    _handleKeydown = (e2) => {
-      onKeyboardEvent(e2, this._nativeForm);
+    _handleKeydown = (e) => {
+      onKeyboardEvent(e, this._nativeForm);
     };
     connectedCallback() {
       requestAnimationFrame(() => {
@@ -24024,8 +23844,8 @@ button.active svg {
     }
     _wire() {
       this._tile.addEventListener("click", () => this._openPicker());
-      this._clearBtn.addEventListener("click", (e2) => {
-        e2.stopPropagation();
+      this._clearBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         this.value = "";
         this.dispatchEvent(new Event("change", { bubbles: true }));
       });
@@ -24033,9 +23853,9 @@ button.active svg {
     _openPicker() {
       const center = document.createElement("cms-media-center");
       document.body.appendChild(center);
-      const handler = (e2) => {
+      const handler = (e) => {
         center.removeEventListener("select-item", handler);
-        const src = e2.detail?.src;
+        const src = e.detail?.src;
         if (src) {
           this.value = src;
           this.dispatchEvent(new Event("change", { bubbles: true }));

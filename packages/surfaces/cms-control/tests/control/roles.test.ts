@@ -4,10 +4,10 @@ import { InMemoryUsersRepository } from "@bernouy/cms-auth";
 import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
 import { cmsPermission, ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE } from "@bernouy/cms-permissions";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
+import type { RoleDefinition } from "@bernouy/cms-permissions";
 import type { ControlCms } from "cms-control/ControlCms";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import { parseRoleDto } from "cms-control/core/roles/mutateRole";
-import { upsertRole, deleteRole, RoleValidationError, RoleConflictError } from "@bernouy/cms-permissions";
 import { assignableRoles, manageableRoles } from "cms-control/core/roles/rolesView";
 import { roleEditorData } from "cms-control/core/roles/editorData";
 
@@ -18,6 +18,10 @@ function makeCms() {
     const users = new InMemoryUsersRepository();
     const roles = new InMemoryRolesRepository();
     return { cms: { repository, users, roles } as unknown as ControlCms, repository, users, roles };
+}
+
+async function seedRole(roles: InMemoryRolesRepository, def: RoleDefinition): Promise<void> {
+    await roles.upsert(def);
 }
 
 describe("parseRoleDto", () => {
@@ -56,8 +60,8 @@ describe("assignableRoles", () => {
     });
 
     test("includes custom roles after creation", async () => {
-        const { cms } = makeCms();
-        await upsertRole(cms.roles, { id: "editor", label: "Editor", grants: [] });
+        const { cms, roles } = makeCms();
+        await seedRole(roles, { id: "editor", label: "Editor", grants: [] });
         expect((await assignableRoles(cms)).map((r) => r.id)).toContain("editor");
     });
 });
@@ -76,76 +80,12 @@ describe("manageableRoles", () => {
     });
 
     test("custom role is deletable and reflects its grant count", async () => {
-        const { cms } = makeCms();
-        await upsertRole(cms.roles, { id: "editor", label: "Editor", grants: [{ permission: cmsPermission("pages", "edit") }] });
+        const { cms, roles } = makeCms();
+        await seedRole(roles, { id: "editor", label: "Editor", grants: [{ permission: cmsPermission("pages", "edit") }] });
         const row = (await manageableRoles(cms)).find((r) => r.id === "editor")!;
         expect(row.hideDelete).toBe("");
         expect(row.permissions).toBe("1");
         expect(row.kind).toBe("Custom");
-    });
-});
-
-describe("upsertRole", () => {
-    test("creates a custom role", async () => {
-        const { cms } = makeCms();
-        const saved = await upsertRole(cms.roles, { id: "editor", label: "Editor", grants: [] });
-        expect(saved).toEqual({ id: "editor", label: "Editor", grants: [] });
-    });
-
-    test("rejects the virtual admin id", async () => {
-        const { cms } = makeCms();
-        await expect(upsertRole(cms.roles, { id: ADMIN_ROLE, label: "Admin", grants: [] })).rejects.toThrow(RoleValidationError);
-    });
-
-    test("rejects an invalid slug on create", async () => {
-        const { cms } = makeCms();
-        await expect(upsertRole(cms.roles, { id: "Bad Id!", label: "X", grants: [] })).rejects.toThrow(RoleValidationError);
-    });
-
-    test("rejects an unknown urn:cms permission grant", async () => {
-        const { cms } = makeCms();
-        await expect(upsertRole(cms.roles, { id: "editor", label: "X", grants: [{ permission: "urn:cms:users:fly" }] }))
-            .rejects.toThrow(RoleValidationError);
-    });
-
-    test("updates a custom role's label + grants", async () => {
-        const { cms } = makeCms();
-        await upsertRole(cms.roles, { id: "editor", label: "Editor", grants: [] });
-        const updated = await upsertRole(cms.roles, { id: "editor", label: "Redacteur", grants: [{ permission: cmsPermission("pages", "edit") }] });
-        expect(updated.label).toBe("Redacteur");
-        expect(updated.grants).toHaveLength(1);
-    });
-
-    test("updating a built-in role changes grants but keeps its fixed label", async () => {
-        const { cms } = makeCms();
-        const updated = await upsertRole(cms.roles, { id: USER_ROLE, label: "Renamed", grants: [{ permission: cmsPermission("files", "view") }] });
-        expect(updated.label).toBe("User");          // label fixed
-        expect(updated.builtin).toBe(true);
-        expect(updated.grants).toHaveLength(1);
-    });
-});
-
-describe("deleteRole", () => {
-    test("rejects admin / built-in / unknown", async () => {
-        const { cms } = makeCms();
-        await expect(deleteRole(cms.roles, cms.users, ADMIN_ROLE)).rejects.toThrow(RoleValidationError);
-        await expect(deleteRole(cms.roles, cms.users, USER_ROLE)).rejects.toThrow(RoleValidationError);
-        await expect(deleteRole(cms.roles, cms.users, PUBLIC_ROLE)).rejects.toThrow(RoleValidationError);
-        await expect(deleteRole(cms.roles, cms.users, "ghost")).rejects.toThrow(RoleValidationError);
-    });
-
-    test("refuses to delete a role still assigned to a user (409)", async () => {
-        const { cms, users } = makeCms();
-        await upsertRole(cms.roles, { id: "editor", label: "Editor", grants: [] });
-        await users.upsert({ sub: "u1" }, "editor");
-        await expect(deleteRole(cms.roles, cms.users, "editor")).rejects.toThrow(RoleConflictError);
-    });
-
-    test("deletes an unused custom role", async () => {
-        const { cms } = makeCms();
-        await upsertRole(cms.roles, { id: "editor", label: "Editor", grants: [] });
-        await deleteRole(cms.roles, cms.users, "editor");
-        expect((await assignableRoles(cms)).map((r) => r.id)).not.toContain("editor");
     });
 });
 
@@ -165,8 +105,8 @@ describe("roleEditorData", () => {
     });
 
     test("returns the role's grants as a flat permission-id list", async () => {
-        const { cms } = makeCms();
-        await upsertRole(cms.roles, { id: "editor", label: "Editor", grants: [{ permission: cmsPermission("pages", "edit") }] });
+        const { cms, roles } = makeCms();
+        await seedRole(roles, { id: "editor", label: "Editor", grants: [{ permission: cmsPermission("pages", "edit") }] });
         const data = await roleEditorData(cms, "editor");
         expect(data.role.grants).toEqual([cmsPermission("pages", "edit")]);
     });
