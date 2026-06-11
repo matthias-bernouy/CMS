@@ -2,6 +2,7 @@ import type { Runner, Middleware } from "@bernouy/http-runner";
 import type { CmsFilesMetadataRepository } from "cms-files/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 import { serveFilesRequest } from "cms-files/http/serveFilesRequest";
+import { CMS_FILES_ROUTE } from "cms-files/core/fileUrls";
 
 /**
  * Mount the path-based file-bytes route at `<basePath>/.cms/files/<tree-path>` on
@@ -19,8 +20,8 @@ export function registerFilesEndpoint(opts: {
     middlewares?: Middleware[];
 }): void {
     const base   = opts.runner.basePath === "/" ? "" : opts.runner.basePath;
-    const prefix = `${base}/.cms/files/`;
-    opts.runner.group("/.cms/files", (filesRunner) => {
+    const prefix = `${base}${CMS_FILES_ROUTE}/`;
+    opts.runner.group(CMS_FILES_ROUTE, (filesRunner) => {
         filesRunner.setDefaultEndpoint("GET", (req) =>
             serveFilesRequest({ metadata: opts.metadata, blob: opts.blob }, req, { prefix }));
     }, opts.middlewares);

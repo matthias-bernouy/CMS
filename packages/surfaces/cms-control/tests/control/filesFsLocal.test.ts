@@ -232,7 +232,6 @@ describe("LocalFsCmsFiles (filesystem-native, uuid id + registry)", () => {
         await uploadFile(fs, fs, file("a.txt", "x"), null);    // writes a valid registry
         await writeFile(registryPath(), "{ not json");
         await expect(new LocalFsCmsFiles(root).reconcile()).rejects.toThrow(/Corrupt files registry/);
-        await rm(registryPath());
-        await expect(new LocalFsCmsFiles(root).reconcile()).resolves.toBeDefined();
+        await expect(new LocalFsCmsFiles(root).reconcile({ force: true })).resolves.toBeDefined();
     });
 });

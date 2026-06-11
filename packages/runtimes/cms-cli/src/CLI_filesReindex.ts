@@ -24,18 +24,10 @@ export default async function CLI_filesReindex(args: string[]): Promise<void> {
     const root = `${config.siteDir}/files`;
     const files = new LocalFsCmsFiles(root);
 
-    if (force) await rmRegistry(`${config.siteDir}/.cms-files-registry.json`);
-
-    const r = await files.reconcile();
+    const r = await files.reconcile({ force });
     console.log(`→ Reindexed ${config.siteDir}/files`);
     console.log(`    healed  ${r.healed.length}   minted ${r.minted.length}   dropped ${r.deleted.length}`);
     for (const e of r.errors) console.warn(`  ! ${e.path}: ${e.error}`);
     console.log("→ Commit .cms-files-registry.json — committed ids never change for a given path+content.");
     if (r.errors.length) process.exit(1);
-}
-
-/** `--force`: discard an existing (possibly corrupt) registry so reconcile rebuilds from disk. */
-async function rmRegistry(path: string): Promise<void> {
-    const { unlink } = await import("node:fs/promises");
-    await unlink(path).catch(() => {});
 }

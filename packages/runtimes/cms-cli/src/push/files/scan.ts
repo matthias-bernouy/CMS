@@ -1,10 +1,9 @@
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
-import { sha256Hex } from "@bernouy/cms-files";
+import { CMS_FILES_REGISTRY_NAME, sha256Hex } from "@bernouy/cms-files";
 
 const FILES_SUBDIR    = "files";
-const REGISTRY_FILE   = ".cms-files-registry.json";
 
 export type LocalFile = {
     /** POSIX path relative to `<siteDir>/files`, e.g. "images/hero.png". */
@@ -51,10 +50,10 @@ export async function scanFiles(siteDir: string): Promise<LocalFile[]> {
         if (id) f.id = id; else missing.push(f.path);
     }
     if (missing.length) {
-        console.warn(`! ${missing.length} media file(s) have no id in ${REGISTRY_FILE}:`);
+        console.warn(`! ${missing.length} media file(s) have no id in ${CMS_FILES_REGISTRY_NAME}:`);
         for (const p of missing.slice(0, 10)) console.warn(`    ${p}`);
         if (missing.length > 10) console.warn(`    … and ${missing.length - 10} more`);
-        console.warn(`  Run \`p9r files reindex\` and commit ${REGISTRY_FILE} before pushing —`);
+        console.warn(`  Run \`p9r files reindex\` and commit ${CMS_FILES_REGISTRY_NAME} before pushing —`);
         console.warn(`  otherwise the remote mints its own ids and their by-id URLs will not match.`);
     }
     return out;
@@ -63,7 +62,7 @@ export async function scanFiles(siteDir: string): Promise<LocalFile[]> {
 /** Read the committed `path → uuid` map; tolerate absent/corrupt (→ all-missing
  *  warning above, and the reindex/gate steps are where that gets fixed). */
 async function loadRegistryByPath(siteDir: string): Promise<Record<string, string>> {
-    const p = join(siteDir, REGISTRY_FILE);
+    const p = join(siteDir, CMS_FILES_REGISTRY_NAME);
     if (!existsSync(p)) return {};
     try {
         const reg = JSON.parse(await readFile(p, "utf-8")) as { byPath?: Record<string, string> };

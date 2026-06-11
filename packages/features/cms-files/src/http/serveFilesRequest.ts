@@ -1,6 +1,7 @@
 import type { CmsFilesMetadataRepository, FileItem } from "cms-files/interfaces/CmsFilesMetadataRepository";
 import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 import { publicAssetCacheControl } from "@bernouy/http-runner";
+import { CMS_FILES_BY_ID_SEGMENT } from "cms-files/core/fileUrls";
 
 /**
  * Cache policy for an id-addressed response. In prod the bytes at a given id are
@@ -68,7 +69,7 @@ export async function serveFilesRequest(
     if (segments.length === 0) return notFound();
 
     // ── id route: /.cms/files/by-id/<id> — opaque + immutable (prod) ──
-    if (segments[0] === "by-id") {
+    if (segments[0] === CMS_FILES_BY_ID_SEGMENT) {
         const id = segments[1];
         if (segments.length !== 2 || !id) return notFound();
         const item = await deps.metadata.getItem(id);

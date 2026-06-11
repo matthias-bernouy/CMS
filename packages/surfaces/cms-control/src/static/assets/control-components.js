@@ -12838,16 +12838,42 @@ cms-endpoints-input .ep-add:hover {
     };
   }
 
+  // ../../features/cms-files/src/core/fileUrls.ts
+  var CMS_FILES_ROUTE = "/.cms/files";
+  var CMS_FILES_BY_ID_ROUTE = `${CMS_FILES_ROUTE}/by-id`;
+  function joinBase(base, path) {
+    const b2 = base === "/" ? "" : base.replace(/\/$/, "");
+    return `${b2}${path}`;
+  }
+  function cmsFilesByIdPath(id2) {
+    return `${CMS_FILES_BY_ID_ROUTE}/${encodeURIComponent(id2)}`;
+  }
+  function cmsFilesByIdUrl(base, id2) {
+    return joinBase(base, cmsFilesByIdPath(id2));
+  }
+  function withFileVersion(url, hash) {
+    return url.includes("?") ? `${url}&v=${hash}` : `${url}?v=${hash}`;
+  }
+  function mediaIdFromUrl(urlOrPath) {
+    const m = /(?:^|\/)\.cms\/files\/by-id\/([^/?#]+)/.exec(urlOrPath);
+    if (!m)
+      return null;
+    try {
+      return decodeURIComponent(m[1]);
+    } catch {
+      return null;
+    }
+  }
   // src/components/editor/componentSync/PageLink/detect.ts
   function isExternal(v2) {
     return /^(https?:|mailto:|tel:|\/\/)/i.test(v2);
   }
   function isMedia(v2) {
-    return /(^|\/)media\?id=/.test(v2);
+    return mediaIdFromUrl(v2) !== null;
   }
   function mediaLabel(src) {
-    const m = src.match(/id=([^&]+)/);
-    return m ? `Media ${m[1]}` : src;
+    const id2 = mediaIdFromUrl(src);
+    return id2 ? `Media ${id2}` : src;
   }
 
   // src/core/dom/meta/getMetaBasePath.ts
@@ -20143,7 +20169,7 @@ dialog::backdrop {
     return `${getMetaBasePath()}/api/files`;
   }
   function cmsFilesIdUrl(id2) {
-    return `${getMetaBasePath()}/.cms/files/by-id/${encodeURIComponent(id2)}`;
+    return cmsFilesByIdUrl(getMetaBasePath(), id2);
   }
   function toLocal(item) {
     const isImage = item.type === "file" && (item.mimeType?.startsWith("image/") ?? false);
@@ -20297,7 +20323,7 @@ dialog::backdrop {
     const url = item.absoluteURL ?? "";
     if (!url || !item.contentHash)
       return url;
-    return url.includes("?") ? `${url}&v=${item.contentHash}` : `${url}?v=${item.contentHash}`;
+    return withFileVersion(url, item.contentHash);
   }
 
   // src/components/media/GridMedia/view/render.ts

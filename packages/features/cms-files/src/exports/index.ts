@@ -19,12 +19,32 @@ export type { CmsFilesBlobStore, BlobInput } from "cms-files/interfaces/CmsFiles
 export { InMemoryCmsFilesMetadata }            from "cms-files/default-implementation/InMemoryCmsFilesMetadata";
 export { InMemoryCmsFilesBlob }                from "cms-files/default-implementation/InMemoryCmsFilesBlob";
 export { LocalFsCmsFilesBlob }                 from "cms-files/default-implementation/LocalFsCmsFilesBlob";
-export { LocalFsCmsFiles, type ReconcileResult } from "cms-files/default-implementation/LocalFsCmsFiles";
+export {
+    CMS_FILES_REGISTRY_NAME,
+    LocalFsCmsFiles,
+    type ReconcileOptions,
+    type ReconcileResult,
+} from "cms-files/default-implementation/LocalFsCmsFiles";
 export { ValidatingCmsFilesMetadata }            from "cms-files/core/ValidatingCmsFilesMetadata";
 
 // ── Core ───────────────────────────────────────────────────────────────
 export { sha256Hex } from "cms-files/core/hashBytes";
 export { MAX_UPLOAD_BYTES, validateUploadSize, validateItemName, FileValidationError } from "cms-files/core/validation";
+export {
+    CMS_FILES_ROUTE,
+    CMS_FILES_BY_ID_SEGMENT,
+    CMS_FILES_BY_ID_ROUTE,
+    CMS_IMAGE_VARIANT_ROUTE,
+    cmsFilesByIdPath,
+    cmsFilesByIdUrl,
+    cmsImageVariantPath,
+    cmsImageVariantUrl,
+    cmsImageVariantUrlFromByIdUrl,
+    cmsFilesByIdRef,
+    isCmsFilesByIdUrl,
+    mediaIdFromUrl,
+    withFileVersion,
+} from "cms-files/core/fileUrls";
 
 // ── File lifecycle (domain rules — create w/ rollback, in-place update, tree delete) ─
 export { uploadFile }        from "cms-files/core/uploadFile";
@@ -38,6 +58,7 @@ export {
 } from "cms-files/core/imageVariants";
 export { OptimizeQueue } from "cms-files/core/optimizeQueue";
 export { optimizePageImages, DEFAULT_LADDER, type OptimizeDeps } from "cms-files/core/optimizePageJob";
+export { injectMediaVersions } from "cms-files/core/injectMediaVersions";
 
 // ── HTTP (mountable by surfaces) ───────────────────────────────────────
 export { serveVariantRequest, registerImageVariantEndpoint, type VariantServeDeps } from "cms-files/http/serveVariant";

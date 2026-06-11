@@ -1,3 +1,5 @@
+import { withFileVersion } from "@bernouy/cms-files/urls";
+
 export type MediaItem = {
     id: string;
     type: "folder" | "image" | "other";
@@ -44,5 +46,5 @@ export function formatSize(bytes: number): string {
 export function variantUrl(item: MediaItem, _width?: number, _height?: number): string {
     const url = item.absoluteURL ?? "";
     if (!url || !item.contentHash) return url;
-    return url.includes("?") ? `${url}&v=${item.contentHash}` : `${url}?v=${item.contentHash}`;
+    return withFileVersion(url, item.contentHash);
 }

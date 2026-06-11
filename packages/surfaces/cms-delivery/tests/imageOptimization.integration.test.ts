@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { parseHTML } from "linkedom";
 import sharp from "sharp";
 import { InMemoryCmsFilesMetadata, InMemoryCmsFilesBlob, sha256Hex } from "@bernouy/cms-files";
-import { injectMediaVersions } from "cms-delivery/core/html/injectMediaVersions";
+import { injectMediaVersions } from "@bernouy/cms-files";
 import { optimizePageImages } from "@bernouy/cms-files";
 import { serveVariantRequest } from "@bernouy/cms-files";
 

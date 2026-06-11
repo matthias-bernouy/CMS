@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { toLocal, cmsFilesIdUrl, type FilesItem } from "cms-control/components/media/GridMedia/api/client";
 import { variantUrl } from "cms-control/components/media/GridMedia/types";
+import { isMedia, mediaLabel } from "cms-control/components/editor/componentSync/PageLink/detect";
 
 const fileItem = (over: Partial<FilesItem> = {}): FilesItem => ({
     id: "01h-abc", name: "hero.png", parentId: null, type: "file",
@@ -24,6 +25,12 @@ describe("GridMedia client — id-addressed URLs", () => {
 
     test("cmsFilesIdUrl encodes the id", () => {
         expect(cmsFilesIdUrl("a b")).toBe("/.cms/files/by-id/a%20b");
+    });
+
+    test("PageLink media detection recognizes current by-id URLs", () => {
+        expect(isMedia("/.cms/files/by-id/a%20b")).toBe(true);
+        expect(mediaLabel("/cms/.cms/files/by-id/a%20b?v=h")).toBe("Media a b");
+        expect(isMedia("/media?id=a")).toBe(false);
     });
 
     test("the DISPLAY url is cache-busted with ?v=contentHash; absoluteURL stays clean", () => {

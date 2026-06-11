@@ -4,6 +4,7 @@ import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 import { sanitizeDomTree, composeShell } from "@bernouy/cms-content";
 import { expandSnippets } from "@bernouy/cms-content";
+import { injectMediaVersions } from "@bernouy/cms-files";
 import { findUsedBlocTags } from "cms-delivery/core/blocs/findUsedBlocs";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
@@ -11,7 +12,6 @@ import { buildAssetPreloads, buildFoucShell, buildStylesheetLink } from "cms-del
 import { buildPreconnect } from "cms-delivery/core/head/buildPreconnect";
 import { buildScriptTags } from "cms-delivery/core/head/buildScriptTags";
 import { defineMetaTags } from "cms-delivery/core/seo/defineMetaTags";
-import { injectMediaVersions } from "cms-delivery/core/html/injectMediaVersions";
 import type { RenderContext } from "cms-delivery/core/html/RenderContext";
 
 /**

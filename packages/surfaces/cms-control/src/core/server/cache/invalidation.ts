@@ -1,5 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { P9R_CACHE } from "@bernouy/cms-content";
+import { cmsFilesByIdRef } from "@bernouy/cms-files";
 
 /**
  * Invalidate every cached rendered page that references a given bloc tag —
@@ -54,7 +55,7 @@ export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: s
  * Pages that don't reference the file keep serving from cache.
  */
 export async function invalidatePagesReferencingFile(cms: ControlCms, fileId: string): Promise<void> {
-    const ref = `by-id/${fileId}`; // precise: ids are unique, so a substring match is safe
+    const ref = cmsFilesByIdRef(fileId); // precise: ids are unique, so a substring match is safe
 
     const [pages, snippets, settings] = await Promise.all([
         cms.repository.getAllPages(),

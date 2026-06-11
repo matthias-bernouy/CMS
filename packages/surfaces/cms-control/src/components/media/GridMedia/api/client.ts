@@ -1,5 +1,6 @@
 import type { MediaItem as LocalMediaItem } from "../types";
 import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
+import { cmsFilesByIdUrl } from "@bernouy/cms-files/urls";
 
 /**
  * Filter expressed in the admin-UI's compact vocabulary (`folder` / `image`
@@ -44,7 +45,7 @@ export function filesBase(): string {
  * a media-tree reorg. Served by both Control (admin-guarded) and Delivery.
  */
 export function cmsFilesIdUrl(id: string): string {
-    return `${getMetaBasePath()}/.cms/files/by-id/${encodeURIComponent(id)}`;
+    return cmsFilesByIdUrl(getMetaBasePath(), id);
 }
 
 export function toLocal(item: FilesItem): LocalMediaItem {

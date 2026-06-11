@@ -36,7 +36,12 @@ export type ReconcileResult = {
     errors:  { path: string; error: string }[];            // I/O failure (NEVER delete an entry on I/O error)
 };
 
-const REGISTRY_NAME = ".cms-files-registry.json";
+export type ReconcileOptions = {
+    /** Discard the existing registry first, then rebuild from disk. */
+    force?: boolean;
+};
+
+export const CMS_FILES_REGISTRY_NAME = ".cms-files-registry.json";
 
 export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlobStore {
 
@@ -45,7 +50,7 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
     private dirty = false;
 
     constructor(private readonly root: string) {
-        this.registryPath = join(root, "..", REGISTRY_NAME);
+        this.registryPath = join(root, "..", CMS_FILES_REGISTRY_NAME);
     }
 
     // ── metadata (tree) ──────────────────────────────────────────────
@@ -61,7 +66,7 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
             catch { return EMPTY_PAGE; }
 
             let items = (await Promise.all(
-                names.filter(n => n !== REGISTRY_NAME).map(n => this._stat(dir ? `${dir}/${n}` : n)),
+            names.filter(n => n !== CMS_FILES_REGISTRY_NAME).map(n => this._stat(dir ? `${dir}/${n}` : n)),
             )).filter(Boolean) as FilesItem[];
             if (opts.accept) items = items.filter(i => opts.accept!.includes(i.type));
             if (opts.search) { const q = opts.search.toLowerCase(); items = items.filter(i => i.name.toLowerCase().includes(q)); }
@@ -221,8 +226,9 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
      * (paths + content hashes only, never mtime/inode) and idempotent. Runs on
      * every `p9r dev` boot and via `p9r files reindex`.
      */
-    async reconcile(): Promise<ReconcileResult> {
-        await this._ensureRegistry();
+    async reconcile(opts: ReconcileOptions = {}): Promise<ReconcileResult> {
+        if (opts.force) await this._resetRegistry();
+        else await this._ensureRegistry();
         const reg = this.registry!;
         const result: ReconcileResult = { healed: [], minted: [], deleted: [], errors: [] };
 
@@ -386,12 +392,21 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
 
     // ── registry persistence ─────────────────────────────────────────
 
+    private async _resetRegistry(): Promise<void> {
+        if (await Bun.file(join(this.root, CMS_FILES_REGISTRY_NAME)).exists()) {
+            throw new Error(`${CMS_FILES_REGISTRY_NAME} must live beside files/, not inside it (move it to the site root).`);
+        }
+        await rm(this.registryPath, { force: true });
+        this.registry = { version: 1, byId: {}, byPath: {} };
+        this.dirty = false;
+    }
+
     private async _ensureRegistry(): Promise<void> {
         if (this.registry) return;
         // A registry found INSIDE files/ is a misplacement — it would surface as a
         // tree item and never load. Fail loudly rather than silently ignore it.
-        if (await Bun.file(join(this.root, REGISTRY_NAME)).exists()) {
-            throw new Error(`${REGISTRY_NAME} must live beside files/, not inside it (move it to the site root).`);
+        if (await Bun.file(join(this.root, CMS_FILES_REGISTRY_NAME)).exists()) {
+            throw new Error(`${CMS_FILES_REGISTRY_NAME} must live beside files/, not inside it (move it to the site root).`);
         }
         const f = Bun.file(this.registryPath);
         if (!(await f.exists())) { this.registry = { version: 1, byId: {}, byPath: {} }; return; }
@@ -400,7 +415,7 @@ export class LocalFsCmsFiles implements CmsFilesMetadataRepository, CmsFilesBlob
         catch {
             throw new Error(
                 `Corrupt files registry at ${this.registryPath}. Restore it with ` +
-                `\`git checkout ${REGISTRY_NAME}\`, or rebuild from disk with \`p9r files reindex --force\`.`,
+                `\`git checkout ${CMS_FILES_REGISTRY_NAME}\`, or rebuild from disk with \`p9r files reindex --force\`.`,
             );
         }
         this.registry = { version: 1, byId: parsed.byId ?? {}, byPath: parsed.byPath ?? {} };
