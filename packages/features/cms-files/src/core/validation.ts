@@ -18,11 +18,19 @@ export function validateUploadSize(size: number): void {
     }
 }
 
-/** Item (folder/file) name rule: required, trimmed. Returns the normalized
- *  name. Enforced at the seam by `ValidatingCmsFilesMetadata`. */
+/** Item (folder/file) name rule: required, trimmed, single path segment.
+ *  Returns the normalized name. Enforced at the seam by
+ *  `ValidatingCmsFilesMetadata`. */
 export function validateItemName(name: unknown): string {
     if (typeof name !== "string" || !name.trim()) {
         throw new FileValidationError("name", "required");
     }
-    return name.trim();
+    const trimmed = name.trim();
+    if (trimmed.includes("/") || trimmed.includes("\\") || trimmed.includes("\0")) {
+        throw new FileValidationError("name", "must be a single path segment");
+    }
+    if (trimmed === "." || trimmed === ".." || trimmed.includes("..")) {
+        throw new FileValidationError("name", "must not contain traversal markers");
+    }
+    return trimmed;
 }
