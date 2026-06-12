@@ -1,10 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import type { SettingSection } from "@bernouy/cms-content/editor";
+import type {
+    DataScope,
+    SettingSection,
+} from "@bernouy/cms-content/editor";
 import {
+    CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
     EditorRegistry,
     RuntimeEditor,
+    type RuntimeEditorDataScopesChangeDetail,
     type RuntimeEditorSettingsChangeDetail,
 } from "../src/runtime";
 
@@ -84,6 +89,64 @@ describe("RuntimeEditor", () => {
         expect(editor.getSettings()).toEqual([gridOverride]);
         expect(eventDetail?.editor).toBe(editor);
         expect(eventDetail?.settings).toEqual([gridOverride]);
+    });
+
+    test("declares data scopes and emits a data-scopes-change event", () => {
+        const document = createDocument();
+        const registry = new EditorRegistry();
+        const editor = new RuntimeEditor(document.getElementById("parent")!, registry);
+        const scope: DataScope = {
+            name: "plans",
+            label: "Plans",
+            source: "urn:test:plans",
+            fields: [
+                { path: "name", type: "string" },
+                { path: "price", type: "number" },
+            ],
+        };
+
+        let eventDetail: RuntimeEditorDataScopesChangeDetail | undefined;
+        editor.target.addEventListener(CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT, (event) => {
+            eventDetail = (event as CustomEvent<RuntimeEditorDataScopesChangeDetail>).detail;
+        });
+
+        editor.declareDataScope(scope);
+
+        expect(editor.getDataScopes()).toEqual([scope]);
+        expect(eventDetail?.editor).toBe(editor);
+        expect(eventDetail?.dataScopes).toEqual([scope]);
+    });
+
+    test("collects data scopes from ancestor editors and the target editor", () => {
+        const document = createDocument();
+        const registry = new EditorRegistry();
+        const parent = new RuntimeEditor(document.getElementById("parent")!, registry);
+        const directChild = new RuntimeEditor(document.getElementById("direct-child")!, registry);
+        const nestedChild = new RuntimeEditor(document.getElementById("nested-child")!, registry);
+
+        const parentScope: DataScope = {
+            name: "site",
+            fields: [{ path: "title", type: "string" }],
+        };
+        const childScope: DataScope = {
+            name: "plans",
+            fields: [{ path: "name", type: "string" }],
+        };
+        const nestedScope: DataScope = {
+            name: "selection",
+            fields: [{ path: "active", type: "boolean" }],
+        };
+
+        parent.declareDataScope(parentScope);
+        directChild.declareDataScope(childScope);
+        nestedChild.declareDataScope(nestedScope);
+
+        expect(registry.getAncestors(nestedChild.target)).toEqual([parent, directChild]);
+        expect(registry.collectDataScopes(nestedChild.target)).toEqual([
+            parentScope,
+            childScope,
+            nestedScope,
+        ]);
     });
 
     test("unregisters disposed editors", () => {
