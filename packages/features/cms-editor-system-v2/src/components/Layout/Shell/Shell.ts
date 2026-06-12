@@ -6,6 +6,8 @@ import "../../Settings/SettingsView/SettingsView";
 import {
     type ContentSlot,
     Editor,
+    type EditableState,
+    type EditableStateSession,
     type EditorCatalog,
     type EditorCatalogEntry,
     type EditorDocument,
@@ -25,9 +27,11 @@ import {
 import {
     SETTINGS_VIEW_CONTENT_CHANGE_EVENT,
     SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+    SETTINGS_VIEW_STATE_TOGGLE_EVENT,
     type SettingsViewContentChangeDetail,
     type SettingsViewMode,
     type SettingsViewSettingChangeDetail,
+    type SettingsViewStateToggleDetail,
 } from "../../Settings/SettingsView/SettingsView";
 import type { StructureTree } from "../StructureTree/StructureTree";
 import type { StructureTreeActionDetail } from "../StructureTree/StructureTree";
@@ -44,6 +48,7 @@ export class Shell extends HTMLElement {
     private _runtime: EditorRuntime | null = null;
     private _frameDocument: Document | null = null;
     private _settingsMode: SettingsViewMode = "settings";
+    private readonly _stateSessions = new WeakMap<Editor, Map<string, EditableStateSession>>();
     private readonly _highlight = new FrameHighlight();
 
     constructor() {
@@ -56,6 +61,7 @@ export class Shell extends HTMLElement {
         this._structureTree.addEventListener("editor-v2:structure-action", this._onStructureAction as EventListener);
         this._settings.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
         this._settings.addEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
+        this._settings.addEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle as EventListener);
         this._canvas.addEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
         this._settingsTabs.addEventListener("click", this._onSettingsTabsClick);
         this._syncStructureTreeCatalog();
@@ -66,10 +72,12 @@ export class Shell extends HTMLElement {
         this._structureTree.removeEventListener("editor-v2:structure-action", this._onStructureAction as EventListener);
         this._settings.removeEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
         this._settings.removeEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
+        this._settings.removeEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle as EventListener);
         this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
         this._settingsTabs.removeEventListener("click", this._onSettingsTabsClick);
         this._unbindFrameDocument();
         this._highlight.dispose();
+        this._exitAllStateSessions();
         this._runtime?.dispose();
         this._runtime = null;
     }
@@ -89,6 +97,7 @@ export class Shell extends HTMLElement {
     }
 
     loadDocument(document: EditorDocument, selectedTarget: HTMLElement | null = null): void {
+        this._exitAllStateSessions();
         this._runtime?.dispose();
         this._runtime = new EditorRuntime(this._catalog);
         this._runtime.load(document);
@@ -172,6 +181,16 @@ export class Shell extends HTMLElement {
         this._highlight.show(selection.editor);
     };
 
+    private readonly _onStateToggle = (event: CustomEvent<SettingsViewStateToggleDetail>): void => {
+        if (!this._runtime) return;
+        const selection = this._runtime.getSelection();
+        if (!selection) return;
+
+        this._toggleState(selection.editor, event.detail.state);
+        this._renderSettings();
+        this._highlight.show(selection.editor);
+    };
+
     private readonly _onFrameClick = (event: Event): void => {
         if (!this._runtime) return;
 
@@ -213,6 +232,7 @@ export class Shell extends HTMLElement {
             selection.textCapability,
             selection.textCapability ? this._getTextValue(selection.editor, selection.textCapability.format) : "",
             this._settingsMode,
+            selection.states,
         );
     }
 
@@ -228,6 +248,50 @@ export class Shell extends HTMLElement {
         }
 
         editor.target.setAttribute(attribute, value);
+    }
+
+    private _toggleState(editor: Editor, state: EditableState): void {
+        const sessions = this._stateSessions.get(editor) ?? new Map<string, EditableStateSession>();
+
+        if (sessions.has(state.id)) {
+            this._exitStateSession(editor, state.id);
+            return;
+        }
+
+        if (state.group) {
+            for (const candidate of editor.getStates()) {
+                if (candidate.id !== state.id && candidate.group === state.group) {
+                    this._exitStateSession(editor, candidate.id);
+                }
+            }
+        }
+
+        const session = state.enter();
+        sessions.set(state.id, session);
+        this._stateSessions.set(editor, sessions);
+    }
+
+    private _exitStateSession(editor: Editor, stateId: string): void {
+        const sessions = this._stateSessions.get(editor);
+        const session = sessions?.get(stateId);
+        if (!sessions || !session) return;
+
+        session.exit();
+        sessions.delete(stateId);
+    }
+
+    private _exitAllStateSessions(): void {
+        if (!this._runtime) return;
+
+        for (const node of this._flattenStructure(this._runtime.getStructure())) {
+            const sessions = this._stateSessions.get(node.editor);
+            if (!sessions) continue;
+
+            for (const session of sessions.values()) {
+                session.exit();
+            }
+            sessions.clear();
+        }
     }
 
     private _addChild(parent: Editor, entry: EditorCatalogEntry, slotName?: string): void {
@@ -436,6 +500,13 @@ export class Shell extends HTMLElement {
         };
 
         return this._runtime ? visit(this._runtime.getStructure()) : null;
+    }
+
+    private _flattenStructure(nodes: EditorStructureNode[]): EditorStructureNode[] {
+        return nodes.flatMap(node => [
+            node,
+            ...this._flattenStructure(node.children),
+        ]);
     }
 
     private get _structureTree(): StructureTree {

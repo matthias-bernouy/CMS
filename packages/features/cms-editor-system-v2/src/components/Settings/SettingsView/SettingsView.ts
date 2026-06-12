@@ -9,6 +9,7 @@ import "../../Controls/SegmentedControl/SegmentedControl";
 import "../../Controls/PageLink/PageLink";
 import "../../Controls/SchemaPicker/SchemaPicker";
 import type {
+    EditableState,
     Setting,
     SettingSection,
     TextCapability,
@@ -29,8 +30,13 @@ export type SettingsViewContentChangeDetail = {
     format: "text" | "html";
 };
 
+export type SettingsViewStateToggleDetail = {
+    state: EditableState;
+};
+
 export const SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
 export const SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
+export const SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
 export type SettingsViewMode = "settings" | "overrides";
 
 export class SettingsView extends HTMLElement {
@@ -44,6 +50,7 @@ export class SettingsView extends HTMLElement {
         textCapability: TextCapability | null = null,
         textValue = "",
         mode: SettingsViewMode = "settings",
+        states: EditableState[] = [],
     ): void {
         const view = this.shadowRoot!.querySelector<HTMLElement>(".settings-view")!;
         view.replaceChildren();
@@ -53,8 +60,9 @@ export class SettingsView extends HTMLElement {
             : section.kind === "surcharge");
 
         const shouldRenderText = mode === "settings" && textCapability;
+        const shouldRenderStates = mode === "settings" && states.length > 0;
 
-        if (visibleSections.length === 0 && !shouldRenderText) {
+        if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
             const empty = document.createElement("div");
             empty.className = "empty";
             empty.textContent = sections.length === 0 && !textCapability
@@ -70,9 +78,45 @@ export class SettingsView extends HTMLElement {
             view.append(this._renderTextCapability(textCapability, textValue));
         }
 
+        if (shouldRenderStates) {
+            view.append(this._renderStates(states));
+        }
+
         for (const section of visibleSections) {
             view.append(this._renderSettingSection(section));
         }
+    }
+
+    private _renderStates(states: EditableState[]): HTMLElement {
+        const section = document.createElement("cms-editor-v2-section");
+        section.setAttribute("label", "States");
+
+        for (const state of states) {
+            const button = document.createElement("button");
+            button.className = "state-button";
+            button.type = "button";
+            button.ariaPressed = String(state.isActive());
+
+            const label = document.createElement("span");
+            label.className = "state-label";
+            label.textContent = state.label;
+
+            const description = document.createElement("span");
+            description.className = "state-description";
+            description.textContent = state.description ?? (state.isActive() ? "Active" : "Inactive");
+
+            button.append(label, description);
+            button.addEventListener("click", () => {
+                this.dispatchEvent(new CustomEvent<SettingsViewStateToggleDetail>(SETTINGS_VIEW_STATE_TOGGLE_EVENT, {
+                    bubbles: true,
+                    composed: true,
+                    detail: { state },
+                }));
+            });
+            section.append(button);
+        }
+
+        return section;
     }
 
     private _renderSettingSection(section: SettingSection): HTMLElement {
