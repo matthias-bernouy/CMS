@@ -50,6 +50,7 @@ export { Textarea } from "./ui/Form/Textarea/Textarea";
 // Layout
 export { HorizontalActionGroup } from "./ui/HorizontalActionGroup/HorizontalActionGroup";
 export { Container } from "./ui/Layout/Container/Container";
+export { Grid } from "./ui/Layout/Grid/Grid";
 export { LeftMenuLayout } from "./ui/Layout/LeftMenuLayout/LeftMenuLayout";
 export { Stack } from "./ui/Layout/Stack/Stack";
 

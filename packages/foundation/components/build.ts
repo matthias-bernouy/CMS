@@ -38,6 +38,7 @@ const blocs: Array<[string, string]> = [
     ["textarea", "./src/ui/Form/Textarea/Textarea.ts"],
     ["horizontal-action-group", "./src/ui/HorizontalActionGroup/HorizontalActionGroup.ts"],
     ["container", "./src/ui/Layout/Container/Container.ts"],
+    ["grid", "./src/ui/Layout/Grid/Grid.ts"],
     ["left-menu-layout", "./src/ui/Layout/LeftMenuLayout/LeftMenuLayout.ts"],
     ["lateral-menu", "./src/ui/Menu/LateralMenu/LateralMenu.ts"],
     ["lateral-menu-item", "./src/ui/Menu/LateralMenu/LateralMenuItem/LateralMenuItem.ts"],
@@ -110,5 +111,6 @@ await Promise.all(
 await cp("./src/assets/default.css", `${dist}/style.css`);
 
 await $`bunx tsc -p tsconfig.build.json`;
+await writeFile(`${dist}/base.d.ts`, `export * from "./base/Component";\n`);
 
 console.log(`Built index.js + ${blocs.length} blocs (esm + d.ts) → ${dist}/`);
