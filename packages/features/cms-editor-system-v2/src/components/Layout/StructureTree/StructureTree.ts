@@ -194,10 +194,18 @@ export class StructureTree extends HTMLElement {
             this._contextMenuButton("Delete", () => this._emitAction("delete", node.editor), "danger", !this._canDelete(node)),
         );
 
-        const hostBounds = this.getBoundingClientRect();
-        menu.style.left = `${clientX - hostBounds.left}px`;
-        menu.style.top = `${clientY - hostBounds.top}px`;
         this.shadowRoot!.append(menu);
+        this._positionContextMenu(menu, clientX, clientY);
+    }
+
+    private _positionContextMenu(menu: HTMLElement, clientX: number, clientY: number): void {
+        const margin = 6;
+        const menuBounds = menu.getBoundingClientRect();
+        const maxLeft = Math.max(margin, window.innerWidth - menuBounds.width - margin);
+        const maxTop = Math.max(margin, window.innerHeight - menuBounds.height - margin);
+
+        menu.style.left = `${Math.min(Math.max(clientX, margin), maxLeft)}px`;
+        menu.style.top = `${Math.min(Math.max(clientY, margin), maxTop)}px`;
     }
 
     private _contextMenuButton(

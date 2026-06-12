@@ -122,8 +122,8 @@
 }
 
 .context-menu {
-    position: absolute;
-    z-index: 20;
+    position: fixed;
+    z-index: 120;
     display: grid;
     gap: 2px;
     min-width: 160px;
