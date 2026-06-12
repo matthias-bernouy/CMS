@@ -6,6 +6,7 @@ export type {
     ContentSlot,
     ContentSlotAccept,
 } from "./ContentSlots";
+export type { TextCapability } from "./TextCapability";
 export type {
     DataExpression,
     DataField,

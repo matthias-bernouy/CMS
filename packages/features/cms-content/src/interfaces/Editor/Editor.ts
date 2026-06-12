@@ -1,6 +1,7 @@
 import type { ContentSlot } from "./ContentSlots";
 import type { DataScope } from "./DataScopes";
 import type { Setting } from "./SettingInputs";
+import type { TextCapability } from "./TextCapability";
 
 export type SettingSection = {
     kind: "self" | "surcharge";
@@ -24,6 +25,10 @@ export class Editor {
         return [];
     }
 
+    protected textCapability(): TextCapability | null {
+        return null;
+    }
+
     getSettings(): SettingSection[] {
         return this.settings();
     }
@@ -45,6 +50,14 @@ export class Editor {
     }
 
     addContentSlots(_slots: ContentSlot | ContentSlot[]): void {
+        // Runtime may override.
+    }
+
+    getTextCapability(): TextCapability | null {
+        return this.textCapability();
+    }
+
+    setTextCapability(_capability: TextCapability | null): void {
         // Runtime may override.
     }
 

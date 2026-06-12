@@ -4,6 +4,7 @@ export {
     type ContentSlotAccept,
     type Setting,
     type SettingSection,
+    type TextCapability,
 } from "../interfaces/Editor";
 
 export type {

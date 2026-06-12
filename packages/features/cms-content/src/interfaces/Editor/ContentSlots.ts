@@ -1,6 +1,4 @@
 export type ContentSlotAccept =
-    | { kind: "text" }
-    | { kind: "richtext" }
     | { kind: "component"; tag: string }
     | { kind: "any-component" };
 
@@ -23,8 +21,7 @@ export type ContentSlot = {
      */
     max?: number;
     /**
-     * Accepted content kinds. Text/richtext are reserved text-node contracts;
-     * component entries target registered custom/native tags.
+     * Accepted component kinds for this light-DOM slot.
      */
     accepts: ContentSlotAccept[];
 };
