@@ -9,6 +9,7 @@ template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtm
 export class StructureTree extends HTMLElement {
     private _nodes: EditorStructureNode[] = [];
     private _selectedEditor: Editor | null = null;
+    private readonly _collapsedEditors = new Set<Editor>();
 
     constructor() {
         super();
@@ -33,14 +34,34 @@ export class StructureTree extends HTMLElement {
             return;
         }
 
-        for (const node of this._flatten(this._nodes)) {
+        for (const node of this._visibleNodes(this._nodes)) {
             tree.append(this._renderNode(node.item, node.depth));
         }
     }
 
-    private _renderNode(node: EditorStructureNode, depth: number): HTMLButtonElement {
+    private _renderNode(node: EditorStructureNode, depth: number): HTMLElement {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.setProperty("--structure-depth", String(depth));
+
+        if (node.children.length > 0) {
+            const toggle = document.createElement("button");
+            toggle.className = "toggle";
+            toggle.type = "button";
+            toggle.textContent = this._isCollapsed(node) ? "›" : "⌄";
+            toggle.setAttribute("aria-label", this._isCollapsed(node) ? "Expand" : "Collapse");
+            toggle.addEventListener("click", () => {
+                this._toggleNode(node);
+            });
+            row.append(toggle);
+        } else {
+            const spacer = document.createElement("span");
+            spacer.className = "toggle-spacer";
+            row.append(spacer);
+        }
+
         const button = document.createElement("button");
-        button.className = `item depth-${Math.min(depth, 2)}`;
+        button.className = "item";
         if (node.editor === this._selectedEditor) button.classList.add("selected");
         button.type = "button";
         button.addEventListener("click", () => {
@@ -51,10 +72,6 @@ export class StructureTree extends HTMLElement {
             }));
         });
 
-        const twisty = document.createElement("span");
-        twisty.className = "twisty";
-        twisty.textContent = node.children.length > 0 ? "⌄" : "";
-
         const icon = document.createElement("span");
         icon.className = "icon";
         icon.textContent = this._iconText(node);
@@ -63,23 +80,34 @@ export class StructureTree extends HTMLElement {
         label.className = "label";
         label.textContent = node.label;
 
-        button.append(twisty, icon, label);
+        button.append(icon, label);
+        row.append(button);
 
-        if (node.editor === this._selectedEditor) {
-            const badge = document.createElement("span");
-            badge.className = "badge";
-            badge.textContent = "Selected";
-            button.append(badge);
-        }
-
-        return button;
+        return row;
     }
 
-    private _flatten(nodes: EditorStructureNode[], depth = 0): { item: EditorStructureNode; depth: number }[] {
-        return nodes.flatMap(node => [
-            { item: node, depth },
-            ...this._flatten(node.children, depth + 1),
-        ]);
+    private _visibleNodes(nodes: EditorStructureNode[], depth = 0): { item: EditorStructureNode; depth: number }[] {
+        return nodes.flatMap(node => {
+            const current = [{ item: node, depth }];
+            if (this._isCollapsed(node)) return current;
+            return [
+                ...current,
+                ...this._visibleNodes(node.children, depth + 1),
+            ];
+        });
+    }
+
+    private _toggleNode(node: EditorStructureNode): void {
+        if (this._isCollapsed(node)) {
+            this._collapsedEditors.delete(node.editor);
+        } else {
+            this._collapsedEditors.add(node.editor);
+        }
+        this._render();
+    }
+
+    private _isCollapsed(node: EditorStructureNode): boolean {
+        return this._collapsedEditors.has(node.editor);
     }
 
     private _iconText(node: EditorStructureNode): string {
