@@ -3,6 +3,10 @@ export {
     type SettingSection,
 } from "./Editor";
 export type {
+    ContentSlot,
+    ContentSlotAccept,
+} from "./ContentSlots";
+export type {
     DataExpression,
     DataField,
     DataFieldType,

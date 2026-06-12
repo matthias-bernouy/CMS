@@ -1,3 +1,4 @@
+import type { ContentSlot } from "./ContentSlots";
 import type { DataScope } from "./DataScopes";
 import type { Setting } from "./SettingInputs";
 
@@ -19,6 +20,10 @@ export class Editor {
         return [];
     }
 
+    protected contentSlots(): ContentSlot[] {
+        return [];
+    }
+
     getSettings(): SettingSection[] {
         return this.settings();
     }
@@ -32,6 +37,14 @@ export class Editor {
     }
 
     declareDataScope(_scope: DataScope | DataScope[]): void {
+        // Runtime may override.
+    }
+
+    getContentSlots(): ContentSlot[] {
+        return this.contentSlots();
+    }
+
+    addContentSlots(_slots: ContentSlot | ContentSlot[]): void {
         // Runtime may override.
     }
 

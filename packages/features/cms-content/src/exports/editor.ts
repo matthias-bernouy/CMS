@@ -1,5 +1,7 @@
 export {
     Editor,
+    type ContentSlot,
+    type ContentSlotAccept,
     type Setting,
     type SettingSection,
 } from "../interfaces/Editor";
