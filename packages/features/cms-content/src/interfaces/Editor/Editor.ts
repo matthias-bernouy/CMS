@@ -31,7 +31,7 @@ export class Editor {
         return this.dataScopes();
     }
 
-    provideData(_scope: DataScope | DataScope[]): void {
+    declareDataScope(_scope: DataScope | DataScope[]): void {
         // Runtime may override.
     }
 
