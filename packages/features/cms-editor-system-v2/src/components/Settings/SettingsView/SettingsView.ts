@@ -11,6 +11,7 @@ import type {
     DataScope,
     Setting,
     SettingSection,
+    TextCapability,
 } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
@@ -31,16 +32,20 @@ export class SettingsView extends HTMLElement {
         this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
     }
 
-    setSettings(sections: SettingSection[], dataScopes: DataScope[] = []): void {
+    setSettings(sections: SettingSection[], dataScopes: DataScope[] = [], textCapability: TextCapability | null = null): void {
         const view = this.shadowRoot!.querySelector<HTMLElement>(".settings-view")!;
         view.replaceChildren();
 
-        if (sections.length === 0 && dataScopes.length === 0) {
+        if (sections.length === 0 && dataScopes.length === 0 && !textCapability) {
             const empty = document.createElement("div");
             empty.className = "empty";
             empty.textContent = "Select an editable element";
             view.append(empty);
             return;
+        }
+
+        if (textCapability) {
+            view.append(this._renderTextCapability(textCapability));
         }
 
         for (const section of sections) {
@@ -143,6 +148,37 @@ export class SettingsView extends HTMLElement {
         if (setting.help) control.setAttribute("hint", setting.help);
         if (setting.placeholder) control.setAttribute("placeholder", setting.placeholder);
         return control;
+    }
+
+    private _renderTextCapability(capability: TextCapability): HTMLElement {
+        const section = document.createElement("cms-editor-v2-section");
+        section.setAttribute("label", "Content");
+
+        const item = document.createElement("div");
+        item.className = "content-slot";
+
+        const name = document.createElement("strong");
+        name.textContent = capability.format === "richtext" ? "Rich text" : "Text";
+
+        const meta = document.createElement("span");
+        meta.textContent = this._formatTextCapability(capability);
+
+        item.append(name, meta);
+        section.append(item);
+
+        return section;
+    }
+
+    private _formatTextCapability(capability: TextCapability): string {
+        const options = [
+            capability.bold ? "bold" : null,
+            capability.italic ? "italic" : null,
+            capability.link ? "link" : null,
+            capability.code ? "code" : null,
+            capability.dynamic ? "dynamic" : null,
+        ].filter((option): option is string => Boolean(option));
+
+        return options.length > 0 ? options.join(", ") : "Plain text";
     }
 
     private _wireTextControl(control: HTMLElement, selector: "input" | "textarea" | "select", setting: Setting): void {

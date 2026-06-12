@@ -29,7 +29,8 @@
     font-weight: 760;
 }
 
-.data-scope {
+.data-scope,
+.content-slot {
     display: grid;
     gap: 3px;
     border: 1px solid var(--editor-v2-border);
@@ -38,12 +39,18 @@
     background: var(--editor-v2-surface);
 }
 
-.data-scope strong {
+.data-scope strong,
+.content-slot strong {
     font-size: 12px;
 }
 
-.data-scope span {
+.data-scope span,
+.content-slot span {
     color: var(--editor-v2-muted);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 11px;
+}
+
+.content-slot {
+    background: color-mix(in srgb, var(--editor-v2-accent) 5%, var(--editor-v2-surface));
 }

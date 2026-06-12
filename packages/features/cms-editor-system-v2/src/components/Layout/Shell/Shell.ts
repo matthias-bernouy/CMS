@@ -143,6 +143,7 @@ export class Shell extends HTMLElement {
         this._settings.setSettings(
             this._resolveSettingsValues(selection.editor, selection.settings),
             this._runtime.getSelectedDataScopes(),
+            selection.textCapability,
         );
         this._setSelectionStatus(selection.editor);
         this._highlight.show(selection.editor);

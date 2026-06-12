@@ -3,12 +3,14 @@ import {
     type DataScope,
     type EditorCatalogEntry,
     type SettingSection,
+    type TextCapability,
 } from "@bernouy/cms-content/editor";
 import type { EditorRegistry } from "../EditorRegistry/EditorRegistry";
 import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
+    CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT,
 } from "../events";
 import type { RuntimeManagedEditor } from "./types";
 
@@ -26,6 +28,7 @@ export function createRuntimeEditor(
         private readonly _addedSettings: SettingSection[] = [];
         private readonly _declaredDataScopes: DataScope[] = [];
         private readonly _addedContentSlots: ContentSlot[] = [];
+        private _textCapabilityOverride: TextCapability | null | undefined;
         private _isMounted = false;
 
         constructor() {
@@ -90,6 +93,20 @@ export function createRuntimeEditor(
             this._emit(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, {
                 editor: this,
                 contentSlots: this.getContentSlots(),
+            });
+        }
+
+        override getTextCapability(): TextCapability | null {
+            return this._textCapabilityOverride !== undefined
+                ? this._textCapabilityOverride
+                : super.getTextCapability();
+        }
+
+        override setTextCapability(capability: TextCapability | null): void {
+            this._textCapabilityOverride = capability;
+            this._emit(CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT, {
+                editor: this,
+                textCapability: this.getTextCapability(),
             });
         }
 

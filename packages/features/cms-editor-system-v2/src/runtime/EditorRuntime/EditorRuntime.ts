@@ -97,6 +97,7 @@ export class EditorRuntime {
             editor: this._selectedEditor,
             settings: this._selectedEditor.getSettings(),
             contentSlots: this._selectedEditor.getContentSlots(),
+            textCapability: this._selectedEditor.getTextCapability(),
         };
     }
 
@@ -129,11 +130,20 @@ export class EditorRuntime {
                 tag: entry.tag,
                 label: entry.label,
                 icon: entry.icon,
+                badges: this._getStructureBadges(editor),
                 children: this._getStructureChildren(editor.target),
             });
         }
 
         return children;
+    }
+
+    private _getStructureBadges(editor: Editor): string[] {
+        const badges: string[] = [];
+        const slot = editor.target.getAttribute("slot");
+        if (slot) badges.push(slot);
+
+        return badges;
     }
 
     private _getClosestStructureParent(target: HTMLElement, stopAt: HTMLElement): HTMLElement {

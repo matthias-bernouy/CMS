@@ -3,6 +3,7 @@ import type {
     Editor,
     EditorCatalogEntry,
     SettingSection,
+    TextCapability,
 } from "@bernouy/cms-content/editor";
 
 export type RuntimeManagedEditor = Editor & {
@@ -18,6 +19,7 @@ export type EditorStructureNode = {
     tag: string;
     label: string;
     icon?: string;
+    badges: string[];
     children: EditorStructureNode[];
 };
 
@@ -25,4 +27,5 @@ export type EditorRuntimeSelection = {
     editor: Editor;
     settings: SettingSection[];
     contentSlots: ContentSlot[];
+    textCapability: TextCapability | null;
 };

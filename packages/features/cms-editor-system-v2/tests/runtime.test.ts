@@ -9,11 +9,13 @@ import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
+    CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT,
     EditorRegistry,
     RuntimeEditor,
     type RuntimeEditorContentSlotsChangeDetail,
     type RuntimeEditorDataScopesChangeDetail,
     type RuntimeEditorSettingsChangeDetail,
+    type RuntimeEditorTextCapabilityChangeDetail,
 } from "../src/runtime";
 
 function createDocument() {
@@ -126,9 +128,9 @@ describe("RuntimeEditor", () => {
         const editor = new RuntimeEditor(document.getElementById("direct-child")!, registry);
 
         const slot: ContentSlot = {
-            label: "Content",
+            label: "Actions",
             min: 1,
-            accepts: [{ kind: "richtext" }],
+            accepts: [{ kind: "component", tag: "button" }],
         };
 
         let eventDetail: RuntimeEditorContentSlotsChangeDetail | undefined;
@@ -141,6 +143,23 @@ describe("RuntimeEditor", () => {
         expect(editor.getContentSlots()).toEqual([slot]);
         expect(eventDetail?.editor).toBe(editor);
         expect(eventDetail?.contentSlots).toEqual([slot]);
+    });
+
+    test("overrides text capability and emits a text-capability-change event", () => {
+        const document = createDocument();
+        const registry = new EditorRegistry();
+        const editor = new RuntimeEditor(document.getElementById("direct-child")!, registry);
+
+        let eventDetail: RuntimeEditorTextCapabilityChangeDetail | undefined;
+        editor.target.addEventListener(CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT, (event) => {
+            eventDetail = (event as CustomEvent<RuntimeEditorTextCapabilityChangeDetail>).detail;
+        });
+
+        editor.setTextCapability({ format: "text", dynamic: true });
+
+        expect(editor.getTextCapability()).toEqual({ format: "text", dynamic: true });
+        expect(eventDetail?.editor).toBe(editor);
+        expect(eventDetail?.textCapability).toEqual({ format: "text", dynamic: true });
     });
 
     test("collects data scopes from ancestor editors and the target editor", () => {

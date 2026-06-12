@@ -56,10 +56,10 @@ const childOverride: SettingSection = {
 };
 
 const childContentSlot: ContentSlot = {
-    label: "Child content",
+    label: "Child actions",
     min: 1,
     max: 1,
-    accepts: [{ kind: "richtext" }],
+    accepts: [{ kind: "component", tag: "button" }],
 };
 
 const parentContentOverride: ContentSlot = {
@@ -95,6 +95,14 @@ class ParentEditor extends Editor {
 }
 
 class ChildEditor extends Editor {
+    protected override textCapability() {
+        return {
+            format: "richtext" as const,
+            bold: true,
+            dynamic: true,
+        };
+    }
+
     protected override contentSlots(): ContentSlot[] {
         return [childContentSlot];
     }
@@ -160,6 +168,11 @@ describe("EditorRuntime", () => {
             childContentSlot,
             parentContentOverride,
         ]);
+        expect(runtime.getSelection()?.textCapability).toEqual({
+            format: "richtext",
+            bold: true,
+            dynamic: true,
+        });
         expect(runtime.getSelectedDataScopes()).toEqual([dataScope]);
     });
 

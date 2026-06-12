@@ -3,12 +3,14 @@ import {
     type ContentSlot,
     type DataScope,
     type SettingSection,
+    type TextCapability,
 } from "@bernouy/cms-content/editor";
 import type { EditorRegistry } from "../EditorRegistry/EditorRegistry";
 import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
+    CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT,
 } from "../events";
 
 export type RuntimeEditorSettingsChangeDetail = {
@@ -26,11 +28,17 @@ export type RuntimeEditorContentSlotsChangeDetail = {
     contentSlots: ContentSlot[];
 };
 
+export type RuntimeEditorTextCapabilityChangeDetail = {
+    editor: RuntimeEditor;
+    textCapability: TextCapability | null;
+};
+
 export class RuntimeEditor extends Editor {
 
     private readonly _addedSettings: SettingSection[] = [];
     private readonly _declaredDataScopes: DataScope[] = [];
     private readonly _addedContentSlots: ContentSlot[] = [];
+    private _textCapabilityOverride: TextCapability | null | undefined;
     private _isMounted = false;
 
     constructor(
@@ -92,6 +100,17 @@ export class RuntimeEditor extends Editor {
         this._emitContentSlotsChange();
     }
 
+    override getTextCapability(): TextCapability | null {
+        return this._textCapabilityOverride !== undefined
+            ? this._textCapabilityOverride
+            : super.getTextCapability();
+    }
+
+    override setTextCapability(capability: TextCapability | null): void {
+        this._textCapabilityOverride = capability;
+        this._emitTextCapabilityChange();
+    }
+
     override getChildren(): Editor[] {
         return this._registry.getDirectChildren(this.target);
     }
@@ -119,6 +138,13 @@ export class RuntimeEditor extends Editor {
         this._emit(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, {
             editor: this,
             contentSlots: this.getContentSlots(),
+        });
+    }
+
+    private _emitTextCapabilityChange(): void {
+        this._emit(CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT, {
+            editor: this,
+            textCapability: this.getTextCapability(),
         });
     }
 

@@ -10,6 +10,7 @@ export class StructureTree extends HTMLElement {
     private _nodes: EditorStructureNode[] = [];
     private _selectedEditor: Editor | null = null;
     private readonly _collapsedEditors = new Set<Editor>();
+    private readonly _expandedBadgeEditors = new Set<Editor>();
 
     constructor() {
         super();
@@ -80,7 +81,36 @@ export class StructureTree extends HTMLElement {
         label.className = "label";
         label.textContent = node.label;
 
-        button.append(icon, label);
+        const badges = document.createElement("span");
+        badges.className = "badges";
+        const visibleBadges = this._visibleBadges(node);
+        for (const value of visibleBadges) {
+            const badge = document.createElement("span");
+            badge.className = "badge";
+            badge.textContent = value;
+            badges.append(badge);
+        }
+        const hiddenCount = node.badges.length - visibleBadges.length;
+        if (hiddenCount > 0) {
+            const more = document.createElement("span");
+            more.className = "badge more";
+            more.role = "button";
+            more.tabIndex = 0;
+            more.textContent = `+${hiddenCount}`;
+            more.addEventListener("click", (event) => {
+                event.stopPropagation();
+                this._toggleBadges(node);
+            });
+            more.addEventListener("keydown", (event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                event.stopPropagation();
+                this._toggleBadges(node);
+            });
+            badges.append(more);
+        }
+
+        button.append(icon, label, badges);
         row.append(button);
 
         return row;
@@ -108,6 +138,24 @@ export class StructureTree extends HTMLElement {
 
     private _isCollapsed(node: EditorStructureNode): boolean {
         return this._collapsedEditors.has(node.editor);
+    }
+
+    private _visibleBadges(node: EditorStructureNode): string[] {
+        if (this._areBadgesExpanded(node)) return node.badges;
+        return node.badges.slice(0, 2);
+    }
+
+    private _toggleBadges(node: EditorStructureNode): void {
+        if (this._areBadgesExpanded(node)) {
+            this._expandedBadgeEditors.delete(node.editor);
+        } else {
+            this._expandedBadgeEditors.add(node.editor);
+        }
+        this._render();
+    }
+
+    private _areBadgesExpanded(node: EditorStructureNode): boolean {
+        return this._expandedBadgeEditors.has(node.editor);
     }
 
     private _iconText(node: EditorStructureNode): string {
