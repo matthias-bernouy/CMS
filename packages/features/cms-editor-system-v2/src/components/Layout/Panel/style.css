@@ -19,9 +19,13 @@
 
 .panel {
     display: grid;
-    grid-template-rows: 44px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     height: 100%;
     min-height: 0;
+}
+
+:host([has-header]) .panel {
+    grid-template-rows: 44px minmax(0, 1fr);
 }
 
 .panel-head {
@@ -31,6 +35,10 @@
     padding: 0 14px;
     border-bottom: 1px solid var(--editor-v2-border);
     background: color-mix(in srgb, var(--editor-v2-surface) 82%, transparent);
+}
+
+:host(:not([has-header])) .panel-head {
+    display: none;
 }
 
 .title {

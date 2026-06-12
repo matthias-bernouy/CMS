@@ -46,21 +46,13 @@
     background: var(--editor-v2-surface-muted);
 }
 
-.settings-panel {
-    background: var(--editor-v2-surface);
+.structure-panel cms-editor-v2-structure-tree {
+    display: block;
+    margin-top: 12px;
 }
 
-.panel-search {
-    margin: 12px 12px 10px;
-    height: 30px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 7px;
-    background: var(--editor-v2-surface-muted);
-    color: var(--editor-v2-muted);
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    font-size: 12px;
+.settings-panel {
+    background: var(--editor-v2-surface);
 }
 
 .empty-panel {

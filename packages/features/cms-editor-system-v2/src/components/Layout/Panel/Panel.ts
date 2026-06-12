@@ -9,6 +9,16 @@ export class Panel extends HTMLElement {
         super();
         this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
     }
+
+    connectedCallback(): void {
+        this._syncHeaderVisibility();
+    }
+
+    private _syncHeaderVisibility(): void {
+        const title = this.querySelector("[slot='title']");
+        const action = this.querySelector("[slot='action']");
+        this.toggleAttribute("has-header", Boolean(title || action));
+    }
 }
 
 if (!customElements.get("cms-editor-v2-panel")) {
