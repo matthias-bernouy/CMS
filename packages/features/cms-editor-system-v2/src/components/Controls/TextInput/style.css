@@ -1,0 +1,40 @@
+:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.field {
+    display: grid;
+    gap: 5px;
+}
+
+.label {
+    color: var(--editor-v2-label);
+    font-size: 12px;
+    font-weight: 640;
+}
+
+input {
+    width: 100%;
+    min-height: 32px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    padding: 0 9px;
+    font: inherit;
+    font-size: 12px;
+}
+
+.hint {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.hint:empty {
+    display: none;
+}

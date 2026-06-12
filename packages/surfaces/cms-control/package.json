@@ -65,7 +65,8 @@
         "linkedom": "^0.18.12",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
-        "@bernouy/cms-content": "workspace:*"
+        "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-editor-system-v2": "workspace:*"
     },
     "engines": {
         "bun": ">=1.3.0"

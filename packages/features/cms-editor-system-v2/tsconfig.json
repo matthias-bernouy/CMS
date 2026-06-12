@@ -1,0 +1,12 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "./src",
+        "baseUrl": "./src",
+        "paths": {
+            "cms-editor-system-v2/*": ["./*"]
+        }
+    },
+    "include": ["src/**/*.ts"]
+}

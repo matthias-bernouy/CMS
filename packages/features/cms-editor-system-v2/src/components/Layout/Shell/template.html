@@ -1,0 +1,26 @@
+<div class="shell">
+    <cms-editor-v2-topbar></cms-editor-v2-topbar>
+    <div class="workspace">
+        <cms-editor-v2-panel class="structure-panel" side="left">
+            <span slot="title">Structure</span>
+            <div class="panel-search" aria-hidden="true">Search structure</div>
+            <cms-editor-v2-outline></cms-editor-v2-outline>
+        </cms-editor-v2-panel>
+        <cms-editor-v2-panel class="settings-panel" side="left">
+            <span slot="title">Settings</span>
+            <div class="panel-tabs">
+                <button class="active" type="button">Settings</button>
+                <button type="button">Capabilities</button>
+            </div>
+            <cms-editor-v2-controls-preview></cms-editor-v2-controls-preview>
+        </cms-editor-v2-panel>
+        <cms-editor-v2-canvas viewport-width="1440" viewport-height="900"></cms-editor-v2-canvas>
+    </div>
+    <footer class="statusbar">
+        <span><b>Mode</b> Edit</span>
+        <span><b>Viewport</b> Desktop</span>
+        <span><b>Zoom</b> 100%</span>
+        <span class="spacer"></span>
+        <span>No selection</span>
+    </footer>
+</div>

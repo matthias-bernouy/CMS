@@ -152,6 +152,7 @@ import "./editor/EditorSystem/FloatingToolbar/FloatingToolbar"
 import "./editor/EditorSystem/ObserverManager"
 import "./editor/MediaCenter/MediaCenter"
 import "./editor/RichTextBar/RichTextBar"
+import "@bernouy/cms-editor-system-v2/browser"
 
 import "./editor/configurations/Configuration/EditorConfiguration"
 

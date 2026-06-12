@@ -76,6 +76,13 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/features/cms-editor-system-v2": {
+      "name": "@bernouy/cms-editor-system-v2",
+      "version": "0.1.0",
+      "peerDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/features/cms-files": {
       "name": "@bernouy/cms-files",
       "version": "0.1.0",
@@ -209,6 +216,7 @@
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
+        "@bernouy/cms-editor-system-v2": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
@@ -259,6 +267,8 @@
     "@bernouy/cms-control": ["@bernouy/cms-control@workspace:packages/surfaces/cms-control"],
 
     "@bernouy/cms-delivery": ["@bernouy/cms-delivery@workspace:packages/surfaces/cms-delivery"],
+
+    "@bernouy/cms-editor-system-v2": ["@bernouy/cms-editor-system-v2@workspace:packages/features/cms-editor-system-v2"],
 
     "@bernouy/cms-files": ["@bernouy/cms-files@workspace:packages/features/cms-files"],
 

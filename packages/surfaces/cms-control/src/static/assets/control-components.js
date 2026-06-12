@@ -21801,6 +21801,1800 @@ button.active svg {
   }
   customElements.define("cms-richtextbar", RichTextBar);
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
+  var template_default15 = `<header class="topbar">
+    <div class="start">
+        <a class="back" href="#">
+            <span class="chevron">‹</span>
+            <span>Pages</span>
+        </a>
+        <div class="divider"></div>
+        <div class="title">
+            <span class="name">Pricing</span>
+            <span class="path">/pricing</span>
+        </div>
+    </div>
+    <div class="center">
+        <div class="segmented" aria-label="Viewport">
+            <button class="active" type="button">Desktop</button>
+            <button type="button">Tablet</button>
+            <button type="button">Mobile</button>
+        </div>
+    </div>
+    <div class="end">
+        <span class="save-state"><span class="dot"></span>Saved</span>
+        <button type="button">Preview</button>
+        <button class="primary" type="button">Publish</button>
+    </div>
+</header>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/style.css
+  var style_default14 = `:host {
+    display: block;
+    min-width: 0;
+    border-bottom: 1px solid var(--editor-v2-border);
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 14px 0 12px;
+}
+
+.start,
+.center,
+.end {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.start {
+    gap: 10px;
+}
+
+.center {
+    justify-content: center;
+}
+
+.end {
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    border-radius: 6px;
+    color: var(--editor-v2-muted);
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 650;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.back:hover {
+    background: var(--editor-v2-surface-muted);
+    color: var(--editor-v2-text);
+}
+
+.chevron {
+    font-size: 18px;
+    line-height: 1;
+    transform: translateY(-1px);
+}
+
+.divider {
+    width: 1px;
+    height: 24px;
+    background: var(--editor-v2-border);
+}
+
+.title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.name {
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.path {
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.segmented {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    padding: 3px;
+}
+
+button {
+    font: inherit;
+    min-height: 28px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.segmented button {
+    min-width: 66px;
+}
+
+button:hover {
+    border-color: var(--editor-v2-border);
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+}
+
+.segmented button.active {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
+}
+
+.save-state {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 5px;
+    border-radius: 999px;
+    background: var(--editor-v2-success);
+    vertical-align: 1px;
+}
+
+.primary {
+    border-color: var(--editor-v2-accent);
+    background: var(--editor-v2-accent);
+    color: #fff;
+    padding: 0 11px;
+}
+
+.primary:hover {
+    border-color: var(--editor-v2-accent);
+    background: var(--editor-v2-accent);
+    color: #fff;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
+  var template = document.createElement("template");
+  template.innerHTML = `<style>${String(style_default14)}</style>${String(template_default15)}`;
+
+  class TopBar extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+    }
+  }
+  if (!customElements.get("cms-editor-v2-topbar")) {
+    customElements.define("cms-editor-v2-topbar", TopBar);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
+  var template_default16 = `<aside class="panel">
+    <div class="panel-head">
+        <div class="title">
+            <slot name="title"></slot>
+        </div>
+        <div class="action">
+            <slot name="action"></slot>
+        </div>
+    </div>
+    <div class="panel-body">
+        <slot></slot>
+    </div>
+</aside>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
+  var style_default15 = `:host {
+    display: block;
+    min-width: 0;
+    min-height: 0;
+    background: inherit;
+}
+
+:host([side="left"]) {
+    border-right: 1px solid var(--editor-v2-border);
+}
+
+:host([side="right"]) {
+    border-left: 1px solid var(--editor-v2-border);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.panel {
+    display: grid;
+    grid-template-rows: 44px minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+}
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--editor-v2-border);
+    background: color-mix(in srgb, var(--editor-v2-surface) 82%, transparent);
+}
+
+.title {
+    min-width: 0;
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.action {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.panel-body {
+    min-height: 0;
+    overflow: auto;
+    background: transparent;
+    padding-bottom: 12px;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
+  var template2 = document.createElement("template");
+  template2.innerHTML = `<style>${String(style_default15)}</style>${String(template_default16)}`;
+
+  class Panel extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template2.content.cloneNode(true));
+    }
+  }
+  if (!customElements.get("cms-editor-v2-panel")) {
+    customElements.define("cms-editor-v2-panel", Panel);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Outline/template.html
+  var template_default17 = `<nav class="outline" aria-label="Page structure">
+    <button class="item active depth-0" type="button">
+        <span class="twisty">⌄</span>
+        <span class="icon">□</span>
+        <span class="label">Page</span>
+    </button>
+    <button class="item depth-1" type="button">
+        <span class="twisty"></span>
+        <span class="icon">≡</span>
+        <span class="label">Navbar</span>
+    </button>
+    <button class="item depth-1" type="button">
+        <span class="twisty"></span>
+        <span class="icon">H</span>
+        <span class="label">Hero</span>
+    </button>
+    <button class="item depth-1" type="button">
+        <span class="twisty">⌄</span>
+        <span class="icon">▦</span>
+        <span class="label">Pricing</span>
+    </button>
+    <button class="item depth-2" type="button">
+        <span class="twisty"></span>
+        <span class="icon">▣</span>
+        <span class="label">Starter card</span>
+    </button>
+    <button class="item depth-2 selected" type="button">
+        <span class="twisty"></span>
+        <span class="icon">▣</span>
+        <span class="label">Pro card</span>
+        <span class="badge">Selected</span>
+    </button>
+    <button class="item depth-2" type="button">
+        <span class="twisty"></span>
+        <span class="icon">▣</span>
+        <span class="label">Enterprise card</span>
+    </button>
+    <button class="item depth-1" type="button">
+        <span class="twisty">⌄</span>
+        <span class="icon">?</span>
+        <span class="label">FAQ</span>
+    </button>
+    <button class="item depth-2" type="button">
+        <span class="twisty"></span>
+        <span class="icon">T</span>
+        <span class="label">Question item</span>
+    </button>
+    <button class="item depth-1" type="button">
+        <span class="twisty"></span>
+        <span class="icon">—</span>
+        <span class="label">Footer</span>
+    </button>
+</nav>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Outline/style.css
+  var style_default16 = `:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.outline {
+    display: grid;
+    gap: 2px;
+    padding: 0 10px 14px;
+}
+
+.item {
+    display: grid;
+    grid-template-columns: 14px 16px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.item:hover {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+}
+
+.item.active {
+    color: var(--editor-v2-text);
+}
+
+.item.selected {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 26%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 10%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+}
+
+.depth-0 {
+    padding-left: 7px;
+}
+
+.depth-1 {
+    padding-left: 20px;
+}
+
+.depth-2 {
+    padding-left: 34px;
+}
+
+.twisty {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    text-align: center;
+}
+
+.icon {
+    display: grid;
+    place-items: center;
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.badge {
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 999px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-accent);
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Outline/Outline.ts
+  var template3 = document.createElement("template");
+  template3.innerHTML = `<style>${String(style_default16)}</style>${String(template_default17)}`;
+
+  class Outline extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template3.content.cloneNode(true));
+    }
+  }
+  if (!customElements.get("cms-editor-v2-outline")) {
+    customElements.define("cms-editor-v2-outline", Outline);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
+  var template_default18 = `<main class="canvas">
+    <div class="viewport">
+        <div class="page">
+            <iframe title="Page canvas" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+    </div>
+</main>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
+  var style_default17 = `:host {
+    display: block;
+    min-width: 0;
+    min-height: 0;
+    --editor-v2-viewport-width: 1440px;
+    --editor-v2-viewport-height: 900px;
+    background: var(--editor-v2-bg);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.canvas {
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    padding: 32px 36px 46px;
+    background-image: radial-gradient(var(--editor-v2-border-strong) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+.viewport {
+    min-width: var(--editor-v2-viewport-width);
+    min-height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.page {
+    width: var(--editor-v2-viewport-width);
+    height: var(--editor-v2-viewport-height);
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 10px;
+    background: var(--editor-v2-surface);
+    box-shadow: var(--editor-v2-shadow);
+    overflow: hidden;
+}
+
+iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: var(--editor-v2-surface);
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/frameDocument.html
+  var frameDocument_default = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+html,
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #151b19;
+    background: #fff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.page {
+    min-height: 100vh;
+    background: #fff;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    height: 68px;
+    padding: 0 64px;
+    border-bottom: 1px solid #e2e6e4;
+}
+
+.logo {
+    font-size: 15px;
+    font-weight: 760;
+}
+
+.links {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    color: #4f5d58;
+    font-size: 13px;
+}
+
+.nav .spacer {
+    flex: 1;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    border-radius: 7px;
+    border: 1px solid #165f4b;
+    background: #165f4b;
+    color: #fff;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.hero {
+    padding: 82px 64px 54px;
+    text-align: center;
+}
+
+.hero h1 {
+    max-width: 740px;
+    margin: 0 auto 16px;
+    font-size: 52px;
+    line-height: 1.04;
+    letter-spacing: 0;
+}
+
+.hero p {
+    max-width: 560px;
+    margin: 0 auto;
+    color: #4f5d58;
+    font-size: 17px;
+    line-height: 1.65;
+}
+
+.pricing {
+    padding: 18px 64px 86px;
+}
+
+.tiers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    max-width: 1040px;
+    margin: 0 auto;
+}
+
+.tier {
+    border: 1px solid #e2e6e4;
+    border-radius: 10px;
+    padding: 28px 26px;
+    background: #fff;
+}
+
+.tier.featured {
+    border-color: #165f4b;
+    box-shadow: 0 0 0 1px #165f4b;
+}
+
+.tier h2 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.price {
+    margin: 16px 0 4px;
+    font-size: 34px;
+    font-weight: 780;
+}
+
+.period {
+    color: #87948f;
+    font-size: 13px;
+}
+
+.tier ul {
+    margin: 22px 0 24px;
+    padding: 0 0 0 18px;
+    color: #4f5d58;
+    font-size: 14px;
+    line-height: 2;
+}
+
+.tier .button {
+    width: 100%;
+}
+
+.faq {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 64px 64px 72px;
+    border-top: 1px solid #e2e6e4;
+}
+
+.faq h2 {
+    margin: 0 0 24px;
+    text-align: center;
+    font-size: 26px;
+}
+
+.faq-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 18px;
+    padding: 18px 0;
+    border-bottom: 1px solid #e2e6e4;
+}
+
+.faq-item strong {
+    font-size: 15px;
+}
+
+.faq-item span {
+    color: #87948f;
+}
+
+.faq-answer {
+    grid-column: 1 / -1;
+    color: #4f5d58;
+    line-height: 1.65;
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    min-height: 74px;
+    padding: 0 64px;
+    border-top: 1px solid #e2e6e4;
+    background: #f9faf9;
+    color: #87948f;
+    font-size: 13px;
+}
+
+.footer .spacer {
+    flex: 1;
+}
+</style>
+</head>
+<body>
+<div class="page">
+    <nav class="nav">
+        <div class="logo">Northstar</div>
+        <div class="links">
+            <a href="#">Product</a>
+            <a href="#">Pricing</a>
+            <a href="#">Resources</a>
+        </div>
+        <div class="spacer"></div>
+        <a class="button" href="#">Start free</a>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h1>Simple plans for teams that publish every week.</h1>
+            <p>Build landing pages, product pages and editorial campaigns with clean components and a predictable editing workflow.</p>
+        </section>
+
+        <section class="pricing">
+            <div class="tiers">
+                <article class="tier">
+                    <h2>Starter</h2>
+                    <div class="price">$19</div>
+                    <div class="period">per month</div>
+                    <ul>
+                        <li>1 site</li>
+                        <li>10 published pages</li>
+                        <li>Community support</li>
+                    </ul>
+                    <a class="button" href="#">Choose Starter</a>
+                </article>
+                <article class="tier featured">
+                    <h2>Pro</h2>
+                    <div class="price">$49</div>
+                    <div class="period">per month</div>
+                    <ul>
+                        <li>5 sites</li>
+                        <li>Unlimited pages</li>
+                        <li>Priority support</li>
+                    </ul>
+                    <a class="button" href="#">Choose Pro</a>
+                </article>
+                <article class="tier">
+                    <h2>Enterprise</h2>
+                    <div class="price">Custom</div>
+                    <div class="period">annual contract</div>
+                    <ul>
+                        <li>Unlimited sites</li>
+                        <li>SSO and audit logs</li>
+                        <li>Dedicated manager</li>
+                    </ul>
+                    <a class="button" href="#">Talk to sales</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="faq">
+            <h2>Frequently asked questions</h2>
+            <div class="faq-item">
+                <strong>Can I change plans later?</strong>
+                <span>+</span>
+                <div class="faq-answer">Yes. Changes apply immediately and the next invoice is prorated.</div>
+            </div>
+            <div class="faq-item">
+                <strong>Can I publish multiple landing pages?</strong>
+                <span>+</span>
+                <div class="faq-answer">Every plan supports reusable sections and independent page publishing.</div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <span>Northstar CMS</span>
+        <div class="spacer"></div>
+        <span>Privacy</span>
+        <span>Terms</span>
+    </footer>
+</div>
+</body>
+</html>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
+  var template4 = document.createElement("template");
+  template4.innerHTML = `<style>${String(style_default17)}</style>${String(template_default18)}`;
+
+  class Canvas extends HTMLElement {
+    static get observedAttributes() {
+      return ["max-width", "viewport-width", "viewport-height"];
+    }
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template4.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.syncViewportSize();
+      this.syncFrameDocument();
+    }
+    attributeChangedCallback() {
+      this.syncViewportSize();
+      this.syncFrameDocument();
+    }
+    syncViewportSize() {
+      const width = this.cssSize(this.getAttribute("viewport-width") ?? this.getAttribute("max-width"));
+      const height = this.cssSize(this.getAttribute("viewport-height"));
+      if (width) {
+        this.style.setProperty("--editor-v2-viewport-width", width);
+      } else {
+        this.style.removeProperty("--editor-v2-viewport-width");
+      }
+      if (height) {
+        this.style.setProperty("--editor-v2-viewport-height", height);
+      } else {
+        this.style.removeProperty("--editor-v2-viewport-height");
+      }
+    }
+    syncFrameDocument() {
+      const frame = this.shadowRoot?.querySelector("iframe");
+      if (!frame)
+        return;
+      frame.srcdoc = String(frameDocument_default);
+    }
+    cssSize(value) {
+      const size = value?.trim();
+      if (!size)
+        return null;
+      return /^\d+$/.test(size) ? `${size}px` : size;
+    }
+  }
+  if (!customElements.get("cms-editor-v2-canvas")) {
+    customElements.define("cms-editor-v2-canvas", Canvas);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Section/template.html
+  var template_default19 = `<section class="section">
+    <button class="head" type="button" aria-expanded="true">
+        <span class="label"></span>
+        <span class="chevron">⌄</span>
+    </button>
+    <div class="body">
+        <slot></slot>
+    </div>
+</section>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Section/style.css
+  var style_default18 = `:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.section {
+    display: grid;
+    gap: 9px;
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 22px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--editor-v2-subtle);
+    padding: 0;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 780;
+    letter-spacing: .09em;
+    text-align: left;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.head::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--editor-v2-border);
+}
+
+.head:hover {
+    color: var(--editor-v2-text);
+}
+
+.chevron {
+    order: 3;
+    color: var(--editor-v2-subtle);
+    font-size: 12px;
+    letter-spacing: 0;
+}
+
+.body {
+    display: grid;
+    gap: 12px;
+    padding: 0 0 2px;
+}
+
+:host([collapsed]) .chevron {
+    transform: rotate(-90deg);
+}
+
+:host([collapsed]) .body {
+    display: none;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Section/Section.ts
+  var template5 = document.createElement("template");
+  template5.innerHTML = `<style>${String(style_default18)}</style>${String(template_default19)}`;
+
+  class Section extends HTMLElement {
+    toggle = () => {
+      const collapsed = this.toggleAttribute("collapsed");
+      this.shadowRoot.querySelector("button").ariaExpanded = String(!collapsed);
+    };
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template5.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
+      this.shadowRoot.querySelector("button").addEventListener("click", this.toggle);
+    }
+    disconnectedCallback() {
+      this.shadowRoot.querySelector("button").removeEventListener("click", this.toggle);
+    }
+  }
+  if (!customElements.get("cms-editor-v2-section")) {
+    customElements.define("cms-editor-v2-section", Section);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/FieldGroup/template.html
+  var template_default20 = `<div class="group">
+    <slot></slot>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/FieldGroup/style.css
+  var style_default19 = `:host {
+    display: block;
+}
+
+.group {
+    display: grid;
+    gap: 8px;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/FieldGroup/FieldGroup.ts
+  var template6 = document.createElement("template");
+  template6.innerHTML = `<style>${String(style_default19)}</style>${String(template_default20)}`;
+
+  class FieldGroup extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template6.content.cloneNode(true));
+    }
+  }
+  if (!customElements.get("cms-editor-v2-field-group")) {
+    customElements.define("cms-editor-v2-field-group", FieldGroup);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/TextInput/template.html
+  var template_default21 = `<label class="field">
+    <span class="label"></span>
+    <input>
+    <span class="hint"></span>
+</label>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/TextInput/style.css
+  var style_default20 = `:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.field {
+    display: grid;
+    gap: 5px;
+}
+
+.label {
+    color: var(--editor-v2-label);
+    font-size: 12px;
+    font-weight: 640;
+}
+
+input {
+    width: 100%;
+    min-height: 32px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    padding: 0 9px;
+    font: inherit;
+    font-size: 12px;
+}
+
+.hint {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.hint:empty {
+    display: none;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/TextInput/TextInput.ts
+  var template7 = document.createElement("template");
+  template7.innerHTML = `<style>${String(style_default20)}</style>${String(template_default21)}`;
+
+  class TextInput extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template7.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
+      this.shadowRoot.querySelector(".hint").textContent = this.getAttribute("hint") ?? "";
+      const input = this.shadowRoot.querySelector("input");
+      input.value = this.getAttribute("value") ?? "";
+      input.placeholder = this.getAttribute("placeholder") ?? "";
+    }
+  }
+  if (!customElements.get("cms-editor-v2-text-input")) {
+    customElements.define("cms-editor-v2-text-input", TextInput);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Textarea/template.html
+  var template_default22 = `<label class="field">
+    <span class="label"></span>
+    <textarea rows="3"></textarea>
+    <span class="hint"></span>
+</label>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Textarea/style.css
+  var style_default21 = `:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.field {
+    display: grid;
+    gap: 5px;
+}
+
+.label {
+    color: var(--editor-v2-label);
+    font-size: 12px;
+    font-weight: 640;
+}
+
+.hint {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+}
+
+textarea {
+    width: 100%;
+    resize: vertical;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    padding: 8px 9px;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.hint:empty {
+    display: none;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Textarea/Textarea.ts
+  var template8 = document.createElement("template");
+  template8.innerHTML = `<style>${String(style_default21)}</style>${String(template_default22)}`;
+
+  class Textarea extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template8.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
+      this.shadowRoot.querySelector(".hint").textContent = this.getAttribute("hint") ?? "";
+      this.shadowRoot.querySelector("textarea").textContent = this.getAttribute("value") ?? "";
+    }
+  }
+  if (!customElements.get("cms-editor-v2-textarea")) {
+    customElements.define("cms-editor-v2-textarea", Textarea);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Select/template.html
+  var template_default23 = `<label class="field">
+    <span class="label"></span>
+    <select></select>
+    <span class="hint"></span>
+</label>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Select/style.css
+  var style_default22 = `:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.field {
+    display: grid;
+    gap: 5px;
+}
+
+.label {
+    color: var(--editor-v2-label);
+    font-size: 12px;
+    font-weight: 640;
+}
+
+.hint {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+}
+
+select {
+    width: 100%;
+    min-height: 32px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    padding: 0 8px;
+    font: inherit;
+    font-size: 12px;
+}
+
+.hint:empty {
+    display: none;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Select/Select.ts
+  var template9 = document.createElement("template");
+  template9.innerHTML = `<style>${String(style_default22)}</style>${String(template_default23)}`;
+
+  class Select extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template9.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
+      this.shadowRoot.querySelector(".hint").textContent = this.getAttribute("hint") ?? "";
+      const current = this.getAttribute("value");
+      const options = (this.getAttribute("options") ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+      this.shadowRoot.querySelector("select").replaceChildren(...options.map((option) => {
+        const element = document.createElement("option");
+        element.textContent = option;
+        element.selected = option === current;
+        return element;
+      }));
+    }
+  }
+  if (!customElements.get("cms-editor-v2-select")) {
+    customElements.define("cms-editor-v2-select", Select);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Toggle/template.html
+  var template_default24 = `<button class="toggle" type="button" aria-pressed="false">
+    <span class="copy">
+        <span class="label"></span>
+        <span class="hint"></span>
+    </span>
+    <span class="switch"></span>
+</button>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Toggle/style.css
+  var style_default23 = `:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.toggle {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    color: var(--editor-v2-text);
+    padding: 10px 11px;
+    font: inherit;
+    text-align: left;
+}
+
+.copy {
+    display: grid;
+    gap: 2px;
+}
+
+.label {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.hint {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.switch {
+    width: 32px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--editor-v2-border-strong);
+    padding: 2px;
+}
+
+.switch::after {
+    content: "";
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #fff;
+}
+
+:host([checked]) .switch {
+    background: var(--editor-v2-accent);
+}
+
+:host([checked]) .switch::after {
+    transform: translateX(14px);
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Toggle/Toggle.ts
+  var template10 = document.createElement("template");
+  template10.innerHTML = `<style>${String(style_default23)}</style>${String(template_default24)}`;
+
+  class Toggle extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template10.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
+      this.shadowRoot.querySelector(".hint").textContent = this.getAttribute("hint") ?? "";
+      this.shadowRoot.querySelector("button").ariaPressed = String(this.hasAttribute("checked"));
+    }
+  }
+  if (!customElements.get("cms-editor-v2-toggle")) {
+    customElements.define("cms-editor-v2-toggle", Toggle);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/SegmentedControl/template.html
+  var template_default25 = `<div class="segmented">
+    <slot></slot>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/SegmentedControl/style.css
+  var style_default24 = `:host {
+    display: block;
+}
+
+.segmented {
+    display: flex;
+    gap: 2px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    padding: 3px;
+}
+
+::slotted(button) {
+    flex: 1;
+    min-height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+::slotted(button[aria-pressed="true"]) {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/SegmentedControl/SegmentedControl.ts
+  var template11 = document.createElement("template");
+  template11.innerHTML = `<style>${String(style_default24)}</style>${String(template_default25)}`;
+
+  class SegmentedControl extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template11.content.cloneNode(true));
+    }
+  }
+  if (!customElements.get("cms-editor-v2-segmented-control")) {
+    customElements.define("cms-editor-v2-segmented-control", SegmentedControl);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/PageLink/template.html
+  var template_default26 = `<div class="page-link">
+    <div class="tabs">
+        <button class="active" type="button">Page</button>
+        <button type="button">External</button>
+        <button type="button">Media</button>
+    </div>
+    <div class="target">
+        <span class="icon">↗</span>
+        <span class="copy">
+            <strong></strong>
+            <code></code>
+        </span>
+    </div>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/PageLink/style.css
+  var style_default25 = `:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.page-link {
+    display: grid;
+    gap: 8px;
+}
+
+.tabs {
+    display: flex;
+    gap: 2px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    padding: 3px;
+}
+
+button {
+    flex: 1;
+    min-height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+button.active {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
+}
+
+.target {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    padding: 10px;
+}
+
+.icon {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--editor-v2-accent) 12%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+}
+
+.copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+strong {
+    font-size: 12px;
+}
+
+code {
+    overflow: hidden;
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/PageLink/PageLink.ts
+  var template12 = document.createElement("template");
+  template12.innerHTML = `<style>${String(style_default25)}</style>${String(template_default26)}`;
+
+  class PageLink2 extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template12.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.shadowRoot.querySelector("strong").textContent = this.getAttribute("label") ?? "Pricing page";
+      this.shadowRoot.querySelector("code").textContent = this.getAttribute("path") ?? "/pricing";
+    }
+  }
+  if (!customElements.get("cms-editor-v2-page-link")) {
+    customElements.define("cms-editor-v2-page-link", PageLink2);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/SchemaPicker/template.html
+  var template_default27 = `<div class="schema">
+    <div class="source">
+        <span class="dot"></span>
+        <span>
+            <strong></strong>
+            <code></code>
+        </span>
+    </div>
+    <div class="fields">
+        <button type="button">plans[].name</button>
+        <button class="active" type="button">plans[].cta.label</button>
+        <button type="button">plans[].cta.href</button>
+    </div>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/SchemaPicker/style.css
+  var style_default26 = `:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.schema {
+    display: grid;
+    gap: 8px;
+}
+
+.source {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    padding: 10px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--editor-v2-success);
+}
+
+strong,
+code {
+    display: block;
+}
+
+strong {
+    font-size: 12px;
+}
+
+code {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+}
+
+.fields {
+    display: grid;
+    gap: 5px;
+}
+
+button {
+    min-height: 28px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    padding: 0 9px;
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+}
+
+button.active {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
+    color: var(--editor-v2-accent);
+    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/SchemaPicker/SchemaPicker.ts
+  var template13 = document.createElement("template");
+  template13.innerHTML = `<style>${String(style_default26)}</style>${String(template_default27)}`;
+
+  class SchemaPicker extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template13.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.shadowRoot.querySelector("strong").textContent = this.getAttribute("source") ?? "Plans data";
+      this.shadowRoot.querySelector("code").textContent = this.getAttribute("path") ?? "urn:supabase:listPlans";
+    }
+  }
+  if (!customElements.get("cms-editor-v2-schema-picker")) {
+    customElements.define("cms-editor-v2-schema-picker", SchemaPicker);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/ControlsPreview/template.html
+  var template_default28 = `<div class="preview">
+    <cms-editor-v2-section label="Element">
+        <cms-editor-v2-field-group>
+            <cms-editor-v2-text-input label="Label" value="Pro card"></cms-editor-v2-text-input>
+            <cms-editor-v2-select label="Variant" value="Featured" options="Default,Featured,Muted"></cms-editor-v2-select>
+            <cms-editor-v2-toggle checked label="Featured" hint="Promote this card visually in the section."></cms-editor-v2-toggle>
+        </cms-editor-v2-field-group>
+    </cms-editor-v2-section>
+
+    <cms-editor-v2-section label="Content">
+        <cms-editor-v2-text-input label="CTA label" value="Choose Pro"></cms-editor-v2-text-input>
+        <cms-editor-v2-textarea label="Description" value="For growing teams that publish often."></cms-editor-v2-textarea>
+    </cms-editor-v2-section>
+
+    <cms-editor-v2-section label="Link">
+        <cms-editor-v2-page-link label="Pricing page" path="/pricing"></cms-editor-v2-page-link>
+    </cms-editor-v2-section>
+
+    <cms-editor-v2-section label="Data field">
+        <cms-editor-v2-schema-picker source="Plans data" path="urn:supabase:listPlans"></cms-editor-v2-schema-picker>
+    </cms-editor-v2-section>
+
+    <cms-editor-v2-section label="State">
+        <cms-editor-v2-segmented-control>
+            <button type="button" aria-pressed="true">Default</button>
+            <button type="button">Hover</button>
+            <button type="button">Active</button>
+        </cms-editor-v2-segmented-control>
+    </cms-editor-v2-section>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/ControlsPreview/style.css
+  var style_default27 = `:host {
+    display: block;
+}
+
+.preview {
+    display: grid;
+    gap: 17px;
+    padding: 0 12px 16px;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/ControlsPreview/ControlsPreview.ts
+  var template14 = document.createElement("template");
+  template14.innerHTML = `<style>${String(style_default27)}</style>${String(template_default28)}`;
+
+  class ControlsPreview extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template14.content.cloneNode(true));
+    }
+  }
+  if (!customElements.get("cms-editor-v2-controls-preview")) {
+    customElements.define("cms-editor-v2-controls-preview", ControlsPreview);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
+  var template_default29 = `<div class="shell">
+    <cms-editor-v2-topbar></cms-editor-v2-topbar>
+    <div class="workspace">
+        <cms-editor-v2-panel class="structure-panel" side="left">
+            <span slot="title">Structure</span>
+            <div class="panel-search" aria-hidden="true">Search structure</div>
+            <cms-editor-v2-outline></cms-editor-v2-outline>
+        </cms-editor-v2-panel>
+        <cms-editor-v2-panel class="settings-panel" side="left">
+            <span slot="title">Settings</span>
+            <div class="panel-tabs">
+                <button class="active" type="button">Settings</button>
+                <button type="button">Capabilities</button>
+            </div>
+            <cms-editor-v2-controls-preview></cms-editor-v2-controls-preview>
+        </cms-editor-v2-panel>
+        <cms-editor-v2-canvas viewport-width="1440" viewport-height="900"></cms-editor-v2-canvas>
+    </div>
+    <footer class="statusbar">
+        <span><b>Mode</b> Edit</span>
+        <span><b>Viewport</b> Desktop</span>
+        <span><b>Zoom</b> 100%</span>
+        <span class="spacer"></span>
+        <span>No selection</span>
+    </footer>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
+  var style_default28 = `:host {
+    --editor-v2-bg: #f6f7f7;
+    --editor-v2-surface: #ffffff;
+    --editor-v2-surface-muted: #f9faf9;
+    --editor-v2-border: #e2e6e4;
+    --editor-v2-border-strong: #c9d1ce;
+    --editor-v2-text: #151b19;
+    --editor-v2-label: #5f6d68;
+    --editor-v2-muted: #87948f;
+    --editor-v2-subtle: #a3ada9;
+    --editor-v2-accent: #165f4b;
+    --editor-v2-success: #1a7f4e;
+    --editor-v2-shadow: 0 1px 0 rgba(16, 24, 21, .035), 0 12px 32px rgba(16, 24, 21, .045);
+    --editor-v2-left-rail-width: 288px;
+    --editor-v2-inspector-width: 348px;
+    display: block;
+    height: 100%;
+    min-height: 560px;
+    color: var(--editor-v2-text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.shell {
+    display: grid;
+    grid-template-rows: 48px minmax(0, 1fr) 28px;
+    height: 100%;
+    min-height: 560px;
+    border: 1px solid var(--editor-v2-border);
+    background: var(--editor-v2-bg);
+}
+
+.workspace {
+    display: grid;
+    grid-template-columns:
+        var(--editor-v2-left-rail-width)
+        var(--editor-v2-inspector-width)
+        minmax(0, 1fr);
+    min-height: 0;
+}
+
+.structure-panel {
+    background: var(--editor-v2-surface-muted);
+}
+
+.settings-panel {
+    background: var(--editor-v2-surface);
+}
+
+.panel-search {
+    margin: 12px 12px 10px;
+    height: 30px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface-muted);
+    color: var(--editor-v2-muted);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
+.empty-panel {
+    margin: 0 12px;
+    border: 1px dashed var(--editor-v2-border-strong);
+    border-radius: 8px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    padding: 13px 12px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.panel-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin: 12px 12px 14px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    padding: 3px;
+}
+
+.panel-tabs button {
+    flex: 1;
+    min-height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.panel-tabs button.active {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
+}
+
+.statusbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    border-top: 1px solid var(--editor-v2-border);
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    padding: 0 14px;
+    font-size: 11px;
+}
+
+.statusbar b {
+    color: var(--editor-v2-text);
+    font-weight: 700;
+}
+
+.spacer {
+    flex: 1;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Shell.ts
+  var template15 = document.createElement("template");
+  template15.innerHTML = `<style>${String(style_default28)}</style>${String(template_default29)}`;
+
+  class Shell extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template15.content.cloneNode(true));
+    }
+  }
+  if (!customElements.get("cms-editor-v2-shell")) {
+    customElements.define("cms-editor-v2-shell", Shell);
+  }
+
   // src/components/CustomHTMLElement.ts
   class CustomHTMLElement extends HTMLElement {
     constructor(html, css, shadow) {
@@ -21816,7 +23610,7 @@ button.active svg {
   }
 
   // src/components/editor/configurations/Configuration/template.html
-  var template_default15 = `<w13c-lateral-dialog>
+  var template_default30 = `<w13c-lateral-dialog>
 
     <h3 slot="title"><slot name="title"></slot></h3>
 
@@ -21839,7 +23633,7 @@ button.active svg {
 </w13c-lateral-dialog>`;
 
   // src/components/editor/configurations/Configuration/style.css
-  var style_default14 = `form{
+  var style_default29 = `form{
     display: flex;
     flex-direction: column;
 }`;
@@ -21872,7 +23666,7 @@ button.active svg {
       return ["url", "method", "delete-redirect", "delete-label"];
     }
     constructor() {
-      super(template_default15, style_default14, true);
+      super(template_default30, style_default29, true);
     }
     _handleSubmit = (e) => {
       e.preventDefault();
@@ -21941,11 +23735,11 @@ button.active svg {
   }
 
   // src/components/editor/snippet/Snippet/template.html
-  var template_default16 = `<div class="snippet-root"></div>
+  var template_default31 = `<div class="snippet-root"></div>
 `;
 
   // src/components/editor/snippet/Snippet/style.css
-  var style_default15 = `:host {
+  var style_default30 = `:host {
     display: block;
     position: relative;
     min-height: 40px;
@@ -22024,8 +23818,8 @@ button.active svg {
 
   // src/components/editor/snippet/Snippet/Snippet.ts
   var SnippetMetadata = {
-    css: style_default15,
-    template: template_default16
+    css: style_default30,
+    template: template_default31
   };
 
   class Snippet extends A2 {
@@ -22084,7 +23878,7 @@ button.active svg {
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default17 = `<div class="backdrop" id="backdrop">
+  var template_default32 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -22123,7 +23917,7 @@ button.active svg {
 `;
 
   // src/components/media/CropSystem/style.css
-  var style_default16 = `:host {
+  var style_default31 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -22325,8 +24119,8 @@ button.active svg {
   class CropSystem extends A2 {
     constructor() {
       super({
-        css: style_default16,
-        template: template_default17
+        css: style_default31,
+        template: template_default32
       });
     }
     connectedCallback() {
@@ -22363,7 +24157,7 @@ button.active svg {
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default18 = `<div class="backdrop" id="backdrop">
+  var template_default33 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -22405,7 +24199,7 @@ button.active svg {
 `;
 
   // src/components/media/DetailMedia/style.css
-  var style_default17 = `:host {
+  var style_default32 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -22618,8 +24412,8 @@ button.active svg {
   class DetailMedia extends A2 {
     constructor() {
       super({
-        css: style_default17,
-        template: template_default18
+        css: style_default32,
+        template: template_default33
       });
     }
     connectedCallback() {
@@ -22651,7 +24445,7 @@ button.active svg {
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default19 = `<div class="toolbar">
+  var template_default34 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -22713,7 +24507,7 @@ button.active svg {
 `;
 
   // src/components/media/GridMedia/view/style.css
-  var style_default18 = `:host {
+  var style_default33 = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
     --empty-color: var(--text-muted, #94a3b8);
@@ -23465,8 +25259,8 @@ button.active svg {
     _items = [];
     constructor() {
       super({
-        css: style_default18,
-        template: template_default19
+        css: style_default33,
+        template: template_default34
       });
     }
     get detail() {

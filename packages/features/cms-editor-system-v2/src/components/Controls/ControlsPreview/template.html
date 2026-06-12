@@ -1,0 +1,30 @@
+<div class="preview">
+    <cms-editor-v2-section label="Element">
+        <cms-editor-v2-field-group>
+            <cms-editor-v2-text-input label="Label" value="Pro card"></cms-editor-v2-text-input>
+            <cms-editor-v2-select label="Variant" value="Featured" options="Default,Featured,Muted"></cms-editor-v2-select>
+            <cms-editor-v2-toggle checked label="Featured" hint="Promote this card visually in the section."></cms-editor-v2-toggle>
+        </cms-editor-v2-field-group>
+    </cms-editor-v2-section>
+
+    <cms-editor-v2-section label="Content">
+        <cms-editor-v2-text-input label="CTA label" value="Choose Pro"></cms-editor-v2-text-input>
+        <cms-editor-v2-textarea label="Description" value="For growing teams that publish often."></cms-editor-v2-textarea>
+    </cms-editor-v2-section>
+
+    <cms-editor-v2-section label="Link">
+        <cms-editor-v2-page-link label="Pricing page" path="/pricing"></cms-editor-v2-page-link>
+    </cms-editor-v2-section>
+
+    <cms-editor-v2-section label="Data field">
+        <cms-editor-v2-schema-picker source="Plans data" path="urn:supabase:listPlans"></cms-editor-v2-schema-picker>
+    </cms-editor-v2-section>
+
+    <cms-editor-v2-section label="State">
+        <cms-editor-v2-segmented-control>
+            <button type="button" aria-pressed="true">Default</button>
+            <button type="button">Hover</button>
+            <button type="button">Active</button>
+        </cms-editor-v2-segmented-control>
+    </cms-editor-v2-section>
+</div>

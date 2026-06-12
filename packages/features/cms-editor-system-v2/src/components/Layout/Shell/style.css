@@ -1,0 +1,126 @@
+:host {
+    --editor-v2-bg: #f6f7f7;
+    --editor-v2-surface: #ffffff;
+    --editor-v2-surface-muted: #f9faf9;
+    --editor-v2-border: #e2e6e4;
+    --editor-v2-border-strong: #c9d1ce;
+    --editor-v2-text: #151b19;
+    --editor-v2-label: #5f6d68;
+    --editor-v2-muted: #87948f;
+    --editor-v2-subtle: #a3ada9;
+    --editor-v2-accent: #165f4b;
+    --editor-v2-success: #1a7f4e;
+    --editor-v2-shadow: 0 1px 0 rgba(16, 24, 21, .035), 0 12px 32px rgba(16, 24, 21, .045);
+    --editor-v2-left-rail-width: 288px;
+    --editor-v2-inspector-width: 348px;
+    display: block;
+    height: 100%;
+    min-height: 560px;
+    color: var(--editor-v2-text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.shell {
+    display: grid;
+    grid-template-rows: 48px minmax(0, 1fr) 28px;
+    height: 100%;
+    min-height: 560px;
+    border: 1px solid var(--editor-v2-border);
+    background: var(--editor-v2-bg);
+}
+
+.workspace {
+    display: grid;
+    grid-template-columns:
+        var(--editor-v2-left-rail-width)
+        var(--editor-v2-inspector-width)
+        minmax(0, 1fr);
+    min-height: 0;
+}
+
+.structure-panel {
+    background: var(--editor-v2-surface-muted);
+}
+
+.settings-panel {
+    background: var(--editor-v2-surface);
+}
+
+.panel-search {
+    margin: 12px 12px 10px;
+    height: 30px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface-muted);
+    color: var(--editor-v2-muted);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
+.empty-panel {
+    margin: 0 12px;
+    border: 1px dashed var(--editor-v2-border-strong);
+    border-radius: 8px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    padding: 13px 12px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.panel-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin: 12px 12px 14px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface-muted);
+    padding: 3px;
+}
+
+.panel-tabs button {
+    flex: 1;
+    min-height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.panel-tabs button.active {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
+}
+
+.statusbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    border-top: 1px solid var(--editor-v2-border);
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    padding: 0 14px;
+    font-size: 11px;
+}
+
+.statusbar b {
+    color: var(--editor-v2-text);
+    font-weight: 700;
+}
+
+.spacer {
+    flex: 1;
+}

@@ -1,0 +1,8 @@
+:host {
+    display: block;
+}
+
+.group {
+    display: grid;
+    gap: 8px;
+}

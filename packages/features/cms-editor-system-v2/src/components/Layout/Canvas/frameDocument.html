@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+html,
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #151b19;
+    background: #fff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.page {
+    min-height: 100vh;
+    background: #fff;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    height: 68px;
+    padding: 0 64px;
+    border-bottom: 1px solid #e2e6e4;
+}
+
+.logo {
+    font-size: 15px;
+    font-weight: 760;
+}
+
+.links {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    color: #4f5d58;
+    font-size: 13px;
+}
+
+.nav .spacer {
+    flex: 1;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    border-radius: 7px;
+    border: 1px solid #165f4b;
+    background: #165f4b;
+    color: #fff;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.hero {
+    padding: 82px 64px 54px;
+    text-align: center;
+}
+
+.hero h1 {
+    max-width: 740px;
+    margin: 0 auto 16px;
+    font-size: 52px;
+    line-height: 1.04;
+    letter-spacing: 0;
+}
+
+.hero p {
+    max-width: 560px;
+    margin: 0 auto;
+    color: #4f5d58;
+    font-size: 17px;
+    line-height: 1.65;
+}
+
+.pricing {
+    padding: 18px 64px 86px;
+}
+
+.tiers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    max-width: 1040px;
+    margin: 0 auto;
+}
+
+.tier {
+    border: 1px solid #e2e6e4;
+    border-radius: 10px;
+    padding: 28px 26px;
+    background: #fff;
+}
+
+.tier.featured {
+    border-color: #165f4b;
+    box-shadow: 0 0 0 1px #165f4b;
+}
+
+.tier h2 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.price {
+    margin: 16px 0 4px;
+    font-size: 34px;
+    font-weight: 780;
+}
+
+.period {
+    color: #87948f;
+    font-size: 13px;
+}
+
+.tier ul {
+    margin: 22px 0 24px;
+    padding: 0 0 0 18px;
+    color: #4f5d58;
+    font-size: 14px;
+    line-height: 2;
+}
+
+.tier .button {
+    width: 100%;
+}
+
+.faq {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 64px 64px 72px;
+    border-top: 1px solid #e2e6e4;
+}
+
+.faq h2 {
+    margin: 0 0 24px;
+    text-align: center;
+    font-size: 26px;
+}
+
+.faq-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 18px;
+    padding: 18px 0;
+    border-bottom: 1px solid #e2e6e4;
+}
+
+.faq-item strong {
+    font-size: 15px;
+}
+
+.faq-item span {
+    color: #87948f;
+}
+
+.faq-answer {
+    grid-column: 1 / -1;
+    color: #4f5d58;
+    line-height: 1.65;
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    min-height: 74px;
+    padding: 0 64px;
+    border-top: 1px solid #e2e6e4;
+    background: #f9faf9;
+    color: #87948f;
+    font-size: 13px;
+}
+
+.footer .spacer {
+    flex: 1;
+}
+</style>
+</head>
+<body>
+<div class="page">
+    <nav class="nav">
+        <div class="logo">Northstar</div>
+        <div class="links">
+            <a href="#">Product</a>
+            <a href="#">Pricing</a>
+            <a href="#">Resources</a>
+        </div>
+        <div class="spacer"></div>
+        <a class="button" href="#">Start free</a>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <h1>Simple plans for teams that publish every week.</h1>
+            <p>Build landing pages, product pages and editorial campaigns with clean components and a predictable editing workflow.</p>
+        </section>
+
+        <section class="pricing">
+            <div class="tiers">
+                <article class="tier">
+                    <h2>Starter</h2>
+                    <div class="price">$19</div>
+                    <div class="period">per month</div>
+                    <ul>
+                        <li>1 site</li>
+                        <li>10 published pages</li>
+                        <li>Community support</li>
+                    </ul>
+                    <a class="button" href="#">Choose Starter</a>
+                </article>
+                <article class="tier featured">
+                    <h2>Pro</h2>
+                    <div class="price">$49</div>
+                    <div class="period">per month</div>
+                    <ul>
+                        <li>5 sites</li>
+                        <li>Unlimited pages</li>
+                        <li>Priority support</li>
+                    </ul>
+                    <a class="button" href="#">Choose Pro</a>
+                </article>
+                <article class="tier">
+                    <h2>Enterprise</h2>
+                    <div class="price">Custom</div>
+                    <div class="period">annual contract</div>
+                    <ul>
+                        <li>Unlimited sites</li>
+                        <li>SSO and audit logs</li>
+                        <li>Dedicated manager</li>
+                    </ul>
+                    <a class="button" href="#">Talk to sales</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="faq">
+            <h2>Frequently asked questions</h2>
+            <div class="faq-item">
+                <strong>Can I change plans later?</strong>
+                <span>+</span>
+                <div class="faq-answer">Yes. Changes apply immediately and the next invoice is prorated.</div>
+            </div>
+            <div class="faq-item">
+                <strong>Can I publish multiple landing pages?</strong>
+                <span>+</span>
+                <div class="faq-answer">Every plan supports reusable sections and independent page publishing.</div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <span>Northstar CMS</span>
+        <div class="spacer"></div>
+        <span>Privacy</span>
+        <span>Terms</span>
+    </footer>
+</div>
+</body>
+</html>

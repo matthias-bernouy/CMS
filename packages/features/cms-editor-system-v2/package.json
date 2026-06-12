@@ -1,0 +1,15 @@
+{
+    "name": "@bernouy/cms-editor-system-v2",
+    "version": "0.1.0",
+    "description": "Experimental CMS editor system v2: outline, inspector, data bindings and capability-driven overrides.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./browser": "./src/exports/browser.ts"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    }
+}
