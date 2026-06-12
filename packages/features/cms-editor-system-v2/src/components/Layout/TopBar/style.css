@@ -33,6 +33,7 @@
 
 .center {
     justify-content: center;
+    gap: 8px;
 }
 
 .end {
@@ -115,6 +116,10 @@ button {
 
 .segmented button {
     min-width: 66px;
+}
+
+.mode-switch button {
+    min-width: 54px;
 }
 
 button:hover {

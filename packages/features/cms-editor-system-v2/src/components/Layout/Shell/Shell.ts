@@ -25,6 +25,15 @@ import {
     type CanvasFrameReadyDetail,
 } from "../Canvas/Canvas";
 import {
+    TOPBAR_EDITOR_MODE_CHANGE_EVENT,
+    TOPBAR_VIEWPORT_CHANGE_EVENT,
+    type TopBar,
+    type TopBarEditorMode,
+    type TopBarEditorModeChangeDetail,
+    type TopBarViewport,
+    type TopBarViewportChangeDetail,
+} from "../TopBar/TopBar";
+import {
     SETTINGS_VIEW_CONTENT_CHANGE_EVENT,
     SETTINGS_VIEW_SETTING_CHANGE_EVENT,
     SETTINGS_VIEW_STATE_TOGGLE_EVENT,
@@ -42,12 +51,32 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
+const VIEWPORTS: Record<TopBarViewport, { label: string; width: number; height: number }> = {
+    desktop: {
+        label:  "Desktop",
+        width:  1440,
+        height: 900,
+    },
+    tablet: {
+        label:  "Tablet",
+        width:  768,
+        height: 900,
+    },
+    mobile: {
+        label:  "Mobile",
+        width:  390,
+        height: 844,
+    },
+};
+
 export class Shell extends HTMLElement {
 
     private _catalog: EditorCatalog = [];
     private _runtime: EditorRuntime | null = null;
     private _frameDocument: Document | null = null;
     private _settingsMode: SettingsViewMode = "settings";
+    private _viewport: TopBarViewport = "desktop";
+    private _editorMode: TopBarEditorMode = "edit";
     private readonly _stateSessions = new WeakMap<Editor, Map<string, EditableStateSession>>();
     private readonly _highlight = new FrameHighlight();
 
@@ -63,8 +92,12 @@ export class Shell extends HTMLElement {
         this._settings.addEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._settings.addEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle as EventListener);
         this._canvas.addEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
+        this._topBar.addEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
+        this._topBar.addEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
         this._settingsTabs.addEventListener("click", this._onSettingsTabsClick);
         this._syncStructureTreeCatalog();
+        this._syncViewport();
+        this._syncEditorMode();
     }
 
     disconnectedCallback(): void {
@@ -74,6 +107,8 @@ export class Shell extends HTMLElement {
         this._settings.removeEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._settings.removeEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle as EventListener);
         this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
+        this._topBar.removeEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
+        this._topBar.removeEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
         this._settingsTabs.removeEventListener("click", this._onSettingsTabsClick);
         this._unbindFrameDocument();
         this._highlight.dispose();
@@ -108,6 +143,8 @@ export class Shell extends HTMLElement {
     }
 
     private readonly _onSelectEditor = (event: Event): void => {
+        if (this._editorMode !== "edit") return;
+
         const editor = (event as CustomEvent<{ editor: Editor }>).detail.editor;
         this._select(editor);
     };
@@ -121,8 +158,19 @@ export class Shell extends HTMLElement {
         this._renderSettings();
     };
 
+    private readonly _onViewportChange = (event: CustomEvent<TopBarViewportChangeDetail>): void => {
+        this._viewport = event.detail.viewport;
+        this._syncViewport();
+    };
+
+    private readonly _onEditorModeChange = (event: CustomEvent<TopBarEditorModeChangeDetail>): void => {
+        this._editorMode = event.detail.mode;
+        this._syncEditorMode();
+    };
+
     private readonly _onStructureAction = (event: CustomEvent<StructureTreeActionDetail>): void => {
         if (!this._runtime) return;
+        if (this._editorMode !== "edit") return;
 
         const { action, editor, entry } = event.detail;
         if (action === "duplicate") {
@@ -161,6 +209,8 @@ export class Shell extends HTMLElement {
 
     private readonly _onSettingChange = (event: CustomEvent<SettingsViewSettingChangeDetail>): void => {
         if (!this._runtime) return;
+        if (this._editorMode !== "edit") return;
+
         const selection = this._runtime.getSelection();
         if (!selection) return;
 
@@ -170,6 +220,8 @@ export class Shell extends HTMLElement {
 
     private readonly _onContentChange = (event: CustomEvent<SettingsViewContentChangeDetail>): void => {
         if (!this._runtime) return;
+        if (this._editorMode !== "edit") return;
+
         const selection = this._runtime.getSelection();
         if (!selection?.textCapability) return;
 
@@ -183,6 +235,8 @@ export class Shell extends HTMLElement {
 
     private readonly _onStateToggle = (event: CustomEvent<SettingsViewStateToggleDetail>): void => {
         if (!this._runtime) return;
+        if (this._editorMode !== "edit") return;
+
         const selection = this._runtime.getSelection();
         if (!selection) return;
 
@@ -193,6 +247,7 @@ export class Shell extends HTMLElement {
 
     private readonly _onFrameClick = (event: Event): void => {
         if (!this._runtime) return;
+        if (this._editorMode !== "edit") return;
 
         event.preventDefault();
         const target = this._eventElement(event);
@@ -470,6 +525,24 @@ export class Shell extends HTMLElement {
         }
     }
 
+    private _syncViewport(): void {
+        const viewport = VIEWPORTS[this._viewport];
+        this._canvas.setAttribute("viewport-width", String(viewport.width));
+        this._canvas.setAttribute("viewport-height", String(viewport.height));
+        this._topBar.viewport = this._viewport;
+        this.shadowRoot!.querySelector(".viewport-status")!.textContent = viewport.label;
+    }
+
+    private _syncEditorMode(): void {
+        this._topBar.mode = this._editorMode;
+        this.toggleAttribute("view-mode", this._editorMode === "view");
+        this.shadowRoot!.querySelector(".mode-status")!.textContent = this._editorMode === "edit" ? "Edit" : "View";
+
+        if (this._editorMode === "view") {
+            this._select(null);
+        }
+    }
+
     private _syncStructureTreeCatalog(): void {
         const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
         if (this._isStructureTree(tree)) {
@@ -523,6 +596,10 @@ export class Shell extends HTMLElement {
 
     private get _canvas(): Canvas {
         return this.shadowRoot!.querySelector("cms-editor-v2-canvas") as Canvas;
+    }
+
+    private get _topBar(): TopBar {
+        return this.shadowRoot!.querySelector("cms-editor-v2-topbar") as TopBar;
     }
 
 }

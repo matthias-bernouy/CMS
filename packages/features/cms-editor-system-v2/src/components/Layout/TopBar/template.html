@@ -12,9 +12,13 @@
     </div>
     <div class="center">
         <div class="segmented" aria-label="Viewport">
-            <button class="active" type="button">Desktop</button>
-            <button type="button">Tablet</button>
-            <button type="button">Mobile</button>
+            <button class="active" type="button" data-viewport="desktop" aria-pressed="true">Desktop</button>
+            <button type="button" data-viewport="tablet" aria-pressed="false">Tablet</button>
+            <button type="button" data-viewport="mobile" aria-pressed="false">Mobile</button>
+        </div>
+        <div class="segmented mode-switch" aria-label="Editor mode">
+            <button class="active" type="button" data-editor-mode="edit" aria-pressed="true">Edit</button>
+            <button type="button" data-editor-mode="view" aria-pressed="false">View</button>
         </div>
     </div>
     <div class="end">
