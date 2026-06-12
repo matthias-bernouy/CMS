@@ -26,6 +26,8 @@ import {
 } from "../Canvas/Canvas";
 import {
     TOPBAR_EDITOR_MODE_CHANGE_EVENT,
+    TOPBAR_PAGE_SETTINGS_EVENT,
+    TOPBAR_SAVE_EVENT,
     TOPBAR_VIEWPORT_CHANGE_EVENT,
     type TopBar,
     type TopBarEditorMode,
@@ -94,6 +96,10 @@ export class Shell extends HTMLElement {
         this._canvas.addEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
         this._topBar.addEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
         this._topBar.addEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
+        this._topBar.addEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
+        this._topBar.addEventListener(TOPBAR_SAVE_EVENT, this._onSave);
+        this._pageSettingsModal.addEventListener("click", this._onPageSettingsModalClick);
+        this.shadowRoot!.addEventListener("keydown", this._onKeyDown);
         this._settingsTabs.addEventListener("click", this._onSettingsTabsClick);
         this._syncStructureTreeCatalog();
         this._syncViewport();
@@ -109,6 +115,10 @@ export class Shell extends HTMLElement {
         this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
         this._topBar.removeEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
         this._topBar.removeEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
+        this._topBar.removeEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
+        this._topBar.removeEventListener(TOPBAR_SAVE_EVENT, this._onSave);
+        this._pageSettingsModal.removeEventListener("click", this._onPageSettingsModalClick);
+        this.shadowRoot!.removeEventListener("keydown", this._onKeyDown);
         this._settingsTabs.removeEventListener("click", this._onSettingsTabsClick);
         this._unbindFrameDocument();
         this._highlight.dispose();
@@ -166,6 +176,30 @@ export class Shell extends HTMLElement {
     private readonly _onEditorModeChange = (event: CustomEvent<TopBarEditorModeChangeDetail>): void => {
         this._editorMode = event.detail.mode;
         this._syncEditorMode();
+    };
+
+    private readonly _onPageSettings = (): void => {
+        this._openPageSettings();
+    };
+
+    private readonly _onSave = (): void => {
+        this._setSaveStatus("Saved");
+        this.dispatchEvent(new CustomEvent("editor-v2:save-document", {
+            bubbles:  true,
+            composed: true,
+        }));
+    };
+
+    private readonly _onPageSettingsModalClick = (event: Event): void => {
+        const closeTarget = (event.target as Element | null)?.closest("[data-page-settings-close]");
+        if (closeTarget) this._closePageSettings();
+    };
+
+    private readonly _onKeyDown = (event: Event): void => {
+        const keyboardEvent = event as KeyboardEvent;
+        if (keyboardEvent.key === "Escape" && !this._pageSettingsModal.hidden) {
+            this._closePageSettings();
+        }
     };
 
     private readonly _onStructureAction = (event: CustomEvent<StructureTreeActionDetail>): void => {
@@ -543,6 +577,20 @@ export class Shell extends HTMLElement {
         }
     }
 
+    private _openPageSettings(): void {
+        this._pageSettingsModal.hidden = false;
+        const firstInput = this._pageSettingsModal.querySelector<HTMLInputElement>("input");
+        firstInput?.focus();
+    }
+
+    private _closePageSettings(): void {
+        this._pageSettingsModal.hidden = true;
+    }
+
+    private _setSaveStatus(label: string): void {
+        this._topBar.saveStatus = label;
+    }
+
     private _syncStructureTreeCatalog(): void {
         const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
         if (this._isStructureTree(tree)) {
@@ -600,6 +648,10 @@ export class Shell extends HTMLElement {
 
     private get _topBar(): TopBar {
         return this.shadowRoot!.querySelector("cms-editor-v2-topbar") as TopBar;
+    }
+
+    private get _pageSettingsModal(): HTMLElement {
+        return this.shadowRoot!.querySelector(".page-settings-modal")!;
     }
 
 }

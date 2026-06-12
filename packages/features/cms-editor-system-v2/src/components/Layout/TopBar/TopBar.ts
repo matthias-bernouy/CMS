@@ -17,6 +17,8 @@ export type TopBarEditorModeChangeDetail = {
 
 export const TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
 export const TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
+export const TOPBAR_SAVE_EVENT = "editor-v2:save";
+export const TOPBAR_PAGE_SETTINGS_EVENT = "editor-v2:page-settings";
 
 export class TopBar extends HTMLElement {
     private _viewport: TopBarViewport = "desktop";
@@ -52,6 +54,10 @@ export class TopBar extends HTMLElement {
         this._setMode(mode, false);
     }
 
+    set saveStatus(label: string) {
+        this.shadowRoot!.querySelector(".save-label")!.textContent = label;
+    }
+
     private readonly _onClick = (event: Event): void => {
         const button = (event.target as Element | null)?.closest<HTMLButtonElement>("button");
         if (!button) return;
@@ -63,7 +69,22 @@ export class TopBar extends HTMLElement {
         }
 
         const mode = button.dataset.editorMode as TopBarEditorMode | undefined;
-        if (mode) this._setMode(mode, true);
+        if (mode) {
+            this._setMode(mode, true);
+            return;
+        }
+
+        if (button.dataset.action === "save") {
+            this.dispatchEvent(new CustomEvent(TOPBAR_SAVE_EVENT, {
+                bubbles:  true,
+                composed: true,
+            }));
+        } else if (button.dataset.action === "page-settings") {
+            this.dispatchEvent(new CustomEvent(TOPBAR_PAGE_SETTINGS_EVENT, {
+                bubbles:  true,
+                composed: true,
+            }));
+        }
     };
 
     private _setViewport(viewport: TopBarViewport, emit: boolean): void {

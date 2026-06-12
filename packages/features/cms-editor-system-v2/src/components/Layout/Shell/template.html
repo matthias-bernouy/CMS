@@ -20,4 +20,49 @@
         <span class="spacer"></span>
         <span class="selection-status">No selection</span>
     </footer>
+    <div class="page-settings-modal" hidden>
+        <div class="page-settings-backdrop" data-page-settings-close></div>
+        <section class="page-settings-dialog" role="dialog" aria-modal="true" aria-labelledby="page-settings-title">
+            <header class="page-settings-header">
+                <div>
+                    <h2 id="page-settings-title">Page settings</h2>
+                    <p>Configure page-level metadata and routing.</p>
+                </div>
+                <button class="icon-button" type="button" data-page-settings-close aria-label="Close page settings">×</button>
+            </header>
+            <div class="page-settings-body">
+                <label>
+                    <span>Title</span>
+                    <input type="text" value="Pricing">
+                </label>
+                <label>
+                    <span>Path</span>
+                    <input type="text" value="/pricing">
+                </label>
+                <label>
+                    <span>Status</span>
+                    <select>
+                        <option selected>Draft</option>
+                        <option>Published</option>
+                    </select>
+                </label>
+                <label>
+                    <span>SEO description</span>
+                    <textarea rows="4">Simple plans for teams that publish every week.</textarea>
+                </label>
+                <label>
+                    <span>Tags</span>
+                    <div class="tag-field">
+                        <span class="tag">pricing</span>
+                        <span class="tag">landing</span>
+                        <input type="text" placeholder="Add tag">
+                    </div>
+                </label>
+            </div>
+            <footer class="page-settings-footer">
+                <button type="button" data-page-settings-close>Cancel</button>
+                <button class="primary" type="button" data-page-settings-close>Apply</button>
+            </footer>
+        </section>
+    </div>
 </div>
