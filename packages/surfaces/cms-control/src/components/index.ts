@@ -14,6 +14,7 @@ import {
     Form as BlocsForm,
     FormDialog,
     FormSection,
+    Grid,
     HorizontalActionGroup,
     IconButton,
     InputFile,
@@ -76,6 +77,7 @@ define("p9r-container", Container);
 define("p9r-divider", Divider);
 define("w13c-form", BlocsForm);
 define("p9r-form-dialog", FormDialog);
+define("p9r-grid", Grid);
 define("p9r-section", FormSection);
 define("p9r-horizontal-action-group", HorizontalActionGroup);
 define("p9r-icon-button", IconButton);
@@ -152,7 +154,7 @@ import "./editor/EditorSystem/FloatingToolbar/FloatingToolbar"
 import "./editor/EditorSystem/ObserverManager"
 import "./editor/MediaCenter/MediaCenter"
 import "./editor/RichTextBar/RichTextBar"
-import "@bernouy/cms-editor-system-v2/browser"
+import "./editorSystemV2/bootstrap"
 
 import "./editor/configurations/Configuration/EditorConfiguration"
 
