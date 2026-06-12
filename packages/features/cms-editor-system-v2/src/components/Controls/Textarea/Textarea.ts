@@ -13,7 +13,7 @@ export class Textarea extends HTMLElement {
     connectedCallback(): void {
         this.shadowRoot!.querySelector(".label")!.textContent = this.getAttribute("label") ?? "";
         this.shadowRoot!.querySelector(".hint")!.textContent = this.getAttribute("hint") ?? "";
-        this.shadowRoot!.querySelector("textarea")!.textContent = this.getAttribute("value") ?? "";
+        this.shadowRoot!.querySelector("textarea")!.value = this.getAttribute("value") ?? "";
     }
 }
 

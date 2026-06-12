@@ -24,7 +24,12 @@ export type SettingsViewSettingChangeDetail = {
     value: string | boolean;
 };
 
+export type SettingsViewContentChangeDetail = {
+    value: string;
+};
+
 export const SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
+export const SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
 
 export class SettingsView extends HTMLElement {
     constructor() {
@@ -32,7 +37,12 @@ export class SettingsView extends HTMLElement {
         this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
     }
 
-    setSettings(sections: SettingSection[], dataScopes: DataScope[] = [], textCapability: TextCapability | null = null): void {
+    setSettings(
+        sections: SettingSection[],
+        dataScopes: DataScope[] = [],
+        textCapability: TextCapability | null = null,
+        textValue = "",
+    ): void {
         const view = this.shadowRoot!.querySelector<HTMLElement>(".settings-view")!;
         view.replaceChildren();
 
@@ -45,7 +55,7 @@ export class SettingsView extends HTMLElement {
         }
 
         if (textCapability) {
-            view.append(this._renderTextCapability(textCapability));
+            view.append(this._renderTextCapability(textCapability, textValue));
         }
 
         for (const section of sections) {
@@ -150,21 +160,31 @@ export class SettingsView extends HTMLElement {
         return control;
     }
 
-    private _renderTextCapability(capability: TextCapability): HTMLElement {
+    private _renderTextCapability(capability: TextCapability, value: string): HTMLElement {
         const section = document.createElement("cms-editor-v2-section");
         section.setAttribute("label", "Content");
 
-        const item = document.createElement("div");
-        item.className = "content-slot";
+        const setting: Setting = capability.format === "richtext"
+            ? {
+                type: "textarea",
+                label: "Rich text",
+                attribute: "__text",
+                defaultValue: value,
+                help: this._formatTextCapability(capability),
+            }
+            : {
+                type: "text",
+                label: "Text",
+                attribute: "__text",
+                defaultValue: value,
+                help: this._formatTextCapability(capability),
+            };
 
-        const name = document.createElement("strong");
-        name.textContent = capability.format === "richtext" ? "Rich text" : "Text";
-
-        const meta = document.createElement("span");
-        meta.textContent = this._formatTextCapability(capability);
-
-        item.append(name, meta);
-        section.append(item);
+        const control = capability.format === "richtext"
+            ? this._control("cms-editor-v2-textarea", setting)
+            : this._control("cms-editor-v2-text-input", setting);
+        this._wireContentControl(control, capability.format === "richtext" ? "textarea" : "input");
+        section.append(control);
 
         return section;
     }
@@ -190,6 +210,15 @@ export class SettingsView extends HTMLElement {
         });
     }
 
+    private _wireContentControl(control: HTMLElement, selector: "input" | "textarea"): void {
+        customElements.whenDefined(control.localName).then(() => {
+            const input = control.shadowRoot?.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector);
+            if (!input) return;
+            input.addEventListener("input", () => this._emitContentChange(input.value));
+            input.addEventListener("change", () => this._emitContentChange(input.value));
+        });
+    }
+
     private _wireToggleControl(control: HTMLElement, setting: Setting): void {
         customElements.whenDefined(control.localName).then(() => {
             const button = control.shadowRoot?.querySelector<HTMLButtonElement>("button");
@@ -208,6 +237,14 @@ export class SettingsView extends HTMLElement {
             bubbles: true,
             composed: true,
             detail: { setting, value },
+        }));
+    }
+
+    private _emitContentChange(value: string): void {
+        this.dispatchEvent(new CustomEvent<SettingsViewContentChangeDetail>(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, {
+            bubbles: true,
+            composed: true,
+            detail: { value },
         }));
     }
 

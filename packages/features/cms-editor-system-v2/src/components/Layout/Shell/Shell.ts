@@ -21,7 +21,9 @@ import {
     type CanvasFrameReadyDetail,
 } from "../Canvas/Canvas";
 import {
+    SETTINGS_VIEW_CONTENT_CHANGE_EVENT,
     SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+    type SettingsViewContentChangeDetail,
     type SettingsViewSettingChangeDetail,
 } from "../../Settings/SettingsView/SettingsView";
 import type { StructureTree } from "../StructureTree/StructureTree";
@@ -47,12 +49,14 @@ export class Shell extends HTMLElement {
     connectedCallback(): void {
         this._structureTree.addEventListener("editor-v2:select-editor", this._onSelectEditor);
         this._settings.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
+        this._settings.addEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._canvas.addEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
     }
 
     disconnectedCallback(): void {
         this._structureTree.removeEventListener("editor-v2:select-editor", this._onSelectEditor);
         this._settings.removeEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
+        this._settings.removeEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
         this._unbindFrameDocument();
         this._highlight.dispose();
@@ -118,6 +122,15 @@ export class Shell extends HTMLElement {
         this._highlight.show(selection.editor);
     };
 
+    private readonly _onContentChange = (event: CustomEvent<SettingsViewContentChangeDetail>): void => {
+        if (!this._runtime) return;
+        const selection = this._runtime.getSelection();
+        if (!selection?.textCapability) return;
+
+        selection.editor.target.textContent = event.detail.value;
+        this._highlight.show(selection.editor);
+    };
+
     private readonly _onFrameClick = (event: Event): void => {
         if (!this._runtime) return;
 
@@ -144,6 +157,7 @@ export class Shell extends HTMLElement {
             this._resolveSettingsValues(selection.editor, selection.settings),
             this._runtime.getSelectedDataScopes(),
             selection.textCapability,
+            selection.textCapability ? this._getTextValue(selection.editor) : "",
         );
         this._setSelectionStatus(selection.editor);
         this._highlight.show(selection.editor);
@@ -182,6 +196,10 @@ export class Shell extends HTMLElement {
             ...setting,
             defaultValue: editor.target.getAttribute(setting.attribute) ?? setting.defaultValue,
         } as Setting;
+    }
+
+    private _getTextValue(editor: Editor): string {
+        return editor.target.textContent ?? "";
     }
 
     private _bindFrameDocument(document: Document): void {
