@@ -15,6 +15,24 @@ export type { TTemplate }        from "cms-content/interfaces/templates";
 export type { TSnippet }         from "cms-content/interfaces/snippets";
 export type { TSystem }          from "cms-content/interfaces/settings";
 export { DEFAULT_SHELL, composeShell } from "cms-content/interfaces/settings";
+export {
+    Editor,
+    type SettingSection,
+} from "../interfaces/Editor";
+export type {
+    PageLinkSetting,
+    SchemaPickerMethod,
+    SchemaPickerSetting,
+    SegmentedSetting,
+    SelectSetting,
+    Setting,
+    SettingMetadata,
+    SettingOption,
+    SettingType,
+    TextareaSetting,
+    TextSetting,
+    ToggleSetting,
+} from "../interfaces/Editor";
 
 // ── Repository seam ────────────────────────────────────────────────────
 export type { ContentReader } from "cms-content/interfaces/ContentReader";

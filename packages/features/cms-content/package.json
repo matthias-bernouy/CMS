@@ -7,6 +7,7 @@
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
+        "./editor": "./src/exports/editor.ts",
         "./browser": "./src/exports/browser.ts",
         "./mongo": "./src/exports/mongo.ts",
         "./constants": "./src/exports/constants.ts"
