@@ -1,13 +1,20 @@
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
-import frameDocumentHtml from "./frameDocument.html" with { type: "text" };
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
+export type CanvasFrameReadyDetail = {
+    document: Document;
+    frame: HTMLIFrameElement;
+    url: string;
+};
+
+export const CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
+
 export class Canvas extends HTMLElement {
     static get observedAttributes(): string[] {
-        return ["max-width", "viewport-width", "viewport-height"];
+        return ["max-width", "viewport-width", "viewport-height", "frame-url"];
     }
 
     constructor() {
@@ -16,13 +23,43 @@ export class Canvas extends HTMLElement {
     }
 
     connectedCallback(): void {
+        this.frame.addEventListener("load", this.onFrameLoad);
         this.syncViewportSize();
-        this.syncFrameDocument();
+        this.syncFrameUrl();
     }
 
-    attributeChangedCallback(): void {
+    disconnectedCallback(): void {
+        this.frame.removeEventListener("load", this.onFrameLoad);
+    }
+
+    attributeChangedCallback(name: string): void {
+        if (name === "frame-url") {
+            this.syncFrameUrl();
+            return;
+        }
+
         this.syncViewportSize();
-        this.syncFrameDocument();
+    }
+
+    private readonly onFrameLoad = (): void => {
+        const frameDocument = this.frame.contentDocument;
+        if (!frameDocument) return;
+
+        this.dispatchEvent(new CustomEvent<CanvasFrameReadyDetail>(CANVAS_FRAME_READY_EVENT, {
+            bubbles: true,
+            composed: true,
+            detail: {
+                document: frameDocument,
+                frame:    this.frame,
+                url:      this.frame.src,
+            },
+        }));
+    };
+
+    private syncFrameUrl(): void {
+        const url = this.getAttribute("frame-url")?.trim() || "about:blank";
+        if (this.frame.getAttribute("src") === url) return;
+        this.frame.setAttribute("src", url);
     }
 
     private syncViewportSize(): void {
@@ -40,16 +77,14 @@ export class Canvas extends HTMLElement {
         }
     }
 
-    private syncFrameDocument(): void {
-        const frame = this.shadowRoot?.querySelector<HTMLIFrameElement>("iframe");
-        if (!frame) return;
-        frame.srcdoc = String(frameDocumentHtml);
-    }
-
     private cssSize(value: string | null): string | null {
         const size = value?.trim();
         if (!size) return null;
         return /^\d+$/.test(size) ? `${size}px` : size;
+    }
+
+    private get frame(): HTMLIFrameElement {
+        return this.shadowRoot!.querySelector("iframe")!;
     }
 }
 
