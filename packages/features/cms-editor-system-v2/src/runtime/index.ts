@@ -1,4 +1,10 @@
 export { EditorRegistry } from "./EditorRegistry/EditorRegistry";
+export { EditorRuntime } from "./EditorRuntime/EditorRuntime";
+export type {
+    EditorRuntimeSelection,
+    EditorStructureNode,
+    RuntimeManagedEditor,
+} from "./EditorRuntime/types";
 export {
     RuntimeEditor,
     type RuntimeEditorDataScopesChangeDetail,

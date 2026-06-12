@@ -9,6 +9,12 @@
         ".": "./src/exports/index.ts",
         "./browser": "./src/exports/browser.ts"
     },
+    "dependencies": {
+        "@bernouy/cms-content": "workspace:*"
+    },
+    "devDependencies": {
+        "linkedom": "^0.18.12"
+    },
     "peerDependencies": {
         "typescript": "^5.9.3"
     }
