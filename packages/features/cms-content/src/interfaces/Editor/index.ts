@@ -27,3 +27,4 @@ export type {
     EditorCatalogEntry,
     EditorConstructor,
 } from "./EditorCatalog";
+export type { EditorDocument } from "./EditorDocument";

@@ -12,6 +12,7 @@ export type {
     EditorCatalog,
     EditorCatalogEntry,
     EditorConstructor,
+    EditorDocument,
     PageLinkSetting,
     SchemaPickerMethod,
     SchemaPickerSetting,
