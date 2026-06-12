@@ -16,12 +16,8 @@ export type {
     TextSetting,
     ToggleSetting,
 } from "./SettingInputs";
-export {
-    BindingEditor,
-    CardEditor,
-    ContainerEditor,
-    GridEditor,
-    ListEditor,
-    ListItemEditor,
-    ParagraphEditor,
-} from "./DefaultEditors";
+export type {
+    EditorCatalog,
+    EditorCatalogEntry,
+    EditorConstructor,
+} from "./EditorCatalog";
