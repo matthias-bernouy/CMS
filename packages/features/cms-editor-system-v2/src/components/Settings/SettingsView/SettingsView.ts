@@ -18,6 +18,13 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
+export type SettingsViewSettingChangeDetail = {
+    setting: Setting;
+    value: string | boolean;
+};
+
+export const SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
+
 export class SettingsView extends HTMLElement {
     constructor() {
         super();
@@ -66,12 +73,15 @@ export class SettingsView extends HTMLElement {
 
     private _renderSetting(setting: Setting): HTMLElement {
         if (setting.type === "textarea") {
-            return this._control("cms-editor-v2-textarea", setting);
+            const control = this._control("cms-editor-v2-textarea", setting);
+            this._wireTextControl(control, "textarea", setting);
+            return control;
         }
 
         if (setting.type === "select") {
             const control = this._control("cms-editor-v2-select", setting);
-            control.setAttribute("options", setting.options.map(option => option.label).join(","));
+            control.setAttribute("options", JSON.stringify(setting.options));
+            this._wireTextControl(control, "select", setting);
             return control;
         }
 
@@ -88,7 +98,14 @@ export class SettingsView extends HTMLElement {
                 const button = document.createElement("button");
                 button.type = "button";
                 button.textContent = option.label;
+                button.value = option.value;
                 button.ariaPressed = String(option.value === setting.defaultValue);
+                button.addEventListener("click", () => {
+                    for (const item of Array.from(control.querySelectorAll("button"))) {
+                        item.ariaPressed = String(item === button);
+                    }
+                    this._emitSettingChange(setting, option.value);
+                });
                 control.append(button);
             }
 
@@ -99,6 +116,7 @@ export class SettingsView extends HTMLElement {
         if (setting.type === "toggle") {
             const control = this._control("cms-editor-v2-toggle", setting);
             if (setting.defaultValue) control.setAttribute("checked", "");
+            this._wireToggleControl(control, setting);
             return control;
         }
 
@@ -113,7 +131,9 @@ export class SettingsView extends HTMLElement {
             return control;
         }
 
-        return this._control("cms-editor-v2-text-input", setting);
+        const control = this._control("cms-editor-v2-text-input", setting);
+        this._wireTextControl(control, "input", setting);
+        return control;
     }
 
     private _control(tag: string, setting: Setting): HTMLElement {
@@ -123,6 +143,36 @@ export class SettingsView extends HTMLElement {
         if (setting.help) control.setAttribute("hint", setting.help);
         if (setting.placeholder) control.setAttribute("placeholder", setting.placeholder);
         return control;
+    }
+
+    private _wireTextControl(control: HTMLElement, selector: "input" | "textarea" | "select", setting: Setting): void {
+        customElements.whenDefined(control.localName).then(() => {
+            const input = control.shadowRoot?.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(selector);
+            if (!input) return;
+            input.addEventListener("input", () => this._emitSettingChange(setting, input.value));
+            input.addEventListener("change", () => this._emitSettingChange(setting, input.value));
+        });
+    }
+
+    private _wireToggleControl(control: HTMLElement, setting: Setting): void {
+        customElements.whenDefined(control.localName).then(() => {
+            const button = control.shadowRoot?.querySelector<HTMLButtonElement>("button");
+            if (!button) return;
+            button.addEventListener("click", () => {
+                const checked = button.ariaPressed !== "true";
+                button.ariaPressed = String(checked);
+                control.toggleAttribute("checked", checked);
+                this._emitSettingChange(setting, checked);
+            });
+        });
+    }
+
+    private _emitSettingChange(setting: Setting, value: string | boolean): void {
+        this.dispatchEvent(new CustomEvent<SettingsViewSettingChangeDetail>(SETTINGS_VIEW_SETTING_CHANGE_EVENT, {
+            bubbles: true,
+            composed: true,
+            detail: { setting, value },
+        }));
     }
 
     private _renderDataScopes(scopes: DataScope[]): HTMLElement {

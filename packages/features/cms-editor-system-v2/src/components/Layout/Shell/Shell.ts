@@ -7,6 +7,8 @@ import {
     Editor,
     type EditorCatalog,
     type EditorDocument,
+    type Setting,
+    type SettingSection,
 } from "@bernouy/cms-content/editor";
 import {
     EditorRuntime,
@@ -18,6 +20,10 @@ import {
     type Canvas,
     type CanvasFrameReadyDetail,
 } from "../Canvas/Canvas";
+import {
+    SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+    type SettingsViewSettingChangeDetail,
+} from "../../Settings/SettingsView/SettingsView";
 import type { StructureTree } from "../StructureTree/StructureTree";
 import { FrameHighlight } from "./FrameHighlight";
 import templateHtml from "./template.html" with { type: "text" };
@@ -40,11 +46,13 @@ export class Shell extends HTMLElement {
 
     connectedCallback(): void {
         this._structureTree.addEventListener("editor-v2:select-editor", this._onSelectEditor);
+        this._settings.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
         this._canvas.addEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
     }
 
     disconnectedCallback(): void {
         this._structureTree.removeEventListener("editor-v2:select-editor", this._onSelectEditor);
+        this._settings.removeEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
         this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
         this._unbindFrameDocument();
         this._highlight.dispose();
@@ -112,6 +120,15 @@ export class Shell extends HTMLElement {
         }, frameDocument.querySelector<HTMLElement>("[data-cms-initial-selection]") ?? undefined);
     };
 
+    private readonly _onSettingChange = (event: CustomEvent<SettingsViewSettingChangeDetail>): void => {
+        if (!this._runtime) return;
+        const selection = this._runtime.getSelection();
+        if (!selection) return;
+
+        this._applySetting(selection.editor, event.detail.setting.attribute, event.detail.value);
+        this._highlight.show(selection.editor);
+    };
+
     private readonly _onFrameClick = (event: Event): void => {
         if (!this._runtime) return;
 
@@ -134,9 +151,47 @@ export class Shell extends HTMLElement {
             return;
         }
 
-        this._settings.setSettings(selection.settings, this._runtime.getSelectedDataScopes());
+        this._settings.setSettings(
+            this._resolveSettingsValues(selection.editor, selection.settings),
+            this._runtime.getSelectedDataScopes(),
+        );
         this._setSelectionStatus(selection.editor);
         this._highlight.show(selection.editor);
+    }
+
+    private _applySetting(editor: Editor, attribute: string, value: string | boolean): void {
+        if (typeof value === "boolean") {
+            editor.target.toggleAttribute(attribute, value);
+            return;
+        }
+
+        if (value === "") {
+            editor.target.removeAttribute(attribute);
+            return;
+        }
+
+        editor.target.setAttribute(attribute, value);
+    }
+
+    private _resolveSettingsValues(editor: Editor, sections: SettingSection[]): SettingSection[] {
+        return sections.map(section => ({
+            ...section,
+            settings: section.settings.map(setting => this._resolveSettingValue(editor, setting)),
+        }));
+    }
+
+    private _resolveSettingValue(editor: Editor, setting: Setting): Setting {
+        if (setting.type === "toggle") {
+            return {
+                ...setting,
+                defaultValue: editor.target.hasAttribute(setting.attribute),
+            };
+        }
+
+        return {
+            ...setting,
+            defaultValue: editor.target.getAttribute(setting.attribute) ?? setting.defaultValue,
+        } as Setting;
     }
 
     private _bindFrameDocument(document: Document): void {
