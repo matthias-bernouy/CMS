@@ -11,3 +11,4 @@ export {
     type RuntimeEditorSettingsChangeDetail,
     type RuntimeManagedEditor,
 } from "../runtime";
+export { RichTextEditor } from "../components/Controls/RichTextEditor/RichTextEditor";

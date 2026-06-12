@@ -2,6 +2,7 @@ import "../../Controls/Section/Section";
 import "../../Controls/FieldGroup/FieldGroup";
 import "../../Controls/TextInput/TextInput";
 import "../../Controls/Textarea/Textarea";
+import "../../Controls/RichTextEditor/RichTextEditor";
 import "../../Controls/Select/Select";
 import "../../Controls/Toggle/Toggle";
 import "../../Controls/SegmentedControl/SegmentedControl";
@@ -26,6 +27,7 @@ export type SettingsViewSettingChangeDetail = {
 
 export type SettingsViewContentChangeDetail = {
     value: string;
+    format: "text" | "html";
 };
 
 export const SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
@@ -164,26 +166,24 @@ export class SettingsView extends HTMLElement {
         const section = document.createElement("cms-editor-v2-section");
         section.setAttribute("label", "Content");
 
-        const setting: Setting = capability.format === "richtext"
-            ? {
-                type: "textarea",
-                label: "Rich text",
-                attribute: "__text",
-                defaultValue: value,
-                help: this._formatTextCapability(capability),
-            }
-            : {
-                type: "text",
-                label: "Text",
-                attribute: "__text",
-                defaultValue: value,
-                help: this._formatTextCapability(capability),
-            };
+        const setting: Setting = {
+            type: "text",
+            label: capability.format === "richtext" ? "Rich text" : "Text",
+            attribute: "__text",
+            defaultValue: value,
+            help: capability.format === "richtext" ? undefined : this._formatTextCapability(capability),
+        };
 
-        const control = capability.format === "richtext"
-            ? this._control("cms-editor-v2-textarea", setting)
-            : this._control("cms-editor-v2-text-input", setting);
-        this._wireContentControl(control, capability.format === "richtext" ? "textarea" : "input");
+        const control = this._control(
+            capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input",
+            setting,
+        );
+        if (capability.format === "richtext") {
+            control.setAttribute("capability", JSON.stringify(capability));
+            this._wireRichTextControl(control);
+        } else {
+            this._wireContentControl(control, "input");
+        }
         section.append(control);
 
         return section;
@@ -214,8 +214,17 @@ export class SettingsView extends HTMLElement {
         customElements.whenDefined(control.localName).then(() => {
             const input = control.shadowRoot?.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector);
             if (!input) return;
-            input.addEventListener("input", () => this._emitContentChange(input.value));
-            input.addEventListener("change", () => this._emitContentChange(input.value));
+            input.addEventListener("input", () => this._emitContentChange(input.value, "text"));
+            input.addEventListener("change", () => this._emitContentChange(input.value, "text"));
+        });
+    }
+
+    private _wireRichTextControl(control: HTMLElement): void {
+        customElements.whenDefined(control.localName).then(() => {
+            control.addEventListener("input", (event) => {
+                const value = (event as CustomEvent<{ value: string }>).detail?.value ?? "";
+                this._emitContentChange(value, "html");
+            });
         });
     }
 
@@ -240,11 +249,11 @@ export class SettingsView extends HTMLElement {
         }));
     }
 
-    private _emitContentChange(value: string): void {
+    private _emitContentChange(value: string, format: "text" | "html"): void {
         this.dispatchEvent(new CustomEvent<SettingsViewContentChangeDetail>(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, {
             bubbles: true,
             composed: true,
-            detail: { value },
+            detail: { value, format },
         }));
     }
 

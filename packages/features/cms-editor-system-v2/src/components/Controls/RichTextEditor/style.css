@@ -1,0 +1,110 @@
+:host {
+    display: block;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.field {
+    display: grid;
+    gap: 8px;
+}
+
+.label {
+    color: var(--editor-v2-label);
+    font-size: 12px;
+    font-weight: 640;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    width: max-content;
+    max-width: 100%;
+    padding: 4px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--editor-v2-bg) 72%, var(--editor-v2-surface));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 65%, transparent);
+    user-select: none;
+}
+
+.tool {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 760;
+    cursor: pointer;
+    user-select: none;
+    transition:
+        background 120ms ease,
+        border-color 120ms ease,
+        color 120ms ease;
+}
+
+.tool svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+.underline-icon {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    pointer-events: none;
+}
+
+.tool:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 30%, var(--editor-v2-border));
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-accent);
+}
+
+.tool:active {
+    background: color-mix(in srgb, var(--editor-v2-accent) 10%, var(--editor-v2-surface));
+    transform: translateY(1px);
+}
+
+.editor {
+    min-height: 96px;
+    width: 100%;
+    overflow: auto;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    padding: 8px 9px;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.45;
+    outline: none;
+    cursor: text;
+}
+
+.editor:focus {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
+}
+
+.hint {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+}
+
+.hint:empty {
+    display: none;
+}

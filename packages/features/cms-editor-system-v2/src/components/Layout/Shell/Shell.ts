@@ -127,7 +127,11 @@ export class Shell extends HTMLElement {
         const selection = this._runtime.getSelection();
         if (!selection?.textCapability) return;
 
-        selection.editor.target.textContent = event.detail.value;
+        if (event.detail.format === "html") {
+            selection.editor.target.innerHTML = event.detail.value;
+        } else {
+            selection.editor.target.textContent = event.detail.value;
+        }
         this._highlight.show(selection.editor);
     };
 
@@ -157,7 +161,7 @@ export class Shell extends HTMLElement {
             this._resolveSettingsValues(selection.editor, selection.settings),
             this._runtime.getSelectedDataScopes(),
             selection.textCapability,
-            selection.textCapability ? this._getTextValue(selection.editor) : "",
+            selection.textCapability ? this._getTextValue(selection.editor, selection.textCapability.format) : "",
         );
         this._setSelectionStatus(selection.editor);
         this._highlight.show(selection.editor);
@@ -198,8 +202,10 @@ export class Shell extends HTMLElement {
         } as Setting;
     }
 
-    private _getTextValue(editor: Editor): string {
-        return editor.target.textContent ?? "";
+    private _getTextValue(editor: Editor, format: "text" | "richtext"): string {
+        return format === "richtext"
+            ? editor.target.innerHTML
+            : editor.target.textContent ?? "";
     }
 
     private _bindFrameDocument(document: Document): void {
