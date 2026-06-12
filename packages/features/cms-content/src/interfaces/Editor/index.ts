@@ -3,6 +3,12 @@ export {
     type SettingSection,
 } from "./Editor";
 export type {
+    DataExpression,
+    DataField,
+    DataFieldType,
+    DataScope,
+} from "./DataScopes";
+export type {
     PageLinkSetting,
     SchemaPickerMethod,
     SchemaPickerSetting,

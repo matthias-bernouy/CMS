@@ -5,6 +5,10 @@ export {
 } from "../interfaces/Editor";
 
 export type {
+    DataExpression,
+    DataField,
+    DataFieldType,
+    DataScope,
     EditorCatalog,
     EditorCatalogEntry,
     EditorConstructor,

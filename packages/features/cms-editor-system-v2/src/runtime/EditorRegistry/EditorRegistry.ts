@@ -1,4 +1,7 @@
-import type { Editor } from "@bernouy/cms-content/editor";
+import type {
+    DataScope,
+    Editor,
+} from "@bernouy/cms-content/editor";
 
 export class EditorRegistry {
 
@@ -34,6 +37,28 @@ export class EditorRegistry {
         }
 
         return children;
+    }
+
+    getAncestors(target: HTMLElement): Editor[] {
+        const ancestors: Editor[] = [];
+        let current = target.parentElement;
+
+        while (current) {
+            const editor = this._editorsByTarget.get(current);
+            if (editor) ancestors.unshift(editor);
+            current = current.parentElement;
+        }
+
+        return ancestors;
+    }
+
+    collectDataScopes(target: HTMLElement): DataScope[] {
+        const editors = [
+            ...this.getAncestors(target),
+            this.getEditor(target),
+        ].filter((editor): editor is Editor => Boolean(editor));
+
+        return editors.flatMap(editor => editor.getDataScopes());
     }
 
     private _getClosestRegisteredAncestor(target: HTMLElement): HTMLElement | undefined {

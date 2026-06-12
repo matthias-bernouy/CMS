@@ -20,6 +20,10 @@ export {
     type SettingSection,
 } from "../interfaces/Editor";
 export type {
+    DataExpression,
+    DataField,
+    DataFieldType,
+    DataScope,
     EditorCatalog,
     EditorCatalogEntry,
     EditorConstructor,

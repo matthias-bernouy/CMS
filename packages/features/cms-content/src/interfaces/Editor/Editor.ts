@@ -1,3 +1,4 @@
+import type { DataScope } from "./DataScopes";
 import type { Setting } from "./SettingInputs";
 
 export type SettingSection = {
@@ -14,11 +15,23 @@ export class Editor {
         return [];
     }
 
+    protected dataScopes(): DataScope[] {
+        return [];
+    }
+
     getSettings(): SettingSection[] {
         return this.settings();
     }
 
     addSettings(_settings: SettingSection | SettingSection[]): void {
+        // Runtime may override.
+    }
+
+    getDataScopes(): DataScope[] {
+        return this.dataScopes();
+    }
+
+    provideData(_scope: DataScope | DataScope[]): void {
         // Runtime may override.
     }
 
