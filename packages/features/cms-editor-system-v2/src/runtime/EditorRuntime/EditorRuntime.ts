@@ -96,6 +96,7 @@ export class EditorRuntime {
         return {
             editor: this._selectedEditor,
             settings: this._selectedEditor.getSettings(),
+            contentSlots: this._selectedEditor.getContentSlots(),
         };
     }
 

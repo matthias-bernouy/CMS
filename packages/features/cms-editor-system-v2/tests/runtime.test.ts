@@ -1,14 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import type {
+    ContentSlot,
     DataScope,
     SettingSection,
 } from "@bernouy/cms-content/editor";
 import {
+    CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
     EditorRegistry,
     RuntimeEditor,
+    type RuntimeEditorContentSlotsChangeDetail,
     type RuntimeEditorDataScopesChangeDetail,
     type RuntimeEditorSettingsChangeDetail,
 } from "../src/runtime";
@@ -115,6 +118,29 @@ describe("RuntimeEditor", () => {
         expect(editor.getDataScopes()).toEqual([scope]);
         expect(eventDetail?.editor).toBe(editor);
         expect(eventDetail?.dataScopes).toEqual([scope]);
+    });
+
+    test("adds runtime content slots and emits a content-slots-change event", () => {
+        const document = createDocument();
+        const registry = new EditorRegistry();
+        const editor = new RuntimeEditor(document.getElementById("direct-child")!, registry);
+
+        const slot: ContentSlot = {
+            label: "Content",
+            min: 1,
+            accepts: [{ kind: "richtext" }],
+        };
+
+        let eventDetail: RuntimeEditorContentSlotsChangeDetail | undefined;
+        editor.target.addEventListener(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, (event) => {
+            eventDetail = (event as CustomEvent<RuntimeEditorContentSlotsChangeDetail>).detail;
+        });
+
+        editor.addContentSlots(slot);
+
+        expect(editor.getContentSlots()).toEqual([slot]);
+        expect(eventDetail?.editor).toBe(editor);
+        expect(eventDetail?.contentSlots).toEqual([slot]);
     });
 
     test("collects data scopes from ancestor editors and the target editor", () => {

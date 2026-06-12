@@ -1,10 +1,12 @@
 import {
+    type ContentSlot,
     type DataScope,
     type EditorCatalogEntry,
     type SettingSection,
 } from "@bernouy/cms-content/editor";
 import type { EditorRegistry } from "../EditorRegistry/EditorRegistry";
 import {
+    CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
 } from "../events";
@@ -23,6 +25,7 @@ export function createRuntimeEditor(
 
         private readonly _addedSettings: SettingSection[] = [];
         private readonly _declaredDataScopes: DataScope[] = [];
+        private readonly _addedContentSlots: ContentSlot[] = [];
         private _isMounted = false;
 
         constructor() {
@@ -71,6 +74,22 @@ export function createRuntimeEditor(
             this._emit(CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT, {
                 editor: this,
                 dataScopes: this.getDataScopes(),
+            });
+        }
+
+        override getContentSlots(): ContentSlot[] {
+            return [
+                ...super.getContentSlots(),
+                ...this._addedContentSlots,
+            ];
+        }
+
+        override addContentSlots(slots: ContentSlot | ContentSlot[]): void {
+            const list = Array.isArray(slots) ? slots : [slots];
+            this._addedContentSlots.push(...list);
+            this._emit(CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT, {
+                editor: this,
+                contentSlots: this.getContentSlots(),
             });
         }
 

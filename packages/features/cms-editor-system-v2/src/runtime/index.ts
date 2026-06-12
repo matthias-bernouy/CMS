@@ -7,10 +7,12 @@ export type {
 } from "./EditorRuntime/types";
 export {
     RuntimeEditor,
+    type RuntimeEditorContentSlotsChangeDetail,
     type RuntimeEditorDataScopesChangeDetail,
     type RuntimeEditorSettingsChangeDetail,
 } from "./RuntimeEditor/RuntimeEditor";
 export {
+    CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
 } from "./events";

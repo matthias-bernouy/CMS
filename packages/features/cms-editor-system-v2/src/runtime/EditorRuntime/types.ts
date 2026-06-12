@@ -1,4 +1,5 @@
 import type {
+    ContentSlot,
     Editor,
     EditorCatalogEntry,
     SettingSection,
@@ -23,4 +24,5 @@ export type EditorStructureNode = {
 export type EditorRuntimeSelection = {
     editor: Editor;
     settings: SettingSection[];
+    contentSlots: ContentSlot[];
 };

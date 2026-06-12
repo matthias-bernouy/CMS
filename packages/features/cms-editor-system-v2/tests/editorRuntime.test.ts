@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import {
     Editor,
+    type ContentSlot,
     type DataScope,
     type EditorCatalog,
     type SettingSection,
@@ -54,6 +55,20 @@ const childOverride: SettingSection = {
     ],
 };
 
+const childContentSlot: ContentSlot = {
+    label: "Child content",
+    min: 1,
+    max: 1,
+    accepts: [{ kind: "richtext" }],
+};
+
+const parentContentOverride: ContentSlot = {
+    label: "Parent slot override",
+    slot: "actions",
+    max: 2,
+    accepts: [{ kind: "component", tag: "button" }],
+};
+
 class DataRootEditor extends Editor {
     override mountEditor(): void {
         this.declareDataScope(dataScope);
@@ -74,11 +89,16 @@ class ParentEditor extends Editor {
     override mountEditor(): void {
         for (const child of this.getChildren()) {
             child.addSettings(childOverride);
+            child.addContentSlots(parentContentOverride);
         }
     }
 }
 
 class ChildEditor extends Editor {
+    protected override contentSlots(): ContentSlot[] {
+        return [childContentSlot];
+    }
+
     protected override settings(): SettingSection[] {
         return [
             {
@@ -135,6 +155,10 @@ describe("EditorRuntime", () => {
                 settings: [],
             },
             childOverride,
+        ]);
+        expect(runtime.getSelection()?.contentSlots).toEqual([
+            childContentSlot,
+            parentContentOverride,
         ]);
         expect(runtime.getSelectedDataScopes()).toEqual([dataScope]);
     });
