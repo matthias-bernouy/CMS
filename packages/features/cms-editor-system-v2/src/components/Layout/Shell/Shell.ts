@@ -73,23 +73,12 @@ export class Shell extends HTMLElement {
         this.setAttribute("catalog-size", String(this._catalog.length));
     }
 
-    loadDocument(document: EditorDocument, initialSelection?: HTMLElement | Editor | null): void {
+    loadDocument(document: EditorDocument): void {
         this._runtime?.dispose();
         this._runtime = new EditorRuntime(this._catalog);
         this._runtime.load(document);
         this._renderStructure();
-
-        if (initialSelection !== undefined) {
-            this._select(!initialSelection
-                ? null
-                : initialSelection instanceof Editor
-                ? initialSelection
-                : this._runtime.getEditor(initialSelection) ?? null);
-            return;
-        }
-
-        const firstEditor = this._runtime.getStructure()[0]?.editor ?? null;
-        this._select(firstEditor);
+        this._select(null);
     }
 
     private readonly _onSelectEditor = (event: Event): void => {
@@ -117,7 +106,7 @@ export class Shell extends HTMLElement {
         this.loadDocument({
             root,
             contentRoot,
-        }, frameDocument.querySelector<HTMLElement>("[data-cms-initial-selection]") ?? undefined);
+        });
     };
 
     private readonly _onSettingChange = (event: CustomEvent<SettingsViewSettingChangeDetail>): void => {
