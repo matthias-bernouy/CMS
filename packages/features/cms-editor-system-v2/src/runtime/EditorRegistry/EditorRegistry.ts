@@ -25,6 +25,19 @@ export class EditorRegistry {
         return this._editorsByTarget.get(target);
     }
 
+    getClosestEditor(target: Element | null, stopAt?: HTMLElement): Editor | undefined {
+        let current: Element | null = target;
+
+        while (current) {
+            const editor = this._editorsByTarget.get(current as HTMLElement);
+            if (editor) return editor;
+            if (stopAt && current === stopAt) return undefined;
+            current = current.parentElement;
+        }
+
+        return undefined;
+    }
+
     getDirectChildren(parent: HTMLElement): Editor[] {
         const children: Editor[] = [];
 

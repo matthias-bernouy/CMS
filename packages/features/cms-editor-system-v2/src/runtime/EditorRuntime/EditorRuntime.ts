@@ -63,6 +63,12 @@ export class EditorRuntime {
         return this.registry.getEditor(target);
     }
 
+    getClosestEditor(target: Element | null): Editor | undefined {
+        const document = this._requireDocument();
+        if (!target || !document.contentRoot.contains(target)) return undefined;
+        return this.registry.getClosestEditor(target, document.contentRoot);
+    }
+
     getStructure(): EditorStructureNode[] {
         const document = this._requireDocument();
 

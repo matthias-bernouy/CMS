@@ -19,6 +19,7 @@ import {
     type CanvasFrameReadyDetail,
 } from "../Canvas/Canvas";
 import type { StructureTree } from "../StructureTree/StructureTree";
+import { FrameHighlight } from "./FrameHighlight";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
 
@@ -29,6 +30,8 @@ export class Shell extends HTMLElement {
 
     private _catalog: EditorCatalog = [];
     private _runtime: EditorRuntime | null = null;
+    private _frameDocument: Document | null = null;
+    private readonly _highlight = new FrameHighlight();
 
     constructor() {
         super();
@@ -43,6 +46,8 @@ export class Shell extends HTMLElement {
     disconnectedCallback(): void {
         this._structureTree.removeEventListener("editor-v2:select-editor", this._onSelectEditor);
         this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
+        this._unbindFrameDocument();
+        this._highlight.dispose();
         this._runtime?.dispose();
         this._runtime = null;
     }
@@ -86,6 +91,8 @@ export class Shell extends HTMLElement {
 
     private readonly _onFrameReady = (event: CustomEvent<CanvasFrameReadyDetail>): void => {
         const frameDocument = event.detail.document;
+        this._bindFrameDocument(frameDocument);
+
         const root = frameDocument.querySelector<HTMLElement>("[data-cms-editor-root]")
             ?? frameDocument.querySelector<HTMLElement>("cms-binding-core");
         const contentRoot = frameDocument.querySelector<HTMLElement>("[data-cms-content]");
@@ -105,6 +112,15 @@ export class Shell extends HTMLElement {
         }, frameDocument.querySelector<HTMLElement>("[data-cms-initial-selection]") ?? undefined);
     };
 
+    private readonly _onFrameClick = (event: Event): void => {
+        if (!this._runtime) return;
+
+        event.preventDefault();
+        const target = this._eventElement(event);
+        const editor = this._runtime.getClosestEditor(target);
+        this._select(editor ?? null);
+    };
+
     private _select(editor: Editor | null): void {
         if (!this._runtime) return;
 
@@ -114,11 +130,31 @@ export class Shell extends HTMLElement {
         if (!selection) {
             this._settings.setSettings([]);
             this._setSelectionStatus(null);
+            this._highlight.hide();
             return;
         }
 
         this._settings.setSettings(selection.settings, this._runtime.getSelectedDataScopes());
         this._setSelectionStatus(selection.editor);
+        this._highlight.show(selection.editor);
+    }
+
+    private _bindFrameDocument(document: Document): void {
+        this._unbindFrameDocument();
+        this._frameDocument = document;
+        document.addEventListener("click", this._onFrameClick, true);
+    }
+
+    private _unbindFrameDocument(): void {
+        this._frameDocument?.removeEventListener("click", this._onFrameClick, true);
+        this._frameDocument = null;
+    }
+
+    private _eventElement(event: Event): Element | null {
+        const target = event.target;
+        if (!target || !("nodeType" in target)) return null;
+        if (target.nodeType === Node.ELEMENT_NODE) return target as Element;
+        return (target as Node).parentElement;
     }
 
     private _renderStructure(): void {
