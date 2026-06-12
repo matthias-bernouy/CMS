@@ -22,7 +22,7 @@ export type RuntimeEditorDataScopesChangeDetail = {
 export class RuntimeEditor extends Editor {
 
     private readonly _addedSettings: SettingSection[] = [];
-    private readonly _providedDataScopes: DataScope[] = [];
+    private readonly _declaredDataScopes: DataScope[] = [];
     private _isMounted = false;
 
     constructor(
@@ -61,13 +61,13 @@ export class RuntimeEditor extends Editor {
     override getDataScopes(): DataScope[] {
         return [
             ...super.getDataScopes(),
-            ...this._providedDataScopes,
+            ...this._declaredDataScopes,
         ];
     }
 
-    override provideData(scope: DataScope | DataScope[]): void {
+    override declareDataScope(scope: DataScope | DataScope[]): void {
         const list = Array.isArray(scope) ? scope : [scope];
-        this._providedDataScopes.push(...list);
+        this._declaredDataScopes.push(...list);
         this._emitDataScopesChange();
     }
 
