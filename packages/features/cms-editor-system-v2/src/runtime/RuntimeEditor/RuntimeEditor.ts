@@ -2,6 +2,7 @@ import {
     Editor,
     type ContentSlot,
     type DataScope,
+    type EditableState,
     type SettingSection,
     type TextCapability,
 } from "@bernouy/cms-content/editor";
@@ -10,6 +11,7 @@ import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
+    CMS_EDITOR_STATES_CHANGE_EVENT,
     CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT,
 } from "../events";
 
@@ -33,11 +35,17 @@ export type RuntimeEditorTextCapabilityChangeDetail = {
     textCapability: TextCapability | null;
 };
 
+export type RuntimeEditorStatesChangeDetail = {
+    editor: RuntimeEditor;
+    states: EditableState[];
+};
+
 export class RuntimeEditor extends Editor {
 
     private readonly _addedSettings: SettingSection[] = [];
     private readonly _declaredDataScopes: DataScope[] = [];
     private readonly _addedContentSlots: ContentSlot[] = [];
+    private readonly _addedStates: EditableState[] = [];
     private _textCapabilityOverride: TextCapability | null | undefined;
     private _isMounted = false;
 
@@ -111,6 +119,19 @@ export class RuntimeEditor extends Editor {
         this._emitTextCapabilityChange();
     }
 
+    override getStates(): EditableState[] {
+        return [
+            ...super.getStates(),
+            ...this._addedStates,
+        ];
+    }
+
+    override addStates(states: EditableState | EditableState[]): void {
+        const list = Array.isArray(states) ? states : [states];
+        this._addedStates.push(...list);
+        this._emitStatesChange();
+    }
+
     override getChildren(): Editor[] {
         return this._registry.getDirectChildren(this.target);
     }
@@ -145,6 +166,13 @@ export class RuntimeEditor extends Editor {
         this._emit(CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT, {
             editor: this,
             textCapability: this.getTextCapability(),
+        });
+    }
+
+    private _emitStatesChange(): void {
+        this._emit(CMS_EDITOR_STATES_CHANGE_EVENT, {
+            editor: this,
+            states: this.getStates(),
         });
     }
 

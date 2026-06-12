@@ -1,5 +1,6 @@
 import type { ContentSlot } from "./ContentSlots";
 import type { DataScope } from "./DataScopes";
+import type { EditableState } from "./EditableState";
 import type { Setting } from "./SettingInputs";
 import type { TextCapability } from "./TextCapability";
 
@@ -27,6 +28,10 @@ export class Editor {
 
     protected textCapability(): TextCapability | null {
         return null;
+    }
+
+    protected states(): EditableState[] {
+        return [];
     }
 
     getSettings(): SettingSection[] {
@@ -58,6 +63,14 @@ export class Editor {
     }
 
     setTextCapability(_capability: TextCapability | null): void {
+        // Runtime may override.
+    }
+
+    getStates(): EditableState[] {
+        return this.states();
+    }
+
+    addStates(_states: EditableState | EditableState[]): void {
         // Runtime may override.
     }
 

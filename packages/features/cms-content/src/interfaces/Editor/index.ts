@@ -14,6 +14,7 @@ export type {
     ContentSlotAccept,
 } from "./ContentSlots";
 export type { TextCapability } from "./TextCapability";
+export type { EditableState, EditableStateSession } from "./EditableState";
 export type {
     DataExpression,
     DataField,

@@ -98,6 +98,7 @@ export class EditorRuntime {
             settings: this._selectedEditor.getSettings(),
             contentSlots: this._selectedEditor.getContentSlots(),
             textCapability: this._selectedEditor.getTextCapability(),
+            states: this._selectedEditor.getStates(),
         };
     }
 

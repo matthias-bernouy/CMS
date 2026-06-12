@@ -3,18 +3,21 @@ import { parseHTML } from "linkedom";
 import type {
     ContentSlot,
     DataScope,
+    EditableState,
     SettingSection,
 } from "@bernouy/cms-content/editor";
 import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
+    CMS_EDITOR_STATES_CHANGE_EVENT,
     CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT,
     EditorRegistry,
     RuntimeEditor,
     type RuntimeEditorContentSlotsChangeDetail,
     type RuntimeEditorDataScopesChangeDetail,
     type RuntimeEditorSettingsChangeDetail,
+    type RuntimeEditorStatesChangeDetail,
     type RuntimeEditorTextCapabilityChangeDetail,
 } from "../src/runtime";
 
@@ -160,6 +163,44 @@ describe("RuntimeEditor", () => {
         expect(editor.getTextCapability()).toEqual({ format: "text", dynamic: true });
         expect(eventDetail?.editor).toBe(editor);
         expect(eventDetail?.textCapability).toEqual({ format: "text", dynamic: true });
+    });
+
+    test("adds runtime editable states and emits a states-change event", () => {
+        const document = createDocument();
+        const registry = new EditorRegistry();
+        const editor = new RuntimeEditor(document.getElementById("direct-child")!, registry);
+        let active = false;
+        const state: EditableState = {
+            id: "menu-open",
+            label: "Menu open",
+            isActive() {
+                return active;
+            },
+            enter() {
+                active = true;
+                return {
+                    exit() {
+                        active = false;
+                    },
+                };
+            },
+        };
+
+        let eventDetail: RuntimeEditorStatesChangeDetail | undefined;
+        editor.target.addEventListener(CMS_EDITOR_STATES_CHANGE_EVENT, (event) => {
+            eventDetail = (event as CustomEvent<RuntimeEditorStatesChangeDetail>).detail;
+        });
+
+        editor.addStates(state);
+
+        expect(editor.getStates()).toEqual([state]);
+        expect(eventDetail?.editor).toBe(editor);
+        expect(eventDetail?.states).toEqual([state]);
+
+        const session = state.enter();
+        expect(state.isActive()).toBe(true);
+        session.exit();
+        expect(state.isActive()).toBe(false);
     });
 
     test("collects data scopes from ancestor editors and the target editor", () => {

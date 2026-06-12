@@ -1,6 +1,7 @@
 import {
     type ContentSlot,
     type DataScope,
+    type EditableState,
     type EditorCatalogEntry,
     type SettingSection,
     type TextCapability,
@@ -10,6 +11,7 @@ import {
     CMS_EDITOR_CONTENT_SLOTS_CHANGE_EVENT,
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
+    CMS_EDITOR_STATES_CHANGE_EVENT,
     CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT,
 } from "../events";
 import type { RuntimeManagedEditor } from "./types";
@@ -28,6 +30,7 @@ export function createRuntimeEditor(
         private readonly _addedSettings: SettingSection[] = [];
         private readonly _declaredDataScopes: DataScope[] = [];
         private readonly _addedContentSlots: ContentSlot[] = [];
+        private readonly _addedStates: EditableState[] = [];
         private _textCapabilityOverride: TextCapability | null | undefined;
         private _isMounted = false;
 
@@ -107,6 +110,22 @@ export function createRuntimeEditor(
             this._emit(CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT, {
                 editor: this,
                 textCapability: this.getTextCapability(),
+            });
+        }
+
+        override getStates(): EditableState[] {
+            return [
+                ...super.getStates(),
+                ...this._addedStates,
+            ];
+        }
+
+        override addStates(states: EditableState | EditableState[]): void {
+            const list = Array.isArray(states) ? states : [states];
+            this._addedStates.push(...list);
+            this._emit(CMS_EDITOR_STATES_CHANGE_EVENT, {
+                editor: this,
+                states: this.getStates(),
             });
         }
 

@@ -7,6 +7,8 @@ export {
     type ContentSlot,
     type ContentSlotAccept,
     type CmsBindingAttribute,
+    type EditableState,
+    type EditableStateSession,
     type Setting,
     type SettingSection,
     type TextCapability,

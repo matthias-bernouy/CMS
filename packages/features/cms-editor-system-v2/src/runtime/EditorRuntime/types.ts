@@ -1,5 +1,6 @@
 import type {
     ContentSlot,
+    EditableState,
     Editor,
     EditorCatalogEntry,
     SettingSection,
@@ -28,4 +29,5 @@ export type EditorRuntimeSelection = {
     settings: SettingSection[];
     contentSlots: ContentSlot[];
     textCapability: TextCapability | null;
+    states: EditableState[];
 };
