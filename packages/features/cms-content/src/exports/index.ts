@@ -16,7 +16,14 @@ export type { TSnippet }         from "cms-content/interfaces/snippets";
 export type { TSystem }          from "cms-content/interfaces/settings";
 export { DEFAULT_SHELL, composeShell } from "cms-content/interfaces/settings";
 export {
+    BindingEditor,
+    CardEditor,
+    ContainerEditor,
     Editor,
+    GridEditor,
+    ListEditor,
+    ListItemEditor,
+    ParagraphEditor,
     type SettingSection,
 } from "../interfaces/Editor";
 export type {

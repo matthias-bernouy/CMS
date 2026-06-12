@@ -27,4 +27,12 @@ export class Editor {
         return [];
     }
 
+    mountEditor(): void {
+        // Editor may override.
+    }
+
+    unmountEditor(): void {
+        // Editor may override.
+    }
+
 }
