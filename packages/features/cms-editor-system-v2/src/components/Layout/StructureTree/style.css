@@ -6,7 +6,7 @@
     box-sizing: border-box;
 }
 
-.outline {
+.structure-tree {
     display: grid;
     gap: 2px;
     padding: 0 10px 14px;
@@ -84,4 +84,10 @@
     padding: 2px 6px;
     font-size: 10px;
     font-weight: 700;
+}
+
+.empty {
+    padding: 14px 10px;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
 }
