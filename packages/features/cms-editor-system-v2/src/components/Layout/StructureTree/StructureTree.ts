@@ -92,6 +92,8 @@ export class StructureTree extends HTMLElement {
         for (const node of this._visibleNodes(this._nodes)) {
             tree.append(this._renderNode(node.item, node.depth));
         }
+
+        this._scrollSelectedIntoView();
     }
 
     private _renderNode(node: EditorStructureNode, depth: number): HTMLElement {
@@ -173,6 +175,25 @@ export class StructureTree extends HTMLElement {
         row.append(button);
 
         return row;
+    }
+
+    private _scrollSelectedIntoView(): void {
+        if (!this._selectedEditor) return;
+
+        requestAnimationFrame(() => {
+            const selected = this.shadowRoot!.querySelector<HTMLElement>(".item.selected");
+            if (!selected) return;
+
+            const scrollContainer = this._scrollContainer;
+            const selectedTop = selected.offsetTop;
+            const targetOffset = scrollContainer.clientHeight * 0.2;
+            const nextScrollTop = selectedTop - targetOffset + selected.offsetHeight / 2;
+
+            scrollContainer.scrollTo({
+                top: Math.max(0, nextScrollTop),
+                behavior: "smooth",
+            });
+        });
     }
 
     private _openContextMenu(node: EditorStructureNode, clientX: number, clientY: number): void {
@@ -403,6 +424,13 @@ export class StructureTree extends HTMLElement {
             menu.setAttribute("role", "menu");
         }
         return menu;
+    }
+
+    private get _scrollContainer(): HTMLElement {
+        const panelBody = this.parentElement?.shadowRoot?.querySelector<HTMLElement>(".panel-body");
+        if (panelBody) return panelBody;
+
+        return this;
     }
 
     private get _blockPicker(): BlockPickerModal {
