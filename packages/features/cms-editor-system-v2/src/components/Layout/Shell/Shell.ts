@@ -26,6 +26,7 @@ import {
     SETTINGS_VIEW_CONTENT_CHANGE_EVENT,
     SETTINGS_VIEW_SETTING_CHANGE_EVENT,
     type SettingsViewContentChangeDetail,
+    type SettingsViewMode,
     type SettingsViewSettingChangeDetail,
 } from "../../Settings/SettingsView/SettingsView";
 import type { StructureTree } from "../StructureTree/StructureTree";
@@ -42,6 +43,7 @@ export class Shell extends HTMLElement {
     private _catalog: EditorCatalog = [];
     private _runtime: EditorRuntime | null = null;
     private _frameDocument: Document | null = null;
+    private _settingsMode: SettingsViewMode = "settings";
     private readonly _highlight = new FrameHighlight();
 
     constructor() {
@@ -55,6 +57,7 @@ export class Shell extends HTMLElement {
         this._settings.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
         this._settings.addEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._canvas.addEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
+        this._settingsTabs.addEventListener("click", this._onSettingsTabsClick);
         this._syncStructureTreeCatalog();
     }
 
@@ -64,6 +67,7 @@ export class Shell extends HTMLElement {
         this._settings.removeEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
         this._settings.removeEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
+        this._settingsTabs.removeEventListener("click", this._onSettingsTabsClick);
         this._unbindFrameDocument();
         this._highlight.dispose();
         this._runtime?.dispose();
@@ -97,6 +101,15 @@ export class Shell extends HTMLElement {
     private readonly _onSelectEditor = (event: Event): void => {
         const editor = (event as CustomEvent<{ editor: Editor }>).detail.editor;
         this._select(editor);
+    };
+
+    private readonly _onSettingsTabsClick = (event: Event): void => {
+        const button = (event.target as Element | null)?.closest<HTMLButtonElement>("[data-settings-mode]");
+        if (!button) return;
+
+        this._settingsMode = button.dataset.settingsMode === "overrides" ? "overrides" : "settings";
+        this._syncSettingsTabs();
+        this._renderSettings();
     };
 
     private readonly _onStructureAction = (event: CustomEvent<StructureTreeActionDetail>): void => {
@@ -181,14 +194,26 @@ export class Shell extends HTMLElement {
             return;
         }
 
-        this._settings.setSettings(
-            this._resolveSettingsValues(selection.editor, selection.settings),
-            this._runtime.getSelectedDataScopes(),
-            selection.textCapability,
-            selection.textCapability ? this._getTextValue(selection.editor, selection.textCapability.format) : "",
-        );
+        this._renderSettings();
         this._setSelectionStatus(selection.editor);
         this._highlight.show(selection.editor);
+    }
+
+    private _renderSettings(): void {
+        if (!this._runtime) return;
+
+        const selection = this._runtime.getSelection();
+        if (!selection) {
+            this._settings.setSettings([]);
+            return;
+        }
+
+        this._settings.setSettings(
+            this._resolveSettingsValues(selection.editor, selection.settings),
+            selection.textCapability,
+            selection.textCapability ? this._getTextValue(selection.editor, selection.textCapability.format) : "",
+            this._settingsMode,
+        );
     }
 
     private _applySetting(editor: Editor, attribute: string, value: string | boolean): void {
@@ -373,6 +398,14 @@ export class Shell extends HTMLElement {
             : "No selection";
     }
 
+    private _syncSettingsTabs(): void {
+        for (const button of Array.from(this._settingsTabs.querySelectorAll<HTMLButtonElement>("[data-settings-mode]"))) {
+            const isActive = button.dataset.settingsMode === this._settingsMode;
+            button.classList.toggle("active", isActive);
+            button.ariaPressed = String(isActive);
+        }
+    }
+
     private _syncStructureTreeCatalog(): void {
         const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
         if (this._isStructureTree(tree)) {
@@ -411,6 +444,10 @@ export class Shell extends HTMLElement {
 
     private get _settings(): SettingsView {
         return this.shadowRoot!.querySelector("cms-editor-v2-settings-view") as SettingsView;
+    }
+
+    private get _settingsTabs(): HTMLElement {
+        return this.shadowRoot!.querySelector(".panel-tabs")!;
     }
 
     private get _canvas(): Canvas {

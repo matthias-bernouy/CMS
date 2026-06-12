@@ -9,7 +9,6 @@ import "../../Controls/SegmentedControl/SegmentedControl";
 import "../../Controls/PageLink/PageLink";
 import "../../Controls/SchemaPicker/SchemaPicker";
 import type {
-    DataScope,
     Setting,
     SettingSection,
     TextCapability,
@@ -32,6 +31,7 @@ export type SettingsViewContentChangeDetail = {
 
 export const SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
 export const SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
+export type SettingsViewMode = "settings" | "overrides";
 
 export class SettingsView extends HTMLElement {
     constructor() {
@@ -41,31 +41,37 @@ export class SettingsView extends HTMLElement {
 
     setSettings(
         sections: SettingSection[],
-        dataScopes: DataScope[] = [],
         textCapability: TextCapability | null = null,
         textValue = "",
+        mode: SettingsViewMode = "settings",
     ): void {
         const view = this.shadowRoot!.querySelector<HTMLElement>(".settings-view")!;
         view.replaceChildren();
 
-        if (sections.length === 0 && dataScopes.length === 0 && !textCapability) {
+        const visibleSections = sections.filter(section => mode === "settings"
+            ? section.kind === "self"
+            : section.kind === "surcharge");
+
+        const shouldRenderText = mode === "settings" && textCapability;
+
+        if (visibleSections.length === 0 && !shouldRenderText) {
             const empty = document.createElement("div");
             empty.className = "empty";
-            empty.textContent = "Select an editable element";
+            empty.textContent = sections.length === 0 && !textCapability
+                ? "Select an editable element"
+                : mode === "settings"
+                ? "No settings"
+                : "No overrides";
             view.append(empty);
             return;
         }
 
-        if (textCapability) {
+        if (shouldRenderText) {
             view.append(this._renderTextCapability(textCapability, textValue));
         }
 
-        for (const section of sections) {
+        for (const section of visibleSections) {
             view.append(this._renderSettingSection(section));
-        }
-
-        if (dataScopes.length > 0) {
-            view.append(this._renderDataScopes(dataScopes));
         }
     }
 
@@ -257,26 +263,6 @@ export class SettingsView extends HTMLElement {
         }));
     }
 
-    private _renderDataScopes(scopes: DataScope[]): HTMLElement {
-        const section = document.createElement("cms-editor-v2-section");
-        section.setAttribute("label", "Data scopes");
-
-        for (const scope of scopes) {
-            const item = document.createElement("div");
-            item.className = "data-scope";
-
-            const name = document.createElement("strong");
-            name.textContent = scope.label ?? scope.name;
-
-            const meta = document.createElement("span");
-            meta.textContent = scope.source ?? scope.name;
-
-            item.append(name, meta);
-            section.append(item);
-        }
-
-        return section;
-    }
 }
 
 if (!customElements.get("cms-editor-v2-settings-view")) {
