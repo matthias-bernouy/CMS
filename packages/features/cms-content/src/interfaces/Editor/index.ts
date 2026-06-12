@@ -2,6 +2,13 @@ export {
     Editor,
     type SettingSection,
 } from "./Editor";
+export {
+    CMS_BINDING_ATTRIBUTES,
+    asInterpolation,
+    isInterpolation,
+    parseInterpolation,
+    type CmsBindingAttribute,
+} from "./BindingSyntax";
 export type {
     ContentSlot,
     ContentSlotAccept,

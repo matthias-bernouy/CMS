@@ -1,7 +1,12 @@
 export {
+    CMS_BINDING_ATTRIBUTES,
     Editor,
+    asInterpolation,
+    isInterpolation,
+    parseInterpolation,
     type ContentSlot,
     type ContentSlotAccept,
+    type CmsBindingAttribute,
     type Setting,
     type SettingSection,
     type TextCapability,
