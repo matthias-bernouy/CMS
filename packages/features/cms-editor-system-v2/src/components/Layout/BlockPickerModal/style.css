@@ -1,0 +1,214 @@
+:host {
+    display: contents;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: color-mix(in srgb, black 20%, transparent);
+}
+
+.backdrop[hidden] {
+    display: none;
+}
+
+.modal {
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    gap: 12px;
+    width: min(620px, calc(100vw - 36px));
+    max-height: min(760px, 88vh);
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 10px;
+    background: var(--editor-v2-bg);
+    box-shadow: 0 24px 70px color-mix(in srgb, black 18%, transparent);
+    padding: 14px;
+}
+
+.header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+}
+
+h2 {
+    margin: 0;
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 780;
+}
+
+.subtitle {
+    margin: 4px 0 0;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+}
+
+.close {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: var(--editor-v2-text);
+}
+
+.search {
+    width: 100%;
+    height: 34px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+    padding: 0 10px;
+}
+
+.search:focus {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
+}
+
+.tabs {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--editor-v2-border);
+    padding-bottom: 8px;
+}
+
+.tab {
+    flex: 0 0 auto;
+    height: 28px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 999px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 720;
+    padding: 0 10px;
+    cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 42%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 9%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+}
+
+.tab:disabled {
+    opacity: 0.46;
+    cursor: not-allowed;
+}
+
+.content {
+    min-height: 220px;
+    overflow: auto;
+}
+
+.group {
+    display: grid;
+    gap: 7px;
+}
+
+.group + .group {
+    margin-top: 16px;
+}
+
+.group-title {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 780;
+    text-transform: uppercase;
+}
+
+.items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 8px;
+}
+
+.block {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 9px;
+    min-height: 74px;
+    width: 100%;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    text-align: left;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.block:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 6%, var(--editor-v2-surface));
+}
+
+.icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-bg);
+    color: var(--editor-v2-accent);
+    font-size: 11px;
+    font-weight: 780;
+}
+
+.name {
+    display: block;
+    overflow: hidden;
+    color: var(--editor-v2-text);
+    font-size: 12px;
+    font-weight: 760;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.description {
+    display: -webkit-box;
+    margin-top: 3px;
+    overflow: hidden;
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.empty {
+    padding: 24px 0;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    text-align: center;
+}
