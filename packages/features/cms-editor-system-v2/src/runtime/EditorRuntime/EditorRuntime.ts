@@ -70,16 +70,14 @@ export class EditorRuntime {
         if (!closest) return undefined;
 
         let current: HTMLElement | null = closest.target;
-        let nearestSelectable = closest;
         while (current && document.contentRoot.contains(current)) {
             const editor = this.registry.getEditor(current);
             if (editor?.getStructureMode() === "opaque") return editor;
-            if (editor) nearestSelectable = editor;
             if (current === document.contentRoot) break;
             current = current.parentElement;
         }
 
-        return nearestSelectable;
+        return closest;
     }
 
     getStructure(): EditorStructureNode[] {

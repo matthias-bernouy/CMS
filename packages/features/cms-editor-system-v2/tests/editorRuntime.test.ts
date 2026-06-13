@@ -182,6 +182,34 @@ describe("EditorRuntime", () => {
         expect(runtime.getSelectedDataScopes()).toEqual([dataScope]);
     });
 
+    test("closest editor keeps the clicked descendant when no opaque ancestor exists", () => {
+        const { document, HTMLElement } = createDocument();
+        const runtime = new EditorRuntime([
+            {
+                tag: "x-parent",
+                label: "Parent",
+                bloc: blocConstructor(HTMLElement),
+                editor: ParentEditor,
+            },
+            {
+                tag: "x-child",
+                label: "Child",
+                bloc: blocConstructor(HTMLElement),
+                editor: ChildEditor,
+            },
+        ]);
+
+        const contentRoot = document.getElementById("content-root")!;
+        const child = document.getElementById("child")!;
+
+        runtime.load({
+            root: contentRoot,
+            contentRoot,
+        });
+
+        expect(runtime.getClosestEditor(child)?.target).toBe(child);
+    });
+
     test("opaque editors hide their descendants from structure", () => {
         const { document, HTMLElement } = parseHTML(`
             <!DOCTYPE html>
