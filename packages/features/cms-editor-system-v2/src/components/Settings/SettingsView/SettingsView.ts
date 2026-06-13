@@ -166,8 +166,10 @@ export class SettingsView extends HTMLElement {
                 button.type = "button";
                 button.textContent = option.label;
                 button.value = option.value;
+                button.disabled = setting.disabled === true;
                 button.ariaPressed = String(option.value === setting.defaultValue);
                 button.addEventListener("click", () => {
+                    if (setting.disabled) return;
                     for (const item of Array.from(control.querySelectorAll("button"))) {
                         item.ariaPressed = String(item === button);
                     }
@@ -188,13 +190,16 @@ export class SettingsView extends HTMLElement {
         }
 
         if (setting.type === "page-link") {
-            return this._control("cms-editor-v2-page-link", setting);
+            const control = this._control("cms-editor-v2-page-link", setting);
+            this._applyDisabled(control, setting);
+            return control;
         }
 
         if (setting.type === "schema-picker") {
             const control = document.createElement("cms-editor-v2-schema-picker");
             control.setAttribute("source", setting.label);
             control.setAttribute("path", setting.defaultValue ?? setting.attribute);
+            this._applyDisabled(control, setting);
             return control;
         }
 
@@ -209,6 +214,7 @@ export class SettingsView extends HTMLElement {
         control.setAttribute("value", String(setting.defaultValue ?? ""));
         if (setting.help) control.setAttribute("hint", setting.help);
         if (setting.placeholder) control.setAttribute("placeholder", setting.placeholder);
+        this._applyDisabled(control, setting);
         return control;
     }
 
@@ -252,21 +258,27 @@ export class SettingsView extends HTMLElement {
     }
 
     private _wireTextControl(control: HTMLElement, selector: "input" | "textarea" | "select", setting: Setting): void {
-        customElements.whenDefined(control.localName).then(() => {
+        const wire = () => {
             const input = control.shadowRoot?.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(selector);
             if (!input) return;
+            input.disabled = setting.disabled === true;
+            if (setting.disabled) return;
             input.addEventListener("input", () => this._emitSettingChange(setting, input.value));
             input.addEventListener("change", () => this._emitSettingChange(setting, input.value));
-        });
+        };
+
+        this._whenDefined(control, wire);
     }
 
     private _wireContentControl(control: HTMLElement, selector: "input" | "textarea"): void {
-        customElements.whenDefined(control.localName).then(() => {
+        const wire = () => {
             const input = control.shadowRoot?.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector);
             if (!input) return;
             input.addEventListener("input", () => this._emitContentChange(input.value, "text"));
             input.addEventListener("change", () => this._emitContentChange(input.value, "text"));
-        });
+        };
+
+        this._whenDefined(control, wire);
     }
 
     private _wireRichTextControl(control: HTMLElement): void {
@@ -278,25 +290,43 @@ export class SettingsView extends HTMLElement {
             });
         };
 
-        if (customElements.get(control.localName)) {
-            wire();
-            return;
-        }
-
-        customElements.whenDefined(control.localName).then(wire);
+        this._whenDefined(control, wire);
     }
 
     private _wireToggleControl(control: HTMLElement, setting: Setting): void {
-        customElements.whenDefined(control.localName).then(() => {
+        const wire = () => {
             const button = control.shadowRoot?.querySelector<HTMLButtonElement>("button");
             if (!button) return;
+            button.disabled = setting.disabled === true;
+            if (setting.disabled) return;
             button.addEventListener("click", () => {
                 const checked = button.ariaPressed !== "true";
                 button.ariaPressed = String(checked);
                 control.toggleAttribute("checked", checked);
                 this._emitSettingChange(setting, checked);
             });
-        });
+        };
+
+        this._whenDefined(control, wire);
+    }
+
+    private _applyDisabled(control: HTMLElement, setting: Setting): void {
+        if (setting.disabled) {
+            control.setAttribute("disabled", "");
+            control.setAttribute("aria-disabled", "true");
+        } else {
+            control.removeAttribute("disabled");
+            control.removeAttribute("aria-disabled");
+        }
+    }
+
+    private _whenDefined(control: HTMLElement, callback: () => void): void {
+        if (customElements.get(control.localName)) {
+            callback();
+            return;
+        }
+
+        customElements.whenDefined(control.localName).then(callback);
     }
 
     private _emitSettingChange(setting: Setting, value: string | boolean): void {

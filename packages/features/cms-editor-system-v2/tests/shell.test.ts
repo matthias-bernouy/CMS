@@ -89,6 +89,99 @@ describe("Shell", () => {
         expect(events).toEqual(["Updated"]);
     });
 
+    test("renders disabled settings as disabled controls", async () => {
+        installDom();
+
+        const {
+            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+            SettingsView,
+        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        if (!customElements.get("cms-editor-v2-text-input")) {
+            customElements.define("cms-editor-v2-text-input", class extends HTMLElement {
+                constructor() {
+                    super();
+                    this.attachShadow({ mode: "open" }).innerHTML = "<input>";
+                }
+            });
+        }
+
+        const view = new SettingsView();
+        let emitted = false;
+        view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, () => {
+            emitted = true;
+        });
+
+        view.setSettings([
+            {
+                kind: "self",
+                label: "Snippet",
+                settings: [
+                    {
+                        type: "text",
+                        label: "Identifier",
+                        attribute: "identifier",
+                        defaultValue: "main-nav",
+                        disabled: true,
+                    },
+                ],
+            },
+        ]);
+
+        const control = view.shadowRoot!.querySelector("cms-editor-v2-text-input")!;
+        const input = control.shadowRoot!.querySelector<HTMLInputElement>("input")!;
+
+        expect(control.hasAttribute("disabled")).toBe(true);
+        expect(input.disabled).toBe(true);
+
+        input.value = "changed";
+        input.dispatchEvent(new Event("input", {
+            bubbles: true,
+        }));
+
+        expect(emitted).toBe(false);
+    });
+
+    test("renders disabled segmented settings as disabled buttons", async () => {
+        installDom();
+
+        const {
+            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+            SettingsView,
+        } = await import("../src/components/Settings/SettingsView/SettingsView");
+
+        const view = new SettingsView();
+        let emitted = false;
+        view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, () => {
+            emitted = true;
+        });
+
+        view.setSettings([
+            {
+                kind: "self",
+                label: "Style",
+                settings: [
+                    {
+                        type: "segmented",
+                        label: "Mode",
+                        attribute: "mode",
+                        defaultValue: "a",
+                        disabled: true,
+                        options: [
+                            { label: "A", value: "a" },
+                            { label: "B", value: "b" },
+                        ],
+                    },
+                ],
+            },
+        ]);
+
+        const buttons = Array.from(view.shadowRoot!.querySelectorAll<HTMLButtonElement>("cms-editor-v2-segmented-control button"));
+
+        expect(buttons.map(button => button.disabled)).toEqual([true, true]);
+        buttons[1]?.click();
+        expect(emitted).toBe(false);
+    });
+
     test("canvas emits a background click outside the page frame", async () => {
         installDom();
 

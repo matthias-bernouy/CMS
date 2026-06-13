@@ -29,6 +29,14 @@ input {
     font-size: 12px;
 }
 
+input:disabled {
+    border-color: color-mix(in srgb, var(--editor-v2-border) 70%, transparent);
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 82%, var(--editor-v2-surface));
+    color: var(--editor-v2-muted);
+    cursor: not-allowed;
+    opacity: .72;
+}
+
 .hint {
     color: var(--editor-v2-muted);
     font-size: 11px;

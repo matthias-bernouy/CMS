@@ -66,7 +66,20 @@ export class EditorRuntime {
     getClosestEditor(target: Element | null): Editor | undefined {
         const document = this._requireDocument();
         if (!target || !document.contentRoot.contains(target)) return undefined;
-        return this.registry.getClosestEditor(target, document.contentRoot);
+        const closest = this.registry.getClosestEditor(target, document.contentRoot);
+        if (!closest) return undefined;
+
+        let current: HTMLElement | null = closest.target;
+        let nearestSelectable = closest;
+        while (current && document.contentRoot.contains(current)) {
+            const editor = this.registry.getEditor(current);
+            if (editor?.getStructureMode() === "opaque") return editor;
+            if (editor) nearestSelectable = editor;
+            if (current === document.contentRoot) break;
+            current = current.parentElement;
+        }
+
+        return nearestSelectable;
     }
 
     getStructure(): EditorStructureNode[] {
@@ -132,7 +145,9 @@ export class EditorRuntime {
                 label: entry.label,
                 icon: entry.icon,
                 badges: this._getStructureBadges(editor),
-                children: this._getStructureChildren(editor.target),
+                children: editor.getStructureMode() === "opaque"
+                    ? []
+                    : this._getStructureChildren(editor.target),
             });
         }
 
@@ -152,8 +167,9 @@ export class EditorRuntime {
         let current = target.parentElement;
 
         while (current && current !== stopAt) {
-            if (document.contentRoot.contains(current) && this.registry.getEditor(current)) {
-                return current;
+            if (document.contentRoot.contains(current)) {
+                const editor = this.registry.getEditor(current);
+                if (editor) return current;
             }
             current = current.parentElement;
         }

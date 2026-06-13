@@ -9,6 +9,7 @@ export {
     type CmsBindingAttribute,
     type EditableState,
     type EditableStateSession,
+    type EditorStructureMode,
     type Setting,
     type SettingSection,
     type TextCapability,
@@ -21,6 +22,9 @@ export type {
     DataScope,
     EditorCatalog,
     EditorCatalogEntry,
+    EditorCatalogRegistration,
+    EditorCatalogRegistrationDefaults,
+    EditorCatalogRuntime,
     EditorConstructor,
     EditorDocument,
     PageLinkSetting,
@@ -35,3 +39,9 @@ export type {
     TextSetting,
     ToggleSetting,
 } from "../interfaces/Editor";
+
+export {
+    createEditorCatalogEntry,
+    mergeEditorCatalogs,
+} from "../core/editor/EditorCatalog";
+export { CMS_SNIPPET_TAG } from "../core/constants/snippet";

@@ -2,6 +2,7 @@ import type { ContentSlot } from "./ContentSlots";
 import type { DataScope } from "./DataScopes";
 import type { EditableState } from "./EditableState";
 import type { Setting } from "./SettingInputs";
+import type { EditorStructureMode } from "./StructureMode";
 import type { TextCapability } from "./TextCapability";
 
 export type SettingSection = {
@@ -32,6 +33,10 @@ export class Editor {
 
     protected states(): EditableState[] {
         return [];
+    }
+
+    protected structureMode(): EditorStructureMode {
+        return "editable";
     }
 
     getSettings(): SettingSection[] {
@@ -77,6 +82,10 @@ export class Editor {
     getChildren(): Editor[] {
         // Runtime may override.
         return [];
+    }
+
+    getStructureMode(): EditorStructureMode {
+        return this.structureMode();
     }
 
     mountEditor(): void {

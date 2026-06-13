@@ -2,6 +2,10 @@
     display: block;
 }
 
+:host([disabled]) {
+    cursor: not-allowed;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -30,6 +34,16 @@ button {
     font: inherit;
     font-size: 12px;
     font-weight: 650;
+}
+
+:host([disabled]) button,
+:host([disabled]) .target {
+    opacity: .64;
+    cursor: not-allowed;
+}
+
+:host([disabled]) button.active {
+    box-shadow: none;
 }
 
 button.active {

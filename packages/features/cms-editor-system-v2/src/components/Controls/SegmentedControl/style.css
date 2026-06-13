@@ -24,6 +24,18 @@
     cursor: pointer;
 }
 
+::slotted(button:disabled) {
+    color: color-mix(in srgb, var(--editor-v2-muted) 72%, transparent);
+    cursor: not-allowed;
+    opacity: .62;
+}
+
+::slotted(button[aria-pressed="true"]:disabled) {
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 84%, var(--editor-v2-surface));
+    color: var(--editor-v2-muted);
+    box-shadow: none;
+}
+
 ::slotted(button[aria-pressed="true"]) {
     background: var(--editor-v2-surface);
     color: var(--editor-v2-text);

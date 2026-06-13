@@ -19,6 +19,10 @@ export {
     Editor,
     type SettingSection,
 } from "../interfaces/Editor";
+export {
+    createEditorCatalogEntry,
+    mergeEditorCatalogs,
+} from "cms-content/core/editor/EditorCatalog";
 export type {
     DataExpression,
     DataField,
@@ -26,8 +30,12 @@ export type {
     DataScope,
     EditorCatalog,
     EditorCatalogEntry,
+    EditorCatalogRegistration,
+    EditorCatalogRegistrationDefaults,
+    EditorCatalogRuntime,
     EditorConstructor,
     EditorDocument,
+    EditorStructureMode,
     PageLinkSetting,
     SchemaPickerMethod,
     SchemaPickerSetting,

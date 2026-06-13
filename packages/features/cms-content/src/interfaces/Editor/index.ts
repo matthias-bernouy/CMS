@@ -14,6 +14,7 @@ export type {
     ContentSlotAccept,
 } from "./ContentSlots";
 export type { TextCapability } from "./TextCapability";
+export type { EditorStructureMode } from "./StructureMode";
 export type { EditableState, EditableStateSession } from "./EditableState";
 export type {
     DataExpression,
@@ -38,6 +39,9 @@ export type {
 export type {
     EditorCatalog,
     EditorCatalogEntry,
+    EditorCatalogRegistration,
+    EditorCatalogRegistrationDefaults,
+    EditorCatalogRuntime,
     EditorConstructor,
 } from "./EditorCatalog";
 export type { EditorDocument } from "./EditorDocument";
