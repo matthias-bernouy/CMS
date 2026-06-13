@@ -14,6 +14,8 @@ export const CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
 export const CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
 export class Canvas extends HTMLElement {
+    private _currentFrameUrl: string | null = null;
+
     static get observedAttributes(): string[] {
         return ["max-width", "viewport-width", "viewport-height", "frame-url", "viewport-padding", "viewport-fit"];
     }
@@ -54,7 +56,7 @@ export class Canvas extends HTMLElement {
             detail: {
                 document: frameDocument,
                 frame:    this.frame,
-                url:      this.frame.src,
+                url:      this._currentFrameUrl ?? this.frame.src,
             },
         }));
     };
@@ -72,8 +74,14 @@ export class Canvas extends HTMLElement {
 
     private syncFrameUrl(): void {
         const url = this.getAttribute("frame-url")?.trim() || "about:blank";
-        if (this.frame.getAttribute("src") === url) return;
-        this.frame.setAttribute("src", url);
+        if (this._currentFrameUrl === url) return;
+
+        this._currentFrameUrl = url;
+        if (this.frame.contentWindow) {
+            this.frame.contentWindow.location.replace(url);
+        } else {
+            this.frame.setAttribute("src", url);
+        }
     }
 
     private syncViewportSize(): void {

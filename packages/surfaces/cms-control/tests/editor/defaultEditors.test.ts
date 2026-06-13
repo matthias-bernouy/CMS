@@ -42,7 +42,7 @@ class TestGridEditor extends GridEditor {
     }
 }
 
-describe("editor v2 default editors", () => {
+describe("editor default editors", () => {
     test("exposes layout editor settings", () => {
         expect(new ContainerEditor(target()).getSettings()[0]?.label).toBe("Container");
         expect(new GridEditor(target()).getSettings()[0]?.label).toBe("Grid");

@@ -1,6 +1,4 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import MissingParam from "cms-control/errors/Http/MissingParam";
-
 
 export type PageConfigDetailResponse = {
     id: string;
@@ -11,14 +9,39 @@ export type PageConfigDetailResponse = {
     published: boolean;
 }
 
-export default async function getConfigDetail(req: Request, sys: ControlCms){
+export default async function getConfigDetail(req: Request, cms: ControlCms): Promise<Response> {
 
     const url = new URL(req.url);
     const id  = url.searchParams.get("id");
 
-    if ( !id ) throw new MissingParam("id");
+    if (!id) return redirectToPages(url);
 
-    const res = await sys.repository.getPage(id);
+    const page = await cms.repository.getPageById(id);
 
-    return new Response("Not implemented")
+    if (!page) return redirectToPages(url);
+
+    const response: PageConfigDetailResponse = {
+        id:          page.id,
+        title:       page.title,
+        description: page.description,
+        path:        page.path,
+        tags:        page.tags,
+        published:   page.visible,
+    };
+
+    return new Response(JSON.stringify(response), {
+        headers: { "Content-Type": "application/json" },
+    });
+}
+
+function redirectToPages(url: URL): Response {
+    return Response.redirect(`${controlBasePath(url.pathname)}/admin/pages`, 302);
+}
+
+function controlBasePath(pathname: string): string {
+    const marker = "/api/page/configDetail";
+    const index = pathname.indexOf(marker);
+    if (index <= 0) return "";
+
+    return pathname.slice(0, index);
 }

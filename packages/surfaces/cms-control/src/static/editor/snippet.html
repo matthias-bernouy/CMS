@@ -1,43 +1,11 @@
-<div cms-source="{{BASE_PATH}}/api/snippet?id=#{id}">
-
-    <template>
-
-        <cms-editor-system>
-
-            <link slot="style" rel="stylesheet" href="{{BASE_PATH}}/.cms/style">
-            <script slot="script" src="{{BASE_PATH}}/api/editor/script.js"></script>
-
-            <cms-editor-configuration url="{{BASE_PATH}}/api/snippet" slot="configuration"
-                delete-redirect="{{BASE_PATH}}/admin/snippets" delete-label="Delete snippet">
-
-                <span slot="title">Snippet</span>
-
-                <p9r-section data-title="Information">
-                    <p9r-input value="{{identifier}}" disabled label="Tag"
-                        hint="Immutable after creation."></p9r-input>
-
-                    <p9r-input value="{{name}}" name="name" label="Name" placeholder="My hero section"
-                        hint="Displayed in the Snippets library." max-count="50"></p9r-input>
-
-                    <p9r-input value="{{description}}" name="description" label="Description" placeholder="A short description"
-                        hint="Shown under the name in the library." max-count="120"></p9r-input>
-                </p9r-section>
-
-                <p9r-section data-title="Taxonomy">
-                    <p9r-tag-suggest value="{{category}}" name="category" mode="single" resource="snippets" api="../api/tags"
-                        placeholder="hero, layout, cta…">
-                        <span slot="label">Category</span>
-                    </p9r-tag-suggest>
-                </p9r-section>
-            </cms-editor-configuration>
-
-            <!-- cms-bind-stop walls this region off from the chrome runtime: the content
-                 is injected (chrome scope) but its cms-source/{{ }} stay an inert editable
-                 template — rendering with data is delivery's job (the Shell). -->
-            <div cms-bind-stop style="display:contents"><inner-html>{{ content | innerHTML }}</inner-html></div>
-
-        </cms-editor-system>
-
-    </template>
-
-</div>
+<cms-editor-shell
+    resource="snippet"
+    back-href="{{BASE_PATH}}/admin/snippets"
+    back-label="Snippets"
+    settings-label="Snippet settings"
+    settings-title="Snippet settings"
+    settings-description="Configure snippet metadata."
+    settings-path-label="Identifier"
+    settings-tags-label="Category"
+    settings-description-label="Description"
+></cms-editor-shell>

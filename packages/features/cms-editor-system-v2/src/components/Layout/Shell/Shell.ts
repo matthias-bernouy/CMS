@@ -121,6 +121,20 @@ type SelectOptions = {
 };
 
 export class Shell extends HTMLElement {
+    static get observedAttributes(): string[] {
+        return [
+            "resource",
+            "back-href",
+            "back-label",
+            "settings-label",
+            "settings-title",
+            "settings-description",
+            "settings-path-label",
+            "settings-tags-label",
+            "settings-status-label",
+            "settings-description-label",
+        ];
+    }
 
     private _catalog: EditorCatalog = [];
     private _insertItems: BlockPickerItem[] = [];
@@ -132,12 +146,17 @@ export class Shell extends HTMLElement {
     private _editorMode: TopBarEditorMode = "edit";
     private _pageConfig: EditorV2PageConfig | null = null;
     private _clipboardElement: HTMLElement | null = null;
+    private _chromeSyncPending: boolean = false;
     private readonly _stateSessions = new WeakMap<Editor, Map<string, EditableStateSession>>();
     private readonly _highlight = new FrameHighlight();
 
     constructor() {
         super();
         this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+    }
+
+    attributeChangedCallback(): void {
+        this._syncChromeLabels();
     }
 
     connectedCallback(): void {
@@ -158,6 +177,7 @@ export class Shell extends HTMLElement {
         this._syncStructureTreeCatalog();
         this._syncViewport();
         this._syncEditorMode();
+        this._syncChromeLabels();
     }
 
     disconnectedCallback(): void {
@@ -1013,6 +1033,116 @@ export class Shell extends HTMLElement {
         }
     }
 
+    private _syncChromeLabels(): void {
+        const resource = this.getAttribute("resource") ?? "page";
+        const defaults = this._resourceChromeDefaults(resource);
+        const topBar = this.shadowRoot!.querySelector("cms-editor-v2-topbar");
+
+        if (!this._isTopBar(topBar)) {
+            this._requestChromeSyncWhenTopBarIsReady();
+            return;
+        }
+
+        this._applyChromeLabels(topBar, resource, defaults);
+    }
+
+    private _requestChromeSyncWhenTopBarIsReady(): void {
+        if (this._chromeSyncPending) return;
+
+        this._chromeSyncPending = true;
+        customElements.whenDefined("cms-editor-v2-topbar").then(() => {
+            this._chromeSyncPending = false;
+
+            const topBar = this.shadowRoot?.querySelector("cms-editor-v2-topbar");
+            if (topBar) customElements.upgrade(topBar);
+            if (!this._isTopBar(topBar)) return;
+
+            const resource = this.getAttribute("resource") ?? "page";
+            this._applyChromeLabels(topBar, resource, this._resourceChromeDefaults(resource));
+        });
+    }
+
+    private _applyChromeLabels(
+        topBar: TopBar,
+        resource: string,
+        defaults: ReturnType<Shell["_resourceChromeDefaults"]>,
+    ): void {
+        topBar.setNavigation({
+            backHref:      this.getAttribute("back-href") ?? defaults.backHref,
+            backLabel:     this.getAttribute("back-label") ?? defaults.backLabel,
+            settingsLabel: this.getAttribute("settings-label") ?? defaults.settingsLabel,
+        });
+
+        this.shadowRoot!.querySelector("#page-settings-title")!.textContent =
+            this.getAttribute("settings-title") ?? defaults.settingsTitle;
+        this.shadowRoot!.querySelector(".settings-description")!.textContent =
+            this.getAttribute("settings-description") ?? defaults.settingsDescription;
+        this.shadowRoot!.querySelector('[data-page-label="path"]')!.textContent =
+            this.getAttribute("settings-path-label") ?? defaults.pathLabel;
+        this.shadowRoot!.querySelector('[data-page-label="tags"]')!.textContent =
+            this.getAttribute("settings-tags-label") ?? defaults.tagsLabel;
+        this.shadowRoot!.querySelector('[data-page-label="published"]')!.textContent =
+            this.getAttribute("settings-status-label") ?? defaults.statusLabel;
+        this.shadowRoot!.querySelector('[data-page-label="description"]')!.textContent =
+            this.getAttribute("settings-description-label") ?? defaults.descriptionLabel;
+
+        const isPage = resource === "page";
+        this._pageField<HTMLInputElement>("path").disabled = !isPage;
+        this._pageField<HTMLSelectElement>("published").closest("label")!.hidden = !isPage;
+    }
+
+    private _resourceChromeDefaults(resource: string): {
+        backHref: string;
+        backLabel: string;
+        settingsLabel: string;
+        settingsTitle: string;
+        settingsDescription: string;
+        pathLabel: string;
+        tagsLabel: string;
+        statusLabel: string;
+        descriptionLabel: string;
+    } {
+        if (resource === "template") {
+            return {
+                backHref:             "/admin/templates",
+                backLabel:            "Templates",
+                settingsLabel:        "Template settings",
+                settingsTitle:        "Template settings",
+                settingsDescription:  "Configure template metadata.",
+                pathLabel:            "Identifier",
+                tagsLabel:            "Category",
+                statusLabel:          "Status",
+                descriptionLabel:     "Description",
+            };
+        }
+
+        if (resource === "snippet") {
+            return {
+                backHref:             "/admin/snippets",
+                backLabel:            "Snippets",
+                settingsLabel:        "Snippet settings",
+                settingsTitle:        "Snippet settings",
+                settingsDescription:  "Configure snippet metadata.",
+                pathLabel:            "Identifier",
+                tagsLabel:            "Category",
+                statusLabel:          "Status",
+                descriptionLabel:     "Description",
+            };
+        }
+
+        return {
+            backHref:             "/admin/pages",
+            backLabel:            "Pages",
+            settingsLabel:        "Page settings",
+            settingsTitle:        "Page settings",
+            settingsDescription:  "Configure page-level metadata and routing.",
+            pathLabel:            "Path",
+            tagsLabel:            "Tags",
+            statusLabel:          "Status",
+            descriptionLabel:     "SEO description",
+        };
+    }
+
     private _openPageSettings(): void {
         this._pageSettingsModal.hidden = false;
         const firstInput = this._pageSettingsModal.querySelector<HTMLInputElement>("input");
@@ -1112,6 +1242,10 @@ export class Shell extends HTMLElement {
         return Boolean(value && "catalog" in value && "setStructure" in value && "setInsertItems" in value);
     }
 
+    private _isTopBar(value: Element | null | undefined): value is TopBar {
+        return Boolean(value && "setNavigation" in value);
+    }
+
     private _findStructureNodeLabel(editor: Editor): string | null {
         const visit = (nodes: EditorStructureNode[]): string | null => {
             for (const node of nodes) {
@@ -1158,6 +1292,6 @@ export class Shell extends HTMLElement {
 
 }
 
-if (!customElements.get("cms-editor-v2-shell")) {
-    customElements.define("cms-editor-v2-shell", Shell);
+if (!customElements.get("cms-editor-shell")) {
+    customElements.define("cms-editor-shell", Shell);
 }

@@ -6,6 +6,7 @@ import type {
 } from "@bernouy/cms-content/editor";
 import { Editor } from "@bernouy/cms-content/editor";
 import type { BlockPickerSelectDetail } from "../src/components/Layout/BlockPickerModal/BlockPickerModal";
+import type { StructureTreeActionDetail } from "../src/components/Layout/StructureTree/StructureTree";
 import type { TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
 import type { EditorStructureNode } from "../src/runtime";
 
@@ -223,6 +224,54 @@ describe("Shell", () => {
         expect(optionIds).not.toContain("multi-root");
     });
 
+    test("structure tree ignores delete shortcuts from shadow editable controls", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class CardEditor extends Editor { }
+
+        const target = document.createElement("demo-card");
+        const editor = new CardEditor(target);
+        const node: EditorStructureNode = {
+            editor,
+            target,
+            tag:      "demo-card",
+            label:    "Card",
+            badges:   [],
+            children: [],
+        };
+        const tree = new StructureTree();
+        const host = document.createElement("cms-editor-shell");
+        const shadow = host.attachShadow({ mode: "open" });
+        const input = document.createElement("input");
+        shadow.append(input);
+        document.body.append(host, tree);
+        tree.setStructure([node], editor);
+
+        const actions: string[] = [];
+        tree.addEventListener("editor-v2:structure-action", (event) => {
+            actions.push((event as CustomEvent<StructureTreeActionDetail>).detail.action);
+        });
+
+        let prevented = false;
+        (tree as unknown as {
+            _onDocumentKeydown(event: KeyboardEvent): void;
+        })._onDocumentKeydown({
+            key:          "Delete",
+            ctrlKey:      false,
+            metaKey:      false,
+            target:       host,
+            preventDefault: () => {
+                prevented = true;
+            },
+            composedPath: () => [input, shadow, host, document],
+        } as unknown as KeyboardEvent);
+
+        expect(actions).toEqual([]);
+        expect(prevented).toBe(false);
+    });
+
     test("topbar emits full and bleed viewport changes", async () => {
         installDom();
 
@@ -246,6 +295,119 @@ describe("Shell", () => {
             { viewport: "full" },
             { viewport: "bleed" },
         ]);
+    });
+
+    test("topbar renders resource navigation labels", async () => {
+        installDom();
+
+        const { TopBar } = await import("../src/components/Layout/TopBar/TopBar");
+
+        const topbar = new TopBar();
+        document.body.append(topbar);
+
+        topbar.setNavigation({
+            backHref:      "/cms/admin/snippets",
+            backLabel:     "Snippets",
+            settingsLabel: "Snippet settings",
+        });
+
+        const back = topbar.shadowRoot!.querySelector<HTMLAnchorElement>(".back")!;
+        expect(back.getAttribute("href")).toBe("/cms/admin/snippets");
+        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Snippets");
+        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Snippet settings");
+    });
+
+    test("shell applies resource chrome attributes", async () => {
+        installDom();
+
+        const { TopBar } = await import("../src/components/Layout/TopBar/TopBar");
+        if (!customElements.get("cms-editor-v2-topbar")) {
+            customElements.define("cms-editor-v2-topbar", class extends TopBar {});
+        }
+
+        const { Shell } = await import("../src/exports");
+
+        const shell = new Shell();
+        shell.setAttribute("resource", "snippet");
+        shell.setAttribute("back-href", "/cms/admin/snippets");
+        shell.setAttribute("back-label", "Snippets");
+        shell.setAttribute("settings-label", "Snippet settings");
+        shell.setAttribute("settings-title", "Snippet settings");
+        shell.setAttribute("settings-description", "Configure snippet metadata.");
+        shell.setAttribute("settings-path-label", "Identifier");
+        shell.setAttribute("settings-tags-label", "Category");
+        document.body.append(shell);
+
+        const topbar = shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!;
+        const back = topbar.shadowRoot!.querySelector<HTMLAnchorElement>(".back")!;
+
+        expect(back.getAttribute("href")).toBe("/cms/admin/snippets");
+        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Snippets");
+        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Snippet settings");
+        expect(shell.shadowRoot!.querySelector("#page-settings-title")!.textContent).toBe("Snippet settings");
+        expect(shell.shadowRoot!.querySelector(".settings-description")!.textContent).toBe("Configure snippet metadata.");
+        expect(shell.shadowRoot!.querySelector('[data-page-label="path"]')!.textContent).toBe("Identifier");
+        expect(shell.shadowRoot!.querySelector('[data-page-label="tags"]')!.textContent).toBe("Category");
+        expect(shell.shadowRoot!.querySelector('[data-page-field="path"]')!.hasAttribute("disabled")).toBe(true);
+        expect(shell.shadowRoot!.querySelector('[data-page-field="published"]')!.closest("label")!.hidden).toBe(true);
+    });
+
+    test("shell does not loop when topbar definition resolves before upgrade", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const originalWhenDefined = customElements.whenDefined.bind(customElements);
+        const originalUpgrade = customElements.upgrade.bind(customElements);
+        let whenDefinedCalls = 0;
+        customElements.whenDefined = (() => {
+            whenDefinedCalls += 1;
+            return Promise.resolve(HTMLElement);
+        }) as CustomElementRegistry["whenDefined"];
+        customElements.upgrade = (() => undefined) as CustomElementRegistry["upgrade"];
+
+        const shell = new Shell();
+        const topbar = shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!;
+        Object.setPrototypeOf(topbar, HTMLElement.prototype);
+
+        shell.setAttribute("resource", "snippet");
+        shell.setAttribute("back-label", "Snippets");
+        shell.setAttribute("settings-label", "Snippet settings");
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(whenDefinedCalls).toBe(1);
+
+        customElements.whenDefined = originalWhenDefined;
+        customElements.upgrade = originalUpgrade;
+    });
+
+    test("canvas uses location.replace for frame navigation", async () => {
+        installDom();
+
+        const { Canvas } = await import("../src/components/Layout/Canvas/Canvas");
+
+        const canvas = new Canvas();
+        document.body.append(canvas);
+
+        const calls: string[] = [];
+        const frame = canvas.shadowRoot!.querySelector("iframe")!;
+        Object.defineProperty(frame, "contentWindow", {
+            configurable: true,
+            value: {
+                location: {
+                    replace(url: string): void {
+                        calls.push(url);
+                    },
+                },
+            },
+        });
+
+        canvas.setAttribute("frame-url", "/cms/api/editor/frame?type=snippet&id=s1");
+
+        expect(calls).toEqual([
+            "/cms/api/editor/frame?type=snippet&id=s1",
+        ]);
+        expect(frame.getAttribute("src")).not.toBe("/cms/api/editor/frame?type=snippet&id=s1");
     });
 
     test("receives the editor catalog", async () => {

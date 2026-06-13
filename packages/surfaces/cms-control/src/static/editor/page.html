@@ -1,57 +1,12 @@
-<div cms-source="{{BASE_PATH}}/api/page?id=#{id}">
-
-    <template>
-
-        <cms-editor-system>
-
-            <link slot="style" rel="stylesheet" href="{{BASE_PATH}}/.cms/style">
-            <script slot="script" src="{{BASE_PATH}}/api/editor/script.js"></script>
-
-            <cms-editor-configuration url="{{BASE_PATH}}/api/page" slot="configuration"
-                delete-redirect="{{BASE_PATH}}/admin/pages" delete-label="Delete page"
-                delete-message="Delete this page permanently? This cannot be undone.">
-
-                <span slot="title">Page</span>
-
-                <p9r-section data-title="SEO">
-                    <p9r-input value="{{title}}" name="title" label="Title" placeholder="A beautiful title"
-                        hint="Used as &lt;title&gt; and SEO heading." max-count="50"></p9r-input>
-
-                    <p9r-input value="{{description}}" name="description" label="Description" placeholder="A beautiful description"
-                        hint="Used as meta description." max-count="120"></p9r-input>
-                </p9r-section>
-
-                <p9r-section data-title="URL">
-                    <div class="field">
-                        <p9r-input value="{{path}}" id="path-input" name="path" label="Path" placeholder="/article"
-                            hint='Letters, numbers, "-" and "/" allowed.'></p9r-input>
-                    </div>
-                </p9r-section>
-
-                <p9r-section data-title="Taxonomy">
-                    <p9r-tag-suggest value="{{tags}}" name="tags" mode="multiple" resource="pages" api="../api/tags"
-                        placeholder="Add a tag…">
-                        <span slot="label">Tags</span>
-                    </p9r-tag-suggest>
-                </p9r-section>
-
-                <p9r-section data-title="Publication">
-                    <p9r-select value="{{visible}}" name="visible" label="Status">
-                        <option value="on">Published</option>
-                        <option value="off">Draft</option>
-                    </p9r-select>
-                </p9r-section>
-            </cms-editor-configuration>
-
-            <!-- The page composed into its Shell exactly like delivery (header/footer +
-                 its own <cms-binding-core>), so the canvas mirrors the published page.
-                 cms-bind-stop keeps the EDITOR's chrome core OUT of this region — the
-                 Shell's own runtime drives the binding inside; the chrome never binds it. -->
-            <div cms-bind-stop style="display:contents"><inner-html>{{ composed | innerHTML }}</inner-html></div>
-
-
-        </cms-editor-system>
-
-    </template>
-
-</div>
+<cms-editor-shell
+    resource="page"
+    back-href="{{BASE_PATH}}/admin/pages"
+    back-label="Pages"
+    settings-label="Page settings"
+    settings-title="Page settings"
+    settings-description="Configure page-level metadata and routing."
+    settings-path-label="Path"
+    settings-tags-label="Tags"
+    settings-status-label="Status"
+    settings-description-label="SEO description"
+></cms-editor-shell>

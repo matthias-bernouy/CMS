@@ -550,14 +550,14 @@ export class StructureTree extends HTMLElement {
             return;
         }
 
-        if ((event.key === "Delete" || event.key === "Backspace") && this._selectedEditor && !this._isEditableEventTarget(event.target)) {
+        if ((event.key === "Delete" || event.key === "Backspace") && this._selectedEditor && !this._isEditableKeyEvent(event)) {
             event.preventDefault();
             this._emitAction("delete", this._selectedEditor);
             return;
         }
 
         if (!event.ctrlKey && !event.metaKey) return;
-        if (this._isEditableEventTarget(event.target)) return;
+        if (this._isEditableKeyEvent(event)) return;
 
         const key = event.key.toLowerCase();
         if (key === "c" && this._selectedEditor) {
@@ -624,9 +624,11 @@ export class StructureTree extends HTMLElement {
         return parent.children.some(child => child === candidate || this._isDescendantNode(candidate, child));
     }
 
-    private _isEditableEventTarget(target: EventTarget | null): boolean {
-        if (!(target instanceof Element)) return false;
-        return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+    private _isEditableKeyEvent(event: Event): boolean {
+        return event.composedPath().some(target => {
+            if (!(target instanceof Element)) return false;
+            return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+        });
     }
 
     private _visibleNodes(nodes: EditorStructureNode[], depth = 0): { item: EditorStructureNode; depth: number }[] {

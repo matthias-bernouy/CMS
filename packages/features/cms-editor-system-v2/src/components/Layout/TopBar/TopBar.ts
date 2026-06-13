@@ -63,6 +63,13 @@ export class TopBar extends HTMLElement {
         this.shadowRoot!.querySelector(".path")!.textContent = path;
     }
 
+    setNavigation(input: { backHref: string; backLabel: string; settingsLabel: string }): void {
+        const back = this.shadowRoot!.querySelector<HTMLAnchorElement>(".back")!;
+        back.setAttribute("href", input.backHref);
+        this.shadowRoot!.querySelector(".back-label")!.textContent = input.backLabel;
+        this.shadowRoot!.querySelector(".settings-label")!.textContent = input.settingsLabel;
+    }
+
     private readonly _onClick = (event: Event): void => {
         const button = (event.target as Element | null)?.closest<HTMLButtonElement>("button");
         if (!button) return;

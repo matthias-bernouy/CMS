@@ -26,7 +26,7 @@
             <header class="page-settings-header">
                 <div>
                     <h2 id="page-settings-title">Page settings</h2>
-                    <p>Configure page-level metadata and routing.</p>
+                    <p class="settings-description">Configure page-level metadata and routing.</p>
                 </div>
                 <button class="icon-button" type="button" data-page-settings-close aria-label="Close page settings">×</button>
             </header>
@@ -36,22 +36,22 @@
                     <input type="text" data-page-field="title">
                 </label>
                 <label>
-                    <span>Path</span>
+                    <span data-page-label="path">Path</span>
                     <input type="text" data-page-field="path">
                 </label>
                 <label>
-                    <span>Status</span>
+                    <span data-page-label="published">Status</span>
                     <select data-page-field="published">
                         <option value="false">Draft</option>
                         <option value="true">Published</option>
                     </select>
                 </label>
                 <label>
-                    <span>SEO description</span>
+                    <span data-page-label="description">SEO description</span>
                     <textarea rows="4" data-page-field="description"></textarea>
                 </label>
                 <label>
-                    <span>Tags</span>
+                    <span data-page-label="tags">Tags</span>
                     <div class="tag-field">
                         <input type="text" data-page-field="tags" placeholder="pricing, landing">
                     </div>

@@ -62,6 +62,8 @@ type SnippetDetail = SnippetListItem & {
     content?: string;
 };
 
+type EditorResource = "page" | "template" | "snippet";
+
 type LegacyEditorCatalogRegistration = EditorCatalogRegistration & {
     cl?: EditorCatalogRegistration["editor"];
     group?: string;
@@ -69,6 +71,12 @@ type LegacyEditorCatalogRegistration = EditorCatalogRegistration & {
 
 function currentPageIdentifier(): string | null {
     return new URL(window.location.href).searchParams.get("id");
+}
+
+function shellResource(shell: Shell): EditorResource {
+    const resource = shell.getAttribute("resource");
+    if (resource === "template" || resource === "snippet") return resource;
+    return "page";
 }
 
 function configureShell(shell: Element): void {
@@ -79,7 +87,7 @@ function configureShell(shell: Element): void {
     shell.addEventListener(EDITOR_V2_SAVE_DOCUMENT_EVENT, saveDocumentListener);
 
     void configureShellCatalogAndFrame(shell);
-    if (currentPageIdentifier()) void loadPageConfig(shell, currentPageIdentifier()!);
+    if (currentPageIdentifier()) void loadDocumentConfig(shell, shellResource(shell), currentPageIdentifier()!);
 }
 
 async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
@@ -91,10 +99,11 @@ async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
     shell.setCatalog(catalog);
     shell.setInsertItems(insertItems);
 
-    const pageId = currentPageIdentifier();
-    const frameUrl = pageId
-        ? `${getMetaBasePath()}/api/editor-v2/frame?id=${encodeURIComponent(pageId)}`
-        : `${getMetaBasePath()}/api/editor-v2/frame`;
+    const documentId = currentPageIdentifier();
+    const resource = shellResource(shell);
+    const frameUrl = documentId
+        ? `${getMetaBasePath()}/api/editor/frame?type=${resource}&id=${encodeURIComponent(documentId)}`
+        : `${getMetaBasePath()}/api/editor/frame?type=${resource}`;
 
     shell.shadowRoot
         ?.querySelector("cms-editor-v2-canvas")
@@ -160,7 +169,7 @@ async function fetchJson<T>(path: string, fallback: T): Promise<T> {
         if (!response.ok) return fallback;
         return await response.json() as T;
     } catch (error) {
-        console.error("[editor-v2] failed to load picker source", path, error);
+        console.error("[editor] failed to load picker source", path, error);
         return fallback;
     }
 }
@@ -176,7 +185,7 @@ async function loadEditorCatalogOnce(): Promise<EditorCatalog> {
     try {
         await loadScript(`${getMetaBasePath()}/api/editor/script.js`);
     } catch (error) {
-        console.error("[editor-v2] editor catalog script failed", error);
+        console.error("[editor] editor catalog script failed", error);
     }
 
     return mergeEditorCatalogs(
@@ -207,7 +216,7 @@ function installEditorCatalogRuntime(): EditorCatalogRuntime {
                     bloc:        entry.bloc,
                 }));
             } catch (error) {
-                console.error("[editor-v2] invalid editor catalog entry", entry, error);
+                console.error("[editor] invalid editor catalog entry", entry, error);
             }
         },
         getCatalog(): EditorCatalog {
@@ -221,7 +230,7 @@ function installEditorCatalogRuntime(): EditorCatalogRuntime {
 
 async function loadScript(src: string): Promise<void> {
     await new Promise<void>((resolve, reject) => {
-        const existing = document.querySelector<HTMLScriptElement>(`script[data-editor-v2-catalog-script="${src}"]`);
+        const existing = document.querySelector<HTMLScriptElement>(`script[data-editor-catalog-script="${src}"]`);
         if (existing) {
             resolve();
             return;
@@ -230,11 +239,20 @@ async function loadScript(src: string): Promise<void> {
         const script = document.createElement("script");
         script.src = src;
         script.async = true;
-        script.dataset.editorV2CatalogScript = src;
+        script.dataset.editorCatalogScript = src;
         script.addEventListener("load", () => resolve(), { once: true });
         script.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)), { once: true });
         document.head.append(script);
     });
+}
+
+async function loadDocumentConfig(shell: Shell, resource: EditorResource, id: string): Promise<void> {
+    if (resource !== "page") {
+        await loadReusableConfig(shell, resource, id);
+        return;
+    }
+
+    await loadPageConfig(shell, id);
 }
 
 async function loadPageConfig(shell: Shell, pageId: string): Promise<void> {
@@ -259,17 +277,48 @@ async function loadPageConfig(shell: Shell, pageId: string): Promise<void> {
     });
 }
 
+async function loadReusableConfig(shell: Shell, resource: "template" | "snippet", id: string): Promise<void> {
+    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id)}`);
+    if (response.redirected) {
+        window.location.href = response.url;
+        return;
+    }
+    if (!response.ok) {
+        shell.setSaveStatus(`${resourceLabel(resource)} load failed`);
+        return;
+    }
+
+    const detail = await response.json() as TemplateDetail | SnippetDetail;
+    shell.setPageConfig({
+        id:          detail.id,
+        title:       detail.name,
+        path:        detail.identifier,
+        description: detail.description ?? "",
+        tags:        detail.category ? [detail.category] : [],
+        published:   true,
+    });
+}
+
 async function onSaveDocument(event: CustomEvent<EditorV2SaveDocumentDetail>): Promise<void> {
     const shell = event.currentTarget;
     if (!(shell instanceof Shell)) return;
 
     try {
-        await savePage(event.detail.page, event.detail.content);
+        await saveDocument(shellResource(shell), event.detail.page, event.detail.content);
         shell.setSaveStatus("Saved");
     } catch (error) {
-        console.error("[editor-v2] save failed", error);
+        console.error("[editor] save failed", error);
         shell.setSaveStatus("Save failed");
     }
+}
+
+async function saveDocument(resource: EditorResource, page: EditorV2PageConfig, content: string): Promise<void> {
+    if (resource === "page") {
+        await savePage(page, content);
+        return;
+    }
+
+    await saveReusable(resource, page, content);
 }
 
 async function savePage(page: EditorV2PageConfig, content: string): Promise<void> {
@@ -294,25 +343,49 @@ async function savePage(page: EditorV2PageConfig, content: string): Promise<void
     }
 }
 
+async function saveReusable(resource: "template" | "snippet", page: EditorV2PageConfig, content: string): Promise<void> {
+    const response = await fetch(`${getMetaBasePath()}/api/${resource}`, {
+        method:  "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            id:          page.id,
+            name:        page.title,
+            category:    page.tags[0] ?? "",
+            description: page.description,
+            content,
+        }),
+    });
+
+    if (!response.ok) {
+        throw new Error(`${resourceLabel(resource)} save failed with ${response.status}`);
+    }
+}
+
+function resourceLabel(resource: EditorResource): string {
+    return resource[0]!.toUpperCase() + resource.slice(1);
+}
+
 function configureExistingShells(): void {
     document
-        .querySelectorAll("cms-editor-v2-shell")
+        .querySelectorAll("cms-editor-shell")
         .forEach(configureShell);
 }
 
 function configureAddedShells(node: Node): void {
     if (!(node instanceof Element)) return;
 
-    if (node.matches("cms-editor-v2-shell")) {
+    if (node.matches("cms-editor-shell")) {
         configureShell(node);
     }
 
     node
-        .querySelectorAll("cms-editor-v2-shell")
+        .querySelectorAll("cms-editor-shell")
         .forEach(configureShell);
 }
 
-customElements.whenDefined("cms-editor-v2-shell").then(() => {
+customElements.whenDefined("cms-editor-shell").then(() => {
     configureExistingShells();
 
     if (document.readyState === "loading") {

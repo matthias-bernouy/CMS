@@ -13,6 +13,22 @@
          …) carries its own admin tokens inside the EditorRoot shadow, so
          no admin stylesheet leaks into the page being edited. -->
     <link rel="stylesheet" href="{{BASE_PATH}}/.cms/style">
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        cms-binding-core,
+        cms-editor-shell {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 
     <script src="{{BASE_PATH}}/assets/control-components.js"></script>
 </head>
