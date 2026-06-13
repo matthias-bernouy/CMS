@@ -20,6 +20,7 @@ import {
 } from "../../../runtime";
 import type { SettingsView } from "../../Settings/SettingsView/SettingsView";
 import {
+    CANVAS_BACKGROUND_CLICK_EVENT,
     CANVAS_FRAME_READY_EVENT,
     type Canvas,
     type CanvasFrameReadyDetail,
@@ -111,6 +112,7 @@ export class Shell extends HTMLElement {
         this._settings.addEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._settings.addEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle as EventListener);
         this._canvas.addEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
+        this._canvas.addEventListener(CANVAS_BACKGROUND_CLICK_EVENT, this._onCanvasBackgroundClick);
         this._topBar.addEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
         this._topBar.addEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
         this._topBar.addEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
@@ -130,6 +132,7 @@ export class Shell extends HTMLElement {
         this._settings.removeEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._settings.removeEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle as EventListener);
         this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
+        this._canvas.removeEventListener(CANVAS_BACKGROUND_CLICK_EVENT, this._onCanvasBackgroundClick);
         this._topBar.removeEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
         this._topBar.removeEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
         this._topBar.removeEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
@@ -342,6 +345,13 @@ export class Shell extends HTMLElement {
         const target = this._eventElement(event);
         const editor = this._runtime.getClosestEditor(target);
         this._select(editor ?? null);
+    };
+
+    private readonly _onCanvasBackgroundClick = (): void => {
+        if (!this._runtime) return;
+        if (this._editorMode !== "edit") return;
+
+        this._select(null);
     };
 
     private _select(editor: Editor | null): void {

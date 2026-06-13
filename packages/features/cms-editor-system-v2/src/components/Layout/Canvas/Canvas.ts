@@ -11,6 +11,7 @@ export type CanvasFrameReadyDetail = {
 };
 
 export const CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
+export const CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
 export class Canvas extends HTMLElement {
     static get observedAttributes(): string[] {
@@ -24,12 +25,14 @@ export class Canvas extends HTMLElement {
 
     connectedCallback(): void {
         this.frame.addEventListener("load", this.onFrameLoad);
+        this.shadowRoot!.addEventListener("click", this.onBackgroundClick);
         this.syncViewportSize();
         this.syncFrameUrl();
     }
 
     disconnectedCallback(): void {
         this.frame.removeEventListener("load", this.onFrameLoad);
+        this.shadowRoot!.removeEventListener("click", this.onBackgroundClick);
     }
 
     attributeChangedCallback(name: string): void {
@@ -53,6 +56,17 @@ export class Canvas extends HTMLElement {
                 frame:    this.frame,
                 url:      this.frame.src,
             },
+        }));
+    };
+
+    private readonly onBackgroundClick = (event: Event): void => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        if (target.closest(".page")) return;
+
+        this.dispatchEvent(new CustomEvent(CANVAS_BACKGROUND_CLICK_EVENT, {
+            bubbles: true,
+            composed: true,
         }));
     };
 

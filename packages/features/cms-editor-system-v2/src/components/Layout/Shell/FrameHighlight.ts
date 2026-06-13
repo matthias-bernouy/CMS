@@ -64,7 +64,8 @@ export class FrameHighlight {
     position: absolute;
     z-index: 2147483647;
     pointer-events: none;
-    border: 2px solid #16775f;
+    outline: 2px solid #16775f;
+    outline-offset: -2px;
     border-radius: 8px;
     box-shadow: 0 0 0 1px rgba(22, 119, 95, 0.18), 0 8px 24px rgba(22, 119, 95, 0.14);
 }

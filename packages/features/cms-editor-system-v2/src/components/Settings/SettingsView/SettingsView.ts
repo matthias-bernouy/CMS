@@ -270,12 +270,20 @@ export class SettingsView extends HTMLElement {
     }
 
     private _wireRichTextControl(control: HTMLElement): void {
-        customElements.whenDefined(control.localName).then(() => {
+        const wire = () => {
             control.addEventListener("input", (event) => {
-                const value = (event as CustomEvent<{ value: string }>).detail?.value ?? "";
+                const value = (event as CustomEvent<{ value: string }>).detail?.value;
+                if (typeof value !== "string") return;
                 this._emitContentChange(value, "html");
             });
-        });
+        };
+
+        if (customElements.get(control.localName)) {
+            wire();
+            return;
+        }
+
+        customElements.whenDefined(control.localName).then(wire);
     }
 
     private _wireToggleControl(control: HTMLElement, setting: Setting): void {
