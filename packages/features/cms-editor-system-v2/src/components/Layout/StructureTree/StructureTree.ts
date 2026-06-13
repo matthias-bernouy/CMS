@@ -338,10 +338,43 @@ export class StructureTree extends HTMLElement {
                 slotLabel: slot.label,
             }));
 
+        const mediaAccept = this._mediaAcceptForSlot(slot);
+        const mediaOptions: BlockPickerOption[] = mediaAccept
+            ? [{
+                item: {
+                    kind:        "media" as const,
+                    label:       "Media",
+                    description: "Choose a file from the CMS library.",
+                    category:    "Media",
+                    subCategory: mediaAccept.join(", "),
+                    icon:        "M",
+                    accept:      mediaAccept,
+                },
+                slot:      slot.slot,
+                slotLabel: slot.label,
+            }]
+            : [];
+
         return [
             ...blockOptions.filter(option => this._canFitItem(parent, slot, option.item!, replaced)),
             ...externalOptions,
+            ...mediaOptions.filter(option => option.item && this._canFitItem(parent, slot, option.item, replaced)),
         ];
+    }
+
+    private _mediaAcceptForSlot(slot: ContentSlot): ("image" | "bitmap" | "svg" | "video" | "audio" | "document")[] | null {
+        const explicit = slot.accepts.find(accept => accept.kind === "media");
+        if (explicit?.kind === "media") return explicit.accept ?? ["image"];
+
+        if (slot.accepts.some(accept => accept.kind === "component" && accept.tag.toLowerCase() === "img")) {
+            return ["image"];
+        }
+
+        if (slot.accepts.some(accept => accept.kind === "any-component")) {
+            return ["image"];
+        }
+
+        return null;
     }
 
     private _hasEnabledGroup(groups: BlockPickerSlotGroup[]): boolean {
@@ -349,12 +382,15 @@ export class StructureTree extends HTMLElement {
     }
 
     private _acceptsEntry(accept: ContentSlotAccept, entry: EditorCatalogEntry): boolean {
+        if (accept.kind === "media") return false;
         if (accept.kind === "any-component") return true;
         return accept.tag.toLowerCase() === entry.tag.toLowerCase();
     }
 
     private _acceptsItem(accept: ContentSlotAccept, item: BlockPickerItem): boolean {
+        if (item.kind === "media") return accept.kind === "media";
         if (item.kind === "block") return this._acceptsEntry(accept, item.entry);
+        if (accept.kind === "media") return false;
         if (accept.kind === "any-component") return true;
         if (item.kind === "snippet") return accept.tag.toLowerCase() === CMS_SNIPPET_TAG;
         return false;

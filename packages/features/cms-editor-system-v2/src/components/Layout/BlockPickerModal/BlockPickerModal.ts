@@ -1,4 +1,4 @@
-import type { EditorCatalogEntry } from "@bernouy/cms-content/editor";
+import type { EditorCatalogEntry, MediaAccept } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
 
@@ -30,6 +30,15 @@ export type BlockPickerItem =
         subCategory?: string;
         icon?: string;
         content: string;
+    }
+    | {
+        kind: "media";
+        label: string;
+        description?: string;
+        category?: string;
+        subCategory?: string;
+        icon?: string;
+        accept?: MediaAccept[];
     };
 
 export type BlockPickerOption = {
@@ -172,6 +181,14 @@ export class BlockPickerModal extends HTMLElement {
                 this._renderSidebar();
                 this._renderEntries();
             }, this._sourceCount("snippet"), this._sourceCount("snippet") === 0),
+            this._filterButton("Media", this._activeSource === "media", () => {
+                if (this._selectSingleSourceOption("media")) return;
+                this._activeSource = "media";
+                this._activeCategory = "";
+                this._activeOption = null;
+                this._renderSidebar();
+                this._renderEntries();
+            }, this._sourceCount("media"), this._sourceCount("media") === 0),
         );
 
         const categories = this._categories();
@@ -350,6 +367,14 @@ export class BlockPickerModal extends HTMLElement {
         return this._activeGroup()?.options.filter(option => this._optionItem(option).kind === source).length ?? 0;
     }
 
+    private _selectSingleSourceOption(source: BlockPickerItem["kind"]): boolean {
+        const options = this._activeGroup()?.options.filter(option => this._optionItem(option).kind === source) ?? [];
+        if (options.length !== 1) return false;
+
+        this._selectOption(options[0]!);
+        return true;
+    }
+
     private _categoryCount(category: string): number {
         return this._activeGroup()?.options.filter(option => this._optionItem(option).kind === this._activeSource && this._categoryLabel(option) === category).length ?? 0;
     }
@@ -424,6 +449,7 @@ export class BlockPickerModal extends HTMLElement {
     private _sourceLabel(kind: BlockPickerItem["kind"]): string {
         if (kind === "template") return "Template";
         if (kind === "snippet") return "Snippet";
+        if (kind === "media") return "Media";
         return "Block";
     }
 
@@ -451,6 +477,7 @@ export class BlockPickerModal extends HTMLElement {
     private _itemHandle(item: BlockPickerItem): string {
         if (item.kind === "block") return item.entry.tag;
         if (item.kind === "snippet") return item.identifier;
+        if (item.kind === "media") return item.accept?.join(", ") ?? "media";
         return item.id;
     }
 

@@ -11,6 +11,7 @@ import {
     type EditorCatalog,
     type EditorCatalogEntry,
     type EditorDocument,
+    type MediaAccept,
     type Setting,
     type SettingSection,
     CMS_SNIPPET_TAG,
@@ -49,6 +50,10 @@ import {
 import type { StructureTree } from "../StructureTree/StructureTree";
 import type { StructureTreeActionDetail } from "../StructureTree/StructureTree";
 import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
+import {
+    FilesCenter,
+    type FilesCenterSelectDetail,
+} from "../../Controls/FilesCenter/FilesCenter";
 import { FrameHighlight } from "./FrameHighlight";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
@@ -338,7 +343,7 @@ export class Shell extends HTMLElement {
         const selection = this._runtime.getSelection();
         if (!selection) return;
 
-        this._applySetting(selection.editor, event.detail.setting.attribute, event.detail.value);
+        this._applySetting(selection.editor, event.detail.setting, event.detail.value);
         this._highlight.show(selection.editor);
     };
 
@@ -422,7 +427,8 @@ export class Shell extends HTMLElement {
         );
     }
 
-    private _applySetting(editor: Editor, attribute: string, value: string | boolean): void {
+    private _applySetting(editor: Editor, setting: Setting, value: string | boolean): void {
+        const attribute = setting.attribute;
         if (typeof value === "boolean") {
             editor.target.toggleAttribute(attribute, value);
             return;
@@ -432,6 +438,8 @@ export class Shell extends HTMLElement {
             editor.target.removeAttribute(attribute);
             return;
         }
+
+        if (typeof value !== "string") return;
 
         editor.target.setAttribute(attribute, value);
     }
@@ -484,6 +492,11 @@ export class Shell extends HTMLElement {
         const slot = this._findSlot(parent, slotName);
         if (!slot || this._isSlotFull(parent, slot)) return;
 
+        if (item.kind === "media") {
+            this._insertMedia(parent, item, slot, slotName);
+            return;
+        }
+
         const insertion = this._createInsertion(item, slotName);
         if (!insertion || !this._canInsertNodeCount(parent, slot, insertion.slotElements)) return;
 
@@ -514,6 +527,11 @@ export class Shell extends HTMLElement {
         const slot = this._findSlot(parent, slotName);
         if (!slot) return;
 
+        if (item.kind === "media") {
+            this._replaceWithMedia(editor, parent, item, slot, slotName);
+            return;
+        }
+
         const insertion = this._createInsertion(item, slotName);
         if (!insertion || !this._canReplaceNodeCount(parent, editor, slot, insertion.slotElements)) return;
 
@@ -528,6 +546,7 @@ export class Shell extends HTMLElement {
     } | null {
         const document = this._frameDocument;
         if (!document) return null;
+        if (item.kind === "media") return null;
 
         if (item.kind === "block") {
             const child = document.createElement(item.entry.tag);
@@ -572,6 +591,77 @@ export class Shell extends HTMLElement {
             selectionTarget,
             slotElements,
         };
+    }
+
+    private _insertMedia(parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string): void {
+        if (!this._canInsertNodeCount(parent, slot, [parent.target])) return;
+        this._openMediaPicker(item.accept, (element) => {
+            this._applySlot(element, slotName);
+            parent.target.append(element);
+            this._reloadFrameDocument(element);
+        });
+    }
+
+    private _replaceWithMedia(editor: Editor, parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string): void {
+        if (!this._canReplaceNodeCount(parent, editor, slot, [editor.target])) return;
+        this._openMediaPicker(item.accept, (element) => {
+            this._applySlot(element, slotName);
+            editor.target.replaceWith(element);
+            this._reloadFrameDocument(element);
+        });
+    }
+
+    private _openMediaPicker(accept: MediaAccept[] | undefined, onSelect: (element: HTMLElement) => void): void {
+        const center = new FilesCenter();
+        const cleanup = () => center.remove();
+        center.addEventListener("close", cleanup, { once: true });
+        center.addEventListener("select-file", (event) => {
+            const detail = (event as CustomEvent<FilesCenterSelectDetail>).detail;
+            const element = this._createMediaElement(detail);
+            if (!element) return;
+            onSelect(element);
+        }, { once: true });
+
+        document.body.append(center);
+        center.show({
+            accept:     ["folder", "file"],
+            fileAccept: accept ?? ["image"],
+        });
+    }
+
+    private _createMediaElement(detail: FilesCenterSelectDetail): HTMLElement | null {
+        const document = this._frameDocument;
+        if (!document) return null;
+
+        if (detail.mimeType?.startsWith("image/") ?? true) {
+            const image = document.createElement("img");
+            image.setAttribute("src", detail.src);
+            image.setAttribute("alt", detail.label);
+            image.addEventListener("load", () => {
+                if (image.naturalWidth > 0) image.setAttribute("width", String(image.naturalWidth));
+                if (image.naturalHeight > 0) image.setAttribute("height", String(image.naturalHeight));
+            }, { once: true });
+            return image;
+        }
+
+        if (detail.mimeType?.startsWith("video/")) {
+            const video = document.createElement("video");
+            video.setAttribute("src", detail.src);
+            video.setAttribute("controls", "");
+            return video;
+        }
+
+        if (detail.mimeType?.startsWith("audio/")) {
+            const audio = document.createElement("audio");
+            audio.setAttribute("src", detail.src);
+            audio.setAttribute("controls", "");
+            return audio;
+        }
+
+        const link = document.createElement("a");
+        link.setAttribute("href", detail.src);
+        link.textContent = detail.label;
+        return link;
     }
 
     private _expandSnippetReferences(fragment: DocumentFragment): void {

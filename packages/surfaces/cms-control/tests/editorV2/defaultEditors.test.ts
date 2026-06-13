@@ -10,6 +10,7 @@ import {
     CodeEditor,
     ContainerEditor,
     GridEditor,
+    ImageEditor,
     ListEditor,
     ListItemEditor,
     ParagraphEditor,
@@ -53,6 +54,7 @@ describe("editor v2 default editors", () => {
         expect(new SpanEditor(target("span")).getTextCapability()?.format).toBe("richtext");
         expect(new CodeEditor(target("code")).getTextCapability()?.format).toBe("text");
         expect(new QuoteEditor(target("blockquote")).getTextCapability()?.format).toBe("richtext");
+        expect(new ImageEditor(target("img")).getSettings()[0]?.label).toBe("Image");
         expect(new ListEditor(target("ul")).getSettings()[0]?.label).toBe("List");
         expect(new ListItemEditor(target("li")).getSettings()[0]?.label).toBe("List item");
     });
@@ -91,6 +93,7 @@ describe("editor v2 default editors", () => {
             },
         ]);
         expect(new ParagraphEditor(target("p")).getContentSlots()).toEqual([]);
+        expect(new ImageEditor(target("img")).getContentSlots()).toEqual([]);
         expect(new SpanEditor(target("span")).getContentSlots()).toEqual([]);
         expect(new CodeEditor(target("code")).getContentSlots()).toEqual([]);
         expect(new QuoteEditor(target("blockquote")).getContentSlots()).toEqual([]);
@@ -137,6 +140,41 @@ describe("editor v2 default editors", () => {
             dynamic: true,
         });
         expect(new CardEditor(target("p9r-card")).getTextCapability()).toBeNull();
+        expect(new ImageEditor(target("img")).getTextCapability()).toBeNull();
+    });
+
+    test("image editor exposes source and intrinsic attribute settings", () => {
+        expect(new ImageEditor(target("img")).getSettings()).toEqual([
+            {
+                kind: "self",
+                label: "Image",
+                settings: [
+                    {
+                        type: "page-link",
+                        label: "Source",
+                        attribute: "src",
+                        allowPage: false,
+                        allowExternal: false,
+                        allowMedia: true,
+                    },
+                    {
+                        type: "text",
+                        label: "Alt text",
+                        attribute: "alt",
+                    },
+                    {
+                        type: "text",
+                        label: "Width",
+                        attribute: "width",
+                    },
+                    {
+                        type: "text",
+                        label: "Height",
+                        attribute: "height",
+                    },
+                ],
+            },
+        ]);
     });
 
     test("grid mounts child override settings on its children", () => {
@@ -200,6 +238,7 @@ describe("editor v2 default editors", () => {
             "p9r-grid",
             CMS_SNIPPET_TAG,
             "p",
+            "img",
             "span",
             "code",
             "blockquote",
@@ -215,5 +254,9 @@ describe("editor v2 default editors", () => {
         expect(container?.editor).toBe(ContainerEditor);
         expect(container?.label).toBe("Container");
         expect(container?.category).toBe("Layout");
+        const image = catalog.find(entry => entry.tag === "img");
+        expect(image?.editor).toBe(ImageEditor);
+        expect(image?.label).toBe("Image");
+        expect(image?.category).toBe("Media");
     });
 });

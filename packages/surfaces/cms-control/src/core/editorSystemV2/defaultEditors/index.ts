@@ -3,6 +3,7 @@ export { CardEditor } from "./CardEditor";
 export { CodeEditor } from "./CodeEditor";
 export { ContainerEditor } from "./ContainerEditor";
 export { GridEditor } from "./GridEditor";
+export { ImageEditor } from "./ImageEditor";
 export { ListEditor } from "./ListEditor";
 export { ListItemEditor } from "./ListItemEditor";
 export { ParagraphEditor } from "./ParagraphEditor";

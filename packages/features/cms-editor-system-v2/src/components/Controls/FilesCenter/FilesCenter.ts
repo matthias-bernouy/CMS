@@ -1,3 +1,4 @@
+import type { MediaAccept } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
 
@@ -23,6 +24,8 @@ type BreadcrumbEntry = {
     label: string;
 };
 
+export type FilesCenterFileAccept = MediaAccept;
+
 export type FilesCenterSelectDetail = {
     id: string;
     label: string;
@@ -37,6 +40,7 @@ export class FilesCenter extends HTMLElement {
     private _selected: FileItem | null = null;
     private _wired = false;
     private _accept: ("folder" | "file")[] = ["folder", "file"];
+    private _fileAccept: FilesCenterFileAccept[] | null = null;
 
     constructor() {
         super();
@@ -47,9 +51,10 @@ export class FilesCenter extends HTMLElement {
         this._wire();
     }
 
-    show(options: { accept?: ("folder" | "file")[] } = {}): void {
+    show(options: { accept?: ("folder" | "file")[]; fileAccept?: FilesCenterFileAccept[] } = {}): void {
         this._wire();
         this._accept = options.accept ?? ["folder", "file"];
+        this._fileAccept = options.fileAccept ?? null;
         this._folder = null;
         this._trail = [{ id: null, label: "Files" }];
         this._selected = null;
@@ -120,6 +125,7 @@ export class FilesCenter extends HTMLElement {
 
         const query = this.searchInput.value.trim().toLowerCase();
         const items = this._items.filter((item) => {
+            if (item.type === "file" && !this._matchesFileAccept(item)) return false;
             if (!query) return true;
             return item.name.toLowerCase().includes(query);
         });
@@ -229,6 +235,19 @@ export class FilesCenter extends HTMLElement {
         if (item.mimeType?.startsWith("image/")) return "image";
         if (item.mimeType?.includes("pdf")) return "pdf";
         return "file";
+    }
+
+    private _matchesFileAccept(item: FileItem): boolean {
+        if (!this._fileAccept || this._fileAccept.length === 0) return true;
+
+        const mimeType = item.mimeType ?? "";
+        if (this._fileAccept.includes("image") && mimeType.startsWith("image/")) return true;
+        if (this._fileAccept.includes("svg") && mimeType === "image/svg+xml") return true;
+        if (this._fileAccept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml") return true;
+        if (this._fileAccept.includes("video") && mimeType.startsWith("video/")) return true;
+        if (this._fileAccept.includes("audio") && mimeType.startsWith("audio/")) return true;
+        if (this._fileAccept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/")) return true;
+        return false;
     }
 
     private _fileMeta(item: FileItem): string {

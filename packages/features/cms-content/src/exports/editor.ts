@@ -10,6 +10,7 @@ export {
     type EditableState,
     type EditableStateSession,
     type EditorStructureMode,
+    type MediaAccept,
     type Setting,
     type SettingSection,
     type TextCapability,

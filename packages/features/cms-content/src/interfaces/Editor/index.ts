@@ -12,6 +12,7 @@ export {
 export type {
     ContentSlot,
     ContentSlotAccept,
+    MediaAccept,
 } from "./ContentSlots";
 export type { TextCapability } from "./TextCapability";
 export type { EditorStructureMode } from "./StructureMode";

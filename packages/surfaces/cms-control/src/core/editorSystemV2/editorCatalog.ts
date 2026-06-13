@@ -11,6 +11,7 @@ import {
     CodeEditor,
     ContainerEditor,
     GridEditor,
+    ImageEditor,
     ListEditor,
     ListItemEditor,
     ParagraphEditor,
@@ -21,6 +22,7 @@ import {
 
 type NativeElementConstructorName =
     | "HTMLElement"
+    | "HTMLImageElement"
     | "HTMLLIElement"
     | "HTMLOListElement"
     | "HTMLParagraphElement"
@@ -97,6 +99,16 @@ export function createControlEditorCatalog(): EditorCatalog {
             category: "Text",
             bloc: nativeElementConstructor("HTMLParagraphElement"),
             editor: ParagraphEditor,
+        },
+        {
+            tag: "img",
+            label: "Image",
+            description: "A media image with source, alt text and intrinsic dimensions.",
+            icon: "image",
+            category: "Media",
+            subCategory: "Image",
+            bloc: nativeElementConstructor("HTMLImageElement"),
+            editor: ImageEditor,
         },
         {
             tag: "span",

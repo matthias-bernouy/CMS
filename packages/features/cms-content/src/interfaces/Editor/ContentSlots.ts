@@ -1,6 +1,15 @@
 export type ContentSlotAccept =
     | { kind: "component"; tag: string }
-    | { kind: "any-component" };
+    | { kind: "any-component" }
+    | { kind: "media"; accept?: MediaAccept[] };
+
+export type MediaAccept =
+    | "image"
+    | "bitmap"
+    | "svg"
+    | "video"
+    | "audio"
+    | "document";
 
 export type ContentSlot = {
     /**
