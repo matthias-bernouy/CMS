@@ -8,12 +8,15 @@ import {
 import {
     BindingCoreEditor,
     CardEditor,
+    CodeEditor,
     ContainerEditor,
     GridEditor,
     ListEditor,
     ListItemEditor,
     ParagraphEditor,
+    QuoteEditor,
     SnippetEditor,
+    SpanEditor,
 } from "cms-control/core/editorSystemV2/defaultEditors";
 
 type NativeElementConstructorName =
@@ -21,6 +24,8 @@ type NativeElementConstructorName =
     | "HTMLLIElement"
     | "HTMLOListElement"
     | "HTMLParagraphElement"
+    | "HTMLQuoteElement"
+    | "HTMLSpanElement"
     | "HTMLUListElement";
 
 function nativeElementConstructor(name: NativeElementConstructorName): CustomElementConstructor {
@@ -92,6 +97,36 @@ export function createControlEditorCatalog(): EditorCatalog {
             category: "Text",
             bloc: nativeElementConstructor("HTMLParagraphElement"),
             editor: ParagraphEditor,
+        },
+        {
+            tag: "span",
+            label: "Span",
+            description: "Inline rich text content.",
+            icon: "type",
+            category: "Text",
+            subCategory: "Inline",
+            bloc: nativeElementConstructor("HTMLSpanElement"),
+            editor: SpanEditor,
+        },
+        {
+            tag: "code",
+            label: "Code",
+            description: "Inline code content.",
+            icon: "code",
+            category: "Text",
+            subCategory: "Inline",
+            bloc: nativeElementConstructor("HTMLElement"),
+            editor: CodeEditor,
+        },
+        {
+            tag: "blockquote",
+            label: "Quote",
+            description: "Quoted rich text content.",
+            icon: "quote",
+            category: "Text",
+            subCategory: "Blocks",
+            bloc: nativeElementConstructor("HTMLQuoteElement"),
+            editor: QuoteEditor,
         },
         {
             tag: "ul",

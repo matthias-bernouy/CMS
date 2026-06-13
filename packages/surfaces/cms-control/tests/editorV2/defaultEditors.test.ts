@@ -7,12 +7,15 @@ import {
 } from "@bernouy/cms-content/editor";
 import {
     CardEditor,
+    CodeEditor,
     ContainerEditor,
     GridEditor,
     ListEditor,
     ListItemEditor,
     ParagraphEditor,
+    QuoteEditor,
     SnippetEditor,
+    SpanEditor,
 } from "cms-control/core/editorSystemV2/defaultEditors";
 import { createControlEditorCatalog } from "cms-control/core/editorSystemV2/editorCatalog";
 
@@ -47,6 +50,9 @@ describe("editor v2 default editors", () => {
 
     test("exposes content editor identities", () => {
         expect(new ParagraphEditor(target("p")).getTextCapability()?.format).toBe("richtext");
+        expect(new SpanEditor(target("span")).getTextCapability()?.format).toBe("richtext");
+        expect(new CodeEditor(target("code")).getTextCapability()?.format).toBe("text");
+        expect(new QuoteEditor(target("blockquote")).getTextCapability()?.format).toBe("richtext");
         expect(new ListEditor(target("ul")).getSettings()[0]?.label).toBe("List");
         expect(new ListItemEditor(target("li")).getSettings()[0]?.label).toBe("List item");
     });
@@ -85,6 +91,9 @@ describe("editor v2 default editors", () => {
             },
         ]);
         expect(new ParagraphEditor(target("p")).getContentSlots()).toEqual([]);
+        expect(new SpanEditor(target("span")).getContentSlots()).toEqual([]);
+        expect(new CodeEditor(target("code")).getContentSlots()).toEqual([]);
+        expect(new QuoteEditor(target("blockquote")).getContentSlots()).toEqual([]);
         expect(new ListItemEditor(target("li")).getContentSlots()).toEqual([]);
     });
 
@@ -105,6 +114,26 @@ describe("editor v2 default editors", () => {
             underline: true,
             link: true,
             color: true,
+            dynamic: true,
+        });
+        expect(new SpanEditor(target("span")).getTextCapability()).toEqual({
+            format: "richtext",
+            bold: true,
+            italic: true,
+            underline: true,
+            link: true,
+            dynamic: true,
+        });
+        expect(new CodeEditor(target("code")).getTextCapability()).toEqual({
+            format: "text",
+            dynamic: true,
+        });
+        expect(new QuoteEditor(target("blockquote")).getTextCapability()).toEqual({
+            format: "richtext",
+            bold: true,
+            italic: true,
+            underline: true,
+            link: true,
             dynamic: true,
         });
         expect(new CardEditor(target("p9r-card")).getTextCapability()).toBeNull();
@@ -171,6 +200,9 @@ describe("editor v2 default editors", () => {
             "p9r-grid",
             CMS_SNIPPET_TAG,
             "p",
+            "span",
+            "code",
+            "blockquote",
             "ul",
             "ol",
             "li",
