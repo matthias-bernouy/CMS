@@ -12,8 +12,8 @@ export async function renameItem(id: string, label: string): Promise<boolean> {
 }
 
 export async function deleteItem(id: string): Promise<boolean> {
-    // Recursive by default so the admin-UI's single "Delete" button stays
-    // equivalent to the prior behavior.
+    // Recursive by default so the admin UI's single "Delete" button can remove
+    // non-empty folders.
     const url = new URL(filesBase(), window.location.origin);
     url.searchParams.set("id", id);
     url.searchParams.set("recursive", "true");
@@ -74,9 +74,8 @@ export async function replaceFileContent(id: string, file: File): Promise<boolea
 }
 
 /**
- * The endpoint only accepts `name` and `parentId`. The old repository
- * contract accepted a free-form metadata bag (`alt`, tags, …); those fields
- * are silently dropped now.
+ * The endpoint only accepts `name` and `parentId`; other metadata fields are
+ * ignored by this API.
  */
 export async function saveItemMetadata(id: string, data: Record<string, string>): Promise<boolean> {
     const patch: { name?: string; parentId?: string } = {};

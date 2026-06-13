@@ -17,8 +17,6 @@ export default async function importBloc(req: Request, cms: ControlCms) {
     const viewFile = formData.get("viewJS") as File;
     const editorEntry = formData.get("editorJS");
     const editorFile = editorEntry instanceof File ? editorEntry : null;
-    const templateHtml = (formData.get("templateHtml") as string | null) || undefined;
-    const configurationHtml = (formData.get("configurationHtml") as string | null) || undefined;
     const sourceRaw = formData.get("source");
     const source = parseSourceMap(sourceRaw);
     const force = formData.get("force") === "true";
@@ -33,9 +31,7 @@ export default async function importBloc(req: Request, cms: ControlCms) {
     const validation = validateBloc({
         tag,
         viewSource,
-        ...(editorSource      !== undefined ? { editorSource }      : {}),
-        ...(templateHtml      !== undefined ? { templateHtml }      : {}),
-        ...(configurationHtml !== undefined ? { configurationHtml } : {}),
+        ...(editorSource !== undefined ? { editorSource } : {}),
     });
     if (validation.errors.length > 0) {
         return new Response(validation.errors.join("\n"), { status: 400 });

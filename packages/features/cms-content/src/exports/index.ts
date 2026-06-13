@@ -15,40 +15,6 @@ export type { TTemplate }        from "cms-content/interfaces/templates";
 export type { TSnippet }         from "cms-content/interfaces/snippets";
 export type { TSystem }          from "cms-content/interfaces/settings";
 export { DEFAULT_SHELL, composeShell } from "cms-content/interfaces/settings";
-export {
-    Editor,
-    type SettingSection,
-} from "../interfaces/Editor";
-export {
-    createEditorCatalogEntry,
-    mergeEditorCatalogs,
-} from "cms-content/core/editor/EditorCatalog";
-export type {
-    DataExpression,
-    DataField,
-    DataFieldType,
-    DataScope,
-    EditorCatalog,
-    EditorCatalogEntry,
-    EditorCatalogRegistration,
-    EditorCatalogRegistrationDefaults,
-    EditorCatalogRuntime,
-    EditorConstructor,
-    EditorDocument,
-    EditorStructureMode,
-    PageLinkSetting,
-    SchemaPickerMethod,
-    SchemaPickerSetting,
-    SegmentedSetting,
-    SelectSetting,
-    Setting,
-    SettingMetadata,
-    SettingOption,
-    SettingType,
-    TextareaSetting,
-    TextSetting,
-    ToggleSetting,
-} from "../interfaces/Editor";
 
 // ── Repository seam ────────────────────────────────────────────────────
 export type { ContentReader } from "cms-content/interfaces/ContentReader";
@@ -81,7 +47,6 @@ export { generateStyleEntry } from "cms-content/http/generateStyleEntry";
 
 // ── Constants & utils ──────────────────────────────────────────────────
 export * from "cms-content/core/constants/p9r-constants";
-export * from "cms-content/core/constants/editorAttributes";
 export * from "cms-content/core/validation/predicates";
 export * from "cms-content/core/utils/contentRefs";
 export { sanitizeDomTree } from "cms-content/core/utils/sanitizeDomTree";

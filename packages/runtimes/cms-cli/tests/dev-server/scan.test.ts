@@ -45,11 +45,11 @@ describe("scanDevBlocs", () => {
     });
 
     test("rejects manifest.json containing default-group", async () => {
-        const legacy = JSON.stringify({
-            "default-tag": "legacy", "default-group": "Old", bloc: "./Bloc.ts",
+        const manifest = JSON.stringify({
+            "default-tag": "invalid", "default-group": "Old", bloc: "./Bloc.ts",
         });
         const root = makeBlocsRoot({
-            "marketing/legacy": { "manifest.json": legacy, "Bloc.ts": "" },
+            "marketing/invalid": { "manifest.json": manifest, "Bloc.ts": "" },
         });
         const blocs = await scanDevBlocs(root, { quiet: true });
         // parseManifest swallows the throw and warns; the bloc is dropped.

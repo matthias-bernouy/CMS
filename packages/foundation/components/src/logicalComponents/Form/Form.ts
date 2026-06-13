@@ -46,7 +46,7 @@ export class Form extends HTMLElement {
         this.removeEventListener("keydown", this._handleKeydown);
     }
 
-    attributeChangedCallback(name: any, oldValue: any, newValue: any): void {
+    attributeChangedCallback(): void {
     }
 
     get redirect() { return this.getAttribute("redirect");  }

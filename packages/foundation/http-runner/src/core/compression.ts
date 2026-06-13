@@ -94,16 +94,9 @@ export function htmlCspHeader(): Record<string, string> {
     return { [cspHeaderName()]: buildCspContent() };
 }
 
-function withCspIfHtml(contentType: string): Record<string, string> {
-    if (!contentType.startsWith("text/html")) return {};
-    return htmlCspHeader();
-}
-
 /**
  * Per-call CSP header for HTML responses. Falls back to the baseline
- * (extras-empty) header when the caller doesn't provide extras — keeping
- * the legacy single-source path costless for everything that doesn't need
- * the dynamic version.
+ * (extras-empty) header when the caller doesn't provide extras.
  */
 function buildCspHeaderForEntry(contentType: string, extras?: CspExtras): Record<string, string> {
     if (!contentType.startsWith("text/html")) return {};

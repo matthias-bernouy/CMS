@@ -12,12 +12,6 @@ export type {
     RangeQuery,
 } from "../interfaces/AnalyticsStore";
 
-// ── Core (pure logic) — helpers the delivery collector uses to build events ──
-export { classifyUserAgent } from "../core/userAgent";
-export type { UserAgentClass } from "../core/userAgent";
-export { dailySalt, visitorId } from "../core/visitor";
-export { dayKey } from "../core/buckets";
-
 // ── Default implementations (instantiated in the composition root) ──
 export { InMemoryAnalyticsStore } from "../default-implementation/InMemoryAnalyticsStore";
 export { ValidatingAnalyticsStore, validateAnalyticsEvent, AnalyticsValidationError } from "../core/ValidatingAnalyticsStore";

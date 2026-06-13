@@ -6,8 +6,8 @@
  *
  * Two rules:
  *  - **Blank on miss.** A token whose path resolves nowhere in the scope chain
- *    renders empty — it's an absent optional field, like the old fetch renderer.
- *    This is safe in this runtime: a nested source's tokens are never bound by
+ *    renders empty — it's an absent optional field. This is safe in this runtime:
+ *    a nested source's tokens are never bound by
  *    an ancestor (the pass stops at the `[cms-source]` boundary), and
  *    `{{ BASE_PATH }}` is server-substituted before the client ever sees it.
  *  - **Raw, not HTML-escaped.** The resolved value is stringified as-is. Safety
@@ -33,7 +33,7 @@ export type FilterMap = Record<string, Filter>;
 const TOKEN = /\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
 
 export function interpolateString(str: string, scope: Scope, filters: FilterMap = {}): string {
-    return str.replace(TOKEN, (whole: string, path: string, filter: string | undefined) => {
+    return str.replace(TOKEN, (_whole: string, path: string, filter: string | undefined) => {
         const res = lookup(scope, path);
         if (!res.found) return ""; // absent in the whole scope chain → blank
         const fn = filter ? filters[filter] : undefined;

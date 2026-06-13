@@ -5,7 +5,7 @@ import { Component } from '@bernouy/components/base';
 import "cms-control/components/media/CardMedia/CardMedia";
 import type { MediaItem, BreadcrumbEntry } from "cms-control/components/media/GridMedia/types";
 import { uploadFiles, createFolder, fetchItems, type LocalTypeFilter } from "cms-control/components/media/GridMedia/api";
-import { renderBreadcrumb, renderGrid } from '../../media/GridMedia/view/render';
+import { renderBreadcrumb, renderGrid } from '../GridMedia/view/render';
 
 export class MediaCenter extends Component {
     private _dialog: HTMLDialogElement | null = null;

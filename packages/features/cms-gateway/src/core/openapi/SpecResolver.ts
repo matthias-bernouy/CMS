@@ -81,7 +81,7 @@ export class SpecResolver {
         return this._pickResponseSchema(found.op, status);
     }
 
-    /** Flat dotted paths into the response schema, for the richtextbar. */
+    /** Flat dotted paths into the response schema, for editor pickers. */
     getResponseFields(id: string): string[] {
         const schema = this.getResponseSchema(id);
         return schema ? flattenSchema(schema) : [];

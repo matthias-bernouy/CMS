@@ -91,59 +91,6 @@ describe("validateBloc — source patterns", () => {
     });
 });
 
-describe("validateBloc — empty p9r-comp-sync (#1)", () => {
-    test("rejects fully empty", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-comp-sync></p9r-comp-sync>`,
-        });
-        expect(r.errors).toEqual([expect.stringContaining("must contain at least one child element")]);
-    });
-
-    test("rejects whitespace-only", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-comp-sync>   \n  </p9r-comp-sync>`,
-        });
-        expect(r.errors.length).toBeGreaterThan(0);
-    });
-
-    test("rejects comments-only", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-comp-sync><!-- nothing here --></p9r-comp-sync>`,
-        });
-        expect(r.errors.length).toBeGreaterThan(0);
-    });
-
-    test("accepts non-empty", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-comp-sync><span>Click me</span></p9r-comp-sync>`,
-            templateHtml: `<slot></slot>`,
-        });
-        expect(r.errors).toHaveLength(0);
-    });
-});
-
-describe("validateBloc — required sync attrs (#5)", () => {
-    test("rejects p9r-link missing name", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-link label="Target"></p9r-link>`,
-        });
-        expect(r.errors).toEqual([expect.stringContaining(`<p9r-link> requires non-empty "name"`)]);
-    });
-
-    test("accepts p9r-link with name", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-link name="href" label="Target"></p9r-link>`,
-        });
-        expect(r.errors.filter(e => e.includes("p9r-link"))).toHaveLength(0);
-    });
-});
-
 describe("validateBloc — Location mutations (#6)", () => {
     test("rejects `location.href = …` in viewSource", () => {
         const r = validateBloc({
@@ -195,61 +142,9 @@ describe("validateBloc — Location mutations (#6)", () => {
     });
 });
 
-describe("validateBloc — slot consistency (#4)", () => {
-    test("accepts comp-sync child slot matching template", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            templateHtml:      `<div><slot name="icon-left"></slot><slot></slot></div>`,
-            configurationHtml: `<p9r-comp-sync><span>default</span><img slot="icon-left"/></p9r-comp-sync>`,
-        });
-        expect(r.errors).toHaveLength(0);
-    });
-
-    test("rejects comp-sync child targeting unknown slot", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            templateHtml:      `<slot></slot>`,
-            configurationHtml: `<p9r-comp-sync><span slot="nonexistent">x</span></p9r-comp-sync>`,
-        });
-        expect(r.errors).toEqual([expect.stringContaining(`slot "nonexistent"`)]);
-    });
-
-    test("accepts image-sync slotTarget matching template slot", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            templateHtml:      `<slot name="icon-left"></slot>`,
-            configurationHtml: `<p9r-image-sync slotTarget="icon-left" label="L"></p9r-image-sync>`,
-        });
-        expect(r.errors).toHaveLength(0);
-    });
-
-    test("rejects image-sync slotTarget without matching slot", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            templateHtml:      `<slot></slot>`,
-            configurationHtml: `<p9r-image-sync slotTarget="missing" label="L"></p9r-image-sync>`,
-        });
-        expect(r.errors).toEqual([expect.stringContaining(`slotTarget="missing"`)]);
-    });
-});
-
 describe("validateBloc — graceful degradation", () => {
     test("only tag → only tag check runs, no errors when valid", () => {
         const r = validateBloc({ tag: "my-bloc" });
-        expect(r.errors).toHaveLength(0);
-        expect(r.warnings).toEqual([
-            expect.stringContaining("configurationHtml not provided"),
-        ]);
-    });
-
-    test("config without template → slot check is skipped (warned)", () => {
-        const r = validateBloc({
-            tag: "my-bloc",
-            configurationHtml: `<p9r-comp-sync><span slot="x">y</span></p9r-comp-sync>`,
-        });
-        expect(r.warnings).toEqual([
-            expect.stringContaining("templateHtml not provided"),
-        ]);
         expect(r.errors).toHaveLength(0);
     });
 

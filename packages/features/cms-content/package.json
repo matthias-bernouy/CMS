@@ -1,16 +1,14 @@
 {
     "name": "@bernouy/cms-content",
     "version": "0.1.0",
-    "description": "The CMS content aggregate behind `CmsRepository` — pages, blocs, templates, snippets and settings (TSystem: site, editor shell, security extras, roles config), with in-memory and Mongo (`./mongo`) implementations, the theme style endpoint under `http/`, the p9r-* constants and content utils. One package because it is ONE consistency domain: entities are copied, provisioned and rendered together.",
+    "description": "The CMS content aggregate behind `CmsRepository` — pages, blocs, templates, snippets and settings (TSystem: site, editor shell, security extras, roles config), with in-memory and Mongo (`./mongo`) implementations, the theme style endpoint under `http/`, cache key builders and content utils. One package because it is ONE consistency domain: entities are copied, provisioned and rendered together.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {
         ".": "./src/exports/index.ts",
         "./editor": "./src/exports/editor.ts",
-        "./browser": "./src/exports/browser.ts",
-        "./mongo": "./src/exports/mongo.ts",
-        "./constants": "./src/exports/constants.ts"
+        "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
         "@bernouy/http-runner": "workspace:*",

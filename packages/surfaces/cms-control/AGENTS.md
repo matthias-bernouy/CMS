@@ -23,7 +23,6 @@ packages/cms-control/
 ├── index.ts                 main barrel — exports ControlCms
 ├── component.ts             /component sub-entry — view-side Bloc authoring (Component base)
 ├── editor.ts                /editor    sub-entry — editor-side Bloc authoring (Editor + registerEditor)
-├── data.ts                  /data      sub-entry — pure utility helpers for blocs
 ├── build.ts                 workspace build hook — calls prebuildControl
 ├── bunfig.toml              test setup hook (happy-dom + p9r globals)
 ├── types/                   ambient TS types (HTMLElements, w13c, endpoint, assets, …)
@@ -49,17 +48,15 @@ packages/cms-control/
     ├── components/          browser TS bundled into `control-components.js`
     │   ├── admin/           admin-page custom elements (`<cms-form>`,
     │   │                    AdminLayout, Secrets, Tokens, ProviderActions, RoleSelect, …)
-    │   ├── editor/          shared editor-adjacent UI still used by admin forms
-    │   │                    (`MediaCenter` for `<cms-media-input>`)
     │   ├── editorSystemV2/  current editor shell bootstrap
     │   ├── form/            <cms-form>, <cms-media-input>
     │   ├── media/           MediaAdmin, GridMedia, CardMedia, CropSystem, DetailMedia
-    │   ├── globals.ts       wires `window.p9r.*` constants for browser
+    │   │                    MediaCenter for `<cms-media-input>`
+    │   ├── globals.ts       exposes `window.p9r.Component` for bloc bundles
     │   └── index.ts         build entry — side-effect-imports every component (self-register)
     │
     ├── core/                non-browser business logic — used by API handlers
     │   ├── authentication/  authGuard wrapper, login page (delegated to auth-core)
-    │   ├── data/            getFields helper for editor data binding
     │   ├── dom/             BubblesEvent, buildRequestUrl, meta/basePath (browser-safe)
     │   ├── editorSystemV2/  control-owned default editors + catalog wiring
     │   ├── files/           uploadFile + media tree mutations
@@ -88,15 +85,13 @@ the local `tsconfig.json` `paths`:
 - `@bernouy/cms-control`           → `index.ts` (server-side; ControlCms)
 - `@bernouy/cms-control/component` → `component.ts` (view-side Bloc authoring — only re-exports `Component`)
 - `@bernouy/cms-control/editor`    → `editor.ts`    (editor-side Bloc authoring — `Editor`, `registerEditor`, `registerEditor_opaque`)
-- `@bernouy/cms-control/data`      → `data.ts`      (pure helpers for `BlocEditor.ts` — `getFields`)
 
 `component.ts` and `editor.ts` are isolated **by design**: the view bundle
 visitors download must never transitively reach editor code. Editor contracts
 live in `@bernouy/cms-content/editor`. Bun's
 `p9rExternalsPlugin` (from `@bernouy/cms-bloc-compile`) intercepts editor
 imports so their symbols read from `window.p9rEditor` (singleton across blocs),
-preserving `instanceof` checks across BlocEditor instances. The `data` entry is
-NOT intercepted — each call site bundles inline.
+preserving `instanceof` checks across BlocEditor instances.
 
 ## Mounting
 
@@ -191,7 +186,7 @@ Building blocks consumed by every admin page:
 
 - **`@bernouy/components`** ships every `<p9r-*>` / `<w13c-*>` admin custom element. Its `.` entry is an **IIFE bundle** — a single bare `import "@bernouy/components"` registers every tag. Never import from `@bernouy/core` for UI.
 - **`@bernouy/core`** is for infrastructure only: `Runner`, `Authentication`, `Subject`, `Middleware`, envelope crypto. Never pull UI from it.
-- **`@bernouy/cms-content/constants`** is the browser-safe sub-entry exposing `P9R_ATTR`, `P9R_MODE`, `P9R_EVENT`, `P9R_ID`, `P9R_CACHE` — imported by `src/components/globals.ts` to wire `window.p9r.*`. Don't import the main `@bernouy/cms-content` barrel from `components/` when only constants are needed.
+- **`window.p9r`** exposes the browser `Component` base class for bloc view bundles. Cache constants stay server-side and are imported directly from `@bernouy/cms-content`.
 - **`showToast`** lives at `src/core/showToast.ts`. Lazily mounts a `<p9r-toast-stack>` and calls its `push()`.
 - **Design tokens** (`--primary-base`, `--bg-surface`, `--text-main`, `--border-default`, …) come from `@bernouy/components/style.css`, exposed at `<basePath>/resources/css/cms-blocs.css`. Admin's `style.css` `@import`s it so every admin page inherits the tokens before any component renders.
 
@@ -212,8 +207,8 @@ under `src/api/editor/`.
 - **Frame loading** goes through `src/api/editor/frame.get.ts`; bloc view
   scripts, editor scripts, and binding-core runtime are served by sibling
   editor endpoints.
-- **`<cms-media-center>`** remains under `src/components/editor/MediaCenter/`
-  because it is a shared admin media picker used outside the editor shell too.
+- **`<cms-media-center>`** lives under `src/components/media/MediaCenter/`
+  because it is a shared admin media picker.
 
 ## CSS conventions
 
@@ -237,4 +232,4 @@ under `src/api/editor/`.
 - `::slotted()` for styling light DOM children from shadow DOM.
 - `:not(:has(::slotted(*)))` pattern to hide empty slot wrappers.
 - For events that need to escape shadow boundaries (form lifecycle, custom system signals), use `BubblesEvent` from `src/core/dom/BubblesEvent.ts` (extends `Event` with `bubbles: true, composed: true`).
-- A child file ≤ 100 lines and a folder ≤ 6 entries are the working maxima. Split into subfolders when crossing either, mirroring the `PageLink/`, `GridMedia/`, `ImageSync/` patterns.
+- A child file ≤ 100 lines and a folder ≤ 6 entries are the working maxima. Split into subfolders when crossing either, mirroring the `PageLink/`, `FilesCenter/`, `GridMedia/` patterns.

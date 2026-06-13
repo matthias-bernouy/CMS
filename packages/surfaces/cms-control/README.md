@@ -172,7 +172,7 @@ The auth guard (`createAuthGuard` from `@bernouy/cms-auth`) checks the
 
 ## Sub-entries for Bloc authoring
 
-Bloc files imported by `p9r` need three browser-safe entry points the
+Bloc files imported by `p9r` need two browser-safe entry points the
 visitor bundle (`Bloc.ts`) must NEVER reach editor code:
 
 - `@bernouy/cms-control/component` — `export { Component }` only.
@@ -180,13 +180,10 @@ visitor bundle (`Bloc.ts`) must NEVER reach editor code:
 - `@bernouy/cms-control/editor` — editor authoring entry for `Editor`,
   `registerEditor`, and `registerEditor_opaque`. Editor contracts live in
   `@bernouy/cms-content/editor`.
-- `@bernouy/cms-control/data` — pure utility helpers (`getFields`) that
-  `BlocEditor.ts` may pull when wiring runtime data binding.
 
 The `editor` entry is intercepted by `p9rExternalsPlugin` (in
 `@bernouy/cms-bloc-compile`) so its symbols read from `window.p9rEditor` —
-same canonical class across every bloc, preserving `instanceof` checks. The
-`data` entry is NOT intercepted; each call site bundles inline.
+same canonical class across every bloc, preserving `instanceof` checks.
 
 ---
 

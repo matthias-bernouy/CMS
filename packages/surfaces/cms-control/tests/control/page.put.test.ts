@@ -23,10 +23,10 @@ function makeRequest(body: Record<string, unknown>) {
 
 const existingPage: TPage = {
     id: "page-1",
-    path: "/old",
-    title: "Old",
-    description: "old desc",
-    content: "<p>old</p>",
+    path: "/draft",
+    title: "Draft",
+    description: "draft desc",
+    content: "<p>draft</p>",
     visible: false,
     tags: ["existing"],
 };
@@ -62,10 +62,10 @@ describe("PUT /api/page (update)", () => {
         const res = await putPage(
             makeRequest({
                 id: "page-1",
-                title: "New title",
-                path: "/new",
-                content: "<p>new</p>",
-                description: "new desc",
+                title: "Published title",
+                path: "/published",
+                content: "<p>published</p>",
+                description: "published desc",
                 visible: true,
                 tags: ["a", "b"],
             }),
@@ -75,10 +75,10 @@ describe("PUT /api/page (update)", () => {
         expect(updateCalls).toHaveLength(1);
         const updated = updateCalls[0]!;
         expect(updated.id).toBe("page-1");
-        expect(updated.title).toBe("New title");
-        expect(updated.path).toBe("/new");
-        expect(updated.content).toBe("<p>new</p>");
-        expect(updated.description).toBe("new desc");
+        expect(updated.title).toBe("Published title");
+        expect(updated.path).toBe("/published");
+        expect(updated.content).toBe("<p>published</p>");
+        expect(updated.description).toBe("published desc");
         expect(updated.visible).toBe(true);
         expect(updated.tags).toEqual(["a", "b"]);
     });

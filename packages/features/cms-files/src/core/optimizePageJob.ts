@@ -2,8 +2,7 @@ import type { CmsFilesMetadataRepository } from "cms-files/interfaces/CmsFilesMe
 import type { CmsFilesBlobStore } from "cms-files/interfaces/CmsFilesBlobStore";
 import { ensureVariants } from "cms-files/core/imageVariants";
 
-/** Placeholder width ladder (B3). B4 replaces this with headless-measured,
- *  per-image widths; `ensureVariants` already caps each rung at the source. */
+/** Default width ladder. `ensureVariants` caps each rung at the source width. */
 export const DEFAULT_LADDER = [320, 640, 960, 1280, 1920];
 
 export type OptimizeDeps = {
@@ -15,9 +14,9 @@ export type OptimizeDeps = {
 /**
  * Generate the variant ladder + manifest for each image referenced on a page —
  * the body of a background optimization job. Skips non-raster (SVG) and
- * hashless/legacy rows; `ensureVariants` is idempotent, so an image already done
- * (e.g. shared with another page) is a no-op. Best-effort per image: one failure
- * doesn't abort the rest.
+ * files without a content hash; `ensureVariants` is idempotent, so an image
+ * already done (e.g. shared with another page) is a no-op. Best-effort per
+ * image: one failure doesn't abort the rest.
  */
 export async function optimizePageImages(deps: OptimizeDeps, imageIds: string[], ladder: number[] = DEFAULT_LADDER): Promise<void> {
     for (const id of imageIds) {

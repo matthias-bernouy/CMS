@@ -1,5 +1,5 @@
 import css from "./MediaInput.css" with { type: "text" };
-import type { MediaCenter } from "cms-control/components/editor/MediaCenter/MediaCenter";
+import type { MediaCenter } from "cms-control/components/media/MediaCenter/MediaCenter";
 
 /**
  * `<cms-media-input name label value types size>` — a form-associated file

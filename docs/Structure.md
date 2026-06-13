@@ -114,9 +114,8 @@ Chaque fichier de `exports/` correspond à **un** sous-chemin déclaré dans le 
 | Fichier | Sous-chemin | Convention |
 |---|---|---|
 | `index.ts` | `.` | API publique par défaut |
-| `browser.ts` | `./browser` | sous-ensemble safe pour un bundle navigateur |
 | `mongo.ts` | `./mongo` | **isole la peerDependency `mongodb`** — non tirée si non importée |
-| `s3.ts`, `urls.ts`, `presets.ts`, `constants.ts`, `components.ts` | `./<nom>` | idem : isole une dépendance lourde ou un sous-domaine |
+| `browser.ts`, `s3.ts`, `urls.ts`, `presets.ts`, `components.ts` | `./<nom>` | isole un contrat navigateur, une dépendance lourde ou un sous-domaine |
 
 Un consommateur importe `@bernouy/cms-content` ou `@bernouy/cms-content/mongo`, jamais un
 chemin interne. C'est ce qui rend chaque entité « promouvable en package » de façon mécanique.

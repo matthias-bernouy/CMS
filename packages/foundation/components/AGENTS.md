@@ -82,10 +82,8 @@ class Component extends HTMLElement {
 - Open shadow root, every component.
 - CSS / template injection is optional — `Stack.ts` and similar passthroughs may skip it when the shadow already inherits styling.
 - **No reactive lifecycle or attribute helper.** Subclasses add what they need.
-- This base `Component` is now the single shared one. `@bernouy/cms-control/component`
-  is a compatibility alias that re-exports it (the former CMS-specific subclass and
-  its `registerCSSVariables` were folded into this base) — don't re-introduce a
-  divergent CMS `Component`.
+- This base `Component` is the single shared one. `@bernouy/cms-control/component`
+  re-exports it — don't introduce a divergent CMS `Component`.
 
 ## Registration
 

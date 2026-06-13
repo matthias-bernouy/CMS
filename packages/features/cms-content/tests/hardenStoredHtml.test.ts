@@ -15,9 +15,8 @@ function survivingHandlers(htmlOut: string): string[] {
 }
 
 /**
- * Regression suite for the stored-XSS hardening. These payloads were confirmed
- * to BYPASS the previous regex-based sanitizer (handler split by `/`, scheme
- * encoded as HTML entities); they must stay neutralized by the DOM sanitizer.
+ * Stored-XSS hardening suite. These payloads cover handler splitting with `/`
+ * and entity-encoded schemes; they must stay neutralized by the DOM sanitizer.
  */
 describe("hardenStoredHtml — neutralizes stored-XSS vectors", () => {
     test("strips <script> elements but keeps siblings", () => {

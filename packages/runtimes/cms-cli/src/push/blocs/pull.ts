@@ -18,9 +18,8 @@ type RemoteBlocSummary = { tag: string; group: string };
  * its files under `<siteDir>/blocs/<group>/<tag>/`. Blocs uploaded before
  * the source-bundle feature have no bundle — we report them under
  * `skipped` so the user knows to push them once with the new CLI to make
- * them pull-able. The `default-group` legacy field is stripped from
- * `manifest.json` on write, since the group is now carried by the
- * folder layout.
+ * them pull-able. The `default-group` field is stripped from
+ * `manifest.json` on write, since the group is carried by the folder layout.
  */
 export async function pullBlocs(adminBase: URL, token: string, siteDir: string): Promise<PullBlocsResult> {
     const out: PullBlocsResult = { pulled: [], skipped: [], failed: [] };
@@ -30,7 +29,7 @@ export async function pullBlocs(adminBase: URL, token: string, siteDir: string):
         try {
             const source = await fetchSource(adminBase, token, tag);
             if (source === null) {
-                out.skipped.push({ tag, reason: "no source bundle on the server (push it once with the new CLI)" });
+                out.skipped.push({ tag, reason: "no source bundle on the server" });
                 continue;
             }
             const target = safeJoin(siteDir, "blocs", categoryToFolder(group), tag);

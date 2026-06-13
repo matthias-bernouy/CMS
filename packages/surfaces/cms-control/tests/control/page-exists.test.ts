@@ -62,11 +62,10 @@ describe("GET /api/page-exists", () => {
 
     test("still flags the collision when current-path differs from the candidate", async () => {
         const cms = makeSystem(["/article"]);
-        // User renamed from /old to /article — /article is occupied by someone else.
         const res = await pageExists(
             makeRequest({
                 path: "/article",
-                "current-path": "/old",
+                "current-path": "/draft",
             }),
             cms,
         );

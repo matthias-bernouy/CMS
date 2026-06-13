@@ -14,11 +14,10 @@
 // ── Admin composition root ─────────────────────────────────────────────
 export { ControlCms, ControlCms as Cms } from "./src/ControlCms";
 
-// Browser-safe bloc authoring symbols live in three sub-entries:
+// Browser-safe bloc authoring symbols live in two sub-entries:
 //   • `@bernouy/cms-control/component` — exposes only `Component`.
 //   • `@bernouy/cms-control/editor`    — exposes `Editor` + `registerEditor`.
-//   • `@bernouy/cms-control/data`      — pure utility functions bundled inline.
 // Keeping them in sub-entries guarantees the view bundle visitors download
 // never drags editor-side code. The editor entry is intercepted by
 // `p9rExternalsPlugin` so its symbols read from `window.p9rEditor` (singleton
-// across blocs). The data entry is NOT intercepted.
+// across blocs).

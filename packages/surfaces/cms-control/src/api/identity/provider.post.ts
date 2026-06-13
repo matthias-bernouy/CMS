@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import type { IdentityProviderKind, NewIdentityProvider } from "@bernouy/cms-auth";
+import type { NewIdentityProvider } from "@bernouy/cms-auth";
 import { validateProviderKind } from "@bernouy/cms-auth";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import MissingParam from "cms-control/errors/Http/MissingParam";

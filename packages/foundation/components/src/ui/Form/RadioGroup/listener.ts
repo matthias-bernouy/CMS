@@ -1,4 +1,4 @@
-import { getRadios, applyValue, syncDisabled, nextRadioGroupName } from './compute';
+import { getRadios, syncDisabled, nextRadioGroupName } from './compute';
 import { emitChange } from './emit';
 
 export const syncRadios = (

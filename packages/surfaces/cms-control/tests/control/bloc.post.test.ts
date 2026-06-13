@@ -206,47 +206,6 @@ describe("bloc.post", () => {
         expect(createBlocCalls).toHaveLength(0);
     });
 
-    test("400 when configurationHtml has empty p9r-comp-sync", async () => {
-        const { cms } = makeSystem();
-        const res = await importBloc(
-            makeRequest({
-                name: "My", tag: "my-bloc", group: "g", viewJS: viewFile(),
-                configurationHtml: `<p9r-comp-sync></p9r-comp-sync>`,
-            }),
-            cms
-        );
-        expect(res.status).toBe(400);
-        expect(await res.text()).toMatch(/at least one child element/);
-    });
-
-    test("400 when slot referenced in config is missing from template", async () => {
-        const { cms } = makeSystem();
-        const res = await importBloc(
-            makeRequest({
-                name: "My", tag: "my-bloc", group: "g", viewJS: viewFile(),
-                templateHtml: `<slot></slot>`,
-                configurationHtml: `<p9r-image-sync slotTarget="ghost" label="L"></p9r-image-sync>`,
-            }),
-            cms
-        );
-        expect(res.status).toBe(400);
-        expect(await res.text()).toMatch(/slotTarget="ghost"/);
-    });
-
-    test("happy path with valid HTML pieces", async () => {
-        const { cms, createBlocCalls } = makeSystem();
-        const res = await importBloc(
-            makeRequest({
-                name: "My", tag: "my-bloc", group: "g", viewJS: viewFile(),
-                templateHtml: `<slot name="icon-left"></slot><slot></slot>`,
-                configurationHtml: `<p9r-comp-sync><span>Click me</span></p9r-comp-sync><p9r-image-sync slotTarget="icon-left" label="L"></p9r-image-sync>`,
-            }),
-            cms
-        );
-        expect(res.status).toBe(200);
-        expect(createBlocCalls).toHaveLength(1);
-    });
-
     test("passes manifest defaultContent file content to prepare_bloc", async () => {
         prepareBlocCalls.length = 0;
         const { cms, createBlocCalls } = makeSystem();

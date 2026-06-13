@@ -15,8 +15,8 @@
  *
  * `lookup` returns `{ found }` so callers can distinguish "resolved to
  * null/undefined" from "no such path in any frame". The interpolator renders
- * both as empty (an absent field blanks, like the old fetch renderer) but keeps
- * the distinction so it never runs a filter on a missing value.
+ * both as empty, but keeps the distinction so it never runs a filter on a
+ * missing value.
  *
  * Found-ness is decided at the HEAD segment: once a frame owns the head, deeper
  * missing keys yield `undefined` (found stays true) rather than bubbling to a

@@ -64,11 +64,6 @@ type SnippetDetail = SnippetListItem & {
 
 type EditorResource = "page" | "template" | "snippet";
 
-type LegacyEditorCatalogRegistration = EditorCatalogRegistration & {
-    cl?: EditorCatalogRegistration["editor"];
-    group?: string;
-};
-
 function currentPageIdentifier(): string | null {
     return new URL(window.location.href).searchParams.get("id");
 }
@@ -199,19 +194,13 @@ function installEditorCatalogRuntime(): EditorCatalogRuntime {
 
     const runtime: EditorCatalogRuntime = {
         Editor,
-        registerEditor(entry: LegacyEditorCatalogRegistration): void {
+        registerEditor(entry: EditorCatalogRegistration): void {
             try {
-                const normalizedEntry: EditorCatalogRegistration = {
-                    ...entry,
-                    editor: entry.editor ?? entry.cl,
-                    category: entry.category ?? entry.group,
-                };
-
-                entries.push(createEditorCatalogEntry(normalizedEntry, {
+                entries.push(createEditorCatalogEntry(entry, {
                     tag:         entry.tag ?? "unknown-bloc",
                     label:       entry.label ?? entry.tag ?? "Unknown bloc",
                     description: entry.description,
-                    category:    entry.category ?? entry.group,
+                    category:    entry.category,
                     defaultContent: entry.defaultContent,
                     bloc:        entry.bloc,
                 }));

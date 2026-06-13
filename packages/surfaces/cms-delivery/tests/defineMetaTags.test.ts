@@ -17,7 +17,7 @@ describe("defineMetaTags favicon", () => {
         expect(faviconHref("/.cms/files/by-id/01h-abc")).toBe("/.cms/files/by-id/01h-abc");
     });
 
-    test("a legacy `/media?...` URL is no longer rewritten (resize endpoint is gone)", () => {
+    test("keeps a plain `/media?...` favicon URL unchanged", () => {
         expect(faviconHref("/x/media?foo=1")).toBe("/x/media?foo=1");
     });
 

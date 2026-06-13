@@ -64,9 +64,7 @@ export const ICON_PARENT = `
 </svg>
 `;
 
-/** Used by both the richtextbar's caret-level dropdown and the BAG's
- *  hierarchical-action dropdown — they share an icon so the user reads both
- *  affordances as variants of the same "extension dropdown" pattern. */
+/** Used by editor controls that insert dynamic expressions. */
 export const ICON_BRACES = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/>
@@ -74,9 +72,7 @@ export const ICON_BRACES = `
 </svg>
 `;
 
-/** Icon for the richtextbar's data-source group header — distinguishes
- *  data-extension fields (resolved against an ancestor data bloc's
- *  schema) from regular richtextbar extensions. */
+/** Icon for data-source controls. */
 export const ICON_DATABASE = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <ellipse cx="12" cy="5" rx="9" ry="3"/>

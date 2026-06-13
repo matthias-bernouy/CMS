@@ -5,7 +5,6 @@ import css from './style.css' with { type: 'text' };
 
 export class Progress extends Component {
 
-    private _bar: HTMLElement | null;
     private _label: HTMLElement | null;
     private _root: HTMLElement | null;
 
@@ -18,7 +17,6 @@ export class Progress extends Component {
             css,
             template: template as unknown as string,
         });
-        this._bar = this.shadowRoot?.querySelector('.bar') ?? null;
         this._label = this.shadowRoot?.querySelector('.label') ?? null;
         this._root = this.shadowRoot?.querySelector('.progress') ?? null;
     }

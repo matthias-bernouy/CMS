@@ -12,10 +12,6 @@ export type BuiltBloc = {
     folder: string;
     viewJS: string;
     editorJS: string | null;
-    /** Original source/HTML kept around so the upload form can ship them
-     *  to the server for defense-in-depth validation. */
-    templateHtml?: string;
-    configurationHtml?: string;
 };
 
 const buildOptions = (entry: string) => ({
@@ -55,19 +51,15 @@ registerEditor_opaque();
 `;
 
 export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
-    const [viewSource, editorSource, templateHtml, configurationHtml] = await Promise.all([
+    const [viewSource, editorSource] = await Promise.all([
         readFile(bloc.entry, "utf-8").catch(() => undefined),
         bloc.editorEntry ? readFile(bloc.editorEntry, "utf-8").catch(() => undefined) : Promise.resolve(undefined),
-        bloc.templatePath ? readFile(bloc.templatePath, "utf-8").catch(() => undefined) : Promise.resolve(undefined),
-        bloc.configurationPath ? readFile(bloc.configurationPath, "utf-8").catch(() => undefined) : Promise.resolve(undefined),
     ]);
 
     const validation = validateBloc({
         tag: bloc.tag,
-        ...(viewSource        !== undefined ? { viewSource }        : {}),
-        ...(editorSource      !== undefined ? { editorSource }      : {}),
-        ...(templateHtml      !== undefined ? { templateHtml }      : {}),
-        ...(configurationHtml !== undefined ? { configurationHtml } : {}),
+        ...(viewSource   !== undefined ? { viewSource }   : {}),
+        ...(editorSource !== undefined ? { editorSource } : {}),
     });
     if (validation.errors.length > 0) {
         throw new Error(`Validation failed for ${bloc.tag}:\n${validation.errors.map(e => "    • " + e).join("\n")}`);
@@ -104,8 +96,6 @@ export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
         folder:      bloc.folder,
         viewJS,
         editorJS,
-        ...(templateHtml      !== undefined ? { templateHtml }      : {}),
-        ...(configurationHtml !== undefined ? { configurationHtml } : {}),
     };
 }
 

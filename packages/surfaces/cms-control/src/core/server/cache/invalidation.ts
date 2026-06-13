@@ -6,7 +6,7 @@ import { cmsFilesByIdRef } from "@bernouy/cms-files";
  * Invalidate every cached rendered page that references a given bloc tag —
  * either directly in its content or transitively via a snippet that
  * contains the bloc. Called after a bloc is re-imported so the HTML — which
- * now points at an obsolete `?v=<hash>` for that bloc — is regenerated on
+ * now points at a stale `?v=<hash>` for that bloc — is regenerated on
  * the next hit.
  *
  * Pages that don't use the bloc are left untouched so they keep serving

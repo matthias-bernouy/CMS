@@ -33,9 +33,6 @@ export class LocalKekProvider implements KekProvider {
 
 /**
  * Serialize an `EncryptedBlob` to a single string `<iv-b64>.<ct-b64>`.
- * Public so consumers that have a legacy schema with separate `iv` /
- * `ciphertext` Buffer fields can build the canonical wrapped string for
- * the new shape (helps backward-compat at the storage layer).
  */
 export function serializeBlob(blob: EncryptedBlob): string {
     return `${blob.iv.toString("base64")}.${blob.ciphertext.toString("base64")}`;

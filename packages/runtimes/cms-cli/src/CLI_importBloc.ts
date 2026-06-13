@@ -213,8 +213,6 @@ async function pushBloc(adminBase: URL, token: string, bloc: BuiltBloc, force: b
             new File([bloc.editorJS], `${bloc.tag}Editor.js`, { type: "application/javascript" }),
         );
     }
-    if (bloc.templateHtml      !== undefined) form.append("templateHtml",      bloc.templateHtml);
-    if (bloc.configurationHtml !== undefined) form.append("configurationHtml", bloc.configurationHtml);
 
     const source = await bundleBlocSource(bloc.folder);
     if (Object.keys(source).length > 0) form.append("source", JSON.stringify(source));

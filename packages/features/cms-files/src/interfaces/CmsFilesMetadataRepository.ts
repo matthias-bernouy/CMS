@@ -35,7 +35,8 @@ export type FileItem = BaseItem & {
     mimeType:    string;
     /** sha256-hex of the bytes. Changes on every content edit → the cache token
      *  (`?v=<contentHash>`) the renderer appends to a `by-id` URL so an in-place
-     *  update busts the immutable cache. Optional: legacy rows may predate it. */
+     *  update busts the immutable cache. Optional for files whose content hash
+     *  has not been indexed yet. */
     contentHash?: string;
 };
 

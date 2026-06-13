@@ -45,7 +45,7 @@ describe("buildCspContent", () => {
         expect(csp).toContain("media-src 'self' https://cdn.example.com");
     });
 
-    test("baseline output (no extras) matches the legacy hardcoded constant", () => {
+    test("baseline output (no extras) matches the canonical constant", () => {
         const expected =
             "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; " +
             "img-src 'self' data: https: blob:; " +

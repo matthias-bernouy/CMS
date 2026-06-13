@@ -6,8 +6,7 @@
     "type": "module",
     "main": "./src/exports/index.ts",
     "exports": {
-        ".": "./src/exports/index.ts",
-        "./browser": "./src/exports/browser.ts"
+        ".": "./src/exports/index.ts"
     },
     "dependencies": {
         "@bernouy/cms-content": "workspace:*"

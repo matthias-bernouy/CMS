@@ -60,8 +60,8 @@ export class MongoCmsRepository implements CmsRepository {
      * identifier through.
      */
     async init(): Promise<void> {
-        // Backfill before indexing — legacy templates created prior to PR 2
-        // have no `identifier` field, which collides on the unique index.
+        // Normalize missing identifiers before indexing to avoid collisions on
+        // the unique index.
         // Default the identifier to the doc id (UUID, already kebab-shaped).
         await this.templates.updateMany(
             { $or: [{ identifier: { $exists: false } }, { identifier: null }, { identifier: "" }] } as never,

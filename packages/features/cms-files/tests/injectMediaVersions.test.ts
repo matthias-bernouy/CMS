@@ -36,7 +36,7 @@ describe("injectMediaVersions", () => {
         expect(out).toContain(`href="/.cms/files/by-id/fav?v=h2"`);
     });
 
-    test("a legacy file with no contentHash is left unversioned", async () => {
+    test("a file with no contentHash is left unversioned", async () => {
         const out = await render(`<img src="/.cms/files/by-id/abc">`, stubFiles({ abc: undefined }));
         expect(out).toContain(`src="/.cms/files/by-id/abc"`);
         expect(out).not.toContain("?v=");

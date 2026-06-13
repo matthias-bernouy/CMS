@@ -7,10 +7,6 @@ export default class CmsForm extends CustomHTMLElement {
 
     private _nativeForm: HTMLFormElement | null = null;
 
-    static override get observedAttributes(): string[] {
-        return [ "redirect", "target", "method", "emit" ]
-    }
-
     private _handleInternalSubmit = (e: Event) => {
         onSubmit(e as SubmitEvent, this);
     }
@@ -47,7 +43,7 @@ export default class CmsForm extends CustomHTMLElement {
         this.removeEventListener("keydown", this._handleKeydown);
     }
 
-    override attributeChangedCallback(name: any, oldValue: any, newValue: any): void {
+    override attributeChangedCallback(): void {
     }
 
     get redirect() { return this.getAttribute("redirect");  }

@@ -4,20 +4,13 @@ import {
     Alert,
     Avatar,
     Badge,
-    Breadcrumb,
-    BreadcrumbItem,
     Button,
     Card,
     Checkbox,
     Container,
-    Divider,
     Form as BlocsForm,
-    FormDialog,
-    FormSection,
     Grid,
-    HorizontalActionGroup,
     IconButton,
-    InputFile,
     LateralDialog,
     LateralMenu,
     LateralMenuItem,
@@ -25,20 +18,9 @@ import {
     Modal,
     OpenModal,
     P9rInput,
-    P9rRange,
     P9rSelect,
-    P9rSizesSelect,
-    Pagination,
-    Progress,
-    Radio,
-    RadioGroup,
     SegmentedSwitch,
-    Skeleton,
-    Spinner,
     Stack,
-    Step,
-    Stepper,
-    Switch,
     TabPanel,
     Table,
     TableCell,
@@ -50,7 +32,6 @@ import {
     Textarea,
     Toast,
     ToastStack,
-    Tooltip,
     Stat,
     LineChart,
     BarList,
@@ -68,20 +49,13 @@ define("p9r-accordion-item", AccordionItem);
 define("p9r-alert", Alert);
 define("p9r-avatar", Avatar);
 define("p9r-badge", Badge);
-define("p9r-breadcrumb", Breadcrumb);
-define("p9r-breadcrumb-item", BreadcrumbItem);
 define("p9r-button", Button);
 define("p9r-card", Card);
 define("w13c-checkbox", Checkbox);
 define("p9r-container", Container);
-define("p9r-divider", Divider);
 define("w13c-form", BlocsForm);
-define("p9r-form-dialog", FormDialog);
 define("p9r-grid", Grid);
-define("p9r-section", FormSection);
-define("p9r-horizontal-action-group", HorizontalActionGroup);
 define("p9r-icon-button", IconButton);
-define("w13c-input-file", InputFile);
 define("w13c-lateral-dialog", LateralDialog);
 define("w13c-lateral-menu", LateralMenu);
 define("w13c-lateral-menu-item", LateralMenuItem);
@@ -89,20 +63,9 @@ define("w13c-left-menu-layout", LeftMenuLayout);
 define("p9r-modal", Modal);
 define("p9r-open-modal", OpenModal);
 define("p9r-input", P9rInput);
-define("p9r-range", P9rRange);
 define("p9r-select", P9rSelect);
-define("p9r-sizes-select", P9rSizesSelect);
-define("p9r-pagination", Pagination);
-define("p9r-progress", Progress);
-define("p9r-radio", Radio);
-define("p9r-radio-group", RadioGroup);
 define("p9r-segmented-switch", SegmentedSwitch);
-define("p9r-skeleton", Skeleton);
-define("p9r-spinner", Spinner);
 define("p9r-stack", Stack);
-define("p9r-step", Step);
-define("p9r-stepper", Stepper);
-define("p9r-switch", Switch);
 define("p9r-tab-panel", TabPanel);
 define("p9r-table", Table);
 define("p9r-cell", TableCell);
@@ -114,7 +77,6 @@ define("p9r-tag-suggest", TagSuggest);
 define("p9r-textarea", Textarea);
 define("p9r-toast", Toast);
 define("p9r-toast-stack", ToastStack);
-define("p9r-tooltip", Tooltip);
 define("p9r-stat", Stat);
 define("p9r-line-chart", LineChart);
 define("p9r-bar-list", BarList);
@@ -137,7 +99,6 @@ import "./admin/Tokens/TokenCreate"
 import "./admin/Secrets/Secrets"
 
 // Editor
-import "./editor/MediaCenter/MediaCenter"
 import "./editorSystemV2/bootstrap"
 
 // Medias
@@ -146,6 +107,7 @@ import "./media/CropSystem/CropSystem"
 import "./media/DetailMedia/DetailMedia"
 import "./media/GridMedia/GridMedia"
 import "./media/MediaAdmin/MediaAdmin"
+import "./media/MediaCenter/MediaCenter"
 
 // Form
 import "./form/Form/Form";

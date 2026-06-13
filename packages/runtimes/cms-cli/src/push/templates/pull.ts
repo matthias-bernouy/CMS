@@ -21,7 +21,7 @@ export async function pullTemplates(adminBase: URL, token: string, siteDir: stri
 
     for (const meta of list) {
         if (!meta.identifier) {
-            out.skipped.push({ reason: `template "${meta.name}" has no identifier — skipped (legacy template, manage it via the admin UI)` });
+            out.skipped.push({ reason: `template "${meta.name}" has no identifier` });
             continue;
         }
         try {
