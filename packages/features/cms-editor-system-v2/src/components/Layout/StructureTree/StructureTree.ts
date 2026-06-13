@@ -1,3 +1,4 @@
+import { CMS_SNIPPET_TAG } from "@bernouy/cms-content/editor";
 import type {
     ContentSlot,
     ContentSlotAccept,
@@ -7,6 +8,7 @@ import type {
 } from "@bernouy/cms-content/editor";
 import {
     BLOCK_PICKER_SELECT_EVENT,
+    type BlockPickerItem,
     type BlockPickerModal,
     type BlockPickerOption,
     type BlockPickerSlotGroup,
@@ -25,6 +27,7 @@ export type StructureTreeActionDetail = {
     action: StructureTreeAction;
     editor: Editor;
     entry?: EditorCatalogEntry;
+    item?: BlockPickerItem;
     slot?: string;
 };
 
@@ -36,6 +39,7 @@ export class StructureTree extends HTMLElement {
     private _nodes: EditorStructureNode[] = [];
     private _selectedEditor: Editor | null = null;
     private _catalog: EditorCatalog = [];
+    private _insertItems: BlockPickerItem[] = [];
     private _scrollSelectedIntoViewOnRender = false;
     private _pendingPickerAction: { action: "add-child" | "replace"; editor: Editor } | null = null;
     private readonly _collapsedTargets = new Set<HTMLElement>();
@@ -60,6 +64,10 @@ export class StructureTree extends HTMLElement {
 
     setCatalog(catalog: EditorCatalog): void {
         this.catalog = catalog;
+    }
+
+    setInsertItems(items: BlockPickerItem[]): void {
+        this._insertItems = items.map(item => ({ ...item }));
     }
 
     get catalog(): EditorCatalog {
@@ -262,18 +270,24 @@ export class StructureTree extends HTMLElement {
         return button;
     }
 
-    private _emitAction(action: StructureTreeAction, editor: Editor, entry?: EditorCatalogEntry, slot?: string): void {
+    private _emitAction(action: StructureTreeAction, editor: Editor, item?: BlockPickerItem, slot?: string): void {
         this.dispatchEvent(new CustomEvent<StructureTreeActionDetail>("editor-v2:structure-action", {
             bubbles: true,
             composed: true,
-            detail: { action, editor, entry, slot },
+            detail: {
+                action,
+                editor,
+                item,
+                entry: item?.kind === "block" ? item.entry : undefined,
+                slot,
+            },
         }));
     }
 
     private _childGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
         return node.editor.getContentSlots().map(slot => {
             const isFull = this._isSlotFull(node, slot);
-            const options = isFull ? [] : this._slotOptions(slot);
+            const options = isFull ? [] : this._slotOptions(slot, node);
 
             return {
                 slot: slot.slot,
@@ -291,7 +305,7 @@ export class StructureTree extends HTMLElement {
         const slot = this._slotForChild(parent, node);
         if (!slot) return [];
 
-        const options = this._slotOptions(slot);
+        const options = this._slotOptions(slot, parent, node);
 
         return [{
             slot: slot.slot,
@@ -301,15 +315,33 @@ export class StructureTree extends HTMLElement {
         }];
     }
 
-    private _slotOptions(slot: ContentSlot): BlockPickerOption[] {
-        return this._catalog.filter(entry => {
+    private _slotOptions(slot: ContentSlot, parent: EditorStructureNode, replaced?: EditorStructureNode): BlockPickerOption[] {
+        const blockOptions: BlockPickerOption[] = this._catalog.filter(entry => {
             if (entry.category === "Runtime") return false;
             return slot.accepts.some(accept => this._acceptsEntry(accept, entry));
         }).map(entry => ({
+            item: {
+                kind: "block" as const,
+                entry,
+            },
             entry,
             slot: slot.slot,
             slotLabel: slot.label,
         }));
+
+        const externalOptions: BlockPickerOption[] = this._insertItems
+            .filter(item => slot.accepts.some(accept => this._acceptsItem(accept, item)))
+            .filter(item => this._canFitItem(parent, slot, item, replaced))
+            .map(item => ({
+                item,
+                slot:      slot.slot,
+                slotLabel: slot.label,
+            }));
+
+        return [
+            ...blockOptions.filter(option => this._canFitItem(parent, slot, option.item!, replaced)),
+            ...externalOptions,
+        ];
     }
 
     private _hasEnabledGroup(groups: BlockPickerSlotGroup[]): boolean {
@@ -319,6 +351,31 @@ export class StructureTree extends HTMLElement {
     private _acceptsEntry(accept: ContentSlotAccept, entry: EditorCatalogEntry): boolean {
         if (accept.kind === "any-component") return true;
         return accept.tag.toLowerCase() === entry.tag.toLowerCase();
+    }
+
+    private _acceptsItem(accept: ContentSlotAccept, item: BlockPickerItem): boolean {
+        if (item.kind === "block") return this._acceptsEntry(accept, item.entry);
+        if (accept.kind === "any-component") return true;
+        if (item.kind === "snippet") return accept.tag.toLowerCase() === CMS_SNIPPET_TAG;
+        return false;
+    }
+
+    private _canFitItem(parent: EditorStructureNode, slot: ContentSlot, item: BlockPickerItem, replaced?: EditorStructureNode): boolean {
+        if (typeof slot.max !== "number") return true;
+
+        const replacedCount = replaced && this._slotForChild(parent, replaced) === slot ? 1 : 0;
+        return this._slotChildCount(parent, slot) - replacedCount + this._itemRootCount(item) <= slot.max;
+    }
+
+    private _itemRootCount(item: BlockPickerItem): number {
+        if (item.kind !== "template") return 1;
+
+        const template = document.createElement("template");
+        template.innerHTML = item.content;
+        const elementCount = template.content.children.length;
+        if (elementCount > 0) return elementCount;
+
+        return template.content.textContent?.trim() ? 1 : 0;
     }
 
     private _canDuplicate(node: EditorStructureNode): boolean {
@@ -370,7 +427,7 @@ export class StructureTree extends HTMLElement {
     private readonly _onBlockPickerSelect = (event: CustomEvent<BlockPickerSelectDetail>): void => {
         if (!this._pendingPickerAction) return;
         const { action, editor } = this._pendingPickerAction;
-        this._emitAction(action, editor, event.detail.option.entry, event.detail.option.slot);
+        this._emitAction(action, editor, event.detail.option.item, event.detail.option.slot);
         this._pendingPickerAction = null;
     };
 

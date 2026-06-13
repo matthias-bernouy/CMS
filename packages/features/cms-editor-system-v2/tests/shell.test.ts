@@ -1,16 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import type {
-    Editor,
     EditorCatalog,
     EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
+import { Editor } from "@bernouy/cms-content/editor";
 import type { BlockPickerSelectDetail } from "../src/components/Layout/BlockPickerModal/BlockPickerModal";
 import type { TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
 import type { EditorStructureNode } from "../src/runtime";
 
 function installDom(): void {
-    const { document, customElements, Element, HTMLElement, CustomEvent, Event } = parseHTML(`
+    const { document, customElements, Element, HTMLElement, CustomEvent, Event, Node } = parseHTML(`
         <!DOCTYPE html>
         <html>
             <body></body>
@@ -24,6 +24,7 @@ function installDom(): void {
         HTMLElement,
         CustomEvent,
         Event,
+        Node,
         requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(callback, 0),
     });
 }
@@ -61,7 +62,7 @@ describe("Shell", () => {
         const picker = new BlockPickerModal();
         const selected: string[] = [];
         picker.addEventListener(BLOCK_PICKER_SELECT_EVENT, (event) => {
-            selected.push((event as CustomEvent<BlockPickerSelectDetail>).detail.option.entry.tag);
+            selected.push((event as CustomEvent<BlockPickerSelectDetail>).detail.option.item?.kind ?? "");
         });
         document.body.append(picker);
 
@@ -79,7 +80,98 @@ describe("Shell", () => {
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
 
         expect(picker.shadowRoot!.querySelector("h3")?.textContent).toBe("Paragraph");
-        expect(selected).toEqual(["p"]);
+        expect(selected).toEqual(["block"]);
+    });
+
+    test("block picker supports template source items", async () => {
+        installDom();
+
+        const {
+            BLOCK_PICKER_SELECT_EVENT,
+            BlockPickerModal,
+        } = await import("../src/components/Layout/BlockPickerModal/BlockPickerModal");
+
+        const picker = new BlockPickerModal();
+        let selectedContent = "";
+        picker.addEventListener(BLOCK_PICKER_SELECT_EVENT, (event) => {
+            const item = (event as CustomEvent<BlockPickerSelectDetail>).detail.option.item;
+            selectedContent = item?.kind === "template" ? item.content : "";
+        });
+        document.body.append(picker);
+
+        picker.open([{
+            label: "Content",
+            options: [{
+                item: {
+                    kind:        "template",
+                    id:          "tpl-1",
+                    label:       "Hero template",
+                    description: "Reusable hero.",
+                    category:    "Marketing",
+                    content:     "<section></section>",
+                },
+                slotLabel: "Content",
+            }],
+        }], "Container");
+
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".sources .filter:nth-child(2)")!.click();
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
+
+        expect(picker.shadowRoot!.querySelector("h3")?.textContent).toBe("Hero template");
+        expect(selectedContent).toBe("<section></section>");
+    });
+
+    test("block picker hides template items that exceed slot max", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class CardEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label:   "Header",
+                    slot:    "header",
+                    max:     1,
+                    accepts: [{ kind: "any-component" as const }],
+                }];
+            }
+        }
+
+        const target = document.createElement("demo-card");
+        const editor = new CardEditor(target);
+        const node: EditorStructureNode = {
+            editor,
+            target,
+            tag:      "demo-card",
+            label:    "Card",
+            badges:   [],
+            children: [],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setInsertItems([
+            {
+                kind:    "template",
+                id:      "multi-root",
+                label:   "Multi root",
+                content: "<p>One</p><p>Two</p>",
+            },
+            {
+                kind:    "template",
+                id:      "single-root",
+                label:   "Single root",
+                content: "<p>One</p>",
+            },
+        ]);
+        tree.setStructure([node], null);
+
+        const groups = (tree as unknown as {
+            _childGroups(node: EditorStructureNode): Array<{ options: Array<{ item?: { id?: string } }> }>;
+        })._childGroups(node);
+        const optionIds = groups.flatMap(group => group.options.map(option => option.item?.id));
+
+        expect(optionIds).toContain("single-root");
+        expect(optionIds).not.toContain("multi-root");
     });
 
     test("topbar emits full and bleed viewport changes", async () => {
@@ -131,6 +223,105 @@ describe("Shell", () => {
 
         expect(shell.catalog).toEqual(catalog);
         expect(shell.getAttribute("catalog-size")).toBe("1");
+    });
+
+    test("serializes expanded snippets as snippet references", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const shell = new Shell();
+        document.body.append(shell);
+
+        const contentRoot = document.createElement("div");
+        contentRoot.setAttribute("data-cms-content", "");
+        contentRoot.innerHTML = `<w13c-snippet identifier="main-nav"><nav>Expanded</nav></w13c-snippet>`;
+        const frameDocument = {
+            querySelector: (selector: string) => selector === "[data-cms-content]" ? contentRoot : null,
+        };
+
+        (shell as unknown as { _frameDocument: typeof frameDocument })._frameDocument = frameDocument;
+
+        expect((shell as unknown as { _getContentHtml(): string })._getContentHtml())
+            .toBe(`<w13c-snippet identifier="main-nav"></w13c-snippet>`);
+    });
+
+    test("inserts template fragments into selected content slots", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        class ContainerEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label:   "Content",
+                    accepts: [{ kind: "any-component" as const }],
+                }];
+            }
+        }
+
+        class ParagraphEditor extends Editor { }
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        const contentRoot = frameDocument.createElement("div");
+        contentRoot.setAttribute("data-cms-content", "");
+        const container = frameDocument.createElement("demo-container");
+        contentRoot.append(container);
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        const structureTree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as Element & {
+            catalog?: unknown[];
+            setInsertItems?: (_items: unknown[]) => void;
+            setStructure?: () => void;
+        };
+        structureTree.setInsertItems = () => undefined;
+        structureTree.setStructure = () => undefined;
+        shell.setInsertItems([{
+            kind:       "snippet",
+            id:         "snippet-main-nav",
+            identifier: "main-nav",
+            label:      "Main nav",
+            content:    "<nav>Expanded nav</nav>",
+        }]);
+        shell.setCatalog([
+            {
+                tag:    "demo-container",
+                label:  "Container",
+                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                editor: ContainerEditor,
+            },
+            {
+                tag:    "p",
+                label:  "Paragraph",
+                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                editor: ParagraphEditor,
+            },
+        ]);
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        shell.loadDocument({ root, contentRoot });
+
+        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const parentEditor = runtime.getEditor(container);
+        if (!parentEditor) throw new Error("Missing container editor.");
+
+        (shell as unknown as {
+            _addChild(parent: Editor, item: unknown, slotName?: string): void;
+        })._addChild(parentEditor, {
+            kind:    "template",
+            id:      "tpl-hero",
+            label:   "Hero template",
+            content: `<p>Inserted from template</p><w13c-snippet identifier="main-nav"></w13c-snippet>`,
+        });
+
+        expect(container.innerHTML).toBe(`<p>Inserted from template</p><w13c-snippet identifier="main-nav"><nav>Expanded nav</nav></w13c-snippet>`);
     });
 
     test("ignores native rich text input events without a value detail", async () => {

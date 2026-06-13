@@ -13,6 +13,7 @@ import {
     type EditorDocument,
     type Setting,
     type SettingSection,
+    CMS_SNIPPET_TAG,
 } from "@bernouy/cms-content/editor";
 import {
     EditorRuntime,
@@ -47,6 +48,7 @@ import {
 } from "../../Settings/SettingsView/SettingsView";
 import type { StructureTree } from "../StructureTree/StructureTree";
 import type { StructureTreeActionDetail } from "../StructureTree/StructureTree";
+import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
 import { FrameHighlight } from "./FrameHighlight";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
@@ -115,6 +117,7 @@ type SelectOptions = {
 export class Shell extends HTMLElement {
 
     private _catalog: EditorCatalog = [];
+    private _insertItems: BlockPickerItem[] = [];
     private _runtime: EditorRuntime | null = null;
     private _frameDocument: Document | null = null;
     private _settingsMode: SettingsViewMode = "settings";
@@ -183,6 +186,11 @@ export class Shell extends HTMLElement {
         this._catalog = [...catalog];
         this.setAttribute("catalog-size", String(this._catalog.length));
         this._syncStructureTreeCatalog();
+    }
+
+    setInsertItems(items: BlockPickerItem[]): void {
+        this._insertItems = items.map(item => ({ ...item }));
+        this._syncStructureTreeInsertItems();
     }
 
     setPageConfig(config: EditorV2PageConfig): void {
@@ -288,15 +296,15 @@ export class Shell extends HTMLElement {
         if (!this._runtime) return;
         if (this._editorMode !== "edit") return;
 
-        const { action, editor, entry } = event.detail;
+        const { action, editor, entry, item } = event.detail;
         if (action === "duplicate") {
             this._duplicateEditor(editor);
         } else if (action === "delete") {
             this._deleteEditor(editor);
-        } else if (action === "replace" && entry) {
-            this._replaceEditor(editor, entry, event.detail.slot);
-        } else if (entry) {
-            this._addChild(editor, entry, event.detail.slot);
+        } else if (action === "replace" && (item || entry)) {
+            this._replaceEditor(editor, item ?? { kind: "block", entry: entry! }, event.detail.slot);
+        } else if (item || entry) {
+            this._addChild(editor, item ?? { kind: "block", entry: entry! }, event.detail.slot);
         }
     };
 
@@ -472,14 +480,15 @@ export class Shell extends HTMLElement {
         }
     }
 
-    private _addChild(parent: Editor, entry: EditorCatalogEntry, slotName?: string): void {
+    private _addChild(parent: Editor, item: BlockPickerItem, slotName?: string): void {
         const slot = this._findSlot(parent, slotName);
         if (!slot || this._isSlotFull(parent, slot)) return;
 
-        const child = parent.target.ownerDocument.createElement(entry.tag);
-        this._applySlot(child, slotName);
-        parent.target.append(child);
-        this._reloadFrameDocument(child);
+        const insertion = this._createInsertion(item, slotName);
+        if (!insertion || !this._canInsertNodeCount(parent, slot, insertion.slotElements)) return;
+
+        parent.target.append(insertion.fragment);
+        this._reloadFrameDocument(insertion.selectionTarget);
     }
 
     private _duplicateEditor(editor: Editor): void {
@@ -498,17 +507,102 @@ export class Shell extends HTMLElement {
         this._reloadFrameDocument(nextSelectionTarget);
     }
 
-    private _replaceEditor(editor: Editor, entry: EditorCatalogEntry, slotName?: string): void {
+    private _replaceEditor(editor: Editor, item: BlockPickerItem, slotName?: string): void {
         const parent = this._parentEditor(editor);
         if (!parent) return;
 
         const slot = this._findSlot(parent, slotName);
         if (!slot) return;
 
-        const replacement = editor.target.ownerDocument.createElement(entry.tag);
-        this._applySlot(replacement, slotName);
-        editor.target.replaceWith(replacement);
-        this._reloadFrameDocument(replacement);
+        const insertion = this._createInsertion(item, slotName);
+        if (!insertion || !this._canReplaceNodeCount(parent, editor, slot, insertion.slotElements)) return;
+
+        editor.target.replaceWith(insertion.fragment);
+        this._reloadFrameDocument(insertion.selectionTarget);
+    }
+
+    private _createInsertion(item: BlockPickerItem, slotName?: string): {
+        fragment: DocumentFragment;
+        selectionTarget: HTMLElement;
+        slotElements: HTMLElement[];
+    } | null {
+        const document = this._frameDocument;
+        if (!document) return null;
+
+        if (item.kind === "block") {
+            const child = document.createElement(item.entry.tag);
+            this._applySlot(child, slotName);
+            const fragment = document.createDocumentFragment();
+            fragment.append(child);
+            return {
+                fragment,
+                selectionTarget: child,
+                slotElements: [child],
+            };
+        }
+
+        if (item.kind === "snippet") {
+            const snippet = document.createElement(CMS_SNIPPET_TAG);
+            snippet.setAttribute("identifier", item.identifier);
+            snippet.innerHTML = item.content;
+            this._applySlot(snippet, slotName);
+            const fragment = document.createDocumentFragment();
+            fragment.append(snippet);
+            return {
+                fragment,
+                selectionTarget: snippet,
+                slotElements: [snippet],
+            };
+        }
+
+        const template = document.createElement("template");
+        template.innerHTML = item.content;
+        const fragment = template.content.cloneNode(true) as DocumentFragment;
+        this._expandSnippetReferences(fragment);
+        const slotElements = Array.from(fragment.children).filter(this._isElementNode) as HTMLElement[];
+        for (const child of slotElements) {
+            this._applySlot(child, slotName);
+        }
+
+        const selectionTarget = slotElements[0] ?? null;
+        if (!selectionTarget) return null;
+
+        return {
+            fragment,
+            selectionTarget,
+            slotElements,
+        };
+    }
+
+    private _expandSnippetReferences(fragment: DocumentFragment): void {
+        const snippets = this._insertItems.filter(item => item.kind === "snippet");
+        if (snippets.length === 0) return;
+
+        for (const element of Array.from(fragment.querySelectorAll(CMS_SNIPPET_TAG))) {
+            const identifier = element.getAttribute("identifier");
+            if (!identifier) continue;
+
+            const snippet = snippets.find(item => item.identifier === identifier);
+            if (!snippet) continue;
+
+            element.innerHTML = snippet.content;
+        }
+    }
+
+    private _isElementNode(node: Element): boolean {
+        return node.nodeType === Node.ELEMENT_NODE;
+    }
+
+    private _canInsertNodeCount(parent: Editor, slot: ContentSlot, insertedElements: HTMLElement[]): boolean {
+        if (typeof slot.max !== "number") return true;
+        return this._slotChildCount(parent, slot) + insertedElements.length <= slot.max;
+    }
+
+    private _canReplaceNodeCount(parent: Editor, replaced: Editor, slot: ContentSlot, insertedElements: HTMLElement[]): boolean {
+        if (typeof slot.max !== "number") return true;
+
+        const replacedCount = (replaced.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined) ? 1 : 0;
+        return this._slotChildCount(parent, slot) - replacedCount + insertedElements.length <= slot.max;
     }
 
     private _findNextSelectionTargetAfterDelete(editor: Editor): HTMLElement | null {
@@ -708,9 +802,17 @@ export class Shell extends HTMLElement {
     }
 
     private _getContentHtml(): string {
-        return this._frameDocument
+        const content = this._frameDocument
             ?.querySelector<HTMLElement>("[data-cms-content]")
-            ?.innerHTML ?? "";
+            ?.cloneNode(true) as HTMLElement | undefined;
+
+        if (!content) return "";
+
+        for (const snippet of Array.from(content.querySelectorAll(CMS_SNIPPET_TAG))) {
+            snippet.replaceChildren();
+        }
+
+        return content.innerHTML;
     }
 
     private _parseTags(value: string): string[] {
@@ -732,6 +834,7 @@ export class Shell extends HTMLElement {
         const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
         if (this._isStructureTree(tree)) {
             tree.catalog = this._catalog;
+            tree.setInsertItems(this._insertItems);
             return;
         }
 
@@ -739,12 +842,28 @@ export class Shell extends HTMLElement {
             const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
             if (this._isStructureTree(upgradedTree)) {
                 upgradedTree.catalog = this._catalog;
+                upgradedTree.setInsertItems(this._insertItems);
+            }
+        });
+    }
+
+    private _syncStructureTreeInsertItems(): void {
+        const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
+        if (this._isStructureTree(tree)) {
+            tree.setInsertItems(this._insertItems);
+            return;
+        }
+
+        customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
+            const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
+            if (this._isStructureTree(upgradedTree)) {
+                upgradedTree.setInsertItems(this._insertItems);
             }
         });
     }
 
     private _isStructureTree(value: Element | null | undefined): value is StructureTree {
-        return Boolean(value && "catalog" in value && "setStructure" in value);
+        return Boolean(value && "catalog" in value && "setStructure" in value && "setInsertItems" in value);
     }
 
     private _findStructureNodeLabel(editor: Editor): string | null {

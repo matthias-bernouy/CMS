@@ -1,17 +1,15 @@
 import type { BunPlugin } from "bun";
 
 /**
- * Bloc bundles must not re-bundle `@bernouy/components/base`, legacy component
- * aliases, or `/editor`. Those base classes are shipped once per page via
- * `src/core/global.ts`, which installs them on `window.p9r`. This plugin
- * rewrites those import specifiers to read from that global, so each
- * bloc's compiled JS contains only its own code.
+ * Bloc bundles must not re-bundle component/editor base classes. The view side
+ * reads `Component` from `window.p9r`; the editor catalog side reads the stable
+ * editor API from `window.p9rEditor`. Each bloc bundle keeps only its own code.
  */
 export const p9rExternalsPlugin: BunPlugin = {
     name: "p9r-externals",
     setup(build) {
         build.onResolve(
-            { filter: /^@bernouy\/(?:components\/base|cms(?:-control)?\/(?:component|editor))$/ },
+            { filter: /^@bernouy\/(?:components\/base|cms(?:-control)?\/component|cms-content\/editor|cms(?:-control)?\/editor)$/ },
             (args) => ({ path: args.path, namespace: "p9r-extern" }),
         );
 
@@ -28,23 +26,16 @@ export const p9rExternalsPlugin: BunPlugin = {
                         loader: "js",
                     };
                 }
-                // The shim lives inside each bloc bundle, so the post-build
-                // `.replaceAll("BE5_*_TO_BE_REPLACED", ...)` in build.ts /
-                // prepare_bloc.ts substitutes the placeholders per-bloc before
-                // they hit the canonical window.p9r.registerEditor.
                 return {
                     contents:
-                        `export const Editor = window.p9r.Editor;\n` +
-                        `export const registerEditor = (props) => window.p9r.registerEditor({\n` +
+                        `export const Editor = window.p9rEditor.Editor;\n` +
+                        `export const registerEditor = (props) => window.p9rEditor.registerEditor({\n` +
                         `    ...props,\n` +
-                        `    tag:   "BE5_TAG_TO_BE_REPLACED",\n` +
-                        `    label: "BE5_LABEL_TO_BE_REPLACED",\n` +
-                        `    group: "BE5_GROUP_TO_BE_REPLACED",\n` +
-                        `});\n` +
-                        `export const registerEditor_opaque = () => window.p9r.registerEditor_opaque({\n` +
-                        `    tag:   "BE5_TAG_TO_BE_REPLACED",\n` +
-                        `    label: "BE5_LABEL_TO_BE_REPLACED",\n` +
-                        `    group: "BE5_GROUP_TO_BE_REPLACED",\n` +
+                        `    tag:         props?.tag ?? "BE5_TAG_TO_BE_REPLACED",\n` +
+                        `    label:       props?.label ?? "BE5_LABEL_TO_BE_REPLACED",\n` +
+                        `    description: props?.description ?? "BE5_DESCRIPTION_TO_BE_REPLACED",\n` +
+                        `    category:    props?.category ?? "BE5_GROUP_TO_BE_REPLACED",\n` +
+                        `    editor:      props?.editor ?? props?.cl,\n` +
                         `});\n`,
                     loader: "js",
                 };

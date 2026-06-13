@@ -4,6 +4,7 @@ export {
     type EditorV2PageConfig,
     type EditorV2SaveDocumentDetail,
 } from "../components/Layout/Shell/Shell";
+export type { BlockPickerItem } from "../components/Layout/BlockPickerModal/BlockPickerModal";
 export {
     CMS_EDITOR_DATA_SCOPES_CHANGE_EVENT,
     CMS_EDITOR_SETTINGS_CHANGE_EVENT,
