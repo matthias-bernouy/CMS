@@ -88,6 +88,10 @@ export type EditorV2SaveDocumentDetail = {
 
 export const EDITOR_V2_SAVE_DOCUMENT_EVENT = "editor-v2:save-document";
 
+type SelectOptions = {
+    scrollStructureIntoView?: boolean;
+};
+
 export class Shell extends HTMLElement {
 
     private _catalog: EditorCatalog = [];
@@ -182,14 +186,14 @@ export class Shell extends HTMLElement {
         this._renderStructure();
         this._select(selectedTarget
             ? this._runtime.getEditor(selectedTarget) ?? this._runtime.getClosestEditor(selectedTarget) ?? null
-            : null);
+            : null, { scrollStructureIntoView: true });
     }
 
     private readonly _onSelectEditor = (event: Event): void => {
         if (this._editorMode !== "edit") return;
 
         const editor = (event as CustomEvent<{ editor: Editor }>).detail.editor;
-        this._select(editor);
+        this._select(editor, { scrollStructureIntoView: false });
     };
 
     private readonly _onSettingsTabsClick = (event: Event): void => {
@@ -344,21 +348,21 @@ export class Shell extends HTMLElement {
         event.preventDefault();
         const target = this._eventElement(event);
         const editor = this._runtime.getClosestEditor(target);
-        this._select(editor ?? null);
+        this._select(editor ?? null, { scrollStructureIntoView: true });
     };
 
     private readonly _onCanvasBackgroundClick = (): void => {
         if (!this._runtime) return;
         if (this._editorMode !== "edit") return;
 
-        this._select(null);
+        this._select(null, { scrollStructureIntoView: false });
     };
 
-    private _select(editor: Editor | null): void {
+    private _select(editor: Editor | null, options: SelectOptions = {}): void {
         if (!this._runtime) return;
 
         const selection = this._runtime.select(editor);
-        this._renderStructure();
+        this._renderStructure(options);
 
         if (!selection) {
             this._settings.setSettings([]);
@@ -600,14 +604,19 @@ export class Shell extends HTMLElement {
         return (target as Node).parentElement;
     }
 
-    private _renderStructure(): void {
+    private _renderStructure(options: SelectOptions = {}): void {
         if (!this._runtime) {
             this._structureTree.setStructure([], null, this._catalog);
             return;
         }
 
         const structure = this._runtime.getStructure();
-        this._structureTree.setStructure(structure, this._runtime.getSelection()?.editor ?? null, this._catalog);
+        this._structureTree.setStructure(
+            structure,
+            this._runtime.getSelection()?.editor ?? null,
+            this._catalog,
+            { scrollSelectedIntoView: options.scrollStructureIntoView === true },
+        );
     }
 
     private _setSelectionStatus(editor: Editor | null): void {

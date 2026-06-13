@@ -4,6 +4,7 @@ import type {
     Editor,
     EditorCatalog,
 } from "@bernouy/cms-content/editor";
+import type { EditorStructureNode } from "../src/runtime";
 
 function installDom(): void {
     const { document, customElements, Element, HTMLElement, CustomEvent, Event } = parseHTML(`
@@ -20,6 +21,7 @@ function installDom(): void {
         HTMLElement,
         CustomEvent,
         Event,
+        requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(callback, 0),
     });
 }
 
@@ -111,5 +113,45 @@ describe("Shell", () => {
         }));
 
         expect(events).toHaveLength(1);
+    });
+
+    test("structure tree only scrolls selected rows when requested", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class DemoEditor {
+            constructor(readonly target: HTMLElement) {}
+            getContentSlots() {
+                return [];
+            }
+        }
+
+        const target = document.createElement("demo-bloc");
+        const editor = new DemoEditor(target) as unknown as Editor;
+        const node: EditorStructureNode = {
+            editor,
+            target,
+            tag:      "demo-bloc",
+            label:    "Demo",
+            badges:   [],
+            children: [],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.connectedCallback();
+
+        tree.scrollTop = 120;
+        tree.setStructure([node], editor);
+        expect(tree.scrollTop).toBe(120);
+
+        let didScroll = false;
+        tree.scrollTo = () => {
+            didScroll = true;
+        };
+        tree.setStructure([node], editor, [], { scrollSelectedIntoView: true });
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(didScroll).toBe(true);
     });
 });

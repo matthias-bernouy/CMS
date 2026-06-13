@@ -28,10 +28,15 @@ export type StructureTreeActionDetail = {
     slot?: string;
 };
 
+export type StructureTreeRenderOptions = {
+    scrollSelectedIntoView?: boolean;
+};
+
 export class StructureTree extends HTMLElement {
     private _nodes: EditorStructureNode[] = [];
     private _selectedEditor: Editor | null = null;
     private _catalog: EditorCatalog = [];
+    private _scrollSelectedIntoViewOnRender = false;
     private _pendingPickerAction: { action: "add-child" | "replace"; editor: Editor } | null = null;
     private readonly _collapsedTargets = new Set<HTMLElement>();
     private readonly _expandedBadgeTargets = new Set<HTMLElement>();
@@ -69,15 +74,19 @@ export class StructureTree extends HTMLElement {
         nodes: EditorStructureNode[],
         selectedEditor: Editor | null = null,
         catalog: EditorCatalog = this._catalog,
+        options: StructureTreeRenderOptions = {},
     ): void {
         this._nodes = nodes;
         this._selectedEditor = selectedEditor;
         this._catalog = [...catalog];
+        this._scrollSelectedIntoViewOnRender = options.scrollSelectedIntoView === true;
         this._render();
     }
 
     private _render(): void {
         const tree = this.shadowRoot!.querySelector<HTMLElement>(".structure-tree")!;
+        const scrollContainer = this._scrollContainer;
+        const previousScrollTop = scrollContainer.scrollTop;
         tree.replaceChildren();
         this._contextMenu.remove();
 
@@ -93,7 +102,11 @@ export class StructureTree extends HTMLElement {
             tree.append(this._renderNode(node.item, node.depth));
         }
 
-        this._scrollSelectedIntoView();
+        if (this._scrollSelectedIntoViewOnRender) {
+            this._scrollSelectedIntoView();
+        } else {
+            scrollContainer.scrollTop = previousScrollTop;
+        }
     }
 
     private _renderNode(node: EditorStructureNode, depth: number): HTMLElement {
