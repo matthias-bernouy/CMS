@@ -7,12 +7,14 @@
 }
 
 .backdrop {
+    --block-picker-top-offset: min(8vh, 64px);
+
     position: fixed;
     inset: 0;
     z-index: 100;
     display: grid;
-    place-items: center;
-    padding: 18px;
+    place-items: start center;
+    padding: var(--block-picker-top-offset) 24px 24px;
     background: color-mix(in srgb, black 20%, transparent);
 }
 
@@ -24,8 +26,8 @@
     display: grid;
     grid-template-rows: auto auto auto minmax(0, 1fr);
     gap: 12px;
-    width: min(620px, calc(100vw - 36px));
-    max-height: min(760px, 88vh);
+    width: min(1040px, calc(100vw - 48px));
+    height: min(720px, calc(100vh - var(--block-picker-top-offset) - 24px));
     border: 1px solid var(--editor-v2-border);
     border-radius: 10px;
     background: var(--editor-v2-bg);
@@ -91,7 +93,7 @@ h2 {
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
 }
 
-.tabs {
+.slot-tabs {
     display: flex;
     gap: 5px;
     overflow-x: auto;
@@ -120,42 +122,106 @@ h2 {
 }
 
 .tab:disabled {
-    opacity: 0.46;
+    opacity: .46;
     cursor: not-allowed;
 }
 
-.content {
-    min-height: 220px;
+.body {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr) 280px;
+    gap: 12px;
+    min-height: 0;
+}
+
+.sidebar,
+.details,
+.results {
+    min-height: 0;
     overflow: auto;
 }
 
-.group {
+.sidebar {
+    display: grid;
+    align-content: start;
+    gap: 18px;
+    border-right: 1px solid var(--editor-v2-border);
+    padding-right: 12px;
+}
+
+.sidebar-section {
     display: grid;
     gap: 7px;
 }
 
-.group + .group {
-    margin-top: 16px;
-}
-
-.group-title {
+.sidebar-title {
     color: var(--editor-v2-muted);
     font-size: 10px;
     font-weight: 780;
     text-transform: uppercase;
 }
 
-.items {
+.sources,
+.categories {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 3px;
+}
+
+.filter {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     gap: 8px;
+    min-height: 28px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    padding: 0 7px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.filter:hover {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+}
+
+.filter[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 28%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+}
+
+.filter:disabled {
+    opacity: .48;
+    cursor: not-allowed;
+}
+
+.filter:disabled:hover {
+    background: transparent;
+    color: var(--editor-v2-muted);
+}
+
+.count {
+    color: var(--editor-v2-subtle);
+    font-size: 11px;
+}
+
+.results {
+    display: grid;
+    align-content: start;
+    gap: 7px;
+    padding-right: 2px;
 }
 
 .block {
     display: grid;
-    grid-template-columns: 32px minmax(0, 1fr);
-    gap: 9px;
-    min-height: 74px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 76px;
     width: 100%;
     border: 1px solid var(--editor-v2-border);
     border-radius: 8px;
@@ -169,14 +235,19 @@ h2 {
 
 .block:hover {
     border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
-    background: color-mix(in srgb, var(--editor-v2-accent) 6%, var(--editor-v2-surface));
+    background: color-mix(in srgb, var(--editor-v2-accent) 5%, var(--editor-v2-surface));
+}
+
+.block[aria-selected="true"] {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 56%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
 }
 
 .icon {
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border: 1px solid var(--editor-v2-border);
     border-radius: 7px;
     background: var(--editor-v2-bg);
@@ -206,9 +277,115 @@ h2 {
     -webkit-line-clamp: 2;
 }
 
-.empty {
-    padding: 24px 0;
+.category {
+    display: block;
+    margin-top: 6px;
+    color: var(--editor-v2-subtle);
+    font-size: 10px;
+    font-weight: 720;
+    text-transform: uppercase;
+}
+
+.details {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    border-left: 1px solid var(--editor-v2-border);
+    padding-left: 12px;
+}
+
+.preview {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 10;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--editor-v2-accent) 8%, transparent), transparent 52%),
+        var(--editor-v2-surface);
+}
+
+.preview-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 28%, var(--editor-v2-border));
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+    font-size: 15px;
+    font-weight: 780;
+}
+
+.details-eyebrow {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 780;
+    text-transform: uppercase;
+}
+
+.details h3 {
+    margin: 0;
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 18px;
+    font-weight: 780;
+}
+
+.details p {
+    margin: 0;
     color: var(--editor-v2-muted);
     font-size: 12px;
+    line-height: 1.45;
+}
+
+dl {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+dl > div {
+    display: grid;
+    gap: 2px;
+}
+
+dt {
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 780;
+    text-transform: uppercase;
+}
+
+dd {
+    margin: 0;
+    color: var(--editor-v2-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
+.insert {
+    min-height: 32px;
+    border: 1px solid var(--editor-v2-accent);
+    border-radius: 7px;
+    background: var(--editor-v2-accent);
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 730;
+    cursor: pointer;
+}
+
+.details-empty,
+.empty {
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.empty {
+    padding: 24px 0;
     text-align: center;
 }

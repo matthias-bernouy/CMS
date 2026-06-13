@@ -8,7 +8,20 @@
             <button class="close" type="button" aria-label="Close">×</button>
         </header>
         <input class="search" type="search" placeholder="Search blocks" />
-        <div class="tabs" role="tablist" aria-label="Content slots"></div>
-        <div class="content"></div>
+        <div class="slot-tabs" role="tablist" aria-label="Content slots"></div>
+        <div class="body">
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Sources</div>
+                    <div class="sources"></div>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Categories</div>
+                    <div class="categories"></div>
+                </div>
+            </aside>
+            <div class="results" role="listbox" aria-label="Available blocks"></div>
+            <aside class="details"></aside>
+        </div>
     </section>
 </div>

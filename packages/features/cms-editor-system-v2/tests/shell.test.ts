@@ -3,7 +3,9 @@ import { parseHTML } from "linkedom";
 import type {
     Editor,
     EditorCatalog,
+    EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
+import type { BlockPickerSelectDetail } from "../src/components/Layout/BlockPickerModal/BlockPickerModal";
 import type { TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
 import type { EditorStructureNode } from "../src/runtime";
 
@@ -27,6 +29,59 @@ function installDom(): void {
 }
 
 describe("Shell", () => {
+    test("block picker filters blocks by category and inserts from details", async () => {
+        installDom();
+
+        const {
+            BLOCK_PICKER_SELECT_EVENT,
+            BlockPickerModal,
+        } = await import("../src/components/Layout/BlockPickerModal/BlockPickerModal");
+
+        class DemoEditor {
+            constructor(readonly target: HTMLElement) { }
+        }
+
+        const card: EditorCatalogEntry = {
+            tag:         "p9r-card",
+            label:       "Card",
+            description: "Groups content.",
+            category:    "Layout",
+            subCategory: "Content",
+            bloc:        HTMLElement as unknown as CustomElementConstructor,
+            editor:      DemoEditor as unknown as new (target: HTMLElement) => Editor,
+        };
+        const paragraph: EditorCatalogEntry = {
+            tag:         "p",
+            label:       "Paragraph",
+            description: "Rich text.",
+            category:    "Text",
+            bloc:        HTMLElement as unknown as CustomElementConstructor,
+            editor:      DemoEditor as unknown as new (target: HTMLElement) => Editor,
+        };
+        const picker = new BlockPickerModal();
+        const selected: string[] = [];
+        picker.addEventListener(BLOCK_PICKER_SELECT_EVENT, (event) => {
+            selected.push((event as CustomEvent<BlockPickerSelectDetail>).detail.option.entry.tag);
+        });
+        document.body.append(picker);
+
+        picker.open([{
+            label: "Content",
+            options: [
+                { entry: card, slotLabel: "Content" },
+                { entry: paragraph, slotLabel: "Content" },
+            ],
+        }], "Container");
+
+        const categoryButton = Array.from(picker.shadowRoot!.querySelectorAll<HTMLButtonElement>(".categories .filter"))
+            .find(button => button.textContent?.includes("Text"));
+        categoryButton?.click();
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
+
+        expect(picker.shadowRoot!.querySelector("h3")?.textContent).toBe("Paragraph");
+        expect(selected).toEqual(["p"]);
+    });
+
     test("topbar emits full and bleed viewport changes", async () => {
         installDom();
 

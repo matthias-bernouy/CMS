@@ -5,7 +5,15 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
+export type BlockPickerItem =
+    | {
+        kind: "block";
+        entry: EditorCatalogEntry;
+    };
+
 export type BlockPickerOption = {
+    kind?: "block";
+    item?: BlockPickerItem;
     entry: EditorCatalogEntry;
     slot?: string;
     slotLabel: string;
@@ -27,6 +35,9 @@ export const BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 export class BlockPickerModal extends HTMLElement {
     private _groups: BlockPickerSlotGroup[] = [];
     private _activeSlotKey = "";
+    private _activeSource: BlockPickerItem["kind"] = "block";
+    private _activeCategory = "";
+    private _activeOption: BlockPickerOption | null = null;
 
     constructor() {
         super();
@@ -36,28 +47,30 @@ export class BlockPickerModal extends HTMLElement {
     connectedCallback(): void {
         this.closeButton.addEventListener("click", this.close);
         this.backdrop.addEventListener("click", this._onBackdropClick);
-        this.search.addEventListener("input", this._renderEntries);
+        this.search.addEventListener("input", this._onSearchInput);
         this.ownerDocument.addEventListener("keydown", this._onKeydown);
     }
 
     disconnectedCallback(): void {
         this.closeButton.removeEventListener("click", this.close);
         this.backdrop.removeEventListener("click", this._onBackdropClick);
-        this.search.removeEventListener("input", this._renderEntries);
+        this.search.removeEventListener("input", this._onSearchInput);
         this.ownerDocument.removeEventListener("keydown", this._onKeydown);
     }
 
     open(groups: BlockPickerSlotGroup[], contextLabel?: string): void {
         this._groups = groups.map(group => ({
             ...group,
-            options: [...group.options],
+            options: group.options.map(option => this._normalizeOption(option)),
         }));
         this._activeSlotKey = this._firstEnabledGroup()?.slot ?? "";
+        this._activeSource = "block";
+        this._activeCategory = "";
+        this._activeOption = null;
         this.subtitle.textContent = contextLabel ? `Choose a block to add inside ${contextLabel}.` : "Choose a block to add.";
         this.search.value = "";
         this.backdrop.hidden = false;
-        this._renderTabs();
-        this._renderEntries();
+        this._render();
         this.search.focus();
     }
 
@@ -65,17 +78,30 @@ export class BlockPickerModal extends HTMLElement {
         this.backdrop.hidden = true;
     };
 
-    private readonly _renderEntries = (): void => {
+    private readonly _onSearchInput = (): void => {
+        this._activeOption = null;
+        this._renderEntries();
+    };
+
+    private readonly _render = (): void => {
+        this._renderTabs();
+        this._renderSidebar();
+        this._renderEntries();
+    };
+
+    private _renderEntries(): void {
         const query = this.search.value.trim().toLowerCase();
         const group = this._activeGroup();
-        const options = group?.options.filter(option => this._matches(option, query)) ?? [];
-        this.content.replaceChildren();
+        const options = group?.options.filter(option => this._isVisibleOption(option, query)) ?? [];
+        this.results.replaceChildren();
 
         if (group?.disabledReason) {
             const empty = document.createElement("div");
             empty.className = "empty";
             empty.textContent = group.disabledReason;
-            this.content.append(empty);
+            this.results.append(empty);
+            this._activeOption = null;
+            this._renderDetails();
             return;
         }
 
@@ -83,29 +109,131 @@ export class BlockPickerModal extends HTMLElement {
             const empty = document.createElement("div");
             empty.className = "empty";
             empty.textContent = "No blocks available";
-            this.content.append(empty);
+            this.results.append(empty);
+            this._activeOption = null;
+            this._renderDetails();
             return;
         }
 
-        for (const [groupName, groupOptions] of this._groupOptions(options)) {
-            const group = document.createElement("section");
-            group.className = "group";
-
-            const title = document.createElement("div");
-            title.className = "group-title";
-            title.textContent = groupName;
-
-            const items = document.createElement("div");
-            items.className = "items";
-
-            for (const option of groupOptions) {
-                items.append(this._renderOption(option));
-            }
-
-            group.append(title, items);
-            this.content.append(group);
+        if (!this._activeOption || !options.includes(this._activeOption)) {
+            this._activeOption = options[0] ?? null;
         }
-    };
+
+        for (const option of options) {
+            this.results.append(this._renderOption(option));
+        }
+
+        this._renderDetails();
+    }
+
+    private _renderSidebar(): void {
+        this.sources.replaceChildren();
+        this.categories.replaceChildren();
+
+        this.sources.append(
+            this._filterButton("Blocks", this._activeSource === "block", () => {
+                this._activeSource = "block";
+                this._activeCategory = "";
+                this._renderSidebar();
+                this._renderEntries();
+            }, this._sourceCount("block")),
+            this._filterButton("Templates", false, () => undefined, 0, true),
+            this._filterButton("Snippets", false, () => undefined, 0, true),
+        );
+
+        const categories = this._categories();
+        this.categories.append(this._filterButton("All", this._activeCategory === "", () => {
+            this._activeCategory = "";
+            this._renderSidebar();
+            this._renderEntries();
+        }, this._sourceCount(this._activeSource)));
+
+        for (const category of categories) {
+            this.categories.append(this._filterButton(category, this._activeCategory === category, () => {
+                this._activeCategory = category;
+                this._renderSidebar();
+                this._renderEntries();
+            }, this._categoryCount(category)));
+        }
+    }
+
+    private _filterButton(label: string, active: boolean, onClick: () => void, count: number, disabled = false): HTMLButtonElement {
+        const button = document.createElement("button");
+        button.className = "filter";
+        button.type = "button";
+        button.disabled = disabled;
+        button.ariaPressed = String(active);
+        button.addEventListener("click", () => {
+            if (button.disabled) return;
+            onClick();
+        });
+
+        const text = document.createElement("span");
+        text.textContent = label;
+
+        const badge = document.createElement("span");
+        badge.className = "count";
+        badge.textContent = String(count);
+
+        button.append(text, badge);
+        return button;
+    }
+
+    private _renderDetails(): void {
+        this.details.replaceChildren();
+        const option = this._activeOption;
+        if (!option) {
+            const empty = document.createElement("div");
+            empty.className = "details-empty";
+            empty.textContent = "Select a block to see details.";
+            this.details.append(empty);
+            return;
+        }
+
+        const eyebrow = document.createElement("div");
+        eyebrow.className = "details-eyebrow";
+        eyebrow.textContent = "Block";
+
+        const title = document.createElement("h3");
+        title.textContent = option.entry.label;
+
+        const description = document.createElement("p");
+        description.textContent = option.entry.description ?? option.entry.tag;
+
+        const preview = document.createElement("div");
+        preview.className = "preview";
+
+        const previewIcon = document.createElement("span");
+        previewIcon.className = "preview-icon";
+        previewIcon.textContent = this._iconText(option.entry);
+
+        preview.append(previewIcon);
+
+        const meta = document.createElement("dl");
+        meta.append(
+            this._metaRow("Tag", option.entry.tag),
+            this._metaRow("Slot", option.slotLabel),
+            this._metaRow("Category", this._categoryLabel(option)),
+        );
+
+        const insert = document.createElement("button");
+        insert.className = "insert";
+        insert.type = "button";
+        insert.textContent = "Insert";
+        insert.addEventListener("click", () => this._selectOption(option));
+
+        this.details.append(preview, eyebrow, title, description, meta, insert);
+    }
+
+    private _metaRow(label: string, value: string): HTMLElement {
+        const wrapper = document.createElement("div");
+        const term = document.createElement("dt");
+        const detail = document.createElement("dd");
+        term.textContent = label;
+        detail.textContent = value;
+        wrapper.append(term, detail);
+        return wrapper;
+    }
 
     private _renderTabs(): void {
         this.tabs.replaceChildren();
@@ -123,8 +251,9 @@ export class BlockPickerModal extends HTMLElement {
             button.addEventListener("click", () => {
                 if (button.disabled) return;
                 this._activeSlotKey = slotKey;
-                this._renderTabs();
-                this._renderEntries();
+                this._activeCategory = "";
+                this._activeOption = null;
+                this._render();
             });
             this.tabs.append(button);
         }
@@ -134,14 +263,12 @@ export class BlockPickerModal extends HTMLElement {
         const button = document.createElement("button");
         button.className = "block";
         button.type = "button";
+        button.ariaSelected = String(option === this._activeOption);
         button.addEventListener("click", () => {
-            this.dispatchEvent(new CustomEvent<BlockPickerSelectDetail>(BLOCK_PICKER_SELECT_EVENT, {
-                bubbles: true,
-                composed: true,
-                detail: { option },
-            }));
-            this.close();
+            this._activeOption = option;
+            this._renderEntries();
         });
+        button.addEventListener("dblclick", () => this._selectOption(option));
 
         const icon = document.createElement("span");
         icon.className = "icon";
@@ -157,22 +284,47 @@ export class BlockPickerModal extends HTMLElement {
         description.className = "description";
         description.textContent = option.entry.description ?? option.entry.tag;
 
-        body.append(name, description);
+        const category = document.createElement("span");
+        category.className = "category";
+        category.textContent = this._categoryLabel(option);
+
+        body.append(name, description, category);
         button.append(icon, body);
 
         return button;
     }
 
-    private _groupOptions(options: BlockPickerOption[]): [string, BlockPickerOption[]][] {
-        const groups = new Map<string, BlockPickerOption[]>();
+    private _selectOption(option: BlockPickerOption): void {
+        this.dispatchEvent(new CustomEvent<BlockPickerSelectDetail>(BLOCK_PICKER_SELECT_EVENT, {
+            bubbles: true,
+            composed: true,
+            detail: { option },
+        }));
+        this.close();
+    }
 
-        for (const option of options) {
-            const category = option.entry.category ?? "Blocks";
-            const label = option.entry.subCategory ? `${category} / ${option.entry.subCategory}` : category;
-            groups.set(label, [...groups.get(label) ?? [], option]);
+    private _isVisibleOption(option: BlockPickerOption, query: string): boolean {
+        if ((option.kind ?? "block") !== this._activeSource) return false;
+        if (this._activeCategory && this._categoryLabel(option) !== this._activeCategory) return false;
+        return this._matches(option, query);
+    }
+
+    private _sourceCount(source: BlockPickerItem["kind"]): number {
+        return this._activeGroup()?.options.filter(option => (option.kind ?? "block") === source).length ?? 0;
+    }
+
+    private _categoryCount(category: string): number {
+        return this._activeGroup()?.options.filter(option => (option.kind ?? "block") === this._activeSource && this._categoryLabel(option) === category).length ?? 0;
+    }
+
+    private _categories(): string[] {
+        const categories = new Set<string>();
+        for (const option of this._activeGroup()?.options ?? []) {
+            if ((option.kind ?? "block") !== this._activeSource) continue;
+            categories.add(this._categoryLabel(option));
         }
 
-        return [...groups.entries()];
+        return [...categories].sort((a, b) => a.localeCompare(b));
     }
 
     private _matches(option: BlockPickerOption, query: string): boolean {
@@ -190,6 +342,22 @@ export class BlockPickerModal extends HTMLElement {
 
     private _iconText(entry: EditorCatalogEntry): string {
         return (entry.icon ?? entry.label).slice(0, 1).toUpperCase();
+    }
+
+    private _categoryLabel(option: BlockPickerOption): string {
+        const category = option.entry.category ?? "Blocks";
+        return option.entry.subCategory ? `${category} / ${option.entry.subCategory}` : category;
+    }
+
+    private _normalizeOption(option: BlockPickerOption): BlockPickerOption {
+        return {
+            ...option,
+            kind: "block",
+            item: {
+                kind: "block",
+                entry: option.entry,
+            },
+        };
     }
 
     private _activeGroup(): BlockPickerSlotGroup | undefined {
@@ -221,15 +389,27 @@ export class BlockPickerModal extends HTMLElement {
     }
 
     private get tabs(): HTMLElement {
-        return this.shadowRoot!.querySelector(".tabs")!;
+        return this.shadowRoot!.querySelector(".slot-tabs")!;
     }
 
     private get subtitle(): HTMLElement {
         return this.shadowRoot!.querySelector(".subtitle")!;
     }
 
-    private get content(): HTMLElement {
-        return this.shadowRoot!.querySelector(".content")!;
+    private get sources(): HTMLElement {
+        return this.shadowRoot!.querySelector(".sources")!;
+    }
+
+    private get categories(): HTMLElement {
+        return this.shadowRoot!.querySelector(".categories")!;
+    }
+
+    private get results(): HTMLElement {
+        return this.shadowRoot!.querySelector(".results")!;
+    }
+
+    private get details(): HTMLElement {
+        return this.shadowRoot!.querySelector(".details")!;
     }
 }
 
