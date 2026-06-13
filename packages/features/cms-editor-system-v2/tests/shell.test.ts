@@ -405,6 +405,101 @@ describe("Shell", () => {
         expect(control.getAttribute("value")).toBe("https://example.com");
     });
 
+    test("files center selects files by opaque id url", async () => {
+        installDom();
+        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
+
+        const calls: string[] = [];
+        globalThis.fetch = (async (url: string | URL | Request) => {
+            calls.push(String(url));
+            return new Response(JSON.stringify({
+                items: [
+                    { id: "folder-1", name: "Documents", parentId: null, type: "folder" },
+                    {
+                        id:          "file 1",
+                        name:        "Guide.pdf",
+                        parentId:    null,
+                        type:        "file",
+                        size:        1200,
+                        mimeType:    "application/pdf",
+                        contentHash: "hash",
+                    },
+                ],
+            }), {
+                headers: { "Content-Type": "application/json" },
+            });
+        }) as typeof fetch;
+
+        const { FilesCenter } = await import("../src/components/Controls/FilesCenter/FilesCenter");
+        const center = new FilesCenter();
+        const selected: string[] = [];
+        center.addEventListener("select-file", (event) => {
+            selected.push((event as CustomEvent<{ src: string }>).detail.src);
+        });
+        document.body.append(center);
+        center.connectedCallback();
+        center.show();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(calls.at(0)).toBe("/cms/api/files?accept=folder%2Cfile&sortBy=name&limit=10000");
+
+        const file = Array.from(center.shadowRoot!.querySelectorAll<HTMLButtonElement>(".item"))
+            .find(button => button.textContent?.includes("Guide.pdf"))!;
+        file.click();
+        center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
+
+        expect(selected).toEqual(["/cms/.cms/files/by-id/file%201"]);
+    });
+
+    test("page link media mode opens the files center", async () => {
+        installDom();
+        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
+
+        globalThis.fetch = (async (url: string | URL | Request) => {
+            const href = String(url);
+            if (href.includes("/api/page/links")) {
+                return new Response(JSON.stringify([]), {
+                    headers: { "Content-Type": "application/json" },
+                });
+            }
+            return new Response(JSON.stringify({
+                items: [{
+                    id:       "hero",
+                    name:     "Hero.png",
+                    parentId: null,
+                    type:     "file",
+                    mimeType: "image/png",
+                }],
+            }), {
+                headers: { "Content-Type": "application/json" },
+            });
+        }) as typeof fetch;
+
+        const { PageLink } = await import("../src/components/Controls/PageLink/PageLink");
+        const control = new PageLink();
+        control.setAttribute("allow-media", "true");
+        const values: string[] = [];
+        control.addEventListener("input", (event) => {
+            values.push((event as CustomEvent<{ value: string }>).detail.value);
+        });
+        document.body.append(control);
+        control.connectedCallback();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const mediaTab = Array.from(control.shadowRoot!.querySelectorAll<HTMLButtonElement>(".tabs button"))
+            .find(button => button.textContent === "Media")!;
+        mediaTab.click();
+        control.shadowRoot!.querySelector<HTMLButtonElement>(".file-button")!.click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const center = document.body.querySelector("cms-editor-v2-files-center")!;
+        center.shadowRoot!.querySelector<HTMLButtonElement>(".item")!.click();
+        center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
+
+        expect(values).toEqual(["/cms/.cms/files/by-id/hero"]);
+        expect(control.getAttribute("value")).toBe("/cms/.cms/files/by-id/hero");
+    });
+
     test("settings view emits page-link setting changes", async () => {
         installDom();
         document.head.innerHTML = `<meta name="basePath" content="/cms">`;

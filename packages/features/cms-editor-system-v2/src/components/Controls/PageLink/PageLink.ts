@@ -1,10 +1,11 @@
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
+import { FilesCenter, type FilesCenterSelectDetail } from "../FilesCenter/FilesCenter";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
-type LinkMode = "page" | "external";
+type LinkMode = "page" | "external" | "media";
 
 type PageRef = {
     title: string;
@@ -37,7 +38,7 @@ export class PageLink extends HTMLElement {
     }
 
     static get observedAttributes(): string[] {
-        return ["label", "hint", "value", "allow-page", "allow-external", "disabled"];
+        return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "disabled"];
     }
 
     attributeChangedCallback(): void {
@@ -59,8 +60,12 @@ export class PageLink extends HTMLElement {
 
     private _syncFromAttributes(): void {
         this._value = this.getAttribute("value") ?? "";
-        if (this._value && this._isExternal(this._value)) {
+        if (this._value && this._isMedia(this._value)) {
+            this._mode = "media";
+        } else if (this._value && this._isExternal(this._value)) {
             this._mode = "external";
+        } else if (!this._allowPage() && !this._allowExternal() && this._allowMedia()) {
+            this._mode = "media";
         } else if (!this._allowPage() && this._allowExternal()) {
             this._mode = "external";
         } else {
@@ -82,6 +87,7 @@ export class PageLink extends HTMLElement {
             if (this.disabled) return;
             this._setValue(this.externalInput.value);
         });
+        this.fileButton.addEventListener("click", () => this._openFilesCenter());
         this.pagePanel.addEventListener("focusout", () => {
             setTimeout(() => {
                 if (this.shadowRoot?.activeElement && this.pagePanel.contains(this.shadowRoot.activeElement)) return;
@@ -131,6 +137,9 @@ export class PageLink extends HTMLElement {
         if (this._allowExternal()) {
             this.tabs.append(this._tab("External", "external"));
         }
+        if (this._allowMedia()) {
+            this.tabs.append(this._tab("Media", "media"));
+        }
     }
 
     private _tab(label: string, mode: LinkMode): HTMLButtonElement {
@@ -153,8 +162,10 @@ export class PageLink extends HTMLElement {
     private _renderPanels(): void {
         this.pagePanel.hidden = this._mode !== "page" || !this._allowPage();
         this.externalPanel.hidden = this._mode !== "external" || !this._allowExternal();
+        this.mediaPanel.hidden = this._mode !== "media" || !this._allowMedia();
         this.searchInput.disabled = this.disabled;
         this.externalInput.disabled = this.disabled;
+        this.fileButton.disabled = this.disabled;
         this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
         if (this._mode === "external") this.externalInput.value = this._value;
     }
@@ -199,7 +210,7 @@ export class PageLink extends HTMLElement {
 
     private _renderSummary(): void {
         const page = this._pages.find(candidate => candidate.path === this._value);
-        this.summaryTitle.textContent = page?.title ?? (this._value ? this._modeLabel() : "No link selected");
+        this.summaryTitle.textContent = page?.title ?? (this._value ? this._summaryFallback() : "No link selected");
         this.summaryValue.textContent = this._value || "Choose a target";
         this.target.hidden = !this._value;
     }
@@ -227,6 +238,23 @@ export class PageLink extends HTMLElement {
         this._renderPages();
     }
 
+    private _openFilesCenter(): void {
+        if (this.disabled) return;
+
+        const center = new FilesCenter();
+        const cleanup = () => center.remove();
+        center.addEventListener("close", cleanup, { once: true });
+        center.addEventListener("select-file", (event) => {
+            const detail = (event as CustomEvent<FilesCenterSelectDetail>).detail;
+            if (!detail?.src) return;
+            this._mode = "media";
+            this._setValue(detail.src);
+        }, { once: true });
+
+        document.body.append(center);
+        center.show({ accept: ["folder", "file"] });
+    }
+
     private _reflectValue(value: string): void {
         this._isReflectingValue = true;
         this.setAttribute("value", value);
@@ -241,12 +269,22 @@ export class PageLink extends HTMLElement {
         return this.getAttribute("allow-external") !== "false";
     }
 
+    private _allowMedia(): boolean {
+        return this.getAttribute("allow-media") !== "false";
+    }
+
     private _isExternal(value: string): boolean {
         return /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("//");
     }
 
-    private _modeLabel(): string {
-        return this._mode === "external" ? "External URL" : "Internal page";
+    private _isMedia(value: string): boolean {
+        return value.includes("/.cms/files/by-id/");
+    }
+
+    private _summaryFallback(): string {
+        if (this._mode === "external") return "External URL";
+        if (this._mode === "media") return "File";
+        return "Internal page";
     }
 
     private _basePath(): string {
@@ -277,12 +315,20 @@ export class PageLink extends HTMLElement {
         return this.shadowRoot!.querySelector(".external-panel")!;
     }
 
+    private get mediaPanel(): HTMLElement {
+        return this.shadowRoot!.querySelector(".media-panel")!;
+    }
+
     private get searchInput(): HTMLInputElement {
         return this.shadowRoot!.querySelector(".search")!;
     }
 
     private get externalInput(): HTMLInputElement {
         return this.shadowRoot!.querySelector(".external-input")!;
+    }
+
+    private get fileButton(): HTMLButtonElement {
+        return this.shadowRoot!.querySelector(".file-button")!;
     }
 
     private get pageList(): HTMLElement {

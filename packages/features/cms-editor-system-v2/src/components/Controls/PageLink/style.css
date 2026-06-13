@@ -80,7 +80,8 @@ button {
 }
 
 .search,
-.external-input {
+.external-input,
+.file-button {
     width: 100%;
     min-height: 32px;
     border: 1px solid var(--editor-v2-border);
@@ -91,6 +92,17 @@ button {
     font-size: 12px;
     outline: none;
     padding: 0 10px;
+}
+
+.file-button {
+    cursor: pointer;
+    font-weight: 720;
+    text-align: center;
+}
+
+.file-button:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 32%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 4%, var(--editor-v2-surface));
 }
 
 .search:focus,

@@ -18,3 +18,4 @@ export {
     type RuntimeManagedEditor,
 } from "../runtime";
 export { RichTextEditor } from "../components/Controls/RichTextEditor/RichTextEditor";
+export { FilesCenter, type FilesCenterSelectDetail } from "../components/Controls/FilesCenter/FilesCenter";

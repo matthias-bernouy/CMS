@@ -1,0 +1,30 @@
+<div class="backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
+        <header class="top">
+            <div>
+                <h2 id="files-title">Choose file</h2>
+                <p>Select a file from the CMS library.</p>
+            </div>
+            <button class="icon-button close" type="button" aria-label="Close">×</button>
+        </header>
+
+        <div class="toolbar">
+            <nav class="breadcrumb" aria-label="Current folder"></nav>
+            <input class="search" type="search" placeholder="Search files" />
+        </div>
+
+        <div class="grid" role="listbox"></div>
+        <div class="empty" hidden>No files found</div>
+
+        <footer class="footer">
+            <div class="selection">
+                <strong>No file selected</strong>
+                <code>Choose a file</code>
+            </div>
+            <div class="actions">
+                <button class="secondary cancel" type="button">Cancel</button>
+                <button class="primary select" type="button" disabled>Select file</button>
+            </div>
+        </footer>
+    </section>
+</div>

@@ -193,6 +193,7 @@ export class SettingsView extends HTMLElement {
             const control = this._control("cms-editor-v2-page-link", setting);
             control.setAttribute("allow-page", String(setting.allowPage !== false));
             control.setAttribute("allow-external", String(setting.allowExternal !== false));
+            control.setAttribute("allow-media", String(setting.allowMedia !== false));
             this._applyDisabled(control, setting);
             this._wirePageLinkControl(control, setting);
             return control;
