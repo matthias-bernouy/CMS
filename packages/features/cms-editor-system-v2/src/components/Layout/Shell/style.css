@@ -48,7 +48,8 @@
 
 .structure-panel cms-editor-v2-structure-tree {
     display: block;
-    margin-top: 12px;
+    height: 100%;
+    padding-top: 12px;
 }
 
 .settings-panel {

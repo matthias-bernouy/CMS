@@ -62,6 +62,10 @@
     pointer-events: none;
 }
 
+.size-tool {
+    font-size: 15px;
+}
+
 .underline-icon {
     text-decoration: underline;
     text-underline-offset: 2px;

@@ -126,10 +126,12 @@ export class Shell extends HTMLElement {
     private _insertItems: BlockPickerItem[] = [];
     private _runtime: EditorRuntime | null = null;
     private _frameDocument: Document | null = null;
+    private _editorDocument: EditorDocument | null = null;
     private _settingsMode: SettingsViewMode = "settings";
     private _viewport: TopBarViewport = "desktop";
     private _editorMode: TopBarEditorMode = "edit";
     private _pageConfig: EditorV2PageConfig | null = null;
+    private _clipboardElement: HTMLElement | null = null;
     private readonly _stateSessions = new WeakMap<Editor, Map<string, EditableStateSession>>();
     private readonly _highlight = new FrameHighlight();
 
@@ -215,6 +217,7 @@ export class Shell extends HTMLElement {
     loadDocument(document: EditorDocument, selectedTarget: HTMLElement | null = null): void {
         this._exitAllStateSessions();
         this._runtime?.dispose();
+        this._editorDocument = document;
         this._runtime = new EditorRuntime(this._catalog);
         this._runtime.load(document);
         this._renderStructure();
@@ -302,14 +305,27 @@ export class Shell extends HTMLElement {
         if (!this._runtime) return;
         if (this._editorMode !== "edit") return;
 
-        const { action, editor, entry, item } = event.detail;
+        const { action, editor, entry, item, sourceEditor } = event.detail;
         if (action === "duplicate") {
+            if (!editor) return;
             this._duplicateEditor(editor);
         } else if (action === "delete") {
+            if (!editor) return;
             this._deleteEditor(editor);
+        } else if (action === "copy") {
+            if (!editor) return;
+            this._copyEditor(editor);
+        } else if (action === "paste-after") {
+            this._pasteAfter(editor ?? null);
+        } else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
+            this._moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
         } else if (action === "replace" && (item || entry)) {
+            if (!editor) return;
             this._replaceEditor(editor, item ?? { kind: "block", entry: entry! }, event.detail.slot);
+        } else if (action === "add-root" && (item || entry)) {
+            this._addRoot(item ?? { kind: "block", entry: entry! });
         } else if (item || entry) {
+            if (!editor) return;
             this._addChild(editor, item ?? { kind: "block", entry: entry! }, event.detail.slot);
         }
     };
@@ -325,6 +341,7 @@ export class Shell extends HTMLElement {
         if (!root || !contentRoot) {
             this._runtime?.dispose();
             this._runtime = null;
+            this._editorDocument = null;
             this._renderStructure();
             this._settings.setSettings([]);
             this._setSelectionStatus(null);
@@ -505,6 +522,16 @@ export class Shell extends HTMLElement {
         this._reloadFrameDocument(insertion.selectionTarget);
     }
 
+    private _addRoot(item: BlockPickerItem): void {
+        if (!this._editorDocument || item.kind === "media") return;
+
+        const insertion = this._createInsertion(item);
+        if (!insertion) return;
+
+        this._editorDocument.contentRoot.append(insertion.fragment);
+        this._reloadFrameDocument(insertion.selectionTarget);
+    }
+
     private _duplicateEditor(editor: Editor): void {
         if (!this._canDuplicate(editor)) return;
 
@@ -523,7 +550,10 @@ export class Shell extends HTMLElement {
 
     private _replaceEditor(editor: Editor, item: BlockPickerItem, slotName?: string): void {
         const parent = this._parentEditor(editor);
-        if (!parent) return;
+        if (!parent) {
+            this._replaceRootEditor(editor, item);
+            return;
+        }
 
         const slot = this._findSlot(parent, slotName);
         if (!slot) return;
@@ -538,6 +568,51 @@ export class Shell extends HTMLElement {
 
         editor.target.replaceWith(insertion.fragment);
         this._reloadFrameDocument(insertion.selectionTarget);
+    }
+
+    private _replaceRootEditor(editor: Editor, item: BlockPickerItem): void {
+        if (item.kind === "media") return;
+
+        const insertion = this._createInsertion(item);
+        if (!insertion) return;
+
+        editor.target.replaceWith(insertion.fragment);
+        this._reloadFrameDocument(insertion.selectionTarget);
+    }
+
+    private _copyEditor(editor: Editor): void {
+        this._clipboardElement = editor.target.cloneNode(true) as HTMLElement;
+    }
+
+    private _pasteAfter(editor: Editor | null): void {
+        if (!this._clipboardElement || !this._editorDocument) return;
+
+        const clone = this._clipboardElement.cloneNode(true) as HTMLElement;
+        if (!editor) {
+            this._editorDocument.contentRoot.append(clone);
+            this._reloadFrameDocument(clone);
+            return;
+        }
+
+        if (!this._canInsertSibling(editor, clone)) return;
+
+        editor.target.after(clone);
+        this._reloadFrameDocument(clone);
+    }
+
+    private _moveEditor(source: Editor, target: Editor, position: "before" | "after"): void {
+        if (source === target || source.target.contains(target.target)) return;
+        if (!this._canMoveEditor(source, target)) return;
+
+        this._applySlot(source.target, target.target.getAttribute("slot") ?? undefined);
+
+        if (position === "before") {
+            target.target.before(source.target);
+        } else {
+            target.target.after(source.target);
+        }
+
+        this._reloadFrameDocument(source.target);
     }
 
     private _createInsertion(item: BlockPickerItem, slotName?: string): {
@@ -746,6 +821,39 @@ export class Shell extends HTMLElement {
         if (!slot?.min) return true;
 
         return this._slotChildCount(parent, slot) > slot.min;
+    }
+
+    private _canInsertSibling(reference: Editor, insertedElement: HTMLElement): boolean {
+        const parent = this._parentEditor(reference);
+        if (!parent) {
+            this._applySlot(insertedElement, undefined);
+            return true;
+        }
+
+        const slotName = reference.target.getAttribute("slot") ?? undefined;
+        const slot = this._findSlot(parent, slotName);
+        if (!slot || !this._canInsertNodeCount(parent, slot, [insertedElement])) return false;
+
+        this._applySlot(insertedElement, slotName);
+        return true;
+    }
+
+    private _canMoveEditor(source: Editor, target: Editor): boolean {
+        if (!this._canDelete(source)) return false;
+
+        const targetParent = this._parentEditor(target);
+        if (!targetParent) return true;
+
+        const targetSlotName = target.target.getAttribute("slot") ?? undefined;
+        const targetSlot = this._findSlot(targetParent, targetSlotName);
+        if (!targetSlot) return false;
+
+        const sourceParent = this._parentEditor(source);
+        const isSameSlot = sourceParent === targetParent
+            && (source.target.getAttribute("slot") ?? undefined) === targetSlotName;
+        if (isSameSlot) return true;
+
+        return this._canInsertNodeCount(targetParent, targetSlot, [source.target]);
     }
 
     private _isSlotFull(parent: Editor, slot: ContentSlot): boolean {

@@ -10,6 +10,7 @@ export class ListItemEditor extends Editor {
             underline: true,
             link: true,
             color: true,
+            size: true,
             dynamic: true,
         };
     }

@@ -1,6 +1,7 @@
 :host {
     display: block;
     position: relative;
+    min-height: 100%;
 }
 
 * {
@@ -9,7 +10,9 @@
 
 .structure-tree {
     display: grid;
+    align-content: start;
     gap: 2px;
+    min-height: 100%;
     padding: 0 10px 14px;
 }
 
@@ -60,9 +63,27 @@
     cursor: pointer;
 }
 
+.item[draggable="true"] {
+    cursor: grab;
+}
+
+.item[draggable="true"]:active {
+    cursor: grabbing;
+}
+
 .item:hover {
     background: var(--editor-v2-surface);
     color: var(--editor-v2-text);
+}
+
+.row.drop-before .item {
+    border-top-color: var(--editor-v2-accent);
+    box-shadow: inset 0 2px 0 var(--editor-v2-accent);
+}
+
+.row.drop-after .item {
+    border-bottom-color: var(--editor-v2-accent);
+    box-shadow: inset 0 -2px 0 var(--editor-v2-accent);
 }
 
 .item.active {
@@ -116,9 +137,29 @@
 }
 
 .empty {
+    display: grid;
+    gap: 10px;
     padding: 14px 10px;
     color: var(--editor-v2-muted);
     font-size: 12px;
+}
+
+.empty button {
+    width: max-content;
+    min-height: 30px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 720;
+    padding: 0 10px;
+}
+
+.empty button:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
+    color: var(--editor-v2-accent);
 }
 
 .context-menu {

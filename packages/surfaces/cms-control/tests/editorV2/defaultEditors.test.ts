@@ -108,6 +108,7 @@ describe("editor v2 default editors", () => {
             underline: true,
             link: true,
             color: true,
+            size: true,
             dynamic: true,
         });
         expect(new ListItemEditor(target("li")).getTextCapability()).toEqual({
@@ -117,6 +118,7 @@ describe("editor v2 default editors", () => {
             underline: true,
             link: true,
             color: true,
+            size: true,
             dynamic: true,
         });
         expect(new SpanEditor(target("span")).getTextCapability()).toEqual({

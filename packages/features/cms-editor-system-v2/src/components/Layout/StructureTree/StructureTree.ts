@@ -21,11 +21,21 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
-export type StructureTreeAction = "add-child" | "duplicate" | "delete" | "replace";
+export type StructureTreeAction =
+    | "add-child"
+    | "add-root"
+    | "copy"
+    | "delete"
+    | "duplicate"
+    | "move-after"
+    | "move-before"
+    | "paste-after"
+    | "replace";
 
 export type StructureTreeActionDetail = {
     action: StructureTreeAction;
-    editor: Editor;
+    editor?: Editor;
+    sourceEditor?: Editor;
     entry?: EditorCatalogEntry;
     item?: BlockPickerItem;
     slot?: string;
@@ -41,7 +51,9 @@ export class StructureTree extends HTMLElement {
     private _catalog: EditorCatalog = [];
     private _insertItems: BlockPickerItem[] = [];
     private _scrollSelectedIntoViewOnRender = false;
-    private _pendingPickerAction: { action: "add-child" | "replace"; editor: Editor } | null = null;
+    private _pendingPickerAction: { action: "add-child" | "add-root" | "replace"; editor?: Editor } | null = null;
+    private _draggedNode: EditorStructureNode | null = null;
+    private _dropRow: HTMLElement | null = null;
     private readonly _collapsedTargets = new Set<HTMLElement>();
     private readonly _expandedBadgeTargets = new Set<HTMLElement>();
 
@@ -54,12 +66,16 @@ export class StructureTree extends HTMLElement {
         this.ownerDocument.addEventListener("click", this._closeContextMenu);
         this.ownerDocument.addEventListener("keydown", this._onDocumentKeydown);
         this._blockPicker.addEventListener(BLOCK_PICKER_SELECT_EVENT, this._onBlockPickerSelect as EventListener);
+        this._tree.addEventListener("click", this._onTreeClick);
+        this._tree.addEventListener("contextmenu", this._onTreeContextMenu);
     }
 
     disconnectedCallback(): void {
         this.ownerDocument.removeEventListener("click", this._closeContextMenu);
         this.ownerDocument.removeEventListener("keydown", this._onDocumentKeydown);
         this._blockPicker.removeEventListener(BLOCK_PICKER_SELECT_EVENT, this._onBlockPickerSelect as EventListener);
+        this._tree.removeEventListener("click", this._onTreeClick);
+        this._tree.removeEventListener("contextmenu", this._onTreeContextMenu);
     }
 
     setCatalog(catalog: EditorCatalog): void {
@@ -92,7 +108,7 @@ export class StructureTree extends HTMLElement {
     }
 
     private _render(): void {
-        const tree = this.shadowRoot!.querySelector<HTMLElement>(".structure-tree")!;
+        const tree = this._tree;
         const scrollContainer = this._scrollContainer;
         const previousScrollTop = scrollContainer.scrollTop;
         tree.replaceChildren();
@@ -101,7 +117,14 @@ export class StructureTree extends HTMLElement {
         if (this._nodes.length === 0) {
             const empty = document.createElement("div");
             empty.className = "empty";
-            empty.textContent = "No editable elements";
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = "Add block";
+            button.addEventListener("click", (event) => {
+                event.stopPropagation();
+                this._openRootPicker();
+            });
+            empty.append("No editable elements", button);
             tree.append(empty);
             return;
         }
@@ -140,6 +163,7 @@ export class StructureTree extends HTMLElement {
 
         const button = document.createElement("button");
         button.className = "item";
+        button.draggable = true;
         if (node.editor === this._selectedEditor) button.classList.add("selected");
         button.type = "button";
         button.addEventListener("click", () => {
@@ -154,6 +178,11 @@ export class StructureTree extends HTMLElement {
             event.stopPropagation();
             this._openContextMenu(node, event.clientX, event.clientY);
         });
+        button.addEventListener("dragstart", (event) => this._onDragStart(node, event));
+        button.addEventListener("dragover", (event) => this._onDragOver(node, row, event));
+        button.addEventListener("dragleave", () => this._clearDropRow());
+        button.addEventListener("drop", (event) => this._onDrop(node, event));
+        button.addEventListener("dragend", () => this._clearDragState());
 
         const icon = document.createElement("span");
         icon.className = "icon";
@@ -232,6 +261,8 @@ export class StructureTree extends HTMLElement {
                 this._pendingPickerAction = { action: "replace", editor: node.editor };
                 this._blockPicker.open(this._replaceGroups(node), node.label);
             }, undefined, !this._hasEnabledGroup(this._replaceGroups(node))),
+            this._contextMenuButton("Copy", () => this._emitAction("copy", node.editor)),
+            this._contextMenuButton("Paste after", () => this._emitAction("paste-after", node.editor)),
             this._contextMenuButton("Duplicate", () => this._emitAction("duplicate", node.editor), undefined, !this._canDuplicate(node)),
             this._contextMenuButton("Delete", () => this._emitAction("delete", node.editor), "danger", !this._canDelete(node)),
         );
@@ -270,18 +301,60 @@ export class StructureTree extends HTMLElement {
         return button;
     }
 
-    private _emitAction(action: StructureTreeAction, editor: Editor, item?: BlockPickerItem, slot?: string): void {
+    private _openRootContextMenu(clientX: number, clientY: number): void {
+        this._closeContextMenu();
+
+        const menu = this._contextMenu;
+        menu.replaceChildren(
+            this._contextMenuButton("Add block", () => this._openRootPicker(), undefined, !this._hasEnabledGroup(this._rootGroups())),
+            this._contextMenuButton("Paste", () => this._emitAction("paste-after")),
+        );
+
+        this.shadowRoot!.append(menu);
+        this._positionContextMenu(menu, clientX, clientY);
+    }
+
+    private _openRootPicker(): void {
+        this._pendingPickerAction = { action: "add-root" };
+        this._blockPicker.open(this._rootGroups(), "Page");
+    }
+
+    private _emitAction(action: StructureTreeAction, editor?: Editor, item?: BlockPickerItem, slot?: string, sourceEditor?: Editor): void {
         this.dispatchEvent(new CustomEvent<StructureTreeActionDetail>("editor-v2:structure-action", {
             bubbles: true,
             composed: true,
             detail: {
                 action,
                 editor,
+                sourceEditor,
                 item,
                 entry: item?.kind === "block" ? item.entry : undefined,
                 slot,
             },
         }));
+    }
+
+    private _rootGroups(): BlockPickerSlotGroup[] {
+        const options: BlockPickerOption[] = [
+            ...this._catalog.filter(entry => entry.category !== "Runtime").map(entry => ({
+                item: {
+                    kind: "block" as const,
+                    entry,
+                },
+                entry,
+                slotLabel: "Page",
+            })),
+            ...this._insertItems.filter(item => item.kind !== "media").map(item => ({
+                item,
+                slotLabel: "Page",
+            })),
+        ];
+
+        return [{
+            label: "Page",
+            disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
+            options,
+        }];
     }
 
     private _childGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
@@ -300,7 +373,7 @@ export class StructureTree extends HTMLElement {
 
     private _replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
         const parent = this._parentNode(node);
-        if (!parent) return [];
+        if (!parent) return this._rootGroups();
 
         const slot = this._slotForChild(parent, node);
         if (!slot) return [];
@@ -472,8 +545,89 @@ export class StructureTree extends HTMLElement {
     };
 
     private readonly _onDocumentKeydown = (event: KeyboardEvent): void => {
-        if (event.key === "Escape") this._closeContextMenu();
+        if (event.key === "Escape") {
+            this._closeContextMenu();
+            return;
+        }
+
+        if ((event.key === "Delete" || event.key === "Backspace") && this._selectedEditor && !this._isEditableEventTarget(event.target)) {
+            event.preventDefault();
+            this._emitAction("delete", this._selectedEditor);
+            return;
+        }
+
+        if (!event.ctrlKey && !event.metaKey) return;
+        if (this._isEditableEventTarget(event.target)) return;
+
+        const key = event.key.toLowerCase();
+        if (key === "c" && this._selectedEditor) {
+            event.preventDefault();
+            this._emitAction("copy", this._selectedEditor);
+        } else if (key === "v") {
+            event.preventDefault();
+            this._emitAction("paste-after", this._selectedEditor ?? undefined);
+        }
     };
+
+    private readonly _onTreeClick = (event: Event): void => {
+        if (event.target !== this._tree) return;
+        this._openRootPicker();
+    };
+
+    private readonly _onTreeContextMenu = (event: Event): void => {
+        if (event.target !== this._tree) return;
+        event.preventDefault();
+        const mouseEvent = event as MouseEvent;
+        this._openRootContextMenu(mouseEvent.clientX, mouseEvent.clientY);
+    };
+
+    private _onDragStart(node: EditorStructureNode, event: DragEvent): void {
+        this._draggedNode = node;
+        event.dataTransfer?.setData("text/plain", node.label);
+        if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+    }
+
+    private _onDragOver(node: EditorStructureNode, row: HTMLElement, event: DragEvent): void {
+        if (!this._draggedNode || this._draggedNode === node || this._isDescendantNode(node, this._draggedNode)) return;
+        event.preventDefault();
+        this._clearDropRow();
+        const position = this._dropPosition(row, event);
+        row.classList.add(position === "before" ? "drop-before" : "drop-after");
+        this._dropRow = row;
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    }
+
+    private _onDrop(node: EditorStructureNode, event: DragEvent): void {
+        if (!this._draggedNode || this._draggedNode === node || this._isDescendantNode(node, this._draggedNode)) return;
+        event.preventDefault();
+        const position = this._dropPosition(event.currentTarget as HTMLElement, event);
+        this._emitAction(position === "before" ? "move-before" : "move-after", node.editor, undefined, undefined, this._draggedNode.editor);
+        this._clearDragState();
+    }
+
+    private _dropPosition(target: HTMLElement, event: DragEvent): "before" | "after" {
+        const rect = target.getBoundingClientRect();
+        return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+    }
+
+    private _clearDragState(): void {
+        this._draggedNode = null;
+        this._clearDropRow();
+    }
+
+    private _clearDropRow(): void {
+        this._dropRow?.classList.remove("drop-before", "drop-after");
+        this._dropRow = null;
+    }
+
+    private _isDescendantNode(candidate: EditorStructureNode, parent: EditorStructureNode): boolean {
+        return parent.children.some(child => child === candidate || this._isDescendantNode(candidate, child));
+    }
+
+    private _isEditableEventTarget(target: EventTarget | null): boolean {
+        if (!(target instanceof Element)) return false;
+        return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+    }
 
     private _visibleNodes(nodes: EditorStructureNode[], depth = 0): { item: EditorStructureNode; depth: number }[] {
         return nodes.flatMap(node => {
@@ -530,6 +684,10 @@ export class StructureTree extends HTMLElement {
             menu.setAttribute("role", "menu");
         }
         return menu;
+    }
+
+    private get _tree(): HTMLElement {
+        return this.shadowRoot!.querySelector<HTMLElement>(".structure-tree")!;
     }
 
     private get _scrollContainer(): HTMLElement {

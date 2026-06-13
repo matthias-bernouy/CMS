@@ -8,7 +8,9 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
-type RichTextAction = "bold" | "italic" | "underline" | "code" | "link" | "dynamic" | "color";
+type RichTextAction = "bold" | "italic" | "underline" | "code" | "link" | "dynamic";
+
+const TEXT_SIZE_STEPS = [".875em", "1em", "1.125em", "1.25em", "1.5em"] as const;
 
 export class RichTextEditor extends HTMLElement {
     private _savedRange: Range | null = null;
@@ -42,12 +44,12 @@ export class RichTextEditor extends HTMLElement {
         this.toolbar.replaceChildren();
         const capability = this.capability;
         const actions: RichTextAction[] = [];
+        if (capability.size) this.toolbar.append(this.renderSizeButton("decrease"), this.renderSizeButton("increase"));
         if (capability.bold) actions.push("bold");
         if (capability.italic) actions.push("italic");
         if (capability.underline) actions.push("underline");
         if (capability.code) actions.push("code");
         if (capability.link) actions.push("link");
-        if (capability.color) actions.push("color");
         if (capability.dynamic) actions.push("dynamic");
 
         for (const action of actions) {
@@ -67,6 +69,25 @@ export class RichTextEditor extends HTMLElement {
             });
             this.toolbar.append(button);
         }
+
+    }
+
+    private renderSizeButton(direction: "decrease" | "increase"): HTMLElement {
+        const button = document.createElement("button");
+        button.className = "tool size-tool";
+        button.type = "button";
+        button.title = direction === "increase" ? "Increase text size" : "Decrease text size";
+        button.textContent = direction === "increase" ? "+" : "-";
+        button.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.stepTextSize(direction);
+        });
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        return button;
     }
 
     private runAction(action: RichTextAction): void {
@@ -87,18 +108,46 @@ export class RichTextEditor extends HTMLElement {
             }
             const href = window.prompt("Link URL");
             if (href) this.wrapRange("a", { href });
-        } else if (action === "color") {
-            if (this.unwrapMatchingRange("span", (element) => element.style.color !== "")) {
-                this.finishAction();
-                return;
-            }
-            const color = window.prompt("Text color");
-            if (color) this.wrapRange("span", { style: `color: ${color}` });
         } else {
             const expression = window.prompt("Data expression");
             if (expression) this.insertText(asInterpolation(expression));
         }
         this.finishAction();
+    }
+
+    private stepTextSize(direction: "decrease" | "increase"): void {
+        if (!this._savedRange || this._savedRange.collapsed) return;
+
+        const range = this.getUsableRange();
+        if (!range) return;
+
+        const wrapper = this.findRangeWrapper(range, "span", (element) => element.style.fontSize !== "");
+        const currentIndex = wrapper ? TEXT_SIZE_STEPS.indexOf(wrapper.style.fontSize as typeof TEXT_SIZE_STEPS[number]) : 1;
+        const fallbackIndex = currentIndex >= 0 ? currentIndex : 1;
+        const nextIndex = direction === "increase"
+            ? Math.min(TEXT_SIZE_STEPS.length - 1, fallbackIndex + 1)
+            : Math.max(0, fallbackIndex - 1);
+
+        if (wrapper) this.unwrapElement(wrapper);
+        this.applySpanStyle("fontSize", TEXT_SIZE_STEPS[nextIndex]!);
+    }
+
+    private applySpanStyle(property: "fontSize", value: string): void {
+        if (!this._savedRange || this._savedRange.collapsed) return;
+
+        if (!value) {
+            if (this.unwrapMatchingRange("span", (element) => element.style[property] !== "")) {
+                this.finishAction();
+            }
+            return;
+        }
+
+        this.wrapRange("span", { style: `${this.cssPropertyName(property)}: ${value}` });
+        this.finishAction();
+    }
+
+    private cssPropertyName(property: "color" | "fontSize"): string {
+        return property === "fontSize" ? "font-size" : "color";
     }
 
     private finishAction(): void {
@@ -262,7 +311,6 @@ export class RichTextEditor extends HTMLElement {
             code: "<span>{}</span>",
             link: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/></svg>`,
             dynamic: `<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>`,
-            color: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18h1.5a2 2 0 0 0 1.8-2.9 1.8 1.8 0 0 1 1.6-2.6H18a6 6 0 0 0 0-12h-6Z"/><circle cx="7.5" cy="10" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="14" cy="7.5" r="1"/><circle cx="16.5" cy="11" r="1"/></svg>`,
         };
         return icons[action];
     }
@@ -273,7 +321,6 @@ export class RichTextEditor extends HTMLElement {
         if (action === "underline") return "Underline";
         if (action === "code") return "Code";
         if (action === "link") return "Link";
-        if (action === "color") return "Color";
         return "Dynamic data";
     }
 
