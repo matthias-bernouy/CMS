@@ -52,6 +52,7 @@ import type { StructureTreeActionDetail } from "../StructureTree/StructureTree";
 import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
 import {
     FilesCenter,
+    type FilesCenterSelectManyDetail,
     type FilesCenterSelectDetail,
 } from "../../Controls/FilesCenter/FilesCenter";
 import { FrameHighlight } from "./FrameHighlight";
@@ -594,24 +595,40 @@ export class Shell extends HTMLElement {
     }
 
     private _insertMedia(parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string): void {
-        if (!this._canInsertNodeCount(parent, slot, [parent.target])) return;
-        this._openMediaPicker(item.accept, (element) => {
-            this._applySlot(element, slotName);
-            parent.target.append(element);
-            this._reloadFrameDocument(element);
+        const remaining = this._remainingSlotCapacity(parent, slot);
+        if (remaining <= 0) return;
+
+        this._openMediaPicker(item.accept, {
+            multiple:     remaining > 1,
+            maxSelection: typeof slot.max === "number" ? remaining : undefined,
+        }, (elements) => {
+            if (elements.length === 0 || !this._canInsertNodeCount(parent, slot, elements)) return;
+            for (const element of elements) {
+                this._applySlot(element, slotName);
+            }
+            parent.target.append(...elements);
+            this._reloadFrameDocument(elements[0] ?? null);
         });
     }
 
     private _replaceWithMedia(editor: Editor, parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string): void {
         if (!this._canReplaceNodeCount(parent, editor, slot, [editor.target])) return;
-        this._openMediaPicker(item.accept, (element) => {
+        this._openMediaPicker(item.accept, {
+            multiple: false,
+        }, (elements) => {
+            const element = elements[0];
+            if (!element) return;
             this._applySlot(element, slotName);
             editor.target.replaceWith(element);
             this._reloadFrameDocument(element);
         });
     }
 
-    private _openMediaPicker(accept: MediaAccept[] | undefined, onSelect: (element: HTMLElement) => void): void {
+    private _openMediaPicker(
+        accept: MediaAccept[] | undefined,
+        options: { multiple?: boolean; maxSelection?: number },
+        onSelect: (elements: HTMLElement[]) => void,
+    ): void {
         const center = new FilesCenter();
         const cleanup = () => center.remove();
         center.addEventListener("close", cleanup, { once: true });
@@ -619,13 +636,22 @@ export class Shell extends HTMLElement {
             const detail = (event as CustomEvent<FilesCenterSelectDetail>).detail;
             const element = this._createMediaElement(detail);
             if (!element) return;
-            onSelect(element);
+            onSelect([element]);
+        }, { once: true });
+        center.addEventListener("select-files", (event) => {
+            const detail = (event as CustomEvent<FilesCenterSelectManyDetail>).detail;
+            const elements = detail.files
+                .map(file => this._createMediaElement(file))
+                .filter((element): element is HTMLElement => Boolean(element));
+            onSelect(elements);
         }, { once: true });
 
         document.body.append(center);
         center.show({
-            accept:     ["folder", "file"],
-            fileAccept: accept ?? ["image"],
+            accept:       ["folder", "file"],
+            fileAccept:   accept ?? ["image"],
+            multiple:     options.multiple === true,
+            maxSelection: options.maxSelection,
         });
     }
 
@@ -734,6 +760,11 @@ export class Shell extends HTMLElement {
         return Array.from(parent.target.children)
             .filter(child => (child.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined))
             .length;
+    }
+
+    private _remainingSlotCapacity(parent: Editor, slot: ContentSlot): number {
+        if (typeof slot.max !== "number") return Number.MAX_SAFE_INTEGER;
+        return Math.max(0, slot.max - this._slotChildCount(parent, slot));
     }
 
     private _parentEditor(editor: Editor): Editor | null {

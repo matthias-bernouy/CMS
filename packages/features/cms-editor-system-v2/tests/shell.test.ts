@@ -500,6 +500,43 @@ describe("Shell", () => {
         expect(selected).toEqual(["/cms/.cms/files/by-id/file%201"]);
     });
 
+    test("files center supports multiple file selection with a limit", async () => {
+        installDom();
+        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
+
+        globalThis.fetch = (async () => new Response(JSON.stringify({
+            items: [
+                { id: "one", name: "One.png", parentId: null, type: "file", mimeType: "image/png" },
+                { id: "two", name: "Two.png", parentId: null, type: "file", mimeType: "image/png" },
+                { id: "three", name: "Three.png", parentId: null, type: "file", mimeType: "image/png" },
+            ],
+        }), {
+            headers: { "Content-Type": "application/json" },
+        })) as typeof fetch;
+
+        const { FilesCenter } = await import("../src/components/Controls/FilesCenter/FilesCenter");
+        const center = new FilesCenter();
+        const selected: string[][] = [];
+        center.addEventListener("select-files", (event) => {
+            selected.push((event as CustomEvent<{ files: { src: string }[] }>).detail.files.map(file => file.src));
+        });
+        document.body.append(center);
+        center.connectedCallback();
+        center.show({ multiple: true, maxSelection: 2 });
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const items = Array.from(center.shadowRoot!.querySelectorAll<HTMLButtonElement>(".item"));
+        items[0]!.click();
+        items[1]!.click();
+        items[2]!.click();
+        center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
+
+        expect(selected).toEqual([[
+            "/cms/.cms/files/by-id/one",
+            "/cms/.cms/files/by-id/two",
+        ]]);
+    });
+
     test("page link media mode opens the files center", async () => {
         installDom();
         document.head.innerHTML = `<meta name="basePath" content="/cms">`;
@@ -649,6 +686,101 @@ describe("Shell", () => {
 
         expect(image.getAttribute("width")).toBe("320");
         expect(image.getAttribute("height")).toBe("180");
+    });
+
+    test("shell inserts multiple media files up to slot capacity", async () => {
+        installDom();
+        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
+
+        globalThis.fetch = (async () => new Response(JSON.stringify({
+            items: [
+                { id: "one", name: "One.png", parentId: null, type: "file", mimeType: "image/png" },
+                { id: "two", name: "Two.png", parentId: null, type: "file", mimeType: "image/png" },
+                { id: "three", name: "Three.png", parentId: null, type: "file", mimeType: "image/png" },
+            ],
+        }), {
+            headers: { "Content-Type": "application/json" },
+        })) as typeof fetch;
+
+        const { Shell } = await import("../src/exports");
+
+        class GalleryEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label: "Images",
+                    slot: "image",
+                    max: 3,
+                    accepts: [{ kind: "media" as const, accept: ["image" as const] }],
+                }];
+            }
+        }
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        const contentRoot = frameDocument.createElement("div");
+        contentRoot.setAttribute("data-cms-content", "");
+        const gallery = frameDocument.createElement("demo-gallery");
+        const existing = frameDocument.createElement("img");
+        existing.setAttribute("slot", "image");
+        gallery.append(existing);
+        contentRoot.append(gallery);
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        const structureTree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as Element & {
+            setInsertItems?: (_items: unknown[]) => void;
+            setStructure?: () => void;
+        };
+        structureTree.setInsertItems = () => undefined;
+        structureTree.setStructure = () => undefined;
+        shell.setCatalog([{
+            tag: "demo-gallery",
+            label: "Gallery",
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: GalleryEditor,
+        }, {
+            tag: "img",
+            label: "Image",
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: Editor,
+        }]);
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        shell.loadDocument({ root, contentRoot });
+
+        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const galleryEditor = runtime.getEditor(gallery);
+        if (!galleryEditor) throw new Error("Missing gallery editor.");
+
+        (shell as unknown as {
+            _addChild(parent: Editor, item: unknown, slotName?: string): void;
+        })._addChild(galleryEditor, {
+            kind: "media",
+            label: "Media",
+            accept: ["image"],
+        }, "image");
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        const center = document.body.querySelector("cms-editor-v2-files-center")!;
+        const items = Array.from(center.shadowRoot!.querySelectorAll<HTMLButtonElement>(".item"));
+        items[0]!.click();
+        items[1]!.click();
+        items[2]!.click();
+        center.shadowRoot!.querySelector<HTMLButtonElement>(".select")!.click();
+
+        const images = Array.from(gallery.querySelectorAll("img"));
+        expect(images.map(image => image.getAttribute("src"))).toEqual([
+            null,
+            "/cms/.cms/files/by-id/one",
+            "/cms/.cms/files/by-id/two",
+        ]);
+        expect(images.map(image => image.getAttribute("slot"))).toEqual(["image", "image", "image"]);
     });
 
     test("settings view emits page-link setting changes", async () => {

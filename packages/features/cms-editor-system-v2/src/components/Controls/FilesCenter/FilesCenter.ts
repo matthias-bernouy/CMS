@@ -33,14 +33,21 @@ export type FilesCenterSelectDetail = {
     mimeType?: string;
 };
 
+export type FilesCenterSelectManyDetail = {
+    files: FilesCenterSelectDetail[];
+};
+
 export class FilesCenter extends HTMLElement {
     private _folder: string | null = null;
     private _trail: BreadcrumbEntry[] = [{ id: null, label: "Files" }];
     private _items: FileItem[] = [];
     private _selected: FileItem | null = null;
+    private _selectedMany: FileItem[] = [];
     private _wired = false;
     private _accept: ("folder" | "file")[] = ["folder", "file"];
     private _fileAccept: FilesCenterFileAccept[] | null = null;
+    private _multiple = false;
+    private _maxSelection: number | null = null;
 
     constructor() {
         super();
@@ -51,13 +58,21 @@ export class FilesCenter extends HTMLElement {
         this._wire();
     }
 
-    show(options: { accept?: ("folder" | "file")[]; fileAccept?: FilesCenterFileAccept[] } = {}): void {
+    show(options: {
+        accept?: ("folder" | "file")[];
+        fileAccept?: FilesCenterFileAccept[];
+        multiple?: boolean;
+        maxSelection?: number;
+    } = {}): void {
         this._wire();
         this._accept = options.accept ?? ["folder", "file"];
         this._fileAccept = options.fileAccept ?? null;
+        this._multiple = options.multiple === true;
+        this._maxSelection = typeof options.maxSelection === "number" ? Math.max(1, options.maxSelection) : null;
         this._folder = null;
         this._trail = [{ id: null, label: "Files" }];
         this._selected = null;
+        this._selectedMany = [];
         this.searchInput.value = "";
         this.backdrop.hidden = false;
         void this._load();
@@ -137,18 +152,18 @@ export class FilesCenter extends HTMLElement {
             button.className = "item";
             button.dataset.type = item.type === "folder" ? "folder" : this._fileKind(item);
             button.type = "button";
-            button.ariaSelected = String(this._selected?.id === item.id);
+            button.ariaSelected = String(this._isSelected(item));
             button.addEventListener("click", () => {
                 if (item.type === "folder") {
                     this._openFolder(item);
                     return;
                 }
-                this._selected = item;
+                this._selectFile(item);
                 this._renderItems();
                 this._updateSelection();
             });
             button.addEventListener("dblclick", () => {
-                if (item.type === "file") this._confirm();
+                if (item.type === "file" && !this._multiple) this._confirm();
             });
 
             const preview = this._preview(item);
@@ -178,24 +193,72 @@ export class FilesCenter extends HTMLElement {
     }
 
     private _updateSelection(): void {
+        if (this._multiple) {
+            const count = this._selectedMany.length;
+            this.selectButton.disabled = count === 0;
+            this.selectButton.textContent = count === 1 ? "Select 1 file" : `Select ${count} files`;
+            this.selectionTitle.textContent = count === 0 ? "No files selected" : `${count} files selected`;
+            this.selectionValue.textContent = this._maxSelection ? `Up to ${this._maxSelection} files` : "Choose files";
+            return;
+        }
+
         this.selectButton.disabled = !this._selected;
+        this.selectButton.textContent = "Select file";
         this.selectionTitle.textContent = this._selected?.name ?? "No file selected";
         this.selectionValue.textContent = this._selected ? this._fileMeta(this._selected) : "Choose a file";
     }
 
     private _confirm(): void {
+        if (this._multiple) {
+            if (this._selectedMany.length === 0) return;
+            this.dispatchEvent(new CustomEvent<FilesCenterSelectManyDetail>("select-files", {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    files: this._selectedMany.map(file => this._fileDetail(file)),
+                },
+            }));
+            this._close();
+            return;
+        }
+
         if (!this._selected) return;
         this.dispatchEvent(new CustomEvent<FilesCenterSelectDetail>("select-file", {
             bubbles: true,
             composed: true,
-            detail: {
-                id: this._selected.id,
-                label: this._selected.name,
-                src: this._fileUrl(this._selected.id),
-                mimeType: this._selected.mimeType,
-            },
+            detail: this._fileDetail(this._selected),
         }));
         this._close();
+    }
+
+    private _selectFile(item: FileItem): void {
+        if (!this._multiple) {
+            this._selected = item;
+            return;
+        }
+
+        const existingIndex = this._selectedMany.findIndex(selected => selected.id === item.id);
+        if (existingIndex >= 0) {
+            this._selectedMany.splice(existingIndex, 1);
+            return;
+        }
+
+        if (this._maxSelection && this._selectedMany.length >= this._maxSelection) return;
+        this._selectedMany.push(item);
+    }
+
+    private _isSelected(item: FileItem): boolean {
+        if (this._multiple) return this._selectedMany.some(selected => selected.id === item.id);
+        return this._selected?.id === item.id;
+    }
+
+    private _fileDetail(item: FileItem): FilesCenterSelectDetail {
+        return {
+            id: item.id,
+            label: item.name,
+            src: this._fileUrl(item.id),
+            mimeType: item.mimeType,
+        };
     }
 
     private _close(): void {
