@@ -58,6 +58,11 @@ export class TopBar extends HTMLElement {
         this.shadowRoot!.querySelector(".save-label")!.textContent = label;
     }
 
+    setPageTitle(title: string, path: string): void {
+        this.shadowRoot!.querySelector(".name")!.textContent = title;
+        this.shadowRoot!.querySelector(".path")!.textContent = path;
+    }
+
     private readonly _onClick = (event: Event): void => {
         const button = (event.target as Element | null)?.closest<HTMLButtonElement>("button");
         if (!button) return;

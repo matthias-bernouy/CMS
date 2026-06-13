@@ -33,35 +33,33 @@
             <div class="page-settings-body">
                 <label>
                     <span>Title</span>
-                    <input type="text" value="Pricing">
+                    <input type="text" data-page-field="title">
                 </label>
                 <label>
                     <span>Path</span>
-                    <input type="text" value="/pricing">
+                    <input type="text" data-page-field="path">
                 </label>
                 <label>
                     <span>Status</span>
-                    <select>
-                        <option selected>Draft</option>
-                        <option>Published</option>
+                    <select data-page-field="published">
+                        <option value="false">Draft</option>
+                        <option value="true">Published</option>
                     </select>
                 </label>
                 <label>
                     <span>SEO description</span>
-                    <textarea rows="4">Simple plans for teams that publish every week.</textarea>
+                    <textarea rows="4" data-page-field="description"></textarea>
                 </label>
                 <label>
                     <span>Tags</span>
                     <div class="tag-field">
-                        <span class="tag">pricing</span>
-                        <span class="tag">landing</span>
-                        <input type="text" placeholder="Add tag">
+                        <input type="text" data-page-field="tags" placeholder="pricing, landing">
                     </div>
                 </label>
             </div>
             <footer class="page-settings-footer">
                 <button type="button" data-page-settings-close>Cancel</button>
-                <button class="primary" type="button" data-page-settings-close>Apply</button>
+                <button class="primary" type="button" data-page-settings-apply>Apply</button>
             </footer>
         </section>
     </div>

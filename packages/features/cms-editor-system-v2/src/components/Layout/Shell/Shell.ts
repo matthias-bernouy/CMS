@@ -71,6 +71,22 @@ const VIEWPORTS: Record<TopBarViewport, { label: string; width: number; height: 
     },
 };
 
+export type EditorV2PageConfig = {
+    id: string;
+    title: string;
+    path: string;
+    description: string;
+    tags: string[];
+    published: boolean;
+};
+
+export type EditorV2SaveDocumentDetail = {
+    page: EditorV2PageConfig;
+    content: string;
+};
+
+export const EDITOR_V2_SAVE_DOCUMENT_EVENT = "editor-v2:save-document";
+
 export class Shell extends HTMLElement {
 
     private _catalog: EditorCatalog = [];
@@ -79,6 +95,7 @@ export class Shell extends HTMLElement {
     private _settingsMode: SettingsViewMode = "settings";
     private _viewport: TopBarViewport = "desktop";
     private _editorMode: TopBarEditorMode = "edit";
+    private _pageConfig: EditorV2PageConfig | null = null;
     private readonly _stateSessions = new WeakMap<Editor, Map<string, EditableStateSession>>();
     private readonly _highlight = new FrameHighlight();
 
@@ -141,6 +158,19 @@ export class Shell extends HTMLElement {
         this._syncStructureTreeCatalog();
     }
 
+    setPageConfig(config: EditorV2PageConfig): void {
+        this._pageConfig = {
+            ...config,
+            tags: [...config.tags],
+        };
+        this._topBar.setPageTitle(config.title, config.path);
+        this._syncPageSettingsForm();
+    }
+
+    setSaveStatus(label: string): void {
+        this._setSaveStatus(label);
+    }
+
     loadDocument(document: EditorDocument, selectedTarget: HTMLElement | null = null): void {
         this._exitAllStateSessions();
         this._runtime?.dispose();
@@ -183,14 +213,39 @@ export class Shell extends HTMLElement {
     };
 
     private readonly _onSave = (): void => {
-        this._setSaveStatus("Saved");
-        this.dispatchEvent(new CustomEvent("editor-v2:save-document", {
-            bubbles:  true,
-            composed: true,
-        }));
+        this._applyPageSettingsForm();
+        this._saveDocument();
     };
 
+    private _saveDocument(): void {
+        if (!this._pageConfig) {
+            this._setSaveStatus("No page");
+            return;
+        }
+
+        this._setSaveStatus("Saving");
+        this.dispatchEvent(new CustomEvent<EditorV2SaveDocumentDetail>(EDITOR_V2_SAVE_DOCUMENT_EVENT, {
+            bubbles:  true,
+            composed: true,
+            detail:   {
+                page:    {
+                    ...this._pageConfig,
+                    tags: [...this._pageConfig.tags],
+                },
+                content: this._getContentHtml(),
+            },
+        }));
+    }
+
     private readonly _onPageSettingsModalClick = (event: Event): void => {
+        const applyTarget = (event.target as Element | null)?.closest("[data-page-settings-apply]");
+        if (applyTarget) {
+            this._applyPageSettingsForm();
+            this._closePageSettings();
+            this._saveDocument();
+            return;
+        }
+
         const closeTarget = (event.target as Element | null)?.closest("[data-page-settings-close]");
         if (closeTarget) this._closePageSettings();
     };
@@ -585,6 +640,47 @@ export class Shell extends HTMLElement {
 
     private _closePageSettings(): void {
         this._pageSettingsModal.hidden = true;
+    }
+
+    private _syncPageSettingsForm(): void {
+        if (!this._pageConfig) return;
+
+        this._pageField<HTMLInputElement>("title").value = this._pageConfig.title;
+        this._pageField<HTMLInputElement>("path").value = this._pageConfig.path;
+        this._pageField<HTMLSelectElement>("published").value = String(this._pageConfig.published);
+        this._pageField<HTMLTextAreaElement>("description").value = this._pageConfig.description;
+        this._pageField<HTMLInputElement>("tags").value = this._pageConfig.tags.join(", ");
+    }
+
+    private _applyPageSettingsForm(): void {
+        if (!this._pageConfig) return;
+
+        this._pageConfig = {
+            id:          this._pageConfig.id,
+            title:       this._pageField<HTMLInputElement>("title").value.trim(),
+            path:        this._pageField<HTMLInputElement>("path").value.trim(),
+            published:   this._pageField<HTMLSelectElement>("published").value === "true",
+            description: this._pageField<HTMLTextAreaElement>("description").value,
+            tags:        this._parseTags(this._pageField<HTMLInputElement>("tags").value),
+        };
+        this._topBar.setPageTitle(this._pageConfig.title, this._pageConfig.path);
+    }
+
+    private _getContentHtml(): string {
+        return this._frameDocument
+            ?.querySelector<HTMLElement>("[data-cms-content]")
+            ?.innerHTML ?? "";
+    }
+
+    private _parseTags(value: string): string[] {
+        return [...new Set(value
+            .split(",")
+            .map(tag => tag.trim())
+            .filter(Boolean))];
+    }
+
+    private _pageField<T extends HTMLElement>(name: string): T {
+        return this.shadowRoot!.querySelector<T>(`[data-page-field="${name}"]`)!;
     }
 
     private _setSaveStatus(label: string): void {
