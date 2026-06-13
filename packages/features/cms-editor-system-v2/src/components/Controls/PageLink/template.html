@@ -1,8 +1,18 @@
 <div class="page-link">
-    <div class="tabs">
-        <button class="active" type="button">Page</button>
-        <button type="button">External</button>
-        <button type="button">Media</button>
+    <div class="head">
+        <span class="label"></span>
+        <span class="hint"></span>
+    </div>
+    <div class="tabs" role="tablist"></div>
+    <div class="panel page-panel">
+        <input class="search" type="search" placeholder="Search pages" />
+        <div class="picker" hidden>
+            <div class="page-list" role="listbox"></div>
+            <div class="empty" hidden>No pages found</div>
+        </div>
+    </div>
+    <div class="panel external-panel" hidden>
+        <input class="external-input" type="url" placeholder="https://example.com" />
     </div>
     <div class="target">
         <span class="icon">↗</span>

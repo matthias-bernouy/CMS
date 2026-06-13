@@ -191,7 +191,10 @@ export class SettingsView extends HTMLElement {
 
         if (setting.type === "page-link") {
             const control = this._control("cms-editor-v2-page-link", setting);
+            control.setAttribute("allow-page", String(setting.allowPage !== false));
+            control.setAttribute("allow-external", String(setting.allowExternal !== false));
             this._applyDisabled(control, setting);
+            this._wirePageLinkControl(control, setting);
             return control;
         }
 
@@ -287,6 +290,19 @@ export class SettingsView extends HTMLElement {
                 const value = (event as CustomEvent<{ value: string }>).detail?.value;
                 if (typeof value !== "string") return;
                 this._emitContentChange(value, "html");
+            });
+        };
+
+        this._whenDefined(control, wire);
+    }
+
+    private _wirePageLinkControl(control: HTMLElement, setting: Setting): void {
+        const wire = () => {
+            if (setting.disabled) return;
+            control.addEventListener("input", (event) => {
+                const value = (event as CustomEvent<{ value: string }>).detail?.value;
+                if (typeof value !== "string") return;
+                this._emitSettingChange(setting, value);
             });
         };
 

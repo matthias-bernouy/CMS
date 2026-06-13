@@ -361,6 +361,99 @@ describe("Shell", () => {
         expect(events).toEqual(["Updated"]);
     });
 
+    test("page link control selects internal pages and external URLs", async () => {
+        installDom();
+        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
+
+        const calls: string[] = [];
+        globalThis.fetch = (async (url: string | URL | Request) => {
+            calls.push(String(url));
+            return new Response(JSON.stringify([
+                { title: "Pricing", path: "/pricing" },
+                { title: "About", path: "/about" },
+            ]), {
+                headers: { "Content-Type": "application/json" },
+            });
+        }) as typeof fetch;
+
+        const { PageLink } = await import("../src/components/Controls/PageLink/PageLink");
+        const control = new PageLink();
+        const values: string[] = [];
+        control.addEventListener("input", (event) => {
+            values.push((event as CustomEvent<{ value: string }>).detail.value);
+        });
+        document.body.append(control);
+        control.connectedCallback();
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(calls).toEqual(["/cms/api/page/links"]);
+
+        const search = control.shadowRoot!.querySelector<HTMLInputElement>(".search")!;
+        search.value = "pricing";
+        search.dispatchEvent(new Event("input", { bubbles: true }));
+
+        control.shadowRoot!.querySelector<HTMLButtonElement>(".page-option")!.click();
+        expect(values.at(-1)).toBe("/pricing");
+        expect(control.getAttribute("value")).toBe("/pricing");
+
+        control.shadowRoot!.querySelectorAll<HTMLButtonElement>(".tabs button")[1]!.click();
+        const external = control.shadowRoot!.querySelector<HTMLInputElement>(".external-input")!;
+        external.value = "https://example.com";
+        external.dispatchEvent(new Event("input", { bubbles: true }));
+
+        expect(values.at(-1)).toBe("https://example.com");
+        expect(control.getAttribute("value")).toBe("https://example.com");
+    });
+
+    test("settings view emits page-link setting changes", async () => {
+        installDom();
+        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
+
+        globalThis.fetch = (async () => new Response(JSON.stringify([
+            { title: "Contact", path: "/contact" },
+        ]), {
+            headers: { "Content-Type": "application/json" },
+        })) as typeof fetch;
+
+        const {
+            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+            SettingsView,
+        } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const { PageLink } = await import("../src/components/Controls/PageLink/PageLink");
+        if (!customElements.get("cms-editor-v2-page-link")) {
+            customElements.define("cms-editor-v2-page-link", class extends PageLink {});
+        }
+
+        const view = new SettingsView();
+        const values: string[] = [];
+        view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, (event) => {
+            values.push(String((event as CustomEvent<{ value: string }>).detail.value));
+        });
+        document.body.append(view);
+
+        view.setSettings([{
+            kind: "self",
+            label: "Link",
+            settings: [{
+                type: "page-link",
+                label: "CTA link",
+                attribute: "href",
+                defaultValue: "",
+                allowPage: true,
+                allowExternal: true,
+            }],
+        }]);
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        view.shadowRoot!
+            .querySelector("cms-editor-v2-page-link")!
+            .shadowRoot!
+            .querySelector<HTMLButtonElement>(".page-option")!
+            .click();
+
+        expect(values).toEqual(["/contact"]);
+    });
+
     test("renders disabled settings as disabled controls", async () => {
         installDom();
 
