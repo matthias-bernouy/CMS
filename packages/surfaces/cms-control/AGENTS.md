@@ -43,14 +43,15 @@ packages/cms-control/
     │   ├── system/          settings get/put
     │   ├── template/        template CRUD
     │   ├── users/           members list + role assignment
-    │   ├── blocs-list.get.ts          flat list for the editor BlocLibrary
+    │   ├── blocs-list.get.ts          flat list for editor block/catalog UI
     │   └── profil.get.ts              admin Profile page payload
     │
     ├── components/          browser TS bundled into `control-components.js`
     │   ├── admin/           admin-page custom elements (`<cms-form>`,
     │   │                    AdminLayout, Secrets, Tokens, ProviderActions, RoleSelect, …)
-    │   ├── editor/          visual editor (EditorRoot, BlocActions, BlocLibrary,
-    │   │                    MediaCenter, RichTextBar, FloatingToolbar, snippet/, componentSync/)
+    │   ├── editor/          shared editor-adjacent UI still used by admin forms
+    │   │                    (`MediaCenter` for `<cms-media-input>`)
+    │   ├── editorSystemV2/  current editor shell bootstrap
     │   ├── form/            <cms-form>, <cms-media-input>
     │   ├── media/           MediaAdmin, GridMedia, CardMedia, CropSystem, DetailMedia
     │   ├── globals.ts       wires `window.p9r.*` constants for browser
@@ -60,8 +61,7 @@ packages/cms-control/
     │   ├── authentication/  authGuard wrapper, login page (delegated to auth-core)
     │   ├── data/            getFields helper for editor data binding
     │   ├── dom/             BubblesEvent, buildRequestUrl, meta/basePath (browser-safe)
-    │   ├── editorSystem/    Component + Editor base classes, registerEditor,
-    │   │                    ObserverManager wiring, defaultEditors/, extensions/
+    │   ├── editorSystemV2/  control-owned default editors + catalog wiring
     │   ├── files/           uploadFile + media tree mutations
     │   ├── http/            readJsonBody helper
     │   ├── pages/           page editor wiring (configDetail, suggestions, ancestry)
@@ -88,14 +88,14 @@ the local `tsconfig.json` `paths`:
 - `@bernouy/cms-control`           → `index.ts` (server-side; ControlCms)
 - `@bernouy/cms-control/component` → `component.ts` (view-side Bloc authoring — only re-exports `Component`)
 - `@bernouy/cms-control/editor`    → `editor.ts`    (editor-side Bloc authoring — `Editor`, `registerEditor`, `registerEditor_opaque`)
-- `@bernouy/cms-control/data`      → `data.ts`      (pure helpers for `BlocEditor.ts` — `getFields`, `collectAncestorExtensions`, extension types)
+- `@bernouy/cms-control/data`      → `data.ts`      (pure helpers for `BlocEditor.ts` — `getFields`)
 
 `component.ts` and `editor.ts` are isolated **by design**: the view bundle
-visitors download must never transitively reach editor code (ObserverManager,
-ConfigPanel, BlocActions, …). Bun's `p9rExternalsPlugin` (from
-`@bernouy/cms-bloc-compile`) intercepts `@bernouy/cms-control/editor` so its
-symbols read from `window.p9r.*` (singleton across blocs), preserving
-`instanceof` checks across BlocEditor instances. The `data` entry is
+visitors download must never transitively reach editor code. Editor contracts
+live in `@bernouy/cms-content/editor`. Bun's
+`p9rExternalsPlugin` (from `@bernouy/cms-bloc-compile`) intercepts editor
+imports so their symbols read from `window.p9rEditor` (singleton across blocs),
+preserving `instanceof` checks across BlocEditor instances. The `data` entry is
 NOT intercepted — each call site bundles inline.
 
 ## Mounting
@@ -182,10 +182,10 @@ pages compose web components that handle dynamic behavior themselves.
 Building blocks consumed by every admin page:
 
 - `<w13c-fixed-admin-layout>` — page chrome with `slot="title"` + `slot="action"`.
-- **Data binding** (`@bernouy/components` `src/binding/`) — attribute-driven, activated inside `<cms-binding-core>` (in the page shell). `cms-source="url"` fetches + renders the body (states via `cms-slot="loading|error|empty"`, reload via `cms-reload-on="evt"`); `cms-repeat` iterates; `{{ path }}` interpolates (blank on miss; `{{ x | innerHTML }}` for raw HTML); `#{param}` is a reactive query-param (use `?id=#{id}` to forward — sources don't auto-forward `location.search`); `cms-param-sync` two-way-binds an input to a query param. Replaced the old `<cms-fetch>`.
+- **Data binding** (`@bernouy/components` `src/binding/`) — attribute-driven, activated inside `<cms-binding-core>` (in the page shell). `cms-source="url"` fetches + renders the body (states via `cms-slot="loading|error|empty"`, reload via `cms-reload-on="evt"`); `cms-repeat` iterates; `{{ path }}` interpolates (blank on miss; `{{ x | innerHTML }}` for raw HTML); `#{param}` is a reactive query-param (use `?id=#{id}` to forward — sources don't auto-forward `location.search`); `cms-param-sync` two-way-binds an input to a query param.
 - `<cms-form>` — wraps an inner `<form>`, posts JSON to `target` on submit, dispatches `form:success` / `form:failed` (bubbles + composed via `BubblesEvent`). `emit="some:event"` re-dispatches on success so a `cms-source` with `cms-reload-on` refreshes.
 - `<cms-media-admin>` — media admin page in a single tag. Header buttons (`+ New folder`, `Upload`) hit the `/api/files` endpoints directly (no form post) and refresh the embedded `<p9r-grid-media>`.
-- `<cms-editor-system>` — editor root, mounted on every editor page (page / template / snippet flavor). Handles the editor's shadow DOM, initial bloc registration, and orchestrates `ObserverManager`, `DragManager`, `BlocActions`, `BlocLibrary`.
+- `<cms-editor-v2-shell>` — editor root, mounted on every editor page (page / template / snippet flavor). Loads the frame, owns the structure/settings panels, and talks to the stable editor API.
 
 ### Admin UI dependencies
 
@@ -197,32 +197,23 @@ Building blocks consumed by every admin page:
 
 ## Editor system
 
-Lives under `src/components/editor/` (UI) and `src/core/editorSystem/`
-(contracts + base classes + default editors).
+The current editor is `@bernouy/cms-editor-system-v2`, mounted by
+`src/components/editorSystemV2/bootstrap.ts` and fed by the editor endpoints
+under `src/api/editor/`.
 
-- **`<cms-editor-system>`** (`components/editor/EditorSystem/EditorRoot/EditorRoot.ts`) is the editor root. It owns its shadow DOM and instantiates `ObserverManager`, `DragManager`, `BlocActions`, `BlocLibrary`. Public methods include `save()`, `openConfig()`. The flavor is stamped via `data-flavor` (`page` / `template` / `snippet`).
-- **No central `EditorManager` class.** The previous monolithic orchestrator was split into per-component classes that talk via DOM events and direct references inside the root's shadow.
-- **`Editor` base class** (`src/core/editorSystem/Editor/Editor.ts`) is the per-tag editor contract. Default editors at `src/core/editorSystem/defaultEditors/`: `TextEditor`, `ListEditor`, `ImageEditor`, `SnippetEditor`. `registerEditor` / `registerEditor_opaque` come from `src/core/editorSystem/registerEditor.ts`.
-- **`ObserverManager`** walks the editor tree and creates an editor per registered tag. Opaque blocs get `p9r-opaque="true"` after editorizing so descendants bail out (the bloc still gets its parent-level action bar).
-- **`<cms-bloc-actions>`** (BAG) is the per-bloc action bar (`BlocActions/BlocActions.ts`). The element is a thin wrapper around a `BagController` (`BlocActions/domain/lifecycle/BagController.ts`) that owns runtime state and sub-controllers (Breadcrumb, InsertButtons, PinMenu). When `setEditor(editor)` is called, BAG creates a `Highlight` overlay on the target.
-- **`<cms-bloc-library>`** has 3 sections: Blocs (by group), Templates (by category), Snippets. Templates insert as HTML fragments (independent copies); blocs and snippets insert as custom elements (`<w13c-snippet identifier="…">` keeps a live link to the snippet source).
-- **`<cms-floating-toolbar>`** + RichTextBar handle text-format menus on selection.
-- **`<cms-media-center>`** is the media picker dialog; created on demand by code that needs it (`ImageEditor`, `ImageSync`, `PageLink`) via `document.createElement("cms-media-center")` + `appendChild(document.body)` + `.show(types)`.
-- **Editor preview loads bloc bundles inlined in the consolidated editor-script endpoint** (`src/api/editor/script.js.get.ts`) — it never reaches out to Delivery, which keeps the admin self-sufficient and avoids CORS + deliveryUrl coupling. `GET /api/bloc?tag=X` still exists for the dev CLI.
-
-### Highlight overlay
-
-`Highlight` (`components/editor/EditorSystem/Highlight.ts`) paints a non-interactive outline around any element via a fixed, pointer-events-none, overflow-hidden root attached to `<body>`. Tracks size via `ResizeObserver` + viewport via `scroll`/`resize`. Used by `BagController.setEditor` to mark the active editor without touching its DOM/CSS. Caller must `dispose()` when the target leaves the DOM.
-
-### Configuration syncs
-
-The bloc's config panel (`<p9r-config-panel>`, lives in `components/editor/componentSync/SyncPanel.ts`) projects sync elements through a `<w13c-lateral-dialog>` slot. Each sync is a custom element acting on the bloc:
-
-- **`<p9r-attr-sync>`** (`componentSync/sync/AttrSync.ts`) — input ↔ attribute binding. Empty value removes the attribute rather than leaving `attr=""`.
-- **`<p9r-comp-sync>`** (`componentSync/sync/CompSync.ts`) — manages a slot's content. Modes: `allow-multiple` (list with add/delete/duplicate/drag), `optionnal` (single slot that can be empty), `disable-others-components` (locks `DISABLE_CHANGE_COMPONENT` on the slot).
-- **`<p9r-image-sync>`** (`componentSync/sync/ImageSync/`) — image picker backed by MediaCenter. **Has its own shadow root** so styles apply regardless of how many shadow roots wrap the host. Split across `ImageSync.ts` (shell), `lock.ts`, `target.ts`, `view.ts`, `mediaCenter.ts`. In non-optional/non-creating mode, `lockActions` sets every `DISABLE_*` flag on the `<img>` so only click-to-open-MediaCenter remains.
-- **`<p9r-state-sync>`** (`componentSync/sync/StateSync.ts`) — declares a pinnable runtime state: `target` selector (in shadow DOM), `attr`, `value`, `label`. Interacts with `PinMode`.
-- **`<p9r-link>`** (`componentSync/PageLink/`) — link picker with three tabs (internal Page via API, External URL, Media file via MediaCenter). Internally split into `PageLink.ts` (shell), `template.ts`, `detect.ts`, `parts/{flows,wiring,controller}.ts`.
+- **`<cms-editor-v2-shell>`** owns the chrome: top bar, structure tree,
+  settings/overrides panel, frame canvas, selection, save, page/template/snippet
+  metadata, block insertion, snippets, templates, and media insertion.
+- **Stable editor contracts** live in `@bernouy/cms-content/editor`. Bloc
+  authors should extend that `Editor` API and register catalog entries through
+  `registerEditor`.
+- **Control-owned default editors** live in `src/core/editorSystemV2/`.
+  `editorCatalog.ts` binds known base tags to those editors.
+- **Frame loading** goes through `src/api/editor/frame.get.ts`; bloc view
+  scripts, editor scripts, and binding-core runtime are served by sibling
+  editor endpoints.
+- **`<cms-media-center>`** remains under `src/components/editor/MediaCenter/`
+  because it is a shared admin media picker used outside the editor shell too.
 
 ## CSS conventions
 
@@ -235,13 +226,13 @@ The bloc's config panel (`<p9r-config-panel>`, lives in `components/editor/compo
 
 ## Custom element prefix conventions
 
-- **`cms-*`** — internal CMS components (admin shell, editor system, form/data utilities). E.g. `cms-form`, `cms-binding-core`, `cms-editor-system`, `cms-bloc-actions`, `cms-bloc-library`, `cms-floating-toolbar`, `cms-media-center`, `cms-media-admin`.
+- **`cms-*`** — internal CMS components (admin shell, editor system, form/data utilities). E.g. `cms-form`, `cms-binding-core`, `cms-editor-v2-shell`, `cms-media-center`, `cms-media-admin`.
 - **`p9r-*`** — public custom elements provided by the framework (from `@bernouy/components`), used inside bloc configurations and editor panels. Reserved system-only — never scaffold a bloc with a `p9r-*` tag.
 - **`w13c-*`** — public custom elements from `@bernouy/components` (admin chrome, generic UI). Reserved system-only.
 
 ## Key rules
 
-- Sub-components do NOT have their own editor — the parent editor manages them via `<p9r-comp-sync>`.
+- Prefer stable editor contracts from `@bernouy/cms-content/editor`; control may provide default implementations, but bloc authoring should not depend on control internals.
 - Never call `super.connectedCallback()` in components.
 - `::slotted()` for styling light DOM children from shadow DOM.
 - `:not(:has(::slotted(*)))` pattern to hide empty slot wrappers.

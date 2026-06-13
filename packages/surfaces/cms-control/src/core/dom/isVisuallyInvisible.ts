@@ -17,9 +17,10 @@
  *
  * `checkVisibility` is supported in Chrome 105+, Safari 17.4+, Firefox
  * 125+ — well within the admin's modern-browser target. We feature-test
- * defensively and pass both legacy (`checkOpacity` / `checkVisibilityCSS`)
- * and current (`opacityProperty` / `visibilityProperty`) option names so
- * engines on either side of the rename accept the call.
+ * defensively and pass both option-name variants
+ * (`checkOpacity` / `checkVisibilityCSS` and
+ * `opacityProperty` / `visibilityProperty`) so engines on either side of the
+ * rename accept the call.
  */
 export function isVisuallyInvisible(el: HTMLElement | SVGElement): boolean {
     if (typeof el.checkVisibility === "function") {

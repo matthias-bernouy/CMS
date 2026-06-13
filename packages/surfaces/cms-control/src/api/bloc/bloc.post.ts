@@ -80,8 +80,7 @@ export default async function importBloc(req: Request, cms: ControlCms) {
 
 /**
  * Parse the optional `source` multipart field (JSON object: relative path →
- * base64 content). Returns `undefined` when absent or empty so legacy CLI
- * versions (no source bundle) keep working unchanged.
+ * base64 content). Returns `undefined` when absent or empty.
  */
 function parseSourceMap(raw: FormDataEntryValue | null): Record<string, string> | undefined {
     if (raw === null || raw === "") return undefined;

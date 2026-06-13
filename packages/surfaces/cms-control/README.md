@@ -177,18 +177,16 @@ visitor bundle (`Bloc.ts`) must NEVER reach editor code:
 
 - `@bernouy/cms-control/component` — `export { Component }` only.
   Imported by `Bloc.ts`, bundled into the view JS shipped to visitors.
-- `@bernouy/cms-control/editor` — `Editor`, `registerEditor`,
-  `registerEditor_opaque`. Imported by `BlocEditor.ts`, bundled into
-  the editor JS that only admins load.
-- `@bernouy/cms-control/data` — pure utility helpers (`getFields`,
-  `collectAncestorExtensions`, extension types) that `BlocEditor.ts`
-  may pull when wiring runtime data binding.
+- `@bernouy/cms-control/editor` — editor authoring entry for `Editor`,
+  `registerEditor`, and `registerEditor_opaque`. Editor contracts live in
+  `@bernouy/cms-content/editor`.
+- `@bernouy/cms-control/data` — pure utility helpers (`getFields`) that
+  `BlocEditor.ts` may pull when wiring runtime data binding.
 
 The `editor` entry is intercepted by `p9rExternalsPlugin` (in
-`@bernouy/cms-bloc-compile`) so its symbols read
-from `window.p9r.*` — same canonical class across every bloc,
-preserving `instanceof` checks. The `data` entry is NOT intercepted;
-each call site bundles inline.
+`@bernouy/cms-bloc-compile`) so its symbols read from `window.p9rEditor` —
+same canonical class across every bloc, preserving `instanceof` checks. The
+`data` entry is NOT intercepted; each call site bundles inline.
 
 ---
 

@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { composeShell, expandSnippets } from "@bernouy/cms-content";
-import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystem/contentRegionAttrs";
+import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
 
 type EditorFrameType = "page" | "template" | "snippet";
 

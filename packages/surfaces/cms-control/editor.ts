@@ -1,16 +1,62 @@
 /**
- * @bernouy/cms-control — editor-side authoring entry point.
+ * Editor authoring entry.
  *
- * `BlocEditor.ts` files import from `@bernouy/cms-control/editor`. This entry
- * exposes the `Editor` base class and the `registerEditor` /
- * `registerEditor_opaque` helpers. Imports from here are intercepted by
- * `p9rExternalsPlugin` and rewritten to read from `window.p9r.*`, so
- * every bloc shares one canonical class instance (required for
- * `instanceof` checks on parent/child editor relationships).
- *
- * Pure utility functions that don't need shared identity (e.g.
- * `getFields`) live in `@bernouy/cms-control/data` so bun bundles them inline
- * per bloc — cheaper than going through the global mechanism.
+ * Bloc bundles are normally rewritten by `p9rExternalsPlugin` to read this API
+ * from `window.p9rEditor`.
  */
-export { Editor } from "./src/core/editorSystem/Editor/Editor";
-export { registerEditor, registerEditor_opaque } from "./src/core/editorSystem/registerEditor";
+import { Editor, type EditorCatalogRegistration } from "@bernouy/cms-content/editor";
+
+export { Editor };
+export type {
+    ContentSlot,
+    ContentSlotAccept,
+    DataExpression,
+    DataField,
+    DataFieldType,
+    DataScope,
+    EditableState,
+    EditableStateSession,
+    EditorCatalog,
+    EditorCatalogEntry,
+    EditorCatalogRegistration,
+    EditorCatalogRegistrationDefaults,
+    EditorCatalogRuntime,
+    EditorConstructor,
+    EditorDocument,
+    EditorStructureMode,
+    MediaAccept,
+    PageLinkSetting,
+    SchemaPickerMethod,
+    SchemaPickerSetting,
+    SegmentedSetting,
+    SelectSetting,
+    Setting,
+    SettingMetadata,
+    SettingOption,
+    SettingSection,
+    SettingType,
+    TextareaSetting,
+    TextCapability,
+    TextSetting,
+    ToggleSetting,
+} from "@bernouy/cms-content/editor";
+
+export function registerEditor(entry: EditorCatalogRegistration): void {
+    (globalThis as { window?: Window & { p9rEditor?: { registerEditor(entry: EditorCatalogRegistration): void } } })
+        .window
+        ?.p9rEditor
+        ?.registerEditor(entry);
+}
+
+export function registerEditor_opaque(entry: EditorCatalogRegistration = {}): void {
+    class OpaqueEditor extends Editor {
+        override getStructureMode(): "opaque" {
+            return "opaque";
+        }
+    }
+
+    registerEditor({
+        ...entry,
+        editor: entry.editor ?? OpaqueEditor,
+    });
+}

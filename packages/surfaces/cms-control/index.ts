@@ -19,6 +19,6 @@ export { ControlCms, ControlCms as Cms } from "./src/ControlCms";
 //   • `@bernouy/cms-control/editor`    — exposes `Editor` + `registerEditor`.
 //   • `@bernouy/cms-control/data`      — pure utility functions bundled inline.
 // Keeping them in sub-entries guarantees the view bundle visitors download
-// never drags editor-side code (ObserverManager, ConfigPanel, …). The editor
-// entry is intercepted by `p9rExternalsPlugin` so its symbols read from
-// `window.p9r.*` (singleton across blocs). The data entry is NOT intercepted.
+// never drags editor-side code. The editor entry is intercepted by
+// `p9rExternalsPlugin` so its symbols read from `window.p9rEditor` (singleton
+// across blocs). The data entry is NOT intercepted.

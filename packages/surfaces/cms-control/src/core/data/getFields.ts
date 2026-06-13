@@ -16,9 +16,8 @@ import { getMetaBasePath } from "cms-control/core/dom/meta/getMetaBasePath";
  * Returns `[]` on any failure (network error, missing url, provider not
  * synced, etc.) so consumers can keep autocomplete logic branch-free.
  *
- * NOTE: the backing endpoint `/api/data/provider/fields` was removed with
- * the old data-provider proxy and will be re-added by the new
- * data-provider system. Until then this resolves to `[]` (graceful).
+ * NOTE: the backing endpoint `/api/data/provider/fields` is not wired yet.
+ * Until then this resolves to `[]` (graceful).
  */
 export async function getFields(url: string, opts: { method?: string } = {}): Promise<string[]> {
     if (!url) return [];

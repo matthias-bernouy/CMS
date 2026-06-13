@@ -28,7 +28,7 @@ const existingPage: TPage = {
     description: "old desc",
     content: "<p>old</p>",
     visible: false,
-    tags: ["legacy"],
+    tags: ["existing"],
 };
 
 describe("PUT /api/page (update)", () => {

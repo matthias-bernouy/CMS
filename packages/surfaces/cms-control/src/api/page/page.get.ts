@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import { composeShell } from "@bernouy/cms-content";
-import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystem/contentRegionAttrs";
+import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
 
 export default async function getPage(req: Request, cms: ControlCms) {
 

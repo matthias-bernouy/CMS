@@ -22,8 +22,31 @@ describe("prepare_bloc editor catalog output", () => {
         expect(bloc.editorJS).toContain('props?.label ?? "Demo card"');
         expect(bloc.editorJS).toContain('props?.category ?? "Content"');
         expect(bloc.editorJS).toContain("props?.editor ?? props?.cl");
-        expect(bloc.editorJS).not.toContain("registerEditor_opaque");
         expect(bloc.viewJS).toContain("customElements.define");
+    });
+
+    test("keeps the opaque editor helper when a bloc imports it", async () => {
+        const view = new File([
+            "customElements.define('demo-card', class extends HTMLElement {});",
+        ], "DemoCard.ts", { type: "text/typescript" });
+        const editor = new File([
+            "import { registerEditor_opaque } from '@bernouy/cms-control/editor';",
+            "registerEditor_opaque();",
+        ], "DemoCardEditor.ts", { type: "text/typescript" });
+
+        const bloc = await prepare_bloc(
+            view,
+            editor,
+            "Demo card",
+            "Content",
+            "A demo bloc",
+            "demo-card",
+        );
+
+        expect(bloc.editorJS).toContain("window.p9rEditor.Editor");
+        expect(bloc.editorJS).toContain("registerEditor_opaque");
+        expect(bloc.editorJS).toContain("getStructureMode()");
+        expect(bloc.editorJS).toContain('return "opaque";');
     });
 
     test("embeds default content into editor catalog registrations", async () => {

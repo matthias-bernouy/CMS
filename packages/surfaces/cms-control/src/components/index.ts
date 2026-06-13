@@ -137,29 +137,8 @@ import "./admin/Tokens/TokenCreate"
 import "./admin/Secrets/Secrets"
 
 // Editor
-import "./editor/componentSync/PageLink/PageLink"
-import "./editor/componentSync/PageLink/PageLink.picker"
-import "./editor/componentSync/SyncPanel"
-import "./editor/componentSync/sync/AttrSync"
-import "./editor/componentSync/sync/CompSync"
-import "./editor/componentSync/sync/ImageSync/ImageSync"
-import "./editor/componentSync/sync/StateSync/StateSync"
-import "./editor/componentSync/sync/SvgSync/SvgSync"
-import "./editor/EditorSystem/BlocActions/BlocActions"
-import "./editor/EditorSystem/BlocLibrary/BlocLibrary"
-import "./editor/EditorSystem/DragManager"
-import "./editor/EditorSystem/EditorRoot/EditorRoot"
-import "./editor/EditorSystem/EditorRoot/TemplatePicker/TemplatePicker"
-import "./editor/EditorSystem/FloatingToolbar/FloatingToolbar"
-import "./editor/EditorSystem/ObserverManager"
 import "./editor/MediaCenter/MediaCenter"
-import "./editor/RichTextBar/RichTextBar"
 import "./editorSystemV2/bootstrap"
-
-import "./editor/configurations/Configuration/EditorConfiguration"
-
-// Snippets
-import "./editor/snippet/Snippet/Snippet"
 
 // Medias
 import "./media/CardMedia/CardMedia"

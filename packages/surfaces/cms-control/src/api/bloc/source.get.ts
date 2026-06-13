@@ -7,7 +7,7 @@ import MissingParam from "cms-control/errors/Http/MissingParam";
  *
  * Response:
  *   - `200 { source: { "<path>": "<base64>" } }` when the bloc has a bundle
- *   - `404 { error: "no source bundle" }` for legacy blocs uploaded before PR 5
+ *   - `404 { error: "no source bundle" }` when no source bundle is stored
  *
  * The bundle is whatever the CLI walked at push time (excluding `node_modules`,
  * `dist`, dotfiles). Binary files are base64-encoded.

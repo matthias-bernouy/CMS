@@ -37,7 +37,13 @@ export const p9rExternalsPlugin: BunPlugin = {
                         `    category:    props?.category ?? "BE5_GROUP_TO_BE_REPLACED",\n` +
                         `    defaultContent: props?.defaultContent ?? BE5_DEFAULT_CONTENT_TO_BE_REPLACED,\n` +
                         `    editor:      props?.editor ?? props?.cl,\n` +
-                        `});\n`,
+                        `});\n` +
+                        `export const registerEditor_opaque = (props = {}) => {\n` +
+                        `    class OpaqueEditor extends window.p9rEditor.Editor {\n` +
+                        `        getStructureMode() { return "opaque"; }\n` +
+                        `    }\n` +
+                        `    registerEditor({ ...props, editor: props?.editor ?? OpaqueEditor });\n` +
+                        `};\n`,
                     loader: "js",
                 };
             },

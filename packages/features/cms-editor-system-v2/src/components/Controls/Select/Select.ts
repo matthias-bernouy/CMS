@@ -43,7 +43,7 @@ export class Select extends HTMLElement {
                     });
             }
         } catch {
-            // Fall through to the legacy comma-separated format.
+            // Fall through to the comma-separated format.
         }
 
         return raw

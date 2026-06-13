@@ -33,13 +33,13 @@ describe("editor catalog script endpoint", () => {
         expect(js).not.toContain("__viewOnly");
     });
 
-    test("normalizes legacy default-content placeholders in stored editor scripts", async () => {
+    test("normalizes default-content placeholders in stored editor scripts", async () => {
         const cache = new Map<string, unknown>();
         const cms = {
             repository: {
                 getBlocsJS: async () => [
                     {
-                        id:       "legacy-card",
+                        id:       "placeholder-card",
                         viewJS:   "",
                         editorJS: "window.p9rEditor.registerEditor({ defaultContent: BE5_DEFAULT_CONTENT_TO_BE_REPLACED, editor: class {} });",
                     },
