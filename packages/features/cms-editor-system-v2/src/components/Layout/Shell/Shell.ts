@@ -54,21 +54,41 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
-const VIEWPORTS: Record<TopBarViewport, { label: string; width: number; height: number }> = {
+const VIEWPORTS: Record<TopBarViewport, { label: string; width: number | "100%"; height: number | "100%"; padding: "normal" | "none"; fit: "fixed" | "fluid" }> = {
     desktop: {
         label:  "Desktop",
         width:  1440,
         height: 900,
+        padding: "normal",
+        fit:    "fixed",
     },
     tablet: {
         label:  "Tablet",
         width:  768,
         height: 900,
+        padding: "normal",
+        fit:    "fixed",
     },
     mobile: {
         label:  "Mobile",
         width:  390,
         height: 844,
+        padding: "normal",
+        fit:    "fixed",
+    },
+    full: {
+        label:  "Full",
+        width:  "100%",
+        height: "100%",
+        padding: "normal",
+        fit:    "fluid",
+    },
+    bleed: {
+        label:  "Bleed",
+        width:  "100%",
+        height: "100%",
+        padding: "none",
+        fit:    "fluid",
     },
 };
 
@@ -637,6 +657,8 @@ export class Shell extends HTMLElement {
         const viewport = VIEWPORTS[this._viewport];
         this._canvas.setAttribute("viewport-width", String(viewport.width));
         this._canvas.setAttribute("viewport-height", String(viewport.height));
+        this._canvas.setAttribute("viewport-padding", viewport.padding);
+        this._canvas.setAttribute("viewport-fit", viewport.fit);
         this._topBar.viewport = this._viewport;
         this.shadowRoot!.querySelector(".viewport-status")!.textContent = viewport.label;
     }

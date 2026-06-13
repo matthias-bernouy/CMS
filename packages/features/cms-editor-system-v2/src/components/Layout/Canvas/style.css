@@ -20,12 +20,23 @@
     background-size: 22px 22px;
 }
 
+:host([viewport-padding="none"]) .canvas {
+    padding: 0;
+}
+
 .viewport {
+    width: 100%;
     min-width: var(--editor-v2-viewport-width);
-    min-height: 100%;
+    min-height: var(--editor-v2-viewport-height);
     display: flex;
     justify-content: center;
     align-items: flex-start;
+}
+
+:host([viewport-fit="fluid"]) .viewport {
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
 }
 
 .page {
@@ -36,6 +47,15 @@
     background: var(--editor-v2-surface);
     box-shadow: var(--editor-v2-shadow);
     overflow: hidden;
+}
+
+:host([viewport-fit="fluid"]) .page {
+    width: 100%;
+    height: 100%;
+}
+
+:host([viewport-padding="none"]) .page {
+    border-radius: 0;
 }
 
 iframe {

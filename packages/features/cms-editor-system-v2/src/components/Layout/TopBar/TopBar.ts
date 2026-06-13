@@ -4,7 +4,7 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
-export type TopBarViewport = "desktop" | "tablet" | "mobile";
+export type TopBarViewport = "desktop" | "tablet" | "mobile" | "full" | "bleed";
 export type TopBarEditorMode = "edit" | "view";
 
 export type TopBarViewportChangeDetail = {
@@ -99,11 +99,7 @@ export class TopBar extends HTMLElement {
         this._syncButtons();
         if (!emit) return;
 
-        this.dispatchEvent(new CustomEvent<TopBarViewportChangeDetail>(TOPBAR_VIEWPORT_CHANGE_EVENT, {
-            bubbles:  true,
-            composed: true,
-            detail:   { viewport },
-        }));
+        this._emitViewportChange();
     }
 
     private _setMode(mode: TopBarEditorMode, emit: boolean): void {
@@ -131,6 +127,14 @@ export class TopBar extends HTMLElement {
             button.classList.toggle("active", isActive);
             button.ariaPressed = String(isActive);
         }
+    }
+
+    private _emitViewportChange(): void {
+        this.dispatchEvent(new CustomEvent<TopBarViewportChangeDetail>(TOPBAR_VIEWPORT_CHANGE_EVENT, {
+            bubbles:  true,
+            composed: true,
+            detail:   { viewport: this._viewport },
+        }));
     }
 }
 

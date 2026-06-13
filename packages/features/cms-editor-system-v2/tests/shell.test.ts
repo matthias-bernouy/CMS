@@ -4,6 +4,7 @@ import type {
     Editor,
     EditorCatalog,
 } from "@bernouy/cms-content/editor";
+import type { TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
 import type { EditorStructureNode } from "../src/runtime";
 
 function installDom(): void {
@@ -26,6 +27,31 @@ function installDom(): void {
 }
 
 describe("Shell", () => {
+    test("topbar emits full and bleed viewport changes", async () => {
+        installDom();
+
+        const {
+            TOPBAR_VIEWPORT_CHANGE_EVENT,
+            TopBar,
+        } = await import("../src/components/Layout/TopBar/TopBar");
+
+        const topbar = new TopBar();
+        document.body.append(topbar);
+
+        const events: TopBarViewportChangeDetail[] = [];
+        topbar.addEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, (event) => {
+            events.push((event as CustomEvent<TopBarViewportChangeDetail>).detail);
+        });
+
+        topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="full"]')!.click();
+        topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="bleed"]')!.click();
+
+        expect(events).toEqual([
+            { viewport: "full" },
+            { viewport: "bleed" },
+        ]);
+    });
+
     test("receives the editor catalog", async () => {
         installDom();
 

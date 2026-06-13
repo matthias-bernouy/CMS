@@ -15,7 +15,7 @@ export const CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click"
 
 export class Canvas extends HTMLElement {
     static get observedAttributes(): string[] {
-        return ["max-width", "viewport-width", "viewport-height", "frame-url"];
+        return ["max-width", "viewport-width", "viewport-height", "frame-url", "viewport-padding", "viewport-fit"];
     }
 
     constructor() {

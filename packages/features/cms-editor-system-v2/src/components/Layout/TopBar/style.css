@@ -115,11 +115,56 @@ button {
 }
 
 .segmented button {
-    min-width: 66px;
+    min-width: 54px;
+}
+
+.device-switch button {
+    min-width: 34px;
+    width: 34px;
+    padding: 0;
+}
+
+.fit-switch button {
+    min-width: 56px;
 }
 
 .mode-switch button {
     min-width: 54px;
+}
+
+.device-icon {
+    display: block;
+    margin: 0 auto;
+    border: 1.5px solid currentColor;
+    border-radius: 3px;
+    position: relative;
+}
+
+.desktop-icon {
+    width: 17px;
+    height: 11px;
+}
+
+.desktop-icon::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    bottom: -4px;
+    height: 3px;
+    border-bottom: 1.5px solid currentColor;
+}
+
+.tablet-icon {
+    width: 13px;
+    height: 17px;
+    border-radius: 4px;
+}
+
+.mobile-icon {
+    width: 10px;
+    height: 17px;
+    border-radius: 4px;
 }
 
 button:hover {
