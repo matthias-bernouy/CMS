@@ -3,12 +3,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { p9rExternalsPlugin } from "./p9rExternalsPlugin";
 
-/** Synthetic editor source for blocs deployed without their own Editor module.
- *  The bloc is registered as opaque: it still gets the default parent-level
- *  action bar, but its subtree is sealed at runtime. */
+/** Synthetic editor source for blocs deployed without their own Editor module. */
 const OPAQUE_EDITOR_SRC = `
-import { registerEditor_opaque } from "@bernouy/cms-control/editor";
-registerEditor_opaque();
+import { Editor, registerEditor } from "@bernouy/cms-content/editor";
+
+class DefaultBlocEditor extends Editor {}
+
+registerEditor({ editor: DefaultBlocEditor });
 `;
 
 /**
@@ -25,6 +26,7 @@ export async function prepare_bloc(
     fileView: File, fileEditor: File | null,
     label: string, group: string, description: string, blocId: string,
     source: Record<string, string> | undefined = undefined,
+    defaultContent: string | undefined = undefined,
 ) {
     const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));
 
@@ -53,10 +55,14 @@ export async function prepare_bloc(
 
         viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", blocId);
 
+        const defaultContentLiteral = JSON.stringify(defaultContent ?? "").replaceAll("$", "$$$$");
+
         editorJS = editorJS
             .replaceAll("BE5_TAG_TO_BE_REPLACED", blocId)
             .replaceAll("BE5_LABEL_TO_BE_REPLACED", label)
-            .replaceAll("BE5_GROUP_TO_BE_REPLACED", group);
+            .replaceAll("BE5_GROUP_TO_BE_REPLACED", group)
+            .replaceAll("BE5_DESCRIPTION_TO_BE_REPLACED", description)
+            .replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", defaultContentLiteral);
 
         return {
             id: blocId,

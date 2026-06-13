@@ -373,6 +373,79 @@ describe("Shell", () => {
         expect(container.innerHTML).toBe(`<p>Inserted from template</p><w13c-snippet identifier="main-nav"><nav>Expanded nav</nav></w13c-snippet>`);
     });
 
+    test("inserts catalog block default content", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        class ContainerEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label: "Content",
+                    accepts: [{ kind: "any-component" as const }],
+                }];
+            }
+        }
+
+        class CardEditor extends Editor {}
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        const contentRoot = frameDocument.createElement("div");
+        contentRoot.setAttribute("data-cms-content", "");
+        const container = frameDocument.createElement("demo-container");
+        contentRoot.append(container);
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        const structureTree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as Element & {
+            setInsertItems?: (_items: unknown[]) => void;
+            setStructure?: () => void;
+        };
+        structureTree.setInsertItems = () => undefined;
+        structureTree.setStructure = () => undefined;
+        shell.setCatalog([{
+            tag: "demo-container",
+            label: "Container",
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: ContainerEditor,
+        }, {
+            tag: "demo-card",
+            label: "Card",
+            defaultContent: `<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`,
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: CardEditor,
+        }]);
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        shell.loadDocument({ root, contentRoot });
+
+        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const containerEditor = runtime.getEditor(container);
+        if (!containerEditor) throw new Error("Missing container editor.");
+
+        (shell as unknown as {
+            _addChild(parent: Editor, item: unknown, slotName?: string): void;
+        })._addChild(containerEditor, {
+            kind: "block",
+            entry: {
+                tag: "demo-card",
+                label: "Card",
+                defaultContent: `<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`,
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: CardEditor,
+            },
+        });
+
+        expect(container.innerHTML).toBe(`<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`);
+    });
+
     test("ignores native rich text input events without a value detail", async () => {
         installDom();
 

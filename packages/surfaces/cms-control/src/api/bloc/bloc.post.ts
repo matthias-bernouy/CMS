@@ -1,4 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
+import { Buffer } from "node:buffer";
+import { posix } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { validateBloc } from "@bernouy/cms-bloc-compile";
 import { DuplicateBlocTagError, P9R_CACHE } from "@bernouy/cms-content";
@@ -44,7 +46,12 @@ export default async function importBloc(req: Request, cms: ControlCms) {
         return new Response(`Bloc with tag "${tag}" already exists`, { status: 409 });
     }
 
-    const bloc = await prepare_bloc(viewFile, editorFile, name, group, description, tag, source);
+    const defaultContentResult = resolveDefaultContent(source);
+    if (defaultContentResult.error) {
+        return new Response(defaultContentResult.error, { status: 400 });
+    }
+
+    const bloc = await prepare_bloc(viewFile, editorFile, name, group, description, tag, source, defaultContentResult.content);
 
     try {
         if (force) await cms.repository.replaceBloc(bloc);
@@ -90,4 +97,44 @@ function parseSourceMap(raw: FormDataEntryValue | null): Record<string, string> 
     } catch {
         return undefined;
     }
+}
+
+function resolveDefaultContent(source: Record<string, string> | undefined): { content?: string; error?: string } {
+    if (!source) return {};
+
+    const manifestRaw = source["manifest.json"] ?? source["./manifest.json"];
+    if (!manifestRaw) return {};
+
+    let manifest: unknown;
+    try {
+        manifest = JSON.parse(decodeSourceFile(manifestRaw));
+    } catch {
+        return { error: "Invalid manifest.json" };
+    }
+
+    if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) return {};
+    const value = (manifest as { defaultContent?: unknown }).defaultContent;
+    if (value === undefined || value === null || value === "") return {};
+    if (typeof value !== "string") return { error: "manifest.defaultContent must be a file path" };
+
+    const normalizedPath = normalizeSourcePath(value);
+    if (!normalizedPath) return { error: "manifest.defaultContent must be a relative file path" };
+
+    const encoded = source[normalizedPath] ?? source[`./${normalizedPath}`];
+    if (!encoded) return { error: `manifest.defaultContent file "${normalizedPath}" not found in source bundle` };
+
+    return { content: decodeSourceFile(encoded) };
+}
+
+function normalizeSourcePath(path: string): string | null {
+    if (path.startsWith("/") || path.includes("\0")) return null;
+
+    const normalized = posix.normalize(path).replace(/^\.\//, "");
+    if (!normalized || normalized === "." || normalized.startsWith("../")) return null;
+
+    return normalized;
+}
+
+function decodeSourceFile(encoded: string): string {
+    return Buffer.from(encoded, "base64").toString("utf8");
 }

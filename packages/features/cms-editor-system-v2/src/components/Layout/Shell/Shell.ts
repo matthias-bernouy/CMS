@@ -625,14 +625,17 @@ export class Shell extends HTMLElement {
         if (item.kind === "media") return null;
 
         if (item.kind === "block") {
-            const child = document.createElement(item.entry.tag);
-            this._applySlot(child, slotName);
-            const fragment = document.createDocumentFragment();
-            fragment.append(child);
+            const fragment = this._createBlockFragment(document, item.entry);
+            const slotElements = Array.from(fragment.children).filter(this._isElementNode) as HTMLElement[];
+            for (const child of slotElements) {
+                this._applySlot(child, slotName);
+            }
+            const selectionTarget = slotElements.find(child => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
+            if (!selectionTarget) return null;
             return {
                 fragment,
-                selectionTarget: child,
-                slotElements: [child],
+                selectionTarget,
+                slotElements,
             };
         }
 
@@ -667,6 +670,20 @@ export class Shell extends HTMLElement {
             selectionTarget,
             slotElements,
         };
+    }
+
+    private _createBlockFragment(document: Document, entry: EditorCatalogEntry): DocumentFragment {
+        if (!entry.defaultContent) {
+            const fragment = document.createDocumentFragment();
+            fragment.append(document.createElement(entry.tag));
+            return fragment;
+        }
+
+        const template = document.createElement("template");
+        template.innerHTML = entry.defaultContent;
+        const fragment = template.content.cloneNode(true) as DocumentFragment;
+        this._expandSnippetReferences(fragment);
+        return fragment;
     }
 
     private _insertMedia(parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string): void {
@@ -765,7 +782,7 @@ export class Shell extends HTMLElement {
         return link;
     }
 
-    private _expandSnippetReferences(fragment: DocumentFragment): void {
+    private _expandSnippetReferences(fragment: ParentNode): void {
         const snippets = this._insertItems.filter(item => item.kind === "snippet");
         if (snippets.length === 0) return;
 

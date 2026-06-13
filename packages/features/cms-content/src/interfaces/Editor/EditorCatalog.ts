@@ -9,6 +9,7 @@ export type EditorCatalogEntry = {
     icon?: string;
     category?: string;
     subCategory?: string;
+    defaultContent?: string;
     bloc: CustomElementConstructor;
     editor: EditorConstructor;
 };
@@ -22,6 +23,7 @@ export type EditorCatalogRegistration = {
     icon?: string;
     category?: string;
     subCategory?: string;
+    defaultContent?: string;
     bloc?: CustomElementConstructor;
     editor?: EditorConstructor;
 };
@@ -31,6 +33,7 @@ export type EditorCatalogRegistrationDefaults = {
     label: string;
     description?: string;
     category?: string;
+    defaultContent?: string;
     bloc?: CustomElementConstructor;
 };
 

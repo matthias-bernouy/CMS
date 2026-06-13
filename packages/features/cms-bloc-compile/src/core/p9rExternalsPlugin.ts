@@ -35,6 +35,7 @@ export const p9rExternalsPlugin: BunPlugin = {
                         `    label:       props?.label ?? "BE5_LABEL_TO_BE_REPLACED",\n` +
                         `    description: props?.description ?? "BE5_DESCRIPTION_TO_BE_REPLACED",\n` +
                         `    category:    props?.category ?? "BE5_GROUP_TO_BE_REPLACED",\n` +
+                        `    defaultContent: props?.defaultContent ?? BE5_DEFAULT_CONTENT_TO_BE_REPLACED,\n` +
                         `    editor:      props?.editor ?? props?.cl,\n` +
                         `});\n`,
                     loader: "js",

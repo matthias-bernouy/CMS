@@ -25,4 +25,23 @@ describe("prepare_bloc editor catalog output", () => {
         expect(bloc.editorJS).not.toContain("registerEditor_opaque");
         expect(bloc.viewJS).toContain("customElements.define");
     });
+
+    test("embeds default content into editor catalog registrations", async () => {
+        const view = new File([
+            "customElements.define('demo-card', class extends HTMLElement {});",
+        ], "DemoCard.ts", { type: "text/typescript" });
+
+        const bloc = await prepare_bloc(
+            view,
+            null,
+            "Demo card",
+            "Content",
+            "A demo bloc",
+            "demo-card",
+            undefined,
+            `<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`,
+        );
+
+        expect(bloc.editorJS).toContain('defaultContent: props?.defaultContent ?? "<demo-card variant=\\"featured\\"><p slot=\\"header\\">Title</p><p>Body</p></demo-card>"');
+    });
 });

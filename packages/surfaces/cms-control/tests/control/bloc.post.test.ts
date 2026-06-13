@@ -1,6 +1,13 @@
 import { describe, test, expect, mock } from "bun:test";
+import { Buffer } from "node:buffer";
 import { DuplicateBlocTagError, P9R_CACHE } from "@bernouy/cms-content";
 import type { TBloc } from "@bernouy/cms-content";
+
+const prepareBlocCalls: Array<{
+    blocId: string;
+    source?: Record<string, string>;
+    defaultContent?: string;
+}> = [];
 
 // Stub prepare_bloc so tests never touch the filesystem or run Bun.build.
 // Must be registered before importBloc is imported.
@@ -14,14 +21,19 @@ mock.module("@bernouy/cms-bloc-compile", () => ({
         group: string,
         description: string,
         blocId: string,
-    ): Promise<TBloc> => ({
-        id: blocId,
-        name: label,
-        group,
-        description,
-        viewJS: "/*view*/",
-        editorJS: "/*editor*/",
-    }),
+        source?: Record<string, string>,
+        defaultContent?: string,
+    ): Promise<TBloc> => {
+        prepareBlocCalls.push({ blocId, source, defaultContent });
+        return {
+            id:       blocId,
+            name:     label,
+            group,
+            description,
+            viewJS:   "/*view*/",
+            editorJS: "/*editor*/",
+        };
+    },
 }));
 
 const { default: importBloc } = await import("cms-control/api/bloc/bloc.post");
@@ -70,6 +82,12 @@ function makeRequest(fields: Record<string, string | File | null>) {
 }
 
 const viewFile = () => new File(["/*view*/"], "Bloc.js", { type: "application/javascript" });
+
+function sourceField(files: Record<string, string>): string {
+    return JSON.stringify(Object.fromEntries(
+        Object.entries(files).map(([path, content]) => [path, Buffer.from(content).toString("base64")]),
+    ));
+}
 
 describe("bloc.post", () => {
     test("400 when name is missing", async () => {
@@ -227,5 +245,27 @@ describe("bloc.post", () => {
         );
         expect(res.status).toBe(200);
         expect(createBlocCalls).toHaveLength(1);
+    });
+
+    test("passes manifest defaultContent file content to prepare_bloc", async () => {
+        prepareBlocCalls.length = 0;
+        const { cms, createBlocCalls } = makeSystem();
+        const res = await importBloc(
+            makeRequest({
+                name: "My",
+                tag: "my-bloc",
+                group: "g",
+                viewJS: viewFile(),
+                source: sourceField({
+                    "manifest.json": JSON.stringify({ defaultContent: "./default.html" }),
+                    "default.html": `<my-bloc><p slot="header">Title</p><p>Body</p></my-bloc>`,
+                }),
+            }),
+            cms
+        );
+
+        expect(res.status).toBe(200);
+        expect(createBlocCalls).toHaveLength(1);
+        expect(prepareBlocCalls[0]?.defaultContent).toBe(`<my-bloc><p slot="header">Title</p><p>Body</p></my-bloc>`);
     });
 });

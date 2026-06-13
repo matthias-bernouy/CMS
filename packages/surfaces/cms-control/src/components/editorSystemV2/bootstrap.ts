@@ -203,6 +203,7 @@ function installEditorCatalogRuntime(): EditorCatalogRuntime {
                     label:       entry.label ?? entry.tag ?? "Unknown bloc",
                     description: entry.description,
                     category:    entry.category ?? entry.group,
+                    defaultContent: entry.defaultContent,
                     bloc:        entry.bloc,
                 }));
             } catch (error) {
