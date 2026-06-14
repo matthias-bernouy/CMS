@@ -26,7 +26,7 @@
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr);
     gap: 12px;
-    width: min(920px, calc(100vw - 48px));
+    width: min(1120px, calc(100vw - 48px));
     height: min(620px, calc(100vh - var(--source-picker-top-offset) - 24px));
     border: 1px solid var(--editor-v2-border);
     border-radius: 10px;
@@ -95,15 +95,17 @@ h2 {
 
 .body {
     display: grid;
-    grid-template-columns: 210px minmax(0, 1fr) 280px;
+    grid-template-columns: minmax(150px, 190px) minmax(220px, 1fr) minmax(190px, 260px) minmax(220px, 300px);
     gap: 12px;
     min-height: 0;
 }
 
 .providers,
 .sources,
-.details {
+.details,
+.binding {
     min-height: 0;
+    min-width: 0;
     overflow: auto;
 }
 
@@ -206,12 +208,43 @@ h2 {
     overflow-wrap: anywhere;
 }
 
-.details {
+.details,
+.binding {
     display: grid;
-    align-content: start;
     gap: 12px;
     border-left: 1px solid var(--editor-v2-border);
     padding-left: 12px;
+}
+
+.details {
+    align-content: start;
+}
+
+.binding {
+    grid-template-rows: minmax(0, 1fr) auto;
+    overflow-x: hidden;
+}
+
+.binding-scroll {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 2px;
+}
+
+.binding-scroll > .config-heading {
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--editor-v2-border);
+}
+
+.binding-footer {
+    display: grid;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--editor-v2-border);
 }
 
 .details-eyebrow {
@@ -236,46 +269,147 @@ h2 {
     line-height: 1.45;
 }
 
-dl {
+.binding-config {
     display: grid;
-    gap: 8px;
-    margin: 0;
+    gap: 12px;
+    min-width: 0;
 }
 
-dl > div {
+.binding-config label {
     display: grid;
-    gap: 2px;
+    gap: 5px;
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    font-weight: 700;
 }
 
-dt {
+.source-alias,
+.param-value,
+.param-mode {
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 6px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+    padding: 0 9px;
+}
+
+.source-alias:focus,
+.param-value:focus,
+.param-mode:focus {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
+}
+
+.config-heading {
     color: var(--editor-v2-muted);
     font-size: 10px;
     font-weight: 780;
     text-transform: uppercase;
 }
 
-dd {
-    margin: 0;
+.param-row {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface);
+    padding: 10px;
+}
+
+.param-header {
+    display: grid;
+    gap: 5px;
+}
+
+.param-controls {
+    display: grid;
+    gap: 7px;
+}
+
+.param-header {
     color: var(--editor-v2-text);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: 760;
+}
+
+.param-name {
+    min-width: 0;
     overflow-wrap: anywhere;
+}
+
+.param-meta {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.param-meta span {
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 18%, var(--editor-v2-border));
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--editor-v2-accent) 5%, var(--editor-v2-bg));
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 720;
+    line-height: 1;
+    padding: 3px 5px;
+}
+
+.param-meta span:first-child {
+    text-transform: uppercase;
+}
+
+.param-meta span:last-child {
+    color: var(--editor-v2-muted);
+}
+
+.param-row p {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.param-mode,
+.param-value {
+    background: var(--editor-v2-bg);
 }
 
 .fields {
     display: grid;
-    gap: 4px;
+    gap: 2px;
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.fields li {
+.field {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
+    column-gap: 8px;
     color: var(--editor-v2-text);
     font-size: 11px;
+    line-height: 1.35;
+    padding: 3px 0 3px calc(var(--field-depth, 0) * 12px);
+}
+
+.field-path {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.field-children {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 2px;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
 }
 
 .field-type {
@@ -284,6 +418,7 @@ dd {
 }
 
 .insert {
+    margin-top: 2px;
     min-height: 32px;
     border: 1px solid var(--editor-v2-accent);
     border-radius: 7px;
@@ -293,6 +428,22 @@ dd {
     font-size: 12px;
     font-weight: 730;
     cursor: pointer;
+}
+
+.remove-source {
+    min-height: 32px;
+    border: 1px solid color-mix(in srgb, #b42318 36%, var(--editor-v2-border));
+    border-radius: 7px;
+    background: transparent;
+    color: #b42318;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 730;
+    cursor: pointer;
+}
+
+.remove-source:hover {
+    background: color-mix(in srgb, #b42318 7%, transparent);
 }
 
 .details-empty,

@@ -6,16 +6,29 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
+export type DataSourcePickerSourceParamValue =
+    | { from: "queryParam"; name: string }
+    | { from: "raw"; value: string };
+
+export type DataSourcePickerSourceBinding = {
+    url: string;
+    alias?: string;
+    params?: Record<string, DataSourcePickerSourceParamValue>;
+};
+
 export type DataSourcePickerSelectDetail = {
     source: EditorDataSource;
+    binding: DataSourcePickerSourceBinding;
 };
 
 export const DATA_SOURCE_PICKER_SELECT_EVENT = "editor-v2:data-source-select";
+export const DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
 
 export class DataSourcePicker extends HTMLElement {
     private _sources: EditorDataSource[] = [];
     private _activeProvider = "";
     private _activeSource: EditorDataSource | null = null;
+    private _canRemove = false;
 
     constructor() {
         super();
@@ -36,13 +49,14 @@ export class DataSourcePicker extends HTMLElement {
         this.ownerDocument.removeEventListener("keydown", this._onKeydown);
     }
 
-    open(sources: EditorDataSource[], contextLabel?: string): void {
+    open(sources: EditorDataSource[], contextLabel?: string, options: { canRemove?: boolean } = {}): void {
         this._sources = sources.map(source => ({
             ...source,
             fields: [...source.fields],
         }));
         this._activeProvider = this._providerGroups()[0]?.key ?? "";
         this._activeSource = null;
+        this._canRemove = options.canRemove === true;
         this.subtitle.textContent = contextLabel ? `Choose a data source for ${contextLabel}.` : "Choose a data source.";
         this.search.value = "";
         this.backdrop.hidden = false;
@@ -58,6 +72,7 @@ export class DataSourcePicker extends HTMLElement {
         this._renderProviders();
         this._renderSources();
         this._renderDetails();
+        this._renderBinding();
     }
 
     private _renderProviders(): void {
@@ -126,6 +141,7 @@ export class DataSourcePicker extends HTMLElement {
                 this._activeSource = source;
                 this._renderSources();
                 this._renderDetails();
+                this._renderBinding();
             });
             button.addEventListener("dblclick", () => this._select(source));
             this.sourcesList.append(button);
@@ -143,48 +159,128 @@ export class DataSourcePicker extends HTMLElement {
             return;
         }
 
-        const source = this._activeSource;
-        const eyebrow = document.createElement("div");
-        eyebrow.className = "details-eyebrow";
-        eyebrow.textContent = source.providerLabel ?? source.provider ?? "Source";
+        const heading = document.createElement("div");
+        heading.className = "details-eyebrow";
+        heading.textContent = "Response fields";
 
-        const title = document.createElement("h3");
-        title.textContent = source.label;
+        this.details.append(heading, this._renderFields(this._activeSource.fields));
+    }
 
-        const description = document.createElement("p");
-        description.textContent = source.description ?? "No description.";
+    private _renderBinding(): void {
+        this.binding.replaceChildren();
 
-        const meta = document.createElement("dl");
-        meta.append(
-            this._definition("URL", source.url),
-            this._definition("Fields", String(this._flattenFields(source.fields).length)),
-        );
+        if (!this._activeSource) {
+            const empty = document.createElement("div");
+            empty.className = "details-empty";
+            empty.textContent = "Select a source to configure its binding.";
+            this.binding.append(empty);
+            return;
+        }
 
-        const fields = this._renderFields(source.fields);
+        const title = document.createElement("div");
+        title.className = "config-heading";
+        title.textContent = "Binding";
+
+        const config = this._renderBindingConfig(this._activeSource);
+        const scroll = document.createElement("div");
+        scroll.className = "binding-scroll";
+        scroll.append(title, config);
 
         const insert = document.createElement("button");
         insert.className = "insert";
         insert.type = "button";
         insert.textContent = "Use source";
-        insert.addEventListener("click", () => this._select(source));
+        insert.addEventListener("click", () => this._select(this._activeSource!));
+        const footer = document.createElement("footer");
+        footer.className = "binding-footer";
 
-        this.details.append(eyebrow, title, description, meta, fields, insert);
+        if (this._canRemove) {
+            const remove = document.createElement("button");
+            remove.className = "remove-source";
+            remove.type = "button";
+            remove.textContent = "Remove source";
+            remove.addEventListener("click", this._remove);
+            footer.append(remove);
+        }
+        footer.append(insert);
+
+        this.binding.append(scroll, footer);
+    }
+
+    private _renderBindingConfig(source: EditorDataSource): HTMLElement {
+        const section = document.createElement("section");
+        section.className = "binding-config";
+
+        const aliasLabel = document.createElement("label");
+        aliasLabel.textContent = "Alias";
+        const alias = document.createElement("input");
+        alias.className = "source-alias";
+        alias.value = "data";
+        alias.placeholder = "data";
+        aliasLabel.append(alias);
+        section.append(aliasLabel);
+
+        const params = source.params ?? [];
+        if (params.length === 0) return section;
+
+        const heading = document.createElement("div");
+        heading.className = "config-heading";
+        heading.textContent = "Request params";
+        section.append(heading);
+
+        for (const param of params) {
+            const row = document.createElement("div");
+            row.className = "param-row";
+            row.dataset.paramName = param.name;
+
+            const header = document.createElement("div");
+            header.className = "param-header";
+            const name = document.createElement("span");
+            name.className = "param-name";
+            name.textContent = param.required ? `${param.name} *` : param.name;
+            const meta = document.createElement("span");
+            meta.className = "param-meta";
+            const location = document.createElement("span");
+            location.textContent = param.in;
+            const type = document.createElement("span");
+            type.textContent = param.type ?? "unknown";
+            meta.append(location, type);
+            header.append(name, meta);
+
+            const description = document.createElement("p");
+            description.textContent = param.description ?? "";
+            description.hidden = !param.description;
+
+            const controls = document.createElement("div");
+            controls.className = "param-controls";
+
+            const mode = document.createElement("select");
+            mode.className = "param-mode";
+            const queryParamOption = document.createElement("option");
+            queryParamOption.value = "queryParam";
+            queryParamOption.textContent = "Query param";
+            const rawOption = document.createElement("option");
+            rawOption.value = "raw";
+            rawOption.textContent = "Raw value";
+            mode.append(queryParamOption, rawOption);
+
+            const value = document.createElement("input");
+            value.className = "param-value";
+            value.placeholder = param.name;
+
+            controls.append(mode, value);
+            row.append(header, description, controls);
+            section.append(row);
+        }
+
+        return section;
     }
 
     private _renderFields(fields: DataField[]): HTMLElement {
         const list = document.createElement("ul");
         list.className = "fields";
 
-        for (const field of this._flattenFields(fields).slice(0, 8)) {
-            const item = document.createElement("li");
-            const path = document.createElement("span");
-            path.textContent = field.path;
-            const type = document.createElement("span");
-            type.className = "field-type";
-            type.textContent = field.type ?? "unknown";
-            item.append(path, type);
-            list.append(item);
-        }
+        for (const field of fields) list.append(this._renderField(field, 0));
 
         if (list.children.length === 0) {
             const empty = document.createElement("p");
@@ -196,23 +292,70 @@ export class DataSourcePicker extends HTMLElement {
         return list;
     }
 
-    private _definition(label: string, value: string): HTMLElement {
-        const row = document.createElement("div");
-        const dt = document.createElement("dt");
-        dt.textContent = label;
-        const dd = document.createElement("dd");
-        dd.textContent = value;
-        row.append(dt, dd);
-        return row;
+    private _renderField(field: DataField, depth: number): HTMLElement {
+        const item = document.createElement("li");
+        item.className = "field";
+        item.style.setProperty("--field-depth", String(depth));
+
+        const path = document.createElement("span");
+        path.className = "field-path";
+        path.textContent = field.path;
+        const type = document.createElement("span");
+        type.className = "field-type";
+        type.textContent = field.type ?? "unknown";
+        item.append(path, type);
+
+        if (field.children?.length) {
+            const children = document.createElement("ul");
+            children.className = "field-children";
+            for (const child of field.children) children.append(this._renderField(child, depth + 1));
+            item.append(children);
+        }
+
+        return item;
     }
 
     private _select(source: EditorDataSource): void {
         this.dispatchEvent(new CustomEvent<DataSourcePickerSelectDetail>(DATA_SOURCE_PICKER_SELECT_EVENT, {
             bubbles: true,
             composed: true,
-            detail: { source },
+            detail: {
+                source,
+                binding: this._sourceBinding(source),
+            },
         }));
         this.close();
+    }
+
+    private readonly _remove = (): void => {
+        this.dispatchEvent(new CustomEvent(DATA_SOURCE_PICKER_REMOVE_EVENT, {
+            bubbles: true,
+            composed: true,
+        }));
+        this.close();
+    };
+
+    private _sourceBinding(source: EditorDataSource): DataSourcePickerSourceBinding {
+        const alias = this.shadowRoot!.querySelector<HTMLInputElement>(".source-alias")?.value.trim();
+        const params: Record<string, DataSourcePickerSourceParamValue> = {};
+
+        for (const row of Array.from(this.shadowRoot!.querySelectorAll(".param-row")) as HTMLElement[]) {
+            const name = row.dataset.paramName;
+            const modeElement = row.querySelector(".param-mode") as HTMLSelectElement | null;
+            const mode = modeElement?.getAttribute("value") ?? modeElement?.value;
+            const rawValue = (row.querySelector(".param-value") as HTMLInputElement | null)?.value.trim();
+            if (!name || !rawValue) continue;
+
+            params[name] = mode === "raw"
+                ? { from: "raw", value: rawValue }
+                : { from: "queryParam", name: rawValue };
+        }
+
+        return {
+            url: source.url,
+            ...(alias ? { alias } : {}),
+            ...(Object.keys(params).length ? { params } : {}),
+        };
     }
 
     private _providerGroups(): { key: string; label: string; count: number }[] {
@@ -247,17 +390,6 @@ export class DataSourcePicker extends HTMLElement {
             source.providerLabel,
             source.url,
         ].some(value => value?.toLowerCase().includes(query)));
-    }
-
-    private _flattenFields(fields: DataField[], prefix = ""): DataField[] {
-        return fields.flatMap(field => {
-            const path = prefix && field.path !== "." ? `${prefix}.${field.path}` : field.path === "." ? prefix || "." : field.path;
-            const current = { ...field, path };
-            return [
-                current,
-                ...this._flattenFields(field.children ?? [], path),
-            ];
-        });
     }
 
     private _escape(value: string): string {
@@ -308,6 +440,10 @@ export class DataSourcePicker extends HTMLElement {
 
     private get details(): HTMLElement {
         return this.shadowRoot!.querySelector(".details")!;
+    }
+
+    private get binding(): HTMLElement {
+        return this.shadowRoot!.querySelector(".binding")!;
     }
 }
 
