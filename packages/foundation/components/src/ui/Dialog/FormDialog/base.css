@@ -3,6 +3,11 @@
     --_modal-radius: 12px;
     --_modal-bg: var(--bg-surface);
     --_modal-border: var(--border-default);
+
+    --ctx-bg: var(--_modal-bg);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--_modal-border);
 }
 
 dialog {
@@ -66,4 +71,11 @@ footer.actions {
     justify-content: flex-end;
     gap: 0.75rem;
     border-top: 1px solid var(--border-default);
+}
+
+footer.actions slot[name="footer"]::slotted(*) {
+    --ctx-bg: var(--bg-base);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--border-default);
 }

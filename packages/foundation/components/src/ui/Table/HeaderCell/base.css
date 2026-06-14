@@ -39,7 +39,7 @@
   border: 0;
   background: transparent;
   border-radius: 4px;
-  color: #ccc;
+  color: var(--text-muted);
 }
 
 .filter-popover {
@@ -47,7 +47,7 @@
   top: 100%;
   left: 0;
   z-index: 10;
-  background: var(--bg-surface, white);
+  background: var(--bg-surface);
   border: 1px solid var(--border-default, #ddd);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 10px;

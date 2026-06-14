@@ -8,21 +8,27 @@
   --_border: 1.5px solid transparent;
   --_hover-bg: var(--bg-base, #f1f5f9);
   --_accent: var(--text-main);
+  --_accent-contrast: var(--bg-surface);
+
+  --ctx-bg: var(--_bg);
+  --ctx-fg: var(--_color);
+  --ctx-fg-muted: var(--text-muted);
+  --ctx-border: var(--_border);
 }
 
 :host([size="sm"]) { --_size: 1.75rem; --_radius: 6px; }
 :host([size="md"]) { --_size: 2.25rem; --_radius: 8px; }
 :host([size="lg"]) { --_size: 2.75rem; --_radius: 10px; }
 
-:host([color="primary"]) { --_accent: var(--primary-base); }
-:host([color="danger"])  { --_accent: var(--danger-base); }
-:host([color="success"]) { --_accent: var(--success-base); }
-:host([color="info"])    { --_accent: var(--info-base); }
-:host([color="warning"]) { --_accent: var(--warning-base); }
+:host([color="primary"]) { --_accent: var(--primary-base); --_accent-contrast: var(--primary-contrasted); }
+:host([color="danger"])  { --_accent: var(--danger-base); --_accent-contrast: var(--danger-contrasted); }
+:host([color="success"]) { --_accent: var(--success-base); --_accent-contrast: var(--success-contrasted); }
+:host([color="info"])    { --_accent: var(--info-base); --_accent-contrast: var(--info-contrasted); }
+:host([color="warning"]) { --_accent: var(--warning-base); --_accent-contrast: var(--warning-contrasted); }
 
 :host([variant="filled"]) {
   --_bg: var(--_accent);
-  --_color: white;
+  --_color: var(--_accent-contrast);
   --_hover-bg: var(--_accent);
 }
 

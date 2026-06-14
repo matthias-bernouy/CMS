@@ -10,6 +10,11 @@
     background: var(--nav-bg);
     color: var(--nav-fg);
     border-bottom: 1px solid var(--nav-border);
+
+    --ctx-bg: var(--nav-bg);
+    --ctx-fg: var(--nav-fg);
+    --ctx-fg-muted: color-mix(in oklab, var(--nav-fg) 68%, var(--nav-bg));
+    --ctx-border: var(--nav-border);
 }
 
 .navbar {
@@ -40,8 +45,8 @@
 
 :host([sticky="yes"])        { position: sticky; top: 0; z-index: 50; }
 :host([variant="surface"])   { --nav-bg: var(--bg-surface, #f8fafc); }
-:host([variant="primary"])   { --nav-bg: var(--primary-base, #4361ee); --nav-fg: #fff; --nav-border: transparent; }
-:host([variant="secondary"]) { --nav-bg: var(--secondary-base, #3a0ca3); --nav-fg: #fff; --nav-border: transparent; }
+:host([variant="primary"])   { --nav-bg: var(--primary-base, #4361ee); --nav-fg: var(--primary-contrasted); --nav-border: transparent; }
+:host([variant="secondary"]) { --nav-bg: var(--secondary-base, #3a0ca3); --nav-fg: var(--secondary-contrasted); --nav-border: transparent; }
 
 @media (max-width: 768px) {
     .burger {

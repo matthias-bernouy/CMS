@@ -7,6 +7,11 @@
     --modal-shadow: var(--p9r-modal-shadow,
         0 20px 25px -5px rgba(0,0,0,0.1),
         0 10px 10px -5px rgba(0,0,0,0.04));
+
+    --ctx-bg: var(--modal-bg);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--modal-border);
 }
 
 dialog {
@@ -72,7 +77,7 @@ dialog[open]::backdrop { opacity: 1; }
     font-size: 1.5rem; line-height: 1; padding: 2px 8px;
     color: inherit; border-radius: 6px;
 }
-.close:hover { background: rgba(0,0,0,0.06); }
+.close:hover { background: color-mix(in oklab, var(--text-main) 6%, transparent); }
 :host([no-close]) .close { display: none; }
 
 .body { padding: var(--modal-pad); overflow: auto; }

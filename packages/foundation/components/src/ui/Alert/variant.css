@@ -30,7 +30,7 @@
 :host([icon][type="success"]) .icon::before,
 :host([type="success"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before {
   content: "✓";
-  color: white;
+  color: var(--bg-surface);
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -43,7 +43,7 @@
 :host([icon][type="danger"]) .icon::before,
 :host([type="danger"]:not([icon="false"])) .icon:has(slot[name="icon"]:not(:has(*)))::before {
   content: "!";
-  color: white;
+  color: var(--bg-surface);
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -53,7 +53,7 @@
 :host(:not([type])) .icon:has(slot[name="icon"]:not(:has(*)))::before,
 :host([type="info"]) .icon:has(slot[name="icon"]:not(:has(*)))::before {
   content: "i";
-  color: white;
+  color: var(--bg-surface);
   font-size: 12px;
   font-weight: 700;
   line-height: 1;

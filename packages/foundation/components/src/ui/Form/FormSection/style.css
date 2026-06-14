@@ -1,6 +1,11 @@
 :host {
     display: block;
     margin-bottom: 8px;
+
+    --ctx-bg: var(--bg-surface);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--border-default);
 }
 
 .section-container {
@@ -75,4 +80,8 @@ header:focus-visible {
 
 .content ::slotted(*) {
     width: 100%;
+    --ctx-bg: var(--bg-surface);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--border-default);
 }

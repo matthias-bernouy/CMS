@@ -10,6 +10,11 @@
   --_offset: 8px;
   --_max-w: 240px;
   --_arrow-size: 5px;
+
+  --ctx-bg: var(--_bg);
+  --ctx-fg: var(--_color);
+  --ctx-fg-muted: color-mix(in oklab, var(--_color) 72%, var(--_bg));
+  --ctx-border: var(--_bg);
 }
 
 .trigger {

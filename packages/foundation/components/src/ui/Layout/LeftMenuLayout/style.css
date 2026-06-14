@@ -6,11 +6,16 @@
 
     --_sidebar-width: 260px;
     --_sidebar-collapsed-width: 0px;
-    --_sidebar-bg: #f4f4f4;
-    --_sidebar-border: #ddd;
-    --_content-bg: #ffffff;
+    --_sidebar-bg: var(--bg-base);
+    --_sidebar-border: var(--border-default);
+    --_content-bg: var(--bg-surface);
     --_content-padding: 2rem;
     --_focus-ring: var(--primary-base, #2563eb);
+
+    --ctx-bg: var(--_content-bg);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--border-default);
 }
 
 .app-container {
@@ -51,6 +56,20 @@
 .app-nav {
     height: 100%;
     overflow-y: auto;
+}
+
+::slotted([slot="sidebar"]) {
+    --ctx-bg: var(--_sidebar-bg);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--_sidebar-border);
+}
+
+::slotted(:not([slot])) {
+    --ctx-bg: var(--_content-bg);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--border-default);
 }
 
 :host([collapsed]) .app-sidebar {

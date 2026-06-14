@@ -9,6 +9,11 @@
   --_radius: 999px;
   --_size: 11px;
   --_dot-color: var(--text-muted, #94a3b8);
+
+  --ctx-bg: var(--_bg);
+  --ctx-fg: var(--_text);
+  --ctx-fg-muted: var(--text-muted);
+  --ctx-border: var(--_border);
 }
 
 :host([color="primary"]) { --_bg: var(--primary-muted); --_text: var(--primary-contrasted); --_dot-color: var(--primary-base); }
@@ -17,11 +22,11 @@
 :host([color="info"])    { --_bg: var(--info-muted);    --_text: var(--info-contrasted);    --_dot-color: var(--info-base); }
 :host([color="warning"]) { --_bg: var(--warning-muted); --_text: var(--warning-contrasted); --_dot-color: var(--warning-base); }
 
-:host([variant="filled"][color="primary"]) { --_bg: var(--primary-base); --_text: white; }
-:host([variant="filled"][color="danger"])  { --_bg: var(--danger-base);  --_text: white; }
-:host([variant="filled"][color="success"]) { --_bg: var(--success-base); --_text: white; }
-:host([variant="filled"][color="info"])    { --_bg: var(--info-base);    --_text: white; }
-:host([variant="filled"][color="warning"]) { --_bg: var(--warning-base); --_text: white; }
+:host([variant="filled"][color="primary"]) { --_bg: var(--primary-base); --_text: var(--primary-contrasted); }
+:host([variant="filled"][color="danger"])  { --_bg: var(--danger-base);  --_text: var(--danger-contrasted); }
+:host([variant="filled"][color="success"]) { --_bg: var(--success-base); --_text: var(--success-contrasted); }
+:host([variant="filled"][color="info"])    { --_bg: var(--info-base);    --_text: var(--info-contrasted); }
+:host([variant="filled"][color="warning"]) { --_bg: var(--warning-base); --_text: var(--warning-contrasted); }
 
 :host([variant="outlined"]) {
   --_bg: transparent;

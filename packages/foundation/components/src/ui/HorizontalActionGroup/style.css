@@ -16,6 +16,11 @@
 
   --_border-color: var(--border-default, #e5e7eb);
 
+  --ctx-bg: var(--_toolbar-bg);
+  --ctx-fg: var(--text-main);
+  --ctx-fg-muted: var(--text-muted);
+  --ctx-border: var(--_toolbar-border);
+
   touch-action: none;
 }
 

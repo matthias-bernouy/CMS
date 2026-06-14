@@ -3,10 +3,15 @@
     flex-direction: column;
     width: 260px;
     height: 100vh;
-    background-color: #ffffff;
+    background-color: var(--bg-surface);
     border-right: 1px solid var(--secondary-muted);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     box-sizing: border-box;
+
+    --ctx-bg: var(--bg-surface);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--secondary-muted);
 }
 
 :host([collapsed]) {

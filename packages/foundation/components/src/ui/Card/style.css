@@ -9,6 +9,11 @@
   --_padding: 1.25rem;
   --_gap: 0.75rem;
   --_text: var(--text-main, #1f2937);
+
+  --ctx-bg: var(--_bg);
+  --ctx-fg: var(--_text);
+  --ctx-fg-muted: var(--text-muted);
+  --ctx-border: var(--_border-color);
 }
 
 :host([variant="outlined"]) {

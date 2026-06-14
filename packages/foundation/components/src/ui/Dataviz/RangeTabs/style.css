@@ -32,5 +32,5 @@
 
 .tabs button.active {
     background: var(--primary-base, #4f46e5);
-    color: #fff;
+    color: var(--primary-contrasted);
 }

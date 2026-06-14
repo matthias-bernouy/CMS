@@ -7,6 +7,11 @@
   --_color: var(--text-main, #1f2937);
   --_border: 0px solid transparent;
   --_font-size: calc(var(--_size) * 0.4);
+
+  --ctx-bg: var(--_bg);
+  --ctx-fg: var(--_color);
+  --ctx-fg-muted: var(--text-muted);
+  --ctx-border: transparent;
 }
 
 :host([size="xs"]) { --_size: 1.25rem; }
@@ -26,6 +31,7 @@
 
 :host([bordered]) {
   --_border: 2px solid var(--bg-surface, #fff);
+  --ctx-border: var(--bg-surface);
 }
 
 .avatar {

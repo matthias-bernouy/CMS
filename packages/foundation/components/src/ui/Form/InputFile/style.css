@@ -2,6 +2,11 @@
     display: block;
     width: 100%;
     margin: 1.25rem 0;
+
+    --ctx-bg: var(--bg-surface);
+    --ctx-fg: var(--text-body);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--border-default);
 }
 
 :host([disabled]) {

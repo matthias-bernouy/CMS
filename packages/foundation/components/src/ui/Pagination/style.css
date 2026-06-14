@@ -5,7 +5,7 @@
   --_radius: 6px;
   --_color: var(--text-body, #4b5563);
   --_active-bg: var(--primary-base, #4361ee);
-  --_active-color: white;
+  --_active-color: var(--primary-contrasted);
   --_hover-bg: var(--bg-base, #f1f5f9);
   --_border: var(--border-default, #e5e7eb);
   --_font-size: 13px;

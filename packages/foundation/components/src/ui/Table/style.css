@@ -1,6 +1,11 @@
 :host {
   display: block;
   width: 100%;
+
+  --ctx-bg: var(--bg-surface);
+  --ctx-fg: var(--text-main);
+  --ctx-fg-muted: var(--text-muted);
+  --ctx-border: var(--border-default);
 }
 
 .table-container {

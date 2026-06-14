@@ -8,6 +8,7 @@
   --cb-focus-ring: color-mix(in oklab, var(--cb-active-bg) 20%, transparent);
   --cb-text: var(--text-main, #374151);
   --cb-hover-border: var(--text-muted, #9ca3af);
+  --cb-check-color: var(--bg-surface);
 }
 
 .checkbox-container {
@@ -53,7 +54,7 @@ input {
   width: 14px;
   height: 14px;
   fill: none;
-  stroke: var(--cb-check-color, #ffffff);
+  stroke: var(--cb-check-color);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -65,7 +66,7 @@ input {
   position: absolute;
   width: 10px;
   height: 2px;
-  background-color: var(--cb-check-color, #ffffff);
+  background-color: var(--cb-check-color);
   border-radius: 1px;
   opacity: 0;
 }

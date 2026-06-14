@@ -13,10 +13,15 @@
 
   --_accent-base: var(--text-main);
   --_accent-muted: var(--bg-base);
-  --_accent-contrast: oklch(100% 0 0);
+  --_accent-contrast: var(--bg-surface);
 
   --_btn-radius: 8px;
   --_btn-font: inherit;
+
+  --ctx-bg: var(--_btn-bg);
+  --ctx-fg: var(--_btn-text);
+  --ctx-fg-muted: var(--text-muted);
+  --ctx-border: var(--_btn-border);
 }
 
 .button {

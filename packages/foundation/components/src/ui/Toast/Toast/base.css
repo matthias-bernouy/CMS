@@ -4,6 +4,11 @@
     --_border: var(--border-default, #e5e7eb);
     --_accent: var(--info-base, #3b82f6);
 
+    --ctx-bg: var(--_bg);
+    --ctx-fg: var(--_color);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--_border);
+
     display: flex;
     align-items: flex-start;
     gap: 10px;
@@ -34,11 +39,15 @@
 }
 
 .icon::before {
-    content: "";
+    content: "i";
     position: absolute;
     inset: 0;
-    display: block;
-    background: no-repeat center / 12px 12px;
+    display: grid;
+    place-items: center;
+    color: var(--bg-surface);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .content {

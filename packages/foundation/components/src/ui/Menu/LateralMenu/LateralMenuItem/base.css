@@ -7,6 +7,17 @@
     --item-bg-active: var(--primary-muted, oklch(95% 0.02 265));
     --item-contrasted: var(--primary-contrasted, oklch(98% 0.01 260));
     --icon-size: 20px;
+
+    --ctx-bg: transparent;
+    --ctx-fg: var(--item-color);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: transparent;
+}
+
+:host([active]) {
+    --ctx-bg: var(--item-bg-active);
+    --ctx-fg: var(--item-color-active);
+    --ctx-border: var(--item-color-active);
 }
 
 .menu-item {

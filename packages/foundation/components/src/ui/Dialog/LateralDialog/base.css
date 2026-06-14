@@ -1,8 +1,13 @@
 :host {
     --drawer-width: 400px;
-    --drawer-bg: #ffffff;
+    --drawer-bg: var(--bg-surface);
     --transition-speed: 0.4s;
     --transition-curve: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --ctx-bg: var(--drawer-bg);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--border-default);
 
     position: fixed;
     top: 0;

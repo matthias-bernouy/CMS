@@ -10,6 +10,11 @@
     --_tag-radius: 6px;
     --_tag-gap: 4px;
 
+    --ctx-bg: var(--_tag-bg);
+    --ctx-fg: var(--_tag-color);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--_tag-border);
+
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;

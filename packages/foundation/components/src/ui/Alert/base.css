@@ -7,6 +7,11 @@
   --_border: var(--info-base, #3b82f6);
   --_radius: 10px;
   --_padding: 0.85rem 1rem;
+
+  --ctx-bg: var(--_bg);
+  --ctx-fg: var(--_color);
+  --ctx-fg-muted: color-mix(in oklab, var(--_color) 72%, var(--_bg));
+  --ctx-border: var(--_border);
 }
 
 .alert {
