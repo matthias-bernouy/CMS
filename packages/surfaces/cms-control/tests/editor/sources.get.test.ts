@@ -4,6 +4,17 @@ import { BAN_PROVIDER } from "@bernouy/cms-gateway/presets";
 import getEditorSources from "cms-control/api/editor/sources.get";
 import type { ControlCms } from "cms-control/ControlCms";
 import type { Provider } from "@bernouy/cms-gateway";
+import type { DataField } from "@bernouy/cms-content/editor";
+
+type EditorSourceTestDto = {
+    label: string;
+    url: string;
+    method: string;
+    provider?: string;
+    providerLabel?: string;
+    params?: Array<{ name: string; in: string; required?: boolean }>;
+    fields: DataField[];
+};
 
 const MIXED_PROVIDER: Provider = {
     urn: "urn:mixed",
@@ -12,6 +23,13 @@ const MIXED_PROVIDER: Provider = {
             urn: "urn:mixed:list",
             method: "GET",
             targetUrl: "https://api.example.com/items",
+            input: {
+                params: [
+                    { name: "id", in: "path", required: true, schema: { type: "string" } },
+                    { name: "q", in: "query", schema: { type: "string" } },
+                    { name: "X-Trace", in: "header", schema: { type: "string" } },
+                ],
+            },
             output: [{ status: "200", body: { type: "object", properties: { items: { type: "array", items: { type: "string" } } } } }],
         },
         {
@@ -32,17 +50,25 @@ describe("GET /api/editor/sources", () => {
             basePath: "/cms",
             gateway,
         } as unknown as ControlCms);
-        const body = await response.json();
+        const body = await response.json() as EditorSourceTestDto[];
 
         expect(response.status).toBe(200);
-        expect(body.map((source: { url: string }) => source.url)).toEqual([
+        expect(body.map(source => source.url)).toEqual([
             "/cms/.cms/gateway/ban/search",
             "/cms/.cms/gateway/ban/reverse",
         ]);
-        expect(body[0].label).toBe("Recherche d'adresse");
-        expect(body[0].provider).toBe("ban");
-        expect(body[0].providerLabel).toBe("Base Adresse Nationale");
-        expect(body[0].fields.some((field: { path: string }) => field.path === "features")).toBe(true);
+        const searchSource = body[0]!;
+        expect(searchSource.label).toBe("Recherche d'adresse");
+        expect(searchSource.provider).toBe("ban");
+        expect(searchSource.providerLabel).toBe("Base Adresse Nationale");
+        expect(searchSource.params?.every(param => param.in === "query" || param.in === "path")).toBe(true);
+        expect(searchSource.params?.some(param => param.name === "q" && param.required === true)).toBe(true);
+        const features = searchSource.fields.filter((field: DataField) => field.path === "features");
+        expect(features).toHaveLength(1);
+        const featureField = features[0]!;
+        expect(featureField.type).toBe("array");
+        expect(featureField.children?.some(field => field.path === "geometry")).toBe(true);
+        expect(featureField.children?.some(field => field.path === ".")).toBe(false);
     });
 
     test("returns an empty list when gateway is not configured", async () => {
@@ -64,11 +90,15 @@ describe("GET /api/editor/sources", () => {
             basePath: "/cms",
             gateway,
         } as unknown as ControlCms);
-        const body = await response.json();
+        const body = await response.json() as EditorSourceTestDto[];
 
-        expect(body.map((source: { method: string; url: string }) => `${source.method} ${source.url}`)).toEqual([
+        expect(body.map(source => `${source.method} ${source.url}`)).toEqual([
             "/cms/.cms/gateway/mixed/list",
             "/cms/.cms/gateway/mixed/create",
         ].map((url, index) => `${index === 0 ? "GET" : "POST"} ${url}`));
+        expect(body[0]!.params?.map(param => `${param.in}:${param.name}`)).toEqual([
+            "path:id",
+            "query:q",
+        ]);
     });
 });

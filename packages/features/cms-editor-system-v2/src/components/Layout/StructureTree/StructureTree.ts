@@ -230,10 +230,7 @@ export class StructureTree extends HTMLElement {
         badges.className = "badges";
         const visibleBadges = this._visibleBadges(node);
         for (const value of visibleBadges) {
-            const badge = document.createElement("span");
-            badge.className = "badge";
-            badge.textContent = value;
-            badges.append(badge);
+            badges.append(this._renderBadge(value));
         }
         const hiddenCount = node.badges.length - visibleBadges.length;
         if (hiddenCount > 0) {
@@ -259,6 +256,34 @@ export class StructureTree extends HTMLElement {
         row.append(button);
 
         return row;
+    }
+
+    private _renderBadge(value: string): HTMLElement {
+        const badge = document.createElement("span");
+        badge.className = this._badgeClass(value);
+
+        const icon = this._badgeIcon(value);
+        if (icon) {
+            const iconEl = document.createElement("span");
+            iconEl.className = "badge-icon";
+            iconEl.textContent = icon;
+            badge.append(iconEl);
+        }
+
+        const label = document.createElement("span");
+        label.textContent = value;
+        badge.append(label);
+        return badge;
+    }
+
+    private _badgeClass(value: string): string {
+        return value === "Source" || value === "Repeat" ? "badge data" : "badge";
+    }
+
+    private _badgeIcon(value: string): string | null {
+        if (value === "Source") return "▦";
+        if (value === "Repeat") return "↻";
+        return null;
     }
 
     private _scrollSelectedIntoView(): void {
