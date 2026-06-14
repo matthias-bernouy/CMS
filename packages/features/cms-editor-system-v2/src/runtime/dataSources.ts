@@ -9,6 +9,14 @@ export type EditorDataSourceMethod =
     | "HEAD"
     | "OPTIONS";
 
+export type EditorDataSourceParam = {
+    name: string;
+    in: "path" | "query" | "header";
+    required?: boolean;
+    type?: string;
+    description?: string;
+};
+
 export type EditorDataSource = {
     label: string;
     url: string;
@@ -16,5 +24,6 @@ export type EditorDataSource = {
     provider?: string;
     providerLabel?: string;
     description?: string;
+    params?: EditorDataSourceParam[];
     fields: DataField[];
 };

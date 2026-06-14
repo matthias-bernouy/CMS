@@ -28,6 +28,9 @@ export const RELOAD_ATTR = "cms-reload-on";
 /** Always-listened global event — `document.dispatchEvent(new Event(...))`
  *  reloads every live source. */
 export const RELOAD_EVENT = "cms-source:reload";
+
+const SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+[A-Za-z_$][\w$]*\s*$/;
+
 export class Source {
     private readonly captured: Captured;
     private abort: AbortController | null = null;
@@ -82,7 +85,7 @@ export class Source {
 
         // A `#{param}`-dependent source reloads when the query params change —
         // via setParam (PARAMS_CHANGE_EVENT) or the browser back/forward (popstate).
-        if (hasParamTokens(this.el.getAttribute(SOURCE_ATTR) ?? "")) {
+        if (hasParamTokens(sourceUrl(this.el.getAttribute(SOURCE_ATTR) ?? ""))) {
             this.paramReactive = true;
             document.addEventListener(PARAMS_CHANGE_EVENT, this.onParamsChange);
             window.addEventListener("popstate", this.onParamsChange);
@@ -100,7 +103,7 @@ export class Source {
     }
 
     async run(opts?: { onlyIfUrlChanged?: boolean }): Promise<void> {
-        const raw = this.el.getAttribute(SOURCE_ATTR)?.trim();
+        const raw = sourceUrl(this.el.getAttribute(SOURCE_ATTR) ?? "");
         if (!raw) return;
         // Resolve `#{param}` against the current query string just before fetch.
         const url = resolveParams(raw);
@@ -141,6 +144,11 @@ export class Source {
             renderContent(this.el, body, { value: data }, this.filters);
         }
     }
+}
+
+function sourceUrl(value: string): string {
+    const match = SOURCE_ALIAS_PATTERN.exec(value);
+    return (match?.[1] ?? value).trim();
 }
 
 /**

@@ -298,6 +298,10 @@ describe("Shell", () => {
             provider: "ban",
             providerLabel: "Base Adresse Nationale",
             description: "Available pricing plans.",
+            params: [
+                { name: "q", in: "query", required: true, type: "string", description: "Search query." },
+                { name: "limit", in: "query", type: "number" },
+            ],
             fields: [{ path: "items", type: "array" }],
         }, {
             label: "Create plan",
@@ -319,14 +323,134 @@ describe("Shell", () => {
         })._openSourcePicker(node);
 
         const picker = tree.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
-        expect(picker.shadowRoot!.querySelector("h3")?.textContent).toBe("Plans");
-        expect(picker.shadowRoot!.querySelector(".details-eyebrow")?.textContent).toBe("Base Adresse Nationale");
+        expect(picker.shadowRoot!.querySelector(".source .name")?.textContent).toBe("Plans");
+        expect(picker.shadowRoot!.querySelector(".details-eyebrow")?.textContent).toBe("Response fields");
+        expect(picker.shadowRoot!.querySelector(".binding .config-heading")?.textContent).toBe("Binding");
         expect(picker.shadowRoot!.textContent ?? "").not.toContain("Create plan");
+        picker.shadowRoot!.querySelector<HTMLInputElement>(".source-alias")!.value = "plans";
+        const rows = picker.shadowRoot!.querySelectorAll<HTMLElement>(".param-row");
+        rows[0]!.querySelector<HTMLInputElement>(".param-value")!.value = "address";
+        rows[1]!.querySelector<HTMLSelectElement>(".param-mode")!.setAttribute("value", "raw");
+        rows[1]!.querySelector<HTMLInputElement>(".param-value")!.value = "5";
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
 
         expect(detail?.action).toBe("set-source");
         expect(detail?.editor).toBe(editor);
         expect(detail?.dataSource?.url).toBe("/api/plans");
+        expect(detail?.sourceBinding).toEqual({
+            url: "/api/plans",
+            alias: "plans",
+            params: {
+                q: { from: "queryParam", name: "address" },
+                limit: { from: "raw", value: "5" },
+            },
+        });
+    });
+
+    test("structure tree removes source from the source picker", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class CardEditor extends Editor { }
+
+        const target = document.createElement("demo-card");
+        target.setAttribute("cms-source", "/api/plans");
+        const editor = new CardEditor(target);
+        const node: EditorStructureNode = {
+            editor,
+            target,
+            tag:      "demo-card",
+            label:    "Card",
+            badges:   [],
+            children: [],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setDataSources([{
+            label: "Plans",
+            url: "/api/plans",
+            method: "GET",
+            fields: [{ path: "items", type: "array" }],
+        }]);
+        tree.setStructure([node], editor);
+
+        let detail: StructureTreeActionDetail | undefined;
+        tree.addEventListener("editor-v2:structure-action", (event) => {
+            detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
+        });
+
+        expect((tree as unknown as {
+            _sourceActionLabel(node: EditorStructureNode): string;
+        })._sourceActionLabel(node)).toBe("Update source");
+
+        (tree as unknown as {
+            _openSourcePicker(node: EditorStructureNode): void;
+        })._openSourcePicker(node);
+
+        const picker = tree.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".remove-source")!.click();
+
+        expect(detail?.action).toBe("remove-source");
+        expect(detail?.editor).toBe(editor);
+    });
+
+    test("repeat picker emits selected array and alias", async () => {
+        installDom();
+
+        const {
+            REPEAT_PICKER_SELECT_EVENT,
+            RepeatPicker,
+        } = await import("../src/components/Layout/RepeatPicker/RepeatPicker");
+
+        const picker = new RepeatPicker();
+        document.body.append(picker);
+
+        let detail: { path: string; alias: string } | undefined;
+        picker.addEventListener(REPEAT_PICKER_SELECT_EVENT, (event) => {
+            detail = (event as CustomEvent<{ path: string; alias: string }>).detail;
+        });
+
+        picker.open([{
+            name: "data",
+            label: "Plans",
+            fields: [{
+                path: "features",
+                type: "array",
+                children: [
+                    { path: "name", type: "string" },
+                    {
+                        path: "geometry",
+                        type: "object",
+                        children: [{
+                            path: "coordinates",
+                            type: "array",
+                            children: [{ path: ".", type: "number" }],
+                        }],
+                    },
+                ],
+            }],
+        }, {
+            name: "data",
+            label: "Plans",
+            fields: [{
+                path: "features",
+                type: "array",
+                children: [{ path: "name", type: "string" }],
+            }],
+        }]);
+        expect(picker.shadowRoot!.querySelectorAll(".array")).toHaveLength(1);
+        const fieldPaths = Array.from(picker.shadowRoot!.querySelectorAll(".field-path"))
+            .map(item => item.textContent);
+        expect(fieldPaths).toContain("geometry");
+        expect(fieldPaths).toContain("coordinates");
+        picker.shadowRoot!.querySelector<HTMLInputElement>(".alias")!.value = "plan";
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
+
+        expect(detail).toEqual({
+            path: "data.features",
+            alias: "plan",
+        });
     });
 
     test("topbar emits full and bleed viewport changes", async () => {
@@ -1241,6 +1365,56 @@ describe("Shell", () => {
         }));
 
         expect(events).toHaveLength(1);
+    });
+
+    test("shell writes repeat bindings with the stable syntax", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/components/Layout/Shell/Shell");
+
+        class CardEditor extends Editor { }
+
+        const shell = new Shell();
+        const target = document.createElement("demo-card");
+        const editor = new CardEditor(target);
+
+        (shell as unknown as {
+            _setRepeat(editor: Editor, path: string, alias: string): void;
+        })._setRepeat(editor, "data.items", "plan");
+
+        expect(target.getAttribute("cms-repeat")).toBe("data.items as plan");
+    });
+
+    test("shell writes source bindings with the stable syntax", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/components/Layout/Shell/Shell");
+
+        class CardEditor extends Editor { }
+
+        const shell = new Shell();
+        const target = document.createElement("demo-card");
+        const editor = new CardEditor(target);
+
+        (shell as unknown as {
+            _setSource(editor: Editor, source: { label: string; url: string; fields: [] }, binding: {
+                url: string;
+                alias: string;
+                params: {
+                    q: { from: "queryParam"; name: string };
+                    limit: { from: "raw"; value: string };
+                };
+            }): void;
+        })._setSource(editor, { label: "Plans", url: "/api/plans", fields: [] }, {
+            url: "/api/plans",
+            alias: "plans",
+            params: {
+                q: { from: "queryParam", name: "address" },
+                limit: { from: "raw", value: "5" },
+            },
+        });
+
+        expect(target.getAttribute("cms-source")).toBe("/api/plans?q=#{address}&limit=5 as plans");
     });
 
     test("structure tree only scrolls selected rows when requested", async () => {

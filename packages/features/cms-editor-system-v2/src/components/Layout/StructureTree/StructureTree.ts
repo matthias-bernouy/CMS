@@ -19,8 +19,10 @@ import {
     type BlockPickerSelectDetail,
 } from "../BlockPickerModal/BlockPickerModal";
 import {
+    DATA_SOURCE_PICKER_REMOVE_EVENT,
     DATA_SOURCE_PICKER_SELECT_EVENT,
     DataSourcePicker,
+    type DataSourcePickerSourceBinding,
     type DataSourcePickerSelectDetail,
 } from "../DataSourcePicker/DataSourcePicker";
 import type { EditorStructureNode } from "../../../runtime";
@@ -40,7 +42,9 @@ export type StructureTreeAction =
     | "move-after"
     | "move-before"
     | "paste-after"
+    | "configure-repeat"
     | "replace"
+    | "remove-repeat"
     | "remove-source"
     | "set-source";
 
@@ -51,11 +55,13 @@ export type StructureTreeActionDetail = {
     entry?: EditorCatalogEntry;
     item?: BlockPickerItem;
     dataSource?: EditorDataSource;
+    sourceBinding?: DataSourcePickerSourceBinding;
     slot?: string;
 };
 
 export type StructureTreeRenderOptions = {
     scrollSelectedIntoView?: boolean;
+    repeatableTargets?: HTMLElement[];
 };
 
 export class StructureTree extends HTMLElement {
@@ -65,6 +71,7 @@ export class StructureTree extends HTMLElement {
     private _dataSources: EditorDataSource[] = [];
     private _insertItems: BlockPickerItem[] = [];
     private _scrollSelectedIntoViewOnRender = false;
+    private readonly _repeatableTargets = new WeakSet<HTMLElement>();
     private _pendingPickerAction: { action: "add-child" | "add-root" | "replace"; editor?: Editor } | null = null;
     private _pendingSourceEditor: Editor | null = null;
     private _draggedNode: EditorStructureNode | null = null;
@@ -82,6 +89,7 @@ export class StructureTree extends HTMLElement {
         this.ownerDocument.addEventListener("keydown", this._onDocumentKeydown);
         this._blockPicker.addEventListener(BLOCK_PICKER_SELECT_EVENT, this._onBlockPickerSelect as EventListener);
         this._dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect as EventListener);
+        this._dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this._onDataSourceRemove);
         this._tree.addEventListener("click", this._onTreeClick);
         this._tree.addEventListener("contextmenu", this._onTreeContextMenu);
     }
@@ -91,6 +99,7 @@ export class StructureTree extends HTMLElement {
         this.ownerDocument.removeEventListener("keydown", this._onDocumentKeydown);
         this._blockPicker.removeEventListener(BLOCK_PICKER_SELECT_EVENT, this._onBlockPickerSelect as EventListener);
         this._dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect as EventListener);
+        this._dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this._onDataSourceRemove);
         this._tree.removeEventListener("click", this._onTreeClick);
         this._tree.removeEventListener("contextmenu", this._onTreeContextMenu);
     }
@@ -128,6 +137,7 @@ export class StructureTree extends HTMLElement {
         this._selectedEditor = selectedEditor;
         this._catalog = [...catalog];
         this._scrollSelectedIntoViewOnRender = options.scrollSelectedIntoView === true;
+        this._setRepeatableTargets(options.repeatableTargets ?? []);
         this._render();
     }
 
@@ -276,11 +286,12 @@ export class StructureTree extends HTMLElement {
         const menu = this._contextMenu;
         menu.replaceChildren();
 
-        const sourceAction = node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)
-            ? this._contextMenuButton("Remove source", () => this._emitAction("remove-source", node.editor))
-            : this._contextMenuButton(this._sourceActionLabel(node), () => {
-                this._openSourcePicker(node);
-            }, undefined, this._sourceDataSources.length === 0);
+        const sourceAction = this._contextMenuButton(this._sourceActionLabel(node), () => {
+            this._openSourcePicker(node);
+        }, undefined, this._sourceDataSources.length === 0);
+        const repeatAction = node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)
+            ? this._contextMenuButton("Remove repeat", () => this._emitAction("remove-repeat", node.editor))
+            : this._contextMenuButton("Add repeat", () => this._emitAction("configure-repeat", node.editor), undefined, !this._repeatableTargets.has(node.target));
 
         menu.append(
             this._contextMenuButton("Add child", () => {
@@ -292,6 +303,7 @@ export class StructureTree extends HTMLElement {
             this._contextMenuButton("Duplicate", () => this._emitAction("duplicate", node.editor), undefined, !this._canDuplicate(node)),
             this._contextSeparator(),
             sourceAction,
+            repeatAction,
             this._contextSeparator(),
             this._contextMenuButton("Replace", () => {
                 this._pendingPickerAction = { action: "replace", editor: node.editor };
@@ -318,8 +330,12 @@ export class StructureTree extends HTMLElement {
         this._pendingSourceEditor = node.editor;
         const picker = this._dataSourcePicker;
         picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect as EventListener);
+        picker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this._onDataSourceRemove);
         picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect as EventListener);
-        picker.open(this._sourceDataSources, node.label);
+        picker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this._onDataSourceRemove);
+        picker.open(this._sourceDataSources, node.label, {
+            canRemove: node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source),
+        });
     }
 
     private _contextMenuButton(
@@ -374,6 +390,7 @@ export class StructureTree extends HTMLElement {
         slot?: string,
         sourceEditor?: Editor,
         dataSource?: EditorDataSource,
+        sourceBinding?: DataSourcePickerSourceBinding,
     ): void {
         this.dispatchEvent(new CustomEvent<StructureTreeActionDetail>("editor-v2:structure-action", {
             bubbles: true,
@@ -384,6 +401,7 @@ export class StructureTree extends HTMLElement {
                 sourceEditor,
                 item,
                 dataSource,
+                sourceBinding,
                 entry: item?.kind === "block" ? item.entry : undefined,
                 slot,
             },
@@ -598,7 +616,13 @@ export class StructureTree extends HTMLElement {
 
     private readonly _onDataSourceSelect = (event: CustomEvent<DataSourcePickerSelectDetail>): void => {
         if (!this._pendingSourceEditor) return;
-        this._emitAction("set-source", this._pendingSourceEditor, undefined, undefined, undefined, event.detail.source);
+        this._emitAction("set-source", this._pendingSourceEditor, undefined, undefined, undefined, event.detail.source, event.detail.binding);
+        this._pendingSourceEditor = null;
+    };
+
+    private readonly _onDataSourceRemove = (): void => {
+        if (!this._pendingSourceEditor) return;
+        this._emitAction("remove-source", this._pendingSourceEditor);
         this._pendingSourceEditor = null;
     };
 
@@ -741,7 +765,23 @@ export class StructureTree extends HTMLElement {
     }
 
     private _sourceActionLabel(node: EditorStructureNode): string {
-        return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Change source" : "Add source";
+        return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Update source" : "Add source";
+    }
+
+    private _setRepeatableTargets(targets: HTMLElement[]): void {
+        for (const node of this._flattenNodes(this._nodes)) {
+            if (!targets.includes(node.target)) this._repeatableTargets.delete(node.target);
+        }
+        for (const target of targets) {
+            this._repeatableTargets.add(target);
+        }
+    }
+
+    private _flattenNodes(nodes: EditorStructureNode[]): EditorStructureNode[] {
+        return nodes.flatMap(node => [
+            node,
+            ...this._flattenNodes(node.children),
+        ]);
     }
 
     private get _sourceDataSources(): EditorDataSource[] {

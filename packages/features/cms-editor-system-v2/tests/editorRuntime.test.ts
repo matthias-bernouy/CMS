@@ -316,7 +316,7 @@ describe("EditorRuntime", () => {
             <html>
                 <body>
                     <main id="content-root">
-                        <x-parent id="parent" cms-source="/api/plans">
+                        <x-parent id="parent" cms-source="/api/plans?q=#{address} as plans">
                             <x-child id="child"></x-child>
                         </x-parent>
                     </main>
@@ -360,9 +360,9 @@ describe("EditorRuntime", () => {
 
         expect(runtime.getSelectedDataScopes()).toEqual([
             {
-                name: "data",
+                name: "plans",
                 label: "Plans",
-                source: "/api/plans",
+                source: "/api/plans?q=#{address}",
                 fields: [
                     {
                         path: "items",

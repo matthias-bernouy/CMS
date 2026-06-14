@@ -3,10 +3,15 @@ import "../Panel/Panel";
 import "../StructureTree/StructureTree";
 import "../Canvas/Canvas";
 import "../../Settings/SettingsView/SettingsView";
+import "../RepeatPicker/RepeatPicker";
 import {
+    asRepeat,
+    asSource,
     type ContentSlot,
     CMS_BINDING_ATTRIBUTES,
     CMS_SNIPPET_TAG,
+    type DataField,
+    type DataScope,
     Editor,
     type EditableState,
     type EditableStateSession,
@@ -51,6 +56,11 @@ import {
 } from "../../Settings/SettingsView/SettingsView";
 import type { StructureTree } from "../StructureTree/StructureTree";
 import type { StructureTreeActionDetail } from "../StructureTree/StructureTree";
+import {
+    REPEAT_PICKER_SELECT_EVENT,
+    RepeatPicker,
+    type RepeatPickerSelectDetail,
+} from "../RepeatPicker/RepeatPicker";
 import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
 import {
     FilesCenter,
@@ -60,6 +70,12 @@ import {
 import { FrameHighlight } from "./FrameHighlight";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
+
+type SourceBinding = {
+    url: string;
+    alias?: string;
+    params?: Record<string, unknown>;
+};
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
@@ -151,6 +167,7 @@ export class Shell extends HTMLElement {
     private _clipboardElement: HTMLElement | null = null;
     private _chromeSyncPending: boolean = false;
     private readonly _stateSessions = new WeakMap<Editor, Map<string, EditableStateSession>>();
+    private _pendingRepeatEditor: Editor | null = null;
     private readonly _highlight = new FrameHighlight();
 
     constructor() {
@@ -168,6 +185,7 @@ export class Shell extends HTMLElement {
         this._settings.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
         this._settings.addEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._settings.addEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle as EventListener);
+        this._repeatPicker.addEventListener(REPEAT_PICKER_SELECT_EVENT, this._onRepeatSelect as EventListener);
         this._canvas.addEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
         this._canvas.addEventListener(CANVAS_BACKGROUND_CLICK_EVENT, this._onCanvasBackgroundClick);
         this._topBar.addEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
@@ -190,6 +208,7 @@ export class Shell extends HTMLElement {
         this._settings.removeEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange as EventListener);
         this._settings.removeEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange as EventListener);
         this._settings.removeEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle as EventListener);
+        this._repeatPicker.removeEventListener(REPEAT_PICKER_SELECT_EVENT, this._onRepeatSelect as EventListener);
         this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady as EventListener);
         this._canvas.removeEventListener(CANVAS_BACKGROUND_CLICK_EVENT, this._onCanvasBackgroundClick);
         this._topBar.removeEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
@@ -350,9 +369,13 @@ export class Shell extends HTMLElement {
         } else if (action === "paste-after") {
             this._pasteAfter(editor ?? null);
         } else if (action === "set-source" && editor && event.detail.dataSource) {
-            this._setSource(editor, event.detail.dataSource);
+            this._setSource(editor, event.detail.dataSource, event.detail.sourceBinding);
         } else if (action === "remove-source" && editor) {
             this._removeSource(editor);
+        } else if (action === "configure-repeat" && editor) {
+            this._openRepeatPicker(editor);
+        } else if (action === "remove-repeat" && editor) {
+            this._removeRepeat(editor);
         } else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
             this._moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
         } else if (action === "replace" && (item || entry)) {
@@ -426,6 +449,12 @@ export class Shell extends HTMLElement {
         this._toggleState(selection.editor, event.detail.state);
         this._renderSettings();
         this._highlight.show(selection.editor);
+    };
+
+    private readonly _onRepeatSelect = (event: CustomEvent<RepeatPickerSelectDetail>): void => {
+        if (!this._pendingRepeatEditor) return;
+        this._setRepeat(this._pendingRepeatEditor, event.detail.path, event.detail.alias);
+        this._pendingRepeatEditor = null;
     };
 
     private readonly _onFrameClick = (event: Event): void => {
@@ -636,13 +665,31 @@ export class Shell extends HTMLElement {
         this._reloadFrameDocument(clone);
     }
 
-    private _setSource(editor: Editor, source: EditorDataSource): void {
-        editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, source.url);
+    private _setSource(editor: Editor, source: EditorDataSource, binding: SourceBinding = { url: source.url }): void {
+        editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, (asSource as (source: SourceBinding | string) => string)(binding));
         this._reloadFrameDocument(editor.target);
     }
 
     private _removeSource(editor: Editor): void {
         editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.source);
+        this._reloadFrameDocument(editor.target);
+    }
+
+    private _openRepeatPicker(editor: Editor): void {
+        if (!this._runtime) return;
+
+        this._pendingRepeatEditor = editor;
+        this._runtime.select(editor);
+        this._repeatPicker.open(this._runtime.getSelectedDataScopes(), this._findStructureNodeLabel(editor) ?? editor.target.localName);
+    }
+
+    private _setRepeat(editor: Editor, path: string, alias: string): void {
+        editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.repeat, asRepeat({ path, alias }));
+        this._reloadFrameDocument(editor.target);
+    }
+
+    private _removeRepeat(editor: Editor): void {
+        editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.repeat);
         this._reloadFrameDocument(editor.target);
     }
 
@@ -1021,8 +1068,27 @@ export class Shell extends HTMLElement {
             structure,
             this._runtime.getSelection()?.editor ?? null,
             this._catalog,
-            { scrollSelectedIntoView: options.scrollStructureIntoView === true },
+            {
+                scrollSelectedIntoView: options.scrollStructureIntoView === true,
+                repeatableTargets:      this._repeatableTargets(structure),
+            },
         );
+    }
+
+    private _repeatableTargets(nodes: EditorStructureNode[]): HTMLElement[] {
+        if (!this._runtime) return [];
+
+        return this._flattenStructure(nodes)
+            .filter(node => this._hasArrayFields(this._runtime!.registry.collectDataScopes(node.target)))
+            .map(node => node.target);
+    }
+
+    private _hasArrayFields(scopes: DataScope[]): boolean {
+        return scopes.some(scope => this._fieldsContainArray(scope.fields));
+    }
+
+    private _fieldsContainArray(fields: DataField[]): boolean {
+        return fields.some(field => field.type === "array" || this._fieldsContainArray(field.children ?? []));
     }
 
     private _syncStructureTreeDataSources(): void {
@@ -1323,6 +1389,15 @@ export class Shell extends HTMLElement {
 
     private get _topBar(): TopBar {
         return this.shadowRoot!.querySelector("cms-editor-v2-topbar") as TopBar;
+    }
+
+    private get _repeatPicker(): RepeatPicker {
+        let picker = this.shadowRoot!.querySelector<RepeatPicker>("cms-editor-v2-repeat-picker");
+        if (!picker) {
+            picker = new RepeatPicker();
+            this.shadowRoot!.append(picker);
+        }
+        return picker;
     }
 
     private get _pageSettingsModal(): HTMLElement {

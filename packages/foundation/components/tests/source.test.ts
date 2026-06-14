@@ -39,6 +39,25 @@ describe("Source — success", () => {
         expect(text(src.querySelector("p"))).toBe("Ada");
     });
 
+    test("fetches the URL portion of an aliased source binding", async () => {
+        let fetchedUrl = "";
+        globalThis.fetch = (async (url: RequestInfo | URL) => {
+            fetchedUrl = String(url);
+            return {
+                ok: true,
+                status: 200,
+                text: async () => JSON.stringify({ name: "Ada" }),
+            };
+        }) as unknown as typeof fetch;
+        const src = el(`<div cms-source="/x?q=#{q} as result"><p>{{ name }}</p></div>`);
+        history.replaceState(history.state, "", `${location.pathname}?q=ada${location.hash}`);
+
+        await new Source(src).run();
+
+        expect(fetchedUrl).toBe("/x?q=ada");
+        expect(text(src.querySelector("p"))).toBe("Ada");
+    });
+
     test("repeats the body over a fetched array", async () => {
         respond(200, JSON.stringify([{ t: "a" }, { t: "b" }]));
         const src = el(`<ul cms-source="/x"><li cms-repeat=".">{{ t }}</li></ul>`);

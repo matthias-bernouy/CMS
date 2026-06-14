@@ -1,6 +1,14 @@
 import type { DataField, DataFieldType } from "@bernouy/cms-content/editor";
-import { parseUrn, type DataShape, type Endpoint, type HTTPMethod } from "@bernouy/cms-gateway";
+import { parseUrn, type DataShape, type Endpoint, type EndpointParam, type HTTPMethod, type ParamIn } from "@bernouy/cms-gateway";
 import type { ControlCms } from "cms-control/ControlCms";
+
+export type EditorSourceParamDto = {
+    name: string;
+    in: ParamIn;
+    required?: boolean;
+    type?: string;
+    description?: string;
+};
 
 export type EditorSourceDto = {
     label: string;
@@ -9,6 +17,7 @@ export type EditorSourceDto = {
     provider?: string;
     providerLabel?: string;
     description?: string;
+    params?: EditorSourceParamDto[];
     fields: DataField[];
 };
 
@@ -47,18 +56,24 @@ function sourceFromEndpoint(cms: ControlCms, endpoint: Endpoint, provider: { pro
         provider:    provider.provider,
         providerLabel: provider.providerLabel ?? provider.provider,
         description: endpoint.meta?.description,
+        params:      sourceParams(endpoint.input?.params ?? []),
         fields:      body ? fieldsFromShape(body) : [],
     };
 }
 
+function sourceParams(params: EndpointParam[]): EditorSourceParamDto[] | undefined {
+    const mapped = params.filter(param => param.in === "query" || param.in === "path").map(param => ({
+        name:        param.name,
+        in:          param.in,
+        required:    param.required,
+        type:        param.schema.type,
+        description: param.description,
+    }));
+    return mapped.length ? mapped : undefined;
+}
+
 function fieldsFromShape(shape: DataShape): DataField[] {
-    if (shape.type === "object") {
-        return Object.entries(shape.properties ?? {}).map(([path, child]) => ({
-            path,
-            type: fieldType(child),
-            children: fieldsFromShape(child),
-        }));
-    }
+    if (shape.type === "object") return Object.entries(shape.properties ?? {}).map(([path, child]) => fieldFromShape(path, child));
 
     if (shape.type === "array" && shape.items) {
         return [{
@@ -68,6 +83,20 @@ function fieldsFromShape(shape: DataShape): DataField[] {
         }];
     }
 
+    return [];
+}
+
+function fieldFromShape(path: string, shape: DataShape): DataField {
+    return {
+        path,
+        type:     fieldType(shape),
+        children: fieldChildren(shape),
+    };
+}
+
+function fieldChildren(shape: DataShape): DataField[] {
+    if (shape.type === "array" && shape.items) return fieldsFromShape(shape.items);
+    if (shape.type === "object") return fieldsFromShape(shape);
     return [];
 }
 

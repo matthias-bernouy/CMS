@@ -138,16 +138,26 @@ export class EditorRuntime {
     }
 
     private _declareSourceDataScope(editor: Editor): void {
-        const source = parseSource(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+        const source = this._parseSourceBinding(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
         if (!source) return;
 
-        const dataSource = this._dataSources.find(candidate => candidate.url === source);
+        const dataSource = this._dataSources.find(candidate => candidate.url === this._sourceSchemaUrl(source.url));
         editor.declareDataScope({
-            name: "data",
-            label: dataSource?.label ?? source,
-            source,
+            name: source.alias ?? "data",
+            label: dataSource?.label ?? source.url,
+            source: source.url,
             fields: dataSource?.fields ?? [],
         });
+    }
+
+    private _parseSourceBinding(value: string): { url: string; alias?: string } | null {
+        const parsed = parseSource(value) as string | { url: string; alias?: string } | null;
+        if (!parsed) return null;
+        return typeof parsed === "string" ? { url: parsed } : parsed;
+    }
+
+    private _sourceSchemaUrl(url: string): string {
+        return url.split("?")[0] ?? url;
     }
 
     private _declareRepeatDataScope(editor: Editor): void {
