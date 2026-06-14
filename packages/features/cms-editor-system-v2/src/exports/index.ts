@@ -5,3 +5,4 @@ export {
     type EditorV2SaveDocumentDetail,
 } from "../components/Layout/Shell/Shell";
 export type { BlockPickerItem } from "../components/Layout/BlockPickerModal/BlockPickerModal";
+export type { EditorDataSource } from "../runtime";

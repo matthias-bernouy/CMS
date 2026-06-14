@@ -1,4 +1,8 @@
-import { CMS_SNIPPET_TAG } from "@bernouy/cms-content/editor";
+import {
+    CMS_BINDING_ATTRIBUTES,
+    CMS_SNIPPET_TAG,
+} from "@bernouy/cms-content/editor";
+import "../DataSourcePicker/DataSourcePicker";
 import type {
     ContentSlot,
     ContentSlotAccept,
@@ -14,7 +18,13 @@ import {
     type BlockPickerSlotGroup,
     type BlockPickerSelectDetail,
 } from "../BlockPickerModal/BlockPickerModal";
+import {
+    DATA_SOURCE_PICKER_SELECT_EVENT,
+    DataSourcePicker,
+    type DataSourcePickerSelectDetail,
+} from "../DataSourcePicker/DataSourcePicker";
 import type { EditorStructureNode } from "../../../runtime";
+import type { EditorDataSource } from "../../../runtime";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
 
@@ -30,7 +40,9 @@ export type StructureTreeAction =
     | "move-after"
     | "move-before"
     | "paste-after"
-    | "replace";
+    | "replace"
+    | "remove-source"
+    | "set-source";
 
 export type StructureTreeActionDetail = {
     action: StructureTreeAction;
@@ -38,6 +50,7 @@ export type StructureTreeActionDetail = {
     sourceEditor?: Editor;
     entry?: EditorCatalogEntry;
     item?: BlockPickerItem;
+    dataSource?: EditorDataSource;
     slot?: string;
 };
 
@@ -49,9 +62,11 @@ export class StructureTree extends HTMLElement {
     private _nodes: EditorStructureNode[] = [];
     private _selectedEditor: Editor | null = null;
     private _catalog: EditorCatalog = [];
+    private _dataSources: EditorDataSource[] = [];
     private _insertItems: BlockPickerItem[] = [];
     private _scrollSelectedIntoViewOnRender = false;
     private _pendingPickerAction: { action: "add-child" | "add-root" | "replace"; editor?: Editor } | null = null;
+    private _pendingSourceEditor: Editor | null = null;
     private _draggedNode: EditorStructureNode | null = null;
     private _dropRow: HTMLElement | null = null;
     private readonly _collapsedTargets = new Set<HTMLElement>();
@@ -66,6 +81,7 @@ export class StructureTree extends HTMLElement {
         this.ownerDocument.addEventListener("click", this._closeContextMenu);
         this.ownerDocument.addEventListener("keydown", this._onDocumentKeydown);
         this._blockPicker.addEventListener(BLOCK_PICKER_SELECT_EVENT, this._onBlockPickerSelect as EventListener);
+        this._dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect as EventListener);
         this._tree.addEventListener("click", this._onTreeClick);
         this._tree.addEventListener("contextmenu", this._onTreeContextMenu);
     }
@@ -74,6 +90,7 @@ export class StructureTree extends HTMLElement {
         this.ownerDocument.removeEventListener("click", this._closeContextMenu);
         this.ownerDocument.removeEventListener("keydown", this._onDocumentKeydown);
         this._blockPicker.removeEventListener(BLOCK_PICKER_SELECT_EVENT, this._onBlockPickerSelect as EventListener);
+        this._dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect as EventListener);
         this._tree.removeEventListener("click", this._onTreeClick);
         this._tree.removeEventListener("contextmenu", this._onTreeContextMenu);
     }
@@ -84,6 +101,13 @@ export class StructureTree extends HTMLElement {
 
     setInsertItems(items: BlockPickerItem[]): void {
         this._insertItems = items.map(item => ({ ...item }));
+    }
+
+    setDataSources(sources: EditorDataSource[]): void {
+        this._dataSources = sources.map(source => ({
+            ...source,
+            fields: [...source.fields],
+        }));
     }
 
     get catalog(): EditorCatalog {
@@ -263,6 +287,10 @@ export class StructureTree extends HTMLElement {
             }, undefined, !this._hasEnabledGroup(this._replaceGroups(node))),
             this._contextMenuButton("Copy", () => this._emitAction("copy", node.editor)),
             this._contextMenuButton("Paste after", () => this._emitAction("paste-after", node.editor)),
+            this._contextMenuButton(this._sourceActionLabel(node), () => {
+                this._openSourcePicker(node);
+            }, undefined, this._sourceDataSources.length === 0),
+            this._contextMenuButton("Remove source", () => this._emitAction("remove-source", node.editor), undefined, !node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)),
             this._contextMenuButton("Duplicate", () => this._emitAction("duplicate", node.editor), undefined, !this._canDuplicate(node)),
             this._contextMenuButton("Delete", () => this._emitAction("delete", node.editor), "danger", !this._canDelete(node)),
         );
@@ -279,6 +307,14 @@ export class StructureTree extends HTMLElement {
 
         menu.style.left = `${Math.min(Math.max(clientX, margin), maxLeft)}px`;
         menu.style.top = `${Math.min(Math.max(clientY, margin), maxTop)}px`;
+    }
+
+    private _openSourcePicker(node: EditorStructureNode): void {
+        this._pendingSourceEditor = node.editor;
+        const picker = this._dataSourcePicker;
+        picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect as EventListener);
+        picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect as EventListener);
+        picker.open(this._sourceDataSources, node.label);
     }
 
     private _contextMenuButton(
@@ -319,7 +355,14 @@ export class StructureTree extends HTMLElement {
         this._blockPicker.open(this._rootGroups(), "Page");
     }
 
-    private _emitAction(action: StructureTreeAction, editor?: Editor, item?: BlockPickerItem, slot?: string, sourceEditor?: Editor): void {
+    private _emitAction(
+        action: StructureTreeAction,
+        editor?: Editor,
+        item?: BlockPickerItem,
+        slot?: string,
+        sourceEditor?: Editor,
+        dataSource?: EditorDataSource,
+    ): void {
         this.dispatchEvent(new CustomEvent<StructureTreeActionDetail>("editor-v2:structure-action", {
             bubbles: true,
             composed: true,
@@ -328,6 +371,7 @@ export class StructureTree extends HTMLElement {
                 editor,
                 sourceEditor,
                 item,
+                dataSource,
                 entry: item?.kind === "block" ? item.entry : undefined,
                 slot,
             },
@@ -540,6 +584,12 @@ export class StructureTree extends HTMLElement {
         this._pendingPickerAction = null;
     };
 
+    private readonly _onDataSourceSelect = (event: CustomEvent<DataSourcePickerSelectDetail>): void => {
+        if (!this._pendingSourceEditor) return;
+        this._emitAction("set-source", this._pendingSourceEditor, undefined, undefined, undefined, event.detail.source);
+        this._pendingSourceEditor = null;
+    };
+
     private readonly _closeContextMenu = (): void => {
         this._contextMenu.remove();
     };
@@ -678,6 +728,14 @@ export class StructureTree extends HTMLElement {
         return node.label.slice(0, 1).toUpperCase();
     }
 
+    private _sourceActionLabel(node: EditorStructureNode): string {
+        return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Change source" : "Add source";
+    }
+
+    private get _sourceDataSources(): EditorDataSource[] {
+        return this._dataSources.filter(source => (source.method ?? "GET") === "GET");
+    }
+
     private get _contextMenu(): HTMLElement {
         let menu = this.shadowRoot!.querySelector<HTMLElement>(".context-menu");
         if (!menu) {
@@ -703,6 +761,15 @@ export class StructureTree extends HTMLElement {
         let picker = this.shadowRoot!.querySelector<BlockPickerModal>("cms-editor-v2-block-picker-modal");
         if (!picker) {
             picker = document.createElement("cms-editor-v2-block-picker-modal") as BlockPickerModal;
+            this.shadowRoot!.append(picker);
+        }
+        return picker;
+    }
+
+    private get _dataSourcePicker(): DataSourcePicker {
+        let picker = this.shadowRoot!.querySelector<DataSourcePicker>("cms-editor-v2-data-source-picker");
+        if (!picker) {
+            picker = new DataSourcePicker();
             this.shadowRoot!.append(picker);
         }
         return picker;

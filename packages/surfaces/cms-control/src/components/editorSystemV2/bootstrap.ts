@@ -2,6 +2,7 @@ import {
     EDITOR_V2_SAVE_DOCUMENT_EVENT,
     Shell,
     type BlockPickerItem,
+    type EditorDataSource,
     type EditorV2PageConfig,
     type EditorV2SaveDocumentDetail,
 } from "@bernouy/cms-editor-system-v2";
@@ -86,13 +87,17 @@ function configureShell(shell: Element): void {
 }
 
 async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
-    const [catalog, insertItems] = await Promise.all([
+    const [catalog, insertItems, dataSources] = await Promise.all([
         loadEditorCatalog(),
         loadInsertItems(),
+        loadDataSources(),
     ]);
+
+    console.log(dataSources);
 
     shell.setCatalog(catalog);
     shell.setInsertItems(insertItems);
+    shell.setDataSources(dataSources);
 
     const documentId = currentPageIdentifier();
     const resource = shellResource(shell);
@@ -115,6 +120,10 @@ async function loadInsertItems(): Promise<BlockPickerItem[]> {
         ...templates,
         ...snippets,
     ];
+}
+
+async function loadDataSources(): Promise<EditorDataSource[]> {
+    return fetchJson<EditorDataSource[]>("editor/sources", []);
 }
 
 async function loadTemplateItems(): Promise<BlockPickerItem[]> {

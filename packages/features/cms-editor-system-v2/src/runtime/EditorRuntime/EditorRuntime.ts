@@ -1,13 +1,18 @@
 import {
+    CMS_BINDING_ATTRIBUTES,
     Editor,
     type DataScope,
+    type DataField,
     type EditorCatalog,
     type EditorCatalogEntry,
     type EditorDocument,
     type SettingSection,
+    parseRepeat,
+    parseSource,
 } from "@bernouy/cms-content/editor";
 import { EditorRegistry } from "../EditorRegistry/EditorRegistry";
 import { createRuntimeEditor } from "./createRuntimeEditor";
+import type { EditorDataSource } from "../dataSources";
 import type {
     EditorRuntimeSelection,
     EditorStructureNode,
@@ -24,7 +29,10 @@ export class EditorRuntime {
     private _document: EditorDocument | null = null;
     private _selectedEditor: Editor | null = null;
 
-    constructor(catalog: EditorCatalog) {
+    constructor(
+        catalog: EditorCatalog,
+        private readonly _dataSources: EditorDataSource[] = [],
+    ) {
         for (const entry of catalog) {
             this._catalogByTag.set(entry.tag.toLowerCase(), entry);
         }
@@ -46,6 +54,7 @@ export class EditorRuntime {
 
         for (const editor of this._editors) {
             editor.mount();
+            this._declareBindingDataScopes(editor);
         }
     }
 
@@ -123,6 +132,61 @@ export class EditorRuntime {
         return this.registry.collectDataScopes(this._selectedEditor.target);
     }
 
+    private _declareBindingDataScopes(editor: Editor): void {
+        this._declareSourceDataScope(editor);
+        this._declareRepeatDataScope(editor);
+    }
+
+    private _declareSourceDataScope(editor: Editor): void {
+        const source = parseSource(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+        if (!source) return;
+
+        const dataSource = this._dataSources.find(candidate => candidate.url === source);
+        editor.declareDataScope({
+            name: "data",
+            label: dataSource?.label ?? source,
+            source,
+            fields: dataSource?.fields ?? [],
+        });
+    }
+
+    private _declareRepeatDataScope(editor: Editor): void {
+        const repeat = parseRepeat(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.repeat) ?? "");
+        if (!repeat?.alias) return;
+
+        const field = this._findDataField(this.registry.collectDataScopes(editor.target), repeat.path);
+        editor.declareDataScope({
+            name: repeat.alias,
+            label: repeat.alias,
+            fields: field?.children ?? [],
+        });
+    }
+
+    private _findDataField(scopes: DataScope[], path: string): DataField | undefined {
+        for (const scope of scopes) {
+            const field = this._findDataFieldInList(scope.fields, path)
+                ?? this._findDataFieldInList(scope.fields, this._stripScopeName(scope.name, path));
+            if (field) return field;
+        }
+
+        return undefined;
+    }
+
+    private _findDataFieldInList(fields: DataField[], path: string): DataField | undefined {
+        for (const field of fields) {
+            if (field.path === path) return field;
+            const child = field.children ? this._findDataFieldInList(field.children, path) : undefined;
+            if (child) return child;
+        }
+
+        return undefined;
+    }
+
+    private _stripScopeName(scopeName: string, path: string): string {
+        const prefix = `${scopeName}.`;
+        return path.startsWith(prefix) ? path.slice(prefix.length) : path;
+    }
+
     private _getStructureChildren(parent: HTMLElement): EditorStructureNode[] {
         const document = this._requireDocument();
         const children: EditorStructureNode[] = [];
@@ -156,6 +220,8 @@ export class EditorRuntime {
         const badges: string[] = [];
         const slot = editor.target.getAttribute("slot");
         if (slot) badges.push(slot);
+        if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) badges.push("Source");
+        if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)) badges.push("Repeat");
 
         return badges;
     }

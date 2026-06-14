@@ -309,4 +309,146 @@ describe("EditorRuntime", () => {
             contentRoot: document.getElementById("runtime-root")!,
         })).toThrow("EditorDocument contentRoot must be inside root.");
     });
+
+    test("declares data scopes from cms-source attributes", () => {
+        const { document, HTMLElement } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body>
+                    <main id="content-root">
+                        <x-parent id="parent" cms-source="/api/plans">
+                            <x-child id="child"></x-child>
+                        </x-parent>
+                    </main>
+                </body>
+            </html>
+        `);
+        const runtime = new EditorRuntime([
+            {
+                tag: "x-parent",
+                label: "Parent",
+                bloc: blocConstructor(HTMLElement),
+                editor: ParentEditor,
+            },
+            {
+                tag: "x-child",
+                label: "Child",
+                bloc: blocConstructor(HTMLElement),
+                editor: ChildEditor,
+            },
+        ], [
+            {
+                label: "Plans",
+                url: "/api/plans",
+                fields: [
+                    {
+                        path: "items",
+                        type: "array",
+                        children: [
+                            { path: "name", type: "string" },
+                        ],
+                    },
+                ],
+            },
+        ]);
+
+        runtime.load({
+            root: document.getElementById("content-root")!,
+            contentRoot: document.getElementById("content-root")!,
+        });
+        runtime.select(document.getElementById("child")!);
+
+        expect(runtime.getSelectedDataScopes()).toEqual([
+            {
+                name: "data",
+                label: "Plans",
+                source: "/api/plans",
+                fields: [
+                    {
+                        path: "items",
+                        type: "array",
+                        children: [
+                            { path: "name", type: "string" },
+                        ],
+                    },
+                ],
+            },
+        ]);
+    });
+
+    test("declares data scopes from named cms-repeat attributes", () => {
+        const { document, HTMLElement } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body>
+                    <main id="content-root">
+                        <x-parent id="parent" cms-source="/api/plans">
+                            <x-child id="child" cms-repeat="items as plan"></x-child>
+                        </x-parent>
+                    </main>
+                </body>
+            </html>
+        `);
+        const runtime = new EditorRuntime([
+            {
+                tag: "x-parent",
+                label: "Parent",
+                bloc: blocConstructor(HTMLElement),
+                editor: ParentEditor,
+            },
+            {
+                tag: "x-child",
+                label: "Child",
+                bloc: blocConstructor(HTMLElement),
+                editor: ChildEditor,
+            },
+        ], [
+            {
+                label: "Plans",
+                url: "/api/plans",
+                fields: [
+                    {
+                        path: "items",
+                        type: "array",
+                        children: [
+                            { path: "name", type: "string" },
+                            { path: "price", type: "number" },
+                        ],
+                    },
+                ],
+            },
+        ]);
+
+        runtime.load({
+            root: document.getElementById("content-root")!,
+            contentRoot: document.getElementById("content-root")!,
+        });
+        runtime.select(document.getElementById("child")!);
+
+        expect(runtime.getSelectedDataScopes()).toEqual([
+            {
+                name: "data",
+                label: "Plans",
+                source: "/api/plans",
+                fields: [
+                    {
+                        path: "items",
+                        type: "array",
+                        children: [
+                            { path: "name", type: "string" },
+                            { path: "price", type: "number" },
+                        ],
+                    },
+                ],
+            },
+            {
+                name: "plan",
+                label: "plan",
+                fields: [
+                    { path: "name", type: "string" },
+                    { path: "price", type: "number" },
+                ],
+            },
+        ]);
+    });
 });

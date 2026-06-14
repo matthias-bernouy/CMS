@@ -5,6 +5,8 @@ import "../Canvas/Canvas";
 import "../../Settings/SettingsView/SettingsView";
 import {
     type ContentSlot,
+    CMS_BINDING_ATTRIBUTES,
+    CMS_SNIPPET_TAG,
     Editor,
     type EditableState,
     type EditableStateSession,
@@ -14,11 +16,11 @@ import {
     type MediaAccept,
     type Setting,
     type SettingSection,
-    CMS_SNIPPET_TAG,
 } from "@bernouy/cms-content/editor";
 import {
     EditorRuntime,
     type EditorStructureNode,
+    type EditorDataSource,
 } from "../../../runtime";
 import type { SettingsView } from "../../Settings/SettingsView/SettingsView";
 import {
@@ -137,6 +139,7 @@ export class Shell extends HTMLElement {
     }
 
     private _catalog: EditorCatalog = [];
+    private _dataSources: EditorDataSource[] = [];
     private _insertItems: BlockPickerItem[] = [];
     private _runtime: EditorRuntime | null = null;
     private _frameDocument: Document | null = null;
@@ -175,6 +178,7 @@ export class Shell extends HTMLElement {
         this.shadowRoot!.addEventListener("keydown", this._onKeyDown);
         this._settingsTabs.addEventListener("click", this._onSettingsTabsClick);
         this._syncStructureTreeCatalog();
+        this._syncStructureTreeDataSources();
         this._syncViewport();
         this._syncEditorMode();
         this._syncChromeLabels();
@@ -221,6 +225,14 @@ export class Shell extends HTMLElement {
         this._syncStructureTreeInsertItems();
     }
 
+    setDataSources(sources: EditorDataSource[]): void {
+        this._dataSources = sources.map(source => ({
+            ...source,
+            fields: [...source.fields],
+        }));
+        this._syncStructureTreeDataSources();
+    }
+
     setPageConfig(config: EditorV2PageConfig): void {
         this._pageConfig = {
             ...config,
@@ -238,7 +250,7 @@ export class Shell extends HTMLElement {
         this._exitAllStateSessions();
         this._runtime?.dispose();
         this._editorDocument = document;
-        this._runtime = new EditorRuntime(this._catalog);
+        this._runtime = new EditorRuntime(this._catalog, this._dataSources);
         this._runtime.load(document);
         this._renderStructure();
         this._select(selectedTarget
@@ -337,6 +349,10 @@ export class Shell extends HTMLElement {
             this._copyEditor(editor);
         } else if (action === "paste-after") {
             this._pasteAfter(editor ?? null);
+        } else if (action === "set-source" && editor && event.detail.dataSource) {
+            this._setSource(editor, event.detail.dataSource);
+        } else if (action === "remove-source" && editor) {
+            this._removeSource(editor);
         } else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
             this._moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
         } else if (action === "replace" && (item || entry)) {
@@ -618,6 +634,16 @@ export class Shell extends HTMLElement {
 
         editor.target.after(clone);
         this._reloadFrameDocument(clone);
+    }
+
+    private _setSource(editor: Editor, source: EditorDataSource): void {
+        editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, source.url);
+        this._reloadFrameDocument(editor.target);
+    }
+
+    private _removeSource(editor: Editor): void {
+        editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.source);
+        this._reloadFrameDocument(editor.target);
     }
 
     private _moveEditor(source: Editor, target: Editor, position: "before" | "after"): void {
@@ -997,6 +1023,19 @@ export class Shell extends HTMLElement {
             this._catalog,
             { scrollSelectedIntoView: options.scrollStructureIntoView === true },
         );
+    }
+
+    private _syncStructureTreeDataSources(): void {
+        const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
+        if (this._isStructureTree(tree)) {
+            tree.setDataSources(this._dataSources);
+            return;
+        }
+
+        customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
+            const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
+            if (this._isStructureTree(upgradedTree)) upgradedTree.setDataSources(this._dataSources);
+        });
     }
 
     private _setSelectionStatus(editor: Editor | null): void {

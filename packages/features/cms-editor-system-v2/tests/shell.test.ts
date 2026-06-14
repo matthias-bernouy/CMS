@@ -272,6 +272,63 @@ describe("Shell", () => {
         expect(prevented).toBe(false);
     });
 
+    test("structure tree emits source selection actions from the source picker", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class CardEditor extends Editor { }
+
+        const target = document.createElement("demo-card");
+        const editor = new CardEditor(target);
+        const node: EditorStructureNode = {
+            editor,
+            target,
+            tag:      "demo-card",
+            label:    "Card",
+            badges:   [],
+            children: [],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setDataSources([{
+            label: "Plans",
+            url: "/api/plans",
+            method: "GET",
+            provider: "ban",
+            providerLabel: "Base Adresse Nationale",
+            description: "Available pricing plans.",
+            fields: [{ path: "items", type: "array" }],
+        }, {
+            label: "Create plan",
+            url: "/api/plans",
+            method: "POST",
+            provider: "ban",
+            providerLabel: "Base Adresse Nationale",
+            fields: [],
+        }]);
+        tree.setStructure([node], editor);
+
+        let detail: StructureTreeActionDetail | undefined;
+        tree.addEventListener("editor-v2:structure-action", (event) => {
+            detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
+        });
+
+        (tree as unknown as {
+            _openSourcePicker(node: EditorStructureNode): void;
+        })._openSourcePicker(node);
+
+        const picker = tree.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
+        expect(picker.shadowRoot!.querySelector("h3")?.textContent).toBe("Plans");
+        expect(picker.shadowRoot!.querySelector(".details-eyebrow")?.textContent).toBe("Base Adresse Nationale");
+        expect(picker.shadowRoot!.textContent ?? "").not.toContain("Create plan");
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
+
+        expect(detail?.action).toBe("set-source");
+        expect(detail?.editor).toBe(editor);
+        expect(detail?.dataSource?.url).toBe("/api/plans");
+    });
+
     test("topbar emits full and bleed viewport changes", async () => {
         installDom();
 
