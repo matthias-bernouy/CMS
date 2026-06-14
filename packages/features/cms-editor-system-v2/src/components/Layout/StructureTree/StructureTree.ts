@@ -276,22 +276,27 @@ export class StructureTree extends HTMLElement {
         const menu = this._contextMenu;
         menu.replaceChildren();
 
+        const sourceAction = node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)
+            ? this._contextMenuButton("Remove source", () => this._emitAction("remove-source", node.editor))
+            : this._contextMenuButton(this._sourceActionLabel(node), () => {
+                this._openSourcePicker(node);
+            }, undefined, this._sourceDataSources.length === 0);
+
         menu.append(
             this._contextMenuButton("Add child", () => {
                 this._pendingPickerAction = { action: "add-child", editor: node.editor };
                 this._blockPicker.open(this._childGroups(node), node.label);
             }, undefined, !this._hasEnabledGroup(this._childGroups(node))),
+            this._contextMenuButton("Copy", () => this._emitAction("copy", node.editor)),
+            this._contextMenuButton("Paste after", () => this._emitAction("paste-after", node.editor)),
+            this._contextMenuButton("Duplicate", () => this._emitAction("duplicate", node.editor), undefined, !this._canDuplicate(node)),
+            this._contextSeparator(),
+            sourceAction,
+            this._contextSeparator(),
             this._contextMenuButton("Replace", () => {
                 this._pendingPickerAction = { action: "replace", editor: node.editor };
                 this._blockPicker.open(this._replaceGroups(node), node.label);
             }, undefined, !this._hasEnabledGroup(this._replaceGroups(node))),
-            this._contextMenuButton("Copy", () => this._emitAction("copy", node.editor)),
-            this._contextMenuButton("Paste after", () => this._emitAction("paste-after", node.editor)),
-            this._contextMenuButton(this._sourceActionLabel(node), () => {
-                this._openSourcePicker(node);
-            }, undefined, this._sourceDataSources.length === 0),
-            this._contextMenuButton("Remove source", () => this._emitAction("remove-source", node.editor), undefined, !node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)),
-            this._contextMenuButton("Duplicate", () => this._emitAction("duplicate", node.editor), undefined, !this._canDuplicate(node)),
             this._contextMenuButton("Delete", () => this._emitAction("delete", node.editor), "danger", !this._canDelete(node)),
         );
 
@@ -335,6 +340,13 @@ export class StructureTree extends HTMLElement {
             action();
         });
         return button;
+    }
+
+    private _contextSeparator(): HTMLElement {
+        const separator = document.createElement("div");
+        separator.className = "context-separator";
+        separator.role = "separator";
+        return separator;
     }
 
     private _openRootContextMenu(clientX: number, clientY: number): void {
