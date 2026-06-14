@@ -64,11 +64,16 @@ export type StructureTreeRenderOptions = {
     repeatableTargets?: HTMLElement[];
 };
 
+export type DefaultTemplateSelection = {
+    category?: string;
+};
+
 export class StructureTree extends HTMLElement {
     private _nodes: EditorStructureNode[] = [];
     private _selectedEditor: Editor | null = null;
     private _catalog: EditorCatalog = [];
     private _dataSources: EditorDataSource[] = [];
+    private _defaultTemplateSelection: DefaultTemplateSelection = {};
     private _insertItems: BlockPickerItem[] = [];
     private _scrollSelectedIntoViewOnRender = false;
     private readonly _repeatableTargets = new WeakSet<HTMLElement>();
@@ -112,6 +117,11 @@ export class StructureTree extends HTMLElement {
         this._insertItems = items.map(item => ({ ...item }));
     }
 
+    setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
+        this._defaultTemplateSelection = { ...selection };
+        this._render();
+    }
+
     setDataSources(sources: EditorDataSource[]): void {
         this._dataSources = sources.map(source => ({
             ...source,
@@ -153,9 +163,11 @@ export class StructureTree extends HTMLElement {
             empty.className = "empty";
             const button = document.createElement("button");
             button.type = "button";
-            button.textContent = "Add block";
+            const defaultTemplates = this._defaultTemplateItems();
+            button.textContent = defaultTemplates.length > 0 ? "Use default template" : "Add block";
             button.addEventListener("click", (event) => {
                 event.stopPropagation();
+                if (this._useDefaultTemplate(defaultTemplates)) return;
                 this._openRootPicker();
             });
             empty.append("No editable elements", button);
@@ -453,6 +465,17 @@ export class StructureTree extends HTMLElement {
             label: "Page",
             disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
             options,
+        }];
+    }
+
+    private _defaultTemplateGroups(templates: BlockPickerItem[]): BlockPickerSlotGroup[] {
+        return [{
+            label: "Default templates",
+            disabledReason: templates.length === 0 ? "No default templates." : undefined,
+            options: templates.map(item => ({
+                item,
+                slotLabel: "Page",
+            })),
         }];
     }
 
@@ -791,6 +814,25 @@ export class StructureTree extends HTMLElement {
 
     private _sourceActionLabel(node: EditorStructureNode): string {
         return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Update source" : "Add source";
+    }
+
+    private _defaultTemplateItems(): BlockPickerItem[] {
+        const templates = this._insertItems.filter((item): item is Extract<BlockPickerItem, { kind: "template" }> => item.kind === "template");
+        if (this._defaultTemplateSelection.category) {
+            return templates.filter(item => item.category === this._defaultTemplateSelection.category);
+        }
+        return [];
+    }
+
+    private _useDefaultTemplate(templates = this._defaultTemplateItems()): boolean {
+        if (templates.length === 0) return false;
+        if (templates.length === 1) {
+            this._emitAction("add-root", undefined, templates[0]);
+            return true;
+        }
+        this._pendingPickerAction = { action: "add-root" };
+        this._blockPicker.open(this._defaultTemplateGroups(templates), "Page");
+        return true;
     }
 
     private _setRepeatableTargets(targets: HTMLElement[]): void {

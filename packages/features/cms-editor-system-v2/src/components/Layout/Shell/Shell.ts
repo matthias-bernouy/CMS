@@ -55,7 +55,7 @@ import {
     type SettingsViewStateToggleDetail,
 } from "../../Settings/SettingsView/SettingsView";
 import type { StructureTree } from "../StructureTree/StructureTree";
-import type { StructureTreeActionDetail } from "../StructureTree/StructureTree";
+import type { DefaultTemplateSelection, StructureTreeActionDetail } from "../StructureTree/StructureTree";
 import {
     REPEAT_PICKER_SELECT_EVENT,
     RepeatPicker,
@@ -125,6 +125,7 @@ export type EditorV2PageConfig = {
     description: string;
     tags: string[];
     published: boolean;
+    defaultTemplateCategory?: string;
 };
 
 export type EditorV2SaveDocumentDetail = {
@@ -156,6 +157,7 @@ export class Shell extends HTMLElement {
 
     private _catalog: EditorCatalog = [];
     private _dataSources: EditorDataSource[] = [];
+    private _defaultTemplateSelection: DefaultTemplateSelection = {};
     private _insertItems: BlockPickerItem[] = [];
     private _runtime: EditorRuntime | null = null;
     private _frameDocument: Document | null = null;
@@ -244,6 +246,11 @@ export class Shell extends HTMLElement {
         this._syncStructureTreeInsertItems();
     }
 
+    setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
+        this._defaultTemplateSelection = { ...selection };
+        this._syncStructureTreeDefaultTemplateSelection();
+    }
+
     setDataSources(sources: EditorDataSource[]): void {
         this._dataSources = sources.map(source => ({
             ...source,
@@ -257,6 +264,11 @@ export class Shell extends HTMLElement {
             ...config,
             tags: [...config.tags],
         };
+        if (config.defaultTemplateCategory) {
+            this.setDefaultTemplateSelection({
+                category: config.defaultTemplateCategory,
+            });
+        }
         this._topBar.setPageTitle(config.title, config.path);
         this._syncPageSettingsForm();
     }
@@ -593,6 +605,9 @@ export class Shell extends HTMLElement {
         const insertion = this._createInsertion(item);
         if (!insertion) return;
 
+        if (this._isEmptyDocumentContent()) {
+            this._editorDocument.contentRoot.replaceChildren();
+        }
         this._editorDocument.contentRoot.append(insertion.fragment);
         this._reloadFrameDocument(insertion.selectionTarget);
     }
@@ -1058,7 +1073,7 @@ export class Shell extends HTMLElement {
     }
 
     private _renderStructure(options: SelectOptions = {}): void {
-        if (!this._runtime) {
+        if (!this._runtime || this._isEmptyDocumentContent()) {
             this._structureTree.setStructure([], null, this._catalog);
             return;
         }
@@ -1073,6 +1088,27 @@ export class Shell extends HTMLElement {
                 repeatableTargets:      this._repeatableTargets(structure),
             },
         );
+    }
+
+    private _isEmptyDocumentContent(): boolean {
+        const contentRoot = this._editorDocument?.contentRoot;
+        if (!contentRoot) return true;
+
+        const meaningfulNodes = Array.from(contentRoot.childNodes)
+            .filter(node => node.nodeType !== Node.TEXT_NODE || (node.textContent ?? "").trim() !== "");
+        if (meaningfulNodes.length === 0) return true;
+        if (meaningfulNodes.length !== 1) return false;
+
+        const node = meaningfulNodes[0];
+        if (!node) return true;
+        if (node.nodeType !== Node.ELEMENT_NODE) return false;
+        const element = node as HTMLElement;
+        if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0) return false;
+
+        return Array.from(element.childNodes).every(child => {
+            if (child.nodeType === Node.TEXT_NODE) return (child.textContent ?? "").trim() === "";
+            return child.nodeType === Node.ELEMENT_NODE && (child as Element).tagName.toLowerCase() === "br";
+        });
     }
 
     private _repeatableTargets(nodes: EditorStructureNode[]): HTMLElement[] {
@@ -1316,6 +1352,7 @@ export class Shell extends HTMLElement {
         if (this._isStructureTree(tree)) {
             tree.catalog = this._catalog;
             tree.setInsertItems(this._insertItems);
+            tree.setDefaultTemplateSelection(this._defaultTemplateSelection);
             return;
         }
 
@@ -1324,6 +1361,7 @@ export class Shell extends HTMLElement {
             if (this._isStructureTree(upgradedTree)) {
                 upgradedTree.catalog = this._catalog;
                 upgradedTree.setInsertItems(this._insertItems);
+                upgradedTree.setDefaultTemplateSelection(this._defaultTemplateSelection);
             }
         });
     }
@@ -1332,6 +1370,7 @@ export class Shell extends HTMLElement {
         const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
         if (this._isStructureTree(tree)) {
             tree.setInsertItems(this._insertItems);
+            tree.setDefaultTemplateSelection(this._defaultTemplateSelection);
             return;
         }
 
@@ -1339,12 +1378,28 @@ export class Shell extends HTMLElement {
             const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
             if (this._isStructureTree(upgradedTree)) {
                 upgradedTree.setInsertItems(this._insertItems);
+                upgradedTree.setDefaultTemplateSelection(this._defaultTemplateSelection);
+            }
+        });
+    }
+
+    private _syncStructureTreeDefaultTemplateSelection(): void {
+        const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
+        if (this._isStructureTree(tree)) {
+            tree.setDefaultTemplateSelection(this._defaultTemplateSelection);
+            return;
+        }
+
+        customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
+            const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
+            if (this._isStructureTree(upgradedTree)) {
+                upgradedTree.setDefaultTemplateSelection(this._defaultTemplateSelection);
             }
         });
     }
 
     private _isStructureTree(value: Element | null | undefined): value is StructureTree {
-        return Boolean(value && "catalog" in value && "setStructure" in value && "setInsertItems" in value);
+        return Boolean(value && "catalog" in value && "setStructure" in value && "setInsertItems" in value && "setDefaultTemplateSelection" in value);
     }
 
     private _isTopBar(value: Element | null | undefined): value is TopBar {

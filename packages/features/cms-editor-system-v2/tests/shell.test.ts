@@ -395,6 +395,44 @@ describe("Shell", () => {
         expect(detail?.editor).toBe(editor);
     });
 
+    test("structure tree uses the default template on empty pages", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setInsertItems([{
+            kind:        "template",
+            id:          "tpl-default",
+            label:       "Default layout",
+            category:    "Layouts",
+            description: "Default page layout.",
+            content:     "<main></main>",
+        }, {
+            kind:        "template",
+            id:          "tpl-other",
+            label:       "Other layout",
+            category:    "Other",
+            content:     "<section></section>",
+        }]);
+        tree.setDefaultTemplateSelection({ category: "Layouts" });
+        tree.setStructure([], null);
+
+        let detail: StructureTreeActionDetail | undefined;
+        tree.addEventListener("editor-v2:structure-action", (event) => {
+            detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
+        });
+
+        const button = tree.shadowRoot!.querySelector<HTMLButtonElement>(".empty button")!;
+        expect(button.textContent).toBe("Use default template");
+        button.click();
+
+        expect(detail?.action).toBe("add-root");
+        expect(detail?.item?.kind).toBe("template");
+        expect(detail?.item?.id).toBe("tpl-default");
+    });
+
     test("repeat picker emits selected array and alias", async () => {
         installDom();
 
@@ -531,6 +569,57 @@ describe("Shell", () => {
         expect(shell.shadowRoot!.querySelector('[data-page-label="tags"]')!.textContent).toBe("Category");
         expect(shell.shadowRoot!.querySelector('[data-page-field="path"]')!.hasAttribute("disabled")).toBe(true);
         expect(shell.shadowRoot!.querySelector('[data-page-field="published"]')!.closest("label")!.hidden).toBe(true);
+    });
+
+    test("shell treats an empty paragraph as empty page content", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        class ParagraphEditor extends Editor { }
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        const contentRoot = frameDocument.createElement("div");
+        contentRoot.setAttribute("data-cms-content", "");
+        contentRoot.innerHTML = "<p></p>";
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.setCatalog([{
+            tag:    "p",
+            label:  "Paragraph",
+            bloc:   HTMLElement as unknown as CustomElementConstructor,
+            editor: ParagraphEditor,
+        }]);
+
+        let renderedStructure: EditorStructureNode[] | undefined;
+        const structureTree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as Element & {
+            setStructure?: (nodes: EditorStructureNode[]) => void;
+        };
+        structureTree.setStructure = (nodes) => {
+            renderedStructure = nodes;
+        };
+
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        shell.loadDocument({ root, contentRoot });
+        expect(renderedStructure).toEqual([]);
+
+        (shell as unknown as { _addRoot(item: unknown): void })._addRoot({
+            kind:    "template",
+            id:      "tpl-default",
+            label:   "Default template",
+            content: "<main></main>",
+        });
+
+        expect(contentRoot.innerHTML).toBe("<main></main>");
     });
 
     test("shell does not loop when topbar definition resolves before upgrade", async () => {

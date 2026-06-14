@@ -37,6 +37,13 @@ type PageConfigDetailResponse = {
     path: string;
     tags: string[];
     published: boolean;
+    defaultTemplateCategory?: string;
+};
+
+type EditorSettingsResponse = {
+    editor?: {
+        layoutCategory?: string;
+    };
 };
 
 type TemplateListItem = {
@@ -87,10 +94,11 @@ function configureShell(shell: Element): void {
 }
 
 async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
-    const [catalog, insertItems, dataSources] = await Promise.all([
+    const [catalog, insertItems, dataSources, settings] = await Promise.all([
         loadEditorCatalog(),
         loadInsertItems(),
         loadDataSources(),
+        loadEditorSettings(),
     ]);
 
     console.log(dataSources);
@@ -98,6 +106,9 @@ async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
     shell.setCatalog(catalog);
     shell.setInsertItems(insertItems);
     shell.setDataSources(dataSources);
+    shell.setDefaultTemplateSelection({
+        category: settings.editor?.layoutCategory || undefined,
+    });
 
     const documentId = currentPageIdentifier();
     const resource = shellResource(shell);
@@ -124,6 +135,10 @@ async function loadInsertItems(): Promise<BlockPickerItem[]> {
 
 async function loadDataSources(): Promise<EditorDataSource[]> {
     return fetchJson<EditorDataSource[]>("editor/sources", []);
+}
+
+async function loadEditorSettings(): Promise<EditorSettingsResponse> {
+    return fetchJson<EditorSettingsResponse>("system/settings", {});
 }
 
 async function loadTemplateItems(): Promise<BlockPickerItem[]> {
@@ -272,6 +287,7 @@ async function loadPageConfig(shell: Shell, pageId: string): Promise<void> {
         description: page.description,
         tags:        page.tags,
         published:   page.published,
+        defaultTemplateCategory: page.defaultTemplateCategory,
     });
 }
 
