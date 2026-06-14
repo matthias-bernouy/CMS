@@ -4,10 +4,19 @@ export {
 } from "./Editor";
 export {
     CMS_BINDING_ATTRIBUTES,
+    asCondition,
     asInterpolation,
+    asRepeat,
+    asSource,
     isInterpolation,
+    parseCondition,
     parseInterpolation,
+    parseRepeat,
+    parseSource,
     type CmsBindingAttribute,
+    type CmsConditionExpression,
+    type CmsRepeatBinding,
+    type CmsSourceUrl,
 } from "./BindingSyntax";
 export type {
     ContentSlot,
