@@ -30,10 +30,36 @@ describe("editor binding syntax", () => {
         expect(isInterpolation("Hello {{ plan.name }}")).toBe(false);
     });
 
-    test("formats and parses source URLs", () => {
+    test("formats source bindings", () => {
         expect(asSource(" /api/plans ")).toBe("/api/plans");
         expect(asSource("https://example.com/api/plans")).toBe("https://example.com/api/plans");
-        expect(parseSource(" {{BASE_PATH}}/api/plans ")).toBe("{{BASE_PATH}}/api/plans");
+        expect(asSource({ url: " /api/plans ", alias: " plans " })).toBe("/api/plans as plans");
+        expect(asSource({
+            url: "/.cms/gateway/ban/search",
+            alias: "addresses",
+            params: {
+                q: { from: "queryParam", name: "address" },
+                limit: { from: "raw", value: 5 },
+                type: { from: "raw", value: "housenumber street" },
+                empty: { from: "raw", value: "" },
+                skipped: undefined,
+            },
+        })).toBe("/.cms/gateway/ban/search?q=#{address}&limit=5&type=housenumber%20street as addresses");
+        expect(asSource({
+            url: "/api/plans?",
+            params: { q: { from: "raw", value: "hello" } },
+        })).toBe("/api/plans?q=hello");
+        expect(asSource({
+            url: "/api/plans?existing=1#results",
+            params: { q: { from: "queryParam", name: "search" } },
+        })).toBe("/api/plans?existing=1&q=#{search}#results");
+    });
+
+    test("parses source bindings", () => {
+        expect(parseSource(" {{BASE_PATH}}/api/plans ")).toEqual({ url: "{{BASE_PATH}}/api/plans" });
+        expect(parseSource("/api/plans as plans")).toEqual({ url: "/api/plans", alias: "plans" });
+        expect(parseSource("  /.cms/gateway/ban/search?q=#{address}   as   addresses  "))
+            .toEqual({ url: "/.cms/gateway/ban/search?q=#{address}", alias: "addresses" });
         expect(parseSource("")).toBeNull();
         expect(parseSource("   ")).toBeNull();
     });

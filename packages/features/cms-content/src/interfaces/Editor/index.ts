@@ -16,6 +16,9 @@ export {
     type CmsBindingAttribute,
     type CmsConditionExpression,
     type CmsRepeatBinding,
+    type CmsSourceBinding,
+    type CmsSourceParamMap,
+    type CmsSourceParamValue,
     type CmsSourceUrl,
 } from "./BindingSyntax";
 export type {
