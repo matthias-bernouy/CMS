@@ -224,6 +224,61 @@ describe("Shell", () => {
         expect(optionIds).not.toContain("multi-root");
     });
 
+    test("structure tree opens media-only slots directly without block picker", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class AlbumEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label: "Images",
+                    slot: "images",
+                    accepts: [{ kind: "media" as const, accept: ["image" as const] }],
+                }];
+            }
+        }
+
+        const target = document.createElement("p9r-photo-album");
+        const editor = new AlbumEditor(target);
+        const node: EditorStructureNode = {
+            editor,
+            target,
+            tag: "p9r-photo-album",
+            label: "Photo album",
+            badges: [],
+            children: [],
+        };
+        const tree = new StructureTree();
+        const actions: StructureTreeActionDetail[] = [];
+        tree.addEventListener("editor-v2:structure-action", (event) => {
+            actions.push((event as CustomEvent<StructureTreeActionDetail>).detail);
+        });
+        document.body.append(tree);
+        tree.setStructure([node], null);
+
+        const internals = tree as unknown as {
+            _childGroups(node: EditorStructureNode): Array<{ label: string; options: Array<unknown> }>;
+            _openPickerOrEmitSingleMedia(
+                action: { action: "add-child"; editor: Editor },
+                groups: Array<{ label: string; options: Array<unknown> }>,
+                contextLabel: string,
+            ): void;
+        };
+        internals._openPickerOrEmitSingleMedia(
+            { action: "add-child", editor },
+            internals._childGroups(node),
+            node.label,
+        );
+
+        expect(actions).toHaveLength(1);
+        expect(actions[0]?.action).toBe("add-child");
+        expect(actions[0]?.editor).toBe(editor);
+        expect(actions[0]?.slot).toBe("images");
+        expect(actions[0]?.item?.kind).toBe("media");
+        expect(actions[0]?.item?.kind === "media" ? actions[0].item.accept : undefined).toEqual(["image"]);
+        expect(tree.shadowRoot!.querySelector("cms-editor-v2-block-picker-modal")).toBeNull();
+    });
 
     test("replace picker allows replacing the only child in a max-one slot", async () => {
         installDom();

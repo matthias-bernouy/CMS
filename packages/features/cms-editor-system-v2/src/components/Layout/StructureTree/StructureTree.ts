@@ -358,8 +358,11 @@ export class StructureTree extends HTMLElement {
 
         menu.append(
             this._contextMenuButton("Add child", () => {
-                this._pendingPickerAction = { action: "add-child", editor: node.editor };
-                this._blockPicker.open(this._childGroups(node), node.label);
+                this._openPickerOrEmitSingleMedia(
+                    { action: "add-child", editor: node.editor },
+                    this._childGroups(node),
+                    node.label,
+                );
             }, undefined, !this._hasEnabledGroup(this._childGroups(node))),
             this._contextMenuButton("Copy", () => this._emitAction("copy", node.editor)),
             this._contextMenuButton("Paste after", () => this._emitAction("paste-after", node.editor)),
@@ -369,8 +372,11 @@ export class StructureTree extends HTMLElement {
             repeatAction,
             this._contextSeparator(),
             this._contextMenuButton("Replace", () => {
-                this._pendingPickerAction = { action: "replace", editor: node.editor };
-                this._blockPicker.open(this._replaceGroups(node), node.label);
+                this._openPickerOrEmitSingleMedia(
+                    { action: "replace", editor: node.editor },
+                    this._replaceGroups(node),
+                    node.label,
+                );
             }, undefined, !this._hasEnabledGroup(this._replaceGroups(node))),
             this._contextMenuButton("Delete", () => this._emitAction("delete", node.editor), "danger", !this._canDelete(node)),
         );
@@ -444,6 +450,29 @@ export class StructureTree extends HTMLElement {
     private _openRootPicker(): void {
         this._pendingPickerAction = { action: "add-root" };
         this._blockPicker.open(this._rootGroups(), "Page");
+    }
+
+    private _openPickerOrEmitSingleMedia(
+        action: NonNullable<typeof this._pendingPickerAction>,
+        groups: BlockPickerSlotGroup[],
+        contextLabel: string,
+    ): void {
+        const option = this._singleEnabledOption(groups);
+        if (option?.item?.kind === "media") {
+            this._emitAction(action.action, action.editor, option.item, option.slot);
+            return;
+        }
+
+        this._pendingPickerAction = action;
+        this._blockPicker.open(groups, contextLabel);
+    }
+
+    private _singleEnabledOption(groups: BlockPickerSlotGroup[]): BlockPickerOption | null {
+        const options = groups
+            .filter(group => !group.disabledReason)
+            .flatMap(group => group.options);
+
+        return options.length === 1 ? options[0] ?? null : null;
     }
 
     private _emitAction(
