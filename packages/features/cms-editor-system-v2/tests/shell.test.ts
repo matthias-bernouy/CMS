@@ -627,6 +627,20 @@ describe("Shell", () => {
         ]);
     });
 
+    test("topbar defaults to bleed viewport", async () => {
+        installDom();
+
+        const { TopBar } = await import("../src/components/Layout/TopBar/TopBar");
+
+        const topbar = new TopBar();
+        document.body.append(topbar);
+
+        expect(topbar.viewport).toBe("bleed");
+        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="bleed"]')?.classList.contains("active")).toBe(true);
+        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="bleed"]')?.getAttribute("aria-pressed")).toBe("true");
+        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="desktop"]')?.getAttribute("aria-pressed")).toBe("false");
+    });
+
     test("topbar renders resource navigation labels", async () => {
         installDom();
 

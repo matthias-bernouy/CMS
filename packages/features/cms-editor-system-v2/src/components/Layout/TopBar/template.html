@@ -12,7 +12,7 @@
     </div>
     <div class="center">
         <div class="segmented device-switch" aria-label="Device viewport">
-            <button class="active icon-button" type="button" data-viewport="desktop" aria-label="Desktop viewport" title="Desktop" aria-pressed="true">
+            <button class="icon-button" type="button" data-viewport="desktop" aria-label="Desktop viewport" title="Desktop" aria-pressed="false">
                 <span class="device-icon desktop-icon" aria-hidden="true"></span>
             </button>
             <button class="icon-button" type="button" data-viewport="tablet" aria-label="Tablet viewport" title="Tablet" aria-pressed="false">
@@ -24,7 +24,7 @@
         </div>
         <div class="segmented fit-switch" aria-label="Canvas fit">
             <button type="button" data-viewport="full" aria-pressed="false">Full</button>
-            <button type="button" data-viewport="bleed" aria-pressed="false">Bleed</button>
+            <button class="active" type="button" data-viewport="bleed" aria-pressed="true">Bleed</button>
         </div>
         <div class="segmented mode-switch" aria-label="Editor mode">
             <button class="active" type="button" data-editor-mode="edit" aria-pressed="true">Edit</button>

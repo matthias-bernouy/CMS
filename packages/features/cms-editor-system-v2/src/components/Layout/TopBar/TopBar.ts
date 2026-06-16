@@ -21,7 +21,7 @@ export const TOPBAR_SAVE_EVENT = "editor-v2:save";
 export const TOPBAR_PAGE_SETTINGS_EVENT = "editor-v2:page-settings";
 
 export class TopBar extends HTMLElement {
-    private _viewport: TopBarViewport = "desktop";
+    private _viewport: TopBarViewport = "bleed";
     private _mode: TopBarEditorMode = "edit";
 
     constructor() {

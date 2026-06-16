@@ -164,7 +164,7 @@ export class Shell extends HTMLElement {
     private _frameDocument: Document | null = null;
     private _editorDocument: EditorDocument | null = null;
     private _settingsMode: SettingsViewMode = "settings";
-    private _viewport: TopBarViewport = "desktop";
+    private _viewport: TopBarViewport = "bleed";
     private _editorMode: TopBarEditorMode = "edit";
     private _pageConfig: EditorV2PageConfig | null = null;
     private _clipboardElement: HTMLElement | null = null;
