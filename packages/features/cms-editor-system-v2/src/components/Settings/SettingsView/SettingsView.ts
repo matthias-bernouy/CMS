@@ -1,5 +1,4 @@
 import "../../Controls/Section/Section";
-import "../../Controls/FieldGroup/FieldGroup";
 import "../../Controls/TextInput/TextInput";
 import "../../Controls/Textarea/Textarea";
 import "../../Controls/RichTextEditor/RichTextEditor";
