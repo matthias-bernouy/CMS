@@ -21,6 +21,10 @@ export type CmsRepeatBinding = {
     path: string;
     alias?: string;
 };
+export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
+export type CmsSourceState = typeof CMS_SOURCE_STATES[number];
+export const CMS_SOURCE_SLOT_VALUES = ["loading", "empty", "error"] as const;
+export type CmsSourceSlotValue = typeof CMS_SOURCE_SLOT_VALUES[number];
 
 const INTERPOLATION_PATTERN = /^\s*\{\{\s*([\s\S]*?)\s*\}\}\s*$/;
 const SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
@@ -85,6 +89,24 @@ export function asCondition(expression: CmsConditionExpression): string {
 export function parseCondition(value: string): CmsConditionExpression | null {
     const expression = value.trim();
     return expression ? expression : null;
+}
+
+export function isCmsSourceSlotValue(value: string | null): value is CmsSourceSlotValue {
+    return (CMS_SOURCE_SLOT_VALUES as readonly string[]).includes(value ?? "");
+}
+
+export function sourceStateFromElement(element: Element): CmsSourceState {
+    const value = element.getAttribute(CMS_BINDING_ATTRIBUTES.slot);
+    return isCmsSourceSlotValue(value) ? value : "loaded";
+}
+
+export function applySourceState(element: Element, state: CmsSourceState): void {
+    if (state === "loaded") {
+        element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
+        return;
+    }
+
+    element.setAttribute(CMS_BINDING_ATTRIBUTES.slot, state);
 }
 
 function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string {

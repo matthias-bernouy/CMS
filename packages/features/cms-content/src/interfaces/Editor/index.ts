@@ -4,21 +4,28 @@ export {
 } from "./Editor";
 export {
     CMS_BINDING_ATTRIBUTES,
+    CMS_SOURCE_SLOT_VALUES,
+    CMS_SOURCE_STATES,
+    applySourceState,
     asCondition,
     asInterpolation,
     asRepeat,
     asSource,
+    isCmsSourceSlotValue,
     isInterpolation,
     parseCondition,
     parseInterpolation,
     parseRepeat,
     parseSource,
+    sourceStateFromElement,
     type CmsBindingAttribute,
     type CmsConditionExpression,
     type CmsRepeatBinding,
     type CmsSourceBinding,
     type CmsSourceParamMap,
     type CmsSourceParamValue,
+    type CmsSourceSlotValue,
+    type CmsSourceState,
     type CmsSourceUrl,
 } from "./BindingSyntax";
 export type {

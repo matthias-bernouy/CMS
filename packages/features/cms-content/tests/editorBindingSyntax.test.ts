@@ -1,18 +1,30 @@
 import { describe, expect, test } from "bun:test";
+import { parseHTML } from "linkedom";
 import {
     CMS_BINDING_ATTRIBUTES,
+    CMS_SOURCE_SLOT_VALUES,
+    CMS_SOURCE_STATES,
+    applySourceState,
     asCondition,
     asInterpolation,
     asRepeat,
     asSource,
+    isCmsSourceSlotValue,
     isInterpolation,
     parseCondition,
     parseInterpolation,
     parseRepeat,
     parseSource,
+    sourceStateFromElement,
 } from "@bernouy/cms-content/editor";
 
 describe("editor binding syntax", () => {
+    function createElement(): Element {
+        return parseHTML("<!DOCTYPE html><html><body><p></p></body></html>")
+            .document
+            .querySelector("p")!;
+    }
+
     test("formats interpolation expressions", () => {
         expect(asInterpolation("plan.name")).toBe("{{ plan.name }}");
         expect(asInterpolation("  plan.price  ")).toBe("{{ plan.price }}");
@@ -92,5 +104,42 @@ describe("editor binding syntax", () => {
             source: "cms-source",
             slot: "cms-slot",
         });
+    });
+
+    test("exposes stable source states and authored slot values", () => {
+        expect(CMS_SOURCE_STATES).toEqual(["loaded", "loading", "empty", "error"]);
+        expect(CMS_SOURCE_SLOT_VALUES).toEqual(["loading", "empty", "error"]);
+        expect(isCmsSourceSlotValue("loading")).toBe(true);
+        expect(isCmsSourceSlotValue("loaded")).toBe(false);
+        expect(isCmsSourceSlotValue("unknown")).toBe(false);
+        expect(isCmsSourceSlotValue(null)).toBe(false);
+    });
+
+    test("maps cms-slot attributes to logical source states", () => {
+        const element = createElement();
+
+        expect(sourceStateFromElement(element)).toBe("loaded");
+
+        element.setAttribute("cms-slot", "empty");
+        expect(sourceStateFromElement(element)).toBe("empty");
+
+        element.setAttribute("cms-slot", "loaded");
+        expect(sourceStateFromElement(element)).toBe("loaded");
+
+        element.setAttribute("cms-slot", "invalid");
+        expect(sourceStateFromElement(element)).toBe("loaded");
+    });
+
+    test("applies logical source states to authored cms-slot attributes", () => {
+        const element = createElement();
+
+        applySourceState(element, "loading");
+        expect(element.getAttribute("cms-slot")).toBe("loading");
+
+        applySourceState(element, "error");
+        expect(element.getAttribute("cms-slot")).toBe("error");
+
+        applySourceState(element, "loaded");
+        expect(element.hasAttribute("cms-slot")).toBe(false);
     });
 });
