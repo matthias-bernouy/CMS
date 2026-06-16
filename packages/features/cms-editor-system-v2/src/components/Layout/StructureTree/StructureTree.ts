@@ -33,6 +33,13 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
+type StructureTreeRenderRequest = {
+    anchor?: {
+        key: HTMLElement;
+        offsetTop: number;
+    };
+};
+
 export type StructureTreeAction =
     | "add-child"
     | "add-root"
@@ -83,6 +90,8 @@ export class StructureTree extends HTMLElement {
     private _dropRow: HTMLElement | null = null;
     private readonly _collapsedTargets = new Set<HTMLElement>();
     private readonly _expandedBadgeTargets = new Set<HTMLElement>();
+    private readonly _renderedRows = new WeakMap<HTMLElement, HTMLElement>();
+    private _scrollRequestId = 0;
 
     constructor() {
         super();
@@ -147,11 +156,13 @@ export class StructureTree extends HTMLElement {
         this._selectedEditor = selectedEditor;
         this._catalog = [...catalog];
         this._scrollSelectedIntoViewOnRender = options.scrollSelectedIntoView === true;
+        if (this._scrollSelectedIntoViewOnRender) this._expandPathToSelected();
         this._setRepeatableTargets(options.repeatableTargets ?? []);
         this._render();
     }
 
-    private _render(): void {
+    private _render(request: StructureTreeRenderRequest = {}): void {
+        this._scrollRequestId += 1;
         const tree = this._tree;
         const scrollContainer = this._scrollContainer;
         const previousScrollTop = scrollContainer.scrollTop;
@@ -179,7 +190,9 @@ export class StructureTree extends HTMLElement {
             tree.append(this._renderNode(node.item, node.depth));
         }
 
-        if (this._scrollSelectedIntoViewOnRender) {
+        if (request.anchor) {
+            this._restoreScrollAnchor(request.anchor);
+        } else if (this._scrollSelectedIntoViewOnRender) {
             this._scrollSelectedIntoView();
         } else {
             scrollContainer.scrollTop = previousScrollTop;
@@ -190,6 +203,7 @@ export class StructureTree extends HTMLElement {
         const row = document.createElement("div");
         row.className = "row";
         row.style.setProperty("--structure-depth", String(depth));
+        this._renderedRows.set(node.target, row);
 
         if (node.children.length > 0) {
             const toggle = document.createElement("button");
@@ -300,8 +314,10 @@ export class StructureTree extends HTMLElement {
 
     private _scrollSelectedIntoView(): void {
         if (!this._selectedEditor) return;
+        const requestId = this._scrollRequestId;
 
         requestAnimationFrame(() => {
+            if (requestId !== this._scrollRequestId) return;
             const selected = this.shadowRoot!.querySelector<HTMLElement>(".item.selected");
             if (!selected) return;
 
@@ -310,11 +326,21 @@ export class StructureTree extends HTMLElement {
             const targetOffset = scrollContainer.clientHeight * 0.2;
             const nextScrollTop = selectedTop - targetOffset + selected.offsetHeight / 2;
 
-            scrollContainer.scrollTo({
-                top: Math.max(0, nextScrollTop),
-                behavior: "smooth",
-            });
+            const top = Math.max(0, nextScrollTop);
+            if (typeof scrollContainer.scrollTo === "function") {
+                scrollContainer.scrollTo({ top, behavior: "smooth" });
+            } else {
+                scrollContainer.scrollTop = top;
+            }
         });
+    }
+
+    private _restoreScrollAnchor(anchor: { key: HTMLElement; offsetTop: number }): void {
+        const row = this._renderedRows.get(anchor.key);
+        if (!row) return;
+
+        const scrollContainer = this._scrollContainer;
+        scrollContainer.scrollTop += row.getBoundingClientRect().top - anchor.offsetTop;
     }
 
     private _openContextMenu(node: EditorStructureNode, clientX: number, clientY: number): void {
@@ -594,7 +620,8 @@ export class StructureTree extends HTMLElement {
     private _canFitItem(parent: EditorStructureNode, slot: ContentSlot, item: BlockPickerItem, replaced?: EditorStructureNode): boolean {
         if (typeof slot.max !== "number") return true;
 
-        const replacedCount = replaced && this._slotForChild(parent, replaced) === slot ? 1 : 0;
+        const replacedSlot = replaced ? this._slotForChild(parent, replaced) : undefined;
+        const replacedCount = replacedSlot && this._sameSlot(replacedSlot, slot) ? 1 : 0;
         return this._slotChildCount(parent, slot) - replacedCount + this._itemRootCount(item) <= slot.max;
     }
 
@@ -636,6 +663,10 @@ export class StructureTree extends HTMLElement {
     private _slotForChild(parent: EditorStructureNode, child: EditorStructureNode): ContentSlot | undefined {
         const childSlot = child.target.getAttribute("slot") ?? undefined;
         return parent.editor.getContentSlots().find(slot => (slot.slot ?? undefined) === childSlot);
+    }
+
+    private _sameSlot(left: ContentSlot, right: ContentSlot): boolean {
+        return (left.slot ?? undefined) === (right.slot ?? undefined);
     }
 
     private _slotChildCount(parent: EditorStructureNode, slot: ContentSlot): number {
@@ -776,13 +807,41 @@ export class StructureTree extends HTMLElement {
         });
     }
 
+    private _expandPathToSelected(): void {
+        if (!this._selectedEditor) return;
+
+        const path = this._pathToEditor(this._nodes, this._selectedEditor);
+        if (!path) return;
+
+        for (const node of path.slice(0, -1)) {
+            this._collapsedTargets.delete(node.target);
+        }
+    }
+
+    private _pathToEditor(nodes: EditorStructureNode[], editor: Editor, ancestors: EditorStructureNode[] = []): EditorStructureNode[] | null {
+        for (const node of nodes) {
+            const path = [...ancestors, node];
+            if (node.editor === editor) return path;
+
+            const childPath = this._pathToEditor(node.children, editor, path);
+            if (childPath) return childPath;
+        }
+
+        return null;
+    }
+
     private _toggleNode(node: EditorStructureNode): void {
+        const row = this._renderedRows.get(node.target);
+        const anchor = row
+            ? { key: node.target, offsetTop: row.getBoundingClientRect().top }
+            : undefined;
+
         if (this._isCollapsed(node)) {
             this._collapsedTargets.delete(node.target);
         } else {
             this._collapsedTargets.add(node.target);
         }
-        this._render();
+        this._render({ anchor });
     }
 
     private _isCollapsed(node: EditorStructureNode): boolean {

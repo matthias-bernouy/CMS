@@ -224,6 +224,62 @@ describe("Shell", () => {
         expect(optionIds).not.toContain("multi-root");
     });
 
+
+    test("replace picker allows replacing the only child in a max-one slot", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class ContainerEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label: "Content",
+                    max: 1,
+                    accepts: [{ kind: "any-component" as const }],
+                }];
+            }
+        }
+
+        class ChildEditor extends Editor {}
+
+        const parentTarget = document.createElement("demo-container");
+        const childTarget = document.createElement("demo-child");
+        const parentEditor = new ContainerEditor(parentTarget);
+        const childEditor = new ChildEditor(childTarget);
+        const childNode: EditorStructureNode = {
+            editor: childEditor,
+            target: childTarget,
+            tag: "demo-child",
+            label: "Child",
+            badges: [],
+            children: [],
+        };
+        const parentNode: EditorStructureNode = {
+            editor: parentEditor,
+            target: parentTarget,
+            tag: "demo-container",
+            label: "Container",
+            badges: [],
+            children: [childNode],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setInsertItems([{
+            kind: "template",
+            id: "replacement",
+            label: "Replacement",
+            content: "<demo-child>Replacement</demo-child>",
+        }]);
+        tree.setStructure([parentNode], null);
+
+        const groups = (tree as unknown as {
+            _replaceGroups(node: EditorStructureNode): Array<{ disabledReason?: string; options: Array<{ item?: { id?: string } }> }>;
+        })._replaceGroups(childNode);
+
+        expect(groups[0]!.disabledReason).toBeUndefined();
+        expect(groups[0]!.options.map(option => option.item?.id)).toContain("replacement");
+    });
+
     test("structure tree ignores delete shortcuts from shadow editable controls", async () => {
         installDom();
 
@@ -1585,6 +1641,46 @@ describe("Shell", () => {
         });
 
         expect(target.getAttribute("cms-source")).toBe("/api/plans?q=#{address}&limit=5 as plans");
+    });
+
+
+    test("structure tree expands collapsed parents to reveal selected children", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class DemoEditor extends Editor {}
+
+        const parentTarget = document.createElement("demo-parent");
+        const childTarget = document.createElement("demo-child");
+        const parentEditor = new DemoEditor(parentTarget);
+        const childEditor = new DemoEditor(childTarget);
+        const childNode: EditorStructureNode = {
+            editor: childEditor,
+            target: childTarget,
+            tag: "demo-child",
+            label: "Child",
+            badges: [],
+            children: [],
+        };
+        const parentNode: EditorStructureNode = {
+            editor: parentEditor,
+            target: parentTarget,
+            tag: "demo-parent",
+            label: "Parent",
+            badges: [],
+            children: [childNode],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setStructure([parentNode], null);
+        tree.shadowRoot!.querySelector<HTMLButtonElement>(".toggle")!.click();
+
+        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).not.toContain("Child");
+
+        tree.setStructure([parentNode], childEditor, [], { scrollSelectedIntoView: true });
+
+        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).toContain("Child");
     });
 
     test("structure tree only scrolls selected rows when requested", async () => {
