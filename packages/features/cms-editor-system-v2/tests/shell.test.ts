@@ -678,6 +678,59 @@ describe("Shell", () => {
         expect(contentRoot.innerHTML).toBe("<main></main>");
     });
 
+
+    test("shell scrolls frame target into view when selected from structure", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        class ParagraphEditor extends Editor {}
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
+        const contentRoot = frameDocument.createElement("main");
+        contentRoot.setAttribute("data-cms-content", "");
+        const paragraph = frameDocument.createElement("p");
+        paragraph.textContent = "Target";
+        contentRoot.append(paragraph);
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        let didScrollFrameTarget = false;
+        (paragraph as HTMLElement & { scrollIntoView(options?: ScrollIntoViewOptions): void }).scrollIntoView = () => {
+            didScrollFrameTarget = true;
+        };
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.connectedCallback();
+        shell.setCatalog([{
+            tag: "p",
+            label: "Paragraph",
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: ParagraphEditor,
+        }]);
+        shell.loadDocument({ root, contentRoot });
+
+        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const editor = runtime.getEditor(paragraph);
+        if (!editor) throw new Error("Missing paragraph editor.");
+
+        shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree")!.dispatchEvent(new CustomEvent("editor-v2:select-editor", {
+            bubbles: true,
+            composed: true,
+            detail: { editor },
+        }));
+
+        expect(didScrollFrameTarget).toBe(true);
+    });
+
     test("shell does not loop when topbar definition resolves before upgrade", async () => {
         installDom();
 

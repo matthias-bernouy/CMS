@@ -8,11 +8,19 @@ export class FrameHighlight {
     private _overlay: HTMLElement | null = null;
     private _resizeObserver: ResizeObserver | null = null;
 
-    show(editor: Editor): void {
+    show(editor: Editor, options: { scrollIntoView?: boolean } = {}): void {
         this.hide();
         this._target = editor.target;
         const doc = editor.target.ownerDocument;
         this._ensureStyle(doc);
+
+        if (options.scrollIntoView) {
+            editor.target.scrollIntoView({
+                block:    "center",
+                inline:   "nearest",
+                behavior: "smooth",
+            });
+        }
 
         this._overlay = doc.createElement("div");
         this._overlay.setAttribute(HIGHLIGHT_ATTR, "");

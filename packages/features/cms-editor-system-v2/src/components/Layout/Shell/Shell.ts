@@ -136,6 +136,7 @@ export type EditorV2SaveDocumentDetail = {
 export const EDITOR_V2_SAVE_DOCUMENT_EVENT = "editor-v2:save-document";
 
 type SelectOptions = {
+    scrollFrameIntoView?: boolean;
     scrollStructureIntoView?: boolean;
 };
 
@@ -293,7 +294,10 @@ export class Shell extends HTMLElement {
         if (this._editorMode !== "edit") return;
 
         const editor = (event as CustomEvent<{ editor: Editor }>).detail.editor;
-        this._select(editor, { scrollStructureIntoView: false });
+        this._select(editor, {
+            scrollFrameIntoView:     true,
+            scrollStructureIntoView: false,
+        });
     };
 
     private readonly _onSettingsTabsClick = (event: Event): void => {
@@ -501,7 +505,9 @@ export class Shell extends HTMLElement {
 
         this._renderSettings();
         this._setSelectionStatus(selection.editor);
-        this._highlight.show(selection.editor);
+        this._highlight.show(selection.editor, {
+            scrollIntoView: options.scrollFrameIntoView === true,
+        });
     }
 
     private _renderSettings(): void {
