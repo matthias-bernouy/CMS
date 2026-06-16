@@ -15,7 +15,14 @@
         <input class="external-input" type="url" placeholder="https://example.com" />
     </div>
     <div class="panel media-panel" hidden>
-        <button class="file-button" type="button">Choose file</button>
+        <button class="file-button" type="button">
+            <span class="file-preview" aria-hidden="true"></span>
+            <span class="file-copy">
+                <strong class="file-title">Choose file</strong>
+                <code class="file-value">No file selected</code>
+            </span>
+            <span class="file-action">Change</span>
+        </button>
     </div>
     <div class="target">
         <span class="icon">↗</span>

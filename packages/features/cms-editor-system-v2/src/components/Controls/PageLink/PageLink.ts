@@ -24,6 +24,7 @@ export class PageLink extends HTMLElement {
     private _wired = false;
     private _pickerOpen = false;
     private _isReflectingValue = false;
+    private _mediaLabel = "";
 
     constructor() {
         super();
@@ -131,6 +132,12 @@ export class PageLink extends HTMLElement {
     private _renderTabs(): void {
         this.tabs.replaceChildren();
 
+        if (this._allowedModes().length <= 1) {
+            this.tabs.hidden = true;
+            return;
+        }
+
+        this.tabs.hidden = false;
         if (this._allowPage()) {
             this.tabs.append(this._tab("Page", "page"));
         }
@@ -168,6 +175,7 @@ export class PageLink extends HTMLElement {
         this.fileButton.disabled = this.disabled;
         this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
         if (this._mode === "external") this.externalInput.value = this._value;
+        this._renderMediaFile();
     }
 
     private _renderPages(): void {
@@ -212,7 +220,7 @@ export class PageLink extends HTMLElement {
         const page = this._pages.find(candidate => candidate.path === this._value);
         this.summaryTitle.textContent = page?.title ?? (this._value ? this._summaryFallback() : "No link selected");
         this.summaryValue.textContent = this._value || "Choose a target";
-        this.target.hidden = !this._value;
+        this.target.hidden = !this._value || this._mode === "media";
     }
 
     private _setValue(value: string): void {
@@ -220,6 +228,7 @@ export class PageLink extends HTMLElement {
         this._reflectValue(value);
         this._renderPages();
         this._renderSummary();
+        this._renderMediaFile();
         this.dispatchEvent(new CustomEvent<PageLinkInputDetail>("input", {
             bubbles: true,
             composed: true,
@@ -248,11 +257,40 @@ export class PageLink extends HTMLElement {
             const detail = (event as CustomEvent<FilesCenterSelectDetail>).detail;
             if (!detail?.src) return;
             this._mode = "media";
+            this._mediaLabel = detail.label;
             this._setValue(detail.src);
         }, { once: true });
 
         document.body.append(center);
         center.show({ accept: ["folder", "file"] });
+    }
+
+    private _renderMediaFile(): void {
+        const title = this.fileTitle;
+        const value = this.fileValue;
+        const preview = this.filePreview;
+        const action = this.fileAction;
+        const hasValue = this._mode === "media" && this._value !== "";
+        const isImage = hasValue && this._isImageMedia(this._value);
+
+        title.textContent = hasValue ? this._mediaDisplayName(this._value, isImage) : "Choose file";
+        value.textContent = hasValue ? this._mediaSelectionLabel(isImage) : "No file selected";
+        value.toggleAttribute("hidden", hasValue && isImage);
+        action.textContent = hasValue ? "Change" : "Choose";
+
+        preview.replaceChildren();
+        preview.dataset.kind = isImage ? "image" : "file";
+
+        if (isImage) {
+            const image = document.createElement("img");
+            image.src = this._value;
+            image.alt = "";
+            image.loading = "lazy";
+            preview.append(image);
+            return;
+        }
+
+        preview.textContent = "↗";
     }
 
     private _reflectValue(value: string): void {
@@ -273,12 +311,44 @@ export class PageLink extends HTMLElement {
         return this.getAttribute("allow-media") !== "false";
     }
 
+    private _allowedModes(): LinkMode[] {
+        const modes: LinkMode[] = [];
+        if (this._allowPage()) modes.push("page");
+        if (this._allowExternal()) modes.push("external");
+        if (this._allowMedia()) modes.push("media");
+        return modes;
+    }
+
     private _isExternal(value: string): boolean {
         return /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("//");
     }
 
     private _isMedia(value: string): boolean {
         return value.includes("/.cms/files/by-id/");
+    }
+
+    private _isImageMedia(value: string): boolean {
+        return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value)
+            || value.includes("/.cms/files/by-id/");
+    }
+
+    private _mediaDisplayName(value: string, isImage: boolean): string {
+        if (this._mediaLabel) return this._mediaLabel;
+        if (value.includes("/.cms/files/by-id/")) return isImage ? "Image" : "Selected file";
+
+        const clean = value.split(/[?#]/, 1)[0] ?? value;
+        const segment = clean.split("/").filter(Boolean).at(-1);
+        if (!segment) return "File";
+
+        try {
+            return decodeURIComponent(segment);
+        } catch {
+            return segment;
+        }
+    }
+
+    private _mediaSelectionLabel(isImage: boolean): string {
+        return isImage ? "Image" : "File selected";
     }
 
     private _summaryFallback(): string {
@@ -331,6 +401,22 @@ export class PageLink extends HTMLElement {
         return this.shadowRoot!.querySelector(".file-button")!;
     }
 
+    private get filePreview(): HTMLElement {
+        return this.shadowRoot!.querySelector(".file-preview")!;
+    }
+
+    private get fileTitle(): HTMLElement {
+        return this.shadowRoot!.querySelector(".file-title")!;
+    }
+
+    private get fileValue(): HTMLElement {
+        return this.shadowRoot!.querySelector(".file-value")!;
+    }
+
+    private get fileAction(): HTMLElement {
+        return this.shadowRoot!.querySelector(".file-action")!;
+    }
+
     private get pageList(): HTMLElement {
         return this.shadowRoot!.querySelector(".page-list")!;
     }
@@ -344,11 +430,11 @@ export class PageLink extends HTMLElement {
     }
 
     private get summaryTitle(): HTMLElement {
-        return this.shadowRoot!.querySelector("strong")!;
+        return this.shadowRoot!.querySelector(".target strong")!;
     }
 
     private get summaryValue(): HTMLElement {
-        return this.shadowRoot!.querySelector("code")!;
+        return this.shadowRoot!.querySelector(".target code")!;
     }
 
     private get target(): HTMLElement {

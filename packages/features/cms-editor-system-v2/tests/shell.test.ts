@@ -1334,6 +1334,27 @@ describe("Shell", () => {
 
         expect(values).toEqual(["/cms/.cms/files/by-id/hero"]);
         expect(control.getAttribute("value")).toBe("/cms/.cms/files/by-id/hero");
+        expect(control.shadowRoot!.querySelector(".file-title")?.textContent).toBe("Hero.png");
+    });
+
+    test("page link media-only mode hides tabs and renders selected file preview", async () => {
+        installDom();
+        document.head.innerHTML = `<meta name="basePath" content="/cms">`;
+
+        const { PageLink } = await import("../src/components/Controls/PageLink/PageLink");
+        const control = new PageLink();
+        control.setAttribute("allow-page", "false");
+        control.setAttribute("allow-external", "false");
+        control.setAttribute("allow-media", "true");
+        control.setAttribute("value", "/cms/.cms/files/by-id/hero");
+        document.body.append(control);
+        control.connectedCallback();
+
+        expect(control.shadowRoot!.querySelector<HTMLElement>(".tabs")!.hidden).toBe(true);
+        expect(control.shadowRoot!.querySelector(".file-title")?.textContent).toBe("Image");
+        expect(control.shadowRoot!.querySelector<HTMLElement>(".file-value")!.hidden).toBe(true);
+        expect(control.shadowRoot!.querySelector<HTMLImageElement>(".file-preview img")?.getAttribute("src")).toBe("/cms/.cms/files/by-id/hero");
+        expect(control.shadowRoot!.querySelector<HTMLElement>(".target")!.hidden).toBe(true);
     });
 
     test("shell inserts media into content slots as native image elements", async () => {
