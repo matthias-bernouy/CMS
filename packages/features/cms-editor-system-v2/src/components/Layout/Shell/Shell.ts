@@ -419,7 +419,6 @@ export class Shell extends HTMLElement {
             this._editorDocument = null;
             this._renderStructure();
             this._settings.setSettings([]);
-            this._setSelectionStatus(null);
             return;
         }
 
@@ -498,13 +497,11 @@ export class Shell extends HTMLElement {
 
         if (!selection) {
             this._settings.setSettings([]);
-            this._setSelectionStatus(null);
             this._highlight.hide();
             return;
         }
 
         this._renderSettings();
-        this._setSelectionStatus(selection.editor);
         this._highlight.show(selection.editor, {
             scrollIntoView: options.scrollFrameIntoView === true,
         });
@@ -1146,12 +1143,6 @@ export class Shell extends HTMLElement {
         });
     }
 
-    private _setSelectionStatus(editor: Editor | null): void {
-        this.shadowRoot!.querySelector(".selection-status")!.textContent = editor
-            ? `Selected ${this._findStructureNodeLabel(editor) ?? editor.target.localName}`
-            : "No selection";
-    }
-
     private _syncSettingsTabs(): void {
         for (const button of Array.from(this._settingsTabs.querySelectorAll<HTMLButtonElement>("[data-settings-mode]"))) {
             const isActive = button.dataset.settingsMode === this._settingsMode;
@@ -1167,13 +1158,11 @@ export class Shell extends HTMLElement {
         this._canvas.setAttribute("viewport-padding", viewport.padding);
         this._canvas.setAttribute("viewport-fit", viewport.fit);
         this._topBar.viewport = this._viewport;
-        this.shadowRoot!.querySelector(".viewport-status")!.textContent = viewport.label;
     }
 
     private _syncEditorMode(): void {
         this._topBar.mode = this._editorMode;
         this.toggleAttribute("view-mode", this._editorMode === "view");
-        this.shadowRoot!.querySelector(".mode-status")!.textContent = this._editorMode === "edit" ? "Edit" : "View";
 
         if (this._editorMode === "view") {
             this._select(null);
