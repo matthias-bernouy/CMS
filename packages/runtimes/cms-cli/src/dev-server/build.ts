@@ -1,5 +1,5 @@
 import { writeFile, unlink, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { isAbsolute, join, normalize, relative } from "node:path";
 import type { DevBloc } from "./scan";
 import { p9rExternalsPlugin } from "@bernouy/cms-bloc-compile";
 import { validateBloc } from "@bernouy/cms-bloc-compile";
@@ -83,10 +83,16 @@ export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
             `opaque_${bloc.tag}`, `opaque editor for ${bloc.tag}`,
         );
     }
+
+    const defaultContent = await readDefaultContent(bloc);
+    const defaultContentLiteral = JSON.stringify(defaultContent ?? "").replaceAll("$", "$$$$");
+
     editorJS = editorJS
         .replaceAll("BE5_TAG_TO_BE_REPLACED",   bloc.tag)
-        .replaceAll("BE5_LABEL_TO_BE_REPLACED", bloc.label)
-        .replaceAll("BE5_GROUP_TO_BE_REPLACED", bloc.group);
+        .replaceAll("BE5_LABEL_TO_BE_REPLACED", jsStringLiteralContent(bloc.label))
+        .replaceAll("BE5_GROUP_TO_BE_REPLACED", jsStringLiteralContent(bloc.group))
+        .replaceAll("BE5_DESCRIPTION_TO_BE_REPLACED", jsStringLiteralContent(bloc.description))
+        .replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", defaultContentLiteral);
 
     return {
         tag:         bloc.tag,
@@ -97,6 +103,29 @@ export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
         viewJS,
         editorJS,
     };
+}
+
+function jsStringLiteralContent(value: string): string {
+    return JSON.stringify(value).slice(1, -1).replaceAll("$", "$$$$");
+}
+
+async function readDefaultContent(bloc: DevBloc): Promise<string | undefined> {
+    const rel = bloc.manifest.defaultContent;
+    if (!rel) return undefined;
+    if (isAbsolute(rel) || rel.includes("\0")) {
+        throw new Error(`Invalid defaultContent path for ${bloc.tag}: must be relative`);
+    }
+
+    const normalized = normalize(rel);
+    if (!normalized || normalized === "." || normalized.startsWith("..")) {
+        throw new Error(`Invalid defaultContent path for ${bloc.tag}: must stay inside the bloc folder`);
+    }
+
+    try {
+        return await readFile(join(bloc.folder, normalized), "utf-8");
+    } catch {
+        throw new Error(`defaultContent file not found for ${bloc.tag}: ${rel}`);
+    }
 }
 
 async function buildWithWrapper(

@@ -59,9 +59,9 @@ export async function prepare_bloc(
 
         editorJS = editorJS
             .replaceAll("BE5_TAG_TO_BE_REPLACED", blocId)
-            .replaceAll("BE5_LABEL_TO_BE_REPLACED", label)
-            .replaceAll("BE5_GROUP_TO_BE_REPLACED", group)
-            .replaceAll("BE5_DESCRIPTION_TO_BE_REPLACED", description)
+            .replaceAll("BE5_LABEL_TO_BE_REPLACED", jsStringLiteralContent(label))
+            .replaceAll("BE5_GROUP_TO_BE_REPLACED", jsStringLiteralContent(group))
+            .replaceAll("BE5_DESCRIPTION_TO_BE_REPLACED", jsStringLiteralContent(description))
             .replaceAll("BE5_DEFAULT_CONTENT_TO_BE_REPLACED", defaultContentLiteral);
 
         return {
@@ -76,4 +76,8 @@ export async function prepare_bloc(
     } finally {
         await rm(tempDir, { recursive: true, force: true }).catch(() => null);
     }
+}
+
+function jsStringLiteralContent(value: string): string {
+    return JSON.stringify(value).slice(1, -1).replaceAll("$", "$$$$");
 }

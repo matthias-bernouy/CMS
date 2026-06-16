@@ -67,4 +67,22 @@ describe("prepare_bloc editor catalog output", () => {
 
         expect(bloc.editorJS).toContain('defaultContent: props?.defaultContent ?? "<demo-card variant=\\"featured\\"><p slot=\\"header\\">Title</p><p>Body</p></demo-card>"');
     });
+
+    test("escapes metadata in editor catalog registrations", async () => {
+        const view = new File([
+            "customElements.define('demo-grid', class extends HTMLElement {});",
+        ], "DemoGrid.ts", { type: "text/typescript" });
+
+        const bloc = await prepare_bloc(
+            view,
+            null,
+            `Grid "layout"`,
+            "Layout",
+            `Children can use bleed="wide|full".`,
+            "demo-grid",
+        );
+
+        expect(() => new Function(bloc.editorJS)).not.toThrow();
+        expect(bloc.editorJS).toContain(`description: props?.description ?? "Children can use bleed=\\"wide|full\\"."`);
+    });
 });

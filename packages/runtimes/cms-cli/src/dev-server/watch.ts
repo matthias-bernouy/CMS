@@ -230,15 +230,18 @@ async function triggerRebuild(
     if (entry.building) { entry.pending = true; return; }
     entry.building = true;
     try {
-        const b = await buildDevBloc(entry.bloc);
+        const oldTag = entry.bloc.tag;
+        const freshBloc = await rescanBlocFolder(entry.bloc.folder) ?? entry.bloc;
+        const b = await buildDevBloc(freshBloc);
         // The manifest tag may have changed since this watcher was set up
         // (the polling loop usually catches it first, but a fast edit can
         // race). Drop the stale tag before setting the new one.
-        if (b.tag !== entry.bloc.tag) built.delete(entry.bloc.tag);
+        if (b.tag !== oldTag) built.delete(oldTag);
         built.set(b.tag, b);
-        entry.bloc = { ...entry.bloc, tag: b.tag, label: b.label, group: b.group };
+        entry.bloc = freshBloc;
         entry.lastBuildMtimeMs = await folderMaxMtimeMs(entry.bloc.folder);
         console.log(`[watch] Rebuilt ${b.tag}`);
+        if (b.tag !== oldTag) emitter.emit(oldTag);
         emitter.emit(b.tag);
     } catch (e) {
         // Ignore the race where a rebuild fires just after the folder was
@@ -254,6 +257,11 @@ async function triggerRebuild(
             setTimeout(() => triggerRebuild(entry, built, emitter), 10);
         }
     }
+}
+
+async function rescanBlocFolder(folder: string): Promise<DevBloc | null> {
+    const blocs = await scanDevBlocs(folder, { quiet: true });
+    return blocs.find(bloc => bloc.folder === folder) ?? null;
 }
 
 function makeWatcher(

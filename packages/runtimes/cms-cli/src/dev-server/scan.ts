@@ -7,6 +7,7 @@ export type BlocManifest = {
     runtime?: string;
     editor?: string;
     bloc?: string;
+    defaultContent?: string;
     "default-tag"?: string;
     meta?: {
         author?: string;

@@ -878,6 +878,87 @@ describe("Shell", () => {
         expect(container.innerHTML).toBe(`<demo-card variant="featured"><p slot="header">Title</p><p>Body</p></demo-card>`);
     });
 
+    test("keeps default content block root as the structure parent", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        class FigureEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label:   "Image",
+                    slot:    "image",
+                    max:     1,
+                    accepts: [{ kind: "any-component" as const }],
+                }, {
+                    label:   "Caption",
+                    slot:    "caption",
+                    max:     1,
+                    accepts: [{ kind: "any-component" as const }],
+                }];
+            }
+        }
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
+        const contentRoot = frameDocument.createElement("div");
+        contentRoot.setAttribute("data-cms-content", "");
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        const structureTree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as Element & {
+            setInsertItems?: (_items: unknown[]) => void;
+            setStructure?: () => void;
+        };
+        structureTree.setInsertItems = () => undefined;
+        structureTree.setStructure = () => undefined;
+        shell.setCatalog([{
+            tag: "demo-figure",
+            label: "Figure",
+            defaultContent: `<demo-figure><img slot="image" alt=""><p slot="caption">Caption</p></demo-figure>`,
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: FigureEditor,
+        }, {
+            tag: "img",
+            label: "Image",
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: Editor,
+        }, {
+            tag: "p",
+            label: "Paragraph",
+            bloc: HTMLElement as unknown as CustomElementConstructor,
+            editor: Editor,
+        }]);
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        shell.loadDocument({ root, contentRoot });
+
+        (shell as unknown as { _addRoot(item: unknown): void })._addRoot({
+            kind: "block",
+            entry: {
+                tag: "demo-figure",
+                label: "Figure",
+                defaultContent: `<demo-figure><img slot="image" alt=""><p slot="caption">Caption</p></demo-figure>`,
+                bloc: HTMLElement as unknown as CustomElementConstructor,
+                editor: FigureEditor,
+            },
+        });
+
+        const runtime = (shell as unknown as { _runtime: { getStructure(): EditorStructureNode[] } })._runtime;
+        const structure = runtime.getStructure();
+
+        expect(contentRoot.innerHTML).toBe(`<demo-figure><img slot="image" alt=""><p slot="caption">Caption</p></demo-figure>`);
+        expect(structure.map(node => node.label)).toEqual(["Figure"]);
+        expect(structure[0]?.children.map(node => node.label)).toEqual(["Image", "Paragraph"]);
+    });
+
     test("ignores native rich text input events without a value detail", async () => {
         installDom();
 
