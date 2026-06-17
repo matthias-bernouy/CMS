@@ -4,7 +4,7 @@ import type {
     EditorCatalog,
     EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
-import { Editor } from "@bernouy/cms-content/editor";
+import { CMS_SNIPPET_TAG, Editor } from "@bernouy/cms-content/editor";
 import type { BlockPickerSelectDetail } from "../src/components/Layout/BlockPickerModal/BlockPickerModal";
 import type { StructureTreeActionDetail } from "../src/components/Layout/StructureTree/StructureTree";
 import type { TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
@@ -902,6 +902,109 @@ describe("Shell", () => {
 
         expect((shell as unknown as { _getContentHtml(): string })._getContentHtml())
             .toBe(`<w13c-snippet identifier="main-nav"></w13c-snippet>`);
+    });
+
+    test("structure tree shows snippet names and snippet icons", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        class SnippetEditor extends Editor {
+            protected override structureMode() {
+                return "opaque" as const;
+            }
+        }
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        const contentRoot = frameDocument.createElement("main");
+        contentRoot.setAttribute("data-cms-content", "");
+        contentRoot.innerHTML = `<w13c-snippet identifier="main-nav"><nav>Expanded nav</nav></w13c-snippet>`;
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.setCatalog([{
+            tag:    CMS_SNIPPET_TAG,
+            label:  "Snippet",
+            icon:   "braces",
+            bloc:   HTMLElement as unknown as CustomElementConstructor,
+            editor: SnippetEditor,
+        }]);
+        shell.setInsertItems([{
+            kind:       "snippet",
+            id:         "snippet-main-nav",
+            identifier: "main-nav",
+            label:      "Main nav",
+            icon:       "S",
+            content:    "<nav>Expanded nav</nav>",
+        }]);
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        shell.loadDocument({ root, contentRoot });
+
+        const tree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree")!;
+        expect(tree.shadowRoot!.querySelector(".label")!.textContent).toBe("Main nav");
+        expect(tree.shadowRoot!.querySelector(".icon")!.textContent).toBe("S");
+    });
+
+    test("structure tree can redirect to the referenced snippet editor", async () => {
+        installDom();
+        Object.assign(globalThis, {
+            window: {
+                innerWidth:  1280,
+                innerHeight: 720,
+                location:    { href: "" },
+            },
+        });
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class SnippetEditor extends Editor {}
+
+        const meta = document.createElement("meta");
+        meta.name = "basePath";
+        meta.content = "/cms";
+        document.head.append(meta);
+
+        const target = document.createElement(CMS_SNIPPET_TAG);
+        target.setAttribute("identifier", "main-nav");
+        const node: EditorStructureNode = {
+            editor: new SnippetEditor(target),
+            target,
+            tag: CMS_SNIPPET_TAG,
+            label: "Main nav",
+            icon: "S",
+            badges: [],
+            children: [],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setInsertItems([{
+            kind:       "snippet",
+            id:         "snippet-main-nav",
+            identifier: "main-nav",
+            label:      "Main nav",
+            icon:       "S",
+            content:    "<nav></nav>",
+        }]);
+        tree.setStructure([node], null);
+
+        (tree as unknown as {
+            _openContextMenu(node: EditorStructureNode, clientX: number, clientY: number): void;
+        })._openContextMenu(node, 10, 10);
+
+        const modifyButton = Array.from(tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item"))
+            .find(button => button.textContent === "Modify Snippet");
+        modifyButton?.click();
+
+        expect(modifyButton?.disabled).toBe(false);
+        expect(window.location.href).toBe("/cms/editor/snippet?id=snippet-main-nav");
     });
 
     test("inserts template fragments into selected content slots", async () => {

@@ -355,6 +355,11 @@ export class StructureTree extends HTMLElement {
         const repeatAction = node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)
             ? this._contextMenuButton("Remove repeat", () => this._emitAction("remove-repeat", node.editor))
             : this._contextMenuButton("Add repeat", () => this._emitAction("configure-repeat", node.editor), undefined, !this._repeatableTargets.has(node.target));
+        const snippet = this._snippetItemForNode(node);
+        const modifySnippetAction = this._contextMenuButton("Modify Snippet", () => {
+            if (!snippet) return;
+            this._redirectToSnippetEditor(snippet.id);
+        }, undefined, !snippet);
 
         menu.append(
             this._contextMenuButton("Add child", () => {
@@ -367,6 +372,7 @@ export class StructureTree extends HTMLElement {
             this._contextMenuButton("Copy", () => this._emitAction("copy", node.editor)),
             this._contextMenuButton("Paste after", () => this._emitAction("paste-after", node.editor)),
             this._contextMenuButton("Duplicate", () => this._emitAction("duplicate", node.editor), undefined, !this._canDuplicate(node)),
+            ...(this._isSnippetNode(node) ? [modifySnippetAction] : []),
             this._contextSeparator(),
             sourceAction,
             repeatAction,
@@ -383,6 +389,18 @@ export class StructureTree extends HTMLElement {
 
         this.shadowRoot!.append(menu);
         this._positionContextMenu(menu, clientX, clientY);
+    }
+
+    private _redirectToSnippetEditor(id: string): void {
+        window.location.href = this._snippetEditorUrl(id);
+    }
+
+    private _snippetEditorUrl(id: string): string {
+        return `${this._basePath()}/editor/snippet?id=${encodeURIComponent(id)}`;
+    }
+
+    private _basePath(): string {
+        return document.querySelector<HTMLMetaElement>('meta[name="basePath"]')?.content ?? "";
     }
 
     private _positionContextMenu(menu: HTMLElement, clientX: number, clientY: number): void {

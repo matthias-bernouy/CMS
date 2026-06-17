@@ -245,6 +245,7 @@ export class Shell extends HTMLElement {
     setInsertItems(items: BlockPickerItem[]): void {
         this._insertItems = items.map(item => ({ ...item }));
         this._syncStructureTreeInsertItems();
+        if (this._runtime) this._renderStructure();
     }
 
     setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
@@ -1081,7 +1082,7 @@ export class Shell extends HTMLElement {
             return;
         }
 
-        const structure = this._runtime.getStructure();
+        const structure = this._decorateStructure(this._runtime.getStructure());
         this._structureTree.setStructure(
             structure,
             this._runtime.getSelection()?.editor ?? null,
@@ -1091,6 +1092,47 @@ export class Shell extends HTMLElement {
                 repeatableTargets:      this._repeatableTargets(structure),
             },
         );
+    }
+
+    private _decorateStructure(nodes: StructureNode[]): StructureNode[] {
+        return nodes.map(node => {
+            if (this._isSourceStateNode(node)) {
+                return {
+                    ...node,
+                    children: this._decorateEditorStructure(node.children),
+                };
+            }
+
+            return this._decorateEditorStructureNode(node);
+        });
+    }
+
+    private _decorateEditorStructure(nodes: EditorStructureNode[]): EditorStructureNode[] {
+        return nodes.map(node => this._decorateEditorStructureNode(node));
+    }
+
+    private _decorateEditorStructureNode(node: EditorStructureNode): EditorStructureNode {
+        const snippet = this._snippetStructureDetails(node);
+
+        return {
+            ...node,
+            label:    snippet?.label ?? node.label,
+            icon:     snippet?.icon ?? node.icon,
+            children: this._decorateStructure(node.children),
+        };
+    }
+
+    private _snippetStructureDetails(node: EditorStructureNode): { label: string; icon: string } | null {
+        if (node.tag.toLowerCase() !== CMS_SNIPPET_TAG) return null;
+
+        const identifier = node.target.getAttribute("identifier")?.trim() ?? "";
+        const item = this._insertItems.find((candidate): candidate is Extract<BlockPickerItem, { kind: "snippet" }> =>
+            candidate.kind === "snippet" && candidate.identifier === identifier);
+
+        return {
+            label: item?.label || identifier || node.label,
+            icon:  item?.icon || "S",
+        };
     }
 
     private _isEmptyDocumentContent(): boolean {
@@ -1114,10 +1156,11 @@ export class Shell extends HTMLElement {
         });
     }
 
-    private _repeatableTargets(nodes: EditorStructureNode[]): HTMLElement[] {
+    private _repeatableTargets(nodes: StructureNode[]): HTMLElement[] {
         if (!this._runtime) return [];
 
         return this._flattenStructure(nodes)
+            .filter((node): node is EditorStructureNode => !this._isSourceStateNode(node))
             .filter(node => this._hasArrayFields(this._runtime!.registry.collectDataScopes(node.target)))
             .map(node => node.target);
     }
@@ -1402,9 +1445,9 @@ export class Shell extends HTMLElement {
     }
 
     private _findStructureNodeLabel(editor: Editor): string | null {
-        const visit = (nodes: EditorStructureNode[]): string | null => {
+        const visit = (nodes: StructureNode[]): string | null => {
             for (const node of nodes) {
-                if (node.editor === editor) return node.label;
+                if (!this._isSourceStateNode(node) && node.editor === editor) return node.label;
                 const childLabel = visit(node.children);
                 if (childLabel) return childLabel;
             }
@@ -1414,11 +1457,15 @@ export class Shell extends HTMLElement {
         return this._runtime ? visit(this._runtime.getStructure()) : null;
     }
 
-    private _flattenStructure(nodes: EditorStructureNode[]): EditorStructureNode[] {
+    private _flattenStructure(nodes: StructureNode[]): StructureNode[] {
         return nodes.flatMap(node => [
             node,
             ...this._flattenStructure(node.children),
         ]);
+    }
+
+    private _isSourceStateNode(node: StructureNode): node is Extract<StructureNode, { kind: "source-state" }> {
+        return node.kind === "source-state";
     }
 
     private get _structureTree(): StructureTree {
