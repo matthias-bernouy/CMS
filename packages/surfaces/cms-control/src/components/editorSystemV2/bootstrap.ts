@@ -1,4 +1,5 @@
 import {
+    EDITOR_V2_DELETE_DOCUMENT_EVENT,
     EDITOR_V2_SAVE_DOCUMENT_EVENT,
     Shell,
     type BlockPickerItem,
@@ -28,6 +29,9 @@ let catalogPromise: Promise<EditorCatalog> | null = null;
 const configuredShells = new WeakSet<Shell>();
 const saveDocumentListener: EventListener = (event) => {
     void onSaveDocument(event as CustomEvent<EditorV2SaveDocumentDetail>);
+};
+const deleteDocumentListener: EventListener = (event) => {
+    void onDeleteDocument(event);
 };
 
 type PageConfigDetailResponse = {
@@ -88,6 +92,7 @@ function configureShell(shell: Element): void {
 
     configuredShells.add(shell);
     shell.addEventListener(EDITOR_V2_SAVE_DOCUMENT_EVENT, saveDocumentListener);
+    shell.addEventListener(EDITOR_V2_DELETE_DOCUMENT_EVENT, deleteDocumentListener);
 
     void configureShellCatalogAndFrame(shell);
     if (currentPageIdentifier()) void loadDocumentConfig(shell, shellResource(shell), currentPageIdentifier()!);
@@ -326,6 +331,28 @@ async function onSaveDocument(event: CustomEvent<EditorV2SaveDocumentDetail>): P
     }
 }
 
+async function onDeleteDocument(event: Event): Promise<void> {
+    const shell = event.currentTarget;
+    if (!(shell instanceof Shell)) return;
+
+    const resource = shellResource(shell);
+    const id = currentPageIdentifier();
+    if (!id) {
+        shell.setSaveStatus(`${resourceLabel(resource)} delete failed`);
+        return;
+    }
+
+    if (!window.confirm(`Delete this ${resource}? This cannot be undone.`)) return;
+
+    try {
+        await deleteDocument(resource, id);
+        window.location.href = listUrl(resource);
+    } catch (error) {
+        console.error("[editor] delete failed", error);
+        shell.setSaveStatus(`${resourceLabel(resource)} delete failed`);
+    }
+}
+
 async function saveDocument(resource: EditorResource, page: EditorV2PageConfig, content: string): Promise<void> {
     if (resource === "page") {
         await savePage(page, content);
@@ -375,6 +402,45 @@ async function saveReusable(resource: "template" | "snippet", page: EditorV2Page
     if (!response.ok) {
         throw new Error(`${resourceLabel(resource)} save failed with ${response.status}`);
     }
+}
+
+async function deleteDocument(resource: EditorResource, id: string): Promise<void> {
+    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+    });
+
+    if (response.status === 409 && resource === "snippet") {
+        await deleteSnippetInUse(id, response);
+        return;
+    }
+
+    if (!response.ok) {
+        throw new Error(`${resourceLabel(resource)} delete failed with ${response.status}`);
+    }
+}
+
+async function deleteSnippetInUse(id: string, response: Response): Promise<void> {
+    const body = await response.json().catch(() => null) as { pages?: Array<{ path?: string; title?: string }> } | null;
+    const pages = Array.isArray(body?.pages) ? body.pages : [];
+    const suffix = pages.length
+        ? `\n\nUsed by:\n${pages.map(page => `- ${page.title || page.path || "Untitled"}`).join("\n")}`
+        : "";
+
+    if (!window.confirm(`This snippet is used by pages. Delete it anyway?${suffix}`)) {
+        throw new Error("Snippet delete cancelled");
+    }
+
+    const forced = await fetch(`${getMetaBasePath()}/api/snippet?id=${encodeURIComponent(id)}&force=true`, {
+        method: "DELETE",
+    });
+
+    if (!forced.ok) {
+        throw new Error(`Snippet delete failed with ${forced.status}`);
+    }
+}
+
+function listUrl(resource: EditorResource): string {
+    return `${getMetaBasePath()}/admin/${resource === "page" ? "pages" : `${resource}s`}`;
 }
 
 function resourceLabel(resource: EditorResource): string {

@@ -7,6 +7,7 @@ import "../RepeatPicker/RepeatPicker";
 import {
     asRepeat,
     asSource,
+    applySourceState,
     type ContentSlot,
     CMS_BINDING_ATTRIBUTES,
     CMS_SNIPPET_TAG,
@@ -21,11 +22,14 @@ import {
     type MediaAccept,
     type Setting,
     type SettingSection,
+    sourceStateFromElement,
 } from "@bernouy/cms-content/editor";
 import {
     EditorRuntime,
     type EditorStructureNode,
     type EditorDataSource,
+    type SourceStateName,
+    type StructureNode,
 } from "../../../runtime";
 import type { SettingsView } from "../../Settings/SettingsView/SettingsView";
 import {
@@ -35,6 +39,7 @@ import {
     type CanvasFrameReadyDetail,
 } from "../Canvas/Canvas";
 import {
+    TOPBAR_DELETE_EVENT,
     TOPBAR_EDITOR_MODE_CHANGE_EVENT,
     TOPBAR_PAGE_SETTINGS_EVENT,
     TOPBAR_SAVE_EVENT,
@@ -134,6 +139,7 @@ export type EditorV2SaveDocumentDetail = {
 };
 
 export const EDITOR_V2_SAVE_DOCUMENT_EVENT = "editor-v2:save-document";
+export const EDITOR_V2_DELETE_DOCUMENT_EVENT = "editor-v2:delete-document";
 
 type SelectOptions = {
     scrollFrameIntoView?: boolean;
@@ -195,6 +201,7 @@ export class Shell extends HTMLElement {
         this._topBar.addEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
         this._topBar.addEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
         this._topBar.addEventListener(TOPBAR_SAVE_EVENT, this._onSave);
+        this._topBar.addEventListener(TOPBAR_DELETE_EVENT, this._onDeleteDocument);
         this._pageSettingsModal.addEventListener("click", this._onPageSettingsModalClick);
         this.shadowRoot!.addEventListener("keydown", this._onKeyDown);
         this._settingsTabs.addEventListener("click", this._onSettingsTabsClick);
@@ -218,6 +225,7 @@ export class Shell extends HTMLElement {
         this._topBar.removeEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
         this._topBar.removeEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
         this._topBar.removeEventListener(TOPBAR_SAVE_EVENT, this._onSave);
+        this._topBar.removeEventListener(TOPBAR_DELETE_EVENT, this._onDeleteDocument);
         this._pageSettingsModal.removeEventListener("click", this._onPageSettingsModalClick);
         this.shadowRoot!.removeEventListener("keydown", this._onKeyDown);
         this._settingsTabs.removeEventListener("click", this._onSettingsTabsClick);
@@ -329,6 +337,18 @@ export class Shell extends HTMLElement {
         this._saveDocument();
     };
 
+    private readonly _onDeleteDocument = (): void => {
+        if (!this._pageConfig) {
+            this._setSaveStatus("No page");
+            return;
+        }
+
+        this.dispatchEvent(new CustomEvent(EDITOR_V2_DELETE_DOCUMENT_EVENT, {
+            bubbles:  true,
+            composed: true,
+        }));
+    };
+
     private _saveDocument(): void {
         if (!this._pageConfig) {
             this._setSaveStatus("No page");
@@ -373,7 +393,7 @@ export class Shell extends HTMLElement {
         if (!this._runtime) return;
         if (this._editorMode !== "edit") return;
 
-        const { action, editor, entry, item, sourceEditor } = event.detail;
+        const { action, editor, entry, item, sourceEditor, sourceState } = event.detail;
         if (action === "duplicate") {
             if (!editor) return;
             this._duplicateEditor(editor);
@@ -384,7 +404,7 @@ export class Shell extends HTMLElement {
             if (!editor) return;
             this._copyEditor(editor);
         } else if (action === "paste-after") {
-            this._pasteAfter(editor ?? null);
+            this._pasteAfter(editor ?? null, sourceState);
         } else if (action === "set-source" && editor && event.detail.dataSource) {
             this._setSource(editor, event.detail.dataSource, event.detail.sourceBinding);
         } else if (action === "remove-source" && editor) {
@@ -393,6 +413,8 @@ export class Shell extends HTMLElement {
             this._openRepeatPicker(editor);
         } else if (action === "remove-repeat" && editor) {
             this._removeRepeat(editor);
+        } else if (action === "clear-source-state" && editor && sourceState) {
+            this._clearSourceState(editor, sourceState);
         } else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
             this._moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
         } else if (action === "replace" && (item || entry)) {
@@ -400,6 +422,9 @@ export class Shell extends HTMLElement {
             this._replaceEditor(editor, item ?? { kind: "block", entry: entry! }, event.detail.slot);
         } else if (action === "add-root" && (item || entry)) {
             this._addRoot(item ?? { kind: "block", entry: entry! });
+        } else if (action === "add-source-state-child" && editor && (item || entry)) {
+            if (!sourceState) return;
+            this._addSourceStateChild(editor, item ?? { kind: "block", entry: entry! }, sourceState);
         } else if (item || entry) {
             if (!editor) return;
             this._addChild(editor, item ?? { kind: "block", entry: entry! }, event.detail.slot);
@@ -577,6 +602,7 @@ export class Shell extends HTMLElement {
         if (!this._runtime) return;
 
         for (const node of this._flattenStructure(this._runtime.getStructure())) {
+            if (this._isSourceStateNode(node)) continue;
             const sessions = this._stateSessions.get(node.editor);
             if (!sessions) continue;
 
@@ -641,13 +667,14 @@ export class Shell extends HTMLElement {
 
         const slot = this._findSlot(parent, slotName);
         if (!slot) return;
+        const sourceState = this._sourceStateForSibling(editor);
 
         if (item.kind === "media") {
-            this._replaceWithMedia(editor, parent, item, slot, slotName);
+            this._replaceWithMedia(editor, parent, item, slot, slotName, sourceState);
             return;
         }
 
-        const insertion = this._createInsertion(item, slotName);
+        const insertion = this._createInsertion(item, slotName, sourceState);
         if (!insertion || !this._canReplaceNodeCount(parent, editor, slot, insertion.slotElements)) return;
 
         editor.target.replaceWith(insertion.fragment);
@@ -668,7 +695,7 @@ export class Shell extends HTMLElement {
         this._clipboardElement = editor.target.cloneNode(true) as HTMLElement;
     }
 
-    private _pasteAfter(editor: Editor | null): void {
+    private _pasteAfter(editor: Editor | null, sourceState?: SourceStateName): void {
         if (!this._clipboardElement || !this._editorDocument) return;
 
         const clone = this._clipboardElement.cloneNode(true) as HTMLElement;
@@ -678,10 +705,55 @@ export class Shell extends HTMLElement {
             return;
         }
 
+        if (sourceState) {
+            this._applySourceState(clone, sourceState);
+            editor.target.append(clone);
+            this._reloadFrameDocument(clone);
+            return;
+        }
+
         if (!this._canInsertSibling(editor, clone)) return;
 
         editor.target.after(clone);
         this._reloadFrameDocument(clone);
+    }
+
+    private _addSourceStateChild(parent: Editor, item: BlockPickerItem, sourceState: SourceStateName): void {
+        const slot = this._sourceStateSlot(parent, sourceState);
+        if (!slot || this._isSlotFull(parent, slot)) return;
+
+        if (item.kind === "media") {
+            this._insertMedia(parent, item, slot, undefined, sourceState);
+            return;
+        }
+
+        const insertion = this._createInsertion(item, undefined, sourceState);
+        if (!insertion || !this._canInsertNodeCount(parent, slot, insertion.slotElements)) return;
+
+        parent.target.append(insertion.fragment);
+        this._reloadFrameDocument(insertion.selectionTarget);
+    }
+
+    private _sourceStateSlot(parent: Editor, sourceState: SourceStateName): ContentSlot {
+        return {
+            label: sourceState.slice(0, 1).toUpperCase() + sourceState.slice(1),
+            accepts: [{ kind: "any-component" }],
+        };
+    }
+
+    private _clearSourceState(parent: Editor, sourceState: SourceStateName): void {
+        if (sourceState === "loaded") {
+            for (const child of Array.from(parent.target.children)) {
+                if (!child.hasAttribute(CMS_BINDING_ATTRIBUTES.slot)) child.remove();
+            }
+            this._reloadFrameDocument(parent.target);
+            return;
+        }
+
+        for (const child of Array.from(parent.target.children)) {
+            if (child.getAttribute(CMS_BINDING_ATTRIBUTES.slot) === sourceState) child.remove();
+        }
+        this._reloadFrameDocument(parent.target);
     }
 
     private _setSource(editor: Editor, source: EditorDataSource, binding: SourceBinding = { url: source.url }): void {
@@ -717,6 +789,7 @@ export class Shell extends HTMLElement {
         if (!this._canMoveEditor(source, target)) return;
 
         this._applySlot(source.target, target.target.getAttribute("slot") ?? undefined);
+        this._applySourceState(source.target, this._sourceStateForSibling(target));
 
         if (position === "before") {
             target.target.before(source.target);
@@ -727,7 +800,7 @@ export class Shell extends HTMLElement {
         this._reloadFrameDocument(source.target);
     }
 
-    private _createInsertion(item: BlockPickerItem, slotName?: string): {
+    private _createInsertion(item: BlockPickerItem, slotName?: string, sourceState?: SourceStateName): {
         fragment: DocumentFragment;
         selectionTarget: HTMLElement;
         slotElements: HTMLElement[];
@@ -741,6 +814,7 @@ export class Shell extends HTMLElement {
             const slotElements = Array.from(fragment.children).filter(this._isElementNode) as HTMLElement[];
             for (const child of slotElements) {
                 this._applySlot(child, slotName);
+                this._applySourceState(child, sourceState);
             }
             const selectionTarget = slotElements.find(child => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
             if (!selectionTarget) return null;
@@ -756,6 +830,7 @@ export class Shell extends HTMLElement {
             snippet.setAttribute("identifier", item.identifier);
             snippet.innerHTML = item.content;
             this._applySlot(snippet, slotName);
+            this._applySourceState(snippet, sourceState);
             const fragment = document.createDocumentFragment();
             fragment.append(snippet);
             return {
@@ -772,6 +847,7 @@ export class Shell extends HTMLElement {
         const slotElements = Array.from(fragment.children).filter(this._isElementNode) as HTMLElement[];
         for (const child of slotElements) {
             this._applySlot(child, slotName);
+            this._applySourceState(child, sourceState);
         }
 
         const selectionTarget = slotElements[0] ?? null;
@@ -798,7 +874,7 @@ export class Shell extends HTMLElement {
         return fragment;
     }
 
-    private _insertMedia(parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string): void {
+    private _insertMedia(parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string, sourceState?: SourceStateName): void {
         const remaining = this._remainingSlotCapacity(parent, slot);
         if (remaining <= 0) return;
 
@@ -809,13 +885,14 @@ export class Shell extends HTMLElement {
             if (elements.length === 0 || !this._canInsertNodeCount(parent, slot, elements)) return;
             for (const element of elements) {
                 this._applySlot(element, slotName);
+                this._applySourceState(element, sourceState);
             }
             parent.target.append(...elements);
             this._reloadFrameDocument(elements[0] ?? null);
         });
     }
 
-    private _replaceWithMedia(editor: Editor, parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string): void {
+    private _replaceWithMedia(editor: Editor, parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string, sourceState?: SourceStateName): void {
         if (!this._canReplaceNodeCount(parent, editor, slot, [editor.target])) return;
         this._openMediaPicker(item.accept, {
             multiple: false,
@@ -823,6 +900,7 @@ export class Shell extends HTMLElement {
             const element = elements[0];
             if (!element) return;
             this._applySlot(element, slotName);
+            this._applySourceState(element, sourceState);
             editor.target.replaceWith(element);
             this._reloadFrameDocument(element);
         });
@@ -956,6 +1034,7 @@ export class Shell extends HTMLElement {
         const parent = this._parentEditor(reference);
         if (!parent) {
             this._applySlot(insertedElement, undefined);
+            this._applySourceState(insertedElement, undefined);
             return true;
         }
 
@@ -964,6 +1043,7 @@ export class Shell extends HTMLElement {
         if (!slot || !this._canInsertNodeCount(parent, slot, [insertedElement])) return false;
 
         this._applySlot(insertedElement, slotName);
+        this._applySourceState(insertedElement, this._sourceStateForSibling(reference));
         return true;
     }
 
@@ -1017,6 +1097,14 @@ export class Shell extends HTMLElement {
         } else {
             element.removeAttribute("slot");
         }
+    }
+
+    private _applySourceState(element: HTMLElement, sourceState: SourceStateName | undefined): void {
+        applySourceState(element, sourceState ?? "loaded");
+    }
+
+    private _sourceStateForSibling(reference: Editor): SourceStateName {
+        return sourceStateFromElement(reference.target);
     }
 
     private _reloadFrameDocument(selectedTarget: HTMLElement | null = null): void {

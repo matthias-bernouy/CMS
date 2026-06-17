@@ -8,7 +8,7 @@ import { CMS_SNIPPET_TAG, Editor } from "@bernouy/cms-content/editor";
 import type { BlockPickerSelectDetail } from "../src/components/Layout/BlockPickerModal/BlockPickerModal";
 import type { StructureTreeActionDetail } from "../src/components/Layout/StructureTree/StructureTree";
 import type { TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
-import type { EditorStructureNode } from "../src/runtime";
+import type { EditorStructureNode, SourceStateStructureNode } from "../src/runtime";
 
 function installDom(): void {
     const { document, customElements, Element, HTMLElement, CustomEvent, Event, Node } = parseHTML(`
@@ -661,6 +661,38 @@ describe("Shell", () => {
         expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Snippet settings");
     });
 
+    test("topbar updates save status label", async () => {
+        installDom();
+
+        const { TopBar } = await import("../src/components/Layout/TopBar/TopBar");
+
+        const topbar = new TopBar();
+        document.body.append(topbar);
+
+        topbar.saveStatus = "Saving";
+
+        expect(topbar.shadowRoot!.querySelector('[data-action="save"]')!.textContent).toBe("Saving");
+    });
+
+    test("topbar emits delete document action", async () => {
+        installDom();
+
+        const {
+            TOPBAR_DELETE_EVENT,
+            TopBar,
+        } = await import("../src/components/Layout/TopBar/TopBar");
+
+        const topbar = new TopBar();
+        document.body.append(topbar);
+        topbar.connectedCallback();
+
+        let count = 0;
+        topbar.addEventListener(TOPBAR_DELETE_EVENT, () => { count++; });
+        topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="delete"]')!.click();
+
+        expect(count).toBe(1);
+    });
+
     test("shell applies resource chrome attributes", async () => {
         installDom();
 
@@ -670,6 +702,10 @@ describe("Shell", () => {
         }
 
         const { Shell } = await import("../src/exports");
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+        if (!customElements.get("cms-editor-v2-structure-tree")) {
+            customElements.define("cms-editor-v2-structure-tree", class extends StructureTree {});
+        }
 
         const shell = new Shell();
         shell.setAttribute("resource", "snippet");
@@ -746,7 +782,6 @@ describe("Shell", () => {
 
         expect(contentRoot.innerHTML).toBe("<main></main>");
     });
-
 
     test("shell scrolls frame target into view when selected from structure", async () => {
         installDom();
@@ -1889,6 +1924,221 @@ describe("Shell", () => {
         expect(target.getAttribute("cms-source")).toBe("/api/plans?q=#{address}&limit=5 as plans");
     });
 
+    test("shell inserts source state children with cms-slot", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+        if (!customElements.get("cms-editor-v2-structure-tree")) {
+            customElements.define("cms-editor-v2-structure-tree", class extends StructureTree {});
+        }
+
+        class ContainerEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label: "Content",
+                    max: 1,
+                    accepts: [{ kind: "any-component" as const }],
+                }];
+            }
+        }
+
+        class ParagraphEditor extends Editor {}
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
+        const contentRoot = frameDocument.createElement("main");
+        contentRoot.setAttribute("data-cms-content", "");
+        const container = frameDocument.createElement("demo-container");
+        container.setAttribute("cms-source", "/api/plans");
+        container.innerHTML = "<p>Loaded message</p>";
+        contentRoot.append(container);
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.setCatalog([
+            {
+                tag:    "demo-container",
+                label:  "Container",
+                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                editor: ContainerEditor,
+            },
+            {
+                tag:            "p",
+                label:          "Paragraph",
+                bloc:           HTMLElement as unknown as CustomElementConstructor,
+                editor:         ParagraphEditor,
+                defaultContent: "<p>Empty message</p>",
+            },
+        ]);
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        shell.loadDocument({ root, contentRoot });
+
+        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const parentEditor = runtime.getEditor(container);
+        if (!parentEditor) throw new Error("Missing container editor.");
+
+        (shell as unknown as {
+            _addSourceStateChild(parent: Editor, item: unknown, sourceState: "empty"): void;
+        })._addSourceStateChild(parentEditor, {
+            kind: "block",
+            entry: {
+                tag:            "p",
+                label:          "Paragraph",
+                bloc:           HTMLElement as unknown as CustomElementConstructor,
+                editor:         ParagraphEditor,
+                defaultContent: "<p>Empty message</p>",
+            },
+        }, "empty");
+
+        expect(container.innerHTML).toBe(`<p>Loaded message</p><p cms-slot="empty">Empty message</p>`);
+    });
+
+    test("shell preserves cms-slot when replacing source state children", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+        if (!customElements.get("cms-editor-v2-structure-tree")) {
+            customElements.define("cms-editor-v2-structure-tree", class extends StructureTree {});
+        }
+
+        class ContainerEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label: "Content",
+                    accepts: [{ kind: "any-component" as const }],
+                }];
+            }
+        }
+
+        class ChildEditor extends Editor {}
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
+        const contentRoot = frameDocument.createElement("main");
+        contentRoot.setAttribute("data-cms-content", "");
+        const container = frameDocument.createElement("demo-container");
+        container.setAttribute("cms-source", "/api/plans");
+        container.innerHTML = `<demo-child cms-slot="empty">Old empty</demo-child>`;
+        contentRoot.append(container);
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.setCatalog([
+            {
+                tag:    "demo-container",
+                label:  "Container",
+                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                editor: ContainerEditor,
+            },
+            {
+                tag:            "demo-child",
+                label:          "Child",
+                bloc:           HTMLElement as unknown as CustomElementConstructor,
+                editor:         ChildEditor,
+                defaultContent: "<demo-child>New empty</demo-child>",
+            },
+        ]);
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        shell.loadDocument({ root, contentRoot });
+
+        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const childEditor = runtime.getEditor(container.querySelector("demo-child") as HTMLElement);
+        if (!childEditor) throw new Error("Missing child editor.");
+
+        (shell as unknown as {
+            _replaceEditor(editor: Editor, item: unknown): void;
+        })._replaceEditor(childEditor, {
+            kind: "block",
+            entry: {
+                tag:            "demo-child",
+                label:          "Child",
+                bloc:           HTMLElement as unknown as CustomElementConstructor,
+                editor:         ChildEditor,
+                defaultContent: "<demo-child>New empty</demo-child>",
+            },
+        });
+
+        expect(container.innerHTML).toBe(`<demo-child cms-slot="empty">New empty</demo-child>`);
+    });
+
+    test("structure tree collapses source state rows per source element", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class DemoEditor extends Editor {}
+
+        const firstSource = document.createElement("demo-source");
+        const secondSource = document.createElement("demo-source");
+        const firstChild = document.createElement("demo-child");
+        const secondChild = document.createElement("demo-child");
+        const firstSourceEditor = new DemoEditor(firstSource);
+        const secondSourceEditor = new DemoEditor(secondSource);
+        const firstChildEditor = new DemoEditor(firstChild);
+        const secondChildEditor = new DemoEditor(secondChild);
+        const firstChildNode: EditorStructureNode = {
+            editor: firstChildEditor,
+            target: firstChild,
+            tag: "demo-child",
+            label: "First child",
+            badges: [],
+            children: [],
+        };
+        const secondChildNode: EditorStructureNode = {
+            editor: secondChildEditor,
+            target: secondChild,
+            tag: "demo-child",
+            label: "Second child",
+            badges: [],
+            children: [],
+        };
+        const firstState: SourceStateStructureNode = {
+            kind: "source-state",
+            sourceEditor: firstSourceEditor,
+            target: firstSource,
+            state: "empty",
+            label: ":empty",
+            badges: [],
+            children: [firstChildNode],
+        };
+        const secondState: SourceStateStructureNode = {
+            kind: "source-state",
+            sourceEditor: secondSourceEditor,
+            target: secondSource,
+            state: "empty",
+            label: ":empty",
+            badges: [],
+            children: [secondChildNode],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setStructure([firstState, secondState], null);
+
+        tree.shadowRoot!.querySelector<HTMLButtonElement>(".source-state-row .toggle")!.click();
+        const labels = Array.from(tree.shadowRoot!.querySelectorAll(".label"))
+            .map(label => label.textContent);
+
+        expect(labels).not.toContain("First child");
+        expect(labels).toContain("Second child");
+    });
 
     test("structure tree expands collapsed parents to reveal selected children", async () => {
         installDom();
@@ -1927,6 +2177,46 @@ describe("Shell", () => {
         tree.setStructure([parentNode], childEditor, [], { scrollSelectedIntoView: true });
 
         expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).toContain("Child");
+    });
+
+    test("structure tree expands collapsed source states to reveal selected children", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class DemoEditor extends Editor {}
+
+        const sourceTarget = document.createElement("demo-source");
+        const childTarget = document.createElement("demo-child");
+        const sourceEditor = new DemoEditor(sourceTarget);
+        const childEditor = new DemoEditor(childTarget);
+        const childNode: EditorStructureNode = {
+            editor: childEditor,
+            target: childTarget,
+            tag: "demo-child",
+            label: "State child",
+            badges: [],
+            children: [],
+        };
+        const stateNode: SourceStateStructureNode = {
+            kind: "source-state",
+            sourceEditor,
+            target: sourceTarget,
+            state: "empty",
+            label: ":empty",
+            badges: [],
+            children: [childNode],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setStructure([stateNode], null);
+        tree.shadowRoot!.querySelector<HTMLButtonElement>(".toggle")!.click();
+
+        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).not.toContain("State child");
+
+        tree.setStructure([stateNode], childEditor, [], { scrollSelectedIntoView: true });
+
+        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).toContain("State child");
     });
 
     test("structure tree only scrolls selected rows when requested", async () => {

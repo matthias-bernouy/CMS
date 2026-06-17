@@ -18,6 +18,7 @@ export type TopBarEditorModeChangeDetail = {
 export const TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
 export const TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
 export const TOPBAR_SAVE_EVENT = "editor-v2:save";
+export const TOPBAR_DELETE_EVENT = "editor-v2:topbar-delete-document";
 export const TOPBAR_PAGE_SETTINGS_EVENT = "editor-v2:page-settings";
 
 export class TopBar extends HTMLElement {
@@ -55,7 +56,9 @@ export class TopBar extends HTMLElement {
     }
 
     set saveStatus(label: string) {
-        this.shadowRoot!.querySelector(".save-label")!.textContent = label;
+        const target = this.shadowRoot!.querySelector(".save-label")
+            ?? this.shadowRoot!.querySelector('[data-action="save"]');
+        if (target) target.textContent = label;
     }
 
     setPageTitle(title: string, path: string): void {
@@ -88,6 +91,11 @@ export class TopBar extends HTMLElement {
 
         if (button.dataset.action === "save") {
             this.dispatchEvent(new CustomEvent(TOPBAR_SAVE_EVENT, {
+                bubbles:  true,
+                composed: true,
+            }));
+        } else if (button.dataset.action === "delete") {
+            this.dispatchEvent(new CustomEvent(TOPBAR_DELETE_EVENT, {
                 bubbles:  true,
                 composed: true,
             }));

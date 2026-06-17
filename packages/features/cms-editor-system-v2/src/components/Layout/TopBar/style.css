@@ -207,3 +207,13 @@ button:hover {
     background: var(--editor-v2-accent);
     color: #fff;
 }
+
+.danger {
+    color: var(--editor-v2-danger, #b42318);
+}
+
+.danger:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-danger, #b42318) 35%, transparent);
+    background: color-mix(in srgb, var(--editor-v2-danger, #b42318) 10%, transparent);
+    color: var(--editor-v2-danger, #b42318);
+}
