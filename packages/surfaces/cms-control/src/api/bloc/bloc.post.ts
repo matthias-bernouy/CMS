@@ -3,8 +3,8 @@ import { Buffer } from "node:buffer";
 import { posix } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import { validateBloc } from "@bernouy/cms-bloc-compile";
-import { DuplicateBlocTagError, P9R_CACHE } from "@bernouy/cms-content";
-import { invalidatePagesReferencingBloc } from "cms-control/core/server/cache/invalidation";
+import { DuplicateBlocTagError } from "@bernouy/cms-content";
+import { invalidateBlocAssets, invalidatePagesReferencingBloc } from "cms-control/core/server/cache/invalidation";
 
 export default async function importBloc(req: Request, cms: ControlCms) {
 
@@ -59,11 +59,7 @@ export default async function importBloc(req: Request, cms: ControlCms) {
         throw e;
     }
 
-    // Invalidate caches: per-bloc view bundle (used by Delivery + the dev
-    // CLI) and the consolidated admin editor bundle that inlines every
-    // bloc's editorJS + viewJS.
-    cms.cache.delete(P9R_CACHE.bloc(bloc.id));
-    cms.cache.delete(P9R_CACHE.EDITOR_SCRIPT);
+    invalidateBlocAssets(cms, bloc.id);
 
     // Rendered pages embedding this bloc now carry a stale `?v=<hash>` in
     // their `<script src="/bloc?tag=...">` tag — re-render them on next hit.

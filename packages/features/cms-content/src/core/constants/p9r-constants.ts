@@ -4,6 +4,7 @@
  */
 export const P9R_CACHE = {
     bloc: (id: string) => `bloc:${id}`,
+    BLOCSET_PREFIX: "blocset:",
     /** A signature-grouped bundle = several blocs concatenated. Keyed on the
      *  deduped+sorted tag set so any page using the same set shares the entry. */
     blocset: (tags: string[]) => `blocset:${[...new Set(tags)].sort().join(",")}`,
@@ -20,4 +21,6 @@ export const P9R_CACHE = {
      * viewJS concatenated — invalidated on any bloc write.
      */
     EDITOR_SCRIPT: "js:editor-script",
+    /** Consolidated bloc view bundle used by the editor frame preview. */
+    EDITOR_VIEW_SCRIPT: "js:editor-view-script",
 } as const;

@@ -47,6 +47,8 @@ function makeSystem(opts: {
     const createBlocCalls: CreateBlocCall[] = [];
     const deleteSpy: string[] = [];
     const cache = new Map<string, unknown>();
+    cache.set(P9R_CACHE.blocset(["my-bloc", "other-bloc"]), {});
+    cache.set(P9R_CACHE.page("/kept"), {});
     const cms: any = {
         repository: {
             getBlocViewJS: async (tag: string) => {
@@ -64,6 +66,13 @@ function makeSystem(opts: {
             get: (k: string) => cache.get(k) ?? null,
             set: (k: string, v: unknown) => { cache.set(k, v); },
             delete: (k: string) => { deleteSpy.push(k); cache.delete(k); },
+            deleteMatching: (predicate: (key: string) => boolean) => {
+                for (const key of [...cache.keys()]) {
+                    if (!predicate(key)) continue;
+                    deleteSpy.push(key);
+                    cache.delete(key);
+                }
+            },
         },
     };
     return { cms, createBlocCalls, deleteSpy };
@@ -159,6 +168,10 @@ describe("bloc.post", () => {
         expect(createBlocCalls[0]?.bloc.name).toBe("My");
         expect(createBlocCalls[0]?.bloc.group).toBe("cards");
         expect(deleteSpy).toContain(P9R_CACHE.bloc("my-bloc"));
+        expect(deleteSpy).toContain(P9R_CACHE.EDITOR_SCRIPT);
+        expect(deleteSpy).toContain(P9R_CACHE.EDITOR_VIEW_SCRIPT);
+        expect(deleteSpy).toContain(P9R_CACHE.blocset(["my-bloc", "other-bloc"]));
+        expect(deleteSpy).not.toContain(P9R_CACHE.page("/kept"));
     });
 
     test("description defaults to empty string when omitted", async () => {
@@ -181,13 +194,14 @@ describe("bloc.post", () => {
         expect(createBlocCalls).toHaveLength(0);
     });
 
-    test("400 when tag uses reserved prefix p9r-*", async () => {
-        const { cms } = makeSystem();
+    test("accepts p9r-* bloc tags", async () => {
+        const { cms, createBlocCalls } = makeSystem();
         const res = await importBloc(
             makeRequest({ name: "My", tag: "p9r-foo", group: "g", viewJS: viewFile() }),
             cms
         );
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(200);
+        expect(createBlocCalls[0]?.bloc.id).toBe("p9r-foo");
     });
 
     test("400 when source has hardcoded customElements.define", async () => {

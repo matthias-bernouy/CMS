@@ -144,7 +144,9 @@ export default async function CLI_dev(args: string[]) {
     // per-bloc cached response so the next fetch sees fresh JS.
     reload.subscribe(tag => {
         cms.cache.delete(P9R_CACHE.EDITOR_SCRIPT);
+        cms.cache.delete(P9R_CACHE.EDITOR_VIEW_SCRIPT);
         cms.cache.delete(P9R_CACHE.bloc(tag));
+        cms.cache.deleteMatching(key => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
         console.log(`[watch] Rebuilt ${tag} — caches invalidated, browser reload signaled.`);
     });
     const registry = createBlocRegistry(`${config.siteDir}/blocs`, blocs, built, reload);

@@ -1,16 +1,20 @@
 import { describe, test, expect } from "bun:test";
 import putPage from "cms-control/api/page/page.put";
-import type { TPage } from "@bernouy/cms-content";
+import { P9R_CACHE, type TPage } from "@bernouy/cms-content";
 
 function makeSystem(opts: { existing?: TPage | null } = {}) {
     const updateCalls: TPage[] = [];
+    const deleteSpy: string[] = [];
     const cms: any = {
         repository: {
             getPageById: async (_id: string) => opts.existing ?? null,
             updatePage: async (page: TPage) => { updateCalls.push(page); },
         },
+        cache: {
+            delete: (key: string) => { deleteSpy.push(key); },
+        },
     };
-    return { cms, updateCalls };
+    return { cms, updateCalls, deleteSpy };
 }
 
 function makeRequest(body: Record<string, unknown>) {
@@ -58,7 +62,7 @@ describe("PUT /api/page (update)", () => {
     });
 
     test("happy path: merges DTO over existing record", async () => {
-        const { cms, updateCalls } = makeSystem({ existing: existingPage });
+        const { cms, updateCalls, deleteSpy } = makeSystem({ existing: existingPage });
         const res = await putPage(
             makeRequest({
                 id: "page-1",
@@ -81,6 +85,26 @@ describe("PUT /api/page (update)", () => {
         expect(updated.description).toBe("published desc");
         expect(updated.visible).toBe(true);
         expect(updated.tags).toEqual(["a", "b"]);
+        expect(deleteSpy).toEqual([
+            P9R_CACHE.page("/draft"),
+            P9R_CACHE.page("/published"),
+        ]);
+    });
+
+    test("invalidates the page once when path stays the same", async () => {
+        const { cms, deleteSpy } = makeSystem({ existing: existingPage });
+        const res = await putPage(
+            makeRequest({
+                id: "page-1",
+                title: "Same path",
+                path: "/draft",
+                content: "<p>updated</p>",
+            }),
+            cms
+        );
+
+        expect(res.ok).toBe(true);
+        expect(deleteSpy).toEqual([P9R_CACHE.page("/draft")]);
     });
 
 });

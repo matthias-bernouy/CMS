@@ -18,6 +18,20 @@ export async function invalidatePagesReferencingBloc(cms: ControlCms, blocTag: s
     }
 }
 
+export function invalidateBlocAssets(cms: ControlCms, blocTag: string): void {
+    cms.cache.delete(P9R_CACHE.bloc(blocTag));
+    cms.cache.delete(P9R_CACHE.EDITOR_SCRIPT);
+    cms.cache.delete(P9R_CACHE.EDITOR_VIEW_SCRIPT);
+    cms.cache.deleteMatching(key => key.startsWith(P9R_CACHE.BLOCSET_PREFIX));
+}
+
+export function invalidateUpdatedPage(cms: ControlCms, previousPath: string, nextPath: string): void {
+    cms.cache.delete(P9R_CACHE.page(previousPath));
+    if (nextPath !== previousPath) {
+        cms.cache.delete(P9R_CACHE.page(nextPath));
+    }
+}
+
 /**
  * Invalidate every cached rendered page that references a given file id —
  * directly (a `<img src="/.cms/files/by-id/<id>">`) or transitively via a

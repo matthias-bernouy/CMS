@@ -2,6 +2,7 @@ import type { ControlCms } from 'cms-control/ControlCms';
 import InvalidParam from 'cms-control/errors/Http/InvalidParam';
 import type { PageUpdateDto } from '../validation/page/parseUpdateDto';
 import { assertContentRefsExist } from "@bernouy/cms-content";
+import { invalidateUpdatedPage } from "cms-control/core/server/cache/invalidation";
 
 export async function updatePage(cms: ControlCms, dto: PageUpdateDto): Promise<void> {
     const existing = await cms.repository.getPageById(dto.id);
@@ -18,4 +19,6 @@ export async function updatePage(cms: ControlCms, dto: PageUpdateDto): Promise<v
         visible: dto.visible,
         tags: dto.tags,
     });
+
+    invalidateUpdatedPage(cms, existing.path, dto.path);
 }
