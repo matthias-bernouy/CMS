@@ -1,4 +1,4 @@
-import { Editor, type ContentSlot, type SettingSection } from "@bernouy/cms-content/editor";
+import { Editor, type ContentSlot } from "@bernouy/cms-content/editor";
 
 export class ListEditor extends Editor {
 
@@ -8,16 +8,6 @@ export class ListEditor extends Editor {
                 label: "Items",
                 min: 1,
                 accepts: [{ kind: "component", tag: "li" }],
-            },
-        ];
-    }
-
-    protected override settings(): SettingSection[] {
-        return [
-            {
-                kind: "self",
-                label: "List",
-                settings: [],
             },
         ];
     }

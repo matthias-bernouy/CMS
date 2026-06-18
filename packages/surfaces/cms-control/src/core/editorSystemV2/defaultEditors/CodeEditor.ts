@@ -1,4 +1,4 @@
-import { Editor, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
+import { Editor, type TextCapability } from "@bernouy/cms-content/editor";
 
 export class CodeEditor extends Editor {
 
@@ -7,10 +7,6 @@ export class CodeEditor extends Editor {
             format: "text",
             dynamic: true,
         };
-    }
-
-    protected override settings(): SettingSection[] {
-        return [];
     }
 
 }

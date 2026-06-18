@@ -1,4 +1,4 @@
-import { Editor, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
+import { Editor, type TextCapability } from "@bernouy/cms-content/editor";
 
 export class ListItemEditor extends Editor {
 
@@ -13,16 +13,6 @@ export class ListItemEditor extends Editor {
             size: true,
             dynamic: true,
         };
-    }
-
-    protected override settings(): SettingSection[] {
-        return [
-            {
-                kind: "self",
-                label: "List item",
-                settings: [],
-            },
-        ];
     }
 
 }

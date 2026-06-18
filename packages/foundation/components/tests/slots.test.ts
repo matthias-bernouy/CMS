@@ -41,11 +41,12 @@ describe("captureContent — partition", () => {
         expect(slots.empty).toBeDefined();
     });
 
-    test("only the first node per slot is kept", () => {
+    test("keeps every direct node for the same slot", () => {
         const src = el(`<div cms-source="/x"><b cms-slot="empty">A</b><b cms-slot="empty">B</b></div>`);
         const { slots } = captureContent(src);
         expect(text(slots.empty!.firstElementChild!)).toBe("A");
-        expect(slots.empty!.childNodes.length).toBe(1);
+        expect(slots.empty!.childNodes.length).toBe(2);
+        expect(Array.from(slots.empty!.children).map(text)).toEqual(["A", "B"]);
     });
 });
 

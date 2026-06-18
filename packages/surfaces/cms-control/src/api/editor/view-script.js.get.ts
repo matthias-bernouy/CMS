@@ -3,8 +3,6 @@ import { cachedResponseAsync, compress, publicAssetCacheControl } from "@bernouy
 import { P9R_CACHE } from "@bernouy/cms-content";
 
 export default async function editorViewScriptGet(req: Request, cms: ControlCms): Promise<Response> {
-    await cms.ensureFoundationBlocsSeeded?.();
-
     return cachedResponseAsync(req, P9R_CACHE.EDITOR_VIEW_SCRIPT, cms.cache, async () => {
         const blocs = await cms.repository.getBlocsJS();
         const js = blocs

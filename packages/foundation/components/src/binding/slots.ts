@@ -30,8 +30,8 @@ export type Captured = {
 /**
  * Move a source element's children off-DOM into pristine fragments, leaving the
  * element empty and ready to render a state into. Slot children lose their
- * `cms-slot` attribute (it has served its purpose); only the first node per
- * slot is kept, extras are dropped.
+ * `cms-slot` attribute (it has served its purpose); all direct children for the
+ * same state are kept in that state's fragment.
  *
  * A `<template>` body is captured INERT (its `.content`): the custom elements
  * inside never upgraded, so they can't pre-render with raw tokens or duplicate
@@ -58,13 +58,9 @@ export function captureContent(el: Element): Captured {
             continue;
         }
         (child as Element).removeAttribute(SLOT_ATTR);
-        if (slots[slot]) {
-            child.parentNode?.removeChild(child); // already filled — drop the extra
-        } else {
-            const frag = document.createDocumentFragment();
-            frag.appendChild(child);
-            slots[slot] = frag;
-        }
+        const frag = slots[slot] ?? document.createDocumentFragment();
+        frag.appendChild(child);
+        slots[slot] = frag;
     }
     return { template, body, slots };
 }

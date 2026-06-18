@@ -1,6 +1,14 @@
 import type { BlocListItemResponse } from "@bernouy/cms-content";
 import type { BuiltBloc } from "../build";
 import { bundleBlocSource } from "cms-cli/push/blocs/bundle";
+import type { TBloc } from "@bernouy/cms-content";
+import { ContentValidationError, DuplicateBlocTagError } from "@bernouy/cms-content";
+import { buildDevBloc } from "cms-cli/dev-server/build";
+import { scanDevBlocs } from "cms-cli/dev-server/scan";
+import { categoryToFolder } from "cms-cli/push/shared/categoryFolder";
+import { safeJoin } from "cms-cli/push/shared/safeJoin";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 
 /**
  * Filesystem-backed bloc store. Reads from a shared `built` map populated
@@ -9,13 +17,15 @@ import { bundleBlocSource } from "cms-cli/push/blocs/bundle";
  * repo calls see it instantly. The shared map IS the cache; "invalidation"
  * is just the watcher swapping a value.
  *
- * Writes (`createBloc` / `replaceBloc`) are NOT supported in dev — the
- * authoring source files ARE the data; you edit `Bloc.ts` directly. The
- * repo throws so an admin UI accidentally hitting POST /api/bloc fails
- * loud rather than silently dropping work.
+ * Writes persist source bundles back to `site/blocs/<group>/<tag>/`, then
+ * build the freshly written source immediately so the current request can see
+ * the new bloc before the watcher polling loop catches up.
  */
 export class BlocsStore {
-    constructor(private readonly built: Map<string, BuiltBloc>) {}
+    constructor(
+        private readonly siteDir: string,
+        private readonly built: Map<string, BuiltBloc>,
+    ) {}
 
     async getAllJS(): Promise<{ id: string; editorJS: string; viewJS: string }[]> {
         return [...this.built.values()].map(b => ({
@@ -39,8 +49,58 @@ export class BlocsStore {
         return await bundleBlocSource(folder);
     }
 
-    /** Dev-mode only: bloc creation goes through editing source files + push. */
-    rejectWrite(): never {
-        throw new Error("Bloc create/replace is not supported in `p9r dev` — edit the source files under site/blocs/ and use `p9r push --type=blocs` to deploy.");
+    async create(bloc: TBloc): Promise<TBloc> {
+        if (this.built.has(bloc.id)) throw new DuplicateBlocTagError(bloc.id);
+        return await this.write(bloc);
     }
+
+    async replace(bloc: TBloc): Promise<TBloc> {
+        return await this.write(bloc);
+    }
+
+    private async write(bloc: TBloc): Promise<TBloc> {
+        const source = bloc.source;
+        if (!source || Object.keys(source).length === 0) {
+            throw new ContentValidationError("source", "`p9r dev` bloc writes require an editable source bundle");
+        }
+
+        const target = safeJoin(this.siteDir, "blocs", categoryToFolder(bloc.group), bloc.id);
+        await rm(target, { recursive: true, force: true });
+        await writeBlocSource(target, source);
+
+        const scanned = await scanDevBlocs(target, { quiet: true });
+        const devBloc = scanned.find(candidate => candidate.tag === bloc.id);
+        if (!devBloc) {
+            throw new ContentValidationError("source", `written source did not produce bloc "${bloc.id}"`);
+        }
+
+        const built = await buildDevBloc(devBloc);
+        this.built.set(built.tag, built);
+        return bloc;
+    }
+}
+
+async function writeBlocSource(target: string, source: Record<string, string>): Promise<void> {
+    for (const [rel, base64] of Object.entries(source)) {
+        if (rel === "" || rel.includes("\0")) {
+            throw new ContentValidationError("source", `invalid source path "${rel}"`);
+        }
+
+        const full = safeJoin(target, rel);
+        await mkdir(dirname(full), { recursive: true });
+        const bytes = rel === "manifest.json" || rel === "./manifest.json"
+            ? Buffer.from(stripLegacyManifestFields(Buffer.from(base64, "base64").toString("utf-8")), "utf-8")
+            : Buffer.from(base64, "base64");
+        await writeFile(full, bytes);
+    }
+}
+
+function stripLegacyManifestFields(raw: string): string {
+    let manifest: Record<string, unknown>;
+    try { manifest = JSON.parse(raw); }
+    catch { return raw; }
+    if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) return raw;
+    if (!("default-group" in manifest)) return raw;
+    delete manifest["default-group"];
+    return JSON.stringify(manifest, null, 4) + "\n";
 }

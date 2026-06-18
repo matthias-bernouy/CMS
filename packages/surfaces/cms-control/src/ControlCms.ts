@@ -38,6 +38,7 @@ import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path"
 import type { CspExtras } from "@bernouy/http-runner";
 import { renderForbiddenPage, renderLoginPage } from "cms-control/core/auth/authPages";
+import { seedFoundationBlocs } from "cms-control/core/editorSystemV2/seedFoundationBlocs";
 
 type Configuration = {
     /**
@@ -73,6 +74,8 @@ type ControlAuthBackends = {
  * without hard-coding any prefix.
  */
 export class ControlCms {
+
+    readonly ready: Promise<void>;
 
     private configuration:    Configuration;
     private _repository:      CmsRepository;
@@ -123,6 +126,10 @@ export class ControlCms {
         this._gateway = gateway ?? null;
         this._analytics = analytics ?? null;
         this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
+        this.ready = seedFoundationBlocs(this._repository, this._cache).then(() => undefined).catch((error) => {
+            console.error("[cms-control] failed to seed foundation blocs", error);
+            throw error;
+        });
 
         const authGuard = createAuthGuard<CMS_ROLES>({
             basePath:     this.basePath,
@@ -130,7 +137,6 @@ export class ControlCms {
             requiredRole: "admin",
             onForbidden:  (_req, ctx) => renderForbiddenPage(ctx.basePath, ctx.logoutUrl),
         });
-
         // Unguarded: the standalone login page. The guard redirects
         // unauthenticated users here via `buildLoginUrl`; registered before the
         // guarded groups so it is reachable without a session (first-match-wins).

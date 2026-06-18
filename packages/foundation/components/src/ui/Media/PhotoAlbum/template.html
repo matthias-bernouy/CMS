@@ -1,0 +1,16 @@
+<section class="album" part="album">
+    <slot class="images" name="images"></slot>
+</section>
+<section class="legend-album" part="legend-album" hidden></section>
+<section class="preview" part="preview" role="dialog" aria-modal="true" aria-label="Photo preview" hidden>
+    <div class="preview-panel" part="preview-panel">
+        <button class="preview-close" type="button" aria-label="Close preview">&times;</button>
+        <div class="preview-stage">
+            <button class="preview-nav preview-prev" type="button" aria-label="Previous image">&lsaquo;</button>
+            <img class="preview-image" part="preview-image" alt="">
+            <button class="preview-nav preview-next" type="button" aria-label="Next image">&rsaquo;</button>
+        </div>
+        <p class="preview-caption" part="preview-caption" hidden></p>
+        <div class="preview-strip" part="preview-strip" role="listbox" aria-label="Other images"></div>
+    </div>
+</section>

@@ -10,10 +10,12 @@ import {
     CodeEditor,
     ContainerEditor,
     GridEditor,
+    HeadingEditor,
     ImageEditor,
     ListEditor,
     ListItemEditor,
     ParagraphEditor,
+    PhotoAlbumEditor,
     QuoteEditor,
     SnippetEditor,
     SpanEditor,
@@ -51,23 +53,25 @@ describe("editor default editors", () => {
 
     test("exposes content editor identities", () => {
         expect(new ParagraphEditor(target("p")).getTextCapability()?.format).toBe("richtext");
+        expect(new HeadingEditor(target("h1")).getTextCapability()?.format).toBe("richtext");
         expect(new SpanEditor(target("span")).getTextCapability()?.format).toBe("richtext");
         expect(new CodeEditor(target("code")).getTextCapability()?.format).toBe("text");
         expect(new QuoteEditor(target("blockquote")).getTextCapability()?.format).toBe("richtext");
         expect(new ImageEditor(target("img")).getSettings()[0]?.label).toBe("Image");
-        expect(new ListEditor(target("ul")).getSettings()[0]?.label).toBe("List");
-        expect(new ListItemEditor(target("li")).getSettings()[0]?.label).toBe("List item");
+        expect(new PhotoAlbumEditor(target("base-photo-album")).getSettings()[0]?.label).toBe("Photo album");
+        expect(new ListEditor(target("ul")).getSettings()).toEqual([]);
+        expect(new ListItemEditor(target("li")).getSettings()).toEqual([]);
     });
 
     test("exposes default content slots", () => {
-        expect(new ContainerEditor(target("p9r-container")).getContentSlots()).toEqual([
+        expect(new ContainerEditor(target("base-container")).getContentSlots()).toEqual([
             {
                 label: "Content",
                 accepts: [{ kind: "any-component" }],
             },
         ]);
 
-        expect(new CardEditor(target("p9r-card")).getContentSlots()).toEqual([
+        expect(new CardEditor(target("base-card")).getContentSlots()).toEqual([
             {
                 label: "Header",
                 slot: "header",
@@ -93,7 +97,15 @@ describe("editor default editors", () => {
             },
         ]);
         expect(new ParagraphEditor(target("p")).getContentSlots()).toEqual([]);
+        expect(new HeadingEditor(target("h1")).getContentSlots()).toEqual([]);
         expect(new ImageEditor(target("img")).getContentSlots()).toEqual([]);
+        expect(new PhotoAlbumEditor(target("base-photo-album")).getContentSlots()).toEqual([
+            {
+                label: "Images",
+                slot: "images",
+                accepts: [{ kind: "media", accept: ["image"] }],
+            },
+        ]);
         expect(new SpanEditor(target("span")).getContentSlots()).toEqual([]);
         expect(new CodeEditor(target("code")).getContentSlots()).toEqual([]);
         expect(new QuoteEditor(target("blockquote")).getContentSlots()).toEqual([]);
@@ -121,6 +133,15 @@ describe("editor default editors", () => {
             size: true,
             dynamic: true,
         });
+        expect(new HeadingEditor(target("h1")).getTextCapability()).toEqual({
+            format: "richtext",
+            bold: true,
+            italic: true,
+            underline: true,
+            link: true,
+            color: true,
+            dynamic: true,
+        });
         expect(new SpanEditor(target("span")).getTextCapability()).toEqual({
             format: "richtext",
             bold: true,
@@ -141,7 +162,7 @@ describe("editor default editors", () => {
             link: true,
             dynamic: true,
         });
-        expect(new CardEditor(target("p9r-card")).getTextCapability()).toBeNull();
+        expect(new CardEditor(target("base-card")).getTextCapability()).toBeNull();
         expect(new ImageEditor(target("img")).getTextCapability()).toBeNull();
     });
 
@@ -180,8 +201,8 @@ describe("editor default editors", () => {
     });
 
     test("grid mounts child override settings on its children", () => {
-        const child = new RecordingEditor(target("p9r-card"));
-        const editor = new TestGridEditor(target("p9r-grid"), [child]);
+        const child = new RecordingEditor(target("base-card"));
+        const editor = new TestGridEditor(target("base-grid"), [child]);
 
         expect(editor.getSettings()[0]?.kind).toBe("self");
         editor.mountEditor();
@@ -235,11 +256,14 @@ describe("editor default editors", () => {
 
         expect(catalog.map(entry => entry.tag)).toEqual([
             "cms-binding-core",
-            "p9r-container",
-            "p9r-card",
-            "p9r-grid",
             CMS_SNIPPET_TAG,
             "p",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
             "img",
             "span",
             "code",
@@ -252,10 +276,10 @@ describe("editor default editors", () => {
         expect(snippet?.editor).toBe(SnippetEditor);
         expect(snippet?.label).toBe("Snippet");
         expect(snippet?.category).toBe("Content");
-        const container = catalog.find(entry => entry.tag === "p9r-container");
-        expect(container?.editor).toBe(ContainerEditor);
-        expect(container?.label).toBe("Container");
-        expect(container?.category).toBe("Layout");
+        const h1 = catalog.find(entry => entry.tag === "h1");
+        expect(h1?.editor).toBe(HeadingEditor);
+        expect(h1?.label).toBe("Heading 1");
+        expect(h1?.defaultContent).toBe("<h1>Heading</h1>");
         const image = catalog.find(entry => entry.tag === "img");
         expect(image?.editor).toBe(ImageEditor);
         expect(image?.label).toBe("Image");

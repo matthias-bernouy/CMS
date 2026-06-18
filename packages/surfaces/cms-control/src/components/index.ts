@@ -19,6 +19,7 @@ import {
     OpenModal,
     P9rInput,
     P9rSelect,
+    PhotoAlbum,
     SegmentedSwitch,
     Stack,
     TabPanel,
@@ -64,6 +65,7 @@ define("p9r-modal", Modal);
 define("p9r-open-modal", OpenModal);
 define("p9r-input", P9rInput);
 define("p9r-select", P9rSelect);
+define("p9r-photo-album", PhotoAlbum);
 define("p9r-segmented-switch", SegmentedSwitch);
 define("p9r-stack", Stack);
 define("p9r-tab-panel", TabPanel);

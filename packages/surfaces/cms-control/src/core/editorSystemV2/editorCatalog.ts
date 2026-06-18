@@ -1,16 +1,9 @@
 import { CMS_SNIPPET_TAG, type EditorCatalog } from "@bernouy/cms-content/editor";
-import {
-    BindingCore,
-    Card,
-    Container,
-    Grid,
-} from "@bernouy/components";
+import { BindingCore } from "@bernouy/components";
 import {
     BindingCoreEditor,
-    CardEditor,
     CodeEditor,
-    ContainerEditor,
-    GridEditor,
+    HeadingEditor,
     ImageEditor,
     ListEditor,
     ListItemEditor,
@@ -22,6 +15,7 @@ import {
 
 type NativeElementConstructorName =
     | "HTMLElement"
+    | "HTMLHeadingElement"
     | "HTMLImageElement"
     | "HTMLLIElement"
     | "HTMLOListElement"
@@ -52,39 +46,6 @@ export function createControlEditorCatalog(): EditorCatalog {
             editor: BindingCoreEditor,
         },
         {
-            tag: "p9r-container",
-            label: "Container",
-            description: "Constrains and aligns a page region.",
-            icon: "box",
-            category: "Layout",
-            subCategory: "Structure",
-            defaultContent: "<p9r-container><p>Content</p></p9r-container>",
-            bloc: Container,
-            editor: ContainerEditor,
-        },
-        {
-            tag: "p9r-card",
-            label: "Card",
-            description: "Groups content in a framed surface.",
-            icon: "panel-top",
-            category: "Layout",
-            subCategory: "Content",
-            defaultContent: `<p9r-card><p slot="header">Title</p><p>Content</p><p slot="footer">Footer</p></p9r-card>`,
-            bloc: Card,
-            editor: CardEditor,
-        },
-        {
-            tag: "p9r-grid",
-            label: "Grid",
-            description: "Arranges child blocks in responsive columns.",
-            icon: "grid",
-            category: "Layout",
-            subCategory: "Structure",
-            defaultContent: "<p9r-grid><p9r-card><p slot=\"header\">Title</p><p>Content</p></p9r-card><p9r-card><p slot=\"header\">Title</p><p>Content</p></p9r-card></p9r-grid>",
-            bloc: Grid,
-            editor: GridEditor,
-        },
-        {
             tag: CMS_SNIPPET_TAG,
             label: "Snippet",
             description: "References a reusable snippet. Edit the snippet itself from the snippet editor.",
@@ -104,6 +65,7 @@ export function createControlEditorCatalog(): EditorCatalog {
             bloc: nativeElementConstructor("HTMLParagraphElement"),
             editor: ParagraphEditor,
         },
+        ...headingCatalogEntries(),
         {
             tag: "img",
             label: "Image",
@@ -178,4 +140,18 @@ export function createControlEditorCatalog(): EditorCatalog {
             editor: ListItemEditor,
         },
     ];
+}
+
+function headingCatalogEntries(): EditorCatalog {
+    return [1, 2, 3, 4, 5, 6].map(level => ({
+        tag: `h${level}`,
+        label: `Heading ${level}`,
+        description: `Level ${level} section heading.`,
+        icon: "heading",
+        category: "Text",
+        subCategory: "Headings",
+        defaultContent: `<h${level}>Heading</h${level}>`,
+        bloc: nativeElementConstructor("HTMLHeadingElement"),
+        editor: HeadingEditor,
+    }));
 }

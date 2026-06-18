@@ -1,0 +1,13 @@
+{
+    "runtime": "foundation",
+    "default-tag": "base-card",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Card",
+        "description": "Groups content in a framed surface.",
+        "categories": ["Layout", "Content"],
+        "icon": "panel-top"
+    }
+}

@@ -1,0 +1,19 @@
+:host {
+    --max-width: var(--p9r-container-md, 768px);
+    display: block;
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline-start: 0;
+    margin-inline-end: auto;
+}
+
+:host([size="xs"])   { --max-width: var(--p9r-container-xs, 480px); }
+:host([size="sm"])   { --max-width: var(--p9r-container-sm, 640px); }
+:host([size="md"])   { --max-width: var(--p9r-container-md, 768px); }
+:host([size="lg"])   { --max-width: var(--p9r-container-lg, 1024px); }
+:host([size="xl"])   { --max-width: var(--p9r-container-xl, 1280px); }
+:host([size="full"]) { --max-width: 100%; }
+
+:host([align="start"])  { margin-inline-start: 0;    margin-inline-end: auto; }
+:host([align="center"]) { margin-inline-start: auto; margin-inline-end: auto; }
+:host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }

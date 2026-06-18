@@ -1,4 +1,4 @@
-import { Editor, type SettingSection, type TextCapability } from "@bernouy/cms-content/editor";
+import { Editor, type TextCapability } from "@bernouy/cms-content/editor";
 
 export class QuoteEditor extends Editor {
 
@@ -11,10 +11,6 @@ export class QuoteEditor extends Editor {
             link: true,
             dynamic: true,
         };
-    }
-
-    protected override settings(): SettingSection[] {
-        return [];
     }
 
 }

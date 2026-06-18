@@ -29,12 +29,12 @@ export class LocalFsCmsRepository implements CmsRepository {
         this._snippets      = new SnippetsStore(siteDir);
         this._templates     = new TemplatesStore(siteDir);
         this._system        = new SystemStore(siteDir);
-        this._blocs         = new BlocsStore(builtBlocs);
+        this._blocs         = new BlocsStore(siteDir, builtBlocs);
     }
 
     // ── Bloc ──
-    createBloc(_bloc: TBloc):  Promise<TBloc> { return this._blocs.rejectWrite(); }
-    replaceBloc(_bloc: TBloc): Promise<TBloc> { return this._blocs.rejectWrite(); }
+    createBloc(bloc: TBloc):  Promise<TBloc> { return this._blocs.create(bloc); }
+    replaceBloc(bloc: TBloc): Promise<TBloc> { return this._blocs.replace(bloc); }
     getBlocsJS():            Promise<{ id: string; editorJS: string; viewJS: string }[]> { return this._blocs.getAllJS(); }
     getBlocsList():          Promise<BlocListItemResponse[]>                              { return this._blocs.getList(); }
     getBlocViewJS(tag: string):                Promise<string | null>                     { return this._blocs.getViewJS(tag); }

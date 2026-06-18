@@ -40,6 +40,7 @@ const blocs: Array<[string, string]> = [
     ["container", "./src/ui/Layout/Container/Container.ts"],
     ["grid", "./src/ui/Layout/Grid/Grid.ts"],
     ["left-menu-layout", "./src/ui/Layout/LeftMenuLayout/LeftMenuLayout.ts"],
+    ["photo-album", "./src/ui/Media/PhotoAlbum/PhotoAlbum.ts"],
     ["lateral-menu", "./src/ui/Menu/LateralMenu/LateralMenu.ts"],
     ["lateral-menu-item", "./src/ui/Menu/LateralMenu/LateralMenuItem/LateralMenuItem.ts"],
     ["pagination", "./src/ui/Pagination/Pagination.ts"],

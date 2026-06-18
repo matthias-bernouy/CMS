@@ -1,0 +1,46 @@
+:host {
+    --min: 240px;
+    --gap: var(--p9r-space-md, 16px);
+    --max-width: 100%;
+
+    display: grid;
+    /* Intrinsically responsive: as many tracks as fit, each at least `--min`
+       wide. `min(--min, 100%)` keeps a single track from overflowing a
+       container narrower than `--min`. No media queries. */
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--min), 100%), 1fr));
+    gap: var(--gap);
+
+    /* Content zone: own width + horizontal placement within the parent.
+       Placement via margin-inline (works under any parent), exposed in the
+       editor as "Align self". */
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: 0 auto;
+}
+
+/* --- Min item width (drives the column count via minmax) --- */
+:host([min="sm"]) { --min: 180px; }
+:host([min="md"]) { --min: 240px; }
+:host([min="lg"]) { --min: 300px; }
+:host([min="xl"]) { --min: 360px; }
+
+/* --- Content zone width (size) --- */
+:host([size="sm"])   { --max-width: var(--p9r-container-sm, 640px); }
+:host([size="md"])   { --max-width: var(--p9r-container-md, 768px); }
+:host([size="lg"])   { --max-width: var(--p9r-container-lg, 1024px); }
+:host([size="xl"])   { --max-width: var(--p9r-container-xl, 1280px); }
+:host([size="full"]) { --max-width: 100%; }
+
+/* --- Self placement (align self) --- */
+:host([align-self="start"])  { margin-inline: 0 auto; }
+:host([align-self="center"]) { margin-inline: auto; }
+:host([align-self="end"])    { margin-inline: auto 0; }
+
+/* --- Gap --- */
+:host([gap="none"]) { --gap: 0; }
+:host([gap="xs"])   { --gap: var(--p9r-space-xs, 4px); }
+:host([gap="sm"])   { --gap: var(--p9r-space-sm, 8px); }
+:host([gap="md"])   { --gap: var(--p9r-space-md, 16px); }
+:host([gap="lg"])   { --gap: var(--p9r-space-lg, 24px); }
+:host([gap="xl"])   { --gap: var(--p9r-space-xl, 32px); }

@@ -138,6 +138,7 @@ export default async function CLI_dev(args: string[]) {
     runner.addEndpoint("GET", "/dev/reload", sseHandler(reload));
 
     const cms = new ControlCms(runner, repo, auth, {}, undefined, undefined, filesMetadata, files, users, identityProviders, pats, credentials, gateway);
+    await cms.ready;
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
     // still need to drop the editor-script (consolidated bundle) and the

@@ -54,6 +54,9 @@ export { Grid } from "./ui/Layout/Grid/Grid";
 export { LeftMenuLayout } from "./ui/Layout/LeftMenuLayout/LeftMenuLayout";
 export { Stack } from "./ui/Layout/Stack/Stack";
 
+// Media
+export { PhotoAlbum } from "./ui/Media/PhotoAlbum/PhotoAlbum";
+
 // Menu
 export { LateralMenu } from "./ui/Menu/LateralMenu/LateralMenu";
 export { LateralMenuItem } from "./ui/Menu/LateralMenu/LateralMenuItem/LateralMenuItem";
