@@ -1,3 +1,5 @@
+export const CMS_BINDING_CORE_TAG = "cms-binding-core";
+
 export const CMS_BINDING_ATTRIBUTES = {
     bindingDisabled:  "cms-binding-disabled",
     condition:        "cms-condition",

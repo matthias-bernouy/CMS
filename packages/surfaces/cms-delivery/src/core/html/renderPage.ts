@@ -2,6 +2,7 @@ import { parseHTML } from "linkedom";
 import type { TPage } from "@bernouy/cms-content";
 import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
+import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { sanitizeDomTree, composeShell } from "@bernouy/cms-content";
 import { expandSnippets } from "@bernouy/cms-content";
 import { injectMediaVersions } from "@bernouy/cms-files";
@@ -88,7 +89,7 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     // uses the activation root. The default Shell wraps content in it; a custom
     // Shell that drops it never loads the engine → binding stays swappable.
     // Same-origin script → no CSP host to whitelist.
-    if (document.querySelector("cms-binding-core")) {
+    if (document.querySelector(CMS_BINDING_CORE_TAG)) {
         const bindingCoreScript = document.createElement("script");
         bindingCoreScript.setAttribute("defer", "");
         bindingCoreScript.setAttribute("src", assets.bindingCoreUrl);

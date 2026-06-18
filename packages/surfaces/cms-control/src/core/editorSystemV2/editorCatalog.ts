@@ -1,4 +1,4 @@
-import { CMS_SNIPPET_TAG, type EditorCatalog } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_CORE_TAG, CMS_SNIPPET_TAG, type EditorCatalog } from "@bernouy/cms-content/editor";
 import { BindingCore } from "@bernouy/components";
 import {
     BindingCoreEditor,
@@ -37,7 +37,7 @@ function nativeElementConstructor(name: NativeElementConstructorName): CustomEle
 export function createControlEditorCatalog(): EditorCatalog {
     return [
         {
-            tag: "cms-binding-core",
+            tag: CMS_BINDING_CORE_TAG,
             label: "Binding core",
             description: "Provides global data scopes to editable content.",
             icon: "database",

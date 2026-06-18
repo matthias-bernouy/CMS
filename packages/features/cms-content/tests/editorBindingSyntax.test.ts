@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import {
     CMS_BINDING_ATTRIBUTES,
+    CMS_BINDING_CORE_TAG,
     CMS_SOURCE_SLOT_VALUES,
     CMS_SOURCE_STATES,
     applySourceState,
@@ -99,6 +100,7 @@ describe("editor binding syntax", () => {
     });
 
     test("exposes stable binding attribute names", () => {
+        expect(CMS_BINDING_CORE_TAG).toBe("cms-binding-core");
         expect(CMS_BINDING_ATTRIBUTES).toEqual({
             bindingDisabled: "cms-binding-disabled",
             condition: "cms-condition",

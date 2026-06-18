@@ -1,3 +1,4 @@
+import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import {
     Accordion,
     AccordionItem,
@@ -44,7 +45,7 @@ function define(tag: string, constructor: CustomElementConstructor) {
     if (!customElements.get(tag)) customElements.define(tag, constructor);
 }
 
-define("cms-binding-core", BindingCore);
+define(CMS_BINDING_CORE_TAG, BindingCore);
 define("p9r-accordion", Accordion);
 define("p9r-accordion-item", AccordionItem);
 define("p9r-alert", Alert);

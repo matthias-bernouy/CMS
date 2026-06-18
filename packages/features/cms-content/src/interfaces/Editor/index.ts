@@ -4,6 +4,7 @@ export {
 } from "./Editor";
 export {
     CMS_BINDING_ATTRIBUTES,
+    CMS_BINDING_CORE_TAG,
     CMS_SOURCE_SLOT_VALUES,
     CMS_SOURCE_STATES,
     applySourceState,

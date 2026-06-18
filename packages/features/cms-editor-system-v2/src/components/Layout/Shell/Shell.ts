@@ -10,6 +10,7 @@ import {
     applySourceState,
     type ContentSlot,
     CMS_BINDING_ATTRIBUTES,
+    CMS_BINDING_CORE_TAG,
     CMS_SNIPPET_TAG,
     type DataField,
     type DataScope,
@@ -436,7 +437,7 @@ export class Shell extends HTMLElement {
         this._bindFrameDocument(frameDocument);
 
         const root = frameDocument.querySelector<HTMLElement>("[data-cms-editor-root]")
-            ?? frameDocument.querySelector<HTMLElement>("cms-binding-core");
+            ?? frameDocument.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG);
         const contentRoot = frameDocument.querySelector<HTMLElement>("[data-cms-content]");
 
         if (!root || !contentRoot) {
@@ -1111,7 +1112,7 @@ export class Shell extends HTMLElement {
         if (!this._frameDocument) return;
 
         const root = this._frameDocument.querySelector<HTMLElement>("[data-cms-editor-root]")
-            ?? this._frameDocument.querySelector<HTMLElement>("cms-binding-core");
+            ?? this._frameDocument.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG);
         const contentRoot = this._frameDocument.querySelector<HTMLElement>("[data-cms-content]");
 
         if (!root || !contentRoot) return;
