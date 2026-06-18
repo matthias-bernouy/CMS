@@ -1,8 +1,10 @@
 export const CMS_BINDING_ATTRIBUTES = {
-    condition: "cms-condition",
-    repeat:    "cms-repeat",
-    source:    "cms-source",
-    slot:      "cms-slot",
+    bindingDisabled:  "cms-binding-disabled",
+    condition:        "cms-condition",
+    repeat:           "cms-repeat",
+    source:           "cms-source",
+    sourceStateForce: "cms-source-state-force",
+    slot:             "cms-slot",
 } as const;
 
 export type CmsBindingAttribute = typeof CMS_BINDING_ATTRIBUTES[keyof typeof CMS_BINDING_ATTRIBUTES];
@@ -23,6 +25,7 @@ export type CmsRepeatBinding = {
 };
 export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type CmsSourceState = typeof CMS_SOURCE_STATES[number];
+export type CmsSourceStateForce = CmsSourceState;
 export const CMS_SOURCE_SLOT_VALUES = ["loading", "empty", "error"] as const;
 export type CmsSourceSlotValue = typeof CMS_SOURCE_SLOT_VALUES[number];
 
@@ -93,6 +96,10 @@ export function parseCondition(value: string): CmsConditionExpression | null {
 
 export function isCmsSourceSlotValue(value: string | null): value is CmsSourceSlotValue {
     return (CMS_SOURCE_SLOT_VALUES as readonly string[]).includes(value ?? "");
+}
+
+export function isCmsSourceState(value: string | null): value is CmsSourceState {
+    return (CMS_SOURCE_STATES as readonly string[]).includes(value ?? "");
 }
 
 export function sourceStateFromElement(element: Element): CmsSourceState {

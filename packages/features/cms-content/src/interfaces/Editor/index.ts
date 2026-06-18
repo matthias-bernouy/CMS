@@ -12,6 +12,7 @@ export {
     asRepeat,
     asSource,
     isCmsSourceSlotValue,
+    isCmsSourceState,
     isInterpolation,
     parseCondition,
     parseInterpolation,
@@ -26,6 +27,7 @@ export {
     type CmsSourceParamValue,
     type CmsSourceSlotValue,
     type CmsSourceState,
+    type CmsSourceStateForce,
     type CmsSourceUrl,
 } from "./BindingSyntax";
 export type {

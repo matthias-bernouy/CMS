@@ -10,6 +10,7 @@ import {
     asRepeat,
     asSource,
     isCmsSourceSlotValue,
+    isCmsSourceState,
     isInterpolation,
     parseCondition,
     parseInterpolation,
@@ -99,9 +100,11 @@ describe("editor binding syntax", () => {
 
     test("exposes stable binding attribute names", () => {
         expect(CMS_BINDING_ATTRIBUTES).toEqual({
+            bindingDisabled: "cms-binding-disabled",
             condition: "cms-condition",
             repeat: "cms-repeat",
             source: "cms-source",
+            sourceStateForce: "cms-source-state-force",
             slot: "cms-slot",
         });
     });
@@ -113,6 +116,12 @@ describe("editor binding syntax", () => {
         expect(isCmsSourceSlotValue("loaded")).toBe(false);
         expect(isCmsSourceSlotValue("unknown")).toBe(false);
         expect(isCmsSourceSlotValue(null)).toBe(false);
+        expect(isCmsSourceState("loaded")).toBe(true);
+        expect(isCmsSourceState("loading")).toBe(true);
+        expect(isCmsSourceState("empty")).toBe(true);
+        expect(isCmsSourceState("error")).toBe(true);
+        expect(isCmsSourceState("disabled")).toBe(false);
+        expect(isCmsSourceState(null)).toBe(false);
     });
 
     test("maps cms-slot attributes to logical source states", () => {
