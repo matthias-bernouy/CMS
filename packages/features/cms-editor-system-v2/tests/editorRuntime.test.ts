@@ -376,6 +376,92 @@ describe("EditorRuntime", () => {
         ]);
     });
 
+    test("groups cms-source children by render state in the structure", () => {
+        const { document, HTMLElement } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body>
+                    <main id="content-root">
+                        <x-parent id="parent" cms-source="/api/plans">
+                            <x-child id="success"></x-child>
+                            <x-child id="loading-a" cms-slot="loading"></x-child>
+                            <x-child id="loading-b" cms-slot="loading"></x-child>
+                            <x-child id="error" cms-slot="error"></x-child>
+                        </x-parent>
+                    </main>
+                </body>
+            </html>
+        `);
+        const runtime = new EditorRuntime([
+            {
+                tag: "x-parent",
+                label: "Parent",
+                bloc: blocConstructor(HTMLElement),
+                editor: ParentEditor,
+            },
+            {
+                tag: "x-child",
+                label: "Child",
+                bloc: blocConstructor(HTMLElement),
+                editor: ChildEditor,
+            },
+        ]);
+
+        runtime.load({
+            root: document.getElementById("content-root")!,
+            contentRoot: document.getElementById("content-root")!,
+        });
+
+        const source = runtime.getStructure()[0]!;
+        expect(source.children.map(node => node.label)).toEqual([":loaded", ":loading", ":empty", ":error"]);
+        expect(source.children[0]!.children.map(node => node.target.id)).toEqual(["success"]);
+        expect(source.children[1]!.children.map(node => node.target.id)).toEqual(["loading-a", "loading-b"]);
+        expect(source.children[2]!.children).toEqual([]);
+        expect(source.children[3]!.children.map(node => node.target.id)).toEqual(["error"]);
+        expect(source.children[1]!.children[0]!.badges).toEqual([]);
+        expect(source.children[3]!.children[0]!.badges).toEqual([]);
+    });
+
+    test("keeps plain source children ungrouped and appends empty state groups", () => {
+        const { document, HTMLElement } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body>
+                    <main id="content-root">
+                        <x-parent id="parent" cms-source="/api/plans">
+                            <x-child id="one"></x-child>
+                            <x-child id="two"></x-child>
+                        </x-parent>
+                    </main>
+                </body>
+            </html>
+        `);
+        const runtime = new EditorRuntime([
+            {
+                tag: "x-parent",
+                label: "Parent",
+                bloc: blocConstructor(HTMLElement),
+                editor: ParentEditor,
+            },
+            {
+                tag: "x-child",
+                label: "Child",
+                bloc: blocConstructor(HTMLElement),
+                editor: ChildEditor,
+            },
+        ]);
+
+        runtime.load({
+            root: document.getElementById("content-root")!,
+            contentRoot: document.getElementById("content-root")!,
+        });
+
+        const source = runtime.getStructure()[0]!;
+        expect(source.children.map(node => node.label)).toEqual([":loaded", ":loading", ":empty", ":error"]);
+        expect(source.children[0]!.children.map(node => node.target.id)).toEqual(["one", "two"]);
+        expect(source.children.slice(1).every(node => node.children.length === 0)).toBe(true);
+    });
+
     test("declares data scopes from named cms-repeat attributes", () => {
         const { document, HTMLElement } = parseHTML(`
             <!DOCTYPE html>

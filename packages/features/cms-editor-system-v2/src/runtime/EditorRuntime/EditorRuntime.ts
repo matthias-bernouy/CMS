@@ -1,5 +1,6 @@
 import {
     CMS_BINDING_ATTRIBUTES,
+    CMS_SOURCE_STATES,
     Editor,
     type DataScope,
     type DataField,
@@ -9,6 +10,7 @@ import {
     type SettingSection,
     parseRepeat,
     parseSource,
+    sourceStateFromElement,
 } from "@bernouy/cms-content/editor";
 import { EditorRegistry } from "../EditorRegistry/EditorRegistry";
 import { createRuntimeEditor } from "./createRuntimeEditor";
@@ -17,7 +19,18 @@ import type {
     EditorRuntimeSelection,
     EditorStructureNode,
     RuntimeManagedEditor,
+    SourceStateName,
+    SourceStateStructureNode,
+    StructureNode,
 } from "./types";
+
+const SOURCE_STATE_NAMES: readonly SourceStateName[] = CMS_SOURCE_STATES;
+const SOURCE_STATE_LABELS: Record<SourceStateName, string> = {
+    loaded:  ":loaded",
+    loading: ":loading",
+    empty:   ":empty",
+    error:   ":error",
+};
 
 export class EditorRuntime {
 
@@ -89,7 +102,7 @@ export class EditorRuntime {
         return closest;
     }
 
-    getStructure(): EditorStructureNode[] {
+    getStructure(): StructureNode[] {
         const document = this._requireDocument();
 
         return this._getStructureChildren(document.contentRoot);
@@ -197,7 +210,7 @@ export class EditorRuntime {
         return path.startsWith(prefix) ? path.slice(prefix.length) : path;
     }
 
-    private _getStructureChildren(parent: HTMLElement): EditorStructureNode[] {
+    private _getStructureChildren(parent: HTMLElement): StructureNode[] {
         const document = this._requireDocument();
         const children: EditorStructureNode[] = [];
 
@@ -211,6 +224,7 @@ export class EditorRuntime {
             if (!entry) continue;
 
             children.push({
+                kind:     "editor",
                 editor,
                 target: editor.target,
                 tag: entry.tag,
@@ -223,7 +237,36 @@ export class EditorRuntime {
             });
         }
 
+        if (parent.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
+            return this._groupSourceChildren(this.registry.getEditor(parent), parent, children);
+        }
+
         return children;
+    }
+
+    private _groupSourceChildren(
+        sourceEditor: Editor | undefined,
+        sourceTarget: HTMLElement,
+        children: EditorStructureNode[],
+    ): StructureNode[] {
+        if (!sourceEditor) return children;
+
+        return SOURCE_STATE_NAMES.map(state => {
+            const stateChildren = children.filter(child => this._sourceStateOf(child.target) === state);
+            return {
+                kind: "source-state",
+                sourceEditor,
+                target: sourceTarget,
+                state,
+                label: SOURCE_STATE_LABELS[state],
+                badges: [],
+                children: stateChildren,
+            } satisfies SourceStateStructureNode;
+        });
+    }
+
+    private _sourceStateOf(target: HTMLElement): SourceStateName {
+        return sourceStateFromElement(target);
     }
 
     private _getStructureBadges(editor: Editor): string[] {

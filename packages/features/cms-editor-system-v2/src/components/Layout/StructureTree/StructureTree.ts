@@ -25,7 +25,7 @@ import {
     type DataSourcePickerSourceBinding,
     type DataSourcePickerSelectDetail,
 } from "../DataSourcePicker/DataSourcePicker";
-import type { EditorStructureNode } from "../../../runtime";
+import type { EditorStructureNode, SourceStateName, SourceStateStructureNode, StructureNode } from "../../../runtime";
 import type { EditorDataSource } from "../../../runtime";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
@@ -33,16 +33,19 @@ import componentCss from "./style.css" with { type: "text" };
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
+type StructureTreeKey = HTMLElement | object;
 type StructureTreeRenderRequest = {
     anchor?: {
-        key: HTMLElement;
+        key: StructureTreeKey;
         offsetTop: number;
     };
 };
 
 export type StructureTreeAction =
     | "add-child"
+    | "add-source-state-child"
     | "add-root"
+    | "clear-source-state"
     | "copy"
     | "delete"
     | "duplicate"
@@ -64,6 +67,7 @@ export type StructureTreeActionDetail = {
     dataSource?: EditorDataSource;
     sourceBinding?: DataSourcePickerSourceBinding;
     slot?: string;
+    sourceState?: SourceStateName;
 };
 
 export type StructureTreeRenderOptions = {
@@ -76,7 +80,7 @@ export type DefaultTemplateSelection = {
 };
 
 export class StructureTree extends HTMLElement {
-    private _nodes: EditorStructureNode[] = [];
+    private _nodes: StructureNode[] = [];
     private _selectedEditor: Editor | null = null;
     private _catalog: EditorCatalog = [];
     private _dataSources: EditorDataSource[] = [];
@@ -84,13 +88,18 @@ export class StructureTree extends HTMLElement {
     private _insertItems: BlockPickerItem[] = [];
     private _scrollSelectedIntoViewOnRender = false;
     private readonly _repeatableTargets = new WeakSet<HTMLElement>();
-    private _pendingPickerAction: { action: "add-child" | "add-root" | "replace"; editor?: Editor } | null = null;
+    private _pendingPickerAction: {
+        action: "add-child" | "add-source-state-child" | "add-root" | "replace";
+        editor?: Editor;
+        sourceState?: SourceStateName;
+    } | null = null;
     private _pendingSourceEditor: Editor | null = null;
     private _draggedNode: EditorStructureNode | null = null;
     private _dropRow: HTMLElement | null = null;
-    private readonly _collapsedTargets = new Set<HTMLElement>();
-    private readonly _expandedBadgeTargets = new Set<HTMLElement>();
-    private readonly _renderedRows = new WeakMap<HTMLElement, HTMLElement>();
+    private readonly _collapsedTargets = new Set<StructureTreeKey>();
+    private readonly _expandedBadgeTargets = new Set<StructureTreeKey>();
+    private readonly _sourceStateKeys = new WeakMap<HTMLElement, Map<SourceStateName, object>>();
+    private readonly _renderedRows = new WeakMap<object, HTMLElement>();
     private _scrollRequestId = 0;
 
     constructor() {
@@ -147,7 +156,7 @@ export class StructureTree extends HTMLElement {
     }
 
     setStructure(
-        nodes: EditorStructureNode[],
+        nodes: StructureNode[],
         selectedEditor: Editor | null = null,
         catalog: EditorCatalog = this._catalog,
         options: StructureTreeRenderOptions = {},
@@ -199,11 +208,11 @@ export class StructureTree extends HTMLElement {
         }
     }
 
-    private _renderNode(node: EditorStructureNode, depth: number): HTMLElement {
+    private _renderNode(node: StructureNode, depth: number): HTMLElement {
         const row = document.createElement("div");
-        row.className = "row";
+        row.className = this._rowClass(node);
         row.style.setProperty("--structure-depth", String(depth));
-        this._renderedRows.set(node.target, row);
+        this._trackRenderedRow(node, row);
 
         if (node.children.length > 0) {
             const toggle = document.createElement("button");
@@ -215,42 +224,50 @@ export class StructureTree extends HTMLElement {
                 this._toggleNode(node);
             });
             row.append(toggle);
+        } else if (this._isSourceStateNode(node)) {
+            row.append(document.createElement("span"));
         } else {
             const spacer = document.createElement("span");
             spacer.className = "toggle-spacer";
             row.append(spacer);
         }
 
-        const button = document.createElement("button");
-        button.className = "item";
-        button.draggable = true;
-        if (node.editor === this._selectedEditor) button.classList.add("selected");
-        button.type = "button";
-        button.addEventListener("click", () => {
+        const item = this._isSourceStateNode(node)
+            ? document.createElement("div")
+            : document.createElement("button");
+        item.className = this._itemClass(node);
+        item.draggable = !this._isSourceStateNode(node);
+        if (!this._isSourceStateNode(node) && node.editor === this._selectedEditor) item.classList.add("selected");
+        if (!this._isSourceStateNode(node)) (item as HTMLButtonElement).type = "button";
+        item.addEventListener("click", () => {
+            if (this._isSourceStateNode(node)) return;
             this.dispatchEvent(new CustomEvent("editor-v2:select-editor", {
                 bubbles: true,
                 composed: true,
                 detail: { editor: node.editor },
             }));
         });
-        button.addEventListener("contextmenu", (event) => {
+        item.addEventListener("contextmenu", (event) => {
+            const mouseEvent = event as MouseEvent;
             event.preventDefault();
             event.stopPropagation();
-            this._openContextMenu(node, event.clientX, event.clientY);
+            this._openContextMenu(node, mouseEvent.clientX, mouseEvent.clientY);
         });
-        button.addEventListener("dragstart", (event) => this._onDragStart(node, event));
-        button.addEventListener("dragover", (event) => this._onDragOver(node, row, event));
-        button.addEventListener("dragleave", () => this._clearDropRow());
-        button.addEventListener("drop", (event) => this._onDrop(node, event));
-        button.addEventListener("dragend", () => this._clearDragState());
+        if (!this._isSourceStateNode(node)) {
+            item.addEventListener("dragstart", (event) => this._onDragStart(node, event as DragEvent));
+            item.addEventListener("dragover", (event) => this._onDragOver(node, row, event as DragEvent));
+            item.addEventListener("dragleave", () => this._clearDropRow());
+            item.addEventListener("drop", (event) => this._onDrop(node, event as DragEvent));
+            item.addEventListener("dragend", () => this._clearDragState());
+        }
 
         const icon = document.createElement("span");
-        icon.className = "icon";
+        icon.className = this._iconClass(node);
         icon.textContent = this._iconText(node);
 
         const label = document.createElement("span");
         label.className = "label";
-        label.textContent = node.label;
+        label.textContent = this._nodeLabel(node);
 
         const badges = document.createElement("span");
         badges.className = "badges";
@@ -278,10 +295,27 @@ export class StructureTree extends HTMLElement {
             badges.append(more);
         }
 
-        button.append(icon, label, badges);
-        row.append(button);
+        if (this._isSourceStateNode(node) && node.children.length === 0) {
+            badges.append(this._sourceStateAddButton(node));
+        }
+
+        item.append(icon, label, badges);
+        row.append(item);
 
         return row;
+    }
+
+    private _sourceStateAddButton(node: SourceStateStructureNode): HTMLButtonElement {
+        const button = document.createElement("button");
+        button.className = "state-add";
+        button.type = "button";
+        button.textContent = "+";
+        button.setAttribute("aria-label", `Add ${node.state} state content`);
+        button.addEventListener("click", (event) => {
+            event.stopPropagation();
+            this._openSourceStatePicker(node);
+        });
+        return button;
     }
 
     private _renderBadge(value: string): HTMLElement {
@@ -335,16 +369,32 @@ export class StructureTree extends HTMLElement {
         });
     }
 
-    private _restoreScrollAnchor(anchor: { key: HTMLElement; offsetTop: number }): void {
-        const row = this._renderedRows.get(anchor.key);
+    private _restoreScrollAnchor(anchor: { key: StructureTreeKey; offsetTop: number }): void {
+        const row = this._findRenderedRow(anchor.key);
         if (!row) return;
 
         const scrollContainer = this._scrollContainer;
         scrollContainer.scrollTop += row.getBoundingClientRect().top - anchor.offsetTop;
     }
 
-    private _openContextMenu(node: EditorStructureNode, clientX: number, clientY: number): void {
+    private _trackRenderedRow(node: StructureNode, row: HTMLElement): void {
+        const key = this._nodeCollapseKey(node);
+        if (typeof key !== "object") return;
+        this._renderedRows.set(key, row);
+    }
+
+    private _findRenderedRow(key: StructureTreeKey): HTMLElement | null {
+        if (typeof key !== "object") return null;
+        return this._renderedRows.get(key) ?? null;
+    }
+
+    private _openContextMenu(node: StructureNode, clientX: number, clientY: number): void {
         this._closeContextMenu();
+
+        if (this._isSourceStateNode(node)) {
+            this._openSourceStateContextMenu(node, clientX, clientY);
+            return;
+        }
 
         const menu = this._contextMenu;
         menu.replaceChildren();
@@ -470,6 +520,31 @@ export class StructureTree extends HTMLElement {
         this._blockPicker.open(this._rootGroups(), "Page");
     }
 
+    private _openSourceStateContextMenu(node: SourceStateStructureNode, clientX: number, clientY: number): void {
+        const menu = this._contextMenu;
+        menu.replaceChildren(
+            this._contextMenuButton("Add block", () => {
+                this._openSourceStatePicker(node);
+            }, undefined, !this._hasEnabledGroup(this._sourceStateGroups(node))),
+            this._contextMenuButton("Paste", () => this._emitAction("paste-after", node.sourceEditor, undefined, undefined, node.state)),
+            this._contextMenuButton("Clear state", () => this._emitAction("clear-source-state", node.sourceEditor, undefined, undefined, node.state), "danger", node.children.length === 0),
+        );
+
+        this.shadowRoot!.append(menu);
+        this._positionContextMenu(menu, clientX, clientY);
+    }
+
+    private _openSourceStatePicker(node: SourceStateStructureNode): void {
+        const groups = this._sourceStateGroups(node);
+        if (!this._hasEnabledGroup(groups)) return;
+
+        this._openPickerOrEmitSingleMedia({
+            action: "add-source-state-child",
+            editor: node.sourceEditor,
+            sourceState: node.state,
+        }, groups, node.label);
+    }
+
     private _openPickerOrEmitSingleMedia(
         action: NonNullable<typeof this._pendingPickerAction>,
         groups: BlockPickerSlotGroup[],
@@ -477,7 +552,7 @@ export class StructureTree extends HTMLElement {
     ): void {
         const option = this._singleEnabledOption(groups);
         if (option?.item?.kind === "media") {
-            this._emitAction(action.action, action.editor, option.item, option.slot);
+            this._emitAction(action.action, action.editor, option.item, option.slot, action.sourceState);
             return;
         }
 
@@ -498,6 +573,7 @@ export class StructureTree extends HTMLElement {
         editor?: Editor,
         item?: BlockPickerItem,
         slot?: string,
+        sourceState?: SourceStateName,
         sourceEditor?: Editor,
         dataSource?: EditorDataSource,
         sourceBinding?: DataSourcePickerSourceBinding,
@@ -514,6 +590,7 @@ export class StructureTree extends HTMLElement {
                 sourceBinding,
                 entry: item?.kind === "block" ? item.entry : undefined,
                 slot,
+                sourceState,
             },
         }));
     }
@@ -564,6 +641,28 @@ export class StructureTree extends HTMLElement {
                 options,
             };
         });
+    }
+
+    private _sourceStateGroups(node: SourceStateStructureNode): BlockPickerSlotGroup[] {
+        const parentNode = this._nodeForEditor(node.sourceEditor);
+        if (!parentNode) return [];
+
+        const slot: ContentSlot = {
+            label: node.label,
+            accepts: [{ kind: "any-component" }],
+        };
+        const options = this._slotOptions(slot, parentNode)
+            .map(option => ({
+                ...option,
+                slot: undefined,
+                slotLabel: node.label,
+            }));
+
+        return [{
+            label: node.label,
+            disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
+            options,
+        }];
     }
 
     private _replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
@@ -717,12 +816,24 @@ export class StructureTree extends HTMLElement {
     }
 
     private _slotChildCount(parent: EditorStructureNode, slot: ContentSlot): number {
-        return parent.children.filter(child => (child.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined)).length;
+        return this._editorChildrenOf(parent)
+            .filter(child => (child.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined))
+            .length;
+    }
+
+    private _editorChildrenOf(parent: EditorStructureNode): EditorStructureNode[] {
+        return parent.children.flatMap(child => this._isSourceStateNode(child) ? child.children : [child]);
     }
 
     private _parentNode(child: EditorStructureNode): EditorStructureNode | null {
-        const visit = (nodes: EditorStructureNode[]): EditorStructureNode | null => {
+        const visit = (nodes: StructureNode[]): EditorStructureNode | null => {
             for (const node of nodes) {
+                if (this._isSourceStateNode(node)) {
+                    if (node.children.includes(child)) return this._nodeForEditor(node.sourceEditor);
+                    const stateParent = visit(node.children);
+                    if (stateParent) return stateParent;
+                    continue;
+                }
                 if (node.children.includes(child)) return node;
                 const parent = visit(node.children);
                 if (parent) return parent;
@@ -733,16 +844,22 @@ export class StructureTree extends HTMLElement {
         return visit(this._nodes);
     }
 
+    private _nodeForEditor(editor: Editor): EditorStructureNode | null {
+        return this._flattenNodes(this._nodes)
+            .filter((node): node is EditorStructureNode => !this._isSourceStateNode(node))
+            .find(node => node.editor === editor) ?? null;
+    }
+
     private readonly _onBlockPickerSelect = (event: CustomEvent<BlockPickerSelectDetail>): void => {
         if (!this._pendingPickerAction) return;
-        const { action, editor } = this._pendingPickerAction;
-        this._emitAction(action, editor, event.detail.option.item, event.detail.option.slot);
+        const { action, editor, sourceState } = this._pendingPickerAction;
+        this._emitAction(action, editor, event.detail.option.item, event.detail.option.slot, sourceState);
         this._pendingPickerAction = null;
     };
 
     private readonly _onDataSourceSelect = (event: CustomEvent<DataSourcePickerSelectDetail>): void => {
         if (!this._pendingSourceEditor) return;
-        this._emitAction("set-source", this._pendingSourceEditor, undefined, undefined, undefined, event.detail.source, event.detail.binding);
+        this._emitAction("set-source", this._pendingSourceEditor, undefined, undefined, undefined, undefined, event.detail.source, event.detail.binding);
         this._pendingSourceEditor = null;
     };
 
@@ -813,7 +930,7 @@ export class StructureTree extends HTMLElement {
         if (!this._draggedNode || this._draggedNode === node || this._isDescendantNode(node, this._draggedNode)) return;
         event.preventDefault();
         const position = this._dropPosition(event.currentTarget as HTMLElement, event);
-        this._emitAction(position === "before" ? "move-before" : "move-after", node.editor, undefined, undefined, this._draggedNode.editor);
+        this._emitAction(position === "before" ? "move-before" : "move-after", node.editor, undefined, undefined, undefined, this._draggedNode.editor);
         this._clearDragState();
     }
 
@@ -833,7 +950,12 @@ export class StructureTree extends HTMLElement {
     }
 
     private _isDescendantNode(candidate: EditorStructureNode, parent: EditorStructureNode): boolean {
-        return parent.children.some(child => child === candidate || this._isDescendantNode(candidate, child));
+        return parent.children.some(child => {
+            if (this._isSourceStateNode(child)) {
+                return child.children.some(grandChild => grandChild === candidate || this._isDescendantNode(candidate, grandChild));
+            }
+            return child === candidate || this._isDescendantNode(candidate, child);
+        });
     }
 
     private _isEditableKeyEvent(event: Event): boolean {
@@ -843,7 +965,7 @@ export class StructureTree extends HTMLElement {
         });
     }
 
-    private _visibleNodes(nodes: EditorStructureNode[], depth = 0): { item: EditorStructureNode; depth: number }[] {
+    private _visibleNodes(nodes: StructureNode[], depth = 0): { item: StructureNode; depth: number }[] {
         return nodes.flatMap(node => {
             const current = [{ item: node, depth }];
             if (this._isCollapsed(node)) return current;
@@ -861,14 +983,14 @@ export class StructureTree extends HTMLElement {
         if (!path) return;
 
         for (const node of path.slice(0, -1)) {
-            this._collapsedTargets.delete(node.target);
+            this._collapsedTargets.delete(this._nodeCollapseKey(node));
         }
     }
 
-    private _pathToEditor(nodes: EditorStructureNode[], editor: Editor, ancestors: EditorStructureNode[] = []): EditorStructureNode[] | null {
+    private _pathToEditor(nodes: StructureNode[], editor: Editor, ancestors: StructureNode[] = []): StructureNode[] | null {
         for (const node of nodes) {
             const path = [...ancestors, node];
-            if (node.editor === editor) return path;
+            if (!this._isSourceStateNode(node) && node.editor === editor) return path;
 
             const childPath = this._pathToEditor(node.children, editor, path);
             if (childPath) return childPath;
@@ -877,49 +999,92 @@ export class StructureTree extends HTMLElement {
         return null;
     }
 
-    private _toggleNode(node: EditorStructureNode): void {
-        const row = this._renderedRows.get(node.target);
+    private _toggleNode(node: StructureNode): void {
+        const key = this._nodeCollapseKey(node);
+        const row = this._findRenderedRow(key);
         const anchor = row
-            ? { key: node.target, offsetTop: row.getBoundingClientRect().top }
+            ? {
+                key,
+                offsetTop: row.getBoundingClientRect().top,
+            }
             : undefined;
 
         if (this._isCollapsed(node)) {
-            this._collapsedTargets.delete(node.target);
+            this._collapsedTargets.delete(key);
         } else {
-            this._collapsedTargets.add(node.target);
+            this._collapsedTargets.add(key);
         }
         this._render({ anchor });
     }
 
-    private _isCollapsed(node: EditorStructureNode): boolean {
-        return this._collapsedTargets.has(node.target);
+    private _isCollapsed(node: StructureNode): boolean {
+        return this._collapsedTargets.has(this._nodeCollapseKey(node));
     }
 
-    private _visibleBadges(node: EditorStructureNode): string[] {
+    private _visibleBadges(node: StructureNode): string[] {
         if (this._areBadgesExpanded(node)) return node.badges;
         return node.badges.slice(0, 2);
     }
 
-    private _toggleBadges(node: EditorStructureNode): void {
+    private _toggleBadges(node: StructureNode): void {
         if (this._areBadgesExpanded(node)) {
-            this._expandedBadgeTargets.delete(node.target);
+            this._expandedBadgeTargets.delete(this._nodeBadgeKey(node));
         } else {
-            this._expandedBadgeTargets.add(node.target);
+            this._expandedBadgeTargets.add(this._nodeBadgeKey(node));
         }
         this._render();
     }
 
-    private _areBadgesExpanded(node: EditorStructureNode): boolean {
-        return this._expandedBadgeTargets.has(node.target);
+    private _areBadgesExpanded(node: StructureNode): boolean {
+        return this._expandedBadgeTargets.has(this._nodeBadgeKey(node));
     }
 
-    private _iconText(node: EditorStructureNode): string {
+    private _iconText(node: StructureNode): string {
+        if (this._isSourceStateNode(node)) return "";
         if (node.icon) return node.icon.slice(0, 1).toUpperCase();
         return node.label.slice(0, 1).toUpperCase();
     }
 
+    private _nodeLabel(node: StructureNode): string {
+        if (!this._isSourceStateNode(node)) return node.label;
+        return node.label;
+    }
+
+    private _rowClass(node: StructureNode): string {
+        if (this._isSourceStateNode(node)) return "row source-state-row";
+        return "row";
+    }
+
+    private _itemClass(node: StructureNode): string {
+        if (this._isSourceStateNode(node)) {
+            return node.children.length > 0
+                ? `item source-state state-filled state-${node.state}`
+                : `item source-state state-${node.state}`;
+        }
+        return "item";
+    }
+
+    private _iconClass(node: StructureNode): string {
+        if (this._isSourceStateNode(node)) return "icon state-spacer";
+        return "icon";
+    }
+
     private _sourceActionLabel(node: EditorStructureNode): string {
         return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Update source" : "Add source";
+    }
+
+    private _isSnippetNode(node: EditorStructureNode): boolean {
+        return node.tag.toLowerCase() === CMS_SNIPPET_TAG;
+    }
+
+    private _snippetItemForNode(node: EditorStructureNode): Extract<BlockPickerItem, { kind: "snippet" }> | null {
+        if (!this._isSnippetNode(node)) return null;
+
+        const identifier = node.target.getAttribute("identifier")?.trim();
+        if (!identifier) return null;
+
+        return this._insertItems.find((item): item is Extract<BlockPickerItem, { kind: "snippet" }> =>
+            item.kind === "snippet" && item.identifier === identifier) ?? null;
     }
 
     private _defaultTemplateItems(): BlockPickerItem[] {
@@ -943,6 +1108,7 @@ export class StructureTree extends HTMLElement {
 
     private _setRepeatableTargets(targets: HTMLElement[]): void {
         for (const node of this._flattenNodes(this._nodes)) {
+            if (this._isSourceStateNode(node)) continue;
             if (!targets.includes(node.target)) this._repeatableTargets.delete(node.target);
         }
         for (const target of targets) {
@@ -950,11 +1116,40 @@ export class StructureTree extends HTMLElement {
         }
     }
 
-    private _flattenNodes(nodes: EditorStructureNode[]): EditorStructureNode[] {
+    private _flattenNodes(nodes: StructureNode[]): StructureNode[] {
         return nodes.flatMap(node => [
             node,
             ...this._flattenNodes(node.children),
         ]);
+    }
+
+    private _isSourceStateNode(node: StructureNode): node is SourceStateStructureNode {
+        return node.kind === "source-state";
+    }
+
+    private _nodeCollapseKey(node: StructureNode): StructureTreeKey {
+        if (this._isSourceStateNode(node)) return this._sourceStateKey(node);
+        return node.target;
+    }
+
+    private _nodeBadgeKey(node: StructureNode): StructureTreeKey {
+        return this._nodeCollapseKey(node);
+    }
+
+    private _sourceStateKey(node: SourceStateStructureNode): object {
+        let sourceKeys = this._sourceStateKeys.get(node.sourceEditor.target);
+        if (!sourceKeys) {
+            sourceKeys = new Map();
+            this._sourceStateKeys.set(node.sourceEditor.target, sourceKeys);
+        }
+
+        let key = sourceKeys.get(node.state);
+        if (!key) {
+            key = {};
+            sourceKeys.set(node.state, key);
+        }
+
+        return key;
     }
 
     private get _sourceDataSources(): EditorDataSource[] {

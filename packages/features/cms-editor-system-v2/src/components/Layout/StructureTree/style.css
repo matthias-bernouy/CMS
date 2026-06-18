@@ -96,6 +96,78 @@
     color: var(--editor-v2-accent);
 }
 
+.item.source-state {
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    min-height: 23px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: color-mix(in srgb, var(--editor-v2-muted) 88%, transparent);
+    cursor: default;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 11px;
+    font-weight: 720;
+}
+
+.source-state-row {
+    opacity: 0.94;
+}
+
+.source-state-row:has(+ .row:not(.source-state-row)) {
+    margin-bottom: 8px;
+}
+
+.item.source-state:hover {
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+}
+
+.item.source-state.state-filled {
+    color: var(--editor-v2-text);
+}
+
+.item.source-state.state-loaded {
+    color: color-mix(in srgb, var(--editor-v2-text) 82%, var(--editor-v2-muted));
+}
+
+.item.source-state.state-loading {
+    color: color-mix(in srgb, #087f8c 68%, var(--editor-v2-muted));
+}
+
+.item.source-state.state-empty {
+    color: color-mix(in srgb, #8a6d1d 68%, var(--editor-v2-muted));
+}
+
+.item.source-state.state-error {
+    color: color-mix(in srgb, #9a2f2f 72%, var(--editor-v2-muted));
+}
+
+.state-spacer {
+    width: 16px;
+}
+
+.state-add {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 999px;
+    background: var(--editor-v2-bg);
+    color: var(--editor-v2-muted);
+    cursor: pointer;
+    font: inherit;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 780;
+    line-height: 1;
+}
+
+.state-add:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 36%, var(--editor-v2-border));
+    color: var(--editor-v2-accent);
+}
+
 .icon {
     display: grid;
     place-items: center;
