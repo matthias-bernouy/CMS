@@ -5,34 +5,24 @@ import "../Canvas/Canvas";
 import "../../Settings/SettingsView/SettingsView";
 import "../RepeatPicker/RepeatPicker";
 import {
-    asRepeat,
-    asSource,
     applySourceState,
     type CmsSourceStateForce,
     type ContentSlot,
     CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
-    CMS_SNIPPET_TAG,
-    parseSource,
-    type DataField,
-    type DataScope,
     Editor,
     type EditableState,
     type EditableStateSession,
     type EditorCatalog,
-    type EditorCatalogEntry,
     type EditorDocument,
     type MediaAccept,
     type Setting,
-    type SettingSection,
     sourceStateFromElement,
 } from "@bernouy/cms-content/editor";
 import {
     EditorRuntime,
-    type EditorStructureNode,
     type EditorDataSource,
     type SourceStateName,
-    type StructureNode,
 } from "../../../runtime";
 import type { SettingsView } from "../../Settings/SettingsView/SettingsView";
 import {
@@ -73,11 +63,6 @@ import {
     type RepeatPickerSelectDetail,
 } from "../RepeatPicker/RepeatPicker";
 import {
-    clearSourceDependencyUsage,
-    collectSourceDependencyUsages,
-    type SourceDependencyUsage,
-} from "./sourceDependencyCleanup";
-import {
     applyShellChromeLabels,
     shellResourceChromeDefaults,
     type ShellChromeDefaults,
@@ -87,7 +72,6 @@ import {
     applyPageSettingsTitle,
     closePageSettingsModal,
     openPageSettingsModal,
-    parseTags,
     readPageSettingsForm,
     syncPageSettingsForm,
 } from "./Domain/shellPageSettings";
@@ -98,19 +82,57 @@ import {
     syncStructureTreeInsertItems,
 } from "./Domain/shellStructureTreeSync";
 import {
-    bindingPreviewCore,
-    bindingPreviewCss,
     injectBindingPreviewStyle,
-    restartViewBindingRuntime,
     syncBindingPreviewCore,
     syncViewFrameContent,
 } from "./Domain/shellBindingPreview";
-import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
 import {
-    FilesCenter,
-    type FilesCenterSelectManyDetail,
-    type FilesCenterSelectDetail,
-} from "../../Controls/Pickers/FilesCenter/FilesCenter";
+    applyParamSyncSetting,
+    settingsWithParamSync,
+} from "./Domain/Settings/paramSync";
+import {
+    getTextValue,
+    resolveSettingsValues,
+} from "./Domain/Settings/settingsValues";
+import {
+    exitAllStateSessions,
+    toggleStateSession,
+} from "./Domain/Settings/stateSessions";
+import {
+    contentHtml,
+    isEmptyDocumentContent,
+} from "./Domain/Structure/structureDocument";
+import { syncStructureTreeDataSources } from "./Domain/Structure/structureDataSources";
+import {
+    findStructureNodeLabel,
+    renderStructure,
+} from "./Domain/Structure/structureRender";
+import {
+    applySlot,
+    createInsertion,
+    snippetItems,
+} from "./Domain/Mutations/insertion";
+import {
+    canDelete,
+    canDuplicate,
+    canInsertNodeCount,
+    canInsertSibling,
+    canMoveEditor,
+    canReplaceNodeCount,
+    findSlot,
+    isSlotFull,
+    parentEditor,
+    remainingSlotCapacity,
+} from "./Domain/Mutations/slots";
+import { openMediaPicker } from "./Domain/Mutations/media";
+import {
+    confirmRemoveSourceDependents,
+    removeRepeat,
+    removeSource,
+    setRepeat,
+    setSource,
+} from "./Domain/Mutations/sourceBindings";
+import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
 import { FrameHighlight } from "./FrameHighlight";
 import pageSettingsCss from "./Styles/pageSettings.css" with { type: "text" };
 import pageSettingsTagsCss from "./Styles/pageSettingsTags.css" with { type: "text" };
@@ -129,12 +151,6 @@ template.innerHTML = `<style>${[
     pageSettingsCss,
     pageSettingsTagsCss,
 ].map(css => String(css)).join("\n")}</style>${String(templateHtml)}`;
-
-const BINDING_READY_ATTRIBUTE = "cms-ready";
-const PARAM_SYNC_ENABLE_SETTING = "__cms-param-sync-enabled";
-const PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
-const PARAM_SYNC_NAME_SETTING = "__cms-param-sync-name";
-const QUERY_PARAM_NAME_PATTERN = /^[A-Za-z0-9_.-]+$/;
 
 const VIEWPORTS: Record<TopBarViewport, { label: string; width: number | "100%"; height: number | "100%"; padding: "normal" | "none"; fit: "fixed" | "fluid" }> = {
     desktop: {
@@ -620,9 +636,9 @@ export class Shell extends HTMLElement {
         }
 
         this._settings.setSettings(
-            this._resolveSettingsValues(selection.editor, this._settingsWithParamSync(selection.editor, selection.settings)),
+            resolveSettingsValues(selection.editor, settingsWithParamSync(selection.editor, selection.settings)),
             selection.textCapability,
-            selection.textCapability ? this._getTextValue(selection.editor, selection.textCapability.format) : "",
+            selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "",
             this._settingsMode,
             selection.states,
             this._runtime.getSelectedDataScopes(),
@@ -654,93 +670,17 @@ export class Shell extends HTMLElement {
     }
 
     private _applyParamSyncSetting(editor: Editor, setting: Setting, value: string | boolean): boolean {
-        if (
-            setting.attribute !== PARAM_SYNC_ENABLE_SETTING
-            && setting.attribute !== PARAM_SYNC_USE_NAME_SETTING
-            && setting.attribute !== PARAM_SYNC_NAME_SETTING
-        ) {
-            return false;
-        }
-
-        const target = editor.target;
-        const current = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
-        const fieldName = this._valueSurfaceName(target);
-
-        if (setting.attribute === PARAM_SYNC_ENABLE_SETTING) {
-            if (value !== true) {
-                target.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
-                return true;
-            }
-
-            const next = current || fieldName;
-            if (this._isValidQueryParamName(next)) {
-                target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
-            }
-            return true;
-        }
-
-        if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
-            if (value === true && this._isValidQueryParamName(fieldName)) {
-                target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
-            } else if (current === fieldName) {
-                target.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
-            }
-            return true;
-        }
-
-        if (typeof value === "string") {
-            const next = value.trim();
-            if (this._isValidQueryParamName(next)) {
-                target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
-            }
-        }
-
-        return true;
+        return applyParamSyncSetting(editor, setting, value);
     }
 
     private _toggleState(editor: Editor, state: EditableState): void {
-        const sessions = this._stateSessions.get(editor) ?? new Map<string, EditableStateSession>();
-
-        if (sessions.has(state.id)) {
-            this._exitStateSession(editor, state.id);
-            return;
-        }
-
-        if (state.group) {
-            for (const candidate of editor.getStates()) {
-                if (candidate.id !== state.id && candidate.group === state.group) {
-                    this._exitStateSession(editor, candidate.id);
-                }
-            }
-        }
-
-        const session = state.enter();
-        sessions.set(state.id, session);
-        this._stateSessions.set(editor, sessions);
-    }
-
-    private _exitStateSession(editor: Editor, stateId: string): void {
-        const sessions = this._stateSessions.get(editor);
-        const session = sessions?.get(stateId);
-        if (!sessions || !session) return;
-
-        session.exit();
-        sessions.delete(stateId);
+        toggleStateSession(this._stateSessions, editor, state);
     }
 
     private _exitAllStateSessions(): void {
         if (!this._runtime) return;
 
-        for (const node of this._flattenStructure(this._runtime.getStructure())) {
-            if (this._isSourceStateNode(node)) continue;
-            const sessions = this._stateSessions.get(node.editor);
-            if (!sessions) continue;
-
-            for (const session of sessions.values()) {
-                session.exit();
-            }
-            sessions.clear();
-        }
+        exitAllStateSessions(this._stateSessions, this._runtime.getStructure());
     }
 
     private _addChild(parent: Editor, item: BlockPickerItem, slotName?: string): void {
@@ -887,33 +827,13 @@ export class Shell extends HTMLElement {
     }
 
     private _setSource(editor: Editor, source: EditorDataSource, binding: SourceBinding = { url: source.url }): void {
-        editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, (asSource as (source: SourceBinding | string) => string)(binding));
+        setSource(editor, source, binding);
         this._reloadFrameDocument(editor.target);
     }
 
     private _removeSource(editor: Editor): void {
-        const usages = this._sourceDependentBindings(editor);
-        if (usages.length > 0 && !this._confirmRemoveSourceDependents(usages.length)) return;
-
-        for (const usage of usages) clearSourceDependencyUsage(usage);
-        editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.source);
-        editor.target.removeAttribute(BINDING_READY_ATTRIBUTE);
+        if (!removeSource(editor, confirmRemoveSourceDependents)) return;
         this._reloadFrameDocument(editor.target);
-    }
-
-    private _sourceDependentBindings(editor: Editor): SourceDependencyUsage[] {
-        const source = parseSource(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "") as SourceBinding | null;
-        const alias = source?.alias?.trim();
-
-        return collectSourceDependencyUsages(editor, alias);
-    }
-
-    private _confirmRemoveSourceDependents(count: number): boolean {
-        const confirm = globalThis.confirm;
-        if (typeof confirm !== "function") return true;
-
-        const plural = count === 1 ? "binding depends" : "bindings depend";
-        return confirm(`This source has ${count} descendant ${plural} on its data. Remove the source and clean those dependent bindings?`);
     }
 
     private _openRepeatPicker(editor: Editor): void {
@@ -925,12 +845,12 @@ export class Shell extends HTMLElement {
     }
 
     private _setRepeat(editor: Editor, path: string, alias: string): void {
-        editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.repeat, asRepeat({ path, alias }));
+        setRepeat(editor, path, alias);
         this._reloadFrameDocument(editor.target);
     }
 
     private _removeRepeat(editor: Editor): void {
-        editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.repeat);
+        removeRepeat(editor);
         this._reloadFrameDocument(editor.target);
     }
 
@@ -955,73 +875,7 @@ export class Shell extends HTMLElement {
         selectionTarget: HTMLElement;
         slotElements: HTMLElement[];
     } | null {
-        const document = this._frameDocument;
-        if (!document) return null;
-        if (item.kind === "media") return null;
-
-        if (item.kind === "block") {
-            const fragment = this._createBlockFragment(document, item.entry);
-            const slotElements = Array.from(fragment.children).filter(this._isElementNode) as HTMLElement[];
-            for (const child of slotElements) {
-                this._applySlot(child, slotName);
-                this._applySourceState(child, sourceState);
-            }
-            const selectionTarget = slotElements.find(child => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
-            if (!selectionTarget) return null;
-            return {
-                fragment,
-                selectionTarget,
-                slotElements,
-            };
-        }
-
-        if (item.kind === "snippet") {
-            const snippet = document.createElement(CMS_SNIPPET_TAG);
-            snippet.setAttribute("identifier", item.identifier);
-            snippet.innerHTML = item.content;
-            this._applySlot(snippet, slotName);
-            this._applySourceState(snippet, sourceState);
-            const fragment = document.createDocumentFragment();
-            fragment.append(snippet);
-            return {
-                fragment,
-                selectionTarget: snippet,
-                slotElements: [snippet],
-            };
-        }
-
-        const template = document.createElement("template");
-        template.innerHTML = item.content;
-        const fragment = template.content.cloneNode(true) as DocumentFragment;
-        this._expandSnippetReferences(fragment);
-        const slotElements = Array.from(fragment.children).filter(this._isElementNode) as HTMLElement[];
-        for (const child of slotElements) {
-            this._applySlot(child, slotName);
-            this._applySourceState(child, sourceState);
-        }
-
-        const selectionTarget = slotElements[0] ?? null;
-        if (!selectionTarget) return null;
-
-        return {
-            fragment,
-            selectionTarget,
-            slotElements,
-        };
-    }
-
-    private _createBlockFragment(document: Document, entry: EditorCatalogEntry): DocumentFragment {
-        if (!entry.defaultContent) {
-            const fragment = document.createDocumentFragment();
-            fragment.append(document.createElement(entry.tag));
-            return fragment;
-        }
-
-        const template = document.createElement("template");
-        template.innerHTML = entry.defaultContent;
-        const fragment = template.content.cloneNode(true) as DocumentFragment;
-        this._expandSnippetReferences(fragment);
-        return fragment;
+        return createInsertion(this._frameDocument, item, snippetItems(this._insertItems), slotName, sourceState);
     }
 
     private _insertMedia(parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string, sourceState?: SourceStateName): void {
@@ -1061,96 +915,15 @@ export class Shell extends HTMLElement {
         options: { multiple?: boolean; maxSelection?: number },
         onSelect: (elements: HTMLElement[]) => void,
     ): void {
-        const center = new FilesCenter();
-        const cleanup = () => center.remove();
-        center.addEventListener("close", cleanup, { once: true });
-        center.addEventListener("select-file", (event) => {
-            const detail = (event as CustomEvent<FilesCenterSelectDetail>).detail;
-            const element = this._createMediaElement(detail);
-            if (!element) return;
-            onSelect([element]);
-        }, { once: true });
-        center.addEventListener("select-files", (event) => {
-            const detail = (event as CustomEvent<FilesCenterSelectManyDetail>).detail;
-            const elements = detail.files
-                .map(file => this._createMediaElement(file))
-                .filter((element): element is HTMLElement => Boolean(element));
-            onSelect(elements);
-        }, { once: true });
-
-        document.body.append(center);
-        center.show({
-            accept:       ["folder", "file"],
-            fileAccept:   accept ?? ["image"],
-            multiple:     options.multiple === true,
-            maxSelection: options.maxSelection,
-        });
-    }
-
-    private _createMediaElement(detail: FilesCenterSelectDetail): HTMLElement | null {
-        const document = this._frameDocument;
-        if (!document) return null;
-
-        if (detail.mimeType?.startsWith("image/") ?? true) {
-            const image = document.createElement("img");
-            image.setAttribute("src", detail.src);
-            image.setAttribute("alt", detail.label);
-            image.addEventListener("load", () => {
-                if (image.naturalWidth > 0) image.setAttribute("width", String(image.naturalWidth));
-                if (image.naturalHeight > 0) image.setAttribute("height", String(image.naturalHeight));
-            }, { once: true });
-            return image;
-        }
-
-        if (detail.mimeType?.startsWith("video/")) {
-            const video = document.createElement("video");
-            video.setAttribute("src", detail.src);
-            video.setAttribute("controls", "");
-            return video;
-        }
-
-        if (detail.mimeType?.startsWith("audio/")) {
-            const audio = document.createElement("audio");
-            audio.setAttribute("src", detail.src);
-            audio.setAttribute("controls", "");
-            return audio;
-        }
-
-        const link = document.createElement("a");
-        link.setAttribute("href", detail.src);
-        link.textContent = detail.label;
-        return link;
-    }
-
-    private _expandSnippetReferences(fragment: ParentNode): void {
-        const snippets = this._insertItems.filter(item => item.kind === "snippet");
-        if (snippets.length === 0) return;
-
-        for (const element of Array.from(fragment.querySelectorAll(CMS_SNIPPET_TAG))) {
-            const identifier = element.getAttribute("identifier");
-            if (!identifier) continue;
-
-            const snippet = snippets.find(item => item.identifier === identifier);
-            if (!snippet) continue;
-
-            element.innerHTML = snippet.content;
-        }
-    }
-
-    private _isElementNode(node: Element): boolean {
-        return node.nodeType === Node.ELEMENT_NODE;
+        openMediaPicker(this._frameDocument, accept, options, onSelect);
     }
 
     private _canInsertNodeCount(parent: Editor, slot: ContentSlot, insertedElements: HTMLElement[]): boolean {
-        if (typeof slot.max !== "number") return true;
-        return this._slotChildCount(parent, slot) + insertedElements.length <= slot.max;
+        return canInsertNodeCount(parent, slot, insertedElements);
     }
 
     private _canReplaceNodeCount(parent: Editor, replaced: Editor, slot: ContentSlot, insertedElements: HTMLElement[]): boolean {
-        if (typeof slot.max !== "number") return true;
-
-        const replacedCount = (replaced.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined) ? 1 : 0;
-        return this._slotChildCount(parent, slot) - replacedCount + insertedElements.length <= slot.max;
+        return canReplaceNodeCount(parent, replaced, slot, insertedElements);
     }
 
     private _findNextSelectionTargetAfterDelete(editor: Editor): HTMLElement | null {
@@ -1161,92 +934,45 @@ export class Shell extends HTMLElement {
     }
 
     private _canDuplicate(editor: Editor): boolean {
-        const parent = this._parentEditor(editor);
-        if (!parent) return true;
-
-        const slot = this._findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
-        if (!slot) return true;
-
-        return !this._isSlotFull(parent, slot);
+        return canDuplicate(this._runtime, editor);
     }
 
     private _canDelete(editor: Editor): boolean {
-        const parent = this._parentEditor(editor);
-        if (!parent) return true;
-
-        const slot = this._findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
-        if (!slot?.min) return true;
-
-        return this._slotChildCount(parent, slot) > slot.min;
+        return canDelete(this._runtime, editor);
     }
 
     private _canInsertSibling(reference: Editor, insertedElement: HTMLElement): boolean {
-        const parent = this._parentEditor(reference);
-        if (!parent) {
-            this._applySlot(insertedElement, undefined);
-            this._applySourceState(insertedElement, undefined);
-            return true;
-        }
-
-        const slotName = reference.target.getAttribute("slot") ?? undefined;
-        const slot = this._findSlot(parent, slotName);
-        if (!slot || !this._canInsertNodeCount(parent, slot, [insertedElement])) return false;
-
-        this._applySlot(insertedElement, slotName);
-        this._applySourceState(insertedElement, this._sourceStateForSibling(reference));
-        return true;
+        return canInsertSibling(
+            this._runtime,
+            reference,
+            insertedElement,
+            (element, sourceState) => this._applySourceState(element, sourceState),
+            editor => this._sourceStateForSibling(editor),
+        );
     }
 
     private _canMoveEditor(source: Editor, target: Editor): boolean {
-        if (!this._canDelete(source)) return false;
-
-        const targetParent = this._parentEditor(target);
-        if (!targetParent) return true;
-
-        const targetSlotName = target.target.getAttribute("slot") ?? undefined;
-        const targetSlot = this._findSlot(targetParent, targetSlotName);
-        if (!targetSlot) return false;
-
-        const sourceParent = this._parentEditor(source);
-        const isSameSlot = sourceParent === targetParent
-            && (source.target.getAttribute("slot") ?? undefined) === targetSlotName;
-        if (isSameSlot) return true;
-
-        return this._canInsertNodeCount(targetParent, targetSlot, [source.target]);
+        return canMoveEditor(this._runtime, source, target);
     }
 
     private _isSlotFull(parent: Editor, slot: ContentSlot): boolean {
-        return typeof slot.max === "number" && this._slotChildCount(parent, slot) >= slot.max;
+        return isSlotFull(parent, slot);
     }
 
     private _findSlot(parent: Editor, slotName: string | undefined): ContentSlot | undefined {
-        return parent.getContentSlots().find(slot => (slot.slot ?? undefined) === slotName);
-    }
-
-    private _slotChildCount(parent: Editor, slot: ContentSlot): number {
-        return Array.from(parent.target.children)
-            .filter(child => (child.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined))
-            .length;
+        return findSlot(parent, slotName);
     }
 
     private _remainingSlotCapacity(parent: Editor, slot: ContentSlot): number {
-        if (typeof slot.max !== "number") return Number.MAX_SAFE_INTEGER;
-        return Math.max(0, slot.max - this._slotChildCount(parent, slot));
+        return remainingSlotCapacity(parent, slot);
     }
 
     private _parentEditor(editor: Editor): Editor | null {
-        if (!this._runtime || !editor.target.parentElement) return null;
-        return this._runtime.getClosestEditor(editor.target.parentElement)?.target === editor.target
-            ? null
-            : this._runtime.getClosestEditor(editor.target.parentElement) ?? null;
+        return parentEditor(this._runtime, editor);
     }
 
     private _applySlot(element: HTMLElement, slotName: string | undefined): void {
-        if (slotName) {
-            element.setAttribute("slot", slotName);
-        } else {
-            element.removeAttribute("slot");
-        }
+        applySlot(element, slotName);
     }
 
     private _applySourceState(element: HTMLElement, sourceState: SourceStateName | undefined): void {
@@ -1268,114 +994,6 @@ export class Shell extends HTMLElement {
 
         this.loadDocument({ root, contentRoot }, selectedTarget);
         this._syncViewFrameContent();
-    }
-
-    private _settingsWithParamSync(editor: Editor, sections: SettingSection[]): SettingSection[] {
-        const section = this._paramSyncSettings(editor);
-        return section ? [...sections, section] : sections;
-    }
-
-    private _paramSyncSettings(editor: Editor): SettingSection | null {
-        const target = editor.target;
-        if (!this._hasStandardValueSurface(target)) return null;
-
-        const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
-        const fieldName = this._valueSurfaceName(target);
-        const hasFieldName = this._isValidQueryParamName(fieldName);
-        const isEnabled = syncValue !== "";
-        const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
-        const settings: Setting[] = [
-            {
-                type: "toggle",
-                label: "Sync with query params",
-                attribute: PARAM_SYNC_ENABLE_SETTING,
-                defaultValue: isEnabled,
-            },
-        ];
-
-        if (isEnabled && hasFieldName) {
-            settings.push({
-                type: "toggle",
-                label: "Use field name",
-                attribute: PARAM_SYNC_USE_NAME_SETTING,
-                defaultValue: usesFieldName,
-                help: `Uses "${fieldName}" as the query parameter name.`,
-            });
-        }
-
-        if (isEnabled && !usesFieldName) {
-            settings.push({
-                type: "text",
-                label: "Param name",
-                attribute: PARAM_SYNC_NAME_SETTING,
-                defaultValue: syncValue,
-                placeholder: hasFieldName ? fieldName : "search",
-                help: "Letters, numbers, underscores, dashes and dots only.",
-                required: true,
-            });
-        }
-
-        return {
-            kind: "surcharge",
-            label: "Query params",
-            settings,
-        };
-    }
-
-    private _hasStandardValueSurface(target: HTMLElement): boolean {
-        if (!("value" in target)) return false;
-
-        try {
-            const value = (target as { value: unknown }).value;
-            (target as { value: unknown }).value = value;
-            return typeof value === "string";
-        } catch {
-            return false;
-        }
-    }
-
-    private _valueSurfaceName(target: HTMLElement): string {
-        const propertyName = "name" in target ? (target as { name?: unknown }).name : undefined;
-        return String(typeof propertyName === "string" ? propertyName : target.getAttribute("name") ?? target.id ?? "").trim();
-    }
-
-    private _isValidQueryParamName(value: string): boolean {
-        return QUERY_PARAM_NAME_PATTERN.test(value.trim());
-    }
-
-    private _resolveSettingsValues(editor: Editor, sections: SettingSection[]): SettingSection[] {
-        return sections.map(section => ({
-            ...section,
-            settings: section.settings.map(setting => this._resolveSettingValue(editor, setting)),
-        }));
-    }
-
-    private _resolveSettingValue(editor: Editor, setting: Setting): Setting {
-        if (this._isParamSyncSetting(setting)) return setting;
-
-        if (setting.type === "toggle") {
-            return {
-                ...setting,
-                defaultValue: editor.target.hasAttribute(setting.attribute),
-            };
-        }
-
-        return {
-            ...setting,
-            defaultValue: editor.target.getAttribute(setting.attribute) ?? setting.defaultValue,
-        } as Setting;
-    }
-
-    private _isParamSyncSetting(setting: Setting): boolean {
-        return setting.attribute === PARAM_SYNC_ENABLE_SETTING
-            || setting.attribute === PARAM_SYNC_USE_NAME_SETTING
-            || setting.attribute === PARAM_SYNC_NAME_SETTING;
-    }
-
-    private _getTextValue(editor: Editor, format: "text" | "richtext"): string {
-        return format === "richtext"
-            ? editor.target.innerHTML
-            : editor.target.textContent ?? "";
     }
 
     private _bindFrameDocument(document: Document): void {
@@ -1407,113 +1025,22 @@ export class Shell extends HTMLElement {
     }
 
     private _renderStructure(options: SelectOptions = {}): void {
-        if (!this._runtime || this._isEmptyDocumentContent()) {
-            this._structureTree.setStructure([], null, this._catalog);
-            return;
-        }
-
-        const structure = this._decorateStructure(this._runtime.getStructure());
-        this._structureTree.setStructure(
-            structure,
-            this._runtime.getSelection()?.editor ?? null,
+        renderStructure(
+            this._structureTree,
+            this._runtime,
             this._catalog,
-            {
-                scrollSelectedIntoView: options.scrollStructureIntoView === true,
-                repeatableTargets:      this._repeatableTargets(structure),
-            },
+            this._insertItems,
+            () => this._isEmptyDocumentContent(),
+            options,
         );
     }
 
-    private _decorateStructure(nodes: StructureNode[]): StructureNode[] {
-        return nodes.map(node => {
-            if (this._isSourceStateNode(node)) {
-                return {
-                    ...node,
-                    children: this._decorateEditorStructure(node.children),
-                };
-            }
-
-            return this._decorateEditorStructureNode(node);
-        });
-    }
-
-    private _decorateEditorStructure(nodes: EditorStructureNode[]): EditorStructureNode[] {
-        return nodes.map(node => this._decorateEditorStructureNode(node));
-    }
-
-    private _decorateEditorStructureNode(node: EditorStructureNode): EditorStructureNode {
-        const snippet = this._snippetStructureDetails(node);
-
-        return {
-            ...node,
-            label:    snippet?.label ?? node.label,
-            icon:     snippet?.icon ?? node.icon,
-            children: this._decorateStructure(node.children),
-        };
-    }
-
-    private _snippetStructureDetails(node: EditorStructureNode): { label: string; icon: string } | null {
-        if (node.tag.toLowerCase() !== CMS_SNIPPET_TAG) return null;
-
-        const identifier = node.target.getAttribute("identifier")?.trim() ?? "";
-        const item = this._insertItems.find((candidate): candidate is Extract<BlockPickerItem, { kind: "snippet" }> =>
-            candidate.kind === "snippet" && candidate.identifier === identifier);
-
-        return {
-            label: item?.label || identifier || node.label,
-            icon:  item?.icon || "S",
-        };
-    }
-
     private _isEmptyDocumentContent(): boolean {
-        const contentRoot = this._editorDocument?.contentRoot;
-        if (!contentRoot) return true;
-
-        const meaningfulNodes = Array.from(contentRoot.childNodes)
-            .filter(node => node.nodeType !== Node.TEXT_NODE || (node.textContent ?? "").trim() !== "");
-        if (meaningfulNodes.length === 0) return true;
-        if (meaningfulNodes.length !== 1) return false;
-
-        const node = meaningfulNodes[0];
-        if (!node) return true;
-        if (node.nodeType !== Node.ELEMENT_NODE) return false;
-        const element = node as HTMLElement;
-        if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0) return false;
-
-        return Array.from(element.childNodes).every(child => {
-            if (child.nodeType === Node.TEXT_NODE) return (child.textContent ?? "").trim() === "";
-            return child.nodeType === Node.ELEMENT_NODE && (child as Element).tagName.toLowerCase() === "br";
-        });
-    }
-
-    private _repeatableTargets(nodes: StructureNode[]): HTMLElement[] {
-        if (!this._runtime) return [];
-
-        return this._flattenStructure(nodes)
-            .filter((node): node is EditorStructureNode => !this._isSourceStateNode(node))
-            .filter(node => this._hasArrayFields(this._runtime!.registry.collectDataScopes(node.target)))
-            .map(node => node.target);
-    }
-
-    private _hasArrayFields(scopes: DataScope[]): boolean {
-        return scopes.some(scope => this._fieldsContainArray(scope.fields));
-    }
-
-    private _fieldsContainArray(fields: DataField[]): boolean {
-        return fields.some(field => field.type === "array" || this._fieldsContainArray(field.children ?? []));
+        return isEmptyDocumentContent(this._editorDocument?.contentRoot);
     }
 
     private _syncStructureTreeDataSources(): void {
-        const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
-        if (this._isStructureTree(tree)) {
-            tree.setDataSources(this._dataSources);
-            return;
-        }
-
-        customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
-            const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
-            if (this._isStructureTree(upgradedTree)) upgradedTree.setDataSources(this._dataSources);
-        });
+        syncStructureTreeDataSources(this.shadowRoot!, this._dataSources, isStructureTree);
     }
 
     private _syncSettingsTabs(): void {
@@ -1545,24 +1072,12 @@ export class Shell extends HTMLElement {
         syncBindingPreviewCore(this._frameDocument, this._viewFrameDocument, this._sourceStateForce);
     }
 
-    private _bindingPreviewCore(document: Document | null): HTMLElement | null {
-        return bindingPreviewCore(document);
-    }
-
     private _syncViewFrameContent(): void {
         syncViewFrameContent(this._frameDocument, this._viewFrameDocument, this._sourceStateForce);
     }
 
-    private _restartViewBindingRuntime(): void {
-        restartViewBindingRuntime(this._viewFrameDocument);
-    }
-
     private _injectBindingPreviewStyle(document: Document): void {
         injectBindingPreviewStyle(document);
-    }
-
-    private _bindingPreviewCss(): string {
-        return bindingPreviewCss();
     }
 
     private _syncChromeLabels(): void {
@@ -1624,21 +1139,7 @@ export class Shell extends HTMLElement {
     }
 
     private _getContentHtml(): string {
-        const content = this._frameDocument
-            ?.querySelector<HTMLElement>("[data-cms-content]")
-            ?.cloneNode(true) as HTMLElement | undefined;
-
-        if (!content) return "";
-
-        for (const snippet of Array.from(content.querySelectorAll(CMS_SNIPPET_TAG))) {
-            snippet.replaceChildren();
-        }
-
-        return content.innerHTML;
-    }
-
-    private _parseTags(value: string): string[] {
-        return parseTags(value);
+        return contentHtml(this._frameDocument);
     }
 
     private _pageField<T extends HTMLElement>(name: string): T {
@@ -1670,27 +1171,7 @@ export class Shell extends HTMLElement {
     }
 
     private _findStructureNodeLabel(editor: Editor): string | null {
-        const visit = (nodes: StructureNode[]): string | null => {
-            for (const node of nodes) {
-                if (!this._isSourceStateNode(node) && node.editor === editor) return node.label;
-                const childLabel = visit(node.children);
-                if (childLabel) return childLabel;
-            }
-            return null;
-        };
-
-        return this._runtime ? visit(this._runtime.getStructure()) : null;
-    }
-
-    private _flattenStructure(nodes: StructureNode[]): StructureNode[] {
-        return nodes.flatMap(node => [
-            node,
-            ...this._flattenStructure(node.children),
-        ]);
-    }
-
-    private _isSourceStateNode(node: StructureNode): node is Extract<StructureNode, { kind: "source-state" }> {
-        return node.kind === "source-state";
+        return findStructureNodeLabel(this._runtime, editor);
     }
 
     private get _structureTree(): StructureTree {

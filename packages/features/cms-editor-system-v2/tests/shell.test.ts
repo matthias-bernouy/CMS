@@ -8,6 +8,10 @@ import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_SNIPPET_TAG, Editor }
 import type { BlockPickerSelectDetail } from "../src/components/Layout/BlockPickerModal/BlockPickerModal";
 import type { StructureTreeActionDetail } from "../src/components/Layout/StructureTree/StructureTree";
 import type { TopBarSourceStateChangeDetail, TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
+import {
+    applyParamSyncSetting,
+    paramSyncSettings,
+} from "../src/components/Layout/Shell/Domain/Settings/paramSync";
 import type { EditorStructureNode, SourceStateStructureNode } from "../src/runtime";
 
 function installDom(): void {
@@ -2369,31 +2373,22 @@ describe("Shell", () => {
     test("shell adds query param sync settings for standard value elements", async () => {
         installDom();
 
-        const { Shell } = await import("../src/components/Layout/Shell/Shell");
-
-        const shell = new Shell();
         const input = document.createElement("input");
         input.setAttribute("name", "search");
         const editor = new Editor(input);
 
-        const section = (shell as unknown as {
-            _paramSyncSettings(editor: Editor): { label: string; settings: Array<{ attribute: string; defaultValue?: unknown }> } | null;
-        })._paramSyncSettings(editor);
+        const section = paramSyncSettings(editor);
 
         expect(section?.label).toBe("Query params");
         expect(section?.settings.map(setting => [setting.attribute, setting.defaultValue])).toEqual([
             ["__cms-param-sync-enabled", false],
         ]);
 
-        (shell as unknown as {
-            _applyParamSyncSetting(editor: Editor, setting: { attribute: string }, value: string | boolean): boolean;
-        })._applyParamSyncSetting(editor, { attribute: "__cms-param-sync-enabled" }, true);
+        applyParamSyncSetting(editor, { attribute: "__cms-param-sync-enabled" }, true);
 
         expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("search");
 
-        const enabledSection = (shell as unknown as {
-            _paramSyncSettings(editor: Editor): { settings: Array<{ attribute: string; defaultValue?: unknown }> } | null;
-        })._paramSyncSettings(editor);
+        const enabledSection = paramSyncSettings(editor);
         expect(enabledSection?.settings.map(setting => [setting.attribute, setting.defaultValue])).toEqual([
             ["__cms-param-sync-enabled", true],
             ["__cms-param-sync-use-name", true],
@@ -2403,28 +2398,21 @@ describe("Shell", () => {
     test("shell validates custom query param sync names", async () => {
         installDom();
 
-        const { Shell } = await import("../src/components/Layout/Shell/Shell");
-
-        const shell = new Shell();
         const input = document.createElement("input");
         input.setAttribute("name", "search");
         input.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, "search");
         const editor = new Editor(input);
-        const api = shell as unknown as {
-            _applyParamSyncSetting(editor: Editor, setting: { attribute: string }, value: string | boolean): boolean;
-            _paramSyncSettings(editor: Editor): { settings: Array<{ attribute: string; defaultValue?: unknown }> } | null;
-        };
 
-        api._applyParamSyncSetting(editor, { attribute: "__cms-param-sync-use-name" }, false);
+        applyParamSyncSetting(editor, { attribute: "__cms-param-sync-use-name" }, false);
         expect(input.hasAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe(false);
 
         input.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, "search");
-        api._applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "bad name");
+        applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "bad name");
         expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("search");
 
-        api._applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "q");
+        applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "q");
         expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("q");
-        expect(api._paramSyncSettings(editor)?.settings.map(setting => setting.attribute)).toEqual([
+        expect(paramSyncSettings(editor)?.settings.map(setting => setting.attribute)).toEqual([
             "__cms-param-sync-enabled",
             "__cms-param-sync-use-name",
             "__cms-param-sync-name",
