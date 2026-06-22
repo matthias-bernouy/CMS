@@ -1,12 +1,8 @@
-import type { Editor, EditorCatalog } from "@bernouy/cms-content/editor";
+import type { Editor } from "@bernouy/cms-content/editor";
 
-import type { EditorDataSource } from "../../../../runtime";
 import type { TopBar } from "../../TopBar/TopBar";
 import type { StructureTree } from "../../StructureTree/StructureTree";
-import type { DefaultTemplateSelection } from "../../StructureTree/StructureTree";
-import type { BlockPickerItem } from "../../BlockPickerModal/BlockPickerModal";
 import type { ShellDomRefs } from "../Domain/shellDomRefs";
-import type { EditorV2PageConfig } from "./shellTypes";
 import {
     applyShellChromeLabels,
     shellResourceChromeDefaults,
@@ -27,22 +23,12 @@ import {
 } from "../Domain/shellStructureTreeSync";
 import { syncStructureTreeDataSources } from "../Domain/Structure/structureDataSources";
 import { findStructureNodeLabel } from "../Domain/Structure/structureRender";
-import type { EditorRuntime } from "../../../../runtime";
+import type { ShellState } from "./Core/Services/shellState";
 
 type SyncContext = {
     host: HTMLElement;
-    root(): ShadowRoot;
-    refs(): ShellDomRefs;
-    topBar(): TopBar;
-    pageConfig(): EditorV2PageConfig | null;
-    setPageConfig(config: EditorV2PageConfig | null): void;
-    catalog(): EditorCatalog;
-    insertItems(): BlockPickerItem[];
-    defaultTemplateSelection(): DefaultTemplateSelection;
-    dataSources(): EditorDataSource[];
-    runtime(): EditorRuntime | null;
-    chromeSyncPending(): boolean;
-    setChromeSyncPending(value: boolean): void;
+    state: ShellState;
+    refs: ShellDomRefs;
 };
 
 export class ShellSync {
@@ -51,7 +37,7 @@ export class ShellSync {
     syncChromeLabels(): void {
         const resource = this.context.host.getAttribute("resource") ?? "page";
         const defaults = shellResourceChromeDefaults(resource);
-        const topBar = this.context.root().querySelector("cms-editor-v2-topbar");
+        const topBar = this.context.host.shadowRoot!.querySelector("cms-editor-v2-topbar");
         if (!this.isTopBar(topBar)) {
             this.requestChromeSyncWhenTopBarIsReady();
             return;
@@ -60,57 +46,57 @@ export class ShellSync {
     }
 
     openPageSettings(): void {
-        openPageSettingsModal(this.context.refs().pageSettingsModal);
+        openPageSettingsModal(this.context.refs.pageSettingsModal);
     }
 
     closePageSettings(): void {
-        closePageSettingsModal(this.context.refs().pageSettingsModal);
+        closePageSettingsModal(this.context.refs.pageSettingsModal);
     }
 
     syncPageSettingsForm(): void {
-        syncPageSettingsForm(this.context.pageConfig(), name => this.pageField(name));
+        syncPageSettingsForm(this.context.state.pageConfig, name => this.pageField(name));
     }
 
     applyPageSettingsForm(): void {
-        const pageConfig = readPageSettingsForm(this.context.pageConfig(), name => this.pageField(name));
-        this.context.setPageConfig(pageConfig);
-        applyPageSettingsTitle(this.context.topBar(), pageConfig);
+        const pageConfig = readPageSettingsForm(this.context.state.pageConfig, name => this.pageField(name));
+        this.context.state.pageConfig = pageConfig;
+        applyPageSettingsTitle(this.context.refs.topBar, pageConfig);
     }
 
     setSaveStatus(label: string): void {
-        this.context.topBar().saveStatus = label;
+        this.context.refs.topBar.saveStatus = label;
     }
 
     syncStructureTreeCatalog(): void {
         syncStructureTreeCatalog(
-            this.context.root(),
-            this.context.catalog(),
-            this.context.insertItems(),
-            this.context.defaultTemplateSelection(),
+            this.context.host.shadowRoot!,
+            this.context.state.catalog,
+            this.context.state.insertItems,
+            this.context.state.defaultTemplateSelection,
         );
     }
 
     syncStructureTreeInsertItems(): void {
         syncStructureTreeInsertItems(
-            this.context.root(),
-            this.context.insertItems(),
-            this.context.defaultTemplateSelection(),
+            this.context.host.shadowRoot!,
+            this.context.state.insertItems,
+            this.context.state.defaultTemplateSelection,
         );
     }
 
     syncStructureTreeDefaultTemplateSelection(): void {
         syncStructureTreeDefaultTemplateSelection(
-            this.context.root(),
-            this.context.defaultTemplateSelection(),
+            this.context.host.shadowRoot!,
+            this.context.state.defaultTemplateSelection,
         );
     }
 
     syncStructureTreeDataSources(): void {
-        syncStructureTreeDataSources(this.context.root(), this.context.dataSources(), isStructureTree);
+        syncStructureTreeDataSources(this.context.host.shadowRoot!, this.context.state.dataSources, isStructureTree);
     }
 
     findStructureNodeLabel(editor: Editor): string | null {
-        return findStructureNodeLabel(this.context.runtime(), editor);
+        return findStructureNodeLabel(this.context.state.runtime, editor);
     }
 
     isStructureTree(value: Element | null | undefined): value is StructureTree {
@@ -122,11 +108,11 @@ export class ShellSync {
     }
 
     private requestChromeSyncWhenTopBarIsReady(): void {
-        if (this.context.chromeSyncPending()) return;
-        this.context.setChromeSyncPending(true);
+        if (this.context.state.chromeSyncPending) return;
+        this.context.state.chromeSyncPending = true;
         customElements.whenDefined("cms-editor-v2-topbar").then(() => {
-            this.context.setChromeSyncPending(false);
-            const topBar = this.context.root().querySelector("cms-editor-v2-topbar");
+            this.context.state.chromeSyncPending = false;
+            const topBar = this.context.host.shadowRoot!.querySelector("cms-editor-v2-topbar");
             if (topBar) customElements.upgrade(topBar);
             if (!this.isTopBar(topBar)) return;
             const resource = this.context.host.getAttribute("resource") ?? "page";
@@ -135,7 +121,7 @@ export class ShellSync {
     }
 
     private pageField<T extends HTMLElement>(name: string): T {
-        return this.context.refs().pageField<T>(name);
+        return this.context.refs.pageField<T>(name);
     }
 
     private isTopBar(value: Element | null | undefined): value is TopBar {

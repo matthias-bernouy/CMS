@@ -45,18 +45,8 @@ export function createShellControllerServices(
     });
     const sync = new ShellSync({
         host,
-        root:                     () => host.shadowRoot!,
-        refs:                     () => refs,
-        topBar:                   () => refs.topBar,
-        pageConfig:               () => state.pageConfig,
-        setPageConfig:            config => { state.pageConfig = config; },
-        catalog:                  () => state.catalog,
-        insertItems:              () => state.insertItems,
-        defaultTemplateSelection: () => state.defaultTemplateSelection,
-        dataSources:              () => state.dataSources,
-        runtime:                  () => state.runtime,
-        chromeSyncPending:        () => state.chromeSyncPending,
-        setChromeSyncPending:     value => { state.chromeSyncPending = value; },
+        state,
+        refs,
     });
     const renderSync = new ShellRenderSyncCommands({ host, state, refs, frames, sync });
     const commands = new ShellCommands({
@@ -86,27 +76,11 @@ export function createShellControllerServices(
         renderSync,
         events,
         api: new ShellApi({
-            catalog:                                  () => state.catalog,
-            setCatalogValue:                         catalog => { state.catalog = catalog; },
-            setCatalogSize:                          size => host.setAttribute("catalog-size", String(size)),
-            setInsertItemsValue:                     items => { state.insertItems = items; },
-            setDefaultTemplateSelectionValue:        selection => { state.defaultTemplateSelection = selection; },
-            setDataSourcesValue:                     sources => { state.dataSources = sources; },
-            setPageConfigValue:                      config => { state.pageConfig = config; },
-            topBarTitle:                             (title, path) => refs.topBar.setPageTitle(title, path),
-            syncStructureTreeCatalog:                () => renderSync.syncStructureTreeCatalog(),
-            syncStructureTreeInsertItems:            () => renderSync.syncStructureTreeInsertItems(),
-            syncStructureTreeDefaultTemplateSelection: () => renderSync.syncStructureTreeDefaultTemplateSelection(),
-            syncStructureTreeDataSources:            () => renderSync.syncStructureTreeDataSources(),
-            syncPageSettingsForm:                    () => renderSync.syncPageSettingsForm(),
-            renderStructure:                         () => commands.renderStructure(),
-            exitAllStateSessions:                    () => commands.exitAllStateSessions(),
-            disposeRuntime:                          () => state.runtime?.dispose(),
-            setEditorDocument:                       document => { state.editorDocument = document; },
-            setRuntime:                              runtime => { state.runtime = runtime; },
-            runtime:                                 () => state.runtime,
-            dataSources:                             () => state.dataSources,
-            select:                                  (editor, options) => commands.select(editor, options),
+            host,
+            state,
+            refs,
+            renderSync,
+            commands,
         }),
     };
 }

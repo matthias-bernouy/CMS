@@ -1,5 +1,4 @@
 import {
-    type Editor,
     type EditorCatalog,
     type EditorDocument,
 } from "@bernouy/cms-content/editor";
@@ -7,81 +6,69 @@ import {
 import { EditorRuntime, type EditorDataSource } from "../../../../../runtime";
 import type { DefaultTemplateSelection } from "../../../StructureTree/StructureTree";
 import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
-import type { SelectOptions, EditorV2PageConfig } from "../shellTypes";
+import type { EditorV2PageConfig } from "../shellTypes";
+import type { ShellDomRefs } from "../../Domain/shellDomRefs";
+import type { ShellCommands } from "./shellCommands";
+import type { ShellRenderSyncCommands } from "./shellRenderSyncCommands";
+import type { ShellState } from "./Services/shellState";
 
 type ApiContext = {
-    catalog(): EditorCatalog;
-    setCatalogValue(catalog: EditorCatalog): void;
-    setCatalogSize(size: number): void;
-    setInsertItemsValue(items: BlockPickerItem[]): void;
-    setDefaultTemplateSelectionValue(selection: DefaultTemplateSelection): void;
-    setDataSourcesValue(sources: EditorDataSource[]): void;
-    setPageConfigValue(config: EditorV2PageConfig): void;
-    topBarTitle(title: string, path: string): void;
-    syncStructureTreeCatalog(): void;
-    syncStructureTreeInsertItems(): void;
-    syncStructureTreeDefaultTemplateSelection(): void;
-    syncStructureTreeDataSources(): void;
-    syncPageSettingsForm(): void;
-    renderStructure(): void;
-    exitAllStateSessions(): void;
-    disposeRuntime(): void;
-    setEditorDocument(document: EditorDocument | null): void;
-    setRuntime(runtime: EditorRuntime | null): void;
-    runtime(): EditorRuntime | null;
-    dataSources(): EditorDataSource[];
-    select(editor: Editor | null, options?: SelectOptions): void;
+    host: HTMLElement;
+    state: ShellState;
+    refs: ShellDomRefs;
+    renderSync: ShellRenderSyncCommands;
+    commands: ShellCommands;
 };
 
 export class ShellApi {
     constructor(private readonly context: ApiContext) {}
 
     setCatalog(catalog: EditorCatalog): void {
-        this.context.setCatalogValue([...catalog]);
-        this.context.setCatalogSize(catalog.length);
-        this.context.syncStructureTreeCatalog();
+        this.context.state.catalog = [...catalog];
+        this.context.host.setAttribute("catalog-size", String(catalog.length));
+        this.context.renderSync.syncStructureTreeCatalog();
     }
 
     setInsertItems(items: BlockPickerItem[]): void {
-        this.context.setInsertItemsValue(items.map(item => ({ ...item })));
-        this.context.syncStructureTreeInsertItems();
-        if (this.context.runtime()) this.context.renderStructure();
+        this.context.state.insertItems = items.map(item => ({ ...item }));
+        this.context.renderSync.syncStructureTreeInsertItems();
+        if (this.context.state.runtime) this.context.commands.renderStructure();
     }
 
     setDefaultTemplateSelection(selection: DefaultTemplateSelection): void {
-        this.context.setDefaultTemplateSelectionValue({ ...selection });
-        this.context.syncStructureTreeDefaultTemplateSelection();
+        this.context.state.defaultTemplateSelection = { ...selection };
+        this.context.renderSync.syncStructureTreeDefaultTemplateSelection();
     }
 
     setDataSources(sources: EditorDataSource[]): void {
-        this.context.setDataSourcesValue(sources.map(source => ({
+        this.context.state.dataSources = sources.map(source => ({
             ...source,
             fields: [...source.fields],
-        })));
-        this.context.syncStructureTreeDataSources();
+        }));
+        this.context.renderSync.syncStructureTreeDataSources();
     }
 
     setPageConfig(config: EditorV2PageConfig): void {
-        this.context.setPageConfigValue({
+        this.context.state.pageConfig = {
             ...config,
             tags: [...config.tags],
-        });
+        };
         if (config.defaultTemplateCategory) {
             this.setDefaultTemplateSelection({ category: config.defaultTemplateCategory });
         }
-        this.context.topBarTitle(config.title, config.path);
-        this.context.syncPageSettingsForm();
+        this.context.refs.topBar.setPageTitle(config.title, config.path);
+        this.context.renderSync.syncPageSettingsForm();
     }
 
     loadDocument(document: EditorDocument, selectedTarget: HTMLElement | null = null): void {
-        this.context.exitAllStateSessions();
-        this.context.disposeRuntime();
-        this.context.setEditorDocument(document);
-        const runtime = new EditorRuntime(this.context.catalog(), this.context.dataSources());
-        this.context.setRuntime(runtime);
+        this.context.commands.exitAllStateSessions();
+        this.context.state.runtime?.dispose();
+        this.context.state.editorDocument = document;
+        const runtime = new EditorRuntime(this.context.state.catalog, this.context.state.dataSources);
+        this.context.state.runtime = runtime;
         runtime.load(document);
-        this.context.renderStructure();
-        this.context.select(selectedTarget
+        this.context.commands.renderStructure();
+        this.context.commands.select(selectedTarget
             ? runtime.getEditor(selectedTarget) ?? runtime.getClosestEditor(selectedTarget) ?? null
             : null, { scrollStructureIntoView: true });
     }
