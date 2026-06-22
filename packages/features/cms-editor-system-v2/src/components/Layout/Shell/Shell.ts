@@ -77,6 +77,34 @@ import {
     collectSourceDependencyUsages,
     type SourceDependencyUsage,
 } from "./sourceDependencyCleanup";
+import {
+    applyShellChromeLabels,
+    shellResourceChromeDefaults,
+    type ShellChromeDefaults,
+} from "./Domain/shellChrome";
+import { ShellDomRefs } from "./Domain/shellDomRefs";
+import {
+    applyPageSettingsTitle,
+    closePageSettingsModal,
+    openPageSettingsModal,
+    parseTags,
+    readPageSettingsForm,
+    syncPageSettingsForm,
+} from "./Domain/shellPageSettings";
+import {
+    isStructureTree,
+    syncStructureTreeCatalog,
+    syncStructureTreeDefaultTemplateSelection,
+    syncStructureTreeInsertItems,
+} from "./Domain/shellStructureTreeSync";
+import {
+    bindingPreviewCore,
+    bindingPreviewCss,
+    injectBindingPreviewStyle,
+    restartViewBindingRuntime,
+    syncBindingPreviewCore,
+    syncViewFrameContent,
+} from "./Domain/shellBindingPreview";
 import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
 import {
     FilesCenter,
@@ -84,6 +112,8 @@ import {
     type FilesCenterSelectDetail,
 } from "../../Controls/Pickers/FilesCenter/FilesCenter";
 import { FrameHighlight } from "./FrameHighlight";
+import pageSettingsCss from "./Styles/pageSettings.css" with { type: "text" };
+import pageSettingsTagsCss from "./Styles/pageSettingsTags.css" with { type: "text" };
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
 
@@ -94,9 +124,12 @@ type SourceBinding = {
 };
 
 const template = document.createElement("template");
-template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
+template.innerHTML = `<style>${[
+    componentCss,
+    pageSettingsCss,
+    pageSettingsTagsCss,
+].map(css => String(css)).join("\n")}</style>${String(templateHtml)}`;
 
-const BINDING_PREVIEW_STYLE_ID = "cms-editor-binding-preview-style";
 const BINDING_READY_ATTRIBUTE = "cms-ready";
 const PARAM_SYNC_ENABLE_SETTING = "__cms-param-sync-enabled";
 const PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
@@ -198,10 +231,12 @@ export class Shell extends HTMLElement {
     private readonly _stateSessions = new WeakMap<Editor, Map<string, EditableStateSession>>();
     private _pendingRepeatEditor: Editor | null = null;
     private readonly _highlight = new FrameHighlight();
+    private readonly _refs: ShellDomRefs;
 
     constructor() {
         super();
         this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+        this._refs = new ShellDomRefs(this);
     }
 
     attributeChangedCallback(): void {
@@ -1507,70 +1542,27 @@ export class Shell extends HTMLElement {
     }
 
     private _syncBindingPreviewCore(): void {
-        const editorCore = this._bindingPreviewCore(this._frameDocument);
-        if (editorCore) {
-            editorCore.setAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce, this._sourceStateForce);
-            editorCore.setAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled, "");
-        }
-
-        const viewCore = this._bindingPreviewCore(this._viewFrameDocument);
-        if (viewCore) {
-            viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce);
-            viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled);
-        }
+        syncBindingPreviewCore(this._frameDocument, this._viewFrameDocument, this._sourceStateForce);
     }
 
     private _bindingPreviewCore(document: Document | null): HTMLElement | null {
-        const root = document?.querySelector<HTMLElement>("[data-cms-editor-root]");
-        if (root?.matches(CMS_BINDING_CORE_TAG)) return root;
-
-        return root?.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG)
-            ?? document?.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG)
-            ?? null;
+        return bindingPreviewCore(document);
     }
 
     private _syncViewFrameContent(): void {
-        const editorContent = this._frameDocument?.querySelector<HTMLElement>("[data-cms-content]");
-        const viewContent = this._viewFrameDocument?.querySelector<HTMLElement>("[data-cms-content]");
-        if (!editorContent || !viewContent) return;
-
-        viewContent.innerHTML = editorContent.innerHTML;
-        this._syncBindingPreviewCore();
-        this._restartViewBindingRuntime();
+        syncViewFrameContent(this._frameDocument, this._viewFrameDocument, this._sourceStateForce);
     }
 
     private _restartViewBindingRuntime(): void {
-        const core = this._bindingPreviewCore(this._viewFrameDocument) as (HTMLElement & {
-            runtime?: { stop(): void } | null;
-            startRuntime?: () => void;
-        }) | null;
-        if (!core || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) return;
-
-        core.runtime?.stop();
-        core.startRuntime?.();
+        restartViewBindingRuntime(this._viewFrameDocument);
     }
 
     private _injectBindingPreviewStyle(document: Document): void {
-        if (document.getElementById(BINDING_PREVIEW_STYLE_ID)) return;
-
-        const style = document.createElement("style");
-        style.id = BINDING_PREVIEW_STYLE_ID;
-        style.textContent = this._bindingPreviewCss();
-        (document.head ?? document.documentElement).append(style);
+        injectBindingPreviewStyle(document);
     }
 
     private _bindingPreviewCss(): string {
-        const core = `${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`;
-        const source = `[${CMS_BINDING_ATTRIBUTES.source}]`;
-        const slot = CMS_BINDING_ATTRIBUTES.slot;
-        const state = CMS_BINDING_ATTRIBUTES.sourceStateForce;
-
-        return [
-            `${core}[${state}="loaded"] ${source} > [${slot}]{display:none!important}`,
-            `${core}[${state}="loading"] ${source} > :not([${slot}="loading"]){display:none!important}`,
-            `${core}[${state}="empty"] ${source} > :not([${slot}="empty"]){display:none!important}`,
-            `${core}[${state}="error"] ${source} > :not([${slot}="error"]){display:none!important}`,
-        ].join("\n");
+        return bindingPreviewCss();
     }
 
     private _syncChromeLabels(): void {
@@ -1605,116 +1597,30 @@ export class Shell extends HTMLElement {
     private _applyChromeLabels(
         topBar: TopBar,
         resource: string,
-        defaults: ReturnType<Shell["_resourceChromeDefaults"]>,
+        defaults: ShellChromeDefaults,
     ): void {
-        topBar.setNavigation({
-            backHref:      this.getAttribute("back-href") ?? defaults.backHref,
-            backLabel:     this.getAttribute("back-label") ?? defaults.backLabel,
-            settingsLabel: this.getAttribute("settings-label") ?? defaults.settingsLabel,
-        });
-
-        this.shadowRoot!.querySelector("#page-settings-title")!.textContent =
-            this.getAttribute("settings-title") ?? defaults.settingsTitle;
-        this.shadowRoot!.querySelector(".settings-description")!.textContent =
-            this.getAttribute("settings-description") ?? defaults.settingsDescription;
-        this.shadowRoot!.querySelector('[data-page-label="path"]')!.textContent =
-            this.getAttribute("settings-path-label") ?? defaults.pathLabel;
-        this.shadowRoot!.querySelector('[data-page-label="tags"]')!.textContent =
-            this.getAttribute("settings-tags-label") ?? defaults.tagsLabel;
-        this.shadowRoot!.querySelector('[data-page-label="published"]')!.textContent =
-            this.getAttribute("settings-status-label") ?? defaults.statusLabel;
-        this.shadowRoot!.querySelector('[data-page-label="description"]')!.textContent =
-            this.getAttribute("settings-description-label") ?? defaults.descriptionLabel;
-
-        const isPage = resource === "page";
-        this._pageField<HTMLInputElement>("path").disabled = !isPage;
-        this._pageField<HTMLSelectElement>("published").closest("label")!.hidden = !isPage;
+        applyShellChromeLabels(this, topBar, resource, defaults, name => this._pageField(name));
     }
 
-    private _resourceChromeDefaults(resource: string): {
-        backHref: string;
-        backLabel: string;
-        settingsLabel: string;
-        settingsTitle: string;
-        settingsDescription: string;
-        pathLabel: string;
-        tagsLabel: string;
-        statusLabel: string;
-        descriptionLabel: string;
-    } {
-        if (resource === "template") {
-            return {
-                backHref:             "/admin/templates",
-                backLabel:            "Templates",
-                settingsLabel:        "Template settings",
-                settingsTitle:        "Template settings",
-                settingsDescription:  "Configure template metadata.",
-                pathLabel:            "Identifier",
-                tagsLabel:            "Category",
-                statusLabel:          "Status",
-                descriptionLabel:     "Description",
-            };
-        }
-
-        if (resource === "snippet") {
-            return {
-                backHref:             "/admin/snippets",
-                backLabel:            "Snippets",
-                settingsLabel:        "Snippet settings",
-                settingsTitle:        "Snippet settings",
-                settingsDescription:  "Configure snippet metadata.",
-                pathLabel:            "Identifier",
-                tagsLabel:            "Category",
-                statusLabel:          "Status",
-                descriptionLabel:     "Description",
-            };
-        }
-
-        return {
-            backHref:             "/admin/pages",
-            backLabel:            "Pages",
-            settingsLabel:        "Page settings",
-            settingsTitle:        "Page settings",
-            settingsDescription:  "Configure page-level metadata and routing.",
-            pathLabel:            "Path",
-            tagsLabel:            "Tags",
-            statusLabel:          "Status",
-            descriptionLabel:     "SEO description",
-        };
+    private _resourceChromeDefaults(resource: string): ShellChromeDefaults {
+        return shellResourceChromeDefaults(resource);
     }
 
     private _openPageSettings(): void {
-        this._pageSettingsModal.hidden = false;
-        const firstInput = this._pageSettingsModal.querySelector<HTMLInputElement>("input");
-        firstInput?.focus();
+        openPageSettingsModal(this._pageSettingsModal);
     }
 
     private _closePageSettings(): void {
-        this._pageSettingsModal.hidden = true;
+        closePageSettingsModal(this._pageSettingsModal);
     }
 
     private _syncPageSettingsForm(): void {
-        if (!this._pageConfig) return;
-
-        this._pageField<HTMLInputElement>("title").value = this._pageConfig.title;
-        this._pageField<HTMLInputElement>("path").value = this._pageConfig.path;
-        this._pageField<HTMLSelectElement>("published").value = String(this._pageConfig.published);
-        this._pageField<HTMLTextAreaElement>("description").value = this._pageConfig.description;
-        this._pageField<HTMLInputElement>("tags").value = this._pageConfig.tags.join(", ");
+        syncPageSettingsForm(this._pageConfig, name => this._pageField(name));
     }
 
     private _applyPageSettingsForm(): void {
-        if (!this._pageConfig) return;
-
-        this._pageConfig = {
-            id:          this._pageConfig.id,
-            title:       this._pageField<HTMLInputElement>("title").value.trim(),
-            path:        this._pageField<HTMLInputElement>("path").value.trim(),
-            published:   this._pageField<HTMLSelectElement>("published").value === "true",
-            description: this._pageField<HTMLTextAreaElement>("description").value,
-            tags:        this._parseTags(this._pageField<HTMLInputElement>("tags").value),
-        };
-        this._topBar.setPageTitle(this._pageConfig.title, this._pageConfig.path);
+        this._pageConfig = readPageSettingsForm(this._pageConfig, name => this._pageField(name));
+        applyPageSettingsTitle(this._topBar, this._pageConfig);
     }
 
     private _getContentHtml(): string {
@@ -1732,14 +1638,11 @@ export class Shell extends HTMLElement {
     }
 
     private _parseTags(value: string): string[] {
-        return [...new Set(value
-            .split(",")
-            .map(tag => tag.trim())
-            .filter(Boolean))];
+        return parseTags(value);
     }
 
     private _pageField<T extends HTMLElement>(name: string): T {
-        return this.shadowRoot!.querySelector<T>(`[data-page-field="${name}"]`)!;
+        return this._refs.pageField<T>(name);
     }
 
     private _setSaveStatus(label: string): void {
@@ -1747,58 +1650,19 @@ export class Shell extends HTMLElement {
     }
 
     private _syncStructureTreeCatalog(): void {
-        const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
-        if (this._isStructureTree(tree)) {
-            tree.catalog = this._catalog;
-            tree.setInsertItems(this._insertItems);
-            tree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-            return;
-        }
-
-        customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
-            const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
-            if (this._isStructureTree(upgradedTree)) {
-                upgradedTree.catalog = this._catalog;
-                upgradedTree.setInsertItems(this._insertItems);
-                upgradedTree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-            }
-        });
+        syncStructureTreeCatalog(this.shadowRoot!, this._catalog, this._insertItems, this._defaultTemplateSelection);
     }
 
     private _syncStructureTreeInsertItems(): void {
-        const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
-        if (this._isStructureTree(tree)) {
-            tree.setInsertItems(this._insertItems);
-            tree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-            return;
-        }
-
-        customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
-            const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
-            if (this._isStructureTree(upgradedTree)) {
-                upgradedTree.setInsertItems(this._insertItems);
-                upgradedTree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-            }
-        });
+        syncStructureTreeInsertItems(this.shadowRoot!, this._insertItems, this._defaultTemplateSelection);
     }
 
     private _syncStructureTreeDefaultTemplateSelection(): void {
-        const tree = this.shadowRoot!.querySelector("cms-editor-v2-structure-tree");
-        if (this._isStructureTree(tree)) {
-            tree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-            return;
-        }
-
-        customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
-            const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
-            if (this._isStructureTree(upgradedTree)) {
-                upgradedTree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-            }
-        });
+        syncStructureTreeDefaultTemplateSelection(this.shadowRoot!, this._defaultTemplateSelection);
     }
 
     private _isStructureTree(value: Element | null | undefined): value is StructureTree {
-        return Boolean(value && "catalog" in value && "setStructure" in value && "setInsertItems" in value && "setDefaultTemplateSelection" in value);
+        return isStructureTree(value);
     }
 
     private _isTopBar(value: Element | null | undefined): value is TopBar {
@@ -1830,36 +1694,31 @@ export class Shell extends HTMLElement {
     }
 
     private get _structureTree(): StructureTree {
-        return this.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as StructureTree;
+        return this._refs.structureTree;
     }
 
     private get _settings(): SettingsView {
-        return this.shadowRoot!.querySelector("cms-editor-v2-settings-view") as SettingsView;
+        return this._refs.settings;
     }
 
     private get _settingsTabs(): HTMLElement {
-        return this.shadowRoot!.querySelector(".panel-tabs")!;
+        return this._refs.settingsTabs;
     }
 
     private get _canvas(): Canvas {
-        return this.shadowRoot!.querySelector("cms-editor-v2-canvas") as Canvas;
+        return this._refs.canvas;
     }
 
     private get _topBar(): TopBar {
-        return this.shadowRoot!.querySelector("cms-editor-v2-topbar") as TopBar;
+        return this._refs.topBar;
     }
 
     private get _repeatPicker(): RepeatPicker {
-        let picker = this.shadowRoot!.querySelector<RepeatPicker>("cms-editor-v2-repeat-picker");
-        if (!picker) {
-            picker = new RepeatPicker();
-            this.shadowRoot!.append(picker);
-        }
-        return picker;
+        return this._refs.repeatPicker;
     }
 
     private get _pageSettingsModal(): HTMLElement {
-        return this.shadowRoot!.querySelector(".page-settings-modal")!;
+        return this._refs.pageSettingsModal;
     }
 
 }
