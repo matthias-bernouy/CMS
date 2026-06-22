@@ -13,6 +13,7 @@ describe("foundation bloc seeding", () => {
             "base-container",
             "base-grid",
             "base-photo-album",
+            "base-skeleton",
         ]);
         expect(list.map(bloc => bloc.id).sort()).toEqual(created.sort());
 
@@ -32,6 +33,11 @@ describe("foundation bloc seeding", () => {
         expect(source?.["template.html"]).toBeString();
         expect(source?.["style.css"]).toBeString();
         expect(source?.["options.ts"]).toBeUndefined();
+
+        const skeletonSource = await repository.getBlocSource("base-skeleton");
+        expect(Buffer.from(skeletonSource!["manifest.json"]!, "base64").toString("utf-8")).toContain(`"default-tag": "base-skeleton"`);
+        expect(Buffer.from(skeletonSource!["Bloc.ts"]!, "base64").toString("utf-8")).toContain("export class Skeleton");
+        expect(Buffer.from(skeletonSource!["BlocEditor.ts"]!, "base64").toString("utf-8")).toContain("export class SkeletonEditor");
     });
 
     test("does not overwrite existing repository blocs", async () => {

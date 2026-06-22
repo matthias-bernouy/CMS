@@ -5,10 +5,13 @@ import {
     CodeEditor,
     HeadingEditor,
     ImageEditor,
+    InputEditor,
     ListEditor,
     ListItemEditor,
+    OptionEditor,
     ParagraphEditor,
     QuoteEditor,
+    SelectEditor,
     SnippetEditor,
     SpanEditor,
 } from "cms-control/core/editorSystemV2/defaultEditors";
@@ -17,10 +20,13 @@ type NativeElementConstructorName =
     | "HTMLElement"
     | "HTMLHeadingElement"
     | "HTMLImageElement"
+    | "HTMLInputElement"
     | "HTMLLIElement"
     | "HTMLOListElement"
+    | "HTMLOptionElement"
     | "HTMLParagraphElement"
     | "HTMLQuoteElement"
+    | "HTMLSelectElement"
     | "HTMLSpanElement"
     | "HTMLUListElement";
 
@@ -75,6 +81,39 @@ export function createControlEditorCatalog(): EditorCatalog {
             subCategory: "Image",
             bloc: nativeElementConstructor("HTMLImageElement"),
             editor: ImageEditor,
+        },
+        {
+            tag: "input",
+            label: "Text input",
+            description: "A standard single-line text input.",
+            icon: "text-cursor-input",
+            category: "Forms",
+            subCategory: "Controls",
+            defaultContent: `<input type="text" name="search" placeholder="Search">`,
+            bloc: nativeElementConstructor("HTMLInputElement"),
+            editor: InputEditor,
+        },
+        {
+            tag: "select",
+            label: "Select",
+            description: "A standard select field with options.",
+            icon: "list-filter",
+            category: "Forms",
+            subCategory: "Controls",
+            defaultContent: `<select name="choice"><option value="option">Option</option></select>`,
+            bloc: nativeElementConstructor("HTMLSelectElement"),
+            editor: SelectEditor,
+        },
+        {
+            tag: "option",
+            label: "Option",
+            description: "An option inside a select field.",
+            icon: "list-plus",
+            category: "Forms",
+            subCategory: "Controls",
+            defaultContent: `<option value="option">Option</option>`,
+            bloc: nativeElementConstructor("HTMLOptionElement"),
+            editor: OptionEditor,
         },
         {
             tag: "span",

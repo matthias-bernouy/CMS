@@ -58,6 +58,11 @@ const FOUNDATION_BLOCS: FoundationBlocSeed[] = [
         componentExport: "PhotoAlbum",
         editorExport:    "PhotoAlbumEditor",
     },
+    {
+        dir:             "base-skeleton",
+        componentExport: "Skeleton",
+        editorExport:    "SkeletonEditor",
+    },
 ];
 
 export async function seedFoundationBlocs(repository: CmsRepository, cache?: Cache): Promise<string[]> {

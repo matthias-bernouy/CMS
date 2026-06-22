@@ -12,11 +12,14 @@ import {
     GridEditor,
     HeadingEditor,
     ImageEditor,
+    InputEditor,
     ListEditor,
     ListItemEditor,
+    OptionEditor,
     ParagraphEditor,
     PhotoAlbumEditor,
     QuoteEditor,
+    SelectEditor,
     SnippetEditor,
     SpanEditor,
 } from "cms-control/core/editorSystemV2/defaultEditors";
@@ -58,6 +61,9 @@ describe("editor default editors", () => {
         expect(new CodeEditor(target("code")).getTextCapability()?.format).toBe("text");
         expect(new QuoteEditor(target("blockquote")).getTextCapability()?.format).toBe("richtext");
         expect(new ImageEditor(target("img")).getSettings()[0]?.label).toBe("Image");
+        expect(new InputEditor(target("input")).getSettings()[0]?.label).toBe("Text input");
+        expect(new SelectEditor(target("select")).getSettings()[0]?.label).toBe("Select");
+        expect(new OptionEditor(target("option")).getSettings()[0]?.label).toBe("Option");
         expect(new PhotoAlbumEditor(target("base-photo-album")).getSettings()[0]?.label).toBe("Photo album");
         expect(new ListEditor(target("ul")).getSettings()).toEqual([]);
         expect(new ListItemEditor(target("li")).getSettings()).toEqual([]);
@@ -99,6 +105,15 @@ describe("editor default editors", () => {
         expect(new ParagraphEditor(target("p")).getContentSlots()).toEqual([]);
         expect(new HeadingEditor(target("h1")).getContentSlots()).toEqual([]);
         expect(new ImageEditor(target("img")).getContentSlots()).toEqual([]);
+        expect(new InputEditor(target("input")).getContentSlots()).toEqual([]);
+        expect(new SelectEditor(target("select")).getContentSlots()).toEqual([
+            {
+                label: "Options",
+                min: 1,
+                accepts: [{ kind: "component", tag: "option" }],
+            },
+        ]);
+        expect(new OptionEditor(target("option")).getContentSlots()).toEqual([]);
         expect(new PhotoAlbumEditor(target("base-photo-album")).getContentSlots()).toEqual([
             {
                 label: "Images",
@@ -160,6 +175,10 @@ describe("editor default editors", () => {
             italic: true,
             underline: true,
             link: true,
+            dynamic: true,
+        });
+        expect(new OptionEditor(target("option")).getTextCapability()).toEqual({
+            format: "text",
             dynamic: true,
         });
         expect(new CardEditor(target("base-card")).getTextCapability()).toBeNull();
@@ -265,6 +284,9 @@ describe("editor default editors", () => {
             "h5",
             "h6",
             "img",
+            "input",
+            "select",
+            "option",
             "span",
             "code",
             "blockquote",
@@ -284,5 +306,14 @@ describe("editor default editors", () => {
         expect(image?.editor).toBe(ImageEditor);
         expect(image?.label).toBe("Image");
         expect(image?.category).toBe("Media");
+        const input = catalog.find(entry => entry.tag === "input");
+        expect(input?.editor).toBe(InputEditor);
+        expect(input?.defaultContent).toBe(`<input type="text" name="search" placeholder="Search">`);
+        const select = catalog.find(entry => entry.tag === "select");
+        expect(select?.editor).toBe(SelectEditor);
+        expect(select?.defaultContent).toBe(`<select name="choice"><option value="option">Option</option></select>`);
+        const option = catalog.find(entry => entry.tag === "option");
+        expect(option?.editor).toBe(OptionEditor);
+        expect(option?.defaultContent).toBe(`<option value="option">Option</option>`);
     });
 });
