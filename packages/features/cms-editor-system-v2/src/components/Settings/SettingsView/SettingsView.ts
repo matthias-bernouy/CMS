@@ -8,6 +8,7 @@ import "../../Controls/SegmentedControl/SegmentedControl";
 import "../../Controls/PageLink/PageLink";
 import "../../Controls/SchemaPicker/SchemaPicker";
 import type {
+    DataScope,
     EditableState,
     Setting,
     SettingSection,
@@ -50,6 +51,7 @@ export class SettingsView extends HTMLElement {
         textValue = "",
         mode: SettingsViewMode = "settings",
         states: EditableState[] = [],
+        dataScopes: DataScope[] = [],
     ): void {
         const view = this.shadowRoot!.querySelector<HTMLElement>(".settings-view")!;
         view.replaceChildren();
@@ -74,7 +76,7 @@ export class SettingsView extends HTMLElement {
         }
 
         if (shouldRenderText) {
-            view.append(this._renderTextCapability(textCapability, textValue));
+            view.append(this._renderTextCapability(textCapability, textValue, dataScopes));
         }
 
         if (shouldRenderStates) {
@@ -221,7 +223,7 @@ export class SettingsView extends HTMLElement {
         return control;
     }
 
-    private _renderTextCapability(capability: TextCapability, value: string): HTMLElement {
+    private _renderTextCapability(capability: TextCapability, value: string, dataScopes: DataScope[]): HTMLElement {
         const section = document.createElement("cms-editor-v2-section");
         section.setAttribute("label", "Content");
 
@@ -239,6 +241,7 @@ export class SettingsView extends HTMLElement {
         );
         if (capability.format === "richtext") {
             control.setAttribute("capability", JSON.stringify(capability));
+            control.setAttribute("data-scopes", JSON.stringify(dataScopes));
             this._wireRichTextControl(control);
         } else {
             this._wireContentControl(control, "input");

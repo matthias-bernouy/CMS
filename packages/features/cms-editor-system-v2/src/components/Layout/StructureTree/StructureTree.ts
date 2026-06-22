@@ -1,6 +1,7 @@
 import {
     CMS_BINDING_ATTRIBUTES,
     CMS_SNIPPET_TAG,
+    parseSource,
 } from "@bernouy/cms-content/editor";
 import "../DataSourcePicker/DataSourcePicker";
 import type {
@@ -471,8 +472,19 @@ export class StructureTree extends HTMLElement {
         picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect as EventListener);
         picker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this._onDataSourceRemove);
         picker.open(this._sourceDataSources, node.label, {
-            canRemove: node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source),
+            canRemove:      node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source),
+            initialBinding: this._sourceBindingForNode(node),
         });
+    }
+
+    private _sourceBindingForNode(node: EditorStructureNode): DataSourcePickerSourceBinding | null {
+        const source = parseSource(node.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+        return source
+            ? {
+                url: source.url,
+                ...(source.alias ? { alias: source.alias } : {}),
+            }
+            : null;
     }
 
     private _contextMenuButton(

@@ -142,7 +142,9 @@ export class EditorRuntime {
     getSelectedDataScopes(): DataScope[] {
         if (!this._selectedEditor) return [];
 
-        return this.registry.collectDataScopes(this._selectedEditor.target);
+        return this.registry.collectDataScopes(this._selectedEditor.target, {
+            includeTarget: !this._selectedEditor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source),
+        });
     }
 
     private _declareBindingDataScopes(editor: Editor): void {

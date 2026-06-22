@@ -65,10 +65,10 @@ export class EditorRegistry {
         return ancestors;
     }
 
-    collectDataScopes(target: HTMLElement): DataScope[] {
+    collectDataScopes(target: HTMLElement, options: { includeTarget?: boolean } = {}): DataScope[] {
         const editors = [
             ...this.getAncestors(target),
-            this.getEditor(target),
+            options.includeTarget === false ? undefined : this.getEditor(target),
         ].filter((editor): editor is Editor => Boolean(editor));
 
         return editors.flatMap(editor => editor.getDataScopes());

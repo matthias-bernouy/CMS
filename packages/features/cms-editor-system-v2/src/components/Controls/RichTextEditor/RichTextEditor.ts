@@ -1,5 +1,7 @@
 import {
     asInterpolation,
+    type DataField,
+    type DataScope,
     type TextCapability,
 } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
@@ -12,8 +14,14 @@ type RichTextAction = "bold" | "italic" | "underline" | "code" | "link" | "dynam
 
 const TEXT_SIZE_STEPS = [".875em", "1em", "1.125em", "1.25em", "1.5em"] as const;
 
+type DataOption = {
+    label: string;
+    path: string;
+};
+
 export class RichTextEditor extends HTMLElement {
     private _savedRange: Range | null = null;
+    private _dataOptions: DataOption[] = [];
 
     constructor() {
         super();
@@ -30,6 +38,9 @@ export class RichTextEditor extends HTMLElement {
         this.editor.addEventListener("mouseup", this.saveSelection);
         this.editor.addEventListener("pointerup", this.saveSelection);
         this.editor.addEventListener("blur", this.saveSelection);
+        this.dataSearch.addEventListener("input", this.renderDataOptions);
+        this.dataSearch.addEventListener("keydown", this.onDataSearchKeydown);
+        this.closeDataButton.addEventListener("click", this.onCloseDataClick);
     }
 
     disconnectedCallback(): void {
@@ -38,6 +49,9 @@ export class RichTextEditor extends HTMLElement {
         this.editor.removeEventListener("mouseup", this.saveSelection);
         this.editor.removeEventListener("pointerup", this.saveSelection);
         this.editor.removeEventListener("blur", this.saveSelection);
+        this.dataSearch.removeEventListener("input", this.renderDataOptions);
+        this.dataSearch.removeEventListener("keydown", this.onDataSearchKeydown);
+        this.closeDataButton.removeEventListener("click", this.onCloseDataClick);
     }
 
     private renderToolbar(): void {
@@ -109,10 +123,106 @@ export class RichTextEditor extends HTMLElement {
             const href = window.prompt("Link URL");
             if (href) this.wrapRange("a", { href });
         } else {
-            const expression = window.prompt("Data expression");
-            if (expression) this.insertText(asInterpolation(expression));
+            this.openDataPicker();
+            return;
         }
         this.finishAction();
+    }
+
+    private openDataPicker(): void {
+        this.saveSelection();
+        this._dataOptions = this.dataOptions();
+        this.dataSearch.value = "";
+        this.renderDataOptions();
+        this.dataPicker.hidden = false;
+        this.dataSearch.focus();
+    }
+
+    private insertDataExpression(expression: string): void {
+        if (!expression) return;
+
+        this.insertText(asInterpolation(expression));
+        this.closeDataPicker({ restoreFocus: false });
+        this.finishAction();
+    }
+
+    private readonly onDataSearchKeydown = (event: KeyboardEvent): void => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const first = this.dataList.querySelector<HTMLButtonElement>(".data-option");
+            if (first) this.insertDataExpression(first.dataset.path ?? "");
+        } else if (event.key === "Escape") {
+            event.preventDefault();
+            this.closeDataPicker();
+        }
+    };
+
+    private readonly renderDataOptions = (): void => {
+        const query = this.dataSearch.value.trim().toLowerCase();
+        const options = query
+            ? this._dataOptions.filter(option => `${option.label} ${option.path}`.toLowerCase().includes(query))
+            : this._dataOptions;
+
+        this.dataList.replaceChildren();
+
+        if (options.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "data-empty";
+            empty.textContent = this._dataOptions.length === 0 ? "No data available here." : "No matching data.";
+            this.dataList.append(empty);
+            return;
+        }
+
+        for (const option of options) {
+            const button = document.createElement("button");
+            button.className = "data-option";
+            button.type = "button";
+            button.dataset.path = option.path;
+
+            const label = document.createElement("span");
+            label.className = "data-label";
+            label.textContent = option.label;
+            const path = document.createElement("code");
+            path.textContent = option.path;
+
+            button.append(label, path);
+            button.addEventListener("click", () => this.insertDataExpression(option.path));
+            this.dataList.append(button);
+        }
+    };
+
+    private readonly onCloseDataClick = (): void => {
+        this.closeDataPicker();
+    };
+
+    private readonly closeDataPicker = (options: { restoreFocus?: boolean } = {}): void => {
+        this.dataPicker.hidden = true;
+        if (options.restoreFocus === false) return;
+
+        this.editor.focus();
+        this.restoreSelection();
+    };
+
+    private dataOptions(): DataOption[] {
+        const byPath = new Map<string, DataOption>();
+        for (const option of this.dataScopes.flatMap(scope => this.fieldOptions(scope.fields, scope.name, scope.label ?? scope.name))) {
+            if (!byPath.has(option.path)) byPath.set(option.path, option);
+        }
+        return [...byPath.values()];
+    }
+
+    private fieldOptions(fields: DataField[], scopeName: string, scopeLabel: string, prefix = ""): DataOption[] {
+        return fields.flatMap(field => {
+            const relativePath = prefix && field.path !== "." ? `${prefix}.${field.path}` : field.path === "." ? prefix : field.path;
+            const path = relativePath ? `${scopeName}.${relativePath}` : scopeName;
+            if (field.type === "array") return [];
+
+            const children = this.fieldOptions(field.children ?? [], scopeName, scopeLabel, relativePath);
+            if (field.type === "object" || field.children?.length) return children;
+
+            const label = field.label ? `${scopeLabel} / ${field.label}` : `${scopeLabel} / ${relativePath}`;
+            return [{ label, path }, ...children];
+        });
     }
 
     private stepTextSize(direction: "decrease" | "increase"): void {
@@ -266,7 +376,7 @@ export class RichTextEditor extends HTMLElement {
 
     private getSelection(): Selection | null {
         const shadowSelection = (this.shadowRoot as ShadowRoot & { getSelection?: () => Selection | null }).getSelection?.();
-        return shadowSelection ?? this.ownerDocument.getSelection();
+        return shadowSelection ?? this.ownerDocument.getSelection?.() ?? null;
     }
 
     private readonly saveSelection = (): void => {
@@ -341,6 +451,18 @@ export class RichTextEditor extends HTMLElement {
         }
     }
 
+    private get dataScopes(): DataScope[] {
+        const raw = this.getAttribute("data-scopes");
+        if (!raw) return [];
+
+        try {
+            const parsed = JSON.parse(raw) as unknown;
+            return Array.isArray(parsed) ? parsed as DataScope[] : [];
+        } catch {
+            return [];
+        }
+    }
+
     private get label(): HTMLElement {
         return this.shadowRoot!.querySelector(".label")!;
     }
@@ -351,6 +473,22 @@ export class RichTextEditor extends HTMLElement {
 
     private get toolbar(): HTMLElement {
         return this.shadowRoot!.querySelector(".toolbar")!;
+    }
+
+    private get dataPicker(): HTMLElement {
+        return this.shadowRoot!.querySelector(".data-picker")!;
+    }
+
+    private get dataSearch(): HTMLInputElement {
+        return this.shadowRoot!.querySelector(".data-search")!;
+    }
+
+    private get dataList(): HTMLElement {
+        return this.shadowRoot!.querySelector(".data-list")!;
+    }
+
+    private get closeDataButton(): HTMLButtonElement {
+        return this.shadowRoot!.querySelector(".close-data")!;
     }
 
     private get editor(): HTMLElement {

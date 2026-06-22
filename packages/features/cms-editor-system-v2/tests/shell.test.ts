@@ -441,7 +441,7 @@ describe("Shell", () => {
         picker.shadowRoot!.querySelector<HTMLInputElement>(".source-alias")!.value = "plans";
         const rows = picker.shadowRoot!.querySelectorAll<HTMLElement>(".param-row");
         rows[0]!.querySelector<HTMLInputElement>(".param-value")!.value = "address";
-        rows[1]!.querySelector<HTMLSelectElement>(".param-mode")!.setAttribute("value", "raw");
+        rows[1]!.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex = 1;
         rows[1]!.querySelector<HTMLInputElement>(".param-value")!.value = "5";
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
 
@@ -504,6 +504,77 @@ describe("Shell", () => {
 
         expect(detail?.action).toBe("remove-source");
         expect(detail?.editor).toBe(editor);
+    });
+
+    test("structure tree pre-fills source picker from an existing cms-source binding", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class CardEditor extends Editor { }
+
+        const target = document.createElement("demo-card");
+        target.setAttribute("cms-source", "/api/plans?q=#{address}&limit=5 as plans");
+        const editor = new CardEditor(target);
+        const node: EditorStructureNode = {
+            editor,
+            target,
+            tag:      "demo-card",
+            label:    "Card",
+            badges:   ["Source"],
+            children: [],
+        };
+        const tree = new StructureTree();
+        document.body.append(tree);
+        tree.setDataSources([{
+            label: "Other",
+            url: "/api/other",
+            method: "GET",
+            fields: [],
+        }, {
+            label: "Plans",
+            url: "/api/plans",
+            method: "GET",
+            fields: [{ path: "items", type: "array" }],
+            params: [
+                { name: "q", in: "query", required: true, type: "string" },
+                { name: "limit", in: "query", type: "number" },
+            ],
+        }]);
+        tree.setStructure([node], editor);
+
+        let detail: StructureTreeActionDetail | undefined;
+        tree.addEventListener("editor-v2:structure-action", (event) => {
+            detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
+        });
+
+        (tree as unknown as {
+            _openSourcePicker(node: EditorStructureNode): void;
+        })._openSourcePicker(node);
+
+        const picker = tree.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
+        expect(picker.shadowRoot!.querySelector<HTMLInputElement>(".source-alias")!.value).toBe("plans");
+
+        const rows = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>(".param-row"));
+        const qRow = rows.find(row => row.dataset.paramName === "q")!;
+        const limitRow = rows.find(row => row.dataset.paramName === "limit")!;
+        expect(qRow.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex).toBe(0);
+        expect(qRow.querySelector<HTMLInputElement>(".param-value")!.value).toBe("address");
+        expect(limitRow.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex).toBe(1);
+        expect(limitRow.querySelector<HTMLInputElement>(".param-value")!.value).toBe("5");
+
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
+
+        expect(detail?.action).toBe("set-source");
+        expect(detail?.dataSource?.url).toBe("/api/plans");
+        expect(detail?.sourceBinding).toEqual({
+            url: "/api/plans",
+            alias: "plans",
+            params: {
+                q: { from: "queryParam", name: "address" },
+                limit: { from: "raw", value: "5" },
+            },
+        });
     });
 
     test("structure tree uses the default template on empty pages", async () => {
@@ -612,6 +683,7 @@ describe("Shell", () => {
 
         const topbar = new TopBar();
         document.body.append(topbar);
+        topbar.connectedCallback();
 
         const events: TopBarViewportChangeDetail[] = [];
         topbar.addEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, (event) => {
@@ -1657,6 +1729,55 @@ describe("Shell", () => {
         expect(events).toEqual(["Updated"]);
     });
 
+    test("rich text dynamic data uses available data scopes instead of a prompt", async () => {
+        installDom();
+
+        const { RichTextEditor } = await import("../src/components/Controls/RichTextEditor/RichTextEditor");
+
+        const editor = new RichTextEditor();
+        editor.setAttribute("label", "Rich text");
+        editor.setAttribute("capability", JSON.stringify({ format: "richtext", dynamic: true }));
+        editor.setAttribute("data-scopes", JSON.stringify([{
+            name: "plans",
+            label: "Plans",
+            fields: [
+                { path: "title", type: "string" },
+                { path: "meta", type: "object", children: [{ path: "category", type: "string" }] },
+                { path: "items", type: "array", children: [{ path: "price", type: "number" }] },
+            ],
+        }, {
+            name: "plan",
+            label: "plan",
+            fields: [{ path: "price", type: "number" }],
+        }]));
+        document.body.append(editor);
+        editor.connectedCallback();
+
+        let prompted = false;
+        const originalPrompt = window.prompt;
+        window.prompt = (() => {
+            prompted = true;
+            return "";
+        }) as typeof window.prompt;
+
+        try {
+            (editor as unknown as { runAction(action: "dynamic"): void }).runAction("dynamic");
+        } finally {
+            window.prompt = originalPrompt;
+        }
+
+        const picker = editor.shadowRoot!.querySelector<HTMLElement>(".data-picker")!;
+        const options = Array.from(editor.shadowRoot!.querySelectorAll<HTMLButtonElement>(".data-option"));
+
+        expect(prompted).toBe(false);
+        expect(picker.hidden).toBe(false);
+        expect(options.map(option => option.dataset.path)).toEqual([
+            "plans.title",
+            "plans.meta.category",
+            "plan.price",
+        ]);
+    });
+
     test("page link control selects internal pages and external URLs", async () => {
         installDom();
         document.head.innerHTML = `<meta name="basePath" content="/cms">`;
@@ -2269,6 +2390,71 @@ describe("Shell", () => {
         expect(target.getAttribute("cms-source")).toBe("/api/plans?q=#{address}&limit=5 as plans");
     });
 
+    test("shell adds query param sync settings for standard value elements", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/components/Layout/Shell/Shell");
+
+        const shell = new Shell();
+        const input = document.createElement("input");
+        input.setAttribute("name", "search");
+        const editor = new Editor(input);
+
+        const section = (shell as unknown as {
+            _paramSyncSettings(editor: Editor): { label: string; settings: Array<{ attribute: string; defaultValue?: unknown }> } | null;
+        })._paramSyncSettings(editor);
+
+        expect(section?.label).toBe("Query params");
+        expect(section?.settings.map(setting => [setting.attribute, setting.defaultValue])).toEqual([
+            ["__cms-param-sync-enabled", false],
+        ]);
+
+        (shell as unknown as {
+            _applyParamSyncSetting(editor: Editor, setting: { attribute: string }, value: string | boolean): boolean;
+        })._applyParamSyncSetting(editor, { attribute: "__cms-param-sync-enabled" }, true);
+
+        expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("search");
+
+        const enabledSection = (shell as unknown as {
+            _paramSyncSettings(editor: Editor): { settings: Array<{ attribute: string; defaultValue?: unknown }> } | null;
+        })._paramSyncSettings(editor);
+        expect(enabledSection?.settings.map(setting => [setting.attribute, setting.defaultValue])).toEqual([
+            ["__cms-param-sync-enabled", true],
+            ["__cms-param-sync-use-name", true],
+        ]);
+    });
+
+    test("shell validates custom query param sync names", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/components/Layout/Shell/Shell");
+
+        const shell = new Shell();
+        const input = document.createElement("input");
+        input.setAttribute("name", "search");
+        input.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, "search");
+        const editor = new Editor(input);
+        const api = shell as unknown as {
+            _applyParamSyncSetting(editor: Editor, setting: { attribute: string }, value: string | boolean): boolean;
+            _paramSyncSettings(editor: Editor): { settings: Array<{ attribute: string; defaultValue?: unknown }> } | null;
+        };
+
+        api._applyParamSyncSetting(editor, { attribute: "__cms-param-sync-use-name" }, false);
+        expect(input.hasAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe(false);
+
+        input.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, "search");
+        api._applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "bad name");
+        expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("search");
+
+        api._applyParamSyncSetting(editor, { attribute: "__cms-param-sync-name" }, "q");
+        expect(input.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)).toBe("q");
+        expect(api._paramSyncSettings(editor)?.settings.map(setting => setting.attribute)).toEqual([
+            "__cms-param-sync-enabled",
+            "__cms-param-sync-use-name",
+            "__cms-param-sync-name",
+        ]);
+    });
+
     test("shell inserts source state children with cms-slot", async () => {
         installDom();
 
@@ -2602,5 +2788,204 @@ describe("Shell", () => {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         expect(didScroll).toBe(true);
+    });
+
+    test("shell keeps source bindings when dependent cleanup is cancelled", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        const source = document.createElement("section");
+        source.setAttribute(CMS_BINDING_ATTRIBUTES.source, "/api/plans as plans");
+        source.innerHTML = `<article cms-repeat="plans.items as plan"><h2>{{ plan.title }}</h2></article>`;
+        const editor = new Editor(source);
+        const shell = new Shell();
+        document.body.append(shell);
+
+        const originalConfirm = globalThis.confirm;
+        globalThis.confirm = (() => false) as typeof globalThis.confirm;
+        try {
+            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(editor);
+        } finally {
+            globalThis.confirm = originalConfirm;
+        }
+
+        expect(source.getAttribute(CMS_BINDING_ATTRIBUTES.source)).toBe("/api/plans as plans");
+        expect(source.querySelector("article")?.getAttribute(CMS_BINDING_ATTRIBUTES.repeat)).toBe("plans.items as plan");
+        expect(source.querySelector("h2")?.textContent).toBe("{{ plan.title }}");
+    });
+
+    test("shell cleans dependent bindings when removing a source", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        const source = document.createElement("section");
+        source.setAttribute(CMS_BINDING_ATTRIBUTES.source, "/api/plans as plans");
+        source.innerHTML = `
+            <article cms-repeat="items as plan" cms-condition="plan.visible" title="Plan {{ plan.title }}">
+                <h2>{{ plan.title }}</h2>
+                <p>{{ unrelated.label }}</p>
+            </article>
+        `;
+        const editor = new Editor(source);
+        const shell = new Shell();
+        document.body.append(shell);
+
+        const originalConfirm = globalThis.confirm;
+        globalThis.confirm = (() => true) as typeof globalThis.confirm;
+        try {
+            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(editor);
+        } finally {
+            globalThis.confirm = originalConfirm;
+        }
+
+        const article = source.querySelector("article")!;
+        expect(source.hasAttribute(CMS_BINDING_ATTRIBUTES.source)).toBe(false);
+        expect(article.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)).toBe(false);
+        expect(article.hasAttribute(CMS_BINDING_ATTRIBUTES.condition)).toBe(false);
+        expect(article.getAttribute("title")).toBe("Plan");
+        expect(article.querySelector("h2")?.textContent).toBe("");
+        expect(article.querySelector("p")?.textContent).toBe("{{ unrelated.label }}");
+    });
+
+    test("shell cleans repeat bindings from child editors when removing a source", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        class GridEditor extends Editor {
+            protected override contentSlots() {
+                return [{
+                    label: "Content",
+                    accepts: [{ kind: "any-component" as const }],
+                }];
+            }
+        }
+
+        class CardEditor extends Editor { }
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
+        const contentRoot = frameDocument.createElement("main");
+        contentRoot.setAttribute("data-cms-content", "");
+        const grid = frameDocument.createElement("demo-grid");
+        grid.setAttribute(CMS_BINDING_ATTRIBUTES.source, "/api/plans as data");
+        grid.setAttribute("cms-ready", "");
+        grid.innerHTML = `
+            <demo-card cms-repeat="data.features as feature">
+                <h2>{{ feature.title }}</h2>
+                <p>{{ unrelated.label }}</p>
+            </demo-card>
+        `;
+        contentRoot.append(grid);
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.setCatalog([
+            {
+                tag:    "demo-grid",
+                label:  "Grid",
+                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                editor: GridEditor,
+            },
+            {
+                tag:    "demo-card",
+                label:  "Card",
+                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                editor: CardEditor,
+            },
+        ]);
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        shell.loadDocument({ root, contentRoot });
+
+        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const gridEditor = runtime.getEditor(grid);
+        if (!gridEditor) throw new Error("Missing grid editor.");
+
+        const originalConfirm = globalThis.confirm;
+        globalThis.confirm = (() => true) as typeof globalThis.confirm;
+        try {
+            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(gridEditor);
+        } finally {
+            globalThis.confirm = originalConfirm;
+        }
+
+        const card = grid.querySelector("demo-card")!;
+        expect(grid.hasAttribute(CMS_BINDING_ATTRIBUTES.source)).toBe(false);
+        expect(grid.hasAttribute("cms-ready")).toBe(false);
+        expect(card.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)).toBe(false);
+        expect(card.querySelector("h2")?.textContent).toBe("");
+        expect(card.querySelector("p")?.textContent).toBe("{{ unrelated.label }}");
+    });
+
+    test("shell cleans repeat bindings from the removed source element", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        const source = document.createElement("section");
+        source.setAttribute(CMS_BINDING_ATTRIBUTES.source, "/api/plans as plans");
+        source.setAttribute(CMS_BINDING_ATTRIBUTES.repeat, "items as plan");
+        source.innerHTML = `<h2>{{ plan.title }}</h2><p>{{ unrelated.label }}</p>`;
+        const editor = new Editor(source);
+        const shell = new Shell();
+        document.body.append(shell);
+
+        const originalConfirm = globalThis.confirm;
+        globalThis.confirm = (() => true) as typeof globalThis.confirm;
+        try {
+            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(editor);
+        } finally {
+            globalThis.confirm = originalConfirm;
+        }
+
+        expect(source.hasAttribute(CMS_BINDING_ATTRIBUTES.source)).toBe(false);
+        expect(source.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)).toBe(false);
+        expect(source.querySelector("h2")?.textContent).toBe("");
+        expect(source.querySelector("p")?.textContent).toBe("{{ unrelated.label }}");
+    });
+
+    test("shell preserves nested source bindings when removing a parent source", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        const source = document.createElement("section");
+        source.setAttribute(CMS_BINDING_ATTRIBUTES.source, "/api/plans as plans");
+        source.innerHTML = `
+            <article cms-repeat="plans.items as plan"><h2>{{ plan.title }}</h2></article>
+            <aside cms-source="/api/featured">
+                <h3>{{ title }}</h3>
+                <p cms-repeat="items as item">{{ item.label }}</p>
+            </aside>
+        `;
+        const editor = new Editor(source);
+        const shell = new Shell();
+        document.body.append(shell);
+
+        const originalConfirm = globalThis.confirm;
+        globalThis.confirm = (() => true) as typeof globalThis.confirm;
+        try {
+            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(editor);
+        } finally {
+            globalThis.confirm = originalConfirm;
+        }
+
+        const nested = source.querySelector("aside")!;
+        expect(source.hasAttribute(CMS_BINDING_ATTRIBUTES.source)).toBe(false);
+        expect(source.querySelector("article")?.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)).toBe(false);
+        expect(nested.getAttribute(CMS_BINDING_ATTRIBUTES.source)).toBe("/api/featured");
+        expect(nested.querySelector("h3")?.textContent).toBe("{{ title }}");
+        expect(nested.querySelector("p")?.getAttribute(CMS_BINDING_ATTRIBUTES.repeat)).toBe("items as item");
+        expect(nested.querySelector("p")?.textContent).toBe("{{ item.label }}");
     });
 });

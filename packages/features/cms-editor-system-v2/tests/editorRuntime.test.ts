@@ -356,6 +356,10 @@ describe("EditorRuntime", () => {
             root: document.getElementById("content-root")!,
             contentRoot: document.getElementById("content-root")!,
         });
+
+        runtime.select(document.getElementById("parent")!);
+        expect(runtime.getSelectedDataScopes()).toEqual([]);
+
         runtime.select(document.getElementById("child")!);
 
         expect(runtime.getSelectedDataScopes()).toEqual([

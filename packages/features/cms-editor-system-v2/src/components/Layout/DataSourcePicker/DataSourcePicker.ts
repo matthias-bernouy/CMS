@@ -28,6 +28,7 @@ export class DataSourcePicker extends HTMLElement {
     private _sources: EditorDataSource[] = [];
     private _activeProvider = "";
     private _activeSource: EditorDataSource | null = null;
+    private _initialBinding: DataSourcePickerSourceBinding | null = null;
     private _canRemove = false;
 
     constructor() {
@@ -49,13 +50,18 @@ export class DataSourcePicker extends HTMLElement {
         this.ownerDocument.removeEventListener("keydown", this._onKeydown);
     }
 
-    open(sources: EditorDataSource[], contextLabel?: string, options: { canRemove?: boolean } = {}): void {
+    open(
+        sources: EditorDataSource[],
+        contextLabel?: string,
+        options: { canRemove?: boolean; initialBinding?: DataSourcePickerSourceBinding | null } = {},
+    ): void {
         this._sources = sources.map(source => ({
             ...source,
             fields: [...source.fields],
         }));
-        this._activeProvider = this._providerGroups()[0]?.key ?? "";
-        this._activeSource = null;
+        this._initialBinding = options.initialBinding ?? null;
+        this._activeSource = this._sourceForBinding(this._initialBinding);
+        this._activeProvider = this._activeSource?.provider ?? this._providerGroups()[0]?.key ?? "";
         this._canRemove = options.canRemove === true;
         this.subtitle.textContent = contextLabel ? `Choose a data source for ${contextLabel}.` : "Choose a data source.";
         this.search.value = "";
@@ -215,12 +221,15 @@ export class DataSourcePicker extends HTMLElement {
         aliasLabel.textContent = "Alias";
         const alias = document.createElement("input");
         alias.className = "source-alias";
-        alias.value = "data";
+        alias.value = source === this._activeSource ? this._initialBinding?.alias ?? "data" : "data";
         alias.placeholder = "data";
         aliasLabel.append(alias);
         section.append(aliasLabel);
 
         const params = source.params ?? [];
+        const initialParams = source === this._activeSource
+            ? this._paramsForBinding(source, this._initialBinding)
+            : {};
         if (params.length === 0) return section;
 
         const heading = document.createElement("div");
@@ -267,6 +276,11 @@ export class DataSourcePicker extends HTMLElement {
             const value = document.createElement("input");
             value.className = "param-value";
             value.placeholder = param.name;
+            const initialValue = initialParams[param.name];
+            if (initialValue) {
+                this._selectMode(mode, initialValue.from);
+                value.value = initialValue.from === "raw" ? initialValue.value : initialValue.name;
+            }
 
             controls.append(mode, value);
             row.append(header, description, controls);
@@ -342,7 +356,7 @@ export class DataSourcePicker extends HTMLElement {
         for (const row of Array.from(this.shadowRoot!.querySelectorAll(".param-row")) as HTMLElement[]) {
             const name = row.dataset.paramName;
             const modeElement = row.querySelector(".param-mode") as HTMLSelectElement | null;
-            const mode = modeElement?.getAttribute("value") ?? modeElement?.value;
+            const mode = modeElement ? this._selectedMode(modeElement) : "queryParam";
             const rawValue = (row.querySelector(".param-value") as HTMLInputElement | null)?.value.trim();
             if (!name || !rawValue) continue;
 
@@ -356,6 +370,59 @@ export class DataSourcePicker extends HTMLElement {
             ...(alias ? { alias } : {}),
             ...(Object.keys(params).length ? { params } : {}),
         };
+    }
+
+    private _selectMode(select: HTMLSelectElement, value: DataSourcePickerSourceParamValue["from"]): void {
+        const index = Array.from(select.options).findIndex(option => option.value === value);
+        if (index >= 0) select.selectedIndex = index;
+    }
+
+    private _selectedMode(select: HTMLSelectElement): DataSourcePickerSourceParamValue["from"] {
+        return select.options[select.selectedIndex]?.value === "raw" ? "raw" : "queryParam";
+    }
+
+    private _sourceForBinding(binding: DataSourcePickerSourceBinding | null): EditorDataSource | null {
+        if (!binding) return null;
+
+        return this._sources.find(source => this._sourceMatchesBinding(source, binding)) ?? null;
+    }
+
+    private _sourceMatchesBinding(source: EditorDataSource, binding: DataSourcePickerSourceBinding): boolean {
+        return this._bindingQuery(source.url, binding.url) !== null;
+    }
+
+    private _paramsForBinding(
+        source: EditorDataSource,
+        binding: DataSourcePickerSourceBinding | null,
+    ): Record<string, DataSourcePickerSourceParamValue> {
+        if (!binding) return {};
+        if (binding.params) return binding.params;
+
+        const query = this._bindingQuery(source.url, binding.url);
+        if (!query) return {};
+
+        const params: Record<string, DataSourcePickerSourceParamValue> = {};
+        for (const [name, value] of new URLSearchParams(query).entries()) {
+            params[name] = this._paramValue(value);
+        }
+        return params;
+    }
+
+    private _paramValue(value: string): DataSourcePickerSourceParamValue {
+        const match = /^#\{([^}]+)\}$/.exec(value);
+        if (match?.[1]?.trim()) {
+            return { from: "queryParam", name: match[1].trim() };
+        }
+        return { from: "raw", value };
+    }
+
+    private _bindingQuery(sourceUrl: string, bindingUrl: string): string | null {
+        if (bindingUrl === sourceUrl) return "";
+        if (bindingUrl.startsWith(`${sourceUrl}?`)) return bindingUrl.slice(sourceUrl.length + 1);
+        if (sourceUrl.includes("?") && bindingUrl.startsWith(`${sourceUrl}&`)) {
+            return bindingUrl.slice(sourceUrl.length + 1);
+        }
+        return null;
     }
 
     private _providerGroups(): { key: string; label: string; count: number }[] {
