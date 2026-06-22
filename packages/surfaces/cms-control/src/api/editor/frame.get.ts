@@ -1,5 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { composeShell, expandSnippets } from "@bernouy/cms-content";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
 
 type EditorFrameType = "page" | "template" | "snippet";
@@ -83,6 +84,7 @@ function renderFrameDocument(input: {
     description: string;
     composed: string;
 }): string {
+    const composed = withEditorBindingCore(input.composed);
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,9 +99,31 @@ function renderFrameDocument(input: {
     <script src="${input.basePath}/api/editor/view-script.js"></script>
 </head>
 <body>
-    <div data-cms-editor-root style="display:contents">${input.composed}</div>
+    <div data-cms-editor-root style="display:contents">${composed}</div>
 </body>
 </html>`;
+}
+
+function withEditorBindingCore(composed: string): string {
+    const forceAttr = CMS_BINDING_ATTRIBUTES.sourceStateForce;
+    if (!hasBindingCore(composed)) {
+        return `<${CMS_BINDING_CORE_TAG} ${CMS_BINDING_ATTRIBUTES.bindingDisabled} ${forceAttr}="loading">${composed}</${CMS_BINDING_CORE_TAG}>`;
+    }
+
+    return composed.replace(new RegExp(`<${CMS_BINDING_CORE_TAG}\\b([^>]*)>`, "i"), (_match, attrs: string) => {
+        let nextAttrs = attrs;
+        if (!hasAttribute(nextAttrs, CMS_BINDING_ATTRIBUTES.bindingDisabled)) nextAttrs += ` ${CMS_BINDING_ATTRIBUTES.bindingDisabled}`;
+        if (!hasAttribute(nextAttrs, forceAttr)) nextAttrs += ` ${forceAttr}="loading"`;
+        return `<${CMS_BINDING_CORE_TAG}${nextAttrs}>`;
+    });
+}
+
+function hasBindingCore(value: string): boolean {
+    return new RegExp(`<${CMS_BINDING_CORE_TAG}\\b`, "i").test(value);
+}
+
+function hasAttribute(attrs: string, name: string): boolean {
+    return new RegExp(`\\s${name}(?:\\s|=|$)`, "i").test(attrs);
 }
 
 function redirectToPages(url: URL): Response {
@@ -119,9 +143,5 @@ function controlBasePath(pathname: string): string {
 }
 
 function escapeHtml(value: string): string {
-    return value
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll("\"", "&quot;");
+    return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;");
 }
