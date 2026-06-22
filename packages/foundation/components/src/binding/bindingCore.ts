@@ -13,22 +13,29 @@
  * the page-global scope (query / route / user) shared by every source within.
  */
 
-import { BindingRuntime, revealSources } from "./runtime";
+import { BindingRuntime, revealSources } from "./runtime/BindingRuntime";
 import { type FilterMap } from "./interpolate";
-import { SOURCE_ATTR } from "./bindSubtree";
-import { BINDING_CORE_TAG, BIND_STOP_ATTR, READY_ATTR } from "./attrs";
+import { injectCloak } from "./core/cloak";
+import {
+    BINDING_CORE_TAG,
+    BINDING_DISABLED_ATTR,
+    BIND_STOP_ATTR,
+    isSourceState,
+    READY_ATTR,
+    SOURCE_STATE_FORCE_ATTR,
+    type SourceState,
+} from "./attrs";
 
 /** Re-exported through `@bernouy/components/binding` so the editor's save can
  *  strip the runtime's own stamps from serialized canvas content. */
-export { clearRuntimeStamps } from "./source";
-export { BINDING_CORE_TAG, BIND_STOP_ATTR, READY_ATTR } from "./attrs";
-
-const CLOAK_ID = "cms-binding-cloak";
-// The core wraps arbitrary content (often the whole page shell), so it must be
-// layout-transparent. Plus the cloak: hide un-ready sources until rendered.
-const CLOAK_CSS =
-    `${BINDING_CORE_TAG}{display:contents}` +
-    `[${SOURCE_ATTR}]:not([${READY_ATTR}]){visibility:hidden}`;
+export { clearRuntimeStamps } from "./source/Source";
+export {
+    BINDING_CORE_TAG,
+    BINDING_DISABLED_ATTR,
+    BIND_STOP_ATTR,
+    READY_ATTR,
+    SOURCE_STATE_FORCE_ATTR,
+} from "./attrs";
 
 /** Filter set passed to every source's interpolation. Empty until a host wires
  *  one in via `setBindingFilters` (the concrete filters are a later step). */
@@ -42,13 +49,13 @@ export function setBindingFilters(filters: FilterMap): void {
 export class BindingCore extends HTMLElement {
     private _runtime: BindingRuntime | null = null;
 
+    static get observedAttributes(): string[] {
+        return [BINDING_DISABLED_ATTR, SOURCE_STATE_FORCE_ATTR];
+    }
+
     connectedCallback(): void {
         injectCloak(this.ownerDocument ?? document);
-        if (this.closest(`[${BIND_STOP_ATTR}]`)) {
-            revealSources(this);
-            return;
-        }
-        this.startRuntime();
+        this._syncRuntime();
     }
 
     disconnectedCallback(): void {
@@ -73,18 +80,56 @@ export class BindingCore extends HTMLElement {
      * permanent), so resuming needs a fresh instance. No-op if one is running.
      */
     startRuntime(): void {
+        if (this._isRuntimeDisabled()) {
+            this._revealInertSources();
+            return;
+        }
         if (this._runtime && !this._runtime.isStopped) return;
-        this._runtime = new BindingRuntime(this, FILTERS);
+        this._runtime = new BindingRuntime(this, FILTERS, {
+            sourceStateForce: this._sourceStateForce(),
+        });
         this._runtime.start();
     }
-}
 
-/** Inject the cloak stylesheet once — hides un-ready sources so the raw,
- *  un-interpolated template never paints. */
-function injectCloak(doc: Document): void {
-    if (doc.getElementById(CLOAK_ID)) return;
-    const style = doc.createElement("style");
-    style.id = CLOAK_ID;
-    style.textContent = CLOAK_CSS;
-    (doc.head ?? doc.documentElement).appendChild(style);
+    attributeChangedCallback(): void {
+        if (!this.isConnected) return;
+        this._syncRuntime({ restart: true });
+    }
+
+    private _syncRuntime(options: { restart?: boolean } = {}): void {
+        if (this._isRuntimeDisabled()) {
+            this._runtime?.deactivate();
+            this._runtime = null;
+            this._revealInertSources();
+            return;
+        }
+
+        if (options.restart) {
+            this._runtime?.deactivate();
+            this._runtime = null;
+        }
+        this.startRuntime();
+    }
+
+    private _isRuntimeDisabled(): boolean {
+        if (this.hasAttribute(BINDING_DISABLED_ATTR) || this.closest(`[${BIND_STOP_ATTR}]`) !== null) return true;
+
+        for (let parent = this.parentElement; parent; parent = parent.parentElement) {
+            if (parent.localName === BINDING_CORE_TAG && parent.hasAttribute(BINDING_DISABLED_ATTR)) return true;
+        }
+
+        return false;
+    }
+
+    private _sourceStateForce(): SourceState | undefined {
+        const value = this.getAttribute(SOURCE_STATE_FORCE_ATTR);
+        return isSourceState(value) ? value : undefined;
+    }
+
+    private _revealInertSources(): void {
+        revealSources(this);
+        queueMicrotask(() => {
+            if (this.isConnected && this._isRuntimeDisabled()) revealSources(this);
+        });
+    }
 }

@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { bindSubtree } from "../src/binding/bindSubtree";
-import { type Scope } from "../src/binding/scope";
+import { bindSubtree } from "../../../src/binding/render/bindSubtree";
+import { type Scope } from "../../../src/binding/scope";
 
 function el(html: string): HTMLElement {
     const host = document.createElement("div");
@@ -98,5 +98,52 @@ describe("cms-repeat — named binding keeps the parent reachable", () => {
         const scope: Scope = { value: { order: { id: 9 }, lines: [{ sku: "A1" }, { sku: "B2" }] } };
         bindSubtree(ul, scope);
         expect(Array.from(ul.querySelectorAll("li")).map(text)).toEqual(["A1 @ 9", "B2 @ 9"]);
+    });
+});
+
+describe("cms-condition — truthy path filtering", () => {
+    test("removes elements whose condition resolves false", () => {
+        const root = el(`
+            <div>
+                <p cms-condition="visible">Visible</p>
+                <p cms-condition="hidden">Hidden</p>
+            </div>
+        `);
+
+        bindSubtree(root, { value: { visible: true, hidden: false } });
+
+        expect(Array.from(root.querySelectorAll("p")).map(text)).toEqual(["Visible"]);
+    });
+
+    test("supports negated paths", () => {
+        const root = el(`
+            <div>
+                <p cms-condition="!archived">Current</p>
+                <p cms-condition="!active">Inactive</p>
+            </div>
+        `);
+
+        bindSubtree(root, { value: { archived: false, active: true } });
+
+        expect(Array.from(root.querySelectorAll("p")).map(text)).toEqual(["Current"]);
+    });
+
+    test("filters repeated clones against each item scope", () => {
+        const root = el(`
+            <ul>
+                <li cms-repeat="items as item" cms-condition="item.visible">{{ item.title }}</li>
+            </ul>
+        `);
+
+        bindSubtree(root, {
+            value: {
+                items: [
+                    { title: "Visible", visible: true },
+                    { title: "Hidden", visible: false },
+                ],
+            },
+        });
+
+        expect(Array.from(root.querySelectorAll("li")).map(text)).toEqual(["Visible"]);
     });
 });

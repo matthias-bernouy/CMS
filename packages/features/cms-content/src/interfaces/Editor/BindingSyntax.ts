@@ -3,6 +3,7 @@ export const CMS_BINDING_CORE_TAG = "cms-binding-core";
 export const CMS_BINDING_ATTRIBUTES = {
     bindingDisabled:  "cms-binding-disabled",
     condition:        "cms-condition",
+    paramSync:        "cms-param-sync",
     repeat:           "cms-repeat",
     source:           "cms-source",
     sourceStateForce: "cms-source-state-force",

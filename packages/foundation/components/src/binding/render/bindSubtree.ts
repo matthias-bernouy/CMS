@@ -27,12 +27,13 @@
  *    against the item) and the runtime then registers it as its own source.
  */
 
-import { interpolateString, type FilterMap } from "./interpolate";
-import { lookup, type Scope } from "./scope";
+import { interpolateString, type FilterMap } from "../interpolate";
+import { lookup, type Scope } from "../scope";
 import { parseRepeat, REPEAT_ATTR } from "./repeat";
-
-export const SOURCE_ATTR = "cms-source";
+import { BINDING_CORE_TAG, CONDITION_ATTR, SOURCE_ATTR } from "../attrs";
+import { evaluateCondition } from "./condition";
 export { REPEAT_ATTR };
+export { SOURCE_ATTR } from "../attrs";
 
 export function bindSubtree(root: Node, scope: Scope, filters: FilterMap = {}): void {
     // A fragment root has no attributes/boundary of its own — bind its children
@@ -64,10 +65,15 @@ function walk(node: Node, scope: Scope, filters: FilterMap, isRoot: boolean): vo
         if (replaced !== attr.value) el.setAttribute(attr.name, replaced);
     }
 
+    if (el.hasAttribute(CONDITION_ATTR) && !evaluateCondition(el.getAttribute(CONDITION_ATTR) ?? "", scope)) {
+        el.remove();
+        return;
+    }
+
     // Boundaries — bind this element's own attrs above, but don't descend:
     //  - a nested source owns its subtree (its own data pass);
     //  - a nested `<cms-binding-core>` is a separate, isolated binding island.
-    if (!isRoot && (el.hasAttribute(SOURCE_ATTR) || el.localName === "cms-binding-core")) return;
+    if (!isRoot && (el.hasAttribute(SOURCE_ATTR) || el.localName === BINDING_CORE_TAG)) return;
 
     // Raw-HTML injection: an element whose sole content is `{{ path | innerHTML }}`
     // is REPLACED by the resolved value parsed as HTML (unescaped, unwrapped) —
@@ -130,6 +136,7 @@ function expandRepeat(tpl: Element, scope: Scope, filters: FilterMap): void {
         const childScope: Scope = spec.name
             ? { vars: { [spec.name]: item }, parent: scope }
             : { value: item, parent: scope };
+        if (clone.hasAttribute(CONDITION_ATTR) && !evaluateCondition(clone.getAttribute(CONDITION_ATTR) ?? "", childScope)) continue;
         bindSubtree(clone, childScope, filters);
         parent.insertBefore(clone, marker);
     }

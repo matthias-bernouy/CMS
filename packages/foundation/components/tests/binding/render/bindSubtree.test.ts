@@ -1,8 +1,7 @@
 import { describe, test, expect } from "bun:test";
-import { bindSubtree } from "../src/binding/bindSubtree";
-import { type Scope } from "../src/binding/scope";
+import { bindSubtree } from "../../../src/binding/render/bindSubtree";
+import { type Scope } from "../../../src/binding/scope";
 
-/** Parse an HTML string into a single root element for binding. */
 function el(html: string): HTMLElement {
     const tpl = document.createElement("div");
     tpl.innerHTML = html.trim();
@@ -71,7 +70,6 @@ describe("bindSubtree — nested source boundary", () => {
         `);
         bindSubtree(root, { value: { id: "OUT" } });
         expect(root.querySelector(".outer")!.textContent).toBe("OUT");
-        // inner belongs to the nested source's own pass — left untouched.
         expect(root.querySelector(".inner")!.textContent!.trim()).toBe("{{ id }}");
     });
 
@@ -113,9 +111,9 @@ describe("bindSubtree — raw HTML injection (| innerHTML)", () => {
     test("a lone {{ x | innerHTML }} replaces its placeholder with unescaped HTML", () => {
         const root = el(`<div><inner-html>{{ content | innerHTML }}</inner-html></div>`);
         bindSubtree(root, { value: { content: "<b>hi</b> <span>there</span>" } });
-        expect(root.querySelector("inner-html")).toBeNull();   // placeholder unwrapped
+        expect(root.querySelector("inner-html")).toBeNull();
         expect(root.querySelector("b")!.textContent).toBe("hi");
-        expect(root.children.length).toBe(2);                  // b + span are direct children now
+        expect(root.children.length).toBe(2);
     });
 
     test("absent value → placeholder removed, nothing injected", () => {

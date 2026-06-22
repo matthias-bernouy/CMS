@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { interpolateString, type FilterMap } from "../src/binding/interpolate";
-import { type Scope } from "../src/binding/scope";
+import { interpolateString, type FilterMap } from "../../../src/binding/interpolate";
+import { type Scope } from "../../../src/binding/scope";
 
 const s = (value: unknown): Scope => ({ value });
 

@@ -22,28 +22,22 @@ import {
 
 describe("editor binding syntax", () => {
     function createElement(): Element {
-        return parseHTML("<!DOCTYPE html><html><body><p></p></body></html>")
-            .document
-            .querySelector("p")!;
+        return parseHTML("<!DOCTYPE html><html><body><p></p></body></html>").document.querySelector("p")!;
     }
-
     test("formats interpolation expressions", () => {
         expect(asInterpolation("plan.name")).toBe("{{ plan.name }}");
         expect(asInterpolation("  plan.price  ")).toBe("{{ plan.price }}");
     });
-
     test("parses interpolation expressions", () => {
         expect(parseInterpolation("{{ plan.name }}")).toBe("plan.name");
         expect(parseInterpolation("  {{ plans[0].cta.label }}  ")).toBe("plans[0].cta.label");
         expect(parseInterpolation("plain text")).toBeNull();
         expect(parseInterpolation("{{ }}")).toBeNull();
     });
-
     test("detects interpolation expressions", () => {
         expect(isInterpolation("{{ plan.name }}")).toBe(true);
         expect(isInterpolation("Hello {{ plan.name }}")).toBe(false);
     });
-
     test("formats source bindings", () => {
         expect(asSource(" /api/plans ")).toBe("/api/plans");
         expect(asSource("https://example.com/api/plans")).toBe("https://example.com/api/plans");
@@ -82,7 +76,6 @@ describe("editor binding syntax", () => {
         expect(asRepeat({ path: "items" })).toBe("items");
         expect(asRepeat({ path: " order.lines ", alias: " line " })).toBe("order.lines as line");
     });
-
     test("parses repeat bindings", () => {
         expect(parseRepeat("items")).toEqual({ path: "items" });
         expect(parseRepeat("order.lines as line")).toEqual({ path: "order.lines", alias: "line" });
@@ -104,6 +97,7 @@ describe("editor binding syntax", () => {
         expect(CMS_BINDING_ATTRIBUTES).toEqual({
             bindingDisabled: "cms-binding-disabled",
             condition: "cms-condition",
+            paramSync: "cms-param-sync",
             repeat: "cms-repeat",
             source: "cms-source",
             sourceStateForce: "cms-source-state-force",
@@ -125,7 +119,6 @@ describe("editor binding syntax", () => {
         expect(isCmsSourceState("disabled")).toBe(false);
         expect(isCmsSourceState(null)).toBe(false);
     });
-
     test("maps cms-slot attributes to logical source states", () => {
         const element = createElement();
 

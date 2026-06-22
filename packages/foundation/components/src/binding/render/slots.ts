@@ -10,13 +10,11 @@
  */
 
 import { bindSubtree } from "./bindSubtree";
-import { type Scope } from "./scope";
-import { type FilterMap } from "./interpolate";
+import { type Scope } from "../scope";
+import { type FilterMap } from "../interpolate";
+import { isSourceSlotValue, SLOT_ATTR, type SourceSlotValue } from "../attrs";
 
-export const SLOT_ATTR = "cms-slot";
-
-export type SlotName = "loading" | "error" | "empty";
-const SLOT_NAMES: readonly SlotName[] = ["loading", "error", "empty"];
+export type SlotName = SourceSlotValue;
 
 export type Captured = {
     /** Authored editable template, including state slots with their attrs. */
@@ -95,7 +93,7 @@ export function isEmpty(data: unknown): boolean {
 function slotOf(node: Node): SlotName | null {
     if (node.nodeType !== Node.ELEMENT_NODE) return null;
     const v = (node as Element).getAttribute(SLOT_ATTR);
-    return v && (SLOT_NAMES as readonly string[]).includes(v) ? (v as SlotName) : null;
+    return isSourceSlotValue(v) ? v : null;
 }
 
 function cloneAuthoredNode(node: Node): Node {

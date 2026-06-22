@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { parseRepeat } from "../src/binding/repeat";
+import { parseRepeat } from "../../../src/binding/render/repeat";
 
 describe("parseRepeat", () => {
     test("bare path", () => {

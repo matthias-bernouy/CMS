@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { lookup, type Scope } from "../src/binding/scope";
+import { lookup, type Scope } from "../../../src/binding/scope";
 
 describe("lookup — presence vs absence (drives blank-on-miss)", () => {
     test("present scalar → found, exact value", () => {

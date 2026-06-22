@@ -18,7 +18,7 @@
  * `name`. A loop guard stops a programmatic reflect from echoing back as a write.
  */
 
-import { setParam, currentParams, PARAMS_CHANGE_EVENT } from "./params";
+import { setParam, currentParams, PARAMS_CHANGE_EVENT } from "../params";
 
 export const PARAM_SYNC_ATTR = "cms-param-sync";
 

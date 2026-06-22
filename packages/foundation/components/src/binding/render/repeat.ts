@@ -13,7 +13,7 @@
  *                                   remains reachable (no shadowing ambiguity).
  */
 
-export const REPEAT_ATTR = "cms-repeat";
+export { REPEAT_ATTR } from "../attrs";
 
 export type RepeatSpec = { path: string; name?: string };
 

@@ -1,7 +1,7 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import {
     resolveParams, hasParamTokens, currentParams, setParam, PARAMS_CHANGE_EVENT,
-} from "../src/binding/params";
+} from "../../../src/binding/params";
 
 // happy-dom does not reflect history.replaceState into `location`, but DOES
 // honour `location.href = …`. Use href to set up state; reset it between tests.

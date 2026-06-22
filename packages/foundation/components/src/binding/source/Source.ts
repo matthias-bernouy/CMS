@@ -1,27 +1,13 @@
-/**
- * The `cms-source` controller — the fetch→render cycle for a single source
- * element, plus reload (`cms-reload-on` / a global event / param-reactive) and
- * teardown. It holds the AbortController so a later run supersedes an in-flight
- * one ("last write wins" at the render).
- *
- * On construction it captures the element's content (body + state slots),
- * leaving the element empty. `run()` then:
- *   1. shows the `loading` slot (if any),
- *   2. fetches the `cms-source` URL,
- *   3. renders the slot matching the outcome:
- *      - error  → `error` slot bound with `{ status, message }` (else: clear + warn),
- *      - empty  → `empty` slot (when the payload is empty and a slot exists),
- *      - success→ the body bound with the data as the implicit scope value
- *                 (so `{{ title }}`, `cms-repeat="items"`, `{{ value }}` all read
- *                 the fetched payload).
- */
+/** Fetches one `cms-source`, renders its authored template, and owns reload hooks. */
 
-import { runFetch } from "./fetcher";
-import { captureContent, renderContent, isEmpty, type Captured } from "./slots";
-import { type FilterMap } from "./interpolate";
-import { SOURCE_ATTR } from "./bindSubtree";
-import { resolveParams, hasParamTokens, PARAMS_CHANGE_EVENT } from "./params";
-import { READY_ATTR } from "./attrs";
+import { runFetch } from "../fetcher";
+import { captureContent, renderContent, isEmpty, type Captured } from "../render/slots";
+import { type FilterMap } from "../interpolate";
+import { resolveParams, hasParamTokens, PARAMS_CHANGE_EVENT } from "../params";
+import { READY_ATTR, SOURCE_ATTR, type SourceState } from "../attrs";
+import { renderForcedSourceState } from "./forcedState";
+import { parseSourceSpec, sourceUrl } from "./sourceSpec";
+export { clearRuntimeStamps } from "./runtimeStamps";
 
 /** Space-separated event names in this attribute re-run the source. */
 export const RELOAD_ATTR = "cms-reload-on";
@@ -29,26 +15,21 @@ export const RELOAD_ATTR = "cms-reload-on";
  *  reloads every live source. */
 export const RELOAD_EVENT = "cms-source:reload";
 
-const SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+[A-Za-z_$][\w$]*\s*$/;
-
 export class Source {
     private readonly captured: Captured;
     private abort: AbortController | null = null;
     private reloadEvents: string[] = [];
     private paramReactive = false;
     private lastUrl: string | null = null;
-    /** Named/global reloads (`cms-reload-on`, `cms-source:reload`) always re-run:
-     *  they mean "the data changed, refetch". */
     private readonly onReload = () => { if (this.el.isConnected) void this.run(); };
-    /** Param-reactive reloads (`cms-params:change` / `popstate`) fire GLOBALLY for
-     *  ANY param. Only re-run when THIS source's resolved URL actually changed, so
-     *  an unrelated param (e.g. a sibling input syncing `#{q}`) doesn't re-fetch +
-     *  re-render us — in the editor the page-source `#{id}` wraps the whole canvas,
-     *  so an unrelated reload would re-render everything and drop the typed input's
-     *  focus. */
+    /** Param-reactive reloads are global, so only re-run when this URL changed. */
     private readonly onParamsChange = () => { if (this.el.isConnected) void this.run({ onlyIfUrlChanged: true }); };
 
-    constructor(private readonly el: Element, private readonly filters: FilterMap = {}) {
+    constructor(
+        private readonly el: Element,
+        private readonly filters: FilterMap = {},
+        private readonly options: { sourceStateForce?: SourceState } = {},
+    ) {
         this.captured = captureContent(el);
     }
 
@@ -79,34 +60,41 @@ export class Source {
     }
 
     private listen(): void {
+        const doc = this.el.ownerDocument;
         const named = (this.el.getAttribute(RELOAD_ATTR) ?? "").split(/\s+/).filter(Boolean);
         this.reloadEvents = [RELOAD_EVENT, ...named];
-        for (const ev of this.reloadEvents) document.addEventListener(ev, this.onReload);
+        for (const ev of this.reloadEvents) doc.addEventListener(ev, this.onReload);
 
         // A `#{param}`-dependent source reloads when the query params change —
         // via setParam (PARAMS_CHANGE_EVENT) or the browser back/forward (popstate).
         if (hasParamTokens(sourceUrl(this.el.getAttribute(SOURCE_ATTR) ?? ""))) {
             this.paramReactive = true;
-            document.addEventListener(PARAMS_CHANGE_EVENT, this.onParamsChange);
-            window.addEventListener("popstate", this.onParamsChange);
+            doc.addEventListener(PARAMS_CHANGE_EVENT, this.onParamsChange);
+            doc.defaultView?.addEventListener?.("popstate", this.onParamsChange);
         }
     }
 
     private unlisten(): void {
-        for (const ev of this.reloadEvents) document.removeEventListener(ev, this.onReload);
+        const doc = this.el.ownerDocument;
+        for (const ev of this.reloadEvents) doc.removeEventListener(ev, this.onReload);
         this.reloadEvents = [];
         if (this.paramReactive) {
-            document.removeEventListener(PARAMS_CHANGE_EVENT, this.onParamsChange);
-            window.removeEventListener("popstate", this.onParamsChange);
+            doc.removeEventListener(PARAMS_CHANGE_EVENT, this.onParamsChange);
+            doc.defaultView?.removeEventListener?.("popstate", this.onParamsChange);
             this.paramReactive = false;
         }
     }
 
     async run(opts?: { onlyIfUrlChanged?: boolean }): Promise<void> {
-        const raw = sourceUrl(this.el.getAttribute(SOURCE_ATTR) ?? "");
-        if (!raw) return;
+        if (this.options.sourceStateForce && this.options.sourceStateForce !== "loaded") {
+            this.renderForcedState(this.options.sourceStateForce);
+            return;
+        }
+
+        const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
+        if (!spec.url) return;
         // Resolve `#{param}` against the current query string just before fetch.
-        const url = resolveParams(raw);
+        const url = resolveParams(spec.url);
         // Param-reactive trigger whose resolved URL didn't change → skip: the
         // cms-params:change event is global, so an unrelated param must not
         // re-fetch + re-render this source (set synchronously so back-to-back
@@ -138,26 +126,20 @@ export class Source {
         }
 
         const data = outcome.data;
+        const scope = spec.alias
+            ? { value: data, vars: { [spec.alias]: data } }
+            : { value: data };
+
         if (isEmpty(data) && slots.empty) {
-            renderContent(this.el, slots.empty, { value: data }, this.filters);
+            renderContent(this.el, slots.empty, scope, this.filters);
         } else {
-            renderContent(this.el, body, { value: data }, this.filters);
+            renderContent(this.el, body, scope, this.filters);
         }
     }
-}
 
-function sourceUrl(value: string): string {
-    const match = SOURCE_ALIAS_PATTERN.exec(value);
-    return (match?.[1] ?? value).trim();
-}
-
-/**
- * Strip runtime-only stamps (currently `cms-ready`) from `root` and its subtree.
- * Used when serializing an editor canvas back to authored content: the runtime's
- * bookkeeping must not leak into saved HTML, or on the next load the cloak would
- * reveal an un-rendered source (a raw `{{ }}` flash) before its fetch resolves.
- */
-export function clearRuntimeStamps(root: Element): void {
-    if (root.hasAttribute(READY_ATTR)) root.removeAttribute(READY_ATTR);
-    root.querySelectorAll(`[${READY_ATTR}]`).forEach((el) => el.removeAttribute(READY_ATTR));
+    private renderForcedState(state: Exclude<SourceState, "loaded">): void {
+        this.abort?.abort();
+        this.abort = null;
+        renderForcedSourceState(this.el, this.captured, this.filters, state);
+    }
 }

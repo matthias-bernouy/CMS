@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { captureContent, renderContent, isEmpty } from "../src/binding/slots";
+import { captureContent, renderContent, isEmpty } from "../../../src/binding/render/slots";
 
 function el(html: string): HTMLElement {
     const host = document.createElement("div");
