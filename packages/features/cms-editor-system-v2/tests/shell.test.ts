@@ -4,10 +4,10 @@ import type {
     EditorCatalog,
     EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
-import { CMS_SNIPPET_TAG, Editor } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_SNIPPET_TAG, Editor } from "@bernouy/cms-content/editor";
 import type { BlockPickerSelectDetail } from "../src/components/Layout/BlockPickerModal/BlockPickerModal";
 import type { StructureTreeActionDetail } from "../src/components/Layout/StructureTree/StructureTree";
-import type { TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
+import type { TopBarSourceStateChangeDetail, TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
 import type { EditorStructureNode, SourceStateStructureNode } from "../src/runtime";
 
 function installDom(): void {
@@ -641,6 +641,48 @@ describe("Shell", () => {
         expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-viewport="desktop"]')?.getAttribute("aria-pressed")).toBe("false");
     });
 
+    test("topbar defaults source preview state to loading and emits changes", async () => {
+        installDom();
+
+        const {
+            TOPBAR_SOURCE_STATE_CHANGE_EVENT,
+            TOPBAR_VIEW_RELOAD_EVENT,
+            TopBar,
+        } = await import("../src/components/Layout/TopBar/TopBar");
+
+        const topbar = new TopBar();
+        document.body.append(topbar);
+        topbar.connectedCallback();
+
+        const events: TopBarSourceStateChangeDetail[] = [];
+        topbar.addEventListener(TOPBAR_SOURCE_STATE_CHANGE_EVENT, (event) => {
+            events.push((event as CustomEvent<TopBarSourceStateChangeDetail>).detail);
+        });
+        let reloads = 0;
+        topbar.addEventListener(TOPBAR_VIEW_RELOAD_EVENT, () => {
+            reloads += 1;
+        });
+
+        expect(topbar.sourceState).toBe("loading");
+        expect(topbar.getAttribute("mode")).toBe("edit");
+        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-source-state="loading"]')?.getAttribute("aria-pressed")).toBe("true");
+        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]')?.disabled).toBe(true);
+
+        (topbar as unknown as { _setSourceState(sourceState: "error", emit: boolean): void })
+            ._setSourceState("error", true);
+
+        expect(topbar.sourceState).toBe("error");
+        expect(events).toEqual([{ sourceState: "error" }]);
+        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-source-state="loading"]')?.getAttribute("aria-pressed")).toBe("false");
+        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-source-state="error"]')?.getAttribute("aria-pressed")).toBe("true");
+
+        topbar.mode = "view";
+        expect(topbar.getAttribute("mode")).toBe("view");
+        expect(topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]')?.disabled).toBe(false);
+        topbar.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]')!.click();
+        expect(reloads).toBe(1);
+    });
+
     test("topbar renders resource navigation labels", async () => {
         installDom();
 
@@ -781,6 +823,309 @@ describe("Shell", () => {
         });
 
         expect(contentRoot.innerHTML).toBe("<main></main>");
+    });
+
+    test("shell drives binding preview attributes across editor and view frames", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
+        const core = frameDocument.createElement(CMS_BINDING_CORE_TAG);
+        const contentRoot = frameDocument.createElement("main");
+        contentRoot.setAttribute("data-cms-content", "");
+        contentRoot.innerHTML = "<p>Hello</p>";
+        core.append(contentRoot);
+        root.append(core);
+        frameDocument.body.append(root);
+
+        const { document: viewFrameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const viewRoot = viewFrameDocument.createElement("div");
+        viewRoot.setAttribute("data-cms-editor-root", "");
+        const viewCore = viewFrameDocument.createElement(CMS_BINDING_CORE_TAG);
+        const viewContentRoot = viewFrameDocument.createElement("main");
+        viewContentRoot.setAttribute("data-cms-content", "");
+        viewCore.append(viewContentRoot);
+        viewRoot.append(viewCore);
+        viewFrameDocument.body.append(viewRoot);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.connectedCallback();
+        shell.loadDocument({ root, contentRoot });
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        (shell as unknown as { _viewFrameDocument: Document })._viewFrameDocument = viewFrameDocument;
+        (shell as unknown as { _syncEditorMode(): void })._syncEditorMode();
+
+        expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
+        expect(core.getAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe("loading");
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
+
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:source-state-change", {
+            bubbles: true,
+            composed: true,
+            detail: { sourceState: "empty" },
+        }));
+        expect(core.getAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe("empty");
+        expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
+
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:editor-mode-change", {
+            bubbles: true,
+            composed: true,
+            detail: { mode: "view" },
+        }));
+        expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
+        expect(core.getAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe("empty");
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe(false);
+        expect(viewCore.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(false);
+        expect(shell.shadowRoot!.querySelector("cms-editor-v2-canvas")?.getAttribute("mode")).toBe("view");
+    });
+
+    test("shell restarts the view binding runtime after syncing frame content", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body>
+                    <div data-cms-editor-root>
+                        <${CMS_BINDING_CORE_TAG}>
+                            <main data-cms-content><input name="search" cms-param-sync="search"></main>
+                        </${CMS_BINDING_CORE_TAG}>
+                    </div>
+                </body>
+            </html>
+        `);
+        const { document: viewFrameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body>
+                    <div data-cms-editor-root>
+                        <${CMS_BINDING_CORE_TAG}>
+                            <main data-cms-content></main>
+                        </${CMS_BINDING_CORE_TAG}>
+                    </div>
+                </body>
+            </html>
+        `);
+        const viewCore = viewFrameDocument.querySelector(CMS_BINDING_CORE_TAG) as HTMLElement & {
+            runtime?: { stop(): void } | null;
+            startRuntime?: () => void;
+        };
+        const calls: string[] = [];
+        viewCore.runtime = { stop: () => calls.push("stop") };
+        viewCore.startRuntime = () => calls.push("start");
+
+        const shell = new Shell();
+        document.body.append(shell);
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        (shell as unknown as { _viewFrameDocument: Document })._viewFrameDocument = viewFrameDocument;
+
+        (shell as unknown as { _syncViewFrameContent(): void })._syncViewFrameContent();
+
+        expect(viewFrameDocument.querySelector("[data-cms-content]")?.innerHTML).toBe(`<input name="search" cms-param-sync="search">`);
+        expect(calls).toEqual(["stop", "start"]);
+    });
+
+    test("shell reloads the view frame from the topbar reload action", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.connectedCallback();
+
+        let reloads = 0;
+        const canvas = shell.shadowRoot!.querySelector("cms-editor-v2-canvas") as HTMLElement & {
+            reloadViewFrame(): void;
+        };
+        canvas.reloadViewFrame = () => {
+            reloads += 1;
+        };
+
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:view-reload", {
+            bubbles: true,
+            composed: true,
+        }));
+
+        expect(reloads).toBe(1);
+    });
+
+    test("shell injects editor-only CSS to show only the selected source state", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <head></head>
+                <body>
+                    <div data-cms-editor-root>
+                        <${CMS_BINDING_CORE_TAG}>
+                            <main data-cms-content>
+                                <section cms-source="/api/plans">
+                                    <p>Loaded</p>
+                                    <p cms-slot="loading">Loading</p>
+                                    <p cms-slot="empty">Empty</p>
+                                    <p cms-slot="error">Error</p>
+                                </section>
+                            </main>
+                        </${CMS_BINDING_CORE_TAG}>
+                    </div>
+                </body>
+            </html>
+        `);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        (shell as unknown as { _bindFrameDocument(document: Document): void })._bindFrameDocument(frameDocument);
+
+        const css = frameDocument.getElementById("cms-editor-binding-preview-style")?.textContent ?? "";
+        expect(css).toContain(`${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`);
+        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.sourceStateForce}="loaded"] [${CMS_BINDING_ATTRIBUTES.source}] > [${CMS_BINDING_ATTRIBUTES.slot}]`);
+        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.sourceStateForce}="loading"] [${CMS_BINDING_ATTRIBUTES.source}] > :not([${CMS_BINDING_ATTRIBUTES.slot}="loading"])`);
+        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.sourceStateForce}="empty"] [${CMS_BINDING_ATTRIBUTES.source}] > :not([${CMS_BINDING_ATTRIBUTES.slot}="empty"])`);
+        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.sourceStateForce}="error"] [${CMS_BINDING_ATTRIBUTES.source}] > :not([${CMS_BINDING_ATTRIBUTES.slot}="error"])`);
+    });
+
+    test("shell does not serialize binding preview attributes from the frame core", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const shell = new Shell();
+        document.body.append(shell);
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body>
+                    <${CMS_BINDING_CORE_TAG} ${CMS_BINDING_ATTRIBUTES.bindingDisabled} ${CMS_BINDING_ATTRIBUTES.sourceStateForce}="loading">
+                        <main data-cms-content><p>Hello</p></main>
+                    </${CMS_BINDING_CORE_TAG}>
+                </body>
+            </html>
+        `);
+
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+
+        expect((shell as unknown as { _getContentHtml(): string })._getContentHtml())
+            .toBe("<p>Hello</p>");
+    });
+
+    test("shell saves editor frame content without leaving view mode", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
+        const core = frameDocument.createElement(CMS_BINDING_CORE_TAG);
+        const contentRoot = frameDocument.createElement("main");
+        contentRoot.setAttribute("data-cms-content", "");
+        contentRoot.innerHTML = `<section cms-source="/api/plans"><p>Authored</p><p cms-slot="loading">Loading</p></section>`;
+        core.append(contentRoot);
+        root.append(core);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.connectedCallback();
+        (shell as unknown as { _pageConfig: unknown })._pageConfig = {
+            id: "page-1",
+            title: "Pricing",
+            path: "/pricing",
+            description: "Pricing page",
+            tags: [],
+            published: true,
+        };
+        shell.loadDocument({ root, contentRoot });
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:editor-mode-change", {
+            bubbles: true,
+            composed: true,
+            detail: { mode: "view" },
+        }));
+        expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
+
+        let savedContent = "";
+        shell.addEventListener("editor-v2:save-document", (event) => {
+            savedContent = (event as CustomEvent<{ content: string }>).detail.content;
+        });
+        (shell as unknown as { _saveDocument(): void })._saveDocument();
+
+        expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
+        expect(shell.shadowRoot!.querySelector("cms-editor-v2-canvas")?.getAttribute("mode")).toBe("view");
+        expect(savedContent).toBe(`<section cms-source="/api/plans"><p>Authored</p><p cms-slot="loading">Loading</p></section>`);
+    });
+
+    test("shell keeps the editor runtime stable when switching between view and edit", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
+        const core = frameDocument.createElement(CMS_BINDING_CORE_TAG);
+        const contentRoot = frameDocument.createElement("main");
+        contentRoot.setAttribute("data-cms-content", "");
+        contentRoot.innerHTML = `<section cms-source="/api/plans"><p>Authored</p></section>`;
+        core.append(contentRoot);
+        root.append(core);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.connectedCallback();
+        shell.loadDocument({ root, contentRoot });
+        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+
+        let reloads = 0;
+        const originalLoadDocument = shell.loadDocument.bind(shell);
+        shell.loadDocument = ((documentArg, selectedTarget) => {
+            reloads += 1;
+            originalLoadDocument(documentArg, selectedTarget);
+        }) as Shell["loadDocument"];
+
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:editor-mode-change", {
+            bubbles: true,
+            composed: true,
+            detail: { mode: "view" },
+        }));
+        shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:editor-mode-change", {
+            bubbles: true,
+            composed: true,
+            detail: { mode: "edit" },
+        }));
+        await Promise.resolve();
+
+        expect(reloads).toBe(0);
     });
 
     test("shell scrolls frame target into view when selected from structure", async () => {

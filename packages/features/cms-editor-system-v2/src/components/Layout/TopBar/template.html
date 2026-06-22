@@ -30,6 +30,15 @@
             <button class="active" type="button" data-editor-mode="edit" aria-pressed="true">Edit</button>
             <button type="button" data-editor-mode="view" aria-pressed="false">View</button>
         </div>
+        <div class="segmented state-switch" aria-label="Source state preview">
+            <button type="button" data-source-state="loaded" aria-pressed="false">Loaded</button>
+            <button class="active" type="button" data-source-state="loading" aria-pressed="true">Loading</button>
+            <button type="button" data-source-state="empty" aria-pressed="false">Empty</button>
+            <button type="button" data-source-state="error" aria-pressed="false">Error</button>
+        </div>
+        <button class="view-reload" type="button" data-action="view-reload" aria-label="Reload preview" title="Reload preview" disabled>
+            <span aria-hidden="true">↻</span>
+        </button>
     </div>
     <div class="end">
         <button class="danger" type="button" data-action="delete">Delete</button>

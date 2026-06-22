@@ -132,6 +132,42 @@ button {
     min-width: 54px;
 }
 
+.state-switch button {
+    min-width: 58px;
+}
+
+.view-reload {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+    border-color: var(--editor-v2-border);
+    background: var(--editor-v2-surface-muted);
+    opacity: .45;
+    transition: opacity .12s ease;
+}
+
+.view-reload span {
+    font-size: 16px;
+    line-height: 1;
+    transform: translateY(-1px);
+}
+
+.view-reload:disabled {
+    cursor: default;
+}
+
+:host([mode="view"]) .state-switch {
+    opacity: .45;
+    pointer-events: none;
+}
+
+:host([mode="view"]) .view-reload {
+    opacity: 1;
+}
+
 .device-icon {
     display: block;
     margin: 0 auto;

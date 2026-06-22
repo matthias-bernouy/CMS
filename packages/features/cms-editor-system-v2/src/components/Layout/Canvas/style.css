@@ -40,6 +40,7 @@
 }
 
 .page {
+    position: relative;
     width: var(--editor-v2-viewport-width);
     height: var(--editor-v2-viewport-height);
     border: 1px solid var(--editor-v2-border);
@@ -64,4 +65,19 @@ iframe {
     height: 100%;
     border: 0;
     background: var(--editor-v2-surface);
+}
+
+.view-frame {
+    display: none;
+}
+
+:host([mode="view"]) .editor-frame {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+:host([mode="view"]) .view-frame {
+    position: absolute;
+    inset: 0;
+    display: block;
 }

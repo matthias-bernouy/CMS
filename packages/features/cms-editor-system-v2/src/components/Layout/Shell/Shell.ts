@@ -8,6 +8,7 @@ import {
     asRepeat,
     asSource,
     applySourceState,
+    type CmsSourceStateForce,
     type ContentSlot,
     CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
@@ -44,10 +45,13 @@ import {
     TOPBAR_EDITOR_MODE_CHANGE_EVENT,
     TOPBAR_PAGE_SETTINGS_EVENT,
     TOPBAR_SAVE_EVENT,
+    TOPBAR_SOURCE_STATE_CHANGE_EVENT,
+    TOPBAR_VIEW_RELOAD_EVENT,
     TOPBAR_VIEWPORT_CHANGE_EVENT,
     type TopBar,
     type TopBarEditorMode,
     type TopBarEditorModeChangeDetail,
+    type TopBarSourceStateChangeDetail,
     type TopBarViewport,
     type TopBarViewportChangeDetail,
 } from "../TopBar/TopBar";
@@ -85,6 +89,8 @@ type SourceBinding = {
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
+
+const BINDING_PREVIEW_STYLE_ID = "cms-editor-binding-preview-style";
 
 const VIEWPORTS: Record<TopBarViewport, { label: string; width: number | "100%"; height: number | "100%"; padding: "normal" | "none"; fit: "fixed" | "fluid" }> = {
     desktop: {
@@ -169,10 +175,12 @@ export class Shell extends HTMLElement {
     private _insertItems: BlockPickerItem[] = [];
     private _runtime: EditorRuntime | null = null;
     private _frameDocument: Document | null = null;
+    private _viewFrameDocument: Document | null = null;
     private _editorDocument: EditorDocument | null = null;
     private _settingsMode: SettingsViewMode = "settings";
     private _viewport: TopBarViewport = "bleed";
     private _editorMode: TopBarEditorMode = "edit";
+    private _sourceStateForce: CmsSourceStateForce = "loading";
     private _pageConfig: EditorV2PageConfig | null = null;
     private _clipboardElement: HTMLElement | null = null;
     private _chromeSyncPending: boolean = false;
@@ -200,6 +208,8 @@ export class Shell extends HTMLElement {
         this._canvas.addEventListener(CANVAS_BACKGROUND_CLICK_EVENT, this._onCanvasBackgroundClick);
         this._topBar.addEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
         this._topBar.addEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
+        this._topBar.addEventListener(TOPBAR_SOURCE_STATE_CHANGE_EVENT, this._onSourceStateChange as EventListener);
+        this._topBar.addEventListener(TOPBAR_VIEW_RELOAD_EVENT, this._onViewReload);
         this._topBar.addEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
         this._topBar.addEventListener(TOPBAR_SAVE_EVENT, this._onSave);
         this._topBar.addEventListener(TOPBAR_DELETE_EVENT, this._onDeleteDocument);
@@ -224,6 +234,8 @@ export class Shell extends HTMLElement {
         this._canvas.removeEventListener(CANVAS_BACKGROUND_CLICK_EVENT, this._onCanvasBackgroundClick);
         this._topBar.removeEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange as EventListener);
         this._topBar.removeEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange as EventListener);
+        this._topBar.removeEventListener(TOPBAR_SOURCE_STATE_CHANGE_EVENT, this._onSourceStateChange as EventListener);
+        this._topBar.removeEventListener(TOPBAR_VIEW_RELOAD_EVENT, this._onViewReload);
         this._topBar.removeEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
         this._topBar.removeEventListener(TOPBAR_SAVE_EVENT, this._onSave);
         this._topBar.removeEventListener(TOPBAR_DELETE_EVENT, this._onDeleteDocument);
@@ -231,6 +243,7 @@ export class Shell extends HTMLElement {
         this.shadowRoot!.removeEventListener("keydown", this._onKeyDown);
         this._settingsTabs.removeEventListener("click", this._onSettingsTabsClick);
         this._unbindFrameDocument();
+        this._unbindViewFrameDocument();
         this._highlight.dispose();
         this._exitAllStateSessions();
         this._runtime?.dispose();
@@ -327,6 +340,15 @@ export class Shell extends HTMLElement {
     private readonly _onEditorModeChange = (event: CustomEvent<TopBarEditorModeChangeDetail>): void => {
         this._editorMode = event.detail.mode;
         this._syncEditorMode();
+    };
+
+    private readonly _onSourceStateChange = (event: CustomEvent<TopBarSourceStateChangeDetail>): void => {
+        this._sourceStateForce = event.detail.sourceState;
+        this._syncEditorMode();
+    };
+
+    private readonly _onViewReload = (): void => {
+        this._canvas.reloadViewFrame();
     };
 
     private readonly _onPageSettings = (): void => {
@@ -434,6 +456,14 @@ export class Shell extends HTMLElement {
 
     private readonly _onFrameReady = (event: CustomEvent<CanvasFrameReadyDetail>): void => {
         const frameDocument = event.detail.document;
+
+        if (event.detail.kind === "view") {
+            this._bindViewFrameDocument(frameDocument);
+            this._syncViewFrameContent();
+            this._syncBindingPreviewCore();
+            return;
+        }
+
         this._bindFrameDocument(frameDocument);
 
         const root = frameDocument.querySelector<HTMLElement>("[data-cms-editor-root]")
@@ -453,6 +483,7 @@ export class Shell extends HTMLElement {
             root,
             contentRoot,
         });
+        this._syncBindingPreviewCore();
     };
 
     private readonly _onSettingChange = (event: CustomEvent<SettingsViewSettingChangeDetail>): void => {
@@ -1151,11 +1182,21 @@ export class Shell extends HTMLElement {
         this._unbindFrameDocument();
         this._frameDocument = document;
         document.addEventListener("click", this._onFrameClick, true);
+        this._injectBindingPreviewStyle(document);
+    }
+
+    private _bindViewFrameDocument(document: Document): void {
+        this._viewFrameDocument = document;
+        this._injectBindingPreviewStyle(document);
     }
 
     private _unbindFrameDocument(): void {
         this._frameDocument?.removeEventListener("click", this._onFrameClick, true);
         this._frameDocument = null;
+    }
+
+    private _unbindViewFrameDocument(): void {
+        this._viewFrameDocument = null;
     }
 
     private _eventElement(event: Event): Element | null {
@@ -1294,11 +1335,77 @@ export class Shell extends HTMLElement {
 
     private _syncEditorMode(): void {
         this._topBar.mode = this._editorMode;
+        this._topBar.sourceState = this._sourceStateForce;
         this.toggleAttribute("view-mode", this._editorMode === "view");
+        this._canvas.setAttribute("mode", this._editorMode);
+        this._syncBindingPreviewCore();
+    }
 
-        if (this._editorMode === "view") {
-            this._select(null);
+    private _syncBindingPreviewCore(): void {
+        const editorCore = this._bindingPreviewCore(this._frameDocument);
+        if (editorCore) {
+            editorCore.setAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce, this._sourceStateForce);
+            editorCore.setAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled, "");
         }
+
+        const viewCore = this._bindingPreviewCore(this._viewFrameDocument);
+        if (viewCore) {
+            viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce);
+            viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled);
+        }
+    }
+
+    private _bindingPreviewCore(document: Document | null): HTMLElement | null {
+        const root = document?.querySelector<HTMLElement>("[data-cms-editor-root]");
+        if (root?.matches(CMS_BINDING_CORE_TAG)) return root;
+
+        return root?.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG)
+            ?? document?.querySelector<HTMLElement>(CMS_BINDING_CORE_TAG)
+            ?? null;
+    }
+
+    private _syncViewFrameContent(): void {
+        const editorContent = this._frameDocument?.querySelector<HTMLElement>("[data-cms-content]");
+        const viewContent = this._viewFrameDocument?.querySelector<HTMLElement>("[data-cms-content]");
+        if (!editorContent || !viewContent) return;
+
+        viewContent.innerHTML = editorContent.innerHTML;
+        this._syncBindingPreviewCore();
+        this._restartViewBindingRuntime();
+    }
+
+    private _restartViewBindingRuntime(): void {
+        const core = this._bindingPreviewCore(this._viewFrameDocument) as (HTMLElement & {
+            runtime?: { stop(): void } | null;
+            startRuntime?: () => void;
+        }) | null;
+        if (!core || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) return;
+
+        core.runtime?.stop();
+        core.startRuntime?.();
+    }
+
+    private _injectBindingPreviewStyle(document: Document): void {
+        if (document.getElementById(BINDING_PREVIEW_STYLE_ID)) return;
+
+        const style = document.createElement("style");
+        style.id = BINDING_PREVIEW_STYLE_ID;
+        style.textContent = this._bindingPreviewCss();
+        (document.head ?? document.documentElement).append(style);
+    }
+
+    private _bindingPreviewCss(): string {
+        const core = `${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`;
+        const source = `[${CMS_BINDING_ATTRIBUTES.source}]`;
+        const slot = CMS_BINDING_ATTRIBUTES.slot;
+        const state = CMS_BINDING_ATTRIBUTES.sourceStateForce;
+
+        return [
+            `${core}[${state}="loaded"] ${source} > [${slot}]{display:none!important}`,
+            `${core}[${state}="loading"] ${source} > :not([${slot}="loading"]){display:none!important}`,
+            `${core}[${state}="empty"] ${source} > :not([${slot}="empty"]){display:none!important}`,
+            `${core}[${state}="error"] ${source} > :not([${slot}="error"]){display:none!important}`,
+        ].join("\n");
     }
 
     private _syncChromeLabels(): void {

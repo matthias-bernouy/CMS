@@ -1,3 +1,4 @@
+import type { CmsSourceStateForce } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
 
@@ -15,8 +16,14 @@ export type TopBarEditorModeChangeDetail = {
     mode: TopBarEditorMode;
 };
 
+export type TopBarSourceStateChangeDetail = {
+    sourceState: CmsSourceStateForce;
+};
+
 export const TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
 export const TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
+export const TOPBAR_SOURCE_STATE_CHANGE_EVENT = "editor-v2:source-state-change";
+export const TOPBAR_VIEW_RELOAD_EVENT = "editor-v2:view-reload";
 export const TOPBAR_SAVE_EVENT = "editor-v2:save";
 export const TOPBAR_DELETE_EVENT = "editor-v2:topbar-delete-document";
 export const TOPBAR_PAGE_SETTINGS_EVENT = "editor-v2:page-settings";
@@ -24,6 +31,7 @@ export const TOPBAR_PAGE_SETTINGS_EVENT = "editor-v2:page-settings";
 export class TopBar extends HTMLElement {
     private _viewport: TopBarViewport = "bleed";
     private _mode: TopBarEditorMode = "edit";
+    private _sourceState: CmsSourceStateForce = "loading";
 
     constructor() {
         super();
@@ -33,6 +41,7 @@ export class TopBar extends HTMLElement {
     connectedCallback(): void {
         this.shadowRoot!.addEventListener("click", this._onClick);
         this._syncButtons();
+        this._syncModeAttribute();
     }
 
     disconnectedCallback(): void {
@@ -53,6 +62,14 @@ export class TopBar extends HTMLElement {
 
     set mode(mode: TopBarEditorMode) {
         this._setMode(mode, false);
+    }
+
+    get sourceState(): CmsSourceStateForce {
+        return this._sourceState;
+    }
+
+    set sourceState(sourceState: CmsSourceStateForce) {
+        this._setSourceState(sourceState, false);
     }
 
     set saveStatus(label: string) {
@@ -89,6 +106,12 @@ export class TopBar extends HTMLElement {
             return;
         }
 
+        const sourceState = button.dataset.sourceState as CmsSourceStateForce | undefined;
+        if (sourceState) {
+            this._setSourceState(sourceState, true);
+            return;
+        }
+
         if (button.dataset.action === "save") {
             this.dispatchEvent(new CustomEvent(TOPBAR_SAVE_EVENT, {
                 bubbles:  true,
@@ -101,6 +124,11 @@ export class TopBar extends HTMLElement {
             }));
         } else if (button.dataset.action === "page-settings") {
             this.dispatchEvent(new CustomEvent(TOPBAR_PAGE_SETTINGS_EVENT, {
+                bubbles:  true,
+                composed: true,
+            }));
+        } else if (button.dataset.action === "view-reload") {
+            this.dispatchEvent(new CustomEvent(TOPBAR_VIEW_RELOAD_EVENT, {
                 bubbles:  true,
                 composed: true,
             }));
@@ -122,6 +150,7 @@ export class TopBar extends HTMLElement {
 
         this._mode = mode;
         this._syncButtons();
+        this._syncModeAttribute();
         if (!emit) return;
 
         this.dispatchEvent(new CustomEvent<TopBarEditorModeChangeDetail>(TOPBAR_EDITOR_MODE_CHANGE_EVENT, {
@@ -131,16 +160,37 @@ export class TopBar extends HTMLElement {
         }));
     }
 
+    private _setSourceState(sourceState: CmsSourceStateForce, emit: boolean): void {
+        if (this._sourceState === sourceState) return;
+
+        this._sourceState = sourceState;
+        this._syncButtons();
+        if (!emit) return;
+
+        this.dispatchEvent(new CustomEvent<TopBarSourceStateChangeDetail>(TOPBAR_SOURCE_STATE_CHANGE_EVENT, {
+            bubbles:  true,
+            composed: true,
+            detail:   { sourceState },
+        }));
+    }
+
     private _syncButtons(): void {
         this._syncButtonGroup("[data-viewport]", "viewport", this._viewport);
         this._syncButtonGroup("[data-editor-mode]", "editorMode", this._mode);
+        this._syncButtonGroup("[data-source-state]", "sourceState", this._sourceState);
     }
 
-    private _syncButtonGroup(selector: string, dataKey: "viewport" | "editorMode", value: string): void {
+    private _syncModeAttribute(): void {
+        this.setAttribute("mode", this._mode);
+        const reload = this.shadowRoot!.querySelector<HTMLButtonElement>('[data-action="view-reload"]');
+        if (reload) reload.disabled = this._mode !== "view";
+    }
+
+    private _syncButtonGroup(selector: string, dataKey: "viewport" | "editorMode" | "sourceState", value: string): void {
         for (const button of Array.from(this.shadowRoot!.querySelectorAll<HTMLButtonElement>(selector))) {
             const isActive = button.dataset[dataKey] === value;
             button.classList.toggle("active", isActive);
-            button.ariaPressed = String(isActive);
+            button.setAttribute("aria-pressed", String(isActive));
         }
     }
 
