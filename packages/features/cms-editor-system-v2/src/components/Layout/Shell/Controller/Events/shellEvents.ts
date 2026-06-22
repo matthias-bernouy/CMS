@@ -22,7 +22,7 @@ export class ShellEvents {
 
     readonly onSelectEditor = (event: Event): void => {
         const editor = (event as CustomEvent<{ editor: Editor }>).detail.editor;
-        this.context.select(editor, {
+        this.context.commands.select(editor, {
             scrollFrameIntoView:     true,
             scrollStructureIntoView: false,
         });
@@ -31,108 +31,108 @@ export class ShellEvents {
     readonly onSettingsTabsClick = (event: Event): void => {
         const button = (event.target as Element | null)?.closest<HTMLButtonElement>("[data-settings-mode]");
         if (!button) return;
-        this.context.setSettingsMode(button.dataset.settingsMode === "overrides" ? "overrides" : "settings");
-        this.context.syncSettingsTabs();
-        this.context.renderSettings();
+        this.context.state.settingsMode = button.dataset.settingsMode === "overrides" ? "overrides" : "settings";
+        this.context.commands.syncSettingsTabs();
+        this.context.commands.renderSettings();
     };
 
     readonly onViewportChange = (event: CustomEvent<TopBarViewportChangeDetail>): void => {
-        this.context.setViewport(event.detail.viewport);
-        this.context.syncViewport();
+        this.context.state.viewport = event.detail.viewport;
+        this.context.commands.syncViewport();
     };
 
     readonly onEditorModeChange = (event: CustomEvent<TopBarEditorModeChangeDetail>): void => {
-        this.context.setEditorMode(event.detail.mode);
-        this.context.syncEditorMode();
+        this.context.state.editorMode = event.detail.mode;
+        this.context.commands.syncEditorMode();
     };
 
     readonly onSourceStateChange = (event: CustomEvent<TopBarSourceStateChangeDetail>): void => {
-        this.context.setSourceState(event.detail.sourceState);
-        this.context.syncEditorMode();
+        this.context.state.sourceStateForce = event.detail.sourceState;
+        this.context.commands.syncEditorMode();
     };
 
-    readonly onViewReload = (): void => this.context.canvas().reloadViewFrame();
-    readonly onPageSettings = (): void => this.context.openPageSettings();
+    readonly onViewReload = (): void => this.context.refs.canvas.reloadViewFrame();
+    readonly onPageSettings = (): void => this.context.renderSync.openPageSettings();
 
     readonly onSave = (): void => {
-        this.context.applyPageSettingsForm();
-        this.context.saveDocument();
+        this.context.renderSync.applyPageSettingsForm();
+        this.context.commands.saveDocument();
     };
 
     readonly onDeleteDocument = (): void => {
-        if (!this.context.pageConfig()) {
-            this.context.setSaveStatus("No page");
+        if (!this.context.state.pageConfig) {
+            this.context.commands.setSaveStatus("No page");
             return;
         }
-        this.context.dispatchDeleteDocument();
+        this.context.commands.dispatchDeleteDocument();
     };
 
     readonly onPageSettingsModalClick = (event: Event): void => {
         if ((event.target as Element | null)?.closest("[data-page-settings-apply]")) {
-            this.context.applyPageSettingsForm();
-            this.context.closePageSettings();
-            this.context.saveDocument();
+            this.context.renderSync.applyPageSettingsForm();
+            this.context.renderSync.closePageSettings();
+            this.context.commands.saveDocument();
             return;
         }
         if ((event.target as Element | null)?.closest("[data-page-settings-close]")) {
-            this.context.closePageSettings();
+            this.context.renderSync.closePageSettings();
         }
     };
 
     readonly onKeyDown = (event: Event): void => {
         const keyboardEvent = event as KeyboardEvent;
-        if (keyboardEvent.key === "Escape" && !this.context.pageSettingsModal().hidden) {
-            this.context.closePageSettings();
+        if (keyboardEvent.key === "Escape" && !this.context.refs.pageSettingsModal.hidden) {
+            this.context.renderSync.closePageSettings();
         }
     };
 
     readonly onStructureAction = (event: CustomEvent<StructureTreeActionDetail>): void => {
-        this.context.mutations().handleStructureAction(event.detail);
+        this.context.mutations.handleStructureAction(event.detail);
     };
 
     readonly onFrameReady = (event: CustomEvent<CanvasFrameReadyDetail>): void => {
-        this.context.handleFrameReady(event.detail);
+        this.context.commands.handleFrameReady(event.detail);
     };
 
     readonly onSettingChange = (event: CustomEvent<SettingsViewSettingChangeDetail>): void => {
-        const selection = this.context.runtime()?.getSelection();
+        const selection = this.context.state.runtime?.getSelection();
         if (!selection) return;
-        this.context.applySetting(selection.editor, event.detail.setting, event.detail.value);
-        this.context.syncViewFrameContent();
-        this.context.showHighlight(selection.editor);
+        this.context.commands.applySetting(selection.editor, event.detail.setting, event.detail.value);
+        this.context.commands.syncViewFrameContent();
+        this.context.highlight.show(selection.editor);
     };
 
     readonly onContentChange = (event: CustomEvent<SettingsViewContentChangeDetail>): void => {
-        const selection = this.context.runtime()?.getSelection();
+        const selection = this.context.state.runtime?.getSelection();
         if (!selection?.textCapability) return;
         if (event.detail.format === "html") selection.editor.target.innerHTML = event.detail.value;
         else selection.editor.target.textContent = event.detail.value;
-        this.context.syncViewFrameContent();
-        this.context.showHighlight(selection.editor);
+        this.context.commands.syncViewFrameContent();
+        this.context.highlight.show(selection.editor);
     };
 
     readonly onStateToggle = (event: CustomEvent<SettingsViewStateToggleDetail>): void => {
-        const selection = this.context.runtime()?.getSelection();
+        const selection = this.context.state.runtime?.getSelection();
         if (!selection) return;
-        this.context.toggleState(selection.editor, event.detail.state);
-        this.context.renderSettings();
-        this.context.showHighlight(selection.editor);
+        this.context.commands.toggleState(selection.editor, event.detail.state);
+        this.context.commands.renderSettings();
+        this.context.highlight.show(selection.editor);
     };
 
     readonly onRepeatSelect = (event: CustomEvent<RepeatPickerSelectDetail>): void => {
-        this.context.mutations().applyRepeatSelection(event.detail.path, event.detail.alias);
+        this.context.mutations.applyRepeatSelection(event.detail.path, event.detail.alias);
     };
 
     readonly onFrameClick = (event: Event): void => {
-        const runtime = this.context.runtime();
+        const runtime = this.context.state.runtime;
         if (!runtime) return;
         event.preventDefault();
-        this.context.select(runtime.getClosestEditor(this.context.frameClickTarget(event)) ?? null, {
+        this.context.commands.select(runtime.getClosestEditor(this.context.frameClickTarget(event)) ?? null, {
             scrollStructureIntoView: true,
         });
     };
 
     readonly onCanvasBackgroundClick = (): void => {
-        if (this.context.runtime()) this.context.select(null, { scrollStructureIntoView: false });
+        if (this.context.state.runtime) this.context.commands.select(null, { scrollStructureIntoView: false });
     };
 }
