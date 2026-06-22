@@ -1,4 +1,5 @@
 import type { Endpoint } from "../interfaces/Gateway";
+import type { ResolveJwtClaimsDeps } from "./jwt/claims";
 import { buildUpstreamUrl } from "./buildUpstreamUrl";
 import { isForbiddenHeaderName } from "./headerPolicy";
 
@@ -12,7 +13,7 @@ import { isForbiddenHeaderName } from "./headerPolicy";
 export type ExecutorDeps = {
     fetchImpl?: typeof fetch;
     resolveSecret?: (ref: string) => Promise<string | undefined>;
-};
+} & ResolveJwtClaimsDeps;
 
 const TIMEOUT_MS = 15_000;
 const REQUEST_ALLOWLIST  = ["accept", "accept-language", "content-type", "range"] as const;
@@ -69,6 +70,9 @@ export async function executeEndpoint(
             try { fwd.set(name, v); }
             catch { return new Response(`header invalide : "${name}"`, { status: 400 }); }
             continue;
+        }
+        if (source.from === "jwt") {
+            return new Response(`jwt header signing not wired yet: ${name}`, { status: 500 });
         }
         try { fwd.set(name, source.value); }
         catch { return new Response(`header invalide : "${name}"`, { status: 400 }); }

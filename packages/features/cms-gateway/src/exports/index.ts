@@ -8,6 +8,7 @@
 export type {
     Provider, Endpoint, HTTPMethod, ParamIn,
     EndpointHeader, HeaderSource, EndpointParam, GatewayMeta, EndpointResponse,
+    JwtAlgorithm, JwtClaimRef, JwtClaimValue, JwtHeaderSource,
 } from "../interfaces/Gateway";
 export { HTTP_METHODS, PARAM_INS } from "../interfaces/Gateway";
 export type { DataShape } from "../interfaces/DataShape";
@@ -44,6 +45,14 @@ export { resolveEndpoint, type ResolveResult } from "../core/resolveEndpoint";
 export { seedProviders, type SeedResult } from "../core/seedProviders";
 export { buildUpstreamUrl, extractPathParamNames, type BuildUpstream } from "../core/buildUpstreamUrl";
 export { executeEndpoint, type ExecutorDeps } from "../core/executeEndpoint";
+export {
+    resolveJwtClaims,
+    validateJwtClaimsConfig,
+    type GatewayRequestContext,
+    type ResolvedJwtClaimValue,
+    type ResolveJwtClaimsDeps,
+    type ResolveJwtClaimsResult,
+} from "../core/jwt/claims";
 export { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "../http/handleGatewayRequest";
 
 // ── OpenAPI spec machinery (provider endpoint schemas) ────────────────
