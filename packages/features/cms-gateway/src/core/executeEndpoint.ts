@@ -1,5 +1,6 @@
 import type { Endpoint } from "../interfaces/Gateway";
 import type { ResolveJwtClaimsDeps } from "./jwt/claims";
+import { signJwtHeaderValue } from "./jwt/signJwtHeader";
 import { buildUpstreamUrl } from "./buildUpstreamUrl";
 import { isForbiddenHeaderName } from "./headerPolicy";
 
@@ -72,7 +73,11 @@ export async function executeEndpoint(
             continue;
         }
         if (source.from === "jwt") {
-            return new Response(`jwt header signing not wired yet: ${name}`, { status: 500 });
+            const signed = await signJwtHeaderValue(source, request, deps ?? {});
+            if (!signed.ok) return new Response(signed.message, { status: signed.status });
+            try { fwd.set(name, signed.value); }
+            catch { return new Response(`header invalide : "${name}"`, { status: 400 }); }
+            continue;
         }
         try { fwd.set(name, source.value); }
         catch { return new Response(`header invalide : "${name}"`, { status: 400 }); }
