@@ -1,4 +1,4 @@
-import type { EditorDataSource } from "../../../runtime";
+import type { EditorDataSource } from "../../../../runtime";
 import { paramsForBinding, type DataSourcePickerSourceBinding, type DataSourcePickerSourceParamValue } from "./dataSourceBinding";
 import { initialAlias } from "../State/dataSourcePickerState";
 

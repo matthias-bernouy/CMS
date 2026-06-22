@@ -215,9 +215,7 @@ describe("Shell", () => {
         ]);
         tree.setStructure([node], null);
 
-        const groups = (tree as unknown as {
-            _childGroups(node: EditorStructureNode): Array<{ options: Array<{ item?: { id?: string } }> }>;
-        })._childGroups(node);
+        const groups = tree.controller.childGroups(node);
         const optionIds = groups.flatMap(group => group.options.map(option => option.item?.id));
 
         expect(optionIds).toContain("single-root");
@@ -257,17 +255,9 @@ describe("Shell", () => {
         document.body.append(tree);
         tree.setStructure([node], null);
 
-        const internals = tree as unknown as {
-            _childGroups(node: EditorStructureNode): Array<{ label: string; options: Array<unknown> }>;
-            _openPickerOrEmitSingleMedia(
-                action: { action: "add-child"; editor: Editor },
-                groups: Array<{ label: string; options: Array<unknown> }>,
-                contextLabel: string,
-            ): void;
-        };
-        internals._openPickerOrEmitSingleMedia(
+        tree.controller.openPickerOrEmitSingleMedia(
             { action: "add-child", editor },
-            internals._childGroups(node),
+            tree.controller.childGroups(node),
             node.label,
         );
 
@@ -327,9 +317,7 @@ describe("Shell", () => {
         }]);
         tree.setStructure([parentNode], null);
 
-        const groups = (tree as unknown as {
-            _replaceGroups(node: EditorStructureNode): Array<{ disabledReason?: string; options: Array<{ item?: { id?: string } }> }>;
-        })._replaceGroups(childNode);
+        const groups = tree.controller.replaceGroups(childNode);
 
         expect(groups[0]!.disabledReason).toBeUndefined();
         expect(groups[0]!.options.map(option => option.item?.id)).toContain("replacement");
@@ -366,9 +354,7 @@ describe("Shell", () => {
         });
 
         let prevented = false;
-        (tree as unknown as {
-            _onDocumentKeydown(event: KeyboardEvent): void;
-        })._onDocumentKeydown({
+        tree.controller.onDocumentKeydown({
             key:          "Delete",
             ctrlKey:      false,
             metaKey:      false,
@@ -429,9 +415,7 @@ describe("Shell", () => {
             detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
         });
 
-        (tree as unknown as {
-            _openSourcePicker(node: EditorStructureNode): void;
-        })._openSourcePicker(node);
+        tree.controller.openSourcePicker(node);
 
         const picker = tree.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
         expect(picker.shadowRoot!.querySelector(".source .name")?.textContent).toBe("Plans");
@@ -491,13 +475,9 @@ describe("Shell", () => {
             detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
         });
 
-        expect((tree as unknown as {
-            _sourceActionLabel(node: EditorStructureNode): string;
-        })._sourceActionLabel(node)).toBe("Update source");
+        expect(tree.controller.sourceActionLabel(node)).toBe("Update source");
 
-        (tree as unknown as {
-            _openSourcePicker(node: EditorStructureNode): void;
-        })._openSourcePicker(node);
+        tree.controller.openSourcePicker(node);
 
         const picker = tree.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".remove-source")!.click();
@@ -548,9 +528,7 @@ describe("Shell", () => {
             detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
         });
 
-        (tree as unknown as {
-            _openSourcePicker(node: EditorStructureNode): void;
-        })._openSourcePicker(node);
+        tree.controller.openSourcePicker(node);
 
         const picker = tree.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
         expect(picker.shadowRoot!.querySelector<HTMLInputElement>(".source-alias")!.value).toBe("plans");
@@ -1447,9 +1425,7 @@ describe("Shell", () => {
         }]);
         tree.setStructure([node], null);
 
-        (tree as unknown as {
-            _openContextMenu(node: EditorStructureNode, clientX: number, clientY: number): void;
-        })._openContextMenu(node, 10, 10);
+        tree.controller.menus.openContextMenu(node, 10, 10);
 
         const modifyButton = Array.from(tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item"))
             .find(button => button.textContent === "Modify Snippet");

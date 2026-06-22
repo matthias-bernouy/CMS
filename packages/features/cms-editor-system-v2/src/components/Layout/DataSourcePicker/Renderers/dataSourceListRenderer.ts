@@ -1,4 +1,4 @@
-import type { EditorDataSource } from "../../../runtime";
+import type { EditorDataSource } from "../../../../runtime";
 import type { DataSourceProviderGroup } from "../State/dataSourceGroups";
 
 export function renderProviderButtons(

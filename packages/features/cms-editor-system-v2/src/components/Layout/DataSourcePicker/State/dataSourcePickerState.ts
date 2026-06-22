@@ -1,4 +1,4 @@
-import type { EditorDataSource } from "../../../runtime";
+import type { EditorDataSource } from "../../../../runtime";
 import type { DataSourcePickerSourceBinding } from "../Binding/dataSourceBinding";
 import { filteredSources, providerGroups } from "./dataSourceGroups";
 
