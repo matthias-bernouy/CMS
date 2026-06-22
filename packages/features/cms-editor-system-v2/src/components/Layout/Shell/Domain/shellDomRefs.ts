@@ -1,19 +1,21 @@
-import type { SettingsView } from "../../../Settings/SettingsView/SettingsView";
-import type { Canvas } from "../../Canvas/Canvas";
+import { SettingsView } from "../../../Settings/SettingsView/SettingsView";
+import { Canvas } from "../../Canvas/Canvas";
 import type { RepeatPicker } from "../../RepeatPicker/RepeatPicker";
 import { RepeatPicker as RepeatPickerElement } from "../../RepeatPicker/RepeatPicker";
-import type { StructureTree } from "../../StructureTree/StructureTree";
-import type { TopBar } from "../../TopBar/TopBar";
+import { StructureTree } from "../../StructureTree/StructureTree";
+import { TopBar } from "../../TopBar/TopBar";
 
 export class ShellDomRefs {
     constructor(private readonly host: HTMLElement) {}
 
     get structureTree(): StructureTree {
-        return this.host.shadowRoot!.querySelector("cms-editor-v2-structure-tree") as StructureTree;
+        this.defineElement("cms-editor-v2-structure-tree", StructureTree);
+        return this.upgrade(this.host.shadowRoot!.querySelector("cms-editor-v2-structure-tree")) as StructureTree;
     }
 
     get settings(): SettingsView {
-        return this.host.shadowRoot!.querySelector("cms-editor-v2-settings-view") as SettingsView;
+        this.defineElement("cms-editor-v2-settings-view", SettingsView);
+        return this.upgrade(this.host.shadowRoot!.querySelector("cms-editor-v2-settings-view")) as SettingsView;
     }
 
     get settingsTabs(): HTMLElement {
@@ -21,11 +23,13 @@ export class ShellDomRefs {
     }
 
     get canvas(): Canvas {
-        return this.host.shadowRoot!.querySelector("cms-editor-v2-canvas") as Canvas;
+        this.defineElement("cms-editor-v2-canvas", Canvas);
+        return this.upgrade(this.host.shadowRoot!.querySelector("cms-editor-v2-canvas")) as Canvas;
     }
 
     get topBar(): TopBar {
-        return this.host.shadowRoot!.querySelector("cms-editor-v2-topbar") as TopBar;
+        this.defineElement("cms-editor-v2-topbar", TopBar);
+        return this.upgrade(this.host.shadowRoot!.querySelector("cms-editor-v2-topbar")) as TopBar;
     }
 
     get repeatPicker(): RepeatPicker {
@@ -43,5 +47,21 @@ export class ShellDomRefs {
 
     pageField<T extends HTMLElement>(name: string): T {
         return this.host.shadowRoot!.querySelector<T>(`[data-page-field="${name}"]`)!;
+    }
+
+    private upgrade<T extends Element>(element: T | null): T | null {
+        if (element) customElements.upgrade(element);
+        return element;
+    }
+
+    private defineElement(tagName: string, constructor: CustomElementConstructor): void {
+        if (customElements.get(tagName)) return;
+
+        try {
+            customElements.define(tagName, constructor);
+        } catch {
+            const ElementClass = class extends (constructor as { new(): HTMLElement }) {};
+            customElements.define(tagName, ElementClass);
+        }
     }
 }

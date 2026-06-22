@@ -13,7 +13,7 @@ import {
 } from "../../sourceDependencyCleanup";
 import type { EditorDataSource } from "../../../../../runtime";
 
-type SourceBinding = {
+export type SourceBinding = {
     url: string;
     alias?: string;
     params?: Record<string, unknown>;

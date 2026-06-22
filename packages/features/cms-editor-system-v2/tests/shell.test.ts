@@ -12,7 +12,12 @@ import {
     applyParamSyncSetting,
     paramSyncSettings,
 } from "../src/components/Layout/Shell/Domain/Settings/paramSync";
+import type { ShellControllerParts } from "../src/components/Layout/Shell/Controller/Core/Services/shellControllerParts";
 import type { EditorStructureNode, SourceStateStructureNode } from "../src/runtime";
+
+function shellParts(shell: unknown): ShellControllerParts {
+    return (shell as { _parts: ShellControllerParts })._parts;
+}
 
 function installDom(): void {
     const { document, customElements, Element, HTMLElement, CustomEvent, Event, Node } = parseHTML(`
@@ -869,7 +874,7 @@ describe("Shell", () => {
         shell.loadDocument({ root, contentRoot });
         expect(renderedStructure).toEqual([]);
 
-        (shell as unknown as { _addRoot(item: unknown): void })._addRoot({
+        shellParts(shell).mutations.addRoot({
             kind:    "template",
             id:      "tpl-default",
             label:   "Default template",
@@ -920,7 +925,7 @@ describe("Shell", () => {
         shell.loadDocument({ root, contentRoot });
         (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
         (shell as unknown as { _viewFrameDocument: Document })._viewFrameDocument = viewFrameDocument;
-        (shell as unknown as { _syncEditorMode(): void })._syncEditorMode();
+        shellParts(shell).commands.syncEditorMode();
 
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(core.getAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce)).toBe("loading");
@@ -990,7 +995,7 @@ describe("Shell", () => {
         (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
         (shell as unknown as { _viewFrameDocument: Document })._viewFrameDocument = viewFrameDocument;
 
-        (shell as unknown as { _syncViewFrameContent(): void })._syncViewFrameContent();
+        shellParts(shell).commands.syncViewFrameContent();
 
         expect(viewFrameDocument.querySelector("[data-cms-content]")?.innerHTML).toBe(`<input name="search" cms-param-sync="search">`);
         expect(calls).toEqual(["stop", "start"]);
@@ -1048,7 +1053,7 @@ describe("Shell", () => {
 
         const shell = new Shell();
         document.body.append(shell);
-        (shell as unknown as { _bindFrameDocument(document: Document): void })._bindFrameDocument(frameDocument);
+        shellParts(shell).commands.bindFrameDocument(frameDocument);
 
         const css = frameDocument.getElementById("cms-editor-binding-preview-style")?.textContent ?? "";
         expect(css).toContain(`${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`);
@@ -1078,7 +1083,7 @@ describe("Shell", () => {
 
         (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
 
-        expect((shell as unknown as { _getContentHtml(): string })._getContentHtml())
+        expect(shellParts(shell).commands.getContentHtml())
             .toBe("<p>Hello</p>");
     });
 
@@ -1127,7 +1132,7 @@ describe("Shell", () => {
         shell.addEventListener("editor-v2:save-document", (event) => {
             savedContent = (event as CustomEvent<{ content: string }>).detail.content;
         });
-        (shell as unknown as { _saveDocument(): void })._saveDocument();
+        shellParts(shell).commands.saveDocument();
 
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(shell.shadowRoot!.querySelector("cms-editor-v2-canvas")?.getAttribute("mode")).toBe("view");
@@ -1334,7 +1339,7 @@ describe("Shell", () => {
 
         (shell as unknown as { _frameDocument: typeof frameDocument })._frameDocument = frameDocument;
 
-        expect((shell as unknown as { _getContentHtml(): string })._getContentHtml())
+        expect(shellParts(shell).commands.getContentHtml())
             .toBe(`<w13c-snippet identifier="main-nav"></w13c-snippet>`);
     });
 
@@ -1506,9 +1511,7 @@ describe("Shell", () => {
         const parentEditor = runtime.getEditor(container);
         if (!parentEditor) throw new Error("Missing container editor.");
 
-        (shell as unknown as {
-            _addChild(parent: Editor, item: unknown, slotName?: string): void;
-        })._addChild(parentEditor, {
+        shellParts(shell).mutations.addChild(parentEditor, {
             kind:    "template",
             id:      "tpl-hero",
             label:   "Hero template",
@@ -1575,9 +1578,7 @@ describe("Shell", () => {
         const containerEditor = runtime.getEditor(container);
         if (!containerEditor) throw new Error("Missing container editor.");
 
-        (shell as unknown as {
-            _addChild(parent: Editor, item: unknown, slotName?: string): void;
-        })._addChild(containerEditor, {
+        shellParts(shell).mutations.addChild(containerEditor, {
             kind: "block",
             entry: {
                 tag: "demo-card",
@@ -1653,7 +1654,7 @@ describe("Shell", () => {
         (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
         shell.loadDocument({ root, contentRoot });
 
-        (shell as unknown as { _addRoot(item: unknown): void })._addRoot({
+        shellParts(shell).mutations.addRoot({
             kind: "block",
             entry: {
                 tag: "demo-figure",
@@ -2028,9 +2029,7 @@ describe("Shell", () => {
         const figureEditor = runtime.getEditor(figure);
         if (!figureEditor) throw new Error("Missing figure editor.");
 
-        (shell as unknown as {
-            _addChild(parent: Editor, item: unknown, slotName?: string): void;
-        })._addChild(figureEditor, {
+        shellParts(shell).mutations.addChild(figureEditor, {
             kind: "media",
             label: "Media",
             accept: ["svg"],
@@ -2127,9 +2126,7 @@ describe("Shell", () => {
         const galleryEditor = runtime.getEditor(gallery);
         if (!galleryEditor) throw new Error("Missing gallery editor.");
 
-        (shell as unknown as {
-            _addChild(parent: Editor, item: unknown, slotName?: string): void;
-        })._addChild(galleryEditor, {
+        shellParts(shell).mutations.addChild(galleryEditor, {
             kind: "media",
             label: "Media",
             accept: ["image"],
@@ -2331,9 +2328,7 @@ describe("Shell", () => {
         const target = document.createElement("demo-card");
         const editor = new CardEditor(target);
 
-        (shell as unknown as {
-            _setRepeat(editor: Editor, path: string, alias: string): void;
-        })._setRepeat(editor, "data.items", "plan");
+        shellParts(shell).mutations.setRepeat(editor, "data.items", "plan");
 
         expect(target.getAttribute("cms-repeat")).toBe("data.items as plan");
     });
@@ -2349,16 +2344,7 @@ describe("Shell", () => {
         const target = document.createElement("demo-card");
         const editor = new CardEditor(target);
 
-        (shell as unknown as {
-            _setSource(editor: Editor, source: { label: string; url: string; fields: [] }, binding: {
-                url: string;
-                alias: string;
-                params: {
-                    q: { from: "queryParam"; name: string };
-                    limit: { from: "raw"; value: string };
-                };
-            }): void;
-        })._setSource(editor, { label: "Plans", url: "/api/plans", fields: [] }, {
+        shellParts(shell).mutations.setSource(editor, { label: "Plans", url: "/api/plans", fields: [] }, {
             url: "/api/plans",
             alias: "plans",
             params: {
@@ -2481,9 +2467,7 @@ describe("Shell", () => {
         const parentEditor = runtime.getEditor(container);
         if (!parentEditor) throw new Error("Missing container editor.");
 
-        (shell as unknown as {
-            _addSourceStateChild(parent: Editor, item: unknown, sourceState: "empty"): void;
-        })._addSourceStateChild(parentEditor, {
+        shellParts(shell).mutations.addSourceStateChild(parentEditor, {
             kind: "block",
             entry: {
                 tag:            "p",
@@ -2558,9 +2542,7 @@ describe("Shell", () => {
         const childEditor = runtime.getEditor(container.querySelector("demo-child") as HTMLElement);
         if (!childEditor) throw new Error("Missing child editor.");
 
-        (shell as unknown as {
-            _replaceEditor(editor: Editor, item: unknown): void;
-        })._replaceEditor(childEditor, {
+        shellParts(shell).mutations.replaceEditor(childEditor, {
             kind: "block",
             entry: {
                 tag:            "demo-child",
@@ -2769,7 +2751,7 @@ describe("Shell", () => {
         const originalConfirm = globalThis.confirm;
         globalThis.confirm = (() => false) as typeof globalThis.confirm;
         try {
-            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(editor);
+            shellParts(shell).mutations.removeSource(editor);
         } finally {
             globalThis.confirm = originalConfirm;
         }
@@ -2799,7 +2781,7 @@ describe("Shell", () => {
         const originalConfirm = globalThis.confirm;
         globalThis.confirm = (() => true) as typeof globalThis.confirm;
         try {
-            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(editor);
+            shellParts(shell).mutations.removeSource(editor);
         } finally {
             globalThis.confirm = originalConfirm;
         }
@@ -2878,7 +2860,7 @@ describe("Shell", () => {
         const originalConfirm = globalThis.confirm;
         globalThis.confirm = (() => true) as typeof globalThis.confirm;
         try {
-            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(gridEditor);
+            shellParts(shell).mutations.removeSource(gridEditor);
         } finally {
             globalThis.confirm = originalConfirm;
         }
@@ -2907,7 +2889,7 @@ describe("Shell", () => {
         const originalConfirm = globalThis.confirm;
         globalThis.confirm = (() => true) as typeof globalThis.confirm;
         try {
-            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(editor);
+            shellParts(shell).mutations.removeSource(editor);
         } finally {
             globalThis.confirm = originalConfirm;
         }
@@ -2939,7 +2921,7 @@ describe("Shell", () => {
         const originalConfirm = globalThis.confirm;
         globalThis.confirm = (() => true) as typeof globalThis.confirm;
         try {
-            (shell as unknown as { _removeSource(editor: Editor): void })._removeSource(editor);
+            shellParts(shell).mutations.removeSource(editor);
         } finally {
             globalThis.confirm = originalConfirm;
         }
