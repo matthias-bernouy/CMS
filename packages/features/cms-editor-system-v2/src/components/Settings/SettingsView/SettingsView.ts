@@ -1,12 +1,12 @@
-import "../../Controls/Section/Section";
-import "../../Controls/TextInput/TextInput";
-import "../../Controls/Textarea/Textarea";
-import "../../Controls/RichTextEditor/RichTextEditor";
-import "../../Controls/Select/Select";
-import "../../Controls/Toggle/Toggle";
-import "../../Controls/SegmentedControl/SegmentedControl";
-import "../../Controls/PageLink/PageLink";
-import "../../Controls/SchemaPicker/SchemaPicker";
+import "../../Controls/Fields/Section/Section";
+import "../../Controls/Fields/TextInput/TextInput";
+import "../../Controls/Fields/Textarea/Textarea";
+import "../../Controls/RichText/RichTextEditor/RichTextEditor";
+import "../../Controls/Fields/Select/Select";
+import "../../Controls/Fields/Toggle/Toggle";
+import "../../Controls/Fields/SegmentedControl/SegmentedControl";
+import "../../Controls/Pickers/PageLink/PageLink";
+import "../../Controls/Pickers/SchemaPicker/SchemaPicker";
 import type {
     DataScope,
     EditableState,

@@ -82,7 +82,7 @@ import {
     FilesCenter,
     type FilesCenterSelectManyDetail,
     type FilesCenterSelectDetail,
-} from "../../Controls/FilesCenter/FilesCenter";
+} from "../../Controls/Pickers/FilesCenter/FilesCenter";
 import { FrameHighlight } from "./FrameHighlight";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };

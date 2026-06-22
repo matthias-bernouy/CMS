@@ -1732,7 +1732,7 @@ describe("Shell", () => {
     test("rich text dynamic data uses available data scopes instead of a prompt", async () => {
         installDom();
 
-        const { RichTextEditor } = await import("../src/components/Controls/RichTextEditor/RichTextEditor");
+        const { RichTextEditor } = await import("../src/components/Controls/RichText/RichTextEditor/RichTextEditor");
 
         const editor = new RichTextEditor();
         editor.setAttribute("label", "Rich text");
@@ -1793,7 +1793,7 @@ describe("Shell", () => {
             });
         }) as typeof fetch;
 
-        const { PageLink } = await import("../src/components/Controls/PageLink/PageLink");
+        const { PageLink } = await import("../src/components/Controls/Pickers/PageLink/PageLink");
         const control = new PageLink();
         const values: string[] = [];
         control.addEventListener("input", (event) => {
@@ -1847,7 +1847,7 @@ describe("Shell", () => {
             });
         }) as typeof fetch;
 
-        const { FilesCenter } = await import("../src/components/Controls/FilesCenter/FilesCenter");
+        const { FilesCenter } = await import("../src/components/Controls/Pickers/FilesCenter/FilesCenter");
         const center = new FilesCenter();
         const selected: string[] = [];
         center.addEventListener("select-file", (event) => {
@@ -1882,7 +1882,7 @@ describe("Shell", () => {
             headers: { "Content-Type": "application/json" },
         })) as typeof fetch;
 
-        const { FilesCenter } = await import("../src/components/Controls/FilesCenter/FilesCenter");
+        const { FilesCenter } = await import("../src/components/Controls/Pickers/FilesCenter/FilesCenter");
         const center = new FilesCenter();
         const selected: string[][] = [];
         center.addEventListener("select-files", (event) => {
@@ -1929,7 +1929,7 @@ describe("Shell", () => {
             });
         }) as typeof fetch;
 
-        const { PageLink } = await import("../src/components/Controls/PageLink/PageLink");
+        const { PageLink } = await import("../src/components/Controls/Pickers/PageLink/PageLink");
         const control = new PageLink();
         control.setAttribute("allow-media", "true");
         const values: string[] = [];
@@ -1959,7 +1959,7 @@ describe("Shell", () => {
         installDom();
         document.head.innerHTML = `<meta name="basePath" content="/cms">`;
 
-        const { PageLink } = await import("../src/components/Controls/PageLink/PageLink");
+        const { PageLink } = await import("../src/components/Controls/Pickers/PageLink/PageLink");
         const control = new PageLink();
         control.setAttribute("allow-page", "false");
         control.setAttribute("allow-external", "false");
@@ -2186,7 +2186,7 @@ describe("Shell", () => {
             SETTINGS_VIEW_SETTING_CHANGE_EVENT,
             SettingsView,
         } = await import("../src/components/Settings/SettingsView/SettingsView");
-        const { PageLink } = await import("../src/components/Controls/PageLink/PageLink");
+        const { PageLink } = await import("../src/components/Controls/Pickers/PageLink/PageLink");
         if (!customElements.get("cms-editor-v2-page-link")) {
             customElements.define("cms-editor-v2-page-link", class extends PageLink {});
         }
