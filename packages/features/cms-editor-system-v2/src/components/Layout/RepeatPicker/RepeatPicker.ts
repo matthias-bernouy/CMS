@@ -1,16 +1,15 @@
 import type { DataField, DataScope } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
+import {
+    defaultRepeatAlias,
+    repeatArrayOptions,
+    visibleRepeatOptions,
+    type RepeatOption,
+} from "./repeatOptions";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
-
-type RepeatOption = {
-    path: string;
-    label: string;
-    scopeLabel: string;
-    fields: DataField[];
-};
 
 export type RepeatPickerSelectDetail = {
     path: string;
@@ -43,7 +42,7 @@ export class RepeatPicker extends HTMLElement {
     }
 
     open(scopes: DataScope[], contextLabel?: string): void {
-        this._options = this._arrayOptions(scopes);
+        this._options = repeatArrayOptions(scopes);
         this._activeOption = null;
         this.subtitle.textContent = contextLabel ? `Choose an array to repeat ${contextLabel}.` : "Choose an array to repeat.";
         this.search.value = "";
@@ -152,7 +151,7 @@ export class RepeatPicker extends HTMLElement {
         label.textContent = "Alias";
         const alias = document.createElement("input");
         alias.className = "alias";
-        alias.value = this._defaultAlias(option.path);
+        alias.value = defaultRepeatAlias(option.path);
         label.append(alias);
         config.append(label);
 
@@ -211,7 +210,7 @@ export class RepeatPicker extends HTMLElement {
         return item;
     }
 
-    private _select(option: RepeatOption, alias = this._defaultAlias(option.path)): void {
+    private _select(option: RepeatOption, alias = defaultRepeatAlias(option.path)): void {
         const cleanAlias = alias.trim();
         if (!cleanAlias) return;
 
@@ -226,48 +225,8 @@ export class RepeatPicker extends HTMLElement {
         this.close();
     }
 
-    private _arrayOptions(scopes: DataScope[]): RepeatOption[] {
-        const byPath = new Map<string, RepeatOption>();
-        for (const option of scopes.flatMap(scope => this._arrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-            if (!byPath.has(option.path)) byPath.set(option.path, option);
-        }
-        return [...byPath.values()];
-    }
-
-    private _arrayFields(fields: DataField[], scopeName: string, scopeLabel: string, prefix = ""): RepeatOption[] {
-        return fields.flatMap(field => {
-            const relativePath = prefix && field.path !== "." ? `${prefix}.${field.path}` : field.path === "." ? prefix : field.path;
-            const fullPath = relativePath ? `${scopeName}.${relativePath}` : scopeName;
-            if (field.type !== "array") return this._arrayFields(field.children ?? [], scopeName, scopeLabel, relativePath);
-
-            return [{
-                path: fullPath,
-                label: field.path,
-                scopeLabel,
-                fields: field.children ?? [],
-            }];
-        });
-    }
-
     private _visibleOptions(): RepeatOption[] {
-        const query = this.search.value.trim().toLowerCase();
-        if (!query) return this._options;
-
-        return this._options.filter(option => [
-            option.path,
-            option.label,
-            option.scopeLabel,
-        ].some(value => value.toLowerCase().includes(query)));
-    }
-
-    private _defaultAlias(path: string): string {
-        const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
-        const singular = segment.endsWith("ies")
-            ? `${segment.slice(0, -3)}y`
-            : segment.endsWith("s") && segment.length > 1
-            ? segment.slice(0, -1)
-            : segment;
-        return singular.replace(/[^A-Za-z0-9_$]/g, "") || "item";
+        return visibleRepeatOptions(this._options, this.search.value);
     }
 
     private readonly _onBackdropClick = (event: Event): void => {

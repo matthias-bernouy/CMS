@@ -1,16 +1,19 @@
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
 import { FilesCenter, type FilesCenterSelectDetail } from "../FilesCenter/FilesCenter";
+import {
+    allowedLinkModes,
+    isImageMediaLink,
+    linkSummaryFallback,
+    mediaDisplayName,
+    mediaSelectionLabel,
+    modeForLinkValue,
+    type LinkMode,
+    type PageRef,
+} from "./pageLinkDomain";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
-
-type LinkMode = "page" | "external" | "media";
-
-type PageRef = {
-    title: string;
-    path: string;
-};
 
 export type PageLinkInputDetail = {
     value: string;
@@ -61,17 +64,7 @@ export class PageLink extends HTMLElement {
 
     private _syncFromAttributes(): void {
         this._value = this.getAttribute("value") ?? "";
-        if (this._value && this._isMedia(this._value)) {
-            this._mode = "media";
-        } else if (this._value && this._isExternal(this._value)) {
-            this._mode = "external";
-        } else if (!this._allowPage() && !this._allowExternal() && this._allowMedia()) {
-            this._mode = "media";
-        } else if (!this._allowPage() && this._allowExternal()) {
-            this._mode = "external";
-        } else {
-            this._mode = "page";
-        }
+        this._mode = modeForLinkValue(this._value, this._modeOptions());
     }
 
     private _wire(): void {
@@ -218,7 +211,7 @@ export class PageLink extends HTMLElement {
 
     private _renderSummary(): void {
         const page = this._pages.find(candidate => candidate.path === this._value);
-        this.summaryTitle.textContent = page?.title ?? (this._value ? this._summaryFallback() : "No link selected");
+        this.summaryTitle.textContent = page?.title ?? (this._value ? linkSummaryFallback(this._mode) : "No link selected");
         this.summaryValue.textContent = this._value || "Choose a target";
         this.target.hidden = !this._value || this._mode === "media";
     }
@@ -271,10 +264,10 @@ export class PageLink extends HTMLElement {
         const preview = this.filePreview;
         const action = this.fileAction;
         const hasValue = this._mode === "media" && this._value !== "";
-        const isImage = hasValue && this._isImageMedia(this._value);
+        const isImage = hasValue && isImageMediaLink(this._value);
 
-        title.textContent = hasValue ? this._mediaDisplayName(this._value, isImage) : "Choose file";
-        value.textContent = hasValue ? this._mediaSelectionLabel(isImage) : "No file selected";
+        title.textContent = hasValue ? mediaDisplayName(this._value, isImage, this._mediaLabel) : "Choose file";
+        value.textContent = hasValue ? mediaSelectionLabel(isImage) : "No file selected";
         value.toggleAttribute("hidden", hasValue && isImage);
         action.textContent = hasValue ? "Change" : "Choose";
 
@@ -312,49 +305,15 @@ export class PageLink extends HTMLElement {
     }
 
     private _allowedModes(): LinkMode[] {
-        const modes: LinkMode[] = [];
-        if (this._allowPage()) modes.push("page");
-        if (this._allowExternal()) modes.push("external");
-        if (this._allowMedia()) modes.push("media");
-        return modes;
+        return allowedLinkModes(this._modeOptions());
     }
 
-    private _isExternal(value: string): boolean {
-        return /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("//");
-    }
-
-    private _isMedia(value: string): boolean {
-        return value.includes("/.cms/files/by-id/");
-    }
-
-    private _isImageMedia(value: string): boolean {
-        return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value)
-            || value.includes("/.cms/files/by-id/");
-    }
-
-    private _mediaDisplayName(value: string, isImage: boolean): string {
-        if (this._mediaLabel) return this._mediaLabel;
-        if (value.includes("/.cms/files/by-id/")) return isImage ? "Image" : "Selected file";
-
-        const clean = value.split(/[?#]/, 1)[0] ?? value;
-        const segment = clean.split("/").filter(Boolean).at(-1);
-        if (!segment) return "File";
-
-        try {
-            return decodeURIComponent(segment);
-        } catch {
-            return segment;
-        }
-    }
-
-    private _mediaSelectionLabel(isImage: boolean): string {
-        return isImage ? "Image" : "File selected";
-    }
-
-    private _summaryFallback(): string {
-        if (this._mode === "external") return "External URL";
-        if (this._mode === "media") return "File";
-        return "Internal page";
+    private _modeOptions() {
+        return {
+            allowPage:     this._allowPage(),
+            allowExternal: this._allowExternal(),
+            allowMedia:    this._allowMedia(),
+        };
     }
 
     private _basePath(): string {

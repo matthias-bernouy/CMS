@@ -1,37 +1,22 @@
-import type { MediaAccept } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
+import {
+    fileDetail,
+    fileKind,
+    fileMeta,
+    fileUrl,
+    matchesFileAccept,
+    type BreadcrumbEntry,
+    type FileItem,
+    type FilesCenterFileAccept,
+    type FilesCenterSelectDetail,
+    type FilesPage,
+} from "./filesCenterDomain";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
 
-type FileItem = {
-    id: string;
-    name: string;
-    parentId: string | null;
-    type: "folder" | "file";
-    size?: number;
-    mimeType?: string;
-    contentHash?: string;
-};
-
-type FilesPage = {
-    items: FileItem[];
-};
-
-type BreadcrumbEntry = {
-    id: string | null;
-    label: string;
-};
-
-export type FilesCenterFileAccept = MediaAccept;
-
-export type FilesCenterSelectDetail = {
-    id: string;
-    label: string;
-    src: string;
-    mimeType?: string;
-};
+export type { FilesCenterFileAccept, FilesCenterSelectDetail } from "./filesCenterDomain";
 
 export type FilesCenterSelectManyDetail = {
     files: FilesCenterSelectDetail[];
@@ -140,7 +125,7 @@ export class FilesCenter extends HTMLElement {
 
         const query = this.searchInput.value.trim().toLowerCase();
         const items = this._items.filter((item) => {
-            if (item.type === "file" && !this._matchesFileAccept(item)) return false;
+            if (item.type === "file" && !matchesFileAccept(item, this._fileAccept)) return false;
             if (!query) return true;
             return item.name.toLowerCase().includes(query);
         });
@@ -150,7 +135,7 @@ export class FilesCenter extends HTMLElement {
         for (const item of items) {
             const button = document.createElement("button");
             button.className = "item";
-            button.dataset.type = item.type === "folder" ? "folder" : this._fileKind(item);
+            button.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
             button.type = "button";
             button.ariaSelected = String(this._isSelected(item));
             button.addEventListener("click", () => {
@@ -177,7 +162,7 @@ export class FilesCenter extends HTMLElement {
 
             const meta = document.createElement("span");
             meta.className = "meta";
-            meta.textContent = item.type === "folder" ? "Folder" : this._fileMeta(item);
+            meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
 
             copy.append(name, meta);
             button.append(preview, copy);
@@ -205,7 +190,7 @@ export class FilesCenter extends HTMLElement {
         this.selectButton.disabled = !this._selected;
         this.selectButton.textContent = "Select file";
         this.selectionTitle.textContent = this._selected?.name ?? "No file selected";
-        this.selectionValue.textContent = this._selected ? this._fileMeta(this._selected) : "Choose a file";
+        this.selectionValue.textContent = this._selected ? fileMeta(this._selected) : "Choose a file";
     }
 
     private _confirm(): void {
@@ -215,7 +200,7 @@ export class FilesCenter extends HTMLElement {
                 bubbles: true,
                 composed: true,
                 detail: {
-                    files: this._selectedMany.map(file => this._fileDetail(file)),
+                    files: this._selectedMany.map(file => fileDetail(this._basePath(), file)),
                 },
             }));
             this._close();
@@ -226,7 +211,7 @@ export class FilesCenter extends HTMLElement {
         this.dispatchEvent(new CustomEvent<FilesCenterSelectDetail>("select-file", {
             bubbles: true,
             composed: true,
-            detail: this._fileDetail(this._selected),
+            detail: fileDetail(this._basePath(), this._selected),
         }));
         this._close();
     }
@@ -252,22 +237,9 @@ export class FilesCenter extends HTMLElement {
         return this._selected?.id === item.id;
     }
 
-    private _fileDetail(item: FileItem): FilesCenterSelectDetail {
-        return {
-            id: item.id,
-            label: item.name,
-            src: this._fileUrl(item.id),
-            mimeType: item.mimeType,
-        };
-    }
-
     private _close(): void {
         this.backdrop.hidden = true;
         this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
-    }
-
-    private _fileUrl(id: string): string {
-        return `${this._basePath()}/.cms/files/by-id/${encodeURIComponent(id)}`;
     }
 
     private _preview(item: FileItem): HTMLElement {
@@ -283,46 +255,15 @@ export class FilesCenter extends HTMLElement {
             const image = document.createElement("img");
             image.alt = "";
             image.loading = "lazy";
-            image.src = this._fileUrl(item.id);
+            image.src = fileUrl(this._basePath(), item.id);
             preview.append(image);
             return preview;
         }
 
-        preview.innerHTML = this._fileKind(item) === "pdf"
+        preview.innerHTML = fileKind(item) === "pdf"
             ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>`
             : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
         return preview;
-    }
-
-    private _fileKind(item: FileItem): "image" | "pdf" | "file" {
-        if (item.mimeType?.startsWith("image/")) return "image";
-        if (item.mimeType?.includes("pdf")) return "pdf";
-        return "file";
-    }
-
-    private _matchesFileAccept(item: FileItem): boolean {
-        if (!this._fileAccept || this._fileAccept.length === 0) return true;
-
-        const mimeType = item.mimeType ?? "";
-        if (this._fileAccept.includes("image") && mimeType.startsWith("image/")) return true;
-        if (this._fileAccept.includes("svg") && mimeType === "image/svg+xml") return true;
-        if (this._fileAccept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml") return true;
-        if (this._fileAccept.includes("video") && mimeType.startsWith("video/")) return true;
-        if (this._fileAccept.includes("audio") && mimeType.startsWith("audio/")) return true;
-        if (this._fileAccept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/")) return true;
-        return false;
-    }
-
-    private _fileMeta(item: FileItem): string {
-        const parts = [item.mimeType ?? "File"];
-        if (typeof item.size === "number") parts.push(this._formatSize(item.size));
-        return parts.join(" · ");
-    }
-
-    private _formatSize(size: number): string {
-        if (size < 1024) return `${size} B`;
-        if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
-        return `${(size / 1024 / 1024).toFixed(1)} MB`;
     }
 
     private _basePath(): string {
