@@ -1,6 +1,17 @@
 import type { EditorCatalogEntry, MediaAccept } from "@bernouy/cms-content/editor";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
+import {
+    blockPickerCategoryLabel,
+    blockPickerIconText,
+    blockPickerItemDescription,
+    blockPickerItemHandle,
+    blockPickerItemLabel,
+    blockPickerOptionItem,
+    blockPickerOptionMatches,
+    blockPickerSourceLabel,
+    normalizeBlockPickerOption,
+} from "./blockPickerItems";
 
 const template = document.createElement("template");
 template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
@@ -91,7 +102,7 @@ export class BlockPickerModal extends HTMLElement {
     open(groups: BlockPickerSlotGroup[], contextLabel?: string): void {
         this._groups = groups.map(group => ({
             ...group,
-            options: group.options.map(option => this._normalizeOption(option)),
+            options: group.options.map(option => normalizeBlockPickerOption(option)),
         }));
         this._activeSlotKey = this._firstEnabledGroup()?.slot ?? "";
         this._activeSource = "block";
@@ -240,32 +251,32 @@ export class BlockPickerModal extends HTMLElement {
             return;
         }
 
-        const item = this._optionItem(option);
+        const item = blockPickerOptionItem(option);
         const eyebrow = document.createElement("div");
         eyebrow.className = "details-eyebrow";
-        eyebrow.textContent = this._sourceLabel(item.kind);
+        eyebrow.textContent = blockPickerSourceLabel(item.kind);
 
         const title = document.createElement("h3");
-        title.textContent = this._itemLabel(item);
+        title.textContent = blockPickerItemLabel(item);
 
         const description = document.createElement("p");
-        description.textContent = this._itemDescription(item);
+        description.textContent = blockPickerItemDescription(item);
 
         const preview = document.createElement("div");
         preview.className = "preview";
 
         const previewIcon = document.createElement("span");
         previewIcon.className = "preview-icon";
-        previewIcon.textContent = this._iconText(item);
+        previewIcon.textContent = blockPickerIconText(item);
 
         preview.append(previewIcon);
 
         const meta = document.createElement("dl");
         meta.append(
-            this._metaRow("Source", this._sourceLabel(item.kind)),
-            this._metaRow("Handle", this._itemHandle(item)),
+            this._metaRow("Source", blockPickerSourceLabel(item.kind)),
+            this._metaRow("Handle", blockPickerItemHandle(item)),
             this._metaRow("Slot", option.slotLabel),
-            this._metaRow("Category", this._categoryLabel(option)),
+            this._metaRow("Category", blockPickerCategoryLabel(option)),
         );
 
         const insert = document.createElement("button");
@@ -322,24 +333,24 @@ export class BlockPickerModal extends HTMLElement {
         });
         button.addEventListener("dblclick", () => this._selectOption(option));
 
-        const item = this._optionItem(option);
+        const item = blockPickerOptionItem(option);
         const icon = document.createElement("span");
         icon.className = "icon";
-        icon.textContent = this._iconText(item);
+        icon.textContent = blockPickerIconText(item);
 
         const body = document.createElement("span");
 
         const name = document.createElement("span");
         name.className = "name";
-        name.textContent = this._itemLabel(item);
+        name.textContent = blockPickerItemLabel(item);
 
         const description = document.createElement("span");
         description.className = "description";
-        description.textContent = this._itemDescription(item);
+        description.textContent = blockPickerItemDescription(item);
 
         const category = document.createElement("span");
         category.className = "category";
-        category.textContent = this._categoryLabel(option);
+        category.textContent = blockPickerCategoryLabel(option);
 
         body.append(name, description, category);
         button.append(icon, body);
@@ -357,18 +368,18 @@ export class BlockPickerModal extends HTMLElement {
     }
 
     private _isVisibleOption(option: BlockPickerOption, query: string): boolean {
-        const item = this._optionItem(option);
+        const item = blockPickerOptionItem(option);
         if (item.kind !== this._activeSource) return false;
-        if (this._activeCategory && this._categoryLabel(option) !== this._activeCategory) return false;
-        return this._matches(option, query);
+        if (this._activeCategory && blockPickerCategoryLabel(option) !== this._activeCategory) return false;
+        return blockPickerOptionMatches(option, query);
     }
 
     private _sourceCount(source: BlockPickerItem["kind"]): number {
-        return this._activeGroup()?.options.filter(option => this._optionItem(option).kind === source).length ?? 0;
+        return this._activeGroup()?.options.filter(option => blockPickerOptionItem(option).kind === source).length ?? 0;
     }
 
     private _selectSingleSourceOption(source: BlockPickerItem["kind"]): boolean {
-        const options = this._activeGroup()?.options.filter(option => this._optionItem(option).kind === source) ?? [];
+        const options = this._activeGroup()?.options.filter(option => blockPickerOptionItem(option).kind === source) ?? [];
         if (options.length !== 1) return false;
 
         this._selectOption(options[0]!);
@@ -376,109 +387,17 @@ export class BlockPickerModal extends HTMLElement {
     }
 
     private _categoryCount(category: string): number {
-        return this._activeGroup()?.options.filter(option => this._optionItem(option).kind === this._activeSource && this._categoryLabel(option) === category).length ?? 0;
+        return this._activeGroup()?.options.filter(option => blockPickerOptionItem(option).kind === this._activeSource && blockPickerCategoryLabel(option) === category).length ?? 0;
     }
 
     private _categories(): string[] {
         const categories = new Set<string>();
         for (const option of this._activeGroup()?.options ?? []) {
-            if (this._optionItem(option).kind !== this._activeSource) continue;
-            categories.add(this._categoryLabel(option));
+            if (blockPickerOptionItem(option).kind !== this._activeSource) continue;
+            categories.add(blockPickerCategoryLabel(option));
         }
 
         return [...categories].sort((a, b) => a.localeCompare(b));
-    }
-
-    private _matches(option: BlockPickerOption, query: string): boolean {
-        if (!query) return true;
-        const item = this._optionItem(option);
-        return [
-            this._itemLabel(item),
-            this._itemDescription(item),
-            this._itemCategory(item),
-            this._itemSubCategory(item),
-            this._itemHandle(item),
-            option.slotLabel,
-        ].some(value => value?.toLowerCase().includes(query));
-    }
-
-    private _iconText(item: BlockPickerItem): string {
-        return (this._itemIcon(item) ?? this._itemLabel(item)).slice(0, 1).toUpperCase();
-    }
-
-    private _categoryLabel(option: BlockPickerOption): string {
-        const item = this._optionItem(option);
-        const category = this._itemCategory(item) ?? this._sourceLabel(item.kind);
-        const subCategory = this._itemSubCategory(item);
-        return subCategory ? `${category} / ${subCategory}` : category;
-    }
-
-    private _normalizeOption(option: BlockPickerOption): BlockPickerOption {
-        if (option.item) {
-            return {
-                ...option,
-                kind: option.item.kind,
-            };
-        }
-
-        if (!option.entry) {
-            throw new Error("Block picker option requires either item or entry.");
-        }
-
-        return {
-            ...option,
-            kind: "block",
-            item: {
-                kind: "block",
-                entry: option.entry,
-            },
-        };
-    }
-
-    private _optionItem(option: BlockPickerOption): BlockPickerItem {
-        if (option.item) return option.item;
-        if (option.entry) {
-            return {
-                kind: "block",
-                entry: option.entry,
-            };
-        }
-        throw new Error("Block picker option requires either item or entry.");
-    }
-
-    private _sourceLabel(kind: BlockPickerItem["kind"]): string {
-        if (kind === "template") return "Template";
-        if (kind === "snippet") return "Snippet";
-        if (kind === "media") return "Media";
-        return "Block";
-    }
-
-    private _itemLabel(item: BlockPickerItem): string {
-        return item.kind === "block" ? item.entry.label : item.label;
-    }
-
-    private _itemDescription(item: BlockPickerItem): string {
-        if (item.kind === "block") return item.entry.description ?? item.entry.tag;
-        return item.description ?? this._itemHandle(item);
-    }
-
-    private _itemCategory(item: BlockPickerItem): string | undefined {
-        return item.kind === "block" ? item.entry.category : item.category;
-    }
-
-    private _itemSubCategory(item: BlockPickerItem): string | undefined {
-        return item.kind === "block" ? item.entry.subCategory : item.subCategory;
-    }
-
-    private _itemIcon(item: BlockPickerItem): string | undefined {
-        return item.kind === "block" ? item.entry.icon : item.icon;
-    }
-
-    private _itemHandle(item: BlockPickerItem): string {
-        if (item.kind === "block") return item.entry.tag;
-        if (item.kind === "snippet") return item.identifier;
-        if (item.kind === "media") return item.accept?.join(", ") ?? "media";
-        return item.id;
     }
 
     private _activeGroup(): BlockPickerSlotGroup | undefined {

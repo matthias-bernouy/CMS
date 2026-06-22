@@ -106,8 +106,6 @@ async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
         loadEditorSettings(),
     ]);
 
-    console.log(dataSources);
-
     shell.setCatalog(catalog);
     shell.setInsertItems(insertItems);
     shell.setDataSources(dataSources);

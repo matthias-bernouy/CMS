@@ -1,8 +1,8 @@
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
+import { attachFieldShadow, createFieldTemplate, syncFieldCopy } from "../fieldElement";
 
-const template = document.createElement("template");
-template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
+const template = createFieldTemplate(templateHtml, componentCss);
 
 type SelectOption = {
     label: string;
@@ -12,12 +12,11 @@ type SelectOption = {
 export class Select extends HTMLElement {
     constructor() {
         super();
-        this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+        attachFieldShadow(this, template);
     }
 
     connectedCallback(): void {
-        this.shadowRoot!.querySelector(".label")!.textContent = this.getAttribute("label") ?? "";
-        this.shadowRoot!.querySelector(".hint")!.textContent = this.getAttribute("hint") ?? "";
+        syncFieldCopy(this);
         const current = this.getAttribute("value");
         const options = this._parseOptions();
         this.shadowRoot!.querySelector("select")!.replaceChildren(...options.map((option) => {

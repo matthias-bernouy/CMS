@@ -4,11 +4,7 @@ import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
 import type { EditorDataSource, StructureNode } from "../../../runtime";
 import { StructureTreeController } from "./State/Controllers/structureTreeController";
 import type { DefaultTemplateSelection } from "./Pickers/structurePickerGroups";
-import type {
-    StructureTreeAction,
-    StructureTreeActionDetail,
-    StructureTreeRenderOptions,
-} from "./State/structureTreeTypes";
+import type { StructureTreeRenderOptions } from "./State/structureTreeTypes";
 import badgesCss from "./Styles/badges.css" with { type: "text" };
 import contextCss from "./Styles/context.css" with { type: "text" };
 import sourceStatesCss from "./Styles/sourceStates.css" with { type: "text" };

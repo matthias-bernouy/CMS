@@ -6,7 +6,6 @@ import "../../Settings/SettingsView/SettingsView";
 import "../RepeatPicker/RepeatPicker";
 import {
     type CmsSourceStateForce,
-    Editor,
     type EditorCatalog,
     type EditorDocument,
 } from "@bernouy/cms-content/editor";
@@ -127,21 +126,4 @@ export class ShellController extends HTMLElement {
     loadDocument(document: EditorDocument, selectedTarget: HTMLElement | null = null): void {
         this._parts.api.loadDocument(document, selectedTarget);
     }
-
-    private _saveDocument(): void {
-        this._parts.commands.saveDocument();
-    }
-
-    private _addChild(parent: Editor, item: BlockPickerItem, slotName?: string): void {
-        this._parts.mutations.addChild(parent, item, slotName);
-    }
-
-    private _syncEditorMode(): void {
-        this._parts.commands.syncEditorMode();
-    }
-
-    private _getContentHtml(): string {
-        return this._parts.commands.getContentHtml();
-    }
-
 }

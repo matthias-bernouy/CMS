@@ -63,10 +63,6 @@ export function unbindShellLifecycle(targets: ShellLifecycleTargets, handlers: S
     updateShellLifecycle("removeEventListener", targets, handlers);
 }
 
-export type ShellLifecycleHost = ShellLifecycleTargets & {
-    events: ShellLifecycleHandlers;
-};
-
 export function lifecycleTargets(host: ShellLifecycleTargets): ShellLifecycleTargets {
     return host;
 }

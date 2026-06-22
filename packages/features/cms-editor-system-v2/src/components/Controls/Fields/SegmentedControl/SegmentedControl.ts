@@ -1,13 +1,13 @@
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
+import { attachFieldShadow, createFieldTemplate } from "../fieldElement";
 
-const template = document.createElement("template");
-template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
+const template = createFieldTemplate(templateHtml, componentCss);
 
 export class SegmentedControl extends HTMLElement {
     constructor() {
         super();
-        this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+        attachFieldShadow(this, template);
     }
 }
 
