@@ -7,10 +7,11 @@ import type { ShellSync } from "../shellSync";
 import type { ShellFrames } from "../shellFrames";
 import { syncViewport } from "../shellViewport";
 import type { SelectOptions } from "../shellTypes";
-import type { ShellControllerInternals } from "./Services/shellServiceTypes";
+import type { ShellState } from "./Services/shellState";
 
 type RenderSyncContext = {
-    host: ShellControllerInternals;
+    host: HTMLElement;
+    state: ShellState;
     refs: ShellDomRefs;
     frames: ShellFrames;
     sync: ShellSync;
@@ -22,22 +23,22 @@ export class ShellRenderSyncCommands {
     renderStructure(options: SelectOptions = {}): void {
         renderStructure(
             this.context.refs.structureTree,
-            this.context.host._runtime,
-            this.context.host._catalog,
-            this.context.host._insertItems,
+            this.context.state.runtime,
+            this.context.state.catalog,
+            this.context.state.insertItems,
             () => this.isEmptyDocumentContent(),
             options,
         );
     }
 
     isEmptyDocumentContent(): boolean {
-        return isEmptyDocumentContent(this.context.host._editorDocument?.contentRoot);
+        return isEmptyDocumentContent(this.context.state.editorDocument?.contentRoot);
     }
 
     syncSettingsTabs(): void {
         const buttons = this.context.refs.settingsTabs.querySelectorAll<HTMLButtonElement>("[data-settings-mode]");
         for (const button of Array.from(buttons)) {
-            const isActive = button.dataset.settingsMode === this.context.host._settingsMode;
+            const isActive = button.dataset.settingsMode === this.context.state.settingsMode;
             button.classList.toggle("active", isActive);
             button.ariaPressed = String(isActive);
         }
@@ -47,24 +48,24 @@ export class ShellRenderSyncCommands {
         syncViewport(
             this.context.refs.canvas,
             this.context.refs.topBar,
-            this.context.host._viewport,
+            this.context.state.viewport,
         );
     }
 
     syncEditorMode(): void {
-        this.context.refs.topBar.mode = this.context.host._editorMode;
-        this.context.refs.topBar.sourceState = this.context.host._sourceStateForce;
-        this.context.host.toggleAttribute("view-mode", this.context.host._editorMode === "view");
-        this.context.refs.canvas.setAttribute("mode", this.context.host._editorMode);
+        this.context.refs.topBar.mode = this.context.state.editorMode;
+        this.context.refs.topBar.sourceState = this.context.state.sourceStateForce;
+        this.context.host.toggleAttribute("view-mode", this.context.state.editorMode === "view");
+        this.context.refs.canvas.setAttribute("mode", this.context.state.editorMode);
         this.syncBindingPreviewCore();
     }
 
     syncBindingPreviewCore(): void {
-        this.context.frames.syncBindingPreviewCore(this.context.host._sourceStateForce);
+        this.context.frames.syncBindingPreviewCore(this.context.state.sourceStateForce);
     }
 
     syncViewFrameContent(): void {
-        this.context.frames.syncViewFrameContent(this.context.host._sourceStateForce);
+        this.context.frames.syncViewFrameContent(this.context.state.sourceStateForce);
     }
 
     syncChromeLabels(): void {

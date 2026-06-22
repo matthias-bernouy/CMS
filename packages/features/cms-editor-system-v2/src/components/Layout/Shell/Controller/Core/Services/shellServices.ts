@@ -11,10 +11,12 @@ import { ShellEvents } from "../../Events/shellEvents";
 import { ShellApi } from "../shellApi";
 import { ShellCommands } from "../shellCommands";
 import { ShellRenderSyncCommands } from "../shellRenderSyncCommands";
-import type { ShellControllerInternals } from "./shellServiceTypes";
+import type { ShellControllerHost } from "./shellServiceTypes";
+import type { ShellState } from "./shellState";
 
 export function createShellControllerServices(
-    host: ShellControllerInternals,
+    host: ShellControllerHost,
+    state: ShellState,
     refs: ShellDomRefs,
     frames: ShellFrames,
     highlight: FrameHighlight,
@@ -23,9 +25,9 @@ export function createShellControllerServices(
     let events: ShellEvents;
     const mutations = new ShellMutations({
         frameDocument:          () => frames.frameDocument,
-        editorDocument:         () => host._editorDocument,
-        runtime:                () => host._runtime,
-        insertItems:            () => host._insertItems,
+        editorDocument:         () => state.editorDocument,
+        runtime:                () => state.runtime,
+        insertItems:            () => state.insertItems,
         repeatPicker:           () => refs.repeatPicker,
         findStructureNodeLabel: editor => renderSync.findStructureNodeLabel(editor),
         isEmptyDocumentContent: () => renderSync.isEmptyDocumentContent(),
@@ -33,9 +35,9 @@ export function createShellControllerServices(
         syncViewFrameContent:   () => renderSync.syncViewFrameContent(),
     });
     const selection = new ShellSelection({
-        runtime:              () => host._runtime,
+        runtime:              () => state.runtime,
         settings:             () => refs.settings,
-        settingsMode:         () => host._settingsMode,
+        settingsMode:         () => state.settingsMode,
         stateSessions:        () => stateSessions,
         highlight:            () => highlight,
         renderStructure:      options => renderSync.renderStructure(options),
@@ -46,19 +48,20 @@ export function createShellControllerServices(
         root:                     () => host.shadowRoot!,
         refs:                     () => refs,
         topBar:                   () => refs.topBar,
-        pageConfig:               () => host._pageConfig,
-        setPageConfig:            config => { host._pageConfig = config; },
-        catalog:                  () => host._catalog,
-        insertItems:              () => host._insertItems,
-        defaultTemplateSelection: () => host._defaultTemplateSelection,
-        dataSources:              () => host._dataSources,
-        runtime:                  () => host._runtime,
-        chromeSyncPending:        () => host._chromeSyncPending,
-        setChromeSyncPending:     value => { host._chromeSyncPending = value; },
+        pageConfig:               () => state.pageConfig,
+        setPageConfig:            config => { state.pageConfig = config; },
+        catalog:                  () => state.catalog,
+        insertItems:              () => state.insertItems,
+        defaultTemplateSelection: () => state.defaultTemplateSelection,
+        dataSources:              () => state.dataSources,
+        runtime:                  () => state.runtime,
+        chromeSyncPending:        () => state.chromeSyncPending,
+        setChromeSyncPending:     value => { state.chromeSyncPending = value; },
     });
-    const renderSync = new ShellRenderSyncCommands({ host, refs, frames, sync });
+    const renderSync = new ShellRenderSyncCommands({ host, state, refs, frames, sync });
     const commands = new ShellCommands({
         host,
+        state,
         frames,
         selection,
         renderSync,
@@ -67,14 +70,14 @@ export function createShellControllerServices(
         deleteEventName:  "editor-v2:delete-document",
     });
     events = new ShellEvents({
-        runtime:               () => host._runtime,
-        settingsMode:          () => host._settingsMode,
-        setSettingsMode:       mode => { host._settingsMode = mode; },
-        setViewport:           viewport => { host._viewport = viewport; },
-        setEditorMode:         mode => { host._editorMode = mode; },
-        setSourceState:        sourceState => { host._sourceStateForce = sourceState; },
+        runtime:               () => state.runtime,
+        settingsMode:          () => state.settingsMode,
+        setSettingsMode:       mode => { state.settingsMode = mode; },
+        setViewport:           viewport => { state.viewport = viewport; },
+        setEditorMode:         mode => { state.editorMode = mode; },
+        setSourceState:        sourceState => { state.sourceStateForce = sourceState; },
         pageSettingsModal:     () => refs.pageSettingsModal,
-        pageConfig:            () => host._pageConfig,
+        pageConfig:            () => state.pageConfig,
         canvas:                () => refs.canvas,
         mutations:             () => mutations,
         select:                (editor, options) => commands.select(editor, options),
@@ -103,13 +106,13 @@ export function createShellControllerServices(
         renderSync,
         events,
         api: new ShellApi({
-            catalog:                                  () => host._catalog,
-            setCatalogValue:                         catalog => { host._catalog = catalog; },
+            catalog:                                  () => state.catalog,
+            setCatalogValue:                         catalog => { state.catalog = catalog; },
             setCatalogSize:                          size => host.setAttribute("catalog-size", String(size)),
-            setInsertItemsValue:                     items => { host._insertItems = items; },
-            setDefaultTemplateSelectionValue:        selection => { host._defaultTemplateSelection = selection; },
-            setDataSourcesValue:                     sources => { host._dataSources = sources; },
-            setPageConfigValue:                      config => { host._pageConfig = config; },
+            setInsertItemsValue:                     items => { state.insertItems = items; },
+            setDefaultTemplateSelectionValue:        selection => { state.defaultTemplateSelection = selection; },
+            setDataSourcesValue:                     sources => { state.dataSources = sources; },
+            setPageConfigValue:                      config => { state.pageConfig = config; },
             topBarTitle:                             (title, path) => refs.topBar.setPageTitle(title, path),
             syncStructureTreeCatalog:                () => renderSync.syncStructureTreeCatalog(),
             syncStructureTreeInsertItems:            () => renderSync.syncStructureTreeInsertItems(),
@@ -118,11 +121,11 @@ export function createShellControllerServices(
             syncPageSettingsForm:                    () => renderSync.syncPageSettingsForm(),
             renderStructure:                         () => commands.renderStructure(),
             exitAllStateSessions:                    () => commands.exitAllStateSessions(),
-            disposeRuntime:                          () => host._runtime?.dispose(),
-            setEditorDocument:                       document => { host._editorDocument = document; },
-            setRuntime:                              runtime => { host._runtime = runtime; },
-            runtime:                                 () => host._runtime,
-            dataSources:                             () => host._dataSources,
+            disposeRuntime:                          () => state.runtime?.dispose(),
+            setEditorDocument:                       document => { state.editorDocument = document; },
+            setRuntime:                              runtime => { state.runtime = runtime; },
+            runtime:                                 () => state.runtime,
+            dataSources:                             () => state.dataSources,
             select:                                  (editor, options) => commands.select(editor, options),
         }),
     };

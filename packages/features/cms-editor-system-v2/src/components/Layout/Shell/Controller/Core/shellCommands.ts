@@ -5,10 +5,12 @@ import type { ShellFrames } from "../shellFrames";
 import type { SelectOptions } from "../shellTypes";
 import { dispatchDeleteDocument, dispatchSaveDocument, handleShellFrameReady } from "./Document/shellDocumentFlow";
 import type { ShellRenderSyncCommands } from "./shellRenderSyncCommands";
-import type { ShellControllerInternals } from "./Services/shellServiceTypes";
+import type { ShellControllerHost } from "./Services/shellServiceTypes";
+import type { ShellState } from "./Services/shellState";
 
 type CommandsContext = {
-    host: ShellControllerInternals;
+    host: ShellControllerHost;
+    state: ShellState;
     frames: ShellFrames;
     selection: ShellSelection;
     renderSync: ShellRenderSyncCommands;
@@ -27,7 +29,7 @@ export class ShellCommands {
     saveDocument(): void {
         dispatchSaveDocument({
             host:           this.context.host,
-            pageConfig:     () => this.context.host._pageConfig,
+            pageConfig:     () => this.context.state.pageConfig,
             contentHtml:    () => this.getContentHtml(),
             syncEditorMode: () => this.syncEditorMode(),
             setSaveStatus:  label => this.setSaveStatus(label),
@@ -87,9 +89,9 @@ export class ShellCommands {
     }
 
     clearDocument(): void {
-        this.context.host._runtime?.dispose();
-        this.context.host._runtime = null;
-        this.context.host._editorDocument = null;
+        this.context.state.runtime?.dispose();
+        this.context.state.runtime = null;
+        this.context.state.editorDocument = null;
     }
 
     renderStructure(options: SelectOptions = {}): void {

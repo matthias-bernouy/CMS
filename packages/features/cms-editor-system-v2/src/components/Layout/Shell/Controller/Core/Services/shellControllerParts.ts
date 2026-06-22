@@ -9,11 +9,16 @@ import type { ShellApi } from "../shellApi";
 import type { ShellCommands } from "../shellCommands";
 import type { ShellRenderSyncCommands } from "../shellRenderSyncCommands";
 import { createShellControllerServices } from "./shellServices";
-import type { ShellControllerInternals } from "./shellServiceTypes";
+import type { ShellControllerHost } from "./shellServiceTypes";
+import {
+    createShellState,
+    type ShellState,
+} from "./shellState";
 import { createShellTemplate } from "../../shellTemplate";
 import type { ShellLifecycleContext } from "../Lifecycle/shellLifecycleFlow";
 
 export type ShellControllerParts = {
+    state: ShellState;
     refs: ShellDomRefs;
     frames: ShellFrames;
     mutations: ShellMutations;
@@ -24,14 +29,16 @@ export type ShellControllerParts = {
     lifecycle: ShellLifecycleContext;
 };
 
-export function createShellControllerParts(host: ShellControllerInternals): ShellControllerParts {
+export function createShellControllerParts(host: ShellControllerHost): ShellControllerParts {
     host.attachShadow({ mode: "open" }).append(createShellTemplate().content.cloneNode(true));
+    const state = createShellState();
     const refs = new ShellDomRefsFactory(host);
     const frames = new ShellFrames();
     const highlight = new FrameHighlight();
     const stateSessions = new WeakMap<Editor, Map<string, EditableStateSession>>();
-    const services = createShellControllerServices(host, refs, frames, highlight, stateSessions);
+    const services = createShellControllerServices(host, state, refs, frames, highlight, stateSessions);
     return {
+        state,
         refs,
         frames,
         mutations:  services.mutations,
@@ -46,8 +53,8 @@ export function createShellControllerParts(host: ShellControllerInternals): Shel
             commands:   services.commands,
             renderSync: services.renderSync,
             highlight,
-            runtime:    () => host._runtime,
-            setRuntime: runtime => { host._runtime = runtime; },
+            runtime:    () => state.runtime,
+            setRuntime: runtime => { state.runtime = runtime; },
         },
     };
 }

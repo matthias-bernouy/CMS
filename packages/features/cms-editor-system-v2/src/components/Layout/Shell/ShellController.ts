@@ -4,29 +4,14 @@ import "../StructureTree/StructureTree";
 import "../Canvas/Canvas";
 import "../../Settings/SettingsView/SettingsView";
 import "../RepeatPicker/RepeatPicker";
-import {
-    type CmsSourceStateForce,
-    type EditorCatalog,
-    type EditorDocument,
-} from "@bernouy/cms-content/editor";
-import {
-    EditorRuntime,
-    type EditorDataSource,
-} from "../../../runtime";
-import {
-    type TopBarEditorMode,
-    type TopBarViewport,
-} from "../TopBar/TopBar";
-import {
-    type SettingsViewMode,
-} from "../../Settings/SettingsView/SettingsView";
+import type { EditorCatalog, EditorDocument } from "@bernouy/cms-content/editor";
+import type { EditorDataSource } from "../../../runtime";
 import type { DefaultTemplateSelection } from "../StructureTree/StructureTree";
 import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
 import {
     createShellControllerParts,
     type ShellControllerParts,
 } from "./Controller/Core/Services/shellControllerParts";
-import type { ShellControllerInternals } from "./Controller/Core/Services/shellServiceTypes";
 import {
     connectShellController,
     disconnectShellController,
@@ -44,43 +29,15 @@ export class ShellController extends HTMLElement {
         return [...SHELL_OBSERVED_ATTRIBUTES];
     }
 
-    private _catalog: EditorCatalog = [];
-    private _dataSources: EditorDataSource[] = [];
-    private _defaultTemplateSelection: DefaultTemplateSelection = {};
-    private _insertItems: BlockPickerItem[] = [];
-    private _runtime: EditorRuntime | null = null;
-    private _editorDocument: EditorDocument | null = null;
-    private _settingsMode: SettingsViewMode = "settings";
-    private _viewport: TopBarViewport = "bleed";
-    private _editorMode: TopBarEditorMode = "edit";
-    private _sourceStateForce: CmsSourceStateForce = "loading";
-    private _pageConfig: EditorV2PageConfig | null = null;
-    private _chromeSyncPending: boolean = false;
     private readonly _parts: ShellControllerParts;
 
     constructor() {
         super();
-        this._parts = createShellControllerParts(this as unknown as ShellControllerInternals);
+        this._parts = createShellControllerParts(this);
     }
 
     attributeChangedCallback(): void {
         this._parts.renderSync.syncChromeLabels();
-    }
-
-    get _frameDocument(): Document | null {
-        return this._parts.frames.frameDocument;
-    }
-
-    set _frameDocument(document: Document | null) {
-        this._parts.frames.frameDocument = document;
-    }
-
-    get _viewFrameDocument(): Document | null {
-        return this._parts.frames.viewFrameDocument;
-    }
-
-    set _viewFrameDocument(document: Document | null) {
-        this._parts.frames.viewFrameDocument = document;
     }
 
     connectedCallback(): void {
@@ -92,7 +49,7 @@ export class ShellController extends HTMLElement {
     }
 
     get catalog(): EditorCatalog {
-        return this._catalog;
+        return this._parts.state.catalog;
     }
 
     set catalog(catalog: EditorCatalog) {

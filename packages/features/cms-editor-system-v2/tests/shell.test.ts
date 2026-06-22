@@ -13,10 +13,23 @@ import {
     paramSyncSettings,
 } from "../src/components/Layout/Shell/Domain/Settings/paramSync";
 import type { ShellControllerParts } from "../src/components/Layout/Shell/Controller/Core/Services/shellControllerParts";
+import type { ShellState } from "../src/components/Layout/Shell/Controller/Core/Services/shellState";
 import type { EditorStructureNode, SourceStateStructureNode } from "../src/runtime";
 
 function shellParts(shell: unknown): ShellControllerParts {
     return (shell as { _parts: ShellControllerParts })._parts;
+}
+
+function shellState(shell: unknown): ShellState {
+    return shellParts(shell).state;
+}
+
+function setShellFrameDocument(shell: unknown, document: Document): void {
+    shellParts(shell).frames.frameDocument = document;
+}
+
+function setShellViewFrameDocument(shell: unknown, document: Document): void {
+    shellParts(shell).frames.viewFrameDocument = document;
 }
 
 function installDom(): void {
@@ -870,7 +883,7 @@ describe("Shell", () => {
             renderedStructure = nodes;
         };
 
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
         expect(renderedStructure).toEqual([]);
 
@@ -923,8 +936,8 @@ describe("Shell", () => {
         document.body.append(shell);
         shell.connectedCallback();
         shell.loadDocument({ root, contentRoot });
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
-        (shell as unknown as { _viewFrameDocument: Document })._viewFrameDocument = viewFrameDocument;
+        setShellFrameDocument(shell, frameDocument);
+        setShellViewFrameDocument(shell, viewFrameDocument);
         shellParts(shell).commands.syncEditorMode();
 
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
@@ -992,8 +1005,8 @@ describe("Shell", () => {
 
         const shell = new Shell();
         document.body.append(shell);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
-        (shell as unknown as { _viewFrameDocument: Document })._viewFrameDocument = viewFrameDocument;
+        setShellFrameDocument(shell, frameDocument);
+        setShellViewFrameDocument(shell, viewFrameDocument);
 
         shellParts(shell).commands.syncViewFrameContent();
 
@@ -1081,7 +1094,7 @@ describe("Shell", () => {
             </html>
         `);
 
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
 
         expect(shellParts(shell).commands.getContentHtml())
             .toBe("<p>Hello</p>");
@@ -1110,7 +1123,7 @@ describe("Shell", () => {
         const shell = new Shell();
         document.body.append(shell);
         shell.connectedCallback();
-        (shell as unknown as { _pageConfig: unknown })._pageConfig = {
+        shellState(shell).pageConfig = {
             id: "page-1",
             title: "Pricing",
             path: "/pricing",
@@ -1119,7 +1132,7 @@ describe("Shell", () => {
             published: true,
         };
         shell.loadDocument({ root, contentRoot });
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
 
         shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!.dispatchEvent(new CustomEvent("editor-v2:editor-mode-change", {
             bubbles: true,
@@ -1163,7 +1176,7 @@ describe("Shell", () => {
         document.body.append(shell);
         shell.connectedCallback();
         shell.loadDocument({ root, contentRoot });
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
 
         let reloads = 0;
         const originalLoadDocument = shell.loadDocument.bind(shell);
@@ -1226,7 +1239,7 @@ describe("Shell", () => {
         }]);
         shell.loadDocument({ root, contentRoot });
 
-        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const runtime = shellState(shell).runtime!;
         const editor = runtime.getEditor(paragraph);
         if (!editor) throw new Error("Missing paragraph editor.");
 
@@ -1337,7 +1350,7 @@ describe("Shell", () => {
             querySelector: (selector: string) => selector === "[data-cms-content]" ? contentRoot : null,
         };
 
-        (shell as unknown as { _frameDocument: typeof frameDocument })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
 
         expect(shellParts(shell).commands.getContentHtml())
             .toBe(`<w13c-snippet identifier="main-nav"></w13c-snippet>`);
@@ -1384,7 +1397,7 @@ describe("Shell", () => {
             icon:       "S",
             content:    "<nav>Expanded nav</nav>",
         }]);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
         const tree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree")!;
@@ -1504,10 +1517,10 @@ describe("Shell", () => {
                 editor: ParagraphEditor,
             },
         ]);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
-        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const runtime = shellState(shell).runtime!;
         const parentEditor = runtime.getEditor(container);
         if (!parentEditor) throw new Error("Missing container editor.");
 
@@ -1571,10 +1584,10 @@ describe("Shell", () => {
             bloc: HTMLElement as unknown as CustomElementConstructor,
             editor: CardEditor,
         }]);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
-        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const runtime = shellState(shell).runtime!;
         const containerEditor = runtime.getEditor(container);
         if (!containerEditor) throw new Error("Missing container editor.");
 
@@ -1651,7 +1664,7 @@ describe("Shell", () => {
             bloc: HTMLElement as unknown as CustomElementConstructor,
             editor: Editor,
         }]);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
         shellParts(shell).mutations.addRoot({
@@ -1665,7 +1678,7 @@ describe("Shell", () => {
             },
         });
 
-        const runtime = (shell as unknown as { _runtime: { getStructure(): EditorStructureNode[] } })._runtime;
+        const runtime = shellState(shell).runtime!;
         const structure = runtime.getStructure();
 
         expect(contentRoot.innerHTML).toBe(`<demo-figure><img slot="image" alt=""><p slot="caption">Caption</p></demo-figure>`);
@@ -2022,10 +2035,10 @@ describe("Shell", () => {
             bloc: HTMLElement as unknown as CustomElementConstructor,
             editor: FigureEditor,
         }]);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
-        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const runtime = shellState(shell).runtime!;
         const figureEditor = runtime.getEditor(figure);
         if (!figureEditor) throw new Error("Missing figure editor.");
 
@@ -2119,10 +2132,10 @@ describe("Shell", () => {
             bloc: HTMLElement as unknown as CustomElementConstructor,
             editor: Editor,
         }]);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
-        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const runtime = shellState(shell).runtime!;
         const galleryEditor = runtime.getEditor(gallery);
         if (!galleryEditor) throw new Error("Missing gallery editor.");
 
@@ -2460,10 +2473,10 @@ describe("Shell", () => {
                 defaultContent: "<p>Empty message</p>",
             },
         ]);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
-        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const runtime = shellState(shell).runtime!;
         const parentEditor = runtime.getEditor(container);
         if (!parentEditor) throw new Error("Missing container editor.");
 
@@ -2535,10 +2548,10 @@ describe("Shell", () => {
                 defaultContent: "<demo-child>New empty</demo-child>",
             },
         ]);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
-        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const runtime = shellState(shell).runtime!;
         const childEditor = runtime.getEditor(container.querySelector("demo-child") as HTMLElement);
         if (!childEditor) throw new Error("Missing child editor.");
 
@@ -2850,10 +2863,10 @@ describe("Shell", () => {
                 editor: CardEditor,
             },
         ]);
-        (shell as unknown as { _frameDocument: Document })._frameDocument = frameDocument;
+        setShellFrameDocument(shell, frameDocument);
         shell.loadDocument({ root, contentRoot });
 
-        const runtime = (shell as unknown as { _runtime: { getEditor(target: HTMLElement): Editor | undefined } })._runtime;
+        const runtime = shellState(shell).runtime!;
         const gridEditor = runtime.getEditor(grid);
         if (!gridEditor) throw new Error("Missing grid editor.");
 
