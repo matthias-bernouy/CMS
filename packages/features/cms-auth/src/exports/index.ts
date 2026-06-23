@@ -24,6 +24,17 @@ export { deleteUserCompletely, type UserDeletionStores } from "cms-auth/core/del
 export { createLocalUser, type CreateLocalUserInput, type CreateLocalUserStores } from "cms-auth/core/createLocalUser";
 export { changeOwnPassword, type ChangeOwnPasswordStores } from "cms-auth/core/changeOwnPassword";
 export {
+    signupLocalUser,
+    requestEmailVerification,
+    confirmEmailVerification,
+    requestPasswordReset,
+    confirmPasswordReset,
+    type PublicAuthFlowConfig,
+    type PublicAuthSendResult,
+    type SignupLocalUserInput,
+    type SignupLocalUserResult,
+} from "cms-auth/core/publicAuth";
+export {
     deleteIdentityProvider,
     updateIdentityProvider,
     type IdentityProviderStores,
@@ -42,8 +53,11 @@ export type {
     AuthTokenStore, AuthToken, AuthTokenPurpose, NewAuthToken,
 } from "cms-auth/interfaces/AuthTokenStore";
 export type {
-    Emailer, AuthEmailRecipient, EmailVerificationEmail, PasswordResetEmail,
+    Emailer, AuthEmailRecipient, OutboundEmail,
 } from "cms-auth/interfaces/Emailer";
+export type {
+    AuthEmailComposer, AuthEmailKind, AuthEmailComposeInput,
+} from "cms-auth/interfaces/AuthEmailComposer";
 
 // ── Default implementations (in-memory; Mongo under ./mongo) ───────────
 export { InMemoryUsersRepository }            from "cms-auth/default-implementation/memory/InMemoryUsersRepository";
@@ -51,6 +65,9 @@ export { InMemoryIdentityProviderRepository } from "cms-auth/default-implementat
 export { InMemoryLocalCredentialStore }       from "cms-auth/default-implementation/memory/InMemoryLocalCredentialStore";
 export { InMemoryPatRepository }              from "cms-auth/default-implementation/memory/InMemoryPatRepository";
 export { InMemoryAuthTokenStore }             from "cms-auth/default-implementation/memory/InMemoryAuthTokenStore";
+export { InMemoryEmailer }                    from "cms-auth/default-implementation/memory/InMemoryEmailer";
+export { ConsoleEmailer }                     from "cms-auth/default-implementation/ConsoleEmailer";
+export { DefaultAuthEmailComposer }           from "cms-auth/default-implementation/DefaultAuthEmailComposer";
 export { InMemoryAuthentication, type InMemoryAuthConfig } from "cms-auth/default-implementation/memory/InMemoryAuthentication";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────
@@ -64,3 +81,8 @@ export {
     type AuthMethodsRoutesConfig,
 } from "cms-auth/http/authHandlers";
 export { createAuthGuard, type AuthGuardContext }            from "cms-auth/http/authGuard";
+export {
+    PUBLIC_AUTH_ROUTES,
+    registerPublicAuthRoutes,
+    type PublicAuthRoutesConfig,
+} from "cms-auth/http/publicAuthHandlers";

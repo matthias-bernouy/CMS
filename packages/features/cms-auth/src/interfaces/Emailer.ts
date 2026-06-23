@@ -3,23 +3,17 @@ export type AuthEmailRecipient = {
     displayName?: string;
 };
 
-export type EmailVerificationEmail = {
-    to:              AuthEmailRecipient;
-    verificationUrl: string;
-    expiresAt:       Date;
-};
-
-export type PasswordResetEmail = {
-    to:        AuthEmailRecipient;
-    resetUrl:  string;
-    expiresAt: Date;
+export type OutboundEmail = {
+    to:       AuthEmailRecipient;
+    subject:  string;
+    text:     string;
+    html?:    string;
 };
 
 /**
- * Outbound auth email boundary. Production runtimes can wire SMTP, Resend,
- * Mailgun, etc.; tests and dev can wire in-memory or console implementations.
+ * Outbound email transport boundary. Production runtimes can wire SMTP,
+ * Resend, Mailgun, etc.; the message content is composed before this boundary.
  */
 export interface Emailer {
-    sendEmailVerification(input: EmailVerificationEmail): Promise<void>;
-    sendPasswordReset(input: PasswordResetEmail): Promise<void>;
+    send(input: OutboundEmail): Promise<void>;
 }

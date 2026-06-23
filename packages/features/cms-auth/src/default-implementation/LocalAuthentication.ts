@@ -7,6 +7,10 @@ import type { RateLimiter } from "@bernouy/rate-limiter";
 import { readCookie, setCookie, clearCookie, sanitizeReturnTo } from "cms-auth/core/cookies";
 
 type SessionPayload = { kind: "session"; sub: string };
+type LoginError = "invalid_credentials" | "rate_limited";
+type LoginResult<Role extends string> =
+    | { ok: true; subject: Subject<Role>; token: string; returnTo?: string }
+    | { ok: false; error: LoginError; returnTo?: string };
 
 export type LocalAuthConfig<Role extends string> = {
     /** Identity-provider id this backend represents (provenance tag, e.g. "local"). */
@@ -86,31 +90,30 @@ export class LocalAuthentication<Role extends string = string> implements Authen
 
     /** `POST <basePath>/login` handler — mounted by the surface. */
     async login(req: Request): Promise<Response> {
-        const { email, password, returnTo } = await readCredentials(req);
-        const back = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : "";
-
-        // Throttle by email BEFORE the expensive argon2 verify (brute-force + CPU-DoS).
-        const rlKey = email && this.cfg.rateLimit ? `login:email:${email.trim().toLowerCase()}` : null;
-        if (rlKey && this.cfg.rateLimit) {
-            const { allowed } = await this.cfg.rateLimit.hit(rlKey);
-            if (!allowed) return redirect(`${this.cfg.loginPagePath}?error=rate_limited${back}`);
+        const result = await this._authenticate(req);
+        const back = result.returnTo ? `&returnTo=${encodeURIComponent(result.returnTo)}` : "";
+        if (!result.ok) {
+            const error = result.error === "rate_limited" ? "rate_limited" : "1";
+            return redirect(`${this.cfg.loginPagePath}?error=${error}${back}`);
         }
-
-        const identity = email && password ? await this.cfg.credentials.verify(email, password) : null;
-        if (!identity) {
-            return redirect(`${this.cfg.loginPagePath}?error=1${back}`);
-        }
-
-        // A successful login clears the counter so earlier fumbles don't count.
-        if (rlKey && this.cfg.rateLimit) await this.cfg.rateLimit.reset(rlKey);
-
-        const subject = await this.cfg.resolver.fromIdentity({ ...identity, provider: this.cfg.providerId });
-        const token = await this.cfg.codec.sign({ kind: "session", sub: subject.identifier }, this._ttl);
-        const dest  = sanitizeReturnTo(returnTo, this.cfg.defaultHome ?? "/");
+        const dest  = sanitizeReturnTo(result.returnTo, this.cfg.defaultHome ?? "/");
         return new Response(null, {
             status:  302,
-            headers: { Location: dest, "Set-Cookie": setCookie(this.cfg.cookieName, token, this._ttl, this.cfg.cookieSecure ?? false) },
+            headers: { Location: dest, "Set-Cookie": this._sessionCookie(result.token) },
         });
+    }
+
+    /** JSON login handler for first-party public auth APIs. */
+    async loginJson(req: Request): Promise<Response> {
+        const result = await this._authenticate(req);
+        if (!result.ok) {
+            return json({ error: result.error }, result.error === "rate_limited" ? 429 : 401);
+        }
+        return json(
+            { subject: result.subject },
+            200,
+            { "Set-Cookie": this._sessionCookie(result.token) },
+        );
     }
 
     /** `GET <basePath>/logout` handler — mounted by the surface. */
@@ -120,6 +123,38 @@ export class LocalAuthentication<Role extends string = string> implements Authen
             status:  302,
             headers: { Location: dest, "Set-Cookie": clearCookie(this.cfg.cookieName, this.cfg.cookieSecure ?? false) },
         });
+    }
+
+    /** JSON logout handler for first-party public auth APIs. */
+    logoutJson(): Response {
+        return json({ ok: true }, 200, {
+            "Set-Cookie": clearCookie(this.cfg.cookieName, this.cfg.cookieSecure ?? false),
+        });
+    }
+
+    private async _authenticate(req: Request): Promise<LoginResult<Role>> {
+        const { email, password, returnTo } = await readCredentials(req);
+
+        // Throttle by email BEFORE the expensive argon2 verify (brute-force + CPU-DoS).
+        const rlKey = email && this.cfg.rateLimit ? `login:email:${email.trim().toLowerCase()}` : null;
+        if (rlKey && this.cfg.rateLimit) {
+            const { allowed } = await this.cfg.rateLimit.hit(rlKey);
+            if (!allowed) return { ok: false, error: "rate_limited", returnTo };
+        }
+
+        const identity = email && password ? await this.cfg.credentials.verify(email, password) : null;
+        if (!identity) return { ok: false, error: "invalid_credentials", returnTo };
+
+        // A successful login clears the counter so earlier fumbles don't count.
+        if (rlKey && this.cfg.rateLimit) await this.cfg.rateLimit.reset(rlKey);
+
+        const subject = await this.cfg.resolver.fromIdentity({ ...identity, provider: this.cfg.providerId });
+        const token = await this.cfg.codec.sign({ kind: "session", sub: subject.identifier }, this._ttl);
+        return { ok: true, subject, token, returnTo };
+    }
+
+    private _sessionCookie(token: string): string {
+        return setCookie(this.cfg.cookieName, token, this._ttl, this.cfg.cookieSecure ?? false);
     }
 }
 
@@ -152,3 +187,8 @@ function readBearer(req: Request): string | null {
 
 const str = (v: FormDataEntryValue | null): string | undefined => (typeof v === "string" && v ? v : undefined);
 const redirect = (location: string): Response => new Response(null, { status: 302, headers: { Location: location } });
+function json(body: unknown, status = 200, headers: HeadersInit = {}): Response {
+    const out = new Headers(headers);
+    if (!out.has("Content-Type")) out.set("Content-Type", "application/json");
+    return new Response(JSON.stringify(body), { status, headers: out });
+}

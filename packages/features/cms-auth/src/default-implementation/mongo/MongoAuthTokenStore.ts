@@ -44,6 +44,14 @@ export class MongoAuthTokenStore implements AuthTokenStore {
         return { token, authToken: fromDoc(doc) };
     }
 
+    async findActive(purpose: AuthTokenPurpose, sub: string): Promise<AuthToken | null> {
+        const doc = await this.col.findOne(
+            { purpose, sub, consumedAt: null, expiresAt: { $gt: new Date() } },
+            { sort: { createdAt: -1 } },
+        );
+        return doc ? fromDoc(doc) : null;
+    }
+
     async consume(purpose: AuthTokenPurpose, token: string): Promise<AuthToken | null> {
         const now = new Date();
         const doc = await this.col.findOneAndUpdate(

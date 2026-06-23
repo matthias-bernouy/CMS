@@ -7,6 +7,7 @@ import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
 import { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "@bernouy/cms-gateway";
+import { PUBLIC_AUTH_ROUTES, registerPublicAuthRoutes } from "@bernouy/cms-auth";
 import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE, filesPrefix, imageVariantPrefix, serveFilesRequest, serveVariantRequest } from "@bernouy/cms-files";
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
@@ -39,6 +40,12 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
     runner.addEndpoint("GET", "/.cms/assets/component.js",        (req) => ComponentServer  (req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/cms-binding-core.js", (req) => BindingCoreServer(req, delivery));
     runner.addEndpoint("GET", "/.cms/assets/favicon",             (req) => FaviconServer    (req, delivery));
+
+    if (delivery.auth) {
+        runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
+            registerPublicAuthRoutes(authRunner, delivery.auth!);
+        });
+    }
 
     runner.addEndpoint("GET", "/robots.txt",  (req) => RobotsServer (req, delivery));
     runner.addEndpoint("GET", "/sitemap.xml", (req) => SitemapServer(req, delivery));

@@ -6,6 +6,7 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import type { GatewaySecretResolver } from "@bernouy/cms-gateway";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
+import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import { TtlCache } from "@bernouy/http-runner";
 import { OptimizeQueue } from "@bernouy/cms-files";
 import { optimizePageImages } from "@bernouy/cms-files";
@@ -43,6 +44,13 @@ export type DeliveryCmsConfig = {
      * `p9r dev` wires this from `site/.env` so local Supabase providers work.
      */
     gatewayResolveSecret?: GatewaySecretResolver;
+    /**
+     * Optional first-party public auth API. When set, Delivery mounts
+     * `<basePath>/.cms/auth/*` for same-origin site signup/login/reset flows.
+     * Auth stays separate from the data gateway: this is CMS identity, not an
+     * author-configurable provider.
+     */
+    auth?: PublicAuthRoutesConfig<string>;
     /**
      * Optional analytics store (writer). When set, the page handler records a
      * page-view per request (fire-and-forget); when absent, collection is a no-op.
@@ -103,6 +111,7 @@ export default class DeliveryCms {
     private _headInjectors:      readonly HeadInjector[];
     private _gateway?:           GatewayRepository;
     private _gatewayResolveSecret?: GatewaySecretResolver;
+    private _auth?:              PublicAuthRoutesConfig<string>;
     private _analytics?:         AnalyticsStore;
     private _analyticsSalt?:     string;
     private _filesMetadata:      CmsFilesMetadataRepository | null;
@@ -118,6 +127,7 @@ export default class DeliveryCms {
         this._gateway            = config.gateway;
         this._analytics          = config.analytics;
         this._analyticsSalt      = config.analyticsSalt;
+        this._auth               = config.auth;
         this._filesMetadata      = config.filesMetadata ?? null;
         this._filesBlob          = config.filesBlob ?? null;
         this._variantStore       = config.variantStore ?? null;
@@ -150,6 +160,11 @@ export default class DeliveryCms {
     /** Secret resolver for Delivery gateway headers, when explicitly wired. */
     get gatewayResolveSecret(){
         return this._gatewayResolveSecret;
+    }
+
+    /** Public auth API config, or `undefined` when not mounted. */
+    get auth(){
+        return this._auth;
     }
 
     /** Analytics store (writer), or `undefined` when analytics is not configured. */

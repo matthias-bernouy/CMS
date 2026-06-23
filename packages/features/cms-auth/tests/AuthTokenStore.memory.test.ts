@@ -26,9 +26,11 @@ describe("InMemoryAuthTokenStore", () => {
         const s = store();
         const { token } = await s.create({ purpose: "password_reset", sub: "local:u1", expiresAt: future() });
 
+        expect((await s.findActive("password_reset", "local:u1"))?.sub).toBe("local:u1");
         const consumed = await s.consume("password_reset", token);
         expect(consumed?.sub).toBe("local:u1");
         expect(consumed?.consumedAt).toBeInstanceOf(Date);
+        expect(await s.findActive("password_reset", "local:u1")).toBeNull();
         expect(await s.consume("password_reset", token)).toBeNull();
     });
 
@@ -44,6 +46,7 @@ describe("InMemoryAuthTokenStore", () => {
         const s = store();
         const { token } = await s.create({ purpose: "password_reset", sub: "local:u1", expiresAt: past() });
 
+        expect(await s.findActive("password_reset", "local:u1")).toBeNull();
         expect(await s.consume("password_reset", token)).toBeNull();
         expect(await s.consume("password_reset", "auth_unknown")).toBeNull();
     });

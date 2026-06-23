@@ -29,6 +29,14 @@ export class InMemoryAuthTokenStore implements AuthTokenStore {
         return { token, authToken: strip(record) };
     }
 
+    async findActive(purpose: AuthTokenPurpose, sub: string): Promise<AuthToken | null> {
+        const now = Date.now();
+        const record = [...this._byId.values()]
+            .filter(r => r.purpose === purpose && r.sub === sub && !r.consumedAt && r.expiresAt.getTime() > now)
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+        return record ? strip(record) : null;
+    }
+
     async consume(purpose: AuthTokenPurpose, token: string): Promise<AuthToken | null> {
         const id = this._idByHash.get(hashAuthToken(token));
         const record = id ? this._byId.get(id) : undefined;

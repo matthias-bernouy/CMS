@@ -249,6 +249,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/cms-analytics": "workspace:*",
+        "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
         "@bernouy/cms-gateway": "workspace:*",

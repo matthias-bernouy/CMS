@@ -21,6 +21,9 @@ export type NewAuthToken = {
  */
 export interface AuthTokenStore {
     create(input: NewAuthToken): Promise<{ token: string; authToken: AuthToken }>;
+    /** Latest unconsumed, unexpired token for a subject/purpose. Plaintext is
+     *  intentionally unavailable; this is for cooldown decisions only. */
+    findActive(purpose: AuthTokenPurpose, sub: string): Promise<AuthToken | null>;
     consume(purpose: AuthTokenPurpose, token: string): Promise<AuthToken | null>;
     deleteForSub(sub: string, purpose?: AuthTokenPurpose): Promise<number>;
 }
