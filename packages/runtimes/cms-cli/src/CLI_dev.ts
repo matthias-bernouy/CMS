@@ -13,24 +13,13 @@ import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
-import { loadDevGateways } from "./dev-server/gateways";
+import { createDevGateway } from "./dev-server/gateways";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { LocalFsCmsFiles, ValidatingCmsFilesMetadata } from "@bernouy/cms-files";
-import { InMemoryUsersRepository } from "@bernouy/cms-auth";
-import { InMemoryIdentityProviderRepository } from "@bernouy/cms-auth";
-import { InMemoryLocalCredentialStore } from "@bernouy/cms-auth";
-import { InMemoryPatRepository } from "@bernouy/cms-auth";
-import { InMemoryAuthentication } from "@bernouy/cms-auth";
-import { createLocalUser } from "@bernouy/cms-auth";
-import { InMemoryGatewayRepository, ValidatingGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
-import type { CMS_ROLES } from "@bernouy/cms-permissions";
+import { createDevAuth, DEV_PASSWORD } from "./dev-server/auth";
 import { loadPushConfig } from "./push/shared/config";
-
-/** Seeded password for the dev `dev-admin` local credential — only used to
- *  exercise the Profile → Password "current password" re-auth in dev. */
-const DEV_PASSWORD = "password";
 
 function parseFlags(args: string[]): { port: number; host: string } {
     let port = 5000;
@@ -85,52 +74,15 @@ export default async function CLI_dev(args: string[]) {
 
     const reload = createReloadEmitter();
     const repo   = new ValidatingCmsRepository(new LocalFsCmsRepository(config.siteDir, built));
-    // Files backend for the new /api/files surface: the site's `files/` dir IS
-    // the media tree (folder = directory, name = filename, bytes = content) —
-    // a plain, push-able folder. One object serves both metadata + blob.
     const files = new LocalFsCmsFiles(`${config.siteDir}/files`);
-    // Re-link the media registry to what is actually on disk before serving:
-    // heal files moved/renamed in the IDE (by content hash), mint ids for new
-    // ones, drop orphans. The reconciled registry is committed to git — that is
-    // what makes ids deterministic across clones. Silent on a clean boot.
     const recon = await files.reconcile();
     if (recon.healed.length)  console.log(`→ Reconciled ${recon.healed.length} moved file(s).`);
     if (recon.minted.length)  console.log(`→ Minted ids for ${recon.minted.length} new file(s)/folder(s).`);
     if (recon.deleted.length) console.log(`→ Dropped ${recon.deleted.length} orphaned registry entry/entries.`);
     for (const e of recon.errors) console.warn(`  ! ${e.path}: ${e.error}`);
-    // The metadata WRITE seam goes through the validating decorator (name rule);
-    // `files` stays the blob store + the reconcile()-capable raw handle.
     const filesMetadata = new ValidatingCmsFilesMetadata(files);
-
-    // Auth surfaces (in-memory for dev): the membership store (authz) seeded
-    // with a couple of users so the Settings → Users tab shows data, plus an
-    // empty identity-provider store for the Settings → Identity tab.
-    const users = new InMemoryUsersRepository<CMS_ROLES>();
-    // Local credential store (authn) so the Users page can create local
-    // email/password users by hand in dev, just like production. Seed one for
-    // the fixed dev subject so "current password" re-auth works in Profile.
-    const credentials = new InMemoryLocalCredentialStore();
-    const devAdmin = await createLocalUser({ credentials, users }, {
-        email: "dev@example.com", password: DEV_PASSWORD, displayName: "p9r dev", role: "admin",
-    });
-    await users.upsert({ sub: "demo-user", displayName: "Demo User", email: "demo@example.com" }, "user");
-    const identityProviders = new InMemoryIdentityProviderRepository();
-    // `identifier` matches the seeded membership row so the Profile page
-    // resolves to a real user and self-service edits work in dev.
-    const auth = new InMemoryAuthentication({ role: "admin", identifier: devAdmin.sub, displayName: "p9r dev" });
-    // PAT store (authn) so the Profile → Tokens tab works in dev instead of
-    // 500-ing on a missing repository.
-    const pats = new InMemoryPatRepository();
-    // Gateway provider store (in-memory for dev). Seeded from `siteDir/gateways/*.json`
-    // (one Provider manifest per file) and shared by BOTH Control (admin CRUD +
-    // preview) and Delivery (the public proxy at `/.cms/gateway/*`), so the
-    // create→callable-in-Delivery chain is exercised end-to-end.
-    const gateway = new ValidatingGatewayRepository(new InMemoryGatewayRepository());
-    const gatewayProviders = await loadDevGateways(config.siteDir);
-    if (gatewayProviders.length > 0) {
-        const { created, skipped } = await seedProviders(gateway, gatewayProviders);
-        console.log(`→ Gateways : ${created.length} seeded${skipped.length ? `, ${skipped.length} skipped` : ""} (${gatewayProviders.map(p => p.urn).join(", ")})`);
-    }
+    const { auth, users, identityProviders, pats, credentials, devAdmin } = await createDevAuth();
+    const gateway = await createDevGateway(config.siteDir);
 
     const runner = new BunRunner();
     // Live-reload SSE channel — registered before the ControlCms group so it

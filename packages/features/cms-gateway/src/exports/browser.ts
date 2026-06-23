@@ -17,4 +17,5 @@ export {
 } from "../core/headerPolicy";
 export { isValidResponseStatus } from "../core/validateProvider";
 export { extractPathParamNames } from "../core/buildUpstreamUrl";
+export { openApiSpecToProvider, type OpenApiImportOperation, type OpenApiProviderImportOptions } from "../core/openapi/provider";
 export type { JSONSchema } from "../core/openapi/types";

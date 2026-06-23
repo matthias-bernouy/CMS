@@ -38,13 +38,18 @@
                 hint="Lowercase letters, numbers and dashes. Immutable after creation."></p9r-input>
             <p9r-input name="meta.name" label="Name" placeholder="Shop API"></p9r-input>
             <p9r-textarea name="meta.description" label="Description" placeholder="What this provider exposes…"></p9r-textarea>
+            <label style="display: grid; gap: .35rem; font-size: 13px; color: var(--text-muted, #64748b);">
+                <span style="font-weight: 700; color: var(--text-main, #0f172a);">OpenAPI file</span>
+                <input type="file" name="openapi" accept=".json,application/json"
+                    style="border: 1px solid var(--border-default, #dbe1ea); border-radius: 8px; padding: .65rem; background: var(--bg-surface, #fff); color: var(--text-main, #0f172a);">
+            </label>
+            <p9r-input name="openapi.baseUrl" label="Base URL override" placeholder="https://api.example.com"></p9r-input>
 
             <p style="margin: 0; font-size: 13px; color: var(--text-muted, #94a3b8);">
-                Add endpoints on the provider page after it's created.
+                Endpoints can be edited on the provider page after creation.
             </p>
 
             <p9r-button color="primary" fullWidth type="submit">Create provider</p9r-button>
         </p9r-stack>
     </cms-form>
 </p9r-modal>
-

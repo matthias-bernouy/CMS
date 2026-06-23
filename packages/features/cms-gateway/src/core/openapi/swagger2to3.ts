@@ -5,11 +5,13 @@
  * Scope:
  *  - moves `definitions` → `components.schemas`
  *  - rewrites every `$ref` from `#/definitions/...` to `#/components/schemas/...`
+ *  - inlines Swagger `#/parameters/...` refs into operation parameters
  *  - wraps each response's bare `schema` in `content["application/json"].schema`
+ *  - moves operation `in: "body"` parameters to JSON `requestBody`
  *
  * Out of scope (left as-is):
- *  - body parameters (`in: "body"`) → 3.x's `requestBody` (rare in our APIs)
  *  - global `consumes` / `produces` / `host` / `basePath` (resolver doesn't read them)
+ *  - `formData` parameters (multipart/x-www-form-urlencoded import is not modelled yet)
  *  - security definitions (we don't render them yet)
  *
  * Returns a fresh object — input is not mutated.
@@ -21,6 +23,8 @@ export function swagger2to3(json: unknown): Record<string, unknown> {
 
     if (rewritten.paths && typeof rewritten.paths === "object") {
         for (const item of Object.values(rewritten.paths as Record<string, unknown>)) {
+            normaliseParameters(item as Record<string, unknown>, rewritten.parameters);
+            moveBodyParameters(item as Record<string, unknown>);
             wrapResponseSchemas(item as Record<string, unknown>);
         }
     }
@@ -80,5 +84,51 @@ function wrapResponseSchemas(pathItem: Record<string, unknown>): void {
                 delete r.schema;
             }
         }
+    }
+}
+
+function normaliseParameters(pathItem: Record<string, unknown>, rawGlobal: unknown): void {
+    const methods = ["get", "post", "put", "delete", "patch", "head", "options"];
+    const global = rawGlobal && typeof rawGlobal === "object" ? rawGlobal as Record<string, unknown> : {};
+    if (Array.isArray(pathItem.parameters)) pathItem.parameters = normaliseParameterList(pathItem.parameters, global);
+    for (const m of methods) {
+        const op = pathItem[m] as Record<string, unknown> | undefined;
+        if (!op || !Array.isArray(op.parameters)) continue;
+        op.parameters = normaliseParameterList(op.parameters, global);
+    }
+}
+
+function normaliseParameterList(params: unknown[], global: Record<string, unknown>): Record<string, unknown>[] {
+    return params.map(p => normaliseParameter(resolveParameterRef(p, global)));
+}
+
+function resolveParameterRef(raw: unknown, global: Record<string, unknown>): Record<string, unknown> {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    const ref = (raw as { $ref?: unknown }).$ref;
+    if (typeof ref !== "string") return raw as Record<string, unknown>;
+    const key = ref.match(/^#\/parameters\/(.+)$/)?.[1];
+    const found = key ? global[key] : undefined;
+    return found && typeof found === "object" && !Array.isArray(found) ? found as Record<string, unknown> : raw as Record<string, unknown>;
+}
+
+function normaliseParameter(raw: Record<string, unknown>): Record<string, unknown> {
+    if (raw.schema || typeof raw.type !== "string") return raw;
+    const { type, format, enum: values, default: defaultValue, ...rest } = raw;
+    return { ...rest, schema: { type, ...(typeof format === "string" ? { format } : {}), ...(Array.isArray(values) ? { enum: values } : {}), ...(defaultValue !== undefined ? { default: defaultValue } : {}) } };
+}
+
+function moveBodyParameters(pathItem: Record<string, unknown>): void {
+    const methods = ["get", "post", "put", "delete", "patch", "head", "options"];
+    for (const m of methods) {
+        const op = pathItem[m] as Record<string, unknown> | undefined;
+        const params = Array.isArray(op?.parameters) ? op.parameters as Record<string, unknown>[] : [];
+        const body = params.find(p => p.in === "body" && p.schema);
+        if (!op || !body || op.requestBody) continue;
+        op.requestBody = {
+            description: typeof body.description === "string" ? body.description : "",
+            required: body.required === true,
+            content: { "application/json": { schema: body.schema } },
+        };
+        op.parameters = params.filter(p => p.in !== "body");
     }
 }

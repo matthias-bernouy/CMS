@@ -56,6 +56,7 @@ export { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayR
 export { parseSpec }      from "../core/openapi/parseSpec";
 export { SpecResolver }   from "../core/openapi/SpecResolver";
 export { SpecParseError } from "../core/openapi/SpecParseError";
+export { openApiSpecToProvider, type OpenApiImportOperation, type OpenApiProviderImportOptions } from "../core/openapi/provider";
 export { stubFromSchema } from "../core/openapi/stubFromSchema";
 export { resolveRef }     from "../core/openapi/resolveRef";
 export { deref }          from "../core/openapi/deref";

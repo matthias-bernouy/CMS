@@ -4,14 +4,14 @@ import { showToast } from "@bernouy/components";
 import type CmsForm from "../Form";
 
 
-export default function onSubmit(e: SubmitEvent, me: CmsForm){
+export default async function onSubmit(e: SubmitEvent, me: CmsForm){
 
     e.preventDefault();
 
     const form = e.target as HTMLFormElement;
 
     const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    const data = await serializeFormData(formData);
 
     fetch(buildRequestUrl(me.target), {
         method: me.method || "POST",
@@ -38,6 +38,27 @@ export default function onSubmit(e: SubmitEvent, me: CmsForm){
         me.dispatchEvent(new BubblesEvent("form:failed"));
     });
 
+}
+
+async function serializeFormData(formData: FormData): Promise<Record<string, string>> {
+    const data: Record<string, string> = {};
+    for (const [key, value] of formData.entries()) {
+        if (isFileEntry(value)) {
+            if (!value.name && value.size === 0) continue;
+            data[key] = await value.text();
+            continue;
+        }
+        data[key] = value;
+    }
+    return data;
+}
+
+type FileEntry = { name: string; size: number; text: () => Promise<string> };
+function isFileEntry(value: unknown): value is FileEntry {
+    return typeof value === "object" && value !== null
+        && typeof (value as FileEntry).name === "string"
+        && typeof (value as FileEntry).size === "number"
+        && typeof (value as FileEntry).text === "function";
 }
 
 async function readErrorMessage(res: Response): Promise<string> {

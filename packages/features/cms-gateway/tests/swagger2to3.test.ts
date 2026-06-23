@@ -37,6 +37,47 @@ describe("swagger2to3", () => {
         expect(r200.schema).toBeUndefined();
     });
 
+    test("moves body parameters to requestBody", () => {
+        const out = swagger2to3({
+            swagger: "2.0",
+            paths: {
+                "/pets": { post: { parameters: [
+                    { name: "pet", in: "body", required: true, schema: { type: "object" } },
+                    { name: "limit", in: "query", schema: { type: "integer" } },
+                ] } },
+            },
+        });
+        const op = (out.paths as any)["/pets"].post;
+        expect(op.requestBody.content["application/json"].schema.type).toBe("object");
+        expect(op.requestBody.required).toBe(true);
+        expect(op.parameters).toEqual([{ name: "limit", in: "query", schema: { type: "integer" } }]);
+    });
+
+    test("inlines global parameter refs", () => {
+        const out = swagger2to3({
+            swagger: "2.0",
+            paths: { "/items": { get: { parameters: [{ $ref: "#/parameters/limit" }] } } },
+            parameters: { limit: { name: "limit", in: "query", type: "integer", required: false } },
+        });
+        expect((out.paths as any)["/items"].get.parameters).toEqual([
+            { name: "limit", in: "query", required: false, schema: { type: "integer" } },
+        ]);
+    });
+
+    test("inlines path-level global parameter refs", () => {
+        const out = swagger2to3({
+            swagger: "2.0",
+            paths: { "/items/{id}": {
+                parameters: [{ $ref: "#/parameters/id" }],
+                get: { responses: { 204: { description: "ok" } } },
+            } },
+            parameters: { id: { name: "id", in: "path", type: "string", required: true } },
+        });
+        expect((out.paths as any)["/items/{id}"].parameters).toEqual([
+            { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ]);
+    });
+
     test("emits openapi 3.0.0 marker", () => {
         const out = swagger2to3({ swagger: "2.0", paths: {} });
         expect(out.openapi).toBe("3.0.0");
