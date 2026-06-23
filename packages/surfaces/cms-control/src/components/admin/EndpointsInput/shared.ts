@@ -1,4 +1,4 @@
-import type { DataShape, GatewayMeta, EndpointResponse, EndpointHeader } from "@bernouy/cms-gateway";
+import type { DataShape, GatewayMeta, EndpointResponse, EndpointHeader, ParamValueSource } from "@bernouy/cms-gateway";
 
 /** Edit-mode prefill seeds, decoded from the `value` attribute JSON. */
 export type ParamSeed = {
@@ -6,6 +6,7 @@ export type ParamSeed = {
     in?: string;
     type?: string;
     required?: boolean;
+    source?: ParamValueSource;
     /** Round-tripped verbatim (not editable yet) — preserved on save (B1 fix). */
     description?: string;
 };

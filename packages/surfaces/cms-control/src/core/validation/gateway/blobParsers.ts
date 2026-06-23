@@ -1,7 +1,7 @@
-import type { EndpointResponse, DataShape, EndpointHeader } from "@bernouy/cms-gateway";
+import type { EndpointResponse, DataShape, EndpointHeader, ComputedParamRef } from "@bernouy/cms-gateway";
 import {
     isValidHeaderName, isForbiddenHeaderName, isValidHeaderValue, isValidResponseStatus,
-    MAX_ENDPOINT_HEADERS, parseDataShape,
+    COMPUTED_PARAM_REFS, MAX_ENDPOINT_HEADERS, parseDataShape,
 } from "@bernouy/cms-gateway";
 import { str } from "./gatewayValidators";
 
@@ -65,7 +65,7 @@ export function parseHeadersBlob(raw: unknown, _path: string): EndpointHeader[] 
     return out.length ? out : undefined;
 }
 
-/** A header value source: `{from:'static',value}` (`isValidHeaderValue`) or `{from:'secret',ref}` (non-empty). */
+/** A header value source: static value, secret ref, or supported computed ref. */
 function parseHeaderSource(raw: unknown): EndpointHeader["source"] | undefined {
     if (typeof raw !== "object" || raw === null) return undefined;
     const s = raw as Record<string, unknown>;
@@ -77,6 +77,12 @@ function parseHeaderSource(raw: unknown): EndpointHeader["source"] | undefined {
     if (s.from === "secret") {
         const ref = str(s.ref);
         return ref ? { from: "secret", ref } : undefined;
+    }
+    if (s.from === "computed") {
+        const ref = str(s.ref);
+        return ref && (COMPUTED_PARAM_REFS as readonly string[]).includes(ref)
+            ? { from: "computed", ref: ref as ComputedParamRef }
+            : undefined;
     }
     return undefined;
 }

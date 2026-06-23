@@ -8,8 +8,9 @@
 export type {
     Provider, Endpoint, HTTPMethod, ParamIn,
     EndpointHeader, HeaderSource, EndpointParam, GatewayMeta, EndpointResponse,
+    ComputedParamRef, ParamValueSource,
 } from "../interfaces/Gateway";
-export { HTTP_METHODS, PARAM_INS } from "../interfaces/Gateway";
+export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS } from "../interfaces/Gateway";
 export type { DataShape } from "../interfaces/DataShape";
 export {
     FORBIDDEN_REQUEST_HEADERS, HEADER_NAME_RE, isForbiddenHeaderName, isValidHeaderName,
@@ -42,7 +43,12 @@ export {
 } from "../core/providerDto";
 export { resolveEndpoint, type ResolveResult } from "../core/resolveEndpoint";
 export { seedProviders, type SeedResult } from "../core/seedProviders";
-export { buildUpstreamUrl, extractPathParamNames, type BuildUpstream } from "../core/buildUpstreamUrl";
+export {
+    buildUpstreamUrl,
+    extractPathParamNames,
+    type BuildUpstream,
+    type GatewayComputedContext,
+} from "../core/buildUpstreamUrl";
 export { executeEndpoint, type ExecutorDeps } from "../core/executeEndpoint";
 export { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "../http/handleGatewayRequest";
 

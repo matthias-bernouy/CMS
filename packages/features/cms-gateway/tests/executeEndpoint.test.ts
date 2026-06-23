@@ -57,6 +57,54 @@ describe("executeEndpoint", () => {
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 
+    test("computed userID uses the configured context resolver", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ input: { params: [{
+            name: "user_id",
+            in: "query",
+            required: true,
+            source: { from: "computed", ref: "userID" },
+            schema: { type: "string" },
+        }] } });
+        await executeEndpoint(e, new Request("http://local/x?user_id=evil"), {
+            fetchImpl,
+            resolveContext: async () => ({ userID: "user-123" }),
+        });
+        expect(fetchImpl.mock.calls[0]![0]).toBe("https://api.example.com/v1/items?user_id=user-123");
+    });
+
+    test("computed params without context resolver → 500, no fetch", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ input: { params: [{
+            name: "user_id",
+            in: "query",
+            required: true,
+            source: { from: "computed", ref: "userID" },
+            schema: { type: "string" },
+        }] } });
+        const res = await executeEndpoint(e, new Request("http://local/x"), { fetchImpl });
+        expect(res.status).toBe(500);
+        expect(await res.text()).toBe("computed params require a configured context resolver");
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    test("required computed userID absent → 401, no fetch", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ input: { params: [{
+            name: "user_id",
+            in: "query",
+            required: true,
+            source: { from: "computed", ref: "userID" },
+            schema: { type: "string" },
+        }] } });
+        const res = await executeEndpoint(e, new Request("http://local/x"), {
+            fetchImpl,
+            resolveContext: async () => ({}),
+        });
+        expect(res.status).toBe(401);
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
     test("endpoint with NO headers proxies fine", async () => {
         const fetchImpl = okFetch();
         const res = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl });
@@ -105,7 +153,39 @@ describe("executeEndpoint", () => {
         const e = ep({ headers: [{ name: "Authorization", source: { from: "secret", ref: "${MISSING}" } }] });
         const res = await executeEndpoint(e, new Request("http://local/x"), { fetchImpl, resolveSecret });
         expect(res.status).toBe(500);
-        expect(await res.text()).toBe("secret introuvable : ${MISSING}");
+        expect(await res.text()).toBe("secret not found: ${MISSING}");
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    test("a computed config header uses the configured context resolver", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ headers: [{ name: "X-User-ID", source: { from: "computed", ref: "userID" } }] });
+        await executeEndpoint(e, new Request("http://local/x"), {
+            fetchImpl,
+            resolveContext: async () => ({ userID: "user-123" }),
+        });
+        const passed = fetchImpl.mock.calls[0]![1]!.headers as Headers;
+        expect(passed.get("x-user-id")).toBe("user-123");
+    });
+
+    test("a computed config header without context resolver → 500, no fetch", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ headers: [{ name: "X-User-ID", source: { from: "computed", ref: "userID" } }] });
+        const res = await executeEndpoint(e, new Request("http://local/x"), { fetchImpl });
+        expect(res.status).toBe(500);
+        expect(await res.text()).toBe("computed headers require a configured context resolver");
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    test("a computed config header with missing userID → 401, no fetch", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({ headers: [{ name: "X-User-ID", source: { from: "computed", ref: "userID" } }] });
+        const res = await executeEndpoint(e, new Request("http://local/x"), {
+            fetchImpl,
+            resolveContext: async () => ({}),
+        });
+        expect(res.status).toBe(401);
+        expect(await res.text()).toBe('computed header unavailable: "X-User-ID"');
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 

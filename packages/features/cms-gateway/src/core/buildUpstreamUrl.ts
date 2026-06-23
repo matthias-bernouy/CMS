@@ -1,8 +1,12 @@
-import type { Endpoint } from "../interfaces/Gateway";
+import type { Endpoint, EndpointParam } from "../interfaces/Gateway";
 
 export type BuildUpstream =
     | { ok: true;  url: string; headers: Record<string, string> }
-    | { ok: false; status: 400 | 500 | 502; message: string };
+    | { ok: false; status: 400 | 401 | 500 | 502; message: string };
+
+export type GatewayComputedContext = {
+    userID?: string;
+};
 
 /** The `{name}` placeholder grammar of `targetUrl` — what this module substitutes. */
 const PATH_PLACEHOLDER = /\{(\w+)\}/g;
@@ -35,15 +39,23 @@ export function extractPathParamNames(targetUrl: string): string[] {
  * A missing `required` param → 400 ; an unfilled `{x}` placeholder → 500.
  * SSRF guard: the resolved origin must remain the one declared by `targetUrl`.
  */
-export function buildUpstreamUrl(endpoint: Endpoint, incoming: URLSearchParams): BuildUpstream {
+export function buildUpstreamUrl(
+    endpoint: Endpoint,
+    incoming: URLSearchParams,
+    computed: GatewayComputedContext = {},
+): BuildUpstream {
     const pathValues = new Map<string, string>();
     const queryParams: [string, string][] = [];
     const headers: Record<string, string> = {};
 
     for (const p of endpoint.input?.params ?? []) {
-        const value = incoming.get(p.name);
+        const value = paramValue(p, incoming, computed);
         if (value === null) {
-            if (p.required) return { ok: false, status: 400, message: `paramètre requis manquant : "${p.name}"` };
+            if (p.required) return { ok: false, status: 400, message: `missing required param: "${p.name}"` };
+            continue;
+        }
+        if (value === undefined) {
+            if (p.required) return { ok: false, status: 401, message: `computed param unavailable: "${p.name}"` };
             continue;
         }
         if (p.in === "path")       pathValues.set(p.name, value);
@@ -56,7 +68,7 @@ export function buildUpstreamUrl(endpoint: Endpoint, incoming: URLSearchParams):
         path = path.replaceAll(`{${name}}`, encodeURIComponent(value));
     }
     if (/\{[^}]+\}/.test(path)) {
-        return { ok: false, status: 500, message: `placeholder non rempli dans targetUrl : "${endpoint.targetUrl}"` };
+        return { ok: false, status: 500, message: `unfilled placeholder in targetUrl: "${endpoint.targetUrl}"` };
     }
 
     let target: URL;
@@ -65,14 +77,24 @@ export function buildUpstreamUrl(endpoint: Endpoint, incoming: URLSearchParams):
         target     = new URL(path);
         baseOrigin = new URL(endpoint.targetUrl.replace(/\{[^}]+\}/g, "_")).origin;
     } catch {
-        return { ok: false, status: 500, message: `targetUrl invalide : "${endpoint.targetUrl}"` };
+        return { ok: false, status: 500, message: `invalid targetUrl: "${endpoint.targetUrl}"` };
     }
 
     for (const [name, value] of queryParams) target.searchParams.append(name, value);
 
     if (target.origin !== baseOrigin) {
-        return { ok: false, status: 502, message: `cible hors de l'origine déclarée (${baseOrigin})` };
+        return { ok: false, status: 502, message: `target escaped declared origin (${baseOrigin})` };
     }
 
     return { ok: true, url: target.toString(), headers };
+}
+
+function paramValue(
+    param: EndpointParam,
+    incoming: URLSearchParams,
+    computed: GatewayComputedContext,
+): string | null | undefined {
+    if (!param.source || param.source.from === "request") return incoming.get(param.name);
+    if (param.source.ref === "userID") return computed.userID || undefined;
+    return undefined;
 }

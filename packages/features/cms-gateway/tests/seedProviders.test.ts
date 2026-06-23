@@ -61,12 +61,12 @@ describe("seedProviders", () => {
     test("throws on an invalid provider and creates nothing (fail fast)", async () => {
         const repo = new InMemoryGatewayRepository();
         const bad: Provider[] = [manifest[0]!, { urn: "bad-urn", endpoints: [] }];
-        await expect(seedProviders(repo, bad)).rejects.toThrow(/invalide/);
+        await expect(seedProviders(repo, bad)).rejects.toThrow(/Invalid provider manifest/);
         expect(await repo.getAllProviders()).toHaveLength(0);
     });
 
     test("throws on duplicate urns in the manifest", async () => {
         const repo = new InMemoryGatewayRepository();
-        await expect(seedProviders(repo, [manifest[0]!, manifest[0]!])).rejects.toThrow(/dupliqués/);
+        await expect(seedProviders(repo, [manifest[0]!, manifest[0]!])).rejects.toThrow(/duplicate provider urns/);
     });
 });

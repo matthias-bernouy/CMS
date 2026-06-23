@@ -1,5 +1,5 @@
-import type { Endpoint } from "../interfaces/Gateway";
-import { buildUpstreamUrl } from "./buildUpstreamUrl";
+import type { ComputedParamRef, Endpoint } from "../interfaces/Gateway";
+import { buildUpstreamUrl, type GatewayComputedContext } from "./buildUpstreamUrl";
 import { isForbiddenHeaderName } from "./headerPolicy";
 
 /**
@@ -12,6 +12,7 @@ import { isForbiddenHeaderName } from "./headerPolicy";
 export type ExecutorDeps = {
     fetchImpl?: typeof fetch;
     resolveSecret?: (ref: string) => Promise<string | undefined>;
+    resolveContext?: (request: Request) => Promise<GatewayComputedContext>;
 };
 
 const TIMEOUT_MS = 15_000;
@@ -42,7 +43,15 @@ export async function executeEndpoint(
     request: Request,
     deps?: ExecutorDeps,
 ): Promise<Response> {
-    const built = buildUpstreamUrl(endpoint, new URL(request.url).searchParams);
+    const needsContext = hasComputedParams(endpoint) || hasComputedHeaders(endpoint);
+    if (hasComputedParams(endpoint) && !deps?.resolveContext) {
+        return new Response("computed params require a configured context resolver", { status: 500 });
+    }
+    if (hasComputedHeaders(endpoint) && !deps?.resolveContext) {
+        return new Response("computed headers require a configured context resolver", { status: 500 });
+    }
+    const computed = needsContext && deps?.resolveContext ? await deps.resolveContext(request) : {};
+    const built = buildUpstreamUrl(endpoint, new URL(request.url).searchParams, computed);
     if (!built.ok) return new Response(built.message, { status: built.status });
 
     // Request: start from an EMPTY Headers object (inbound cookie / authorization never leak).
@@ -53,7 +62,7 @@ export async function executeEndpoint(
     }
     for (const [name, value] of Object.entries(built.headers)) {
         try { fwd.set(name, value); }
-        catch { return new Response(`header-param invalide : "${name}"`, { status: 400 }); }
+        catch { return new Response(`invalid header param: "${name}"`, { status: 400 }); }
     }
     // Config headers win over forwarded ones (last `.set`). Defense-in-depth: skip
     // forbidden names (the parser already drops them). Secret refs are resolved via
@@ -65,13 +74,20 @@ export async function executeEndpoint(
                 return new Response(`secret header requires a configured secret store (not wired yet): ${name}`, { status: 500 });
             }
             const v = await deps.resolveSecret(source.ref);
-            if (v == null) return new Response(`secret introuvable : ${source.ref}`, { status: 500 });
+            if (v == null) return new Response(`secret not found: ${source.ref}`, { status: 500 });
             try { fwd.set(name, v); }
-            catch { return new Response(`header invalide : "${name}"`, { status: 400 }); }
+            catch { return new Response(`invalid header: "${name}"`, { status: 400 }); }
+            continue;
+        }
+        if (source.from === "computed") {
+            const v = computedValue(source.ref, computed);
+            if (v == null) return new Response(`computed header unavailable: "${name}"`, { status: 401 });
+            try { fwd.set(name, v); }
+            catch { return new Response(`invalid header: "${name}"`, { status: 400 }); }
             continue;
         }
         try { fwd.set(name, source.value); }
-        catch { return new Response(`header invalide : "${name}"`, { status: 400 }); }
+        catch { return new Response(`invalid header: "${name}"`, { status: 400 }); }
     }
 
     const hasBody = endpoint.method !== "GET" && endpoint.method !== "HEAD" && request.body != null;
@@ -103,4 +119,17 @@ export async function executeEndpoint(
         if (v !== null) out.set(name, v);
     }
     return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers: out });
+}
+
+function hasComputedParams(endpoint: Endpoint): boolean {
+    return (endpoint.input?.params ?? []).some((param) => param.source?.from === "computed");
+}
+
+function hasComputedHeaders(endpoint: Endpoint): boolean {
+    return (endpoint.headers ?? []).some((header) => header.source.from === "computed");
+}
+
+function computedValue(ref: ComputedParamRef, computed: GatewayComputedContext): string | undefined {
+    if (ref === "userID") return computed.userID || undefined;
+    return undefined;
 }

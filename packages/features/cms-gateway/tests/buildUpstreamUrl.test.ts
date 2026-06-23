@@ -50,6 +50,44 @@ describe("buildUpstreamUrl", () => {
         if (r.ok) { expect(r.headers).toEqual({ "X-Trace": "abc" }); expect(r.url).toBe("https://api.example.com/v1/items"); }
     });
 
+    test("computed userID can feed a query param", () => {
+        const e = ep({ input: { params: [{
+            name: "user_id",
+            in: "query",
+            required: true,
+            source: { from: "computed", ref: "userID" },
+            schema: { type: "string" },
+        }] } });
+        const r = buildUpstreamUrl(e, q("user_id=evil"), { userID: "user-123" });
+        expect(r.ok).toBe(true);
+        if (r.ok) expect(r.url).toBe("https://api.example.com/v1/items?user_id=user-123");
+    });
+
+    test("computed userID can feed a header param", () => {
+        const e = ep({ input: { params: [{
+            name: "X-User-ID",
+            in: "header",
+            source: { from: "computed", ref: "userID" },
+            schema: { type: "string" },
+        }] } });
+        const r = buildUpstreamUrl(e, q(""), { userID: "user-123" });
+        expect(r.ok).toBe(true);
+        if (r.ok) expect(r.headers).toEqual({ "X-User-ID": "user-123" });
+    });
+
+    test("required computed userID absent → 401", () => {
+        const e = ep({ input: { params: [{
+            name: "user_id",
+            in: "query",
+            required: true,
+            source: { from: "computed", ref: "userID" },
+            schema: { type: "string" },
+        }] } });
+        const r = buildUpstreamUrl(e, q(""));
+        expect(r.ok).toBe(false);
+        if (!r.ok) expect(r.status).toBe(401);
+    });
+
     test("unfilled placeholder in targetUrl → 500", () => {
         const e = ep({ targetUrl: "https://api.example.com/v1/users/{id}" });  // no path param declared
         const r = buildUpstreamUrl(e, q(""));

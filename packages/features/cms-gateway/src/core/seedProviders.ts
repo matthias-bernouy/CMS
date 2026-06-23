@@ -26,7 +26,7 @@ export async function seedProviders(
 
     const urns = providers.map(p => p.urn);
     const dupes = [...new Set(urns.filter((u, i) => urns.indexOf(u) !== i))];
-    if (dupes.length > 0) problems.push(`urns de provider dupliqués : ${dupes.join(", ")}`);
+    if (dupes.length > 0) problems.push(`duplicate provider urns: ${dupes.join(", ")}`);
 
     for (const provider of providers) {
         const errors = validateProvider(provider);
@@ -34,7 +34,7 @@ export async function seedProviders(
     }
 
     if (problems.length > 0) {
-        throw new Error(`Manifeste de providers invalide :\n  - ${problems.join("\n  - ")}`);
+        throw new Error(`Invalid provider manifest:\n  - ${problems.join("\n  - ")}`);
     }
 
     // 2) Idempotent creation (skip-if-exists).

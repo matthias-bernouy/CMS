@@ -6,6 +6,7 @@ import type {
     GatewayMeta,
     HTTPMethod,
     ParamIn,
+    ParamValueSource,
     Provider,
 } from "../interfaces/Gateway";
 import type { DataShape } from "../interfaces/DataShape";
@@ -17,6 +18,7 @@ export type ProviderParamDto = {
     type?: DataShape["type"];
     required?: boolean;
     description?: string;
+    source?: ParamValueSource;
 };
 
 export type EndpointDto = {
@@ -103,6 +105,7 @@ export function providerToCanonicalDto(provider: Provider): CanonicalProviderDto
                 type: p.type ?? "string",
                 required: !!p.required,
                 description: p.description ?? "",
+                source: p.source ?? { from: "request" },
             })),
             body: e.body ?? null,
             output: e.output ?? null,
@@ -119,6 +122,7 @@ function endpointDtoToEndpoint(providerId: string, e: EndpointDto): Endpoint {
         schema: { type: p.type ?? "string" },
         ...(p.required !== undefined ? { required: p.required } : {}),
         ...(p.description ? { description: p.description } : {}),
+        ...(p.source ? { source: p.source } : {}),
     }));
     const endpoint: Endpoint = {
         urn: makeEndpointUrn(providerId, e.endpointId),
@@ -147,6 +151,7 @@ function endpointToDto(endpoint: Endpoint): EndpointDto {
             type: p.schema?.type ?? "string",
             required: !!p.required,
             ...(p.description ? { description: p.description } : {}),
+            ...(p.source ? { source: p.source } : {}),
         })),
         ...(endpoint.input?.body ? { body: endpoint.input.body } : {}),
         ...(endpoint.output?.length ? { output: endpoint.output } : {}),

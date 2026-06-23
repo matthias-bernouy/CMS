@@ -1,6 +1,6 @@
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import type { GatewayMeta, ParamIn, ProviderParamDto } from "@bernouy/cms-gateway";
-import { PARAM_INS, extractPathParamNames } from "@bernouy/cms-gateway";
+import type { ComputedParamRef, GatewayMeta, ParamIn, ParamValueSource, ProviderParamDto } from "@bernouy/cms-gateway";
+import { COMPUTED_PARAM_REFS, PARAM_INS, extractPathParamNames } from "@bernouy/cms-gateway";
 
 /** V1 param value types (scalars) — an EDITOR restriction; the gateway model
  *  allows any `DataShape`, the full recursive shape is reserved for the body. */
@@ -9,6 +9,7 @@ export type ParamType = typeof PARAM_TYPES[number];
 export type EndpointParamDto = Omit<ProviderParamDto, "type" | "required"> & {
     type: ParamType;
     required: boolean;
+    source?: ParamValueSource;
 };
 /** `{name}` placeholders in a URL are DERIVED required `in:'path'` params, deduped in URL order. */
 export function pathParamsFromUrl(targetUrl: string): EndpointParamDto[] {
@@ -47,13 +48,30 @@ export function parseParamsBlob(raw: unknown, reserved: ReadonlySet<string>, pat
         const type = typeof p.type === "string" ? p.type : "string";
         if (!(PARAM_TYPES as readonly string[]).includes(type)) throw new InvalidParam(`${path}.${i}.type`, "must be string|number|boolean");
         const description = (typeof p.description === "string" ? p.description : "").trim();
+        const source = parseParamSource(p.source, `${path}.${i}.source`);
+        if (source.from === "computed" && pin === "path") {
+            throw new InvalidParam(`${path}.${i}.source`, "computed values cannot be used for path params.");
+        }
         out.push({
             name, in: pin as ParamIn, type: type as ParamType,
             required: p.required === true || p.required === "true",
             ...(description ? { description } : {}),
+            ...(source.from === "computed" ? { source } : {}),
         });
     });
     return out;
+}
+
+function parseParamSource(raw: unknown, path: string): ParamValueSource {
+    if (raw === undefined || raw === null) return { from: "request" };
+    if (typeof raw !== "object" || Array.isArray(raw)) throw new InvalidParam(path, "expected an object.");
+    const source = raw as Record<string, unknown>;
+    if (source.from === "request") return { from: "request" };
+    if (source.from !== "computed") throw new InvalidParam(`${path}.from`, "must be request|computed.");
+    if (!(COMPUTED_PARAM_REFS as readonly unknown[]).includes(source.ref)) {
+        throw new InvalidParam(`${path}.ref`, "must be userID.");
+    }
+    return { from: "computed", ref: source.ref as ComputedParamRef };
 }
 /** Parse a per-endpoint `meta` JSON blob into a `GatewayMeta`, or `undefined` when
  *  blank/un-named. Editor-less round-trip field: a malformed stored meta is DROPPED (not

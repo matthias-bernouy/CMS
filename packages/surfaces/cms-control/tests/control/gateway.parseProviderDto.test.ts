@@ -42,6 +42,25 @@ describe("parseProviderDto", () => {
         ]);
     });
 
+    test("params JSON blob preserves computed userID source", () => {
+        const dto = parseProviderDto(validBody({
+            "endpoints.0.params": JSON.stringify([
+                { name: "user_id", in: "query", type: "string", required: true, source: { from: "computed", ref: "userID" } },
+            ]),
+        }));
+        expect(dto.endpoints[0]!.params).toEqual([
+            { name: "user_id", in: "query", type: "string", required: true, source: { from: "computed", ref: "userID" } },
+        ]);
+    });
+
+    test("params JSON blob rejects unknown computed refs", () => {
+        expect(() => parseProviderDto(validBody({
+            "endpoints.0.params": JSON.stringify([
+                { name: "email", in: "query", type: "string", source: { from: "computed", ref: "email" } },
+            ]),
+        }))).toThrow(/endpoints\.0\.params\.0\.source\.ref/);
+    });
+
     test("a blank-name param entry is skipped (unfilled)", () => {
         const dto = parseProviderDto(validBody({
             "endpoints.0.params": JSON.stringify([
@@ -300,6 +319,15 @@ describe("parseProviderDto", () => {
     test("headers: a secret header round-trips ({from:'secret',ref})", () => {
         expect(headers([{ name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } }]))
             .toEqual([{ name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } }] as any);
+    });
+
+    test("headers: a computed userID header round-trips", () => {
+        expect(headers([{ name: "X-User-ID", source: { from: "computed", ref: "userID" } }]))
+            .toEqual([{ name: "X-User-ID", source: { from: "computed", ref: "userID" } }] as any);
+    });
+
+    test("headers: an unknown computed ref is dropped", () => {
+        expect(headers([{ name: "X-User-Email", source: { from: "computed", ref: "email" } }])).toBeUndefined();
     });
 
     test("headers: invalid names (space / non-ASCII / control / 'X:Y') are dropped", () => {

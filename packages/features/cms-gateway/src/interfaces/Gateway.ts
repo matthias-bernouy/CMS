@@ -8,10 +8,12 @@ export type HTTPMethod = typeof HTTP_METHODS[number];
 /** Where a request header's value comes from.
  *  - `static`: a plaintext fixed value injected verbatim upstream.
  *  - `secret`: a credential reference (`${KEY}` shape) resolved server-side — NOT
- *    applied until the secret store is wired (the executor returns 500 for it). */
+ *    applied until the secret store is wired (the executor returns 500 for it).
+ *  - `computed`: a gateway context value resolved server-side for this request. */
 export type HeaderSource =
     | { from: 'static'; value: string }
-    | { from: 'secret'; ref: string };
+    | { from: 'secret'; ref: string }
+    | { from: 'computed'; ref: ComputedParamRef };
 
 /** A request header injected into the upstream call. `name` is an RFC 7230 token. */
 export type EndpointHeader = {
@@ -25,10 +27,18 @@ export type EndpointHeader = {
 export const PARAM_INS = ['path', 'query', 'header'] as const;
 export type ParamIn = typeof PARAM_INS[number];
 
+export const COMPUTED_PARAM_REFS = ['userID'] as const;
+export type ComputedParamRef = typeof COMPUTED_PARAM_REFS[number];
+
+export type ParamValueSource =
+    | { from: 'request' }
+    | { from: 'computed'; ref: ComputedParamRef };
+
 /** An input parameter and its location in the upstream request. */
 export type EndpointParam = {
     name: string;
     in: ParamIn;
+    source?: ParamValueSource;
     required?: boolean;
     description?: string;
     schema: DataShape;
@@ -56,7 +66,7 @@ export type Endpoint = {
 
     /** Request headers injected into the upstream call. `static` = a plaintext
      *  fixed value forwarded verbatim; `secret` = a credential ref resolved
-     *  server-side (NOT applied until the secret store is wired → executor 500). */
+     *  server-side; `computed` = a gateway context value resolved per request. */
     headers?: EndpointHeader[];
 
     meta?: GatewayMeta;

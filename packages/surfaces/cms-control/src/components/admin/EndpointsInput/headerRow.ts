@@ -1,6 +1,12 @@
 import { makeInput, makeSelect, makeIconButton, ICON_X } from "./controls";
 import { readControl } from "./shared";
-import { isValidHeaderName, isForbiddenHeaderName, type EndpointHeader } from "@bernouy/cms-gateway/browser";
+import {
+    COMPUTED_PARAM_REFS,
+    isValidHeaderName,
+    isForbiddenHeaderName,
+    type ComputedParamRef,
+    type EndpointHeader,
+} from "@bernouy/cms-gateway/browser";
 
 /** Handle for one header row: its element + a `read()` assembling the
  *  `EndpointHeader` (or `null` when the name is blank). */
@@ -10,9 +16,8 @@ export type HeaderRowHandle = {
 };
 
 /** One editable request-header row — UI-only (no form names). A name input
- *  (inline-validated like the status field), a static/secret source toggle, and
- *  the matching value control (a plain input for `static`, a `<cms-credential-select>`
- *  for `secret`). Both value controls are built ONCE; the toggle only flips their
+ *  (inline-validated like the status field), a source toggle, and the matching
+ *  value control. Value controls are built ONCE; the toggle only flips their
  *  `style.display` — the p9r-select and the credential picker are NEVER reparented
  *  (moving them would reset their live value). The trash button calls `onRemove`,
  *  which the panel uses to drop this row's handle AND its element. */
@@ -50,7 +55,7 @@ export function makeHeaderRow(
     if (seed.name) validate();
 
     // ── Source toggle ──
-    const fromSelect = makeSelect(['static', 'secret'], from);
+    const fromSelect = makeSelect(['static', 'secret', 'computed'], from);
     fromSelect.className = 'ep-status';
     fromSelect.dataset.role = 'header-from';
 
@@ -71,17 +76,26 @@ export function makeHeaderRow(
     credSelect.style.display = from === 'secret' ? '' : 'none';
     credSelect.addEventListener('change', onChange);
 
+    const computedSelect = makeSelect(COMPUTED_PARAM_REFS, from === 'computed'
+        ? (seed.source as { ref?: string }).ref
+        : 'userID');
+    computedSelect.className = 'ep-status';
+    computedSelect.dataset.role = 'header-value-computed';
+    computedSelect.style.display = from === 'computed' ? '' : 'none';
+    computedSelect.addEventListener('change', onChange);
+
     fromSelect.addEventListener('change', () => {
         const v = readControl(fromSelect);
         fromSelect.setAttribute('value', v);   // keep attr in sync so a re-slot can't reset it
         staticInput.style.display = v === 'static' ? '' : 'none';
         credSelect.style.display = v === 'secret' ? '' : 'none';
+        computedSelect.style.display = v === 'computed' ? '' : 'none';
         onChange();
     });
 
     const remove = makeIconButton(ICON_X, { ariaLabel: 'Remove header', onClick: onRemove });
 
-    row.append(name, fromSelect, staticInput, credSelect, remove);
+    row.append(name, fromSelect, staticInput, credSelect, computedSelect, remove);
 
     const read = (): EndpointHeader | null => {
         const n = readControl(name).trim();
@@ -90,6 +104,10 @@ export function makeHeaderRow(
             const ref = ((credSelect as { value?: string }).value
                 || credSelect.getAttribute('value') || '').trim();
             return ref ? { name: n, source: { from: 'secret', ref } } : null;
+        }
+        if (readControl(fromSelect) === 'computed') {
+            const ref = readControl(computedSelect) as ComputedParamRef;
+            return { name: n, source: { from: 'computed', ref } };
         }
         return { name: n, source: { from: 'static', value: readControl(staticInput) } };
     };

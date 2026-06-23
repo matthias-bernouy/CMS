@@ -45,9 +45,18 @@ cms-endpoints-input .ep-meta {
 }
 
 /* Query-param row controls */
+cms-endpoints-input .ep-query-row {
+    align-items: center;
+}
 cms-endpoints-input .ep-name { flex: 1; min-width: 0; }
 cms-endpoints-input .ep-type { min-width: 7rem; }
-cms-endpoints-input .ep-required { white-space: nowrap; }
+cms-endpoints-input .ep-computed { min-width: 6.5rem; }
+cms-endpoints-input .ep-computed[hidden] { display: none; }
+cms-endpoints-input .ep-required {
+    flex: 0 0 auto;
+    align-self: center;
+    white-space: nowrap;
+}
 
 /* Compact response-status chooser (select + custom-code input) — not full-width,
    so the remove ✕ sits next to it. */

@@ -4,9 +4,11 @@ export type {
     GatewayMeta,
     HTTPMethod,
     ParamIn,
+    ComputedParamRef,
+    ParamValueSource,
 } from "../interfaces/Gateway";
 export type { DataShape } from "../interfaces/DataShape";
-export { HTTP_METHODS, PARAM_INS } from "../interfaces/Gateway";
+export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS } from "../interfaces/Gateway";
 export {
     isValidHeaderName,
     isForbiddenHeaderName,
