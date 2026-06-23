@@ -14,7 +14,6 @@ import type { UsersRepository, IdentityProviderRepository, PatRepository, LocalC
 import {
     AUTH_ROUTES,
     authMethodsHandler,
-    createSubjectContextResolver,
     createAuthGuard,
     localLoginHandler,
     localLogoutHandler,
@@ -175,14 +174,13 @@ export class ControlCms {
         // `resolveSecret` so `secret`-sourced headers resolve (delivery leaves it
         // unwired → clean 500).
         const resolveSecret = createSecretResolver(this._secrets);
-        const resolveContext = createSubjectContextResolver(this._auth);
         runner.group(CMS_GATEWAY_ROUTE, (proxyRunner) => {
             const prefix = gatewayPrefix(runner.basePath);
             for (const method of GATEWAY_PROXY_METHODS) {
                 proxyRunner.setDefaultEndpoint(method, (req) =>
                     handleGatewayRequest(this._gateway, req, {
                         prefix,
-                        deps: { resolveSecret, resolveContext },
+                        deps: { resolveSecret },
                     }));
             }
         }, [authGuard]);

@@ -24,10 +24,6 @@ export { deleteUserCompletely, type UserDeletionStores } from "cms-auth/core/del
 export { createLocalUser, type CreateLocalUserInput, type CreateLocalUserStores } from "cms-auth/core/createLocalUser";
 export { changeOwnPassword, type ChangeOwnPasswordStores } from "cms-auth/core/changeOwnPassword";
 export {
-    createSubjectContextResolver,
-    type SubjectContext,
-} from "cms-auth/core/subjectContext/createSubjectContextResolver";
-export {
     deleteIdentityProvider,
     updateIdentityProvider,
     type IdentityProviderStores,
