@@ -17609,11 +17609,14 @@ label {
     }
     _findDataField(scopes, path) {
       for (const scope of scopes) {
-        const field = this._findDataFieldInList(scope.fields, path) ?? this._findDataFieldInList(scope.fields, this._stripScopeName(scope.name, path));
+        const field = this._findRootArrayField(scope, path) ?? this._findDataFieldInList(scope.fields, path) ?? this._findDataFieldInList(scope.fields, this._stripScopeName(scope.name, path));
         if (field)
           return field;
       }
       return;
+    }
+    _findRootArrayField(scope, path) {
+      return path === scope.name ? this._findDataFieldInList(scope.fields, ".") : undefined;
     }
     _findDataFieldInList(fields, path) {
       for (const field of fields) {

@@ -189,12 +189,17 @@ export class EditorRuntime {
 
     private _findDataField(scopes: DataScope[], path: string): DataField | undefined {
         for (const scope of scopes) {
-            const field = this._findDataFieldInList(scope.fields, path)
+            const field = this._findRootArrayField(scope, path)
+                ?? this._findDataFieldInList(scope.fields, path)
                 ?? this._findDataFieldInList(scope.fields, this._stripScopeName(scope.name, path));
             if (field) return field;
         }
 
         return undefined;
+    }
+
+    private _findRootArrayField(scope: DataScope, path: string): DataField | undefined {
+        return path === scope.name ? this._findDataFieldInList(scope.fields, ".") : undefined;
     }
 
     private _findDataFieldInList(fields: DataField[], path: string): DataField | undefined {
