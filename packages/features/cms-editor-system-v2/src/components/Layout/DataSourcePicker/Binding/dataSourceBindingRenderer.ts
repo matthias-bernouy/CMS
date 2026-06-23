@@ -74,7 +74,7 @@ function renderParamControls(
 
     const mode = document.createElement("select");
     mode.className = "param-mode";
-    mode.append(option("queryParam", "Query param"), option("raw", "Raw value"));
+    mode.append(option("queryParam", "Query param"), option("raw", "Raw value"), option("state", "Page state"));
 
     const value = document.createElement("input");
     value.className = "param-value";

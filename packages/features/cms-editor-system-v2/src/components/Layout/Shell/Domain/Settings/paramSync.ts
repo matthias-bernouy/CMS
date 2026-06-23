@@ -4,12 +4,11 @@ import {
     type SettingSection,
     type Editor,
 } from "@bernouy/cms-content/editor";
+import { hasStandardValueSurface, isValidValueKey, valueSurfaceName } from "./valueSurface";
 
 export const PARAM_SYNC_ENABLE_SETTING = "__cms-param-sync-enabled";
 export const PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
 export const PARAM_SYNC_NAME_SETTING = "__cms-param-sync-name";
-
-const QUERY_PARAM_NAME_PATTERN = /^[A-Za-z0-9_.-]+$/;
 
 export function applyParamSyncSetting(
     editor: Editor,
@@ -29,14 +28,14 @@ export function applyParamSyncSetting(
         }
 
         const next = current || fieldName;
-        if (isValidQueryParamName(next)) {
+        if (isValidValueKey(next)) {
             target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
         }
         return true;
     }
 
     if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
-        if (value === true && isValidQueryParamName(fieldName)) {
+        if (value === true && isValidValueKey(fieldName)) {
             target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
         } else if (current === fieldName) {
             target.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
@@ -46,7 +45,7 @@ export function applyParamSyncSetting(
 
     if (typeof value === "string") {
         const next = value.trim();
-        if (isValidQueryParamName(next)) {
+        if (isValidValueKey(next)) {
             target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
         }
     }
@@ -65,7 +64,7 @@ export function paramSyncSettings(editor: Editor): SettingSection | null {
 
     const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
     const fieldName = valueSurfaceName(target);
-    const hasFieldName = isValidQueryParamName(fieldName);
+    const hasFieldName = isValidValueKey(fieldName);
     const isEnabled = syncValue !== "";
     const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
     const settings: Setting[] = [
@@ -110,25 +109,4 @@ export function isParamSyncSetting(setting: Pick<Setting, "attribute">): boolean
     return setting.attribute === PARAM_SYNC_ENABLE_SETTING
         || setting.attribute === PARAM_SYNC_USE_NAME_SETTING
         || setting.attribute === PARAM_SYNC_NAME_SETTING;
-}
-
-function hasStandardValueSurface(target: HTMLElement): boolean {
-    if (!("value" in target)) return false;
-
-    try {
-        const value = (target as { value: unknown }).value;
-        (target as { value: unknown }).value = value;
-        return typeof value === "string";
-    } catch {
-        return false;
-    }
-}
-
-function valueSurfaceName(target: HTMLElement): string {
-    const propertyName = "name" in target ? (target as { name?: unknown }).name : undefined;
-    return String(typeof propertyName === "string" ? propertyName : target.getAttribute("name") ?? target.id ?? "").trim();
-}
-
-function isValidQueryParamName(value: string): boolean {
-    return QUERY_PARAM_NAME_PATTERN.test(value.trim());
 }

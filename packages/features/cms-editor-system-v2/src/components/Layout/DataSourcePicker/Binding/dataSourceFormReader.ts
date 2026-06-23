@@ -25,14 +25,14 @@ function readParams(root: ParentNode): Record<string, DataSourcePickerSourcePara
         const rawValue = (row.querySelector(".param-value") as HTMLInputElement | null)?.value.trim();
         if (!name || !rawValue) continue;
 
-        params[name] = mode === "raw"
-            ? { from: "raw", value: rawValue }
-            : { from: "queryParam", name: rawValue };
+        if (mode === "raw") params[name] = { from: "raw", value: rawValue };
+        else params[name] = { from: mode, name: rawValue };
     }
 
     return params;
 }
 
 function selectedMode(select: HTMLSelectElement): DataSourcePickerSourceParamValue["from"] {
-    return select.options[select.selectedIndex]?.value === "raw" ? "raw" : "queryParam";
+    const value = select.options[select.selectedIndex]?.value;
+    return value === "raw" || value === "state" ? value : "queryParam";
 }

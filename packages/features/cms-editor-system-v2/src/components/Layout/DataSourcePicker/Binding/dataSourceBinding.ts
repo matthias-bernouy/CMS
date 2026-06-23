@@ -2,6 +2,7 @@ import type { EditorDataSource } from "../../../../runtime";
 
 export type DataSourcePickerSourceParamValue =
     | { from: "queryParam"; name: string }
+    | { from: "state"; name: string }
     | { from: "raw"; value: string };
 
 export type DataSourcePickerSourceBinding = {
@@ -40,11 +41,16 @@ export function paramsForBinding(
 }
 
 function paramValue(value: string): DataSourcePickerSourceParamValue {
-    const match = /^#\{([^}]+)\}$/.exec(value);
-    if (match?.[1]?.trim()) {
-        return { from: "queryParam", name: match[1].trim() };
-    }
+    const queryParam = tokenValue(value, "#");
+    if (queryParam) return { from: "queryParam", name: queryParam };
+    const state = tokenValue(value, "@");
+    if (state) return { from: "state", name: state };
     return { from: "raw", value };
+}
+
+function tokenValue(value: string, prefix: "#" | "@"): string | null {
+    const match = new RegExp(`^\\${prefix}\\{([^}]+)\\}$`).exec(value);
+    return match?.[1]?.trim() || null;
 }
 
 function bindingQuery(sourceUrl: string, bindingUrl: string): string | null {

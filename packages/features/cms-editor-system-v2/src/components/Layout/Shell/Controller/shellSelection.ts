@@ -15,6 +15,10 @@ import {
     settingsWithParamSync,
 } from "../Domain/Settings/paramSync";
 import {
+    applyPageStateSetting,
+    settingsWithPageState,
+} from "../Domain/Settings/pageState";
+import {
     getTextValue,
     resolveSettingsValues,
 } from "../Domain/Settings/settingsValues";
@@ -65,7 +69,10 @@ export class ShellSelection {
         }
 
         this.context.settings().setSettings(
-            resolveSettingsValues(selection.editor, settingsWithParamSync(selection.editor, selection.settings)),
+            resolveSettingsValues(
+                selection.editor,
+                settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings)),
+            ),
             selection.textCapability,
             selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "",
             this.context.settingsMode(),
@@ -75,7 +82,7 @@ export class ShellSelection {
     }
 
     applySetting(editor: Editor, setting: Setting, value: string | boolean): void {
-        if (applyParamSyncSetting(editor, setting, value)) {
+        if (applyParamSyncSetting(editor, setting, value) || applyPageStateSetting(editor, setting, value)) {
             this.renderSettings();
             this.context.syncViewFrameContent();
             this.context.highlight().show(editor);

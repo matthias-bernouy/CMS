@@ -5,6 +5,7 @@ import {
 } from "@bernouy/cms-content/editor";
 
 import { isParamSyncSetting } from "./paramSync";
+import { isPageStateSetting } from "./pageState";
 
 export function resolveSettingsValues(editor: Editor, sections: SettingSection[]): SettingSection[] {
     return sections.map(section => ({
@@ -20,7 +21,7 @@ export function getTextValue(editor: Editor, format: "text" | "richtext"): strin
 }
 
 function resolveSettingValue(editor: Editor, setting: Setting): Setting {
-    if (isParamSyncSetting(setting)) return setting;
+    if (isParamSyncSetting(setting) || isPageStateSetting(setting)) return setting;
 
     if (setting.type === "toggle") {
         return {
