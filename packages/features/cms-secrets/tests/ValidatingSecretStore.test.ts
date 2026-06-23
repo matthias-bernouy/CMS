@@ -4,6 +4,7 @@ import {
     SECRET_KEY_MAX_LENGTH,
     SecretValidationError,
     ValidatingSecretStore,
+    createSecretResolver,
     isValidSecretKey,
     secretKeyToRef,
     secretRefToKey,
@@ -60,5 +61,13 @@ describe("secret refs", () => {
         expect(isValidSecretKey("")).toBe(false);
         expect(isValidSecretKey("lower")).toBe(false);
         expect(isValidSecretKey("A".repeat(SECRET_KEY_MAX_LENGTH + 1))).toBe(false);
+    });
+
+    test("secret resolver accepts exact refs and plain keys", async () => {
+        const store = new InMemorySecretStore();
+        await store.set("API_KEY", "secret");
+        const resolve = createSecretResolver(store);
+        expect(await resolve("${API_KEY}")).toBe("secret");
+        expect(await resolve("API_KEY")).toBe("secret");
     });
 });

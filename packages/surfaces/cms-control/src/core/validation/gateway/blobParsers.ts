@@ -76,7 +76,9 @@ function parseHeaderSource(raw: unknown): EndpointHeader["source"] | undefined {
     }
     if (s.from === "secret") {
         const ref = str(s.ref);
-        return ref ? { from: "secret", ref } : undefined;
+        const prefix = typeof s.prefix === "string" && s.prefix ? s.prefix : undefined;
+        if (prefix !== undefined && !isValidHeaderValue(prefix)) return undefined;
+        return ref ? { from: "secret", ref, ...(prefix ? { prefix } : {}) } : undefined;
     }
     if (s.from === "computed") {
         const ref = str(s.ref);

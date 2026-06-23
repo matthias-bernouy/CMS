@@ -147,6 +147,15 @@ describe("executeEndpoint", () => {
         expect(passed.get("authorization")).toBe("sk_live_x");
     });
 
+    test("a secret config header prefix is applied after resolution", async () => {
+        const fetchImpl = okFetch();
+        const resolveSecret = mock(async (_ref: string) => "service-role-key");
+        const e = ep({ headers: [{ name: "Authorization", source: { from: "secret", ref: "${SUPABASE_KEY}", prefix: "Bearer " } }] });
+        await executeEndpoint(e, new Request("http://local/x"), { fetchImpl, resolveSecret });
+        const passed = fetchImpl.mock.calls[0]![1]!.headers as Headers;
+        expect(passed.get("authorization")).toBe("Bearer service-role-key");
+    });
+
     test("a secret config header with resolveSecret returning undefined → 500, no fetch", async () => {
         const fetchImpl = okFetch();
         const resolveSecret = mock(async (_ref: string) => undefined);

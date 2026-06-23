@@ -91,7 +91,7 @@ describe("gateway preview proxy", () => {
         try {
             const res = await handlers.get("GET")!(new Request(`${URL_BASE}/secured/get`));
             expect(res.status).toBe(500);
-            expect(await res.text()).toContain("secret introuvable");
+            expect(await res.text()).toContain("secret not found");
             expect(fetchSpy).not.toHaveBeenCalled();
         } finally {
             fetchSpy.mockRestore();

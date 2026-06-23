@@ -34,6 +34,9 @@ export function makeHeaderRow(
     row.dataset.role = 'header-row';
 
     const from = seed.source?.from ?? 'static';
+    const secretPrefix = from === 'secret'
+        ? (seed.source as { prefix?: string } | undefined)?.prefix
+        : undefined;
 
     // ── Name (inline-validated) ──
     const name = makeInput('', '', 'X-Api-Version', seed.name);
@@ -76,6 +79,12 @@ export function makeHeaderRow(
     credSelect.style.display = from === 'secret' ? '' : 'none';
     credSelect.addEventListener('change', onChange);
 
+    const prefixInput = makeInput('', '', 'Prefix', secretPrefix);
+    prefixInput.className = 'ep-status';
+    prefixInput.dataset.role = 'header-value-secret-prefix';
+    prefixInput.style.display = from === 'secret' ? '' : 'none';
+    prefixInput.addEventListener('input', onChange);
+
     const computedSelect = makeSelect(COMPUTED_PARAM_REFS, from === 'computed'
         ? (seed.source as { ref?: string }).ref
         : 'userID');
@@ -89,13 +98,14 @@ export function makeHeaderRow(
         fromSelect.setAttribute('value', v);   // keep attr in sync so a re-slot can't reset it
         staticInput.style.display = v === 'static' ? '' : 'none';
         credSelect.style.display = v === 'secret' ? '' : 'none';
+        prefixInput.style.display = v === 'secret' ? '' : 'none';
         computedSelect.style.display = v === 'computed' ? '' : 'none';
         onChange();
     });
 
     const remove = makeIconButton(ICON_X, { ariaLabel: 'Remove header', onClick: onRemove });
 
-    row.append(name, fromSelect, staticInput, credSelect, computedSelect, remove);
+    row.append(name, fromSelect, staticInput, prefixInput, credSelect, computedSelect, remove);
 
     const read = (): EndpointHeader | null => {
         const n = readControl(name).trim();
@@ -103,7 +113,8 @@ export function makeHeaderRow(
         if (readControl(fromSelect) === 'secret') {
             const ref = ((credSelect as { value?: string }).value
                 || credSelect.getAttribute('value') || '').trim();
-            return ref ? { name: n, source: { from: 'secret', ref } } : null;
+            const prefix = readControl(prefixInput);
+            return ref ? { name: n, source: { from: 'secret', ref, ...(prefix ? { prefix } : {}) } } : null;
         }
         if (readControl(fromSelect) === 'computed') {
             const ref = readControl(computedSelect) as ComputedParamRef;

@@ -33,7 +33,7 @@ describe("POST /api/gateway-provider round-trips", () => {
         const { cms, gateway } = makeCms();
         const headers = [
             { name: "X-Api-Version", source: { from: "static", value: "2024-01" } },
-            { name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } },
+            { name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}", prefix: "Bearer " } },
         ];
         await postGatewayProvider(post(validBody({ "endpoints.0.headers": JSON.stringify(headers) })), cms);
         const stored = await gateway.getProvider("urn:shop");

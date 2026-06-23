@@ -1,4 +1,5 @@
 import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
+import { secretRefToKey } from "./secretRef";
 
 /**
  * Builds the `(ref) => value` resolver consumers hand to callback seams
@@ -10,7 +11,7 @@ import type { SecretStore } from "cms-secrets/interfaces/SecretStore";
 export function createSecretResolver(secrets: SecretStore): (ref: string) => Promise<string | undefined> {
     return async (ref: string) => {
         try {
-            return (await secrets.get(ref)) ?? undefined;
+            return (await secrets.get(secretRefToKey(ref) ?? ref)) ?? undefined;
         } catch {
             return undefined;
         }

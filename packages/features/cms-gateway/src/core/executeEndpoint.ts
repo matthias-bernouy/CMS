@@ -78,7 +78,7 @@ export async function executeEndpoint(
             }
             const v = await deps.resolveSecret(source.ref);
             if (v == null) return new Response(`secret not found: ${source.ref}`, { status: 500 });
-            try { fwd.set(name, v); }
+            try { fwd.set(name, `${source.prefix ?? ""}${v}`); }
             catch { return new Response(`invalid header: "${name}"`, { status: 400 }); }
             continue;
         }

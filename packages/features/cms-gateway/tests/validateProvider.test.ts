@@ -102,6 +102,18 @@ describe("validateProvider", () => {
         const errs = validateProvider(provider({ endpoints: [bad] }));
         expect(errs.some(m => m.includes("invalid computed ref"))).toBe(true);
     });
+    test("secret config header accepts safe prefix and rejects control chars", () => {
+        const good = { ...ep("urn:shop:x"), headers: [
+            { name: "Authorization", source: { from: "secret" as const, ref: "${KEY}", prefix: "Bearer " } },
+        ] };
+        expect(validateProvider(provider({ endpoints: [good] }))).toEqual([]);
+
+        const bad = { ...ep("urn:shop:x"), headers: [
+            { name: "Authorization", source: { from: "secret" as const, ref: "${KEY}", prefix: "Bearer \n" } },
+        ] };
+        const errs = validateProvider(provider({ endpoints: [bad] }));
+        expect(errs.some(m => m.includes("invalid header prefix"))).toBe(true);
+    });
     test("invalid + duplicate response status", () => {
         const e = { ...ep("urn:shop:x"), output: [{ status: "200" }, { status: "200" }, { status: "2xx" }] };
         const errs = validateProvider(provider({ endpoints: [e] }));

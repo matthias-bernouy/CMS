@@ -321,6 +321,11 @@ describe("parseProviderDto", () => {
             .toEqual([{ name: "Authorization", source: { from: "secret", ref: "${STRIPE_KEY}" } }] as any);
     });
 
+    test("headers: a secret header prefix round-trips", () => {
+        expect(headers([{ name: "Authorization", source: { from: "secret", ref: "${SUPABASE_KEY}", prefix: "Bearer " } }]))
+            .toEqual([{ name: "Authorization", source: { from: "secret", ref: "${SUPABASE_KEY}", prefix: "Bearer " } }] as any);
+    });
+
     test("headers: a computed userID header round-trips", () => {
         expect(headers([{ name: "X-User-ID", source: { from: "computed", ref: "userID" } }]))
             .toEqual([{ name: "X-User-ID", source: { from: "computed", ref: "userID" } }] as any);

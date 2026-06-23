@@ -113,6 +113,12 @@ function validateHeaders(ep: Endpoint, errors: string[]): void {
         if (h.source.from === "secret" && !h.source.ref) {
             errors.push(`secret header without ref for "${ep.urn}": "${h.name}"`);
         }
+        if (h.source.from === "secret") {
+            const prefix = (h.source as { prefix?: unknown }).prefix;
+            if (prefix !== undefined && (typeof prefix !== "string" || !isValidHeaderValue(prefix))) {
+                errors.push(`invalid header prefix for "${ep.urn}": "${h.name}"`);
+            }
+        }
         if (h.source.from === "computed" && !(COMPUTED_PARAM_REFS as readonly string[]).includes(h.source.ref)) {
             errors.push(`invalid computed ref for "${ep.urn}": "${h.source.ref}"`);
         }

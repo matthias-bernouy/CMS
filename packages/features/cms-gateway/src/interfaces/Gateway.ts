@@ -12,7 +12,7 @@ export type HTTPMethod = typeof HTTP_METHODS[number];
  *  - `computed`: a gateway context value resolved server-side for this request. */
 export type HeaderSource =
     | { from: 'static'; value: string }
-    | { from: 'secret'; ref: string }
+    | { from: 'secret'; ref: string; prefix?: string }
     | { from: 'computed'; ref: ComputedParamRef };
 
 /** A request header injected into the upstream call. `name` is an RFC 7230 token. */
