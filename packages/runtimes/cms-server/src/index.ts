@@ -11,7 +11,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
 import { MongoDekRepository, createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
-import { ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
+import { ValidatingSecretStore } from "@bernouy/cms-secrets";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { ValidatingGatewayRepository } from "@bernouy/cms-gateway";
@@ -160,18 +160,7 @@ await controlCms.ready;
 // gateway instance as Control, so providers created in the admin are immediately
 // resolvable by the `/.cms/gateway/*` proxy.
 const deliveryRunner = new BunRunner();
-new DeliveryCms({
-    runner: deliveryRunner,
-    repository: repo,
-    cache,
-    gateway,
-    gatewayDeps: { resolveSecret: createSecretResolver(secrets) },
-    analytics,
-    analyticsSalt: ANALYTICS_SALT_SECRET,
-    filesMetadata,
-    filesBlob,
-    variantStore,
-});
+new DeliveryCms({ runner: deliveryRunner, repository: repo, cache, gateway, analytics, analyticsSalt: ANALYTICS_SALT_SECRET, filesMetadata, filesBlob, variantStore });
 
 controlRunner.start(CONTROL_PORT);
 deliveryRunner.start(DELIVERY_PORT);

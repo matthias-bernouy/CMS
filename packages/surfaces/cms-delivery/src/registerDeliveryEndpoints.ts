@@ -45,8 +45,9 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
 
     // Shared `.cms/*` handlers — Control mounts the same three, admin-guarded.
     // `generateStyleEntry` is the same producer `resolveAssets` uses for the
-    // `?v=<hash>` link, so served bytes match. Gateway is public; execution deps
-    // are optional because public auth context is deployment-specific.
+    // `?v=<hash>` link, so served bytes match. Gateway is public + unwired here
+    // (no `deps.resolveSecret`) → a `secret`-sourced header yields a clean 500;
+    // an unconfigured gateway yields 501.
     runner.addEndpoint("GET", "/.cms/style", (req) =>
         cachedResponseAsync(
             req,
@@ -66,7 +67,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
         const prefix = gatewayPrefix(runner.basePath);
         for (const method of GATEWAY_PROXY_METHODS) {
             proxyRunner.setDefaultEndpoint(method, (req) =>
-                handleGatewayRequest(delivery.gateway, req, { prefix, deps: delivery.gatewayDeps }));
+                handleGatewayRequest(delivery.gateway, req, { prefix }));
         }
     });
 

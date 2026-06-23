@@ -3,7 +3,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import type { Cache } from "@bernouy/http-runner";
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
-import type { ExecutorDeps, GatewayRepository } from "@bernouy/cms-gateway";
+import type { GatewayRepository } from "@bernouy/cms-gateway";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import { TtlCache } from "@bernouy/http-runner";
 import { OptimizeQueue } from "@bernouy/cms-files";
@@ -34,8 +34,6 @@ export type DeliveryCmsConfig = {
      * resolves against it and proxies upstream; when absent, that route returns 501.
      */
     gateway?: GatewayRepository;
-    /** Optional execution dependencies for gateway headers that need secrets or request context. */
-    gatewayDeps?: ExecutorDeps;
     /**
      * Optional analytics store (writer). When set, the page handler records a
      * page-view per request (fire-and-forget); when absent, collection is a no-op.
@@ -95,7 +93,6 @@ export default class DeliveryCms {
     private _cache:              Cache;
     private _headInjectors:      readonly HeadInjector[];
     private _gateway?:           GatewayRepository;
-    private _gatewayDeps?:       ExecutorDeps;
     private _analytics?:         AnalyticsStore;
     private _analyticsSalt?:     string;
     private _filesMetadata:      CmsFilesMetadataRepository | null;
@@ -109,7 +106,6 @@ export default class DeliveryCms {
         this._cache              = config.cache || new TtlCache({ bypass: process.env.MODE === "DEV" });
         this._headInjectors      = config.headInjectors ?? [];
         this._gateway            = config.gateway;
-        this._gatewayDeps        = config.gatewayDeps;
         this._analytics          = config.analytics;
         this._analyticsSalt      = config.analyticsSalt;
         this._filesMetadata      = config.filesMetadata ?? null;
@@ -138,10 +134,6 @@ export default class DeliveryCms {
     /** Data-gateway provider store, or `undefined` when no gateway is configured. */
     get gateway(){
         return this._gateway;
-    }
-
-    get gatewayDeps(){
-        return this._gatewayDeps;
     }
 
     /** Analytics store (writer), or `undefined` when analytics is not configured. */
