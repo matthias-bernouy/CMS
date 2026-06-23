@@ -21,6 +21,7 @@ import {
     BINDING_DISABLED_ATTR,
     BIND_STOP_ATTR,
     isSourceState,
+    PAGE_STATE_ATTR,
     READY_ATTR,
     SOURCE_STATE_FORCE_ATTR,
     type SourceState,
@@ -33,9 +34,11 @@ export {
     BINDING_CORE_TAG,
     BINDING_DISABLED_ATTR,
     BIND_STOP_ATTR,
+    PAGE_STATE_ATTR,
     READY_ATTR,
     SOURCE_STATE_FORCE_ATTR,
 } from "./attrs";
+export { currentState, setState, STATE_CHANGE_EVENT } from "./params";
 
 /** Filter set passed to every source's interpolation. Empty until a host wires
  *  one in via `setBindingFilters` (the concrete filters are a later step). */

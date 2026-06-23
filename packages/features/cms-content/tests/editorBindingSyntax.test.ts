@@ -29,12 +29,13 @@ describe("editor binding syntax", () => {
             alias: "addresses",
             params: {
                 q: { from: "queryParam", name: "address" },
+                delivery: { from: "state", name: "deliveryAddress" },
                 limit: { from: "raw", value: 5 },
                 type: { from: "raw", value: "housenumber street" },
                 empty: { from: "raw", value: "" },
                 skipped: undefined,
             },
-        })).toBe("/.cms/gateway/ban/search?q=#{address}&limit=5&type=housenumber%20street as addresses");
+        })).toBe("/.cms/gateway/ban/search?q=#{address}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses");
         expect(asSource({
             url: "/api/plans?",
             params: { q: { from: "raw", value: "hello" } },
@@ -48,8 +49,8 @@ describe("editor binding syntax", () => {
     test("parses source bindings", () => {
         expect(parseSource(" {{BASE_PATH}}/api/plans ")).toEqual({ url: "{{BASE_PATH}}/api/plans" });
         expect(parseSource("/api/plans as plans")).toEqual({ url: "/api/plans", alias: "plans" });
-        expect(parseSource("  /.cms/gateway/ban/search?q=#{address}   as   addresses  "))
-            .toEqual({ url: "/.cms/gateway/ban/search?q=#{address}", alias: "addresses" });
+        expect(parseSource("  /.cms/gateway/ban/search?q=#{address}&delivery=@{deliveryAddress}   as   addresses  "))
+            .toEqual({ url: "/.cms/gateway/ban/search?q=#{address}&delivery=@{deliveryAddress}", alias: "addresses" });
         expect(parseSource("")).toBeNull();
         expect(parseSource("   ")).toBeNull();
     });
@@ -80,6 +81,7 @@ describe("editor binding syntax", () => {
             bindingDisabled: "cms-binding-disabled",
             condition: "cms-condition",
             paramSync: "cms-param-sync",
+            pageState: "cms-page-state",
             repeat: "cms-repeat",
             source: "cms-source",
             sourceStateForce: "cms-source-state-force",

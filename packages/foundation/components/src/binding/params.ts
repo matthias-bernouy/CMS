@@ -13,14 +13,22 @@
  */
 
 export const PARAMS_CHANGE_EVENT = "cms-params:change";
+export const STATE_CHANGE_EVENT = "cms-state:change";
 
 const PARAM_TOKEN = /#\{\s*(\w+)\s*\}/g;
+const STATE_TOKEN = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
+const STATE_BY_DOCUMENT = new WeakMap<Document, Map<string, string>>();
 
 /** Whether a `cms-source` template depends on any query param. Matches exactly
  *  what `resolveParams` substitutes, so a malformed `#{a-b}` is neither resolved
  *  nor treated as reactive (it stays literal, no param listeners attached). */
 export function hasParamTokens(template: string): boolean {
     return /#\{\s*\w+\s*\}/.test(template);
+}
+
+/** Whether a `cms-source` template depends on local page state. */
+export function hasStateTokens(template: string): boolean {
+    return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(template);
 }
 
 /** Current query params from the address bar. */
@@ -31,6 +39,12 @@ export function currentParams(): URLSearchParams {
 /** Replace `#{name}` tokens with URL-encoded param values (missing → ""). */
 export function resolveParams(template: string, params: URLSearchParams = currentParams()): string {
     return template.replace(PARAM_TOKEN, (_m, name: string) => encodeURIComponent(params.get(name) ?? ""));
+}
+
+/** Replace `@{name}` tokens with URL-encoded local page state values. */
+export function resolveState(template: string, doc: Document = document): string {
+    const state = stateForDocument(doc);
+    return template.replace(STATE_TOKEN, (_m, name: string) => encodeURIComponent(state.get(name) ?? ""));
 }
 
 /**
@@ -45,4 +59,28 @@ export function setParam(name: string, value: string): void {
     const qs = params.toString();
     history.replaceState(history.state, "", location.pathname + (qs ? `?${qs}` : "") + location.hash);
     document.dispatchEvent(new Event(PARAMS_CHANGE_EVENT));
+}
+
+export function currentState(name: string, doc: Document = document): string {
+    return stateForDocument(doc).get(name.trim()) ?? "";
+}
+
+export function setState(name: string, value: string, doc: Document = document): void {
+    const key = name.trim();
+    if (!key) return;
+    const state = stateForDocument(doc);
+    const next = value;
+    const previous = state.get(key) ?? "";
+    if (next === "") state.delete(key);
+    else state.set(key, next);
+    if (next !== previous) doc.dispatchEvent(new Event(STATE_CHANGE_EVENT));
+}
+
+function stateForDocument(doc: Document): Map<string, string> {
+    let state = STATE_BY_DOCUMENT.get(doc);
+    if (!state) {
+        state = new Map();
+        STATE_BY_DOCUMENT.set(doc, state);
+    }
+    return state;
 }

@@ -115,7 +115,11 @@ export {
     clearRuntimeStamps,
     BINDING_CORE_TAG,
     BIND_STOP_ATTR,
+    PAGE_STATE_ATTR,
     READY_ATTR,
+    STATE_CHANGE_EVENT,
+    currentState,
+    setState,
 } from "./binding/bindingCore";
 export { setParam, PARAMS_CHANGE_EVENT } from "./binding/params";
 export type { FilterMap, Filter } from "./binding/interpolate";

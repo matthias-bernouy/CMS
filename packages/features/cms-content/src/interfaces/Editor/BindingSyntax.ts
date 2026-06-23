@@ -4,6 +4,7 @@ export const CMS_BINDING_ATTRIBUTES = {
     bindingDisabled:  "cms-binding-disabled",
     condition:        "cms-condition",
     paramSync:        "cms-param-sync",
+    pageState:        "cms-page-state",
     repeat:           "cms-repeat",
     source:           "cms-source",
     sourceStateForce: "cms-source-state-force",
@@ -14,6 +15,7 @@ export const CMS_BINDING_RUNTIME_ATTRIBUTES = { ready: "cms-ready" } as const;
 export type CmsBindingAttribute = typeof CMS_BINDING_ATTRIBUTES[keyof typeof CMS_BINDING_ATTRIBUTES];
 export type CmsSourceParamValue =
     | { from: "queryParam"; name: string }
+    | { from: "state"; name: string }
     | { from: "raw"; value: string | number | boolean };
 export type CmsSourceParamMap = Record<string, CmsSourceParamValue | null | undefined>;
 export type CmsSourceBinding = { url: string; alias?: string; params?: CmsSourceParamMap };
@@ -118,6 +120,7 @@ function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string
         const [name, value] = entry;
         if (name.trim() === "" || value === null || value === undefined) return false;
         if (value.from === "queryParam") return value.name.trim() !== "";
+        if (value.from === "state") return value.name.trim() !== "";
         return String(value.value).trim() !== "";
     });
     if (entries.length === 0) return url;
@@ -136,5 +139,6 @@ function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string
 
 function encodeSourceParamValue(value: CmsSourceParamValue): string {
     if (value.from === "queryParam") return `#{${value.name.trim()}}`;
+    if (value.from === "state") return `@{${value.name.trim()}}`;
     return encodeURIComponent(String(value.value).trim());
 }

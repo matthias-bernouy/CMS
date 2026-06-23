@@ -1,6 +1,7 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import { Source } from "../../../src/binding/source/Source";
-import { el, text, resetDom } from "../testUtils";
+import { setState } from "../../../src/binding/params";
+import { el, resetDom } from "../testUtils";
 
 afterEach(resetDom);
 
@@ -36,5 +37,35 @@ describe("Source — param-reactive reload guard (URL-changed)", () => {
         source.dispose();
         src.remove();
         history.replaceState({}, "", "/");
+    });
+});
+
+describe("Source — state-reactive reload guard (URL-changed)", () => {
+    test("a state change re-runs only when this source's resolved URL changed", async () => {
+        let calls = 0;
+        globalThis.fetch = (async () => {
+            calls++;
+            return { ok: true, status: 200, text: async () => JSON.stringify({ n: calls }) } as unknown as Response;
+        }) as unknown as typeof fetch;
+        const flush = () => new Promise((r) => setTimeout(r, 0));
+
+        setState("address", "old", document);
+        const src = el(`<div cms-source="/x?a=@{address}"><p>{{ n }}</p></div>`);
+        document.body.appendChild(src);
+        const source = new Source(src);
+        source.start();
+        await flush();
+        expect(calls).toBe(1);
+
+        setState("other", "value", document);
+        await flush();
+        expect(calls).toBe(1);
+
+        setState("address", "new", document);
+        await flush();
+        expect(calls).toBe(2);
+
+        source.dispose();
+        src.remove();
     });
 });

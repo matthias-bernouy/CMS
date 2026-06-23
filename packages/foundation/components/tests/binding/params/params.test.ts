@@ -1,6 +1,8 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import {
-    resolveParams, hasParamTokens, currentParams, setParam, PARAMS_CHANGE_EVENT,
+    currentParams, currentState, hasParamTokens, hasStateTokens,
+    PARAMS_CHANGE_EVENT, resolveParams, resolveState,
+    setParam, setState, STATE_CHANGE_EVENT,
 } from "../../../src/binding/params";
 
 // happy-dom does not reflect history.replaceState into `location`, but DOES
@@ -45,6 +47,32 @@ describe("resolveParams", () => {
 
     test("leaves {{ data }} tokens untouched", () => {
         expect(resolveParams("/x?id=#{p}&n={{ name }}", p("p=1"))).toBe("/x?id=1&n={{ name }}");
+    });
+});
+
+describe("local page state", () => {
+    test("detects and resolves @{...} tokens", () => {
+        setState("address", "12 rue A", document);
+        setState("delivery.address", "Paris", document);
+        expect(hasStateTokens("/api/x?q=@{address}")).toBe(true);
+        expect(hasStateTokens("/api/x?q=@{delivery.address}")).toBe(true);
+        expect(hasStateTokens("/api/x?q=#{address}")).toBe(false);
+        expect(resolveState("/api/x?q=@{address}", document)).toBe("/api/x?q=12%20rue%20A");
+        expect(resolveState("/api/x?q=@{delivery.address}", document)).toBe("/api/x?q=Paris");
+    });
+
+    test("setState writes local state without changing the address bar", () => {
+        let fired = 0;
+        const onChange = () => { fired++; };
+        document.addEventListener(STATE_CHANGE_EVENT, onChange);
+        location.href = "http://localhost/admin/pages?search=old";
+
+        setState("deliveryAddress", "Paris", document);
+
+        expect(currentState("deliveryAddress", document)).toBe("Paris");
+        expect(location.search).toBe("?search=old");
+        expect(fired).toBe(1);
+        document.removeEventListener(STATE_CHANGE_EVENT, onChange);
     });
 });
 

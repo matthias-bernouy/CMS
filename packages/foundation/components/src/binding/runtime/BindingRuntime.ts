@@ -1,17 +1,19 @@
-/** Discovers sources/param sync controls and owns their lifecycle for one root. */
+/** Discovers sources and value sync controls, then owns their lifecycle. */
 
 import { Source } from "../source/Source";
 import { ParamSync, PARAM_SYNC_ATTR } from "../params/ParamSync";
+import { PageStateSync, PAGE_STATE_ATTR } from "../params/PageStateSync";
 import { type FilterMap } from "../interpolate";
 import { SOURCE_ATTR, type SourceState } from "../attrs";
 import { eachMatching } from "./discovery";
 import { revealInertSources, revealSources } from "./revealSources";
 export { revealSources } from "./revealSources";
 
-/** Owns the source/param-sync registries and the discovery observer for one root. */
+/** Owns the source/value-sync registries and the discovery observer for one root. */
 export class BindingRuntime {
     private readonly sources = new Map<Element, Source>();
     private readonly paramSyncs = new Map<Element, ParamSync>();
+    private readonly pageStateSyncs = new Map<Element, PageStateSync>();
     private observer: MutationObserver | null = null;
     private stopped = false;
 
@@ -21,13 +23,8 @@ export class BindingRuntime {
         private readonly options: { sourceStateForce?: SourceState } = {},
     ) {}
 
-    /**
-     * Activate existing sources and watch for future ones. If the document is
-     * still parsing, defer the initial scan to `DOMContentLoaded`: a source
-     * discovered mid-parse may not have its children (template + slots) yet, so
-     * `captureContent` would capture an empty element. Once the document is
-     * parsed, every source's subtree is complete.
-     */
+    /** Activate existing sources; defer until DOMContentLoaded while parsing so
+     *  source children are complete before `captureContent`. */
     start(): void {
         if (typeof document !== "undefined" && document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", () => this.activate(), { once: true });
@@ -86,17 +83,17 @@ export class BindingRuntime {
             src.dispose();
         }
         for (const ps of this.paramSyncs.values()) ps.dispose();
+        for (const ps of this.pageStateSyncs.values()) ps.dispose();
         this.sources.clear();
         this.paramSyncs.clear();
+        this.pageStateSyncs.clear();
         hooks?.afterDispose?.();
     }
 
-    /** True once stopped/deactivated — `BindingRuntime` is single-use. */
     get isStopped(): boolean {
         return this.stopped;
     }
 
-    /** Test/introspection hook: number of live sources. */
     get size(): number {
         return this.sources.size;
     }
@@ -118,6 +115,12 @@ export class BindingRuntime {
             this.paramSyncs.set(el, ps);
             ps.start();
         });
+        eachMatching(node, PAGE_STATE_ATTR, this.root, (el) => {
+            if (!el.isConnected || this.pageStateSyncs.has(el)) return;
+            const ps = new PageStateSync(el);
+            this.pageStateSyncs.set(el, ps);
+            ps.start();
+        });
     }
 
     private unregisterWithin(node: Node): void {
@@ -132,6 +135,12 @@ export class BindingRuntime {
             if (!ps) return;
             ps.dispose();
             this.paramSyncs.delete(el);
+        });
+        eachMatching(node, PAGE_STATE_ATTR, this.root, (el) => {
+            const ps = this.pageStateSyncs.get(el);
+            if (!ps) return;
+            ps.dispose();
+            this.pageStateSyncs.delete(el);
         });
     }
 }

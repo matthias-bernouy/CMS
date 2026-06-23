@@ -6,6 +6,7 @@ export const SLOT_ATTR = "cms-slot";
 export const REPEAT_ATTR = "cms-repeat";
 export const CONDITION_ATTR = "cms-condition";
 export const PARAM_SYNC_ATTR = "cms-param-sync";
+export const PAGE_STATE_ATTR = "cms-page-state";
 
 export const SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type SourceState = typeof SOURCE_STATES[number];

@@ -1,5 +1,6 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import { Source, RELOAD_EVENT } from "../../../src/binding/source/Source";
+import { BindingRuntime } from "../../../src/binding/runtime/BindingRuntime";
 import { PARAMS_CHANGE_EVENT } from "../../../src/binding/params";
 import { el, text, waitFor, settle, res, resetDom } from "../testUtils";
 
@@ -81,5 +82,35 @@ describe("Source — #{param} reactivity", () => {
         await settle();
         expect(calls).toBe(1); // unchanged — not param-reactive
         src.dispose();
+    });
+});
+
+describe("BindingRuntime — cms-page-state", () => {
+    test("syncs input value to local state and reloads dependent sources", async () => {
+        const urls: string[] = [];
+        globalThis.fetch = (async (url: string) => {
+            urls.push(url);
+            return res(200, JSON.stringify([{ t: url }]));
+        }) as unknown as typeof fetch;
+        location.href = "http://localhost/?kept=1";
+
+        const root = el(`
+            <div>
+                <input cms-page-state="address">
+                <div cms-source="/api/x?q=@{address}"><span cms-repeat="."></span></div>
+            </div>
+        `);
+        document.body.appendChild(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+        await waitFor(() => urls.includes("/api/x?q="));
+
+        const input = root.querySelector<HTMLInputElement>("input")!;
+        input.value = "Paris";
+        input.dispatchEvent(new Event("change"));
+
+        await waitFor(() => urls.includes("/api/x?q=Paris"));
+        expect(location.search).toBe("?kept=1");
+        runtime.stop();
     });
 });
