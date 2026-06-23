@@ -20,6 +20,8 @@ import { ValidatingCmsRepository } from "@bernouy/cms-content";
 import { LocalFsCmsFiles, ValidatingCmsFilesMetadata } from "@bernouy/cms-files";
 import { createDevAuth, DEV_PASSWORD } from "./dev-server/auth";
 import { loadPushConfig } from "./push/shared/config";
+import { LocalFsEnvSecretStore } from "./dev-server/secrets";
+import { ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
 
 function parseFlags(args: string[]): { port: number; host: string } {
     let port = 5000;
@@ -83,13 +85,15 @@ export default async function CLI_dev(args: string[]) {
     const filesMetadata = new ValidatingCmsFilesMetadata(files);
     const { auth, users, identityProviders, pats, credentials, devAdmin } = await createDevAuth();
     const gateway = await createDevGateway(config.siteDir);
+    const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
+    const resolveSecret = createSecretResolver(secrets);
 
     const runner = new BunRunner();
     // Live-reload SSE channel — registered before the ControlCms group so it
     // matches first (the group catches `/` as a fallback).
     runner.addEndpoint("GET", "/dev/reload", sseHandler(reload));
 
-    const cms = new ControlCms(runner, repo, auth, {}, undefined, undefined, filesMetadata, files, users, identityProviders, pats, credentials, gateway);
+    const cms = new ControlCms(runner, repo, auth, {}, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, gateway);
     await cms.ready;
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
@@ -115,7 +119,7 @@ export default async function CLI_dev(args: string[]) {
     const deliveryPort = port + 1;
     const deliveryRunner = new BunRunner();
     const variantStore = new LocalFsCmsFilesBlob(`${config.siteDir}/.cms-variants`);
-    new DeliveryCms({ runner: deliveryRunner, repository: repo, filesMetadata, filesBlob: files, variantStore, gateway });
+    new DeliveryCms({ runner: deliveryRunner, repository: repo, filesMetadata, filesBlob: files, variantStore, gateway, gatewayResolveSecret: resolveSecret });
     deliveryRunner.start(deliveryPort);
 
     console.log("");

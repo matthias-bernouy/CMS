@@ -2,6 +2,9 @@ import type { ComputedParamRef, Endpoint } from "../interfaces/Gateway";
 import { buildUpstreamUrl, type GatewayComputedContext } from "./buildUpstreamUrl";
 import { isForbiddenHeaderName } from "./headerPolicy";
 
+/** Resolves a server-side secret reference used by gateway config headers. */
+export type GatewaySecretResolver = (ref: string) => Promise<string | undefined>;
+
 /**
  * Injected dependencies for the executor.
  *  - `fetchImpl`: test/infra override of the upstream call (default = global `fetch`).
@@ -11,7 +14,7 @@ import { isForbiddenHeaderName } from "./headerPolicy";
  */
 export type ExecutorDeps = {
     fetchImpl?: typeof fetch;
-    resolveSecret?: (ref: string) => Promise<string | undefined>;
+    resolveSecret?: GatewaySecretResolver;
     resolveContext?: (request: Request) => Promise<GatewayComputedContext>;
 };
 

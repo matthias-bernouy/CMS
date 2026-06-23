@@ -4,6 +4,7 @@ import type { Cache } from "@bernouy/http-runner";
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
+import type { GatewaySecretResolver } from "@bernouy/cms-gateway";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import { TtlCache } from "@bernouy/http-runner";
 import { OptimizeQueue } from "@bernouy/cms-files";
@@ -34,6 +35,14 @@ export type DeliveryCmsConfig = {
      * resolves against it and proxies upstream; when absent, that route returns 501.
      */
     gateway?: GatewayRepository;
+    /**
+     * Optional secret resolver for gateway headers.
+     *
+     * Keep undefined for public deployments unless the composition root has
+     * enforced the authentication/authorization policy around exposed providers.
+     * `p9r dev` wires this from `site/.env` so local Supabase providers work.
+     */
+    gatewayResolveSecret?: GatewaySecretResolver;
     /**
      * Optional analytics store (writer). When set, the page handler records a
      * page-view per request (fire-and-forget); when absent, collection is a no-op.
@@ -93,6 +102,7 @@ export default class DeliveryCms {
     private _cache:              Cache;
     private _headInjectors:      readonly HeadInjector[];
     private _gateway?:           GatewayRepository;
+    private _gatewayResolveSecret?: GatewaySecretResolver;
     private _analytics?:         AnalyticsStore;
     private _analyticsSalt?:     string;
     private _filesMetadata:      CmsFilesMetadataRepository | null;
@@ -111,6 +121,7 @@ export default class DeliveryCms {
         this._filesMetadata      = config.filesMetadata ?? null;
         this._filesBlob          = config.filesBlob ?? null;
         this._variantStore       = config.variantStore ?? null;
+        this._gatewayResolveSecret = config.gatewayResolveSecret;
 
         registerDeliveryEndpoints(this);
     }
@@ -134,6 +145,11 @@ export default class DeliveryCms {
     /** Data-gateway provider store, or `undefined` when no gateway is configured. */
     get gateway(){
         return this._gateway;
+    }
+
+    /** Secret resolver for Delivery gateway headers, when explicitly wired. */
+    get gatewayResolveSecret(){
+        return this._gatewayResolveSecret;
     }
 
     /** Analytics store (writer), or `undefined` when analytics is not configured. */
