@@ -11,32 +11,7 @@ export type HTTPMethod = typeof HTTP_METHODS[number];
  *    applied until the secret store is wired (the executor returns 500 for it). */
 export type HeaderSource =
     | { from: 'static'; value: string }
-    | { from: 'secret'; ref: string }
-    | JwtHeaderSource;
-
-export type JwtAlgorithm = "RS256" | "ES256" | "EdDSA" | "HS256";
-
-export type JwtClaimRef = "$userID";
-
-export type JwtClaimValue =
-    | string
-    | number
-    | boolean
-    | null
-    | string[]
-    | number[]
-    | boolean[]
-    | JwtClaimRef;
-
-export type JwtHeaderSource = {
-    from: "jwt";
-    signingKeyRef: string;
-    alg?: JwtAlgorithm;
-    kid?: string;
-    ttlSeconds?: number;
-    claims?: Record<string, JwtClaimValue>;
-    prefix?: string;
-};
+    | { from: 'secret'; ref: string };
 
 /** A request header injected into the upstream call. `name` is an RFC 7230 token. */
 export type EndpointHeader = {

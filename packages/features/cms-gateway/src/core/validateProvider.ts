@@ -2,7 +2,6 @@ import type { Provider, Endpoint } from "../interfaces/Gateway";
 import { HTTP_METHODS, PARAM_INS } from "../interfaces/Gateway";
 import { isProviderUrn, isEndpointUrn, providerUrnOf } from "./urn";
 import { isValidHeaderName, isForbiddenHeaderName, isValidHeaderValue, MAX_ENDPOINT_HEADERS } from "./headerPolicy";
-import { validateJwtClaimsConfig } from "./jwt/claims";
 
 /** `true` if the endpoint urn belongs to the given provider. */
 export function endpointBelongsToProvider(endpointUrn: string, providerUrn: string): boolean {
@@ -103,17 +102,6 @@ function validateHeaders(ep: Endpoint, errors: string[]): void {
         }
         if (h.source.from === "secret" && !h.source.ref) {
             errors.push(`header secret sans ref pour "${ep.urn}" : "${h.name}"`);
-        }
-        if (h.source.from === "jwt") {
-            if (!h.source.signingKeyRef) errors.push(`jwt header without signingKeyRef for "${ep.urn}" : "${h.name}"`);
-            if (h.source.alg && !["RS256", "ES256", "EdDSA", "HS256"].includes(h.source.alg)) {
-                errors.push(`invalid jwt algorithm for "${ep.urn}" : "${h.name}"`);
-            }
-            if (h.source.ttlSeconds !== undefined && (!Number.isInteger(h.source.ttlSeconds) || h.source.ttlSeconds < 1 || h.source.ttlSeconds > 3600)) {
-                errors.push(`invalid jwt ttl for "${ep.urn}" : "${h.name}"`);
-            }
-            const claimsError = validateJwtClaimsConfig(h.source.claims);
-            if (claimsError) errors.push(`${claimsError} for "${ep.urn}" : "${h.name}"`);
         }
     }
 }

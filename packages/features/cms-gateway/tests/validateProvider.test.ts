@@ -74,21 +74,6 @@ describe("validateProvider", () => {
         const errs = validateProvider(provider({ endpoints: [e] }));
         expect(errs.some(m => m.includes("header dupliqué"))).toBe(true);
     });
-    test("jwt header: missing key, bad ttl, unknown claim ref", () => {
-        const e = { ...ep("urn:shop:x"), headers: [{
-            name: "Authorization",
-            source: {
-                from: "jwt" as const,
-                signingKeyRef: "",
-                ttlSeconds: 0,
-                claims: { sub: "$email" },
-            },
-        }] };
-        const errs = validateProvider(provider({ endpoints: [e] }));
-        expect(errs.some(m => m.includes("jwt header without signingKeyRef"))).toBe(true);
-        expect(errs.some(m => m.includes("invalid jwt ttl"))).toBe(true);
-        expect(errs.some(m => m.includes('jwt claim "sub" has an invalid value'))).toBe(true);
-    });
     test("invalid + duplicate response status", () => {
         const e = { ...ep("urn:shop:x"), output: [{ status: "200" }, { status: "200" }, { status: "2xx" }] };
         const errs = validateProvider(provider({ endpoints: [e] }));
