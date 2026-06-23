@@ -47,14 +47,32 @@ export function syncViewFrameContent(
 }
 
 export function restartViewBindingRuntime(viewDocument: Document | null): void {
-    const core = bindingPreviewCore(viewDocument) as (HTMLElement & {
-        runtime?: { stop(): void } | null;
-        startRuntime?: () => void;
-    }) | null;
+    const core = bindingPreviewCore(viewDocument) as BindingPreviewCoreElement | null;
     if (!core || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) return;
 
-    core.runtime?.stop();
-    core.startRuntime?.();
+    if (startViewBindingRuntime(core)) return;
+
+    viewDocument?.defaultView?.customElements.whenDefined(core.localName)
+        .then(() => {
+            viewDocument.defaultView?.customElements.upgrade(core);
+            if (!core.isConnected || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)) return;
+            startViewBindingRuntime(core);
+        })
+        .catch(() => undefined);
+}
+
+type BindingPreviewCoreElement = HTMLElement & {
+    runtime?: { stop(): void; deactivate?: () => void } | null;
+    startRuntime?: () => void;
+};
+
+function startViewBindingRuntime(core: BindingPreviewCoreElement): boolean {
+    if (typeof core.startRuntime !== "function") return false;
+
+    if (typeof core.runtime?.deactivate === "function") core.runtime.deactivate();
+    else core.runtime?.stop();
+    core.startRuntime();
+    return true;
 }
 
 export function injectBindingPreviewStyle(document: Document): void {

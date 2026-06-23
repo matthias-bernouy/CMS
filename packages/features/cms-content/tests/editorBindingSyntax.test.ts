@@ -1,24 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import {
-    CMS_BINDING_ATTRIBUTES,
-    CMS_BINDING_CORE_TAG,
-    CMS_SOURCE_SLOT_VALUES,
-    CMS_SOURCE_STATES,
-    applySourceState,
-    asCondition,
-    asInterpolation,
-    asRepeat,
-    asSource,
-    isCmsSourceSlotValue,
-    isCmsSourceState,
-    isInterpolation,
-    parseCondition,
-    parseInterpolation,
-    parseRepeat,
-    parseSource,
-    sourceStateFromElement,
-} from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_SLOT_VALUES, CMS_SOURCE_STATES, applySourceState, asCondition, asInterpolation, asRepeat, asSource, clearBindingRuntimeState, isCmsSourceSlotValue, isCmsSourceState, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, sourceStateFromElement } from "@bernouy/cms-content/editor";
 
 describe("editor binding syntax", () => {
     function createElement(): Element {
@@ -103,6 +85,7 @@ describe("editor binding syntax", () => {
             sourceStateForce: "cms-source-state-force",
             slot: "cms-slot",
         });
+        expect(CMS_BINDING_RUNTIME_ATTRIBUTES).toEqual({ ready: "cms-ready" });
     });
 
     test("exposes stable source states and authored slot values", () => {
@@ -145,5 +128,15 @@ describe("editor binding syntax", () => {
 
         applySourceState(element, "loaded");
         expect(element.hasAttribute("cms-slot")).toBe(false);
+    });
+
+    test("clears binding runtime state from serialized content", () => {
+        const { document } = parseHTML("<main cms-ready><section cms-source=\"/api\" cms-ready><p>Plan</p></section></main>");
+        const content = document.querySelector("main")!;
+        clearBindingRuntimeState(content);
+
+        expect(content.hasAttribute("cms-ready")).toBe(false);
+        expect(content.querySelector("[cms-source]")?.hasAttribute("cms-ready")).toBe(false);
+        expect(content.querySelector("[cms-source]")?.getAttribute("cms-source")).toBe("/api");
     });
 });

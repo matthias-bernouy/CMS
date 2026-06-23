@@ -79,6 +79,7 @@ export class ShellFrames {
 
         callbacks.loadDocument({ root, contentRoot });
         callbacks.syncBindingPreviewCore();
+        callbacks.syncViewFrameContent();
     }
 
     private injectBindingPreviewStyle(document: Document): void {

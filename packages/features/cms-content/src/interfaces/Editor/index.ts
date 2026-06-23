@@ -5,6 +5,7 @@ export {
 export {
     CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
+    CMS_BINDING_RUNTIME_ATTRIBUTES,
     CMS_SOURCE_SLOT_VALUES,
     CMS_SOURCE_STATES,
     applySourceState,
@@ -12,6 +13,7 @@ export {
     asInterpolation,
     asRepeat,
     asSource,
+    clearBindingRuntimeState,
     isCmsSourceSlotValue,
     isCmsSourceState,
     isInterpolation,

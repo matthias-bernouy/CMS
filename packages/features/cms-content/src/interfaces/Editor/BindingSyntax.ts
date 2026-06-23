@@ -9,23 +9,17 @@ export const CMS_BINDING_ATTRIBUTES = {
     sourceStateForce: "cms-source-state-force",
     slot:             "cms-slot",
 } as const;
+export const CMS_BINDING_RUNTIME_ATTRIBUTES = { ready: "cms-ready" } as const;
 
 export type CmsBindingAttribute = typeof CMS_BINDING_ATTRIBUTES[keyof typeof CMS_BINDING_ATTRIBUTES];
 export type CmsSourceParamValue =
     | { from: "queryParam"; name: string }
     | { from: "raw"; value: string | number | boolean };
 export type CmsSourceParamMap = Record<string, CmsSourceParamValue | null | undefined>;
-export type CmsSourceBinding = {
-    url: string;
-    alias?: string;
-    params?: CmsSourceParamMap;
-};
+export type CmsSourceBinding = { url: string; alias?: string; params?: CmsSourceParamMap };
 export type CmsSourceUrl = string;
 export type CmsConditionExpression = string;
-export type CmsRepeatBinding = {
-    path: string;
-    alias?: string;
-};
+export type CmsRepeatBinding = { path: string; alias?: string };
 export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type CmsSourceState = typeof CMS_SOURCE_STATES[number];
 export type CmsSourceStateForce = CmsSourceState;
@@ -77,12 +71,7 @@ export function asRepeat(binding: CmsRepeatBinding): string {
 
 export function parseRepeat(value: string): CmsRepeatBinding | null {
     const match = REPEAT_ALIAS_PATTERN.exec(value);
-    if (match) {
-        return {
-            path: match[1]!.trim(),
-            alias: match[2]!,
-        };
-    }
+    if (match) return { path: match[1]!.trim(), alias: match[2]! };
 
     const path = value.trim();
     return path ? { path } : null;
@@ -111,12 +100,14 @@ export function sourceStateFromElement(element: Element): CmsSourceState {
 }
 
 export function applySourceState(element: Element, state: CmsSourceState): void {
-    if (state === "loaded") {
-        element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
-        return;
-    }
+    if (state === "loaded") element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
+    else element.setAttribute(CMS_BINDING_ATTRIBUTES.slot, state);
+}
 
-    element.setAttribute(CMS_BINDING_ATTRIBUTES.slot, state);
+export function clearBindingRuntimeState(root: Element): void {
+    const attr = CMS_BINDING_RUNTIME_ATTRIBUTES.ready;
+    root.removeAttribute(attr);
+    root.querySelectorAll(`[${attr}]`).forEach((element) => element.removeAttribute(attr));
 }
 
 function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string {
