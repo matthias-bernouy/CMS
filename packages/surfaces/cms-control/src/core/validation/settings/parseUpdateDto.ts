@@ -22,7 +22,13 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
     }
 
     if (hasSectionKey(body, "editor")) {
-        dto.editor = collectStringSection(body, "editor", []) as TSystem["editor"];
+        const editor: Partial<TSystem["editor"]> = {};
+        if ("editor.layoutCategory" in body) {
+            const value = body["editor.layoutCategory"];
+            if (typeof value !== "string") throw new InvalidParam("editor.layoutCategory", "expected a string.");
+            editor.layoutCategory = value;
+        }
+        dto.editor = editor as TSystem["editor"];
     }
 
     if (hasSectionKey(body, "security")) {

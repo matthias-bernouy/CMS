@@ -52,13 +52,13 @@ describe("editor frame endpoint - pages", () => {
         expect(requestedPaths).toEqual(["/pricing"]);
     });
 
-    test("wraps custom page shells without a core in the editor binding core", async () => {
-        const { cms } = cmsWithPage(pricingPage(), {}, "<main>{{CONTENT}}</main>");
+    test("wraps page content directly in the editor binding core", async () => {
+        const { cms } = cmsWithPage(pricingPage());
         const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
         const html = await response.text();
 
         expect(response.status).toBe(200);
-        expect(html).toContain(`<div data-cms-editor-root style="display:contents"><cms-binding-core cms-binding-disabled cms-source-state-force="loading"><main>`);
+        expect(html).toContain(`<div data-cms-editor-root style="display:contents"><cms-binding-core cms-binding-disabled cms-source-state-force="loading">`);
         expect(html).toContain(`<div data-cms-content style="display:contents"><p>Hello</p></div>`);
         expect(html).toContain("/cms/api/editor/binding-core.js");
     });

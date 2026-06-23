@@ -4,7 +4,7 @@ export function cmsWithPage(page: {
     title: string;
     description: string;
     content: string;
-} | null, snippets: Record<string, string> = {}, shell = "<cms-binding-core>{{CONTENT}}</cms-binding-core>") {
+} | null, snippets: Record<string, string> = {}) {
     const requestedIds: string[] = [];
     const requestedPaths: string[] = [];
     const cms = {
@@ -17,7 +17,7 @@ export function cmsWithPage(page: {
                 requestedPaths.push(path);
                 return page && page.path === path ? { visible: true, tags: [], ...page } : null;
             },
-            getSystem: async () => ({ editor: { shell } }),
+            getSystem: async () => ({ editor: { layoutCategory: "" } }),
             getSnippetByIdentifier: async (identifier: string) => snippets[identifier]
                 ? { content: snippets[identifier] }
                 : null,

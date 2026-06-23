@@ -35,15 +35,6 @@ export type TSystem = {
          * on the Templates tab, filtered to this category.
          */
         layoutCategory: string;
-        /**
-         * HTML structure every rendered page's content is wrapped in inside
-         * `<body>`. `{{CONTENT}}` marks where the page's own content is
-         * injected; the surrounding markup — header / nav / footer and the
-         * `<cms-binding-core>` activation root — is shared by every page.
-         * Consumed by delivery's `renderPage`; editable in settings.
-         * Defaults to `DEFAULT_SHELL`.
-         */
-        shell: string;
     },
 
     /**
@@ -70,22 +61,6 @@ export type TSystem = {
 
 }
 
-/**
- * Default page shell (`editor.shell`). `{{CONTENT}}` is the slot delivery
- * replaces with the page's own content. Wrapping it in `<cms-binding-core>`
- * gives every rendered page the data-binding runtime out of the box.
- */
-export const DEFAULT_SHELL = "<cms-binding-core>{{CONTENT}}</cms-binding-core>";
-
-/**
- * Compose a page's body by dropping its `content` into the Shell's `{{CONTENT}}`
- * slot. Falls back to {@link DEFAULT_SHELL} when the configured shell lost the
- * marker (systems predating the field, a bad save). Function replacement so
- * `$&` / `$1` inside user content aren't treated as replacement patterns.
- * Shared by delivery (`renderPage`) and the control editor (`page.get`) so the
- * editor canvas mirrors the published composition byte-for-byte.
- */
-export function composeShell(shell: string | undefined, content: string): string {
-    const tpl = shell?.includes("{{CONTENT}}") ? shell : DEFAULT_SHELL;
-    return tpl.replace("{{CONTENT}}", () => content);
+export function wrapBindingCore(content: string): string {
+    return `<cms-binding-core>${content}</cms-binding-core>`;
 }

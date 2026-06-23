@@ -1,4 +1,3 @@
-import { DEFAULT_SHELL } from "cms-content/interfaces/settings";
 import type { TSystem } from "cms-content/interfaces/settings";
 
 export function defaultSystem(): TSystem {
@@ -14,7 +13,7 @@ export function defaultSystem(): TSystem {
             notFound:    null,
             serverError: null,
         },
-        editor:   { layoutCategory: "", shell: DEFAULT_SHELL },
+        editor:   { layoutCategory: "" },
         security: { connectExtras: [], mediaExtras: [] },
     };
 }

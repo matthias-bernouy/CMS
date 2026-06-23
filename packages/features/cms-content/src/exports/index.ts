@@ -14,7 +14,7 @@ export type { TPage, TPageRef }  from "cms-content/interfaces/pages";
 export type { TTemplate }        from "cms-content/interfaces/templates";
 export type { TSnippet }         from "cms-content/interfaces/snippets";
 export type { TSystem }          from "cms-content/interfaces/settings";
-export { DEFAULT_SHELL, composeShell } from "cms-content/interfaces/settings";
+export { wrapBindingCore } from "cms-content/interfaces/settings";
 
 // ── Repository seam ────────────────────────────────────────────────────
 export type { ContentReader } from "cms-content/interfaces/ContentReader";

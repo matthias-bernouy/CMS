@@ -47,4 +47,12 @@ describe("parseSettingsUpdateDto — security section (parsing)", () => {
         expect(dto.security?.connectExtras).toEqual(["https://api.x.com"]);
         expect(dto.security?.mediaExtras).toEqual(["https://cdn.x.com"]);
     });
+
+    test("ignores legacy editor.shell updates", () => {
+        const dto = parseSettingsUpdateDto({
+            "editor.layoutCategory": "Layouts",
+            "editor.shell": "<cms-binding-core>{{CONTENT}}</cms-binding-core>",
+        });
+        expect(dto.editor).toEqual({ layoutCategory: "Layouts" });
+    });
 });

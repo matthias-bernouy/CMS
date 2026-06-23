@@ -34,7 +34,6 @@ export class SystemStore {
             },
             editor: {
                 layoutCategory: typeof json.editor?.layoutCategory === "string" ? json.editor.layoutCategory : base.editor.layoutCategory,
-                shell:          typeof json.editor?.shell          === "string" ? json.editor.shell          : base.editor.shell,
             },
             security: {
                 connectExtras: Array.isArray(json.security?.connectExtras) ? json.security.connectExtras : base.security.connectExtras,

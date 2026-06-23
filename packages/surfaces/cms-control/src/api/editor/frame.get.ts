@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { composeShell, expandSnippets } from "@bernouy/cms-content";
+import { expandSnippets, wrapBindingCore } from "@bernouy/cms-content";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
 
@@ -55,10 +55,9 @@ async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
         return redirectToPages(url);
     }
 
-    const system = await cms.repository.getSystem();
     const basePath = controlBasePath(url.pathname);
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${page.content}</div>`;
-    const composed = composeShell(system.editor.shell, content);
+    const composed = wrapBindingCore(content);
     const expanded = await expandSnippets(composed, cms.repository);
 
     return new Response(renderFrameDocument({
