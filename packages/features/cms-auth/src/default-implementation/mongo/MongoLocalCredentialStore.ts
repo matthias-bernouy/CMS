@@ -25,8 +25,9 @@ type CredentialDoc = {
     emailEnc:   EncryptedBlob;
     emailIndex: string;       // unique HMAC(email)
     hash:       string;       // argon2id password hash
-    createdAt:  Date;
-    updatedAt:  Date;
+    emailVerifiedAt?: Date | null;
+    createdAt:       Date;
+    updatedAt:       Date;
 };
 
 export class MongoLocalCredentialStore implements LocalCredentialStore {
@@ -50,15 +51,16 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
     }
 
     async create(input: NewCredential): Promise<Identity> {
-        const email = input.email.trim().toLowerCase();
+        const email = normalizeEmail(input.email);
         const now = new Date();
         const doc: CredentialDoc = {
-            _id:        randomUUIDv7(),
-            emailEnc:   await this.fieldCrypto.encrypt(email),
-            emailIndex: this.fieldCrypto.blindIndex(email),
-            hash:       await Bun.password.hash(input.password),
-            createdAt:  now,
-            updatedAt:  now,
+            _id:             randomUUIDv7(),
+            emailEnc:        await this.fieldCrypto.encrypt(email),
+            emailIndex:      this.fieldCrypto.blindIndex(email),
+            hash:            await Bun.password.hash(input.password),
+            emailVerifiedAt: input.emailVerified === false ? null : now,
+            createdAt:       now,
+            updatedAt:       now,
         };
         try { await this.col.insertOne(doc as OptionalUnlessRequiredId<CredentialDoc>); }
         catch (e) {
@@ -69,11 +71,12 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
     }
 
     async verify(email: string, password: string): Promise<Identity | null> {
-        const doc = await this.col.findOne({ emailIndex: this.fieldCrypto.blindIndex(email) });
+        const doc = await this.col.findOne({ emailIndex: this.fieldCrypto.blindIndex(normalizeEmail(email)) });
         // Spend a verify's worth of time on an unknown email too, so timing
         // doesn't reveal which emails are registered.
         if (!doc) { await dummyPasswordVerify(password); return null; }
         if (!(await Bun.password.verify(password, doc.hash))) return null;
+        if (doc.emailVerifiedAt === null) return null;
         // No `displayName`: the credential store doesn't own one. Returning the
         // email here would overwrite the user's real displayName on every login
         // (SubjectResolver.upsert only updates provided fields).
@@ -89,8 +92,16 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
         return r.matchedCount === 1;
     }
 
+    async markEmailVerified(sub: string): Promise<boolean> {
+        const r = await this.col.updateOne(
+            { _id: sub },
+            { $set: { emailVerifiedAt: new Date(), updatedAt: new Date() } },
+        );
+        return r.matchedCount === 1;
+    }
+
     async getByEmail(email: string): Promise<LocalCredential | null> {
-        const d = await this.col.findOne({ emailIndex: this.fieldCrypto.blindIndex(email) });
+        const d = await this.col.findOne({ emailIndex: this.fieldCrypto.blindIndex(normalizeEmail(email)) });
         return d ? this._fromDoc(d) : null;
     }
 
@@ -105,6 +116,14 @@ export class MongoLocalCredentialStore implements LocalCredentialStore {
     }
 
     private async _fromDoc(d: CredentialDoc): Promise<LocalCredential> {
-        return { sub: d._id, email: await this.fieldCrypto.decrypt(d.emailEnc), createdAt: d.createdAt, updatedAt: d.updatedAt };
+        return {
+            sub: d._id,
+            email: await this.fieldCrypto.decrypt(d.emailEnc),
+            emailVerifiedAt: d.emailVerifiedAt === undefined ? d.createdAt : d.emailVerifiedAt,
+            createdAt: d.createdAt,
+            updatedAt: d.updatedAt,
+        };
     }
 }
+
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();

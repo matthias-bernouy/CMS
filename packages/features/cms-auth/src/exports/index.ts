@@ -38,12 +38,19 @@ export type {
 } from "cms-auth/interfaces/IdentityProvider";
 export type { LocalCredentialStore, LocalCredential, NewCredential } from "cms-auth/interfaces/LocalCredentialStore";
 export type { PatRepository, Pat, PatPrincipal, NewPat }             from "cms-auth/interfaces/PatRepository";
+export type {
+    AuthTokenStore, AuthToken, AuthTokenPurpose, NewAuthToken,
+} from "cms-auth/interfaces/AuthTokenStore";
+export type {
+    Emailer, AuthEmailRecipient, EmailVerificationEmail, PasswordResetEmail,
+} from "cms-auth/interfaces/Emailer";
 
 // ── Default implementations (in-memory; Mongo under ./mongo) ───────────
 export { InMemoryUsersRepository }            from "cms-auth/default-implementation/memory/InMemoryUsersRepository";
 export { InMemoryIdentityProviderRepository } from "cms-auth/default-implementation/memory/InMemoryIdentityProviderRepository";
 export { InMemoryLocalCredentialStore }       from "cms-auth/default-implementation/memory/InMemoryLocalCredentialStore";
 export { InMemoryPatRepository }              from "cms-auth/default-implementation/memory/InMemoryPatRepository";
+export { InMemoryAuthTokenStore }             from "cms-auth/default-implementation/memory/InMemoryAuthTokenStore";
 export { InMemoryAuthentication, type InMemoryAuthConfig } from "cms-auth/default-implementation/memory/InMemoryAuthentication";
 
 // ── HTTP handlers (mounted by surfaces) ────────────────────────────────

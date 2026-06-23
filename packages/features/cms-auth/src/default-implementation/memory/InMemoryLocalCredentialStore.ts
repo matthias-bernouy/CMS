@@ -21,6 +21,7 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
         const now = new Date();
         const rec: Record = {
             sub: randomUUIDv7(), email, createdAt: now, updatedAt: now,
+            emailVerifiedAt: input.emailVerified === false ? null : now,
             hash: await Bun.password.hash(input.password),
         };
         this._bySub.set(rec.sub, rec);
@@ -35,9 +36,9 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
         if (!rec) { await dummyPasswordVerify(password); return null; }
         // No `displayName` — see the Mongo impl: returning it would clobber the
         // user's stored displayName on every login.
-        return (await Bun.password.verify(password, rec.hash))
-            ? { sub: rec.sub, email: rec.email }
-            : null;
+        if (!(await Bun.password.verify(password, rec.hash))) return null;
+        if (rec.emailVerifiedAt === null) return null;
+        return { sub: rec.sub, email: rec.email };
     }
 
     async setPassword(sub: string, password: string): Promise<boolean> {
@@ -45,6 +46,15 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
         if (!rec) return false;
         rec.hash = await Bun.password.hash(password);
         rec.updatedAt = new Date();
+        return true;
+    }
+
+    async markEmailVerified(sub: string): Promise<boolean> {
+        const rec = this._bySub.get(sub);
+        if (!rec) return false;
+        const now = new Date();
+        rec.emailVerifiedAt = now;
+        rec.updatedAt = now;
         return true;
     }
 
@@ -67,4 +77,6 @@ export class InMemoryLocalCredentialStore implements LocalCredentialStore {
     }
 }
 
-const strip = (r: Record): LocalCredential => ({ sub: r.sub, email: r.email, createdAt: r.createdAt, updatedAt: r.updatedAt });
+const strip = (r: Record): LocalCredential => ({
+    sub: r.sub, email: r.email, emailVerifiedAt: r.emailVerifiedAt, createdAt: r.createdAt, updatedAt: r.updatedAt,
+});

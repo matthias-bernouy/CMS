@@ -12,16 +12,20 @@ import type { Identity } from "cms-auth/interfaces/UsersRepository";
  * into `UsersRepository`, exactly like any other auth backend.
  */
 export type LocalCredential = {
-    sub:       string;     // stable id, generated at creation
-    email:     string;     // unique; the login handle
-    createdAt: Date;
-    updatedAt: Date;
+    sub:             string;     // stable id, generated at creation
+    email:           string;     // unique; the login handle
+    emailVerifiedAt: Date | null;
+    createdAt:       Date;
+    updatedAt:       Date;
 };
 
 export type NewCredential = {
-    email:        string;
-    password:     string;
-    displayName?: string;
+    email:          string;
+    password:       string;
+    displayName?:   string;
+    /** Defaults to true for existing admin/bootstrap flows. Public signup will
+     *  pass false and complete verification through the auth token flow. */
+    emailVerified?: boolean;
 };
 
 export interface LocalCredentialStore {
@@ -35,6 +39,9 @@ export interface LocalCredentialStore {
 
     /** Replace the password for an existing `sub`. `false` when unknown. */
     setPassword(sub: string, password: string): Promise<boolean>;
+
+    /** Mark the login email as verified. `false` when unknown. */
+    markEmailVerified(sub: string): Promise<boolean>;
 
     /** Lookup by login handle (no secret returned). */
     getByEmail(email: string): Promise<LocalCredential | null>;

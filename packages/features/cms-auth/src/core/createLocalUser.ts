@@ -9,10 +9,11 @@ export type CreateLocalUserStores<Role extends string = string> = {
 };
 
 export type CreateLocalUserInput<Role extends string = string> = {
-    email:        string;
-    password:     string;
-    displayName?: string;
-    role:         Role;
+    email:          string;
+    password:       string;
+    displayName?:   string;
+    role:           Role;
+    emailVerified?: boolean;
 };
 
 export async function createLocalUser<Role extends string>(
@@ -21,9 +22,10 @@ export async function createLocalUser<Role extends string>(
 ): Promise<TUser<Role>> {
     validatePassword(input.password);
     const identity = await stores.credentials.create({
-        email:       input.email,
-        password:    input.password,
-        displayName: input.displayName,
+        email:          input.email,
+        password:       input.password,
+        displayName:    input.displayName,
+        emailVerified:  input.emailVerified ?? true,
     });
     return stores.users.upsert(
         { ...identity, sub: internalUserId("local", identity.sub), provider: "local" },

@@ -52,6 +52,14 @@ describe("LocalAuthentication login", () => {
         expect(cookie(res)).toContain("cms-t-session=");
     });
 
+    test("unverified credentials cannot create a session", async () => {
+        const { routes, credentials } = setup();
+        await credentials.create({ email: "a@x.com", password: "pw", emailVerified: false });
+        const res = await login(routes, "a@x.com", "pw");
+        expect(loc(res)).toContain("error=1");
+        expect(cookie(res)).not.toContain("cms-t-session=");
+    });
+
     test("wrong password → ?error=1, no cookie", async () => {
         const { routes, credentials } = setup();
         await credentials.create({ email: "a@x.com", password: "pw" });

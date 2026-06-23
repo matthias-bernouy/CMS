@@ -8,3 +8,4 @@ export { MongoUsersRepository, type MongoUsersConfig }                        fr
 export { MongoIdentityProviderRepository, type MongoIdentityProviderConfig } from "cms-auth/default-implementation/mongo/MongoIdentityProviderRepository";
 export { MongoLocalCredentialStore, type MongoLocalCredentialConfig }        from "cms-auth/default-implementation/mongo/MongoLocalCredentialStore";
 export { MongoPatRepository, type MongoPatConfig }                            from "cms-auth/default-implementation/mongo/MongoPatRepository";
+export { MongoAuthTokenStore, type MongoAuthTokenConfig }                     from "cms-auth/default-implementation/mongo/MongoAuthTokenStore";
