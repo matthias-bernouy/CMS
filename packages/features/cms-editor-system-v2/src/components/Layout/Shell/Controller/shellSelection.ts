@@ -106,6 +106,9 @@ export class ShellSelection {
         } else if (typeof value === "string") {
             editor.target.setAttribute(attribute, value);
         }
+        if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
+            this.renderSettings();
+        }
     }
 
     private applyAttributes(editor: Editor, attributes: SettingsViewAttributeChanges): void {
@@ -118,6 +121,7 @@ export class ShellSelection {
                 editor.target.setAttribute(attribute, value);
             }
         }
+        this.renderSettings();
     }
 
     toggleState(editor: Editor, state: EditableState): void {

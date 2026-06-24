@@ -13,6 +13,8 @@ import {
     type EndpointPickerMethod,
     type EndpointPickerSetting,
     type CmsSourceBinding,
+    type SettingVisibilityRule,
+    type SettingVisibilityValue,
 } from "@bernouy/cms-content/editor";
 import type {
     DataScope,
@@ -148,7 +150,9 @@ export class SettingsView extends HTMLElement {
         const element = document.createElement("cms-editor-v2-section");
         element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
 
-        if (section.settings.length === 0) {
+        const settings = visibleSettings(section.settings);
+
+        if (settings.length === 0) {
             const empty = document.createElement("div");
             empty.className = "section-empty";
             empty.textContent = "No settings";
@@ -156,7 +160,7 @@ export class SettingsView extends HTMLElement {
             return element;
         }
 
-        for (const setting of section.settings) {
+        for (const setting of settings) {
             element.append(this._renderSetting(setting));
         }
 
@@ -523,10 +527,11 @@ export class SettingsView extends HTMLElement {
     }
 
     private _emitSettingChange(setting: Setting, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
+        const changes = attributes ?? attributesForSettingValue(setting, value);
         this.dispatchEvent(new CustomEvent<SettingsViewSettingChangeDetail>(SETTINGS_VIEW_SETTING_CHANGE_EVENT, {
             bubbles: true,
             composed: true,
-            detail: attributes ? { setting, value, attributes } : { setting, value },
+            detail: changes ? { setting, value, attributes: changes } : { setting, value },
         }));
     }
 
@@ -538,6 +543,49 @@ export class SettingsView extends HTMLElement {
         }));
     }
 
+}
+
+function visibleSettings(settings: Setting[]): Setting[] {
+    const values = new Map(settings.map(setting => [setting.attribute, setting.defaultValue]));
+    return settings.filter(setting => isSettingVisible(setting.visibleWhen, values));
+}
+
+function attributesForSettingValue(setting: Setting, value: string | boolean): SettingsViewAttributeChanges | undefined {
+    const matchingRules = setting.attributesOnValue?.filter(rule => visibilityValueMatches(value, rule.value)) ?? [];
+    if (matchingRules.length === 0) return undefined;
+
+    const attributes: SettingsViewAttributeChanges = { [setting.attribute]: value };
+    for (const rule of matchingRules) {
+        Object.assign(attributes, rule.attributes);
+    }
+    return attributes;
+}
+
+function isSettingVisible(
+    visibleWhen: Setting["visibleWhen"],
+    values: Map<string, Setting["defaultValue"]>,
+): boolean {
+    if (!visibleWhen) return true;
+    const rules = Array.isArray(visibleWhen) ? visibleWhen : [visibleWhen];
+    return rules.every(rule => matchesVisibilityRule(rule, values.get(rule.attribute)));
+}
+
+function matchesVisibilityRule(rule: SettingVisibilityRule, actual: Setting["defaultValue"]): boolean {
+    if (rule.equals !== undefined && !visibilityValueMatches(actual, rule.equals)) return false;
+    if (rule.notEquals !== undefined && visibilityValueMatches(actual, rule.notEquals)) return false;
+    return true;
+}
+
+function visibilityValueMatches(
+    actual: Setting["defaultValue"],
+    expected: SettingVisibilityValue | SettingVisibilityValue[],
+): boolean {
+    const expectedValues = Array.isArray(expected) ? expected : [expected];
+    return expectedValues.some(value => normalizeVisibilityValue(actual) === normalizeVisibilityValue(value));
+}
+
+function normalizeVisibilityValue(value: Setting["defaultValue"] | SettingVisibilityValue): string | boolean {
+    return typeof value === "boolean" ? value : String(value ?? "");
 }
 
 if (!customElements.get("cms-editor-v2-settings-view")) {

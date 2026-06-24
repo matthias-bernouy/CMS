@@ -7,9 +7,14 @@ import type { TextSetting } from "./text";
 import type { ToggleSetting } from "./toggle";
 
 export type {
+    SettingAttributeChanges,
+    SettingAttributeRule,
+    SettingAttributeValue,
     SettingMetadata,
     SettingOption,
     SettingType,
+    SettingVisibilityRule,
+    SettingVisibilityValue,
 } from "./base";
 
 export type {

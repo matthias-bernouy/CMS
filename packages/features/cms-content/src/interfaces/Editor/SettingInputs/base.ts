@@ -12,6 +12,23 @@ export type SettingOption = {
     value: string;
 };
 
+export type SettingVisibilityValue = string | boolean;
+
+export type SettingVisibilityRule = {
+    attribute: string;
+    equals?: SettingVisibilityValue | SettingVisibilityValue[];
+    notEquals?: SettingVisibilityValue | SettingVisibilityValue[];
+};
+
+export type SettingAttributeValue = string | boolean | null;
+
+export type SettingAttributeChanges = Record<string, SettingAttributeValue>;
+
+export type SettingAttributeRule = {
+    value: SettingVisibilityValue | SettingVisibilityValue[];
+    attributes: SettingAttributeChanges;
+};
+
 export type SettingMetadata<TType extends SettingType, TValue> = {
     type: TType;
     label: string;
@@ -22,4 +39,6 @@ export type SettingMetadata<TType extends SettingType, TValue> = {
     defaultValue?: TValue;
     disabled?: boolean;
     required?: boolean;
+    visibleWhen?: SettingVisibilityRule | SettingVisibilityRule[];
+    attributesOnValue?: SettingAttributeRule[];
 };
