@@ -67,6 +67,20 @@ export { InMemoryPatRepository }              from "cms-auth/default-implementat
 export { InMemoryAuthTokenStore }             from "cms-auth/default-implementation/memory/InMemoryAuthTokenStore";
 export { InMemoryEmailer }                    from "cms-auth/default-implementation/memory/InMemoryEmailer";
 export { ConsoleEmailer }                     from "cms-auth/default-implementation/ConsoleEmailer";
+export {
+    SmtpEmailer,
+    type SmtpEmailerConfig,
+    type SmtpSendMailInput,
+    type SmtpTransport,
+    type SmtpTransportConfig,
+    type SmtpTransportFactory,
+} from "cms-auth/default-implementation/SmtpEmailer";
+export {
+    ConfiguredEmailer,
+    EmailConfigurationError,
+    type ConfiguredEmailerConfig,
+    type RuntimeEmailSettings,
+} from "cms-auth/default-implementation/ConfiguredEmailer";
 export { DefaultAuthEmailComposer }           from "cms-auth/default-implementation/DefaultAuthEmailComposer";
 export { InMemoryAuthentication, type InMemoryAuthConfig } from "cms-auth/default-implementation/memory/InMemoryAuthentication";
 

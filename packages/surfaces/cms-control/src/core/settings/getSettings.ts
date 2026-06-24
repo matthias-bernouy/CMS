@@ -6,6 +6,7 @@ export type SettingsResponse = {
     site:     TSystem["site"];
     editor:   TSystem["editor"];
     security: TSystem["security"];
+    email:    TSystem["email"];
     pages:    PageLink[];
     layoutCategories: string[];
 };
@@ -28,6 +29,7 @@ export async function getSettings(cms: ControlCms): Promise<SettingsResponse> {
         site:     system.site,
         editor:   system.editor,
         security: system.security,
+        email:    system.email,
         pages,
         layoutCategories,
     };

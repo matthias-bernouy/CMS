@@ -55,6 +55,25 @@ export type TSystem = {
         mediaExtras:   string[];
     },
 
+    /**
+     * Runtime outbound email configuration. The password is deliberately a
+     * secret reference, never a raw value stored in the system settings.
+     */
+    email: {
+        enabled:   boolean;
+        fromEmail: string;
+        fromName:  string;
+        replyTo:   string;
+        transport: "smtp";
+        smtp: {
+            host:              string;
+            port:              number;
+            secure:            boolean;
+            username:          string;
+            passwordSecretRef: string;
+        };
+    },
+
     // Roles are NOT stored here — they live in their own `RolesRepository`
     // (@bernouy/cms-permissions), a dedicated collection independent of the
     // content aggregate.

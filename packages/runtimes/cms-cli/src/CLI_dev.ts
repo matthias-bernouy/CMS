@@ -22,6 +22,14 @@ import { createDevAuth, DEV_PASSWORD } from "./dev-server/auth";
 import { loadPushConfig } from "./push/shared/config";
 import { LocalFsEnvSecretStore } from "./dev-server/secrets";
 import { ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
+import {
+    ConfiguredEmailer,
+    InMemoryAuthTokenStore,
+    LocalAuthentication,
+    SignedCookieCodec,
+    SubjectResolver,
+} from "@bernouy/cms-auth";
+import type { CMS_ROLES } from "@bernouy/cms-permissions";
 
 function parseFlags(args: string[]): { port: number; host: string } {
     let port = 5000;
@@ -56,6 +64,8 @@ export default async function CLI_dev(args: string[]) {
     const cwd = process.cwd();
     const config = await loadPushConfig(cwd);
     const { port, host } = parseFlags(args);
+    const deliveryPort = port + 1;
+    const publicHost = host === "0.0.0.0" ? "localhost" : host;
 
     console.log(`→ Site dir : ${config.siteDir}`);
 
@@ -87,13 +97,41 @@ export default async function CLI_dev(args: string[]) {
     const gateway = await createDevGateway(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
     const resolveSecret = createSecretResolver(secrets);
+    const publicAuth = {
+        local: new LocalAuthentication<CMS_ROLES>({
+            providerId:    "local",
+            loginPagePath: "/.cms/auth/login",
+            logoutPath:    "/.cms/auth/logout",
+            credentials,
+            resolver:      new SubjectResolver<CMS_ROLES>(users, "user"),
+            codec:         new SignedCookieCodec(new TextEncoder().encode("p9r-dev-public-auth-session")),
+            cookieName:    "p9r-dev-site-session",
+            defaultHome:   "/",
+            pats,
+        }),
+        credentials,
+        users,
+        tokens:                   new InMemoryAuthTokenStore(),
+        emailer:                  new ConfiguredEmailer({
+            readSettings: async () => (await repo.getSystem()).email,
+            secrets,
+        }),
+        defaultRole:              "user" as CMS_ROLES,
+        siteName:                 "p9r dev",
+        authEmailCooldownSeconds: 0,
+        emailVerificationUrl:     `http://${publicHost}:${deliveryPort}/auth/verify-email`,
+        passwordResetUrl:         `http://${publicHost}:${deliveryPort}/auth/reset-password`,
+    };
 
     const runner = new BunRunner();
     // Live-reload SSE channel — registered before the ControlCms group so it
     // matches first (the group catches `/` as a fallback).
     runner.addEndpoint("GET", "/dev/reload", sseHandler(reload));
 
-    const cms = new ControlCms(runner, repo, auth, {}, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, gateway);
+    const cms = new ControlCms(runner, repo, auth, {
+        deliveryUrl: `http://${publicHost}:${deliveryPort}`,
+        publicAuth: { ...publicAuth, allowSignup: false },
+    }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, gateway);
     await cms.ready;
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
@@ -116,10 +154,18 @@ export default async function CLI_dev(args: string[]) {
     // you can watch an <img> upgrade to a responsive `srcset` on refresh.
     // (In MODE=DEV the render cache bypasses, so a refresh re-renders and the
     // srcset appears once the background worker has generated — no PROD needed.)
-    const deliveryPort = port + 1;
     const deliveryRunner = new BunRunner();
     const variantStore = new LocalFsCmsFilesBlob(`${config.siteDir}/.cms-variants`);
-    new DeliveryCms({ runner: deliveryRunner, repository: repo, filesMetadata, filesBlob: files, variantStore, gateway, gatewayResolveSecret: resolveSecret });
+    new DeliveryCms({
+        runner: deliveryRunner,
+        repository: repo,
+        filesMetadata,
+        filesBlob: files,
+        variantStore,
+        gateway,
+        gatewayResolveSecret: resolveSecret,
+        auth: publicAuth,
+    });
     deliveryRunner.start(deliveryPort);
 
     console.log("");

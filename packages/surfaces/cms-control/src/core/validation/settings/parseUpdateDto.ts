@@ -1,6 +1,6 @@
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import type { TPageRef, TSystem } from "@bernouy/cms-content";
-import { coercePageRef } from "@bernouy/cms-content";
+import { coercePageRef, defaultSystem } from "@bernouy/cms-content";
 
 export type SettingsUpdateDto = Partial<TSystem>;
 
@@ -42,6 +42,21 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
         dto.security = sec as TSystem["security"];
     }
 
+    if (hasSectionKey(body, "email")) {
+        const email = defaultSystem().email;
+        if ("email.enabled" in body) email.enabled = asBoolean(body["email.enabled"], "email.enabled");
+        if ("email.fromEmail" in body) email.fromEmail = asString(body["email.fromEmail"], "email.fromEmail");
+        if ("email.fromName" in body) email.fromName = asString(body["email.fromName"], "email.fromName");
+        if ("email.replyTo" in body) email.replyTo = asString(body["email.replyTo"], "email.replyTo");
+        if ("email.transport" in body) email.transport = asString(body["email.transport"], "email.transport") as TSystem["email"]["transport"];
+        if ("email.smtp.host" in body) email.smtp.host = asString(body["email.smtp.host"], "email.smtp.host");
+        if ("email.smtp.port" in body) email.smtp.port = asInteger(body["email.smtp.port"], "email.smtp.port");
+        if ("email.smtp.secure" in body) email.smtp.secure = asBoolean(body["email.smtp.secure"], "email.smtp.secure");
+        if ("email.smtp.username" in body) email.smtp.username = asString(body["email.smtp.username"], "email.smtp.username");
+        if ("email.smtp.passwordSecretRef" in body) email.smtp.passwordSecretRef = asString(body["email.smtp.passwordSecretRef"], "email.smtp.passwordSecretRef");
+        dto.email = email;
+    }
+
     return dto;
 }
 
@@ -52,6 +67,30 @@ function parseOriginList(raw: unknown, paramName: string): string[] {
     if (raw === undefined || raw === null || raw === "") return [];
     if (typeof raw !== "string") throw new InvalidParam(paramName, "expected a string.");
     return raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+}
+
+function asString(raw: unknown, paramName: string): string {
+    if (raw === undefined || raw === null) return "";
+    if (typeof raw !== "string") throw new InvalidParam(paramName, "expected a string.");
+    return raw;
+}
+
+function asBoolean(raw: unknown, paramName: string): boolean {
+    if (typeof raw === "boolean") return raw;
+    if (raw === undefined || raw === null || raw === "") return false;
+    if (typeof raw !== "string") throw new InvalidParam(paramName, "expected a boolean.");
+    const value = raw.trim().toLowerCase();
+    if (["1", "true", "on", "yes"].includes(value)) return true;
+    if (["0", "false", "off", "no"].includes(value)) return false;
+    throw new InvalidParam(paramName, "expected a boolean.");
+}
+
+function asInteger(raw: unknown, paramName: string): number {
+    if (typeof raw === "number" && Number.isInteger(raw)) return raw;
+    if (typeof raw !== "string") throw new InvalidParam(paramName, "expected an integer.");
+    const value = Number(raw);
+    if (!Number.isInteger(value)) throw new InvalidParam(paramName, "expected an integer.");
+    return value;
 }
 
 function hasSectionKey(body: Record<string, unknown>, prefix: string): boolean {

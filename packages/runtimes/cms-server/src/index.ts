@@ -31,7 +31,7 @@ import {
     SubjectResolver,
     LocalAuthentication,
     AuthValidationError,
-    ConsoleEmailer,
+    ConfiguredEmailer,
     createLocalUser,
 } from "@bernouy/cms-auth";
 import {
@@ -152,7 +152,10 @@ if (!existingAdmin) {
 const codec        = new SignedCookieCodec(new TextEncoder().encode(CMS_SESSION_SECRET));
 const resolver     = new SubjectResolver<CMS_ROLES>(users, "user");
 const cookieSecure = CONTROL_PUBLIC_URL.startsWith("https");
-const authEmailer  = new ConsoleEmailer();
+const authEmailer  = new ConfiguredEmailer({
+    readSettings: async () => (await repo.getSystem()).email,
+    secrets,
+});
 
 // Control admin on its own runner/port — root-mounted (no `/cms` prefix;
 // the port already isolates the admin surface from Delivery).

@@ -39,6 +39,20 @@ export class SystemStore {
                 connectExtras: Array.isArray(json.security?.connectExtras) ? json.security.connectExtras : base.security.connectExtras,
                 mediaExtras:   Array.isArray(json.security?.mediaExtras)   ? json.security.mediaExtras   : base.security.mediaExtras,
             },
+            email: {
+                enabled:   typeof json.email?.enabled   === "boolean" ? json.email.enabled   : base.email.enabled,
+                fromEmail: typeof json.email?.fromEmail === "string"  ? json.email.fromEmail : base.email.fromEmail,
+                fromName:  typeof json.email?.fromName  === "string"  ? json.email.fromName  : base.email.fromName,
+                replyTo:   typeof json.email?.replyTo   === "string"  ? json.email.replyTo   : base.email.replyTo,
+                transport: json.email?.transport === "smtp" ? json.email.transport : base.email.transport,
+                smtp:      {
+                    host:              typeof json.email?.smtp?.host              === "string"  ? json.email.smtp.host              : base.email.smtp.host,
+                    port:              typeof json.email?.smtp?.port              === "number"  ? json.email.smtp.port              : base.email.smtp.port,
+                    secure:            typeof json.email?.smtp?.secure            === "boolean" ? json.email.smtp.secure            : base.email.smtp.secure,
+                    username:          typeof json.email?.smtp?.username          === "string"  ? json.email.smtp.username          : base.email.smtp.username,
+                    passwordSecretRef: typeof json.email?.smtp?.passwordSecretRef === "string"  ? json.email.smtp.passwordSecretRef : base.email.smtp.passwordSecretRef,
+                },
+            },
         });
     }
 
@@ -50,7 +64,7 @@ export class SystemStore {
         return merged;
     }
 
-    private async _readJson(): Promise<{ initializationStep?: any; site?: any; editor?: any; security?: any }> {
+    private async _readJson(): Promise<{ initializationStep?: any; site?: any; editor?: any; security?: any; email?: any }> {
         const file = join(this.siteDir, SYSTEM_FILE);
         if (!existsSync(file)) return {};
         try { return JSON.parse(await readFile(file, "utf-8")); }
@@ -66,7 +80,7 @@ export class SystemStore {
     private async _writeJson(system: TSystem): Promise<void> {
         await mkdir(this.siteDir, { recursive: true });
         const { theme: _, ...site } = system.site;
-        const body = JSON.stringify({ site, editor: system.editor, security: system.security }, null, 4) + "\n";
+        const body = JSON.stringify({ site, editor: system.editor, security: system.security, email: system.email }, null, 4) + "\n";
         await writeFile(join(this.siteDir, SYSTEM_FILE), body, "utf-8");
     }
 

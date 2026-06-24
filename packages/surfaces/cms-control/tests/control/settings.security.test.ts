@@ -56,3 +56,50 @@ describe("parseSettingsUpdateDto — security section (parsing)", () => {
         expect(dto.editor).toEqual({ layoutCategory: "Layouts" });
     });
 });
+
+describe("parseSettingsUpdateDto — email section", () => {
+    test("parses runtime SMTP settings from dotted form fields", () => {
+        const dto = parseSettingsUpdateDto({
+            "email.enabled":                "true",
+            "email.fromEmail":              "no-reply@example.com",
+            "email.fromName":               "CMS",
+            "email.replyTo":                "support@example.com",
+            "email.transport":              "smtp",
+            "email.smtp.host":              "smtp.example.com",
+            "email.smtp.port":              "465",
+            "email.smtp.secure":            "true",
+            "email.smtp.username":          "postmaster@example.com",
+            "email.smtp.passwordSecretRef": "${SMTP_PASSWORD}",
+        });
+
+        expect(dto.email).toEqual({
+            enabled:   true,
+            fromEmail: "no-reply@example.com",
+            fromName:  "CMS",
+            replyTo:   "support@example.com",
+            transport: "smtp",
+            smtp:      {
+                host:              "smtp.example.com",
+                port:              465,
+                secure:            true,
+                username:          "postmaster@example.com",
+                passwordSecretRef: "${SMTP_PASSWORD}",
+            },
+        });
+    });
+
+    test("parses checkbox false values", () => {
+        const dto = parseSettingsUpdateDto({
+            "email.enabled":     "false",
+            "email.smtp.secure": "false",
+        });
+
+        expect(dto.email?.enabled).toBe(false);
+        expect(dto.email?.smtp.secure).toBe(false);
+    });
+
+    test("rejects invalid boolean and port values", () => {
+        expect(() => parseSettingsUpdateDto({ "email.enabled": "maybe" })).toThrow(InvalidParam);
+        expect(() => parseSettingsUpdateDto({ "email.smtp.port": "abc" })).toThrow(InvalidParam);
+    });
+});

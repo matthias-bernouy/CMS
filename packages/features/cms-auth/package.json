@@ -15,7 +15,8 @@
         "jose": "^6.2.1",
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/rate-limiter": "workspace:*",
-        "@bernouy/cms-secrets": "workspace:*"
+        "@bernouy/cms-secrets": "workspace:*",
+        "nodemailer": "^7.0.11"
     },
     "peerDependencies": {
         "mongodb": "^7.2.0",

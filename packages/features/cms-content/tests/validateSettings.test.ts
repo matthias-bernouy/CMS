@@ -31,3 +31,94 @@ describe("validateSettingsPatch — CSP origins", () => {
         expect(validateSettingsPatch(patch)).toEqual(patch);
     });
 });
+
+describe("validateSettingsPatch — email settings", () => {
+    test("passes through disabled email settings without requiring SMTP credentials", () => {
+        const out = validateSettingsPatch({
+            email: {
+                enabled:   false,
+                fromEmail: "",
+                fromName:  "",
+                replyTo:   "",
+                transport: "smtp",
+                smtp:      {
+                    host:              "",
+                    port:              587,
+                    secure:            false,
+                    username:          "",
+                    passwordSecretRef: "",
+                },
+            },
+        });
+
+        expect(out.email?.enabled).toBe(false);
+    });
+
+    test("accepts partial disabled email patches", () => {
+        const out = validateSettingsPatch({ email: { enabled: false } as any });
+
+        expect(out.email?.enabled).toBe(false);
+        expect(out.email?.smtp.port).toBe(587);
+    });
+
+    test("accepts enabled email settings with a complete SMTP configuration", () => {
+        const out = validateSettingsPatch({
+            email: {
+                enabled:   true,
+                fromEmail: "no-reply@example.com",
+                fromName:  "CMS",
+                replyTo:   "",
+                transport: "smtp",
+                smtp:      {
+                    host:              "smtp.example.com",
+                    port:              587,
+                    secure:            false,
+                    username:          "postmaster@example.com",
+                    passwordSecretRef: "${SMTP_PASSWORD}",
+                },
+            },
+        });
+
+        expect(out.email?.smtp.host).toBe("smtp.example.com");
+        expect(out.email?.smtp.port).toBe(587);
+        expect(out.email?.smtp.secure).toBe(false);
+    });
+
+    test("rejects enabled email settings without a valid sender", () => {
+        expect(() => validateSettingsPatch({
+            email: {
+                enabled:   true,
+                fromEmail: "invalid",
+                fromName:  "CMS",
+                replyTo:   "",
+                transport: "smtp",
+                smtp:      {
+                    host:              "smtp.example.com",
+                    port:              587,
+                    secure:            false,
+                    username:          "user",
+                    passwordSecretRef: "${SMTP_PASSWORD}",
+                },
+            },
+        })).toThrow(ContentValidationError);
+    });
+
+    test("rejects enabled email settings without a secret reference", () => {
+        expect(() => validateSettingsPatch({
+            email: {
+                enabled:   true,
+                fromEmail: "no-reply@example.com",
+                fromName:  "CMS",
+                replyTo:   "",
+                transport: "smtp",
+                smtp:      {
+                    host:              "smtp.example.com",
+                    port:              587,
+                    secure:            false,
+                    username:          "user",
+                    passwordSecretRef: "SMTP_PASSWORD",
+                },
+            },
+        })).toThrow(ContentValidationError);
+    });
+});

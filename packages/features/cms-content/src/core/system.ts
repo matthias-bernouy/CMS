@@ -15,6 +15,20 @@ export function defaultSystem(): TSystem {
         },
         editor:   { layoutCategory: "" },
         security: { connectExtras: [], mediaExtras: [] },
+        email:    {
+            enabled:   false,
+            fromEmail: "",
+            fromName:  "",
+            replyTo:   "",
+            transport: "smtp",
+            smtp:      {
+                host:              "",
+                port:              587,
+                secure:            false,
+                username:          "",
+                passwordSecretRef: "",
+            },
+        },
     };
 }
 
@@ -23,6 +37,17 @@ export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): T
     for (const [section, value] of Object.entries(update) as [keyof TSystem, unknown][]) {
         if (section === "initializationStep") {
             merged.initializationStep = value as number;
+        } else if (section === "email" && typeof value === "object" && value !== null) {
+            const email = value as Partial<TSystem["email"]>;
+            const currentEmail = current.email ?? defaultSystem().email;
+            merged.email = {
+                ...currentEmail,
+                ...email,
+                smtp: {
+                    ...currentEmail.smtp,
+                    ...(email.smtp ?? {}),
+                },
+            };
         } else if (typeof value === "object" && value !== null) {
             (merged as any)[section] = {
                 ...(current as any)[section],

@@ -259,7 +259,7 @@ export class MongoCmsRepository implements CmsRepository {
         const doc = await this.system.findOne({ _id: SYSTEM_ID });
         if (doc) {
             const { _id, ...rest } = doc;
-            return rest;
+            return mergeSystemUpdate(defaultSystem(), rest);
         }
         // Lazy creation on first access — keeps the contract synchronous-feeling
         // for callers and avoids requiring a separate `seed()` step.
