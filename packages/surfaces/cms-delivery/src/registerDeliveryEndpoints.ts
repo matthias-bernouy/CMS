@@ -7,7 +7,7 @@ import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
 import { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "@bernouy/cms-gateway";
-import { PUBLIC_AUTH_ROUTES, registerPublicAuthRoutes } from "@bernouy/cms-auth";
+import { PUBLIC_AUTH_ROUTES, executeAuthSystemGatewayEndpoint, registerPublicAuthRoutes } from "@bernouy/cms-auth";
 import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE, filesPrefix, imageVariantPrefix, serveFilesRequest, serveVariantRequest } from "@bernouy/cms-files";
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
@@ -73,8 +73,14 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
 
     runner.group(CMS_GATEWAY_ROUTE, (proxyRunner) => {
         const prefix = gatewayPrefix(runner.basePath);
-        const deps = delivery.gatewayResolveSecret
-            ? { resolveSecret: delivery.gatewayResolveSecret }
+        const deps = delivery.gatewayResolveSecret || delivery.auth
+            ? {
+                ...(delivery.gatewayResolveSecret ? { resolveSecret: delivery.gatewayResolveSecret } : {}),
+                ...(delivery.auth ? {
+                    executeSystemEndpoint: (endpoint: { urn: string; targetUrl: string }, req: Request) =>
+                        executeAuthSystemGatewayEndpoint(delivery.auth!, endpoint, req),
+                } : {}),
+            }
             : undefined;
         for (const method of GATEWAY_PROXY_METHODS) {
             proxyRunner.setDefaultEndpoint(method, (req) =>

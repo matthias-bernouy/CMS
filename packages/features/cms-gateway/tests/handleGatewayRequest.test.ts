@@ -1,6 +1,8 @@
 import { describe, test, expect, mock } from "bun:test";
 import { handleGatewayRequest } from "cms-gateway/http/handleGatewayRequest";
 import { InMemoryGatewayRepository } from "cms-gateway/default-implementation/InMemoryGatewayRepository";
+import { CompositeGatewayRepository } from "cms-gateway/core/CompositeGatewayRepository";
+import { SYSTEM_AUTH_PROVIDER } from "cms-gateway/core/systemProviders";
 import type { Provider } from "cms-gateway/interfaces/Gateway";
 
 const PREFIX = "/base/.cms/gateway/";
@@ -52,5 +54,29 @@ describe("handleGatewayRequest", () => {
         expect(fetchImpl.mock.calls[0]![0]).toBe("https://api.shop.com/cart");
         expect(res.status).toBe(200);
         expect(await res.text()).toBe("ok");
+    });
+
+    test("system endpoints require a system executor", async () => {
+        const repo = new CompositeGatewayRepository(new InMemoryGatewayRepository(), [SYSTEM_AUTH_PROVIDER]);
+        const res = await handleGatewayRequest(repo, new Request("http://local" + PREFIX + "system-auth/me"), { prefix: PREFIX });
+        expect(res.status).toBe(501);
+        expect(await res.text()).toBe("system gateway executor not configured");
+    });
+
+    test("system endpoints delegate without proxying upstream", async () => {
+        const repo = new CompositeGatewayRepository(new InMemoryGatewayRepository(), [SYSTEM_AUTH_PROVIDER]);
+        const executeSystemEndpoint = mock(async (_endpoint, req: Request) =>
+            new Response(req.headers.get("cookie") ?? "missing"));
+        const fetchImpl = okFetch();
+
+        const res = await handleGatewayRequest(
+            repo,
+            new Request("http://local" + PREFIX + "system-auth/me", { headers: { cookie: "site-session=abc" } }),
+            { prefix: PREFIX, deps: { executeSystemEndpoint, fetchImpl } },
+        );
+
+        expect(executeSystemEndpoint).toHaveBeenCalledTimes(1);
+        expect(fetchImpl).not.toHaveBeenCalled();
+        expect(await res.text()).toBe("site-session=abc");
     });
 });

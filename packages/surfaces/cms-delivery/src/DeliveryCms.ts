@@ -46,9 +46,9 @@ export type DeliveryCmsConfig = {
     gatewayResolveSecret?: GatewaySecretResolver;
     /**
      * Optional first-party public auth API. When set, Delivery mounts
-     * `<basePath>/.cms/auth/*` for same-origin site signup/login/reset flows.
-     * Auth stays separate from the data gateway: this is CMS identity, not an
-     * author-configurable provider.
+     * `<basePath>/.cms/auth/*` for direct same-origin signup/login/reset flows
+     * and lets the readonly `system-auth` Gateway provider execute the same
+     * actions when a gateway repository is configured.
      */
     auth?: PublicAuthRoutesConfig<string>;
     /**

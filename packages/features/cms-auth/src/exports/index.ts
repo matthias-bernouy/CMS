@@ -86,3 +86,4 @@ export {
     registerPublicAuthRoutes,
     type PublicAuthRoutesConfig,
 } from "cms-auth/http/publicAuthHandlers";
+export { executeAuthSystemGatewayEndpoint } from "cms-auth/http/systemAuthGateway";

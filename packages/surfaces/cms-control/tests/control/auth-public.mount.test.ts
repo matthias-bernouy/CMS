@@ -11,17 +11,20 @@ import {
     SubjectResolver,
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
+import { CompositeGatewayRepository, InMemoryGatewayRepository, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { ControlCms } from "cms-control/ControlCms";
 import type { CMS_ROLES } from "types/roles";
 
 class CaptureRunner implements Runner {
     readonly endpoints = new Map<string, number>();
+    readonly handlers = new Map<string, RouteHandler>();
 
     constructor(readonly basePath: string = "/", private readonly root: CaptureRunner | null = null) {}
 
     addEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", path: string, _handler: RouteHandler, middlewares: Middleware[] = []): void {
         this.target.endpoints.set(`${method} ${joinPath(this.basePath, path)}`, middlewares.length);
+        this.target.handlers.set(`${method} ${joinPath(this.basePath, path)}`, _handler);
     }
     use() {}
     get(path: string, handler: RouteHandler, middlewares?: Middleware[]) { this.addEndpoint("GET", path, handler, middlewares); }
@@ -40,6 +43,7 @@ class CaptureRunner implements Runner {
 
     setDefaultEndpoint(method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS", _handler: RouteHandler, middlewares: Middleware[] = []): void {
         this.target.endpoints.set(`${method} ${this.basePath}`, middlewares.length);
+        this.target.handlers.set(`${method} ${this.basePath}`, _handler);
     }
 
     private get target(): CaptureRunner {
@@ -92,6 +96,44 @@ describe("Control public auth mount", () => {
 
         expect(runner.endpoints.get("POST /.cms/auth/login")).toBe(0);
         expect(runner.endpoints.has("POST /.cms/auth/signup")).toBe(false);
+    });
+
+    test("keeps system-auth signup disabled through the guarded Control gateway", async () => {
+        const runner = new CaptureRunner();
+        const repository = new InMemoryCmsRepository();
+        const { local, credentials, users, publicAuth } = authSystem();
+        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+        const cms = new ControlCms(
+            runner,
+            repository,
+            local,
+            { publicAuth },
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            users,
+            undefined,
+            undefined,
+            credentials,
+            gateway,
+            undefined,
+            new InMemoryRolesRepository(),
+            { local },
+        );
+        await cms.ready;
+
+        const gatewayPost = runner.handlers.get("POST /.cms/gateway");
+        expect(gatewayPost).toBeDefined();
+
+        const res = await gatewayPost!(new Request("http://control/.cms/gateway/system-auth/signup", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ email: "ada@example.com", password: "password-1" }),
+        }));
+
+        expect(res.status).toBe(404);
+        expect(await credentials.getByEmail("ada@example.com")).toBeNull();
     });
 });
 

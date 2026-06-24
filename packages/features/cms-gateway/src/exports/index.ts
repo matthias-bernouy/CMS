@@ -61,7 +61,14 @@ export {
     type GatewayComputedContext,
 } from "../core/buildUpstreamUrl";
 export { executeEndpoint, type ExecutorDeps, type GatewaySecretResolver } from "../core/executeEndpoint";
-export { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "../http/handleGatewayRequest";
+export {
+    CMS_GATEWAY_ROUTE,
+    GATEWAY_PROXY_METHODS,
+    gatewayPrefix,
+    handleGatewayRequest,
+    type GatewayHandlerDeps,
+    type GatewaySystemExecutor,
+} from "../http/handleGatewayRequest";
 
 // ── OpenAPI spec machinery (provider endpoint schemas) ────────────────
 export { parseSpec }      from "../core/openapi/parseSpec";

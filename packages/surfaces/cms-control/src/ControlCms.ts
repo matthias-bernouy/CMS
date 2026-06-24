@@ -20,6 +20,7 @@ import {
     oidcCallbackHandler,
     oidcLoginHandler,
     PUBLIC_AUTH_ROUTES,
+    executeAuthSystemGatewayEndpoint,
     registerPublicAuthRoutes,
 } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
@@ -150,12 +151,13 @@ export class ControlCms {
         // guarded groups so it is reachable without a session (first-match-wins).
         runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, this.basePath));
 
-        if (this.configuration.publicAuth) {
+        const controlPublicAuth = this.configuration.publicAuth
+            ? { ...this.configuration.publicAuth, allowSignup: false }
+            : undefined;
+
+        if (controlPublicAuth) {
             runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
-                registerPublicAuthRoutes(authRunner, {
-                    ...this.configuration.publicAuth!,
-                    allowSignup: false,
-                });
+                registerPublicAuthRoutes(authRunner, controlPublicAuth);
             });
         }
 
@@ -195,13 +197,17 @@ export class ControlCms {
             const subject = await this._auth.getSubject(req).catch(() => null);
             return subject ? { userID: subject.identifier } : {};
         };
+        const executeSystemEndpoint = controlPublicAuth
+            ? (endpoint: { urn: string; targetUrl: string }, req: Request) =>
+                executeAuthSystemGatewayEndpoint(controlPublicAuth, endpoint, req)
+            : undefined;
         runner.group(CMS_GATEWAY_ROUTE, (proxyRunner) => {
             const prefix = gatewayPrefix(runner.basePath);
             for (const method of GATEWAY_PROXY_METHODS) {
                 proxyRunner.setDefaultEndpoint(method, (req) =>
                     handleGatewayRequest(this._gateway, req, {
                         prefix,
-                        deps: { resolveSecret, resolveContext },
+                        deps: { resolveSecret, resolveContext, executeSystemEndpoint },
                     }));
             }
         }, [authGuard]);
