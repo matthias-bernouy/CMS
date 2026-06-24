@@ -41,7 +41,6 @@ import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path"
 import type { CspExtras } from "@bernouy/http-runner";
 import { renderForbiddenPage, renderLoginPage } from "cms-control/core/auth/authPages";
-import { seedFoundationBlocs } from "cms-control/core/editorSystemV2/seedFoundationBlocs";
 
 type Configuration = {
     /**
@@ -135,10 +134,7 @@ export class ControlCms {
         this._gateway = gateway ?? null;
         this._analytics = analytics ?? null;
         this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
-        this.ready = seedFoundationBlocs(this._repository, this._cache).then(() => undefined).catch((error) => {
-            console.error("[cms-control] failed to seed foundation blocs", error);
-            throw error;
-        });
+        this.ready = Promise.resolve();
 
         const authGuard = createAuthGuard<CMS_ROLES>({
             basePath:     this.basePath,
