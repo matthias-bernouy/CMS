@@ -31,6 +31,7 @@ import {
     SubjectResolver,
     LocalAuthentication,
     AuthValidationError,
+    ConsoleEmailer,
     createLocalUser,
 } from "@bernouy/cms-auth";
 import {
@@ -38,6 +39,7 @@ import {
     MongoIdentityProviderRepository,
     MongoLocalCredentialStore,
     MongoPatRepository,
+    MongoAuthTokenStore,
 } from "@bernouy/cms-auth/mongo";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
 
@@ -58,6 +60,16 @@ const CMS_ADMIN_EMAIL     = env("CMS_ADMIN_EMAIL");
 const CMS_ADMIN_PASSWORD  = env("CMS_ADMIN_PASSWORD");
 const CMS_FILES_DIR       = env("CMS_FILES_DIR");
 const MONGO_URL           = env("MONGO_URL");
+const CMS_AUTH_SITE_NAME  = process.env.CMS_AUTH_SITE_NAME ?? "CMS";
+const CMS_AUTH_EMAIL_COOLDOWN_SECONDS = Number(process.env.CMS_AUTH_EMAIL_COOLDOWN_SECONDS ?? 300);
+const CMS_AUTH_EMAIL_VERIFICATION_URL = process.env.CMS_AUTH_EMAIL_VERIFICATION_URL
+    ?? `${DELIVERY_PUBLIC_URL}/auth/verify-email`;
+const CMS_AUTH_PASSWORD_RESET_URL = process.env.CMS_AUTH_PASSWORD_RESET_URL
+    ?? `${DELIVERY_PUBLIC_URL}/auth/reset-password`;
+const CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL = process.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL
+    ?? `${CONTROL_PUBLIC_URL}/auth/verify-email`;
+const CMS_CONTROL_AUTH_PASSWORD_RESET_URL = process.env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL
+    ?? `${CONTROL_PUBLIC_URL}/auth/reset-password`;
 // Optional: shared secret salting the cookieless visitor id. Set it (and keep it
 // identical) across instances for consistent unique-visitor counts; unset → an
 // ephemeral per-boot salt (a mid-day restart recounts that day's visitors).
@@ -94,6 +106,7 @@ const users             = new MongoUsersRepository<CMS_ROLES>(db, fieldCrypto);
 const identityProviders = new MongoIdentityProviderRepository(db);
 const credentials       = new MongoLocalCredentialStore(db, fieldCrypto);            await credentials.init();
 const pats              = new MongoPatRepository(db);                              await pats.init();
+const authTokens        = new MongoAuthTokenStore(db);                             await authTokens.init();
 const mongoGateway      = new MongoGatewayRepository(db);                          await mongoGateway.init();
 const gateway           = new ValidatingGatewayRepository(mongoGateway);
 const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
@@ -139,6 +152,7 @@ if (!existingAdmin) {
 const codec        = new SignedCookieCodec(new TextEncoder().encode(CMS_SESSION_SECRET));
 const resolver     = new SubjectResolver<CMS_ROLES>(users, "user");
 const cookieSecure = CONTROL_PUBLIC_URL.startsWith("https");
+const authEmailer  = new ConsoleEmailer();
 
 // Control admin on its own runner/port — root-mounted (no `/cms` prefix;
 // the port already isolates the admin surface from Delivery).
@@ -153,14 +167,41 @@ const auth = new LocalAuthentication<CMS_ROLES>({
     cookieSecure,
     defaultHome:   "/admin/pages",
 });
-const controlCms = new ControlCms(controlRunner, repo, auth, {}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, gateway, analytics, roles, { local: auth });
+const publicAuthBase = {
+    local:                    auth,
+    credentials,
+    users,
+    tokens:                   authTokens,
+    emailer:                  authEmailer,
+    defaultRole:              "user" as CMS_ROLES,
+    siteName:                 CMS_AUTH_SITE_NAME,
+    authEmailCooldownSeconds: CMS_AUTH_EMAIL_COOLDOWN_SECONDS,
+};
+const controlCms = new ControlCms(controlRunner, repo, auth, {
+    deliveryUrl: DELIVERY_PUBLIC_URL,
+    publicAuth: {
+        ...publicAuthBase,
+        emailVerificationUrl: CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
+        passwordResetUrl:     CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
+        allowSignup:          false,
+    },
+}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, gateway, analytics, roles, { local: auth });
 await controlCms.ready;
 
 // Delivery on its own runner/port — strictly public surface. Shares the SAME
 // gateway instance as Control, so providers created in the admin are immediately
 // resolvable by the `/.cms/gateway/*` proxy.
 const deliveryRunner = new BunRunner();
-new DeliveryCms({ runner: deliveryRunner, repository: repo, cache, gateway, analytics, analyticsSalt: ANALYTICS_SALT_SECRET, filesMetadata, filesBlob, variantStore });
+new DeliveryCms({
+    runner: deliveryRunner, repository: repo, cache, gateway, analytics,
+    analyticsSalt: ANALYTICS_SALT_SECRET,
+    filesMetadata, filesBlob, variantStore,
+    auth: {
+        ...publicAuthBase,
+        emailVerificationUrl: CMS_AUTH_EMAIL_VERIFICATION_URL,
+        passwordResetUrl:     CMS_AUTH_PASSWORD_RESET_URL,
+    },
+});
 
 controlRunner.start(CONTROL_PORT);
 deliveryRunner.start(DELIVERY_PORT);

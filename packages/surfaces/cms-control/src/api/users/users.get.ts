@@ -10,5 +10,12 @@ export default async function listUsers(req: Request, cms: ControlCms) {
     if (role) opts.role = role;
 
     const page = await cms.users.list(opts);
-    return Response.json(page.users);
+    const users = await Promise.all(page.users.map(async (user) => {
+        if (user.provider !== "local" || !user.email) {
+            return { ...user, emailVerifiedAt: null };
+        }
+        const credential = await cms.credentials.getByEmail(user.email);
+        return { ...user, emailVerifiedAt: credential?.emailVerifiedAt ?? null };
+    }));
+    return Response.json(users);
 }

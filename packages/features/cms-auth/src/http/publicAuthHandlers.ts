@@ -25,21 +25,24 @@ export const PUBLIC_AUTH_ROUTES = {
 export type PublicAuthRoutesConfig<Role extends string = string> =
     PublicAuthFlowConfig<Role> & {
         local: LocalAuthentication<Role>;
+        allowSignup?: boolean;
     };
 
 export function registerPublicAuthRoutes<Role extends string>(
     runner: Runner,
     cfg: PublicAuthRoutesConfig<Role>,
 ): void {
-    runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.signup, async (req) => {
-        const body = await readJsonObject(req);
-        await signupLocalUser(cfg, {
-            email: requiredString(body, "email"),
-            password: requiredString(body, "password"),
-            displayName: optionalString(body, "displayName"),
+    if (cfg.allowSignup !== false) {
+        runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.signup, async (req) => {
+            const body = await readJsonObject(req);
+            await signupLocalUser(cfg, {
+                email: requiredString(body, "email"),
+                password: requiredString(body, "password"),
+                displayName: optionalString(body, "displayName"),
+            });
+            return ok();
         });
-        return ok();
-    });
+    }
 
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.login, (req) => cfg.local.loginJson(req));
     runner.addEndpoint("POST", PUBLIC_AUTH_ROUTES.logout, () => cfg.local.logoutJson());

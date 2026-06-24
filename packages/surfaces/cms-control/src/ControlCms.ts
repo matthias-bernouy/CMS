@@ -1,4 +1,4 @@
-import type { Authentication, LocalAuthentication, OidcAuthentication } from "@bernouy/cms-auth";
+import type { Authentication, LocalAuthentication, OidcAuthentication, PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { Runner } from "@bernouy/http-runner";
 import { cachedResponseAsync, publicAssetCacheControl, redirect } from "@bernouy/http-runner";
 import type { CmsRepository } from "@bernouy/cms-content";
@@ -19,6 +19,8 @@ import {
     localLogoutHandler,
     oidcCallbackHandler,
     oidcLoginHandler,
+    PUBLIC_AUTH_ROUTES,
+    registerPublicAuthRoutes,
 } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import { InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
@@ -49,6 +51,12 @@ type Configuration = {
      * undefined when admin-only previews are not needed.
      */
     deliveryUrl?: string;
+    /**
+     * Optional unguarded first-party auth API used by admin login/reset/email
+     * verification pages. Control disables public signup when mounting it; user
+     * creation stays an admin API concern on this surface.
+     */
+    publicAuth?: PublicAuthRoutesConfig<CMS_ROLES>;
 }
 
 type ControlAuthBackends = {
@@ -141,6 +149,15 @@ export class ControlCms {
         // unauthenticated users here via `buildLoginUrl`; registered before the
         // guarded groups so it is reachable without a session (first-match-wins).
         runner.addEndpoint("GET", "/login", (req) => renderLoginPage(req, this.basePath));
+
+        if (this.configuration.publicAuth) {
+            runner.group(PUBLIC_AUTH_ROUTES.base, (authRunner) => {
+                registerPublicAuthRoutes(authRunner, {
+                    ...this.configuration.publicAuth!,
+                    allowSignup: false,
+                });
+            });
+        }
 
         runner.group(AUTH_ROUTES.base, (authRunner) => {
             const supportedKinds: ("local" | "oidc")[] = [];
@@ -289,6 +306,13 @@ export class ControlCms {
     get credentials(): LocalCredentialStore {
         if (!this._credentials) throw new Error("local credential store not configured");
         return this._credentials;
+    }
+
+    /** Public auth flow configuration (tokens + email transport/templates +
+     *  frontend action URLs). Throws until wired by the composition root. */
+    get publicAuth(): PublicAuthRoutesConfig<CMS_ROLES> {
+        if (!this.configuration.publicAuth) throw new Error("public auth not configured");
+        return this.configuration.publicAuth;
     }
 
     /** Gateway provider store (data-gateway). Backs the admin provider CRUD;
