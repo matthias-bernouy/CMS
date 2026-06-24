@@ -1,5 +1,5 @@
+import type { EndpointPickerSetting } from "./endpointPicker";
 import type { PageLinkSetting } from "./pageLink";
-import type { SchemaPickerSetting } from "./schemaPicker";
 import type { SegmentedSetting } from "./segmented";
 import type { SelectSetting } from "./select";
 import type { TextareaSetting } from "./textarea";
@@ -12,8 +12,12 @@ export type {
     SettingType,
 } from "./base";
 
+export type {
+    EndpointPickerMethod,
+    EndpointPickerSetting,
+} from "./endpointPicker";
+export { ENDPOINT_PICKER_METHODS, isEndpointPickerMethod } from "./endpointPicker";
 export type { PageLinkSetting } from "./pageLink";
-export type { SchemaPickerMethod, SchemaPickerSetting } from "./schemaPicker";
 export type { SegmentedSetting } from "./segmented";
 export type { SelectSetting } from "./select";
 export type { TextareaSetting } from "./textarea";
@@ -27,4 +31,4 @@ export type Setting =
     | ToggleSetting
     | SegmentedSetting
     | PageLinkSetting
-    | SchemaPickerSetting;
+    | EndpointPickerSetting;

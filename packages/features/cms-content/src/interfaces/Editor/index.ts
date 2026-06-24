@@ -48,9 +48,9 @@ export type {
     DataScope,
 } from "./DataScopes";
 export type {
+    EndpointPickerMethod,
+    EndpointPickerSetting,
     PageLinkSetting,
-    SchemaPickerMethod,
-    SchemaPickerSetting,
     SegmentedSetting,
     SelectSetting,
     Setting,
@@ -60,6 +60,10 @@ export type {
     TextareaSetting,
     TextSetting,
     ToggleSetting,
+} from "./SettingInputs";
+export {
+    ENDPOINT_PICKER_METHODS,
+    isEndpointPickerMethod,
 } from "./SettingInputs";
 export type {
     EditorCatalog,

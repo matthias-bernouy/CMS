@@ -1,13 +1,6 @@
-import type { DataField } from "@bernouy/cms-content/editor";
+import type { DataField, EndpointPickerMethod } from "@bernouy/cms-content/editor";
 
-export type EditorDataSourceMethod =
-    | "GET"
-    | "POST"
-    | "PUT"
-    | "DELETE"
-    | "PATCH"
-    | "HEAD"
-    | "OPTIONS";
+export type EditorDataSourceMethod = EndpointPickerMethod;
 
 export type EditorDataSourceParam = {
     name: string;
@@ -34,6 +27,8 @@ export type EditorDataSource = {
     url: string;
     method?: EditorDataSourceMethod;
     provider?: string;
+    providerUrn?: string;
+    endpointUrn?: string;
     providerLabel?: string;
     description?: string;
     params?: EditorDataSourceParam[];

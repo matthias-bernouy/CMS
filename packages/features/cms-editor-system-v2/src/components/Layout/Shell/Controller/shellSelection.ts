@@ -7,7 +7,9 @@ import {
 
 import type { EditorRuntime } from "../../../../runtime";
 import type { SettingsViewMode } from "../../../Settings/SettingsView/SettingsView";
+import type { SettingsViewAttributeChanges } from "../../../Settings/SettingsView/SettingsView";
 import type { SettingsView } from "../../../Settings/SettingsView/SettingsView";
+import type { EditorDataSource } from "../../../../runtime";
 import type { FrameHighlight } from "./Core/FrameHighlight";
 import type { SelectOptions } from "./shellTypes";
 import {
@@ -30,6 +32,7 @@ import {
 type SelectionContext = {
     runtime(): EditorRuntime | null;
     settings(): SettingsView;
+    dataSources(): EditorDataSource[];
     settingsMode(): SettingsViewMode;
     stateSessions(): WeakMap<Editor, Map<string, EditableStateSession>>;
     highlight(): FrameHighlight;
@@ -78,10 +81,16 @@ export class ShellSelection {
             this.context.settingsMode(),
             selection.states,
             runtime.getSelectedDataScopes(),
+            this.context.dataSources(),
         );
     }
 
-    applySetting(editor: Editor, setting: Setting, value: string | boolean): void {
+    applySetting(editor: Editor, setting: Setting, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
+        if (attributes) {
+            this.applyAttributes(editor, attributes);
+            return;
+        }
+
         if (applyParamSyncSetting(editor, setting, value) || applyPageStateSetting(editor, setting, value)) {
             this.renderSettings();
             this.context.syncViewFrameContent();
@@ -96,6 +105,18 @@ export class ShellSelection {
             editor.target.removeAttribute(attribute);
         } else if (typeof value === "string") {
             editor.target.setAttribute(attribute, value);
+        }
+    }
+
+    private applyAttributes(editor: Editor, attributes: SettingsViewAttributeChanges): void {
+        for (const [attribute, value] of Object.entries(attributes)) {
+            if (value === null || value === "") {
+                editor.target.removeAttribute(attribute);
+            } else if (typeof value === "boolean") {
+                editor.target.toggleAttribute(attribute, value);
+            } else {
+                editor.target.setAttribute(attribute, value);
+            }
         }
     }
 

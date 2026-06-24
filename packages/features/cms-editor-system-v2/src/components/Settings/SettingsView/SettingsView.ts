@@ -6,7 +6,14 @@ import "../../Controls/Fields/Select/Select";
 import "../../Controls/Fields/Toggle/Toggle";
 import "../../Controls/Fields/SegmentedControl/SegmentedControl";
 import "../../Controls/Pickers/PageLink/PageLink";
-import "../../Controls/Pickers/SchemaPicker/SchemaPicker";
+import {
+    CMS_BINDING_ATTRIBUTES,
+    asSource,
+    parseSource,
+    type EndpointPickerMethod,
+    type EndpointPickerSetting,
+    type CmsSourceBinding,
+} from "@bernouy/cms-content/editor";
 import type {
     DataScope,
     EditableState,
@@ -14,6 +21,14 @@ import type {
     SettingSection,
     TextCapability,
 } from "@bernouy/cms-content/editor";
+import {
+    DataSourcePicker,
+    DATA_SOURCE_PICKER_REMOVE_EVENT,
+    DATA_SOURCE_PICKER_SELECT_EVENT,
+    type DataSourcePickerSelectDetail,
+    type DataSourcePickerSourceBinding,
+} from "../../Layout/DataSourcePicker/DataSourcePicker";
+import type { EditorDataSource } from "../../../runtime";
 import templateHtml from "./template.html" with { type: "text" };
 import componentCss from "./style.css" with { type: "text" };
 
@@ -23,7 +38,10 @@ template.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtm
 export type SettingsViewSettingChangeDetail = {
     setting: Setting;
     value: string | boolean;
+    attributes?: SettingsViewAttributeChanges;
 };
+export type SettingsViewAttributeValue = string | boolean | null;
+export type SettingsViewAttributeChanges = Record<string, SettingsViewAttributeValue>;
 
 export type SettingsViewContentChangeDetail = {
     value: string;
@@ -40,6 +58,10 @@ export const SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
 export type SettingsViewMode = "settings" | "overrides";
 
 export class SettingsView extends HTMLElement {
+    private _dataSources: EditorDataSource[] = [];
+    private _endpointPicker: DataSourcePicker | null = null;
+    private _disconnectEndpointPickerEvents: (() => void) | null = null;
+
     constructor() {
         super();
         this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
@@ -52,7 +74,9 @@ export class SettingsView extends HTMLElement {
         mode: SettingsViewMode = "settings",
         states: EditableState[] = [],
         dataScopes: DataScope[] = [],
+        dataSources: EditorDataSource[] = [],
     ): void {
+        this._dataSources = dataSources;
         const view = this.shadowRoot!.querySelector<HTMLElement>(".settings-view")!;
         view.replaceChildren();
 
@@ -200,12 +224,8 @@ export class SettingsView extends HTMLElement {
             return control;
         }
 
-        if (setting.type === "schema-picker") {
-            const control = document.createElement("cms-editor-v2-schema-picker");
-            control.setAttribute("source", setting.label);
-            control.setAttribute("path", setting.defaultValue ?? setting.attribute);
-            this._applyDisabled(control, setting);
-            return control;
+        if (setting.type === "endpoint-picker") {
+            return this._renderEndpointPickerSetting(setting);
         }
 
         const control = this._control("cms-editor-v2-text-input", setting);
@@ -221,6 +241,160 @@ export class SettingsView extends HTMLElement {
         if (setting.placeholder) control.setAttribute("placeholder", setting.placeholder);
         this._applyDisabled(control, setting);
         return control;
+    }
+
+    private _renderEndpointPickerSetting(setting: EndpointPickerSetting): HTMLElement {
+        const wrapper = document.createElement("div");
+        wrapper.className = "field endpoint-field";
+
+        const label = document.createElement("div");
+        label.className = "field-label";
+        label.textContent = setting.label;
+
+        const button = document.createElement("button");
+        button.className = "endpoint-button";
+        button.type = "button";
+        button.disabled = setting.disabled === true;
+        this._syncEndpointButton(button, setting);
+        if (!setting.disabled) {
+            button.addEventListener("click", () => this._openEndpointPicker(setting, button));
+        }
+
+        wrapper.append(label, button);
+        if (setting.help) {
+            const help = document.createElement("div");
+            help.className = "field-help";
+            help.textContent = setting.help;
+            wrapper.append(help);
+        }
+        return wrapper;
+    }
+
+    private _syncEndpointButton(
+        button: HTMLButtonElement,
+        setting: EndpointPickerSetting,
+        selected: EditorDataSource | null = this._selectedEndpoint(setting),
+        fallbackValue = setting.defaultValue,
+    ): void {
+        button.replaceChildren();
+
+        const method = selected?.method ?? setting.defaultMethod;
+        if (method) {
+            const methodBadge = document.createElement("span");
+            methodBadge.className = "endpoint-method";
+            methodBadge.textContent = method;
+            button.append(methodBadge);
+        }
+
+        const value = document.createElement("span");
+        value.className = selected ? "endpoint-value" : "endpoint-placeholder";
+        value.textContent = selected?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
+        button.append(value);
+    }
+
+    private _openEndpointPicker(setting: EndpointPickerSetting, button: HTMLButtonElement): void {
+        const picker = this._ensureEndpointPicker();
+        this._disconnectEndpointPickerEvents?.();
+
+        const onSelect = (event: Event): void => {
+            this._disconnectEndpointPickerEvents?.();
+            const detail = (event as CustomEvent<DataSourcePickerSelectDetail>).detail;
+            const value = this._endpointValue(setting, detail);
+            this._syncEndpointButton(button, setting, detail.source, value);
+            this._emitSettingChange(setting, value, this._endpointAttributes(setting, detail, value));
+        };
+        const onRemove = (): void => {
+            this._disconnectEndpointPickerEvents?.();
+            const attributes: SettingsViewAttributeChanges = { [setting.attribute]: null };
+            if (setting.methodAttribute) attributes[setting.methodAttribute] = null;
+            this._syncEndpointButton(button, setting, null, "");
+            this._emitSettingChange(setting, "", attributes);
+        };
+        const cleanup = (): void => {
+            picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
+            picker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
+            if (this._disconnectEndpointPickerEvents === cleanup) this._disconnectEndpointPickerEvents = null;
+        };
+        this._disconnectEndpointPickerEvents = cleanup;
+
+        picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
+        picker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
+        picker.open(this._endpointOptions(setting), setting.label, {
+            canRemove:      setting.required !== true && Boolean(setting.defaultValue),
+            initialBinding: this._initialEndpointBinding(setting),
+        });
+    }
+
+    private _ensureEndpointPicker(): DataSourcePicker {
+        if (this._endpointPicker) return this._endpointPicker;
+        const picker = new DataSourcePicker();
+        this.shadowRoot!.append(picker);
+        this._endpointPicker = picker;
+        return picker;
+    }
+
+    private _endpointOptions(setting: EndpointPickerSetting): EditorDataSource[] {
+        const methods = new Set(setting.methods ?? []);
+        return this._dataSources.filter((source) => {
+            const method = this._endpointMethod(source);
+            if (methods.size > 0 && !methods.has(method)) return false;
+            return true;
+        });
+    }
+
+    private _selectedEndpoint(setting: EndpointPickerSetting): EditorDataSource | null {
+        const value = setting.defaultValue;
+        if (!value) return null;
+        const binding = this._initialEndpointBinding(setting);
+        return this._endpointOptions(setting).find(source => {
+            if (this._usesSourceBinding(setting) && binding) {
+                return binding.url === source.url
+                    || binding.url.startsWith(`${source.url}?`)
+                    || (source.url.includes("?") && binding.url.startsWith(`${source.url}&`));
+            }
+            return source.url === value;
+        }) ?? null;
+    }
+
+    private _initialEndpointBinding(setting: EndpointPickerSetting): DataSourcePickerSourceBinding | null {
+        const value = setting.defaultValue;
+        if (!value) return null;
+
+        if (this._usesSourceBinding(setting)) {
+            const source = parseSource(value);
+            return source ? {
+                url: source.url,
+                ...(source.alias ? { alias: source.alias } : {}),
+            } : null;
+        }
+
+        return { url: value };
+    }
+
+    private _endpointValue(setting: EndpointPickerSetting, detail: DataSourcePickerSelectDetail): string {
+        if (this._usesSourceBinding(setting)) {
+            return asSource(detail.binding as CmsSourceBinding);
+        }
+
+        return detail.source.url;
+    }
+
+    private _endpointAttributes(
+        setting: EndpointPickerSetting,
+        detail: DataSourcePickerSelectDetail,
+        value: string,
+    ): SettingsViewAttributeChanges {
+        const attributes: SettingsViewAttributeChanges = { [setting.attribute]: value };
+        if (setting.methodAttribute) attributes[setting.methodAttribute] = this._endpointMethod(detail.source);
+        return attributes;
+    }
+
+    private _endpointMethod(source: EditorDataSource): EndpointPickerMethod {
+        return source.method ?? "GET";
+    }
+
+    private _usesSourceBinding(setting: EndpointPickerSetting): boolean {
+        return setting.attribute === CMS_BINDING_ATTRIBUTES.source;
     }
 
     private _renderTextCapability(capability: TextCapability, value: string, dataScopes: DataScope[]): HTMLElement {
@@ -348,11 +522,11 @@ export class SettingsView extends HTMLElement {
         customElements.whenDefined(control.localName).then(callback);
     }
 
-    private _emitSettingChange(setting: Setting, value: string | boolean): void {
+    private _emitSettingChange(setting: Setting, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
         this.dispatchEvent(new CustomEvent<SettingsViewSettingChangeDetail>(SETTINGS_VIEW_SETTING_CHANGE_EVENT, {
             bubbles: true,
             composed: true,
-            detail: { setting, value },
+            detail: attributes ? { setting, value, attributes } : { setting, value },
         }));
     }
 

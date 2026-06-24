@@ -37,6 +37,7 @@ export function createShellControllerServices(
     const selection = new ShellSelection({
         runtime:              () => state.runtime,
         settings:             () => refs.settings,
+        dataSources:          () => state.dataSources,
         settingsMode:         () => state.settingsMode,
         stateSessions:        () => stateSessions,
         highlight:            () => highlight,

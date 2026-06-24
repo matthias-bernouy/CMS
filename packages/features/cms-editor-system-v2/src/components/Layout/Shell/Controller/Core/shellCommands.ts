@@ -7,6 +7,7 @@ import { dispatchDeleteDocument, dispatchSaveDocument, handleShellFrameReady } f
 import type { ShellRenderSyncCommands } from "./shellRenderSyncCommands";
 import type { ShellControllerHost } from "./Services/shellServiceTypes";
 import type { ShellState } from "./Services/shellState";
+import type { SettingsViewAttributeChanges } from "../../../../Settings/SettingsView/SettingsView";
 
 type CommandsContext = {
     host: ShellControllerHost;
@@ -60,8 +61,8 @@ export class ShellCommands {
         this.context.selection.renderSettings();
     }
 
-    applySetting(editor: Editor, setting: Setting, value: string | boolean): void {
-        this.context.selection.applySetting(editor, setting, value);
+    applySetting(editor: Editor, setting: Setting, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
+        this.context.selection.applySetting(editor, setting, value, attributes);
     }
 
     toggleState(editor: Editor, state: Parameters<ShellSelection["toggleState"]>[1]): void {

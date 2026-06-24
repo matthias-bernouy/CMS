@@ -97,7 +97,7 @@ export class ShellEvents {
     readonly onSettingChange = (event: CustomEvent<SettingsViewSettingChangeDetail>): void => {
         const selection = this.context.state.runtime?.getSelection();
         if (!selection) return;
-        this.context.commands.applySetting(selection.editor, event.detail.setting, event.detail.value);
+        this.context.commands.applySetting(selection.editor, event.detail.setting, event.detail.value, event.detail.attributes);
         this.context.commands.syncViewFrameContent();
         this.context.highlight.show(selection.editor);
     };

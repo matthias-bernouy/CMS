@@ -5,7 +5,7 @@ export type SettingType =
     | "toggle"
     | "segmented"
     | "page-link"
-    | "schema-picker";
+    | "endpoint-picker";
 
 export type SettingOption = {
     label: string;

@@ -45,9 +45,15 @@ export function renderSourceButtons(
         button.type = "button";
         button.ariaSelected = String(source === activeSource);
 
+        const header = document.createElement("span");
+        header.className = "source-header";
+        const method = document.createElement("span");
+        method.className = "method";
+        method.textContent = source.method ?? "GET";
         const name = document.createElement("span");
         name.className = "name";
         name.textContent = source.label;
+        header.append(method, name);
         const description = document.createElement("span");
         description.className = "description";
         description.textContent = source.description ?? "No description.";
@@ -55,7 +61,7 @@ export function renderSourceButtons(
         url.className = "url";
         url.textContent = source.url;
 
-        button.append(name, description, url);
+        button.append(header, description, url);
         button.addEventListener("click", () => onSelect(source));
         button.addEventListener("dblclick", () => onConfirm(source));
         container.append(button);

@@ -182,6 +182,23 @@ h2 {
     background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
 }
 
+.source-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+}
+
+.method {
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 24%, var(--editor-v2-border));
+    border-radius: 5px;
+    color: var(--editor-v2-accent);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 3px 5px;
+}
+
 .name {
     overflow: hidden;
     color: var(--editor-v2-text);

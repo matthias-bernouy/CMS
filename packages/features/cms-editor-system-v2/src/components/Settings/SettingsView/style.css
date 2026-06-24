@@ -29,6 +29,60 @@
     font-weight: 760;
 }
 
+.field-help {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.endpoint-button {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 34px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    padding: 7px 9px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.endpoint-button:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
+}
+
+.endpoint-button:disabled {
+    cursor: not-allowed;
+    opacity: .58;
+}
+
+.endpoint-method {
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 24%, var(--editor-v2-border));
+    border-radius: 5px;
+    color: var(--editor-v2-accent);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 3px 5px;
+}
+
+.endpoint-value,
+.endpoint-placeholder {
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.endpoint-placeholder {
+    color: var(--editor-v2-muted);
+}
+
 .state-button {
     display: grid;
     gap: 3px;

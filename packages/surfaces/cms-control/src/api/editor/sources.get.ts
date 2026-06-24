@@ -27,6 +27,8 @@ export type EditorSourceDto = {
     url: string;
     method: HTTPMethod;
     provider?: string;
+    providerUrn?: string;
+    endpointUrn?: string;
     providerLabel?: string;
     description?: string;
     params?: EditorSourceParamDto[];
@@ -40,6 +42,7 @@ export default async function getEditorSources(_req: Request, cms: ControlCms): 
         const sources = providers.flatMap(provider => provider.endpoints
             .map(endpoint => sourceFromEndpoint(cms, endpoint, {
                 provider: parseUrn(provider.urn)?.provider ?? provider.urn,
+                providerUrn: provider.urn,
                 providerLabel: provider.meta?.name,
             })));
 
@@ -56,7 +59,11 @@ export default async function getEditorSources(_req: Request, cms: ControlCms): 
     }
 }
 
-function sourceFromEndpoint(cms: ControlCms, endpoint: Endpoint, provider: { provider: string; providerLabel?: string }): EditorSourceDto {
+function sourceFromEndpoint(
+    cms: ControlCms,
+    endpoint: Endpoint,
+    provider: { provider: string; providerUrn?: string; providerLabel?: string },
+): EditorSourceDto {
     const parsed = parseUrn(endpoint.urn);
     const path = parsed ? `${parsed.provider}/${parsed.endpoint}` : endpoint.urn;
     const body = endpoint.output?.find(response => response.status === "200" && response.body)?.body
@@ -67,6 +74,8 @@ function sourceFromEndpoint(cms: ControlCms, endpoint: Endpoint, provider: { pro
         url:         `${cms.basePath}/.cms/gateway/${path}`,
         method:      endpoint.method,
         provider:    provider.provider,
+        ...(provider.providerUrn ? { providerUrn: provider.providerUrn } : {}),
+        endpointUrn: endpoint.urn,
         providerLabel: provider.providerLabel ?? provider.provider,
         description: endpoint.meta?.description,
         params:      sourceParams(endpoint.input?.params ?? []),

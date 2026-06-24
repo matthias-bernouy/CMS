@@ -44,6 +44,11 @@ export class ShellApi {
         this.context.state.dataSources = sources.map(source => ({
             ...source,
             fields: [...source.fields],
+            ...(source.params ? { params: [...source.params] } : {}),
+            ...(source.body ? { body: {
+                ...source.body,
+                fields: [...source.body.fields],
+            } } : {}),
         }));
         this.context.renderSync.syncStructureTreeDataSources();
     }

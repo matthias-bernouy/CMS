@@ -11,6 +11,8 @@ type EditorSourceTestDto = {
     url: string;
     method: string;
     provider?: string;
+    providerUrn?: string;
+    endpointUrn?: string;
     providerLabel?: string;
     params?: Array<{ name: string; in: string; required?: boolean }>;
     body?: {
@@ -64,6 +66,8 @@ describe("GET /api/editor/sources", () => {
         const searchSource = body[0]!;
         expect(searchSource.label).toBe("Recherche d'adresse");
         expect(searchSource.provider).toBe("ban");
+        expect(searchSource.providerUrn).toBe("urn:ban");
+        expect(searchSource.endpointUrn).toBe("urn:ban:search");
         expect(searchSource.providerLabel).toBe("Base Adresse Nationale");
         expect(searchSource.params?.every(param => param.in === "query" || param.in === "path")).toBe(true);
         expect(searchSource.params?.some(param => param.name === "q" && param.required === true)).toBe(true);
@@ -117,6 +121,8 @@ describe("GET /api/editor/sources", () => {
 
         const login = body.find(source => source.url === "/cms/.cms/gateway/system-auth/login");
         expect(login?.provider).toBe("system-auth");
+        expect(login?.providerUrn).toBe("urn:system-auth");
+        expect(login?.endpointUrn).toBe("urn:system-auth:login");
         expect(login?.providerLabel).toBe("Authentication");
         expect(login?.label).toBe("Log in");
         expect(login?.method).toBe("POST");

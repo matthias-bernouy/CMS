@@ -23,4 +23,9 @@ export {
     CMS_EDITOR_STATES_CHANGE_EVENT,
     CMS_EDITOR_TEXT_CAPABILITY_CHANGE_EVENT,
 } from "./events";
-export type { EditorDataSource, EditorDataSourceBody, EditorDataSourceBodyField } from "./dataSources";
+export type {
+    EditorDataSource,
+    EditorDataSourceBody,
+    EditorDataSourceBodyField,
+    EditorDataSourceMethod,
+} from "./dataSources";
