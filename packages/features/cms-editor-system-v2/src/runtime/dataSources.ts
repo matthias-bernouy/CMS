@@ -17,6 +17,18 @@ export type EditorDataSourceParam = {
     description?: string;
 };
 
+export type EditorDataSourceBodyField = {
+    path: string;
+    type?: string;
+    required?: boolean;
+    children?: EditorDataSourceBodyField[];
+};
+
+export type EditorDataSourceBody = {
+    contentType: "application/json";
+    fields: EditorDataSourceBodyField[];
+};
+
 export type EditorDataSource = {
     label: string;
     url: string;
@@ -25,5 +37,6 @@ export type EditorDataSource = {
     providerLabel?: string;
     description?: string;
     params?: EditorDataSourceParam[];
+    body?: EditorDataSourceBody;
     fields: DataField[];
 };

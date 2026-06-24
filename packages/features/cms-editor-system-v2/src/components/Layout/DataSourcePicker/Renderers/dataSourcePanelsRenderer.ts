@@ -1,7 +1,7 @@
 import type { EditorDataSource } from "../../../../runtime";
 import type { DataSourcePickerSourceBinding } from "../Binding/dataSourceBinding";
 import { renderBindingConfig } from "../Binding/dataSourceBindingRenderer";
-import { renderDataSourceFields } from "./dataSourceFieldRenderer";
+import { renderDataSourceBodyFields, renderDataSourceFields } from "./dataSourceFieldRenderer";
 
 export function renderDetailsPanel(container: HTMLElement, source: EditorDataSource | null): void {
     container.replaceChildren();
@@ -11,10 +11,17 @@ export function renderDetailsPanel(container: HTMLElement, source: EditorDataSou
         return;
     }
 
-    const heading = document.createElement("div");
-    heading.className = "details-eyebrow";
-    heading.textContent = "Response fields";
-    container.append(heading, renderDataSourceFields(source.fields));
+    if (source.body) {
+        const requestHeading = document.createElement("div");
+        requestHeading.className = "details-eyebrow";
+        requestHeading.textContent = "Request body";
+        container.append(requestHeading, renderDataSourceBodyFields(source.body.fields));
+    }
+
+    const responseHeading = document.createElement("div");
+    responseHeading.className = "details-eyebrow";
+    responseHeading.textContent = "Response fields";
+    container.append(responseHeading, renderDataSourceFields(source.fields));
 }
 
 export function renderBindingPanel(

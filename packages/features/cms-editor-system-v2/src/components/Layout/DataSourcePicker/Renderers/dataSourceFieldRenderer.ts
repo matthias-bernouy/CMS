@@ -1,22 +1,38 @@
 import type { DataField } from "@bernouy/cms-content/editor";
+import type { EditorDataSourceBodyField } from "../../../../runtime";
+
+type RenderableField = {
+    path: string;
+    type?: string;
+    required?: boolean;
+    children?: RenderableField[];
+};
 
 export function renderDataSourceFields(fields: DataField[]): HTMLElement {
+    return renderFieldList(fields, "No schema fields declared.");
+}
+
+export function renderDataSourceBodyFields(fields: EditorDataSourceBodyField[]): HTMLElement {
+    return renderFieldList(fields, "No request body declared.");
+}
+
+function renderFieldList(fields: RenderableField[], emptyMessage: string): HTMLElement {
     const list = document.createElement("ul");
     list.className = "fields";
 
-    for (const field of fields) list.append(renderDataSourceField(field, 0));
+    for (const field of fields) list.append(renderField(field, 0));
 
     if (list.children.length === 0) {
         const empty = document.createElement("p");
         empty.className = "details-empty";
-        empty.textContent = "No schema fields declared.";
+        empty.textContent = emptyMessage;
         return empty;
     }
 
     return list;
 }
 
-function renderDataSourceField(field: DataField, depth: number): HTMLElement {
+function renderField(field: RenderableField, depth: number): HTMLElement {
     const item = document.createElement("li");
     item.className = "field";
     item.style.setProperty("--field-depth", String(depth));
@@ -29,10 +45,17 @@ function renderDataSourceField(field: DataField, depth: number): HTMLElement {
     type.textContent = field.type ?? "unknown";
     item.append(path, type);
 
+    if (field.required) {
+        const required = document.createElement("span");
+        required.className = "field-required";
+        required.textContent = "required";
+        item.append(required);
+    }
+
     if (field.children?.length) {
         const children = document.createElement("ul");
         children.className = "field-children";
-        for (const child of field.children) children.append(renderDataSourceField(child, depth + 1));
+        for (const child of field.children) children.append(renderField(child, depth + 1));
         item.append(children);
     }
 

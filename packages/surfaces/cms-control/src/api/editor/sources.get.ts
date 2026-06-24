@@ -10,6 +10,18 @@ export type EditorSourceParamDto = {
     description?: string;
 };
 
+export type EditorSourceBodyFieldDto = {
+    path: string;
+    type: DataFieldType;
+    required?: boolean;
+    children?: EditorSourceBodyFieldDto[];
+};
+
+export type EditorSourceBodyDto = {
+    contentType: "application/json";
+    fields: EditorSourceBodyFieldDto[];
+};
+
 export type EditorSourceDto = {
     label: string;
     url: string;
@@ -18,6 +30,7 @@ export type EditorSourceDto = {
     providerLabel?: string;
     description?: string;
     params?: EditorSourceParamDto[];
+    body?: EditorSourceBodyDto;
     fields: DataField[];
 };
 
@@ -57,6 +70,7 @@ function sourceFromEndpoint(cms: ControlCms, endpoint: Endpoint, provider: { pro
         providerLabel: provider.providerLabel ?? provider.provider,
         description: endpoint.meta?.description,
         params:      sourceParams(endpoint.input?.params ?? []),
+        body:        sourceBody(endpoint.input?.body),
         fields:      body ? fieldsFromShape(body) : [],
     };
 }
@@ -70,6 +84,51 @@ function sourceParams(params: EndpointParam[]): EditorSourceParamDto[] | undefin
         description: param.description,
     }));
     return mapped.length ? mapped : undefined;
+}
+
+function sourceBody(shape: DataShape | undefined): EditorSourceBodyDto | undefined {
+    if (!shape) return undefined;
+    return {
+        contentType: "application/json",
+        fields:      bodyFieldsFromShape(shape),
+    };
+}
+
+function bodyFieldsFromShape(shape: DataShape): EditorSourceBodyFieldDto[] {
+    if (shape.type === "object") {
+        const required = new Set(shape.required ?? []);
+        return Object.entries(shape.properties ?? {})
+            .map(([path, child]) => bodyFieldFromShape(path, child, required.has(path)));
+    }
+
+    if (shape.type === "array" && shape.items) {
+        return [{
+            path: ".",
+            type: "array",
+            children: bodyFieldsFromShape(shape.items),
+        }];
+    }
+
+    return [{ path: ".", type: fieldType(shape) }];
+}
+
+function bodyFieldFromShape(path: string, shape: DataShape, required: boolean): EditorSourceBodyFieldDto {
+    const children = bodyChildren(shape);
+    return {
+        path,
+        type: fieldType(shape),
+        ...(required ? { required: true } : {}),
+        ...(children.length ? { children } : {}),
+    };
+}
+
+function bodyChildren(shape: DataShape): EditorSourceBodyFieldDto[] {
+    if (shape.type === "array" && shape.items) return bodyFieldsFromShape(shape.items);
+    if (shape.type !== "object") return [];
+
+    const required = new Set(shape.required ?? []);
+    return Object.entries(shape.properties ?? {})
+        .map(([path, child]) => bodyFieldFromShape(path, child, required.has(path)));
 }
 
 function fieldsFromShape(shape: DataShape): DataField[] {

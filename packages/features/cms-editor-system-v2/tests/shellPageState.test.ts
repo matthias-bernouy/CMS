@@ -76,6 +76,38 @@ describe("Shell page state bindings", () => {
         expect(row.querySelector<HTMLInputElement>(".param-value")!.value).toBe("delivery.address");
     });
 
+    test("data source picker renders request body schemas for action sources", async () => {
+        installDom();
+        const { DataSourcePicker } = await import("../src/components/Layout/DataSourcePicker/DataSourcePicker");
+        const picker = new DataSourcePicker();
+        document.body.append(picker);
+
+        picker.open([{
+            label: "Log in",
+            url: "/.cms/gateway/system-auth/login",
+            method: "POST",
+            provider: "system-auth",
+            providerLabel: "Authentication",
+            body: {
+                contentType: "application/json",
+                fields: [
+                    { path: "email", type: "string", required: true },
+                    { path: "password", type: "string", required: true },
+                    { path: "returnTo", type: "string" },
+                ],
+            },
+            fields: [{ path: "subject", type: "object" }],
+        }]);
+
+        const details = picker.shadowRoot!.querySelector<HTMLElement>(".details")!;
+        const headings = Array.from(details.querySelectorAll(".details-eyebrow")).map(node => node.textContent);
+        expect(headings).toEqual(["Request body", "Response fields"]);
+        expect(details.textContent).toContain("email");
+        expect(details.textContent).toContain("password");
+        expect(details.querySelectorAll(".field-required")).toHaveLength(2);
+        expect(details.textContent).toContain("subject");
+    });
+
     test("page state settings write and validate cms-page-state", () => {
         installDom();
         const input = document.createElement("input");

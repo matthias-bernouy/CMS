@@ -13,6 +13,10 @@ type EditorSourceTestDto = {
     provider?: string;
     providerLabel?: string;
     params?: Array<{ name: string; in: string; required?: boolean }>;
+    body?: {
+        contentType: "application/json";
+        fields: Array<{ path: string; type: string; required?: boolean }>;
+    };
     fields: DataField[];
 };
 
@@ -115,5 +119,14 @@ describe("GET /api/editor/sources", () => {
         expect(login?.provider).toBe("system-auth");
         expect(login?.providerLabel).toBe("Authentication");
         expect(login?.label).toBe("Log in");
+        expect(login?.method).toBe("POST");
+        expect(login?.body).toEqual({
+            contentType: "application/json",
+            fields: [
+                { path: "email", type: "string", required: true },
+                { path: "password", type: "string", required: true },
+                { path: "returnTo", type: "string" },
+            ],
+        });
     });
 });
