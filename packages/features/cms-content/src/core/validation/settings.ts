@@ -3,6 +3,9 @@ import { ContentValidationError } from "cms-content/core/errors";
 import { defaultSystem } from "cms-content/core/system";
 
 const SECRET_REF_PATTERN = /^\$\{[A-Z][A-Z0-9_]*\}$/;
+type SettingsPatch = Omit<Partial<TSystem>, "email"> & {
+    email?: Partial<TSystem["email"]>;
+};
 
 /**
  * Validate + normalize a CSP origin allow-list: each entry must be a valid
@@ -30,8 +33,8 @@ function validateOrigins(field: string, origins: string[]): string[] {
  * CSP extras). Other sections pass through untouched. Returns a new patch with
  * normalized origins; throws `ContentValidationError`.
  */
-export function validateSettingsPatch(patch: Partial<TSystem>): Partial<TSystem> {
-    const normalized = { ...patch };
+export function validateSettingsPatch(patch: SettingsPatch): Partial<TSystem> {
+    const normalized = { ...patch } as Partial<TSystem>;
 
     if (patch.security) {
         const security = { ...patch.security };
@@ -49,6 +52,7 @@ export function validateSettingsPatch(patch: Partial<TSystem>): Partial<TSystem>
 
 function validateEmailSettings(email: Partial<TSystem["email"]>): TSystem["email"] {
     const base = defaultSystem().email;
+    const templates = (email.templates ?? {}) as Partial<TSystem["email"]["templates"]>;
     const normalized: TSystem["email"] = {
         ...base,
         ...email,
@@ -61,6 +65,10 @@ function validateEmailSettings(email: Partial<TSystem["email"]>): TSystem["email
             host:              (email.smtp?.host ?? base.smtp.host).trim(),
             username:          (email.smtp?.username ?? base.smtp.username).trim(),
             passwordSecretRef: (email.smtp?.passwordSecretRef ?? base.smtp.passwordSecretRef).trim(),
+        },
+        templates: {
+            emailVerification: normalizeEmailTemplate(templates.emailVerification, base.templates.emailVerification),
+            passwordReset:     normalizeEmailTemplate(templates.passwordReset, base.templates.passwordReset),
         },
     };
 
@@ -87,6 +95,16 @@ function validateEmailSettings(email: Partial<TSystem["email"]>): TSystem["email
     }
 
     return normalized;
+}
+
+function normalizeEmailTemplate(
+    template: Partial<TSystem["email"]["templates"]["emailVerification"]> | undefined,
+    base: TSystem["email"]["templates"]["emailVerification"],
+): TSystem["email"]["templates"]["emailVerification"] {
+    return {
+        subject: typeof template?.subject === "string" ? template.subject : base.subject,
+        html:    typeof template?.html    === "string" ? template.html    : base.html,
+    };
 }
 
 function requireEmailAddress(field: string, value: string): void {

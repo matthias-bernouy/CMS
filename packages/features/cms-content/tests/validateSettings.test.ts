@@ -61,6 +61,19 @@ describe("validateSettingsPatch — email settings", () => {
         expect(out.email?.smtp.port).toBe(587);
     });
 
+    test("accepts partial auth email template patches", () => {
+        const out = validateSettingsPatch({
+            email: {
+                templates: {
+                    emailVerification: { subject: "Verify {{siteName}}" },
+                },
+            } as any,
+        });
+
+        expect(out.email?.templates.emailVerification.subject).toBe("Verify {{siteName}}");
+        expect(out.email?.templates.passwordReset.subject).toBe("");
+    });
+
     test("accepts enabled email settings with a complete SMTP configuration", () => {
         const out = validateSettingsPatch({
             email: {

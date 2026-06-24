@@ -32,6 +32,7 @@ import {
     LocalAuthentication,
     AuthValidationError,
     ConfiguredEmailer,
+    TemplatedAuthEmailComposer,
     createLocalUser,
 } from "@bernouy/cms-auth";
 import {
@@ -156,6 +157,9 @@ const authEmailer  = new ConfiguredEmailer({
     readSettings: async () => (await repo.getSystem()).email,
     secrets,
 });
+const authEmailComposer = new TemplatedAuthEmailComposer({
+    readTemplates: async () => (await repo.getSystem()).email.templates,
+});
 
 // Control admin on its own runner/port — root-mounted (no `/cms` prefix;
 // the port already isolates the admin surface from Delivery).
@@ -176,6 +180,7 @@ const publicAuthBase = {
     users,
     tokens:                   authTokens,
     emailer:                  authEmailer,
+    emailComposer:            authEmailComposer,
     defaultRole:              "user" as CMS_ROLES,
     siteName:                 CMS_AUTH_SITE_NAME,
     authEmailCooldownSeconds: CMS_AUTH_EMAIL_COOLDOWN_SECONDS,

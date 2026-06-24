@@ -28,6 +28,7 @@ import {
     LocalAuthentication,
     SignedCookieCodec,
     SubjectResolver,
+    TemplatedAuthEmailComposer,
 } from "@bernouy/cms-auth";
 import type { CMS_ROLES } from "@bernouy/cms-permissions";
 
@@ -115,6 +116,9 @@ export default async function CLI_dev(args: string[]) {
         emailer:                  new ConfiguredEmailer({
             readSettings: async () => (await repo.getSystem()).email,
             secrets,
+        }),
+        emailComposer:            new TemplatedAuthEmailComposer({
+            readTemplates: async () => (await repo.getSystem()).email.templates,
         }),
         defaultRole:              "user" as CMS_ROLES,
         siteName:                 "p9r dev",

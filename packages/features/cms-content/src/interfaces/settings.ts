@@ -1,5 +1,10 @@
 import type { TPageRef } from "cms-content/interfaces/pages";
 
+export type TEmailTemplate = {
+    subject: string;
+    html:    string;
+};
+
 export type TSystem = {
 
     initializationStep: number;
@@ -71,6 +76,10 @@ export type TSystem = {
             secure:            boolean;
             username:          string;
             passwordSecretRef: string;
+        };
+        templates: {
+            emailVerification: TEmailTemplate;
+            passwordReset:     TEmailTemplate;
         };
     },
 

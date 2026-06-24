@@ -11,25 +11,48 @@ const req = (body: Record<string, unknown>) => new Request("http://control/api/s
 });
 
 describe("POST /api/system/email-test", () => {
-    test("sends a test email through the configured public auth emailer", async () => {
+    test("sends a selected auth template through the configured public auth emailer", async () => {
         const emailer = new InMemoryEmailer();
-        const cms = { publicAuth: { emailer } } as unknown as ControlCms;
+        const cms = {
+            publicAuth: {
+                emailer,
+                emailVerificationUrl: "https://site.test/verify",
+                passwordResetUrl:     "https://site.test/reset",
+                siteName:             "Test Site",
+                emailComposer: {
+                    compose: async (input: any) => ({
+                        to:      input.to,
+                        subject: `template:${input.kind}`,
+                        text:    input.actionUrl,
+                    }),
+                },
+            },
+        } as unknown as ControlCms;
 
-        const res = await postEmailTest(req({ to: "ada@example.com" }), cms);
+        const res = await postEmailTest(req({ to: "ada@example.com", kind: "password_reset" }), cms);
 
         expect(res.status).toBe(200);
         expect(emailer.sent).toHaveLength(1);
         expect(emailer.sent[0]).toMatchObject({
             to:      { email: "ada@example.com" },
-            subject: "CMS email test",
+            subject: "template:password_reset",
         });
+        expect(emailer.sent[0]!.text).toBe("https://site.test/reset?token=test-token");
     });
 
     test("rejects invalid recipient emails", async () => {
         const emailer = new InMemoryEmailer();
         const cms = { publicAuth: { emailer } } as unknown as ControlCms;
 
-        await expect(postEmailTest(req({ to: "invalid" }), cms)).rejects.toThrow(InvalidParam);
+        await expect(postEmailTest(req({ to: "invalid", kind: "email_verification" }), cms)).rejects.toThrow(InvalidParam);
+        expect(emailer.sent).toHaveLength(0);
+    });
+
+    test("rejects invalid template kinds", async () => {
+        const emailer = new InMemoryEmailer();
+        const cms = { publicAuth: { emailer } } as unknown as ControlCms;
+
+        await expect(postEmailTest(req({ to: "ada@example.com", kind: "other" }), cms)).rejects.toThrow(InvalidParam);
         expect(emailer.sent).toHaveLength(0);
     });
 });

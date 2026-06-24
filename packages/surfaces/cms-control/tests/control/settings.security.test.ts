@@ -70,6 +70,10 @@ describe("parseSettingsUpdateDto — email section", () => {
             "email.smtp.secure":            "true",
             "email.smtp.username":          "postmaster@example.com",
             "email.smtp.passwordSecretRef": "${SMTP_PASSWORD}",
+            "email.templates.emailVerification.subject": "Verify {{siteName}}",
+            "email.templates.emailVerification.html":    "<a href=\"{{actionUrl}}\">Verify</a>",
+            "email.templates.passwordReset.subject":     "Reset {{siteName}}",
+            "email.templates.passwordReset.html":        "<a href=\"{{actionUrl}}\">Reset</a>",
         });
 
         expect(dto.email).toEqual({
@@ -85,6 +89,16 @@ describe("parseSettingsUpdateDto — email section", () => {
                 username:          "postmaster@example.com",
                 passwordSecretRef: "${SMTP_PASSWORD}",
             },
+            templates: {
+                emailVerification: {
+                    subject: "Verify {{siteName}}",
+                    html:    "<a href=\"{{actionUrl}}\">Verify</a>",
+                },
+                passwordReset: {
+                    subject: "Reset {{siteName}}",
+                    html:    "<a href=\"{{actionUrl}}\">Reset</a>",
+                },
+            },
         });
     });
 
@@ -96,6 +110,7 @@ describe("parseSettingsUpdateDto — email section", () => {
 
         expect(dto.email?.enabled).toBe(false);
         expect(dto.email?.smtp.secure).toBe(false);
+        expect(dto.email?.templates.emailVerification.subject).toBe("");
     });
 
     test("rejects invalid boolean and port values", () => {

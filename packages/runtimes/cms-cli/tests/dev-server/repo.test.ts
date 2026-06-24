@@ -119,6 +119,16 @@ describe("LocalFsCmsRepository system settings", () => {
                     username:          "postmaster@example.com",
                     passwordSecretRef: "${SMTP_PASSWORD}",
                 },
+                templates: {
+                    emailVerification: {
+                        subject: "Verify {{siteName}}",
+                        html:    "<a href=\"{{actionUrl}}\">Verify</a>",
+                    },
+                    passwordReset: {
+                        subject: "",
+                        html:    "",
+                    },
+                },
             },
         });
 
@@ -128,6 +138,7 @@ describe("LocalFsCmsRepository system settings", () => {
 
         expect(system.email.smtp.host).toBe("smtp.example.com");
         expect(system.email.smtp.passwordSecretRef).toBe("${SMTP_PASSWORD}");
+        expect(system.email.templates.emailVerification.subject).toBe("Verify {{siteName}}");
         expect(JSON.parse(raw).email.enabled).toBe(true);
     });
 });

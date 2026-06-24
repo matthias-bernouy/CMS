@@ -1,7 +1,9 @@
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
+import type { AuthEmailKind } from "@bernouy/cms-auth";
 
 export type EmailTestDto = {
-    to: string;
+    to:   string;
+    kind: AuthEmailKind;
 };
 
 export function parseEmailTestDto(body: Record<string, unknown>): EmailTestDto {
@@ -11,5 +13,11 @@ export function parseEmailTestDto(body: Record<string, unknown>): EmailTestDto {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         throw new InvalidParam("to", "expected an email address.");
     }
-    return { to: email };
+
+    const kind = body.kind;
+    if (kind !== "email_verification" && kind !== "password_reset") {
+        throw new InvalidParam("kind", "expected email_verification or password_reset.");
+    }
+
+    return { to: email, kind };
 }

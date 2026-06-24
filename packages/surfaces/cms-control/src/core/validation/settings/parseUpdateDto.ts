@@ -54,6 +54,8 @@ export function parseSettingsUpdateDto(body: Record<string, unknown>): SettingsU
         if ("email.smtp.secure" in body) email.smtp.secure = asBoolean(body["email.smtp.secure"], "email.smtp.secure");
         if ("email.smtp.username" in body) email.smtp.username = asString(body["email.smtp.username"], "email.smtp.username");
         if ("email.smtp.passwordSecretRef" in body) email.smtp.passwordSecretRef = asString(body["email.smtp.passwordSecretRef"], "email.smtp.passwordSecretRef");
+        parseEmailTemplate(body, email, "emailVerification");
+        parseEmailTemplate(body, email, "passwordReset");
         dto.email = email;
     }
 
@@ -91,6 +93,16 @@ function asInteger(raw: unknown, paramName: string): number {
     const value = Number(raw);
     if (!Number.isInteger(value)) throw new InvalidParam(paramName, "expected an integer.");
     return value;
+}
+
+function parseEmailTemplate(
+    body: Record<string, unknown>,
+    email: TSystem["email"],
+    key: keyof TSystem["email"]["templates"],
+): void {
+    const prefix = `email.templates.${key}`;
+    if (`${prefix}.subject` in body) email.templates[key].subject = asString(body[`${prefix}.subject`], `${prefix}.subject`);
+    if (`${prefix}.html`    in body) email.templates[key].html    = asString(body[`${prefix}.html`],    `${prefix}.html`);
 }
 
 function hasSectionKey(body: Record<string, unknown>, prefix: string): boolean {

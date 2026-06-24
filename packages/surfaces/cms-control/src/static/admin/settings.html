@@ -99,10 +99,38 @@
                                 </p9r-stack>
                             </cms-form>
 
+                            <cms-form target="{{BASE_PATH}}/api/system/settings" emit="settings:saved">
+                                <p9r-stack gap="lg">
+                                    <p9r-card>
+                                        <span slot="header">Email verification template</span>
+                                        <p9r-stack gap="md">
+                                            <p9r-input name="email.templates.emailVerification.subject" label="Subject" value="{{ email.templates.emailVerification.subject }}" placeholder="Verify your email"></p9r-input>
+                                            <p9r-textarea name="email.templates.emailVerification.html" label="HTML" rows="10" autosize value="{{ email.templates.emailVerification.html }}" placeholder="&lt;p&gt;&lt;a href=&quot;https://example.com&quot;&gt;Verify email&lt;/a&gt;&lt;/p&gt;"></p9r-textarea>
+                                        </p9r-stack>
+                                    </p9r-card>
+
+                                    <p9r-card>
+                                        <span slot="header">Password reset template</span>
+                                        <p9r-stack gap="md">
+                                            <p9r-input name="email.templates.passwordReset.subject" label="Subject" value="{{ email.templates.passwordReset.subject }}" placeholder="Reset your password"></p9r-input>
+                                            <p9r-textarea name="email.templates.passwordReset.html" label="HTML" rows="10" autosize value="{{ email.templates.passwordReset.html }}" placeholder="&lt;p&gt;&lt;a href=&quot;https://example.com&quot;&gt;Reset password&lt;/a&gt;&lt;/p&gt;"></p9r-textarea>
+                                        </p9r-stack>
+                                    </p9r-card>
+
+                                    <p9r-stack direction="row" justify="end">
+                                        <p9r-button type="submit" color="primary">Save</p9r-button>
+                                    </p9r-stack>
+                                </p9r-stack>
+                            </cms-form>
+
                             <cms-form target="{{BASE_PATH}}/api/system/email-test" emit="email:test">
                                 <p9r-card>
                                     <span slot="header">Test email</span>
                                     <p9r-stack gap="md">
+                                        <p9r-select name="kind" label="Template" value="email_verification">
+                                            <option value="email_verification">Email verification</option>
+                                            <option value="password_reset">Password reset</option>
+                                        </p9r-select>
                                         <p9r-input name="to" label="Recipient" placeholder="you@example.com"></p9r-input>
                                         <p9r-stack direction="row" justify="end">
                                             <p9r-button type="submit">Send test</p9r-button>

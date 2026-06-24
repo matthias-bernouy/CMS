@@ -52,6 +52,10 @@ export class SystemStore {
                     username:          typeof json.email?.smtp?.username          === "string"  ? json.email.smtp.username          : base.email.smtp.username,
                     passwordSecretRef: typeof json.email?.smtp?.passwordSecretRef === "string"  ? json.email.smtp.passwordSecretRef : base.email.smtp.passwordSecretRef,
                 },
+                templates: {
+                    emailVerification: readEmailTemplate(json.email?.templates?.emailVerification, base.email.templates.emailVerification),
+                    passwordReset:     readEmailTemplate(json.email?.templates?.passwordReset,     base.email.templates.passwordReset),
+                },
             },
         });
     }
@@ -88,4 +92,11 @@ export class SystemStore {
         await mkdir(this.siteDir, { recursive: true });
         await writeFile(join(this.siteDir, THEME_FILE), theme, "utf-8");
     }
+}
+
+function readEmailTemplate(raw: any, fallback: TSystem["email"]["templates"]["emailVerification"]) {
+    return {
+        subject: typeof raw?.subject === "string" ? raw.subject : fallback.subject,
+        html:    typeof raw?.html    === "string" ? raw.html    : fallback.html,
+    };
 }

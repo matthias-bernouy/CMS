@@ -28,8 +28,16 @@ export function defaultSystem(): TSystem {
                 username:          "",
                 passwordSecretRef: "",
             },
+            templates: {
+                emailVerification: emptyEmailTemplate(),
+                passwordReset:     emptyEmailTemplate(),
+            },
         },
     };
+}
+
+function emptyEmailTemplate() {
+    return { subject: "", html: "" };
 }
 
 export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): TSystem {
@@ -40,12 +48,23 @@ export function mergeSystemUpdate(current: TSystem, update: Partial<TSystem>): T
         } else if (section === "email" && typeof value === "object" && value !== null) {
             const email = value as Partial<TSystem["email"]>;
             const currentEmail = current.email ?? defaultSystem().email;
+            const currentTemplates = currentEmail.templates ?? defaultSystem().email.templates;
             merged.email = {
                 ...currentEmail,
                 ...email,
                 smtp: {
                     ...currentEmail.smtp,
                     ...(email.smtp ?? {}),
+                },
+                templates: {
+                    emailVerification: {
+                        ...currentTemplates.emailVerification,
+                        ...(email.templates?.emailVerification ?? {}),
+                    },
+                    passwordReset: {
+                        ...currentTemplates.passwordReset,
+                        ...(email.templates?.passwordReset ?? {}),
+                    },
                 },
             };
         } else if (typeof value === "object" && value !== null) {

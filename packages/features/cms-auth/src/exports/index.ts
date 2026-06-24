@@ -81,6 +81,12 @@ export {
     type ConfiguredEmailerConfig,
     type RuntimeEmailSettings,
 } from "cms-auth/default-implementation/ConfiguredEmailer";
+export {
+    TemplatedAuthEmailComposer,
+    type RuntimeAuthEmailTemplate,
+    type RuntimeAuthEmailTemplates,
+    type TemplatedAuthEmailComposerConfig,
+} from "cms-auth/default-implementation/TemplatedAuthEmailComposer";
 export { DefaultAuthEmailComposer }           from "cms-auth/default-implementation/DefaultAuthEmailComposer";
 export { InMemoryAuthentication, type InMemoryAuthConfig } from "cms-auth/default-implementation/memory/InMemoryAuthentication";
 
