@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { ADMIN_ROLE, CMS_PERMISSION_CATALOGUE, cmsPermission } from "@bernouy/cms-permissions";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
-import { parseUrn } from "@bernouy/cms-gateway";
+import { isSystemProviderUrn, parseUrn } from "@bernouy/cms-gateway";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 
 /** CMS capabilities of one feature, as pickable permissions. */
@@ -47,7 +47,7 @@ async function gatewayPermGroups(cms: ControlCms): Promise<GatewayPermGroup[]> {
     if (!gateway) return [];
 
     const providers = await gateway.getAllProviders();
-    return providers.map((p) => ({
+    return providers.filter((p) => !isSystemProviderUrn(p.urn)).map((p) => ({
         provider:  p.urn,
         label:     p.meta?.name ?? parseUrn(p.urn)?.provider ?? p.urn,
         endpoints: p.endpoints.map((e) => ({ id: e.urn, label: e.meta?.name ?? e.urn })),

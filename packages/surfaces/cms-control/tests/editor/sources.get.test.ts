@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
+import { CompositeGatewayRepository, InMemoryGatewayRepository, seedProviders, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
 import { BAN_PROVIDER } from "@bernouy/cms-gateway/presets";
 import getEditorSources from "cms-control/api/editor/sources.get";
 import type { ControlCms } from "cms-control/ControlCms";
@@ -100,5 +100,20 @@ describe("GET /api/editor/sources", () => {
             "path:id",
             "query:q",
         ]);
+    });
+
+    test("lists readonly system auth endpoints as editor sources", async () => {
+        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+
+        const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
+            basePath: "/cms",
+            gateway,
+        } as unknown as ControlCms);
+        const body = await response.json() as EditorSourceTestDto[];
+
+        const login = body.find(source => source.url === "/cms/.cms/gateway/system-auth/login");
+        expect(login?.provider).toBe("system-auth");
+        expect(login?.providerLabel).toBe("Authentication");
+        expect(login?.label).toBe("Log in");
     });
 });

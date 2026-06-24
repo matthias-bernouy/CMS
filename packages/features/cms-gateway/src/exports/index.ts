@@ -20,6 +20,7 @@ export {
 export type { GatewayRepository } from "../interfaces/GatewayRepository";
 export { InMemoryGatewayRepository } from "../default-implementation/InMemoryGatewayRepository";
 export { ValidatingGatewayRepository } from "../core/ValidatingGatewayRepository";
+export { CompositeGatewayRepository } from "../core/CompositeGatewayRepository";
 
 // ── Core (pure logic) ──
 export {
@@ -27,6 +28,16 @@ export {
     type ParsedUrn,
 } from "../core/urn";
 export { validateProvider, endpointBelongsToProvider, isParsableUrl, isValidResponseStatus } from "../core/validateProvider";
+export {
+    SYSTEM_PROVIDER_ID_PREFIX,
+    SYSTEM_AUTH_PROVIDER_ID,
+    SYSTEM_AUTH_PROVIDER_URN,
+    SYSTEM_AUTH_PROVIDER,
+    SYSTEM_GATEWAY_PROVIDERS,
+    isSystemProviderId,
+    isSystemProviderUrn,
+    systemProviderUrnOf,
+} from "../core/systemProviders";
 export { GatewayValidationError, DuplicateProviderError } from "../core/errors";
 export { parseDataShape } from "../core/parseDataShape";
 export {

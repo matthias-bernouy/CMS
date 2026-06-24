@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
 import getGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.get";
-import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
+import { CompositeGatewayRepository, InMemoryGatewayRepository, SYSTEM_AUTH_PROVIDER_URN, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
 
 const makeCms = () => {
     const gateway = new InMemoryGatewayRepository();
@@ -34,6 +34,8 @@ describe("GET /api/gateway-provider?urn=", () => {
 
         expect(body.urn).toBe("urn:shop");
         expect(body.id).toBe("shop");                                  // derived (urn: prefix stripped)
+        expect(body.readonly).toBe(false);
+        expect(body.readonlyNoticeStyle).toBe("display:none;");
         expect(body.endpoints).toHaveLength(2);
         expect(body.endpoints[0].endpointId).toBe("getCart");          // derived per-endpoint
         expect(body.endpoints[1].endpointId).toBe("addItem");
@@ -58,6 +60,18 @@ describe("GET /api/gateway-provider?urn=", () => {
         ]);
         // endpointsJson round-trips the same enriched shape (incl. params)
         expect(JSON.parse(body.endpointsJson)[0].params).toEqual(body.endpoints[0].params);
+    });
+
+    test("system providers are readable but marked readonly", async () => {
+        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+        const cms = { gateway } as any;
+
+        const body = await (await getGatewayProvider(get(`?urn=${SYSTEM_AUTH_PROVIDER_URN}`), cms)).json();
+        expect(body.id).toBe("system-auth");
+        expect(body.readonly).toBe(true);
+        expect(body.editableStyle).toBe("display:none;");
+        expect(body.readonlyNoticeStyle).toBe("");
+        expect(body.endpoints.map((endpoint: { endpointId: string }) => endpoint.endpointId)).toContain("login");
     });
 
     test("unknown urn → InvalidParam", async () => {

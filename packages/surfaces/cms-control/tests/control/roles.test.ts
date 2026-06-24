@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { InMemoryUsersRepository } from "@bernouy/cms-auth";
-import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
+import { CompositeGatewayRepository, InMemoryGatewayRepository, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
 import { cmsPermission, ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE } from "@bernouy/cms-permissions";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import type { RoleDefinition } from "@bernouy/cms-permissions";
@@ -131,5 +131,15 @@ describe("roleEditorData", () => {
         expect(groups).toHaveLength(1);
         expect(groups[0]!.label).toBe("Stripe");
         expect(groups[0]!.endpoints).toEqual([{ id: "urn:stripe:getInvoice", label: "Get invoice" }]);
+    });
+
+    test("does not expose system providers as role permissions", async () => {
+        const repository = new InMemoryCmsRepository();
+        const users = new InMemoryUsersRepository();
+        const roles = new InMemoryRolesRepository();
+        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+        const cms = { repository, users, roles, gateway } as unknown as ControlCms;
+
+        expect((await roleEditorData(cms, USER_ROLE)).catalog.gateway).toEqual([]);
     });
 });

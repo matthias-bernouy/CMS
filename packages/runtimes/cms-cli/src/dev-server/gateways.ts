@@ -3,6 +3,8 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
     InMemoryGatewayRepository,
+    CompositeGatewayRepository,
+    SYSTEM_GATEWAY_PROVIDERS,
     ValidatingGatewayRepository,
     parseUrn,
     seedProviders,
@@ -40,7 +42,10 @@ export async function loadDevGateways(siteDir: string): Promise<Provider[]> {
 }
 
 export async function createDevGateway(siteDir: string): Promise<GatewayRepository> {
-    const gateway = new ValidatingGatewayRepository(new LocalFsGatewayRepository(siteDir));
+    const gateway = new CompositeGatewayRepository(
+        new ValidatingGatewayRepository(new LocalFsGatewayRepository(siteDir)),
+        SYSTEM_GATEWAY_PROVIDERS,
+    );
     const providers = await loadDevGateways(siteDir);
     if (providers.length > 0) {
         const { created, skipped } = await seedProviders(gateway, providers);

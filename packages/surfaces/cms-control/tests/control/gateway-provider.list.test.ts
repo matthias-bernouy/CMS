@@ -1,7 +1,12 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
 import getGatewayProviders from "cms-control/api/gateway-provider/list.get";
-import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
+import {
+    CompositeGatewayRepository,
+    InMemoryGatewayRepository,
+    SYSTEM_AUTH_PROVIDER_URN,
+    SYSTEM_GATEWAY_PROVIDERS,
+} from "@bernouy/cms-gateway";
 
 const makeCms = () => {
     const gateway = new InMemoryGatewayRepository();
@@ -32,6 +37,20 @@ describe("GET /api/gateway-provider/list", () => {
 
         const rows = await (await getGatewayProviders(list(), cms)).json();
         expect(rows).toHaveLength(1);
-        expect(rows[0]).toEqual({ urn: "urn:shop", id: "shop", name: "shop", endpointCount: 2 });
+        expect(rows[0]).toEqual({ urn: "urn:shop", id: "shop", name: "shop", endpointCount: 2, readonly: false });
+    });
+
+    test("marks system providers as readonly", async () => {
+        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+        const cms = { gateway } as any;
+
+        const rows = await (await getGatewayProviders(list(), cms)).json();
+        expect(rows[0]).toEqual({
+            urn:           SYSTEM_AUTH_PROVIDER_URN,
+            id:            "system-auth",
+            name:          "Authentication",
+            endpointCount: 8,
+            readonly:      true,
+        });
     });
 });

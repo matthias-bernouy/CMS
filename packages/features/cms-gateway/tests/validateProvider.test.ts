@@ -19,6 +19,10 @@ describe("validateProvider", () => {
         const errs = validateProvider(provider({ urn: "shop" }));
         expect(errs.some(e => e.includes("invalid provider urn"))).toBe(true);
     });
+    test("reserved system provider urn", () => {
+        const errs = validateProvider(provider({ urn: "urn:system-custom", endpoints: [ep("urn:system-custom:x")] }));
+        expect(errs.some(e => e.includes("reserved system provider urn"))).toBe(true);
+    });
     test("endpoint not belonging to provider", () => {
         const errs = validateProvider(provider({ endpoints: [ep("urn:other:x")] }));
         expect(errs.some(e => e.includes("does not belong"))).toBe(true);

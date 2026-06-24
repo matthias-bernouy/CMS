@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
 import deleteGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.delete";
-import { InMemoryGatewayRepository } from "@bernouy/cms-gateway";
+import { CompositeGatewayRepository, InMemoryGatewayRepository, SYSTEM_AUTH_PROVIDER_URN, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
 
 const makeCms = () => {
     const gateway = new InMemoryGatewayRepository();
@@ -40,5 +40,11 @@ describe("DELETE /api/gateway-provider", () => {
     test("missing urn param → MissingParam", async () => {
         const { cms } = makeCms();
         await expect(deleteGatewayProvider(del(""), cms)).rejects.toThrow(/Missing param urn/);
+    });
+
+    test("system providers are readonly", async () => {
+        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+        const cms = { gateway } as any;
+        await expect(deleteGatewayProvider(del(`?urn=${SYSTEM_AUTH_PROVIDER_URN}`), cms)).rejects.toThrow(/readonly/);
     });
 });

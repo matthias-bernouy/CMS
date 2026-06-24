@@ -93,4 +93,10 @@ describe("POST /api/gateway-provider", () => {
         await expect(postGatewayProvider(post(validBody({ "endpoints.0.body": "{not json" })), cms))
             .rejects.toThrow(/endpoints\.0\.body/);
     });
+
+    test("reserved system provider ids are rejected", async () => {
+        const { cms } = makeCms();
+        await expect(postGatewayProvider(post(validBody({ id: "system-auth" })), cms))
+            .rejects.toThrow(/reserved prefix/);
+    });
 });

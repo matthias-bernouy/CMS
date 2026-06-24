@@ -1,6 +1,6 @@
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { HTTP_METHODS, isParsableUrl, type HTTPMethod, type ProviderDto } from "@bernouy/cms-gateway";
+import { HTTP_METHODS, isParsableUrl, isSystemProviderId, SYSTEM_PROVIDER_ID_PREFIX, type HTTPMethod, type ProviderDto } from "@bernouy/cms-gateway";
 import { slugify } from "cms-control/core/validation/slugify";
 import { parseShapeField } from "./parseShapeField";
 import { pathParamsFromUrl, parseParamsBlob, parseMetaField, buildMeta } from "./gatewayValidators";
@@ -27,6 +27,7 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
     if (typeof body.id !== "string" || !body.id) throw new MissingParam("id");
     const id = slugify(body.id);
     if (!id) throw new InvalidParam("id", "cannot derive an id");
+    if (isSystemProviderId(id)) throw new InvalidParam("id", `reserved prefix "${SYSTEM_PROVIDER_ID_PREFIX}"`);
 
     // Group flat scalar keys by row index; collect per-endpoint JSON blobs separately.
     const rows = new Map<number, Partial<Record<"endpointId" | "method" | "targetUrl", string>>>();

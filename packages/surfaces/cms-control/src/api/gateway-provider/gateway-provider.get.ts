@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { providerToDto } from "@bernouy/cms-gateway";
+import { isSystemProviderUrn, providerToDto } from "@bernouy/cms-gateway";
 
 /**
  * GET /api/gateway-provider?urn= — the full provider, enriched for the edit page.
@@ -25,7 +25,17 @@ export default async function getGatewayProvider(req: Request, cms: ControlCms) 
     const dto = providerToDto(provider);
     const endpointsJson = JSON.stringify(dto.endpoints);
 
-    return new Response(JSON.stringify({ ...provider, id: dto.id, endpoints: dto.endpoints, endpointsJson }), {
+    const readonly = isSystemProviderUrn(provider.urn);
+
+    return new Response(JSON.stringify({
+        ...provider,
+        id: dto.id,
+        endpoints: dto.endpoints,
+        endpointsJson,
+        readonly,
+        editableStyle:       readonly ? "display:none;" : "",
+        readonlyNoticeStyle: readonly ? "" : "display:none;",
+    }), {
         headers: { "Content-Type": "application/json" },
     });
 }

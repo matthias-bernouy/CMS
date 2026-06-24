@@ -9,43 +9,62 @@
     <div cms-source="{{BASE_PATH}}/api/gateway-provider?urn=#{urn}" cms-reload-on="provider:updated">
         <template>
             <div style="max-width: 760px;">
-                <cms-form target="{{BASE_PATH}}/api/gateway-provider" method="PUT" emit="provider:updated">
-                    <p9r-stack gap="l">
-                        <p9r-stack gap="m">
-                            <!-- Immutable key: submitted via the hidden input; the visible field is display-only. -->
-                            <input type="hidden" name="id" value="{{id}}">
-                            <p9r-input label="Identifier" value="{{id}}" disabled hint="Immutable after creation."></p9r-input>
-                            <p9r-input name="meta.name" label="Name" value="{{meta.name}}"></p9r-input>
-                            <p9r-textarea name="meta.description" label="Description" value="{{meta.description}}"></p9r-textarea>
-                            <!-- icon has no editor yet; round-tripped so a save never wipes it (B1). -->
-                            <input type="hidden" name="meta.icon" value="{{meta.icon}}">
+                <div style="{{readonlyNoticeStyle}} padding: 1rem; border: 1px solid var(--border-default, #e5e7eb); border-radius: 8px; background: var(--bg-surface, #fff); color: var(--text-main, #0f172a);">
+                    <strong>System provider</strong>
+                    <p style="margin: .35rem 0 0; color: var(--text-muted, #64748b);">This provider is managed by the CMS. It can be selected as a data source, but it cannot be edited or deleted.</p>
+                    <p9r-table style="margin-top: 1rem;">
+                        <p9r-row slot="header">
+                            <p9r-cell><strong>Endpoint</strong></p9r-cell>
+                            <p9r-cell><strong>ID</strong></p9r-cell>
+                            <p9r-cell><strong>Method</strong></p9r-cell>
+                        </p9r-row>
+                        <p9r-row cms-repeat="endpoints">
+                            <p9r-cell><strong>{{ meta.name }}</strong></p9r-cell>
+                            <p9r-cell><code>{{ endpointId }}</code></p9r-cell>
+                            <p9r-cell><code>{{ method }}</code></p9r-cell>
+                        </p9r-row>
+                    </p9r-table>
+                </div>
+
+                <div style="{{editableStyle}}">
+                    <cms-form target="{{BASE_PATH}}/api/gateway-provider" method="PUT" emit="provider:updated">
+                        <p9r-stack gap="l">
+                            <p9r-stack gap="m">
+                                <!-- Immutable key: submitted via the hidden input; the visible field is display-only. -->
+                                <input type="hidden" name="id" value="{{id}}">
+                                <p9r-input label="Identifier" value="{{id}}" disabled hint="Immutable after creation."></p9r-input>
+                                <p9r-input name="meta.name" label="Name" value="{{meta.name}}"></p9r-input>
+                                <p9r-textarea name="meta.description" label="Description" value="{{meta.description}}"></p9r-textarea>
+                                <!-- icon has no editor yet; round-tripped so a save never wipes it (B1). -->
+                                <input type="hidden" name="meta.icon" value="{{meta.icon}}">
+                            </p9r-stack>
+
+                            <p9r-stack gap="s">
+                                <strong>Endpoints</strong>
+                                <!-- Prefilled from the server-stringified array (see the GET handler);
+                                     the component parses `value` on connect and seeds one row each. -->
+                                <cms-endpoints-input value="{{endpointsJson}}"></cms-endpoints-input>
+                            </p9r-stack>
+
+                            <div>
+                                <p9r-button color="primary" type="submit">Save changes</p9r-button>
+                            </div>
                         </p9r-stack>
+                    </cms-form>
 
-                        <p9r-stack gap="s">
-                            <strong>Endpoints</strong>
-                            <!-- Prefilled from the server-stringified array (see the GET handler);
-                                 the component parses `value` on connect and seeds one row each. -->
-                            <cms-endpoints-input value="{{endpointsJson}}"></cms-endpoints-input>
-                        </p9r-stack>
-
-                        <div>
-                            <p9r-button color="primary" type="submit">Save changes</p9r-button>
-                        </div>
-                    </p9r-stack>
-                </cms-form>
-
-                <!-- Danger zone — sibling of the form so the delete isn't part of the PUT.
-                     `{{urn}}` resolves from the fetched provider; `redirect` returns to the
-                     list once the record (and this page's subject) is gone. -->
-                <div style="margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-default, #e5e7eb);">
-                    <cms-confirm-form
-                        target="{{BASE_PATH}}/api/gateway-provider?urn={{urn}}"
-                        method="DELETE"
-                        emit="provider:updated"
-                        redirect="{{BASE_PATH}}/admin/gateway-providers"
-                        message="Delete this provider? Its endpoints are removed. This cannot be undone.">
-                        <p9r-button color="danger" variant="ghost">Delete provider</p9r-button>
-                    </cms-confirm-form>
+                    <!-- Danger zone — sibling of the form so the delete isn't part of the PUT.
+                         `{{urn}}` resolves from the fetched provider; `redirect` returns to the
+                         list once the record (and this page's subject) is gone. -->
+                    <div style="margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-default, #e5e7eb);">
+                        <cms-confirm-form
+                            target="{{BASE_PATH}}/api/gateway-provider?urn={{urn}}"
+                            method="DELETE"
+                            emit="provider:updated"
+                            redirect="{{BASE_PATH}}/admin/gateway-providers"
+                            message="Delete this provider? Its endpoints are removed. This cannot be undone.">
+                            <p9r-button color="danger" variant="ghost">Delete provider</p9r-button>
+                        </cms-confirm-form>
+                    </div>
                 </div>
             </div>
         </template>

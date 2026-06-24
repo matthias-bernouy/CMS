@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { openApiSpecToProvider, providerDtoToProvider, SpecParseError } from "@bernouy/cms-gateway";
+import { isSystemProviderId, openApiSpecToProvider, providerDtoToProvider, SpecParseError, SYSTEM_PROVIDER_ID_PREFIX } from "@bernouy/cms-gateway";
 import type { ProviderDto } from "../validation/gateway/parseProviderDto";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
@@ -42,6 +42,7 @@ function providerId(value: unknown): string {
     if (typeof value !== "string" || !value) throw new MissingParam("id");
     const id = slugify(value);
     if (!id) throw new InvalidParam("id", "cannot derive an id");
+    if (isSystemProviderId(id)) throw new InvalidParam("id", `reserved prefix "${SYSTEM_PROVIDER_ID_PREFIX}"`);
     return id;
 }
 

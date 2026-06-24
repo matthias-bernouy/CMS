@@ -2,6 +2,7 @@ import type { Provider, Endpoint } from "../interfaces/Gateway";
 import { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS } from "../interfaces/Gateway";
 import { isProviderUrn, isEndpointUrn, providerUrnOf } from "./urn";
 import { isValidHeaderName, isForbiddenHeaderName, isValidHeaderValue, MAX_ENDPOINT_HEADERS } from "./headerPolicy";
+import { isSystemProviderUrn } from "./systemProviders";
 
 /** `true` if the endpoint urn belongs to the given provider. */
 export function endpointBelongsToProvider(endpointUrn: string, providerUrn: string): boolean {
@@ -34,6 +35,8 @@ export function validateProvider(provider: Provider): string[] {
 
     if (!isProviderUrn(provider.urn)) {
         errors.push(`invalid provider urn: "${provider.urn}" (expected "urn:<id>")`);
+    } else if (isSystemProviderUrn(provider.urn)) {
+        errors.push(`reserved system provider urn: "${provider.urn}"`);
     }
 
     const seen = new Set<string>();
