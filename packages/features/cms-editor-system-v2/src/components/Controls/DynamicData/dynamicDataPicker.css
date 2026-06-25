@@ -1,0 +1,100 @@
+.dynamic-data-tool,
+.close-data {
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    cursor: pointer;
+}
+
+.dynamic-data-tool {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    background: color-mix(in srgb, var(--editor-v2-bg) 72%, var(--editor-v2-surface));
+}
+
+.dynamic-data-tool svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+.dynamic-data-tool:hover,
+.data-option:hover,
+.data-option:focus-visible {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 7%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+    outline: none;
+}
+
+.dynamic-data-tool:disabled,
+.data-picker[hidden] {
+    display: none;
+}
+
+.data-picker {
+    display: grid;
+    gap: 8px;
+    width: min(360px, 100%);
+    padding: 10px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-bg);
+    box-shadow: 0 14px 36px color-mix(in srgb, black 12%, transparent);
+}
+
+.data-picker-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-picker-header strong { color: var(--editor-v2-label); font-size: 12px; font-weight: 760; }
+.close-data { width: 26px; height: 26px; color: var(--editor-v2-muted); font: inherit; font-size: 16px; line-height: 1; }
+
+.data-search {
+    min-height: 30px;
+    width: 100%;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    padding: 0 8px;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.data-list { display: grid; gap: 4px; max-height: 220px; overflow: auto; }
+
+.data-option {
+    display: grid;
+    gap: 3px;
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--editor-v2-text);
+    padding: 7px 8px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.data-label,
+.data-option code,
+.data-empty { overflow-wrap: anywhere; font-size: 12px; }
+
+.data-label { font-weight: 700; }
+.data-option code,
+.data-empty { color: var(--editor-v2-muted); }

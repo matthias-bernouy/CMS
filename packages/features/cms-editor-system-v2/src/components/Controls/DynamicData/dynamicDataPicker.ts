@@ -1,15 +1,15 @@
-import type { DataOption } from "./richTextDataOptions";
+import type { DynamicDataOption } from "./dynamicDataOptions";
 
-export function matchingDataOptions(options: DataOption[], query: string): DataOption[] {
+export function matchingDynamicDataOptions(options: DynamicDataOption[], query: string): DynamicDataOption[] {
     const normalized = query.trim().toLowerCase();
     return normalized
         ? options.filter(option => `${option.label} ${option.path}`.toLowerCase().includes(normalized))
         : options;
 }
 
-export function renderDataOptions(
+export function renderDynamicDataOptions(
     list: HTMLElement,
-    options: DataOption[],
+    options: DynamicDataOption[],
     totalOptions: number,
     onSelect: (path: string) => void,
 ): void {

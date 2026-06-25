@@ -1,7 +1,7 @@
 import type { TextCapability } from "@bernouy/cms-content/editor";
+import { DynamicDataPickerController } from "../../DynamicData/DynamicDataPickerController";
 import { parseTextCapability } from "./richTextAttributes";
 import type { RichTextAction } from "./richTextActions";
-import { RichTextDataPickerController } from "./richTextDataPickerController";
 import { RichTextRangeCommands } from "./richTextRangeCommands";
 import { renderRichTextToolbar } from "./richTextToolbar";
 import templateHtml from "./template.html" with { type: "text" };
@@ -15,7 +15,7 @@ export class RichTextEditor extends HTMLElement {
         () => this.editor,
         () => this.getSelection(),
     );
-    private readonly _dataPicker = new RichTextDataPickerController({
+    private readonly _dataPicker = new DynamicDataPickerController({
         picker:      () => this.dataPicker,
         search:      () => this.dataSearch,
         list:        () => this.dataList,
@@ -25,7 +25,7 @@ export class RichTextEditor extends HTMLElement {
         saveSelection:    this._range.saveSelection,
         restoreSelection: () => this._range.restoreSelection(),
         insertText:       (text) => this._range.insertText(text),
-        focusEditor:      () => this.editor.focus(),
+        focusControl:     () => this.editor.focus(),
         finish:           () => this.finishAction(),
     });
 

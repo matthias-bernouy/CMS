@@ -1,12 +1,12 @@
 import type { DataField, DataScope } from "@bernouy/cms-content/editor";
 
-export type DataOption = {
+export type DynamicDataOption = {
     label: string;
     path: string;
 };
 
-export function flattenDataOptions(scopes: DataScope[]): DataOption[] {
-    const byPath = new Map<string, DataOption>();
+export function flattenDynamicDataOptions(scopes: DataScope[]): DynamicDataOption[] {
+    const byPath = new Map<string, DynamicDataOption>();
     for (const scope of scopes) {
         const options = fieldOptions(scope.fields, scope.name, scope.label ?? scope.name);
         for (const option of options) {
@@ -16,7 +16,7 @@ export function flattenDataOptions(scopes: DataScope[]): DataOption[] {
     return [...byPath.values()];
 }
 
-function fieldOptions(fields: DataField[], scopeName: string, scopeLabel: string, prefix = ""): DataOption[] {
+function fieldOptions(fields: DataField[], scopeName: string, scopeLabel: string, prefix = ""): DynamicDataOption[] {
     return fields.flatMap(field => {
         const relativePath = prefix && field.path !== "." ? `${prefix}.${field.path}` : field.path === "." ? prefix : field.path;
         const path = relativePath ? `${scopeName}.${relativePath}` : scopeName;

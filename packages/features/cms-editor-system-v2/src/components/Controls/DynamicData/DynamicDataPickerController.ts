@@ -1,10 +1,10 @@
 import { asInterpolation } from "@bernouy/cms-content/editor";
-import { parseDataScopes } from "./richTextAttributes";
-import { matchingDataOptions, renderDataOptions } from "./richTextDataPicker";
-import { flattenDataOptions, type DataOption } from "./richTextDataOptions";
+import { parseDataScopes } from "./dynamicDataAttributes";
+import { matchingDynamicDataOptions, renderDynamicDataOptions } from "./dynamicDataPicker";
+import { flattenDynamicDataOptions, type DynamicDataOption } from "./dynamicDataOptions";
 
-export class RichTextDataPickerController {
-    private _dataOptions: DataOption[] = [];
+export class DynamicDataPickerController {
+    private _options: DynamicDataOption[] = [];
 
     constructor(
         private readonly _refs: {
@@ -18,7 +18,7 @@ export class RichTextDataPickerController {
             saveSelection: () => void;
             restoreSelection: () => void;
             insertText: (text: string) => void;
-            focusEditor: () => void;
+            focusControl: () => void;
             finish: () => void;
         },
     ) {}
@@ -37,7 +37,7 @@ export class RichTextDataPickerController {
 
     open(): void {
         this._actions.saveSelection();
-        this._dataOptions = flattenDataOptions(parseDataScopes(this._refs.rawScopes()));
+        this._options = flattenDynamicDataOptions(parseDataScopes(this._refs.rawScopes()));
         this._refs.search().value = "";
         this._render();
         this._refs.picker().hidden = false;
@@ -56,7 +56,7 @@ export class RichTextDataPickerController {
         this._refs.picker().hidden = true;
         if (options.restoreFocus === false) return;
 
-        this._actions.focusEditor();
+        this._actions.focusControl();
         this._actions.restoreSelection();
     }
 
@@ -72,10 +72,10 @@ export class RichTextDataPickerController {
     };
 
     private readonly _render = (): void => {
-        renderDataOptions(
+        renderDynamicDataOptions(
             this._refs.list(),
-            matchingDataOptions(this._dataOptions, this._refs.search().value),
-            this._dataOptions.length,
+            matchingDynamicDataOptions(this._options, this._refs.search().value),
+            this._options.length,
             (path) => this.insertExpression(path),
         );
     };

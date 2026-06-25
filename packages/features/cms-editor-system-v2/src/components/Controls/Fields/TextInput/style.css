@@ -11,6 +11,13 @@
     gap: 5px;
 }
 
+.control-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px;
+}
+
 .label {
     color: var(--editor-v2-label);
     font-size: 12px;

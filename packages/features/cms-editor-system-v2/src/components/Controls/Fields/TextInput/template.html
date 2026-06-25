@@ -1,5 +1,18 @@
-<label class="field">
+<div class="field">
     <span class="label"></span>
-    <input>
+    <div class="control-shell">
+        <input>
+        <button class="dynamic-data-tool" type="button" title="Dynamic data" aria-label="Insert dynamic data" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>
+        </button>
+    </div>
+    <div class="data-picker" hidden role="dialog" aria-label="Insert data">
+        <div class="data-picker-header">
+            <strong>Insert data</strong>
+            <button type="button" class="close-data" aria-label="Close data picker">×</button>
+        </div>
+        <input class="data-search" type="search" placeholder="Search data">
+        <div class="data-list"></div>
+    </div>
     <span class="hint"></span>
-</label>
+</div>

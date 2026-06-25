@@ -61,6 +61,7 @@ export type SettingsViewMode = "settings" | "overrides";
 
 export class SettingsView extends HTMLElement {
     private _dataSources: EditorDataSource[] = [];
+    private _dataScopes: DataScope[] = [];
     private _endpointPicker: DataSourcePicker | null = null;
     private _disconnectEndpointPickerEvents: (() => void) | null = null;
 
@@ -79,6 +80,7 @@ export class SettingsView extends HTMLElement {
         dataSources: EditorDataSource[] = [],
     ): void {
         this._dataSources = dataSources;
+        this._dataScopes = dataScopes;
         const view = this.shadowRoot!.querySelector<HTMLElement>(".settings-view")!;
         view.replaceChildren();
 
@@ -170,6 +172,7 @@ export class SettingsView extends HTMLElement {
     private _renderSetting(setting: Setting): HTMLElement {
         if (setting.type === "textarea") {
             const control = this._control("cms-editor-v2-textarea", setting);
+            this._setDataScopes(control);
             this._wireTextControl(control, "textarea", setting);
             return control;
         }
@@ -233,6 +236,7 @@ export class SettingsView extends HTMLElement {
         }
 
         const control = this._control("cms-editor-v2-text-input", setting);
+        this._setDataScopes(control);
         this._wireTextControl(control, "input", setting);
         return control;
     }
@@ -422,6 +426,7 @@ export class SettingsView extends HTMLElement {
             control.setAttribute("data-scopes", JSON.stringify(dataScopes));
             this._wireRichTextControl(control);
         } else {
+            if (capability.dynamic) this._setDataScopes(control, dataScopes);
             this._wireContentControl(control, "input");
         }
         section.append(control);
@@ -515,6 +520,10 @@ export class SettingsView extends HTMLElement {
             control.removeAttribute("disabled");
             control.removeAttribute("aria-disabled");
         }
+    }
+
+    private _setDataScopes(control: HTMLElement, dataScopes = this._dataScopes): void {
+        control.setAttribute("data-scopes", JSON.stringify(dataScopes));
     }
 
     private _whenDefined(control: HTMLElement, callback: () => void): void {

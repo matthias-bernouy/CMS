@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
 import type {
+    DataScope,
     EditorCatalog,
     EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
@@ -50,6 +51,38 @@ function installDom(): void {
         Node,
         requestAnimationFrame: (callback: FrameRequestCallback) => setTimeout(callback, 0),
     });
+}
+
+const dynamicDataScopes: DataScope[] = [{
+    name: "plans",
+    label: "Plans",
+    fields: [
+        { path: "title", type: "string" },
+        { path: "meta", type: "object", children: [{ path: "category", type: "string" }] },
+    ],
+}];
+
+async function defineTextControls(): Promise<void> {
+    const { TextInput } = await import("../src/components/Controls/Fields/TextInput/TextInput");
+    const { Textarea } = await import("../src/components/Controls/Fields/Textarea/Textarea");
+    class TestTextInput extends TextInput {}
+    class TestTextarea extends Textarea {}
+
+    if (!customElements.get("cms-editor-v2-text-input")) {
+        customElements.define("cms-editor-v2-text-input", TestTextInput);
+    }
+    if (!customElements.get("cms-editor-v2-textarea")) {
+        customElements.define("cms-editor-v2-textarea", TestTextarea);
+    }
+}
+
+function openDynamicDataPicker(control: HTMLElement): void {
+    control.shadowRoot!
+        .querySelector<HTMLButtonElement>(".dynamic-data-tool")!
+        .dispatchEvent(new Event("pointerdown", {
+            bubbles:    true,
+            cancelable: true,
+        }));
 }
 
 describe("Shell", () => {
@@ -1865,6 +1898,115 @@ describe("Shell", () => {
             "plans.meta.category",
             "plan.price",
         ]);
+    });
+
+    test("plain text content dynamic data inserts an interpolation at the cursor", async () => {
+        installDom();
+        await defineTextControls();
+
+        const {
+            SETTINGS_VIEW_CONTENT_CHANGE_EVENT,
+            SettingsView,
+        } = await import("../src/components/Settings/SettingsView/SettingsView");
+
+        const view = new SettingsView();
+        const events: Array<{ value: string; format: string }> = [];
+        view.addEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, (event) => {
+            events.push((event as CustomEvent<{ value: string; format: string }>).detail);
+        });
+        document.body.append(view);
+
+        view.setSettings([], {
+            format:  "text",
+            dynamic: true,
+        }, "Hello ", "settings", [], dynamicDataScopes);
+
+        const control = view.shadowRoot!.querySelector<HTMLElement>("cms-editor-v2-text-input")!;
+        const input = control.shadowRoot!.querySelector<HTMLInputElement>("input")!;
+        input.setSelectionRange?.(input.value.length, input.value.length);
+
+        openDynamicDataPicker(control);
+        control.shadowRoot!.querySelector<HTMLButtonElement>(".data-option")!.click();
+
+        expect(input.value).toBe("Hello {{ plans.title }}");
+        expect(events).toEqual([{ value: "Hello {{ plans.title }}", format: "text" }]);
+    });
+
+    test("text settings dynamic data inserts an interpolation and emits a setting change", async () => {
+        installDom();
+        await defineTextControls();
+
+        const {
+            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+            SettingsView,
+        } = await import("../src/components/Settings/SettingsView/SettingsView");
+
+        const view = new SettingsView();
+        const values: string[] = [];
+        view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, (event) => {
+            values.push(String((event as CustomEvent<{ value: string }>).detail.value));
+        });
+        document.body.append(view);
+
+        view.setSettings([{
+            kind: "self",
+            label: "Image",
+            settings: [{
+                type: "text",
+                label: "Alt text",
+                attribute: "alt",
+                defaultValue: "Plan ",
+            }],
+        }], null, "", "settings", [], dynamicDataScopes);
+
+        const control = view.shadowRoot!.querySelector<HTMLElement>("cms-editor-v2-text-input")!;
+        const input = control.shadowRoot!.querySelector<HTMLInputElement>("input")!;
+        input.setSelectionRange?.(input.value.length, input.value.length);
+
+        openDynamicDataPicker(control);
+        control.shadowRoot!.querySelector<HTMLButtonElement>(".data-option")!.click();
+
+        expect(input.value).toBe("Plan {{ plans.title }}");
+        expect(values).toEqual(["Plan {{ plans.title }}"]);
+    });
+
+    test("textarea settings dynamic data inserts an interpolation and emits a setting change", async () => {
+        installDom();
+        await defineTextControls();
+
+        const {
+            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+            SettingsView,
+        } = await import("../src/components/Settings/SettingsView/SettingsView");
+
+        const view = new SettingsView();
+        const values: string[] = [];
+        view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, (event) => {
+            values.push(String((event as CustomEvent<{ value: string }>).detail.value));
+        });
+        document.body.append(view);
+
+        view.setSettings([{
+            kind: "self",
+            label: "Copy",
+            settings: [{
+                type: "textarea",
+                label: "Description",
+                attribute: "description",
+                defaultValue: "Category: ",
+            }],
+        }], null, "", "settings", [], dynamicDataScopes);
+
+        const control = view.shadowRoot!.querySelector<HTMLElement>("cms-editor-v2-textarea")!;
+        const textarea = control.shadowRoot!.querySelector<HTMLTextAreaElement>("textarea")!;
+        textarea.setSelectionRange?.(textarea.value.length, textarea.value.length);
+
+        openDynamicDataPicker(control);
+        const options = Array.from(control.shadowRoot!.querySelectorAll<HTMLButtonElement>(".data-option"));
+        options.find(option => option.dataset.path === "plans.meta.category")!.click();
+
+        expect(textarea.value).toBe("Category: {{ plans.meta.category }}");
+        expect(values).toEqual(["Category: {{ plans.meta.category }}"]);
     });
 
     test("page link control selects internal pages and external URLs", async () => {
