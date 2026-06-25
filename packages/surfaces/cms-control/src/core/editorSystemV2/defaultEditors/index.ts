@@ -6,6 +6,7 @@ export { GridEditor } from "./GridEditor";
 export { HeadingEditor } from "./HeadingEditor";
 export { ImageEditor } from "./ImageEditor";
 export { InputEditor } from "./InputEditor";
+export { LinkEditor } from "./LinkEditor";
 export { ListEditor } from "./ListEditor";
 export { ListItemEditor } from "./ListItemEditor";
 export { OptionEditor } from "./OptionEditor";

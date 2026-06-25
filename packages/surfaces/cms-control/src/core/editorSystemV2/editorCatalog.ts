@@ -6,6 +6,7 @@ import {
     HeadingEditor,
     ImageEditor,
     InputEditor,
+    LinkEditor,
     ListEditor,
     ListItemEditor,
     OptionEditor,
@@ -17,6 +18,7 @@ import {
 } from "cms-control/core/editorSystemV2/defaultEditors";
 
 type NativeElementConstructorName =
+    | "HTMLAnchorElement"
     | "HTMLElement"
     | "HTMLHeadingElement"
     | "HTMLImageElement"
@@ -81,6 +83,17 @@ export function createControlEditorCatalog(): EditorCatalog {
             subCategory: "Image",
             bloc: nativeElementConstructor("HTMLImageElement"),
             editor: ImageEditor,
+        },
+        {
+            tag: "a",
+            label: "Link",
+            description: "A navigational link with editable text and target settings.",
+            icon: "link",
+            category: "Text",
+            subCategory: "Inline",
+            defaultContent: `<a href="#">Link</a>`,
+            bloc: nativeElementConstructor("HTMLAnchorElement"),
+            editor: LinkEditor,
         },
         {
             tag: "input",

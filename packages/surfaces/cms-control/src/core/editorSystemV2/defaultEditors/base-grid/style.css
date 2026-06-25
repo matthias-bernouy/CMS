@@ -1,46 +1,96 @@
 :host {
     --min: 240px;
-    --gap: var(--p9r-space-md, 16px);
-    --max-width: 100%;
+    --max: none;
+    --column-gap: var(--p9r-space-md, 16px);
+    --row-gap: var(--p9r-space-md, 16px);
+    --item-align: stretch;
+    --item-justify: stretch;
 
     display: grid;
-    /* Intrinsically responsive: as many tracks as fit, each at least `--min`
-       wide. `min(--min, 100%)` keeps a single track from overflowing a
-       container narrower than `--min`. No media queries. */
-    grid-template-columns: repeat(auto-fill, minmax(min(var(--min), 100%), 1fr));
-    gap: var(--gap);
-
-    /* Content zone: own width + horizontal placement within the parent.
-       Placement via margin-inline (works under any parent), exposed in the
-       editor as "Align self". */
+    grid-template-columns: repeat(auto-fit, minmax(min(var(--min), 100%), 1fr));
+    column-gap: var(--column-gap);
+    row-gap: var(--row-gap);
+    align-items: var(--item-align);
+    justify-items: var(--item-justify);
     box-sizing: border-box;
     width: 100%;
-    max-width: var(--max-width);
-    margin-inline: 0 auto;
 }
 
 /* --- Min item width (drives the column count via minmax) --- */
+:host([min="xs"]) { --min: 140px; }
 :host([min="sm"]) { --min: 180px; }
 :host([min="md"]) { --min: 240px; }
 :host([min="lg"]) { --min: 300px; }
 :host([min="xl"]) { --min: 360px; }
 
-/* --- Content zone width (size) --- */
-:host([size="sm"])   { --max-width: var(--p9r-container-sm, 640px); }
-:host([size="md"])   { --max-width: var(--p9r-container-md, 768px); }
-:host([size="lg"])   { --max-width: var(--p9r-container-lg, 1024px); }
-:host([size="xl"])   { --max-width: var(--p9r-container-xl, 1280px); }
-:host([size="full"]) { --max-width: 100%; }
+/* --- Max item width (limits each item inside its responsive cell) --- */
+:host([max="none"]) { --max: none; --item-justify: stretch; }
+:host([max="xs"])   { --max: 180px; --item-justify: center; }
+:host([max="sm"])   { --max: 240px; --item-justify: center; }
+:host([max="md"])   { --max: 320px; --item-justify: center; }
+:host([max="lg"])   { --max: 420px; --item-justify: center; }
+:host([max="xl"])   { --max: 560px; --item-justify: center; }
 
-/* --- Self placement (align self) --- */
-:host([align-self="start"])  { margin-inline: 0 auto; }
-:host([align-self="center"]) { margin-inline: auto; }
-:host([align-self="end"])    { margin-inline: auto 0; }
+/* --- Item alignment inside each grid row --- */
+:host([item-align="stretch"]) { --item-align: stretch; }
+:host([item-align="start"])   { --item-align: start; }
+:host([item-align="center"])  { --item-align: center; }
+:host([item-align="end"])     { --item-align: end; }
+
+/* --- Child placement overrides --- */
+::slotted(*) {
+    min-width: 0;
+    width: 100%;
+    max-width: var(--max);
+}
+
+::slotted([grid-column="span 1"]) { grid-column: span 1; }
+::slotted([grid-column="span 2"]) { grid-column: span 2; }
+::slotted([grid-column="span 3"]) { grid-column: span 3; }
+::slotted([grid-column="span 4"]) { grid-column: span 4; }
+::slotted([grid-column="1 / -1"]) { grid-column: 1 / -1; }
 
 /* --- Gap --- */
-:host([gap="none"]) { --gap: 0; }
-:host([gap="xs"])   { --gap: var(--p9r-space-xs, 4px); }
-:host([gap="sm"])   { --gap: var(--p9r-space-sm, 8px); }
-:host([gap="md"])   { --gap: var(--p9r-space-md, 16px); }
-:host([gap="lg"])   { --gap: var(--p9r-space-lg, 24px); }
-:host([gap="xl"])   { --gap: var(--p9r-space-xl, 32px); }
+:host([gap="none"]) {
+    --column-gap: 0;
+    --row-gap: 0;
+}
+
+:host([gap="xs"]) {
+    --column-gap: var(--p9r-space-xs, 4px);
+    --row-gap: var(--p9r-space-xs, 4px);
+}
+
+:host([gap="sm"]) {
+    --column-gap: var(--p9r-space-sm, 8px);
+    --row-gap: var(--p9r-space-sm, 8px);
+}
+
+:host([gap="md"]) {
+    --column-gap: var(--p9r-space-md, 16px);
+    --row-gap: var(--p9r-space-md, 16px);
+}
+
+:host([gap="lg"]) {
+    --column-gap: var(--p9r-space-lg, 24px);
+    --row-gap: var(--p9r-space-lg, 24px);
+}
+
+:host([gap="xl"]) {
+    --column-gap: var(--p9r-space-xl, 32px);
+    --row-gap: var(--p9r-space-xl, 32px);
+}
+
+:host([gap="custom"][column-gap="none"]) { --column-gap: 0; }
+:host([gap="custom"][column-gap="xs"])   { --column-gap: var(--p9r-space-xs, 4px); }
+:host([gap="custom"][column-gap="sm"])   { --column-gap: var(--p9r-space-sm, 8px); }
+:host([gap="custom"][column-gap="md"])   { --column-gap: var(--p9r-space-md, 16px); }
+:host([gap="custom"][column-gap="lg"])   { --column-gap: var(--p9r-space-lg, 24px); }
+:host([gap="custom"][column-gap="xl"])   { --column-gap: var(--p9r-space-xl, 32px); }
+
+:host([gap="custom"][row-gap="none"]) { --row-gap: 0; }
+:host([gap="custom"][row-gap="xs"])   { --row-gap: var(--p9r-space-xs, 4px); }
+:host([gap="custom"][row-gap="sm"])   { --row-gap: var(--p9r-space-sm, 8px); }
+:host([gap="custom"][row-gap="md"])   { --row-gap: var(--p9r-space-md, 16px); }
+:host([gap="custom"][row-gap="lg"])   { --row-gap: var(--p9r-space-lg, 24px); }
+:host([gap="custom"][row-gap="xl"])   { --row-gap: var(--p9r-space-xl, 32px); }

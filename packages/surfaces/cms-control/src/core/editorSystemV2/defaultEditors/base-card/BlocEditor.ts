@@ -61,6 +61,12 @@ export class CardEditor extends Editor {
                         attribute: "interactive",
                         defaultValue: false,
                     },
+                    {
+                        type: "toggle",
+                        label: "Fill height",
+                        attribute: "fill-height",
+                        defaultValue: false,
+                    },
                 ],
             },
         ];

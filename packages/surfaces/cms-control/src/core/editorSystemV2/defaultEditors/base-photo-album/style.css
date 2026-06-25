@@ -1,13 +1,13 @@
 :host {
     --min: 260px;
     --gap: var(--p9r-space-lg, 24px);
-    --radius: 8px;
+    --radius: var(--p9r-radius-md, 12px);
     --fit: cover;
     --aspect-ratio: 4 / 3;
     --max-width: 100%;
     --image-bg: var(--bg-surface, #ffffff);
     --image-border: color-mix(in srgb, var(--border-default, #e5e7eb) 80%, transparent);
-    --image-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --image-shadow: var(--p9r-shadow-sm, 0 1px 2px rgb(15 23 42 / 0.06));
 
     display: block;
     box-sizing: border-box;
@@ -189,7 +189,7 @@
 
 .preview-close,
 .preview-nav {
-    color: var(--primary-contrasted, #ffffff);
+    color: var(--text-inverted, #ffffff);
     background: rgb(0 0 0 / 0.72);
     border: 1px solid rgb(255 255 255 / 0.42);
     box-shadow: 0 12px 32px rgb(0 0 0 / 0.36);
@@ -204,7 +204,7 @@
     z-index: 2;
     width: 44px;
     height: 44px;
-    border-radius: 999px;
+    border-radius: var(--p9r-radius-pill, 999px);
     font-size: 1.75rem;
     line-height: 1;
 }
@@ -215,7 +215,7 @@
     z-index: 2;
     width: 52px;
     height: 52px;
-    border-radius: 999px;
+    border-radius: var(--p9r-radius-pill, 999px);
     font-size: 2.25rem;
     line-height: 1;
     transform: translateY(-50%);
@@ -232,7 +232,7 @@
 .preview-caption {
     max-width: 72ch;
     margin: 0 auto;
-    color: var(--primary-contrasted, #ffffff);
+    color: var(--text-inverted, #ffffff);
     font-size: 0.95rem;
     line-height: 1.45;
     text-align: center;
@@ -263,7 +263,7 @@
     padding: 0;
     overflow: hidden;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: var(--p9r-radius-sm, 6px);
     background: var(--image-bg);
     opacity: 0.68;
     scroll-snap-align: center;
@@ -303,9 +303,9 @@
 :host([fit="contain"]) { --fit: contain; }
 
 :host([radius="none"]) { --radius: 0; }
-:host([radius="sm"]) { --radius: 4px; }
-:host([radius="md"]) { --radius: 8px; }
-:host([radius="lg"]) { --radius: 16px; }
+:host([radius="sm"]) { --radius: var(--p9r-radius-sm, 6px); }
+:host([radius="md"]) { --radius: var(--p9r-radius-md, 12px); }
+:host([radius="lg"]) { --radius: var(--p9r-radius-lg, 20px); }
 
 :host([chrome="none"]) {
     --image-bg: transparent;
@@ -316,7 +316,7 @@
 :host([chrome="framed"]) {
     --image-bg: var(--bg-surface, #ffffff);
     --image-border: color-mix(in srgb, var(--border-default, #e5e7eb) 80%, transparent);
-    --image-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --image-shadow: var(--p9r-shadow-sm, 0 1px 2px rgb(15 23 42 / 0.06));
 }
 
 :host([size="sm"]) { --max-width: var(--p9r-container-sm, 640px); }

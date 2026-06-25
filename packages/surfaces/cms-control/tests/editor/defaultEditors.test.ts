@@ -13,6 +13,7 @@ import {
     HeadingEditor,
     ImageEditor,
     InputEditor,
+    LinkEditor,
     ListEditor,
     ListItemEditor,
     OptionEditor,
@@ -49,15 +50,46 @@ class TestGridEditor extends GridEditor {
 
 describe("editor default editors", () => {
     test("exposes layout editor settings", () => {
-        expect(new ContainerEditor(target()).getSettings()[0]?.label).toBe("Container");
-        expect(new GridEditor(target()).getSettings()[0]?.label).toBe("Grid");
-        expect(new CardEditor(target()).getSettings()[0]?.label).toBe("Card");
+        const containerSettings = new ContainerEditor(target()).getSettings()[0];
+        const gridSettings = new GridEditor(target()).getSettings()[0];
+
+        expect(containerSettings?.label).toBe("Container");
+        expect(containerSettings?.settings.map(setting => setting.attribute)).toEqual([
+            "size",
+            "align",
+            "padding-inline",
+            "padding-block",
+            "background",
+            "radius",
+            "min-height",
+            "vertical-align",
+            "bleed",
+        ]);
+
+        expect(gridSettings?.label).toBe("Grid");
+        expect(gridSettings?.settings.map(setting => setting.attribute)).toEqual([
+            "min",
+            "max",
+            "gap",
+            "column-gap",
+            "row-gap",
+            "item-align",
+        ]);
+        const cardSettings = new CardEditor(target()).getSettings()[0];
+        expect(cardSettings?.label).toBe("Card");
+        expect(cardSettings?.settings.map(setting => setting.attribute)).toEqual([
+            "variant",
+            "padding",
+            "interactive",
+            "fill-height",
+        ]);
     });
 
     test("exposes content editor identities", () => {
         expect(new ParagraphEditor(target("p")).getTextCapability()?.format).toBe("richtext");
         expect(new HeadingEditor(target("h1")).getTextCapability()?.format).toBe("richtext");
         expect(new SpanEditor(target("span")).getTextCapability()?.format).toBe("richtext");
+        expect(new LinkEditor(target("a")).getTextCapability()?.format).toBe("richtext");
         expect(new CodeEditor(target("code")).getTextCapability()?.format).toBe("text");
         expect(new QuoteEditor(target("blockquote")).getTextCapability()?.format).toBe("richtext");
         expect(new ImageEditor(target("img")).getSettings()[0]?.label).toBe("Image");
@@ -122,6 +154,7 @@ describe("editor default editors", () => {
             },
         ]);
         expect(new SpanEditor(target("span")).getContentSlots()).toEqual([]);
+        expect(new LinkEditor(target("a")).getContentSlots()).toEqual([]);
         expect(new CodeEditor(target("code")).getContentSlots()).toEqual([]);
         expect(new QuoteEditor(target("blockquote")).getContentSlots()).toEqual([]);
         expect(new ListItemEditor(target("li")).getContentSlots()).toEqual([]);
@@ -163,6 +196,13 @@ describe("editor default editors", () => {
             italic: true,
             underline: true,
             link: true,
+            dynamic: true,
+        });
+        expect(new LinkEditor(target("a")).getTextCapability()).toEqual({
+            format: "richtext",
+            bold: true,
+            italic: true,
+            underline: true,
             dynamic: true,
         });
         expect(new CodeEditor(target("code")).getTextCapability()).toEqual({
@@ -219,6 +259,55 @@ describe("editor default editors", () => {
         ]);
     });
 
+    test("link editor exposes target settings", () => {
+        expect(new LinkEditor(target("a")).getSettings()).toEqual([
+            {
+                kind: "self",
+                label: "Link",
+                settings: [
+                    {
+                        type: "page-link",
+                        label: "Target",
+                        attribute: "href",
+                    },
+                    {
+                        type: "select",
+                        label: "Open in",
+                        attribute: "target",
+                        defaultValue: "_self",
+                        options: [
+                            { label: "Same tab", value: "_self" },
+                            { label: "New tab", value: "_blank" },
+                        ],
+                    },
+                    {
+                        type: "text",
+                        label: "Relationship",
+                        attribute: "rel",
+                    },
+                ],
+            },
+        ]);
+    });
+
+    test("input editor exposes type and field attribute settings", () => {
+        const inputSettings = new InputEditor(target("input")).getSettings()[0];
+
+        expect(inputSettings?.settings.map(setting => setting.attribute)).toEqual([
+            "type",
+            "name",
+            "placeholder",
+            "value",
+            "required",
+            "disabled",
+        ]);
+        expect(inputSettings?.settings[0]).toMatchObject({
+            type: "select",
+            label: "Type",
+            attribute: "type",
+        });
+    });
+
     test("grid mounts child override settings on its children", () => {
         const child = new RecordingEditor(target("base-card"));
         const editor = new TestGridEditor(target("base-grid"), [child]);
@@ -241,7 +330,11 @@ describe("editor default editors", () => {
                             { label: "1 column", value: "span 1" },
                             { label: "2 columns", value: "span 2" },
                             { label: "3 columns", value: "span 3" },
+                            { label: "4 columns", value: "span 4" },
                             { label: "Full row", value: "1 / -1" },
+                        ],
+                        attributesOnValue: [
+                            { value: "auto", attributes: { "grid-column": null } },
                         ],
                     },
                 ],
@@ -284,6 +377,7 @@ describe("editor default editors", () => {
             "h5",
             "h6",
             "img",
+            "a",
             "input",
             "select",
             "option",

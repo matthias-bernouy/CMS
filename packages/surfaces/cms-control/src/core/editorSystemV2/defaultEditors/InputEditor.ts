@@ -9,6 +9,22 @@ export class InputEditor extends Editor {
                 label: "Text input",
                 settings: [
                     {
+                        type: "select",
+                        label: "Type",
+                        attribute: "type",
+                        defaultValue: "text",
+                        options: [
+                            { label: "Text", value: "text" },
+                            { label: "Email", value: "email" },
+                            { label: "Password", value: "password" },
+                            { label: "Search", value: "search" },
+                            { label: "Telephone", value: "tel" },
+                            { label: "URL", value: "url" },
+                            { label: "Number", value: "number" },
+                            { label: "Submit", value: "submit" },
+                        ],
+                    },
+                    {
                         type: "text",
                         label: "Name",
                         attribute: "name",

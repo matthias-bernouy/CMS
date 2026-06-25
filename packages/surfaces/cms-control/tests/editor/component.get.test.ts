@@ -21,5 +21,7 @@ describe("editor component runtime endpoint", () => {
         expect(response.headers.get("content-type")).toContain("text/javascript");
         expect(js).toContain("window.p9r");
         expect(js).toContain("Component");
+        expect(js).not.toContain(`define("base-container"`);
+        expect(js).not.toContain(`define("base-card"`);
     });
 });

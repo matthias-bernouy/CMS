@@ -1,20 +1,5 @@
 import { Editor, type ContentSlot, type SettingOption, type SettingSection } from "@bernouy/cms-content/editor";
 
-const containerSizeOptions: SettingOption[] = [
-    { label: "Extra small", value: "xs" },
-    { label: "Small", value: "sm" },
-    { label: "Medium", value: "md" },
-    { label: "Large", value: "lg" },
-    { label: "Extra large", value: "xl" },
-    { label: "Full width", value: "full" },
-];
-
-const alignmentOptions: SettingOption[] = [
-    { label: "Start", value: "start" },
-    { label: "Center", value: "center" },
-    { label: "End", value: "end" },
-];
-
 const spacingOptions: SettingOption[] = [
     { label: "None", value: "none" },
     { label: "Extra small", value: "xs" },
@@ -22,6 +7,35 @@ const spacingOptions: SettingOption[] = [
     { label: "Medium", value: "md" },
     { label: "Large", value: "lg" },
     { label: "Extra large", value: "xl" },
+];
+
+const gridGapOptions: SettingOption[] = [
+    ...spacingOptions,
+    { label: "Custom", value: "custom" },
+];
+
+const minWidthOptions: SettingOption[] = [
+    { label: "Extra small", value: "xs" },
+    { label: "Small", value: "sm" },
+    { label: "Medium", value: "md" },
+    { label: "Large", value: "lg" },
+    { label: "Extra large", value: "xl" },
+];
+
+const maxWidthOptions: SettingOption[] = [
+    { label: "None", value: "none" },
+    { label: "Extra small", value: "xs" },
+    { label: "Small", value: "sm" },
+    { label: "Medium", value: "md" },
+    { label: "Large", value: "lg" },
+    { label: "Extra large", value: "xl" },
+];
+
+const itemAlignmentOptions: SettingOption[] = [
+    { label: "Stretch", value: "stretch" },
+    { label: "Top", value: "start" },
+    { label: "Center", value: "center" },
+    { label: "Bottom", value: "end" },
 ];
 
 export class GridEditor extends Editor {
@@ -44,21 +58,19 @@ export class GridEditor extends Editor {
                 settings: [
                     {
                         type: "select",
-                        label: "Size",
-                        attribute: "size",
-                        defaultValue: "full",
-                        options: containerSizeOptions.filter(option => option.value !== "xs"),
-                    },
-                    {
-                        type: "select",
                         label: "Minimum item width",
                         attribute: "min",
                         defaultValue: "md",
-                        options: [
-                            { label: "Small", value: "sm" },
-                            { label: "Medium", value: "md" },
-                            { label: "Large", value: "lg" },
-                            { label: "Extra large", value: "xl" },
+                        options: minWidthOptions,
+                    },
+                    {
+                        type: "select",
+                        label: "Maximum item width",
+                        attribute: "max",
+                        defaultValue: "none",
+                        options: maxWidthOptions,
+                        attributesOnValue: [
+                            { value: "none", attributes: { max: null } },
                         ],
                     },
                     {
@@ -66,14 +78,36 @@ export class GridEditor extends Editor {
                         label: "Gap",
                         attribute: "gap",
                         defaultValue: "md",
-                        options: spacingOptions,
+                        options: gridGapOptions,
+                        attributesOnValue: [
+                            {
+                                value: ["none", "xs", "sm", "md", "lg", "xl"],
+                                attributes: { "column-gap": null, "row-gap": null },
+                            },
+                        ],
                     },
                     {
-                        type: "segmented",
-                        label: "Align self",
-                        attribute: "align-self",
-                        defaultValue: "start",
-                        options: alignmentOptions,
+                        type: "select",
+                        label: "Column gap",
+                        attribute: "column-gap",
+                        defaultValue: "md",
+                        options: spacingOptions,
+                        visibleWhen: { attribute: "gap", equals: "custom" },
+                    },
+                    {
+                        type: "select",
+                        label: "Row gap",
+                        attribute: "row-gap",
+                        defaultValue: "md",
+                        options: spacingOptions,
+                        visibleWhen: { attribute: "gap", equals: "custom" },
+                    },
+                    {
+                        type: "select",
+                        label: "Item align",
+                        attribute: "item-align",
+                        defaultValue: "stretch",
+                        options: itemAlignmentOptions,
                     },
                 ],
             },
@@ -95,7 +129,11 @@ export class GridEditor extends Editor {
                         { label: "1 column", value: "span 1" },
                         { label: "2 columns", value: "span 2" },
                         { label: "3 columns", value: "span 3" },
+                        { label: "4 columns", value: "span 4" },
                         { label: "Full row", value: "1 / -1" },
+                    ],
+                    attributesOnValue: [
+                        { value: "auto", attributes: { "grid-column": null } },
                     ],
                 },
             ],
