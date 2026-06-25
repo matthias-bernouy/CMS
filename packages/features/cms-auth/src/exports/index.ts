@@ -78,7 +78,9 @@ export {
 export {
     ConfiguredEmailer,
     EmailConfigurationError,
+    isEmailDeliveryDisabledError,
     type ConfiguredEmailerConfig,
+    type EmailConfigurationErrorCode,
     type RuntimeEmailSettings,
 } from "cms-auth/default-implementation/ConfiguredEmailer";
 export {

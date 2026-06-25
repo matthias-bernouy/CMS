@@ -6,6 +6,7 @@ import type { TUser, UsersRepository } from "cms-auth/interfaces/UsersRepository
 import { internalUserId } from "cms-auth/core/SubjectResolver";
 import { AuthValidationError, validatePassword } from "cms-auth/core/validation";
 import { DefaultAuthEmailComposer } from "cms-auth/default-implementation/DefaultAuthEmailComposer";
+import { isEmailDeliveryDisabledError } from "cms-auth/default-implementation/ConfiguredEmailer";
 
 const DEFAULT_EMAIL_VERIFICATION_TTL_SECONDS = 24 * 60 * 60;
 const DEFAULT_PASSWORD_RESET_TTL_SECONDS = 60 * 60;
@@ -61,8 +62,13 @@ export async function signupLocalUser<Role extends string>(
     validateEmail(email);
     validatePassword(input.password);
 
+    const emailDeliveryEnabled = await isEmailDeliveryEnabled(cfg);
     const existing = await cfg.credentials.getByEmail(email);
     if (existing) {
+        if (!emailDeliveryEnabled) {
+            await cfg.credentials.markEmailVerified(existing.sub);
+            return { created: false, sent: false };
+        }
         return { created: false, sent: await sendVerificationForCredential(cfg, existing) };
     }
 
@@ -70,12 +76,14 @@ export async function signupLocalUser<Role extends string>(
         email,
         password: input.password,
         displayName: input.displayName,
-        emailVerified: false,
+        emailVerified: !emailDeliveryEnabled,
     });
     const user = await cfg.users.upsert(
         { ...identity, sub: internalUserId("local", identity.sub), provider: "local" },
         cfg.defaultRole,
     );
+    if (!emailDeliveryEnabled) return { created: true, sent: false };
+
     return {
         created: true,
         sent: await sendVerificationForCredential(cfg, { sub: identity.sub, email, emailVerifiedAt: null }, user),
@@ -90,6 +98,10 @@ export async function requestEmailVerification<Role extends string>(
     validateEmail(email);
     const credential = await cfg.credentials.getByEmail(email);
     if (!credential) return { sent: false };
+    if (!await isEmailDeliveryEnabled(cfg)) {
+        await cfg.credentials.markEmailVerified(credential.sub);
+        return { sent: false };
+    }
     return { sent: await sendVerificationForCredential(cfg, credential) };
 }
 
@@ -114,6 +126,7 @@ export async function requestPasswordReset<Role extends string>(
     validateEmail(email);
     const credential = await cfg.credentials.getByEmail(email);
     if (!credential) return { sent: false };
+    if (!await isEmailDeliveryEnabled(cfg)) return { sent: false };
 
     if (await inEmailCooldown(cfg, "password_reset", credential.sub)) return { sent: false };
 
@@ -122,7 +135,7 @@ export async function requestPasswordReset<Role extends string>(
     const { token } = await cfg.tokens.create({ purpose: "password_reset", sub: credential.sub, expiresAt });
     const user = await readLocalUser(cfg.users, credential.sub);
     const actionUrl = cfg.buildPasswordResetUrl?.(token) ?? buildTokenUrl(cfg.passwordResetUrl, token);
-    await cfg.emailer.send(await emailComposer(cfg).compose({
+    const sent = await sendAuthEmail(cfg, await emailComposer(cfg).compose({
         kind: "password_reset",
         to: { email: credential.email, displayName: user?.displayName },
         actionUrl,
@@ -130,7 +143,10 @@ export async function requestPasswordReset<Role extends string>(
         expiresAt,
         siteName: cfg.siteName,
     }));
-    return { sent: true };
+    if (!sent) {
+        await cfg.tokens.deleteForSub(credential.sub, "password_reset");
+    }
+    return { sent };
 }
 
 export async function confirmPasswordReset<Role extends string>(
@@ -161,7 +177,7 @@ async function sendVerificationForCredential<Role extends string>(
     const { token } = await cfg.tokens.create({ purpose: "email_verification", sub: credential.sub, expiresAt });
     const user = knownUser ?? await readLocalUser(cfg.users, credential.sub);
     const actionUrl = cfg.buildEmailVerificationUrl?.(token) ?? buildTokenUrl(cfg.emailVerificationUrl, token);
-    await cfg.emailer.send(await emailComposer(cfg).compose({
+    const sent = await sendAuthEmail(cfg, await emailComposer(cfg).compose({
         kind: "email_verification",
         to: { email: credential.email, displayName: user?.displayName },
         actionUrl,
@@ -169,7 +185,28 @@ async function sendVerificationForCredential<Role extends string>(
         expiresAt,
         siteName: cfg.siteName,
     }));
-    return true;
+    if (!sent) {
+        await cfg.tokens.deleteForSub(credential.sub, "email_verification");
+        await cfg.credentials.markEmailVerified(credential.sub);
+    }
+    return sent;
+}
+
+async function isEmailDeliveryEnabled<Role extends string>(cfg: PublicAuthFlowConfig<Role>): Promise<boolean> {
+    return cfg.emailer.isEnabled ? cfg.emailer.isEnabled() : true;
+}
+
+async function sendAuthEmail<Role extends string>(
+    cfg: PublicAuthFlowConfig<Role>,
+    email: Awaited<ReturnType<AuthEmailComposer["compose"]>>,
+): Promise<boolean> {
+    try {
+        await cfg.emailer.send(email);
+        return true;
+    } catch (error) {
+        if (isEmailDeliveryDisabledError(error)) return false;
+        throw error;
+    }
 }
 
 async function inEmailCooldown<Role extends string>(

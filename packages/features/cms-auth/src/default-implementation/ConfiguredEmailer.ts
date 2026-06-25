@@ -24,32 +24,47 @@ export type ConfiguredEmailerConfig = {
     transportFactory?: SmtpTransportFactory;
 };
 
+export type EmailConfigurationErrorCode =
+    | "disabled"
+    | "invalid_configuration"
+    | "unsupported_transport"
+    | "invalid_secret_reference"
+    | "missing_secret";
+
 export class EmailConfigurationError extends Error {
-    constructor(message: string) {
+    constructor(message: string, readonly code: EmailConfigurationErrorCode = "invalid_configuration") {
         super(message);
         this.name = "EmailConfigurationError";
     }
 }
 
+export function isEmailDeliveryDisabledError(error: unknown): boolean {
+    return error instanceof EmailConfigurationError && error.code === "disabled";
+}
+
 export class ConfiguredEmailer implements Emailer {
     constructor(private readonly config: ConfiguredEmailerConfig) {}
+
+    async isEnabled(): Promise<boolean> {
+        return (await this.config.readSettings()).enabled;
+    }
 
     async send(input: OutboundEmail): Promise<void> {
         const settings = await this.config.readSettings();
         if (!settings.enabled) {
-            throw new EmailConfigurationError("Email delivery is disabled.");
+            throw new EmailConfigurationError("Email delivery is disabled.", "disabled");
         }
         if (settings.transport !== "smtp") {
-            throw new EmailConfigurationError(`Unsupported email transport: ${settings.transport}.`);
+            throw new EmailConfigurationError(`Unsupported email transport: ${settings.transport}.`, "unsupported_transport");
         }
 
         const secretKey = secretRefToKey(settings.smtp.passwordSecretRef);
         if (!secretKey) {
-            throw new EmailConfigurationError("SMTP password secret reference is invalid.");
+            throw new EmailConfigurationError("SMTP password secret reference is invalid.", "invalid_secret_reference");
         }
         const password = await this.config.secrets.get(secretKey);
         if (!password) {
-            throw new EmailConfigurationError(`SMTP password secret "${secretKey}" was not found.`);
+            throw new EmailConfigurationError(`SMTP password secret "${secretKey}" was not found.`, "missing_secret");
         }
 
         const emailer = new SmtpEmailer({

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
     ConfiguredEmailer,
     EmailConfigurationError,
+    isEmailDeliveryDisabledError,
     type RuntimeEmailSettings,
     type SmtpSendMailInput,
     type SmtpTransportConfig,
@@ -68,7 +69,14 @@ describe("ConfiguredEmailer", () => {
             secrets:      { get: async () => "secret-value" },
         });
 
-        await expect(emailer.send(message())).rejects.toThrow(EmailConfigurationError);
+        expect(await emailer.isEnabled()).toBe(false);
+        const error = await emailer.send(message()).then(
+            () => null,
+            (err) => err,
+        );
+        expect(error).toBeInstanceOf(EmailConfigurationError);
+        expect(error.code).toBe("disabled");
+        expect(isEmailDeliveryDisabledError(error)).toBe(true);
     });
 
     test("fails when the referenced secret is missing", async () => {
@@ -77,7 +85,13 @@ describe("ConfiguredEmailer", () => {
             secrets:      { get: async () => null },
         });
 
-        await expect(emailer.send(message())).rejects.toThrow(EmailConfigurationError);
+        const error = await emailer.send(message()).then(
+            () => null,
+            (err) => err,
+        );
+        expect(error).toBeInstanceOf(EmailConfigurationError);
+        expect(error.code).toBe("missing_secret");
+        expect(isEmailDeliveryDisabledError(error)).toBe(false);
     });
 });
 

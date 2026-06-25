@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { BunRunner } from "@bernouy/http-runner";
 import { serveForTest, type TestServer } from "@bernouy/http-runner/testing";
 import {
+    EmailConfigurationError,
+    type Emailer,
     InMemoryAuthTokenStore,
     InMemoryEmailer,
     InMemoryLocalCredentialStore,
@@ -15,12 +17,13 @@ import {
 
 type Role = "user" | "admin";
 
-function setup(opts: { authEmailCooldownSeconds?: number } = {}) {
+function setup(opts: { authEmailCooldownSeconds?: number; emailer?: Emailer } = {}) {
     const runner = new BunRunner();
     const users = new InMemoryUsersRepository<Role>();
     const credentials = new InMemoryLocalCredentialStore();
     const tokens = new InMemoryAuthTokenStore();
-    const emailer = new InMemoryEmailer();
+    const captureEmailer = new InMemoryEmailer();
+    const emailer = opts.emailer ?? captureEmailer;
     const resolver = new SubjectResolver<Role>(users, "user");
     const local = new LocalAuthentication<Role>({
         providerId: "local",
@@ -45,7 +48,7 @@ function setup(opts: { authEmailCooldownSeconds?: number } = {}) {
     };
     registerPublicAuthRoutes(runner, cfg);
     const server = serveForTest(runner);
-    return { server, credentials, emailer };
+    return { server, credentials, emailer: captureEmailer };
 }
 
 describe("public auth routes", () => {
@@ -78,6 +81,36 @@ describe("public auth routes", () => {
             const logout = await post(server, "/logout", {});
             expect(logout.status).toBe(200);
             expect(logout.headers.get("set-cookie")).toContain("site-session=");
+        } finally {
+            server.stop();
+        }
+    });
+
+    test("signup skips verification when email delivery is disabled", async () => {
+        const { server, credentials } = setup({ emailer: disabledEmailer() });
+        try {
+            expect((await post(server, "/signup", {
+                email:       "disabled@x.com",
+                password:    "password-1",
+                displayName: "No Mail",
+            })).status).toBe(200);
+            expect((await credentials.getByEmail("disabled@x.com"))?.emailVerifiedAt).toBeInstanceOf(Date);
+
+            const loggedIn = await post(server, "/login", {
+                email:    "disabled@x.com",
+                password: "password-1",
+            });
+            expect(loggedIn.status).toBe(200);
+        } finally {
+            server.stop();
+        }
+    });
+
+    test("auth email request endpoints no-op when email delivery is disabled", async () => {
+        const { server } = setup({ emailer: disabledEmailer() });
+        try {
+            expect((await post(server, "/password/reset/request", { email: "unknown@x.com" })).status).toBe(200);
+            expect((await post(server, "/email/verification/request", { email: "unknown@x.com" })).status).toBe(200);
         } finally {
             server.stop();
         }
@@ -161,4 +194,13 @@ function tokenFrom(text: string): string {
 
 function sessionCookie(res: Response): string {
     return res.headers.get("set-cookie")?.split(";")[0] ?? "";
+}
+
+function disabledEmailer(): Emailer {
+    return {
+        isEnabled: async () => false,
+        send:      async () => {
+            throw new EmailConfigurationError("Email delivery is disabled.", "disabled");
+        },
+    };
 }
