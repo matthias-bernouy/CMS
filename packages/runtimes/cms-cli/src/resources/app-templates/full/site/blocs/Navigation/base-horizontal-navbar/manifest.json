@@ -1,0 +1,16 @@
+{
+    "runtime": "0.0.1",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "default-tag": "base-horizontal-navbar",
+    "defaultContent": "./default.html",
+    "meta": {
+        "author": "Be5 Solutions",
+        "title": "Horizontal navbar",
+        "description": "Responsive horizontal site navigation with brand, links and action slots.",
+        "categories": [
+            "navigation",
+            "layout"
+        ]
+    }
+}

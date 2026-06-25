@@ -1,0 +1,16 @@
+<nav class="navbar" part="navbar">
+    <div class="brand" part="brand">
+        <slot name="brand"></slot>
+    </div>
+    <button class="menu-toggle" part="toggle" type="button" aria-label="Menu" aria-expanded="false">
+        <span class="menu-icon" aria-hidden="true"></span>
+    </button>
+    <div class="panel" part="panel">
+        <div class="links" part="links">
+            <slot></slot>
+        </div>
+        <div class="actions" part="actions">
+            <slot name="actions"></slot>
+        </div>
+    </div>
+</nav>

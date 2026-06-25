@@ -1,0 +1,21 @@
+---
+title: Register
+description: Static registration page ready for auth wiring
+visible: true
+tags: []
+---
+<w13c-snippet identifier="navbar"></w13c-snippet>
+<base-container size="sm" align="center" padding-block="xl" background="muted" min-height="half">
+    <base-card padding="lg" variant="elevated">
+        <h1 slot="header">Create an account</h1>
+        <p>Start with a few account details. Email verification can be connected later.</p>
+        <base-form endpoint="/.cms/auth/signup" method="POST" redirect="/auth/login">
+            <input type="text" name="displayName" placeholder="Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="submit" value="Register">
+        </base-form>
+        <a slot="footer" href="/auth/login">Already have an account?</a>
+    </base-card>
+</base-container>
+<w13c-snippet identifier="footer"></w13c-snippet>

@@ -1,0 +1,4 @@
+node_modules
+.env
+site/.cms-variants
+site/.p9r-dev

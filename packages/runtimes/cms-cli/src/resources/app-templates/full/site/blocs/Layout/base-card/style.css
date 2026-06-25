@@ -1,0 +1,159 @@
+:host {
+  display: block;
+
+  --_bg: var(--bg-surface, #ffffff);
+  --_border-color: var(--border-default, #e5e7eb);
+  --_border-width: 1px;
+  --_radius: var(--p9r-radius-md, 12px);
+  --_shadow: none;
+  --_padding: var(--p9r-space-lg, 24px);
+  --_gap: var(--p9r-space-md, 16px);
+  --_text: var(--text-main, #1f2937);
+
+  --ctx-bg: var(--_bg);
+  --ctx-fg: var(--_text);
+  --ctx-fg-muted: var(--text-muted, #667085);
+  --ctx-border: var(--_border-color);
+}
+
+:host([variant="outlined"]) {
+  --_bg: var(--bg-surface, #ffffff);
+  --_shadow: none;
+}
+
+:host([variant="elevated"]) {
+  --_border-width: 0;
+  --_shadow: var(--p9r-shadow-lg, 0 18px 48px rgb(16 24 40 / 0.14));
+}
+
+:host([variant="filled"]) {
+  --_bg: var(--bg-base, #f8fafc);
+  --_border-width: 0;
+  --_shadow: none;
+}
+
+:host([padding="none"]) { --_padding: 0; }
+:host([padding="sm"])   { --_padding: var(--p9r-space-md, 16px); }
+:host([padding="md"])   { --_padding: var(--p9r-space-lg, 24px); }
+:host([padding="lg"])   { --_padding: var(--p9r-space-xl, 32px); }
+
+:host([fill-height]) {
+  height: 100%;
+}
+
+:host([fill-height]) .card {
+  min-height: 100%;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--_bg);
+  color: var(--_text);
+  border: var(--_border-width) solid var(--_border-color);
+  border-radius: var(--_radius);
+  box-shadow: var(--_shadow);
+  overflow: hidden;
+}
+
+.header,
+.body,
+.footer {
+  padding: var(--_padding);
+}
+
+.header {
+  text-align: start;
+  border-bottom: 1px solid var(--_border-color);
+}
+
+.header ::slotted(*) {
+  margin-block: 0 !important;
+}
+
+.header ::slotted(img) {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  border-radius: var(--p9r-radius-sm, 6px);
+}
+
+.header ::slotted(h1) {
+  font-size: clamp(1.75rem, 4vw, 2.5rem) !important;
+  line-height: 1.08 !important;
+}
+
+.header ::slotted(h2) {
+  font-size: clamp(1.5rem, 3vw, 2rem) !important;
+  line-height: 1.12 !important;
+}
+
+.header ::slotted(h3),
+.header ::slotted(h4),
+.header ::slotted(h5),
+.header ::slotted(h6) {
+  font-size: 1.25rem !important;
+  line-height: 1.2 !important;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--_gap);
+  border-top: 1px solid var(--_border-color);
+}
+
+.footer ::slotted(*) {
+  margin-block: 0 !important;
+}
+
+.footer ::slotted(a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.6rem 0.9rem;
+  color: var(--text-inverted, #ffffff) !important;
+  background: var(--primary-base, #3659e3);
+  border-radius: var(--p9r-radius-sm, 6px);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.footer ::slotted(a:hover) {
+  color: var(--text-inverted, #ffffff) !important;
+  background: var(--primary-contrasted, #172554);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--_gap);
+}
+
+.body ::slotted(*) {
+  margin-block: 0 !important;
+}
+
+:host(:not([has-header])) .header,
+:host(:not([has-footer])) .footer {
+  display: none;
+}
+
+:host([interactive]) {
+  cursor: pointer;
+}
+
+:host([interactive]) .card {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :host([interactive]) .card:hover {
+    box-shadow: var(--p9r-shadow-lg, 0 18px 48px rgb(16 24 40 / 0.14));
+    transform: translateY(-1px);
+  }
+}

@@ -3,7 +3,6 @@ import CLI_push from "./CLI_push";
 import CLI_pull from "./CLI_pull";
 import CLI_dev from "./CLI_dev";
 import CLI_init from "./CLI_init";
-import CLI_new from "./CLI_new";
 import CLI_installSkill from "./CLI_installSkill";
 import CLI_listBlocs from "./CLI_listBlocs";
 import CLI_secrets from "./CLI_secrets";
@@ -15,9 +14,7 @@ function printHelp() {
     console.log(`p9r — Cms CLI
 
 Usage:
-  p9r init <folder> [--force]      Scaffold a new bloc folder.
-  p9r new <folder> [flags]         Scaffold a CMS app (Control + Delivery,
-                                   in-memory providers, basic auth).
+  p9r init <folder> [flags]        Scaffold a CMS site project.
       --template=full              Template (default: full)
       --force | -f                 Allow a non-empty target.
   p9r install-skill [--force]      Install the bloc-creator Claude skill
@@ -63,9 +60,6 @@ try {
     switch (command) {
         case "init":
             await CLI_init(rest);
-            break;
-        case "new":
-            await CLI_new(rest);
             break;
         case "install-skill":
             await CLI_installSkill(rest);

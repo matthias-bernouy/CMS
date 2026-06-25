@@ -1,0 +1,20 @@
+---
+title: Preparing auth screens
+description: Static article detail page
+visible: true
+tags: ["auth"]
+---
+<w13c-snippet identifier="navbar"></w13c-snippet>
+<base-container size="md" align="center" padding-block="xl">
+    <base-card padding="lg">
+        <h1 slot="header">Preparing auth screens</h1>
+        <p>Published on June 24, 2026 - 4 min read</p>
+        <p>Auth screens can exist before their endpoints are connected, as long as they stay honest about their state.</p>
+        <h2>Separate interface from wiring</h2>
+        <p>The starter includes login, registration, password recovery and verification screens as static editable pages.</p>
+        <h2>Connect behavior later</h2>
+        <p>When the auth provider is ready, these pages can bind inputs and submit actions to the public auth API.</p>
+        <blockquote>The UI should prepare the workflow without pretending the integration is already active.</blockquote>
+    </base-card>
+</base-container>
+<w13c-snippet identifier="footer"></w13c-snippet>

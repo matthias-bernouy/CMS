@@ -123,7 +123,7 @@ export default async function CLI_dev(args: string[]) {
         defaultRole:              "user" as CMS_ROLES,
         siteName:                 "p9r dev",
         authEmailCooldownSeconds: 0,
-        emailVerificationUrl:     `http://${publicHost}:${deliveryPort}/auth/verify-email`,
+        emailVerificationUrl:     `http://${publicHost}:${deliveryPort}/auth/confirm-email`,
         passwordResetUrl:         `http://${publicHost}:${deliveryPort}/auth/reset-password`,
     };
 

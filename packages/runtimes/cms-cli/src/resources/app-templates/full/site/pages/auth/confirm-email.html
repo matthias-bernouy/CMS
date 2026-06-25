@@ -1,0 +1,19 @@
+---
+title: Confirm email
+description: Static email confirmation page ready for auth wiring
+visible: true
+tags: []
+---
+<w13c-snippet identifier="navbar"></w13c-snippet>
+<base-container size="sm" align="center" padding-block="xl" background="muted" min-height="half">
+    <base-card padding="lg" variant="elevated">
+        <h1 slot="header">Confirm your email</h1>
+        <p>Use this page as the landing screen for email verification links.</p>
+        <base-form endpoint="/.cms/auth/email/verification/confirm" method="POST" redirect="/auth/login">
+            <input type="text" name="token" placeholder="Verification token" required>
+            <input type="submit" value="Confirm email">
+        </base-form>
+        <a slot="footer" href="/auth/login">Go to login</a>
+    </base-card>
+</base-container>
+<w13c-snippet identifier="footer"></w13c-snippet>
