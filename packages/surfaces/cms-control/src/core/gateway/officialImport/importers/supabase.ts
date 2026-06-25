@@ -1,8 +1,11 @@
 import {
     openApiSpecToProvider,
+    parseDataShape,
     validateProvider,
+    type DataShape,
     type Endpoint,
     type EndpointHeader,
+    type EndpointResponse,
     type Provider,
 } from "@bernouy/cms-gateway";
 import { secretKeyToRef } from "@bernouy/cms-secrets";
@@ -10,20 +13,30 @@ import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import type { SupabaseOfficialProviderImportDto } from "cms-control/core/validation/gateway/parseOfficialProviderImportDto";
 import type { OfficialProviderImportResult } from "../types";
 
+const RPC_OUTPUT_METADATA_FUNCTION = "cms_gateway_rpc_output_shapes";
+
 export async function importSupabaseOfficialProvider(
     dto: SupabaseOfficialProviderImportDto,
 ): Promise<OfficialProviderImportResult> {
     const restUrl = normalizeSupabaseRestUrl(dto.projectUrl);
+    const schema = dto.schema ?? "public";
     const secretKey = supabaseSecretKey(dto.id);
     const secretRef = secretKeyToRef(secretKey);
-    const spec = await fetchSupabaseOpenApi(restUrl, dto.apiKey);
+    const spec = await fetchSupabaseOpenApi(restUrl, dto.apiKey, schema);
     const provider = openApiSpecToProvider(spec, {
         providerId: dto.id,
         baseUrl: restUrl.replace(/\/+$/, ""),
     });
+    provider.endpoints = provider.endpoints.filter(endpoint => rpcFunctionName(endpoint) !== RPC_OUTPUT_METADATA_FUNCTION);
+    const rpcOutputShapes = hasRpcEndpoints(provider)
+        ? await fetchSupabaseRpcOutputShapes(restUrl, dto.apiKey, schema)
+        : new Map<string, DataShape>();
 
     provider.meta = mergeMeta(provider, dto);
-    provider.endpoints = provider.endpoints.map(endpoint => withSupabaseHeaders(endpoint, secretRef));
+    provider.endpoints = provider.endpoints
+        .map(endpoint => withSupabaseRpcOutput(endpoint, rpcOutputShapes))
+        .map(endpoint => withSupabaseSchemaHeaders(endpoint, schema))
+        .map(endpoint => withSupabaseHeaders(endpoint, secretRef));
 
     const errors = validateProvider(provider);
     if (errors.length) {
@@ -49,10 +62,11 @@ function normalizeSupabaseRestUrl(raw: string): string {
     return url.toString();
 }
 
-async function fetchSupabaseOpenApi(restUrl: string, apiKey: string): Promise<string> {
+async function fetchSupabaseOpenApi(restUrl: string, apiKey: string, schema: string): Promise<string> {
     const response = await fetch(restUrl, {
         headers: {
             accept: "application/openapi+json",
+            "accept-profile": schema,
             apikey: apiKey,
             authorization: `Bearer ${apiKey}`,
         },
@@ -63,6 +77,146 @@ async function fetchSupabaseOpenApi(restUrl: string, apiKey: string): Promise<st
     const spec = await response.text();
     if (!spec.trim()) throw new InvalidParam("projectUrl", "Supabase OpenAPI response was empty");
     return spec;
+}
+
+async function fetchSupabaseRpcOutputShapes(restUrl: string, apiKey: string, schema: string): Promise<Map<string, DataShape>> {
+    let response: Response;
+    try {
+        response = await fetch(new URL(`rpc/${RPC_OUTPUT_METADATA_FUNCTION}`, restUrl).toString(), {
+            method: "POST",
+            headers: {
+                accept: "application/json",
+                "content-type": "application/json",
+                "content-profile": schema,
+                apikey: apiKey,
+                authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({ p_schemas: [schema] }),
+        });
+    } catch {
+        return new Map();
+    }
+    if (!response.ok) return new Map();
+
+    let body: unknown;
+    try {
+        body = await response.json();
+    } catch {
+        return new Map();
+    }
+    return rpcOutputShapesFromMetadata(body);
+}
+
+function rpcOutputShapesFromMetadata(body: unknown): Map<string, DataShape> {
+    const out = new Map<string, DataShape>();
+    if (!isRecord(body) || !Array.isArray(body.functions)) return out;
+
+    for (const entry of body.functions) {
+        if (!isRecord(entry)) continue;
+        const name = text(entry.name);
+        if (!name || name === RPC_OUTPUT_METADATA_FUNCTION) continue;
+
+        const shape = shapeFromFunctionMetadata(entry);
+        if (!shape) continue;
+        try {
+            out.set(name, parseDataShape(shape, `supabase.functions.${name}.output`));
+        } catch {
+            continue;
+        }
+    }
+    return out;
+}
+
+function shapeFromFunctionMetadata(entry: Record<string, unknown>): DataShape | null {
+    const fields = fieldsShape(entry.fields);
+    const returnShape = fields ?? shapeFromTypeMetadata(entry.returnType);
+    if (!returnShape) return null;
+    return entry.returnsSet === true ? { type: "array", items: returnShape } : returnShape;
+}
+
+function fieldsShape(fields: unknown): DataShape | null {
+    if (!Array.isArray(fields) || fields.length === 0) return null;
+    const properties: Record<string, DataShape> = {};
+    for (const field of fields) {
+        if (!isRecord(field)) continue;
+        const name = text(field.name);
+        if (!name || isUnsafePropertyName(name)) continue;
+        const shape = shapeFromTypeMetadata(field);
+        if (shape) properties[name] = shape;
+    }
+    return Object.keys(properties).length ? { type: "object", properties } : null;
+}
+
+function shapeFromTypeMetadata(value: unknown): DataShape | null {
+    if (!isRecord(value)) return null;
+
+    const fields = fieldsShape(value.fields);
+    if (fields) return fields;
+
+    const category = text(value.typeCategory);
+    const kind = text(value.typeKind);
+    const typeName = lowerText(value.typeName);
+    const dataType = lowerText(value.dataType);
+
+    if (category === "A") {
+        return { type: "array", items: shapeFromTypeMetadata(value.element) ?? { type: "string" } };
+    }
+    if (category === "B" || typeName === "bool" || dataType === "boolean") return { type: "boolean" };
+    if (category === "N" || isNumericType(typeName) || isNumericType(dataType)) return { type: "number" };
+    if (typeName === "json" || typeName === "jsonb" || dataType === "json" || dataType === "jsonb") return { type: "object" };
+    if (kind === "c") return { type: "object" };
+    return { type: "string" };
+}
+
+function hasRpcEndpoints(provider: Provider): boolean {
+    return provider.endpoints.some(endpoint => rpcFunctionName(endpoint) !== null);
+}
+
+function withSupabaseRpcOutput(endpoint: Endpoint, outputShapes: Map<string, DataShape>): Endpoint {
+    const name = rpcFunctionName(endpoint);
+    if (!name) return endpoint;
+    const body = outputShapes.get(name);
+    if (!body) return endpoint;
+    return { ...endpoint, output: mergeResponseOutput(endpoint.output, { status: "200", body }) };
+}
+
+function withSupabaseSchemaHeaders(endpoint: Endpoint, schema: string): Endpoint {
+    if (schema === "public") return endpoint;
+    const headers = (endpoint.headers ?? [])
+        .filter(header => !["accept-profile", "content-profile"].includes(header.name.toLowerCase()));
+    return {
+        ...endpoint,
+        headers: [
+            ...headers,
+            staticHeader("accept-profile", schema),
+            staticHeader("content-profile", schema),
+        ],
+    };
+}
+
+function mergeResponseOutput(current: EndpointResponse[] | undefined, response: EndpointResponse): EndpointResponse[] {
+    if (!current?.length) return [response];
+    let replaced = false;
+    const next = current.map(entry => {
+        if (entry.status !== response.status || replaced) return entry;
+        replaced = true;
+        return response;
+    });
+    return replaced ? next : [response, ...next];
+}
+
+function rpcFunctionName(endpoint: Endpoint): string | null {
+    let url: URL;
+    try {
+        url = new URL(endpoint.targetUrl);
+    } catch {
+        return null;
+    }
+    const segments = url.pathname.split("/").filter(Boolean);
+    const rpcIndex = segments.lastIndexOf("rpc");
+    if (rpcIndex < 0) return null;
+    const name = segments[rpcIndex + 1];
+    return name ? decodeURIComponent(name) : null;
 }
 
 function mergeMeta(provider: Provider, dto: SupabaseOfficialProviderImportDto): Provider["meta"] {
@@ -92,6 +246,46 @@ function secretHeader(name: string, ref: string, prefix?: string): EndpointHeade
     return { name, source: { from: "secret", ref, ...(prefix ? { prefix } : {}) } };
 }
 
+function staticHeader(name: string, value: string): EndpointHeader {
+    return { name, source: { from: "static", value } };
+}
+
 function supabaseSecretKey(providerId: string): string {
     return `SUPABASE_${providerId.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_API_KEY`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function text(value: unknown): string | undefined {
+    return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function lowerText(value: unknown): string {
+    return text(value)?.toLowerCase() ?? "";
+}
+
+function isUnsafePropertyName(value: string): boolean {
+    return value === "__proto__" || value === "constructor" || value === "prototype";
+}
+
+function isNumericType(value: string): boolean {
+    return [
+        "bigint",
+        "bigserial",
+        "decimal",
+        "double precision",
+        "float4",
+        "float8",
+        "int2",
+        "int4",
+        "int8",
+        "integer",
+        "money",
+        "numeric",
+        "real",
+        "serial",
+        "smallint",
+    ].includes(value);
 }

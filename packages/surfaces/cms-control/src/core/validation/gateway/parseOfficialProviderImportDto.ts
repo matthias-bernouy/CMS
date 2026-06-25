@@ -10,6 +10,7 @@ export type SupabaseOfficialProviderImportDto = {
     id: string;
     projectUrl: string;
     apiKey: string;
+    schema?: string;
     meta?: Partial<GatewayMeta>;
 };
 
@@ -31,7 +32,9 @@ export function parseOfficialProviderImportDto(body: Record<string, unknown>): O
     const apiKey = text(body.apiKey) ?? text(body["supabase.apiKey"]);
     if (!apiKey) throw new MissingParam("apiKey");
 
-    return { kind, id, projectUrl, apiKey, ...parseMeta(body) };
+    const schema = parseSchema(body);
+
+    return { kind, id, projectUrl, apiKey, ...(schema ? { schema } : {}), ...parseMeta(body) };
 }
 
 function parseMeta(body: Record<string, unknown>): { meta?: Partial<GatewayMeta> } {
@@ -51,3 +54,12 @@ function parseMeta(body: Record<string, unknown>): { meta?: Partial<GatewayMeta>
 
 const text = (value: unknown): string | undefined =>
     typeof value === "string" && value.trim() ? value.trim() : undefined;
+
+function parseSchema(body: Record<string, unknown>): string | undefined {
+    const schema = text(body.schema) ?? text(body["supabase.schema"]);
+    if (!schema) return undefined;
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(schema)) {
+        throw new InvalidParam("schema", "must be a Postgres identifier");
+    }
+    return schema;
+}

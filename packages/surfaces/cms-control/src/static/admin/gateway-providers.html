@@ -48,7 +48,16 @@
                                 hint="Lowercase letters, numbers and dashes. Immutable after creation."></p9r-input>
                             <p9r-input name="meta.name" label="Name" placeholder="Supabase"></p9r-input>
                             <p9r-input name="projectUrl" label="Project URL" placeholder="https://project-ref.supabase.co"></p9r-input>
-                            <p9r-input name="apiKey" type="password" label="Service role key" autocomplete="off"></p9r-input>
+                            <p9r-input name="schema" label="Data API schema" value="api"
+                                hint="Use the exposed schema that contains the RPC functions, usually api. Use public only for public-schema endpoints."></p9r-input>
+                            <p9r-input name="apiKey" type="password" label="Service role key" autocomplete="off"
+                                hint="Required for the OpenAPI schema. Publishable and anon keys cannot import providers."></p9r-input>
+                            <details style="font-size: 13px; color: var(--text-muted, #64748b);">
+                                <summary style="cursor: pointer; font-weight: 700; color: var(--text-main, #0f172a);">RPC output metadata</summary>
+                                <p style="margin: .5rem 0 0;">
+                                    Install <code>cms_gateway_rpc_output_shapes</code> in Supabase to enrich RPC endpoints with response fields. Without it, RPC endpoints are imported without detailed outputs.
+                                </p>
+                            </details>
                             <p9r-button color="primary" fullWidth type="submit">Connect Supabase</p9r-button>
                         </p9r-stack>
                     </cms-form>
