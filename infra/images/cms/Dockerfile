@@ -1,4 +1,4 @@
-# Basic CMS image — single Bun process for Control + Delivery, all in-memory.
+# Basic CMS image — single Bun process for Control + Delivery.
 # Build context is the repo root (the workspace must be fully available).
 
 FROM oven/bun:1.3-alpine AS build
@@ -21,7 +21,6 @@ WORKDIR /app
 COPY --from=build /app /app
 
 ENV NODE_ENV=production
-ENV PORT=3000
-EXPOSE 3000
+EXPOSE 3000 3001
 
 CMD ["bun", "run", "packages/runtimes/cms-server/src/index.ts"]

@@ -11,7 +11,7 @@ import { BunRunner } from "@bernouy/http-runner";
 import { EnvelopeSecretCrypto, LocalKekProvider } from "@bernouy/envelope-crypto";
 import { MongoDekRepository, createFieldCrypto } from "@bernouy/envelope-crypto/mongo";
 import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
-import { ValidatingSecretStore } from "@bernouy/cms-secrets";
+import { ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { CompositeGatewayRepository, SYSTEM_GATEWAY_PROVIDERS, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
@@ -64,7 +64,7 @@ const MONGO_URL           = env("MONGO_URL");
 const CMS_AUTH_SITE_NAME  = process.env.CMS_AUTH_SITE_NAME ?? "CMS";
 const CMS_AUTH_EMAIL_COOLDOWN_SECONDS = Number(process.env.CMS_AUTH_EMAIL_COOLDOWN_SECONDS ?? 300);
 const CMS_AUTH_EMAIL_VERIFICATION_URL = process.env.CMS_AUTH_EMAIL_VERIFICATION_URL
-    ?? `${DELIVERY_PUBLIC_URL}/auth/verify-email`;
+    ?? `${DELIVERY_PUBLIC_URL}/auth/confirm-email`;
 const CMS_AUTH_PASSWORD_RESET_URL = process.env.CMS_AUTH_PASSWORD_RESET_URL
     ?? `${DELIVERY_PUBLIC_URL}/auth/reset-password`;
 const CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL = process.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL
@@ -120,6 +120,7 @@ const secrets           = new ValidatingSecretStore(new EncryptedMongoSecretStor
     collection:   db.collection("cms_secrets"),
     secretCrypto,
 }));
+const resolveSecret     = createSecretResolver(secrets);
 const cache = new InMemoryCache();
 
 // Seed the builtin `local` identity provider (idempotent).
@@ -197,12 +198,13 @@ const controlCms = new ControlCms(controlRunner, repo, auth, {
 await controlCms.ready;
 
 // Delivery on its own runner/port — strictly public surface. Shares the SAME
-// gateway instance as Control, so providers created in the admin are immediately
-// resolvable by the `/.cms/gateway/*` proxy.
+// gateway + encrypted secret store as Control, so providers created in the
+// admin are immediately usable by the `/.cms/gateway/*` proxy.
 const deliveryRunner = new BunRunner();
 new DeliveryCms({
     runner: deliveryRunner, repository: repo, cache, gateway, analytics,
     analyticsSalt: ANALYTICS_SALT_SECRET,
+    gatewayResolveSecret: resolveSecret,
     filesMetadata, filesBlob, variantStore,
     auth: {
         ...publicAuthBase,
