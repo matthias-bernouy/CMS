@@ -1,18 +1,73 @@
-### RULE: IMPORT PATHS & PACKAGE ARCHITECTURE
+# Import Rules
 
-When writing or refactoring code in this project, strictly follow these rules for imports and path resolution:
+Imports are part of the package architecture. They must preserve workspace
+boundaries and keep browser/server/adapters separated.
 
-**1. Use Path Aliases / Package Names (No relative paths)**
-Never use complex relative paths (e.g., `../../`). Always use absolute imports from the root of the project using path aliases (like `@/` or `src/`), or use the package's own name.
-* ❌ BAD: `import { helper } from '../../utils/helper';`
-* ✅ GOOD: `import { helper } from '@/utils/helper';`
+## Workspace Packages
 
-**2. Never use `__dirname` for relative navigation**
-When serving static folders or resolving paths, do not use `__dirname` combined with relative navigation (it breaks during build/packaging in ESM). Resolve paths from the project/package root.
-* ❌ BAD: `serveApi(join(__dirname, "../../api/admin"));`
-* ✅ GOOD: `serveApi(join(packageRoot, "api/admin"));` *(Assuming packageRoot is correctly resolved via import.meta or process.cwd)*
+Import another package only through its declared package name or subpath:
 
-**3. Strict adherence to package `exports`**
-When developing a package (e.g., `StorageProvider`), if you need to import files or sub-modules that are part of the package's public or internal API, you MUST include them in the `package.json` `"exports"` field. Import them using the package name, acting as a consumer. Do not bypass the exports boundary.
-* ❌ BAD: `import { Repository } from '../../../StorageProvider/src/infrastructure/repo';`
-* ✅ GOOD: `import { Repository } from 'StorageProvider/infrastructure';` *(Provided `"./infrastructure"` is declared in the package's exports)*
+```ts
+import { ValidatingCmsRepository } from "@bernouy/cms-content";
+import { MongoCmsRepository } from "@bernouy/cms-content/mongo";
+```
+
+Do not import another package through a deep filesystem path:
+
+```ts
+// Wrong
+import { MongoCmsRepository } from "../../cms-content/src/default-implementation/MongoCmsRepository";
+```
+
+If a symbol must be consumed by another package, export it from the owning
+package's `src/exports/*.ts` file and declare the matching subpath in
+`package.json`.
+
+## Local Package Aliases
+
+Inside a package, use the package-local path aliases already configured for
+that package:
+
+```ts
+import { readJsonBody } from "cms-control/core/http/readJsonBody";
+import { validatePagePath } from "cms-content/core/validation/pages";
+import { BunRunner } from "http-runner/default-implementation/BunRunner";
+```
+
+Avoid deep `../../..` imports when a local alias exists. A short relative import
+between sibling files is acceptable when that is the package's established
+style, but do not cross package boundaries with relative paths.
+
+## Adapter Subpaths
+
+Adapter subpaths isolate optional infrastructure:
+
+- `./mongo` imports MongoDB-backed repositories.
+- `./s3` imports S3-backed file blobs.
+- `./browser` imports browser-safe gateway types and helpers.
+- `./components` imports browser components for auth.
+
+Only composition roots should import production adapters. In practice this
+usually means `@bernouy/cms-server`, tests, or local development wiring.
+Surfaces consume interfaces and receive concrete instances through their
+constructors or config.
+
+## Browser Bundles
+
+Browser-facing code must not import Node, Bun server APIs, Mongo adapters, S3
+adapters, or surface internals. Use browser-safe subpaths such as:
+
+```ts
+import { Component } from "@bernouy/cms-control/component";
+import { Editor } from "@bernouy/cms-control/editor";
+import type { EndpointPickerMethod } from "@bernouy/cms-content/editor";
+```
+
+For bloc editor bundles, `@bernouy/cms-control/editor` is rewritten by
+`p9rExternalsPlugin` so the runtime reads from `window.p9rEditor`.
+
+## Path Resolution
+
+Do not build package-root paths with `__dirname` and fragile `../../`
+navigation. Prefer `import.meta.dir`, package-local constants, or an injected
+root path. This matters for Bun, ESM, built artifacts, and packaged templates.

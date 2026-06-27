@@ -1,42 +1,63 @@
-# Static folder
+# Static Folder
 
-## Rôle
+`@bernouy/cms-control` serves `src/static/` through
+`src/core/registerEndpoints/serveStaticFolder/`. The folder contains
+server-rendered admin and editor HTML fragments plus static assets.
 
-Le dossier `static/` contient le rendu côté serveur de pages HTML, servi par `serveStaticFolder(runner, options)` (cf. `packages/surfaces/cms-control/src/core/registerEndpoints/serveStaticFolder/`).
+## Routing
 
-Chaque fichier `.html` routable du dossier devient une route. Les fichiers non-`.html` (images, fonts, etc.) sont servis tels quels, à leur chemin relatif.
+Every scanned `.html` file becomes a route:
 
-Exceptions :
-- les fichiers `_template.html` sont des wrappers de rendu, pas des routes ;
-- une surface peut réserver certains documents pleine-page (`login.html`, `forbidden.html`, …) et les rendre explicitement hors du scan statique, par exemple quand une page doit être publique alors que le reste du dossier est gardé.
+| File | Route |
+| --- | --- |
+| `static/index.html` | `/` |
+| `static/admin/pages.html` | `/admin/pages` |
+| `static/admin/index.html` | `/admin` |
+| `static/editor/page.html` | `/editor/page` |
 
-## Routage par arborescence
+Non-HTML assets are served at their relative path. Text assets (`.js`, `.css`,
+`.svg`, `.json`, `.txt`, `.xml`, `.map`) are compressed and cached through the
+shared HTTP helpers. Pre-compressed binary assets such as `woff2`, images, and
+icons are served without a second compression pass.
 
-L'URL d'une page correspond à son chemin relatif depuis le dossier `static/`, sans l'extension `.html`. Les fichiers `index.html` mappent au dossier parent.
+Skipped files:
 
-Exemples :
-- `static/index.html` → `/`
-- `static/admin/buckets.html` → `/admin/buckets`
-- `static/admin/index.html` → `/admin`
-- `static/logo.svg` → `/logo.svg` (servi tel quel)
+- `_template.html` files. They are wrappers, not routes.
+- `login.html` and `forbidden.html`. `ControlCms` renders them explicitly
+  because they have auth behavior different from the guarded static tree.
 
-Le préfixe d'URL dépend du `runner` passé à `serveStaticFolder` (par exemple via `runner.group("/admin", ...)`).
+## Templates
 
-## Tokens du template
+Each routable HTML fragment is wrapped in the closest `_template.html`, walking
+from the file's directory up to `static/`.
 
-`serveStaticFolder` prend des options (`cache`, `cspExtras`, …) et enveloppe chaque `.html` routable avec le `_template.html` le plus proche dans l'arborescence. Pour chaque requête :
+The template replacement tokens are:
 
-- `{{CONTENT}}` dans le template est remplacé par le contenu du `.html` matché.
-- `{{BASE_PATH}}` est remplacé par `runner.basePath`, **à la fois dans le template et dans le contenu du `.html`**. Toute référence à un asset (`href`, `src`, fetch URL, etc.) doit donc utiliser `{{BASE_PATH}}` plutôt qu'un chemin absolu.
+- `{{CONTENT}}`: replaced with the routed fragment.
+- `{{BASE_PATH}}`: replaced with the current runner `basePath` in both the
+  template and the fragment.
 
-## Règles de contenu
+Any asset URL, form target, fetch URL, or link that points back into Control
+should use `{{BASE_PATH}}`.
 
-Chaque `.html` routable ne contient que le fragment injecté dans `{{CONTENT}}` — pas de `<html>`, `<head>` ou `<body>`, ces balises viennent du template.
+## Fragment Rules
 
-Pas de JS ni de CSS dans les fragments routables de `static/`. Le styling et l'interactivité passent par les custom elements ou par des assets externes référencés via `{{BASE_PATH}}`. Les documents pleine-page réservés rendus explicitement par une surface peuvent porter leur propre squelette HTML.
+Routable fragments contain only the content injected into `{{CONTENT}}`. Do not
+put `<html>`, `<head>`, or `<body>` in those fragments.
 
-## Composants UI (`@bernouy/components`)
+Keep static fragments declarative. Prefer custom elements and data-binding over
+page-specific inline scripts. Shared styles and scripts belong in assets or in
+browser components.
 
-`@bernouy/components` fournit les custom elements visuels (`<p9r-*>`), les composants logiques `<w13c-*>` (ex. `<w13c-form>`), et le **runtime de data-binding** (`<cms-binding-core>` + `cms-source`/`cms-repeat`/`{{ }}`/`#{}`) — fetch + rendu déclaratifs, sans JS de page. Côté CMS admin, `@bernouy/cms-control` ajoute ses propres tags `<cms-*>` (`<cms-form>`, `<cms-binding-core>`, …).
+Editor routes redirect to the relevant admin list when the required `id` query
+parameter is missing.
 
-Voir la documentation de `packages/foundation/components` pour la liste complète.
+## UI Runtime
+
+Admin pages use:
+
+- `@bernouy/components` for public `<p9r-*>` and `<w13c-*>` elements plus the
+  binding runtime.
+- `@bernouy/cms-control` browser components for internal `<cms-*>` elements.
+- `{{BASE_PATH}}/resources/css/cms-blocs.css` for shared design tokens consumed
+  by both admin and authored blocs.

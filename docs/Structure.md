@@ -1,148 +1,133 @@
-# Structure du monorepo
+# Monorepo Structure
 
-Le code vit sous `packages/`, réparti en **quatre couches** dont le seul but est la
-**séparation des responsabilités** et la **réutilisation à travers plusieurs surfaces**.
+CmsCore is a Bun and TypeScript workspace. Packages live under `packages/` and
+are split into four layers:
 
-```
+```text
 packages/
-├── foundation/   ← briques génériques, rien de spécifique au CMS
-├── features/     ← le CMS, découpé en domaines métier (un par package)
-├── surfaces/     ← assemblage des features en applications (routes, pages), sur interfaces seules
-└── runtimes/     ← points d'entrée exécutables qui injectent les implémentations réelles
+|-- foundation/   generic building blocks with no CMS-domain knowledge
+|-- features/     CMS domain modules, one package per business area
+|-- surfaces/     HTTP applications assembled from feature contracts
+`-- runtimes/     executable composition roots
 ```
 
-## Schéma des dépendances
+The dependency direction is strict:
 
-Le sens des dépendances est strict, des couches concrètes vers les couches abstraites :
-
-```
-runtimes ──▶ surfaces ──▶ features ──▶ foundation
-   │            │            │
-   │            │            └─ une feature peut dépendre d'une autre feature
-   │            │               (toujours via son barrel exports/, jamais en profondeur)
-   │            └─ une surface ne connaît que les interfaces des features
-   └─ un runtime choisit et injecte les implémentations (Mongo, S3, …)
+```text
+runtimes -> surfaces -> features -> foundation
 ```
 
-Règle : **une couche ne dépend jamais d'une couche au-dessus d'elle.** Une feature ignore
-les surfaces ; une surface ignore les runtimes.
+A layer never imports a layer above it. A feature may import another feature,
+but only through that feature's declared package export.
 
----
+## Packages
 
-## Les quatre couches
+Foundation packages:
 
-### `foundation/`
+- `@bernouy/http-runner`: `Runner`, `BunRunner`, HTTP helpers, cache,
+  compression, CSP, and test server helpers.
+- `@bernouy/envelope-crypto`: envelope encryption, KEK/DEK contracts, field
+  encryption, and the Mongo DEK adapter.
+- `@bernouy/rate-limiter`: fixed-window rate limiting with memory and Mongo
+  implementations.
+- `@bernouy/components`: public custom elements (`<p9r-*>`, `<w13c-*>`) and
+  the CMS data-binding runtime.
 
-Tout ce qui peut être généralisé hors du CMS. Aucune connaissance du métier CMS.
-À terme, ces packages pourraient sortir du monorepo si d'autres projets en ont besoin.
+Feature packages:
 
-Aujourd'hui : `http-runner` (la seam `Runner` — endpoints, middlewares, montage),
-`envelope-crypto` (chiffrement par enveloppe), `rate-limiter` (rate limiting substituable),
-`components` (les blocs `<p9r-*>` et custom elements d'admin, ex-`cms-blocs`).
+- `@bernouy/cms-content`: pages, blocs, templates, snippets, settings,
+  validation, snippet expansion, editor contracts, and repository contracts.
+- `@bernouy/cms-files`: metadata and blob stores, media lifecycle, local/S3
+  storage, image variants, and file-serving handlers.
+- `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
+  encrypted Mongo storage.
+- `@bernouy/cms-permissions`: role definitions, grants, permission catalogue,
+  and role repository contracts.
+- `@bernouy/cms-auth`: local auth, OIDC auth, PATs, signed cookies, public auth
+  flows, user/provider repositories, and auth route registrars.
+- `@bernouy/cms-gateway`: data-provider contracts, endpoint execution,
+  OpenAPI import, system providers, and gateway proxy helpers.
+- `@bernouy/cms-analytics`: privacy-first server-side analytics events,
+  counters, stores, and dashboard handlers.
+- `@bernouy/cms-bloc-compile`: bloc validation, view/editor bundling, and the
+  editor externals plugin.
+- `@bernouy/cms-editor-system-v2`: editor shell components and editor runtime
+  types.
 
-### `features/`
+Surface packages:
 
-Le CMS lui-même, découpé en **domaines métier**, un par package
-(`@bernouy/cms-content`, `@bernouy/cms-auth`, `@bernouy/cms-gateway`, …).
-Chaque feature est un module autonome qui suit l'**architecture en couches** décrite plus bas.
+- `@bernouy/cms-control`: admin UI, REST API, authenticated static pages, media
+  admin, settings, users, gateway admin, and editor endpoints.
+- `@bernouy/cms-delivery`: public rendering, page lookup, bloc bundles,
+  component runtime, gateway proxy, media serving, sitemap, robots, and
+  analytics collection.
 
-### `surfaces/`
+Runtime packages:
 
-Assemble les features entre elles : monte les routes, sert les pages, câble les middlewares.
-**Aucune implémentation concrète** — une surface ne manipule que les *interfaces* exposées
-par les features, jamais un `new MongoXxx()`. Deux surfaces aujourd'hui :
-`cms-control` (le back-office admin : `api/` + `static/` + `components/`) et
-`cms-delivery` (le rendu public des sites).
+- `@bernouy/cms-cli`: `p9r` CLI for scaffolding, local development, push/pull,
+  files reindexing, secrets, and bloc listing.
+- `@bernouy/cms-server`: production composition root. It reads environment,
+  wires Mongo/local filesystem/crypto/auth/gateway/analytics, and starts
+  Control and Delivery runners.
 
-### `runtimes/`
+## Feature Anatomy
 
-Les points d'entrée **exécutables** : ils sont les seuls à choisir et instancier les
-implémentations réelles (`MongoCmsRepository`, store S3, …) et à les injecter dans une surface.
-`cms-server` (le serveur HTTP) et `cms-cli` (l'outil en ligne de commande).
+Most feature packages use this shape:
 
----
-
-## Anatomie d'un package `features/`
-
-Chaque feature applique la même architecture en couches. Le flux de dépendances interne va
-**toujours** du concret vers l'abstrait :
-
+```text
+src/
+|-- interfaces/              contracts and public types
+|-- core/                    pure domain logic and validation
+|-- default-implementation/  in-memory, local, or adapter-backed implementations
+|-- http/                    handlers or registrars that surfaces can mount
+`-- exports/                 public package subpath barrels
 ```
-http/ ──▶ exports/ ──▶ core/ ──▶ interfaces/
-                          ▲           ▲
-        default-implementation/ ──────┘
+
+Not every feature needs every folder. For example, `cms-bloc-compile` is a
+compile-time utility with `core/` and `exports/`; `cms-secrets` has no HTTP
+surface of its own.
+
+Keep these boundaries:
+
+- `interfaces/` stays inert: types and contracts only.
+- `core/` receives dependencies by interface and does not instantiate concrete
+  persistence adapters.
+- `default-implementation/` owns concrete implementations.
+- `http/` may expose handlers, constants, or registrars, but it should not make
+  production infrastructure choices.
+- `exports/` is the package boundary. Every file here must match a declared
+  `package.json` export subpath.
+
+## Surfaces And Runtimes
+
+Surfaces mount behavior onto a provided `Runner`. They can own application
+routes, static HTML, API file routing, and page shells. They should consume
+feature contracts and helpers, not production adapters such as Mongo or S3.
+
+Runtimes are the only packages expected to read `process.env`, connect to
+databases, instantiate network adapters, choose storage roots, and call
+`runner.start()`.
+
+## Build
+
+The workspace build is sequenced:
+
+1. `packages/foundation/components` builds first because consumers use its
+   generated `dist/` bundle and declarations.
+2. `bunx tsc --build` emits project-reference declarations.
+3. `packages/surfaces/cms-control` builds its browser admin bundle.
+
+Use the root commands:
+
+```bash
+bun run build
+bun run typecheck
+bun test
 ```
 
-### Les dossiers
+## See Also
 
-| Dossier | Rôle | Présence |
-|---|---|---|
-| `interfaces/` | Contrats purs : `interface`/`type` uniquement, **aucun code exécutable**. C'est la frontière que le reste du package suit. | toutes (sauf libs pures de transformation) |
-| `core/` | La logique métier pure. N'importe **que** des `interfaces/`, jamais une implémentation concrète. | **toutes** |
-| `default-implementation/` | Implémentations concrètes proposées des interfaces (`InMemoryXxx`, `MongoXxx`, …). | features avec un repository/store |
-| `exports/` | Le **composition root** et la frontière publique du package. Un fichier par sous-chemin déclaré dans `package.json`. | **toutes** |
-| `http/` | Les **handlers** HTTP (`(req, deps) => Response`) et les **constantes de route** (chemin, méthode, clé de cache) de la feature. **Ne monte aucune route** (`runner.addEndpoint`/`group` interdits ici) et **ne sert aucune page HTML** — voir les deux règles ci-dessous. | features qui exposent des routes |
-| `components/` | Custom elements / fragments HTML propres à la feature. | `cms-auth` |
-| `presets/` | Données de préréglage embarquées. | `cms-gateway` |
-
-Les dossiers absents sont **légitimes**, pas des écarts : `cms-bloc-compile` est une lib de
-transformation pure (`core` + `exports` seulement) ; `cms-permissions` et `cms-secrets`
-n'ont pas de `http/` car elles n'exposent pas d'endpoints propres.
-
-### Règles d'or
-
-1. **Sens des flèches** : `http/` → `exports/` → `core/` → `interfaces/`. Jamais l'inverse.
-2. **Instanciation confinée** : on ne voit `new MaClasse()` **que** dans `exports/` ou
-   `default-implementation/`. `core/` reçoit ses dépendances par injection.
-3. **`interfaces/` est inerte** : interdiction d'y importer ou d'y écrire du code exécutable.
-4. **Une feature consomme une autre feature** uniquement via son barrel `exports/`
-   (le nom de package), jamais par un chemin profond — voir [import-rules](./import-rules.md).
-5. **Une feature ne monte pas de routes.** Elle exporte des *handlers* + des *constantes
-   de route* ; c'est la **surface** qui appelle `runner.addEndpoint`/`group`. Invariant
-   vérifiable : `runner.addEndpoint`/`.group(`/`.setDefaultEndpoint` n'apparaît que dans
-   `surfaces/` et `runtimes/`, jamais dans `features/`.
-6. **Une feature ne sert pas de page HTML.** Les documents pleine-page (login, erreurs, …)
-   appartiennent à la surface (`static/`). Un middleware de feature qui doit produire une
-   page (ex. l'auth guard) reçoit un *hook de rendu injecté* par la surface, et reste
-   sans présentation par défaut (réponse texte/redirection nue).
-
-### `exports/` ↔ `package.json`
-
-Chaque fichier de `exports/` correspond à **un** sous-chemin déclaré dans le champ
-`"exports"` du `package.json`, et inversement :
-
-| Fichier | Sous-chemin | Convention |
-|---|---|---|
-| `index.ts` | `.` | API publique par défaut |
-| `mongo.ts` | `./mongo` | **isole la peerDependency `mongodb`** — non tirée si non importée |
-| `browser.ts`, `s3.ts`, `urls.ts`, `presets.ts`, `components.ts` | `./<nom>` | isole un contrat navigateur, une dépendance lourde ou un sous-domaine |
-
-Un consommateur importe `@bernouy/cms-content` ou `@bernouy/cms-content/mongo`, jamais un
-chemin interne. C'est ce qui rend chaque entité « promouvable en package » de façon mécanique.
-
-### Limites (signaux de refactorisation)
-
-- Un fichier > **120 lignes** → extraire des sous-modules.
-- Un dossier > **8 fichiers/sous-dossiers** → réorganiser.
-- Plus de **4 niveaux** de profondeur depuis `src/` → réorganiser.
-
----
-
-## Où vivent `api/` et `static/` ?
-
-Dans les **surfaces**, pas dans les features. Une feature publie des *handlers* dans son
-`http/` ; c'est la surface qui les **monte** (`runner.addEndpoint`/`group`), en plus de
-posséder son dossier `api/` auto-routé et son dossier `static/` (pages d'admin, pages login
-et erreurs). Quand une route est exposée par deux surfaces (les routes `/.cms/*` servies à la
-fois par `cms-control` en aperçu guardé et par `cms-delivery` en public), chaque surface
-écrit son propre montage à partir du handler + de la constante de route partagés.
-
-- `api/` : routage automatique par fichiers — voir [api-folder](./api-folder.md).
-- `static/` : rendu SSR des pages — voir [static-folder](./static-folder.md).
-
-## Voir aussi
-
-- [import-rules](./import-rules.md) — chemins d'import et frontières de packages.
-- [api-folder](./api-folder.md) — convention du dossier `api/` des surfaces.
-- [static-folder](./static-folder.md) — convention du dossier `static/` des surfaces.
-- [cms-bloc-development](./cms-bloc-development.md) — développement des blocs `foundation/components`.
+- [import-rules.md](./import-rules.md)
+- [api-folder.md](./api-folder.md)
+- [static-folder.md](./static-folder.md)
+- [cms-bloc-development.md](./cms-bloc-development.md)

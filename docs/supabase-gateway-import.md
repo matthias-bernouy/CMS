@@ -1,8 +1,12 @@
 # Supabase Gateway Import
 
-The official Supabase provider import reads the project OpenAPI schema and stores
-the provided key as a CMS secret. RPC response fields are enriched only when the
-Supabase project exposes the optional metadata function below.
+The official Supabase import creates a gateway provider from the project's
+OpenAPI schema and stores the submitted API key as a CMS secret. Imported
+endpoints receive injected `apikey` and `authorization` headers that read from
+that secret at execution time.
+
+RPC response fields are enriched only when the Supabase project exposes the
+optional metadata function below.
 
 ## Import Steps
 
@@ -13,7 +17,7 @@ Supabase project exposes the optional metadata function below.
 4. Set `Data API schema` to the exposed schema that contains your RPC functions,
    usually `api`.
 5. Enter a service role key or another secret key allowed to read the OpenAPI
-   schema. Publishable and anon keys cannot import the provider.
+   schema. Publishable and anon keys should not be used for the import.
 6. Submit `Connect Supabase`.
 
 If the provider already exists, delete it first or import with a new identifier.

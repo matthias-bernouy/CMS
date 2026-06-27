@@ -1,11 +1,14 @@
-# System Auth Gateway
+# Auth System Gateway
 
-The readonly `system-auth` provider exposes CMS-owned authentication through the
-same data-source catalogue as regular gateway providers. It is intended for
-site-authored login, signup, verification and reset pages; the CMS does not ship
-public auth blocs by default.
+The readonly `system-auth` provider exposes CMS-owned public authentication
+through the same gateway catalogue as regular providers. It is intended for
+site-authored login, signup, email verification, password reset, and account
+state pages.
 
-## Runtime Path
+The CMS does not ship public auth blocs by default. Sites call these endpoints
+from authored blocs or forms.
+
+## Runtime Paths
 
 When a surface is configured with both a gateway repository and public auth,
 these endpoints are available on the site origin:
@@ -21,13 +24,14 @@ these endpoints are available on the site origin:
 | `POST` | `/.cms/gateway/system-auth/requestPasswordReset` | `{ "email": string }` | `{ "ok": true }` |
 | `POST` | `/.cms/gateway/system-auth/confirmPasswordReset` | `{ "token": string, "password": string }` | `{ "ok": true }` |
 
-Control mounts the same provider behind the admin guard and keeps signup
-disabled there. Delivery can expose signup when its public auth config allows it.
+`@bernouy/cms-control` mounts the same provider behind the admin guard and keeps
+signup disabled there. `@bernouy/cms-delivery` can expose signup when its public
+auth config allows it.
 
 ## Authoring Contract
 
 Use `GET /.cms/gateway/system-auth/me` as a normal `cms-source` to render
-authenticated/anonymous states.
+authenticated and anonymous states.
 
 Use action endpoints from custom blocs or forms with a JSON payload:
 
@@ -39,7 +43,7 @@ await fetch("/.cms/gateway/system-auth/login", {
 });
 ```
 
-The editor source catalogue includes `method`, response fields, and the JSON
+The editor source catalogue includes method, response fields, and JSON
 request-body fields for action endpoints. Structure data-source binding still
-only offers `GET` sources, so login/reset actions are not accidentally inserted
-as `cms-source` fetches.
+only offers `GET` sources, so login and reset actions are not accidentally
+inserted as `cms-source` fetches.
