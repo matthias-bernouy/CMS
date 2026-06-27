@@ -35,6 +35,25 @@ describe("editor frame endpoint - pages", () => {
         expect(html).not.toContain("stale");
     });
 
+    test("sanitizes stored and expanded HTML before rendering the frame", async () => {
+        const { cms } = cmsWithPage(pricingPage(`
+            <a href="javascript:alert(1)">bad link</a>
+            <iframe srcdoc="<script>alert(1)</script>"></iframe>
+            <w13c-snippet identifier="hero">stale</w13c-snippet>
+        `), {
+            hero: `<img src="x" onerror="alert(1)"><script>alert(1)</script><p>Expanded hero</p>`,
+        });
+        const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
+        const html = await response.text();
+
+        expect(response.status).toBe(200);
+        expect(html).toContain("<p>Expanded hero</p>");
+        expect(html).not.toContain("<script>alert");
+        expect(html).not.toContain("onerror");
+        expect(html).not.toContain("javascript:alert");
+        expect(html).not.toContain("srcdoc");
+    });
+
     test("redirects to pages admin when the page is missing", async () => {
         const { cms } = cmsWithPage(null);
         const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=missing-id"), cms as any);
@@ -59,7 +78,7 @@ describe("editor frame endpoint - pages", () => {
 
         expect(response.status).toBe(200);
         expect(html).toContain(`<div data-cms-editor-root style="display:contents"><cms-binding-core cms-binding-disabled cms-source-state-force="loading">`);
-        expect(html).toContain(`<div data-cms-content style="display:contents"><p>Hello</p></div>`);
+        expect(html).toContain(`<div data-cms-content="" style="display:contents"><p>Hello</p></div>`);
         expect(html).toContain("/cms/api/editor/binding-core.js");
     });
 });

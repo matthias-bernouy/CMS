@@ -11,6 +11,7 @@ export type VariantServeDeps = {
 };
 
 const MAX_WIDTH = 4000; // sanity bound on the URL; no generation happens here
+const RASTER_FALLBACK_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif", "image/bmp"]);
 const notFound = () => new Response("Not found", { status: 404 });
 
 /**
@@ -58,6 +59,7 @@ export async function serveVariantRequest(
 
     // Fallback: the original, served NOT-immutable so it is replaced once the
     // worker has generated the variant.
+    if (!RASTER_FALLBACK_TYPES.has(item.mimeType)) return notFound();
     const original = await deps.sourceBlob.get(item.id);
     if (!original) return notFound();
     return imageResponse(original, item.mimeType, cacheControl(false), item.size);

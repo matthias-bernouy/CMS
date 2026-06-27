@@ -56,6 +56,36 @@ describe("handleGatewayRequest", () => {
         expect(await res.text()).toBe("ok");
     });
 
+    test("a denied endpoint grant returns 403 without proxying upstream", async () => {
+        const fetchImpl = okFetch();
+        const authorizeEndpoint = mock(async () => false);
+
+        const res = await handleGatewayRequest(
+            await seededRepo(),
+            new Request("http://local" + PREFIX + "shop/getCart"),
+            { prefix: PREFIX, deps: { fetchImpl, authorizeEndpoint } },
+        );
+
+        expect(res.status).toBe(403);
+        expect(await res.text()).toBe("Forbidden");
+        expect(authorizeEndpoint).toHaveBeenCalledTimes(1);
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    test("an allowed endpoint grant proxies upstream", async () => {
+        const fetchImpl = okFetch();
+        const authorizeEndpoint = mock(async (endpoint: { urn: string }) => endpoint.urn === "urn:shop:getCart");
+
+        const res = await handleGatewayRequest(
+            await seededRepo(),
+            new Request("http://local" + PREFIX + "shop/getCart"),
+            { prefix: PREFIX, deps: { fetchImpl, authorizeEndpoint } },
+        );
+
+        expect(res.status).toBe(200);
+        expect(fetchImpl).toHaveBeenCalledTimes(1);
+    });
+
     test("system endpoints require a system executor", async () => {
         const repo = new CompositeGatewayRepository(new InMemoryGatewayRepository(), [SYSTEM_AUTH_PROVIDER]);
         const res = await handleGatewayRequest(repo, new Request("http://local" + PREFIX + "system-auth/me"), { prefix: PREFIX });
@@ -78,5 +108,20 @@ describe("handleGatewayRequest", () => {
         expect(executeSystemEndpoint).toHaveBeenCalledTimes(1);
         expect(fetchImpl).not.toHaveBeenCalled();
         expect(await res.text()).toBe("site-session=abc");
+    });
+
+    test("system endpoints are authorized before the system executor runs", async () => {
+        const repo = new CompositeGatewayRepository(new InMemoryGatewayRepository(), [SYSTEM_AUTH_PROVIDER]);
+        const executeSystemEndpoint = mock(async () => new Response("system"));
+        const authorizeEndpoint = mock(async () => false);
+
+        const res = await handleGatewayRequest(
+            repo,
+            new Request("http://local" + PREFIX + "system-auth/me"),
+            { prefix: PREFIX, deps: { executeSystemEndpoint, authorizeEndpoint } },
+        );
+
+        expect(res.status).toBe(403);
+        expect(executeSystemEndpoint).not.toHaveBeenCalled();
     });
 });

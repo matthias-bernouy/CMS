@@ -3,6 +3,7 @@ import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { type Middleware, type RouteHandler, type Runner } from "@bernouy/http-runner";
 import {
     InMemoryAuthTokenStore,
+    InMemoryAuthentication,
     InMemoryEmailer,
     InMemoryLocalCredentialStore,
     InMemoryUsersRepository,
@@ -103,10 +104,11 @@ describe("Control public auth mount", () => {
         const repository = new InMemoryCmsRepository();
         const { local, credentials, users, publicAuth } = authSystem();
         const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+        const adminAuth = new InMemoryAuthentication<CMS_ROLES>({ role: "admin" });
         const cms = new ControlCms(
             runner,
             repository,
-            local,
+            adminAuth,
             { publicAuth },
             undefined,
             undefined,

@@ -7,8 +7,10 @@ import { systemProviderUrnOf } from "../core/systemProviders";
 export const CMS_GATEWAY_ROUTE = "/.cms/gateway";
 export const GATEWAY_PROXY_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
 export type GatewaySystemExecutor = (endpoint: Endpoint, request: Request) => Response | Promise<Response>;
+export type GatewayEndpointAuthorizer = (endpoint: Endpoint, request: Request) => boolean | Promise<boolean>;
 export type GatewayHandlerDeps = ExecutorDeps & {
     executeSystemEndpoint?: GatewaySystemExecutor;
+    authorizeEndpoint?: GatewayEndpointAuthorizer;
 };
 
 export function gatewayPrefix(basePath: string): string {
@@ -44,6 +46,10 @@ export async function handleGatewayRequest(
     const resolved = await resolveEndpoint(gateway, segments, request.method);
     if (!resolved.ok) {
         return new Response(resolved.reason, { status: resolved.reason === "method_not_allowed" ? 405 : 404 });
+    }
+
+    if (opts.deps?.authorizeEndpoint && !(await opts.deps.authorizeEndpoint(resolved.endpoint, request))) {
+        return new Response("Forbidden", { status: 403 });
     }
 
     if (systemProviderUrnOf(resolved.endpoint.urn)) {

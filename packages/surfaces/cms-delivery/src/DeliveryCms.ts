@@ -7,6 +7,7 @@ import type { GatewayRepository } from "@bernouy/cms-gateway";
 import type { GatewaySecretResolver } from "@bernouy/cms-gateway";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
+import type { RolesRepository } from "@bernouy/cms-permissions";
 import { TtlCache } from "@bernouy/http-runner";
 import { OptimizeQueue } from "@bernouy/cms-files";
 import { optimizePageImages } from "@bernouy/cms-files";
@@ -51,6 +52,12 @@ export type DeliveryCmsConfig = {
      * actions when a gateway repository is configured.
      */
     auth?: PublicAuthRoutesConfig<string>;
+    /**
+     * Role definitions used to authorize public gateway endpoint calls. Required
+     * for an executable Delivery gateway; when absent, gateway requests are
+     * denied instead of being treated as anonymous allow-all.
+     */
+    roles?: RolesRepository;
     /**
      * Optional analytics store (writer). When set, the page handler records a
      * page-view per request (fire-and-forget); when absent, collection is a no-op.
@@ -112,6 +119,7 @@ export default class DeliveryCms {
     private _gateway?:           GatewayRepository;
     private _gatewayResolveSecret?: GatewaySecretResolver;
     private _auth?:              PublicAuthRoutesConfig<string>;
+    private _roles?:             RolesRepository;
     private _analytics?:         AnalyticsStore;
     private _analyticsSalt?:     string;
     private _filesMetadata:      CmsFilesMetadataRepository | null;
@@ -128,6 +136,7 @@ export default class DeliveryCms {
         this._analytics          = config.analytics;
         this._analyticsSalt      = config.analyticsSalt;
         this._auth               = config.auth;
+        this._roles              = config.roles;
         this._filesMetadata      = config.filesMetadata ?? null;
         this._filesBlob          = config.filesBlob ?? null;
         this._variantStore       = config.variantStore ?? null;
@@ -165,6 +174,11 @@ export default class DeliveryCms {
     /** Public auth API config, or `undefined` when not mounted. */
     get auth(){
         return this._auth;
+    }
+
+    /** Role definitions for Delivery gateway authorization, when wired. */
+    get roles(){
+        return this._roles;
     }
 
     /** Analytics store (writer), or `undefined` when analytics is not configured. */

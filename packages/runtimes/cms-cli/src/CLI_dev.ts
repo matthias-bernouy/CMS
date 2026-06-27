@@ -30,7 +30,7 @@ import {
     SubjectResolver,
     TemplatedAuthEmailComposer,
 } from "@bernouy/cms-auth";
-import type { CMS_ROLES } from "@bernouy/cms-permissions";
+import { InMemoryRolesRepository, type CMS_ROLES, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 
 function parseFlags(args: string[]): { port: number; host: string } {
     let port = 5000;
@@ -98,6 +98,7 @@ export default async function CLI_dev(args: string[]) {
     const gateway = await createDevGateway(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
     const resolveSecret = createSecretResolver(secrets);
+    const roles = new ValidatingRolesRepository(new InMemoryRolesRepository());
     const publicAuth = {
         local: new LocalAuthentication<CMS_ROLES>({
             providerId:    "local",
@@ -135,7 +136,7 @@ export default async function CLI_dev(args: string[]) {
     const cms = new ControlCms(runner, repo, auth, {
         deliveryUrl: `http://${publicHost}:${deliveryPort}`,
         publicAuth: { ...publicAuth, allowSignup: false },
-    }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, gateway);
+    }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, gateway, undefined, roles);
     await cms.ready;
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
@@ -168,6 +169,7 @@ export default async function CLI_dev(args: string[]) {
         variantStore,
         gateway,
         gatewayResolveSecret: resolveSecret,
+        roles,
         auth: publicAuth,
     });
     deliveryRunner.start(deliveryPort);

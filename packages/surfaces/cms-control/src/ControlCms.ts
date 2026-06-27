@@ -24,7 +24,7 @@ import {
     registerPublicAuthRoutes,
 } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
-import { InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
+import { ADMIN_ROLE, can, grantsFor, InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 import type { GatewayRepository } from "@bernouy/cms-gateway";
 import { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "@bernouy/cms-gateway";
 import {
@@ -193,6 +193,13 @@ export class ControlCms {
             const subject = await this._auth.getSubject(req).catch(() => null);
             return subject ? { userID: subject.identifier } : {};
         };
+        const authorizeEndpoint = async (endpoint: { urn: string }, req: Request) => {
+            const subject = await this._auth.getSubject(req).catch(() => null);
+            if (!subject) return false;
+            if (subject.role === ADMIN_ROLE) return true;
+            const definitions = await this._roles.list();
+            return can(grantsFor(subject.role, { definitions }), endpoint.urn);
+        };
         const executeSystemEndpoint = controlPublicAuth
             ? (endpoint: { urn: string; targetUrl: string }, req: Request) =>
                 executeAuthSystemGatewayEndpoint(controlPublicAuth, endpoint, req)
@@ -203,7 +210,7 @@ export class ControlCms {
                 proxyRunner.setDefaultEndpoint(method, (req) =>
                     handleGatewayRequest(this._gateway, req, {
                         prefix,
-                        deps: { resolveSecret, resolveContext, executeSystemEndpoint },
+                        deps: { resolveSecret, resolveContext, executeSystemEndpoint, authorizeEndpoint },
                     }));
             }
         }, [authGuard]);

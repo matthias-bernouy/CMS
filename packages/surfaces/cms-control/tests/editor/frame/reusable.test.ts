@@ -50,4 +50,25 @@ describe("editor frame endpoint - reusable documents", () => {
         expect(html).toContain(`<cms-binding-core cms-binding-disabled cms-source-state-force="loading">`);
         expect(html).toContain("<nav>Snippet content</nav>");
     });
+
+    test("sanitizes reusable document content before rendering the frame", async () => {
+        const { cms } = cmsWithReusableDocument("snippet", {
+            id:          "snippet-1",
+            identifier:  "main-nav",
+            name:        "Main nav",
+            description: "Snippet description",
+            category:    "Navigation",
+            content:     `<svg><image href="data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+"></image></svg><p onclick="alert(1)">Safe text</p>`,
+        });
+        const response = await getEditorFrame(
+            new Request("http://localhost/cms/api/editor/frame?type=snippet&id=snippet-1"),
+            cms as any,
+        );
+        const html = await response.text();
+
+        expect(response.status).toBe(200);
+        expect(html).toContain("Safe text");
+        expect(html).not.toContain("onclick");
+        expect(html).not.toContain("data:image/svg+xml");
+    });
 });

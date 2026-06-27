@@ -15,6 +15,7 @@ import {
     InMemoryGatewayRepository,
     SYSTEM_GATEWAY_PROVIDERS,
 } from "@bernouy/cms-gateway";
+import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 
 type Role = "user";
@@ -53,7 +54,7 @@ class CaptureRunner implements Runner {
     }
 }
 
-function setup() {
+async function setup() {
     const runner = new CaptureRunner();
     const users = new InMemoryUsersRepository<Role>();
     const credentials = new InMemoryLocalCredentialStore();
@@ -79,7 +80,20 @@ function setup() {
         authEmailCooldownSeconds: 0,
     };
     const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
-    new DeliveryCms({ runner, repository: {} as any, auth, gateway });
+    const roles = new InMemoryRolesRepository();
+    const grants = [
+        "me",
+        "login",
+        "logout",
+        "signup",
+        "requestEmailVerification",
+        "confirmEmailVerification",
+        "requestPasswordReset",
+        "confirmPasswordReset",
+    ].map((endpoint) => ({ permission: `urn:system-auth:${endpoint}` }));
+    await roles.upsert({ id: PUBLIC_ROLE, label: "Public", builtin: true, grants });
+    await roles.upsert({ id: USER_ROLE, label: "User", builtin: true, grants });
+    new DeliveryCms({ runner, repository: {} as any, auth, gateway, roles });
     return {
         emailer,
         credentials,
@@ -90,7 +104,7 @@ function setup() {
 
 describe("Delivery system auth gateway", () => {
     test("signup, verification, login, me and logout run through system-auth", async () => {
-        const { post, get, emailer } = setup();
+        const { post, get, emailer } = await setup();
 
         expect((await post(jsonRequest("/signup", { email: "Ada@Example.com", password: "password-1", displayName: "Ada" }))).status).toBe(200);
         expect(emailer.sent).toHaveLength(1);
@@ -116,7 +130,7 @@ describe("Delivery system auth gateway", () => {
     });
 
     test("password reset runs through system-auth and verifies the credential", async () => {
-        const { post, emailer, credentials } = setup();
+        const { post, emailer, credentials } = await setup();
 
         await post(jsonRequest("/signup", { email: "reset@example.com", password: "old-password" }));
         expect((await post(jsonRequest("/requestPasswordReset", { email: "reset@example.com" }))).status).toBe(200);

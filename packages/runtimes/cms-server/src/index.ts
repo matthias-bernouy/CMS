@@ -205,7 +205,7 @@ new DeliveryCms({
     runner: deliveryRunner, repository: repo, cache, gateway, analytics,
     analyticsSalt: ANALYTICS_SALT_SECRET,
     gatewayResolveSecret: resolveSecret,
-    filesMetadata, filesBlob, variantStore,
+    roles, filesMetadata, filesBlob, variantStore,
     auth: {
         ...publicAuthBase,
         emailVerificationUrl: CMS_AUTH_EMAIL_VERIFICATION_URL,

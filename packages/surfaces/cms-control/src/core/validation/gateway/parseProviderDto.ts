@@ -1,6 +1,6 @@
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { HTTP_METHODS, isParsableUrl, isSystemProviderId, SYSTEM_PROVIDER_ID_PREFIX, type HTTPMethod, type ProviderDto } from "@bernouy/cms-gateway";
+import { HTTP_METHODS, isAllowedGatewayTargetUrl, isSystemProviderId, SYSTEM_PROVIDER_ID_PREFIX, type HTTPMethod, type ProviderDto } from "@bernouy/cms-gateway";
 import { slugify } from "cms-control/core/validation/slugify";
 import { parseShapeField } from "./parseShapeField";
 import { pathParamsFromUrl, parseParamsBlob, parseMetaField, buildMeta } from "./gatewayValidators";
@@ -63,8 +63,8 @@ export function parseProviderDto(body: Record<string, unknown>): ProviderDto {
         if (!(HTTP_METHODS as readonly string[]).includes(method)) {
             throw new InvalidParam(`endpoints.${idx}.method`, `must be ${HTTP_METHODS.join("|")}`);
         }
-        if (!isParsableUrl(targetUrl)) {
-            throw new InvalidParam(`endpoints.${idx}.targetUrl`, "invalid URL");
+        if (!isAllowedGatewayTargetUrl(targetUrl)) {
+            throw new InvalidParam(`endpoints.${idx}.targetUrl`, "invalid or blocked URL");
         }
         if (seenIds.has(endpointId)) {
             throw new InvalidParam(`endpoints.${idx}.endpointId`, "duplicate within provider");

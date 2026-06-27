@@ -10,6 +10,7 @@ import { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayR
 import { PUBLIC_AUTH_ROUTES, executeAuthSystemGatewayEndpoint, registerPublicAuthRoutes } from "@bernouy/cms-auth";
 import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE, filesPrefix, imageVariantPrefix, serveFilesRequest, serveVariantRequest } from "@bernouy/cms-files";
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
+import { ADMIN_ROLE, PUBLIC_ROLE, can, grantsFor } from "@bernouy/cms-permissions";
 import { cachedResponseAsync, publicAssetCacheControl } from "@bernouy/http-runner";
 import { recordPageView } from "cms-delivery/core/analytics/recordPageView";
 
@@ -73,15 +74,23 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
 
     runner.group(CMS_GATEWAY_ROUTE, (proxyRunner) => {
         const prefix = gatewayPrefix(runner.basePath);
-        const deps = delivery.gatewayResolveSecret || delivery.auth
-            ? {
-                ...(delivery.gatewayResolveSecret ? { resolveSecret: delivery.gatewayResolveSecret } : {}),
-                ...(delivery.auth ? {
-                    executeSystemEndpoint: (endpoint: { urn: string; targetUrl: string }, req: Request) =>
-                        executeAuthSystemGatewayEndpoint(delivery.auth!, endpoint, req),
-                } : {}),
-            }
-            : undefined;
+        const authorizeEndpoint = async (endpoint: { urn: string }, req: Request) => {
+            const roles = delivery.roles;
+            if (!roles) return false;
+            const subject = delivery.auth ? await delivery.auth.local.getSubject(req).catch(() => null) : null;
+            if (subject?.role === ADMIN_ROLE) return true;
+            const role = subject?.role ?? PUBLIC_ROLE;
+            const definitions = await roles.list();
+            return can(grantsFor(role, { definitions }), endpoint.urn);
+        };
+        const deps = {
+            ...(delivery.gatewayResolveSecret ? { resolveSecret: delivery.gatewayResolveSecret } : {}),
+            ...(delivery.auth ? {
+                executeSystemEndpoint: (endpoint: { urn: string; targetUrl: string }, req: Request) =>
+                    executeAuthSystemGatewayEndpoint(delivery.auth!, endpoint, req),
+            } : {}),
+            authorizeEndpoint,
+        };
         for (const method of GATEWAY_PROXY_METHODS) {
             proxyRunner.setDefaultEndpoint(method, (req) =>
                 handleGatewayRequest(delivery.gateway, req, { prefix, deps }));

@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { expandSnippets, wrapBindingCore } from "@bernouy/cms-content";
+import { expandSnippets, hardenStoredHtml, wrapBindingCore } from "@bernouy/cms-content";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
 
@@ -28,7 +28,7 @@ export default async function getEditorFrame(req: Request, cms: ControlCms): Pro
 
     const basePath = controlBasePath(url.pathname);
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${document.content}</div>`;
-    const expanded = await expandSnippets(content, cms.repository);
+    const expanded = hardenStoredHtml(await expandSnippets(content, cms.repository));
 
     return new Response(renderFrameDocument({
         basePath,
@@ -58,7 +58,7 @@ async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
     const basePath = controlBasePath(url.pathname);
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${page.content}</div>`;
     const composed = wrapBindingCore(content);
-    const expanded = await expandSnippets(composed, cms.repository);
+    const expanded = hardenStoredHtml(await expandSnippets(composed, cms.repository));
 
     return new Response(renderFrameDocument({
         basePath,

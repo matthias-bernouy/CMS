@@ -2,6 +2,8 @@ import { describe, expect, spyOn, test } from "bun:test";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
 import type { Provider } from "@bernouy/cms-gateway";
+import { InMemoryRolesRepository, PUBLIC_ROLE } from "@bernouy/cms-permissions";
+import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 
 const SECURED: Provider = {
@@ -53,7 +55,21 @@ function joinPath(base: string, path: string): string {
     return joined.length > 1 && joined.endsWith("/") ? joined.slice(0, -1) : joined;
 }
 
-async function mountDeliveryGateway(resolveSecret?: (ref: string) => Promise<string | undefined>) {
+async function publicGatewayRoles(): Promise<RolesRepository> {
+    const roles = new InMemoryRolesRepository();
+    await roles.upsert({
+        id: PUBLIC_ROLE,
+        label: "Public",
+        builtin: true,
+        grants: [{ permission: "urn:secured:get" }],
+    });
+    return roles;
+}
+
+async function mountDeliveryGateway(opts: {
+    resolveSecret?: (ref: string) => Promise<string | undefined>;
+    roles?: RolesRepository;
+} = {}) {
     const gateway = new InMemoryGatewayRepository();
     await seedProviders(gateway, [SECURED]);
     const runner = new CaptureRunner();
@@ -61,14 +77,28 @@ async function mountDeliveryGateway(resolveSecret?: (ref: string) => Promise<str
         runner,
         repository: {} as any,
         gateway,
-        gatewayResolveSecret: resolveSecret,
+        gatewayResolveSecret: opts.resolveSecret,
+        roles: opts.roles,
     });
     return runner.defaultHandler("GET", "/.cms/gateway");
 }
 
 describe("Delivery gateway secrets", () => {
-    test("keeps secret headers blocked by default", async () => {
+    test("denies gateway execution when roles are not wired", async () => {
         const handler = await mountDeliveryGateway();
+        const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("upstream"));
+        try {
+            const res = await handler(new Request("http://site/.cms/gateway/secured/get"));
+
+            expect(res.status).toBe(403);
+            expect(fetchSpy).not.toHaveBeenCalled();
+        } finally {
+            fetchSpy.mockRestore();
+        }
+    });
+
+    test("keeps secret headers blocked by default", async () => {
+        const handler = await mountDeliveryGateway({ roles: await publicGatewayRoles() });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("upstream"));
         try {
             const res = await handler(new Request("http://site/.cms/gateway/secured/get"));
@@ -82,7 +112,10 @@ describe("Delivery gateway secrets", () => {
     });
 
     test("uses an explicitly wired resolver for dev gateway secrets", async () => {
-        const handler = await mountDeliveryGateway(async ref => ref === "${API_KEY}" ? "dev-key" : undefined);
+        const handler = await mountDeliveryGateway({
+            resolveSecret: async ref => ref === "${API_KEY}" ? "dev-key" : undefined,
+            roles: await publicGatewayRoles(),
+        });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));
         try {
             const res = await handler(new Request("http://site/.cms/gateway/secured/get"));

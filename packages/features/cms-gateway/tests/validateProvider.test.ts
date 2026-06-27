@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { validateProvider, endpointBelongsToProvider } from "cms-gateway/core/validateProvider";
+import { validateGatewayTargetUrl, validateProvider, endpointBelongsToProvider } from "cms-gateway/core/validateProvider";
 import type { Provider, Endpoint } from "cms-gateway/interfaces/Gateway";
 
 const ep = (urn: string, targetUrl = "https://api.shop.com/x"): Endpoint =>
@@ -38,6 +38,35 @@ describe("validateProvider", () => {
     test("unparseable targetUrl", () => {
         const errs = validateProvider(provider({ endpoints: [ep("urn:shop:x", "not a url")] }));
         expect(errs.some(e => e.includes("targetUrl"))).toBe(true);
+    });
+    test("targetUrl must be http or https", () => {
+        const errs = validateProvider(provider({ endpoints: [ep("urn:shop:x", "ftp://api.shop.com/x")] }));
+        expect(errs.some(e => e.includes("http or https"))).toBe(true);
+    });
+    test("targetUrl rejects local/private IP ranges and metadata hosts", () => {
+        const blocked = [
+            "http://localhost/x",
+            "http://api.localhost/x",
+            "http://127.0.0.1/x",
+            "http://10.1.2.3/x",
+            "http://172.16.0.10/x",
+            "http://192.168.1.9/x",
+            "http://169.254.169.254/latest/meta-data",
+            "http://[::1]/x",
+            "http://[fe80::1]/x",
+            "http://[fc00::1]/x",
+            "http://[::ffff:127.0.0.1]/x",
+        ];
+
+        for (const targetUrl of blocked) {
+            const errs = validateProvider(provider({ endpoints: [ep("urn:shop:x", targetUrl)] }));
+            expect(errs.some(e => e.includes("targetUrl"))).toBe(true);
+        }
+    });
+    test("targetUrl allows public http/https and explicit blocked-host allowlist", () => {
+        expect(validateProvider(provider({ endpoints: [ep("urn:shop:x", "http://api.shop.com/x")] }))).toEqual([]);
+        expect(validateGatewayTargetUrl("http://127.0.0.1/x").ok).toBe(false);
+        expect(validateGatewayTargetUrl("http://127.0.0.1/x", { allowBlockedTargetHosts: ["127.0.0.1"] }).ok).toBe(true);
     });
     test("unknown HTTP method", () => {
         const errs = validateProvider(provider({ endpoints: [{ ...ep("urn:shop:x"), method: "FETCH" as any }] }));

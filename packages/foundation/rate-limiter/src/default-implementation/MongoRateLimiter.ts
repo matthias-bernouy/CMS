@@ -7,8 +7,8 @@ import type { RateLimiter, RateLimitResult, RateLimitPolicy } from "rate-limiter
  * one process). One doc per key in `<prefix>rate_limits`, `key` as `_id`, with a
  * TTL index on `expiresAt` so spent windows are reaped automatically.
  *
- * Window boundaries are slightly racy under concurrency (two requests can both
- * open a fresh window and lose one increment) — acceptable for a throttle.
+ * Window creation/reset is a single atomic update pipeline, so concurrent hits
+ * cannot lose increments at a boundary.
  * Call `init()` once at boot to create the TTL index.
  */
 export type MongoRateLimiterConfig = { collectionPrefix?: string };
@@ -37,20 +37,38 @@ export class MongoRateLimiter implements RateLimiter {
 
     async hit(key: string): Promise<RateLimitResult> {
         const now = new Date();
-        // Increment within an ACTIVE window (expiresAt in the future).
-        const active = await this.col.findOneAndUpdate(
-            { _id: key, expiresAt: { $gt: now } },
-            { $inc: { count: 1 } },
-            { returnDocument: "after" },
-        );
-        if (active) {
-            if (active.count <= this.policy.limit) return { allowed: true };
-            return { allowed: false, retryAfterSeconds: Math.ceil((active.expiresAt.getTime() - now.getTime()) / 1000) };
-        }
-        // No active window (new key or expired) — open a fresh one.
         const expiresAt = new Date(now.getTime() + this.policy.windowSeconds * 1000);
-        await this.col.updateOne({ _id: key }, { $set: { count: 1, expiresAt } }, { upsert: true });
-        return { allowed: true };
+        const updated = await this.col.findOneAndUpdate(
+            { _id: key },
+            [
+                {
+                    $set: {
+                        count: {
+                            $cond: [
+                                { $gt: ["$expiresAt", now] },
+                                { $add: [{ $ifNull: ["$count", 0] }, 1] },
+                                1,
+                            ],
+                        },
+                        expiresAt: {
+                            $cond: [
+                                { $gt: ["$expiresAt", now] },
+                                "$expiresAt",
+                                expiresAt,
+                            ],
+                        },
+                    },
+                },
+            ],
+            { upsert: true, returnDocument: "after" },
+        );
+
+        if (!updated) return { allowed: true };
+        if (updated.count <= this.policy.limit) return { allowed: true };
+        return {
+            allowed: false,
+            retryAfterSeconds: Math.ceil((updated.expiresAt.getTime() - now.getTime()) / 1000),
+        };
     }
 
     async reset(key: string): Promise<void> {

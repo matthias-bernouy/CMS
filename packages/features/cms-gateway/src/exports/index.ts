@@ -27,7 +27,15 @@ export {
     parseUrn, makeProviderUrn, makeEndpointUrn, providerUrnOf, isProviderUrn, isEndpointUrn,
     type ParsedUrn,
 } from "../core/urn";
-export { validateProvider, endpointBelongsToProvider, isParsableUrl, isValidResponseStatus } from "../core/validateProvider";
+export {
+    validateProvider,
+    endpointBelongsToProvider,
+    isParsableUrl,
+    validateGatewayTargetUrl,
+    isAllowedGatewayTargetUrl,
+    isValidResponseStatus,
+    type GatewayTargetUrlValidationOptions,
+} from "../core/validateProvider";
 export {
     SYSTEM_PROVIDER_ID_PREFIX,
     SYSTEM_AUTH_PROVIDER_ID,
@@ -68,6 +76,7 @@ export {
     handleGatewayRequest,
     type GatewayHandlerDeps,
     type GatewaySystemExecutor,
+    type GatewayEndpointAuthorizer,
 } from "../http/handleGatewayRequest";
 
 // ── OpenAPI spec machinery (provider endpoint schemas) ────────────────

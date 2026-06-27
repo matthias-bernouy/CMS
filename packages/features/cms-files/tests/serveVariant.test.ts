@@ -7,11 +7,11 @@ const PREFIX = "/.cms/img/";
 const enc = new TextEncoder();
 const req = (path: string) => new Request(`http://x${path}`);
 
-async function setup(opts: { contentHash?: string; withVariant?: boolean } = {}) {
+async function setup(opts: { contentHash?: string; withVariant?: boolean; mimeType?: string } = {}) {
     const metadata = new InMemoryCmsFilesMetadata();
     const sourceBlob = new InMemoryCmsFilesBlob();
     const variantStore = new InMemoryCmsFilesBlob();
-    const file = await metadata.createFile({ name: "hero.png", parentId: null, size: 8, mimeType: "image/png", contentHash: opts.contentHash });
+    const file = await metadata.createFile({ name: "hero.png", parentId: null, size: 8, mimeType: opts.mimeType ?? "image/png", contentHash: opts.contentHash });
     await sourceBlob.put(file.id, enc.encode("ORIGINAL"));
     if (opts.withVariant && opts.contentHash) {
         await variantStore.put(variantKey(opts.contentHash, { width: 200, format: "webp" }), enc.encode("WEBP200"));
@@ -54,6 +54,14 @@ describe("serveVariantRequest", () => {
         const { deps, id } = await setup({ contentHash: undefined });
         const res = await serveVariantRequest(deps, req(`${PREFIX}${id}/200.webp`), { prefix: PREFIX });
         expect(await res.text()).toBe("ORIGINAL");
+    });
+
+    test("non-raster originals are not served as image variant fallbacks", async () => {
+        for (const mimeType of ["image/svg+xml", "text/html", "text/plain", "application/octet-stream"]) {
+            const { deps, id } = await setup({ contentHash: "h1", mimeType });
+            const res = await serveVariantRequest(deps, req(`${PREFIX}${id}/200.webp`), { prefix: PREFIX });
+            expect(res.status).toBe(404);
+        }
     });
 
     test("unknown id → 404", async () => {
