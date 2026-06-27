@@ -78,6 +78,15 @@ describe("ValidatingCmsRepository — snippets", () => {
         expect(calls.createSnippet[0].name).toBe("Hero");
     });
 
+    test("createSnippet requires all create fields", async () => {
+        const { repo } = makeRepo();
+        const base = { identifier: "hero", name: "Hero", description: "", content: "", category: "", createdAt: new Date(), updatedAt: new Date() };
+
+        await expect(repo.createSnippet({ ...base, content: undefined } as any)).rejects.toThrow(ContentValidationError);
+        await expect(repo.createSnippet({ ...base, createdAt: undefined } as any)).rejects.toThrow(ContentValidationError);
+        await expect(repo.createSnippet({ ...base, updatedAt: new Date(Number.NaN) } as any)).rejects.toThrow(ContentValidationError);
+    });
+
     test("updateSnippet trims the name", async () => {
         const { repo, calls } = makeRepo();
         await repo.updateSnippet("s1", { name: "  Redacted  " });
@@ -92,6 +101,17 @@ describe("ValidatingCmsRepository — templates", () => {
             .rejects.toThrow(ContentValidationError);
         await repo.createTemplate({ identifier: "ok", name: "  Tpl  ", description: "", content: "", category: "", createdAt: new Date() });
         expect(calls.createTemplate[0].name).toBe("Tpl");
+    });
+
+    test("createTemplate requires all create fields but updateTemplate accepts patches", async () => {
+        const { repo, calls } = makeRepo();
+        const base = { identifier: "hero", name: "Hero", description: "", content: "", category: "", createdAt: new Date() };
+
+        await expect(repo.createTemplate({ ...base, description: undefined } as any)).rejects.toThrow(ContentValidationError);
+        await expect(repo.createTemplate({ ...base, createdAt: "today" } as any)).rejects.toThrow(ContentValidationError);
+
+        await repo.updateTemplate("t1", { name: "  Partial  " });
+        expect(calls.updateTemplate[0][1].name).toBe("Partial");
     });
 });
 

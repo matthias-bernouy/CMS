@@ -7,8 +7,8 @@ import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import type { TSystem } from "cms-content/interfaces/settings";
 import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/pages";
-import { validateSnippetPatch } from "cms-content/core/validation/snippets";
-import { validateTemplatePatch } from "cms-content/core/validation/templates";
+import { validateSnippetCreate, validateSnippetPatch } from "cms-content/core/validation/snippets";
+import { validateTemplateCreate, validateTemplatePatch } from "cms-content/core/validation/templates";
 import { assertContentRefsExist } from "cms-content/core/validation/assertContentRefsExist";
 import { validateSettingsPatch } from "cms-content/core/validation/settings";
 
@@ -37,8 +37,8 @@ export class ValidatingCmsRepository implements CmsRepository {
     }
 
     async createSnippet(snippet: Omit<TSnippet, "id">): Promise<TSnippet> {
-        const valid = validateSnippetPatch(snippet) as Omit<TSnippet, "id">;
-        if (valid.content !== undefined) await assertContentRefsExist(this.inner, valid.content);
+        const valid = validateSnippetCreate(snippet);
+        await assertContentRefsExist(this.inner, valid.content);
         return this.inner.createSnippet(valid);
     }
 
@@ -49,8 +49,8 @@ export class ValidatingCmsRepository implements CmsRepository {
     }
 
     async createTemplate(template: Omit<TTemplate, "id">): Promise<TTemplate> {
-        const valid = validateTemplatePatch(template) as Omit<TTemplate, "id">;
-        if (valid.content !== undefined) await assertContentRefsExist(this.inner, valid.content);
+        const valid = validateTemplateCreate(template);
+        await assertContentRefsExist(this.inner, valid.content);
         return this.inner.createTemplate(valid);
     }
 

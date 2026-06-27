@@ -1,5 +1,11 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, spyOn, test } from "bun:test";
 import { prepare_bloc } from "../src/exports";
+
+const originalBuild = Bun.build;
+
+afterEach(() => {
+    Bun.build = originalBuild;
+});
 
 describe("prepare_bloc editor catalog output", () => {
     test("uses the stable editor catalog runtime for blocs without editor source", async () => {
@@ -84,5 +90,41 @@ describe("prepare_bloc editor catalog output", () => {
 
         expect(() => new Function(bloc.editorJS)).not.toThrow();
         expect(bloc.editorJS).toContain(`description: props?.description ?? "Children can use bleed=\\"wide|full\\"."`);
+    });
+
+    test("reports Bun build failures instead of returning an empty view bundle", async () => {
+        spyOn(Bun, "build").mockImplementation(async (options: Bun.BuildConfig) => {
+            const entry = String(options.entrypoints?.[0] ?? "");
+            if (entry.endsWith("demo-card.js")) {
+                return {
+                    success: false,
+                    outputs: [],
+                    logs:    [new Error("missing dependency")],
+                } as unknown as Bun.BuildOutput;
+            }
+            return {
+                success: true,
+                outputs: [{ text: async () => "editor output" }],
+                logs:    [],
+            } as unknown as Bun.BuildOutput;
+        });
+
+        const view = new File(["import './missing.js';"], "DemoCard.ts", { type: "text/typescript" });
+
+        await expect(prepare_bloc(view, null, "Demo card", "Content", "", "demo-card"))
+            .rejects.toThrow(/Build failed \(view bundle for demo-card\):\n  - missing dependency/);
+    });
+
+    test("reports missing Bun build outputs", async () => {
+        spyOn(Bun, "build").mockImplementation(async () => ({
+            success: true,
+            outputs: [],
+            logs:    [],
+        }) as unknown as Bun.BuildOutput);
+
+        const view = new File(["customElements.define('demo-card', class extends HTMLElement {});"], "DemoCard.ts", { type: "text/typescript" });
+
+        await expect(prepare_bloc(view, null, "Demo card", "Content", "", "demo-card"))
+            .rejects.toThrow(/Build failed \((view|editor) bundle for demo-card\):\n  \(no details from Bun.build\)/);
     });
 });

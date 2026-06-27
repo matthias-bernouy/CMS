@@ -45,13 +45,13 @@ export async function prepare_bloc(
         if (fileEditor) await Bun.write(editorPath, fileEditor);
         else            await Bun.write(editorPath, OPAQUE_EDITOR_SRC);
 
-        const [viewBuild, editorBuild] = await Promise.all([
-            Bun.build(buildOptions(viewPath)),
-            Bun.build(buildOptions(editorPath)),
+        const [viewJSRaw, editorJSRaw] = await Promise.all([
+            runBuild(buildOptions(viewPath), `view bundle for ${blocId}`),
+            runBuild(buildOptions(editorPath), `editor bundle for ${blocId}`),
         ]);
 
-        let viewJS   = await viewBuild.outputs[0]?.text()   || "";
-        let editorJS = await editorBuild.outputs[0]?.text() || "";
+        let viewJS   = viewJSRaw;
+        let editorJS = editorJSRaw;
 
         viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", blocId);
 
@@ -80,4 +80,33 @@ export async function prepare_bloc(
 
 function jsStringLiteralContent(value: string): string {
     return JSON.stringify(value).slice(1, -1).replaceAll("$", "$$$$");
+}
+
+async function runBuild(
+    options: Bun.BuildConfig,
+    label: string,
+): Promise<string> {
+    let result: Bun.BuildOutput;
+    try {
+        result = await Bun.build(options);
+    } catch (e) {
+        throw new Error(`Build failed (${label}):\n${formatError(e)}`);
+    }
+    if (!result.success || !result.outputs[0]) {
+        throw new Error(`Build failed (${label}):\n${formatLogs(result.logs)}`);
+    }
+    return await result.outputs[0].text();
+}
+
+function formatLogs(logs: unknown[]): string {
+    if (!logs || logs.length === 0) return "  (no details from Bun.build)";
+    return logs.map(formatError).join("\n");
+}
+
+function formatError(e: unknown): string {
+    if (e instanceof AggregateError) return e.errors.map(formatError).join("\n");
+    const msg = (e as { message?: unknown })?.message ?? String(e);
+    const pos = (e as { position?: { file?: string; line?: number; column?: number } })?.position;
+    const where = pos?.file ? `\n      at ${pos.file}:${pos.line ?? 0}:${pos.column ?? 0}` : "";
+    return `  - ${String(msg)}${where}`;
 }

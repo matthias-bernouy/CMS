@@ -43,38 +43,31 @@ import {
     MongoAuthTokenStore,
 } from "@bernouy/cms-auth/mongo";
 import { MongoRateLimiter } from "@bernouy/rate-limiter/mongo";
+import { readRuntimeEnv } from "./runtimeEnv";
 
-const env = (k: string, d?: string): string => {
-    const v = process.env[k];
-    if (v) return v;
-    if (d !== undefined) return d;
-    throw new Error(`env ${k} missing`);
-};
-
-const CONTROL_PORT        = Number(process.env.CONTROL_PORT  ?? 3000);
-const DELIVERY_PORT       = Number(process.env.DELIVERY_PORT ?? 3001);
-const CONTROL_PUBLIC_URL  = env("CONTROL_PUBLIC_URL");
-const DELIVERY_PUBLIC_URL = env("DELIVERY_PUBLIC_URL");
-const CMS_SESSION_SECRET  = env("CMS_SESSION_SECRET");
-const CMS_KEK_HEX         = env("CMS_KEK_HEX");
-const CMS_ADMIN_EMAIL     = env("CMS_ADMIN_EMAIL");
-const CMS_ADMIN_PASSWORD  = env("CMS_ADMIN_PASSWORD");
-const CMS_FILES_DIR       = env("CMS_FILES_DIR");
-const MONGO_URL           = env("MONGO_URL");
-const CMS_AUTH_SITE_NAME  = process.env.CMS_AUTH_SITE_NAME ?? "CMS";
-const CMS_AUTH_EMAIL_COOLDOWN_SECONDS = Number(process.env.CMS_AUTH_EMAIL_COOLDOWN_SECONDS ?? 300);
-const CMS_AUTH_EMAIL_VERIFICATION_URL = process.env.CMS_AUTH_EMAIL_VERIFICATION_URL
-    ?? `${DELIVERY_PUBLIC_URL}/auth/confirm-email`;
-const CMS_AUTH_PASSWORD_RESET_URL = process.env.CMS_AUTH_PASSWORD_RESET_URL
-    ?? `${DELIVERY_PUBLIC_URL}/auth/reset-password`;
-const CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL = process.env.CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL
-    ?? `${CONTROL_PUBLIC_URL}/auth/verify-email`;
-const CMS_CONTROL_AUTH_PASSWORD_RESET_URL = process.env.CMS_CONTROL_AUTH_PASSWORD_RESET_URL
-    ?? `${CONTROL_PUBLIC_URL}/auth/reset-password`;
+const {
+    CONTROL_PORT,
+    DELIVERY_PORT,
+    CONTROL_PUBLIC_URL,
+    DELIVERY_PUBLIC_URL,
+    CMS_SESSION_SECRET,
+    CMS_KEK_HEX,
+    CMS_ADMIN_EMAIL,
+    CMS_ADMIN_PASSWORD,
+    CMS_FILES_DIR,
+    MONGO_URL,
+    CMS_AUTH_SITE_NAME,
+    CMS_AUTH_EMAIL_COOLDOWN_SECONDS,
+    CMS_AUTH_EMAIL_VERIFICATION_URL,
+    CMS_AUTH_PASSWORD_RESET_URL,
+    CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
+    CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
+    ANALYTICS_SALT_SECRET: CONFIGURED_ANALYTICS_SALT_SECRET,
+} = readRuntimeEnv(process.env);
 // Optional: shared secret salting the cookieless visitor id. Set it (and keep it
 // identical) across instances for consistent unique-visitor counts; unset → an
 // ephemeral per-boot salt (a mid-day restart recounts that day's visitors).
-const ANALYTICS_SALT_SECRET = process.env.ANALYTICS_SALT_SECRET || crypto.randomUUID();
+const ANALYTICS_SALT_SECRET = CONFIGURED_ANALYTICS_SALT_SECRET || crypto.randomUUID();
 
 // Single-tenant for now — the scope id flows into the DEK store + PII
 // crypto + encrypted secret store. Changing it after data has been

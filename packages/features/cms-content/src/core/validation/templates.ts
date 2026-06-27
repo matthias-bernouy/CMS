@@ -12,6 +12,17 @@ export function validateTemplateIdentifier(value: string): string {
     return value;
 }
 
+export function validateTemplateCreate(template: Partial<Omit<TTemplate, "id">>): Omit<TTemplate, "id"> {
+    return {
+        identifier:  validateTemplateIdentifier(requiredString(template.identifier, "identifier")),
+        name:        validateLabel("name", requiredString(template.name, "name"), 50),
+        description: validateOptionalText("description", requiredString(template.description, "description"), 200),
+        content:     validateContent(requiredString(template.content, "content")),
+        category:    validateCategory(requiredString(template.category, "category")),
+        createdAt:   validateDate(template.createdAt, "createdAt"),
+    };
+}
+
 /**
  * Validate + normalize a template patch. Only present fields are checked;
  * returned fields are normalized. Throws `ContentValidationError`.
@@ -25,4 +36,16 @@ export function validateTemplatePatch(template: Partial<TTemplate>): Partial<TTe
     if (template.category    !== undefined) out.category    = validateCategory(template.category);
     if (template.content     !== undefined) out.content     = validateContent(template.content);
     return out;
+}
+
+function requiredString(value: unknown, field: string): string {
+    if (typeof value !== "string") throw new ContentValidationError(field, "required");
+    return value;
+}
+
+function validateDate(value: unknown, field: string): Date {
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+        throw new ContentValidationError(field, "valid Date expected");
+    }
+    return value;
 }

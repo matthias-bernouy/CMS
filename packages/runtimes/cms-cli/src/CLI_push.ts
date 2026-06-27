@@ -1,4 +1,3 @@
-import CLI_importBloc from "./CLI_importBloc";
 import { getAccessToken } from "./credentials";
 import { runPages } from "./push/pages/run";
 import { runSnippets } from "./push/snippets/run";
@@ -6,8 +5,9 @@ import { runTemplates } from "./push/templates/run";
 import { runSystem } from "./push/system/run";
 import { runFiles } from "./push/files/run";
 import { runGateways } from "./push/gateways/run";
+import { runBlocs } from "./push/blocs/run";
 
-type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string };
+type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string; only: Set<string> | null };
 
 const TYPES = ["*", "system", "gateways", "files", "blocs", "snippets", "templates", "pages"] as const;
 // Files (media) ship right after system so pages/snippets that reference
@@ -18,12 +18,15 @@ const ORDER = ["system", "gateways", "files", "blocs", "snippets", "templates", 
 type Stage = typeof ORDER[number];
 
 function parseFlags(args: string[]): Flags {
-    const f: Flags = { force: false, yes: false, dryRun: false, type: "*" };
+    const f: Flags = { force: false, yes: false, dryRun: false, type: "*", only: null };
     for (const arg of args) {
         if      (arg === "--force"   || arg === "-f") f.force = true;
         else if (arg === "--yes"     || arg === "-y") f.yes = true;
         else if (arg === "--dry-run")                 f.dryRun = true;
         else if (arg.startsWith("--type="))           f.type = arg.slice("--type=".length);
+        else if (arg.startsWith("--only=")) {
+            f.only = new Set(arg.slice("--only=".length).split(",").map(s => s.trim()).filter(Boolean));
+        }
     }
     return f;
 }
@@ -47,7 +50,7 @@ async function runStage(stage: Stage, args: string[], adminBase: URL, token: str
         case "system":    return runSystem(adminBase, token, flags);
         case "gateways":  return runGateways(adminBase, token, flags);
         case "files":     return runFiles(adminBase, token, flags);
-        case "blocs":     return CLI_importBloc(args);
+        case "blocs":     return runBlocs(adminBase, token, flags);
         case "snippets":  return runSnippets(adminBase, token, flags);
         case "templates": return runTemplates(adminBase, token, flags);
         case "pages":     return runPages(adminBase, token, flags);

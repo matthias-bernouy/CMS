@@ -32,14 +32,17 @@ import {
 } from "@bernouy/cms-auth";
 import { InMemoryRolesRepository, type CMS_ROLES, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 
-function parseFlags(args: string[]): { port: number; host: string } {
+export function parseDevFlags(args: string[]): { port: number; host: string; deliveryPort: number; publicHost: string } {
     let port = 5000;
     let host = "localhost";
     for (const arg of args) {
-        if      (arg.startsWith("--port=")) port = Number(arg.slice("--port=".length)) || port;
+        if      (arg.startsWith("--port=")) port = parsePortFlag(arg.slice("--port=".length));
         else if (arg.startsWith("--host=")) host = arg.slice("--host=".length) || host;
     }
-    return { port, host };
+    const deliveryPort = port + 1;
+    if (deliveryPort > 65535) throw new Error("--port must be <= 65534 because Delivery uses port + 1");
+    const publicHost = host === "0.0.0.0" ? "localhost" : host;
+    return { port, host, deliveryPort, publicHost };
 }
 
 function sseHandler(reload: ReloadEmitter): (req: Request) => Response {
@@ -64,9 +67,14 @@ function sseHandler(reload: ReloadEmitter): (req: Request) => Response {
 export default async function CLI_dev(args: string[]) {
     const cwd = process.cwd();
     const config = await loadPushConfig(cwd);
-    const { port, host } = parseFlags(args);
-    const deliveryPort = port + 1;
-    const publicHost = host === "0.0.0.0" ? "localhost" : host;
+    let parsed: ReturnType<typeof parseDevFlags>;
+    try {
+        parsed = parseDevFlags(args);
+    } catch (err) {
+        console.error(`✖ ${err instanceof Error ? err.message : String(err)}`);
+        process.exit(1);
+    }
+    const { port, host, deliveryPort, publicHost } = parsed;
 
     console.log(`→ Site dir : ${config.siteDir}`);
 
@@ -192,4 +200,13 @@ export default async function CLI_dev(args: string[]) {
     };
     process.on("SIGINT",  () => shutdown("SIGINT"));
     process.on("SIGTERM", () => shutdown("SIGTERM"));
+}
+
+function parsePortFlag(raw: string): number {
+    if (!/^\d+$/.test(raw)) throw new Error("--port must be an integer");
+    const port = Number(raw);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new Error("--port must be between 1 and 65535");
+    }
+    return port;
 }

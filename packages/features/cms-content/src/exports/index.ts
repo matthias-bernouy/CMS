@@ -37,8 +37,8 @@ export { ValidatingCmsRepository } from "cms-content/core/validation/ValidatingC
 export { assertContentRefsExist, type ContentRefsReader } from "cms-content/core/validation/assertContentRefsExist";
 export { hardenStoredHtml } from "cms-content/core/validation/hardenStoredHtml";
 export { validatePagePath, validatePageTitle, validatePagePatch }   from "cms-content/core/validation/pages";
-export { validateSnippetIdentifier, validateSnippetPatch }          from "cms-content/core/validation/snippets";
-export { validateTemplateIdentifier, validateTemplatePatch }        from "cms-content/core/validation/templates";
+export { validateSnippetIdentifier, validateSnippetCreate, validateSnippetPatch }   from "cms-content/core/validation/snippets";
+export { validateTemplateIdentifier, validateTemplateCreate, validateTemplatePatch } from "cms-content/core/validation/templates";
 export { validateSettingsPatch } from "cms-content/core/validation/settings";
 export { coercePageRef, pageRefToString } from "cms-content/core/validation/pageRef";
 
