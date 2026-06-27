@@ -2,7 +2,7 @@ import { describe, expect, spyOn, test } from "bun:test";
 import DeliveryCms from "cms-delivery/DeliveryCms";
 import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
 import type { Provider } from "@bernouy/cms-gateway";
-import { InMemoryRolesRepository, PUBLIC_ROLE } from "@bernouy/cms-permissions";
+import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 
@@ -13,6 +13,24 @@ const SECURED: Provider = {
         method: "GET",
         targetUrl: "https://api.example.com/data",
         headers: [{ name: "authorization", source: { from: "secret", ref: "${API_KEY}", prefix: "Bearer " } }],
+    }],
+};
+
+const COMPUTED: Provider = {
+    urn: "urn:computed",
+    endpoints: [{
+        urn:       "urn:computed:me",
+        method:    "GET",
+        targetUrl: "https://api.example.com/me",
+        input: {
+            params: [{
+                name:     "user_id",
+                in:       "query",
+                required: true,
+                source:   { from: "computed", ref: "userID" },
+                schema:   { type: "string" },
+            }],
+        },
     }],
 };
 
@@ -66,12 +84,20 @@ async function publicGatewayRoles(): Promise<RolesRepository> {
     return roles;
 }
 
+async function gatewayRoles(role: string, permission: string): Promise<RolesRepository> {
+    const roles = new InMemoryRolesRepository();
+    await roles.upsert({ id: role, label: role, builtin: role === PUBLIC_ROLE || role === USER_ROLE, grants: [{ permission }] });
+    return roles;
+}
+
 async function mountDeliveryGateway(opts: {
     resolveSecret?: (ref: string) => Promise<string | undefined>;
     roles?: RolesRepository;
+    providers?: Provider[];
+    auth?: unknown;
 } = {}) {
     const gateway = new InMemoryGatewayRepository();
-    await seedProviders(gateway, [SECURED]);
+    await seedProviders(gateway, opts.providers ?? [SECURED]);
     const runner = new CaptureRunner();
     new DeliveryCms({
         runner,
@@ -79,6 +105,7 @@ async function mountDeliveryGateway(opts: {
         gateway,
         gatewayResolveSecret: opts.resolveSecret,
         roles: opts.roles,
+        auth: opts.auth as any,
     });
     return runner.defaultHandler("GET", "/.cms/gateway");
 }
@@ -123,6 +150,27 @@ describe("Delivery gateway secrets", () => {
             expect(res.status).toBe(200);
             const init = fetchSpy.mock.calls[0]![1] as RequestInit;
             expect((init.headers as Headers).get("authorization")).toBe("Bearer dev-key");
+        } finally {
+            fetchSpy.mockRestore();
+        }
+    });
+
+    test("resolves computed userID from the Delivery auth subject", async () => {
+        const handler = await mountDeliveryGateway({
+            providers: [COMPUTED],
+            roles: await gatewayRoles(USER_ROLE, "urn:computed:me"),
+            auth: {
+                local: {
+                    getSubject: async () => ({ identifier: "user-123", role: USER_ROLE, displayName: "Ada" }),
+                },
+            },
+        });
+        const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));
+        try {
+            const res = await handler(new Request("http://site/.cms/gateway/computed/me"));
+
+            expect(res.status).toBe(200);
+            expect(fetchSpy.mock.calls[0]![0]).toBe("https://api.example.com/me?user_id=user-123");
         } finally {
             fetchSpy.mockRestore();
         }

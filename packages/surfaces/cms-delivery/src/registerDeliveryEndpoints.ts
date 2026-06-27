@@ -74,6 +74,10 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
 
     runner.group(CMS_GATEWAY_ROUTE, (proxyRunner) => {
         const prefix = gatewayPrefix(runner.basePath);
+        const resolveContext = async (req: Request) => {
+            const subject = delivery.auth ? await delivery.auth.local.getSubject(req).catch(() => null) : null;
+            return subject ? { userID: subject.identifier } : {};
+        };
         const authorizeEndpoint = async (endpoint: { urn: string }, req: Request) => {
             const roles = delivery.roles;
             if (!roles) return false;
@@ -89,6 +93,7 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
                 executeSystemEndpoint: (endpoint: { urn: string; targetUrl: string }, req: Request) =>
                     executeAuthSystemGatewayEndpoint(delivery.auth!, endpoint, req),
             } : {}),
+            resolveContext,
             authorizeEndpoint,
         };
         for (const method of GATEWAY_PROXY_METHODS) {

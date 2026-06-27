@@ -23,9 +23,9 @@ describe("can", () => {
         expect(can([], cmsPermission("users", "create"))).toBe(false);
     });
 
-    test("ignores the reserved condition field (V1)", () => {
+    test("denies a conditional grant until an evaluator exists", () => {
         const conditional: Grant[] = [{ permission: "urn:x:y", condition: { only: "me" } }];
-        expect(can(conditional, "urn:x:y")).toBe(true);
+        expect(can(conditional, "urn:x:y")).toBe(false);
     });
 });
 

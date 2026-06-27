@@ -12,6 +12,9 @@ export type RoleDto = { id: string; label: string; grants: Grant[] };
  *  `ValidatingRolesRepository` (the unbypassable seam enforcement). */
 export function validateGrants(grants: Grant[]): void {
     for (const g of grants) {
+        if (g.condition !== undefined) {
+            throw new RoleValidationError("grants", "conditional grants are not supported yet");
+        }
         if (g.permission.startsWith("urn:cms:") && !CMS_PERMISSIONS.includes(g.permission)) {
             throw new RoleValidationError("grants", `unknown CMS permission ${g.permission}`);
         }

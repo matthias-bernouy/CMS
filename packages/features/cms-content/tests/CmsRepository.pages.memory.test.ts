@@ -47,9 +47,10 @@ describe("InMemoryCmsRepository.getPagesMetadata — filter + sort", () => {
         expect(rows.map(r => r.path)).toEqual(["/contact", "/blog", "/about"]);
     });
 
-    test("published helper accepts truthy visible values", () => {
+    test("published helper accepts only strict visible true", () => {
         expect(isPublishedPage({ visible: true } as any)).toBe(true);
-        expect(isPublishedPage({ visible: "true" } as any)).toBe(true);
+        expect(isPublishedPage({ visible: "true" } as any)).toBe(false);
+        expect(isPublishedPage({ visible: "false" } as any)).toBe(false);
         expect(isPublishedPage({ visible: false } as any)).toBe(false);
     });
 

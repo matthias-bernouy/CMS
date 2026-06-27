@@ -10,8 +10,8 @@
  *   - gateway endpoint → `urn:<provider>:<endpoint>` (the URN the gateway already
  *                        mints), e.g. `urn:stripe:getInvoice` — holding it = "may call it".
  * A `Grant` pairs that permission with a reserved `condition` (always `undefined`
- * in V1 — `can()` ignores it), the seam for the future "by parameter" extension,
- * so adding it later needs no data migration.
+ * in V1 — conditional grants are rejected until an evaluator exists), the seam
+ * for the future "by parameter" extension.
  *
  * Roles: `admin` is the virtual super-role — it owns NO stored grants and is
  * short-circuited by callers before `can()`; it is deliberately absent from the
@@ -47,7 +47,7 @@ export const CMS_PERMISSIONS: readonly string[] = CMS_PERMISSION_CATALOGUE.flatM
 
 /** One permission held by a role. `permission` is the opaque id (CMS capability
  *  URN or gateway endpoint URN). `condition` is reserved for the later "by
- *  parameter" extension and is always `undefined` in V1. */
+ *  parameter" extension and must stay `undefined` until an evaluator exists. */
 export type Grant = {
     permission: string;
     condition?: unknown;
@@ -89,8 +89,8 @@ export function grantsFor(roleId: string, roles: RolesConfig): Grant[] {
     return roles.definitions.find((d) => d.id === roleId)?.grants ?? [];
 }
 
-/** Whether `grants` hold `permission`. V1 = exact id match; `condition` is ignored
- *  (reserved). Deny-by-default. */
+/** Whether `grants` hold `permission`. V1 = exact id match with no condition.
+ *  Conditional grants are denied until an evaluator exists. Deny-by-default. */
 export function can(grants: Grant[], permission: string): boolean {
-    return grants.some((g) => g.permission === permission);
+    return grants.some((g) => g.condition === undefined && g.permission === permission);
 }

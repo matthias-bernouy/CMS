@@ -36,7 +36,7 @@ export async function renderRef(
         const settings = await delivery.repository.getSystem();
         const ref = settings.site?.[field] ?? null;
         if (ref) {
-            const page = await delivery.repository.getPage(ref.path);
+            const page = await delivery.repository.getPublishedPage(ref.path);
             if (page) {
                 return await cachedResponseAsync(
                     req,

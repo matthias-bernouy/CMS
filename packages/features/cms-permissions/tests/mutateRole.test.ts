@@ -40,6 +40,15 @@ describe("upsertRole", () => {
             .rejects.toThrow(RoleValidationError);
     });
 
+    test("rejects conditional grants until an evaluator exists", async () => {
+        const { roles } = makeStores();
+        await expect(upsertRole(roles, {
+            id: "editor",
+            label: "X",
+            grants: [{ permission: cmsPermission("users", "view"), condition: { only: "me" } }],
+        })).rejects.toThrow(RoleValidationError);
+    });
+
     test("updates a custom role's label + grants", async () => {
         const { roles } = makeStores();
         await upsertRole(roles, { id: "editor", label: "Editor", grants: [] });

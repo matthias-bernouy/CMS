@@ -15,8 +15,8 @@ export function filterAndSortPages(pages: PageMeta[], opts: PagesQuery = {}): Pa
             p.title.toLowerCase().includes(search) || p.path.toLowerCase().includes(search));
     }
     if (opts.tag)                     rows = rows.filter(p => p.tags.includes(opts.tag!));
-    if (opts.visible === "published") rows = rows.filter(p => p.visible);
-    else if (opts.visible === "draft") rows = rows.filter(p => !p.visible);
+    if (opts.visible === "published") rows = rows.filter(p => p.visible === true);
+    else if (opts.visible === "draft") rows = rows.filter(p => p.visible !== true);
 
     const sortBy = opts.sortBy ?? "title";
     const dir    = opts.sortOrder === "desc" ? -1 : 1;
@@ -24,6 +24,6 @@ export function filterAndSortPages(pages: PageMeta[], opts: PagesQuery = {}): Pa
 }
 
 function compareBy(a: PageMeta, b: PageMeta, key: "title" | "path" | "visible"): number {
-    if (key === "visible") return (a.visible ? 1 : 0) - (b.visible ? 1 : 0);
+    if (key === "visible") return (a.visible === true ? 1 : 0) - (b.visible === true ? 1 : 0);
     return a[key].localeCompare(b[key], undefined, { sensitivity: "base" });
 }

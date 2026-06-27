@@ -38,15 +38,21 @@ describe("parseRoleDto", () => {
         expect(() => parseRoleDto({ id: "x", label: "X", grants: "nope" })).toThrow(InvalidParam);
     });
 
-    test("accepts a known CMS permission and a gateway urn, dropping condition", () => {
+    test("accepts a known CMS permission and a gateway urn", () => {
         const dto = parseRoleDto({ id: "x", label: "X", grants: [
-            { permission: cmsPermission("users", "view"), condition: { foo: 1 } },
+            { permission: cmsPermission("users", "view") },
             { permission: "urn:stripe:getInvoice" },
         ] });
         expect(dto.grants).toEqual([
             { permission: cmsPermission("users", "view") },
             { permission: "urn:stripe:getInvoice" },
         ]);
+    });
+
+    test("rejects conditional grants until an evaluator exists", () => {
+        expect(() => parseRoleDto({ id: "x", label: "X", grants: [
+            { permission: cmsPermission("users", "view"), condition: { foo: 1 } },
+        ] })).toThrow(InvalidParam);
     });
 });
 

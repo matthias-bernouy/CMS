@@ -48,6 +48,13 @@ describe("ValidatingCmsRepository — pages", () => {
         await expect(repo.updatePage({ id: "p1", tags: ["bad/char"] })).rejects.toThrow(ContentValidationError);
     });
 
+    test("updatePage requires visible to be a strict boolean", async () => {
+        const { repo, calls } = makeRepo();
+        await repo.updatePage({ id: "p1", visible: false });
+        expect(calls.updatePage[0].visible).toBe(false);
+        await expect(repo.updatePage({ id: "p1", visible: "false" as any })).rejects.toThrow(ContentValidationError);
+    });
+
     test("updatePage hardens content and checks refs exist", async () => {
         const { repo, calls } = makeRepo({ blocs: ["cs-card"] });
         await repo.updatePage({ id: "p1", content: "<cs-card></cs-card>" });

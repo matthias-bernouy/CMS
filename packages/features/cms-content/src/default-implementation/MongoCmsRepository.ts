@@ -208,7 +208,7 @@ export class MongoCmsRepository implements CmsRepository {
         }
         if (opts.tag)                     filter.tags = opts.tag;
         if (opts.visible === "published") filter.visible = true;
-        else if (opts.visible === "draft") filter.visible = false;
+        else if (opts.visible === "draft") filter.visible = { $ne: true };
 
         const sortField = opts.sortBy ?? "title";
         const sort = { [sortField]: opts.sortOrder === "desc" ? -1 : 1 } as Record<string, 1 | -1>;
@@ -224,7 +224,7 @@ export class MongoCmsRepository implements CmsRepository {
             path:    d.path,
             title:   d.title,
             tags:    d.tags,
-            visible: d.visible,
+            visible: d.visible === true,
         }));
     }
 
@@ -407,7 +407,7 @@ function toDoc<T extends { id: string }>(model: T): WithMongoId<T> {
 function fromPageDoc(d: PageDoc | null): TPage | null {
     if (!d) return null;
     const { _id, ...rest } = d;
-    return { id: _id, ...rest };
+    return { id: _id, ...rest, visible: d.visible === true };
 }
 function fromSnippetDoc(d: SnippetDoc | null): TSnippet | null {
     if (!d) return null;

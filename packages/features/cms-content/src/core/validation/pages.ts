@@ -29,5 +29,9 @@ export function validatePagePatch(page: Partial<TPage>): Partial<TPage> {
     if (page.content     !== undefined) out.content     = validateContent(page.content);
     if (page.description !== undefined) out.description = validateOptionalText("description", page.description, 200);
     if (page.tags        !== undefined) out.tags        = validateTags(page.tags);
+    if (page.visible     !== undefined) {
+        if (typeof page.visible !== "boolean") throw new ContentValidationError("visible", "boolean expected");
+        out.visible = page.visible;
+    }
     return out;
 }
