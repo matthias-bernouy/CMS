@@ -52,4 +52,67 @@ describe("Source — success", () => {
         await new Source(src).run();
         expect(Array.from(src.querySelectorAll("li")).map(text)).toEqual(["a", "b"]);
     });
+
+    test("success reload updates bound sites without replacing stable body nodes", async () => {
+        let call = 0;
+        globalThis.fetch = (async () => {
+            call++;
+            return {
+                ok: true,
+                status: 200,
+                text: async () => JSON.stringify({ name: call === 1 ? "Ada" : "Grace" }),
+            } as unknown as Response;
+        }) as unknown as typeof fetch;
+        const src = el(`
+            <div cms-source="/x">
+                <p>Hello {{ name }}</p>
+                <input name="email">
+            </div>
+        `);
+        const source = new Source(src);
+
+        await source.run();
+        const paragraph = src.querySelector("p")!;
+        const input = src.querySelector("input")!;
+        input.setAttribute("data-live", "kept");
+
+        await source.run();
+
+        expect(src.querySelector("p")).toBe(paragraph);
+        expect(src.querySelector("input")).toBe(input);
+        expect(src.querySelector("input")!.getAttribute("data-live")).toBe("kept");
+        expect(text(src.querySelector("p"))).toBe("Hello Grace");
+    });
+
+    test("a slot transition remounts the body from the compiled template", async () => {
+        let call = 0;
+        globalThis.fetch = (async () => {
+            call++;
+            return {
+                ok: true,
+                status: 200,
+                text: async () => call === 1 ? JSON.stringify({ name: "Ada" }) : JSON.stringify([]),
+            } as unknown as Response;
+        }) as unknown as typeof fetch;
+        const src = el(`
+            <div cms-source="/x">
+                <p>Hello {{ name }}</p>
+                <input name="email">
+                <div cms-slot="empty">No data</div>
+            </div>
+        `);
+        const source = new Source(src);
+
+        await source.run();
+        const input = src.querySelector("input")!;
+
+        await source.run();
+        expect(src.querySelector("input")).toBeNull();
+        expect(text(src.querySelector("div"))).toBe("No data");
+
+        call = 0;
+        await source.run();
+        expect(src.querySelector("input")).not.toBe(input);
+        expect(text(src.querySelector("p"))).toBe("Hello Ada");
+    });
 });

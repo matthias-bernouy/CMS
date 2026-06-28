@@ -3,10 +3,9 @@
  *  - `[cms-slot="loading"|"error"|"empty"]` → state slots,
  *  - everything else → the `body` (the default data template).
  *
- * The split is captured ONCE, off-DOM, into pristine fragments; every render
- * clones the relevant fragment. This is what makes reload clean — the data
- * template (which `bindSubtree` mutates: stamping clones, replacing tokens) is
- * never consumed in place, so the next render starts from a fresh copy.
+ * The split is captured ONCE, off-DOM, into pristine fragments. Source success
+ * bodies compile that pristine body into a reactive region; state slots still
+ * render by cloning and binding their captured fragments.
  */
 
 import { bindSubtree } from "./bindSubtree";
@@ -64,9 +63,10 @@ export function captureContent(el: Element): Captured {
 }
 
 /**
- * Render a captured fragment into `el`: clear whatever was rendered before,
- * append a fresh deep clone, then bind it against `scope`. A null scope renders
- * static content (e.g. a loading slot with no tokens) — tokens left verbatim.
+ * Render a captured state fragment into `el`: clear whatever was rendered
+ * before, append a fresh deep clone, then bind it against `scope`. A null scope
+ * renders static content (e.g. a loading slot with no tokens) — tokens left
+ * verbatim. Source bodies use the reactive template runtime instead.
  */
 export function renderContent(
     el: Element,

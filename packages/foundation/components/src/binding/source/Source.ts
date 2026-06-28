@@ -1,10 +1,12 @@
-/** Fetches one `cms-source`, renders its authored template, and owns reload hooks. */
+/** Fetches one `cms-source`, owns reload hooks, and updates its body reactively. */
 
 import { runFetch } from "../fetcher";
 import { captureContent, renderContent, isEmpty, type Captured } from "../render/slots";
 import { type FilterMap } from "../interpolate";
 import { READY_ATTR, SOURCE_ATTR, type SourceState } from "../attrs";
-import { renderForcedSourceState } from "./forcedState";
+import { type Scope } from "../scope";
+import { CompiledTemplate } from "../reactive/CompiledTemplate";
+import { type MountedRegion } from "../reactive/MountedRegion";
 import { parseSourceSpec, sourceUrl } from "./sourceSpec";
 import { listenReactiveUrlChanges, resolveReactiveUrl } from "./reactiveUrl";
 export { clearRuntimeStamps } from "./runtimeStamps";
@@ -17,6 +19,9 @@ export const RELOAD_EVENT = "cms-source:reload";
 
 export class Source {
     private readonly captured: Captured;
+    private readonly bodyTemplate: CompiledTemplate;
+    private bodyRegion: MountedRegion | null = null;
+    private rendered: "none" | "body" | "slot" = "none";
     private abort: AbortController | null = null;
     private reloadEvents: string[] = [];
     private stopUrlListeners: (() => void) | null = null;
@@ -30,6 +35,7 @@ export class Source {
         private readonly options: { sourceStateForce?: SourceState } = {},
     ) {
         this.captured = captureContent(el);
+        this.bodyTemplate = CompiledTemplate.fromFragment(this.captured.body, this.filters);
     }
 
     /** Wire reload listeners and kick off the first fetch. The synchronous part
@@ -55,7 +61,8 @@ export class Source {
     renderTemplate(): void {
         this.abort?.abort();
         this.abort = null;
-        renderContent(this.el, this.captured.template, null, this.filters);
+        this.clearRendered();
+        this.el.replaceChildren(this.captured.template.cloneNode(true));
     }
 
     private listen(): void {
@@ -93,8 +100,8 @@ export class Source {
         if (opts?.onlyIfUrlChanged && url === this.lastUrl) return;
         this.lastUrl = url;
 
-        const { slots, body } = this.captured;
-        if (slots.loading) renderContent(this.el, slots.loading, null, this.filters);
+        const { slots } = this.captured;
+        if (slots.loading) this.renderSlot(slots.loading, null);
 
         this.abort?.abort();
         const ac = new AbortController();
@@ -108,9 +115,9 @@ export class Source {
         if (outcome.kind === "error") {
             if (slots.error) {
                 const ctx = { value: { status: outcome.status, message: outcome.message } };
-                renderContent(this.el, slots.error, ctx, this.filters);
+                this.renderSlot(slots.error, ctx);
             } else {
-                this.el.replaceChildren();
+                this.clearRendered();
                 console.warn(`cms-source "${url}": ${outcome.message}`);
             }
             return;
@@ -122,15 +129,48 @@ export class Source {
             : { value: data };
 
         if (isEmpty(data) && slots.empty) {
-            renderContent(this.el, slots.empty, scope, this.filters);
+            this.renderSlot(slots.empty, scope);
         } else {
-            renderContent(this.el, body, scope, this.filters);
+            this.renderBody(scope);
         }
     }
 
     private renderForcedState(state: Exclude<SourceState, "loaded">): void {
         this.abort?.abort();
         this.abort = null;
-        renderForcedSourceState(this.el, this.captured, this.filters, state);
+        const fragment = this.captured.slots[state];
+        if (!fragment) {
+            this.clearRendered();
+            return;
+        }
+
+        const scope = state === "error"
+            ? { value: { status: 0, message: "Forced error state" } }
+            : null;
+        this.renderSlot(fragment, scope);
+    }
+
+    private renderBody(scope: Scope): void {
+        if (this.bodyRegion && this.rendered === "body") {
+            this.bodyRegion.update(scope);
+            return;
+        }
+
+        this.clearRendered();
+        this.bodyRegion = this.bodyTemplate.mount(this.el, scope);
+        this.rendered = "body";
+    }
+
+    private renderSlot(fragment: DocumentFragment, scope: Scope | null): void {
+        this.clearRendered();
+        renderContent(this.el, fragment, scope, this.filters);
+        this.rendered = "slot";
+    }
+
+    private clearRendered(): void {
+        this.bodyRegion?.unmount();
+        this.bodyRegion = null;
+        this.el.replaceChildren();
+        this.rendered = "none";
     }
 }

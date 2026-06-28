@@ -9,6 +9,15 @@ function deferredFetch(status: number, body: string) {
     return release;
 }
 
+function responseSequence(payloads: { status: number; body: string }[]): void {
+    let i = 0;
+    globalThis.fetch = (async () => {
+        const payload = payloads[Math.min(i, payloads.length - 1)]!;
+        i++;
+        return { ok: payload.status >= 200 && payload.status < 300, status: payload.status, text: async () => payload.body } as unknown as Response;
+    }) as unknown as typeof fetch;
+}
+
 afterEach(resetDom);
 
 describe("Source — slot selection", () => {
@@ -43,6 +52,27 @@ describe("Source — slot selection", () => {
         const src = el(`<div cms-source="/x"><p>{{ name }}</p></div>`);
         await new Source(src).run();
         expect(src.childNodes.length).toBe(0);
+    });
+
+    test("error with no error slot clears a previous reactive body and later success remounts it", async () => {
+        responseSequence([
+            { status: 200, body: JSON.stringify({ name: "Ada" }) },
+            { status: 500, body: "" },
+            { status: 200, body: JSON.stringify({ name: "Grace" }) },
+        ]);
+        const src = el(`<div cms-source="/x"><p>Hello {{ name }}</p><input name="email"></div>`);
+        const source = new Source(src);
+
+        await source.run();
+        const input = src.querySelector("input")!;
+        expect(text(src.querySelector("p"))).toBe("Hello Ada");
+
+        await source.run();
+        expect(src.childNodes.length).toBe(0);
+
+        await source.run();
+        expect(text(src.querySelector("p"))).toBe("Hello Grace");
+        expect(src.querySelector("input")).not.toBe(input);
     });
 });
 

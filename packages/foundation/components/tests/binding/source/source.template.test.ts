@@ -4,6 +4,12 @@ import { el, text, respond, resetDom } from "../testUtils";
 
 afterEach(resetDom);
 
+function commentCount(node: Node): number {
+    let count = node.nodeType === Node.COMMENT_NODE ? 1 : 0;
+    for (const child of Array.from(node.childNodes)) count += commentCount(child);
+    return count;
+}
+
 describe("Source — editor template restore", () => {
     test("renderTemplate() restores the authored body and state slots with cms-slot attrs", async () => {
         respond(200, JSON.stringify({ name: "Ada" }));
@@ -51,6 +57,43 @@ describe("Source — editor template restore", () => {
         expect(template).not.toBeNull();
         expect(text(template!.content.querySelector("my-card"))).toBe("{{ name }}");
         expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("Nothing");
+    });
+
+    test("renderTemplate() removes reactive anchors after structural body updates", async () => {
+        let call = 0;
+        globalThis.fetch = (async () => {
+            call++;
+            return {
+                ok: true,
+                status: 200,
+                text: async () => JSON.stringify({
+                    visible: call === 1,
+                    items: call === 1 ? [{ name: "Ada" }] : [{ name: "Grace" }, { name: "Lin" }],
+                    html: call === 1 ? "<b>First</b>" : "<i>Second</i>",
+                }),
+            } as unknown as Response;
+        }) as unknown as typeof fetch;
+        const src = el(`
+            <section cms-source="/x">
+                <p cms-condition="visible">{{ items.length }}</p>
+                <span cms-repeat="items as item">{{ item.name }}</span>
+                <raw-html>{{ html | innerHTML }}</raw-html>
+                <div cms-slot="empty">Empty</div>
+            </section>
+        `);
+        const source = new Source(src);
+
+        await source.run();
+        await source.run();
+        expect(commentCount(src)).toBeGreaterThan(0);
+
+        source.renderTemplate();
+
+        expect(commentCount(src)).toBe(0);
+        expect(src.querySelector('[cms-condition="visible"]')).not.toBeNull();
+        expect(src.querySelector('[cms-repeat="items as item"]')).not.toBeNull();
+        expect(text(src.querySelector("raw-html"))).toBe("{{ html | innerHTML }}");
+        expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("Empty");
     });
 });
 
