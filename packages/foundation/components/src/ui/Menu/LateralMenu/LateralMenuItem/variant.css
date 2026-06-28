@@ -1,6 +1,6 @@
 .menu-item:hover {
-    background-color: var(--item-bg-active);
-    color: var(--item-color-active);
+    background-color: var(--item-bg-hover);
+    color: var(--item-color-hover);
 }
 
 :host(:focus-visible) .menu-item {
@@ -11,17 +11,19 @@
 .menu-item.active {
     background-color: var(--item-bg-active);
     color: var(--item-color-active);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .menu-item.active::before {
     content: "";
     position: absolute;
     left: 0;
+    top: 9px;
+    bottom: 9px;
     width: 3px;
-    height: 100%;
+    height: auto;
     background-color: var(--item-color-active);
-    border-radius: 0 4px 4px 0;
+    border-radius: 999px;
 }
 
 .menu-item.active ::slotted(svg) {
@@ -29,10 +31,10 @@
 }
 
 :host([disabled]) .menu-item {
-    cursor: not-allowed;
+    cursor: default;
     pointer-events: none;
-    opacity: 0.5;
-    filter: grayscale(1);
+    color: var(--item-color-disabled);
+    opacity: .66;
     background: transparent !important;
 }
 

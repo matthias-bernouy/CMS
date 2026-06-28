@@ -1,31 +1,31 @@
 :host([color="primary"]) {
   --_accent-base: var(--primary-base);
   --_accent-muted: var(--primary-muted);
-  --_accent-contrast: var(--primary-contrasted);
+  --_accent-contrast: var(--primary-foreground, var(--primary-contrasted));
 }
 
 :host([color="danger"]) {
   --_accent-base: var(--danger-base);
   --_accent-muted: var(--danger-muted);
-  --_accent-contrast: var(--danger-contrasted);
+  --_accent-contrast: var(--danger-foreground, var(--danger-contrasted));
 }
 
 :host([color="success"]) {
   --_accent-base: var(--success-base);
   --_accent-muted: var(--success-muted);
-  --_accent-contrast: var(--success-contrasted);
+  --_accent-contrast: var(--success-foreground, var(--success-contrasted));
 }
 
 :host([color="info"]) {
   --_accent-base: var(--info-base);
   --_accent-muted: var(--info-muted);
-  --_accent-contrast: var(--info-contrasted);
+  --_accent-contrast: var(--info-foreground, var(--info-contrasted));
 }
 
 :host([color="warning"]) {
   --_accent-base: var(--warning-base);
   --_accent-muted: var(--warning-muted);
-  --_accent-contrast: var(--warning-contrasted);
+  --_accent-contrast: var(--warning-foreground, var(--warning-contrasted));
 }
 
 :host([variant="filled"]) {

@@ -1,43 +1,53 @@
 :root {
     /* Surfaces */
-    --bg-base:    oklch(98% 0.004 265);
-    --bg-surface: oklch(100% 0 0);
-    --bg-overlay: oklch(100% 0 0);
+    --bg-base:    #f6f7f7;
+    --bg-surface: #ffffff;
+    --bg-overlay: #ffffff;
+    --bg-sidebar: #fbfcfb;
+    --bg-subtle:  #f9faf9;
+    --bg-hover:   #f1f4f3;
 
     /* Text */
-    --text-main:  oklch(22% 0.02 265);
-    --text-body:  oklch(38% 0.02 265);
-    --text-muted: oklch(60% 0.01 265);
-    --text-label: oklch(45% 0.02 265);
+    --text-main:  #151b19;
+    --text-body:  #4f5d58;
+    --text-muted: #87948f;
+    --text-label: #4f5d58;
 
     /* Borders */
-    --border-default: oklch(92% 0.006 265);
-    --border-light:   oklch(96% 0.004 265);
+    --border-default: #e2e6e4;
+    --border-light:   #eef1f0;
+    --border-strong:  #c9d1ce;
 
     /* Accents — base / muted / contrasted */
-    --primary-base:       oklch(60% 0.18 265);
-    --primary-muted:      oklch(96% 0.03 265);
-    --primary-contrasted: oklch(30% 0.12 265);
+    --primary-base:       #165f4b;
+    --primary-muted:      #e2f0ea;
+    --primary-contrasted: #145641;
+    --primary-foreground: #ffffff;
 
-    --secondary-base:       oklch(50% 0.02 265);
-    --secondary-muted:      oklch(94% 0.008 265);
-    --secondary-contrasted: oklch(25% 0.03 265);
+    --secondary-base:       #4f5d58;
+    --secondary-muted:      #f1f4f3;
+    --secondary-contrasted: #151b19;
+    --secondary-foreground: #ffffff;
 
     --danger-base:        oklch(60% 0.20 25);
     --danger-muted:       oklch(96% 0.03 25);
     --danger-contrasted:  oklch(30% 0.12 25);
+    --danger-foreground:  #ffffff;
 
     --success-base:       oklch(62% 0.15 150);
     --success-muted:      oklch(96% 0.03 150);
     --success-contrasted: oklch(30% 0.10 150);
+    --success-foreground: #ffffff;
 
     --info-base:          oklch(65% 0.12 225);
     --info-muted:         oklch(96% 0.02 225);
     --info-contrasted:    oklch(30% 0.08 225);
+    --info-foreground:    #ffffff;
 
     --warning-base:       oklch(72% 0.15 70);
     --warning-muted:      oklch(96% 0.03 70);
     --warning-contrasted: oklch(35% 0.10 70);
+    --warning-foreground: #151b19;
 
     /* Context aliases — the "current surface" a bloc sits on. Neutral defaults
        here; colour-variant provider blocs (footer, hero, banner…) re-route

@@ -4,12 +4,12 @@
     width: 100vw;
     overflow: hidden;
 
-    --_sidebar-width: 260px;
+    --_sidebar-width: 252px;
     --_sidebar-collapsed-width: 0px;
-    --_sidebar-bg: var(--bg-base);
+    --_sidebar-bg: var(--bg-sidebar, var(--bg-surface));
     --_sidebar-border: var(--border-default);
-    --_content-bg: var(--bg-surface);
-    --_content-padding: 2rem;
+    --_content-bg: var(--bg-base);
+    --_content-padding: 30px;
     --_focus-ring: var(--primary-base, #2563eb);
 
     --ctx-bg: var(--_content-bg);
@@ -63,6 +63,7 @@
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
     --ctx-border: var(--_sidebar-border);
+    --menu-border-width: 0;
 }
 
 ::slotted(:not([slot])) {

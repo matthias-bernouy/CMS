@@ -1,15 +1,9 @@
 <w13c-left-menu-layout>
 
-    <w13c-lateral-menu slot="sidebar">
-        <h2 slot="header">Page Builder</h2>
+    <w13c-lateral-menu slot="sidebar" aria-label="Admin navigation" style="--menu-brand-mark: 'C'; --menu-brand-mark-display: grid; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;">
+        <h2 slot="header" data-admin-brand>CmsCore</h2>
 
-        <w13c-lateral-menu-item data-route="files">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-            </svg>
-            Files
-        </w13c-lateral-menu-item>
+        <div class="menu-section">Content</div>
 
         <w13c-lateral-menu-item data-route="pages">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -22,6 +16,7 @@
             </svg>
             Pages
         </w13c-lateral-menu-item>
+
         <w13c-lateral-menu-item data-route="snippets">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -31,6 +26,7 @@
             </svg>
             Snippets
         </w13c-lateral-menu-item>
+
         <w13c-lateral-menu-item data-route="templates">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -41,41 +37,15 @@
             Templates
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="gateway-providers">
+        <w13c-lateral-menu-item data-route="files">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22v-5" />
-                <path d="M9 8V2" />
-                <path d="M15 8V2" />
-                <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
+                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
             </svg>
-            Gateway
+            Files
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="analytics">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10" />
-                <line x1="12" y1="20" x2="12" y2="4" />
-                <line x1="6" y1="20" x2="6" y2="14" />
-            </svg>
-            Analytics
-        </w13c-lateral-menu-item>
-
-        <w13c-lateral-menu-item disabled data-route="components" badge="upcoming">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 3H3v7h7V3Z" />
-                <path d="M21 3h-7v7h7V3Z" />
-                <path d="M10 14H3v7h7v-7Z" />
-                <path d="M21 14h-7v7h7v-7Z" />
-            </svg>
-            Blocks
-        </w13c-lateral-menu-item>
-
-
-
-        <w13c-lateral-menu-item disabled data-route="components" badge="upcoming">
+        <w13c-lateral-menu-item disabled>
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
@@ -88,8 +58,72 @@
             Theme
         </w13c-lateral-menu-item>
 
+        <w13c-lateral-menu-item disabled>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 3H3v7h7V3Z" />
+                <path d="M21 3h-7v7h7V3Z" />
+                <path d="M10 14H3v7h7v-7Z" />
+                <path d="M21 14h-7v7h7v-7Z" />
+            </svg>
+            Blocs
+        </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="users" slot="footer">
+        <div class="menu-section">Data</div>
+
+        <w13c-lateral-menu-item data-route="analytics">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            Analytics
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item disabled>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.35"
+                stroke-linecap="round">
+                <path d="M9 5c-2.3 2-3.4 4.3-3.4 7S6.7 17 9 19" />
+                <path d="M15 5c2.3 2 3.4 4.3 3.4 7S17.3 17 15 19" />
+            </svg>
+            Functions
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item disabled>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="6" cy="12" r="2.5" />
+                <circle cx="17" cy="7" r="2.5" />
+                <circle cx="17" cy="17" r="2.5" />
+                <path d="M8.5 12h3.5" />
+                <path d="m12 12 2.8-3.1" />
+                <path d="m12 12 2.8 3.1" />
+            </svg>
+            Triggers
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item data-route="gateway-providers">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="7" ry="3" />
+                <path d="M5 5v6c0 1.66 3.13 3 7 3s7-1.34 7-3V5" />
+                <path d="M5 11v6c0 1.66 3.13 3 7 3s7-1.34 7-3v-6" />
+            </svg>
+            Sources
+        </w13c-lateral-menu-item>
+
+        <div class="menu-section">Workspace</div>
+
+        <w13c-lateral-menu-item disabled>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 3v4h1.5a2.5 2.5 0 1 1 0 5H14v4h-4v-1.5a2.5 2.5 0 1 0-5 0V16H3v-6h1.5a2.5 2.5 0 1 0 0-5H3V3h6v1.5a2.5 2.5 0 1 0 5 0V3Z" />
+            </svg>
+            Integrations
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item data-route="users">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -100,7 +134,7 @@
             Users
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="settings" slot="footer">
+        <w13c-lateral-menu-item data-route="settings">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path
@@ -110,6 +144,16 @@
             Settings
         </w13c-lateral-menu-item>
 
+        <w13c-lateral-menu-item disabled>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l1.7 5.1L19 10l-5.3 1.9L12 17l-1.7-5.1L5 10l5.3-1.9L12 3Z" />
+                <path d="M19 3v4" />
+                <path d="M21 5h-4" />
+            </svg>
+            AI Assistant
+        </w13c-lateral-menu-item>
+
         <w13c-lateral-menu-item data-role="profil" data-route="profil" slot="footer">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -117,7 +161,7 @@
                 <circle cx="12" cy="10" r="3" />
                 <path d="M6.5 18.5a6 6 0 0 1 11 0" />
             </svg>
-            Profil
+            Profile
         </w13c-lateral-menu-item>
     </w13c-lateral-menu>
 
@@ -128,7 +172,7 @@
                 <slot name="title"></slot>
             </h1>
 
-            <div style="display: flex; align-items: center; gap: 0.75rem;padding-top: 4px">
+            <div style="display: flex; align-items: center; gap: 0.75rem; padding-top: 4px;">
                 <slot name="action"></slot>
             </div>
         </div>

@@ -20,11 +20,11 @@
 :host([size="md"]) { --_size: 2.25rem; --_radius: 8px; }
 :host([size="lg"]) { --_size: 2.75rem; --_radius: 10px; }
 
-:host([color="primary"]) { --_accent: var(--primary-base); --_accent-contrast: var(--primary-contrasted); }
-:host([color="danger"])  { --_accent: var(--danger-base); --_accent-contrast: var(--danger-contrasted); }
-:host([color="success"]) { --_accent: var(--success-base); --_accent-contrast: var(--success-contrasted); }
-:host([color="info"])    { --_accent: var(--info-base); --_accent-contrast: var(--info-contrasted); }
-:host([color="warning"]) { --_accent: var(--warning-base); --_accent-contrast: var(--warning-contrasted); }
+:host([color="primary"]) { --_accent: var(--primary-base); --_accent-contrast: var(--primary-foreground, var(--primary-contrasted)); }
+:host([color="danger"])  { --_accent: var(--danger-base); --_accent-contrast: var(--danger-foreground, var(--danger-contrasted)); }
+:host([color="success"]) { --_accent: var(--success-base); --_accent-contrast: var(--success-foreground, var(--success-contrasted)); }
+:host([color="info"])    { --_accent: var(--info-base); --_accent-contrast: var(--info-foreground, var(--info-contrasted)); }
+:host([color="warning"]) { --_accent: var(--warning-base); --_accent-contrast: var(--warning-foreground, var(--warning-contrasted)); }
 
 :host([variant="filled"]) {
   --_bg: var(--_accent);
