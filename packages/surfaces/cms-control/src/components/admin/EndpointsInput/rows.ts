@@ -1,4 +1,4 @@
-import { HTTP_METHODS } from "@bernouy/cms-gateway/browser";
+import { HTTP_METHODS } from "@bernouy/cms-sources/browser";
 import { makeInput, makeMethodSelect, makeDeleteButton } from "./controls";
 import { makeInPanel } from "./inPanel";
 import { makeOutPanel } from "./outPanel";
@@ -47,7 +47,7 @@ export function makeEndpointRow(idx: number, seed: EndpointSeed = {}, api?: stri
     infos.setAttribute('label', 'Infos');
     const infosBody = document.createElement('p9r-stack');
     infosBody.setAttribute('gap', 'm');
-    const idInput = makeInput(`endpoints.${idx}.endpointId`, 'Endpoint id', 'getUser', seed.endpointId);
+    const idInput = makeInput(`endpoints.${idx}.endpointId`, 'SourceEndpoint id', 'getUser', seed.endpointId);
     const methodSelect = makeMethodSelect(`endpoints.${idx}.method`, method);
     const urlInput = makeInput(`endpoints.${idx}.targetUrl`, 'Target URL', 'https://api.example.com/path', seed.targetUrl);
     infosBody.append(idInput, methodSelect, urlInput);

@@ -11,10 +11,10 @@ import {
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
 import {
-    CompositeGatewayRepository,
-    InMemoryGatewayRepository,
-    SYSTEM_GATEWAY_PROVIDERS,
-} from "@bernouy/cms-gateway";
+    CompositeSourceRepository,
+    InMemorySourceRepository,
+    SYSTEM_SOURCES,
+} from "@bernouy/cms-sources";
 import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 
@@ -79,7 +79,7 @@ async function setup() {
         passwordResetUrl: "http://site.test/auth/reset-password",
         authEmailCooldownSeconds: 0,
     };
-    const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+    const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
     const roles = new InMemoryRolesRepository();
     const grants = [
         "me",
@@ -93,12 +93,12 @@ async function setup() {
     ].map((endpoint) => ({ permission: `urn:system-auth:${endpoint}` }));
     await roles.upsert({ id: PUBLIC_ROLE, label: "Public", builtin: true, grants });
     await roles.upsert({ id: USER_ROLE, label: "User", builtin: true, grants });
-    new DeliveryCms({ runner, repository: {} as any, auth, gateway, roles });
+    new DeliveryCms({ runner, repository: {} as any, auth, sources: gateway, roles });
     return {
         emailer,
         credentials,
-        get:  runner.defaultHandler("GET", "/.cms/gateway"),
-        post: runner.defaultHandler("POST", "/.cms/gateway"),
+        get:  runner.defaultHandler("GET", "/.cms/sources"),
+        post: runner.defaultHandler("POST", "/.cms/sources"),
     };
 }
 
@@ -153,7 +153,7 @@ function jsonRequest(endpoint: string, body: unknown): Request {
 }
 
 function url(endpoint: string): string {
-    return `http://site/.cms/gateway/system-auth${endpoint}`;
+    return `http://site/.cms/sources/system-auth${endpoint}`;
 }
 
 function tokenFrom(text: string): string {

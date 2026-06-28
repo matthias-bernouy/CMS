@@ -13,7 +13,7 @@
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/components": "workspace:*",
@@ -109,8 +109,8 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/features/cms-gateway": {
-      "name": "@bernouy/cms-gateway",
+    "packages/features/cms-sources": {
+      "name": "@bernouy/cms-sources",
       "version": "0.1.0",
       "dependencies": {
         "@bernouy/http-runner": "workspace:*",
@@ -187,7 +187,7 @@
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -206,7 +206,7 @@
         "@bernouy/cms-control": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/envelope-crypto": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
@@ -227,7 +227,7 @@
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-editor-system-v2": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/components": "workspace:*",
@@ -253,7 +253,7 @@
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-files": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/http-runner": "workspace:*",
         "linkedom": "^0.18.12",
@@ -282,7 +282,7 @@
 
     "@bernouy/cms-files": ["@bernouy/cms-files@workspace:packages/features/cms-files"],
 
-    "@bernouy/cms-gateway": ["@bernouy/cms-gateway@workspace:packages/features/cms-gateway"],
+    "@bernouy/cms-sources": ["@bernouy/cms-sources@workspace:packages/features/cms-sources"],
 
     "@bernouy/cms-permissions": ["@bernouy/cms-permissions@workspace:packages/features/cms-permissions"],
 

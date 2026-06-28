@@ -1,10 +1,10 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
-import { DuplicateProviderError, InMemoryGatewayRepository, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
+import { DuplicateSourceError, InMemorySourceRepository, ValidatingSourceRepository } from "@bernouy/cms-sources";
 
 const makeCms = () => {
-    const gateway = new ValidatingGatewayRepository(new InMemoryGatewayRepository());
-    return { cms: { gateway } as any, gateway };
+    const gateway = new ValidatingSourceRepository(new InMemorySourceRepository());
+    return { cms: { sources: gateway } as any, gateway };
 };
 
 const post = (body: Record<string, unknown>) =>
@@ -28,7 +28,7 @@ describe("POST /api/gateway-provider", () => {
         }), cms);
         expect(res.ok).toBe(true);
 
-        const stored = await gateway.getProvider("urn:shop");
+        const stored = await gateway.getSource("urn:shop");
         expect(stored?.endpoints).toHaveLength(2);
         expect(stored?.endpoints[0]!.urn).toBe("urn:shop:getCart");
         expect(stored?.endpoints[1]!.urn).toBe("urn:shop:addItem");
@@ -37,7 +37,7 @@ describe("POST /api/gateway-provider", () => {
     test("duplicate urn -> domain error with HTTP status", async () => {
         const { cms } = makeCms();
         await postGatewayProvider(post(validBody()), cms);
-        await expect(postGatewayProvider(post(validBody()), cms)).rejects.toBeInstanceOf(DuplicateProviderError);
+        await expect(postGatewayProvider(post(validBody()), cms)).rejects.toBeInstanceOf(DuplicateSourceError);
         await expect(postGatewayProvider(post(validBody()), cms)).rejects.toMatchObject({ status: 400 });
     });
 
@@ -52,7 +52,7 @@ describe("POST /api/gateway-provider", () => {
         await postGatewayProvider(post(validBody({
             "endpoints.0.params": JSON.stringify([{ name: "limit", in: "query", type: "number", required: true }]),
         })), cms);
-        expect((await gateway.getProvider("urn:shop"))?.endpoints[0]!.input?.params).toEqual([
+        expect((await gateway.getSource("urn:shop"))?.endpoints[0]!.input?.params).toEqual([
             { name: "limit", in: "query", required: true, schema: { type: "number" } },
         ]);
     });
@@ -61,21 +61,21 @@ describe("POST /api/gateway-provider", () => {
         const { cms, gateway } = makeCms();
         const body = { type: "object", properties: { id: { type: "string" }, tags: { type: "array", items: { type: "string" } } } };
         await postGatewayProvider(post(validBody({ "endpoints.0.method": "POST", "endpoints.0.body": JSON.stringify(body) })), cms);
-        expect((await gateway.getProvider("urn:shop"))?.endpoints[0]!.input?.body).toEqual(body as any);
+        expect((await gateway.getSource("urn:shop"))?.endpoints[0]!.input?.body).toEqual(body as any);
     });
 
     test("body required[] round-trips into input.body", async () => {
         const { cms, gateway } = makeCms();
         const body = { type: "object", properties: { id: { type: "string" }, n: { type: "number" } }, required: ["id"] };
         await postGatewayProvider(post(validBody({ "endpoints.0.method": "POST", "endpoints.0.body": JSON.stringify(body) })), cms);
-        expect((await gateway.getProvider("urn:shop"))?.endpoints[0]!.input?.body).toEqual(body as any);
+        expect((await gateway.getSource("urn:shop"))?.endpoints[0]!.input?.body).toEqual(body as any);
     });
 
     test("body-only endpoint still gets an input.body", async () => {
         const { cms, gateway } = makeCms();
         const body = { type: "object", properties: { q: { type: "string" } } };
         await postGatewayProvider(post(validBody({ "endpoints.0.body": JSON.stringify(body) })), cms);
-        const stored = await gateway.getProvider("urn:shop");
+        const stored = await gateway.getSource("urn:shop");
         expect(stored?.endpoints[0]!.input?.params).toBeUndefined();
         expect(stored?.endpoints[0]!.input?.body).toEqual(body as any);
     });
@@ -85,7 +85,7 @@ describe("POST /api/gateway-provider", () => {
         const body = { type: "object", properties: { ok: { type: "boolean" } } };
         const output = [{ status: "200", body }];
         await postGatewayProvider(post(validBody({ "endpoints.0.output": JSON.stringify(output) })), cms);
-        expect((await gateway.getProvider("urn:shop"))?.endpoints[0]!.output).toEqual(output as any);
+        expect((await gateway.getSource("urn:shop"))?.endpoints[0]!.output).toEqual(output as any);
     });
 
     test("malformed body JSON -> InvalidParam", async () => {

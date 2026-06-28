@@ -1,5 +1,5 @@
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { parseDataShape, type DataShape } from "@bernouy/cms-gateway";
+import { parseDataShape, type DataShape } from "@bernouy/cms-sources";
 
 /** Parse a JSON-blob form field into a `DataShape`, or `undefined` when blank.
  *  Used for the per-endpoint `body` / `output` hidden fields. The JSON unwrapping

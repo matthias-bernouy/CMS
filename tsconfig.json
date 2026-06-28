@@ -10,7 +10,7 @@
         { "path": "packages/features/cms-permissions" },
         { "path": "packages/features/cms-content" },
         { "path": "packages/features/cms-bloc-compile" },
-        { "path": "packages/features/cms-gateway" },
+        { "path": "packages/features/cms-sources" },
         { "path": "packages/features/cms-analytics" },
         { "path": "packages/foundation/components" },
         { "path": "packages/surfaces/cms-delivery" },

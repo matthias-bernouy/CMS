@@ -14,8 +14,8 @@ import { EncryptedMongoSecretStore } from "@bernouy/cms-secrets/mongo";
 import { ValidatingSecretStore, createSecretResolver } from "@bernouy/cms-secrets";
 import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
-import { CompositeGatewayRepository, SYSTEM_GATEWAY_PROVIDERS, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
-import { MongoGatewayRepository } from "@bernouy/cms-gateway/mongo";
+import { CompositeSourceRepository, SYSTEM_SOURCES, ValidatingSourceRepository } from "@bernouy/cms-sources";
+import { MongoSourceRepository } from "@bernouy/cms-sources/mongo";
 import { ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics/mongo";
 import { MongoClient } from "mongodb";
@@ -101,8 +101,8 @@ const identityProviders = new MongoIdentityProviderRepository(db);
 const credentials       = new MongoLocalCredentialStore(db, fieldCrypto);            await credentials.init();
 const pats              = new MongoPatRepository(db);                              await pats.init();
 const authTokens        = new MongoAuthTokenStore(db);                             await authTokens.init();
-const mongoGateway      = new MongoGatewayRepository(db);                          await mongoGateway.init();
-const gateway           = new CompositeGatewayRepository(new ValidatingGatewayRepository(mongoGateway), SYSTEM_GATEWAY_PROVIDERS);
+const mongoSources      = new MongoSourceRepository(db);                          await mongoSources.init();
+const sources           = new CompositeSourceRepository(new ValidatingSourceRepository(mongoSources), SYSTEM_SOURCES);
 const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
 const analytics         = new ValidatingAnalyticsStore(mongoAnalytics);
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
@@ -187,17 +187,17 @@ const controlCms = new ControlCms(controlRunner, repo, auth, {
         passwordResetUrl:     CMS_CONTROL_AUTH_PASSWORD_RESET_URL,
         allowSignup:          false,
     },
-}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, gateway, analytics, roles, { local: auth });
+}, cache, secrets, filesMetadata, filesBlob, users, identityProviders, pats, credentials, sources, analytics, roles, { local: auth });
 await controlCms.ready;
 
 // Delivery on its own runner/port — strictly public surface. Shares the SAME
-// gateway + encrypted secret store as Control, so providers created in the
-// admin are immediately usable by the `/.cms/gateway/*` proxy.
+// sources + encrypted secret store as Control, so integration-created sources
+// are immediately usable by the `/.cms/sources/*` proxy.
 const deliveryRunner = new BunRunner();
 new DeliveryCms({
-    runner: deliveryRunner, repository: repo, cache, gateway, analytics,
+    runner: deliveryRunner, repository: repo, cache, sources, analytics,
     analyticsSalt: ANALYTICS_SALT_SECRET,
-    gatewayResolveSecret: resolveSecret,
+    sourceResolveSecret: resolveSecret,
     roles, filesMetadata, filesBlob, variantStore,
     auth: {
         ...publicAuthBase,

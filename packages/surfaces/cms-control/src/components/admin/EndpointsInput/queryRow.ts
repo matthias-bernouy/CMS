@@ -1,6 +1,6 @@
 import { makeInput, makeSelect, makeRequiredCheckbox, makeIconButton, ICON_X } from "./controls";
 import { PARAM_TYPES, readControl, type ParamSeed } from "./shared";
-import type { ParamValueSource } from "@bernouy/cms-gateway/browser";
+import type { ParamValueSource } from "@bernouy/cms-sources/browser";
 
 /** A query param as it appears in the `endpoints.<i>.params` JSON blob. */
 export type QueryParam = {

@@ -11,7 +11,7 @@
     "dependencies": {
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/components": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "linkedom": "^0.18.12",
         "@bernouy/http-runner": "workspace:*",

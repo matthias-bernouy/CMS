@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import { InMemoryCmsRepository } from "@bernouy/cms-content";
 import { InMemoryUsersRepository } from "@bernouy/cms-auth";
-import { CompositeGatewayRepository, InMemoryGatewayRepository, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
+import { CompositeSourceRepository, InMemorySourceRepository, SYSTEM_SOURCES } from "@bernouy/cms-sources";
 import { cmsPermission, ADMIN_ROLE, USER_ROLE, PUBLIC_ROLE } from "@bernouy/cms-permissions";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import type { RoleDefinition } from "@bernouy/cms-permissions";
@@ -126,13 +126,13 @@ describe("roleEditorData", () => {
         const repository = new InMemoryCmsRepository();
         const users = new InMemoryUsersRepository();
         const roles = new InMemoryRolesRepository();
-        const gateway = new InMemoryGatewayRepository();
-        await gateway.createProvider({
+        const gateway = new InMemorySourceRepository();
+        await gateway.createSource({
             urn: "urn:stripe",
             meta: { name: "Stripe" },
             endpoints: [{ urn: "urn:stripe:getInvoice", method: "GET", targetUrl: "https://api.stripe.com/{id}", meta: { name: "Get invoice" } }],
         });
-        const cms = { repository, users, roles, gateway } as unknown as ControlCms;
+        const cms = { repository, users, roles, sources: gateway } as unknown as ControlCms;
         const groups = (await roleEditorData(cms, USER_ROLE)).catalog.gateway;
         expect(groups).toHaveLength(1);
         expect(groups[0]!.label).toBe("Stripe");
@@ -143,8 +143,8 @@ describe("roleEditorData", () => {
         const repository = new InMemoryCmsRepository();
         const users = new InMemoryUsersRepository();
         const roles = new InMemoryRolesRepository();
-        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
-        const cms = { repository, users, roles, gateway } as unknown as ControlCms;
+        const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
+        const cms = { repository, users, roles, sources: gateway } as unknown as ControlCms;
 
         expect((await roleEditorData(cms, USER_ROLE)).catalog.gateway).toEqual([]);
     });

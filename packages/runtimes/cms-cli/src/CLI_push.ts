@@ -13,7 +13,7 @@ const TYPES = ["*", "system", "gateways", "files", "blocs", "snippets", "templat
 // Files (media) ship right after system so pages/snippets that reference
 // `/.cms/files/<path>` resolve once the rest of the content lands. Gateways
 // (data providers) ship right after system too — independent config the rest
-// of the content may reference at runtime via `/.cms/gateway/*`.
+// of the content may reference at runtime via `/.cms/sources/*`.
 const ORDER = ["system", "gateways", "files", "blocs", "snippets", "templates", "pages"] as const;
 type Stage = typeof ORDER[number];
 

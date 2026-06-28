@@ -1,8 +1,8 @@
-import type { EndpointResponse, DataShape, EndpointHeader, ComputedParamRef } from "@bernouy/cms-gateway";
+import type { EndpointResponse, DataShape, EndpointHeader, ComputedParamRef } from "@bernouy/cms-sources";
 import {
     isValidHeaderName, isForbiddenHeaderName, isValidHeaderValue, isValidResponseStatus,
     COMPUTED_PARAM_REFS, MAX_ENDPOINT_HEADERS, parseDataShape,
-} from "@bernouy/cms-gateway";
+} from "@bernouy/cms-sources";
 import { str } from "./gatewayValidators";
 
 /**

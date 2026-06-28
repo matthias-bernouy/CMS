@@ -1,4 +1,4 @@
-import { isValidResponseStatus } from "@bernouy/cms-gateway/browser";
+import { isValidResponseStatus } from "@bernouy/cms-sources/browser";
 import { readControl } from "./shared";
 
 /** Common HTTP status codes offered in the response-status chooser. */

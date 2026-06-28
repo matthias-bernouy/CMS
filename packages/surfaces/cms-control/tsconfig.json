@@ -29,6 +29,7 @@
         { "path": "../../features/cms-content" },
         { "path": "../../features/cms-files" },
         { "path": "../../features/cms-secrets" },
+        { "path": "../../features/cms-sources" },
         { "path": "../../features/cms-analytics" }
     ]
 }

@@ -1,12 +1,12 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import DeliveryCms from "cms-delivery/DeliveryCms";
-import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
-import type { Provider } from "@bernouy/cms-gateway";
+import { InMemorySourceRepository, seedSources } from "@bernouy/cms-sources";
+import type { Source } from "@bernouy/cms-sources";
 import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 
-const SECURED: Provider = {
+const SECURED: Source = {
     urn: "urn:secured",
     endpoints: [{
         urn: "urn:secured:get",
@@ -16,7 +16,7 @@ const SECURED: Provider = {
     }],
 };
 
-const COMPUTED: Provider = {
+const COMPUTED: Source = {
     urn: "urn:computed",
     endpoints: [{
         urn:       "urn:computed:me",
@@ -93,21 +93,21 @@ async function gatewayRoles(role: string, permission: string): Promise<RolesRepo
 async function mountDeliveryGateway(opts: {
     resolveSecret?: (ref: string) => Promise<string | undefined>;
     roles?: RolesRepository;
-    providers?: Provider[];
+    providers?: Source[];
     auth?: unknown;
 } = {}) {
-    const gateway = new InMemoryGatewayRepository();
-    await seedProviders(gateway, opts.providers ?? [SECURED]);
+    const gateway = new InMemorySourceRepository();
+    await seedSources(gateway, opts.providers ?? [SECURED]);
     const runner = new CaptureRunner();
     new DeliveryCms({
         runner,
         repository: {} as any,
-        gateway,
-        gatewayResolveSecret: opts.resolveSecret,
+        sources: gateway,
+        sourceResolveSecret: opts.resolveSecret,
         roles: opts.roles,
         auth: opts.auth as any,
     });
-    return runner.defaultHandler("GET", "/.cms/gateway");
+    return runner.defaultHandler("GET", "/.cms/sources");
 }
 
 describe("Delivery gateway secrets", () => {
@@ -115,7 +115,7 @@ describe("Delivery gateway secrets", () => {
         const handler = await mountDeliveryGateway();
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("upstream"));
         try {
-            const res = await handler(new Request("http://site/.cms/gateway/secured/get"));
+            const res = await handler(new Request("http://site/.cms/sources/secured/get"));
 
             expect(res.status).toBe(403);
             expect(fetchSpy).not.toHaveBeenCalled();
@@ -128,7 +128,7 @@ describe("Delivery gateway secrets", () => {
         const handler = await mountDeliveryGateway({ roles: await publicGatewayRoles() });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("upstream"));
         try {
-            const res = await handler(new Request("http://site/.cms/gateway/secured/get"));
+            const res = await handler(new Request("http://site/.cms/sources/secured/get"));
 
             expect(res.status).toBe(500);
             expect(await res.text()).toBe("secret header requires a configured secret store (not wired yet): authorization");
@@ -145,7 +145,7 @@ describe("Delivery gateway secrets", () => {
         });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));
         try {
-            const res = await handler(new Request("http://site/.cms/gateway/secured/get"));
+            const res = await handler(new Request("http://site/.cms/sources/secured/get"));
 
             expect(res.status).toBe(200);
             const init = fetchSpy.mock.calls[0]![1] as RequestInit;
@@ -167,7 +167,7 @@ describe("Delivery gateway secrets", () => {
         });
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));
         try {
-            const res = await handler(new Request("http://site/.cms/gateway/computed/me"));
+            const res = await handler(new Request("http://site/.cms/sources/computed/me"));
 
             expect(res.status).toBe(200);
             expect(fetchSpy.mock.calls[0]![0]).toBe("https://api.example.com/me?user_id=user-123");

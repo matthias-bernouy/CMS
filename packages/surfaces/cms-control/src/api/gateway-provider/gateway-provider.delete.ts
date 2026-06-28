@@ -9,7 +9,7 @@ export default async function deleteGatewayProvider(req: Request, cms: ControlCm
     const urn = new URL(req.url).searchParams.get("urn");
     if (!urn) throw new MissingParam("urn");
 
-    const ok = await cms.gateway.deleteProvider(urn);
+    const ok = await cms.sources.deleteSource(urn);
     if (!ok) throw new InvalidParam("urn", "unknown provider");
 
     return new Response("Deleted", { status: 200 });

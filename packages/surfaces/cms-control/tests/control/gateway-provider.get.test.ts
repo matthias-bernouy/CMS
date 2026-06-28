@@ -1,11 +1,11 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
 import getGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.get";
-import { CompositeGatewayRepository, InMemoryGatewayRepository, SYSTEM_AUTH_PROVIDER_URN, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
+import { CompositeSourceRepository, InMemorySourceRepository, SYSTEM_AUTH_SOURCE_URN, SYSTEM_SOURCES } from "@bernouy/cms-sources";
 
 const makeCms = () => {
-    const gateway = new InMemoryGatewayRepository();
-    return { cms: { gateway } as any, gateway };
+    const gateway = new InMemorySourceRepository();
+    return { cms: { sources: gateway } as any, gateway };
 };
 
 const seed = (cms: any) => postGatewayProvider(
@@ -63,10 +63,10 @@ describe("GET /api/gateway-provider?urn=", () => {
     });
 
     test("system providers are readable but marked readonly", async () => {
-        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
-        const cms = { gateway } as any;
+        const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
+        const cms = { sources: gateway } as any;
 
-        const body = await (await getGatewayProvider(get(`?urn=${SYSTEM_AUTH_PROVIDER_URN}`), cms)).json();
+        const body = await (await getGatewayProvider(get(`?urn=${SYSTEM_AUTH_SOURCE_URN}`), cms)).json();
         expect(body.id).toBe("system-auth");
         expect(body.readonly).toBe(true);
         expect(body.editableStyle).toBe("display:none;");

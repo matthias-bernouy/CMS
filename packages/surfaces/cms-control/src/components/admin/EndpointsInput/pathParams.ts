@@ -1,4 +1,4 @@
-import { extractPathParamNames } from "@bernouy/cms-gateway/browser";
+import { extractPathParamNames } from "@bernouy/cms-sources/browser";
 
 /**
  * Path params — derived (not posted) from the Target URL's `{placeholders}`.

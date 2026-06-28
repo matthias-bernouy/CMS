@@ -6,7 +6,7 @@ import {
     isForbiddenHeaderName,
     type ComputedParamRef,
     type EndpointHeader,
-} from "@bernouy/cms-gateway/browser";
+} from "@bernouy/cms-sources/browser";
 
 /** Handle for one header row: its element + a `read()` assembling the
  *  `EndpointHeader` (or `null` when the name is blank). */

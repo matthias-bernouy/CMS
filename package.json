@@ -31,7 +31,7 @@
         "@bernouy/cms-permissions": "workspace:*",
         "@bernouy/cms-content": "workspace:*",
         "@bernouy/cms-delivery": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-analytics": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/cms-control": "workspace:*",

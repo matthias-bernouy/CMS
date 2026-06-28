@@ -1,12 +1,12 @@
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import type { ComputedParamRef, GatewayMeta, ParamIn, ParamValueSource, ProviderParamDto } from "@bernouy/cms-gateway";
-import { COMPUTED_PARAM_REFS, PARAM_INS, extractPathParamNames } from "@bernouy/cms-gateway";
+import type { ComputedParamRef, SourceMeta, ParamIn, ParamValueSource, SourceParamDto } from "@bernouy/cms-sources";
+import { COMPUTED_PARAM_REFS, PARAM_INS, extractPathParamNames } from "@bernouy/cms-sources";
 
 /** V1 param value types (scalars) — an EDITOR restriction; the gateway model
  *  allows any `DataShape`, the full recursive shape is reserved for the body. */
 export const PARAM_TYPES = ["string", "number", "boolean"] as const;
 export type ParamType = typeof PARAM_TYPES[number];
-export type EndpointParamDto = Omit<ProviderParamDto, "type" | "required"> & {
+export type EndpointParamDto = Omit<SourceParamDto, "type" | "required"> & {
     type: ParamType;
     required: boolean;
     source?: ParamValueSource;
@@ -17,9 +17,9 @@ export function pathParamsFromUrl(targetUrl: string): EndpointParamDto[] {
 }
 /** Read a truthy string field, else `undefined`. Shared by `buildMeta`/`parseMetaField`/`blobParsers`. */
 export const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
-/** Provider `meta`; `meta.name` defaults to the id so a listing never shows the bare urn. */
-export function buildMeta(body: Record<string, unknown>, id: string): GatewayMeta {
-    const meta: GatewayMeta = { name: str(body["meta.name"]) ?? id };
+/** Source `meta`; `meta.name` defaults to the id so a listing never shows the bare urn. */
+export function buildMeta(body: Record<string, unknown>, id: string): SourceMeta {
+    const meta: SourceMeta = { name: str(body["meta.name"]) ?? id };
     const description = str(body["meta.description"]);
     const icon        = str(body["meta.icon"]);
     if (description) meta.description = description;
@@ -73,18 +73,18 @@ function parseParamSource(raw: unknown, path: string): ParamValueSource {
     }
     return { from: "computed", ref: source.ref as ComputedParamRef };
 }
-/** Parse a per-endpoint `meta` JSON blob into a `GatewayMeta`, or `undefined` when
+/** Parse a per-endpoint `meta` JSON blob into a `SourceMeta`, or `undefined` when
  *  blank/un-named. Editor-less round-trip field: a malformed stored meta is DROPPED (not
  *  thrown) so it can't make the provider un-saveable. */
-export function parseMetaField(raw: unknown): GatewayMeta | undefined {
+export function parseMetaField(raw: unknown): SourceMeta | undefined {
     if (raw == null || raw === "" || typeof raw !== "string") return undefined;
     let parsed: unknown;
     try { parsed = JSON.parse(raw); } catch { return undefined; }
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined;
     const m = parsed as Record<string, unknown>;
     const name = str(m.name);
-    if (!name) return undefined;   // GatewayMeta requires a name → drop
-    const meta: GatewayMeta = { name };
+    if (!name) return undefined;   // SourceMeta requires a name → drop
+    const meta: SourceMeta = { name };
     const description = str(m.description);
     const icon = str(m.icon);
     if (description) meta.description = description;

@@ -1,11 +1,11 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
 import deleteGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.delete";
-import { CompositeGatewayRepository, InMemoryGatewayRepository, SYSTEM_AUTH_PROVIDER_URN, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
+import { CompositeSourceRepository, InMemorySourceRepository, SYSTEM_AUTH_SOURCE_URN, SYSTEM_SOURCES } from "@bernouy/cms-sources";
 
 const makeCms = () => {
-    const gateway = new InMemoryGatewayRepository();
-    return { cms: { gateway } as any, gateway };
+    const gateway = new InMemorySourceRepository();
+    return { cms: { sources: gateway } as any, gateway };
 };
 
 const seed = (cms: any) => postGatewayProvider(
@@ -29,7 +29,7 @@ describe("DELETE /api/gateway-provider", () => {
         await seed(cms);
         const res = await deleteGatewayProvider(del("?urn=urn:shop"), cms);
         expect(res.status).toBe(200);
-        expect(await gateway.getProvider("urn:shop")).toBeNull();
+        expect(await gateway.getSource("urn:shop")).toBeNull();
     });
 
     test("unknown urn → InvalidParam", async () => {
@@ -43,8 +43,8 @@ describe("DELETE /api/gateway-provider", () => {
     });
 
     test("system providers are readonly", async () => {
-        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
-        const cms = { gateway } as any;
-        await expect(deleteGatewayProvider(del(`?urn=${SYSTEM_AUTH_PROVIDER_URN}`), cms)).rejects.toThrow(/readonly/);
+        const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
+        const cms = { sources: gateway } as any;
+        await expect(deleteGatewayProvider(del(`?urn=${SYSTEM_AUTH_SOURCE_URN}`), cms)).rejects.toThrow(/readonly/);
     });
 });

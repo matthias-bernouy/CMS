@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, mock, spyOn, test } from "bun:test";
 import postOfficialProviderImport from "cms-control/api/gateway-provider/official-import.post";
-import { InMemoryGatewayRepository, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
+import { InMemorySourceRepository, ValidatingSourceRepository } from "@bernouy/cms-sources";
 import { InMemorySecretStore, ValidatingSecretStore } from "@bernouy/cms-secrets";
 
 const makeCms = () => {
-    const gateway = new ValidatingGatewayRepository(new InMemoryGatewayRepository());
+    const gateway = new ValidatingSourceRepository(new InMemorySourceRepository());
     const secrets = new ValidatingSecretStore(new InMemorySecretStore());
-    return { cms: { gateway, secrets } as any, gateway, secrets };
+    return { cms: { sources: gateway, secrets } as any, gateway, secrets };
 };
 
 const post = (body: Record<string, unknown>) =>
@@ -120,7 +120,7 @@ describe("POST /api/gateway-provider/official-import", () => {
         expect(fetchHeaders.get("authorization")).toBe("Bearer service-role-key");
 
         expect(await secrets.get("SUPABASE_MY_DB_API_KEY")).toBe("service-role-key");
-        const stored = await gateway.getProvider("urn:my-db");
+        const stored = await gateway.getSource("urn:my-db");
         expect(stored?.meta?.name).toBe("Main database");
         expect(stored?.endpoints[0]!.targetUrl).toBe("https://project.supabase.co/rest/v1/todos");
         expect(stored?.endpoints[0]!.headers).toEqual([
@@ -153,7 +153,7 @@ describe("POST /api/gateway-provider/official-import", () => {
         }), cms)).rejects.toThrow(/Supabase OpenAPI request failed/);
 
         expect(await secrets.get("SUPABASE_MY_DB_API_KEY")).toBeNull();
-        expect(await gateway.getProvider("urn:my-db")).toBeNull();
+        expect(await gateway.getSource("urn:my-db")).toBeNull();
     });
 
     test("enriches Supabase RPC response outputs from the installed metadata RPC", async () => {
@@ -190,7 +190,7 @@ describe("POST /api/gateway-provider/official-import", () => {
         expect(metadataHeaders.get("content-profile")).toBe("api");
         expect(fetchSpy.mock.calls[1]![1]!.body).toBe(JSON.stringify({ p_schemas: ["api"] }));
 
-        const endpoints = (await gateway.getProvider("urn:my-db"))?.endpoints ?? [];
+        const endpoints = (await gateway.getSource("urn:my-db"))?.endpoints ?? [];
         expect(endpoints.some(endpoint => endpoint.targetUrl.includes("/rpc/cms_gateway_rpc_output_shapes"))).toBe(false);
         const endpoint = endpoints.find(endpoint => endpoint.targetUrl.includes("/rpc/list_posts"))!;
         expect(endpoint.headers).toEqual([
@@ -241,6 +241,6 @@ describe("POST /api/gateway-provider/official-import", () => {
         }), cms);
 
         expect(res.ok).toBe(true);
-        expect((await gateway.getProvider("urn:my-db"))?.endpoints[0]!.output).toEqual([{ status: "200" }]);
+        expect((await gateway.getSource("urn:my-db"))?.endpoints[0]!.output).toEqual([{ status: "200" }]);
     });
 });

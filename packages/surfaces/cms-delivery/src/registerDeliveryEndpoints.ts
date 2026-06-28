@@ -6,8 +6,8 @@ import SitemapServer   from "cms-delivery/endpoints/sitemap.xml.server";
 import FaviconServer   from "cms-delivery/endpoints/assets/favicon.server";
 import ComponentServer from "cms-delivery/endpoints/assets/component.server";
 import BindingCoreServer from "cms-delivery/endpoints/assets/bindingCore.server";
-import { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "@bernouy/cms-gateway";
-import { PUBLIC_AUTH_ROUTES, executeAuthSystemGatewayEndpoint, registerPublicAuthRoutes } from "@bernouy/cms-auth";
+import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest } from "@bernouy/cms-sources";
+import { PUBLIC_AUTH_ROUTES, executeAuthSystemSourceEndpoint, registerPublicAuthRoutes } from "@bernouy/cms-auth";
 import { CMS_FILES_ROUTE, CMS_IMAGE_VARIANT_ROUTE, filesPrefix, imageVariantPrefix, serveFilesRequest, serveVariantRequest } from "@bernouy/cms-files";
 import { generateStyleEntry, P9R_CACHE } from "@bernouy/cms-content";
 import { ADMIN_ROLE, PUBLIC_ROLE, can, grantsFor } from "@bernouy/cms-permissions";
@@ -53,9 +53,9 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
 
     // Shared `.cms/*` handlers — Control mounts the same three, admin-guarded.
     // `generateStyleEntry` is the same producer `resolveAssets` uses for the
-    // `?v=<hash>` link, so served bytes match. Gateway secrets stay unwired
+    // `?v=<hash>` link, so served bytes match. Source secrets stay unwired
     // unless the composition root explicitly provides a resolver; otherwise a
-    // `secret`-sourced header yields a clean 500 and an unconfigured gateway
+    // `secret`-sourced header yields a clean 500 and unconfigured sources
     // yields 501.
     runner.addEndpoint("GET", "/.cms/style", (req) =>
         cachedResponseAsync(
@@ -72,8 +72,8 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
             serveFilesRequest({ metadata: delivery.filesMetadata, blob: delivery.filesBlob }, req, { prefix }));
     });
 
-    runner.group(CMS_GATEWAY_ROUTE, (proxyRunner) => {
-        const prefix = gatewayPrefix(runner.basePath);
+    runner.group(CMS_SOURCES_ROUTE, (proxyRunner) => {
+        const prefix = sourcesPrefix(runner.basePath);
         const resolveContext = async (req: Request) => {
             const subject = delivery.auth ? await delivery.auth.local.getSubject(req).catch(() => null) : null;
             return subject ? { userID: subject.identifier } : {};
@@ -88,17 +88,17 @@ export function registerDeliveryEndpoints(delivery: DeliveryCms){
             return can(grantsFor(role, { definitions }), endpoint.urn);
         };
         const deps = {
-            ...(delivery.gatewayResolveSecret ? { resolveSecret: delivery.gatewayResolveSecret } : {}),
+            ...(delivery.sourceResolveSecret ? { resolveSecret: delivery.sourceResolveSecret } : {}),
             ...(delivery.auth ? {
                 executeSystemEndpoint: (endpoint: { urn: string; targetUrl: string }, req: Request) =>
-                    executeAuthSystemGatewayEndpoint(delivery.auth!, endpoint, req),
+                    executeAuthSystemSourceEndpoint(delivery.auth!, endpoint, req),
             } : {}),
             resolveContext,
             authorizeEndpoint,
         };
-        for (const method of GATEWAY_PROXY_METHODS) {
+        for (const method of SOURCE_PROXY_METHODS) {
             proxyRunner.setDefaultEndpoint(method, (req) =>
-                handleGatewayRequest(delivery.gateway, req, { prefix, deps }));
+                handleSourceRequest(delivery.sources, req, { prefix, deps }));
         }
     });
 

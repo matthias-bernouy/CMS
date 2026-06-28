@@ -3,8 +3,8 @@ import { BunRunner } from "@bernouy/http-runner";
 import type { Cache } from "@bernouy/http-runner";
 import type { CmsFilesMetadataRepository, CmsFilesBlobStore } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
-import type { GatewayRepository } from "@bernouy/cms-gateway";
-import type { GatewaySecretResolver } from "@bernouy/cms-gateway";
+import type { SourceRepository } from "@bernouy/cms-sources";
+import type { SourceSecretResolver } from "@bernouy/cms-sources";
 import type { AnalyticsStore } from "@bernouy/cms-analytics";
 import type { PublicAuthRoutesConfig } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
@@ -33,28 +33,28 @@ export type DeliveryCmsConfig = {
      */
     headInjectors?: readonly HeadInjector[];
     /**
-     * Optional data-gateway provider store. When set, `/.cms/gateway/<provider>/<endpoint>`
+     * Optional data source store. When set, `/.cms/sources/<source>/<endpoint>`
      * resolves against it and proxies upstream; when absent, that route returns 501.
      */
-    gateway?: GatewayRepository;
+    sources?: SourceRepository;
     /**
-     * Optional secret resolver for gateway headers.
+     * Optional secret resolver for source headers.
      *
      * Keep undefined for public deployments unless the composition root has
-     * enforced the authentication/authorization policy around exposed providers.
-     * `p9r dev` wires this from `site/.env` so local Supabase providers work.
+     * enforced the authentication/authorization policy around exposed sources.
+     * `p9r dev` wires this from `site/.env` so local Supabase sources work.
      */
-    gatewayResolveSecret?: GatewaySecretResolver;
+    sourceResolveSecret?: SourceSecretResolver;
     /**
      * Optional first-party public auth API. When set, Delivery mounts
      * `<basePath>/.cms/auth/*` for direct same-origin signup/login/reset flows
-     * and lets the readonly `system-auth` Gateway provider execute the same
-     * actions when a gateway repository is configured.
+     * and lets the readonly `system-auth` source execute the same actions when
+     * a source repository is configured.
      */
     auth?: PublicAuthRoutesConfig<string>;
     /**
-     * Role definitions used to authorize public gateway endpoint calls. Required
-     * for an executable Delivery gateway; when absent, gateway requests are
+     * Role definitions used to authorize public source endpoint calls. Required
+     * for an executable Delivery source proxy; when absent, source requests are
      * denied instead of being treated as anonymous allow-all.
      */
     roles?: RolesRepository;
@@ -103,7 +103,7 @@ export type DeliveryCmsConfig = {
  *   <basePath>/                — user pages, served by the default endpoint
  *   <basePath>/.cms/*          — Delivery's own assets
  *   <basePath>/.cms/files/*    — file bytes (readable path → metadata → blob)
- *   <basePath>/.cms/gateway/*  — data-gateway proxy (when a gateway is configured)
+ *   <basePath>/.cms/sources/*  — data source proxy (when sources are configured)
  *   <basePath>/robots.txt      — tenant-level crawler file
  *   <basePath>/sitemap.xml     — tenant-level sitemap
  *
@@ -116,8 +116,8 @@ export default class DeliveryCms {
     private _repository:         ContentReader;
     private _cache:              Cache;
     private _headInjectors:      readonly HeadInjector[];
-    private _gateway?:           GatewayRepository;
-    private _gatewayResolveSecret?: GatewaySecretResolver;
+    private _sources?:           SourceRepository;
+    private _sourceResolveSecret?: SourceSecretResolver;
     private _auth?:              PublicAuthRoutesConfig<string>;
     private _roles?:             RolesRepository;
     private _analytics?:         AnalyticsStore;
@@ -132,7 +132,7 @@ export default class DeliveryCms {
         this._repository         = config.repository;
         this._cache              = config.cache || new TtlCache({ bypass: process.env.MODE === "DEV" });
         this._headInjectors      = config.headInjectors ?? [];
-        this._gateway            = config.gateway;
+        this._sources            = config.sources;
         this._analytics          = config.analytics;
         this._analyticsSalt      = config.analyticsSalt;
         this._auth               = config.auth;
@@ -140,7 +140,7 @@ export default class DeliveryCms {
         this._filesMetadata      = config.filesMetadata ?? null;
         this._filesBlob          = config.filesBlob ?? null;
         this._variantStore       = config.variantStore ?? null;
-        this._gatewayResolveSecret = config.gatewayResolveSecret;
+        this._sourceResolveSecret = config.sourceResolveSecret;
 
         registerDeliveryEndpoints(this);
     }
@@ -161,14 +161,14 @@ export default class DeliveryCms {
         return this._headInjectors;
     }
 
-    /** Data-gateway provider store, or `undefined` when no gateway is configured. */
-    get gateway(){
-        return this._gateway;
+    /** Data source store, or `undefined` when sources are not configured. */
+    get sources(){
+        return this._sources;
     }
 
-    /** Secret resolver for Delivery gateway headers, when explicitly wired. */
-    get gatewayResolveSecret(){
-        return this._gatewayResolveSecret;
+    /** Secret resolver for Delivery source headers, when explicitly wired. */
+    get sourceResolveSecret(){
+        return this._sourceResolveSecret;
     }
 
     /** Public auth API config, or `undefined` when not mounted. */

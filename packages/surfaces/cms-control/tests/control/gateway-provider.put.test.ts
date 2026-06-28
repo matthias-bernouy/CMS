@@ -1,12 +1,12 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
 import putGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.put";
-import { InMemoryGatewayRepository, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
+import { InMemorySourceRepository, ValidatingSourceRepository } from "@bernouy/cms-sources";
 
 // Decorated like the composition roots — the domain rules live in the repo seam.
 const makeCms = () => {
-    const gateway = new ValidatingGatewayRepository(new InMemoryGatewayRepository());
-    return { cms: { gateway } as any, gateway };
+    const gateway = new ValidatingSourceRepository(new InMemorySourceRepository());
+    return { cms: { sources: gateway } as any, gateway };
 };
 
 const body = (method: string, b: Record<string, unknown>) =>
@@ -29,10 +29,10 @@ describe("PUT /api/gateway-provider", () => {
         await postGatewayProvider(body("POST", oneEndpoint), cms);
 
         await putGatewayProvider(body("PUT", twoEndpoints), cms);
-        expect((await gateway.getProvider("urn:shop"))?.endpoints).toHaveLength(2);
+        expect((await gateway.getSource("urn:shop"))?.endpoints).toHaveLength(2);
 
         await putGatewayProvider(body("PUT", oneEndpoint), cms);
-        expect((await gateway.getProvider("urn:shop"))?.endpoints).toHaveLength(1);   // proves full-replace, not merge
+        expect((await gateway.getSource("urn:shop"))?.endpoints).toHaveLength(1);   // proves full-replace, not merge
     });
 
     test("unknown urn → InvalidParam", async () => {

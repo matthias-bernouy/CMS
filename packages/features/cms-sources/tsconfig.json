@@ -1,0 +1,15 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir":  "dist",
+        "rootDir": "./src",
+        "baseUrl": "./src",
+        "paths": {
+            "cms-sources/*": ["./*"]
+        }
+    },
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../../foundation/http-runner" }
+    ]
+}

@@ -1,4 +1,4 @@
-import { HTTP_METHODS } from "@bernouy/cms-gateway/browser";
+import { HTTP_METHODS } from "@bernouy/cms-sources/browser";
 
 /** Inline SVG fragments (set via `innerHTML`), shared by the icon buttons below. */
 const ICON_SVG = (paths: string, size = 16) =>

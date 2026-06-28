@@ -1,7 +1,7 @@
 import { makeIconButton, ICON_X } from "./controls";
 import { makeDataShapeTree } from "./dataShapeTree";
 import { makeStatusField } from "./statusField";
-import type { DataShape, EndpointResponse } from "@bernouy/cms-gateway";
+import type { DataShape, EndpointResponse } from "@bernouy/cms-sources";
 
 /** Handle for one response row: its element + a `read()` that assembles the
  *  `EndpointResponse`. The body `read` is captured in the closure (it can't be

@@ -1,4 +1,4 @@
-import type { GatewayMeta } from "@bernouy/cms-gateway";
+import type { SourceMeta } from "@bernouy/cms-sources";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import { slugify } from "cms-control/core/validation/slugify";
@@ -11,7 +11,7 @@ export type SupabaseOfficialProviderImportDto = {
     projectUrl: string;
     apiKey: string;
     schema?: string;
-    meta?: Partial<GatewayMeta>;
+    meta?: Partial<SourceMeta>;
 };
 
 export type OfficialProviderImportDto = SupabaseOfficialProviderImportDto;
@@ -37,7 +37,7 @@ export function parseOfficialProviderImportDto(body: Record<string, unknown>): O
     return { kind, id, projectUrl, apiKey, ...(schema ? { schema } : {}), ...parseMeta(body) };
 }
 
-function parseMeta(body: Record<string, unknown>): { meta?: Partial<GatewayMeta> } {
+function parseMeta(body: Record<string, unknown>): { meta?: Partial<SourceMeta> } {
     const nested = typeof body.meta === "object" && body.meta !== null && !Array.isArray(body.meta)
         ? body.meta as Record<string, unknown>
         : {};

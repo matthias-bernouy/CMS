@@ -21,12 +21,12 @@ describe("parseShapeField", () => {
         expect(() => parseShapeField({ type: "string" } as any, "body")).toThrow(/body/);
     });
 
-    test("shape rules are delegated to the gateway (GatewayValidationError, .status 400)", () => {
+    test("shape rules are delegated to the gateway (SourceValidationError, .status 400)", () => {
         try {
             parseShapeField(JSON.stringify({ type: "datetime" }), "body");
             expect.unreachable();
         } catch (err) {
-            expect((err as Error).name).toBe("GatewayValidationError");
+            expect((err as Error).name).toBe("SourceValidationError");
             expect((err as { status?: number }).status).toBe(400);
         }
     });

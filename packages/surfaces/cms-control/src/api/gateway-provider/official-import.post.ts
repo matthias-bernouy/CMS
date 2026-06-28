@@ -1,5 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { SpecParseError } from "@bernouy/cms-gateway";
+import { SpecParseError } from "@bernouy/cms-sources";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import { createOfficialProviderImport } from "cms-control/core/gateway/officialImport/createOfficialProviderImport";
 import { parseOfficialProviderImportDto } from "cms-control/core/validation/gateway/parseOfficialProviderImportDto";

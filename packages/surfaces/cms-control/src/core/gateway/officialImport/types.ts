@@ -1,6 +1,6 @@
-import type { Provider } from "@bernouy/cms-gateway";
+import type { Source } from "@bernouy/cms-sources";
 
 export type OfficialProviderImportResult = {
-    provider: Provider;
+    source: Source;
     secrets: Array<{ key: string; value: string }>;
 };

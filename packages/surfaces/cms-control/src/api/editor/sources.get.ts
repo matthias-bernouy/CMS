@@ -1,5 +1,5 @@
 import type { DataField, DataFieldType } from "@bernouy/cms-content/editor";
-import { parseUrn, type DataShape, type Endpoint, type EndpointParam, type HTTPMethod, type ParamIn } from "@bernouy/cms-gateway";
+import { parseUrn, type DataShape, type SourceEndpoint, type EndpointParam, type HTTPMethod, type ParamIn } from "@bernouy/cms-sources";
 import type { ControlCms } from "cms-control/ControlCms";
 
 export type EditorSourceParamDto = {
@@ -38,10 +38,10 @@ export type EditorSourceDto = {
 
 export default async function getEditorSources(_req: Request, cms: ControlCms): Promise<Response> {
     try {
-        const providers = await cms.gateway.getAllProviders();
+        const providers = await cms.sources.getAllSources();
         const sources = providers.flatMap(provider => provider.endpoints
             .map(endpoint => sourceFromEndpoint(cms, endpoint, {
-                provider: parseUrn(provider.urn)?.provider ?? provider.urn,
+                provider: parseUrn(provider.urn)?.source ?? provider.urn,
                 providerUrn: provider.urn,
                 providerLabel: provider.meta?.name,
             })));
@@ -50,7 +50,7 @@ export default async function getEditorSources(_req: Request, cms: ControlCms): 
             headers: { "Content-Type": "application/json" },
         });
     } catch (error) {
-        if (error instanceof Error && error.message === "gateway repository not configured") {
+        if (error instanceof Error && error.message === "sources repository not configured") {
             return new Response(JSON.stringify([]), {
                 headers: { "Content-Type": "application/json" },
             });
@@ -61,17 +61,17 @@ export default async function getEditorSources(_req: Request, cms: ControlCms): 
 
 function sourceFromEndpoint(
     cms: ControlCms,
-    endpoint: Endpoint,
+    endpoint: SourceEndpoint,
     provider: { provider: string; providerUrn?: string; providerLabel?: string },
 ): EditorSourceDto {
     const parsed = parseUrn(endpoint.urn);
-    const path = parsed ? `${parsed.provider}/${parsed.endpoint}` : endpoint.urn;
+    const path = parsed ? `${parsed.source}/${parsed.endpoint}` : endpoint.urn;
     const body = endpoint.output?.find(response => response.status === "200" && response.body)?.body
         ?? endpoint.output?.find(response => response.body)?.body;
 
     return {
         label:       endpoint.meta?.name ?? parsed?.endpoint ?? endpoint.urn,
-        url:         `${cms.basePath}/.cms/gateway/${path}`,
+        url:         `${cms.basePath}/.cms/sources/${path}`,
         method:      endpoint.method,
         provider:    provider.provider,
         ...(provider.providerUrn ? { providerUrn: provider.providerUrn } : {}),

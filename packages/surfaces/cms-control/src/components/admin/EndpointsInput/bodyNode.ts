@@ -1,6 +1,6 @@
 import { makeInput, makeRequiredCheckbox, makeSelect, makeIconButton, ICON_X } from "./controls";
 import { readControl, SHAPE_TYPES } from "./shared";
-import type { DataShape } from "@bernouy/cms-gateway";
+import type { DataShape } from "@bernouy/cms-sources";
 
 export type NodeHandle = {
     /** Inline type picker (for `array`, also " of <elementType>"). */

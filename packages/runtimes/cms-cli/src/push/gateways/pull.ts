@@ -1,22 +1,22 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { safeJoin } from "cms-cli/push/shared/safeJoin";
 import {
-    parseUrn, providerDtoToProvider,
-    type Provider, type ProviderDto,
-} from "@bernouy/cms-gateway";
+    parseUrn, sourceDtoToSource,
+    type Source, type SourceDto,
+} from "@bernouy/cms-sources";
 
 const HEADERS = (token: string) => ({ "Authorization": `Bearer ${token}` });
 
 export type PullGatewaysResult = { pulled: string[]; failed: { urn: string; error: string }[] };
 
 /** The edit-form-enriched shape returned by `GET /api/gateway-provider?urn=`. */
-type EnrichedEndpoint = Omit<ProviderDto["endpoints"][number], "params"> & {
-    params?: ProviderDto["endpoints"][number]["params"];
+type EnrichedEndpoint = Omit<SourceDto["endpoints"][number], "params"> & {
+    params?: SourceDto["endpoints"][number]["params"];
 };
 type EnrichedProvider = {
     urn: string;
     id: string;
-    meta?: ProviderDto["meta"];
+    meta?: SourceDto["meta"];
     endpoints?: EnrichedEndpoint[];
 };
 
@@ -41,7 +41,7 @@ async function fetchList(adminBase: URL, token: string): Promise<{ urn: string }
     return await res.json() as { urn: string }[];
 }
 
-async function fetchProvider(adminBase: URL, token: string, urn: string): Promise<Provider> {
+async function fetchProvider(adminBase: URL, token: string, urn: string): Promise<Source> {
     const url = new URL(`api/gateway-provider?urn=${encodeURIComponent(urn)}`, adminBase).href;
     const res = await fetch(url, { headers: HEADERS(token) });
     if (!res.ok) throw new Error(`GET ${url} → HTTP ${res.status}`);
@@ -49,13 +49,13 @@ async function fetchProvider(adminBase: URL, token: string, urn: string): Promis
 }
 
 /**
- * Rebuild the canonical `Provider` from the enriched edit-form response — the
+ * Rebuild the canonical `Source` from the enriched edit-form response — the
  * inverse of `gateway-provider.get`'s flattening: re-derive each endpoint urn
  * from `id` + `endpointId`, and re-nest each param's scalar `type` back into a
  * `schema`. body / output / meta / headers ride along verbatim.
  */
-export function reconstructProvider(r: EnrichedProvider): Provider {
-    return providerDtoToProvider({
+export function reconstructProvider(r: EnrichedProvider): Source {
+    return sourceDtoToSource({
         id: r.id,
         meta: r.meta ?? { name: r.id },
         endpoints: (r.endpoints ?? []).map(e => ({
@@ -77,8 +77,8 @@ export function reconstructProvider(r: EnrichedProvider): Provider {
     });
 }
 
-async function writeGateway(siteDir: string, provider: Provider): Promise<void> {
-    const id   = parseUrn(provider.urn)?.provider ?? "provider";
+async function writeGateway(siteDir: string, provider: Source): Promise<void> {
+    const id   = parseUrn(provider.urn)?.source ?? "provider";
     const dir  = safeJoin(siteDir, "gateways");
     const file = safeJoin(dir, `${id}.json`);
     await mkdir(dir, { recursive: true });

@@ -1,6 +1,6 @@
 import { makeResponseRow, type ResponseRowHandle } from "./responseRow";
 import { jsonField, type EndpointSeed } from "./shared";
-import type { DataShape } from "@bernouy/cms-gateway";
+import type { DataShape } from "@bernouy/cms-sources";
 
 /** The "Out" tab: the editable response contract — a per-status list serialised
  *  into ONE JSON blob `endpoints.<i>.output` (an `EndpointResponse[]`). Each row

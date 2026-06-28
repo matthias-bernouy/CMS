@@ -12,7 +12,7 @@ import type { EndpointSeed } from "./shared";
  * LIGHT DOM so the parent `<cms-form>`'s native `FormData` picks it up: the endpoint
  * SCALARS post as flat keys (`endpoints.<n>.endpointId|method|targetUrl`), and every
  * STRUCTURED field posts as one JSON blob the editor syncs
- * (`endpoints.<n>.{params,body,output,headers,meta}`). `parseProviderDto` reassembles both.
+ * (`endpoints.<n>.{params,body,output,headers,meta}`). `parseSourceDto` reassembles both.
  *
  * The endpoint index `<n>` increments per row and never reuses — removing a row
  * leaves a gap the parser compacts, so deletes never collide.

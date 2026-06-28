@@ -1,6 +1,6 @@
 import { makeHeaderRow, type HeaderRowHandle } from "./headerRow";
 import { jsonField, type EndpointSeed } from "./shared";
-import type { EndpointHeader } from "@bernouy/cms-gateway";
+import type { EndpointHeader } from "@bernouy/cms-sources";
 
 /** The "Headers" tab: the editable request-header list serialised into ONE JSON
  *  blob `endpoints.<i>.headers` (an `EndpointHeader[]`). Each row is a header name

@@ -1,4 +1,4 @@
-import { providerToFlatDto, type Provider } from "@bernouy/cms-gateway";
+import { sourceToFlatDto, type Source } from "@bernouy/cms-sources";
 import type { ClassifiedGateway, RemoteGatewayItem } from "./classify";
 
 export type ApplyResult = {
@@ -21,7 +21,7 @@ export async function fetchRemoteGatewayList(adminBase: URL, token: string): Pro
 }
 
 /** POST every "new" provider and PUT every "update" — both as the flat indexed
- *  form-body the server's `parseProviderDto` expects (full-aggregate replace). */
+ *  form-body the server's `parseSourceDto` expects (full-aggregate replace). */
 export async function applyPushGateways(
     adminBase: URL,
     token:     string,
@@ -41,21 +41,21 @@ export async function applyPushGateways(
     return result;
 }
 
-async function sendProvider(adminBase: URL, token: string, method: "POST" | "PUT", provider: Provider): Promise<void> {
+async function sendProvider(adminBase: URL, token: string, method: "POST" | "PUT", provider: Source): Promise<void> {
     const url = new URL("api/gateway-provider", adminBase).href;
     const res = await fetch(url, { method, headers: HEADERS_JSON(token), body: JSON.stringify(flattenProvider(provider)) });
     if (!res.ok) throw new Error(`${method} ${url} → HTTP ${res.status}${await tail(res)}`);
 }
 
 /**
- * Serialize a Provider into the FLAT indexed form-body `parseProviderDto`
+ * Serialize a Source into the FLAT indexed form-body `parseSourceDto`
  * consumes (`endpoints.<i>.<scalar>` + per-endpoint JSON-blob strings for
- * params/body/output/meta/headers). Inverse of `parseProviderDto`, mirror of
+ * params/body/output/meta/headers). Inverse of `parseSourceDto`, mirror of
  * `gateway-provider.get`'s flattening. `urn` is NEVER sent — the server
  * recomputes every urn from `id` + `endpointId` (its namespace invariant).
  */
-export function flattenProvider(p: Provider): Record<string, string> {
-    return providerToFlatDto(p);
+export function flattenProvider(p: Source): Record<string, string> {
+    return sourceToFlatDto(p);
 }
 
 async function tail(res: Response): Promise<string> {

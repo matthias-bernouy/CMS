@@ -2,15 +2,15 @@ import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
 import getGatewayProviders from "cms-control/api/gateway-provider/list.get";
 import {
-    CompositeGatewayRepository,
-    InMemoryGatewayRepository,
-    SYSTEM_AUTH_PROVIDER_URN,
-    SYSTEM_GATEWAY_PROVIDERS,
-} from "@bernouy/cms-gateway";
+    CompositeSourceRepository,
+    InMemorySourceRepository,
+    SYSTEM_AUTH_SOURCE_URN,
+    SYSTEM_SOURCES,
+} from "@bernouy/cms-sources";
 
 const makeCms = () => {
-    const gateway = new InMemoryGatewayRepository();
-    return { cms: { gateway } as any, gateway };
+    const gateway = new InMemorySourceRepository();
+    return { cms: { sources: gateway } as any, gateway };
 };
 
 const list = () => new Request("http://localhost/cms/api/gateway-provider/list", { method: "GET" });
@@ -41,12 +41,12 @@ describe("GET /api/gateway-provider/list", () => {
     });
 
     test("marks system providers as readonly", async () => {
-        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
-        const cms = { gateway } as any;
+        const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
+        const cms = { sources: gateway } as any;
 
         const rows = await (await getGatewayProviders(list(), cms)).json();
         expect(rows[0]).toEqual({
-            urn:           SYSTEM_AUTH_PROVIDER_URN,
+            urn:           SYSTEM_AUTH_SOURCE_URN,
             id:            "system-auth",
             name:          "Authentication",
             endpointCount: 8,

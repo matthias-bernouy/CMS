@@ -1,13 +1,13 @@
 import {
-    openApiSpecToProvider,
+    openApiSpecToSource,
     parseDataShape,
-    validateProvider,
+    validateSource,
     type DataShape,
-    type Endpoint,
+    type SourceEndpoint,
     type EndpointHeader,
     type EndpointResponse,
-    type Provider,
-} from "@bernouy/cms-gateway";
+    type Source,
+} from "@bernouy/cms-sources";
 import { secretKeyToRef } from "@bernouy/cms-secrets";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import type { SupabaseOfficialProviderImportDto } from "cms-control/core/validation/gateway/parseOfficialProviderImportDto";
@@ -23,27 +23,27 @@ export async function importSupabaseOfficialProvider(
     const secretKey = supabaseSecretKey(dto.id);
     const secretRef = secretKeyToRef(secretKey);
     const spec = await fetchSupabaseOpenApi(restUrl, dto.apiKey, schema);
-    const provider = openApiSpecToProvider(spec, {
-        providerId: dto.id,
+    const source = openApiSpecToSource(spec, {
+        sourceId: dto.id,
         baseUrl: restUrl.replace(/\/+$/, ""),
     });
-    provider.endpoints = provider.endpoints.filter(endpoint => rpcFunctionName(endpoint) !== RPC_OUTPUT_METADATA_FUNCTION);
-    const rpcOutputShapes = hasRpcEndpoints(provider)
+    source.endpoints = source.endpoints.filter(endpoint => rpcFunctionName(endpoint) !== RPC_OUTPUT_METADATA_FUNCTION);
+    const rpcOutputShapes = hasRpcEndpoints(source)
         ? await fetchSupabaseRpcOutputShapes(restUrl, dto.apiKey, schema)
         : new Map<string, DataShape>();
 
-    provider.meta = mergeMeta(provider, dto);
-    provider.endpoints = provider.endpoints
+    source.meta = mergeMeta(source, dto);
+    source.endpoints = source.endpoints
         .map(endpoint => withSupabaseRpcOutput(endpoint, rpcOutputShapes))
         .map(endpoint => withSupabaseSchemaHeaders(endpoint, schema))
         .map(endpoint => withSupabaseHeaders(endpoint, secretRef));
 
-    const errors = validateProvider(provider);
+    const errors = validateSource(source);
     if (errors.length) {
-        throw new InvalidParam("supabase", `imported provider is invalid: ${errors.join("; ")}`);
+        throw new InvalidParam("supabase", `imported source is invalid: ${errors.join("; ")}`);
     }
 
-    return { provider, secrets: [{ key: secretKey, value: dto.apiKey }] };
+    return { source, secrets: [{ key: secretKey, value: dto.apiKey }] };
 }
 
 function normalizeSupabaseRestUrl(raw: string): string {
@@ -168,11 +168,11 @@ function shapeFromTypeMetadata(value: unknown): DataShape | null {
     return { type: "string" };
 }
 
-function hasRpcEndpoints(provider: Provider): boolean {
-    return provider.endpoints.some(endpoint => rpcFunctionName(endpoint) !== null);
+function hasRpcEndpoints(source: Source): boolean {
+    return source.endpoints.some(endpoint => rpcFunctionName(endpoint) !== null);
 }
 
-function withSupabaseRpcOutput(endpoint: Endpoint, outputShapes: Map<string, DataShape>): Endpoint {
+function withSupabaseRpcOutput(endpoint: SourceEndpoint, outputShapes: Map<string, DataShape>): SourceEndpoint {
     const name = rpcFunctionName(endpoint);
     if (!name) return endpoint;
     const body = outputShapes.get(name);
@@ -180,7 +180,7 @@ function withSupabaseRpcOutput(endpoint: Endpoint, outputShapes: Map<string, Dat
     return { ...endpoint, output: mergeResponseOutput(endpoint.output, { status: "200", body }) };
 }
 
-function withSupabaseSchemaHeaders(endpoint: Endpoint, schema: string): Endpoint {
+function withSupabaseSchemaHeaders(endpoint: SourceEndpoint, schema: string): SourceEndpoint {
     if (schema === "public") return endpoint;
     const headers = (endpoint.headers ?? [])
         .filter(header => !["accept-profile", "content-profile"].includes(header.name.toLowerCase()));
@@ -205,7 +205,7 @@ function mergeResponseOutput(current: EndpointResponse[] | undefined, response: 
     return replaced ? next : [response, ...next];
 }
 
-function rpcFunctionName(endpoint: Endpoint): string | null {
+function rpcFunctionName(endpoint: SourceEndpoint): string | null {
     let url: URL;
     try {
         url = new URL(endpoint.targetUrl);
@@ -219,8 +219,8 @@ function rpcFunctionName(endpoint: Endpoint): string | null {
     return name ? decodeURIComponent(name) : null;
 }
 
-function mergeMeta(provider: Provider, dto: SupabaseOfficialProviderImportDto): Provider["meta"] {
-    const current = provider.meta ?? { name: dto.id };
+function mergeMeta(source: Source, dto: SupabaseOfficialProviderImportDto): Source["meta"] {
+    const current = source.meta ?? { name: dto.id };
     return {
         ...current,
         ...(dto.meta?.name ? { name: dto.meta.name } : {}),
@@ -229,7 +229,7 @@ function mergeMeta(provider: Provider, dto: SupabaseOfficialProviderImportDto): 
     };
 }
 
-function withSupabaseHeaders(endpoint: Endpoint, secretRef: string): Endpoint {
+function withSupabaseHeaders(endpoint: SourceEndpoint, secretRef: string): SourceEndpoint {
     const headers = (endpoint.headers ?? [])
         .filter(header => !["apikey", "authorization"].includes(header.name.toLowerCase()));
     return {

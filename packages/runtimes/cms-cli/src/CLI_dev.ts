@@ -175,8 +175,8 @@ export default async function CLI_dev(args: string[]) {
         filesMetadata,
         filesBlob: files,
         variantStore,
-        gateway,
-        gatewayResolveSecret: resolveSecret,
+        sources: gateway,
+        sourceResolveSecret: resolveSecret,
         roles,
         auth: publicAuth,
     });

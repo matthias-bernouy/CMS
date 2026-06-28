@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { CompositeGatewayRepository, InMemoryGatewayRepository, seedProviders, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
-import { BAN_PROVIDER } from "@bernouy/cms-gateway/presets";
+import { CompositeSourceRepository, InMemorySourceRepository, seedSources, SYSTEM_SOURCES } from "@bernouy/cms-sources";
+import { BAN_SOURCE } from "@bernouy/cms-sources/presets";
 import getEditorSources from "cms-control/api/editor/sources.get";
 import type { ControlCms } from "cms-control/ControlCms";
-import type { Provider } from "@bernouy/cms-gateway";
+import type { Source } from "@bernouy/cms-sources";
 import type { DataField } from "@bernouy/cms-content/editor";
 
 type EditorSourceTestDto = {
@@ -22,7 +22,7 @@ type EditorSourceTestDto = {
     fields: DataField[];
 };
 
-const MIXED_PROVIDER: Provider = {
+const MIXED_PROVIDER: Source = {
     urn: "urn:mixed",
     endpoints: [
         {
@@ -49,19 +49,19 @@ const MIXED_PROVIDER: Provider = {
 
 describe("GET /api/editor/sources", () => {
     test("lists gateway endpoints as editor data sources", async () => {
-        const gateway = new InMemoryGatewayRepository();
-        await seedProviders(gateway, [BAN_PROVIDER]);
+        const gateway = new InMemorySourceRepository();
+        await seedSources(gateway, [BAN_SOURCE]);
 
         const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
             basePath: "/cms",
-            gateway,
+        sources: gateway,
         } as unknown as ControlCms);
         const body = await response.json() as EditorSourceTestDto[];
 
         expect(response.status).toBe(200);
         expect(body.map(source => source.url)).toEqual([
-            "/cms/.cms/gateway/ban/search",
-            "/cms/.cms/gateway/ban/reverse",
+            "/cms/.cms/sources/ban/search",
+            "/cms/.cms/sources/ban/reverse",
         ]);
         const searchSource = body[0]!;
         expect(searchSource.label).toBe("Recherche d'adresse");
@@ -79,10 +79,10 @@ describe("GET /api/editor/sources", () => {
         expect(featureField.children?.some(field => field.path === ".")).toBe(false);
     });
 
-    test("returns an empty list when gateway is not configured", async () => {
+    test("returns an empty list when sources are not configured", async () => {
         const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
-            get gateway(): never {
-                throw new Error("gateway repository not configured");
+            get sources(): never {
+                throw new Error("sources repository not configured");
             },
         } as unknown as ControlCms);
 
@@ -91,18 +91,18 @@ describe("GET /api/editor/sources", () => {
     });
 
     test("exposes all endpoint methods", async () => {
-        const gateway = new InMemoryGatewayRepository();
-        await seedProviders(gateway, [MIXED_PROVIDER]);
+        const gateway = new InMemorySourceRepository();
+        await seedSources(gateway, [MIXED_PROVIDER]);
 
         const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
             basePath: "/cms",
-            gateway,
+        sources: gateway,
         } as unknown as ControlCms);
         const body = await response.json() as EditorSourceTestDto[];
 
         expect(body.map(source => `${source.method} ${source.url}`)).toEqual([
-            "/cms/.cms/gateway/mixed/list",
-            "/cms/.cms/gateway/mixed/create",
+            "/cms/.cms/sources/mixed/list",
+            "/cms/.cms/sources/mixed/create",
         ].map((url, index) => `${index === 0 ? "GET" : "POST"} ${url}`));
         expect(body[0]!.params?.map(param => `${param.in}:${param.name}`)).toEqual([
             "path:id",
@@ -111,15 +111,15 @@ describe("GET /api/editor/sources", () => {
     });
 
     test("lists readonly system auth endpoints as editor sources", async () => {
-        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+        const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
 
         const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
             basePath: "/cms",
-            gateway,
+        sources: gateway,
         } as unknown as ControlCms);
         const body = await response.json() as EditorSourceTestDto[];
 
-        const login = body.find(source => source.url === "/cms/.cms/gateway/system-auth/login");
+        const login = body.find(source => source.url === "/cms/.cms/sources/system-auth/login");
         expect(login?.provider).toBe("system-auth");
         expect(login?.providerUrn).toBe("urn:system-auth");
         expect(login?.endpointUrn).toBe("urn:system-auth:login");

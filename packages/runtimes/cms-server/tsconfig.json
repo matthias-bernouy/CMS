@@ -6,6 +6,7 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
+        { "path": "../../features/cms-sources" },
         { "path": "../../surfaces/cms-control" },
         { "path": "../../surfaces/cms-delivery" }
     ]

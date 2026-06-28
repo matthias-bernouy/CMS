@@ -1,10 +1,10 @@
 import { describe, test, expect } from "bun:test";
 import postGatewayProvider from "cms-control/api/gateway-provider/gateway-provider.post";
-import { InMemoryGatewayRepository, ValidatingGatewayRepository } from "@bernouy/cms-gateway";
+import { InMemorySourceRepository, ValidatingSourceRepository } from "@bernouy/cms-sources";
 
 const makeCms = () => {
-    const gateway = new ValidatingGatewayRepository(new InMemoryGatewayRepository());
-    return { cms: { gateway } as any, gateway };
+    const gateway = new ValidatingSourceRepository(new InMemorySourceRepository());
+    return { cms: { sources: gateway } as any, gateway };
 };
 
 const post = (body: Record<string, unknown>) =>
@@ -29,7 +29,7 @@ describe("POST /api/gateway-provider OpenAPI import", () => {
                 } } },
             }),
         }), cms);
-        const stored = await gateway.getProvider("urn:shop");
+        const stored = await gateway.getSource("urn:shop");
         expect(stored?.meta?.name).toBe("Shop override");
         expect(stored?.endpoints[0]!.urn).toBe("urn:shop:get-cart");
         expect(stored?.endpoints[0]!.targetUrl).toBe("https://api.shop.com/cart/{id}");
@@ -42,7 +42,7 @@ describe("POST /api/gateway-provider OpenAPI import", () => {
             openapi: JSON.stringify({ openapi: "3.0.0", paths: { "/cart": { get: { operationId: "cart" } } } }),
             "openapi.baseUrl": "https://override.shop.com",
         }), cms);
-        expect((await gateway.getProvider("urn:shop"))?.endpoints[0]!.targetUrl)
+        expect((await gateway.getSource("urn:shop"))?.endpoints[0]!.targetUrl)
             .toBe("https://override.shop.com/cart");
     });
 });

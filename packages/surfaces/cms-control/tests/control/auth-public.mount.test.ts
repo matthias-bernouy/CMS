@@ -12,7 +12,7 @@ import {
     SubjectResolver,
     type PublicAuthRoutesConfig,
 } from "@bernouy/cms-auth";
-import { CompositeGatewayRepository, InMemoryGatewayRepository, SYSTEM_GATEWAY_PROVIDERS } from "@bernouy/cms-gateway";
+import { CompositeSourceRepository, InMemorySourceRepository, SYSTEM_SOURCES } from "@bernouy/cms-sources";
 import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import { ControlCms } from "cms-control/ControlCms";
 import type { CMS_ROLES } from "types/roles";
@@ -103,7 +103,7 @@ describe("Control public auth mount", () => {
         const runner = new CaptureRunner();
         const repository = new InMemoryCmsRepository();
         const { local, credentials, users, publicAuth } = authSystem();
-        const gateway = new CompositeGatewayRepository(new InMemoryGatewayRepository(), SYSTEM_GATEWAY_PROVIDERS);
+        const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
         const adminAuth = new InMemoryAuthentication<CMS_ROLES>({ role: "admin" });
         const cms = new ControlCms(
             runner,
@@ -125,10 +125,10 @@ describe("Control public auth mount", () => {
         );
         await cms.ready;
 
-        const gatewayPost = runner.handlers.get("POST /.cms/gateway");
+        const gatewayPost = runner.handlers.get("POST /.cms/sources");
         expect(gatewayPost).toBeDefined();
 
-        const res = await gatewayPost!(new Request("http://control/.cms/gateway/system-auth/signup", {
+        const res = await gatewayPost!(new Request("http://control/.cms/sources/system-auth/signup", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({ email: "ada@example.com", password: "password-1" }),

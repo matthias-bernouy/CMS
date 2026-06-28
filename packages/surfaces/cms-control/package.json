@@ -55,7 +55,7 @@
         "@bernouy/cms-bloc-compile": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/components": "workspace:*",
-        "@bernouy/cms-gateway": "workspace:*",
+        "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-analytics": "workspace:*",
         "linkedom": "^0.18.12",
         "@bernouy/cms-files": "workspace:*",

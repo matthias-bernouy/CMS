@@ -17,7 +17,7 @@
         "@bernouy/cms-secrets":     "workspace:*",
         "@bernouy/cms-content":     "workspace:*",
         "@bernouy/cms-files":       "workspace:*",
-        "@bernouy/cms-gateway":     "workspace:*",
+        "@bernouy/cms-sources":     "workspace:*",
         "@bernouy/cms-analytics":   "workspace:*",
         "@bernouy/cms-control":     "workspace:*",
         "@bernouy/cms-delivery":    "workspace:*",

@@ -1,6 +1,6 @@
 import { makeDataShapeTree } from "./dataShapeTree";
 import { jsonField } from "./shared";
-import type { DataShape } from "@bernouy/cms-gateway";
+import type { DataShape } from "@bernouy/cms-sources";
 
 /**
  * The "Body" sub-section of the In tab: a thin wrapper that owns the hidden

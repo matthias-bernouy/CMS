@@ -1,6 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { parseProviderDto } from "cms-control/core/validation/gateway/parseProviderDto";
-import { providerDtoToProvider } from "@bernouy/cms-gateway";
+import { parseSourceDto } from "cms-control/core/validation/gateway/parseSourceDto";
+import { sourceDtoToSource } from "@bernouy/cms-sources";
 
 /** A valid single-endpoint body, as `<cms-form>` would post it (flat keys). */
 const validBody = (over: Record<string, unknown> = {}) => ({
@@ -12,9 +12,9 @@ const validBody = (over: Record<string, unknown> = {}) => ({
     ...over,
 });
 
-describe("parseProviderDto", () => {
+describe("parseSourceDto", () => {
     test("multi-row body → endpoints in order", () => {
-        const dto = parseProviderDto({
+        const dto = parseSourceDto({
             id: "shop",
             "endpoints.0.endpointId": "getCart", "endpoints.0.method": "GET",  "endpoints.0.targetUrl": "https://api.shop.com/cart",
             "endpoints.1.endpointId": "addItem", "endpoints.1.method": "POST", "endpoints.1.targetUrl": "https://api.shop.com/items",
@@ -25,12 +25,12 @@ describe("parseProviderDto", () => {
     });
 
     test("single-row body → 1 endpoint", () => {
-        expect(parseProviderDto(validBody()).endpoints).toHaveLength(1);
-        expect(parseProviderDto(validBody()).endpoints[0]!.params).toEqual([]);   // no params declared
+        expect(parseSourceDto(validBody()).endpoints).toHaveLength(1);
+        expect(parseSourceDto(validBody()).endpoints[0]!.params).toEqual([]);   // no params declared
     });
 
     test("params JSON blob → endpoint.params", () => {
-        const dto = parseProviderDto(validBody({
+        const dto = parseSourceDto(validBody({
             "endpoints.0.params": JSON.stringify([
                 { name: "limit", in: "query", type: "number", required: true },
                 { name: "q", in: "query", type: "string", required: false },
@@ -43,7 +43,7 @@ describe("parseProviderDto", () => {
     });
 
     test("params JSON blob preserves computed userID source", () => {
-        const dto = parseProviderDto(validBody({
+        const dto = parseSourceDto(validBody({
             "endpoints.0.params": JSON.stringify([
                 { name: "user_id", in: "query", type: "string", required: true, source: { from: "computed", ref: "userID" } },
             ]),
@@ -54,7 +54,7 @@ describe("parseProviderDto", () => {
     });
 
     test("params JSON blob rejects unknown computed refs", () => {
-        expect(() => parseProviderDto(validBody({
+        expect(() => parseSourceDto(validBody({
             "endpoints.0.params": JSON.stringify([
                 { name: "email", in: "query", type: "string", source: { from: "computed", ref: "email" } },
             ]),
@@ -62,7 +62,7 @@ describe("parseProviderDto", () => {
     });
 
     test("a blank-name param entry is skipped (unfilled)", () => {
-        const dto = parseProviderDto(validBody({
+        const dto = parseSourceDto(validBody({
             "endpoints.0.params": JSON.stringify([
                 { name: "", in: "query", type: "string" },
                 { name: "q", in: "query", type: "string" },
@@ -72,32 +72,32 @@ describe("parseProviderDto", () => {
     });
 
     test("malformed / non-array params blob → InvalidParam", () => {
-        expect(() => parseProviderDto(validBody({ "endpoints.0.params": "{not json" })))
+        expect(() => parseSourceDto(validBody({ "endpoints.0.params": "{not json" })))
             .toThrow(/endpoints\.0\.params/);
-        expect(() => parseProviderDto(validBody({ "endpoints.0.params": JSON.stringify({ name: "x" }) })))
+        expect(() => parseSourceDto(validBody({ "endpoints.0.params": JSON.stringify({ name: "x" }) })))
             .toThrow(/endpoints\.0\.params/);
     });
 
     test("path params derived from URL {placeholders} (required, in:path)", () => {
-        const dto = parseProviderDto(validBody({ "endpoints.0.targetUrl": "https://api.shop.com/items/{id}" }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.targetUrl": "https://api.shop.com/items/{id}" }));
         expect(dto.endpoints[0]!.params).toEqual([
             { name: "id", in: "path", type: "string", required: true },
         ]);
     });
 
     test("multiple path params kept in URL order", () => {
-        const dto = parseProviderDto(validBody({ "endpoints.0.targetUrl": "https://api.shop.com/{org}/items/{id}" }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.targetUrl": "https://api.shop.com/{org}/items/{id}" }));
         expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["org", "id"]);
         expect(dto.endpoints[0]!.params.every(p => p.in === "path" && p.required)).toBe(true);
     });
 
     test("a repeated placeholder is deduped", () => {
-        const dto = parseProviderDto(validBody({ "endpoints.0.targetUrl": "https://api.shop.com/{id}/sub/{id}" }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.targetUrl": "https://api.shop.com/{id}/sub/{id}" }));
         expect(dto.endpoints[0]!.params.map(p => p.name)).toEqual(["id"]);
     });
 
     test("path params precede blob params in the merged list", () => {
-        const dto = parseProviderDto(validBody({
+        const dto = parseSourceDto(validBody({
             "endpoints.0.targetUrl": "https://api.shop.com/items/{id}",
             "endpoints.0.params": JSON.stringify([{ name: "limit", in: "query", type: "number" }]),
         }));
@@ -108,32 +108,32 @@ describe("parseProviderDto", () => {
     });
 
     test("a blob param shadowing a path placeholder → InvalidParam", () => {
-        expect(() => parseProviderDto(validBody({
+        expect(() => parseSourceDto(validBody({
             "endpoints.0.targetUrl": "https://api.shop.com/items/{id}",
             "endpoints.0.params": JSON.stringify([{ name: "id", in: "query", type: "string" }]),
         }))).toThrow(/duplicate param name/);
     });
 
     test("bad param type → InvalidParam (scoped to the array index)", () => {
-        expect(() => parseProviderDto(validBody({
+        expect(() => parseSourceDto(validBody({
             "endpoints.0.params": JSON.stringify([{ name: "x", in: "query", type: "object" }]),
         }))).toThrow(/endpoints\.0\.params\.0\.type/);
     });
 
     test("`in:'path'` from the blob → InvalidParam (path is URL-derived, never posted)", () => {
-        expect(() => parseProviderDto(validBody({
+        expect(() => parseSourceDto(validBody({
             "endpoints.0.params": JSON.stringify([{ name: "x", in: "path", type: "string" }]),
         }))).toThrow(/endpoints\.0\.params\.0\.in/);
     });
 
     test("unknown param `in` → InvalidParam", () => {
-        expect(() => parseProviderDto(validBody({
+        expect(() => parseSourceDto(validBody({
             "endpoints.0.params": JSON.stringify([{ name: "x", in: "body", type: "string" }]),
         }))).toThrow(/endpoints\.0\.params\.0\.in/);
     });
 
     test("duplicate param name in the blob → InvalidParam", () => {
-        expect(() => parseProviderDto(validBody({
+        expect(() => parseSourceDto(validBody({
             "endpoints.0.params": JSON.stringify([
                 { name: "x", in: "query", type: "string" },
                 { name: "x", in: "query", type: "number" },
@@ -142,7 +142,7 @@ describe("parseProviderDto", () => {
     });
 
     test("gap compaction — a removed row (missing index) is skipped, result is dense", () => {
-        const dto = parseProviderDto({
+        const dto = parseSourceDto({
             id: "shop",
             "endpoints.0.endpointId": "a", "endpoints.0.method": "GET", "endpoints.0.targetUrl": "https://x.com",
             "endpoints.2.endpointId": "b", "endpoints.2.method": "GET", "endpoints.2.targetUrl": "https://y.com",
@@ -152,15 +152,15 @@ describe("parseProviderDto", () => {
     });
 
     test("missing id → MissingParam", () => {
-        expect(() => parseProviderDto(validBody({ id: undefined }))).toThrow(/Missing param id/);
+        expect(() => parseSourceDto(validBody({ id: undefined }))).toThrow(/Missing param id/);
     });
 
     test("punctuation-only id (slugifies to empty) → InvalidParam", () => {
-        expect(() => parseProviderDto(validBody({ id: "!!!" }))).toThrow(/Invalid param id/);
+        expect(() => parseSourceDto(validBody({ id: "!!!" }))).toThrow(/Invalid param id/);
     });
 
     test("missing endpoint sub-field (key absent) → MissingParam scoped to the row", () => {
-        expect(() => parseProviderDto({
+        expect(() => parseSourceDto({
             id: "shop",
             "endpoints.0.endpointId": "getCart",
             "endpoints.0.method": "GET",
@@ -169,22 +169,22 @@ describe("parseProviderDto", () => {
     });
 
     test("empty-string endpoint sub-field → MissingParam (empty input counts as missing)", () => {
-        expect(() => parseProviderDto(validBody({ "endpoints.0.targetUrl": "" })))
+        expect(() => parseSourceDto(validBody({ "endpoints.0.targetUrl": "" })))
             .toThrow(/Missing param endpoints\.0\.targetUrl/);
     });
 
     test("bad method → InvalidParam scoped to the row", () => {
-        expect(() => parseProviderDto(validBody({ "endpoints.0.method": "FETCH" })))
+        expect(() => parseSourceDto(validBody({ "endpoints.0.method": "FETCH" })))
             .toThrow(/Invalid param endpoints\.0\.method/);
     });
 
     test("bad targetUrl → InvalidParam scoped to the row", () => {
-        expect(() => parseProviderDto(validBody({ "endpoints.0.targetUrl": "not a url" })))
+        expect(() => parseSourceDto(validBody({ "endpoints.0.targetUrl": "not a url" })))
             .toThrow(/Invalid param endpoints\.0\.targetUrl/);
     });
 
     test("duplicate endpointId across rows → InvalidParam", () => {
-        expect(() => parseProviderDto({
+        expect(() => parseSourceDto({
             id: "shop",
             "endpoints.0.endpointId": "dup", "endpoints.0.method": "GET", "endpoints.0.targetUrl": "https://x.com",
             "endpoints.1.endpointId": "dup", "endpoints.1.method": "GET", "endpoints.1.targetUrl": "https://y.com",
@@ -192,23 +192,23 @@ describe("parseProviderDto", () => {
     });
 
     test("zero endpoints → allowed (provider shell; endpoints added on the edit page)", () => {
-        const dto = parseProviderDto({ id: "shop", "meta.name": "Shop" });
+        const dto = parseSourceDto({ id: "shop", "meta.name": "Shop" });
         expect(dto.endpoints).toEqual([]);
         expect(dto.id).toBe("shop");
     });
 
     test("provider meta.icon round-trips when the form posts it (B1)", () => {
-        const dto = parseProviderDto(validBody({ "meta.icon": "map-pin" }));
+        const dto = parseSourceDto(validBody({ "meta.icon": "map-pin" }));
         expect(dto.meta).toEqual({ name: "Shop", icon: "map-pin" } as any);
     });
 
     test("blank meta.icon → no icon (provider had none)", () => {
-        const dto = parseProviderDto(validBody({ "meta.icon": "" }));
+        const dto = parseSourceDto(validBody({ "meta.icon": "" }));
         expect(dto.meta.icon).toBeUndefined();
     });
 
     test("meta.name defaults to the id when absent", () => {
-        const dto = parseProviderDto({
+        const dto = parseSourceDto({
             id: "shop",
             "endpoints.0.endpointId": "getCart", "endpoints.0.method": "GET", "endpoints.0.targetUrl": "https://x.com",
         });
@@ -216,37 +216,37 @@ describe("parseProviderDto", () => {
     });
 
     test("client-supplied endpoint urn is ignored (recomputed by the service)", () => {
-        const dto = parseProviderDto(validBody({ "endpoints.0.urn": "urn:evil:inject" })) as any;
+        const dto = parseSourceDto(validBody({ "endpoints.0.urn": "urn:evil:inject" })) as any;
         expect(dto.endpoints[0].urn).toBeUndefined();
         expect(dto.endpoints[0].endpointId).toBe("getCart");
     });
 
     test("body JSON blob → parsed DataShape on the DTO", () => {
         const body = { type: "object", properties: { id: { type: "string" } } };
-        const dto = parseProviderDto(validBody({ "endpoints.0.body": JSON.stringify(body) }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.body": JSON.stringify(body) }));
         expect(dto.endpoints[0]!.body).toEqual(body as any);
     });
 
     test("output JSON blob → parsed per-status list on the DTO (round-trip)", () => {
         const body = { type: "array", items: { type: "number" } };
         const output = [{ status: "200", body }];
-        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
         expect(dto.endpoints[0]!.output).toEqual(output as any);
     });
 
     test("blank body field → no body on the DTO", () => {
-        const dto = parseProviderDto(validBody({ "endpoints.0.body": "" }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.body": "" }));
         expect(dto.endpoints[0]!.body).toBeUndefined();
     });
 
     test("malformed body JSON → InvalidParam scoped to the endpoint", () => {
-        expect(() => parseProviderDto(validBody({ "endpoints.0.body": "{bad" })))
+        expect(() => parseSourceDto(validBody({ "endpoints.0.body": "{bad" })))
             .toThrow(/endpoints\.0\.body/);
     });
 
     test("body shape with a bad node type → InvalidParam", () => {
         const bad = JSON.stringify({ type: "object", properties: { x: { type: "datetime" } } });
-        expect(() => parseProviderDto(validBody({ "endpoints.0.body": bad })))
+        expect(() => parseSourceDto(validBody({ "endpoints.0.body": bad })))
             .toThrow(/endpoints\.0\.body\.properties\.x\.type/);
     });
 
@@ -257,7 +257,7 @@ describe("parseProviderDto", () => {
             { status: "404", body: { type: "object" } },
             { status: "default", body: { type: "string" } },
         ];
-        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
         expect(dto.endpoints[0]!.output).toEqual(output as any);
     });
 
@@ -269,7 +269,7 @@ describe("parseProviderDto", () => {
             { status: 200,   body: { type: "string" } },   // number, not string
             { status: "201", body: { type: "string" } },   // valid → kept
         ];
-        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
         expect(dto.endpoints[0]!.output).toEqual([{ status: "201", body: { type: "string" } }] as any);
     });
 
@@ -278,38 +278,38 @@ describe("parseProviderDto", () => {
             { status: "200", body: { type: "string" } },
             { status: "200", body: { type: "number" } },
         ];
-        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
         expect(dto.endpoints[0]!.output).toEqual([{ status: "200", body: { type: "string" } }] as any);
     });
 
     test("output: a body-less entry (e.g. 204) is preserved as {status}", () => {
         const output = [{ status: "204" }, { status: "200", body: { type: "object" } }];
-        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
         expect(dto.endpoints[0]!.output).toEqual([{ status: "204" }, { status: "200", body: { type: "object" } }] as any);
     });
 
     test("output: a bad body is dropped but the status-only entry is KEPT", () => {
         const output = [{ status: "200", body: { type: "datetime" } }];   // off-vocabulary node type
-        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        const dto = parseSourceDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
         expect(dto.endpoints[0]!.output).toEqual([{ status: "200" }] as any);
     });
 
     test("output: malformed JSON / non-array → undefined (no crash, no output stored)", () => {
-        expect(parseProviderDto(validBody({ "endpoints.0.output": "{bad" })).endpoints[0]!.output).toBeUndefined();
-        expect(parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify({ status: "200" }) })).endpoints[0]!.output).toBeUndefined();
-        expect(parseProviderDto(validBody({ "endpoints.0.output": "[]" })).endpoints[0]!.output).toBeUndefined();
-        expect(parseProviderDto(validBody({ "endpoints.0.output": "" })).endpoints[0]!.output).toBeUndefined();
+        expect(parseSourceDto(validBody({ "endpoints.0.output": "{bad" })).endpoints[0]!.output).toBeUndefined();
+        expect(parseSourceDto(validBody({ "endpoints.0.output": JSON.stringify({ status: "200" }) })).endpoints[0]!.output).toBeUndefined();
+        expect(parseSourceDto(validBody({ "endpoints.0.output": "[]" })).endpoints[0]!.output).toBeUndefined();
+        expect(parseSourceDto(validBody({ "endpoints.0.output": "" })).endpoints[0]!.output).toBeUndefined();
     });
 
     test("output: full round-trip parse → toProvider preserves the list", () => {
         const output = [{ status: "200", body: { type: "object", properties: { id: { type: "string" } } } }, { status: "404" }];
-        const dto = parseProviderDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
-        const provider = providerDtoToProvider(dto);
+        const dto = parseSourceDto(validBody({ "endpoints.0.output": JSON.stringify(output) }));
+        const provider = sourceDtoToSource(dto);
         expect(provider.endpoints[0]!.output).toEqual(output as any);
     });
 
     // ── Request headers (`headers`) — lenient, drop-don't-throw ──
-    const headers = (h: unknown) => parseProviderDto(validBody({ "endpoints.0.headers": JSON.stringify(h) })).endpoints[0]!.headers;
+    const headers = (h: unknown) => parseSourceDto(validBody({ "endpoints.0.headers": JSON.stringify(h) })).endpoints[0]!.headers;
 
     test("headers: a static header round-trips", () => {
         expect(headers([{ name: "X-Api-Version", source: { from: "static", value: "2024-01" } }]))
@@ -390,14 +390,14 @@ describe("parseProviderDto", () => {
         expect(headers([{ name: "X-A", source: { from: "weird" } }])).toBeUndefined();        // unknown from
         expect(headers([{ name: "X-A" }])).toBeUndefined();                                   // no source
         expect(headers([])).toBeUndefined();
-        expect(parseProviderDto(validBody({ "endpoints.0.headers": "{bad" })).endpoints[0]!.headers).toBeUndefined();
-        expect(parseProviderDto(validBody({ "endpoints.0.headers": "" })).endpoints[0]!.headers).toBeUndefined();
+        expect(parseSourceDto(validBody({ "endpoints.0.headers": "{bad" })).endpoints[0]!.headers).toBeUndefined();
+        expect(parseSourceDto(validBody({ "endpoints.0.headers": "" })).endpoints[0]!.headers).toBeUndefined();
     });
 
     test("headers: full round-trip parse → toProvider sets endpoint.headers; never sets rules", () => {
         const h = [{ name: "X-Api-Version", source: { from: "static", value: "2024-01" } }];
-        const dto = parseProviderDto(validBody({ "endpoints.0.headers": JSON.stringify(h) }));
-        const provider = providerDtoToProvider(dto);
+        const dto = parseSourceDto(validBody({ "endpoints.0.headers": JSON.stringify(h) }));
+        const provider = sourceDtoToSource(dto);
         expect(provider.endpoints[0]!.headers).toEqual(h as any);
         expect((provider.endpoints[0] as any).rules).toBeUndefined();
     });

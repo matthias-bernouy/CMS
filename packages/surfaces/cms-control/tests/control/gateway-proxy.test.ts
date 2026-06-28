@@ -1,13 +1,13 @@
 import { describe, test, expect, spyOn } from "bun:test";
 import type { RouteHandler } from "@bernouy/http-runner";
-import { GATEWAY_PROXY_METHODS, handleGatewayRequest } from "@bernouy/cms-gateway";
-import { InMemoryGatewayRepository, seedProviders } from "@bernouy/cms-gateway";
-import type { Provider } from "@bernouy/cms-gateway";
+import { SOURCE_PROXY_METHODS, handleSourceRequest } from "@bernouy/cms-sources";
+import { InMemorySourceRepository, seedSources } from "@bernouy/cms-sources";
+import type { Source } from "@bernouy/cms-sources";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 
 // A provider whose endpoint injects a `secret`-sourced header — exercises the
 // wired `resolveSecret` (delivery leaves it unwired, so it can't cover this).
-const SECURED: Provider = {
+const SECURED: Source = {
     urn: "urn:secured",
     endpoints: [{
         urn: "urn:secured:get", method: "GET", targetUrl: "https://api.example.com/data",
@@ -17,14 +17,14 @@ const SECURED: Provider = {
 
 /**
  * Minimal surface mount: captures the default endpoint each method would
- * register inside the `/.cms/gateway` group, so a test can invoke the real
+ * register inside the `/.cms/sources` group, so a test can invoke the real
  * handler end-to-end without booting a server.
  */
-function mountGateway(gateway: InMemoryGatewayRepository | null, secrets: InMemorySecretStore) {
+function mountGateway(gateway: InMemorySourceRepository | null, secrets: InMemorySecretStore) {
     const handlers = new Map<string, RouteHandler>();
-    const prefix = "/cms/.cms/gateway/";
-    for (const method of GATEWAY_PROXY_METHODS) {
-        handlers.set(method, (req) => handleGatewayRequest(gateway, req, {
+    const prefix = "/cms/.cms/sources/";
+    for (const method of SOURCE_PROXY_METHODS) {
+        handlers.set(method, (req) => handleSourceRequest(gateway, req, {
             prefix,
             deps: { resolveSecret: (r) => secrets.get(r).then(v => v ?? undefined) },
         }));
@@ -33,15 +33,15 @@ function mountGateway(gateway: InMemoryGatewayRepository | null, secrets: InMemo
 }
 
 async function mountBan() {
-    const gateway = new InMemoryGatewayRepository();
-    const { BAN_PROVIDER } = await import("@bernouy/cms-gateway/presets");
-    await seedProviders(gateway, [BAN_PROVIDER]);
+    const gateway = new InMemorySourceRepository();
+    const { BAN_SOURCE } = await import("@bernouy/cms-sources/presets");
+    await seedSources(gateway, [BAN_SOURCE]);
     const secrets = new InMemorySecretStore();
     const handlers = mountGateway(gateway, secrets);
     return { handlers, secrets, gateway };
 }
 
-const URL_BASE = "http://admin/cms/.cms/gateway";
+const URL_BASE = "http://admin/cms/.cms/sources";
 
 describe("gateway preview proxy", () => {
     test("registers all five proxy methods", async () => {
@@ -64,8 +64,8 @@ describe("gateway preview proxy", () => {
     });
 
     test("a {from:'secret'} header resolves via cms.secrets and reaches the upstream", async () => {
-        const gateway = new InMemoryGatewayRepository();
-        await seedProviders(gateway, [SECURED]);
+        const gateway = new InMemorySourceRepository();
+        await seedSources(gateway, [SECURED]);
         const secrets = new InMemorySecretStore();
         await secrets.set("API_KEY", "s3cr3t-token");
         const handlers = mountGateway(gateway, secrets);
@@ -82,8 +82,8 @@ describe("gateway preview proxy", () => {
     });
 
     test("missing secret → clean 500 (resolveSecret returns undefined, never throws), no upstream call", async () => {
-        const gateway = new InMemoryGatewayRepository();
-        await seedProviders(gateway, [SECURED]);
+        const gateway = new InMemorySourceRepository();
+        await seedSources(gateway, [SECURED]);
         const secrets = new InMemorySecretStore(); // API_KEY absent
         const handlers = mountGateway(gateway, secrets);
 
@@ -113,7 +113,7 @@ describe("gateway preview proxy", () => {
     test("path not under the base-path prefix → 404", async () => {
         const { handlers } = await mountBan();
         // Same path but at the root origin (no /cms base) — must NOT match.
-        const res = await handlers.get("GET")!(new Request("http://admin/.cms/gateway/ban/search?q=x"));
+        const res = await handlers.get("GET")!(new Request("http://admin/.cms/sources/ban/search?q=x"));
         expect(res.status).toBe(404);
     });
 

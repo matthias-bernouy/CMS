@@ -20,13 +20,13 @@ import {
     oidcCallbackHandler,
     oidcLoginHandler,
     PUBLIC_AUTH_ROUTES,
-    executeAuthSystemGatewayEndpoint,
+    executeAuthSystemSourceEndpoint,
     registerPublicAuthRoutes,
 } from "@bernouy/cms-auth";
 import type { RolesRepository } from "@bernouy/cms-permissions";
 import { ADMIN_ROLE, can, grantsFor, InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
-import type { GatewayRepository } from "@bernouy/cms-gateway";
-import { CMS_GATEWAY_ROUTE, GATEWAY_PROXY_METHODS, gatewayPrefix, handleGatewayRequest } from "@bernouy/cms-gateway";
+import type { SourceRepository } from "@bernouy/cms-sources";
+import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest } from "@bernouy/cms-sources";
 import {
     ANALYTICS_ROUTES,
     analyticsBreakdownHandler,
@@ -97,7 +97,7 @@ export class ControlCms {
     private _identityProviders:   IdentityProviderRepository | null;
     private _pats:                PatRepository | null;
     private _credentials:         LocalCredentialStore | null;
-    private _gateway:             GatewayRepository | null;
+    private _sources:             SourceRepository | null;
     private _analytics:           AnalyticsStore | null;
     private _roles:               RolesRepository;
 
@@ -114,7 +114,7 @@ export class ControlCms {
         identityProviders?: IdentityProviderRepository,
         pats?: PatRepository,
         credentials?: LocalCredentialStore,
-        gateway?: GatewayRepository,
+        sources?: SourceRepository,
         analytics?: AnalyticsStore,
         roles?: RolesRepository,
         authBackends: ControlAuthBackends = {},
@@ -131,7 +131,7 @@ export class ControlCms {
         this._identityProviders = identityProviders ?? null;
         this._pats = pats ?? null;
         this._credentials = credentials ?? null;
-        this._gateway = gateway ?? null;
+        this._sources = sources ?? null;
         this._analytics = analytics ?? null;
         this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
         this.ready = Promise.resolve();
@@ -183,9 +183,9 @@ export class ControlCms {
         runner.addEndpoint("GET", "/admin", toPages, [authGuard]);
 
         // Shared `.cms/*` mounts — the same feature handlers Delivery calls, here
-        // admin-guarded: the editor preview + media library + gateway preview run
+        // admin-guarded: the editor preview + media library + source preview run
         // in the admin's same-origin session, so the guard passes. Registered
-        // before the `/` and `/api` groups. Control alone wires the gateway's
+        // before the `/` and `/api` groups. Control alone wires the source
         // `resolveSecret` so `secret`-sourced headers resolve (delivery leaves it
         // unwired → clean 500).
         const resolveSecret = createSecretResolver(this._secrets);
@@ -202,13 +202,13 @@ export class ControlCms {
         };
         const executeSystemEndpoint = controlPublicAuth
             ? (endpoint: { urn: string; targetUrl: string }, req: Request) =>
-                executeAuthSystemGatewayEndpoint(controlPublicAuth, endpoint, req)
+                executeAuthSystemSourceEndpoint(controlPublicAuth, endpoint, req)
             : undefined;
-        runner.group(CMS_GATEWAY_ROUTE, (proxyRunner) => {
-            const prefix = gatewayPrefix(runner.basePath);
-            for (const method of GATEWAY_PROXY_METHODS) {
+        runner.group(CMS_SOURCES_ROUTE, (proxyRunner) => {
+            const prefix = sourcesPrefix(runner.basePath);
+            for (const method of SOURCE_PROXY_METHODS) {
                 proxyRunner.setDefaultEndpoint(method, (req) =>
-                    handleGatewayRequest(this._gateway, req, {
+                    handleSourceRequest(this._sources, req, {
                         prefix,
                         deps: { resolveSecret, resolveContext, executeSystemEndpoint, authorizeEndpoint },
                     }));
@@ -324,11 +324,11 @@ export class ControlCms {
         return this.configuration.publicAuth;
     }
 
-    /** Gateway provider store (data-gateway). Backs the admin provider CRUD;
+    /** Source store. Backs source reads and integration-created writes;
      *  must be the same instance Delivery reads. Throws until wired. */
-    get gateway(): GatewayRepository {
-        if (!this._gateway) throw new Error("gateway repository not configured");
-        return this._gateway;
+    get sources(): SourceRepository {
+        if (!this._sources) throw new Error("sources repository not configured");
+        return this._sources;
     }
 
     /** Analytics store (reader). Backs the admin analytics dashboards;

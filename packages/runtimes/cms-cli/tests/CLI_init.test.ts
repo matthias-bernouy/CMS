@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BAN_PROVIDER } from "@bernouy/cms-gateway/presets";
+import { BAN_SOURCE } from "@bernouy/cms-sources/presets";
 import { scaffoldProject } from "cms-cli/CLI_init";
 import { buildAllDevBlocs } from "cms-cli/dev-server/build";
 import { scanDevBlocs } from "cms-cli/dev-server/scan";
@@ -52,7 +52,7 @@ describe("p9r init", () => {
         }
 
         const banProvider = JSON.parse(await readFile(join(target, "site", "gateways", "ban.json"), "utf-8"));
-        expect(banProvider).toEqual(BAN_PROVIDER);
+        expect(banProvider).toEqual(BAN_SOURCE);
 
         const theme = await readFile(join(target, "site", "theme.css"), "utf-8");
         expect(theme).toContain("--bg-surface");

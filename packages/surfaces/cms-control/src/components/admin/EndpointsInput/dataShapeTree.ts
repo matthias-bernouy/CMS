@@ -1,5 +1,5 @@
 import { makeNode, type NodeHandle } from "./bodyNode";
-import type { DataShape } from "@bernouy/cms-gateway";
+import type { DataShape } from "@bernouy/cms-sources";
 
 /**
  * A reusable, FIELDLESS DataShape-tree widget. Owns the empty/tree toggle UI for

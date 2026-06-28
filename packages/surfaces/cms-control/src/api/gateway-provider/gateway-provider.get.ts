@@ -1,12 +1,12 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { isSystemProviderUrn, providerToDto } from "@bernouy/cms-gateway";
+import { isSystemSourceUrn, sourceToDto } from "@bernouy/cms-sources";
 
 /**
  * GET /api/gateway-provider?urn= — the full provider, enriched for the edit page.
  *
- * The persisted `Provider` carries only `urn` (no plain `id`), and the admin's
+ * The persisted `Source` carries only `urn` (no plain `id`), and the admin's
  * template interpolation has no array→JSON path, so the response adds:
  *  - a top-level derived `id` (so the edit form's hidden `<input name="id">` binds);
  *  - a per-endpoint derived `endpointId` (the create-form field, stripped from the urn);
@@ -19,13 +19,13 @@ export default async function getGatewayProvider(req: Request, cms: ControlCms) 
     const urn = new URL(req.url).searchParams.get("urn");
     if (!urn) throw new MissingParam("urn");
 
-    const provider = await cms.gateway.getProvider(urn);
+    const provider = await cms.sources.getSource(urn);
     if (!provider) throw new InvalidParam("urn", "Unknown provider.");
 
-    const dto = providerToDto(provider);
+    const dto = sourceToDto(provider);
     const endpointsJson = JSON.stringify(dto.endpoints);
 
-    const readonly = isSystemProviderUrn(provider.urn);
+    const readonly = isSystemSourceUrn(provider.urn);
 
     return new Response(JSON.stringify({
         ...provider,
