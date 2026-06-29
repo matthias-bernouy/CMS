@@ -3,7 +3,6 @@ import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BAN_SOURCE } from "@bernouy/cms-sources/presets";
 import { scaffoldProject } from "cms-cli/CLI_init";
 import { buildAllDevBlocs } from "cms-cli/dev-server/build";
 import { scanDevBlocs } from "cms-cli/dev-server/scan";
@@ -45,14 +44,12 @@ describe("p9r init", () => {
         expect(existsSync(join(target, "p9r.config.json"))).toBe(true);
         expect(existsSync(join(target, "site", "system.json"))).toBe(true);
         expect(existsSync(join(target, "site", "theme.css"))).toBe(true);
-        expect(existsSync(join(target, "site", "gateways", "ban.json"))).toBe(true);
+        expect(existsSync(join(target, "site", "integrations", ".gitkeep"))).toBe(true);
+        expect(existsSync(join(target, "site", ".p9r", "generated", "sources", ".gitkeep"))).toBe(true);
         expect(existsSync(join(target, "site", "pages", "index.html"))).toBe(true);
         for (const file of starterEditableHtmlFiles) {
             expect(existsSync(join(target, ...file))).toBe(true);
         }
-
-        const banProvider = JSON.parse(await readFile(join(target, "site", "gateways", "ban.json"), "utf-8"));
-        expect(banProvider).toEqual(BAN_SOURCE);
 
         const theme = await readFile(join(target, "site", "theme.css"), "utf-8");
         expect(theme).toContain("--bg-surface");
@@ -71,6 +68,10 @@ describe("p9r init", () => {
         expect(containerCss).toContain("max-width: var(--_max-width)");
         expect(containerCss).toContain("justify-content: var(--_vertical-align)");
         expect(containerCss).toContain(`:host([vertical-align="start"])`);
+        expect(containerCss).not.toContain("::slotted(h1");
+        expect(containerCss).not.toContain("::slotted(h2");
+        expect(containerCss).not.toContain("::slotted(h3");
+        expect(containerCss).not.toContain("::slotted(p");
 
         const cardCss = await readFile(join(target, "site", "blocs", "Layout", "base-card", "style.css"), "utf-8");
         expect(cardCss).toContain(".header ::slotted(h1)");

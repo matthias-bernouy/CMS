@@ -110,6 +110,7 @@ export class ContainerEditor extends Editor {
                         label: "Minimum height",
                         attribute: "min-height",
                         defaultValue: "none",
+                        help: "Reserve vertical space for hero or centered sections.",
                         options: [
                             { label: "None", value: "none" },
                             { label: "Half screen", value: "half" },
@@ -121,6 +122,7 @@ export class ContainerEditor extends Editor {
                         label: "Vertical align",
                         attribute: "vertical-align",
                         defaultValue: "center",
+                        help: "Aligns content inside the reserved minimum height.",
                         options: verticalAlignmentOptions,
                         visibleWhen: { attribute: "min-height", notEquals: "none" },
                     },
@@ -129,6 +131,7 @@ export class ContainerEditor extends Editor {
                         label: "Bleed content",
                         attribute: "bleed",
                         defaultValue: false,
+                        help: "Removes the max width constraint while keeping container padding.",
                         attributesOnValue: [
                             { value: true, attributes: { size: null, align: null } },
                         ],
