@@ -7,7 +7,9 @@ export const CMS_BINDING_ATTRIBUTES = {
     pageState:        "cms-page-state",
     repeat:           "cms-repeat",
     source:           "cms-source",
+    sourceId:         "cms-source-id",
     sourceStateForce: "cms-source-state-force",
+    sourceTrigger:    "cms-source-trigger",
     slot:             "cms-slot",
 } as const;
 export const CMS_BINDING_RUNTIME_ATTRIBUTES = { ready: "cms-ready" } as const;
@@ -22,15 +24,21 @@ export type CmsSourceBinding = { url: string; alias?: string; params?: CmsSource
 export type CmsSourceUrl = string;
 export type CmsConditionExpression = string;
 export type CmsRepeatBinding = { path: string; alias?: string };
+export const CMS_SOURCE_TRIGGERS = ["auto", "submit"] as const;
+export type CmsSourceTrigger = typeof CMS_SOURCE_TRIGGERS[number];
 export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type CmsSourceState = typeof CMS_SOURCE_STATES[number];
 export type CmsSourceStateForce = CmsSourceState;
 export const CMS_SOURCE_SLOT_VALUES = ["loading", "empty", "error"] as const;
 export type CmsSourceSlotValue = typeof CMS_SOURCE_SLOT_VALUES[number];
+export const CMS_SOURCE_STATUS_SCOPE = "$source";
+export const CMS_SOURCES_STATUS_SCOPE = "$sources";
+export type CmsSourceStatusCondition = { sourceId?: string; state: CmsSourceState };
 
 const INTERPOLATION_PATTERN = /^\s*\{\{\s*([\s\S]*?)\s*\}\}\s*$/;
 const SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
 const REPEAT_ALIAS_PATTERN = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+const SOURCE_STATUS_ID_PATTERN = /^[A-Za-z_$][\w$-]*$/;
 
 export function asInterpolation(expression: string): string {
     return `{{ ${expression.trim()} }}`;
@@ -88,12 +96,85 @@ export function parseCondition(value: string): CmsConditionExpression | null {
     return expression ? expression : null;
 }
 
+export function asSourceStatusCondition(state: CmsSourceState, sourceId?: string): CmsConditionExpression {
+    const id = sourceId?.trim();
+    if (id && !SOURCE_STATUS_ID_PATTERN.test(id)) {
+        throw new Error(`Invalid source status id: "${sourceId}"`);
+    }
+    return id ? `${CMS_SOURCES_STATUS_SCOPE}.${id}.${state}` : `${CMS_SOURCE_STATUS_SCOPE}.${state}`;
+}
+
+export function asSourceStatusConditions(conditions: CmsSourceStatusCondition[]): CmsConditionExpression {
+    return conditions
+        .map(condition => asSourceStatusCondition(condition.state, condition.sourceId))
+        .join(" || ");
+}
+
+export function parseSourceStatusCondition(value: string | null): CmsSourceState | null {
+    return parseSourceStatusConditionDetails(value)?.state ?? null;
+}
+
+export function parseSourceStatusConditionDetails(value: string | null): CmsSourceStatusCondition | null {
+    const conditions = parseSourceStatusConditions(value);
+    return conditions.length === 1 ? conditions[0]! : null;
+}
+
+export function parseSourceStatusConditions(value: string | null): CmsSourceStatusCondition[] {
+    const expression = value?.trim() ?? "";
+    if (!expression) return [];
+
+    const conditions: CmsSourceStatusCondition[] = [];
+    for (const part of expression.split(/\s*\|\|\s*/)) {
+        const condition = parseSingleSourceStatusCondition(part);
+        if (!condition) return [];
+        conditions.push(condition);
+    }
+    return conditions;
+}
+
+export function sourceStatusConditionFromElement(element: Element): CmsSourceState | null {
+    return parseSourceStatusCondition(element.getAttribute(CMS_BINDING_ATTRIBUTES.condition));
+}
+
+export function sourceStatusConditionDetailsFromElement(element: Element): CmsSourceStatusCondition | null {
+    return parseSourceStatusConditionDetails(element.getAttribute(CMS_BINDING_ATTRIBUTES.condition));
+}
+
+export function sourceStatusConditionsFromElement(element: Element): CmsSourceStatusCondition[] {
+    return parseSourceStatusConditions(element.getAttribute(CMS_BINDING_ATTRIBUTES.condition));
+}
+
+export function applySourceStatusCondition(element: Element, state: CmsSourceState, sourceId?: string): void {
+    element.setAttribute(CMS_BINDING_ATTRIBUTES.condition, asSourceStatusCondition(state, sourceId));
+    element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
+}
+
+export function applySourceStatusConditions(element: Element, conditions: CmsSourceStatusCondition[]): void {
+    if (conditions.length === 0) {
+        element.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
+        element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
+        return;
+    }
+    element.setAttribute(CMS_BINDING_ATTRIBUTES.condition, asSourceStatusConditions(conditions));
+    element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
+}
+
+export function clearSourceStatusCondition(element: Element): void {
+    if (sourceStatusConditionsFromElement(element).length > 0) {
+        element.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
+    }
+}
+
 export function isCmsSourceSlotValue(value: string | null): value is CmsSourceSlotValue {
     return (CMS_SOURCE_SLOT_VALUES as readonly string[]).includes(value ?? "");
 }
 
 export function isCmsSourceState(value: string | null): value is CmsSourceState {
     return (CMS_SOURCE_STATES as readonly string[]).includes(value ?? "");
+}
+
+export function isCmsSourceTrigger(value: string | null): value is CmsSourceTrigger {
+    return (CMS_SOURCE_TRIGGERS as readonly string[]).includes(value ?? "");
 }
 
 export function sourceStateFromElement(element: Element): CmsSourceState {
@@ -135,6 +216,17 @@ function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string
         : "?";
     const query = entries.map(([name, value]) => `${encodeURIComponent(name)}=${encodeSourceParamValue(value)}`).join("&");
     return `${beforeHash}${separator}${query}${hash}`;
+}
+
+function parseSingleSourceStatusCondition(value: string): CmsSourceStatusCondition | null {
+    const expression = value.trim();
+    for (const state of CMS_SOURCE_STATES) {
+        if (expression === asSourceStatusCondition(state)) return { state };
+    }
+
+    const match = /^\$sources\.([A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)$/.exec(expression);
+    if (!match) return null;
+    return { sourceId: match[1]!, state: match[2] as CmsSourceState };
 }
 
 function encodeSourceParamValue(value: CmsSourceParamValue): string {

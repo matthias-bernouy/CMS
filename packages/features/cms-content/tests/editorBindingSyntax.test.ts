@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_SLOT_VALUES, CMS_SOURCE_STATES, applySourceState, asCondition, asInterpolation, asRepeat, asSource, clearBindingRuntimeState, isCmsSourceSlotValue, isCmsSourceState, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, sourceStateFromElement } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_SLOT_VALUES, CMS_SOURCE_STATES, CMS_SOURCE_TRIGGERS, applySourceState, applySourceStatusCondition, applySourceStatusConditions, asCondition, asInterpolation, asRepeat, asSource, asSourceStatusCondition, asSourceStatusConditions, clearBindingRuntimeState, clearSourceStatusCondition, isCmsSourceSlotValue, isCmsSourceState, isCmsSourceTrigger, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, parseSourceStatusCondition, parseSourceStatusConditionDetails, parseSourceStatusConditions, sourceStateFromElement, sourceStatusConditionDetailsFromElement, sourceStatusConditionFromElement } from "@bernouy/cms-content/editor";
 
 describe("editor binding syntax", () => {
     function createElement(): Element {
@@ -25,7 +25,7 @@ describe("editor binding syntax", () => {
         expect(asSource("https://example.com/api/plans")).toBe("https://example.com/api/plans");
         expect(asSource({ url: " /api/plans ", alias: " plans " })).toBe("/api/plans as plans");
         expect(asSource({
-            url: "/.cms/gateway/ban/search",
+            url: "/.cms/sources/catalog/search",
             alias: "addresses",
             params: {
                 q: { from: "queryParam", name: "address" },
@@ -35,7 +35,7 @@ describe("editor binding syntax", () => {
                 empty: { from: "raw", value: "" },
                 skipped: undefined,
             },
-        })).toBe("/.cms/gateway/ban/search?q=#{address}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses");
+        })).toBe("/.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}&limit=5&type=housenumber%20street as addresses");
         expect(asSource({
             url: "/api/plans?",
             params: { q: { from: "raw", value: "hello" } },
@@ -49,8 +49,8 @@ describe("editor binding syntax", () => {
     test("parses source bindings", () => {
         expect(parseSource(" {{BASE_PATH}}/api/plans ")).toEqual({ url: "{{BASE_PATH}}/api/plans" });
         expect(parseSource("/api/plans as plans")).toEqual({ url: "/api/plans", alias: "plans" });
-        expect(parseSource("  /.cms/gateway/ban/search?q=#{address}&delivery=@{deliveryAddress}   as   addresses  "))
-            .toEqual({ url: "/.cms/gateway/ban/search?q=#{address}&delivery=@{deliveryAddress}", alias: "addresses" });
+        expect(parseSource("  /.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}   as   addresses  "))
+            .toEqual({ url: "/.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}", alias: "addresses" });
         expect(parseSource("")).toBeNull();
         expect(parseSource("   ")).toBeNull();
     });
@@ -75,6 +75,35 @@ describe("editor binding syntax", () => {
         expect(parseCondition("   ")).toBeNull();
     });
 
+    test("formats and parses source status conditions", () => {
+        const element = createElement();
+
+        expect(asSourceStatusCondition("loading")).toBe("$source.loading");
+        expect(asSourceStatusCondition("loading", "source-1")).toBe("$sources.source-1.loading");
+        expect(asSourceStatusConditions([{ sourceId: "source-1", state: "loading" }, { sourceId: "source-2", state: "empty" }]))
+            .toBe("$sources.source-1.loading || $sources.source-2.empty");
+        expect(() => asSourceStatusCondition("loading", "bad id")).toThrow("Invalid source status id");
+        expect(parseSourceStatusCondition(" $source.error ")).toBe("error");
+        expect(parseSourceStatusCondition("$sources.source-1.error")).toBe("error");
+        expect(parseSourceStatusConditionDetails("$sources.source-1.error")).toEqual({ sourceId: "source-1", state: "error" });
+        expect(parseSourceStatusConditions("$sources.source-1.loading || $sources.source-2.empty"))
+            .toEqual([{ sourceId: "source-1", state: "loading" }, { sourceId: "source-2", state: "empty" }]);
+        expect(parseSourceStatusCondition("$source.unknown")).toBeNull();
+
+        applySourceStatusCondition(element, "empty", "plans");
+        expect(element.getAttribute("cms-condition")).toBe("$sources.plans.empty");
+        expect(sourceStatusConditionFromElement(element)).toBe("empty");
+        expect(sourceStatusConditionDetailsFromElement(element)).toEqual({ sourceId: "plans", state: "empty" });
+
+        clearSourceStatusCondition(element);
+        expect(element.hasAttribute("cms-condition")).toBe(false);
+
+        applySourceState(element, "loading");
+        applySourceStatusConditions(element, []);
+        expect(element.hasAttribute("cms-condition")).toBe(false);
+        expect(element.hasAttribute("cms-slot")).toBe(false);
+    });
+
     test("exposes stable binding attribute names", () => {
         expect(CMS_BINDING_CORE_TAG).toBe("cms-binding-core");
         expect(CMS_BINDING_ATTRIBUTES).toEqual({
@@ -84,7 +113,9 @@ describe("editor binding syntax", () => {
             pageState: "cms-page-state",
             repeat: "cms-repeat",
             source: "cms-source",
+            sourceId: "cms-source-id",
             sourceStateForce: "cms-source-state-force",
+            sourceTrigger: "cms-source-trigger",
             slot: "cms-slot",
         });
         expect(CMS_BINDING_RUNTIME_ATTRIBUTES).toEqual({ ready: "cms-ready" });
@@ -93,6 +124,7 @@ describe("editor binding syntax", () => {
     test("exposes stable source states and authored slot values", () => {
         expect(CMS_SOURCE_STATES).toEqual(["loaded", "loading", "empty", "error"]);
         expect(CMS_SOURCE_SLOT_VALUES).toEqual(["loading", "empty", "error"]);
+        expect(CMS_SOURCE_TRIGGERS).toEqual(["auto", "submit"]);
         expect(isCmsSourceSlotValue("loading")).toBe(true);
         expect(isCmsSourceSlotValue("loaded")).toBe(false);
         expect(isCmsSourceSlotValue("unknown")).toBe(false);
@@ -103,6 +135,9 @@ describe("editor binding syntax", () => {
         expect(isCmsSourceState("error")).toBe(true);
         expect(isCmsSourceState("disabled")).toBe(false);
         expect(isCmsSourceState(null)).toBe(false);
+        expect(isCmsSourceTrigger("auto")).toBe(true);
+        expect(isCmsSourceTrigger("submit")).toBe(true);
+        expect(isCmsSourceTrigger("manual")).toBe(false);
     });
     test("maps cms-slot attributes to logical source states", () => {
         const element = createElement();
