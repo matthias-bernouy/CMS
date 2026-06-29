@@ -1,0 +1,20 @@
+{
+    "name": "@bernouy/cms-integrations",
+    "version": "0.1.0",
+    "description": "Declarative CMS integration definitions and import execution.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "main": "./src/exports/index.ts",
+    "exports": {
+        ".": "./src/exports/index.ts",
+        "./mongo": "./src/exports/mongo.ts"
+    },
+    "dependencies": {
+        "@bernouy/cms-sources": "workspace:*",
+        "@bernouy/cms-secrets": "workspace:*"
+    },
+    "peerDependencies": {
+        "mongodb": "^7.2.0",
+        "typescript": "^5.9.3"
+    }
+}

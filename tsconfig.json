@@ -11,6 +11,7 @@
         { "path": "packages/features/cms-content" },
         { "path": "packages/features/cms-bloc-compile" },
         { "path": "packages/features/cms-sources" },
+        { "path": "packages/features/cms-integrations" },
         { "path": "packages/features/cms-analytics" },
         { "path": "packages/foundation/components" },
         { "path": "packages/surfaces/cms-delivery" },
