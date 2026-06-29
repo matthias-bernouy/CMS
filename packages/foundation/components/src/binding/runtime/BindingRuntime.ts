@@ -1,17 +1,20 @@
 /** Discovers sources and value sync controls, then owns their lifecycle. */
 
 import { Source } from "../source/Source";
+import { type SourceStatusValue } from "../source/sourceStatus";
 import { ParamSync, PARAM_SYNC_ATTR } from "../params/ParamSync";
 import { PageStateSync, PAGE_STATE_ATTR } from "../params/PageStateSync";
 import { type FilterMap } from "../interpolate";
 import { SOURCE_ATTR, type SourceState } from "../attrs";
 import { eachMatching } from "./discovery";
 import { revealInertSources, revealSources } from "./revealSources";
+import { sourceStatusScope } from "./sourceStatusScope";
 export { revealSources } from "./revealSources";
 
 /** Owns the source/value-sync registries and the discovery observer for one root. */
 export class BindingRuntime {
     private readonly sources = new Map<Element, Source>();
+    private readonly sourceStatuses = new Map<Element, SourceStatusValue>();
     private readonly paramSyncs = new Map<Element, ParamSync>();
     private readonly pageStateSyncs = new Map<Element, PageStateSync>();
     private observer: MutationObserver | null = null;
@@ -23,8 +26,7 @@ export class BindingRuntime {
         private readonly options: { sourceStateForce?: SourceState } = {},
     ) {}
 
-    /** Activate existing sources; defer until DOMContentLoaded while parsing so
-     *  source children are complete before `captureContent`. */
+    /** Activate after DOMContentLoaded while parsing so source children exist. */
     start(): void {
         if (typeof document !== "undefined" && document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", () => this.activate(), { once: true });
@@ -55,14 +57,7 @@ export class BindingRuntime {
         this.teardown();
     }
 
-    /**
-     * Stop fetching and revert the DOM to the authored template: re-render every
-     * source's captured body raw (un-interpolated `{{ }}`, intact `cms-repeat`),
-     * then tear down (abort fetches, drop listeners, stop observing). A generic
-     * runtime primitive — the CMS editor calls it to pause binding in edit mode,
-     * but the runtime itself knows nothing about modes. Like `stop()`, single-use
-     * after; build a fresh runtime to resume.
-     */
+    /** Revert sources to authored templates, then tear down the runtime. */
     deactivate(): void {
         this.teardown({
             beforeSourceDispose: (src) => src.renderTemplate(),
@@ -85,6 +80,7 @@ export class BindingRuntime {
         for (const ps of this.paramSyncs.values()) ps.dispose();
         for (const ps of this.pageStateSyncs.values()) ps.dispose();
         this.sources.clear();
+        this.sourceStatuses.clear();
         this.paramSyncs.clear();
         this.pageStateSyncs.clear();
         hooks?.afterDispose?.();
@@ -105,7 +101,11 @@ export class BindingRuntime {
         // and with its URL interpolated — when the parent renders it.
         eachMatching(node, SOURCE_ATTR, this.root, (el) => {
             if (!el.isConnected || this.sources.has(el)) return;
-            const src = new Source(el, this.filters, this.options);
+            const src = new Source(el, this.filters, {
+                ...this.options,
+                setSourceStatus:  (source, status) => this.sourceStatuses.set(source, status),
+                sourceStatusesFor: (source, current) => sourceStatusScope(this.root, this.sourceStatuses, source, current),
+            });
             this.sources.set(el, src);
             src.start();
         });
@@ -129,6 +129,7 @@ export class BindingRuntime {
             if (!src) return;
             src.dispose();
             this.sources.delete(el);
+            this.sourceStatuses.delete(el);
         });
         eachMatching(node, PARAM_SYNC_ATTR, this.root, (el) => {
             const ps = this.paramSyncs.get(el);
@@ -143,4 +144,5 @@ export class BindingRuntime {
             this.pageStateSyncs.delete(el);
         });
     }
+
 }

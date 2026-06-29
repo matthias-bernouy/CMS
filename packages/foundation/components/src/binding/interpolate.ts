@@ -28,9 +28,9 @@ import { lookup, type Scope } from "./scope";
 export type Filter = (value: unknown) => unknown;
 export type FilterMap = Record<string, Filter>;
 
-/** `{{ path }}` or `{{ path | filter }}`. Paths are word chars + dots; the
- *  filter name is a bare word. Surrounding whitespace is ignored. */
-const TOKEN = /\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+/** `{{ path }}` or `{{ path | filter }}`. Paths are word chars, `$`, `.`, and `-`;
+ *  the filter name is a bare word. Surrounding whitespace is ignored. */
+const TOKEN = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
 
 export function interpolateString(str: string, scope: Scope, filters: FilterMap = {}): string {
     return str.replace(TOKEN, (_whole: string, path: string, filter: string | undefined) => {

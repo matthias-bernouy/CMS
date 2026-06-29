@@ -2,6 +2,8 @@ export const BINDING_CORE_TAG = "cms-binding-core";
 export const BINDING_DISABLED_ATTR = "cms-binding-disabled";
 export const SOURCE_STATE_FORCE_ATTR = "cms-source-state-force";
 export const SOURCE_ATTR = "cms-source";
+export const SOURCE_ID_ATTR = "cms-source-id";
+export const SOURCE_TRIGGER_ATTR = "cms-source-trigger";
 export const SLOT_ATTR = "cms-slot";
 export const REPEAT_ATTR = "cms-repeat";
 export const CONDITION_ATTR = "cms-condition";
@@ -10,6 +12,8 @@ export const PAGE_STATE_ATTR = "cms-page-state";
 
 export const SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type SourceState = typeof SOURCE_STATES[number];
+export const SOURCE_TRIGGERS = ["auto", "submit"] as const;
+export type SourceTrigger = typeof SOURCE_TRIGGERS[number];
 export const SOURCE_SLOT_VALUES = ["loading", "empty", "error"] as const;
 export type SourceSlotValue = typeof SOURCE_SLOT_VALUES[number];
 
@@ -29,6 +33,10 @@ export const READY_ATTR = "cms-ready";
 
 export function isSourceState(value: string | null): value is SourceState {
     return (SOURCE_STATES as readonly string[]).includes(value ?? "");
+}
+
+export function isSourceTrigger(value: string | null): value is SourceTrigger {
+    return (SOURCE_TRIGGERS as readonly string[]).includes(value ?? "");
 }
 
 export function isSourceSlotValue(value: string | null): value is SourceSlotValue {

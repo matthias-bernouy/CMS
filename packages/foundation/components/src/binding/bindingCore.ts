@@ -23,7 +23,9 @@ import {
     isSourceState,
     PAGE_STATE_ATTR,
     READY_ATTR,
+    SOURCE_ID_ATTR,
     SOURCE_STATE_FORCE_ATTR,
+    SOURCE_TRIGGER_ATTR,
     type SourceState,
 } from "./attrs";
 
@@ -36,7 +38,9 @@ export {
     BIND_STOP_ATTR,
     PAGE_STATE_ATTR,
     READY_ATTR,
+    SOURCE_ID_ATTR,
     SOURCE_STATE_FORCE_ATTR,
+    SOURCE_TRIGGER_ATTR,
 } from "./attrs";
 export { currentState, setState, STATE_CHANGE_EVENT } from "./params";
 

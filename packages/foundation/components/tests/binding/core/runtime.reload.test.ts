@@ -41,6 +41,7 @@ describe("Source — reload", () => {
         expect(text(elt.querySelector("p"))).toBe("2");
         src.dispose();
     });
+
 });
 
 describe("Source — #{param} reactivity", () => {
