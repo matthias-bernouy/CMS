@@ -1154,7 +1154,7 @@ describe("Shell", () => {
         const core = frameDocument.createElement(CMS_BINDING_CORE_TAG);
         const contentRoot = frameDocument.createElement("main");
         contentRoot.setAttribute("data-cms-content", "");
-        contentRoot.innerHTML = `<section cms-source="/api/plans"><p>Authored</p><p cms-slot="loading">Loading</p></section>`;
+        contentRoot.innerHTML = `<section cms-source="/api/plans"><p>Authored</p><p cms-condition="$source.loading">Loading</p></section>`;
         core.append(contentRoot);
         root.append(core);
         frameDocument.body.append(root);
@@ -1188,7 +1188,7 @@ describe("Shell", () => {
 
         expect(core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled)).toBe(true);
         expect(shell.shadowRoot!.querySelector("cms-editor-v2-canvas")?.getAttribute("mode")).toBe("view");
-        expect(savedContent).toBe(`<section cms-source="/api/plans"><p>Authored</p><p cms-slot="loading">Loading</p></section>`);
+        expect(savedContent).toBe(`<section cms-source="/api/plans"><p>Authored</p><p cms-condition="$source.loading">Loading</p></section>`);
     });
 
     test("shell keeps the editor runtime stable when switching between view and edit", async () => {

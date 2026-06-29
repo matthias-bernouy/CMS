@@ -24,14 +24,14 @@
         </div>
 
         <p9r-table cms-source="{{BASE_PATH}}/api/page/list?search=#{search}&visible=#{visible}&tag=#{tag}" cms-reload-on="new:page">
-            <p9r-row slot="header">
+            <p9r-row slot="header" cms-condition="$source.loaded">
                 <p9r-cell data-sort="title"><strong>Page title</strong> <span data-sort-ind></span></p9r-cell>
                 <p9r-cell data-sort="path"><strong>Path</strong> <span data-sort-ind></span></p9r-cell>
                 <p9r-cell><strong>Tags</strong></p9r-cell>
                 <p9r-cell data-sort="visible"><strong>Visibility</strong> <span data-sort-ind></span></p9r-cell>
             </p9r-row>
 
-            <p9r-row cms-repeat="." href="{{BASE_PATH}}/editor/page?id={{ id }}">
+            <p9r-row cms-repeat="." cms-condition="$source.loaded" href="{{BASE_PATH}}/editor/page?id={{ id }}">
                 <p9r-cell><strong>{{ title }}</strong></p9r-cell>
                 <p9r-cell><p9r-tag>{{ path }}</p9r-tag></p9r-cell>
                 <p9r-cell>
@@ -40,7 +40,7 @@
                 <p9r-cell><p9r-tag color="{{ visibleColor }}">{{ visibleLabel }}</p9r-tag></p9r-cell>
             </p9r-row>
 
-            <cms-empty-state cms-slot="empty">
+            <cms-empty-state cms-condition="$source.empty">
                 <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>

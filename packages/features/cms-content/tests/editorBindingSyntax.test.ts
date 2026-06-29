@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_SLOT_VALUES, CMS_SOURCE_STATES, CMS_SOURCE_TRIGGERS, applySourceState, applySourceStatusCondition, applySourceStatusConditions, asCondition, asInterpolation, asRepeat, asSource, asSourceStatusCondition, asSourceStatusConditions, clearBindingRuntimeState, clearSourceStatusCondition, isCmsSourceSlotValue, isCmsSourceState, isCmsSourceTrigger, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, parseSourceStatusCondition, parseSourceStatusConditionDetails, parseSourceStatusConditions, sourceStateFromElement, sourceStatusConditionDetailsFromElement, sourceStatusConditionFromElement } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_STATES, CMS_SOURCE_TRIGGERS, applySourceStatusCondition, applySourceStatusConditions, asCondition, asInterpolation, asRepeat, asSource, asSourceStatusCondition, asSourceStatusConditions, clearBindingRuntimeState, clearSourceStatusCondition, isCmsSourceState, isCmsSourceTrigger, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, parseSourceStatusCondition, parseSourceStatusConditionDetails, parseSourceStatusConditions, sourceStatusConditionDetailsFromElement, sourceStatusConditionFromElement } from "@bernouy/cms-content/editor";
 
 describe("editor binding syntax", () => {
     function createElement(): Element {
@@ -98,10 +98,8 @@ describe("editor binding syntax", () => {
         clearSourceStatusCondition(element);
         expect(element.hasAttribute("cms-condition")).toBe(false);
 
-        applySourceState(element, "loading");
         applySourceStatusConditions(element, []);
         expect(element.hasAttribute("cms-condition")).toBe(false);
-        expect(element.hasAttribute("cms-slot")).toBe(false);
     });
 
     test("exposes stable binding attribute names", () => {
@@ -116,19 +114,13 @@ describe("editor binding syntax", () => {
             sourceId: "cms-source-id",
             sourceStateForce: "cms-source-state-force",
             sourceTrigger: "cms-source-trigger",
-            slot: "cms-slot",
         });
         expect(CMS_BINDING_RUNTIME_ATTRIBUTES).toEqual({ ready: "cms-ready" });
     });
 
-    test("exposes stable source states and authored slot values", () => {
+    test("exposes stable source states and triggers", () => {
         expect(CMS_SOURCE_STATES).toEqual(["loaded", "loading", "empty", "error"]);
-        expect(CMS_SOURCE_SLOT_VALUES).toEqual(["loading", "empty", "error"]);
         expect(CMS_SOURCE_TRIGGERS).toEqual(["auto", "submit"]);
-        expect(isCmsSourceSlotValue("loading")).toBe(true);
-        expect(isCmsSourceSlotValue("loaded")).toBe(false);
-        expect(isCmsSourceSlotValue("unknown")).toBe(false);
-        expect(isCmsSourceSlotValue(null)).toBe(false);
         expect(isCmsSourceState("loaded")).toBe(true);
         expect(isCmsSourceState("loading")).toBe(true);
         expect(isCmsSourceState("empty")).toBe(true);
@@ -138,33 +130,6 @@ describe("editor binding syntax", () => {
         expect(isCmsSourceTrigger("auto")).toBe(true);
         expect(isCmsSourceTrigger("submit")).toBe(true);
         expect(isCmsSourceTrigger("manual")).toBe(false);
-    });
-    test("maps cms-slot attributes to logical source states", () => {
-        const element = createElement();
-
-        expect(sourceStateFromElement(element)).toBe("loaded");
-
-        element.setAttribute("cms-slot", "empty");
-        expect(sourceStateFromElement(element)).toBe("empty");
-
-        element.setAttribute("cms-slot", "loaded");
-        expect(sourceStateFromElement(element)).toBe("loaded");
-
-        element.setAttribute("cms-slot", "invalid");
-        expect(sourceStateFromElement(element)).toBe("loaded");
-    });
-
-    test("applies logical source states to authored cms-slot attributes", () => {
-        const element = createElement();
-
-        applySourceState(element, "loading");
-        expect(element.getAttribute("cms-slot")).toBe("loading");
-
-        applySourceState(element, "error");
-        expect(element.getAttribute("cms-slot")).toBe("error");
-
-        applySourceState(element, "loaded");
-        expect(element.hasAttribute("cms-slot")).toBe(false);
     });
 
     test("clears binding runtime state from serialized content", () => {

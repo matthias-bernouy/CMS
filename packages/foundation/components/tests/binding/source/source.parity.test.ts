@@ -34,7 +34,7 @@ function deferredJson(payload: unknown): () => void {
 }
 
 describe("Source — parity contract for authored template restore", () => {
-    test("renderTemplate() restores structural directives, raw HTML placeholders, and slots", async () => {
+    test("renderTemplate() restores structural directives, raw HTML placeholders, and source-state conditions", async () => {
         jsonSequence([{ items: [{ name: "Ada", visible: true }], html: "<b>Trusted</b>" }]);
         const src = el(`
             <section cms-source="/x">
@@ -42,7 +42,7 @@ describe("Source — parity contract for authored template restore", () => {
                     <li cms-repeat="items as item" cms-condition="item.visible">{{ item.name }}</li>
                 </ul>
                 <raw-html>{{ html | innerHTML }}</raw-html>
-                <p cms-slot="empty">No rows</p>
+                <p cms-condition="$source.empty">No rows</p>
             </section>
         `);
         const source = new Source(src);
@@ -60,7 +60,7 @@ describe("Source — parity contract for authored template restore", () => {
         expect(repeated.getAttribute("cms-condition")).toBe("item.visible");
         expect(text(repeated)).toBe("{{ item.name }}");
         expect(text(src.querySelector("raw-html"))).toBe("{{ html | innerHTML }}");
-        expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("No rows");
+        expect(text(src.querySelector('[cms-condition="$source.empty"]'))).toBe("No rows");
     });
 });
 
@@ -151,8 +151,8 @@ describe("Source — parity contract for body re-renders", () => {
     });
 });
 
-describe("Source — parity contract for slot/body transitions", () => {
-    test("success, empty slot, error slot, and success can alternate on one source", async () => {
+describe("Source — parity contract for status/body transitions", () => {
+    test("success, empty condition, error condition, and success can alternate on one source", async () => {
         responseSequence([
             { status: 200, body: JSON.stringify({ name: "Ada" }) },
             { status: 200, body: JSON.stringify([]) },
@@ -162,9 +162,9 @@ describe("Source — parity contract for slot/body transitions", () => {
         ]);
         const src = el(`
             <div cms-source="/x">
-                <p class="data">{{ name }}</p>
-                <p cms-slot="empty" class="empty">No rows</p>
-                <p cms-slot="error" class="error">Failed: {{ status }}</p>
+                <p class="data" cms-condition="$source.loaded">{{ name }}</p>
+                <p cms-condition="$source.empty" class="empty">No rows</p>
+                <p cms-condition="$source.error" class="error">Failed: {{ status }}</p>
             </div>
         `);
         const source = new Source(src);
@@ -189,12 +189,12 @@ describe("Source — parity contract for slot/body transitions", () => {
         expect(text(src.querySelector(".data"))).toBe("Lin");
     });
 
-    test("loading slot can replace an already-rendered body and then return to body", async () => {
+    test("loading condition can replace an already-rendered body and then return to body", async () => {
         jsonSequence([{ name: "Ada" }]);
         const src = el(`
             <div cms-source="/x">
-                <p class="data">{{ name }}</p>
-                <p cms-slot="loading" class="loading">Loading</p>
+                <p class="data" cms-condition="$source.loaded">{{ name }}</p>
+                <p cms-condition="$source.loading" class="loading">Loading</p>
             </div>
         `);
         const source = new Source(src);

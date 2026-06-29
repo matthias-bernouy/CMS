@@ -8,7 +8,7 @@
     </p9r-open-modal>
 
     <p9r-table cms-source="{{BASE_PATH}}/api/users" cms-reload-on="user:updated">
-        <p9r-row slot="header">
+        <p9r-row slot="header" cms-condition="$source.loaded">
             <p9r-cell><strong>User</strong></p9r-cell>
             <p9r-cell><strong>Email</strong></p9r-cell>
             <p9r-cell><strong>Provider</strong></p9r-cell>
@@ -16,7 +16,7 @@
             <p9r-cell></p9r-cell>
         </p9r-row>
 
-        <p9r-row cms-repeat=".">
+        <p9r-row cms-repeat="." cms-condition="$source.loaded">
             <p9r-cell><strong>{{ displayName }}</strong></p9r-cell>
             <p9r-cell>{{ email }}</p9r-cell>
             <p9r-cell><p9r-tag>{{ provider }}</p9r-tag></p9r-cell>
@@ -30,7 +30,7 @@
             </p9r-cell>
         </p9r-row>
 
-        <cms-empty-state cms-slot="empty">
+        <cms-empty-state cms-condition="$source.empty">
             <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />

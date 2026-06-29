@@ -10,7 +10,6 @@ export const CMS_BINDING_ATTRIBUTES = {
     sourceId:         "cms-source-id",
     sourceStateForce: "cms-source-state-force",
     sourceTrigger:    "cms-source-trigger",
-    slot:             "cms-slot",
 } as const;
 export const CMS_BINDING_RUNTIME_ATTRIBUTES = { ready: "cms-ready" } as const;
 
@@ -29,8 +28,6 @@ export type CmsSourceTrigger = typeof CMS_SOURCE_TRIGGERS[number];
 export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type CmsSourceState = typeof CMS_SOURCE_STATES[number];
 export type CmsSourceStateForce = CmsSourceState;
-export const CMS_SOURCE_SLOT_VALUES = ["loading", "empty", "error"] as const;
-export type CmsSourceSlotValue = typeof CMS_SOURCE_SLOT_VALUES[number];
 export const CMS_SOURCE_STATUS_SCOPE = "$source";
 export const CMS_SOURCES_STATUS_SCOPE = "$sources";
 export type CmsSourceStatusCondition = { sourceId?: string; state: CmsSourceState };
@@ -146,17 +143,14 @@ export function sourceStatusConditionsFromElement(element: Element): CmsSourceSt
 
 export function applySourceStatusCondition(element: Element, state: CmsSourceState, sourceId?: string): void {
     element.setAttribute(CMS_BINDING_ATTRIBUTES.condition, asSourceStatusCondition(state, sourceId));
-    element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
 }
 
 export function applySourceStatusConditions(element: Element, conditions: CmsSourceStatusCondition[]): void {
     if (conditions.length === 0) {
         element.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
-        element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
         return;
     }
     element.setAttribute(CMS_BINDING_ATTRIBUTES.condition, asSourceStatusConditions(conditions));
-    element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
 }
 
 export function clearSourceStatusCondition(element: Element): void {
@@ -165,26 +159,12 @@ export function clearSourceStatusCondition(element: Element): void {
     }
 }
 
-export function isCmsSourceSlotValue(value: string | null): value is CmsSourceSlotValue {
-    return (CMS_SOURCE_SLOT_VALUES as readonly string[]).includes(value ?? "");
-}
-
 export function isCmsSourceState(value: string | null): value is CmsSourceState {
     return (CMS_SOURCE_STATES as readonly string[]).includes(value ?? "");
 }
 
 export function isCmsSourceTrigger(value: string | null): value is CmsSourceTrigger {
     return (CMS_SOURCE_TRIGGERS as readonly string[]).includes(value ?? "");
-}
-
-export function sourceStateFromElement(element: Element): CmsSourceState {
-    const value = element.getAttribute(CMS_BINDING_ATTRIBUTES.slot);
-    return isCmsSourceSlotValue(value) ? value : "loaded";
-}
-
-export function applySourceState(element: Element, state: CmsSourceState): void {
-    if (state === "loaded") element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
-    else element.setAttribute(CMS_BINDING_ATTRIBUTES.slot, state);
 }
 
 export function clearBindingRuntimeState(root: Element): void {

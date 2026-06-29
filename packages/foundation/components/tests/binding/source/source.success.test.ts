@@ -84,7 +84,7 @@ describe("Source — success", () => {
         expect(text(src.querySelector("p"))).toBe("Hello Grace");
     });
 
-    test("a slot transition remounts the body from the compiled template", async () => {
+    test("a status transition remounts the body from the compiled template", async () => {
         let call = 0;
         globalThis.fetch = (async () => {
             call++;
@@ -96,9 +96,9 @@ describe("Source — success", () => {
         }) as unknown as typeof fetch;
         const src = el(`
             <div cms-source="/x">
-                <p>Hello {{ name }}</p>
-                <input name="email">
-                <div cms-slot="empty">No data</div>
+                <p cms-condition="$source.loaded">Hello {{ name }}</p>
+                <input cms-condition="$source.loaded" name="email">
+                <div cms-condition="$source.empty">No data</div>
             </div>
         `);
         const source = new Source(src);

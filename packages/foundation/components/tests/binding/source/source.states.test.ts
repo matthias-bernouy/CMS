@@ -20,13 +20,13 @@ function responseSequence(payloads: { status: number; body: string }[]): void {
 
 afterEach(resetDom);
 
-describe("Source — slot selection", () => {
-    test("empty payload → empty slot", async () => {
+describe("Source — status condition selection", () => {
+    test("empty payload → empty condition", async () => {
         respond(200, JSON.stringify([]));
         const src = el(`
             <ul cms-source="/x">
-                <li cms-repeat=".">{{ t }}</li>
-                <div cms-slot="empty">Nothing here</div>
+                <li cms-condition="$source.loaded" cms-repeat=".">{{ t }}</li>
+                <div cms-condition="$source.empty">Nothing here</div>
             </ul>
         `);
         await new Source(src).run();
@@ -34,12 +34,12 @@ describe("Source — slot selection", () => {
         expect(text(src.querySelector("div"))).toBe("Nothing here");
     });
 
-    test("error → error slot bound with status", async () => {
+    test("error → error condition bound with status", async () => {
         respond(404, "nope");
         const src = el(`
             <div cms-source="/x">
-                <p>{{ name }}</p>
-                <div cms-slot="error">Failed: {{ status }}</div>
+                <p cms-condition="$source.loaded">{{ name }}</p>
+                <div cms-condition="$source.error">Failed: {{ status }}</div>
             </div>
         `);
         await new Source(src).run();
@@ -47,14 +47,14 @@ describe("Source — slot selection", () => {
         expect(text(src.querySelector("div"))).toBe("Failed: 404");
     });
 
-    test("error with no error slot → element cleared", async () => {
+    test("error with no error condition → element cleared", async () => {
         respond(500, "");
         const src = el(`<div cms-source="/x"><p>{{ name }}</p></div>`);
         await new Source(src).run();
         expect(src.childNodes.length).toBe(0);
     });
 
-    test("error with no error slot clears a previous reactive body and later success remounts it", async () => {
+    test("error with no error condition clears a previous reactive body and later success remounts it", async () => {
         responseSequence([
             { status: 200, body: JSON.stringify({ name: "Ada" }) },
             { status: 500, body: "" },
@@ -77,12 +77,12 @@ describe("Source — slot selection", () => {
 });
 
 describe("Source — loading state", () => {
-    test("loading slot is shown before data arrives, then replaced", async () => {
+    test("loading condition is shown before data arrives, then replaced", async () => {
         const release = deferredFetch(200, JSON.stringify({ name: "Ada" }));
         const src = el(`
             <div cms-source="/x">
-                <p class="data">{{ name }}</p>
-                <div cms-slot="loading">Loading…</div>
+                <p class="data" cms-condition="$source.loaded">{{ name }}</p>
+                <div cms-condition="$source.loading">Loading…</div>
             </div>
         `);
         const p = new Source(src).run();
@@ -92,12 +92,12 @@ describe("Source — loading state", () => {
         release();
         await p;
         expect(text(src.querySelector(".data"))).toBe("Ada");
-        expect(src.querySelector("[cms-slot]")).toBeNull();
+        expect(src.querySelector('[cms-condition="$source.loading"]')).toBeNull();
     });
 });
 
 describe("Source — forced state", () => {
-    test("a forced missing state slot clears the source without fetching", async () => {
+    test("a forced missing state condition clears the source without fetching", async () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls++;

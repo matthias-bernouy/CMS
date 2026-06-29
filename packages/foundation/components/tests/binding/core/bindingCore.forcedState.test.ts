@@ -12,7 +12,7 @@ function commentCount(node: Node): number {
 }
 
 describe("<cms-binding-core> — forced source state", () => {
-    test("cms-source-state-force=loading renders loading slots without fetching", async () => {
+    test("cms-source-state-force=loading renders loading conditions without fetching", async () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls++;
@@ -22,8 +22,8 @@ describe("<cms-binding-core> — forced source state", () => {
         document.body.innerHTML = `
             <${BINDING_CORE_TAG} ${SOURCE_STATE_FORCE_ATTR}="loading">
                 <div cms-source="/x">
-                    <p>{{ name }}</p>
-                    <div cms-slot="loading">Loading</div>
+                    <p cms-condition="$source.loaded">{{ name }}</p>
+                    <div cms-condition="$source.loading">Loading</div>
                 </div>
             </${BINDING_CORE_TAG}>`;
 
@@ -32,7 +32,7 @@ describe("<cms-binding-core> — forced source state", () => {
         expect(text(document.querySelector("[cms-source] > div"))).toBe("Loading");
     });
 
-    test("cms-source-state-force=empty renders empty slots without fetching", async () => {
+    test("cms-source-state-force=empty renders empty conditions without fetching", async () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls++;
@@ -42,8 +42,8 @@ describe("<cms-binding-core> — forced source state", () => {
         document.body.innerHTML = `
             <${BINDING_CORE_TAG} ${SOURCE_STATE_FORCE_ATTR}="empty">
                 <div cms-source="/x">
-                    <p>{{ name }}</p>
-                    <div cms-slot="empty">No data</div>
+                    <p cms-condition="$source.loaded">{{ name }}</p>
+                    <div cms-condition="$source.empty">No data</div>
                 </div>
             </${BINDING_CORE_TAG}>`;
 
@@ -52,7 +52,7 @@ describe("<cms-binding-core> — forced source state", () => {
         expect(text(document.querySelector("[cms-source] > div"))).toBe("No data");
     });
 
-    test("cms-source-state-force=error renders error slots with a forced context", async () => {
+    test("cms-source-state-force=error renders error conditions with a forced context", async () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls++;
@@ -62,8 +62,8 @@ describe("<cms-binding-core> — forced source state", () => {
         document.body.innerHTML = `
             <${BINDING_CORE_TAG} ${SOURCE_STATE_FORCE_ATTR}="error">
                 <div cms-source="/x">
-                    <p>{{ name }}</p>
-                    <div cms-slot="error">Failed: {{ message }}</div>
+                    <p cms-condition="$source.loaded">{{ name }}</p>
+                    <div cms-condition="$source.error">Failed: {{ message }}</div>
                 </div>
             </${BINDING_CORE_TAG}>`;
 
@@ -76,9 +76,9 @@ describe("<cms-binding-core> — forced source state", () => {
         document.body.innerHTML = `
             <${BINDING_CORE_TAG} ${SOURCE_STATE_FORCE_ATTR}="loading">
                 <div cms-source="/x">
-                    <p>{{ name }}</p>
-                    <div cms-slot="loading">Loading</div>
-                    <div cms-slot="empty">No data</div>
+                    <p cms-condition="$source.loaded">{{ name }}</p>
+                    <div cms-condition="$source.loading">Loading</div>
+                    <div cms-condition="$source.empty">No data</div>
                 </div>
             </${BINDING_CORE_TAG}>`;
         const core = document.querySelector<BindingCore>(BINDING_CORE_TAG)!;
@@ -90,7 +90,7 @@ describe("<cms-binding-core> — forced source state", () => {
         expect(text(document.querySelector("[cms-source] > div"))).toBe("No data");
     });
 
-    test("changing from loaded to forced state clears the reactive body region", async () => {
+    test("changing from loaded to forced state updates the reactive body region", async () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls++;
@@ -100,8 +100,8 @@ describe("<cms-binding-core> — forced source state", () => {
         document.body.innerHTML = `
             <${BINDING_CORE_TAG}>
                 <div cms-source="/x">
-                    <p>{{ name }}</p>
-                    <div cms-slot="empty">No data</div>
+                    <p cms-condition="$source.loaded">{{ name }}</p>
+                    <div cms-condition="$source.empty">No data</div>
                 </div>
             </${BINDING_CORE_TAG}>`;
         const core = document.querySelector<BindingCore>(BINDING_CORE_TAG)!;
@@ -115,7 +115,7 @@ describe("<cms-binding-core> — forced source state", () => {
         await waitFor(() => text(source.querySelector("div")) === "No data");
         expect(calls).toBe(1);
         expect(source.querySelector("p")).toBeNull();
-        expect(commentCount(source)).toBe(0);
+        expect(commentCount(source)).toBeGreaterThan(0);
     });
 
     test("a forced parent core does not force nested binding cores", async () => {
@@ -123,12 +123,12 @@ describe("<cms-binding-core> — forced source state", () => {
         document.body.innerHTML = `
             <${BINDING_CORE_TAG} ${SOURCE_STATE_FORCE_ATTR}="loading">
                 <div cms-source="/outer">
-                    <div cms-slot="loading">Outer loading</div>
+                    <div cms-condition="$source.loading">Outer loading</div>
                 </div>
                 <${BINDING_CORE_TAG}>
                     <div cms-source="/inner">
-                        <p>{{ name }}</p>
-                        <div cms-slot="loading">Inner loading</div>
+                        <p cms-condition="$source.loaded">{{ name }}</p>
+                        <div cms-condition="$source.loading">Inner loading</div>
                     </div>
                 </${BINDING_CORE_TAG}>
             </${BINDING_CORE_TAG}>`;

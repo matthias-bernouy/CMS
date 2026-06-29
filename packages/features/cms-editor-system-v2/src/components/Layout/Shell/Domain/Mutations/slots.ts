@@ -55,13 +55,13 @@ export function canInsertSibling(
     runtime: EditorRuntime | null,
     reference: Editor,
     insertedElement: HTMLElement,
-    applySourceState: (element: HTMLElement, sourceState: CmsSourceStatusCondition[]) => void,
-    sourceStateForSibling: (reference: Editor) => CmsSourceStatusCondition[],
+    applySourceConditions: (element: HTMLElement, conditions: CmsSourceStatusCondition[]) => void,
+    sourceConditionsForSibling: (reference: Editor) => CmsSourceStatusCondition[],
 ): boolean {
     const parent = parentEditor(runtime, reference);
     if (!parent) {
         applySlot(insertedElement, undefined);
-        applySourceState(insertedElement, []);
+        applySourceConditions(insertedElement, []);
         return true;
     }
 
@@ -70,7 +70,7 @@ export function canInsertSibling(
     if (!slot || !canInsertNodeCount(parent, slot, [insertedElement])) return false;
 
     applySlot(insertedElement, slotName);
-    applySourceState(insertedElement, sourceStateForSibling(reference));
+    applySourceConditions(insertedElement, sourceConditionsForSibling(reference));
     return true;
 }
 

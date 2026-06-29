@@ -4,7 +4,6 @@ export const SOURCE_STATE_FORCE_ATTR = "cms-source-state-force";
 export const SOURCE_ATTR = "cms-source";
 export const SOURCE_ID_ATTR = "cms-source-id";
 export const SOURCE_TRIGGER_ATTR = "cms-source-trigger";
-export const SLOT_ATTR = "cms-slot";
 export const REPEAT_ATTR = "cms-repeat";
 export const CONDITION_ATTR = "cms-condition";
 export const PARAM_SYNC_ATTR = "cms-param-sync";
@@ -14,18 +13,16 @@ export const SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type SourceState = typeof SOURCE_STATES[number];
 export const SOURCE_TRIGGERS = ["auto", "submit"] as const;
 export type SourceTrigger = typeof SOURCE_TRIGGERS[number];
-export const SOURCE_SLOT_VALUES = ["loading", "empty", "error"] as const;
-export type SourceSlotValue = typeof SOURCE_SLOT_VALUES[number];
 
 /**
  * Marks a subtree the runtime must NOT discover sources within. Unlike a
  * nested `<cms-binding-core>` (which owns its own data), a `[cms-bind-stop]`
  * region is left INERT: the editor wraps the injected page content in it so the
- * chrome core still INJECTS the content (`bindSubtree` traverses it — the
- * `{{ content | innerHTML }}` interpolation runs) but never registers or
+ * chrome core still INJECTS the content (`{{ content | innerHTML }}` runs
+ * through the reactive template) but never registers or
  * executes the content's own `cms-source` / `cms-param-sync`. The content stays
- * an editable template; rendering it with data is delivery's job. RUNTIME-
- * discovery boundary only (it does NOT stop `bindSubtree`), and a complete
+ * an editable template; rendering it with data is delivery's job. Runtime
+ * discovery boundary only, and a complete
  * no-op in delivery where no element carries it.
  */
 export const BIND_STOP_ATTR = "cms-bind-stop";
@@ -37,8 +34,4 @@ export function isSourceState(value: string | null): value is SourceState {
 
 export function isSourceTrigger(value: string | null): value is SourceTrigger {
     return (SOURCE_TRIGGERS as readonly string[]).includes(value ?? "");
-}
-
-export function isSourceSlotValue(value: string | null): value is SourceSlotValue {
-    return (SOURCE_SLOT_VALUES as readonly string[]).includes(value ?? "");
 }

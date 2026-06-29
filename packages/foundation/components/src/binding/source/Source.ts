@@ -1,9 +1,9 @@
 /** Fetches one `cms-source`, owns reload hooks, and updates its body reactively. */
 
 import { runFetch } from "../fetcher";
-import { captureContent } from "../render/slots";
 import { type FilterMap } from "../interpolate";
 import { READY_ATTR, SOURCE_ATTR, type SourceState } from "../attrs";
+import { captureSourceContent } from "./sourceContent";
 import { listenSourceEvents, sourceTrigger } from "./sourceEvents";
 import { parseSourceSpec } from "./sourceSpec";
 import { resolveReactiveUrl } from "./reactiveUrl";
@@ -36,7 +36,7 @@ export class Source {
         private readonly filters: FilterMap = {},
         private readonly options: SourceOptions = {},
     ) {
-        const captured = captureContent(el);
+        const captured = captureSourceContent(el);
         this.renderer = new SourceRenderer(el, captured, this.filters);
         this.presenter = new SourcePresenter(el, captured, this.renderer, this.options);
     }

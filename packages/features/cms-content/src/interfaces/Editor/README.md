@@ -35,7 +35,6 @@ activate binding features for descendants of that element:
   `cms-condition="$sources.products.loaded || $sources.products.empty"`.
 - `cms-source-trigger="submit"` to delay source fetching until the parent form is
   submitted. Missing or `auto` trigger values fetch automatically.
-- `cms-slot="loading|empty|error"` legacy alternate source-state content.
 
 Nested binding cores are isolated scopes. An implementation can choose the precise
 runtime mechanics, but it should not leak data scopes across nested cores.
@@ -99,8 +98,6 @@ A binding implementation must:
   `$sources.<source-id>.*` as source status conditions.
 - Respect `CMS_BINDING_ATTRIBUTES.sourceTrigger`; `submit` sources must not
   fetch from automatic URL/param changes before a submit event.
-- Preserve legacy `CMS_BINDING_ATTRIBUTES.slot` source-state behavior until
-  authored templates have been migrated.
 - Leave the public tag and attribute names unchanged.
 
 An implementation may:

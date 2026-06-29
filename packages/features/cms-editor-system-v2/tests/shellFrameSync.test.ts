@@ -45,7 +45,7 @@ describe("Shell frame binding sync", () => {
         const { document: viewDocument } = parseHTML(`
             <div data-cms-editor-root>
                 <${CMS_BINDING_CORE_TAG} ${CMS_BINDING_ATTRIBUTES.bindingDisabled} ${CMS_BINDING_ATTRIBUTES.sourceStateForce}="loading">
-                    <main data-cms-content><p cms-slot="loading">Loading</p></main>
+                    <main data-cms-content><p cms-condition="$source.loading">Loading</p></main>
                 </${CMS_BINDING_CORE_TAG}>
             </div>
         `);
@@ -123,7 +123,7 @@ describe("Shell frame binding sync", () => {
         core.runtime = {
             deactivate: () => {
                 calls.push("deactivate");
-                source.innerHTML = `<p cms-repeat="data as data">{{ data.label }}</p><base-skeleton shape="rect" cms-slot="loading"></base-skeleton>`;
+                source.innerHTML = `<p cms-repeat="data as data">{{ data.label }}</p><base-skeleton shape="rect" cms-condition="$source.loading"></base-skeleton>`;
             },
             stop: () => calls.push("stop"),
         };
@@ -136,6 +136,6 @@ describe("Shell frame binding sync", () => {
 
         expect(calls).toEqual(["deactivate", "start"]);
         expect(captured).toContain(`cms-repeat="data as data"`);
-        expect(captured).toContain(`cms-slot="loading"`);
+        expect(captured).toContain(`cms-condition="$source.loading"`);
     });
 });

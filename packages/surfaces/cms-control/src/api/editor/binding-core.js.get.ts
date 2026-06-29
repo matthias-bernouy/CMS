@@ -7,7 +7,16 @@ const CACHE_KEY = "js:editor-binding-core";
 
 export default async function editorBindingCoreGet(req: Request, cms: ControlCms): Promise<Response> {
     return cachedResponseAsync(req, CACHE_KEY, cms.cache, async () => {
-        const result = await Bun.build({ entrypoints: [SOURCE], format: "iife", conditions: ["bun"] });
-        return compress(await result.outputs[0]!.text(), "text/javascript");
+        const result = await Bun.build({
+            entrypoints: [SOURCE],
+            format: "iife",
+            target: "browser",
+            conditions: ["bun"],
+        });
+        const output = result.outputs[0];
+        if (!result.success || !output) {
+            throw new Error(`Failed to build editor binding core runtime:\n${result.logs.join("\n")}`);
+        }
+        return compress(await output.text(), "text/javascript");
     }, publicAssetCacheControl(req));
 }

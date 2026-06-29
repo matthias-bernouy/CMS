@@ -1,5 +1,5 @@
 import { SOURCE_ATTR, type SourceState } from "../attrs";
-import { isEmpty, type Captured } from "../render/slots";
+import { isEmpty, type CapturedSourceContent } from "./sourceContent";
 import { parseSourceSpec } from "./sourceSpec";
 import { SourceRenderer } from "./sourceRenderer";
 import {
@@ -15,7 +15,7 @@ export class SourcePresenter {
 
     constructor(
         private readonly el: Element,
-        private readonly captured: Captured,
+        captured: CapturedSourceContent,
         private readonly renderer: SourceRenderer,
         private readonly options: SourceStatusOptions,
     ) {
@@ -26,7 +26,6 @@ export class SourcePresenter {
         const loading = statusValue("loading", undefined);
         publishSourceStatus(this.el, loading, this.options);
         if (this.hasConditions("loading")) this.renderer.body(this.scope(alias, loading, undefined));
-        else if (!this.usesConditions() && this.captured.slots.loading) this.renderer.slot(this.captured.slots.loading, null);
     }
 
     error(alias: string | undefined, url: string, status: number | null, message: string): void {
@@ -34,7 +33,6 @@ export class SourcePresenter {
         const errorStatus = statusValue("error", errorValue);
         publishSourceStatus(this.el, errorStatus, this.options);
         if (this.usesConditions()) this.renderer.body(this.scope(alias, errorStatus, errorValue));
-        else if (this.captured.slots.error) this.renderer.slot(this.captured.slots.error, { value: errorValue });
         else {
             this.renderer.clear();
             console.warn(`cms-source "${url}": ${message}`);
@@ -46,9 +44,7 @@ export class SourcePresenter {
         const sourceStatus = statusValue(state, data);
         publishSourceStatus(this.el, sourceStatus, this.options);
         const scope = this.scope(alias, sourceStatus, data);
-        if (this.usesConditions()) this.renderer.body(scope);
-        else if (state === "empty" && this.captured.slots.empty) this.renderer.slot(this.captured.slots.empty, scope);
-        else this.renderer.body(scope);
+        this.renderer.body(scope);
     }
 
     forced(state: Exclude<SourceState, "loaded">): void {
@@ -60,9 +56,7 @@ export class SourcePresenter {
             this.renderer.body(this.scope(spec.alias, forcedStatus, forcedValue));
             return;
         }
-        const fragment = this.captured.slots[state];
-        if (fragment) this.renderer.slot(fragment, state === "error" ? { value: forcedValue } : null);
-        else this.renderer.clear();
+        this.renderer.clear();
     }
 
     private scope(alias: string | undefined, sourceStatus: ReturnType<typeof statusValue>, value: unknown) {

@@ -110,7 +110,7 @@
                     </p9r-stack>
 
                     <div cms-source="{{BASE_PATH}}/api/pats" cms-reload-on="pat:changed">
-                        <p9r-table>
+                        <p9r-table cms-condition="$source.loaded">
                             <p9r-row slot="header">
                                 <p9r-cell><strong>Name</strong></p9r-cell>
                                 <p9r-cell><strong>Created</strong></p9r-cell>
@@ -130,7 +130,7 @@
                             </p9r-row>
                         </p9r-table>
 
-                        <cms-empty-state cms-slot="empty">
+                        <cms-empty-state cms-condition="$source.empty">
                             <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <circle cx="7.5" cy="15.5" r="5.5"/>
                                 <path d="m21 2-9.6 9.6"/>

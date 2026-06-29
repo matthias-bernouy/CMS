@@ -1,6 +1,6 @@
 /**
- * Parsing for the `cms-repeat` directive. The DOM expansion lives in
- * `bindSubtree.ts`; this is just the (pure) grammar.
+ * Parsing for the `cms-repeat` directive. Reactive templates own DOM expansion;
+ * this is just the pure grammar.
  *
  * Forms:
  *  - `cms-repeat="items"`         → iterate the array at `items`; each item

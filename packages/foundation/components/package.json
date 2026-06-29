@@ -43,7 +43,7 @@
     },
     "./binding": {
       "types": "./dist/binding/bindingCore.d.ts",
-      "bun": "./src/binding/bindingCore.ts",
+      "bun": "./binding.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },

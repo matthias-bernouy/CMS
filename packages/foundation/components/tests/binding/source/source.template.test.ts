@@ -11,30 +11,30 @@ function commentCount(node: Node): number {
 }
 
 describe("Source — editor template restore", () => {
-    test("renderTemplate() restores the authored body and state slots with cms-slot attrs", async () => {
+    test("renderTemplate() restores authored source-state conditions", async () => {
         respond(200, JSON.stringify({ name: "Ada" }));
         const src = el(`
             <div cms-source="/x">
-                <p class="data">{{ name }}</p>
-                <div cms-slot="loading">Loading</div>
-                <div cms-slot="error">Failed: {{ status }}</div>
-                <div cms-slot="empty">Nothing</div>
+                <p class="data" cms-condition="$source.loaded">{{ name }}</p>
+                <div cms-condition="$source.loading">Loading</div>
+                <div cms-condition="$source.error">Failed: {{ status }}</div>
+                <div cms-condition="$source.empty">Nothing</div>
             </div>
         `);
         const source = new Source(src);
 
         await source.run();
         expect(text(src.querySelector(".data"))).toBe("Ada");
-        expect(src.querySelector("[cms-slot]")).toBeNull();
+        expect(src.querySelector('[cms-condition="$source.loading"]')).toBeNull();
 
         source.renderTemplate();
 
         expect(text(src.querySelector(".data"))).toBe("{{ name }}");
-        expect(text(src.querySelector('[cms-slot="loading"]'))).toBe("Loading");
-        expect(text(src.querySelector('[cms-slot="error"]'))).toBe("Failed: {{ status }}");
-        expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("Nothing");
-        expect(Array.from(src.children).map((el) => el.getAttribute("cms-slot") ?? "body"))
-            .toEqual(["body", "loading", "error", "empty"]);
+        expect(text(src.querySelector('[cms-condition="$source.loading"]'))).toBe("Loading");
+        expect(text(src.querySelector('[cms-condition="$source.error"]'))).toBe("Failed: {{ status }}");
+        expect(text(src.querySelector('[cms-condition="$source.empty"]'))).toBe("Nothing");
+        expect(Array.from(src.children).map((el) => el.getAttribute("cms-condition") ?? "none"))
+            .toEqual(["$source.loaded", "$source.loading", "$source.error", "$source.empty"]);
     });
 
     test("renderTemplate() preserves an authored <template> wrapper", async () => {
@@ -42,7 +42,7 @@ describe("Source — editor template restore", () => {
         const src = el(`
             <div cms-source="/x">
                 <template><my-card>{{ name }}</my-card></template>
-                <div cms-slot="empty">Nothing</div>
+                <div cms-condition="$source.empty">Nothing</div>
             </div>
         `);
         const source = new Source(src);
@@ -56,7 +56,7 @@ describe("Source — editor template restore", () => {
         const template = src.querySelector("template") as HTMLTemplateElement | null;
         expect(template).not.toBeNull();
         expect(text(template!.content.querySelector("my-card"))).toBe("{{ name }}");
-        expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("Nothing");
+        expect(text(src.querySelector('[cms-condition="$source.empty"]'))).toBe("Nothing");
     });
 
     test("renderTemplate() removes reactive anchors after structural body updates", async () => {
@@ -78,7 +78,7 @@ describe("Source — editor template restore", () => {
                 <p cms-condition="visible">{{ items.length }}</p>
                 <span cms-repeat="items as item">{{ item.name }}</span>
                 <raw-html>{{ html | innerHTML }}</raw-html>
-                <div cms-slot="empty">Empty</div>
+                <div cms-condition="$source.empty">Empty</div>
             </section>
         `);
         const source = new Source(src);
@@ -93,7 +93,7 @@ describe("Source — editor template restore", () => {
         expect(src.querySelector('[cms-condition="visible"]')).not.toBeNull();
         expect(src.querySelector('[cms-repeat="items as item"]')).not.toBeNull();
         expect(text(src.querySelector("raw-html"))).toBe("{{ html | innerHTML }}");
-        expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("Empty");
+        expect(text(src.querySelector('[cms-condition="$source.empty"]'))).toBe("Empty");
     });
 });
 

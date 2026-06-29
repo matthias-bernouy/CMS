@@ -5,7 +5,7 @@
     </p9r-open-modal>
 
     <p9r-table cms-source="{{BASE_PATH}}/api/snippet/list" cms-reload-on="new:snippet">
-        <p9r-row slot="header">
+        <p9r-row slot="header" cms-condition="$source.loaded">
             <p9r-cell><strong>Tag</strong></p9r-cell>
             <p9r-cell><strong>Name</strong></p9r-cell>
             <p9r-cell><strong>Category</strong></p9r-cell>
@@ -13,7 +13,7 @@
             <p9r-cell></p9r-cell>
         </p9r-row>
 
-        <p9r-row cms-repeat="." href="{{BASE_PATH}}/editor/snippet?id={{id}}">
+        <p9r-row cms-repeat="." cms-condition="$source.loaded" href="{{BASE_PATH}}/editor/snippet?id={{id}}">
             <p9r-cell><code>{{ identifier }}</code></p9r-cell>
             <p9r-cell>{{ name }}</p9r-cell>
             <p9r-cell>{{ category }}</p9r-cell>
@@ -21,7 +21,7 @@
             <p9r-cell></p9r-cell>
         </p9r-row>
 
-        <cms-empty-state cms-slot="empty">
+        <cms-empty-state cms-condition="$source.empty">
             <svg slot="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="m18 16 4-4-4-4"/>
                 <path d="m6 8-4 4 4 4"/>

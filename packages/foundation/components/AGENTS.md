@@ -18,7 +18,7 @@ binding runtime used by Control, Delivery, and authored blocs.
   menus, media controls, and toasts.
 - `<w13c-*>`: logical components such as declarative forms.
 - Binding runtime: `<cms-binding-core>` plus `cms-source`, `cms-repeat`,
-  `cms-slot`, `cms-reload-on`, `#{param}`, `{{ path }}`, and
+  `cms-condition`, `cms-reload-on`, `#{param}`, `{{ path }}`, and
   `cms-param-sync`.
 
 `cms-*` tag names are reserved for Control internals, even when the binding
@@ -45,7 +45,8 @@ events.
 Binding activates only inside `<cms-binding-core>`. Nested cores are isolated.
 
 - `cms-source="url"` fetches JSON and renders the element body.
-- `cms-slot="loading|error|empty"` defines source states.
+- `cms-condition="$source.loading"`, `$source.error`, `$source.empty`, or
+  `$source.loaded` defines source states.
 - `cms-repeat="items"` or `cms-repeat="items as item"` iterates arrays.
 - `{{ path }}` interpolates text. `{{ path | innerHTML }}` injects trusted raw
   HTML.

@@ -32,7 +32,7 @@ describe("base-search-input", () => {
             <${BINDING_CORE_TAG}>
                 <${SEARCH_INPUT_TAG} cms-source="/api/addresses">
                     <option cms-repeat=". as address" value="{{ address.label }}">{{ address.label }}</option>
-                    <div cms-slot="loading">Loading addresses</div>
+                    <div cms-condition="$source.loading">Loading addresses</div>
                 </${SEARCH_INPUT_TAG}>
             </${BINDING_CORE_TAG}>
         `;
@@ -139,7 +139,7 @@ describe("base-search-input", () => {
             <${BINDING_CORE_TAG}>
                 <${SEARCH_INPUT_TAG} cms-source="/api/addresses">
                     <option cms-repeat=". as address" value="{{ address.label }}">{{ address.label }}</option>
-                    <base-skeleton cms-slot="loading">Loading addresses</base-skeleton>
+                    <base-skeleton cms-condition="$source.loading">Loading addresses</base-skeleton>
                 </${SEARCH_INPUT_TAG}>
             </${BINDING_CORE_TAG}>
         `;

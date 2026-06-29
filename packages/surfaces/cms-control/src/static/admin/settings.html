@@ -156,13 +156,13 @@
                     </p9r-stack>
 
                     <p9r-table cms-source="{{BASE_PATH}}/api/identity/providers" cms-reload-on="idp:changed">
-                        <p9r-row slot="header">
+                        <p9r-row slot="header" cms-condition="$source.loaded">
                             <p9r-cell><strong>Provider</strong></p9r-cell>
                             <p9r-cell><strong>Kind</strong></p9r-cell>
                             <p9r-cell><strong>Manage</strong></p9r-cell>
                         </p9r-row>
 
-                        <p9r-row cms-repeat=".">
+                        <p9r-row cms-repeat="." cms-condition="$source.loaded">
                             <p9r-cell><strong>{{ displayName }}</strong></p9r-cell>
                             <p9r-cell><p9r-tag>{{ kind }}</p9r-tag></p9r-cell>
                             <p9r-cell>
@@ -184,7 +184,7 @@
                             </p9r-cell>
                         </p9r-row>
 
-                        <cms-empty-state cms-slot="empty">
+                        <cms-empty-state cms-condition="$source.empty">
                             <p slot="title">No providers</p>
                             <p slot="hint">The local email/password provider is seeded at provisioning; add Google/OIDC for more.</p>
                         </cms-empty-state>

@@ -106,14 +106,14 @@ describe("BindingRuntime — deactivate / resume (editor pause)", () => {
         rt2.stop();
     });
 
-    test("deactivate() restores authored <template> wrappers and state slots for save", async () => {
+    test("deactivate() restores authored <template> wrappers and source-state conditions for save", async () => {
         routes({ "/x": () => res(200, JSON.stringify({ name: "Ada" })) });
         const root = el(`
             <div>
                 <div cms-source="/x">
                     <template><my-card>{{ name }}</my-card></template>
-                    <p cms-slot="empty">Nothing</p>
-                    <p cms-slot="error">Failed</p>
+                    <p cms-condition="$source.empty">Nothing</p>
+                    <p cms-condition="$source.error">Failed</p>
                 </div>
             </div>
         `);
@@ -128,8 +128,8 @@ describe("BindingRuntime — deactivate / resume (editor pause)", () => {
         const template = src.querySelector("template") as HTMLTemplateElement | null;
         expect(template).not.toBeNull();
         expect(text(template!.content.querySelector("my-card"))).toBe("{{ name }}");
-        expect(text(src.querySelector('[cms-slot="empty"]'))).toBe("Nothing");
-        expect(text(src.querySelector('[cms-slot="error"]'))).toBe("Failed");
+        expect(text(src.querySelector('[cms-condition="$source.empty"]'))).toBe("Nothing");
+        expect(text(src.querySelector('[cms-condition="$source.error"]'))).toBe("Failed");
         expect(src.innerHTML).toContain("<template>");
     });
 });
