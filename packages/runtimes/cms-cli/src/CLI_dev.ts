@@ -13,7 +13,7 @@ import { LocalFsCmsFilesBlob } from "@bernouy/cms-files";
 import { P9R_CACHE } from "@bernouy/cms-content";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
-import { createDevGateway } from "./dev-server/gateways";
+import { createDevSources } from "./dev-server/integrations";
 import { LocalFsIntegrationInstanceRepository } from "./dev-server/integrationInstances";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
@@ -104,7 +104,7 @@ export default async function CLI_dev(args: string[]) {
     for (const e of recon.errors) console.warn(`  ! ${e.path}: ${e.error}`);
     const filesMetadata = new ValidatingCmsFilesMetadata(files);
     const { auth, users, identityProviders, pats, credentials, devAdmin } = await createDevAuth();
-    const gateway = await createDevGateway(config.siteDir);
+    const sources = await createDevSources(config.siteDir);
     const integrationInstances = new LocalFsIntegrationInstanceRepository(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
     const resolveSecret = createSecretResolver(secrets);
@@ -147,7 +147,7 @@ export default async function CLI_dev(args: string[]) {
         deliveryUrl: `http://${publicHost}:${deliveryPort}`,
         publicAuth: { ...publicAuth, allowSignup: false },
         integrationInstances,
-    }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, gateway, undefined, roles);
+    }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, sources, undefined, roles);
     await cms.ready;
 
     // Watcher → cache invalidation. Bloc rebuild flips bytes in `built`; we
@@ -178,7 +178,7 @@ export default async function CLI_dev(args: string[]) {
         filesMetadata,
         filesBlob: files,
         variantStore,
-        sources: gateway,
+        sources,
         sourceResolveSecret: resolveSecret,
         roles,
         auth: publicAuth,
