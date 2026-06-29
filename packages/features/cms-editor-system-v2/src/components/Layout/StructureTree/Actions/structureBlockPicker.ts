@@ -9,7 +9,7 @@ import type {
 } from "../State/structureTreeTypes";
 
 export type StructureBlockPickerContext = {
-    emitAction(action: StructureTreeAction, item?: BlockPickerItem, slot?: string, sourceState?: PendingPickerAction["sourceState"]): void;
+    emitAction(action: StructureTreeAction, item?: BlockPickerItem, slot?: string): void;
     openBlockPicker(groups: BlockPickerSlotGroup[], contextLabel: string): void;
     setPendingPickerAction(action: PendingPickerAction): void;
 };
@@ -22,7 +22,7 @@ export function openPickerOrEmitSingleMedia(
 ): void {
     const option = singleEnabledOption(groups);
     if (option?.item?.kind === "media") {
-        context.emitAction(action.action, option.item, option.slot, action.sourceState);
+        context.emitAction(action.action, option.item, option.slot);
         return;
     }
 

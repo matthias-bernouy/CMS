@@ -9,7 +9,6 @@ import type {
 } from "../../BlockPickerModal/BlockPickerModal";
 import type {
     EditorStructureNode,
-    SourceStateStructureNode,
 } from "../../../../runtime";
 import { slotOptions } from "./structurePickerOptions";
 
@@ -22,7 +21,7 @@ export type StructurePickerGroupContext = {
     insertItems: BlockPickerItem[];
     defaultTemplateSelection: DefaultTemplateSelection;
     editorChildrenOf(parent: EditorStructureNode): EditorStructureNode[];
-    nodeForEditor(editor: SourceStateStructureNode["sourceEditor"]): EditorStructureNode | null;
+    nodeForEditor(editor: EditorStructureNode["editor"]): EditorStructureNode | null;
     parentNode(child: EditorStructureNode): EditorStructureNode | null;
     sameSlot(left: ContentSlot, right: ContentSlot): boolean;
     slotChildCount(parent: EditorStructureNode, slot: ContentSlot): number;
@@ -75,28 +74,6 @@ export function childGroups(context: StructurePickerGroupContext, node: EditorSt
             options,
         };
     });
-}
-
-export function sourceStateGroups(context: StructurePickerGroupContext, node: SourceStateStructureNode): BlockPickerSlotGroup[] {
-    const parentNode = context.nodeForEditor(node.sourceEditor);
-    if (!parentNode) return [];
-
-    const slot: ContentSlot = {
-        label: node.label,
-        accepts: [{ kind: "any-component" }],
-    };
-    const options = slotOptions(context, slot, parentNode)
-        .map(option => ({
-            ...option,
-            slot: undefined,
-            slotLabel: node.label,
-        }));
-
-    return [{
-        label: node.label,
-        disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
-        options,
-    }];
 }
 
 export function replaceGroups(context: StructurePickerGroupContext, node: EditorStructureNode): BlockPickerSlotGroup[] {

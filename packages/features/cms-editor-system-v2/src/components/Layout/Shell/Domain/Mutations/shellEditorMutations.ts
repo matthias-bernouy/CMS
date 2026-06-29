@@ -1,11 +1,11 @@
 import {
-    applySourceState,
+    applySourceStatusConditions,
     CMS_BINDING_ATTRIBUTES,
-    sourceStateFromElement,
+    sourceStatusConditionsFromElement,
+    type CmsSourceStatusCondition,
     type Editor,
 } from "@bernouy/cms-content/editor";
 
-import type { SourceStateName } from "../../../../../runtime";
 import type { MutationContext } from "./shellMutations";
 import type { ShellContentMutations } from "./shellContentMutations";
 import {
@@ -46,7 +46,7 @@ export class ShellEditorMutations {
         this._clipboardElement = editor.target.cloneNode(true) as HTMLElement;
     }
 
-    pasteAfter(editor: Editor | null, sourceState?: SourceStateName): void {
+    pasteAfter(editor: Editor | null): void {
         const document = this.context.editorDocument();
         if (!this._clipboardElement || !document) return;
 
@@ -57,38 +57,18 @@ export class ShellEditorMutations {
             return;
         }
 
-        if (sourceState) {
-            applySourceState(clone, sourceState);
-            editor.target.append(clone);
-            this.content.reloadFrameDocument(clone);
-            return;
-        }
-
         if (!canInsertSibling(
             this.context.runtime(),
             editor,
             clone,
-            (element, state) => applySourceState(element, state ?? "loaded"),
-            reference => sourceStateFromElement(reference.target),
+            (element, state) => {
+                if (state.length) applySourceStatusConditions(element, state);
+            },
+            reference => sourceStatusConditionsFromElement(reference.target),
         )) return;
 
         editor.target.after(clone);
         this.content.reloadFrameDocument(clone);
-    }
-
-    clearSourceState(parent: Editor, sourceState: SourceStateName): void {
-        if (sourceState === "loaded") {
-            for (const child of Array.from(parent.target.children)) {
-                if (!child.hasAttribute(CMS_BINDING_ATTRIBUTES.slot)) child.remove();
-            }
-            this.content.reloadFrameDocument(parent.target);
-            return;
-        }
-
-        for (const child of Array.from(parent.target.children)) {
-            if (child.getAttribute(CMS_BINDING_ATTRIBUTES.slot) === sourceState) child.remove();
-        }
-        this.content.reloadFrameDocument(parent.target);
     }
 
     moveEditor(source: Editor, target: Editor, position: "before" | "after"): void {
@@ -96,7 +76,7 @@ export class ShellEditorMutations {
         if (!canMoveEditor(this.context.runtime(), source, target)) return;
 
         applySlot(source.target, target.target.getAttribute("slot") ?? undefined);
-        applySourceState(source.target, sourceStateFromElement(target.target));
+        applySiblingSourceStatus(source.target, sourceStatusConditionsFromElement(target.target));
 
         if (position === "before") target.target.before(source.target);
         else target.target.after(source.target);
@@ -109,4 +89,9 @@ export class ShellEditorMutations {
         if (!parent) return null;
         return this.context.runtime()?.getClosestEditor(parent)?.target ?? null;
     }
+}
+
+function applySiblingSourceStatus(target: HTMLElement, state: CmsSourceStatusCondition[]): void {
+    if (state.length) applySourceStatusConditions(target, state);
+    else if (sourceStatusConditionsFromElement(target).length) target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
 }

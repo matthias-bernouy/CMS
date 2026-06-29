@@ -1,6 +1,7 @@
 import {
     CMS_BINDING_ATTRIBUTES,
     CMS_BINDING_CORE_TAG,
+    parseSourceStatusConditions,
     parseRepeat,
     type Editor,
 } from "@bernouy/cms-content/editor";
@@ -12,12 +13,14 @@ export type SourceDependencyUsage = {
 
 type DependencyScope = {
     aliases: Set<string>;
+    sourceId?: string;
     sourceLocal: boolean;
 };
-export function collectSourceDependencyUsages(editor: Editor, sourceAlias?: string): SourceDependencyUsage[] {
+export function collectSourceDependencyUsages(editor: Editor, sourceAlias?: string, sourceId?: string): SourceDependencyUsage[] {
     const usages: SourceDependencyUsage[] = [];
     const scope = collectElementDependencies(editor.target, {
         aliases: sourceAlias ? new Set([sourceAlias]) : new Set(),
+        sourceId,
         sourceLocal: true,
     }, usages, { isRoot: true });
 
@@ -65,6 +68,7 @@ function collectElementDependencies(
 ): DependencyScope {
     const scope: DependencyScope = {
         aliases: new Set(inheritedScope.aliases),
+        sourceId: inheritedScope.sourceId,
         sourceLocal: inheritedScope.sourceLocal,
     };
 
@@ -105,13 +109,19 @@ function bindingTextDependsOn(value: string, scope: DependencyScope): boolean {
         if (expressionReferencesScope(value, alias)) return true;
     }
 
-    return scope.sourceLocal && containsBindingSyntax(value);
+    if (!scope.sourceLocal) return false;
+    return containsBindingSyntax(value, scope);
 }
 function expressionReferencesScope(value: string, scope: string): boolean {
     const escaped = scope.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     return new RegExp(`(?:^|[^A-Za-z0-9_$])${escaped}(?:\\b|\\s*\\.)`).test(value);
 }
-function containsBindingSyntax(value: string): boolean {
+function containsBindingSyntax(value: string, scope: DependencyScope): boolean {
+    const statusConditions = parseSourceStatusConditions(value);
+    if (statusConditions.length > 0) {
+        return statusConditions.some(condition => !condition.sourceId || condition.sourceId === scope.sourceId);
+    }
+
     if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value)) return true;
 
     const matches = value.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);

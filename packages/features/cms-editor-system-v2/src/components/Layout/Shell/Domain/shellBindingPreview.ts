@@ -87,13 +87,20 @@ export function injectBindingPreviewStyle(document: Document): void {
 export function bindingPreviewCss(): string {
     const core = `${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`;
     const source = `[${CMS_BINDING_ATTRIBUTES.source}]`;
-    const slot = CMS_BINDING_ATTRIBUTES.slot;
+    const condition = CMS_BINDING_ATTRIBUTES.condition;
     const state = CMS_BINDING_ATTRIBUTES.sourceStateForce;
+    const hiddenFor = (current: string) => {
+        const selectors = [
+            `${core}[${state}="${current}"] ${source} [${condition}^="$source."]:not([${condition}*=".${current}"])`,
+            `${core}[${state}="${current}"] ${source} [${condition}^="$sources."]:not([${condition}*=".${current}"])`,
+        ];
+        return `${selectors.join(",")}{display:none!important}`;
+    };
 
     return [
-        `${core}[${state}="loaded"] ${source} > [${slot}]{display:none!important}`,
-        `${core}[${state}="loading"] ${source} > :not([${slot}="loading"]){display:none!important}`,
-        `${core}[${state}="empty"] ${source} > :not([${slot}="empty"]){display:none!important}`,
-        `${core}[${state}="error"] ${source} > :not([${slot}="error"]){display:none!important}`,
+        hiddenFor("loaded"),
+        hiddenFor("loading"),
+        hiddenFor("empty"),
+        hiddenFor("error"),
     ].join("\n");
 }

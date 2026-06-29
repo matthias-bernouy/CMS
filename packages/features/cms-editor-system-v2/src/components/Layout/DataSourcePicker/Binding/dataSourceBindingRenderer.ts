@@ -8,7 +8,7 @@ export function renderBindingConfig(
 ): HTMLElement {
     const section = document.createElement("section");
     section.className = "binding-config";
-    section.append(renderAliasInput(initialAlias(initialBinding)));
+    section.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? "auto"));
 
     const params = source.params ?? [];
     if (params.length === 0) return section;
@@ -32,6 +32,17 @@ function renderAliasInput(value: string): HTMLElement {
     alias.placeholder = "data";
     aliasLabel.append(alias);
     return aliasLabel;
+}
+
+function renderTriggerSelect(value: "auto" | "submit"): HTMLElement {
+    const label = document.createElement("label");
+    label.textContent = "Trigger";
+    const trigger = document.createElement("select");
+    trigger.className = "source-trigger";
+    trigger.append(option("auto", "Auto"), option("submit", "Submit"));
+    selectOption(trigger, value);
+    label.append(trigger);
+    return label;
 }
 
 function renderParamRow(
@@ -102,6 +113,10 @@ function textSpan(value: string): HTMLElement {
 }
 
 function selectMode(select: HTMLSelectElement, value: DataSourcePickerSourceParamValue["from"]): void {
+    selectOption(select, value);
+}
+
+function selectOption(select: HTMLSelectElement, value: string): void {
     const index = Array.from(select.options).findIndex(option => option.value === value);
     if (index >= 0) select.selectedIndex = index;
 }

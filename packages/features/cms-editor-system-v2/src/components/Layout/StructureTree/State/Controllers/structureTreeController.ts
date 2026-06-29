@@ -1,6 +1,6 @@
 import type { Editor, EditorCatalog } from "@bernouy/cms-content/editor";
 import type { BlockPickerItem, BlockPickerSlotGroup } from "../../../BlockPickerModal/BlockPickerModal";
-import type { EditorDataSource, EditorStructureNode, SourceStateStructureNode, StructureNode } from "../../../../../runtime";
+import type { EditorDataSource, EditorStructureNode, StructureNode } from "../../../../../runtime";
 import type { DefaultTemplateSelection } from "../../Pickers/structurePickerGroups";
 import type { PendingPickerAction, StructureTreeRenderOptions } from "../structureTreeTypes";
 import { StructureTreeEmitter } from "./structureTreeEmitter";
@@ -72,5 +72,4 @@ export class StructureTreeController {
     onDocumentKeydown(event: KeyboardEvent): void { this.events.onDocumentKeydown(event); }
     openSourcePicker(node: EditorStructureNode): void { this.pickers.openSourcePicker(node); }
     sourceActionLabel(node: EditorStructureNode): string { return this.menus.sourceActionLabel(node); }
-    sourceStateGroups(node: SourceStateStructureNode): BlockPickerSlotGroup[] { return this.pickers.sourceStateGroups(node); }
 }

@@ -20,9 +20,7 @@ export type StructureTreeRenderRequest = {
 
 export type StructureTreeAction =
     | "add-child"
-    | "add-source-state-child"
     | "add-root"
-    | "clear-source-state"
     | "copy"
     | "delete"
     | "duplicate"
@@ -32,7 +30,10 @@ export type StructureTreeAction =
     | "configure-repeat"
     | "replace"
     | "remove-repeat"
+    | "remove-source-status-condition"
     | "remove-source"
+    | "set-source-status-condition"
+    | "set-source-status-conditions"
     | "set-source";
 
 export type StructureTreeActionDetail = {
@@ -43,6 +44,7 @@ export type StructureTreeActionDetail = {
     item?: BlockPickerItem;
     dataSource?: EditorDataSource;
     sourceBinding?: DataSourcePickerSourceBinding;
+    sourceConditions?: Array<{ sourceEditor: Editor; sourceState: SourceStateName }>;
     slot?: string;
     sourceState?: SourceStateName;
 };
@@ -53,7 +55,6 @@ export type StructureTreeRenderOptions = {
 };
 
 export type PendingPickerAction = {
-    action: "add-child" | "add-source-state-child" | "add-root" | "replace";
+    action: "add-child" | "add-root" | "replace";
     editor?: Editor;
-    sourceState?: SourceStateName;
 };

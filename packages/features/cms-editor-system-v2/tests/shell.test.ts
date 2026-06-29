@@ -15,7 +15,7 @@ import {
 } from "../src/components/Layout/Shell/Domain/Settings/paramSync";
 import type { ShellControllerParts } from "../src/components/Layout/Shell/Controller/Core/Services/shellControllerParts";
 import type { ShellState } from "../src/components/Layout/Shell/Controller/Core/Services/shellState";
-import type { EditorStructureNode, SourceStateStructureNode } from "../src/runtime";
+import type { EditorStructureNode } from "../src/runtime";
 
 function shellParts(shell: unknown): ShellControllerParts {
     return (shell as { _parts: ShellControllerParts })._parts;
@@ -447,8 +447,8 @@ describe("Shell", () => {
             label: "Plans",
             url: "/api/plans",
             method: "GET",
-            provider: "ban",
-            providerLabel: "Base Adresse Nationale",
+            provider: "plans-api",
+            providerLabel: "Plans API",
             description: "Available pricing plans.",
             params: [
                 { name: "q", in: "query", required: true, type: "string", description: "Search query." },
@@ -459,8 +459,8 @@ describe("Shell", () => {
             label: "Create plan",
             url: "/api/plans",
             method: "POST",
-            provider: "ban",
-            providerLabel: "Base Adresse Nationale",
+            provider: "plans-api",
+            providerLabel: "Plans API",
             fields: [],
         }]);
         tree.setStructure([node], editor);
@@ -478,6 +478,7 @@ describe("Shell", () => {
         expect(picker.shadowRoot!.querySelector(".binding .config-heading")?.textContent).toBe("Binding");
         expect(picker.shadowRoot!.textContent ?? "").not.toContain("Create plan");
         picker.shadowRoot!.querySelector<HTMLInputElement>(".source-alias")!.value = "plans";
+        picker.shadowRoot!.querySelector<HTMLSelectElement>(".source-trigger")!.selectedIndex = 1;
         const rows = picker.shadowRoot!.querySelectorAll<HTMLElement>(".param-row");
         rows[0]!.querySelector<HTMLInputElement>(".param-value")!.value = "address";
         rows[1]!.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex = 1;
@@ -490,6 +491,7 @@ describe("Shell", () => {
         expect(detail?.sourceBinding).toEqual({
             url: "/api/plans",
             alias: "plans",
+            trigger: "submit",
             params: {
                 q: { from: "queryParam", name: "address" },
                 limit: { from: "raw", value: "5" },
@@ -550,6 +552,7 @@ describe("Shell", () => {
 
         const target = document.createElement("demo-card");
         target.setAttribute("cms-source", "/api/plans?q=#{address}&limit=5 as plans");
+        target.setAttribute("cms-source-trigger", "submit");
         const editor = new CardEditor(target);
         const node: EditorStructureNode = {
             editor,
@@ -587,6 +590,7 @@ describe("Shell", () => {
 
         const picker = tree.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
         expect(picker.shadowRoot!.querySelector<HTMLInputElement>(".source-alias")!.value).toBe("plans");
+        expect(picker.shadowRoot!.querySelector<HTMLSelectElement>(".source-trigger")!.selectedIndex).toBe(1);
 
         const rows = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>(".param-row"));
         const qRow = rows.find(row => row.dataset.paramName === "q")!;
@@ -603,6 +607,7 @@ describe("Shell", () => {
         expect(detail?.sourceBinding).toEqual({
             url: "/api/plans",
             alias: "plans",
+            trigger: "submit",
             params: {
                 q: { from: "queryParam", name: "address" },
                 limit: { from: "raw", value: "5" },
@@ -1072,7 +1077,7 @@ describe("Shell", () => {
         expect(reloads).toBe(1);
     });
 
-    test("shell injects editor-only CSS to show only the selected source state", async () => {
+    test("shell injects editor-only CSS to show only the selected source status condition", async () => {
         installDom();
 
         const { Shell } = await import("../src/exports");
@@ -1085,10 +1090,10 @@ describe("Shell", () => {
                         <${CMS_BINDING_CORE_TAG}>
                             <main data-cms-content>
                                 <section cms-source="/api/plans">
-                                    <p>Loaded</p>
-                                    <p cms-slot="loading">Loading</p>
-                                    <p cms-slot="empty">Empty</p>
-                                    <p cms-slot="error">Error</p>
+                                    <p cms-condition="$source.loaded">Loaded</p>
+                                    <p cms-condition="$source.loading">Loading</p>
+                                    <p cms-condition="$source.empty">Empty</p>
+                                    <p cms-condition="$source.error">Error</p>
                                 </section>
                             </main>
                         </${CMS_BINDING_CORE_TAG}>
@@ -1103,10 +1108,11 @@ describe("Shell", () => {
 
         const css = frameDocument.getElementById("cms-editor-binding-preview-style")?.textContent ?? "";
         expect(css).toContain(`${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`);
-        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.sourceStateForce}="loaded"] [${CMS_BINDING_ATTRIBUTES.source}] > [${CMS_BINDING_ATTRIBUTES.slot}]`);
-        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.sourceStateForce}="loading"] [${CMS_BINDING_ATTRIBUTES.source}] > :not([${CMS_BINDING_ATTRIBUTES.slot}="loading"])`);
-        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.sourceStateForce}="empty"] [${CMS_BINDING_ATTRIBUTES.source}] > :not([${CMS_BINDING_ATTRIBUTES.slot}="empty"])`);
-        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.sourceStateForce}="error"] [${CMS_BINDING_ATTRIBUTES.source}] > :not([${CMS_BINDING_ATTRIBUTES.slot}="error"])`);
+        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".loading"])`);
+        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$sources."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".loading"])`);
+        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".loaded"])`);
+        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".empty"])`);
+        expect(css).toContain(`[${CMS_BINDING_ATTRIBUTES.condition}^="$source."]:not([${CMS_BINDING_ATTRIBUTES.condition}*=".error"])`);
     });
 
     test("shell does not serialize binding preview attributes from the frame core", async () => {
@@ -2673,9 +2679,11 @@ describe("Shell", () => {
                 q: { from: "queryParam", name: "address" },
                 limit: { from: "raw", value: "5" },
             },
+            trigger: "submit",
         });
 
         expect(target.getAttribute("cms-source")).toBe("/api/plans?q=#{address}&limit=5 as plans");
+        expect(target.getAttribute("cms-source-trigger")).toBe("submit");
     });
 
     test("shell adds query param sync settings for standard value elements", async () => {
@@ -2727,14 +2735,10 @@ describe("Shell", () => {
         ]);
     });
 
-    test("shell inserts source state children with cms-slot", async () => {
+    test("shell applies source status conditions to existing children", async () => {
         installDom();
 
         const { Shell } = await import("../src/exports");
-        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
-        if (!customElements.get("cms-editor-v2-structure-tree")) {
-            customElements.define("cms-editor-v2-structure-tree", class extends StructureTree {});
-        }
 
         class ContainerEditor extends Editor {
             protected override contentSlots() {
@@ -2759,8 +2763,10 @@ describe("Shell", () => {
         const contentRoot = frameDocument.createElement("main");
         contentRoot.setAttribute("data-cms-content", "");
         const container = frameDocument.createElement("demo-container");
+        const paragraph = frameDocument.createElement("p");
         container.setAttribute("cms-source", "/api/plans");
-        container.innerHTML = "<p>Loaded message</p>";
+        paragraph.textContent = "Empty message";
+        container.append(paragraph);
         contentRoot.append(container);
         root.append(contentRoot);
         frameDocument.body.append(root);
@@ -2787,23 +2793,113 @@ describe("Shell", () => {
 
         const runtime = shellState(shell).runtime!;
         const parentEditor = runtime.getEditor(container);
+        const paragraphEditor = runtime.getEditor(paragraph);
         if (!parentEditor) throw new Error("Missing container editor.");
+        if (!paragraphEditor) throw new Error("Missing paragraph editor.");
 
-        shellParts(shell).mutations.addSourceStateChild(parentEditor, {
-            kind: "block",
-            entry: {
-                tag:            "p",
-                label:          "Paragraph",
-                bloc:           HTMLElement as unknown as CustomElementConstructor,
-                editor:         ParagraphEditor,
-                defaultContent: "<p>Empty message</p>",
-            },
-        }, "empty");
+        shellParts(shell).mutations.setSourceStatusCondition(paragraphEditor, parentEditor, "empty");
 
-        expect(container.innerHTML).toBe(`<p>Loaded message</p><p cms-slot="empty">Empty message</p>`);
+        expect(container.getAttribute("cms-source-id")).toBe("demo-container");
+        expect(container.innerHTML).toBe(`<p cms-condition="$sources.demo-container.empty">Empty message</p>`);
     });
 
-    test("shell preserves cms-slot when replacing source state children", async () => {
+    test("shell writes source status conditions against a selected outer source", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        class SourceEditor extends Editor {}
+        class ChildEditor extends Editor {}
+
+        const { document: frameDocument } = parseHTML(`
+            <!DOCTYPE html>
+            <html>
+                <body></body>
+            </html>
+        `);
+        const root = frameDocument.createElement("div");
+        root.setAttribute("data-cms-editor-root", "");
+        const contentRoot = frameDocument.createElement("main");
+        contentRoot.setAttribute("data-cms-content", "");
+        const outer = frameDocument.createElement("demo-outer");
+        outer.setAttribute("cms-source", "/api/outer");
+        const inner = frameDocument.createElement("demo-inner");
+        inner.setAttribute("cms-source", "/api/inner");
+        const child = frameDocument.createElement("demo-child");
+        inner.append(child);
+        outer.append(inner);
+        contentRoot.append(outer);
+        root.append(contentRoot);
+        frameDocument.body.append(root);
+
+        const shell = new Shell();
+        document.body.append(shell);
+        shell.setCatalog([
+            {
+                tag:    "demo-outer",
+                label:  "Outer",
+                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                editor: SourceEditor,
+            },
+            {
+                tag:    "demo-inner",
+                label:  "Inner",
+                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                editor: SourceEditor,
+            },
+            {
+                tag:    "demo-child",
+                label:  "Child",
+                bloc:   HTMLElement as unknown as CustomElementConstructor,
+                editor: ChildEditor,
+            },
+        ]);
+        setShellFrameDocument(shell, frameDocument);
+        shell.loadDocument({ root, contentRoot });
+
+        const runtime = shellState(shell).runtime!;
+        const outerEditor = runtime.getEditor(outer);
+        const childEditor = runtime.getEditor(child);
+        if (!outerEditor) throw new Error("Missing outer editor.");
+        if (!childEditor) throw new Error("Missing child editor.");
+
+        shellParts(shell).mutations.setSourceStatusCondition(childEditor, outerEditor, "error");
+
+        expect(outer.getAttribute("cms-source-id")).toBe("demo-outer");
+        expect(child.getAttribute("cms-condition")).toBe("$sources.demo-outer.error");
+    });
+
+    test("shell writes multiple source status conditions", async () => {
+        installDom();
+
+        const { Shell } = await import("../src/exports");
+
+        class DemoEditor extends Editor {}
+
+        const outer = document.createElement("demo-outer");
+        outer.setAttribute("cms-source", "/api/outer");
+        const inner = document.createElement("demo-inner");
+        inner.setAttribute("cms-source", "/api/inner");
+        const child = document.createElement("demo-child");
+        inner.append(child);
+        outer.append(inner);
+        const outerEditor = new DemoEditor(outer);
+        const innerEditor = new DemoEditor(inner);
+        const childEditor = new DemoEditor(child);
+        const shell = new Shell();
+        document.body.append(shell);
+
+        shellParts(shell).mutations.setSourceStatusConditions(childEditor, [
+            { sourceEditor: outerEditor, sourceState: "loaded" },
+            { sourceEditor: innerEditor, sourceState: "empty" },
+        ]);
+
+        expect(outer.getAttribute("cms-source-id")).toBe("demo-outer");
+        expect(inner.getAttribute("cms-source-id")).toBe("demo-inner");
+        expect(child.getAttribute("cms-condition")).toBe("$sources.demo-outer.loaded || $sources.demo-inner.empty");
+    });
+
+    test("shell preserves source status conditions when replacing children", async () => {
         installDom();
 
         const { Shell } = await import("../src/exports");
@@ -2835,7 +2931,7 @@ describe("Shell", () => {
         contentRoot.setAttribute("data-cms-content", "");
         const container = frameDocument.createElement("demo-container");
         container.setAttribute("cms-source", "/api/plans");
-        container.innerHTML = `<demo-child cms-slot="empty">Old empty</demo-child>`;
+        container.innerHTML = `<demo-child cms-condition="$source.empty">Old empty</demo-child>`;
         contentRoot.append(container);
         root.append(contentRoot);
         frameDocument.body.append(root);
@@ -2875,68 +2971,140 @@ describe("Shell", () => {
             },
         });
 
-        expect(container.innerHTML).toBe(`<demo-child cms-slot="empty">New empty</demo-child>`);
+        expect(container.innerHTML).toBe(`<demo-child cms-condition="$source.empty">New empty</demo-child>`);
     });
 
-    test("structure tree collapses source state rows per source element", async () => {
+    test("structure tree emits source status condition actions from the condition modal", async () => {
         installDom();
 
         const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
 
         class DemoEditor extends Editor {}
 
-        const firstSource = document.createElement("demo-source");
-        const secondSource = document.createElement("demo-source");
-        const firstChild = document.createElement("demo-child");
-        const secondChild = document.createElement("demo-child");
-        const firstSourceEditor = new DemoEditor(firstSource);
-        const secondSourceEditor = new DemoEditor(secondSource);
-        const firstChildEditor = new DemoEditor(firstChild);
-        const secondChildEditor = new DemoEditor(secondChild);
-        const firstChildNode: EditorStructureNode = {
-            editor: firstChildEditor,
-            target: firstChild,
+        const source = document.createElement("demo-source");
+        source.setAttribute("cms-source", "/api/plans");
+        const child = document.createElement("demo-child");
+        source.append(child);
+        const sourceEditor = new DemoEditor(source);
+        const childEditor = new DemoEditor(child);
+        const childNode: EditorStructureNode = {
+            editor: childEditor,
+            target: child,
             tag: "demo-child",
-            label: "First child",
+            label: "Child",
             badges: [],
             children: [],
         };
-        const secondChildNode: EditorStructureNode = {
-            editor: secondChildEditor,
-            target: secondChild,
-            tag: "demo-child",
-            label: "Second child",
+        const sourceNode: EditorStructureNode = {
+            editor: sourceEditor,
+            target: source,
+            tag: "demo-source",
+            label: "Source",
             badges: [],
-            children: [],
-        };
-        const firstState: SourceStateStructureNode = {
-            kind: "source-state",
-            sourceEditor: firstSourceEditor,
-            target: firstSource,
-            state: "empty",
-            label: ":empty",
-            badges: [],
-            children: [firstChildNode],
-        };
-        const secondState: SourceStateStructureNode = {
-            kind: "source-state",
-            sourceEditor: secondSourceEditor,
-            target: secondSource,
-            state: "empty",
-            label: ":empty",
-            badges: [],
-            children: [secondChildNode],
+            children: [childNode],
         };
         const tree = new StructureTree();
+        let detail: StructureTreeActionDetail | undefined;
+        tree.addEventListener("editor-v2:structure-action", (event) => {
+            detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
+        });
         document.body.append(tree);
-        tree.setStructure([firstState, secondState], null);
+        tree.setDataSources([{ label: "Plans endpoint", url: "/api/plans", fields: [] }]);
+        tree.setStructure([sourceNode], null);
 
-        tree.shadowRoot!.querySelector<HTMLButtonElement>(".source-state-row .toggle")!.click();
-        const labels = Array.from(tree.shadowRoot!.querySelectorAll(".label"))
-            .map(label => label.textContent);
+        tree.controller.menus.openContextMenu(childNode, 0, 0);
+        const buttons = Array.from(tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item"));
+        expect(buttons.filter(button => button.textContent?.startsWith("Show when"))).toHaveLength(0);
+        buttons.find(button => button.textContent === "Add condition")!.click();
 
-        expect(labels).not.toContain("First child");
-        expect(labels).toContain("Second child");
+        const picker = tree.shadowRoot!.querySelector("cms-editor-v2-condition-picker")!;
+        expect(picker.shadowRoot!.querySelector(".source-name")?.textContent).toBe("Source: Plans endpoint");
+        const emptyInput = Array.from(picker.shadowRoot!.querySelectorAll("label"))
+            .find(label => label.textContent === "empty")!
+            .querySelector<HTMLInputElement>("input")!;
+        emptyInput.checked = true;
+        emptyInput.dispatchEvent(new Event("change"));
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".apply")!.click();
+
+        expect(detail?.action).toBe("set-source-status-conditions");
+        expect(detail?.editor).toBe(childEditor);
+        expect(detail?.sourceConditions).toEqual([{ sourceEditor, sourceState: "empty" }]);
+    });
+
+    test("structure tree condition modal lets source status conditions target an outer nested source", async () => {
+        installDom();
+
+        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
+
+        class DemoEditor extends Editor {}
+
+        const outer = document.createElement("demo-outer");
+        outer.setAttribute("cms-source", "/api/outer");
+        outer.setAttribute("cms-source-id", "outer");
+        const inner = document.createElement("demo-inner");
+        inner.setAttribute("cms-source", "/api/inner");
+        inner.setAttribute("cms-source-id", "inner");
+        const child = document.createElement("demo-child");
+        inner.append(child);
+        outer.append(inner);
+
+        const outerEditor = new DemoEditor(outer);
+        const innerEditor = new DemoEditor(inner);
+        const childEditor = new DemoEditor(child);
+        const childNode: EditorStructureNode = {
+            editor: childEditor,
+            target: child,
+            tag: "demo-child",
+            label: "Child",
+            badges: [],
+            children: [],
+        };
+        const innerNode: EditorStructureNode = {
+            editor: innerEditor,
+            target: inner,
+            tag: "demo-inner",
+            label: "Inner source",
+            badges: ["Source"],
+            children: [childNode],
+        };
+        const outerNode: EditorStructureNode = {
+            editor: outerEditor,
+            target: outer,
+            tag: "demo-outer",
+            label: "Outer source",
+            badges: ["Source"],
+            children: [innerNode],
+        };
+        const tree = new StructureTree();
+        let detail: StructureTreeActionDetail | undefined;
+        tree.addEventListener("editor-v2:structure-action", (event) => {
+            detail = (event as CustomEvent<StructureTreeActionDetail>).detail;
+        });
+        document.body.append(tree);
+        tree.setStructure([outerNode], null);
+
+        tree.controller.menus.openContextMenu(childNode, 0, 0);
+        tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item")
+            .forEach(button => {
+                if (button.textContent === "Add condition") button.click();
+            });
+
+        const picker = tree.shadowRoot!.querySelector("cms-editor-v2-condition-picker")!;
+        expect(Array.from(picker.shadowRoot!.querySelectorAll(".source-title")).map(title => title.textContent))
+            .toEqual(["Inner source", "Outer source"]);
+
+        const sources = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>(".source"));
+        const outerSource = sources.find(source => source.querySelector(".source-title")?.textContent === "Outer source")!;
+        const outerError = Array.from(outerSource.querySelectorAll("label"))
+            .find(label => label.textContent === "error")!
+            .querySelector<HTMLInputElement>("input")!;
+        outerError.checked = true;
+        outerError.dispatchEvent(new Event("change"));
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".apply")!.click();
+
+        expect(detail?.action).toBe("set-source-status-conditions");
+        expect(detail?.editor).toBe(childEditor);
+        expect(detail?.sourceConditions).toEqual([{ sourceEditor: outerEditor, sourceState: "error" }]);
     });
 
     test("structure tree expands collapsed parents to reveal selected children", async () => {
@@ -2978,7 +3146,7 @@ describe("Shell", () => {
         expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).toContain("Child");
     });
 
-    test("structure tree expands collapsed source states to reveal selected children", async () => {
+    test("structure tree condition modal hides nested source status conditions for the same source", async () => {
         installDom();
 
         const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
@@ -2986,8 +3154,14 @@ describe("Shell", () => {
         class DemoEditor extends Editor {}
 
         const sourceTarget = document.createElement("demo-source");
+        sourceTarget.setAttribute("cms-source", "/api/plans");
+        const wrapperTarget = document.createElement("demo-wrapper");
         const childTarget = document.createElement("demo-child");
+        wrapperTarget.setAttribute(CMS_BINDING_ATTRIBUTES.condition, "$source.loading");
+        wrapperTarget.append(childTarget);
+        sourceTarget.append(wrapperTarget);
         const sourceEditor = new DemoEditor(sourceTarget);
+        const wrapperEditor = new DemoEditor(wrapperTarget);
         const childEditor = new DemoEditor(childTarget);
         const childNode: EditorStructureNode = {
             editor: childEditor,
@@ -2997,25 +3171,35 @@ describe("Shell", () => {
             badges: [],
             children: [],
         };
-        const stateNode: SourceStateStructureNode = {
-            kind: "source-state",
-            sourceEditor,
-            target: sourceTarget,
-            state: "empty",
-            label: ":empty",
-            badges: [],
+        const wrapperNode: EditorStructureNode = {
+            editor: wrapperEditor,
+            target: wrapperTarget,
+            tag: "demo-wrapper",
+            label: "Wrapper",
+            badges: ["loading"],
             children: [childNode],
+        };
+        const sourceNode: EditorStructureNode = {
+            editor: sourceEditor,
+            target: sourceTarget,
+            tag: "demo-source",
+            label: "Source",
+            badges: [],
+            children: [wrapperNode],
         };
         const tree = new StructureTree();
         document.body.append(tree);
-        tree.setStructure([stateNode], null);
-        tree.shadowRoot!.querySelector<HTMLButtonElement>(".toggle")!.click();
+        tree.setStructure([sourceNode], null);
 
-        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).not.toContain("State child");
+        tree.controller.menus.openContextMenu(childNode, 0, 0);
+        tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item")
+            .forEach(button => {
+                if (button.textContent === "Add condition") button.click();
+            });
 
-        tree.setStructure([stateNode], childEditor, [], { scrollSelectedIntoView: true });
-
-        expect(Array.from(tree.shadowRoot!.querySelectorAll(".label")).map(label => label.textContent)).toContain("State child");
+        const picker = tree.shadowRoot!.querySelector("cms-editor-v2-condition-picker")!;
+        expect(picker.shadowRoot!.querySelector(".empty")?.textContent).toBe("No source available.");
+        expect(picker.shadowRoot!.querySelector<HTMLButtonElement>(".apply")!.disabled).toBe(true);
     });
 
     test("structure tree only scrolls selected rows when requested", async () => {
@@ -3090,11 +3274,14 @@ describe("Shell", () => {
 
         const source = document.createElement("section");
         source.setAttribute(CMS_BINDING_ATTRIBUTES.source, "/api/plans as plans");
+        source.setAttribute(CMS_BINDING_ATTRIBUTES.sourceId, "plans");
         source.innerHTML = `
             <article cms-repeat="items as plan" cms-condition="plan.visible" title="Plan {{ plan.title }}">
                 <h2>{{ plan.title }}</h2>
                 <p>{{ unrelated.label }}</p>
             </article>
+            <p class="empty" cms-condition="$sources.plans.empty">No plans</p>
+            <p class="featured-empty" cms-condition="$sources.featured.empty">No featured plans</p>
         `;
         const editor = new Editor(source);
         const shell = new Shell();
@@ -3115,6 +3302,8 @@ describe("Shell", () => {
         expect(article.getAttribute("title")).toBe("Plan");
         expect(article.querySelector("h2")?.textContent).toBe("");
         expect(article.querySelector("p")?.textContent).toBe("{{ unrelated.label }}");
+        expect(source.querySelector(".empty")?.hasAttribute(CMS_BINDING_ATTRIBUTES.condition)).toBe(false);
+        expect(source.querySelector(".featured-empty")?.getAttribute(CMS_BINDING_ATTRIBUTES.condition)).toBe("$sources.featured.empty");
     });
 
     test("shell cleans repeat bindings from child editors when removing a source", async () => {

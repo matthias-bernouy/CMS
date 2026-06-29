@@ -4,12 +4,8 @@ import type {
 } from "@bernouy/cms-content/editor";
 import type {
     EditorStructureNode,
-    SourceStateName,
-    SourceStateStructureNode,
     StructureNode,
 } from "../../../../runtime";
-
-type SourceStatePredicate = (node: StructureNode) => node is SourceStateStructureNode;
 
 export function canDuplicateNode(
     node: EditorStructureNode,
@@ -63,18 +59,10 @@ export function slotChildCount(
 export function parentStructureNode(
     nodes: StructureNode[],
     child: EditorStructureNode,
-    isSourceStateNode: SourceStatePredicate,
-    nodeForEditor: (editor: Editor) => EditorStructureNode | null,
 ): EditorStructureNode | null {
     for (const node of nodes) {
-        if (isSourceStateNode(node)) {
-            if (node.children.includes(child)) return nodeForEditor(node.sourceEditor);
-            const stateParent = parentStructureNode(node.children, child, isSourceStateNode, nodeForEditor);
-            if (stateParent) return stateParent;
-            continue;
-        }
         if (node.children.includes(child)) return node;
-        const parent = parentStructureNode(node.children, child, isSourceStateNode, nodeForEditor);
+        const parent = parentStructureNode(node.children, child);
         if (parent) return parent;
     }
     return null;
@@ -83,31 +71,10 @@ export function parentStructureNode(
 export function nodeForEditor(
     nodes: StructureNode[],
     editor: Editor,
-    isSourceStateNode: SourceStatePredicate,
 ): EditorStructureNode | null {
     return nodes
         .flatMap(node => [node, ...nodeForEditorChildren(node)])
-        .filter((node): node is EditorStructureNode => !isSourceStateNode(node))
         .find(node => node.editor === editor) ?? null;
-}
-
-export function sourceStateKey(
-    keys: WeakMap<HTMLElement, Map<SourceStateName, object>>,
-    node: SourceStateStructureNode,
-): object {
-    let sourceKeys = keys.get(node.sourceEditor.target);
-    if (!sourceKeys) {
-        sourceKeys = new Map();
-        keys.set(node.sourceEditor.target, sourceKeys);
-    }
-
-    let key = sourceKeys.get(node.state);
-    if (!key) {
-        key = {};
-        sourceKeys.set(node.state, key);
-    }
-
-    return key;
 }
 
 function nodeForEditorChildren(node: StructureNode): StructureNode[] {

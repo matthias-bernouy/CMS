@@ -1,11 +1,11 @@
 import type {
     ContentSlot,
     Editor,
+    CmsSourceStatusCondition,
 } from "@bernouy/cms-content/editor";
 
 import type { EditorRuntime } from "../../../../../runtime";
 import { applySlot } from "./insertion";
-import type { SourceStateName } from "../../../../../runtime";
 
 export function canInsertNodeCount(
     parent: Editor,
@@ -55,13 +55,13 @@ export function canInsertSibling(
     runtime: EditorRuntime | null,
     reference: Editor,
     insertedElement: HTMLElement,
-    applySourceState: (element: HTMLElement, sourceState: SourceStateName | undefined) => void,
-    sourceStateForSibling: (reference: Editor) => SourceStateName,
+    applySourceState: (element: HTMLElement, sourceState: CmsSourceStatusCondition[]) => void,
+    sourceStateForSibling: (reference: Editor) => CmsSourceStatusCondition[],
 ): boolean {
     const parent = parentEditor(runtime, reference);
     if (!parent) {
         applySlot(insertedElement, undefined);
-        applySourceState(insertedElement, undefined);
+        applySourceState(insertedElement, []);
         return true;
     }
 

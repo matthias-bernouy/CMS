@@ -26,6 +26,13 @@ export function contextSeparator(): HTMLElement {
     return separator;
 }
 
+export function contextTitle(label: string): HTMLElement {
+    const title = document.createElement("div");
+    title.className = "context-title";
+    title.textContent = label;
+    return title;
+}
+
 export function positionContextMenu(menu: HTMLElement, clientX: number, clientY: number): void {
     const margin = 6;
     const menuBounds = menu.getBoundingClientRect();

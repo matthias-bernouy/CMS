@@ -27,18 +27,7 @@ export type EditorStructureNode = {
 };
 
 export type SourceStateName = CmsSourceState;
-
-export type SourceStateStructureNode = {
-    kind: "source-state";
-    sourceEditor: Editor;
-    target: HTMLElement;
-    state: SourceStateName;
-    label: string;
-    badges: string[];
-    children: EditorStructureNode[];
-};
-
-export type StructureNode = EditorStructureNode | SourceStateStructureNode;
+export type StructureNode = EditorStructureNode;
 
 export type EditorRuntimeSelection = {
     editor: Editor;

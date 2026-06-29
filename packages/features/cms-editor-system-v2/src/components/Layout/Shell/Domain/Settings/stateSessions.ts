@@ -49,7 +49,6 @@ export function exitAllStateSessions(
     nodes: StructureNode[],
 ): void {
     for (const node of flattenStructure(nodes)) {
-        if (isSourceStateNode(node)) continue;
         const sessions = sessionsByEditor.get(node.editor);
         if (!sessions) continue;
 
@@ -62,8 +61,4 @@ export function exitAllStateSessions(
 
 function flattenStructure(nodes: StructureNode[]): StructureNode[] {
     return nodes.flatMap(node => [node, ...flattenStructure(node.children)]);
-}
-
-function isSourceStateNode(node: StructureNode): node is Extract<StructureNode, { kind: "source-state" }> {
-    return node.kind === "source-state";
 }

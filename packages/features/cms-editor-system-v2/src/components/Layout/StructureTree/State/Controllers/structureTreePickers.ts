@@ -1,6 +1,11 @@
-import type { Editor } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, parseSource, type Editor } from "@bernouy/cms-content/editor";
 import type { BlockPickerItem, BlockPickerSlotGroup } from "../../../BlockPickerModal/BlockPickerModal";
-import type { EditorStructureNode, SourceStateStructureNode } from "../../../../../runtime";
+import type { EditorStructureNode } from "../../../../../runtime";
+import {
+    CONDITION_PICKER_APPLY_EVENT,
+    CONDITION_PICKER_REMOVE_EVENT,
+    type ConditionPickerCondition,
+} from "../../../ConditionPicker/ConditionPicker";
 import { openPickerOrEmitSingleMedia, useDefaultTemplate, type StructureBlockPickerContext } from "../../Actions/structureBlockPicker";
 import { openStructureSourcePicker } from "../../Actions/structureSourcePicker";
 import {
@@ -11,7 +16,6 @@ import {
     isSlotFull,
     replaceGroups,
     rootGroups,
-    sourceStateGroups,
     type StructurePickerGroupContext,
 } from "../../Pickers/structurePickerGroups";
 import type { PendingPickerAction } from "../structureTreeTypes";
@@ -32,10 +36,6 @@ export class StructureTreePickers {
         return childGroups(this.groupContext(), node);
     }
 
-    sourceStateGroups(node: SourceStateStructureNode): BlockPickerSlotGroup[] {
-        return sourceStateGroups(this.groupContext(), node);
-    }
-
     replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[] {
         return replaceGroups(this.groupContext(), node);
     }
@@ -51,12 +51,6 @@ export class StructureTreePickers {
     openRootPicker(): void {
         this.tree.state.pendingPickerAction = { action: "add-root" };
         this.tree.refs.blockPicker.open(this.rootGroups(), "Page");
-    }
-
-    openSourceStatePicker(node: SourceStateStructureNode): void {
-        const groups = this.sourceStateGroups(node);
-        if (!this.hasEnabledGroup(groups)) return;
-        this.openPickerOrEmitSingleMedia({ action: "add-source-state-child", editor: node.sourceEditor, sourceState: node.state }, groups, node.label);
     }
 
     openPickerOrEmitSingleMedia(action: PendingPickerAction, groups: BlockPickerSlotGroup[], contextLabel: string): void {
@@ -75,6 +69,29 @@ export class StructureTreePickers {
         });
     }
 
+    openConditionPicker(node: EditorStructureNode): void {
+        this.tree.state.pendingConditionEditor = node.editor;
+        const picker = this.tree.refs.conditionPicker;
+        picker.removeEventListener(CONDITION_PICKER_APPLY_EVENT, this.tree.events.onConditionApply as EventListener);
+        picker.removeEventListener(CONDITION_PICKER_REMOVE_EVENT, this.tree.events.onConditionRemove);
+        picker.addEventListener(CONDITION_PICKER_APPLY_EVENT, this.tree.events.onConditionApply as EventListener);
+        picker.addEventListener(CONDITION_PICKER_REMOVE_EVENT, this.tree.events.onConditionRemove);
+        const sources = this.tree.nodes
+            .sourceAncestorNodes(node)
+            .filter(source => this.tree.nodes.canSetSourceStatusCondition(node, source))
+            .map(source => ({
+                editor:     source.editor,
+                label:      source.label,
+                sourceName: this.sourceName(source),
+            }));
+        picker.open({
+            sources,
+            selected:     this.selectedConditions(node),
+            contextLabel: node.label,
+            canRemove:    this.tree.nodes.sourceStatusConditions(node).length > 0,
+        });
+    }
+
     defaultTemplateItems(): BlockPickerItem[] {
         return defaultTemplateItems(this.groupContext());
     }
@@ -85,7 +102,7 @@ export class StructureTreePickers {
 
     private blockPickerContext(editor?: Editor): StructureBlockPickerContext {
         return {
-            emitAction:              (action, item, slot, sourceState) => this.tree.emitter.emitAction(action, editor, item, slot, sourceState),
+            emitAction:              (action, item, slot) => this.tree.emitter.emitAction(action, editor, item, slot),
             openBlockPicker:         (groups, contextLabel) => this.tree.refs.blockPicker.open(groups, contextLabel),
             setPendingPickerAction: action => {
                 this.tree.state.pendingPickerAction = action;
@@ -106,4 +123,30 @@ export class StructureTreePickers {
             slotForChild:             (parent, child) => this.tree.nodes.slotForChild(parent, child),
         };
     }
+
+    private selectedConditions(node: EditorStructureNode): ConditionPickerCondition[] {
+        const sources = this.tree.nodes.sourceAncestorNodes(node);
+        const selected: ConditionPickerCondition[] = [];
+        for (const condition of this.tree.nodes.sourceStatusConditions(node)) {
+            const source = condition.sourceId
+                ? sources.find(candidate => candidate.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === condition.sourceId)
+                : sources[0];
+            if (!source) continue;
+            selected.push({ sourceEditor: source.editor, sourceState: condition.state });
+        }
+        return selected;
+    }
+
+    private sourceName(source: EditorStructureNode): string | undefined {
+        const binding = parseSource(source.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+        if (!binding) return undefined;
+        const dataSource = this.tree.state.dataSources.find(candidate => sourceUrlMatchesBinding(candidate.url, binding.url));
+        return dataSource?.label ?? binding.alias ?? binding.url;
+    }
+}
+
+function sourceUrlMatchesBinding(sourceUrl: string, bindingUrl: string): boolean {
+    return bindingUrl === sourceUrl
+        || bindingUrl.startsWith(`${sourceUrl}?`)
+        || (sourceUrl.includes("?") && bindingUrl.startsWith(`${sourceUrl}&`));
 }

@@ -1,9 +1,10 @@
 import {
     type Editor,
     type EditorDocument,
+    type CmsSourceState,
 } from "@bernouy/cms-content/editor";
 
-import type { EditorRuntime, EditorDataSource, SourceStateName } from "../../../../../runtime";
+import type { EditorRuntime, EditorDataSource } from "../../../../../runtime";
 import type { StructureTreeActionDetail } from "../../../StructureTree/StructureTree";
 import type { RepeatPicker } from "../../../RepeatPicker/RepeatPicker";
 import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
@@ -41,19 +42,19 @@ export class ShellMutations {
         if (action === "duplicate" && editor) this.editor.duplicateEditor(editor);
         else if (action === "delete" && editor) this.editor.deleteEditor(editor);
         else if (action === "copy" && editor) this.editor.copyEditor(editor);
-        else if (action === "paste-after") this.editor.pasteAfter(editor ?? null, sourceState);
+        else if (action === "paste-after") this.editor.pasteAfter(editor ?? null);
         else if (action === "set-source" && editor && detail.dataSource) this.bindings.setSource(editor, detail.dataSource, detail.sourceBinding);
         else if (action === "remove-source" && editor) this.bindings.removeSource(editor);
         else if (action === "configure-repeat" && editor) this.bindings.openRepeatPicker(editor);
         else if (action === "remove-repeat" && editor) this.bindings.removeRepeat(editor);
-        else if (action === "clear-source-state" && editor && sourceState) this.editor.clearSourceState(editor, sourceState);
+        else if (action === "set-source-status-condition" && editor && sourceEditor && sourceState) this.bindings.setSourceStatusCondition(editor, sourceEditor, sourceState);
+        else if (action === "set-source-status-conditions" && editor && detail.sourceConditions) this.bindings.setSourceStatusConditions(editor, detail.sourceConditions);
+        else if (action === "remove-source-status-condition" && editor) this.bindings.removeSourceStatusCondition(editor);
         else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
             this.editor.moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
         } else if (action === "replace" && editor && blockItem) this.content.replaceEditor(editor, blockItem, detail.slot);
         else if (action === "add-root" && blockItem) this.content.addRoot(blockItem);
-        else if (action === "add-source-state-child" && editor && blockItem && sourceState) {
-            this.content.addSourceStateChild(editor, blockItem, sourceState);
-        } else if (editor && blockItem) this.content.addChild(editor, blockItem, detail.slot);
+        else if (editor && blockItem) this.content.addChild(editor, blockItem, detail.slot);
     }
 
     applyRepeatSelection(path: string, alias: string): void {
@@ -72,10 +73,6 @@ export class ShellMutations {
         this.content.replaceEditor(editor, item, slotName);
     }
 
-    addSourceStateChild(parent: Editor, item: BlockPickerItem, sourceState: SourceStateName): void {
-        this.content.addSourceStateChild(parent, item, sourceState);
-    }
-
     setRepeat(editor: Editor, path: string, alias: string): void {
         this.bindings.setRepeat(editor, path, alias);
     }
@@ -86,5 +83,17 @@ export class ShellMutations {
 
     removeSource(editor: Editor): void {
         this.bindings.removeSource(editor);
+    }
+
+    setSourceStatusCondition(editor: Editor, sourceEditor: Editor, state: CmsSourceState): void {
+        this.bindings.setSourceStatusCondition(editor, sourceEditor, state);
+    }
+
+    setSourceStatusConditions(editor: Editor, conditions: Array<{ sourceEditor: Editor; sourceState: CmsSourceState }>): void {
+        this.bindings.setSourceStatusConditions(editor, conditions);
+    }
+
+    removeSourceStatusCondition(editor: Editor): void {
+        this.bindings.removeSourceStatusCondition(editor);
     }
 }

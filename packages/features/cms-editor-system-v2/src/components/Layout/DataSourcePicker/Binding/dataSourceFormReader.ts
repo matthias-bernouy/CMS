@@ -6,11 +6,13 @@ import type {
 
 export function readSourceBinding(root: ParentNode, source: EditorDataSource): DataSourcePickerSourceBinding {
     const alias = root.querySelector<HTMLInputElement>(".source-alias")?.value.trim();
+    const trigger = selectedTrigger(root.querySelector<HTMLSelectElement>(".source-trigger"));
     const params = readParams(root);
 
     return {
         url: source.url,
         ...(alias ? { alias } : {}),
+        ...(trigger === "submit" ? { trigger } : {}),
         ...(Object.keys(params).length ? { params } : {}),
     };
 }
@@ -35,4 +37,9 @@ function readParams(root: ParentNode): Record<string, DataSourcePickerSourcePara
 function selectedMode(select: HTMLSelectElement): DataSourcePickerSourceParamValue["from"] {
     const value = select.options[select.selectedIndex]?.value;
     return value === "raw" || value === "state" ? value : "queryParam";
+}
+
+function selectedTrigger(select: HTMLSelectElement | null): "auto" | "submit" {
+    const value = select?.options[select.selectedIndex]?.value;
+    return value === "submit" ? value : "auto";
 }

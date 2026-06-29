@@ -7,6 +7,11 @@ import {
     DATA_SOURCE_PICKER_SELECT_EVENT,
     type DataSourcePickerSelectDetail,
 } from "../../../DataSourcePicker/DataSourcePicker";
+import {
+    CONDITION_PICKER_APPLY_EVENT,
+    CONDITION_PICKER_REMOVE_EVENT,
+    type ConditionPickerApplyDetail,
+} from "../../../ConditionPicker/ConditionPicker";
 import type { EditorStructureNode } from "../../../../../runtime";
 import {
     clearStructureDragState,
@@ -21,8 +26,8 @@ import type { StructureTreeController } from "./structureTreeController";
 export class StructureTreeEvents {
     readonly onBlockPickerSelect = (event: CustomEvent<BlockPickerSelectDetail>): void => {
         if (!this.tree.state.pendingPickerAction) return;
-        const { action, editor, sourceState } = this.tree.state.pendingPickerAction;
-        this.tree.emitter.emitAction(action, editor, event.detail.option.item, event.detail.option.slot, sourceState);
+        const { action, editor } = this.tree.state.pendingPickerAction;
+        this.tree.emitter.emitAction(action, editor, event.detail.option.item, event.detail.option.slot);
         this.tree.state.pendingPickerAction = null;
     };
 
@@ -36,6 +41,18 @@ export class StructureTreeEvents {
         if (!this.tree.state.pendingSourceEditor) return;
         this.tree.emitter.emitAction("remove-source", this.tree.state.pendingSourceEditor);
         this.tree.state.pendingSourceEditor = null;
+    };
+
+    readonly onConditionApply = (event: CustomEvent<ConditionPickerApplyDetail>): void => {
+        if (!this.tree.state.pendingConditionEditor) return;
+        this.tree.emitter.emitAction("set-source-status-conditions", this.tree.state.pendingConditionEditor, undefined, undefined, undefined, undefined, undefined, undefined, event.detail.conditions);
+        this.tree.state.pendingConditionEditor = null;
+    };
+
+    readonly onConditionRemove = (): void => {
+        if (!this.tree.state.pendingConditionEditor) return;
+        this.tree.emitter.emitAction("remove-source-status-condition", this.tree.state.pendingConditionEditor);
+        this.tree.state.pendingConditionEditor = null;
     };
 
     readonly onDocumentKeydown = (event: KeyboardEvent): void => {
@@ -60,6 +77,8 @@ export class StructureTreeEvents {
         this.tree.refs.blockPicker.addEventListener(BLOCK_PICKER_SELECT_EVENT, this.onBlockPickerSelect as EventListener);
         this.tree.refs.dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this.onDataSourceSelect as EventListener);
         this.tree.refs.dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this.onDataSourceRemove);
+        this.tree.refs.conditionPicker.addEventListener(CONDITION_PICKER_APPLY_EVENT, this.onConditionApply as EventListener);
+        this.tree.refs.conditionPicker.addEventListener(CONDITION_PICKER_REMOVE_EVENT, this.onConditionRemove);
         this.tree.refs.tree.addEventListener("click", this.onTreeClick);
         this.tree.refs.tree.addEventListener("contextmenu", this.onTreeContextMenu);
     }
@@ -70,6 +89,8 @@ export class StructureTreeEvents {
         this.tree.refs.blockPicker.removeEventListener(BLOCK_PICKER_SELECT_EVENT, this.onBlockPickerSelect as EventListener);
         this.tree.refs.dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this.onDataSourceSelect as EventListener);
         this.tree.refs.dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this.onDataSourceRemove);
+        this.tree.refs.conditionPicker.removeEventListener(CONDITION_PICKER_APPLY_EVENT, this.onConditionApply as EventListener);
+        this.tree.refs.conditionPicker.removeEventListener(CONDITION_PICKER_REMOVE_EVENT, this.onConditionRemove);
         this.tree.refs.tree.removeEventListener("click", this.onTreeClick);
         this.tree.refs.tree.removeEventListener("contextmenu", this.onTreeContextMenu);
     }

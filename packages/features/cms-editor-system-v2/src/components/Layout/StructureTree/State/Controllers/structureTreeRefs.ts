@@ -1,4 +1,5 @@
 import type { BlockPickerModal } from "../../../BlockPickerModal/BlockPickerModal";
+import { ConditionPicker } from "../../../ConditionPicker/ConditionPicker";
 import { DataSourcePicker } from "../../../DataSourcePicker/DataSourcePicker";
 
 export class StructureTreeRefs {
@@ -37,6 +38,15 @@ export class StructureTreeRefs {
         let picker = this.host.shadowRoot!.querySelector<DataSourcePicker>("cms-editor-v2-data-source-picker");
         if (!picker) {
             picker = new DataSourcePicker();
+            this.host.shadowRoot!.append(picker);
+        }
+        return picker;
+    }
+
+    get conditionPicker(): ConditionPicker {
+        let picker = this.host.shadowRoot!.querySelector<ConditionPicker>("cms-editor-v2-condition-picker");
+        if (!picker) {
+            picker = new ConditionPicker();
             this.host.shadowRoot!.append(picker);
         }
         return picker;

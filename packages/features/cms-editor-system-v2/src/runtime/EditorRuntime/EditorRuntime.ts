@@ -1,6 +1,5 @@
 import {
     CMS_BINDING_ATTRIBUTES,
-    CMS_SOURCE_STATES,
     Editor,
     type DataScope,
     type DataField,
@@ -9,8 +8,8 @@ import {
     type EditorDocument,
     type SettingSection,
     parseRepeat,
+    parseSourceStatusConditions,
     parseSource,
-    sourceStateFromElement,
 } from "@bernouy/cms-content/editor";
 import { EditorRegistry } from "../EditorRegistry/EditorRegistry";
 import { createRuntimeEditor } from "./createRuntimeEditor";
@@ -19,18 +18,8 @@ import type {
     EditorRuntimeSelection,
     EditorStructureNode,
     RuntimeManagedEditor,
-    SourceStateName,
-    SourceStateStructureNode,
     StructureNode,
 } from "./types";
-
-const SOURCE_STATE_NAMES: readonly SourceStateName[] = CMS_SOURCE_STATES;
-const SOURCE_STATE_LABELS: Record<SourceStateName, string> = {
-    loaded:  ":loaded",
-    loading: ":loading",
-    empty:   ":empty",
-    error:   ":error",
-};
 
 export class EditorRuntime {
 
@@ -244,36 +233,7 @@ export class EditorRuntime {
             });
         }
 
-        if (parent.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
-            return this._groupSourceChildren(this.registry.getEditor(parent), parent, children);
-        }
-
         return children;
-    }
-
-    private _groupSourceChildren(
-        sourceEditor: Editor | undefined,
-        sourceTarget: HTMLElement,
-        children: EditorStructureNode[],
-    ): StructureNode[] {
-        if (!sourceEditor) return children;
-
-        return SOURCE_STATE_NAMES.map(state => {
-            const stateChildren = children.filter(child => this._sourceStateOf(child.target) === state);
-            return {
-                kind: "source-state",
-                sourceEditor,
-                target: sourceTarget,
-                state,
-                label: SOURCE_STATE_LABELS[state],
-                badges: [],
-                children: stateChildren,
-            } satisfies SourceStateStructureNode;
-        });
-    }
-
-    private _sourceStateOf(target: HTMLElement): SourceStateName {
-        return sourceStateFromElement(target);
     }
 
     private _getStructureBadges(editor: Editor): string[] {
@@ -282,6 +242,10 @@ export class EditorRuntime {
         if (slot) badges.push(slot);
         if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) badges.push("Source");
         if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)) badges.push("Repeat");
+        const condition = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition);
+        const sourceStatuses = [...new Set(parseSourceStatusConditions(condition).map(item => item.state))];
+        if (sourceStatuses.length > 0) badges.push(...sourceStatuses);
+        else if (condition?.trim()) badges.push("condition");
 
         return badges;
     }

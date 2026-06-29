@@ -1,5 +1,6 @@
 import type { Editor } from "@bernouy/cms-content/editor";
 import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
+import type { ConditionPickerCondition } from "../../../ConditionPicker/ConditionPicker";
 import type { DataSourcePickerSourceBinding } from "../../../DataSourcePicker/DataSourcePicker";
 import type { EditorDataSource, SourceStateName } from "../../../../../runtime";
 import type { StructureTreeAction, StructureTreeActionDetail } from "../structureTreeTypes";
@@ -28,6 +29,7 @@ export class StructureTreeEmitter {
         sourceEditor?: Editor,
         dataSource?: EditorDataSource,
         sourceBinding?: DataSourcePickerSourceBinding,
+        sourceConditions?: ConditionPickerCondition[],
     ): void {
         this.host.dispatchEvent(new CustomEvent<StructureTreeActionDetail>("editor-v2:structure-action", {
             bubbles: true,
@@ -39,6 +41,7 @@ export class StructureTreeEmitter {
                 item,
                 dataSource,
                 sourceBinding,
+                sourceConditions,
                 entry: item?.kind === "block" ? item.entry : undefined,
                 slot,
                 sourceState,

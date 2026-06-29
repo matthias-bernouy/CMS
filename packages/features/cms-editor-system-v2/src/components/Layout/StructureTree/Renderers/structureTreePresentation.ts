@@ -1,11 +1,11 @@
 import {
     CMS_BINDING_ATTRIBUTES,
+    CMS_SOURCE_STATES,
     CMS_SNIPPET_TAG,
 } from "@bernouy/cms-content/editor";
 import type { BlockPickerItem } from "../../BlockPickerModal/BlockPickerModal";
 import type {
     EditorStructureNode,
-    SourceStateStructureNode,
     StructureNode,
 } from "../../../../runtime";
 
@@ -28,6 +28,7 @@ export function renderStructureBadge(value: string): HTMLElement {
 }
 
 export function structureBadgeClass(value: string): string {
+    if ((CMS_SOURCE_STATES as readonly string[]).includes(value)) return `badge source-status ${value}`;
     return value === "Source" || value === "Repeat" ? "badge data" : "badge";
 }
 
@@ -37,33 +38,24 @@ export function structureBadgeIcon(value: string): string | null {
     return null;
 }
 
-export function structureIconText(node: StructureNode, isSourceStateNode: (node: StructureNode) => node is SourceStateStructureNode): string {
-    if (isSourceStateNode(node)) return "";
+export function structureIconText(node: StructureNode): string {
     if (node.icon) return node.icon.slice(0, 1).toUpperCase();
     return node.label.slice(0, 1).toUpperCase();
 }
 
-export function structureNodeLabel(node: StructureNode, isSourceStateNode: (node: StructureNode) => node is SourceStateStructureNode): string {
-    if (!isSourceStateNode(node)) return node.label;
+export function structureNodeLabel(node: StructureNode): string {
     return node.label;
 }
 
-export function structureRowClass(node: StructureNode, isSourceStateNode: (node: StructureNode) => node is SourceStateStructureNode): string {
-    if (isSourceStateNode(node)) return "row source-state-row";
+export function structureRowClass(_node: StructureNode): string {
     return "row";
 }
 
-export function structureItemClass(node: StructureNode, isSourceStateNode: (node: StructureNode) => node is SourceStateStructureNode): string {
-    if (isSourceStateNode(node)) {
-        return node.children.length > 0
-            ? `item source-state state-filled state-${node.state}`
-            : `item source-state state-${node.state}`;
-    }
+export function structureItemClass(_node: StructureNode): string {
     return "item";
 }
 
-export function structureIconClass(node: StructureNode, isSourceStateNode: (node: StructureNode) => node is SourceStateStructureNode): string {
-    if (isSourceStateNode(node)) return "icon state-spacer";
+export function structureIconClass(_node: StructureNode): string {
     return "icon";
 }
 

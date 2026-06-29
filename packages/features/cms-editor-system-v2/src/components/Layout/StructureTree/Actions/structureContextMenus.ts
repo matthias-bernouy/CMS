@@ -2,16 +2,13 @@ import { CMS_BINDING_ATTRIBUTES } from "@bernouy/cms-content/editor";
 import type { BlockPickerSlotGroup } from "../../BlockPickerModal/BlockPickerModal";
 import type {
     EditorStructureNode,
-    SourceStateName,
-    SourceStateStructureNode,
     StructureNode,
 } from "../../../../runtime";
 import { contextMenuButton, contextSeparator, positionContextMenu } from "./structureContextMenuItems";
 
 type PendingPickerAction = {
-    action: "add-child" | "add-source-state-child" | "add-root" | "replace";
+    action: "add-child" | "add-root" | "replace";
     editor?: EditorStructureNode["editor"];
-    sourceState?: SourceStateName;
 };
 
 export type StructureContextMenuContext = {
@@ -20,21 +17,19 @@ export type StructureContextMenuContext = {
     canDuplicate(node: EditorStructureNode): boolean;
     childGroups(node: EditorStructureNode): BlockPickerSlotGroup[];
     closeContextMenu(): void;
-    emitAction(action: "copy" | "paste-after" | "duplicate" | "delete" | "remove-repeat" | "configure-repeat" | "clear-source-state", editor?: EditorStructureNode["editor"], sourceState?: SourceStateName): void;
+    emitAction(action: "copy" | "paste-after" | "duplicate" | "delete" | "remove-repeat" | "configure-repeat" | "remove-source-status-condition", editor?: EditorStructureNode["editor"]): void;
     hasEnabledGroup(groups: BlockPickerSlotGroup[]): boolean;
     isSnippetNode(node: EditorStructureNode): boolean;
-    isSourceStateNode(node: StructureNode): node is SourceStateStructureNode;
     openPickerOrEmitSingleMedia(action: PendingPickerAction, groups: BlockPickerSlotGroup[], contextLabel: string): void;
+    openConditionPicker(node: EditorStructureNode): void;
     openRootPicker(): void;
     openSourcePicker(node: EditorStructureNode): void;
-    openSourceStatePicker(node: SourceStateStructureNode): void;
     redirectToSnippetEditor(id: string): void;
     repeatableTargets: WeakSet<HTMLElement>;
     replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[];
     rootGroups(): BlockPickerSlotGroup[];
     sourceActionLabel(node: EditorStructureNode): string;
     sourceDataSourceCount(): number;
-    sourceStateGroups(node: SourceStateStructureNode): BlockPickerSlotGroup[];
     snippetItemForNode(node: EditorStructureNode): { id: string } | null;
 };
 
@@ -46,10 +41,6 @@ export function openStructureContextMenu(
     context: StructureContextMenuContext,
 ): void {
     context.closeContextMenu();
-    if (context.isSourceStateNode(node)) {
-        openSourceStateContextMenu(node, clientX, clientY, menu, context);
-        return;
-    }
 
     menu.replaceChildren();
     const sourceAction = contextMenuButton(context.sourceActionLabel(node), () => {
@@ -75,6 +66,7 @@ export function openStructureContextMenu(
         contextSeparator(),
         sourceAction,
         repeatAction,
+        contextMenuButton("Add condition", () => context.openConditionPicker(node), context.closeContextMenu),
         contextSeparator(),
         contextMenuButton("Replace", () => {
             context.openPickerOrEmitSingleMedia({ action: "replace", editor: node.editor }, context.replaceGroups(node), node.label);
@@ -90,23 +82,6 @@ export function openRootContextMenu(clientX: number, clientY: number, menu: HTML
     menu.replaceChildren(
         contextMenuButton("Add block", () => context.openRootPicker(), context.closeContextMenu, undefined, !context.hasEnabledGroup(context.rootGroups())),
         contextMenuButton("Paste", () => context.emitAction("paste-after"), context.closeContextMenu),
-    );
-    appendPositionedMenu(menu, clientX, clientY, context);
-}
-
-function openSourceStateContextMenu(
-    node: SourceStateStructureNode,
-    clientX: number,
-    clientY: number,
-    menu: HTMLElement,
-    context: StructureContextMenuContext,
-): void {
-    menu.replaceChildren(
-        contextMenuButton("Add block", () => {
-            context.openSourceStatePicker(node);
-        }, context.closeContextMenu, undefined, !context.hasEnabledGroup(context.sourceStateGroups(node))),
-        contextMenuButton("Paste", () => context.emitAction("paste-after", node.sourceEditor, node.state), context.closeContextMenu),
-        contextMenuButton("Clear state", () => context.emitAction("clear-source-state", node.sourceEditor, node.state), context.closeContextMenu, "danger", node.children.length === 0),
     );
     appendPositionedMenu(menu, clientX, clientY, context);
 }

@@ -380,7 +380,7 @@ describe("EditorRuntime", () => {
         ]);
     });
 
-    test("groups cms-source children by render state in the structure", () => {
+    test("keeps cms-source children ungrouped and badges source status conditions", () => {
         const { document, HTMLElement } = parseHTML(`
             <!DOCTYPE html>
             <html>
@@ -388,9 +388,9 @@ describe("EditorRuntime", () => {
                     <main id="content-root">
                         <x-parent id="parent" cms-source="/api/plans">
                             <x-child id="success"></x-child>
-                            <x-child id="loading-a" cms-slot="loading"></x-child>
-                            <x-child id="loading-b" cms-slot="loading"></x-child>
-                            <x-child id="error" cms-slot="error"></x-child>
+                            <x-child id="loading-a" cms-condition="$source.loading"></x-child>
+                            <x-child id="loading-b" cms-condition="$source.loading"></x-child>
+                            <x-child id="error" cms-condition="$source.error"></x-child>
                         </x-parent>
                     </main>
                 </body>
@@ -417,16 +417,14 @@ describe("EditorRuntime", () => {
         });
 
         const source = runtime.getStructure()[0]!;
-        expect(source.children.map(node => node.label)).toEqual([":loaded", ":loading", ":empty", ":error"]);
-        expect(source.children[0]!.children.map(node => node.target.id)).toEqual(["success"]);
-        expect(source.children[1]!.children.map(node => node.target.id)).toEqual(["loading-a", "loading-b"]);
-        expect(source.children[2]!.children).toEqual([]);
-        expect(source.children[3]!.children.map(node => node.target.id)).toEqual(["error"]);
-        expect(source.children[1]!.children[0]!.badges).toEqual([]);
-        expect(source.children[3]!.children[0]!.badges).toEqual([]);
+        expect(source.children.map(node => node.target.id)).toEqual(["success", "loading-a", "loading-b", "error"]);
+        expect(source.children[0]!.badges).toEqual([]);
+        expect(source.children[1]!.badges).toEqual(["loading"]);
+        expect(source.children[2]!.badges).toEqual(["loading"]);
+        expect(source.children[3]!.badges).toEqual(["error"]);
     });
 
-    test("keeps plain source children ungrouped and appends empty state groups", () => {
+    test("keeps plain source children ungrouped without empty state groups", () => {
         const { document, HTMLElement } = parseHTML(`
             <!DOCTYPE html>
             <html>
@@ -461,9 +459,7 @@ describe("EditorRuntime", () => {
         });
 
         const source = runtime.getStructure()[0]!;
-        expect(source.children.map(node => node.label)).toEqual([":loaded", ":loading", ":empty", ":error"]);
-        expect(source.children[0]!.children.map(node => node.target.id)).toEqual(["one", "two"]);
-        expect(source.children.slice(1).every(node => node.children.length === 0)).toBe(true);
+        expect(source.children.map(node => node.target.id)).toEqual(["one", "two"]);
     });
 
     test("declares data scopes from named cms-repeat attributes", () => {

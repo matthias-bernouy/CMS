@@ -5,7 +5,6 @@ export type {
     EditorStructureNode,
     RuntimeManagedEditor,
     SourceStateName,
-    SourceStateStructureNode,
     StructureNode,
 } from "./EditorRuntime/types";
 export {

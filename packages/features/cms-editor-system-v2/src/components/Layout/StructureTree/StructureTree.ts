@@ -1,4 +1,5 @@
 import "../DataSourcePicker/DataSourcePicker";
+import "../ConditionPicker/ConditionPicker";
 import type { Editor, EditorCatalog } from "@bernouy/cms-content/editor";
 import type { BlockPickerItem } from "../BlockPickerModal/BlockPickerModal";
 import type { EditorDataSource, StructureNode } from "../../../runtime";

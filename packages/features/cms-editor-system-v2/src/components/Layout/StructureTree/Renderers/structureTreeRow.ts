@@ -1,7 +1,6 @@
 import type { Editor } from "@bernouy/cms-content/editor";
 import type {
     EditorStructureNode,
-    SourceStateStructureNode,
     StructureNode,
 } from "../../../../runtime";
 
@@ -12,7 +11,6 @@ export type StructureTreeRowRenderContext = {
     iconClass(node: StructureNode): string;
     iconText(node: StructureNode): string;
     isCollapsed(node: StructureNode): boolean;
-    isSourceStateNode(node: StructureNode): node is SourceStateStructureNode;
     itemClass(node: StructureNode): string;
     nodeLabel(node: StructureNode): string;
     onDragOver(node: EditorStructureNode, row: HTMLElement, event: DragEvent): void;
@@ -22,7 +20,6 @@ export type StructureTreeRowRenderContext = {
     renderBadge(value: string): HTMLElement;
     rowClass(node: StructureNode): string;
     selectEditor(editor: Editor): void;
-    sourceStateAddButton(node: SourceStateStructureNode): HTMLButtonElement;
     toggleBadges(node: StructureNode): void;
     toggleNode(node: StructureNode): void;
     trackRenderedRow(node: StructureNode, row: HTMLElement): void;
@@ -41,15 +38,12 @@ export function renderStructureTreeRow(
 
     appendToggle(row, node, context);
 
-    const item = context.isSourceStateNode(node)
-        ? document.createElement("div")
-        : document.createElement("button");
+    const item = document.createElement("button");
     item.className = context.itemClass(node);
-    item.draggable = !context.isSourceStateNode(node);
-    if (!context.isSourceStateNode(node) && node.editor === context.selectedEditor) item.classList.add("selected");
-    if (!context.isSourceStateNode(node)) (item as HTMLButtonElement).type = "button";
+    item.draggable = true;
+    if (node.editor === context.selectedEditor) item.classList.add("selected");
+    item.type = "button";
     item.addEventListener("click", () => {
-        if (context.isSourceStateNode(node)) return;
         context.selectEditor(node.editor);
     });
     item.addEventListener("contextmenu", (event) => {
@@ -58,13 +52,11 @@ export function renderStructureTreeRow(
         event.stopPropagation();
         context.openContextMenu(node, mouseEvent.clientX, mouseEvent.clientY);
     });
-    if (!context.isSourceStateNode(node)) {
-        item.addEventListener("dragstart", (event) => context.onDragStart(node, event as DragEvent));
-        item.addEventListener("dragover", (event) => context.onDragOver(node, row, event as DragEvent));
-        item.addEventListener("dragleave", () => context.clearDropRow());
-        item.addEventListener("drop", (event) => context.onDrop(node, event as DragEvent));
-        item.addEventListener("dragend", () => context.clearDragState());
-    }
+    item.addEventListener("dragstart", (event) => context.onDragStart(node, event as DragEvent));
+    item.addEventListener("dragover", (event) => context.onDragOver(node, row, event as DragEvent));
+    item.addEventListener("dragleave", () => context.clearDropRow());
+    item.addEventListener("drop", (event) => context.onDrop(node, event as DragEvent));
+    item.addEventListener("dragend", () => context.clearDragState());
 
     const icon = document.createElement("span");
     icon.className = context.iconClass(node);
@@ -95,8 +87,6 @@ function appendToggle(row: HTMLElement, node: StructureNode, context: StructureT
             context.toggleNode(node);
         });
         row.append(toggle);
-    } else if (context.isSourceStateNode(node)) {
-        row.append(document.createElement("span"));
     } else {
         const spacer = document.createElement("span");
         spacer.className = "toggle-spacer";
@@ -127,9 +117,5 @@ function appendBadges(badges: HTMLElement, node: StructureNode, context: Structu
             context.toggleBadges(node);
         });
         badges.append(more);
-    }
-
-    if (context.isSourceStateNode(node) && node.children.length === 0) {
-        badges.append(context.sourceStateAddButton(node));
     }
 }

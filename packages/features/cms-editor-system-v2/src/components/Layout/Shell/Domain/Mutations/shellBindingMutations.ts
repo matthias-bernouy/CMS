@@ -1,5 +1,6 @@
 import {
     CMS_BINDING_CORE_TAG,
+    type CmsSourceState,
     type Editor,
 } from "@bernouy/cms-content/editor";
 
@@ -9,8 +10,11 @@ import {
     confirmRemoveSourceDependents,
     removeRepeat,
     removeSource,
+    removeSourceStatusCondition as removeSourceStatusConditionBinding,
     setRepeat,
     setSource,
+    setSourceStatusCondition as setSourceStatusConditionBinding,
+    setSourceStatusConditions as setSourceStatusConditionsBinding,
     type SourceBinding,
 } from "./sourceBindings";
 
@@ -54,6 +58,21 @@ export class ShellBindingMutations {
 
     setRepeat(editor: Editor, path: string, alias: string): void {
         setRepeat(editor, path, alias);
+        this.reload(editor.target);
+    }
+
+    setSourceStatusCondition(editor: Editor, sourceEditor: Editor, state: CmsSourceState): void {
+        if (!setSourceStatusConditionBinding(editor, sourceEditor, state)) return;
+        this.reload(editor.target);
+    }
+
+    setSourceStatusConditions(editor: Editor, conditions: Array<{ sourceEditor: Editor; sourceState: CmsSourceState }>): void {
+        if (!setSourceStatusConditionsBinding(editor, conditions)) return;
+        this.reload(editor.target);
+    }
+
+    removeSourceStatusCondition(editor: Editor): void {
+        if (!removeSourceStatusConditionBinding(editor)) return;
         this.reload(editor.target);
     }
 

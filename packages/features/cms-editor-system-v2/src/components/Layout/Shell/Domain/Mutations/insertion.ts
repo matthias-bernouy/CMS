@@ -1,10 +1,10 @@
 import {
-    applySourceState,
+    applySourceStatusConditions,
     CMS_SNIPPET_TAG,
+    type CmsSourceStatusCondition,
     type EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
 
-import type { SourceStateName } from "../../../../../runtime";
 import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
 
 export type ContentInsertion = {
@@ -18,7 +18,7 @@ export function createInsertion(
     item: BlockPickerItem,
     snippetItems: Array<Extract<BlockPickerItem, { kind: "snippet" }>>,
     slotName?: string,
-    sourceState?: SourceStateName,
+    sourceStatusConditions?: CmsSourceStatusCondition[],
 ): ContentInsertion | null {
     if (!document) return null;
     if (item.kind === "media") return null;
@@ -28,7 +28,7 @@ export function createInsertion(
         const slotElements = slotElementChildren(fragment);
         for (const child of slotElements) {
             applySlot(child, slotName);
-            applySourceState(child, sourceState ?? "loaded");
+            applyCondition(child, sourceStatusConditions);
         }
         const selectionTarget = slotElements.find(child => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements[0] ?? null;
         if (!selectionTarget) return null;
@@ -44,7 +44,7 @@ export function createInsertion(
         snippet.setAttribute("identifier", item.identifier);
         snippet.innerHTML = item.content;
         applySlot(snippet, slotName);
-        applySourceState(snippet, sourceState ?? "loaded");
+        applyCondition(snippet, sourceStatusConditions);
         const fragment = document.createDocumentFragment();
         fragment.append(snippet);
         return {
@@ -61,7 +61,7 @@ export function createInsertion(
     const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
         applySlot(child, slotName);
-        applySourceState(child, sourceState ?? "loaded");
+        applyCondition(child, sourceStatusConditions);
     }
 
     const selectionTarget = slotElements[0] ?? null;
@@ -80,6 +80,10 @@ export function applySlot(element: HTMLElement, slotName: string | undefined): v
     } else {
         element.removeAttribute("slot");
     }
+}
+
+export function applyCondition(element: HTMLElement, sourceStatusConditions: CmsSourceStatusCondition[] | undefined): void {
+    if (sourceStatusConditions?.length) applySourceStatusConditions(element, sourceStatusConditions);
 }
 
 export function snippetItems(items: BlockPickerItem[]): Array<Extract<BlockPickerItem, { kind: "snippet" }>> {

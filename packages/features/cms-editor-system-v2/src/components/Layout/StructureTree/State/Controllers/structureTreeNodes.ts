@@ -1,6 +1,14 @@
-import type { ContentSlot, Editor } from "@bernouy/cms-content/editor";
+import {
+    CMS_BINDING_ATTRIBUTES,
+    sourceStatusConditionDetailsFromElement,
+    sourceStatusConditionsFromElement,
+    type ContentSlot,
+    type Editor,
+    type CmsSourceState,
+    type CmsSourceStatusCondition,
+} from "@bernouy/cms-content/editor";
 import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
-import type { EditorDataSource, EditorStructureNode, SourceStateStructureNode, StructureNode } from "../../../../../runtime";
+import type { EditorDataSource, EditorStructureNode, StructureNode } from "../../../../../runtime";
 import {
     canDeleteNode,
     canDuplicateNode,
@@ -9,7 +17,6 @@ import {
     sameSlot,
     slotChildCount,
     slotForChild,
-    sourceStateKey,
 } from "../structureNodeRelations";
 import {
     editorChildrenOf,
@@ -54,19 +61,19 @@ export class StructureTreeNodes {
     }
 
     editorChildrenOf(parent: EditorStructureNode): EditorStructureNode[] {
-        return editorChildrenOf(parent, node => this.isSourceStateNode(node));
+        return editorChildrenOf(parent);
     }
 
     parentNode(child: EditorStructureNode): EditorStructureNode | null {
-        return parentStructureNode(this.state.nodes, child, node => this.isSourceStateNode(node), editor => this.nodeForEditor(editor));
+        return parentStructureNode(this.state.nodes, child);
     }
 
     nodeForEditor(editor: Editor): EditorStructureNode | null {
-        return nodeForEditor(this.state.nodes, editor, node => this.isSourceStateNode(node));
+        return nodeForEditor(this.state.nodes, editor);
     }
 
     isDescendantNode(candidate: EditorStructureNode, parent: EditorStructureNode): boolean {
-        return isDescendantStructureNode(candidate, parent, node => this.isSourceStateNode(node));
+        return isDescendantStructureNode(candidate, parent);
     }
 
     visibleNodes(nodes = this.state.nodes, depth = 0): { item: StructureNode; depth: number }[] {
@@ -75,7 +82,7 @@ export class StructureTreeNodes {
 
     expandPathToSelected(): void {
         if (!this.state.selectedEditor) return;
-        const path = pathToEditor(this.state.nodes, this.state.selectedEditor, node => this.isSourceStateNode(node));
+        const path = pathToEditor(this.state.nodes, this.state.selectedEditor);
         if (!path) return;
         for (const node of path.slice(0, -1)) this.state.collapsedTargets.delete(this.nodeCollapseKey(node));
     }
@@ -104,7 +111,7 @@ export class StructureTreeNodes {
 
     setRepeatableTargets(targets: HTMLElement[]): void {
         for (const node of flattenStructureNodes(this.state.nodes)) {
-            if (!this.isSourceStateNode(node) && !targets.includes(node.target)) this.state.repeatableTargets.delete(node.target);
+            if (!targets.includes(node.target)) this.state.repeatableTargets.delete(node.target);
         }
         for (const target of targets) this.state.repeatableTargets.add(target);
     }
@@ -117,26 +124,79 @@ export class StructureTreeNodes {
         return flattenStructureNodes(nodes);
     }
 
-    isSourceStateNode(node: StructureNode): node is SourceStateStructureNode {
-        return node.kind === "source-state";
-    }
-
     nodeCollapseKey(node: StructureNode): HTMLElement | object {
-        return this.isSourceStateNode(node) ? sourceStateKey(this.state.sourceStateKeys, node) : node.target;
+        return node.target;
     }
 
     nodeBadgeKey(node: StructureNode): HTMLElement | object {
         return this.nodeCollapseKey(node);
     }
 
-    iconText(node: StructureNode): string { return structureIconText(node, value => this.isSourceStateNode(value)); }
-    nodeLabel(node: StructureNode): string { return structureNodeLabel(node, value => this.isSourceStateNode(value)); }
-    rowClass(node: StructureNode): string { return structureRowClass(node, value => this.isSourceStateNode(value)); }
-    itemClass(node: StructureNode): string { return structureItemClass(node, value => this.isSourceStateNode(value)); }
-    iconClass(node: StructureNode): string { return structureIconClass(node, value => this.isSourceStateNode(value)); }
+    nearestSourceNode(node: EditorStructureNode): EditorStructureNode | null {
+        return this.sourceAncestorNodes(node)[0] ?? null;
+    }
+
+    sourceAncestorNodes(node: EditorStructureNode): EditorStructureNode[] {
+        const sources: EditorStructureNode[] = [];
+        for (let current = this.parentNode(node); current; current = this.parentNode(current)) {
+            if (current.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) sources.push(current);
+        }
+        return sources;
+    }
+
+    sourceStatusCondition(node: EditorStructureNode): CmsSourceState | null {
+        return sourceStatusConditionDetailsFromElement(node.target)?.state ?? null;
+    }
+
+    sourceStatusConditionDetails(node: EditorStructureNode): CmsSourceStatusCondition | null {
+        return sourceStatusConditionDetailsFromElement(node.target);
+    }
+
+    sourceStatusConditions(node: EditorStructureNode): CmsSourceStatusCondition[] {
+        return sourceStatusConditionsFromElement(node.target);
+    }
+
+    canSetSourceStatusCondition(node: EditorStructureNode, source: EditorStructureNode | null = this.nearestSourceNode(node)): boolean {
+        if (!source) return false;
+        if (!source.target.contains(node.target) || source.target === node.target) return false;
+        if (hasNonSourceStatusCondition(node.target)) return false;
+        return !hasSourceStatusConditionAncestor(node.target, source.target);
+    }
+
+    iconText(node: StructureNode): string { return structureIconText(node); }
+    nodeLabel(node: StructureNode): string { return structureNodeLabel(node); }
+    rowClass(node: StructureNode): string { return structureRowClass(node); }
+    itemClass(node: StructureNode): string { return structureItemClass(node); }
+    iconClass(node: StructureNode): string { return structureIconClass(node); }
     sourceActionLabel(node: EditorStructureNode): string { return sourceActionLabel(node); }
     isSnippetNode(node: EditorStructureNode): boolean { return isSnippetNode(node); }
     snippetItemForNode(node: EditorStructureNode): Extract<BlockPickerItem, { kind: "snippet" }> | null {
         return snippetItemForNode(node, this.state.insertItems);
     }
+}
+
+function nearestSourceAncestor(target: HTMLElement): HTMLElement | null {
+    for (let current = target.parentElement; current; current = current.parentElement) {
+        if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) return current;
+    }
+    return null;
+}
+
+function hasSourceStatusConditionAncestor(target: HTMLElement, source: HTMLElement): boolean {
+    for (let current = target.parentElement; current && current !== source; current = current.parentElement) {
+        if (sourceStatusConditionTargetsSource(current, source)) return true;
+    }
+    return false;
+}
+
+function hasNonSourceStatusCondition(target: HTMLElement): boolean {
+    return target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0;
+}
+
+function sourceStatusConditionTargetsSource(target: HTMLElement, source: HTMLElement): boolean {
+    const conditions = sourceStatusConditionsFromElement(target);
+    return conditions.some(condition => {
+        if (condition.sourceId) return condition.sourceId === source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
+        return nearestSourceAncestor(target) === source;
+    });
 }

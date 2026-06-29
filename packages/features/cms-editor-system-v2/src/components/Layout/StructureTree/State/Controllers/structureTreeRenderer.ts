@@ -1,4 +1,4 @@
-import type { SourceStateStructureNode, StructureNode } from "../../../../../runtime";
+import type { StructureNode } from "../../../../../runtime";
 import { renderEmptyStructureTree } from "../../Renderers/structureEmptyTree";
 import { renderStructureBadge } from "../../Renderers/structureTreePresentation";
 import { renderStructureTreeRow } from "../../Renderers/structureTreeRow";
@@ -40,7 +40,6 @@ export class StructureTreeRenderer {
             iconClass:            value => this.tree.nodes.iconClass(value),
             iconText:             value => this.tree.nodes.iconText(value),
             isCollapsed:          value => this.tree.nodes.isCollapsed(value),
-            isSourceStateNode:    value => this.tree.nodes.isSourceStateNode(value),
             itemClass:            value => this.tree.nodes.itemClass(value),
             nodeLabel:            value => this.tree.nodes.nodeLabel(value),
             onDragOver:           (value, row, event) => this.tree.events.onDragOver(value, row, event),
@@ -50,25 +49,11 @@ export class StructureTreeRenderer {
             renderBadge:          value => renderStructureBadge(value),
             rowClass:             value => this.tree.nodes.rowClass(value),
             selectEditor:         editor => this.tree.emitter.selectEditor(editor),
-            sourceStateAddButton: value => this.sourceStateAddButton(value),
             toggleBadges:         value => this.toggleBadges(value),
             toggleNode:           value => this.toggleNode(value),
             trackRenderedRow:     (value, row) => this.trackRenderedRow(value, row),
             visibleBadges:        value => this.tree.nodes.visibleBadges(value),
         });
-    }
-
-    sourceStateAddButton(node: SourceStateStructureNode): HTMLButtonElement {
-        const button = document.createElement("button");
-        button.className = "state-add";
-        button.type = "button";
-        button.textContent = "+";
-        button.setAttribute("aria-label", `Add ${node.state} state content`);
-        button.addEventListener("click", (event) => {
-            event.stopPropagation();
-            this.tree.pickers.openSourceStatePicker(node);
-        });
-        return button;
     }
 
     toggleNode(node: StructureNode): void {

@@ -44,22 +44,13 @@ export function renderStructure(
 }
 
 export function decorateStructure(nodes: StructureNode[], insertItems: BlockPickerItem[]): StructureNode[] {
-    return nodes.map(node => {
-        if (isSourceStateNode(node)) {
-            return {
-                ...node,
-                children: decorateEditorStructure(node.children, insertItems),
-            };
-        }
-
-        return decorateEditorStructureNode(node, insertItems);
-    });
+    return nodes.map(node => decorateEditorStructureNode(node, insertItems));
 }
 
 export function findStructureNodeLabel(runtime: EditorRuntime | null, editor: Editor): string | null {
     const visit = (nodes: StructureNode[]): string | null => {
         for (const node of nodes) {
-            if (!isSourceStateNode(node) && node.editor === editor) return node.label;
+            if (node.editor === editor) return node.label;
             const childLabel = visit(node.children);
             if (childLabel) return childLabel;
         }
@@ -67,10 +58,6 @@ export function findStructureNodeLabel(runtime: EditorRuntime | null, editor: Ed
     };
 
     return runtime ? visit(runtime.getStructure()) : null;
-}
-
-export function isSourceStateNode(node: StructureNode): node is Extract<StructureNode, { kind: "source-state" }> {
-    return node.kind === "source-state";
 }
 
 function decorateEditorStructure(nodes: EditorStructureNode[], insertItems: BlockPickerItem[]): EditorStructureNode[] {
@@ -106,7 +93,6 @@ function snippetStructureDetails(
 
 function repeatableTargets(runtime: EditorRuntime, nodes: StructureNode[]): HTMLElement[] {
     return flattenStructure(nodes)
-        .filter((node): node is EditorStructureNode => !isSourceStateNode(node))
         .filter(node => hasArrayFields(runtime.registry.collectDataScopes(node.target)))
         .map(node => node.target);
 }

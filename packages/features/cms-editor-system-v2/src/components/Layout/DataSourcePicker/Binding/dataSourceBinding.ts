@@ -9,6 +9,7 @@ export type DataSourcePickerSourceBinding = {
     url: string;
     alias?: string;
     params?: Record<string, DataSourcePickerSourceParamValue>;
+    trigger?: "auto" | "submit";
 };
 
 export function sourceForBinding(
