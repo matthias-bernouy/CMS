@@ -27,7 +27,7 @@ function makeSystem() {
             getAllPages: async () => [],
             getAllSnippets: async () => [],
         },
-        cache: { delete: () => {} },
+        cache: { delete: () => {}, deleteMatching: () => {} },
     } as any;
 }
 

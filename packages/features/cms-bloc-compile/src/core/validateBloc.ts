@@ -105,8 +105,7 @@ function checkNoHardcodedDefine(source: string, fileLabel: string, expectedTag: 
  *
  * We reject the mutation patterns at push time and steer authors toward
  * `<a href>` (static nav) or `history.pushState` (SPA-style transitions),
- * both of which the editor DOES intercept. See cms-bloc-development.md
- * rule 9 for the full pattern guide.
+ * both of which the editor DOES intercept.
  */
 function checkNoLocationMutation(source: string, fileLabel: string): string[] {
     const PATTERNS: { name: string; re: RegExp }[] = [

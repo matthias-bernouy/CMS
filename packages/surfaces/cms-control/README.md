@@ -99,7 +99,7 @@ new ControlCms(
     runner:              Runner,
     repository:          CmsRepository,
     auth:                Authentication<CMS_ROLES>,
-    configuration:       { deliveryUrl?: string } = {},
+    options:             { publicAuth?: PublicAuthRoutesConfig<CMS_ROLES>; integrations?: IntegrationDefinition[] } = {},
     cache?:              Cache,
     secrets?:            SecretStore,
     filesMetadata?:      CmsFilesMetadataRepository,
@@ -115,7 +115,7 @@ new ControlCms(
 )
 ```
 
-The first four args are required. Each missing optional repo / store
+The first three args are required. Each missing optional repo / store
 silently disables the admin surface that needs it:
 
 | Optional dep         | Disabling effect                              |

@@ -13,6 +13,8 @@
 
 // ── Admin composition root ─────────────────────────────────────────────
 export { ControlCms, ControlCms as Cms } from "./src/ControlCms";
+export type { ControlCmsOptions } from "./src/ControlCms";
+export type { IntegrationDefinition } from "@bernouy/cms-integrations";
 
 // Browser-safe bloc authoring symbols live in two sub-entries:
 //   • `@bernouy/cms-control/component` — exposes only `Component`.

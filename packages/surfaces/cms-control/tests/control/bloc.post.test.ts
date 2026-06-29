@@ -194,14 +194,15 @@ describe("bloc.post", () => {
         expect(createBlocCalls).toHaveLength(0);
     });
 
-    test("accepts p9r-* bloc tags", async () => {
+    test("400 when tag uses reserved prefix p9r-*", async () => {
         const { cms, createBlocCalls } = makeSystem();
         const res = await importBloc(
             makeRequest({ name: "My", tag: "p9r-foo", group: "g", viewJS: viewFile() }),
             cms
         );
-        expect(res.status).toBe(200);
-        expect(createBlocCalls[0]?.bloc.id).toBe("p9r-foo");
+        expect(res.status).toBe(400);
+        expect(await res.text()).toMatch(/reserved prefix/);
+        expect(createBlocCalls).toHaveLength(0);
     });
 
     test("400 when source has hardcoded customElements.define", async () => {
