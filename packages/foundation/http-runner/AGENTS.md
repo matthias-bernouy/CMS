@@ -1,80 +1,43 @@
 # @bernouy/http-runner
 
-`Runner` implementation backed by `Bun.serve`. Two files:
-`src/BunRunner.ts` (the runner itself) and `src/registerStaticFolder.ts`
-(walk-and-register-each-file helper).
+Foundation HTTP mounting seam. It owns the `Runner` interface, `BunRunner`,
+cache helpers, compression, CSP helpers, request IP capture, and test server
+utilities.
 
-## What it implements
+## Boundaries
 
-The `Runner` contract from `@bernouy/core` — verb routes, prefix groups,
-middlewares, default endpoint, IP capture, dynamic route removal. The
-runner is request-driven: `start(port = 3000)` opens `Bun.serve` and
-matches per request. No route compilation step.
+- This package is CMS-agnostic. Do not import `@bernouy/cms-*` packages.
+- Root export exposes the server runner and shared HTTP helpers.
+- `./html` is the browser-safe helper subpath. Keep it free of Bun/Node server
+  imports.
+- `./testing` exposes test server helpers only.
 
-## Routing
+## Runner Semantics
 
-- **Exact + dynamic segments only** (`/article/:id`). No regex, no
-  catch-all wildcards. `matchPath` splits on `/` and accepts a part if
-  it starts with `:` or is literally equal.
-- **Method + path lookup is linear**, in registration order. First match
+- `BunRunner` matches routes lazily per request. Routes added after `start()`
+  are honored.
+- Exact and `:param` path segments are supported. No regex or catch-all routing.
+- Route lookup is linear by method/path registration order. First match wins.
+- Default endpoints run only when no route matches. The deepest matching prefix
   wins.
-- **Default endpoint** runs only when no route matches; the deepest
-  matching prefix wins (`defaultEndpoints.sort((a, b) => b.prefix.length - a.prefix.length)`).
-  Used by `cms` Delivery to fall through to on-demand page rendering.
-- **`removeRoutesByPathPrefix(prefix)`** is the multi-tenant teardown
-  hook: drops every route + default endpoint whose path equals the
-  prefix or descends from it. Global middlewares are kept.
+- `removeRoutesByPathPrefix(prefix)` removes routes and default endpoints under
+  that prefix. It does not clear global middlewares.
 
-## Groups and `basePath`
+## Groups
 
-`group(prefix, callback, middlewares)` builds a **scoped runner** that
-shares state (routes, middlewares, default endpoints) with the parent
-but exposes a normalized `basePath`. Three things to know:
+`group(prefix, callback, middlewares)` creates a scoped runner sharing the
+parent route/default endpoint arrays while exposing a normalized `basePath`.
 
-- The trailing `/` is stripped so a `group("/cms", r => r.group("/", …))`
-  doesn't propagate a double slash into `{{BASE_PATH}}` substitutions
-  downstream (would produce `/cms//assets/foo.css`).
-- Children write back into the parent's `routes` / `defaultEndpoints`
-  arrays — there is no per-group registry. `removeRoutesByPathPrefix`
-  works across the whole tree.
-- The scoped runner is built with object-spread + per-method overrides;
-  it is **not** a `BunRunner` instance. Methods you add to `BunRunner`
-  must also be re-exposed in the `scopedRunner` literal in `group()` or
-  consumers using `runner.group()` won't see them.
+If you add a method to `BunRunner`, also expose it on the scoped runner literal
+inside `group()`, otherwise grouped consumers will not see it.
 
-## Static folder
+## Middleware And Errors
 
-`registerStaticFolder(folderEntry, runner)` walks the folder
-synchronously at boot via `readdirSync` and registers a `GET` per file.
-Files are read **lazily per request** with `Bun.file`, so memory stays
-flat. Use this for asset trees that should be enumerable at boot;
-prefer `serveStaticFolder` from `@bernouy/core` for HTML pages that
-need `{{CONTENT}}` / `{{BASE_PATH}}` substitution.
+Middlewares run in this order:
 
-## Middlewares
+1. global middlewares registered with `use()`;
+2. group/route middlewares.
 
-Composed in order: `globalMiddlewares` (registered via `use()`) first,
-then per-route. Each middleware receives `(req, next)` and returns a
-`Promise<Response>`. Errors thrown inside a middleware/handler bubble
-to the top-level `try/catch` in `Bun.serve.fetch` → 500 + `console.error`.
-
-## IP capture
-
-`Bun.serve.fetch` calls `setRequestIP(request, peer.address)` on entry.
-Downstream handlers reach the same value through `runner.getRequestIP(req)`
-(or `getRequestIP` directly from `@bernouy/core`). The capture is
-per-request — composed runners share the same value.
-
-## Conventions
-
-- **One server per `BunRunner` instance.** `start()` is the only call
-  that spawns `Bun.serve`. Calling `start()` twice opens two listeners.
-- **Routes registered after `start()` are honored**, because matching
-  is lazy at request time. Useful for `the CMS multi-tenant case` mounting tenant
-  routes dynamically.
-- The 500 response logs the error but never includes the message in the
-  body — keep it that way to avoid leaking internals.
-
-## Dependencies
-
-- runtime: `@bernouy/core` (`Runner`, `RouteHandler`, `Middleware`, `setRequestIP`, `getRequestIP`)
+Thrown errors bubble to the top-level `Bun.serve.fetch` catch, which logs the
+error and returns a generic 500 body. Do not leak internal error messages in the
+response body.

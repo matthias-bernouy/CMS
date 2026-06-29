@@ -19,35 +19,36 @@ four layers with a one-way dependency rule:
 
 ```
 CmsCore/
-├── packages/
-│   ├── foundation/
-│   │   ├── http-runner/       @bernouy/http-runner     Runner contract + BunRunner + HTTP toolkit (Cache/TtlCache, compression, CSP, html helpers — `./html` is browser-safe) + serveForTest under ./testing
-│   │   ├── envelope-crypto/   @bernouy/envelope-crypto envelope encryption (DEK/KEK, EnvelopeSecretCrypto) + queryable field encryption (FieldCrypto, blind index); ./mongo = MongoDekRepository + createFieldCrypto
-│   │   └── rate-limiter/      @bernouy/rate-limiter    fixed-window rate limiting; ./mongo = cross-instance counter
-│   ├── features/
-│   │   ├── cms-content/       @bernouy/cms-content     the content aggregate behind CmsRepository — pages, blocs, templates, snippets, settings (one interface file per entity) + ContentReader read view + expandSnippets/contentRefs/hardenStoredHtml/roles rules + p9r constants; ./mongo
-│   │   ├── cms-files/         @bernouy/cms-files       media files — metadata + blob contracts, file lifecycle (upload/update/delete), sharp image variants + optimize queue, /.cms/files + image-variant endpoints; ./mongo, ./s3
-│   │   ├── cms-secrets/       @bernouy/cms-secrets     admin-managed secrets — SecretStore/SecretReader, ${VAR} resolution, gateway secret resolver; ./mongo = envelope-encrypted store
-│   │   ├── cms-permissions/   @bernouy/cms-permissions roles & permissions vocabulary (urn catalogue, grants, can()) — dependency-free
-│   │   ├── cms-auth/          @bernouy/cms-auth        CMS-owned auth chain — LocalAuth + dynamic OIDC + PATs + signed cookies + Users/IdP/Credential stores + registerAuthRoutes/authGuard/login pages; ./mongo, ./components
-│   │   ├── cms-gateway/       @bernouy/cms-gateway     data-gateway substrate — providers/endpoints, request resolution + execution, OpenAPI spec machinery; ./presets
-│   │   ├── cms-analytics/     @bernouy/cms-analytics   cookieless server-side analytics — collection (buildPageViewEvent) + counters-at-write store + dashboard API registrar
-│   │   ├── cms-blocs/         @bernouy/cms-blocs       UI toolkit (`<p9r-*>`, `<w13c-*>`) + data-binding runtime. Published to npm (MIT).
-│   │   └── cms-bloc-compile/  @bernouy/cms-bloc-compile bloc build pipeline (prepare_bloc, validateBloc, p9rExternalsPlugin)
-│   ├── surfaces/
-│   │   ├── cms-control/       @bernouy/cms-control     admin — REST API (/api), admin pages (/admin), the visual editor; ControlCms mounts it all on an injected runner
-│   │   └── cms-delivery/      @bernouy/cms-delivery    public rendering — DeliveryCms: page render pipeline, signature-grouped bloc bundles, theme, sitemap/robots
-│   └── runtimes/
-│       ├── cms-cli/           @bernouy/cms-cli         `p9r` CLI — scaffold blocs/apps, local editor (p9r dev), push/pull content
-│       └── cms-server/        @bernouy/cms-server      production composition root — Mongo + FS stores, crypto, auth; Control + Delivery on two ports. The only place reading process.env.
-│
-├── infra/
-│   └── images/cms/            Docker image (Dockerfile runs cms-server) + per-instance compose + shared nginx-proxy/acme/mongo compose. Multi-instance per server.
-│
-├── build.ts                   orchestrated build (see below)
-├── tsconfig.base.json         shared TS compilerOptions
-├── tsconfig.json              `references` to every package (project refs)
-└── package.json               workspaces: packages/{foundation,features,surfaces,runtimes}/*
+|-- packages/
+|   |-- foundation/
+|   |   |-- http-runner/       @bernouy/http-runner
+|   |   |-- envelope-crypto/   @bernouy/envelope-crypto
+|   |   |-- rate-limiter/      @bernouy/rate-limiter
+|   |   `-- components/        @bernouy/components
+|   |-- features/
+|   |   |-- cms-content/       @bernouy/cms-content
+|   |   |-- cms-files/         @bernouy/cms-files
+|   |   |-- cms-secrets/       @bernouy/cms-secrets
+|   |   |-- cms-permissions/   @bernouy/cms-permissions
+|   |   |-- cms-auth/          @bernouy/cms-auth
+|   |   |-- cms-gateway/       @bernouy/cms-gateway
+|   |   |-- cms-analytics/     @bernouy/cms-analytics
+|   |   |-- cms-bloc-compile/  @bernouy/cms-bloc-compile
+|   |   `-- cms-editor-system-v2/ @bernouy/cms-editor-system-v2
+|   |-- surfaces/
+|   |   |-- cms-control/       @bernouy/cms-control
+|   |   `-- cms-delivery/      @bernouy/cms-delivery
+|   `-- runtimes/
+|       |-- cms-cli/           @bernouy/cms-cli
+|       `-- cms-server/        @bernouy/cms-server
+|
+|-- infra/
+|   `-- images/cms/
+|
+|-- build.ts
+|-- tsconfig.base.json
+|-- tsconfig.json
+`-- package.json
 ```
 
 ## Dependency rules
@@ -70,7 +71,7 @@ CmsCore/
 
 ```bash
 bun install                 # links every workspace package + installs externals
-bun run build               # orchestrated: cms-blocs bundle → tsc --build → cms-control bundle
+bun run build               # orchestrated: components bundle -> tsc --build -> cms-control bundle
 bun run typecheck           # tsc --build only (project references)
 bun run clean               # tsc --build --clean (drops per-package dist + tsbuildinfo)
 bun test                    # workspace test runner
@@ -79,12 +80,12 @@ bun test                    # workspace test runner
 `build.ts` is sequenced because downstream packages need upstream artefacts
 at type-check time:
 
-1. `packages/features/cms-blocs` → `dist/{ui.js, style.css, index.d.ts, blocs/*.d.ts}`.
-   `cms-blocs` ships its built bundle as `main`; consumers import the IIFE
-   bundle to register every tag at once, so it must build first.
+1. `packages/foundation/components` -> `dist/{index.js, style.css, index.d.ts, blocs/*.mjs, blocs/*.d.ts}`.
+   `@bernouy/components` ships generated bundles and declarations; consumers
+   need those artifacts before the workspace type-check runs.
 2. `tsc --build` → emits `.d.ts` for every other package via project refs.
-3. `packages/surfaces/cms-control` → control-side prebuild
-   (`control-components.js` bundle, depends on `cms-blocs/dist`) + own `.d.ts` emit.
+3. `packages/surfaces/cms-control` -> control-side prebuild
+   (`control-components.js` bundle, depends on `@bernouy/components/dist`) + own `.d.ts` emit.
 
 Every other package ships **source** through its `exports` field — no bundle
 step, consumers resolve straight to `src/`.
