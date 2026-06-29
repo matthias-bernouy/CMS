@@ -15,6 +15,20 @@ const SECURED: Source = {
     }],
 };
 
+const PUBLIC_SEARCH: Source = {
+    urn: "urn:public-search",
+    endpoints: [{
+        urn: "urn:public-search:search",
+        method: "GET",
+        targetUrl: "https://api.example.com/search",
+        input: {
+            params: [
+                { name: "q", in: "query", required: true, schema: { type: "string" } },
+            ],
+        },
+    }],
+};
+
 /**
  * Minimal surface mount: captures the default endpoint each method would
  * register inside the `/.cms/sources` group, so a test can invoke the real
@@ -32,10 +46,9 @@ function mountGateway(gateway: InMemorySourceRepository | null, secrets: InMemor
     return handlers;
 }
 
-async function mountBan() {
+async function mountPublicSearch() {
     const gateway = new InMemorySourceRepository();
-    const { BAN_SOURCE } = await import("@bernouy/cms-sources/presets");
-    await seedSources(gateway, [BAN_SOURCE]);
+    await seedSources(gateway, [PUBLIC_SEARCH]);
     const secrets = new InMemorySecretStore();
     const handlers = mountGateway(gateway, secrets);
     return { handlers, secrets, gateway };
@@ -45,19 +58,19 @@ const URL_BASE = "http://admin/cms/.cms/sources";
 
 describe("gateway preview proxy", () => {
     test("registers all five proxy methods", async () => {
-        const { handlers } = await mountBan();
+        const { handlers } = await mountPublicSearch();
         expect([...handlers.keys()].sort()).toEqual(["DELETE", "GET", "PATCH", "POST", "PUT"]);
     });
 
     test("resolves a provider/endpoint and proxies to the built upstream URL", async () => {
-        const { handlers } = await mountBan();
+        const { handlers } = await mountPublicSearch();
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(
             new Response('{"type":"FeatureCollection"}', { status: 200, headers: { "content-type": "application/json" } }),
         );
         try {
-            const res = await handlers.get("GET")!(new Request(`${URL_BASE}/ban/search?q=8+bd+du+port`));
+            const res = await handlers.get("GET")!(new Request(`${URL_BASE}/public-search/search?q=8+bd+du+port`));
             expect(res.status).toBe(200);
-            expect(String(fetchSpy.mock.calls[0]![0])).toBe("https://api-adresse.data.gouv.fr/search/?q=8+bd+du+port");
+            expect(String(fetchSpy.mock.calls[0]![0])).toBe("https://api.example.com/search?q=8+bd+du+port");
         } finally {
             fetchSpy.mockRestore();
         }
@@ -99,10 +112,10 @@ describe("gateway preview proxy", () => {
     });
 
     test("unknown provider/endpoint → 404, no upstream call", async () => {
-        const { handlers } = await mountBan();
+        const { handlers } = await mountPublicSearch();
         const fetchSpy = spyOn(globalThis, "fetch").mockResolvedValue(new Response("x"));
         try {
-            const res = await handlers.get("GET")!(new Request(`${URL_BASE}/ban/nope`));
+            const res = await handlers.get("GET")!(new Request(`${URL_BASE}/public-search/nope`));
             expect(res.status).toBe(404);
             expect(fetchSpy).not.toHaveBeenCalled();
         } finally {
@@ -111,16 +124,16 @@ describe("gateway preview proxy", () => {
     });
 
     test("path not under the base-path prefix → 404", async () => {
-        const { handlers } = await mountBan();
+        const { handlers } = await mountPublicSearch();
         // Same path but at the root origin (no /cms base) — must NOT match.
-        const res = await handlers.get("GET")!(new Request("http://admin/.cms/sources/ban/search?q=x"));
+        const res = await handlers.get("GET")!(new Request("http://admin/.cms/sources/public-search/search?q=x"));
         expect(res.status).toBe(404);
     });
 
     test("no gateway configured → 501", async () => {
         const secrets = new InMemorySecretStore();
         const handlers = mountGateway(null, secrets);
-        const res = await handlers.get("GET")!(new Request(`${URL_BASE}/ban/search?q=x`));
+        const res = await handlers.get("GET")!(new Request(`${URL_BASE}/public-search/search?q=x`));
         expect(res.status).toBe(501);
     });
 });

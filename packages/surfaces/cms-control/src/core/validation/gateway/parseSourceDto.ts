@@ -16,7 +16,7 @@ type BlobFields = Partial<Record<"params" | "body" | "output" | "meta" | "header
 
 /**
  * Validates a FLAT body (as emitted by `<cms-form>`'s `Object.fromEntries(FormData)`)
- * against the gateway-provider contract and produces a typed DTO. Source meta is
+ * against the source contract and produces a typed DTO. Source meta is
  * read from flat dotted keys (`meta.name`, …); endpoints are reconstructed from an
  * indexed flat array (`endpoints.<i>.<field>`) — sparse indices are compacted so a
  * removed row (a gap left by the UI) doesn't break submission. The parser NEVER reads

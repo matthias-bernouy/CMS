@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { CompositeSourceRepository, InMemorySourceRepository, seedSources, SYSTEM_SOURCES } from "@bernouy/cms-sources";
-import { BAN_SOURCE } from "@bernouy/cms-sources/presets";
 import getEditorSources from "cms-control/api/editor/sources.get";
 import type { ControlCms } from "cms-control/ControlCms";
 import type { Source } from "@bernouy/cms-sources";
@@ -47,10 +46,58 @@ const MIXED_PROVIDER: Source = {
     ],
 };
 
+const ADDRESS_PROVIDER: Source = {
+    urn: "urn:address",
+    meta: { name: "Address API", description: "Address lookup", icon: "map-pin" },
+    endpoints: [
+        {
+            urn: "urn:address:search",
+            method: "GET",
+            targetUrl: "https://api.example.com/search",
+            meta: { name: "Address search" },
+            input: {
+                params: [
+                    { name: "q", in: "query", required: true, schema: { type: "string" } },
+                    { name: "limit", in: "query", schema: { type: "number" } },
+                ],
+            },
+            output: [{
+                status: "200",
+                body: {
+                    type: "object",
+                    properties: {
+                        features: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    geometry: { type: "object" },
+                                    properties: {
+                                        type: "object",
+                                        properties: {
+                                            label: { type: "string" },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            }],
+        },
+        {
+            urn: "urn:address:reverse",
+            method: "GET",
+            targetUrl: "https://api.example.com/reverse",
+            meta: { name: "Reverse geocoding" },
+        },
+    ],
+};
+
 describe("GET /api/editor/sources", () => {
     test("lists gateway endpoints as editor data sources", async () => {
         const gateway = new InMemorySourceRepository();
-        await seedSources(gateway, [BAN_SOURCE]);
+        await seedSources(gateway, [ADDRESS_PROVIDER]);
 
         const response = await getEditorSources(new Request("http://admin/cms/api/editor/sources"), {
             basePath: "/cms",
@@ -60,15 +107,15 @@ describe("GET /api/editor/sources", () => {
 
         expect(response.status).toBe(200);
         expect(body.map(source => source.url)).toEqual([
-            "/cms/.cms/sources/ban/search",
-            "/cms/.cms/sources/ban/reverse",
+            "/cms/.cms/sources/address/search",
+            "/cms/.cms/sources/address/reverse",
         ]);
         const searchSource = body[0]!;
-        expect(searchSource.label).toBe("Recherche d'adresse");
-        expect(searchSource.provider).toBe("ban");
-        expect(searchSource.providerUrn).toBe("urn:ban");
-        expect(searchSource.endpointUrn).toBe("urn:ban:search");
-        expect(searchSource.providerLabel).toBe("Base Adresse Nationale");
+        expect(searchSource.label).toBe("Address search");
+        expect(searchSource.provider).toBe("address");
+        expect(searchSource.providerUrn).toBe("urn:address");
+        expect(searchSource.endpointUrn).toBe("urn:address:search");
+        expect(searchSource.providerLabel).toBe("Address API");
         expect(searchSource.params?.every(param => param.in === "query" || param.in === "path")).toBe(true);
         expect(searchSource.params?.some(param => param.name === "q" && param.required === true)).toBe(true);
         const features = searchSource.fields.filter((field: DataField) => field.path === "features");

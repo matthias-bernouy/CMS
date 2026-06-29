@@ -1,5 +1,5 @@
 /** Thrown when a source write breaks a source-domain rule. Carries `.status`
- *  so any HTTP surface maps it to a 400 without importing surface errors. */
+ *  so any HTTP surface maps it without importing surface errors. */
 export class SourceValidationError extends Error {
     status = 400;
     constructor(field: string, message: string) {
@@ -9,7 +9,7 @@ export class SourceValidationError extends Error {
 }
 
 export class DuplicateSourceError extends Error {
-    status = 400;
+    status = 409;
     constructor(urn: string) {
         super(`Source with urn "${urn}" already exists`);
         this.name = "DuplicateSourceError";

@@ -8,8 +8,7 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./browser": "./src/exports/browser.ts",
-        "./mongo": "./src/exports/mongo.ts",
-        "./presets": "./src/exports/presets.ts"
+        "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
         "@bernouy/http-runner": "workspace:*"
