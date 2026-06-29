@@ -7,12 +7,12 @@ import { pullPages } from "./push/pages/pull";
 import { pullSnippets } from "./push/snippets/pull";
 import { pullTemplates } from "./push/templates/pull";
 import { pullSystem } from "./push/system/pull";
-import { pullGateways } from "./push/gateways/pull";
+import { pullIntegrations } from "./push/integrations/pull";
 
 type Flags = { force: boolean; yes: boolean; type: string };
 
-const TYPES = ["*", "system", "gateways", "blocs", "snippets", "templates", "pages"] as const;
-const ORDER = ["system", "gateways", "blocs", "snippets", "templates", "pages"] as const;
+const TYPES = ["*", "system", "integrations", "blocs", "snippets", "templates", "pages"] as const;
+const ORDER = ["system", "integrations", "blocs", "snippets", "templates", "pages"] as const;
 type Stage = typeof ORDER[number];
 
 function parseFlags(args: string[]): Flags {
@@ -41,7 +41,7 @@ async function resolveAdmin(): Promise<{ adminBase: URL; token: string }> {
 
 async function runStage(stage: Stage, adminBase: URL, token: string, siteDir: string): Promise<void> {
     if      (stage === "system")    await pullSystem(adminBase, token, siteDir);
-    else if (stage === "gateways")  reportItems   (await pullGateways(adminBase, token, siteDir), "gateways", "urn");
+    else if (stage === "integrations") reportItems(await pullIntegrations(adminBase, token, siteDir), "integrations", "id");
     else if (stage === "blocs")     reportBlocs   (await pullBlocs   (adminBase, token, siteDir));
     else if (stage === "snippets")  reportItems   (await pullSnippets(adminBase, token, siteDir), "snippets", "identifier");
     else if (stage === "templates") reportTemplates(await pullTemplates(adminBase, token, siteDir));
@@ -49,7 +49,7 @@ async function runStage(stage: Stage, adminBase: URL, token: string, siteDir: st
     if (stage === "system") console.log("→ system: pulled.");
 }
 
-function reportItems(r: { pulled: string[]; failed: { error: string }[] & ({ path?: string; identifier?: string; urn?: string }[]) }, label: string, key: "path" | "identifier" | "urn"): void {
+function reportItems(r: { pulled: string[]; failed: { error: string }[] & ({ path?: string; identifier?: string; urn?: string; id?: string }[]) }, label: string, key: "path" | "identifier" | "urn" | "id"): void {
     for (const ok of r.pulled) console.log(`    ✓ ${ok}`);
     for (const ko of r.failed as Array<Record<string, string>>) console.error(`    ✗ ${ko[key]}: ${ko.error}`);
     console.log(`→ ${label}: ${r.pulled.length} pulled, ${r.failed.length} failed.`);

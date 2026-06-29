@@ -33,6 +33,7 @@ export function buildIntegrationInstanceView(
         artifacts,
         ...(detail ? {
             answers: instance.answersSnapshot,
+            definition: instance.definitionSnapshot,
             secretInputs: instance.secretInputs,
             runs: instance.runs,
         } : {}),

@@ -4,17 +4,17 @@ import { runSnippets } from "./push/snippets/run";
 import { runTemplates } from "./push/templates/run";
 import { runSystem } from "./push/system/run";
 import { runFiles } from "./push/files/run";
-import { runGateways } from "./push/gateways/run";
+import { runIntegrations } from "./push/integrations/run";
 import { runBlocs } from "./push/blocs/run";
 
 type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string; only: Set<string> | null };
 
-const TYPES = ["*", "system", "gateways", "files", "blocs", "snippets", "templates", "pages"] as const;
+const TYPES = ["*", "system", "integrations", "files", "blocs", "snippets", "templates", "pages"] as const;
 // Files (media) ship right after system so pages/snippets that reference
-// `/.cms/files/<path>` resolve once the rest of the content lands. Gateways
-// (data providers) ship right after system too — independent config the rest
-// of the content may reference at runtime via `/.cms/sources/*`.
-const ORDER = ["system", "gateways", "files", "blocs", "snippets", "templates", "pages"] as const;
+// `/.cms/files/<path>` resolve once the rest of the content lands. Integrations
+// ship right after system too because they generate source contracts referenced
+// at runtime via `/.cms/sources/*`.
+const ORDER = ["system", "integrations", "files", "blocs", "snippets", "templates", "pages"] as const;
 type Stage = typeof ORDER[number];
 
 function parseFlags(args: string[]): Flags {
@@ -48,7 +48,7 @@ async function resolveAdmin(): Promise<{ adminBase: URL; token: string }> {
 async function runStage(stage: Stage, args: string[], adminBase: URL, token: string, flags: Flags): Promise<number> {
     switch (stage) {
         case "system":    return runSystem(adminBase, token, flags);
-        case "gateways":  return runGateways(adminBase, token, flags);
+        case "integrations": return runIntegrations(adminBase, token, flags);
         case "files":     return runFiles(adminBase, token, flags);
         case "blocs":     return runBlocs(adminBase, token, flags);
         case "snippets":  return runSnippets(adminBase, token, flags);

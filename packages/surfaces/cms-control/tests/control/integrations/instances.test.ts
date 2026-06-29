@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import getIntegrationInstances from "cms-control/api/integrations/instances.get";
 import postIntegrationImport from "cms-control/api/integrations/import.post";
-import { getInstances, makeCms, postImport } from "./helpers";
+import { getInstances, makeCms, manualSourceDefinition, postImport } from "./helpers";
 
 describe("GET /api/integrations/instances", () => {
     test("lists tracked instances and reconciles missing source artifacts", async () => {
@@ -43,6 +43,22 @@ describe("GET /api/integrations/instances", () => {
         expect(res.status).toBe(200);
         expect(body[0].artifacts[0].exists).toBe("unknown");
         expect(body[0].missingArtifactCount).toBe(0);
+    });
+
+    test("includes the definition snapshot on instance details", async () => {
+        const { cms } = makeCms();
+
+        await postIntegrationImport(postImport({
+            kind: "manual-source",
+            definition: manualSourceDefinition(),
+            answers: { id: "manual", targetUrl: "https://api.example.com/items" },
+        }), cms);
+
+        const res = await getIntegrationInstances(getInstances("manual-source:manual"), cms);
+        const body = await res.json();
+
+        expect(body.definition.kind).toBe("manual-source");
+        expect(body.definition.artifacts[0].source.id).toBe("{{answers.id}}");
     });
 
     test("returns 404 for missing instance details", async () => {

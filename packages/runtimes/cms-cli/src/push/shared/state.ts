@@ -2,7 +2,13 @@ import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export type EntityKey = `page:${string}` | `snippet:${string}` | `template:${string}` | `file:${string}` | `gateway:${string}` | "system";
+export type EntityKey =
+    | `page:${string}`
+    | `snippet:${string}`
+    | `template:${string}`
+    | `file:${string}`
+    | `integration:${string}`
+    | "system";
 
 export type EntityState = {
     /** Hash of the local payload at last successful push/pull. */
