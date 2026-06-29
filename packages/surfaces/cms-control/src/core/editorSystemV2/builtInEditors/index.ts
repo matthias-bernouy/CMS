@@ -1,8 +1,5 @@
 export { BindingCoreEditor } from "./BindingCoreEditor";
-export { CardEditor } from "./CardEditor";
 export { CodeEditor } from "./CodeEditor";
-export { ContainerEditor } from "./ContainerEditor";
-export { GridEditor } from "./GridEditor";
 export { HeadingEditor } from "./HeadingEditor";
 export { ImageEditor } from "./ImageEditor";
 export { InputEditor } from "./InputEditor";
@@ -11,7 +8,6 @@ export { ListEditor } from "./ListEditor";
 export { ListItemEditor } from "./ListItemEditor";
 export { OptionEditor } from "./OptionEditor";
 export { ParagraphEditor } from "./ParagraphEditor";
-export { PhotoAlbumEditor } from "./PhotoAlbumEditor";
 export { QuoteEditor } from "./QuoteEditor";
 export { SelectEditor } from "./SelectEditor";
 export { SnippetEditor } from "./SnippetEditor";

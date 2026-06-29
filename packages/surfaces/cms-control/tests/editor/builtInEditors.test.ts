@@ -1,15 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
     CMS_SNIPPET_TAG,
-    Editor,
-    type EditorCatalog,
-    type SettingSection,
 } from "@bernouy/cms-content/editor";
 import {
-    CardEditor,
     CodeEditor,
-    ContainerEditor,
-    GridEditor,
     HeadingEditor,
     ImageEditor,
     InputEditor,
@@ -18,73 +12,18 @@ import {
     ListItemEditor,
     OptionEditor,
     ParagraphEditor,
-    PhotoAlbumEditor,
     QuoteEditor,
     SelectEditor,
     SnippetEditor,
     SpanEditor,
-} from "cms-control/core/editorSystemV2/defaultEditors";
+} from "cms-control/core/editorSystemV2/builtInEditors";
 import { createControlEditorCatalog } from "cms-control/core/editorSystemV2/editorCatalog";
 
 function target(tagName = "div"): HTMLElement {
     return document.createElement(tagName);
 }
 
-class RecordingEditor extends Editor {
-    addedSettings: SettingSection[] = [];
-
-    override addSettings(settings: SettingSection | SettingSection[]): void {
-        this.addedSettings.push(...(Array.isArray(settings) ? settings : [settings]));
-    }
-}
-
-class TestGridEditor extends GridEditor {
-    constructor(target: HTMLElement, private readonly _children: Editor[]) {
-        super(target);
-    }
-
-    override getChildren(): Editor[] {
-        return this._children;
-    }
-}
-
-describe("editor default editors", () => {
-    test("exposes layout editor settings", () => {
-        const containerSettings = new ContainerEditor(target()).getSettings()[0];
-        const gridSettings = new GridEditor(target()).getSettings()[0];
-
-        expect(containerSettings?.label).toBe("Container");
-        expect(containerSettings?.settings.map(setting => setting.attribute)).toEqual([
-            "size",
-            "align",
-            "padding-inline",
-            "padding-block",
-            "background",
-            "radius",
-            "min-height",
-            "vertical-align",
-            "bleed",
-        ]);
-
-        expect(gridSettings?.label).toBe("Grid");
-        expect(gridSettings?.settings.map(setting => setting.attribute)).toEqual([
-            "min",
-            "max",
-            "gap",
-            "column-gap",
-            "row-gap",
-            "item-align",
-        ]);
-        const cardSettings = new CardEditor(target()).getSettings()[0];
-        expect(cardSettings?.label).toBe("Card");
-        expect(cardSettings?.settings.map(setting => setting.attribute)).toEqual([
-            "variant",
-            "padding",
-            "interactive",
-            "fill-height",
-        ]);
-    });
-
+describe("editor built-in editors", () => {
     test("exposes content editor identities", () => {
         expect(new ParagraphEditor(target("p")).getTextCapability()?.format).toBe("richtext");
         expect(new HeadingEditor(target("h1")).getTextCapability()?.format).toBe("richtext");
@@ -96,37 +35,11 @@ describe("editor default editors", () => {
         expect(new InputEditor(target("input")).getSettings()[0]?.label).toBe("Text input");
         expect(new SelectEditor(target("select")).getSettings()[0]?.label).toBe("Select");
         expect(new OptionEditor(target("option")).getSettings()[0]?.label).toBe("Option");
-        expect(new PhotoAlbumEditor(target("base-photo-album")).getSettings()[0]?.label).toBe("Photo album");
         expect(new ListEditor(target("ul")).getSettings()).toEqual([]);
         expect(new ListItemEditor(target("li")).getSettings()).toEqual([]);
     });
 
     test("exposes default content slots", () => {
-        expect(new ContainerEditor(target("base-container")).getContentSlots()).toEqual([
-            {
-                label: "Content",
-                accepts: [{ kind: "any-component" }],
-            },
-        ]);
-
-        expect(new CardEditor(target("base-card")).getContentSlots()).toEqual([
-            {
-                label: "Header",
-                slot: "header",
-                max: 1,
-                accepts: [{ kind: "any-component" }],
-            },
-            {
-                label: "Content",
-                accepts: [{ kind: "any-component" }],
-            },
-            {
-                label: "Footer",
-                slot: "footer",
-                accepts: [{ kind: "any-component" }],
-            },
-        ]);
-
         expect(new ListEditor(target("ul")).getContentSlots()).toEqual([
             {
                 label: "Items",
@@ -146,13 +59,6 @@ describe("editor default editors", () => {
             },
         ]);
         expect(new OptionEditor(target("option")).getContentSlots()).toEqual([]);
-        expect(new PhotoAlbumEditor(target("base-photo-album")).getContentSlots()).toEqual([
-            {
-                label: "Images",
-                slot: "images",
-                accepts: [{ kind: "media", accept: ["image"] }],
-            },
-        ]);
         expect(new SpanEditor(target("span")).getContentSlots()).toEqual([]);
         expect(new LinkEditor(target("a")).getContentSlots()).toEqual([]);
         expect(new CodeEditor(target("code")).getContentSlots()).toEqual([]);
@@ -221,7 +127,6 @@ describe("editor default editors", () => {
             format: "text",
             dynamic: true,
         });
-        expect(new CardEditor(target("base-card")).getTextCapability()).toBeNull();
         expect(new ImageEditor(target("img")).getTextCapability()).toBeNull();
     });
 
@@ -306,61 +211,6 @@ describe("editor default editors", () => {
             label: "Type",
             attribute: "type",
         });
-    });
-
-    test("grid mounts child override settings on its children", () => {
-        const child = new RecordingEditor(target("base-card"));
-        const editor = new TestGridEditor(target("base-grid"), [child]);
-
-        expect(editor.getSettings()[0]?.kind).toBe("self");
-        editor.mountEditor();
-
-        expect(child.addedSettings).toEqual([
-            {
-                kind: "surcharge",
-                label: "Grid item",
-                settings: [
-                    {
-                        type: "select",
-                        label: "Column span",
-                        attribute: "grid-column",
-                        defaultValue: "auto",
-                        options: [
-                            { label: "Auto", value: "auto" },
-                            { label: "1 column", value: "span 1" },
-                            { label: "2 columns", value: "span 2" },
-                            { label: "3 columns", value: "span 3" },
-                            { label: "4 columns", value: "span 4" },
-                            { label: "Full row", value: "1 / -1" },
-                        ],
-                        attributesOnValue: [
-                            { value: "auto", attributes: { "grid-column": null } },
-                        ],
-                    },
-                ],
-            },
-        ]);
-    });
-
-    test("catalog entries can bind bloc classes to control-owned editors", () => {
-        class DemoBloc extends HTMLElement { }
-
-        const catalog: EditorCatalog = [
-            {
-                tag: "demo-bloc",
-                label: "Demo bloc",
-                description: "A test bloc entry.",
-                icon: "box",
-                category: "Layout",
-                subCategory: "Cards",
-                bloc: DemoBloc,
-                editor: CardEditor,
-            },
-        ];
-
-        expect(catalog[0]?.bloc).toBe(DemoBloc);
-        expect(catalog[0]?.editor).toBe(CardEditor);
-        expect(catalog[0]?.subCategory).toBe("Cards");
     });
 
     test("control catalog exposes editor entries for known base elements", () => {

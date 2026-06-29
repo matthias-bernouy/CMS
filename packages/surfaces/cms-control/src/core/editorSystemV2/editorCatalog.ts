@@ -15,7 +15,7 @@ import {
     SelectEditor,
     SnippetEditor,
     SpanEditor,
-} from "cms-control/core/editorSystemV2/defaultEditors";
+} from "cms-control/core/editorSystemV2/builtInEditors";
 
 type NativeElementConstructorName =
     | "HTMLAnchorElement"
