@@ -14,6 +14,7 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createDevGateway } from "./dev-server/gateways";
+import { LocalFsIntegrationInstanceRepository } from "./dev-server/integrationInstances";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
@@ -104,6 +105,7 @@ export default async function CLI_dev(args: string[]) {
     const filesMetadata = new ValidatingCmsFilesMetadata(files);
     const { auth, users, identityProviders, pats, credentials, devAdmin } = await createDevAuth();
     const gateway = await createDevGateway(config.siteDir);
+    const integrationInstances = new LocalFsIntegrationInstanceRepository(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
     const resolveSecret = createSecretResolver(secrets);
     const roles = new ValidatingRolesRepository(new InMemoryRolesRepository());
@@ -144,6 +146,7 @@ export default async function CLI_dev(args: string[]) {
     const cms = new ControlCms(runner, repo, auth, {
         deliveryUrl: `http://${publicHost}:${deliveryPort}`,
         publicAuth: { ...publicAuth, allowSignup: false },
+        integrationInstances,
     }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, gateway, undefined, roles);
     await cms.ready;
 

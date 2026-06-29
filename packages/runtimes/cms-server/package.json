@@ -18,6 +18,7 @@
         "@bernouy/cms-content":     "workspace:*",
         "@bernouy/cms-files":       "workspace:*",
         "@bernouy/cms-sources":     "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-analytics":   "workspace:*",
         "@bernouy/cms-control":     "workspace:*",
         "@bernouy/cms-delivery":    "workspace:*",

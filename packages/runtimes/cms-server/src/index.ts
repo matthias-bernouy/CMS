@@ -18,6 +18,7 @@ import { CompositeSourceRepository, SYSTEM_SOURCES, ValidatingSourceRepository }
 import { MongoSourceRepository } from "@bernouy/cms-sources/mongo";
 import { ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics/mongo";
+import { MongoIntegrationInstanceRepository } from "@bernouy/cms-integrations/mongo";
 import { MongoClient } from "mongodb";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { LocalFsCmsFilesBlob, ValidatingCmsFilesMetadata } from "@bernouy/cms-files";
@@ -105,6 +106,7 @@ const mongoSources      = new MongoSourceRepository(db);                        
 const sources           = new CompositeSourceRepository(new ValidatingSourceRepository(mongoSources), SYSTEM_SOURCES);
 const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
 const analytics         = new ValidatingAnalyticsStore(mongoAnalytics);
+const integrationsStore = new MongoIntegrationInstanceRepository(db);              await integrationsStore.init();
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
 const mongoRoles        = new MongoRolesRepository(db.collection("cms_roles"));    await mongoRoles.init();
 const roles             = new ValidatingRolesRepository(mongoRoles);
@@ -181,6 +183,7 @@ const publicAuthBase = {
 };
 const controlCms = new ControlCms(controlRunner, repo, auth, {
     deliveryUrl: DELIVERY_PUBLIC_URL,
+    integrationInstances: integrationsStore,
     publicAuth: {
         ...publicAuthBase,
         emailVerificationUrl: CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
