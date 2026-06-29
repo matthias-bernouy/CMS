@@ -53,6 +53,7 @@
         "@bernouy/http-runner": "workspace:*",
         "@bernouy/cms-auth": "workspace:*",
         "@bernouy/cms-bloc-compile": "workspace:*",
+        "@bernouy/cms-integrations": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/components": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",

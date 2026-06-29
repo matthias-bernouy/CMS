@@ -38,9 +38,10 @@ import {
 import type { CMS_ROLES } from "types/roles";
 import serveStaticFolder from "./core/registerEndpoints/serveStaticFolder/serveStaticFolder";
 import { serveApi } from "./core/registerEndpoints/serveApiFolder";
-import { join } from "node:path"
+import { join } from "node:path";
 import type { CspExtras } from "@bernouy/http-runner";
 import { renderForbiddenPage, renderLoginPage } from "cms-control/core/auth/authPages";
+import type { IntegrationDefinition, IntegrationInstanceRepository } from "@bernouy/cms-integrations";
 
 type Configuration = {
     /**
@@ -57,6 +58,15 @@ type Configuration = {
      * creation stays an admin API concern on this surface.
      */
     publicAuth?: PublicAuthRoutesConfig<CMS_ROLES>;
+}
+
+export type ControlCmsOptions = Configuration & {
+    /** Optional site-provided declarative integrations. They may define
+     *  artifact templates, but cannot execute official backend handlers. */
+    integrations?: IntegrationDefinition[];
+    /** Integration instance/run store. Runtimes must pass a durable repository
+     *  before enabling the integration API. */
+    integrationInstances?: IntegrationInstanceRepository;
 }
 
 type ControlAuthBackends = {
@@ -85,7 +95,7 @@ export class ControlCms {
 
     readonly ready: Promise<void>;
 
-    private configuration:    Configuration;
+    private configuration:    ControlCmsOptions;
     private _repository:      CmsRepository;
     private _runner:          Runner;
     private _auth:            Authentication<CMS_ROLES>;
@@ -100,12 +110,14 @@ export class ControlCms {
     private _sources:             SourceRepository | null;
     private _analytics:           AnalyticsStore | null;
     private _roles:               RolesRepository;
+    private _integrations:        IntegrationDefinition[];
+    private _integrationInstances: IntegrationInstanceRepository | null;
 
     constructor(
         runner: Runner,
         repository: CmsRepository,
         auth: Authentication<CMS_ROLES>,
-        configuration: Configuration,
+        configuration: ControlCmsOptions = {},
         cache?: Cache,
         secrets?: SecretStore,
         filesMetadata?: CmsFilesMetadataRepository,
@@ -134,6 +146,8 @@ export class ControlCms {
         this._sources = sources ?? null;
         this._analytics = analytics ?? null;
         this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
+        this._integrations = configuration.integrations ?? [];
+        this._integrationInstances = configuration.integrationInstances ?? null;
         this.ready = Promise.resolve();
 
         const authGuard = createAuthGuard<CMS_ROLES>({
@@ -322,6 +336,17 @@ export class ControlCms {
     get publicAuth(): PublicAuthRoutesConfig<CMS_ROLES> {
         if (!this.configuration.publicAuth) throw new Error("public auth not configured");
         return this.configuration.publicAuth;
+    }
+
+    /** Site-provided declarative integrations. Official integrations are
+     *  registered by Control itself and merged at the API boundary. */
+    get integrations(): IntegrationDefinition[] {
+        return this._integrations;
+    }
+
+    get integrationInstances(): IntegrationInstanceRepository {
+        if (!this._integrationInstances) throw new Error("integration instances repository not configured");
+        return this._integrationInstances;
     }
 
     /** Source store. Backs source reads and integration-created writes;

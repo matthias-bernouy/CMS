@@ -30,6 +30,7 @@
         { "path": "../../features/cms-files" },
         { "path": "../../features/cms-secrets" },
         { "path": "../../features/cms-sources" },
+        { "path": "../../features/cms-integrations" },
         { "path": "../../features/cms-analytics" }
     ]
 }
