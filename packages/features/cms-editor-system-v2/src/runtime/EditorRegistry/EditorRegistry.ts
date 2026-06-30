@@ -38,11 +38,24 @@ export class EditorRegistry {
         return undefined;
     }
 
+    getRichTextOwner(target: HTMLElement): Editor | undefined {
+        let current = target.parentElement;
+
+        while (current) {
+            const editor = this._editorsByTarget.get(current);
+            if (editor && this._containsTargetInRichText(editor, target)) return editor;
+            current = current.parentElement;
+        }
+
+        return undefined;
+    }
+
     getDirectChildren(parent: HTMLElement): Editor[] {
         const children: Editor[] = [];
 
         for (const editor of this._editorsByTarget.values()) {
             if (editor.target === parent) continue;
+            if (this.getRichTextOwner(editor.target)) continue;
             if (!parent.contains(editor.target)) continue;
             if (this._getClosestRegisteredAncestor(editor.target) !== parent) continue;
 
@@ -78,11 +91,35 @@ export class EditorRegistry {
         let current = target.parentElement;
 
         while (current) {
-            if (this._editorsByTarget.has(current)) return current;
+            const editor = this._editorsByTarget.get(current);
+            if (editor && !this.getRichTextOwner(editor.target)) return current;
             current = current.parentElement;
         }
 
         return undefined;
+    }
+
+    private _containsTargetInRichText(editor: Editor, target: HTMLElement): boolean {
+        return editor.getTextCapability()?.format === "richtext"
+            && editor.target !== target
+            && editor.target.contains(target)
+            && !this._isInsideNamedContentSlot(editor, target);
+    }
+
+    private _isInsideNamedContentSlot(editor: Editor, target: HTMLElement): boolean {
+        const namedSlots = new Set(editor.getContentSlots()
+            .map(slot => slot.slot)
+            .filter((slot): slot is string => Boolean(slot)));
+        if (namedSlots.size === 0) return false;
+
+        let current: HTMLElement | null = target;
+        while (current && current !== editor.target) {
+            const slot = current.getAttribute("slot");
+            if (slot && namedSlots.has(slot)) return true;
+            current = current.parentElement;
+        }
+
+        return false;
     }
 
 }

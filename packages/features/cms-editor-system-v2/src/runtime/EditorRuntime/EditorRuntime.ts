@@ -88,7 +88,7 @@ export class EditorRuntime {
             current = current.parentElement;
         }
 
-        return closest;
+        return this._getRichTextOwner(closest.target) ?? closest;
     }
 
     getStructure(): StructureNode[] {
@@ -107,7 +107,9 @@ export class EditorRuntime {
             ? targetOrEditor
             : this.registry.getEditor(targetOrEditor);
 
-        this._selectedEditor = editor ?? null;
+        this._selectedEditor = editor
+            ? this._getRichTextOwner(editor.target) ?? editor
+            : null;
 
         return this.getSelection();
     }
@@ -213,6 +215,7 @@ export class EditorRuntime {
         for (const editor of this._editors) {
             if (!document.contentRoot.contains(editor.target)) continue;
             if (editor.target === parent) continue;
+            if (this._getRichTextOwner(editor.target)) continue;
             if (!parent.contains(editor.target)) continue;
             if (this._getClosestStructureParent(editor.target, parent) !== parent) continue;
 
@@ -257,12 +260,18 @@ export class EditorRuntime {
         while (current && current !== stopAt) {
             if (document.contentRoot.contains(current)) {
                 const editor = this.registry.getEditor(current);
-                if (editor) return current;
+                if (editor && !this._getRichTextOwner(editor.target)) return current;
             }
             current = current.parentElement;
         }
 
         return stopAt;
+    }
+
+    private _getRichTextOwner(target: HTMLElement): Editor | undefined {
+        const document = this._requireDocument();
+        const owner = this.registry.getRichTextOwner(target);
+        return owner && document.contentRoot.contains(owner.target) ? owner : undefined;
     }
 
     private _walkElements(root: HTMLElement): HTMLElement[] {

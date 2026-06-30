@@ -31,6 +31,11 @@ type SourceOptions = SourceStatusOptions & {
     afterSourceRender?: (source: Element) => void;
 };
 
+const SOURCE_SUCCESS_EVENT = "cms-source:success";
+const SOURCE_FAILED_EVENT = "cms-source:failed";
+const LEGACY_FORM_SUCCESS_EVENT = "form:success";
+const LEGACY_FORM_FAILED_EVENT = "form:failed";
+
 export class Source {
     private readonly renderer: SourceRenderer;
     private readonly presenter: SourcePresenter;
@@ -125,6 +130,7 @@ export class Source {
             if (ac.signal.aborted) return;
             this.presenter.result(spec.alias, result);
             this.afterRender();
+            this.dispatchSubmitEvent(result);
             this.afterSubmit(result, spec.alias);
             return;
         }
@@ -158,6 +164,18 @@ export class Source {
         if (this.shouldReset()) result.form.reset();
         const redirect = this.successRedirect(result, alias);
         if (redirect) this.redirect(redirect);
+    }
+
+    private dispatchSubmitEvent(result: FormSubmitResult): void {
+        const canonical = result.ok ? SOURCE_SUCCESS_EVENT : SOURCE_FAILED_EVENT;
+        const legacy = result.ok ? LEGACY_FORM_SUCCESS_EVENT : LEGACY_FORM_FAILED_EVENT;
+        const init: CustomEventInit<FormSubmitResult> = {
+            bubbles: true,
+            composed: true,
+            detail: result,
+        };
+        this.el.dispatchEvent(new CustomEvent(canonical, init));
+        this.el.dispatchEvent(new CustomEvent(legacy, init));
     }
 
     private publish(result: FormSubmitResult): void {

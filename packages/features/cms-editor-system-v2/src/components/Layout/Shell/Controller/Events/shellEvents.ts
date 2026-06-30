@@ -15,6 +15,7 @@ import type {
 } from "../../../../Settings/SettingsView/SettingsView";
 import type { RepeatPickerSelectDetail } from "../../../RepeatPicker/RepeatPicker";
 import type { StructureTreeActionDetail } from "../../../StructureTree/StructureTree";
+import { setTextValue } from "../../Domain/Settings/settingsValues";
 import type { ShellEventsContext } from "./shellEventTypes";
 
 export class ShellEvents {
@@ -105,8 +106,11 @@ export class ShellEvents {
     readonly onContentChange = (event: CustomEvent<SettingsViewContentChangeDetail>): void => {
         const selection = this.context.state.runtime?.getSelection();
         if (!selection?.textCapability) return;
-        if (event.detail.format === "html") selection.editor.target.innerHTML = event.detail.value;
-        else selection.editor.target.textContent = event.detail.value;
+        setTextValue(
+            selection.editor,
+            selection.textCapability.format,
+            event.detail.value,
+        );
         this.context.commands.syncViewFrameContent();
         this.context.highlight.show(selection.editor);
     };

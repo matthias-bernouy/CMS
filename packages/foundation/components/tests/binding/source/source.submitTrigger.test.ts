@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { PARAMS_CHANGE_EVENT } from "../../../src/binding/params";
 import { BindingRuntime } from "../../../src/binding/runtime/BindingRuntime";
+import { type FormSubmitResult } from "../../../src/binding/submit/formSubmit";
 import { el, res, resetDom, settle, text, waitFor } from "../testUtils";
 
 afterEach(resetDom);
@@ -85,6 +86,7 @@ describe("Source — submit trigger", () => {
 
     test("form-owned submit source sends JSON without replacing form controls", async () => {
         let request: { url: string; init?: RequestInit } | null = null;
+        const events: Record<string, FormSubmitResult | undefined> = {};
         globalThis.fetch = (async (url: string, init?: RequestInit) => {
             request = { url, init };
             return new Response(JSON.stringify({ id: "42" }), {
@@ -102,6 +104,12 @@ describe("Source — submit trigger", () => {
             </form>
         `) as HTMLFormElement;
         document.body.append(root);
+        document.body.addEventListener("cms-source:success", event => {
+            events.source = (event as CustomEvent<FormSubmitResult>).detail;
+        }, { once: true });
+        document.body.addEventListener("form:success", event => {
+            events.form = (event as CustomEvent<FormSubmitResult>).detail;
+        }, { once: true });
         const input = root.querySelector("input")!;
         input.value = "ada@example.com";
         input.focus();
@@ -119,6 +127,8 @@ describe("Source — submit trigger", () => {
         expect(captured.url).toBe("http://localhost/api/users");
         expect(captured.init?.method).toBe("POST");
         expect(captured.init?.body).toBe(JSON.stringify({ email: "ada@example.com" }));
+        expect(events.source?.status).toBe(201);
+        expect(events.form?.status).toBe(201);
         expect(root.querySelector("input")).toBe(input);
         expect(input.value).toBe("");
         runtime.stop();
