@@ -47,7 +47,7 @@ describe("assertContentRefsExist", () => {
 
     test("ignores reserved system prefixes (w13c-* except snippet, cms-*)", async () => {
         const cms = makeSystem();
-        await assertContentRefsExist(cms, `<cms-form></cms-form><w13c-fixed-admin-layout></w13c-fixed-admin-layout>`);
+        await assertContentRefsExist(cms, `<cms-binding-core></cms-binding-core><w13c-fixed-admin-layout></w13c-fixed-admin-layout>`);
     });
 
     test("does not query bloc list when content has no bloc refs", async () => {

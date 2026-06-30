@@ -1,5 +1,6 @@
 export { BindingCoreEditor } from "./BindingCoreEditor";
 export { CodeEditor } from "./CodeEditor";
+export { FormEditor } from "./FormEditor";
 export { HeadingEditor } from "./HeadingEditor";
 export { ImageEditor } from "./ImageEditor";
 export { InputEditor } from "./InputEditor";

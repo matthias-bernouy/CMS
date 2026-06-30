@@ -60,8 +60,6 @@ const blocs: Array<[string, string]> = [
     ["toast-stack", "./src/ui/Toast/ToastStack/ToastStack.ts"],
     ["tooltip", "./src/ui/Tooltip/Tooltip.ts"],
 
-    ["w13c-form", "./src/logicalComponents/Form/Form.ts"],
-
     ["stat", "./src/ui/Dataviz/Stat/Stat.ts"],
     ["line-chart", "./src/ui/Dataviz/LineChart/LineChart.ts"],
     ["bar-list", "./src/ui/Dataviz/BarList/BarList.ts"],

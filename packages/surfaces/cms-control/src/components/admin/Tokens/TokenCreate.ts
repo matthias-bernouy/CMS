@@ -7,8 +7,8 @@ import { showToast } from "@bernouy/components";
  * is stored server-side). On success it fires `emit` so the tokens table
  * refreshes, and resets whenever its host `<p9r-modal>` is reopened.
  *
- * It deliberately does NOT use `<cms-form>`: that emits `form:success`, which
- * `<p9r-modal>` listens for to auto-close — but the reveal must stay open.
+ * It deliberately keeps its own flow so the reveal can stay open until the
+ * user copies the token.
  */
 class CmsTokenCreate extends HTMLElement {
 

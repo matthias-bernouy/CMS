@@ -4,7 +4,7 @@ import { showToast } from "@bernouy/components";
 /**
  * `<cms-confirm-form target="..." method="DELETE" emit="..." message="..."
  *  conflict-confirm-message="...">` — a self-contained click→confirm→fetch
- * helper. Replaces the cms-form+confirm pairing for destructive actions
+ * helper. Handles destructive actions that need an explicit confirmation step
  * with optional consumer-aware second-confirm.
  *
  * Flow:

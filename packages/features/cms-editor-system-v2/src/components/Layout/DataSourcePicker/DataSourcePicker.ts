@@ -29,6 +29,7 @@ export const DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
 export class DataSourcePicker extends HTMLElement {
     private _sources: EditorDataSource[] = [];
     private _activeProvider = "";
+    private _activeMethod = "GET";
     private _activeSource: EditorDataSource | null = null;
     private _initialBinding: DataSourcePickerSourceBinding | null = null;
     private _canRemove = false;
@@ -43,11 +44,13 @@ export class DataSourcePicker extends HTMLElement {
             closeButton:   this.closeButton,
             backdrop:      this.backdrop,
             search:        this.search,
+            methodFilter:  this.methodFilter,
             ownerDocument: this.ownerDocument,
         }, {
             close:         this.close,
             backdropClick: this._onBackdropClick,
             searchInput:   this._onSearchInput,
+            methodChange:  this._onMethodChange,
             keydown:       this._onKeydown,
         });
     }
@@ -63,11 +66,18 @@ export class DataSourcePicker extends HTMLElement {
     ): void {
         this._sources = cloneSources(sources);
         this._initialBinding = options.initialBinding ?? null;
+        this.search.value = "";
+        this.methodFilter.onchange = this._onMethodChange;
         this._activeSource = sourceForBinding(this._sources, this._initialBinding);
-        this._activeProvider = this._activeSource?.provider ?? firstProviderKey(this._sources, this.search.value);
+        this._activeMethod = this._activeSource ? this._sourceMethod(this._activeSource) : "GET";
+        this._selectMethodFilter(this._activeMethod);
+        if (this._methodSources().length === 0) {
+            this._activeMethod = "all";
+            this._selectMethodFilter("all");
+        }
+        this._activeProvider = this._activeSource?.provider ?? firstProviderKey(this._methodSources(), this.search.value);
         this._canRemove = options.canRemove === true;
         this.subtitle.textContent = contextLabel ? `Choose a data source for ${contextLabel}.` : "Choose a data source.";
-        this.search.value = "";
         this.backdrop.hidden = false;
         this._render();
         this.search.focus();
@@ -120,13 +130,22 @@ export class DataSourcePicker extends HTMLElement {
     };
     private _sourceBinding(source: EditorDataSource): DataSourcePickerSourceBinding { return readSourceBinding(this.shadowRoot!, source); }
     private _providerGroups(): DataSourceProviderGroup[] { return providerGroups(this._filteredSources()); }
-    private _visibleSources(): EditorDataSource[] { return visibleSources(this._sources, this.search.value, this._activeProvider); }
-    private _filteredSources(): EditorDataSource[] { return filteredSources(this._sources, this.search.value); }
+    private _visibleSources(): EditorDataSource[] { return visibleSources(this._methodSources(), this.search.value, this._activeProvider); }
+    private _filteredSources(): EditorDataSource[] { return filteredSources(this._methodSources(), this.search.value); }
+    private _methodSources(): EditorDataSource[] {
+        return this._sources.filter(source => this._activeMethod === "all" || this._sourceMethod(source) === this._activeMethod);
+    }
     private readonly _onBackdropClick = (event: Event): void => {
         if (event.target === this.backdrop) this.close();
     };
     private readonly _onSearchInput = (): void => {
-        this._activeProvider = firstProviderKey(this._sources, this.search.value);
+        this._activeProvider = firstProviderKey(this._methodSources(), this.search.value);
+        this._activeSource = null;
+        this._render();
+    };
+    private readonly _onMethodChange = (): void => {
+        this._activeMethod = this._selectedMethodFilter();
+        this._activeProvider = firstProviderKey(this._methodSources(), this.search.value);
         this._activeSource = null;
         this._render();
     };
@@ -137,11 +156,32 @@ export class DataSourcePicker extends HTMLElement {
     private get closeButton(): HTMLButtonElement { return this.query(".close"); }
     private get subtitle(): HTMLElement { return this.query(".subtitle"); }
     private get search(): HTMLInputElement { return this.query(".search"); }
+    private get methodFilter(): HTMLSelectElement { return this.query(".method-filter"); }
     private get providers(): HTMLElement { return this.query(".providers"); }
     private get sourcesList(): HTMLElement { return this.query(".sources"); }
     private get details(): HTMLElement { return this.query(".details"); }
     private get binding(): HTMLElement { return this.query(".binding"); }
     private query<T extends Element>(selector: string): T { return this.shadowRoot!.querySelector<T>(selector)!; }
+    private _sourceMethod(source: EditorDataSource): string { return source.method ?? "GET"; }
+    private _selectMethodFilter(value: string): void {
+        const options = Array.from(this.methodFilter.options);
+        const index = options.findIndex(option => option.value === value);
+        this.methodFilter.selectedIndex = index >= 0 ? index : 0;
+        options.forEach((option, i) => {
+            option.selected = i === this.methodFilter.selectedIndex;
+            option.toggleAttribute("selected", option.selected);
+        });
+        this.methodFilter.setAttribute("value", options[this.methodFilter.selectedIndex]?.value ?? "GET");
+    }
+    private _selectedMethodFilter(): string {
+        const options = Array.from(this.methodFilter.options);
+        const selected = options.find(option => option.selected);
+        if (selected?.value) return selected.value;
+        const selectedIndexValue = this.methodFilter.options[this.methodFilter.selectedIndex]?.value;
+        if (selectedIndexValue) return selectedIndexValue;
+        const selectedAttr = options.find(option => option.hasAttribute("selected"));
+        return selectedAttr?.value ?? this.methodFilter.getAttribute("value") ?? "GET";
+    }
 }
 
 if (!customElements.get("cms-editor-v2-data-source-picker")) {

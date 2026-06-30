@@ -8,6 +8,10 @@ export const CMS_BINDING_ATTRIBUTES = {
     repeat:           "cms-repeat",
     source:           "cms-source",
     sourceId:         "cms-source-id",
+    sourceMethod:     "cms-source-method",
+    sourcePublish:    "cms-source-publish",
+    sourceSuccessRedirect: "cms-source-success-redirect",
+    sourceSuccessReset:    "cms-source-success-reset",
     sourceStateForce: "cms-source-state-force",
     sourceTrigger:    "cms-source-trigger",
 } as const;
@@ -25,6 +29,8 @@ export type CmsConditionExpression = string;
 export type CmsRepeatBinding = { path: string; alias?: string };
 export const CMS_SOURCE_TRIGGERS = ["auto", "submit"] as const;
 export type CmsSourceTrigger = typeof CMS_SOURCE_TRIGGERS[number];
+export const CMS_SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"] as const;
+export type CmsSourceMethod = typeof CMS_SOURCE_METHODS[number];
 export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type CmsSourceState = typeof CMS_SOURCE_STATES[number];
 export type CmsSourceStateForce = CmsSourceState;
@@ -165,6 +171,10 @@ export function isCmsSourceState(value: string | null): value is CmsSourceState 
 
 export function isCmsSourceTrigger(value: string | null): value is CmsSourceTrigger {
     return (CMS_SOURCE_TRIGGERS as readonly string[]).includes(value ?? "");
+}
+
+export function isCmsSourceMethod(value: string | null): value is CmsSourceMethod {
+    return (CMS_SOURCE_METHODS as readonly string[]).includes((value ?? "").toUpperCase());
 }
 
 export function clearBindingRuntimeState(root: Element): void {

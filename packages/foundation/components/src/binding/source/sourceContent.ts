@@ -28,6 +28,23 @@ export function captureSourceContent(el: Element): CapturedSourceContent {
     return { template, body };
 }
 
+export function cloneSourceContent(el: Element): CapturedSourceContent {
+    const doc = el.ownerDocument ?? document;
+    const body = doc.createDocumentFragment();
+    const template = doc.createDocumentFragment();
+
+    for (const child of Array.from(el.childNodes)) {
+        template.appendChild(child.cloneNode(true));
+        if (child.nodeType === Node.ELEMENT_NODE && (child as Element).tagName === "TEMPLATE") {
+            body.appendChild(((child as HTMLTemplateElement).content.cloneNode(true)));
+        } else {
+            body.appendChild(child.cloneNode(true));
+        }
+    }
+
+    return { template, body };
+}
+
 export function isEmpty(data: unknown): boolean {
     if (data == null) return true;
     if (Array.isArray(data)) return data.length === 0;

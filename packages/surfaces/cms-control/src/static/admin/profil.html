@@ -58,19 +58,19 @@
 
                             <p9r-card>
                                 <span slot="header">Account</span>
-                                <cms-form target="{{BASE_PATH}}/api/profil" emit="profil:updated">
+                                <form cms-source="{{BASE_PATH}}/api/profil as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="profil:updated" cms-source-success-reset="false">
                                     <p9r-stack gap="md">
                                         <p9r-input name="displayName" label="Display name" value="{{ displayName }}" placeholder="Your name"></p9r-input>
                                         <p9r-stack direction="row" justify="end">
                                             <p9r-button color="primary" type="submit">Save</p9r-button>
                                         </p9r-stack>
                                     </p9r-stack>
-                                </cms-form>
+                                </form>
                             </p9r-card>
 
                             <p9r-card cms-repeat="passwordCard">
                                     <span slot="header">Password</span>
-                                    <cms-form target="{{BASE_PATH}}/api/profil/password" emit="password:changed">
+                                    <form cms-source="{{BASE_PATH}}/api/profil/password as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="password:changed">
                                         <p9r-stack gap="md">
                                             <p9r-input name="currentPassword" type="password" label="Current password" autocomplete="current-password" required></p9r-input>
                                             <p9r-input name="newPassword" type="password" label="New password" placeholder="At least 8 characters" autocomplete="new-password" required></p9r-input>
@@ -78,7 +78,7 @@
                                                 <p9r-button color="primary" type="submit">Change password</p9r-button>
                                             </p9r-stack>
                                         </p9r-stack>
-                                    </cms-form>
+                                    </form>
                                 </p9r-card>
 
                             <p9r-card>

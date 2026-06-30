@@ -3,6 +3,7 @@ import { BindingCore } from "@bernouy/components";
 import {
     BindingCoreEditor,
     CodeEditor,
+    FormEditor,
     HeadingEditor,
     ImageEditor,
     InputEditor,
@@ -22,6 +23,7 @@ type NativeElementConstructorName =
     | "HTMLElement"
     | "HTMLHeadingElement"
     | "HTMLImageElement"
+    | "HTMLFormElement"
     | "HTMLInputElement"
     | "HTMLLIElement"
     | "HTMLOListElement"
@@ -105,6 +107,16 @@ export function createControlEditorCatalog(): EditorCatalog {
             defaultContent: `<input type="text" name="search" placeholder="Search">`,
             bloc: nativeElementConstructor("HTMLInputElement"),
             editor: InputEditor,
+        },
+        {
+            tag: "form",
+            label: "Form",
+            description: "A native form that submits through cms-source.",
+            icon: "send",
+            category: "Forms",
+            defaultContent: `<form cms-source-trigger="submit"><input type="email" name="email" placeholder="Email" required><input type="submit" value="Submit"></form>`,
+            bloc: nativeElementConstructor("HTMLFormElement"),
+            editor: FormEditor,
         },
         {
             tag: "select",

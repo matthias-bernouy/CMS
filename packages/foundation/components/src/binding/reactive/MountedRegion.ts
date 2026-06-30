@@ -22,6 +22,18 @@ export class MountedRegion {
     }
 }
 
+export class MountedInPlaceRegion {
+    constructor(private readonly sites: LiveBindingSite[]) {}
+
+    update(scope: Scope): void {
+        for (const site of this.sites) site.update(scope);
+    }
+
+    unmount(): void {
+        for (const site of this.sites) site.unmount?.();
+    }
+}
+
 export function clearBetween(start: Node, end: Node): void {
     let node = start.nextSibling;
     while (node && node !== end) {

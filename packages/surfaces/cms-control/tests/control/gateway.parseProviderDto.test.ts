@@ -2,7 +2,7 @@ import { describe, test, expect } from "bun:test";
 import { parseSourceDto } from "cms-control/core/validation/gateway/parseSourceDto";
 import { sourceDtoToSource } from "@bernouy/cms-sources";
 
-/** A valid single-endpoint body, as `<cms-form>` would post it (flat keys). */
+/** A valid single-endpoint body, as an admin form posts it (flat keys). */
 const validBody = (over: Record<string, unknown> = {}) => ({
     id: "shop",
     "meta.name": "Shop",

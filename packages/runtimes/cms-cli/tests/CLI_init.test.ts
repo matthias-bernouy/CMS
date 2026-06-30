@@ -97,23 +97,6 @@ describe("p9r init", () => {
         expect(gridEditor).toContain(`attribute: "item-align"`);
         expect(gridEditor).not.toContain(`label: "Columns"`);
 
-        const formEditor = await readFile(join(target, "site", "blocs", "Form", "base-form", "BlocEditor.ts"), "utf-8");
-        expect(formEditor).toContain(`type: "endpoint-picker"`);
-        expect(formEditor).toContain(`attribute: "endpoint"`);
-        expect(formEditor).toContain(`methodAttribute: "method"`);
-
-        const formDefault = await readFile(join(target, "site", "blocs", "Form", "base-form", "default.html"), "utf-8");
-        expect(formDefault).toContain(`<base-search-input name="search" placeholder="Search">`);
-        expect(formDefault).toContain(`<option value="First suggestion"></option>`);
-        expect(formDefault).not.toContain(`<datalist`);
-
-        const formBloc = await readFile(join(target, "site", "blocs", "Form", "base-form", "Bloc.ts"), "utf-8");
-        expect(formBloc).toContain(`fetch(endpoint, init)`);
-        expect(formBloc).toContain(`this.addEventListener("click", this._onClick)`);
-        expect(formBloc).toContain(`this.addEventListener("keydown", this._onKeyDown)`);
-        expect(formBloc).toContain(`FORM_SUCCESS_EVENT`);
-        expect(formBloc).toContain(`FORM_ERROR_EVENT`);
-
         const searchInputEditor = await readFile(join(target, "site", "blocs", "Form", "base-search-input", "BlocEditor.ts"), "utf-8");
         expect(searchInputEditor).toContain(`label: "Options"`);
         expect(searchInputEditor).toContain(`tag: "option"`);
@@ -128,7 +111,7 @@ describe("p9r init", () => {
         expect(searchInputCss).toContain(`::slotted(option)`);
 
         const loginPage = await readFile(join(target, "site", "pages", "auth", "login.html"), "utf-8");
-        expect(loginPage).toContain(`<base-form endpoint="/.cms/auth/login" method="POST" redirect="/">`);
+        expect(loginPage).toContain(`<form cms-source="/.cms/auth/login as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-redirect="/">`);
 
         const listingsPage = await readFile(join(target, "site", "pages", "annonces.html"), "utf-8");
         expect(listingsPage).toContain(`title: Annonces`);
@@ -140,17 +123,17 @@ describe("p9r init", () => {
         expect(listingsPage).toContain(`data:image/svg+xml`);
 
         const registerPage = await readFile(join(target, "site", "pages", "auth", "register.html"), "utf-8");
-        expect(registerPage).toContain(`<base-form endpoint="/.cms/auth/signup" method="POST" redirect="/auth/login">`);
+        expect(registerPage).toContain(`<form cms-source="/.cms/auth/signup as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-redirect="/auth/login">`);
         expect(registerPage).toContain(`name="displayName"`);
 
         const forgotPasswordPage = await readFile(join(target, "site", "pages", "auth", "forgot-password.html"), "utf-8");
-        expect(forgotPasswordPage).toContain(`<base-form endpoint="/.cms/auth/password/reset/request" method="POST" redirect="/auth/login">`);
+        expect(forgotPasswordPage).toContain(`<form cms-source="/.cms/auth/password/reset/request as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-redirect="/auth/login">`);
 
         const confirmEmailPage = await readFile(join(target, "site", "pages", "auth", "confirm-email.html"), "utf-8");
-        expect(confirmEmailPage).toContain(`<base-form endpoint="/.cms/auth/email/verification/confirm" method="POST" redirect="/auth/login">`);
+        expect(confirmEmailPage).toContain(`<form cms-source="/.cms/auth/email/verification/confirm as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-redirect="/auth/login">`);
 
         const resetPasswordPage = await readFile(join(target, "site", "pages", "auth", "reset-password.html"), "utf-8");
-        expect(resetPasswordPage).toContain(`<base-form endpoint="/.cms/auth/password/reset/confirm" method="POST" redirect="/auth/login">`);
+        expect(resetPasswordPage).toContain(`<form cms-source="/.cms/auth/password/reset/confirm as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-redirect="/auth/login">`);
 
         const blocs = await scanDevBlocs(join(target, "site", "blocs"), { quiet: true });
         expect(blocs.map(bloc => bloc.tag).sort()).toEqual([
@@ -158,7 +141,6 @@ describe("p9r init", () => {
             "base-container",
             "base-footer",
             "base-footer-column",
-            "base-form",
             "base-grid",
             "base-horizontal-navbar",
             "base-nav-item",
@@ -169,7 +151,6 @@ describe("p9r init", () => {
 
         const byTag = Object.fromEntries(blocs.map(bloc => [bloc.tag, bloc]));
         expect(byTag["base-card"]?.group).toBe("Layout");
-        expect(byTag["base-form"]?.group).toBe("Form");
         expect(byTag["base-search-input"]?.group).toBe("Form");
         expect(byTag["base-footer"]?.group).toBe("Navigation");
         expect(byTag["base-horizontal-navbar"]?.group).toBe("Navigation");
@@ -177,12 +158,12 @@ describe("p9r init", () => {
         expect(byTag["base-skeleton"]?.group).toBe("Feedback");
 
         const built = await buildAllDevBlocs(blocs);
-        expect(built.size).toBe(11);
+        expect(built.size).toBe(10);
 
         for (const file of starterEditableHtmlFiles) {
             const html = await readFile(join(target, ...file), "utf-8");
 
-            expect(html).not.toMatch(/<\/?(main|section|article|div|form|label|button|strong|small|header|footer)\b/i);
+            expect(html).not.toMatch(/<\/?(main|section|article|div|label|button|strong|small|header|footer)\b/i);
             expect(html).not.toMatch(/\sclass=/i);
             expect(html).not.toMatch(/\sstyle=/i);
             expect(html).not.toMatch(/<script\b/i);

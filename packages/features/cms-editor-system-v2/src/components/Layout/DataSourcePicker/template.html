@@ -7,7 +7,17 @@
             </div>
             <button class="close" type="button" aria-label="Close">×</button>
         </header>
-        <input class="search" type="search" placeholder="Search sources" />
+        <div class="toolbar">
+            <input class="search" type="search" placeholder="Search sources" />
+            <select class="method-filter" aria-label="Method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="PATCH">PATCH</option>
+                <option value="DELETE">DELETE</option>
+                <option value="all">All</option>
+            </select>
+        </div>
         <div class="body">
             <aside class="providers" aria-label="Providers"></aside>
             <div class="sources" role="listbox" aria-label="Data sources"></div>

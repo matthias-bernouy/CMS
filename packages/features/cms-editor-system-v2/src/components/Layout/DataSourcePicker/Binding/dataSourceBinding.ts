@@ -1,4 +1,5 @@
 import type { EditorDataSource } from "../../../../runtime";
+import type { EditorDataSourceMethod } from "../../../../runtime";
 
 export type DataSourcePickerSourceParamValue =
     | { from: "queryParam"; name: string }
@@ -8,6 +9,7 @@ export type DataSourcePickerSourceParamValue =
 export type DataSourcePickerSourceBinding = {
     url: string;
     alias?: string;
+    method?: EditorDataSourceMethod;
     params?: Record<string, DataSourcePickerSourceParamValue>;
     trigger?: "auto" | "submit";
 };
@@ -21,6 +23,7 @@ export function sourceForBinding(
 }
 
 export function sourceMatchesBinding(source: EditorDataSource, binding: DataSourcePickerSourceBinding): boolean {
+    if (binding.method && (source.method ?? "GET") !== binding.method) return false;
     return bindingQuery(source.url, binding.url) !== null;
 }
 

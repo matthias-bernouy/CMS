@@ -10,9 +10,11 @@ import {
     type SourceStatusValue,
     type SourceStatusOptions,
 } from "./sourceStatus";
+import type { FormSubmitResult } from "../submit/formSubmit";
 
 export class SourcePresenter {
     private readonly conditions: Set<SourceState>;
+    private renderedBody = false;
 
     constructor(
         private readonly el: Element,
@@ -27,12 +29,15 @@ export class SourcePresenter {
         const initial: SourceStatusValue = { loading: false, loaded: false, empty: false, error: false };
         publishSourceStatus(this.el, initial, this.options);
         this.renderer.body(this.scope(alias, initial, undefined));
+        this.renderedBody = true;
     }
 
     loading(alias: string | undefined): void {
         const loading = statusValue("loading", undefined);
         publishSourceStatus(this.el, loading, this.options);
+        if (this.renderedBody && !this.hasConditions("loading")) return;
         this.renderer.body(this.scope(alias, loading, undefined));
+        this.renderedBody = true;
     }
 
     error(alias: string | undefined, url: string, status: number | null, message: string): void {
@@ -40,6 +45,7 @@ export class SourcePresenter {
         const errorStatus = statusValue("error", errorValue);
         publishSourceStatus(this.el, errorStatus, this.options);
         this.renderer.body(this.scope(alias, errorStatus, errorValue));
+        this.renderedBody = true;
         if (!this.hasConditions("error")) console.warn(`cms-source "${url}": ${message}`);
     }
 
@@ -49,6 +55,15 @@ export class SourcePresenter {
         publishSourceStatus(this.el, sourceStatus, this.options);
         const scope = this.scope(alias, sourceStatus, data);
         this.renderer.body(scope);
+        this.renderedBody = true;
+    }
+
+    result(alias: string | undefined, result: FormSubmitResult): void {
+        const state = result.ok ? "loaded" : "error";
+        const sourceStatus = statusValue(state, result);
+        publishSourceStatus(this.el, sourceStatus, this.options);
+        this.renderer.body(this.scope(alias, sourceStatus, result));
+        this.renderedBody = true;
     }
 
     forced(state: Exclude<SourceState, "loaded">): void {
@@ -57,6 +72,7 @@ export class SourcePresenter {
         const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
         publishSourceStatus(this.el, forcedStatus, this.options);
         this.renderer.body(this.scope(spec.alias, forcedStatus, forcedValue));
+        this.renderedBody = true;
     }
 
     private scope(alias: string | undefined, sourceStatus: SourceStatusValue, value: unknown) {

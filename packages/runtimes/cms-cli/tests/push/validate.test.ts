@@ -16,7 +16,7 @@ describe("extractRefs", () => {
             `<p9r-input></p9r-input>
              <w13c-fixed-admin-layout></w13c-fixed-admin-layout>
              <be5-editor></be5-editor>
-             <cms-form></cms-form>
+             <cms-binding-core></cms-binding-core>
              <base-card></base-card>
              <cs-stat-tile></cs-stat-tile>`,
         );

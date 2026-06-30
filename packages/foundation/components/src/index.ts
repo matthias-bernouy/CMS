@@ -103,11 +103,6 @@ export { LineChart } from "./ui/Dataviz/LineChart/LineChart";
 export { BarList } from "./ui/Dataviz/BarList/BarList";
 export { RangeTabs } from "./ui/Dataviz/RangeTabs/RangeTabs";
 
-
-
-
-export { Form } from "./logicalComponents/Form/Form";
-
 // Data-binding runtime
 export {
     BindingCore,

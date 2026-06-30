@@ -112,7 +112,11 @@ describe("editor binding syntax", () => {
             repeat: "cms-repeat",
             source: "cms-source",
             sourceId: "cms-source-id",
+            sourceMethod: "cms-source-method",
+            sourcePublish: "cms-source-publish",
             sourceStateForce: "cms-source-state-force",
+            sourceSuccessRedirect: "cms-source-success-redirect",
+            sourceSuccessReset: "cms-source-success-reset",
             sourceTrigger: "cms-source-trigger",
         });
         expect(CMS_BINDING_RUNTIME_ATTRIBUTES).toEqual({ ready: "cms-ready" });

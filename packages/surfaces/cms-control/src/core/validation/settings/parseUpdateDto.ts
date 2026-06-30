@@ -5,7 +5,7 @@ import { coercePageRef, defaultSystem } from "@bernouy/cms-content";
 export type SettingsUpdateDto = Partial<TSystem>;
 
 /**
- * Validates a flat dotted body (as emitted by `<cms-form>`) against the
+ * Validates a flat dotted body (as emitted by the admin settings forms) against the
  * settings-update contract and produces a nested `Partial<TSystem>`.
  * `site.notFound` / `site.serverError` are coerced from `string` to
  * `TPageRef` (`""` → `null`, `"/path"` → `{ path }`).

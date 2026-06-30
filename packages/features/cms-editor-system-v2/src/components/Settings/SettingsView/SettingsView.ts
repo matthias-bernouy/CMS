@@ -315,6 +315,9 @@ export class SettingsView extends HTMLElement {
             this._disconnectEndpointPickerEvents?.();
             const attributes: SettingsViewAttributeChanges = { [setting.attribute]: null };
             if (setting.methodAttribute) attributes[setting.methodAttribute] = null;
+            if (this._usesSourceBinding(setting)) {
+                attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = null;
+            }
             this._syncEndpointButton(button, setting, null, "");
             this._emitSettingChange(setting, "", attributes);
         };
@@ -373,6 +376,7 @@ export class SettingsView extends HTMLElement {
             return source ? {
                 url: source.url,
                 ...(source.alias ? { alias: source.alias } : {}),
+                ...(setting.defaultMethod ? { method: setting.defaultMethod } : {}),
             } : null;
         }
 
@@ -393,7 +397,10 @@ export class SettingsView extends HTMLElement {
         value: string,
     ): SettingsViewAttributeChanges {
         const attributes: SettingsViewAttributeChanges = { [setting.attribute]: value };
-        if (setting.methodAttribute) attributes[setting.methodAttribute] = this._endpointMethod(detail.source);
+        if (setting.methodAttribute) attributes[setting.methodAttribute] = detail.binding.method ?? this._endpointMethod(detail.source);
+        if (this._usesSourceBinding(setting)) {
+            attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = detail.binding.trigger === "submit" ? "submit" : null;
+        }
         return attributes;
     }
 

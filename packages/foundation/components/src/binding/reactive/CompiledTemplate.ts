@@ -1,9 +1,10 @@
-import { BINDING_CORE_TAG, CONDITION_ATTR, REPEAT_ATTR, SOURCE_ATTR } from "../attrs";
+import { BINDING_CORE_TAG, CONDITION_ATTR, REPEAT_ATTR, SOURCE_ATTR, SOURCE_TRIGGER_ATTR } from "../attrs";
 import { interpolateString, type FilterMap } from "../interpolate";
 import { parseRepeat, type RepeatSpec } from "../render/repeat";
 import { evaluateCondition } from "../render/condition";
 import { lookup, type Scope } from "../scope";
-import { clearBetween, MountedRegion, type LiveBindingSite } from "./MountedRegion";
+import { clearBetween, MountedInPlaceRegion, MountedRegion, type LiveBindingSite } from "./MountedRegion";
+import { parseSourceSpec } from "../source/sourceSpec";
 
 type NodePath = number[];
 
@@ -47,6 +48,11 @@ type CompilePlan = {
 type CompileOptions = {
     skipRootCondition?: boolean;
     skipRootRepeat?: boolean;
+    submitBoundary?: SubmitSourceBoundary | null;
+};
+
+type SubmitSourceBoundary = {
+    alias?: string;
 };
 
 export class CompiledTemplate {
@@ -84,6 +90,17 @@ export class CompiledTemplate {
 
     static fromTemplate(template: DocumentFragment, filters: FilterMap, options: CompileOptions = {}): CompiledTemplate {
         return new CompiledTemplate(template, compile(template, filters, options), filters);
+    }
+
+    static bindChildrenInPlace(parent: Element, scope: Scope, filters: FilterMap = {}): MountedInPlaceRegion {
+        const doc = parent.ownerDocument ?? document;
+        const template = doc.createDocumentFragment();
+        for (const child of Array.from(parent.childNodes)) template.appendChild(child.cloneNode(true));
+        const plan = compile(template, filters);
+        const sites = instantiateSites(parent, plan, filters);
+        const region = new MountedInPlaceRegion(sites);
+        region.update(scope);
+        return region;
     }
 }
 
@@ -216,6 +233,7 @@ function compile(fragment: DocumentFragment, filters: FilterMap, options: Compil
         compileNode(child, [index], {
             skipCondition: options.skipRootCondition === true,
             skipRepeat: options.skipRootRepeat === true,
+            submitBoundary: options.submitBoundary ?? null,
         }, plan, filters);
     });
     return plan;
@@ -224,63 +242,84 @@ function compile(fragment: DocumentFragment, filters: FilterMap, options: Compil
 function compileNode(
     node: Node,
     path: NodePath,
-    options: { skipCondition: boolean; skipRepeat: boolean },
+    options: { skipCondition: boolean; skipRepeat: boolean; submitBoundary: SubmitSourceBoundary | null },
     plan: CompilePlan,
     filters: FilterMap,
 ): void {
     if (node.nodeType === Node.TEXT_NODE) {
         const template = node.nodeValue ?? "";
-        if (hasBinding(template)) plan.text.push({ path, template });
+        if (hasBinding(template) && !bindingOwnedBySubmitSource(template, options.submitBoundary)) plan.text.push({ path, template });
         return;
     }
 
     if (node.nodeType !== Node.ELEMENT_NODE) return;
     const el = node as Element;
 
-    if (!options.skipRepeat && el.hasAttribute(REPEAT_ATTR)) {
+    if (!options.skipRepeat && el.hasAttribute(REPEAT_ATTR) && !pathOwnedBySubmitSource(el.getAttribute(REPEAT_ATTR) ?? "", options.submitBoundary)) {
+        const rootCondition = el.getAttribute(CONDITION_ATTR);
+        const rootConditionOwnedBySubmit = rootCondition
+            ? conditionOwnedBySubmitSource(rootCondition, options.submitBoundary)
+            : false;
         plan.repeats.push({
             path,
             spec: parseRepeat(el.getAttribute(REPEAT_ATTR) ?? ""),
-            template: compileElementTemplate(el, filters, { removeRepeat: true }),
-            rootCondition: el.getAttribute(CONDITION_ATTR),
+            template: compileElementTemplate(el, filters, {
+                removeRepeat: true,
+                removeCondition: !!options.submitBoundary && !!rootCondition && !rootConditionOwnedBySubmit,
+                submitBoundary: options.submitBoundary,
+            }),
+            rootCondition: rootConditionOwnedBySubmit ? null : rootCondition,
         });
         return;
     }
 
-    if (!options.skipCondition && el.hasAttribute(CONDITION_ATTR)) {
+    if (!options.skipCondition && el.hasAttribute(CONDITION_ATTR) && !conditionOwnedBySubmitSource(el.getAttribute(CONDITION_ATTR) ?? "", options.submitBoundary)) {
         plan.conditions.push({
             path,
             expression: el.getAttribute(CONDITION_ATTR) ?? "",
-            template: compileElementTemplate(el, filters),
+            template: compileElementTemplate(el, filters, {
+                removeCondition: !!options.submitBoundary,
+                submitBoundary: options.submitBoundary,
+            }),
         });
         return;
     }
 
-    if (el.hasAttribute(SOURCE_ATTR) || el.localName === BINDING_CORE_TAG) {
-        compileAttributes(el, path, plan);
+    if (el.hasAttribute(SOURCE_ATTR)) {
+        compileAttributes(el, path, plan, options.submitBoundary);
+        if (el.getAttribute(SOURCE_TRIGGER_ATTR)?.trim().toLowerCase() !== "submit") return;
+        const nextBoundary = submitBoundary(el);
+        Array.from(el.childNodes).forEach((child, index) => {
+            compileNode(child, [...path, index], { skipCondition: false, skipRepeat: false, submitBoundary: nextBoundary }, plan, filters);
+        });
+        return;
+    }
+
+    if (el.localName === BINDING_CORE_TAG) {
+        compileAttributes(el, path, plan, options.submitBoundary);
         return;
     }
 
     const rawHtml = rawHtmlExpression(el);
     if (rawHtml) {
-        plan.rawHtml.push({ path, expression: rawHtml });
+        if (!pathOwnedBySubmitSource(rawHtml, options.submitBoundary)) plan.rawHtml.push({ path, expression: rawHtml });
         return;
     }
 
-    compileAttributes(el, path, plan);
+    compileAttributes(el, path, plan, options.submitBoundary);
 
     Array.from(el.childNodes).forEach((child, index) => {
-        compileNode(child, [...path, index], { skipCondition: false, skipRepeat: false }, plan, filters);
+        compileNode(child, [...path, index], { skipCondition: false, skipRepeat: false, submitBoundary: options.submitBoundary }, plan, filters);
     });
 }
 
-function instantiateSites(fragment: DocumentFragment, plan: CompilePlan, filters: FilterMap): LiveBindingSite[] {
+function instantiateSites(root: Node, plan: CompilePlan, filters: FilterMap): LiveBindingSite[] {
     const sites: LiveBindingSite[] = [];
-    const textTargets = plan.text.map((text) => ({ plan: text, node: nodeAtPath(fragment, text.path) }));
-    const attrTargets = plan.attributes.map((attr) => ({ plan: attr, node: nodeAtPath(fragment, attr.path) }));
-    const conditionTargets = plan.conditions.map((condition) => ({ plan: condition, node: nodeAtPath(fragment, condition.path) }));
-    const repeatTargets = plan.repeats.map((repeat) => ({ plan: repeat, node: nodeAtPath(fragment, repeat.path) }));
-    const rawHtmlTargets = plan.rawHtml.map((rawHtml) => ({ plan: rawHtml, node: nodeAtPath(fragment, rawHtml.path) }));
+    const textTargets = plan.text.map((text) => ({ plan: text, node: nodeAtPath(root, text.path) }));
+    const attrTargets = plan.attributes.map((attr) => ({ plan: attr, node: nodeAtPath(root, attr.path) }));
+    const conditionTargets = plan.conditions.map((condition) => ({ plan: condition, node: nodeAtPath(root, condition.path) }));
+    const repeatTargets = plan.repeats.map((repeat) => ({ plan: repeat, node: nodeAtPath(root, repeat.path) }));
+    const rawHtmlTargets = plan.rawHtml.map((rawHtml) => ({ plan: rawHtml, node: nodeAtPath(root, rawHtml.path) }));
 
     for (const { plan: text, node } of textTargets) {
         if (node.nodeType !== Node.TEXT_NODE) throw new Error("Compiled text binding no longer points to a text node.");
@@ -310,7 +349,7 @@ function instantiateSites(fragment: DocumentFragment, plan: CompilePlan, filters
     return sites;
 }
 
-function nodeAtPath(root: DocumentFragment, path: NodePath): Node {
+function nodeAtPath(root: Node, path: NodePath): Node {
     let node: Node = root;
     for (const index of path) {
         const child = node.childNodes.item(index);
@@ -324,22 +363,28 @@ function hasBinding(value: string): boolean {
     return value.includes("{{");
 }
 
-function compileAttributes(el: Element, path: NodePath, plan: CompilePlan): void {
+function compileAttributes(el: Element, path: NodePath, plan: CompilePlan, boundary: SubmitSourceBoundary | null = null): void {
     for (const attr of Array.from(el.attributes)) {
-        if (hasBinding(attr.value)) {
+        if (hasBinding(attr.value) && !bindingOwnedBySubmitSource(attr.value, boundary)) {
             plan.attributes.push({ path, name: attr.name, template: attr.value });
         }
     }
 }
 
-function compileElementTemplate(el: Element, filters: FilterMap, options: { removeRepeat?: boolean } = {}): CompiledTemplate {
+function compileElementTemplate(
+    el: Element,
+    filters: FilterMap,
+    options: { removeRepeat?: boolean; removeCondition?: boolean; submitBoundary?: SubmitSourceBoundary | null } = {},
+): CompiledTemplate {
     const fragment = (el.ownerDocument ?? document).createDocumentFragment();
     const clone = el.cloneNode(true) as Element;
     if (options.removeRepeat) clone.removeAttribute(REPEAT_ATTR);
+    if (options.removeCondition) clone.removeAttribute(CONDITION_ATTR);
     fragment.appendChild(clone);
     return CompiledTemplate.fromTemplate(fragment, filters, {
         skipRootCondition: true,
         skipRootRepeat: options.removeRepeat === true,
+        submitBoundary: options.submitBoundary ?? null,
     });
 }
 
@@ -356,10 +401,40 @@ function replaceWithAnchors(node: Node, label: string): { start: Comment; end: C
 }
 
 const RAW_HTML = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+const BINDING_TOKEN = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+const CONDITION_PATH = /!?([A-Za-z_$][\w$]*(?:\.[\w$-]+)*)/g;
 
 function rawHtmlExpression(el: Element): string | null {
     if (el.childNodes.length !== 1) return null;
     const only = el.firstChild;
     if (!only || only.nodeType !== Node.TEXT_NODE) return null;
     return (only.nodeValue ?? "").trim().match(RAW_HTML)?.[1] ?? null;
+}
+
+function submitBoundary(el: Element): SubmitSourceBoundary {
+    return { alias: parseSourceSpec(el.getAttribute(SOURCE_ATTR) ?? "").alias };
+}
+
+function bindingOwnedBySubmitSource(value: string, boundary: SubmitSourceBoundary | null): boolean {
+    if (!boundary) return false;
+    BINDING_TOKEN.lastIndex = 0;
+    for (const match of value.matchAll(BINDING_TOKEN)) {
+        if (pathOwnedBySubmitSource(match[1] ?? "", boundary)) return true;
+    }
+    return false;
+}
+
+function conditionOwnedBySubmitSource(value: string, boundary: SubmitSourceBoundary | null): boolean {
+    if (!boundary) return false;
+    CONDITION_PATH.lastIndex = 0;
+    for (const match of value.matchAll(CONDITION_PATH)) {
+        if (pathOwnedBySubmitSource(match[1] ?? "", boundary)) return true;
+    }
+    return false;
+}
+
+function pathOwnedBySubmitSource(path: string, boundary: SubmitSourceBoundary | null): boolean {
+    if (!boundary) return false;
+    const head = path.trim().split(".")[0] ?? "";
+    return head === "$source" || (!!boundary.alias && head === boundary.alias);
 }

@@ -4,6 +4,10 @@ export const SOURCE_STATE_FORCE_ATTR = "cms-source-state-force";
 export const SOURCE_ATTR = "cms-source";
 export const SOURCE_ID_ATTR = "cms-source-id";
 export const SOURCE_TRIGGER_ATTR = "cms-source-trigger";
+export const SOURCE_METHOD_ATTR = "cms-source-method";
+export const SOURCE_PUBLISH_ATTR = "cms-source-publish";
+export const SOURCE_SUCCESS_RESET_ATTR = "cms-source-success-reset";
+export const SOURCE_SUCCESS_REDIRECT_ATTR = "cms-source-success-redirect";
 export const REPEAT_ATTR = "cms-repeat";
 export const CONDITION_ATTR = "cms-condition";
 export const PARAM_SYNC_ATTR = "cms-param-sync";
@@ -13,6 +17,8 @@ export const SOURCE_STATES = ["loaded", "loading", "empty", "error"] as const;
 export type SourceState = typeof SOURCE_STATES[number];
 export const SOURCE_TRIGGERS = ["auto", "submit"] as const;
 export type SourceTrigger = typeof SOURCE_TRIGGERS[number];
+export const SOURCE_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"] as const;
+export type SourceMethod = typeof SOURCE_METHODS[number];
 
 /**
  * Marks a subtree the runtime must NOT discover sources within. Unlike a
@@ -34,4 +40,8 @@ export function isSourceState(value: string | null): value is SourceState {
 
 export function isSourceTrigger(value: string | null): value is SourceTrigger {
     return (SOURCE_TRIGGERS as readonly string[]).includes(value ?? "");
+}
+
+export function isSourceMethod(value: string | null): value is SourceMethod {
+    return (SOURCE_METHODS as readonly string[]).includes((value ?? "").toUpperCase());
 }

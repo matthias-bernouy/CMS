@@ -8,7 +8,10 @@ export function renderBindingConfig(
 ): HTMLElement {
     const section = document.createElement("section");
     section.className = "binding-config";
-    section.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? "auto"));
+    section.append(
+        renderAliasInput(initialAlias(initialBinding)),
+        renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source)),
+    );
 
     const params = source.params ?? [];
     if (params.length === 0) return section;
@@ -43,6 +46,10 @@ function renderTriggerSelect(value: "auto" | "submit"): HTMLElement {
     selectOption(trigger, value);
     label.append(trigger);
     return label;
+}
+
+function defaultTrigger(source: EditorDataSource): "auto" | "submit" {
+    return (source.method ?? "GET") === "GET" ? "auto" : "submit";
 }
 
 function renderParamRow(

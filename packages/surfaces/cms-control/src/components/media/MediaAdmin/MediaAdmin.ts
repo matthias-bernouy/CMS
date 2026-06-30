@@ -10,8 +10,7 @@ type FormFieldEl = HTMLElement & { value: string };
  * and same-origin calls to the `/api/files/*` endpoints. Renders into light
  * DOM so the embedded `<p9r-grid-media>` keeps using its existing API surface.
  *
- * Header buttons bypass `<cms-form>` because uploads go through a multipart
- * POST to `/api/files/upload`, not a JSON form post.
+ * Header buttons use a custom multipart POST to `/api/files/upload`.
  */
 export class MediaAdmin extends HTMLElement {
 

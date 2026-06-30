@@ -12,9 +12,9 @@ type P9rInput = HTMLElement & { value: string };
  * Appended to `document.body` so it escapes the editor's transformed
  * subtree — a native `<dialog>.showModal()` nested in a transformed
  * ancestor centres inside that box, not the viewport. Light-DOM
- * `p9r-input`/`p9r-button` children self-style. No `<cms-form>`: that
- * emits `form:success`, which `p9r-modal` auto-closes on, before our
- * handler runs. Open/close = toggling the `open` attribute.
+ * `p9r-input`/`p9r-button` children self-style. This custom flow keeps the
+ * dialog open long enough to expose the newly created secret reference.
+ * Open/close = toggling the `open` attribute.
  */
 
 function buildModal(host: CredentialSelect): HTMLElement {

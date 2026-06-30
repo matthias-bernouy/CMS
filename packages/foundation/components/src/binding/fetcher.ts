@@ -21,10 +21,12 @@ export type FetchOutcome =
     | { kind: "error"; status: number | null; message: string }
     | { kind: "aborted" };
 
-export async function runFetch(url: string, signal: AbortSignal): Promise<FetchOutcome> {
+export async function runFetch(url: string, signal: AbortSignal, init: RequestInit = {}): Promise<FetchOutcome> {
     let res: Response;
     try {
-        res = await fetch(url, { headers: { Accept: "application/json" }, signal });
+        const headers = new Headers(init.headers);
+        if (!headers.has("Accept")) headers.set("Accept", "application/json");
+        res = await fetch(url, { ...init, headers, signal });
     } catch (err) {
         return isAbort(err) ? { kind: "aborted" } : { kind: "error", status: null, message: messageOf(err) };
     }

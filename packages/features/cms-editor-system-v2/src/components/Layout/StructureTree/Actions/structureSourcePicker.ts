@@ -36,10 +36,12 @@ export function openStructureSourcePicker(node: EditorStructureNode, context: St
 export function sourceBindingForNode(node: EditorStructureNode): DataSourcePickerSourceBinding | null {
     const source = parseSource(node.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
     const trigger = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
+    const method = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
     return source
         ? {
             url: source.url,
             ...(source.alias ? { alias: source.alias } : {}),
+            ...(method ? { method: method as DataSourcePickerSourceBinding["method"] } : {}),
             ...(isCmsSourceTrigger(trigger) && trigger !== "auto" ? { trigger } : {}),
         }
         : null;

@@ -79,6 +79,54 @@ describe("CompiledTemplate — boundaries", () => {
         expect(text(source.querySelector("span"))).toBe("{{ id }}");
     });
 
+    test("descends into submit sources for parent data while keeping submit result bindings inert", () => {
+        const { host, region } = mount(`
+            <form cms-source="/api/save as result" cms-source-trigger="submit" data-id="{{ id }}">
+                <input name="site.name" value="{{ site.name }}">
+                <select name="site.notFound">
+                    <option cms-repeat="pages" value="{{ path }}">{{ title }}</option>
+                </select>
+                <input class="enabled" cms-condition="email.enabled" name="email.enabled" value="true">
+                <input class="disabled" cms-condition="!email.enabled" name="email.enabled" value="true">
+                <p class="success" cms-condition="result.ok">Saved {{ result.body.id }}</p>
+            </form>
+        `, {
+            id: "settings",
+            site: { name: "Demo" },
+            email: { enabled: true },
+            pages: [{ path: "/404", title: "Not found" }],
+        });
+        const form = host.querySelector("form")!;
+
+        expect(form.getAttribute("data-id")).toBe("settings");
+        expect(form.querySelector("input")!.getAttribute("value")).toBe("Demo");
+        expect(form.querySelector("option")!.getAttribute("value")).toBe("/404");
+        expect(text(form.querySelector("option"))).toBe("Not found");
+        expect(form.querySelector(".enabled")).not.toBeNull();
+        expect(form.querySelector(".enabled")!.hasAttribute("cms-condition")).toBe(false);
+        expect(form.querySelector(".disabled")).toBeNull();
+        expect(text(form.querySelector(".success"))).toBe("Saved {{ result.body.id }}");
+        expect(form.querySelector(".success")!.hasAttribute("cms-condition")).toBe(true);
+
+        region.update({
+            value: {
+                id: "settings-2",
+                site: { name: "Updated" },
+                email: { enabled: false },
+                pages: [{ path: "/500", title: "Server error" }],
+            },
+        });
+
+        expect(form.getAttribute("data-id")).toBe("settings-2");
+        expect(form.querySelector("input")!.getAttribute("value")).toBe("Updated");
+        expect(form.querySelector("option")!.getAttribute("value")).toBe("/500");
+        expect(text(form.querySelector("option"))).toBe("Server error");
+        expect(form.querySelector(".enabled")).toBeNull();
+        expect(form.querySelector(".disabled")).not.toBeNull();
+        expect(form.querySelector(".disabled")!.hasAttribute("cms-condition")).toBe(false);
+        expect(text(form.querySelector(".success"))).toBe("Saved {{ result.body.id }}");
+    });
+
     test("binds a nested binding core's own attributes but keeps its subtree inert", () => {
         const { host } = mount(`
             <section>

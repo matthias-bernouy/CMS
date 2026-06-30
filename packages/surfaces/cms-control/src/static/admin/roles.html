@@ -36,11 +36,11 @@
 
 <p9r-modal id="create-role-modal" aria-label="Add a role">
     <span slot="title">Add role</span>
-    <cms-form target="{{BASE_PATH}}/api/roles" emit="role:updated">
+    <form cms-source="{{BASE_PATH}}/api/roles as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="role:updated">
         <p9r-stack gap="md">
             <p9r-input name="label" label="Name" placeholder="Editor" required></p9r-input>
             <p9r-input name="id" label="Identifier" placeholder="editor (a-z, 0-9, -, _)" required></p9r-input>
             <p9r-button color="primary" fullWidth type="submit">Create role</p9r-button>
         </p9r-stack>
-    </cms-form>
+    </form>
 </p9r-modal>

@@ -83,6 +83,7 @@ export class Canvas extends HTMLElement {
         const kind = iframe.dataset.frameKind === "view" ? "view" : "editor";
         const frameDocument = iframe.contentDocument;
         if (!frameDocument) return;
+        if (kind === "editor") installEditorFormGuard(frameDocument);
 
         this.dispatchEvent(new CustomEvent<CanvasFrameReadyDetail>(CANVAS_FRAME_READY_EVENT, {
             bubbles: true,
@@ -167,4 +168,15 @@ export class Canvas extends HTMLElement {
 
 if (!customElements.get("cms-editor-v2-canvas")) {
     customElements.define("cms-editor-v2-canvas", Canvas);
+}
+
+const EDITOR_FORM_GUARD_KEY = "__cmsEditorFormGuardInstalled";
+
+function installEditorFormGuard(document: Document): void {
+    const state = document as Document & { [EDITOR_FORM_GUARD_KEY]?: boolean };
+    if (state[EDITOR_FORM_GUARD_KEY]) return;
+    state[EDITOR_FORM_GUARD_KEY] = true;
+    document.addEventListener("submit", (event) => {
+        if (!event.defaultPrevented) event.preventDefault();
+    }, true);
 }

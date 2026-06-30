@@ -7,7 +7,7 @@
             <p9r-tab-panel id="general" label="General">
                 <div cms-source="{{BASE_PATH}}/api/system/settings" cms-reload-on="settings:saved">
                     <template>
-                        <cms-form id="settings-form" target="{{BASE_PATH}}/api/system/settings" emit="settings:saved">
+                        <form id="settings-form" cms-source="{{BASE_PATH}}/api/system/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="settings:saved" cms-source-success-reset="false">
                             <p9r-stack gap="lg">
                                 <p9r-card>
                                     <span slot="header">Site</span>
@@ -56,7 +56,7 @@
                                     <p9r-button type="submit" color="primary">Save</p9r-button>
                                 </p9r-stack>
                             </p9r-stack>
-                        </cms-form>
+                        </form>
                     </template>
                 </div>
             </p9r-tab-panel>
@@ -65,7 +65,7 @@
                 <div cms-source="{{BASE_PATH}}/api/system/settings" cms-reload-on="settings:saved">
                     <template>
                         <p9r-stack gap="lg">
-                            <cms-form target="{{BASE_PATH}}/api/system/settings" emit="settings:saved">
+                            <form cms-source="{{BASE_PATH}}/api/system/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="settings:saved" cms-source-success-reset="false">
                                 <p9r-stack gap="lg">
                                     <p9r-card>
                                         <span slot="header">Sender</span>
@@ -97,9 +97,9 @@
                                         <p9r-button type="submit" color="primary">Save</p9r-button>
                                     </p9r-stack>
                                 </p9r-stack>
-                            </cms-form>
+                            </form>
 
-                            <cms-form target="{{BASE_PATH}}/api/system/settings" emit="settings:saved">
+                            <form cms-source="{{BASE_PATH}}/api/system/settings as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="settings:saved" cms-source-success-reset="false">
                                 <p9r-stack gap="lg">
                                     <p9r-card>
                                         <span slot="header">Email verification template</span>
@@ -121,9 +121,9 @@
                                         <p9r-button type="submit" color="primary">Save</p9r-button>
                                     </p9r-stack>
                                 </p9r-stack>
-                            </cms-form>
+                            </form>
 
-                            <cms-form target="{{BASE_PATH}}/api/system/email-test" emit="email:test">
+                            <form cms-source="{{BASE_PATH}}/api/system/email-test as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="email:test">
                                 <p9r-card>
                                     <span slot="header">Test email</span>
                                     <p9r-stack gap="md">
@@ -137,7 +137,7 @@
                                         </p9r-stack>
                                     </p9r-stack>
                                 </p9r-card>
-                            </cms-form>
+                            </form>
                         </p9r-stack>
                     </template>
                 </div>
@@ -169,7 +169,7 @@
                                 <cms-provider-actions provider-id="{{ id }}" kind="{{ kind }}" enabled="{{ enabled }}" base-url="{{BASE_PATH}}/api/identity/provider" emit="idp:changed"></cms-provider-actions>
                                 <p9r-modal id="edit-{{ id }}" aria-label="Edit provider">
                                     <span slot="title">Edit provider</span>
-                                    <cms-form target="{{BASE_PATH}}/api/identity/provider" method="PATCH" emit="idp:changed">
+                                    <form cms-source="{{BASE_PATH}}/api/identity/provider as result" cms-source-trigger="submit" cms-source-method="PATCH" cms-source-publish="idp:changed" cms-source-success-reset="false">
                                         <p9r-stack gap="md">
                                             <input type="hidden" name="id" value="{{ id }}">
                                             <p9r-input name="displayName" label="Name" value="{{ displayName }}"></p9r-input>
@@ -179,7 +179,7 @@
                                             <p9r-input name="scopes" label="Scopes" value="{{ scopes }}"></p9r-input>
                                             <p9r-button type="submit" color="primary" fullWidth>Save</p9r-button>
                                         </p9r-stack>
-                                    </cms-form>
+                                    </form>
                                 </p9r-modal>
                             </p9r-cell>
                         </p9r-row>
@@ -198,7 +198,7 @@
 
 <p9r-modal id="add-idp-modal" aria-label="Add identity provider">
     <span slot="title">Add identity provider</span>
-    <cms-form target="{{BASE_PATH}}/api/identity/provider" emit="idp:changed">
+    <form cms-source="{{BASE_PATH}}/api/identity/provider as result" cms-source-trigger="submit" cms-source-method="POST" cms-source-publish="idp:changed">
         <p9r-stack gap="md">
             <input type="hidden" name="kind" value="oidc">
             <p9r-input name="displayName" label="Name" placeholder="Google"></p9r-input>
@@ -208,5 +208,5 @@
             <p9r-input name="scopes" label="Scopes" value="openid email profile"></p9r-input>
             <p9r-button color="primary" fullWidth type="submit">Add provider</p9r-button>
         </p9r-stack>
-    </cms-form>
+    </form>
 </p9r-modal>

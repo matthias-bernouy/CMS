@@ -21,6 +21,7 @@ import type { EditorDataSource } from "../../../../../runtime";
 export type SourceBinding = {
     url: string;
     alias?: string;
+    method?: EditorDataSource["method"];
     params?: Record<string, unknown>;
     trigger?: "auto" | "submit";
 };
@@ -35,6 +36,9 @@ export function setSource(
     editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, (asSource as (source: SourceBinding | string) => string)(binding));
     if (binding.trigger === "submit") editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger, "submit");
     else editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
+    const method = binding.method ?? source.method ?? "GET";
+    if (method && (method !== "GET" || binding.trigger === "submit")) editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod, method);
+    else editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
 }
 
 export function removeSource(editor: Editor, confirmRemoveSourceDependents: (count: number) => boolean): boolean {
@@ -44,6 +48,10 @@ export function removeSource(editor: Editor, confirmRemoveSourceDependents: (cou
     for (const usage of usages) clearSourceDependencyUsage(usage);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.source);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourcePublish);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessReset);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
     editor.target.removeAttribute(BINDING_READY_ATTRIBUTE);
     return true;

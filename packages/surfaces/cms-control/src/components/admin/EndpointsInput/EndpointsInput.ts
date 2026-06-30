@@ -9,7 +9,7 @@ import type { EndpointSeed } from "./shared";
  * Each endpoint is a collapsible `<p9r-accordion-item>` (built in `rows.ts`) with
  * a `<p9r-tabs>` body: Infos / In (path + query params + body) / Out (per-status
  * response shapes) / Headers (static + secret request headers). Everything sits in
- * LIGHT DOM so the parent `<cms-form>`'s native `FormData` picks it up: the endpoint
+ * LIGHT DOM so the parent form's native `FormData` picks it up: the endpoint
  * SCALARS post as flat keys (`endpoints.<n>.endpointId|method|targetUrl`), and every
  * STRUCTURED field posts as one JSON blob the editor syncs
  * (`endpoints.<n>.{params,body,output,headers,meta}`). `parseSourceDto` reassembles both.

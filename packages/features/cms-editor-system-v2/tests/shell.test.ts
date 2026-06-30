@@ -476,7 +476,34 @@ describe("Shell", () => {
         expect(picker.shadowRoot!.querySelector(".source .name")?.textContent).toBe("Plans");
         expect(picker.shadowRoot!.querySelector(".details-eyebrow")?.textContent).toBe("Response fields");
         expect(picker.shadowRoot!.querySelector(".binding .config-heading")?.textContent).toBe("Binding");
+        expect(picker.shadowRoot!.querySelector(".source-method")).toBeNull();
         expect(picker.shadowRoot!.textContent ?? "").not.toContain("Create plan");
+        const methodFilter = picker.shadowRoot!.querySelector<HTMLSelectElement>(".method-filter")!;
+        methodFilter.options[0]!.removeAttribute("selected");
+        methodFilter.options[0]!.selected = false;
+        methodFilter.options[1]!.selected = true;
+        methodFilter.options[1]!.setAttribute("selected", "");
+        methodFilter.setAttribute("value", "POST");
+        methodFilter.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(picker.shadowRoot!.querySelector(".source .name")?.textContent).toBe("Create plan");
+        methodFilter.options[1]!.removeAttribute("selected");
+        methodFilter.options[1]!.selected = false;
+        methodFilter.options[5]!.selected = true;
+        methodFilter.options[5]!.setAttribute("selected", "");
+        methodFilter.setAttribute("value", "all");
+        methodFilter.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(Array.from(picker.shadowRoot!.querySelectorAll(".source .name")).map(source => source.textContent)).toEqual([
+            "Plans",
+            "Create plan",
+        ]);
+        methodFilter.options[5]!.removeAttribute("selected");
+        methodFilter.options[5]!.selected = false;
+        methodFilter.options[1]!.removeAttribute("selected");
+        methodFilter.options[1]!.selected = false;
+        methodFilter.options[0]!.selected = true;
+        methodFilter.options[0]!.setAttribute("selected", "");
+        methodFilter.setAttribute("value", "GET");
+        methodFilter.dispatchEvent(new Event("change", { bubbles: true }));
         picker.shadowRoot!.querySelector<HTMLInputElement>(".source-alias")!.value = "plans";
         picker.shadowRoot!.querySelector<HTMLSelectElement>(".source-trigger")!.selectedIndex = 1;
         const rows = picker.shadowRoot!.querySelectorAll<HTMLElement>(".param-row");
@@ -492,6 +519,7 @@ describe("Shell", () => {
             url: "/api/plans",
             alias: "plans",
             trigger: "submit",
+            method: "GET",
             params: {
                 q: { from: "queryParam", name: "address" },
                 limit: { from: "raw", value: "5" },
@@ -608,6 +636,7 @@ describe("Shell", () => {
             url: "/api/plans",
             alias: "plans",
             trigger: "submit",
+            method: "GET",
             params: {
                 q: { from: "queryParam", name: "address" },
                 limit: { from: "raw", value: "5" },
@@ -1347,6 +1376,43 @@ describe("Shell", () => {
             "/cms/api/editor/frame?type=snippet&id=s1",
         ]);
         expect(frame.getAttribute("src")).not.toBe("/cms/api/editor/frame?type=snippet&id=s1");
+    });
+
+    test("canvas allows form-capable preview frames and blocks native editor form submits", async () => {
+        installDom();
+
+        const { Canvas } = await import("../src/components/Layout/Canvas/Canvas");
+
+        const canvas = new Canvas();
+        document.body.append(canvas);
+        canvas.connectedCallback();
+
+        const editorFrame = canvas.shadowRoot!.querySelector<HTMLIFrameElement>(".editor-frame")!;
+        const viewFrame = canvas.shadowRoot!.querySelector<HTMLIFrameElement>(".view-frame")!;
+        expect(editorFrame.getAttribute("sandbox")).toContain("allow-forms");
+        expect(viewFrame.getAttribute("sandbox")).toContain("allow-forms");
+
+        const editorDom = parseHTML("<!doctype html><html><body><form></form></body></html>");
+        Object.defineProperty(editorFrame, "contentDocument", {
+            configurable: true,
+            value:        editorDom.document,
+        });
+        editorFrame.dispatchEvent(new Event("load"));
+
+        const editorSubmit = new Event("submit", { bubbles: true, cancelable: true });
+        editorDom.document.querySelector("form")!.dispatchEvent(editorSubmit);
+        expect(editorSubmit.defaultPrevented).toBe(true);
+
+        const viewDom = parseHTML("<!doctype html><html><body><form></form></body></html>");
+        Object.defineProperty(viewFrame, "contentDocument", {
+            configurable: true,
+            value:        viewDom.document,
+        });
+        viewFrame.dispatchEvent(new Event("load"));
+
+        const viewSubmit = new Event("submit", { bubbles: true, cancelable: true });
+        viewDom.document.querySelector("form")!.dispatchEvent(viewSubmit);
+        expect(viewSubmit.defaultPrevented).toBe(false);
     });
 
     test("receives the editor catalog", async () => {
@@ -2680,10 +2746,24 @@ describe("Shell", () => {
                 limit: { from: "raw", value: "5" },
             },
             trigger: "submit",
+            method: "POST",
         });
 
         expect(target.getAttribute("cms-source")).toBe("/api/plans?q=#{address}&limit=5 as plans");
         expect(target.getAttribute("cms-source-trigger")).toBe("submit");
+        expect(target.getAttribute("cms-source-method")).toBe("POST");
+
+        const searchTarget = document.createElement("demo-search");
+        const searchEditor = new CardEditor(searchTarget);
+        shellParts(shell).mutations.setSource(searchEditor, { label: "Search", url: "/api/search", method: "GET", fields: [] }, {
+            url: "/api/search",
+            trigger: "submit",
+            method: "GET",
+        });
+
+        expect(searchTarget.getAttribute("cms-source")).toBe("/api/search");
+        expect(searchTarget.getAttribute("cms-source-trigger")).toBe("submit");
+        expect(searchTarget.getAttribute("cms-source-method")).toBe("GET");
     });
 
     test("shell adds query param sync settings for standard value elements", async () => {

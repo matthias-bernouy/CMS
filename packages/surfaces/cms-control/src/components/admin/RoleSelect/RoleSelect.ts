@@ -9,7 +9,7 @@ type RoleOption = { id: string; label: string };
  *   - auto-save (users table): given `sub`, POSTs `{ sub, role }` to `url` on
  *     change, toasts, and dispatches `emit` on success.
  *   - form (create-user modal): given `name` and no `sub`, it is form-associated
- *     and contributes its value to the enclosing `<cms-form>` via FormData.
+ *     and contributes its value to the enclosing form via FormData.
  */
 class CmsRoleSelect extends HTMLElement {
 

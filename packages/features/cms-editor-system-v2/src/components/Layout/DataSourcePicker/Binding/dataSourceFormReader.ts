@@ -7,11 +7,13 @@ import type {
 export function readSourceBinding(root: ParentNode, source: EditorDataSource): DataSourcePickerSourceBinding {
     const alias = root.querySelector<HTMLInputElement>(".source-alias")?.value.trim();
     const trigger = selectedTrigger(root.querySelector<HTMLSelectElement>(".source-trigger"));
+    const method = source.method ?? "GET";
     const params = readParams(root);
 
     return {
         url: source.url,
         ...(alias ? { alias } : {}),
+        ...(method !== "GET" || trigger === "submit" ? { method } : {}),
         ...(trigger === "submit" ? { trigger } : {}),
         ...(Object.keys(params).length ? { params } : {}),
     };

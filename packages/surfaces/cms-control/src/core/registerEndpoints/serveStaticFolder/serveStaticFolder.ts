@@ -51,7 +51,7 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
                 routePath = routePath.slice(0, -5);
             }
             const finalRoute = routePath.startsWith("/") ? routePath : `/${routePath}`;
-            const cacheKey = `static-html:${finalRoute}`;
+            const cachePrefix = `static-html:${finalRoute}`;
 
             runner.get(finalRoute, async (req: Request) => {
                 // /editor/<resource> needs an `id` query param; without one the
@@ -68,6 +68,7 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
                     }
                 }
                 const extras = options.cspExtras ? await options.cspExtras() : undefined;
+                const cacheKey = versionedStaticCacheKey(cachePrefix, file.absolutePath);
                 return cachedResponseAsync(req, cacheKey, cache, async () => {
                     const html = await prepareHtml(file.absolutePath, runner);
                     return compress(html, "text/html; charset=utf-8");
@@ -81,10 +82,12 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
         const compressType = COMPRESSIBLE_TYPES[ext];
 
         if (compressType) {
-            const cacheKey = `static-asset:${file.relativePath}`;
+            const cachePrefix = `static-asset:${file.relativePath}`;
             runner.get(file.relativePath, async (req: Request) => {
+                const source = Bun.file(file.absolutePath);
+                const cacheKey = `${cachePrefix}:${source.lastModified}`;
                 return cachedResponseAsync(req, cacheKey, cache, async () => {
-                    const bytes = new Uint8Array(await Bun.file(file.absolutePath).arrayBuffer());
+                    const bytes = new Uint8Array(await source.arrayBuffer());
                     return compress(bytes, compressType);
                 }, publicAssetCacheControl(req));
             });
@@ -102,4 +105,8 @@ export default async function serveStaticFolder(runner: Runner, options: ServeSt
             });
         });
     }
+}
+
+function versionedStaticCacheKey(prefix: string, path: string): string {
+    return `${prefix}:${Bun.file(path).lastModified}`;
 }

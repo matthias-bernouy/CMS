@@ -9,7 +9,6 @@ import {
     Card,
     Checkbox,
     Container,
-    Form as BlocsForm,
     Grid,
     IconButton,
     LateralDialog,
@@ -55,7 +54,6 @@ define("p9r-button", Button);
 define("p9r-card", Card);
 define("w13c-checkbox", Checkbox);
 define("p9r-container", Container);
-define("w13c-form", BlocsForm);
 define("p9r-grid", Grid);
 define("p9r-icon-button", IconButton);
 define("w13c-lateral-dialog", LateralDialog);
@@ -115,5 +113,4 @@ import "./media/MediaAdmin/MediaAdmin"
 import "./media/MediaCenter/MediaCenter"
 
 // Form
-import "./form/Form/Form";
 import "./form/MediaInput/MediaInput";

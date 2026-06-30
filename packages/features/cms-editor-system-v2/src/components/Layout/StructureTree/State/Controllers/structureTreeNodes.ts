@@ -117,7 +117,7 @@ export class StructureTreeNodes {
     }
 
     sourceDataSources(): EditorDataSource[] {
-        return this.state.dataSources.filter(source => (source.method ?? "GET") === "GET");
+        return this.state.dataSources;
     }
 
     flattenNodes(nodes: StructureNode[]): StructureNode[] {

@@ -1,5 +1,5 @@
 /* `<cms-endpoints-input>` is light-DOM (its named controls must stay in the
-   parent <cms-form>'s tree for FormData). This sheet is injected once into the
+   parent form's tree for FormData). This sheet is injected once into the
    document head; every rule is scoped to the tag so nothing leaks. */
 
 cms-endpoints-input {

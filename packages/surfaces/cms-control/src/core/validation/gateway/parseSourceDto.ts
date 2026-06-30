@@ -15,7 +15,7 @@ const BLOB_KEY = /^endpoints\.(\d+)\.(params|body|output|meta|headers)$/;
 type BlobFields = Partial<Record<"params" | "body" | "output" | "meta" | "headers", unknown>>;
 
 /**
- * Validates a FLAT body (as emitted by `<cms-form>`'s `Object.fromEntries(FormData)`)
+ * Validates a FLAT body (as emitted by a native form's `Object.fromEntries(FormData)`)
  * against the source contract and produces a typed DTO. Source meta is
  * read from flat dotted keys (`meta.name`, …); endpoints are reconstructed from an
  * indexed flat array (`endpoints.<i>.<field>`) — sparse indices are compacted so a

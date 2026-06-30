@@ -24,7 +24,7 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
     for (const eventName of reloadEvents) doc.addEventListener(eventName, callbacks.onReload);
 
     if (sourceTrigger(source) === "submit") {
-        const form = source.closest("form");
+        const form = asOwnerForm(source) ?? source.closest("form");
         form?.addEventListener("submit", callbacks.onSubmit);
         return () => {
             for (const eventName of reloadEvents) doc.removeEventListener(eventName, callbacks.onReload);
@@ -41,6 +41,11 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
         for (const eventName of reloadEvents) doc.removeEventListener(eventName, callbacks.onReload);
         stopUrlListeners();
     };
+}
+
+function asOwnerForm(source: Element): HTMLFormElement | null {
+    const ctor = source.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
+    return typeof ctor === "function" && source instanceof ctor ? source as HTMLFormElement : null;
 }
 
 function namedReloadEvents(source: Element): string[] {
