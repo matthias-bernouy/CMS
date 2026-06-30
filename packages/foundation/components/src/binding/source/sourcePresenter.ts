@@ -7,6 +7,7 @@ import {
     scopeForSourceStatus,
     sourceStatusConditions,
     statusValue,
+    type SourceStatusValue,
     type SourceStatusOptions,
 } from "./sourceStatus";
 
@@ -22,21 +23,24 @@ export class SourcePresenter {
         this.conditions = sourceStatusConditions(captured.body);
     }
 
+    initial(alias: string | undefined): void {
+        const initial: SourceStatusValue = { loading: false, loaded: false, empty: false, error: false };
+        publishSourceStatus(this.el, initial, this.options);
+        this.renderer.body(this.scope(alias, initial, undefined));
+    }
+
     loading(alias: string | undefined): void {
         const loading = statusValue("loading", undefined);
         publishSourceStatus(this.el, loading, this.options);
-        if (this.hasConditions("loading")) this.renderer.body(this.scope(alias, loading, undefined));
+        this.renderer.body(this.scope(alias, loading, undefined));
     }
 
     error(alias: string | undefined, url: string, status: number | null, message: string): void {
         const errorValue = { status, message };
         const errorStatus = statusValue("error", errorValue);
         publishSourceStatus(this.el, errorStatus, this.options);
-        if (this.usesConditions()) this.renderer.body(this.scope(alias, errorStatus, errorValue));
-        else {
-            this.renderer.clear();
-            console.warn(`cms-source "${url}": ${message}`);
-        }
+        this.renderer.body(this.scope(alias, errorStatus, errorValue));
+        if (!this.hasConditions("error")) console.warn(`cms-source "${url}": ${message}`);
     }
 
     data(alias: string | undefined, data: unknown): void {
@@ -50,21 +54,13 @@ export class SourcePresenter {
     forced(state: Exclude<SourceState, "loaded">): void {
         const forcedValue = state === "error" ? { status: 0, message: "Forced error state" } : undefined;
         const forcedStatus = statusValue(state, forcedValue);
+        const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
         publishSourceStatus(this.el, forcedStatus, this.options);
-        if (this.usesConditions()) {
-            const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
-            this.renderer.body(this.scope(spec.alias, forcedStatus, forcedValue));
-            return;
-        }
-        this.renderer.clear();
+        this.renderer.body(this.scope(spec.alias, forcedStatus, forcedValue));
     }
 
-    private scope(alias: string | undefined, sourceStatus: ReturnType<typeof statusValue>, value: unknown) {
+    private scope(alias: string | undefined, sourceStatus: SourceStatusValue, value: unknown) {
         return scopeForSourceStatus(this.el, alias, sourceStatus, value, this.options);
-    }
-
-    private usesConditions(): boolean {
-        return this.conditions.size > 0;
     }
 
     private hasConditions(state: SourceState): boolean {

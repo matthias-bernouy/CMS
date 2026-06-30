@@ -48,6 +48,10 @@ export class Source {
             onSubmit: this.onSubmit,
         });
         if (sourceTrigger(this.el) === "auto" || this.options.sourceStateForce) void this.run();
+        else {
+            const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
+            if (spec.url) this.presenter.initial(spec.alias);
+        }
         this.el.setAttribute(READY_ATTR, "");
     }
 

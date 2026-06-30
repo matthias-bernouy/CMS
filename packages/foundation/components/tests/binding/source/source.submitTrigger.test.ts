@@ -27,6 +27,7 @@ describe("Source — submit trigger", () => {
         runtime.start();
         await settle();
         expect(calls).toBe(0);
+        expect(root.querySelector("p")).not.toBeNull();
 
         location.href = "http://localhost/?search=bar";
         document.dispatchEvent(new Event(PARAMS_CHANGE_EVENT));
@@ -40,6 +41,45 @@ describe("Source — submit trigger", () => {
         await waitFor(() => text(root.querySelector("p")) === "1");
         expect(calls).toBe(1);
         expect(urls).toEqual(["/api/search?q=bar"]);
+        runtime.stop();
+    });
+
+    test("submit-triggered sources render common body before the first submit", async () => {
+        let calls = 0;
+        globalThis.fetch = (async () => {
+            calls++;
+            return res(200, JSON.stringify({ n: calls }));
+        }) as unknown as typeof fetch;
+
+        const root = el(`
+            <form>
+                <div cms-source="/api/search" cms-source-trigger="submit">
+                    <fieldset><input name="q" value="plans"></fieldset>
+                    <p class="loaded" cms-condition="$source.loaded">{{ n }}</p>
+                    <p class="loading" cms-condition="$source.loading">Loading</p>
+                    <p class="empty" cms-condition="$source.empty">Empty</p>
+                    <p class="error" cms-condition="$source.error">Error</p>
+                </div>
+            </form>
+        `);
+        document.body.appendChild(root);
+        const runtime = new BindingRuntime(root);
+        runtime.start();
+        await settle();
+
+        const input = root.querySelector("input")!;
+        expect(calls).toBe(0);
+        expect(root.querySelector("fieldset")).not.toBeNull();
+        expect(root.querySelector(".loaded")).toBeNull();
+        expect(root.querySelector(".loading")).toBeNull();
+        expect(root.querySelector(".empty")).toBeNull();
+        expect(root.querySelector(".error")).toBeNull();
+
+        root.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+
+        await waitFor(() => text(root.querySelector(".loaded")) === "1");
+        expect(calls).toBe(1);
+        expect(root.querySelector("input")).toBe(input);
         runtime.stop();
     });
 });

@@ -12,6 +12,27 @@ function commentCount(node: Node): number {
 }
 
 describe("<cms-binding-core> — forced source state", () => {
+    for (const state of ["loading", "empty"] as const) {
+        test(`cms-source-state-force=${state} renders unconditioned source body without fetching`, async () => {
+            let calls = 0;
+            globalThis.fetch = (async () => {
+                calls++;
+                return { ok: true, status: 200, text: async () => JSON.stringify({ name: "Ada" }) } as unknown as Response;
+            }) as unknown as typeof fetch;
+
+            document.body.innerHTML = `
+                <${BINDING_CORE_TAG} ${SOURCE_STATE_FORCE_ATTR}="${state}">
+                    <div cms-source="/x">
+                        <p>Static child {{ name }}</p>
+                    </div>
+                </${BINDING_CORE_TAG}>`;
+
+            await settle();
+            expect(calls).toBe(0);
+            expect(text(document.querySelector("[cms-source] > p"))).toBe("Static child");
+        });
+    }
+
     test("cms-source-state-force=loading renders loading conditions without fetching", async () => {
         let calls = 0;
         globalThis.fetch = (async () => {
