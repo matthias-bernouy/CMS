@@ -65,4 +65,23 @@ describe("scanDevBlocs", () => {
         const tags = blocs.map(b => b.tag).sort();
         expect(tags).toEqual(["base-accordion", "base-accordion-item"]);
     });
+
+    test("accepts native editor-only blocs without a view entry", async () => {
+        const root = makeBlocsRoot({
+            "Text/paragraph": {
+                "manifest.json": JSON.stringify({
+                    runtime: "native",
+                    "default-tag": "p",
+                    editor: "./BlocEditor.ts",
+                    meta: { title: "Paragraph", description: "" },
+                }),
+                "BlocEditor.ts": "",
+            },
+        });
+        const blocs = await scanDevBlocs(root, { quiet: true });
+        expect(blocs).toHaveLength(1);
+        expect(blocs[0]?.tag).toBe("p");
+        expect(blocs[0]?.entry).toBeUndefined();
+        expect(blocs[0]?.editorEntry).toContain("BlocEditor.ts");
+    });
 });

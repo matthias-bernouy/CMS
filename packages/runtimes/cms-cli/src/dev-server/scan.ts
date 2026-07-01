@@ -25,7 +25,7 @@ export type DevBloc = {
     label: string;
     group: string;
     description: string;
-    entry: string;
+    entry?: string;
     editorEntry?: string;
     /** Convention: `template.html` next to the bloc entry. Absent when the
      *  bloc renders without a shadow template. */
@@ -115,13 +115,14 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         return null;
     }
 
-    const blocRel = manifest.bloc || "./Bloc.ts";
+    const native = manifest.runtime === "native";
+    const blocRel = manifest.bloc || (native ? undefined : "./Bloc.ts");
     const editorRel = manifest.editor;
 
-    const entry = join(folder, blocRel);
+    const entry = blocRel ? join(folder, blocRel) : undefined;
     const editorEntry = editorRel ? join(folder, editorRel) : undefined;
 
-    const templatePath      = join(dirname(entry), "template.html");
+    const templatePath      = entry ? join(dirname(entry), "template.html") : join(folder, "template.html");
     const configurationPath = editorEntry ? join(dirname(editorEntry), "configuration.html") : undefined;
 
     return {
@@ -131,7 +132,7 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         label: manifest.meta?.title || basename(folder),
         group: folderToCategory(parentName),
         description: manifest.meta?.description || "",
-        entry,
+        ...(entry                                      ? { entry }                                      : {}),
         ...(editorEntry                                ? { editorEntry }                              : {}),
         ...(existsSync(templatePath)                   ? { templatePath }                             : {}),
         ...(configurationPath && existsSync(configurationPath) ? { configurationPath }                : {}),

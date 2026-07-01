@@ -9,6 +9,8 @@ import { RESERVED_PREFIXES } from "@bernouy/cms-content";
 export type ValidateBlocInput = {
     /** Manifest tag — required, the only mandatory field. */
     tag: string;
+    /** Native HTML entries register editor metadata only; their tags are not custom elements. */
+    native?: boolean;
     /** User's view source (typically `Bloc.ts`). */
     viewSource?: string;
     /** User's editor source (typically `BlocEditor.ts`). */
@@ -45,7 +47,7 @@ export function validateBlocTag(tag: string): string | null {
 export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     const errors: string[] = [];
 
-    const tagError = validateBlocTag(input.tag);
+    const tagError = input.native ? validateNativeBlocTag(input.tag) : validateBlocTag(input.tag);
     if (tagError) errors.push(tagError);
 
     if (input.viewSource) {
@@ -58,6 +60,45 @@ export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     }
 
     return { errors };
+}
+
+const NATIVE_BLOC_TAGS = new Set([
+    "button",
+    "datalist",
+    "fieldset",
+    "form",
+    "input",
+    "label",
+    "legend",
+    "meter",
+    "optgroup",
+    "option",
+    "output",
+    "p",
+    "progress",
+    "select",
+    "span",
+    "strong",
+    "em",
+    "small",
+    "code",
+    "pre",
+    "blockquote",
+    "ul",
+    "ol",
+    "li",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "textarea",
+]);
+
+function validateNativeBlocTag(tag: string): string | null {
+    if (NATIVE_BLOC_TAGS.has(tag)) return null;
+    return `Invalid native tag "${tag}" — must be one of: ${[...NATIVE_BLOC_TAGS].join(", ")}.`;
 }
 
 // ── #3: Hardcoded `customElements.define` ─────────────────────────────────

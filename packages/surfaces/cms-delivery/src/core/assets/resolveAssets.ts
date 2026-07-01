@@ -87,8 +87,11 @@ export async function resolveRuntimeAssets(
     const componentUrl   = `${componentJsUrl}?v=${componentEntry!.hash}`;
     const bindingCoreUrl = `${bindingCoreJsUrl}?v=${bindingCoreEntry!.hash}`;
     const styleUrl       = `${prefix}/style?v=${styleEntry!.hash}`;
-    const blocUrls       = bundles.map((tags, i) =>
-        `${prefix}/blocset?tags=${[...tags].sort().join(",")}&v=${bundleEntries[i]!.hash}`);
+    const blocAssets     = bundles
+        .map((tags, i) => ({ tags, entry: bundleEntries[i]! }))
+        .filter(asset => asset.entry.raw.length > 0);
+    const blocUrls       = blocAssets.map(({ tags, entry }) =>
+        `${prefix}/blocset?tags=${[...tags].sort().join(",")}&v=${entry.hash}`);
     const scriptUrls     = [componentUrl, ...blocUrls];
 
     return { componentUrl, bindingCoreUrl, styleUrl, blocUrls, scriptUrls };

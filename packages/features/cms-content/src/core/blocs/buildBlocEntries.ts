@@ -17,7 +17,6 @@ export async function generateBlocSetEntry(tags: string[], repository: ContentRe
         return js ? `;/* ${tag} */\n${js}\n` : null;
     }));
     const sources = chunks.filter((c): c is string => c !== null);
-    if (sources.length === 0) throw new Error(`generateBlocSetEntry: no viewJS for any of [${sorted.join(", ")}]`);
 
     return compress(sources.join(""), "text/javascript");
 }

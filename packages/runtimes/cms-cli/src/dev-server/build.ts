@@ -51,13 +51,15 @@ registerEditor_opaque();
 `;
 
 export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
+    const native = bloc.manifest.runtime === "native";
     const [viewSource, editorSource] = await Promise.all([
-        readFile(bloc.entry, "utf-8").catch(() => undefined),
+        bloc.entry ? readFile(bloc.entry, "utf-8").catch(() => undefined) : Promise.resolve(undefined),
         bloc.editorEntry ? readFile(bloc.editorEntry, "utf-8").catch(() => undefined) : Promise.resolve(undefined),
     ]);
 
     const validation = validateBloc({
         tag: bloc.tag,
+        native,
         ...(viewSource   !== undefined ? { viewSource }   : {}),
         ...(editorSource !== undefined ? { editorSource } : {}),
     });
@@ -65,11 +67,15 @@ export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
         throw new Error(`Validation failed for ${bloc.tag}:\n${validation.errors.map(e => "    • " + e).join("\n")}`);
     }
 
-    let viewJS = await buildWithWrapper(
-        bloc.folder, bloc.entry, viewWrapperSrc, `view_${bloc.tag}`,
-        `view for ${bloc.tag}`,
-    );
-    viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", bloc.tag);
+    let viewJS = "";
+    if (!native) {
+        if (!bloc.entry) throw new Error(`Missing view entry for ${bloc.tag}`);
+        viewJS = await buildWithWrapper(
+            bloc.folder, bloc.entry, viewWrapperSrc, `view_${bloc.tag}`,
+            `view for ${bloc.tag}`,
+        );
+        viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", bloc.tag);
+    }
 
     let editorJS: string | null;
     if (bloc.editorEntry) {
@@ -77,11 +83,14 @@ export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
             bloc.folder, bloc.editorEntry, editorWrapperSrc, `editor_${bloc.tag}`,
             `editor for ${bloc.tag}`,
         );
-    } else {
+    } else if (!native) {
+        if (!bloc.entry) throw new Error(`Missing view entry for ${bloc.tag}`);
         editorJS = await buildWithWrapper(
             bloc.folder, bloc.entry, (_spec) => opaqueEditorWrapperSrc(),
             `opaque_${bloc.tag}`, `opaque editor for ${bloc.tag}`,
         );
+    } else {
+        throw new Error(`Native bloc "${bloc.tag}" requires an editor entry`);
     }
 
     const defaultContent = await readDefaultContent(bloc);

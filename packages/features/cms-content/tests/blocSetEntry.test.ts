@@ -36,8 +36,9 @@ describe("generateBlocSetEntry", () => {
         expect(out).not.toContain("missing");
     });
 
-    test("throws only when no tag resolves", () => {
-        expect(generateBlocSetEntry(["x", "y"], repoWith({}))).rejects.toThrow();
+    test("returns an empty JS bundle when no tag has viewJS", async () => {
+        const out = decode(await generateBlocSetEntry(["x", "y"], repoWith({})));
+        expect(out).toBe("");
     });
 
     test("throws on an empty tag set", () => {

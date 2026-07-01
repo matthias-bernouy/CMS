@@ -27,6 +27,7 @@ export async function prepare_bloc(
     label: string, group: string, description: string, blocId: string,
     source: Record<string, string> | undefined = undefined,
     defaultContent: string | undefined = undefined,
+    options: { native?: boolean } = {},
 ) {
     const tempDir = await mkdtemp(join(tmpdir(), "p9r-bloc-"));
 
@@ -46,14 +47,16 @@ export async function prepare_bloc(
         else            await Bun.write(editorPath, OPAQUE_EDITOR_SRC);
 
         const [viewJSRaw, editorJSRaw] = await Promise.all([
-            runBuild(buildOptions(viewPath), `view bundle for ${blocId}`),
+            options.native
+                ? fileView.text()
+                : runBuild(buildOptions(viewPath), `view bundle for ${blocId}`),
             runBuild(buildOptions(editorPath), `editor bundle for ${blocId}`),
         ]);
 
         let viewJS   = viewJSRaw;
         let editorJS = editorJSRaw;
 
-        viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", blocId);
+        if (!options.native) viewJS = viewJS.replaceAll("BE5_TAG_TO_BE_REPLACED", blocId);
 
         const defaultContentLiteral = JSON.stringify(defaultContent ?? "").replaceAll("$", "$$$$");
 

@@ -152,4 +152,17 @@ describe("validateBloc — graceful degradation", () => {
         const r = validateBloc({ tag: "BAD-TAG" });
         expect(r.errors.length).toBeGreaterThan(0);
     });
+
+    test("accepts native text tags when native mode is explicit", () => {
+        expect(validateBloc({ tag: "p", native: true }).errors).toEqual([]);
+        expect(validateBloc({ tag: "h1", native: true }).errors).toEqual([]);
+        expect(validateBloc({ tag: "my-bloc", native: true }).errors[0]).toContain("Invalid native tag");
+    });
+
+    test("accepts native form tags when native mode is explicit", () => {
+        const tags = ["form", "fieldset", "legend", "label", "input", "textarea", "select", "option", "button", "output"];
+        for (const tag of tags) {
+            expect(validateBloc({ tag, native: true }).errors).toEqual([]);
+        }
+    });
 });

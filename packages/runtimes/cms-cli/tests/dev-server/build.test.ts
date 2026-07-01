@@ -78,4 +78,35 @@ describe("buildDevBloc", () => {
         expect(() => new Function(built.editorJS)).not.toThrow();
         expect(built.editorJS).toContain(`description: props?.description ?? "Children can use bleed=\\"wide|full\\"."`);
     });
+
+    test("builds native editor-only blocs without registering a custom element", async () => {
+        const folder = tmpBloc({
+            "BlocEditor.ts": `
+                import { Editor } from "@bernouy/cms-control/editor";
+                export class ParagraphEditor extends Editor {}
+            `,
+            "default.html": `<p>Text</p>`,
+        });
+        const bloc: DevBloc = {
+            folder,
+            manifest: {
+                runtime: "native",
+                editor: "./BlocEditor.ts",
+                "default-tag": "p",
+                defaultContent: "./default.html",
+            },
+            tag: "p",
+            label: "Paragraph",
+            group: "Text",
+            description: "Native paragraph",
+            editorEntry: join(folder, "BlocEditor.ts"),
+        };
+
+        const built = await buildDevBloc(bloc);
+
+        expect(built.viewJS).toBe("");
+        expect(built.editorJS).toContain(`tag: props?.tag ?? "p"`);
+        expect(built.editorJS).toContain(`defaultContent: props?.defaultContent ?? "<p>Text</p>"`);
+        expect(built.editorJS).not.toContain(`customElements.define("p"`);
+    });
 });
