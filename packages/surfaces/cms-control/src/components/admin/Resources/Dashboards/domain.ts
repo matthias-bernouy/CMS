@@ -171,7 +171,7 @@ function renderFilters(widget: Extract<DashboardWidget, { widget: "w-table" }>, 
         <div class="dashboard-filters" role="search" aria-label="Dashboard filters">
             ${widget.filters.map(filter => {
                 const param = filter.param ?? filter.field;
-                const label = filterLabel(filter.field);
+                const label = filter.label ?? filterLabel(filter.field);
                 if (filter.input === "select") {
                     return `
                         <p9r-select cms-param-sync="${escapeAttr(param)}" label="${escapeAttr(label)}" value="">
@@ -184,7 +184,7 @@ function renderFilters(widget: Extract<DashboardWidget, { widget: "w-table" }>, 
                     <p9r-input
                         cms-param-sync="${escapeAttr(param)}"
                         label="${escapeAttr(label)}"
-                        placeholder="${escapeAttr(filterPlaceholder(filter.field, collection))}"
+                        placeholder="${escapeAttr(filter.placeholder ?? filterPlaceholder(filter.field, collection))}"
                         type="search"
                     ></p9r-input>
                 `;

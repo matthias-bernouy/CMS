@@ -41,6 +41,16 @@ describe("@bernouy/cms-integrations BAN integration", () => {
             params: { q: "$param.q" },
             itemsPath: "features",
         });
+        expect(dashboard?.views[0]).toMatchObject({
+            widget: "w-table",
+            filters: [{
+                field: "q",
+                param: "q",
+                input: "text",
+                label: "Search",
+                placeholder: "Search addresses",
+            }],
+        });
         expect(await secrets.listKeys()).toEqual([]);
     });
 

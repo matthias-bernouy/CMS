@@ -123,7 +123,13 @@ export const BAN_DEFINITION: IntegrationDefinition = {
                     {
                         widget: "w-table",
                         collection: "addresses",
-                        filters: [{ field: "q", param: "q", input: "text" }],
+                        filters: [{
+                            field: "q",
+                            param: "q",
+                            input: "text",
+                            label: "Search",
+                            placeholder: "Search addresses",
+                        }],
                         columns: [
                             { field: "properties.label", label: "Address" },
                             { field: "properties.city", label: "City" },

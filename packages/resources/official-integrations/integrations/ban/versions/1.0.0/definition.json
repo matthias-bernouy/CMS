@@ -321,7 +321,9 @@
                             {
                                 "field": "q",
                                 "param": "q",
-                                "input": "text"
+                                "input": "text",
+                                "label": "Search",
+                                "placeholder": "Search addresses"
                             }
                         ],
                         "columns": [

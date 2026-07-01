@@ -57,6 +57,8 @@ export type FilterSpec = {
     field: string;
     param?: string;
     input?: "text" | "select";
+    label?: string;
+    placeholder?: string;
     options?: string[];
 };
 

@@ -327,6 +327,8 @@ function parseFilter(value: unknown, name: string): FilterSpec {
         field: requiredText(value.field, `${name}.field`),
         ...(text(value.param) ? { param: text(value.param)! } : {}),
         ...(value.input === "select" ? { input: "select" } : value.input === "text" ? { input: "text" } : {}),
+        ...(text(value.label) ? { label: text(value.label)! } : {}),
+        ...(text(value.placeholder) ? { placeholder: text(value.placeholder)! } : {}),
     };
     if (value.input !== undefined && value.input !== "select" && value.input !== "text") {
         throw new IntegrationInputError(`${name}.input`, "must be text or select");
