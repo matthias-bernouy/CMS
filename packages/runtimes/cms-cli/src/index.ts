@@ -2,8 +2,6 @@
 import CLI_push from "./CLI_push";
 import CLI_pull from "./CLI_pull";
 import CLI_dev from "./CLI_dev";
-import CLI_init from "./CLI_init";
-import CLI_installSkill from "./CLI_installSkill";
 import CLI_listBlocs from "./CLI_listBlocs";
 import CLI_secrets from "./CLI_secrets";
 import CLI_filesReindex from "./CLI_filesReindex";
@@ -14,19 +12,14 @@ function printHelp() {
     console.log(`p9r — Cms CLI
 
 Usage:
-  p9r init <folder> [flags]        Scaffold a CMS site project.
-      --template=full              Template (default: full)
-      --force | -f                 Allow a non-empty target.
-  p9r install-skill [--force]      Install the bloc-creator Claude skill
-                                   into ./.claude/skills/.
   p9r dev [--port=N --host=H]      Run the editor 100% locally against site/.
                                    No remote calls, no auth. Run \`p9r pull\`
                                    first to bootstrap site/ from a tenant.
   p9r push [flags]                 Push system/integrations/files/blocs/
-                                   {snippets,templates,pages} in that order to
-                                   the remote CMS.
+                                   templates/pages in that order to the remote
+                                   CMS.
       --type=<one>|*               One of: system, integrations, files, blocs,
-                                   snippets, templates, pages (default *).
+                                   templates, pages (default *).
       --dry-run                    Show what would be uploaded, no writes.
       --yes | -y                   Skip the [y/N] prompt.
       --force | -f                 Bypass conflict + cross-ref validation.
@@ -59,12 +52,6 @@ Env (loaded from .env or the environment):
 
 try {
     switch (command) {
-        case "init":
-            await CLI_init(rest);
-            break;
-        case "install-skill":
-            await CLI_installSkill(rest);
-            break;
         case "login":
         case "logout":
             console.error("✖ `p9r login`/`logout` were removed. Create a Personal Access Token in the CMS admin Profile page, then set P9R_TOKEN=pat_... (or add it to ~/.config/p9r/credentials.json).");
