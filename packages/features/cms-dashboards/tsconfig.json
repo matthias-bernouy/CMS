@@ -1,0 +1,15 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir":  "dist",
+        "rootDir": "./src",
+        "baseUrl": "./src",
+        "paths": {
+            "cms-dashboards/*": ["./*"]
+        }
+    },
+    "references": [
+        { "path": "../cms-sources" }
+    ],
+    "include": ["src/**/*.ts"]
+}
