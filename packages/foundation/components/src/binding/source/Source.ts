@@ -5,6 +5,7 @@ import { interpolateString, type FilterMap } from "../interpolate";
 import {
     READY_ATTR,
     SOURCE_ATTR,
+    SOURCE_BODY_ATTR,
     SOURCE_METHOD_ATTR,
     SOURCE_PUBLISH_ATTR,
     SOURCE_SUCCESS_REDIRECT_ATTR,
@@ -16,6 +17,7 @@ import { captureSourceContent, cloneSourceContent } from "./sourceContent";
 import { listenSourceEvents, sourceTrigger } from "./sourceEvents";
 import { parseSourceSpec } from "./sourceSpec";
 import { resolveReactiveUrl } from "./reactiveUrl";
+import { resolveSourceBodyFields } from "./sourceBody";
 import { SourceRenderer } from "./sourceRenderer";
 import { SourcePresenter } from "./sourcePresenter";
 import { type SourceStatusOptions } from "./sourceStatus";
@@ -122,10 +124,14 @@ export class Source {
         if (this.formOwned) {
             const form = asOwnerForm(this.el, this.el.ownerDocument);
             if (!form) return;
+            const method = this.sourceMethod();
             const result = await submitForm(form, {
                 url: this.submitUrl(url),
-                method: this.sourceMethod(),
+                method,
                 signal: ac.signal,
+                bodyFields: method === "GET" || method === "HEAD"
+                    ? undefined
+                    : resolveSourceBodyFields(this.el.getAttribute(SOURCE_BODY_ATTR), this.el.ownerDocument),
             });
             if (ac.signal.aborted) return;
             this.presenter.result(spec.alias, result);

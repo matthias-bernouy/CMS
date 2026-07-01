@@ -1,4 +1,4 @@
-import type { EditorDataSource } from "../../../../runtime";
+import type { EditorDataSource, EditorDataSourceBodyField } from "../../../../runtime";
 import { paramsForBinding, type DataSourcePickerSourceBinding, type DataSourcePickerSourceParamValue } from "./dataSourceBinding";
 import { initialAlias } from "../State/dataSourcePickerState";
 
@@ -13,16 +13,8 @@ export function renderBindingConfig(
         renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source)),
     );
 
-    const params = source.params ?? [];
-    if (params.length === 0) return section;
-
-    const heading = document.createElement("div");
-    heading.className = "config-heading";
-    heading.textContent = "Request params";
-    section.append(heading);
-
-    const initialParams = paramsForBinding(source, initialBinding);
-    for (const param of params) section.append(renderParamRow(param, initialParams[param.name]));
+    renderRequestParams(section, source, initialBinding);
+    renderRequestBody(section, source, initialBinding);
     return section;
 }
 
@@ -52,18 +44,78 @@ function defaultTrigger(source: EditorDataSource): "auto" | "submit" {
     return (source.method ?? "GET") === "GET" ? "auto" : "submit";
 }
 
-function renderParamRow(
-    param: NonNullable<EditorDataSource["params"]>[number],
+function renderRequestParams(
+    section: HTMLElement,
+    source: EditorDataSource,
+    initialBinding: DataSourcePickerSourceBinding | null,
+): void {
+    const params = source.params ?? [];
+    if (params.length === 0) return;
+
+    section.append(renderHeading("Request params"));
+
+    const initialParams = paramsForBinding(source, initialBinding);
+    for (const param of params) {
+        section.append(renderBindingRow({
+            kind:        "param",
+            name:        param.name,
+            location:    param.in,
+            type:        param.type,
+            required:    param.required,
+            description: param.description,
+        }, initialParams[param.name]));
+    }
+}
+
+function renderRequestBody(
+    section: HTMLElement,
+    source: EditorDataSource,
+    initialBinding: DataSourcePickerSourceBinding | null,
+): void {
+    const fields = bodyBindingFields(source.body?.fields ?? []);
+    if (fields.length === 0) return;
+
+    section.append(renderHeading("Request body"));
+    for (const field of fields) {
+        section.append(renderBindingRow({
+            kind:     "body",
+            name:     field.name,
+            location: "body",
+            type:     field.type,
+            required: field.required,
+        }, initialBinding?.body?.[field.name]));
+    }
+}
+
+type BindingRow = {
+    kind: "param" | "body";
+    name: string;
+    location: string;
+    type?: string;
+    required?: boolean;
+    description?: string;
+};
+
+function renderBindingRow(
+    rowConfig: BindingRow,
     initialValue: DataSourcePickerSourceParamValue | undefined,
 ): HTMLElement {
     const row = document.createElement("div");
     row.className = "param-row";
-    row.dataset.paramName = param.name;
-    row.append(renderParamHeader(param), renderParamDescription(param), renderParamControls(param.name, initialValue));
+    row.dataset.bindingKind = rowConfig.kind;
+    row.dataset.paramName = rowConfig.name;
+    row.append(renderParamHeader(rowConfig), renderParamDescription(rowConfig), renderParamControls(rowConfig.name, initialValue));
     return row;
 }
 
-function renderParamHeader(param: NonNullable<EditorDataSource["params"]>[number]): HTMLElement {
+function renderHeading(text: string): HTMLElement {
+    const heading = document.createElement("div");
+    heading.className = "config-heading";
+    heading.textContent = text;
+    return heading;
+}
+
+function renderParamHeader(param: BindingRow): HTMLElement {
     const header = document.createElement("div");
     header.className = "param-header";
     const name = document.createElement("span");
@@ -71,12 +123,12 @@ function renderParamHeader(param: NonNullable<EditorDataSource["params"]>[number
     name.textContent = param.required ? `${param.name} *` : param.name;
     const meta = document.createElement("span");
     meta.className = "param-meta";
-    meta.append(textSpan(param.in), textSpan(param.type ?? "unknown"));
+    meta.append(textSpan(param.location), textSpan(param.type ?? "unknown"));
     header.append(name, meta);
     return header;
 }
 
-function renderParamDescription(param: NonNullable<EditorDataSource["params"]>[number]): HTMLElement {
+function renderParamDescription(param: BindingRow): HTMLElement {
     const description = document.createElement("p");
     description.textContent = param.description ?? "";
     description.hidden = !param.description;
@@ -99,11 +151,25 @@ function renderParamControls(
     value.placeholder = name;
     if (initialValue) {
         selectMode(mode, initialValue.from);
-        value.value = initialValue.from === "raw" ? initialValue.value : initialValue.name;
+        value.value = String(initialValue.from === "raw" ? initialValue.value : initialValue.name);
     }
 
     controls.append(mode, value);
     return controls;
+}
+
+function bodyBindingFields(fields: EditorDataSourceBodyField[]): Array<{ name: string; type?: string; required?: boolean }> {
+    const rows: Array<{ name: string; type?: string; required?: boolean }> = [];
+    for (const field of fields) {
+        if (field.path !== "." && isBindableBodyType(field.type)) {
+            rows.push({ name: field.path, type: field.type, required: field.required });
+        }
+    }
+    return rows;
+}
+
+function isBindableBodyType(type: string | undefined): boolean {
+    return type !== "object" && type !== "array";
 }
 
 function option(value: string, label: string): HTMLOptionElement {

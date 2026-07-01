@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseHTML } from "linkedom";
-import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_STATES, CMS_SOURCE_TRIGGERS, applySourceStatusCondition, applySourceStatusConditions, asCondition, asInterpolation, asRepeat, asSource, asSourceStatusCondition, asSourceStatusConditions, clearBindingRuntimeState, clearSourceStatusCondition, isCmsSourceState, isCmsSourceTrigger, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, parseSourceStatusCondition, parseSourceStatusConditionDetails, parseSourceStatusConditions, sourceStatusConditionDetailsFromElement, sourceStatusConditionFromElement } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_BINDING_RUNTIME_ATTRIBUTES, CMS_SOURCE_STATES, CMS_SOURCE_TRIGGERS, applySourceStatusCondition, applySourceStatusConditions, asCondition, asInterpolation, asRepeat, asSource, asSourceBody, asSourceStatusCondition, asSourceStatusConditions, clearBindingRuntimeState, clearSourceStatusCondition, isCmsSourceState, isCmsSourceTrigger, isInterpolation, parseCondition, parseInterpolation, parseRepeat, parseSource, parseSourceBody, parseSourceStatusCondition, parseSourceStatusConditionDetails, parseSourceStatusConditions, sourceStatusConditionDetailsFromElement, sourceStatusConditionFromElement } from "@bernouy/cms-content/editor";
 
 describe("editor binding syntax", () => {
     function createElement(): Element {
@@ -53,6 +53,36 @@ describe("editor binding syntax", () => {
             .toEqual({ url: "/.cms/sources/catalog/search?q=#{address}&delivery=@{deliveryAddress}", alias: "addresses" });
         expect(parseSource("")).toBeNull();
         expect(parseSource("   ")).toBeNull();
+    });
+
+    test("formats and parses source body bindings", () => {
+        const body = {
+            email: { from: "queryParam" as const, name: "email" },
+            token: { from: "state" as const, name: "auth.token" },
+            active: { from: "raw" as const, value: true },
+            count: { from: "raw" as const, value: 2 },
+            label: { from: "raw" as const, value: "Newsletter" },
+            skipped: undefined,
+        };
+
+        const formatted = asSourceBody(body);
+
+        expect(JSON.parse(formatted)).toEqual({
+            email: { from: "queryParam", name: "email" },
+            token: { from: "state", name: "auth.token" },
+            active: { from: "raw", value: true },
+            count: { from: "raw", value: 2 },
+            label: { from: "raw", value: "Newsletter" },
+        });
+        expect(parseSourceBody(formatted)).toEqual({
+            email: { from: "queryParam", name: "email" },
+            token: { from: "state", name: "auth.token" },
+            active: { from: "raw", value: true },
+            count: { from: "raw", value: 2 },
+            label: { from: "raw", value: "Newsletter" },
+        });
+        expect(parseSourceBody("")).toBeNull();
+        expect(parseSourceBody("{bad")).toBeNull();
     });
 
     test("formats repeat bindings", () => {
@@ -111,6 +141,7 @@ describe("editor binding syntax", () => {
             pageState: "cms-page-state",
             repeat: "cms-repeat",
             source: "cms-source",
+            sourceBody: "cms-source-body",
             sourceId: "cms-source-id",
             sourceMethod: "cms-source-method",
             sourcePublish: "cms-source-publish",

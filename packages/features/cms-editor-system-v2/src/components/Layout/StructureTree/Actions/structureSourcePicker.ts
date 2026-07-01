@@ -2,6 +2,7 @@ import {
     CMS_BINDING_ATTRIBUTES,
     isCmsSourceTrigger,
     parseSource,
+    parseSourceBody,
 } from "@bernouy/cms-content/editor";
 import type { EditorStructureNode } from "../../../../runtime";
 import type { EditorDataSource } from "../../../../runtime";
@@ -35,6 +36,7 @@ export function openStructureSourcePicker(node: EditorStructureNode, context: St
 
 export function sourceBindingForNode(node: EditorStructureNode): DataSourcePickerSourceBinding | null {
     const source = parseSource(node.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    const body = parseSourceBody(node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceBody));
     const trigger = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
     const method = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
     return source
@@ -42,6 +44,7 @@ export function sourceBindingForNode(node: EditorStructureNode): DataSourcePicke
             url: source.url,
             ...(source.alias ? { alias: source.alias } : {}),
             ...(method ? { method: method as DataSourcePickerSourceBinding["method"] } : {}),
+            ...(body ? { body: body as DataSourcePickerSourceBinding["body"] } : {}),
             ...(isCmsSourceTrigger(trigger) && trigger !== "auto" ? { trigger } : {}),
         }
         : null;

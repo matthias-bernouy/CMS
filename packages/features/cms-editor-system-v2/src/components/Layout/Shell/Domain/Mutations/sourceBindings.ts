@@ -3,6 +3,7 @@ import {
     applySourceStatusConditions,
     asRepeat,
     asSource,
+    asSourceBody,
     CMS_BINDING_ATTRIBUTES,
     sourceStatusConditionsFromElement,
     parseSource,
@@ -23,6 +24,7 @@ export type SourceBinding = {
     alias?: string;
     method?: EditorDataSource["method"];
     params?: Record<string, unknown>;
+    body?: Record<string, unknown>;
     trigger?: "auto" | "submit";
 };
 
@@ -39,6 +41,10 @@ export function setSource(
     const method = binding.method ?? source.method ?? "GET";
     if (method && (method !== "GET" || binding.trigger === "submit")) editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod, method);
     else editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
+
+    const body = binding.body ? (asSourceBody as (body: Record<string, unknown>) => string)(binding.body) : "";
+    if (body) editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceBody, body);
+    else editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceBody);
 }
 
 export function removeSource(editor: Editor, confirmRemoveSourceDependents: (count: number) => boolean): boolean {
@@ -47,6 +53,7 @@ export function removeSource(editor: Editor, confirmRemoveSourceDependents: (cou
 
     for (const usage of usages) clearSourceDependencyUsage(usage);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.source);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceBody);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourcePublish);

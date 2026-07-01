@@ -1,9 +1,11 @@
 export type FormSubmitMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
 
+export type SerializedFormData = Record<string, FormDataEntryValue | FormDataEntryValue[] | string | number | boolean>;
+
 export type SerializedForm =
-    | { kind: "query"; url: string; formData: FormData; data: Record<string, FormDataEntryValue | FormDataEntryValue[]> }
-    | { kind: "json"; url: string; formData: FormData; data: Record<string, FormDataEntryValue | FormDataEntryValue[]>; body: string }
-    | { kind: "formData"; url: string; formData: FormData; data: Record<string, FormDataEntryValue | FormDataEntryValue[]>; body: FormData };
+    | { kind: "query"; url: string; formData: FormData; data: SerializedFormData }
+    | { kind: "json"; url: string; formData: FormData; data: SerializedFormData; body: string }
+    | { kind: "formData"; url: string; formData: FormData; data: SerializedFormData; body: FormData };
 
 export type FormSubmitResult = {
     ok: boolean;
@@ -14,10 +16,13 @@ export type FormSubmitResult = {
     form: HTMLFormElement;
 };
 
+export type AdditionalFormFields = Record<string, string | number | boolean>;
+
 export type SubmitFormOptions = {
     url: string;
     method: FormSubmitMethod;
     signal?: AbortSignal;
+    bodyFields?: AdditionalFormFields;
 };
 
 type FormControl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | FormAssociatedLike;
@@ -48,10 +53,9 @@ export function collectFormData(form: HTMLFormElement): FormData {
 
 export function serializeForm(
     form: HTMLFormElement,
-    options: { url: string; method: FormSubmitMethod },
+    options: { url: string; method: FormSubmitMethod; bodyFields?: AdditionalFormFields },
 ): SerializedForm {
     const formData = collectFormData(form);
-    const data = serializeFormData(formData);
     const method = options.method;
 
     if (method === "GET" || method === "HEAD") {
@@ -59,9 +63,11 @@ export function serializeForm(
             kind: "query",
             url: appendQuery(options.url, formData),
             formData,
-            data,
+            data: serializeFormData(formData),
         };
     }
+
+    const data = withAdditionalFields(serializeFormData(formData), formData, options.bodyFields);
 
     if (BODY_METHODS.has(method) && hasFile(formData)) {
         return { kind: "formData", url: options.url, formData, data, body: formData };
@@ -153,6 +159,24 @@ function appendQuery(url: string, formData: FormData): string {
         next.searchParams.append(key, isFileLike(value) ? value.name : value);
     }
     return next.toString();
+}
+
+function withAdditionalFields(
+    data: SerializedFormData,
+    formData: FormData,
+    fields: AdditionalFormFields | undefined,
+): SerializedFormData {
+    if (!fields) return data;
+
+    let next: SerializedFormData = data;
+    for (const [rawKey, value] of Object.entries(fields)) {
+        const key = rawKey.trim();
+        if (!key || formData.has(key) || Object.prototype.hasOwnProperty.call(data, key)) continue;
+        if (next === data) next = { ...data };
+        next[key] = value;
+        formData.append(key, String(value));
+    }
+    return next;
 }
 
 function formControls(form: HTMLFormElement): FormControl[] {

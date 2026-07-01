@@ -21,6 +21,7 @@ export class FormEditor extends Editor {
                         attribute: CMS_BINDING_ATTRIBUTES.source,
                         methodAttribute: CMS_BINDING_ATTRIBUTES.sourceMethod,
                         defaultMethod: this.currentMethod(),
+                        defaultBody: this.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceBody) ?? "",
                         methods: FORM_METHODS,
                     },
                     {

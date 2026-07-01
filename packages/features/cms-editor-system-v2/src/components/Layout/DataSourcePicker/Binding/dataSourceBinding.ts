@@ -4,13 +4,14 @@ import type { EditorDataSourceMethod } from "../../../../runtime";
 export type DataSourcePickerSourceParamValue =
     | { from: "queryParam"; name: string }
     | { from: "state"; name: string }
-    | { from: "raw"; value: string };
+    | { from: "raw"; value: string | number | boolean };
 
 export type DataSourcePickerSourceBinding = {
     url: string;
     alias?: string;
     method?: EditorDataSourceMethod;
     params?: Record<string, DataSourcePickerSourceParamValue>;
+    body?: Record<string, DataSourcePickerSourceParamValue>;
     trigger?: "auto" | "submit";
 };
 

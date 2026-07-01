@@ -2592,6 +2592,70 @@ describe("Shell", () => {
         }]);
     });
 
+    test("settings view emits source body attributes for endpoint-picker source bindings", async () => {
+        installDom();
+
+        const {
+            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+            SettingsView,
+        } = await import("../src/components/Settings/SettingsView/SettingsView");
+
+        const view = new SettingsView();
+        const events: Array<{
+            value: string | boolean;
+            attributes?: Record<string, string | boolean | null>;
+        }> = [];
+        view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, (event) => {
+            const detail = (event as CustomEvent<{
+                value: string | boolean;
+                attributes?: Record<string, string | boolean | null>;
+            }>).detail;
+            events.push({
+                value:      detail.value,
+                attributes: detail.attributes,
+            });
+        });
+        document.body.append(view);
+
+        view.setSettings([{
+            kind: "self",
+            label: "Form",
+            settings: [{
+                type: "endpoint-picker",
+                label: "Submit source",
+                attribute: CMS_BINDING_ATTRIBUTES.source,
+                methodAttribute: CMS_BINDING_ATTRIBUTES.sourceMethod,
+                defaultMethod: "POST",
+                methods: ["POST"],
+            }],
+        }], null, "", "settings", [], [], [{
+            label:  "Log in",
+            url:    "/login",
+            method: "POST",
+            body: {
+                contentType: "application/json",
+                fields: [{ path: "returnTo", type: "string" }],
+            },
+            fields: [],
+        }]);
+
+        view.shadowRoot!.querySelector<HTMLButtonElement>(".endpoint-button")!.click();
+
+        const picker = view.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
+        const row = picker.shadowRoot!.querySelector<HTMLElement>('.param-row[data-binding-kind="body"]')!;
+        row.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex = 0;
+        row.querySelector<HTMLInputElement>(".param-value")!.value = "returnTo";
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
+
+        expect(events).toHaveLength(1);
+        expect(events[0]!.value).toBe("/login as data");
+        expect(events[0]!.attributes?.[CMS_BINDING_ATTRIBUTES.source]).toBe("/login as data");
+        expect(events[0]!.attributes?.[CMS_BINDING_ATTRIBUTES.sourceMethod]).toBe("POST");
+        expect(JSON.parse(String(events[0]!.attributes?.[CMS_BINDING_ATTRIBUTES.sourceBody]))).toEqual({
+            returnTo: { from: "queryParam", name: "returnTo" },
+        });
+    });
+
     test("renders disabled settings as disabled controls", async () => {
         installDom();
 
@@ -2745,11 +2809,19 @@ describe("Shell", () => {
                 q: { from: "queryParam", name: "address" },
                 limit: { from: "raw", value: "5" },
             },
+            body: {
+                returnTo: { from: "queryParam", name: "returnTo" },
+                token: { from: "state", name: "auth.token" },
+            },
             trigger: "submit",
             method: "POST",
         });
 
         expect(target.getAttribute("cms-source")).toBe("/api/plans?q=#{address}&limit=5 as plans");
+        expect(JSON.parse(target.getAttribute("cms-source-body") ?? "{}")).toEqual({
+            returnTo: { from: "queryParam", name: "returnTo" },
+            token: { from: "state", name: "auth.token" },
+        });
         expect(target.getAttribute("cms-source-trigger")).toBe("submit");
         expect(target.getAttribute("cms-source-method")).toBe("POST");
 
@@ -2762,6 +2834,7 @@ describe("Shell", () => {
         });
 
         expect(searchTarget.getAttribute("cms-source")).toBe("/api/search");
+        expect(searchTarget.hasAttribute("cms-source-body")).toBe(false);
         expect(searchTarget.getAttribute("cms-source-trigger")).toBe("submit");
         expect(searchTarget.getAttribute("cms-source-method")).toBe("GET");
     });
@@ -3354,6 +3427,7 @@ describe("Shell", () => {
 
         const source = document.createElement("section");
         source.setAttribute(CMS_BINDING_ATTRIBUTES.source, "/api/plans as plans");
+        source.setAttribute(CMS_BINDING_ATTRIBUTES.sourceBody, JSON.stringify({ token: { from: "state", name: "auth.token" } }));
         source.setAttribute(CMS_BINDING_ATTRIBUTES.sourceId, "plans");
         source.innerHTML = `
             <article cms-repeat="items as plan" cms-condition="plan.visible" title="Plan {{ plan.title }}">
@@ -3377,6 +3451,7 @@ describe("Shell", () => {
 
         const article = source.querySelector("article")!;
         expect(source.hasAttribute(CMS_BINDING_ATTRIBUTES.source)).toBe(false);
+        expect(source.hasAttribute(CMS_BINDING_ATTRIBUTES.sourceBody)).toBe(false);
         expect(article.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)).toBe(false);
         expect(article.hasAttribute(CMS_BINDING_ATTRIBUTES.condition)).toBe(false);
         expect(article.getAttribute("title")).toBe("Plan");

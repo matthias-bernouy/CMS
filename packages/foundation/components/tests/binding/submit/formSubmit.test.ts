@@ -28,6 +28,34 @@ describe("formSubmit", () => {
         if (serialized.kind === "json") expect(JSON.parse(serialized.body)).toEqual(serialized.data);
     });
 
+    test("adds body fields to non-GET JSON without replacing real controls", () => {
+        const target = form(`
+            <form>
+                <input name="email" value="ada@example.com">
+            </form>
+        `);
+
+        const serialized = serializeForm(target, {
+            url: "/api/users",
+            method: "POST",
+            bodyFields: {
+                email: "bound@example.com",
+                source: "signup",
+                active: true,
+                count: 2,
+            },
+        });
+
+        expect(serialized.kind).toBe("json");
+        expect(serialized.data).toEqual({
+            email: "ada@example.com",
+            source: "signup",
+            active: true,
+            count: 2,
+        });
+        if (serialized.kind === "json") expect(JSON.parse(serialized.body)).toEqual(serialized.data);
+    });
+
     test("serializes GET forms into the query string", () => {
         const target = form(`
             <form>
@@ -40,6 +68,20 @@ describe("formSubmit", () => {
 
         expect(serialized.kind).toBe("query");
         expect(serialized.url).toBe("http://localhost/api/search?kind=public&q=plans&limit=5");
+    });
+
+    test("ignores body fields for GET forms", () => {
+        const target = form(`<form><input name="q" value="plans"></form>`);
+
+        const serialized = serializeForm(target, {
+            url: "/api/search",
+            method: "GET",
+            bodyFields: { hidden: "ignored" },
+        });
+
+        expect(serialized.kind).toBe("query");
+        expect(serialized.url).toBe("http://localhost/api/search?q=plans");
+        expect(serialized.data).toEqual({ q: "plans" });
     });
 
     test("uses FormData when a file is present", () => {
@@ -56,6 +98,23 @@ describe("formSubmit", () => {
 
         expect(serialized.kind).toBe("formData");
         expect(Array.from(serialized.formData.getAll("photos")).map(file => (file as File).name)).toEqual(["a.jpg", "b.jpg"]);
+    });
+
+    test("adds body fields to multipart FormData", () => {
+        const target = form(`<form><input type="file" name="photo"></form>`);
+        const input = target.querySelector<HTMLInputElement>("input")!;
+        Object.defineProperty(input, "files", {
+            value: [new File(["a"], "a.jpg", { type: "image/jpeg" })],
+        });
+
+        const serialized = serializeForm(target, {
+            url: "/api/upload",
+            method: "POST",
+            bodyFields: { folder: "avatars" },
+        });
+
+        expect(serialized.kind).toBe("formData");
+        expect(serialized.formData.get("folder")).toBe("avatars");
     });
 
     test("submitForm returns a normalized result and never throws for network failures", async () => {

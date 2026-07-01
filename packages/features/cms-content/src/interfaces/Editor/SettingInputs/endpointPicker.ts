@@ -16,6 +16,7 @@ export type EndpointPickerSetting = SettingMetadata<"endpoint-picker", string> &
     methods?: EndpointPickerMethod[];
     methodAttribute?: string;
     defaultMethod?: EndpointPickerMethod;
+    defaultBody?: string;
 };
 
 export function isEndpointPickerMethod(value: string): value is EndpointPickerMethod {

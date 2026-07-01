@@ -7,6 +7,7 @@ export const CMS_BINDING_ATTRIBUTES = {
     pageState:        "cms-page-state",
     repeat:           "cms-repeat",
     source:           "cms-source",
+    sourceBody:       "cms-source-body",
     sourceId:         "cms-source-id",
     sourceMethod:     "cms-source-method",
     sourcePublish:    "cms-source-publish",
@@ -24,6 +25,7 @@ export type CmsSourceParamValue =
     | { from: "raw"; value: string | number | boolean };
 export type CmsSourceParamMap = Record<string, CmsSourceParamValue | null | undefined>;
 export type CmsSourceBinding = { url: string; alias?: string; params?: CmsSourceParamMap };
+export type CmsSourceBodyBinding = CmsSourceParamMap;
 export type CmsSourceUrl = string;
 export type CmsConditionExpression = string;
 export type CmsRepeatBinding = { path: string; alias?: string };
@@ -74,6 +76,28 @@ export function parseSource(value: string): CmsSourceBinding | null {
 
     const url = value.trim();
     return url ? { url } : null;
+}
+
+export function asSourceBody(body: CmsSourceBodyBinding): string {
+    const normalized = normalizeSourceParamMap(body);
+    return Object.keys(normalized).length ? JSON.stringify(normalized) : "";
+}
+
+export function parseSourceBody(value: string | null | undefined): CmsSourceBodyBinding | null {
+    const raw = value?.trim() ?? "";
+    if (!raw) return null;
+
+    let parsed: unknown;
+    try { parsed = JSON.parse(raw); }
+    catch { return null; }
+
+    if (!isRecord(parsed)) return null;
+    const body: CmsSourceBodyBinding = {};
+    for (const [name, source] of Object.entries(parsed)) {
+        const param = normalizeSourceParamValue(source);
+        if (name.trim() && param) body[name] = param;
+    }
+    return Object.keys(body).length ? body : null;
 }
 
 export function asRepeat(binding: CmsRepeatBinding): string {
@@ -187,13 +211,7 @@ function sourceUrlWithParams(rawUrl: string, params?: CmsSourceParamMap): string
     const url = rawUrl.trim();
     if (!params) return url;
 
-    const entries = Object.entries(params).filter((entry): entry is [string, CmsSourceParamValue] => {
-        const [name, value] = entry;
-        if (name.trim() === "" || value === null || value === undefined) return false;
-        if (value.from === "queryParam") return value.name.trim() !== "";
-        if (value.from === "state") return value.name.trim() !== "";
-        return String(value.value).trim() !== "";
-    });
+    const entries = Object.entries(normalizeSourceParamMap(params));
     if (entries.length === 0) return url;
 
     const hashIndex = url.indexOf("#");
@@ -223,4 +241,33 @@ function encodeSourceParamValue(value: CmsSourceParamValue): string {
     if (value.from === "queryParam") return `#{${value.name.trim()}}`;
     if (value.from === "state") return `@{${value.name.trim()}}`;
     return encodeURIComponent(String(value.value).trim());
+}
+
+function normalizeSourceParamMap(params: CmsSourceParamMap): Record<string, CmsSourceParamValue> {
+    const normalized: Record<string, CmsSourceParamValue> = {};
+    for (const [name, value] of Object.entries(params)) {
+        const param = normalizeSourceParamValue(value);
+        if (name.trim() && param) normalized[name] = param;
+    }
+    return normalized;
+}
+
+function normalizeSourceParamValue(value: unknown): CmsSourceParamValue | null {
+    if (!isRecord(value) || typeof value.from !== "string") return null;
+
+    if (value.from === "queryParam" || value.from === "state") {
+        return typeof value.name === "string" && value.name.trim()
+            ? { from: value.from, name: value.name.trim() }
+            : null;
+    }
+
+    if (value.from !== "raw") return null;
+    if (typeof value.value === "string") return value.value.trim() ? { from: "raw", value: value.value } : null;
+    if (typeof value.value === "number" && Number.isFinite(value.value)) return { from: "raw", value: value.value };
+    if (typeof value.value === "boolean") return { from: "raw", value: value.value };
+    return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }

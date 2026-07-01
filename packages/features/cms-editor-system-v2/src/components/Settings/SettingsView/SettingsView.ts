@@ -8,7 +8,9 @@ import "../../Controls/Fields/SegmentedControl/SegmentedControl";
 import "../../Controls/Pickers/PageLink/PageLink";
 import {
     CMS_BINDING_ATTRIBUTES,
+    asSourceBody,
     asSource,
+    parseSourceBody,
     parseSource,
     type EndpointPickerMethod,
     type EndpointPickerSetting,
@@ -316,6 +318,7 @@ export class SettingsView extends HTMLElement {
             const attributes: SettingsViewAttributeChanges = { [setting.attribute]: null };
             if (setting.methodAttribute) attributes[setting.methodAttribute] = null;
             if (this._usesSourceBinding(setting)) {
+                attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = null;
                 attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = null;
             }
             this._syncEndpointButton(button, setting, null, "");
@@ -373,10 +376,12 @@ export class SettingsView extends HTMLElement {
 
         if (this._usesSourceBinding(setting)) {
             const source = parseSource(value);
+            const body = parseSourceBody(setting.defaultBody);
             return source ? {
                 url: source.url,
                 ...(source.alias ? { alias: source.alias } : {}),
                 ...(setting.defaultMethod ? { method: setting.defaultMethod } : {}),
+                ...(body ? { body: body as DataSourcePickerSourceBinding["body"] } : {}),
             } : null;
         }
 
@@ -399,6 +404,10 @@ export class SettingsView extends HTMLElement {
         const attributes: SettingsViewAttributeChanges = { [setting.attribute]: value };
         if (setting.methodAttribute) attributes[setting.methodAttribute] = detail.binding.method ?? this._endpointMethod(detail.source);
         if (this._usesSourceBinding(setting)) {
+            const body = detail.binding.body
+                ? (asSourceBody as (body: NonNullable<DataSourcePickerSourceBinding["body"]>) => string)(detail.binding.body)
+                : "";
+            attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = body || null;
             attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = detail.binding.trigger === "submit" ? "submit" : null;
         }
         return attributes;

@@ -108,6 +108,112 @@ describe("Shell page state bindings", () => {
         expect(details.textContent).toContain("subject");
     });
 
+    test("data source picker emits request body bindings", async () => {
+        installDom();
+        const {
+            DATA_SOURCE_PICKER_SELECT_EVENT,
+            DataSourcePicker,
+        } = await import("../src/components/Layout/DataSourcePicker/DataSourcePicker");
+        const picker = new DataSourcePicker();
+        let detail: DataSourcePickerSelectDetail | null = null;
+        picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, (event) => {
+            detail = (event as CustomEvent<DataSourcePickerSelectDetail>).detail;
+        });
+        document.body.append(picker);
+        picker.open([{
+            label: "Log in",
+            url: "/login",
+            method: "POST",
+            body: {
+                contentType: "application/json",
+                fields: [
+                    { path: "email", type: "string", required: true },
+                    { path: "returnTo", type: "string" },
+                ],
+            },
+            fields: [],
+        }]);
+
+        const rows = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>('.param-row[data-binding-kind="body"]'));
+        rows[0]!.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex = 1;
+        rows[0]!.querySelector<HTMLInputElement>(".param-value")!.value = "ada@example.com";
+        rows[1]!.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex = 0;
+        rows[1]!.querySelector<HTMLInputElement>(".param-value")!.value = "returnTo";
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
+
+        expect(detail?.binding).toEqual({
+            url: "/login",
+            alias: "data",
+            method: "POST",
+            trigger: "submit",
+            body: {
+                email: { from: "raw", value: "ada@example.com" },
+                returnTo: { from: "queryParam", name: "returnTo" },
+            },
+        });
+    });
+
+    test("data source picker only binds top-level scalar request body fields", async () => {
+        installDom();
+        const { DataSourcePicker } = await import("../src/components/Layout/DataSourcePicker/DataSourcePicker");
+        const picker = new DataSourcePicker();
+        document.body.append(picker);
+        picker.open([{
+            label: "Create customer",
+            url: "/customers",
+            method: "POST",
+            body: {
+                contentType: "application/json",
+                fields: [
+                    { path: "email", type: "string", required: true },
+                    {
+                        path: "profile",
+                        type: "object",
+                        children: [{ path: "firstName", type: "string" }],
+                    },
+                    {
+                        path: "items",
+                        type: "array",
+                        children: [{ path: "sku", type: "string" }],
+                    },
+                ],
+            },
+            fields: [],
+        }]);
+
+        const bodyRows = Array.from(picker.shadowRoot!.querySelectorAll<HTMLElement>('.param-row[data-binding-kind="body"]'));
+        expect(bodyRows.map(row => row.dataset.paramName)).toEqual(["email"]);
+        expect(picker.shadowRoot!.querySelector<HTMLElement>(".details")!.textContent).toContain("firstName");
+        expect(picker.shadowRoot!.querySelector<HTMLElement>(".details")!.textContent).toContain("sku");
+    });
+
+    test("data source picker pre-fills request body bindings", async () => {
+        installDom();
+        const { DataSourcePicker } = await import("../src/components/Layout/DataSourcePicker/DataSourcePicker");
+        const picker = new DataSourcePicker();
+        document.body.append(picker);
+        picker.open([{
+            label: "Log in",
+            url: "/login",
+            method: "POST",
+            body: {
+                contentType: "application/json",
+                fields: [{ path: "token", type: "string" }],
+            },
+            fields: [],
+        }], undefined, {
+            initialBinding: {
+                url: "/login",
+                method: "POST",
+                body: { token: { from: "state", name: "auth.token" } },
+            },
+        });
+
+        const row = picker.shadowRoot!.querySelector<HTMLElement>('.param-row[data-binding-kind="body"]')!;
+        expect(row.querySelector<HTMLSelectElement>(".param-mode")!.selectedIndex).toBe(2);
+        expect(row.querySelector<HTMLInputElement>(".param-value")!.value).toBe("auth.token");
+    });
+
     test("page state settings write and validate cms-page-state", () => {
         installDom();
         const input = document.createElement("input");

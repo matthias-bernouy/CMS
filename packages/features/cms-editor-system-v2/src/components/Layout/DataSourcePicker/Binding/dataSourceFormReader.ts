@@ -8,7 +8,8 @@ export function readSourceBinding(root: ParentNode, source: EditorDataSource): D
     const alias = root.querySelector<HTMLInputElement>(".source-alias")?.value.trim();
     const trigger = selectedTrigger(root.querySelector<HTMLSelectElement>(".source-trigger"));
     const method = source.method ?? "GET";
-    const params = readParams(root);
+    const params = readRows(root, "param");
+    const body = readRows(root, "body");
 
     return {
         url: source.url,
@@ -16,13 +17,14 @@ export function readSourceBinding(root: ParentNode, source: EditorDataSource): D
         ...(method !== "GET" || trigger === "submit" ? { method } : {}),
         ...(trigger === "submit" ? { trigger } : {}),
         ...(Object.keys(params).length ? { params } : {}),
+        ...(Object.keys(body).length ? { body } : {}),
     };
 }
 
-function readParams(root: ParentNode): Record<string, DataSourcePickerSourceParamValue> {
+function readRows(root: ParentNode, kind: "param" | "body"): Record<string, DataSourcePickerSourceParamValue> {
     const params: Record<string, DataSourcePickerSourceParamValue> = {};
 
-    for (const row of Array.from(root.querySelectorAll(".param-row")) as HTMLElement[]) {
+    for (const row of Array.from(root.querySelectorAll(`.param-row[data-binding-kind="${kind}"]`)) as HTMLElement[]) {
         const name = row.dataset.paramName;
         const modeElement = row.querySelector(".param-mode") as HTMLSelectElement | null;
         const mode = modeElement ? selectedMode(modeElement) : "queryParam";
