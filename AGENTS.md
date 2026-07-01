@@ -13,15 +13,18 @@ Package instructions override or specialize the rules below.
 
 ## Workspace Shape
 
-Packages live under four layers:
+Packages live under five layers:
 
 ```text
-runtimes -> surfaces -> features -> foundation
+runtimes -> surfaces -> resources -> features -> foundation
 ```
 
 - `foundation/` contains generic utilities with no CMS-domain knowledge.
 - `features/` contains CMS domain modules, contracts, validation, default
   implementations, and optional HTTP handlers or registrars.
+- `resources/` contains versioned, declarative CMS resources such as official
+  integration packages. Resource packages may depend on feature contracts but do
+  not mount HTTP routes, connect to databases, or choose runtime adapters.
 - `surfaces/` mounts features into HTTP applications. Surfaces receive
   dependencies through constructors or config; they do not pick production
   adapters.

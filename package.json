@@ -3,6 +3,7 @@
     "private": true,
     "workspaces": [
         "packages/foundation/*",
+        "packages/resources/*",
         "packages/features/*",
         "packages/surfaces/*",
         "packages/runtimes/*"

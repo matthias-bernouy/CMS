@@ -1,12 +1,13 @@
 # Monorepo Structure
 
 CmsCore is a Bun and TypeScript workspace. Packages live under `packages/` and
-are split into four layers:
+are split into five layers:
 
 ```text
 packages/
 |-- foundation/   generic building blocks with no CMS-domain knowledge
 |-- features/     CMS domain modules, one package per business area
+|-- resources/    versioned declarative CMS resources
 |-- surfaces/     HTTP applications assembled from feature contracts
 `-- runtimes/     executable composition roots
 ```
@@ -14,7 +15,7 @@ packages/
 The dependency direction is strict:
 
 ```text
-runtimes -> surfaces -> features -> foundation
+runtimes -> surfaces -> resources -> features -> foundation
 ```
 
 A layer never imports a layer above it. A feature may import another feature,
@@ -32,6 +33,13 @@ Foundation packages:
   implementations.
 - `@bernouy/components`: public custom elements (`<p9r-*>`, `<w13c-*>`) and
   the CMS data-binding runtime.
+
+Resource packages:
+
+- `@bernouy/cms-official-integrations`: local repository of official,
+  versioned CMS integration resources. It stores manifests, source contracts,
+  connector assets, and deployment blueprints without executing installs. It may
+  depend on feature contracts to express typed integration definitions.
 
 Feature packages:
 
