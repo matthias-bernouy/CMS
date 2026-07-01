@@ -53,6 +53,35 @@ small,
     padding: 0 2px;
 }
 
+.detail-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.detail-toolbar button {
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 7px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-default, #0f1f1a);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 7px 11px;
+}
+
+.detail-toolbar button:hover {
+    background: var(--bg-hover, #f3f6f5);
+}
+
+.detail-toolbar span {
+    color: var(--text-muted, #66736f);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 h2,
 h3,
 p {
@@ -227,29 +256,76 @@ p {
     padding: 0;
 }
 
-.dashboard-detail-grid {
+.dashboard-detail-body {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px 24px;
+    gap: 18px;
+    max-width: 960px;
+}
+
+.dashboard-detail-media-list {
+    display: grid;
+    gap: 14px;
+}
+
+.dashboard-detail-media {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     margin: 0;
 }
 
-.dashboard-detail-grid div {
+.dashboard-detail-media img {
+    width: 96px;
+    height: 96px;
+    border-radius: 8px;
+    background: var(--bg-subtle, #f5f7f6);
+    object-fit: cover;
+}
+
+.dashboard-detail-media figcaption {
     display: grid;
     gap: 4px;
     min-width: 0;
 }
 
-.dashboard-detail-grid dt {
+.dashboard-detail-media span,
+.dashboard-detail-list dt {
     color: var(--text-muted, #66736f);
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
 }
 
-.dashboard-detail-grid dd {
+.dashboard-detail-media a {
+    color: var(--text-default, #0f1f1a);
+    overflow-wrap: anywhere;
+}
+
+.dashboard-detail-list {
+    display: grid;
+    margin: 0;
+}
+
+.dashboard-detail-list div {
+    display: grid;
+    grid-template-columns: minmax(140px, 180px) minmax(0, 1fr);
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border-default, #dfe5e2);
+}
+
+.dashboard-detail-list div:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.dashboard-detail-list dd {
     margin: 0;
     overflow-wrap: anywhere;
+}
+
+.dashboard-detail-list a {
+    color: var(--text-default, #0f1f1a);
 }
 
 .widget-section {
@@ -265,4 +341,16 @@ p {
     padding: 2px 8px;
     font-size: 12px;
     font-weight: 700;
+}
+
+@media (max-width: 760px) {
+    .dashboard-detail-media {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-detail-list div {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
 }

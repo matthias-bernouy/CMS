@@ -138,7 +138,7 @@ export class DashboardNav extends Component {
         this.syncFromUrl();
         this.ensureDashboardSelection();
         this.render();
-        dispatchDashboardSelection(this.selection());
+        dispatchDashboardSelection(currentSelection());
     };
 
     private onExternalSelection = (event: CustomEvent<DashboardSelection>): void => {

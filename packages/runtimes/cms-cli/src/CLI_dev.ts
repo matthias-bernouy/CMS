@@ -14,6 +14,7 @@ import { P9R_CACHE } from "@bernouy/cms-content";
 import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createDevSources } from "./dev-server/integrations";
+import { LocalFsDashboardRepository } from "./dev-server/dashboards";
 import { LocalFsIntegrationInstanceRepository } from "./dev-server/integrationInstances";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
@@ -111,6 +112,7 @@ export default async function CLI_dev(args: string[]) {
     const sources = await createDevSources(config.siteDir);
     const integrationCatalog = createIntegrationCatalog();
     const integrationInstances = new LocalFsIntegrationInstanceRepository(config.siteDir);
+    const dashboards = new LocalFsDashboardRepository(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
     const resolveSecret = createSecretResolver(secrets);
     const roles = new ValidatingRolesRepository(new InMemoryRolesRepository());
@@ -153,6 +155,7 @@ export default async function CLI_dev(args: string[]) {
         publicAuth: { ...publicAuth, allowSignup: false },
         integrationCatalog,
         integrationInstances,
+        dashboards,
     }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, sources, undefined, roles);
     await cms.ready;
 

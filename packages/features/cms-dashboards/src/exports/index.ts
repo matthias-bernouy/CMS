@@ -16,6 +16,7 @@ export type {
     ColumnSpec,
     ColumnFormat,
     FieldSpec,
+    FieldFormat,
     FieldInput,
     FilterSpec,
 } from "../interfaces/Dashboard";

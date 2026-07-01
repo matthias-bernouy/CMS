@@ -6,6 +6,7 @@ import {
     type ColumnSpec,
     type DashboardDto,
     type DashboardWidget,
+    type FieldFormat,
     type FieldInput,
     type FieldSpec,
 } from "@bernouy/cms-dashboards";
@@ -29,7 +30,7 @@ export function collectionById(dashboard: DashboardDto, collectionId: string): C
 
 export function widgetTitle(widget: DashboardWidget): string {
     if (widget.widget === "w-stat") return widget.label ?? widget.endpoint;
-    if ("collection" in widget) return widget.collection;
+    if ("collection" in widget) return sentenceCase(labelFromPath(widget.collection));
     if (widget.widget === "w-section") return widget.title ?? "Section";
     return widget.widget;
 }
@@ -169,6 +170,8 @@ function renderDetail(
     if (!fields.length) return renderMissing(`No displayable fields for collection "${widget.collection}"`);
 
     const url = endpointUrl(context.group, ref, { selection: selected });
+    const mediaFields = fields.filter(field => field.format === "image");
+    const detailFields = fields.filter(field => field.format !== "image");
     return `
         <section class="panel dashboard-detail">
             <strong>${escapeHtml(widgetTitle(widget))}</strong>
@@ -176,14 +179,21 @@ function renderDetail(
                 <div cms-source="${escapeAttr(url)} as item">
                     <p class="state detail-state" cms-condition="$source.loading">Loading...</p>
                     <p class="state detail-state" cms-condition="$source.error">Unable to load item.</p>
-                    <dl class="dashboard-detail-grid" cms-condition="$source.loaded">
-                        ${fields.map(field => `
-                            <div>
-                                <dt>${escapeHtml(field.label)}</dt>
-                                <dd>${formatDetailBinding(field.field, field.input)}</dd>
+                    <div class="dashboard-detail-body" cms-condition="$source.loaded">
+                        ${mediaFields.length ? `
+                            <div class="dashboard-detail-media-list">
+                                ${mediaFields.map(renderImageField).join("")}
                             </div>
-                        `).join("")}
-                    </dl>
+                        ` : ""}
+                        <dl class="dashboard-detail-list">
+                            ${detailFields.map(field => `
+                                <div>
+                                    <dt>${escapeHtml(field.label)}</dt>
+                                    <dd>${formatDetailBinding(field)}</dd>
+                                </div>
+                            `).join("")}
+                        </dl>
+                    </div>
                 </div>
             </cms-binding-core>
         </section>
@@ -258,6 +268,7 @@ type ResolvedField = {
     field: string;
     label: string;
     input?: FieldInput;
+    format?: FieldFormat;
 };
 
 function resolveColumns(
@@ -290,7 +301,7 @@ function resolveFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpoint
         return fields.flatMap(field => {
             if (typeof field === "string") return isSafeBindingPath(field) ? { field, label: labelFromPath(field) } : [];
             if (!isSafeBindingPath(field.field)) return [];
-            return { field: field.field, label: field.label ?? labelFromPath(field.field), input: field.input };
+            return { field: field.field, label: field.label ?? labelFromPath(field.field), input: field.input, format: field.format };
         });
     }
 
@@ -303,6 +314,7 @@ function resolveFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpoint
             field: field.path,
             label: labelFromPath(field.path),
             input: field.input,
+            format: inferFieldFormat(field.path),
         }));
 }
 
@@ -406,10 +418,32 @@ function formatBinding(field: string, format: ResolvedColumn["format"]): string 
     return binding;
 }
 
-function formatDetailBinding(field: string, input: ResolvedField["input"]): string {
-    const binding = `{{ item.${field} }}`;
-    if (input === "boolean") return `<span class="badge">${binding}</span>`;
+function renderImageField(field: ResolvedField): string {
+    const binding = `{{ item.${field.field} }}`;
+    return `
+        <figure class="dashboard-detail-media" cms-condition="item.${field.field}">
+            <img src="${binding}" alt="">
+            <figcaption>
+                <span>${escapeHtml(field.label)}</span>
+                <a href="${binding}" target="_blank" rel="noopener">${binding}</a>
+            </figcaption>
+        </figure>
+    `;
+}
+
+function formatDetailBinding(field: ResolvedField): string {
+    const binding = `{{ item.${field.field} }}`;
+    if (field.format === "url") return `<a href="${binding}" target="_blank" rel="noopener">${binding}</a>`;
+    if (field.format === "badge" || field.input === "boolean") return `<span class="badge">${binding}</span>`;
+    if (field.format === "date") return `<time>${binding}</time>`;
     return binding;
+}
+
+function inferFieldFormat(field: string): FieldFormat | undefined {
+    const leaf = field.split(".").filter(Boolean).at(-1)?.toLowerCase() ?? "";
+    if (leaf.endsWith("url") || leaf.endsWith("uri") || leaf === "href") return "url";
+    if (leaf.endsWith("at") || leaf.endsWith("date")) return "date";
+    return undefined;
 }
 
 function isSafeBindingPath(path: string): boolean {

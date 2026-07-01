@@ -58,7 +58,17 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                         meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
                         source: "items",
                         collections: [{ id: "items", list: { endpoint: "list" } }],
-                        views: [{ widget: "w-table", collection: "items" }],
+                        views: [
+                            { widget: "w-table", collection: "items" },
+                            {
+                                widget: "w-detail",
+                                collection: "items",
+                                fields: [
+                                    { field: "imageUrl", label: "Image", format: "image" },
+                                    { field: "website", label: "Website", format: "url" },
+                                ],
+                            },
+                        ],
                     },
                 }],
             },
@@ -72,7 +82,17 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                 meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
                 source: "items",
                 collections: [{ id: "items", list: { endpoint: "list" } }],
-                views: [{ widget: "w-table", collection: "items" }],
+                views: [
+                    { widget: "w-table", collection: "items" },
+                    {
+                        widget: "w-detail",
+                        collection: "items",
+                        fields: [
+                            { field: "imageUrl", label: "Image", format: "image" },
+                            { field: "website", label: "Website", format: "url" },
+                        ],
+                    },
+                ],
             },
         });
     });

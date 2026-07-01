@@ -16,6 +16,7 @@ import { ControlCms } from "@bernouy/cms-control";
 import { DeliveryCms } from "@bernouy/cms-delivery";
 import { CompositeSourceRepository, SYSTEM_SOURCES, ValidatingSourceRepository } from "@bernouy/cms-sources";
 import { MongoSourceRepository } from "@bernouy/cms-sources/mongo";
+import { MongoDashboardRepository } from "@bernouy/cms-dashboards/mongo";
 import { ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics/mongo";
 import { MongoIntegrationInstanceRepository } from "@bernouy/cms-integrations/mongo";
@@ -104,6 +105,7 @@ const pats              = new MongoPatRepository(db);                           
 const authTokens        = new MongoAuthTokenStore(db);                             await authTokens.init();
 const mongoSources      = new MongoSourceRepository(db);                          await mongoSources.init();
 const sources           = new CompositeSourceRepository(new ValidatingSourceRepository(mongoSources), SYSTEM_SOURCES);
+const dashboards        = new MongoDashboardRepository(db);                       await dashboards.init();
 const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
 const analytics         = new ValidatingAnalyticsStore(mongoAnalytics);
 const integrationsStore = new MongoIntegrationInstanceRepository(db);              await integrationsStore.init();
@@ -183,6 +185,7 @@ const publicAuthBase = {
 };
 const controlCms = new ControlCms(controlRunner, repo, auth, {
     deliveryUrl: DELIVERY_PUBLIC_URL,
+    dashboards,
     integrationInstances: integrationsStore,
     publicAuth: {
         ...publicAuthBase,

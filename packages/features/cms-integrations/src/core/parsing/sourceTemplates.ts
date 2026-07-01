@@ -5,6 +5,7 @@ import type {
     ColumnSpec,
     DashboardDto,
     DashboardWidget,
+    FieldFormat,
     FieldInput,
     FieldSpec,
     FilterSpec,
@@ -304,10 +305,19 @@ function parseField(value: unknown, name: string): FieldSpec {
     return {
         field: requiredText(value.field, `${name}.field`),
         ...(text(value.label) ? { label: text(value.label)! } : {}),
+        ...(parseFieldFormat(value.format, `${name}.format`) ? { format: parseFieldFormat(value.format, `${name}.format`)! } : {}),
         ...(parseFieldInput(value.input, `${name}.input`) ? { input: parseFieldInput(value.input, `${name}.input`)! } : {}),
         ...(value.readonly === true ? { readonly: true } : {}),
         ...(value.required === true ? { required: true } : {}),
     };
+}
+
+function parseFieldFormat(value: unknown, name: string): FieldFormat | undefined {
+    if (value === undefined) return undefined;
+    if (value === "date" || value === "money" || value === "badge" || value === "text" || value === "image" || value === "url") {
+        return value;
+    }
+    throw new IntegrationInputError(name, "must be date, money, badge, text, image, or url");
 }
 
 function parseFieldInput(value: unknown, name: string): FieldInput | undefined {

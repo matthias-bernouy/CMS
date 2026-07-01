@@ -5,6 +5,8 @@ export const DASHBOARD_SELECTION_EVENT = "cms-dashboards:selection";
 export type DashboardSelection = {
     source: string;
     dashboard: string;
+    collection?: string;
+    row?: string;
 };
 
 export function basePath(): string {
@@ -24,16 +26,42 @@ export function currentDashboard(): string {
     return new URL(window.location.href).searchParams.get("dashboard") ?? "";
 }
 
+export function currentCollection(): string {
+    return new URL(window.location.href).searchParams.get("collection") ?? "";
+}
+
+export function currentRow(): string {
+    return new URL(window.location.href).searchParams.get("row") ?? "";
+}
+
 export function currentSelection(): DashboardSelection {
-    return { source: currentSource(), dashboard: currentDashboard() };
+    const collection = currentCollection();
+    const row = currentRow();
+    return {
+        source: currentSource(),
+        dashboard: currentDashboard(),
+        ...(collection && row ? { collection, row } : {}),
+    };
 }
 
 export function replaceSelectionUrl(selection: DashboardSelection): void {
+    history.replaceState(null, "", selectionUrl(selection));
+}
+
+export function pushSelectionUrl(selection: DashboardSelection): void {
+    history.pushState(null, "", selectionUrl(selection));
+}
+
+function selectionUrl(selection: DashboardSelection): string {
     const params = new URLSearchParams();
     if (selection.source) params.set("source", selection.source);
     if (selection.dashboard) params.set("dashboard", selection.dashboard);
+    if (selection.collection && selection.row) {
+        params.set("collection", selection.collection);
+        params.set("row", selection.row);
+    }
     const suffix = params.toString() ? `?${params.toString()}` : "";
-    history.replaceState(null, "", route(`/admin/sources${suffix}`));
+    return route(`/admin/sources${suffix}`);
 }
 
 export function dispatchDashboardSelection(selection: DashboardSelection): void {

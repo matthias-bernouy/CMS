@@ -32,6 +32,7 @@ export type Collection = {
 };
 
 export type ColumnFormat = "date" | "money" | "badge" | "text";
+export type FieldFormat = ColumnFormat | "image" | "url";
 
 export type ColumnSpec =
     | string
@@ -48,6 +49,7 @@ export type FieldSpec =
     | {
         field: string;
         label?: string;
+        format?: FieldFormat;
         input?: FieldInput;
         readonly?: boolean;
         required?: boolean;
