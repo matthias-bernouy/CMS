@@ -2,7 +2,7 @@ import { writeFile, unlink, readFile } from "node:fs/promises";
 import { isAbsolute, join, normalize, relative } from "node:path";
 import type { DevBloc } from "./scan";
 import { p9rExternalsPlugin } from "@bernouy/cms-bloc-compile";
-import { validateBloc } from "@bernouy/cms-bloc-compile";
+import { isNativeBlocTag, validateBloc } from "@bernouy/cms-bloc-compile";
 
 export type BuiltBloc = {
     tag: string;
@@ -51,7 +51,7 @@ registerEditor_opaque();
 `;
 
 export async function buildDevBloc(bloc: DevBloc): Promise<BuiltBloc> {
-    const native = bloc.manifest.runtime === "native";
+    const native = isNativeBlocTag(bloc.tag);
     const [viewSource, editorSource] = await Promise.all([
         bloc.entry ? readFile(bloc.entry, "utf-8").catch(() => undefined) : Promise.resolve(undefined),
         bloc.editorEntry ? readFile(bloc.editorEntry, "utf-8").catch(() => undefined) : Promise.resolve(undefined),

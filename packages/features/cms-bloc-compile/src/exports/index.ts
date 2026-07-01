@@ -8,5 +8,5 @@
  */
 
 export { prepare_bloc }                  from "cms-bloc-compile/core/prepare_bloc";
-export { validateBloc, validateBlocTag } from "cms-bloc-compile/core/validateBloc";
+export { isNativeBlocTag, validateBloc, validateBlocTag } from "cms-bloc-compile/core/validateBloc";
 export { p9rExternalsPlugin }            from "cms-bloc-compile/core/p9rExternalsPlugin";

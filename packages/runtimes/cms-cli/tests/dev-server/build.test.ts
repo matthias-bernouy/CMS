@@ -90,7 +90,6 @@ describe("buildDevBloc", () => {
         const bloc: DevBloc = {
             folder,
             manifest: {
-                runtime: "native",
                 editor: "./BlocEditor.ts",
                 "default-tag": "p",
                 defaultContent: "./default.html",

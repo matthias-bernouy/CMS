@@ -1,7 +1,7 @@
 import type { ControlCms } from "cms-control/ControlCms";
 import { Buffer } from "node:buffer";
 import { posix } from "node:path";
-import { prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
+import { isNativeBlocTag, prepare_bloc, validateBloc } from "@bernouy/cms-bloc-compile";
 import { DuplicateBlocTagError } from "@bernouy/cms-content";
 import { invalidateBlocAssets, invalidatePagesReferencingBloc } from "cms-control/core/server/cache/invalidation";
 
@@ -37,9 +37,15 @@ export async function importBlocArtifact(cms: ControlCms, input: BlocImportInput
     const editorFile = input.editorJS ? asFile(input.editorJS, "BlocEditor.ts") : null;
     const viewSource = await viewFile.text();
     const editorSource = editorFile ? await editorFile.text() : undefined;
+    const sourceManifest = parseSourceManifest(input.source);
+    if (sourceManifest.error) {
+        throw new BlocImportError(sourceManifest.error, 400);
+    }
+    const native = isNativeBlocTag(input.tag);
 
     const validation = validateBloc({
         tag: input.tag,
+        native,
         viewSource,
         ...(editorSource !== undefined ? { editorSource } : {}),
     });
@@ -67,6 +73,7 @@ export async function importBlocArtifact(cms: ControlCms, input: BlocImportInput
         input.tag,
         input.source,
         defaultContentResult.content,
+        { native },
     );
 
     try {
@@ -106,18 +113,9 @@ function asFile(value: string | File, name: string): File {
 }
 
 function resolveDefaultContent(source: Record<string, string> | undefined): { content?: string; error?: string } {
+    const { manifest, error } = parseSourceManifest(source);
+    if (error) return { error };
     if (!source) return {};
-
-    const manifestRaw = source["manifest.json"] ?? source["./manifest.json"];
-    if (!manifestRaw) return {};
-
-    let manifest: unknown;
-    try {
-        manifest = JSON.parse(decodeSourceFile(manifestRaw));
-    } catch {
-        return { error: "Invalid manifest.json" };
-    }
-
     if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) return {};
     const value = (manifest as { defaultContent?: unknown }).defaultContent;
     if (value === undefined || value === null || value === "") return {};
@@ -130,6 +128,21 @@ function resolveDefaultContent(source: Record<string, string> | undefined): { co
     if (!encoded) return { error: `manifest.defaultContent file "${normalizedPath}" not found in source bundle` };
 
     return { content: decodeSourceFile(encoded) };
+}
+
+function parseSourceManifest(source: Record<string, string> | undefined): { manifest?: Record<string, unknown>; error?: string } {
+    if (!source) return {};
+
+    const manifestRaw = source["manifest.json"] ?? source["./manifest.json"];
+    if (!manifestRaw) return {};
+
+    try {
+        const manifest = JSON.parse(decodeSourceFile(manifestRaw));
+        if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) return {};
+        return { manifest: manifest as Record<string, unknown> };
+    } catch {
+        return { error: "Invalid manifest.json" };
+    }
 }
 
 function normalizeSourcePath(path: string): string | null {

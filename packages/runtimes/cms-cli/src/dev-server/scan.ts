@@ -2,6 +2,7 @@ import { readdir, stat, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { folderToCategory } from "cms-cli/push/shared/categoryFolder";
+import { isNativeBlocTag } from "@bernouy/cms-bloc-compile";
 
 export type BlocManifest = {
     runtime?: string;
@@ -115,7 +116,7 @@ function toDevBloc(folder: string, manifest: BlocManifest, options: ScanOptions)
         return null;
     }
 
-    const native = manifest.runtime === "native";
+    const native = isNativeBlocTag(tag);
     const blocRel = manifest.bloc || (native ? undefined : "./Bloc.ts");
     const editorRel = manifest.editor;
 

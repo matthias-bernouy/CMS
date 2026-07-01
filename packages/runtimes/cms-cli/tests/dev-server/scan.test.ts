@@ -66,11 +66,10 @@ describe("scanDevBlocs", () => {
         expect(tags).toEqual(["base-accordion", "base-accordion-item"]);
     });
 
-    test("accepts native editor-only blocs without a view entry", async () => {
+    test("accepts native editor-only blocs without manifest runtime metadata or a view entry", async () => {
         const root = makeBlocsRoot({
             "Text/paragraph": {
                 "manifest.json": JSON.stringify({
-                    runtime: "native",
                     "default-tag": "p",
                     editor: "./BlocEditor.ts",
                     meta: { title: "Paragraph", description: "" },

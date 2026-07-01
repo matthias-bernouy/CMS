@@ -47,7 +47,9 @@ export function validateBlocTag(tag: string): string | null {
 export function validateBloc(input: ValidateBlocInput): ValidateBlocResult {
     const errors: string[] = [];
 
-    const tagError = input.native ? validateNativeBlocTag(input.tag) : validateBlocTag(input.tag);
+    const tagError = input.native || isNativeBlocTag(input.tag)
+        ? validateNativeBlocTag(input.tag)
+        : validateBlocTag(input.tag);
     if (tagError) errors.push(tagError);
 
     if (input.viewSource) {
@@ -96,8 +98,12 @@ const NATIVE_BLOC_TAGS = new Set([
     "textarea",
 ]);
 
+export function isNativeBlocTag(tag: string): boolean {
+    return NATIVE_BLOC_TAGS.has(tag);
+}
+
 function validateNativeBlocTag(tag: string): string | null {
-    if (NATIVE_BLOC_TAGS.has(tag)) return null;
+    if (isNativeBlocTag(tag)) return null;
     return `Invalid native tag "${tag}" — must be one of: ${[...NATIVE_BLOC_TAGS].join(", ")}.`;
 }
 

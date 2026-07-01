@@ -7,6 +7,7 @@ const prepareBlocCalls: Array<{
     blocId: string;
     source?: Record<string, string>;
     defaultContent?: string;
+    native?: boolean;
 }> = [];
 
 // Stub prepare_bloc so tests never touch the filesystem or run Bun.build.
@@ -23,8 +24,9 @@ mock.module("@bernouy/cms-bloc-compile", () => ({
         blocId: string,
         source?: Record<string, string>,
         defaultContent?: string,
+        options?: { native?: boolean },
     ): Promise<TBloc> => {
-        prepareBlocCalls.push({ blocId, source, defaultContent });
+        prepareBlocCalls.push({ blocId, source, defaultContent, native: options?.native });
         return {
             id:       blocId,
             name:     label,
@@ -60,7 +62,6 @@ function makeSystem(opts: {
                 return bloc;
             },
             getAllPages: async () => [],
-            getAllSnippets: async () => [],
         },
         cache: {
             get: (k: string) => cache.get(k) ?? null,
@@ -241,5 +242,29 @@ describe("bloc.post", () => {
         expect(res.status).toBe(200);
         expect(createBlocCalls).toHaveLength(1);
         expect(prepareBlocCalls[0]?.defaultContent).toBe(`<my-bloc><p slot="header">Title</p><p>Body</p></my-bloc>`);
+    });
+
+    test("allows native text bloc tags without manifest runtime metadata", async () => {
+        prepareBlocCalls.length = 0;
+        const { cms, createBlocCalls } = makeSystem();
+        const res = await importBloc(
+            makeRequest({
+                name: "Paragraph",
+                tag: "p",
+                group: "Text",
+                viewJS: viewFile(),
+                source: sourceField({
+                    "manifest.json": JSON.stringify({ defaultContent: "./default.html" }),
+                    "default.html": `<p>Text</p>`,
+                }),
+            }),
+            cms
+        );
+
+        expect(res.status).toBe(200);
+        expect(createBlocCalls).toHaveLength(1);
+        expect(createBlocCalls[0]?.bloc.id).toBe("p");
+        expect(prepareBlocCalls[0]?.native).toBe(true);
+        expect(prepareBlocCalls[0]?.defaultContent).toBe(`<p>Text</p>`);
     });
 });
