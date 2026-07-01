@@ -80,13 +80,13 @@ export class DashboardView extends Component {
 
     private handleClick(event: Event): void {
         const target = event.target as Element | null;
-        const openCreate = target?.closest<HTMLElement>("[data-dashboard-create-open]");
-        if (openCreate?.dataset.dashboardCreateOpen) {
-            this.openCreateDialog(openCreate.dataset.dashboardCreateOpen);
+        const openWrite = target?.closest<HTMLElement>("[data-dashboard-write-open]");
+        if (openWrite?.dataset.dashboardWriteOpen) {
+            void this.openWriteDialog(openWrite.dataset.dashboardWriteOpen);
             return;
         }
-        if (target?.closest("[data-dashboard-create-close]")) {
-            this.closeCreateDialog(target);
+        if (target?.closest("[data-dashboard-write-close]")) {
+            this.closeWriteDialog(target);
             return;
         }
         if (target?.closest("[data-dashboard-back]")) {
@@ -178,15 +178,15 @@ export class DashboardView extends Component {
 
     private async handleSubmit(event: SubmitEvent): Promise<void> {
         const target = event.target;
-        if (!(target instanceof HTMLFormElement) || !target.matches("[data-dashboard-create]")) return;
+        if (!(target instanceof HTMLFormElement) || !target.matches("[data-dashboard-write]")) return;
         event.preventDefault();
 
         const form = target;
-        const state = form.querySelector<HTMLElement>("[data-dashboard-create-state]");
-        setCreateState(state, "");
-        const payload = readCreatePayload(form);
+        const state = form.querySelector<HTMLElement>("[data-dashboard-write-state]");
+        setWriteState(state, "");
+        const payload = readWritePayload(form);
         if (!payload.ok) {
-            setCreateState(state, payload.message, "error");
+            setWriteState(state, payload.message, "error");
             showToast(payload.message, { type: "error" });
             payload.control?.focus();
             return;
@@ -194,17 +194,17 @@ export class DashboardView extends Component {
 
         let url: string;
         try {
-            url = resolveCreateUrl(form.dataset.dashboardUrl ?? "", payload.params);
+            url = resolveWriteUrl(form.dataset.dashboardUrl ?? "", payload.params);
         } catch (error) {
-            const message = error instanceof Error ? error.message : "Invalid create URL";
-            setCreateState(state, message, "error");
+            const message = error instanceof Error ? error.message : "Invalid write URL";
+            setWriteState(state, message, "error");
             showToast(message, { type: "error" });
             return;
         }
 
         const method = form.dataset.dashboardMethod || "POST";
         form.setAttribute("aria-busy", "true");
-        setCreateState(state, "Creating...");
+        setWriteState(state, "Saving...");
         try {
             const response = await fetch(url, {
                 method,
@@ -216,35 +216,61 @@ export class DashboardView extends Component {
             });
             if (!response.ok) {
                 const message = await responseMessage(response);
-                setCreateState(state, message, "error");
+                setWriteState(state, message, "error");
                 showToast(message, { type: "error" });
                 return;
             }
 
             form.reset();
-            setCreateState(state, "Created.", "success");
-            showToast("Created", { type: "success" });
+            const successMessage = form.dataset.dashboardSuccessMessage || "Saved";
+            setWriteState(state, `${successMessage}.`, "success");
+            showToast(successMessage, { type: "success" });
             this.renderWidgets();
         } catch {
-            setCreateState(state, "Network error", "error");
+            setWriteState(state, "Network error", "error");
             showToast("Network error", { type: "error" });
         } finally {
             form.removeAttribute("aria-busy");
         }
     }
 
-    private openCreateDialog(id: string): void {
-        const dialog = this.shadowRoot!.querySelector<HTMLDialogElement>(`[data-dashboard-create-dialog="${cssEscape(id)}"]`);
+    private async openWriteDialog(id: string): Promise<void> {
+        const dialog = this.shadowRoot!.querySelector<HTMLDialogElement>(`[data-dashboard-write-dialog="${cssEscape(id)}"]`);
         if (!dialog) return;
+        const form = dialog.querySelector<HTMLFormElement>("[data-dashboard-write]");
         if (typeof dialog.showModal === "function") dialog.showModal();
         else dialog.setAttribute("open", "");
         void this.hydrateUserPickers(dialog);
+        if (form?.dataset.dashboardLoadUrl) {
+            await this.hydrateWriteForm(form);
+            void this.hydrateUserPickers(dialog);
+        }
     }
 
-    private closeCreateDialog(target: Element | null): void {
-        const dialog = target?.closest<HTMLDialogElement>("dialog[data-dashboard-create-dialog]");
+    private closeWriteDialog(target: Element | null): void {
+        const dialog = target?.closest<HTMLDialogElement>("dialog[data-dashboard-write-dialog]");
         if (!dialog) return;
         dialog.close();
+    }
+
+    private async hydrateWriteForm(form: HTMLFormElement): Promise<void> {
+        const state = form.querySelector<HTMLElement>("[data-dashboard-write-state]");
+        setWriteState(state, "Loading...");
+        try {
+            const response = await fetch(form.dataset.dashboardLoadUrl ?? "", { headers: { accept: "application/json" } });
+            if (!response.ok) {
+                const message = await responseMessage(response);
+                setWriteState(state, message, "error");
+                showToast(message, { type: "error" });
+                return;
+            }
+            const item = await response.json() as Record<string, unknown>;
+            fillWriteForm(form, item);
+            setWriteState(state, "");
+        } catch {
+            setWriteState(state, "Unable to load item", "error");
+            showToast("Unable to load item", { type: "error" });
+        }
     }
 
     private async hydrateUserPickers(root: ParentNode = this.shadowRoot!): Promise<void> {
@@ -330,16 +356,17 @@ export class DashboardView extends Component {
     }
 }
 
-type CreatePayload =
+type WritePayload =
     | { ok: true; body: Record<string, unknown>; params: URLSearchParams }
     | { ok: false; message: string; control?: HTMLElement };
 
-function readCreatePayload(form: HTMLFormElement): CreatePayload {
+function readWritePayload(form: HTMLFormElement): WritePayload {
     const body: Record<string, unknown> = {};
     const params = new URLSearchParams();
     const controls = Array.from(form.querySelectorAll<HTMLElement>("[data-dashboard-field]"));
 
     for (const control of controls) {
+        if (control.hasAttribute("data-dashboard-readonly")) continue;
         const name = control.getAttribute("name") ?? "";
         if (!name) continue;
         const value = readFieldValue(control);
@@ -400,7 +427,7 @@ function setNestedValue(target: Record<string, unknown>, path: string, value: un
     if (leaf) current[leaf] = value;
 }
 
-function resolveCreateUrl(template: string, params: URLSearchParams): string {
+function resolveWriteUrl(template: string, params: URLSearchParams): string {
     return template.replace(/#\{([^}]+)\}/g, (_match, rawName: string) => {
         const name = rawName.trim();
         const value = params.get(name);
@@ -409,11 +436,48 @@ function resolveCreateUrl(template: string, params: URLSearchParams): string {
     });
 }
 
-function setCreateState(target: HTMLElement | null, message: string, kind = ""): void {
+function setWriteState(target: HTMLElement | null, message: string, kind = ""): void {
     if (!target) return;
     target.textContent = message;
     target.hidden = !message;
     target.dataset.state = kind;
+}
+
+function fillWriteForm(form: HTMLFormElement, item: Record<string, unknown>): void {
+    const controls = Array.from(form.querySelectorAll<HTMLElement>("[data-dashboard-field]"));
+    for (const control of controls) {
+        const name = control.getAttribute("name") ?? "";
+        if (!name) continue;
+        setFieldValue(control, valueAtPath(item, name));
+    }
+}
+
+function setFieldValue(control: HTMLElement, value: unknown): void {
+    const type = control.dataset.dashboardFieldType ?? "text";
+    if (type === "cms-user") {
+        if (typeof value === "string" && value) control.dataset.value = value;
+        else delete control.dataset.value;
+        const input = control.querySelector<HTMLInputElement>("[data-dashboard-user-search]");
+        if (input) input.value = typeof value === "string" ? value : "";
+        return;
+    }
+    if (control instanceof HTMLInputElement && control.type === "checkbox") {
+        control.checked = value === true;
+        return;
+    }
+    const valueControl = control as HTMLElement & { value?: unknown };
+    const stringValue = value === null || value === undefined ? "" : String(value);
+    if ("value" in valueControl) valueControl.value = stringValue;
+    control.setAttribute("value", stringValue);
+}
+
+function valueAtPath(item: Record<string, unknown>, path: string): unknown {
+    let current: unknown = item;
+    for (const part of path.split(".")) {
+        if (!part || !current || typeof current !== "object" || Array.isArray(current)) return undefined;
+        current = (current as Record<string, unknown>)[part];
+    }
+    return current;
 }
 
 async function responseMessage(response: Response): Promise<string> {
@@ -433,7 +497,18 @@ function hydrateUserPicker(picker: HTMLElement, users: DashboardUserOption[]): v
     const input = picker.querySelector<HTMLInputElement>("[data-dashboard-user-search]");
     const menu = picker.querySelector<HTMLElement>("[data-dashboard-user-menu]");
     if (!input || !menu) return;
-    if (picker.dataset.dashboardUserHydrated === "true") return;
+
+    const syncInitialSelection = () => {
+        const selected = picker.dataset.value;
+        if (!selected) return;
+        const user = users.find(candidate => candidate.sub === selected);
+        input.value = user ? userLabel(user) : selected;
+    };
+
+    if (picker.dataset.dashboardUserHydrated === "true") {
+        syncInitialSelection();
+        return;
+    }
     picker.dataset.dashboardUserHydrated = "true";
 
     let activeIndex = -1;
@@ -504,6 +579,7 @@ function hydrateUserPicker(picker: HTMLElement, users: DashboardUserOption[]): v
         const user = users.find(candidate => candidate.sub === option?.dataset.dashboardUserValue);
         if (user) select(user);
     });
+    syncInitialSelection();
 }
 
 function userMatchesInput(user: DashboardUserOption, value: string): boolean {
@@ -567,7 +643,7 @@ function cssEscape(value: string): string {
 function mainWidgetsFor(widgets: DashboardWidget[]): DashboardWidget[] {
     const result: DashboardWidget[] = [];
     for (const widget of widgets) {
-        if (widget.widget === "w-detail") continue;
+        if (widget.widget === "w-detail" || widget.widget === "w-update") continue;
         if (widget.widget === "w-section") {
             const children = mainWidgetsFor(widget.children);
             if (children.length) result.push({ ...widget, children });
@@ -588,7 +664,7 @@ function mainWidgetsFor(widgets: DashboardWidget[]): DashboardWidget[] {
 function detailWidgetsFor(widgets: DashboardWidget[], collection: string): DashboardWidget[] {
     const result: DashboardWidget[] = [];
     for (const widget of widgets) {
-        if (widget.widget === "w-detail" && widget.collection === collection) {
+        if ((widget.widget === "w-detail" || widget.widget === "w-update") && widget.collection === collection) {
             result.push(widget);
             continue;
         }

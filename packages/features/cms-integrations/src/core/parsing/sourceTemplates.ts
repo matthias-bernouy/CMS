@@ -240,14 +240,30 @@ function parseWidget(value: unknown, name: string): DashboardWidget {
                 ...(typeof value.pageSize === "number" ? { pageSize: value.pageSize } : {}),
             };
         case "w-detail":
-        case "w-detail-item-put":
-        case "w-detail-patch":
-        case "w-create":
             return {
                 widget,
                 collection: requiredText(value.collection, `${name}.collection`),
                 ...(value.fields !== undefined ? { fields: parseFields(value.fields, `${name}.fields`) } : {}),
             };
+        case "w-create":
+            return {
+                widget,
+                collection: requiredText(value.collection, `${name}.collection`),
+                ...(text(value.label) ? { label: text(value.label)! } : {}),
+                ...(text(value.submitLabel) ? { submitLabel: text(value.submitLabel)! } : {}),
+                ...(value.fields !== undefined ? { fields: parseFields(value.fields, `${name}.fields`) } : {}),
+            };
+        case "w-update": {
+            const action = parseUpdateAction(value.action, `${name}.action`);
+            return {
+                widget,
+                collection: requiredText(value.collection, `${name}.collection`),
+                ...(action ? { action } : {}),
+                ...(text(value.label) ? { label: text(value.label)! } : {}),
+                ...(text(value.submitLabel) ? { submitLabel: text(value.submitLabel)! } : {}),
+                ...(value.fields !== undefined ? { fields: parseFields(value.fields, `${name}.fields`) } : {}),
+            };
+        }
         case "w-stat":
             return {
                 widget,
@@ -258,6 +274,12 @@ function parseWidget(value: unknown, name: string): DashboardWidget {
         default:
             throw new IntegrationInputError(`${name}.widget`, "must be a supported dashboard widget");
     }
+}
+
+function parseUpdateAction(value: unknown, name: string): "update" | "patch" | undefined {
+    if (value === undefined) return undefined;
+    if (value === "update" || value === "patch") return value;
+    throw new IntegrationInputError(name, "must be update or patch");
 }
 
 function parseWidgetArray(value: unknown, name: string): DashboardWidget[] {

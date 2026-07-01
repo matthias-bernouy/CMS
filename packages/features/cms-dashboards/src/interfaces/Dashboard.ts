@@ -73,6 +73,11 @@ export type RowAction = {
     requires?: string;
 };
 
+export type WriteWidgetLabels = {
+    label?: string;
+    submitLabel?: string;
+};
+
 export type DashboardWidget =
     | { widget: "w-section"; title?: string; children: DashboardWidget[] }
     | { widget: "w-tabs"; tabs: Array<{ label: string; children: DashboardWidget[] }> }
@@ -85,9 +90,8 @@ export type DashboardWidget =
         pageSize?: number;
     }
     | { widget: "w-detail"; collection: string; fields?: FieldSpec[] }
-    | { widget: "w-detail-item-put"; collection: string; fields?: FieldSpec[] }
-    | { widget: "w-detail-patch"; collection: string; fields?: FieldSpec[] }
-    | { widget: "w-create"; collection: string; fields?: FieldSpec[] }
+    | ({ widget: "w-create"; collection: string; fields?: FieldSpec[] } & WriteWidgetLabels)
+    | ({ widget: "w-update"; collection: string; action?: "update" | "patch"; fields?: FieldSpec[] } & WriteWidgetLabels)
     | { widget: "w-stat"; endpoint: string; path: string; label?: string };
 
 export type DashboardDto = {

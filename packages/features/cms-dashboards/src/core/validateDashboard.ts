@@ -107,9 +107,26 @@ function validateWidget(
             }
             widget.fields?.forEach((field, index) => validateSpecPath(field, `${path}.fields.${index}`, errors));
             break;
-        case "w-detail-item-put":
-        case "w-detail-patch":
+        case "w-update":
             validateCollectionRef(widget.collection, `${path}.collection`, collections, errors);
+            {
+                const collection = collections.get(widget.collection);
+                const action = widget.action ?? "update";
+                const writeRef = collection?.item?.[action];
+                const getRef = collection?.item?.get;
+                if (collection && !collection.rowKey) {
+                    errors.push(`${path}.collection "${widget.collection}" must declare rowKey for w-update`);
+                }
+                if (collection && !getRef) {
+                    errors.push(`${path}.collection "${widget.collection}" must declare item.get for w-update`);
+                }
+                if (collection && !writeRef) {
+                    errors.push(`${path}.collection "${widget.collection}" must declare item.${action} for w-update`);
+                }
+                if (writeRef && !Object.values(writeRef.params ?? {}).includes(SELECTION_EXPR)) {
+                    errors.push(`${path}.collection "${widget.collection}" item.${action} must bind a param to $selection`);
+                }
+            }
             widget.fields?.forEach((field, index) => validateSpecPath(field, `${path}.fields.${index}`, errors));
             break;
         case "w-create":
@@ -197,8 +214,8 @@ function validateParamBindings(
         if (typeof expr !== "string" || !expr) {
             errors.push(`${path}.params.${name} must be a non-empty string`);
         } else if (expr === SELECTION_EXPR) {
-            if (!path.includes(".item.get")) {
-                errors.push(`${path}.params.${name} uses $selection outside a collection item get endpoint`);
+            if (!supportsSelectionParam(path)) {
+                errors.push(`${path}.params.${name} uses $selection outside a selectable collection item endpoint`);
             }
         } else if (expr.startsWith("$") && !PARAM_EXPR.test(expr)) {
             errors.push(`${path}.params.${name} has invalid binding expression "${expr}"`);
@@ -211,6 +228,13 @@ function validateParamBindings(
             errors.push(`${path}.params.${param.name} is required by endpoint "${endpoint.urn}"`);
         }
     }
+}
+
+function supportsSelectionParam(path: string): boolean {
+    return path.includes(".item.get") ||
+        path.includes(".item.update") ||
+        path.includes(".item.patch") ||
+        path.includes(".item.delete");
 }
 
 function validateId(path: string, value: string, errors: string[]): void {

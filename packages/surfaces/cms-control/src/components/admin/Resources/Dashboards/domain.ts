@@ -29,6 +29,7 @@ export function collectionById(dashboard: DashboardDto, collectionId: string): C
 }
 
 export function widgetTitle(widget: DashboardWidget): string {
+    if ("label" in widget && widget.label) return widget.label;
     if (widget.widget === "w-stat") return widget.label ?? widget.endpoint;
     if ("collection" in widget) return sentenceCase(labelFromPath(widget.collection));
     if (widget.widget === "w-section") return widget.title ?? "Section";
@@ -51,9 +52,8 @@ export function renderWidget(widget: DashboardWidget, context: RenderContext, ke
             return renderDetail(widget, context);
         case "w-create":
             return renderCreate(widget, context, key);
-        case "w-detail-item-put":
-        case "w-detail-patch":
-            return renderPendingWidget(widget);
+        case "w-update":
+            return renderUpdate(widget, context, key);
         default:
             return `<section class="panel empty"><strong>Unsupported widget</strong></section>`;
     }
@@ -113,7 +113,7 @@ function renderTable(
     const repeatPath = repeatPathFor(endpoint, collection);
     const url = endpointUrl(context.group, collection.list);
     const filters = renderFilters(widget, collection);
-    const rowAttributes = hasDetailWidget(context.dashboard.views, collection.id) && collection.item?.get
+    const rowAttributes = hasDetailCollectionWidget(context.dashboard.views, collection.id) && collection.item?.get
         ? rowSelectionAttributes(collection)
         : "";
 
@@ -215,35 +215,101 @@ function renderCreate(
     const endpoint = endpointById(context.group, ref.endpoint);
     if (!endpoint) return renderMissing(`Unknown endpoint "${ref.endpoint}"`);
 
-    const fields = resolveCreateFields(widget.fields, endpoint);
+    const fields = resolveWriteFields(widget.fields, endpoint);
     if (!fields.length) return renderMissing(`No writable fields for collection "${widget.collection}"`);
 
     const paramFields = paramFieldNames(ref);
     const url = endpointUrl(context.group, ref);
     const modalId = `dashboard-create-${safeDomId(key)}`;
+    const label = writeLabel(widget, "Create");
+    const submitLabel = writeSubmitLabel(widget, label);
     return `
         <section class="dashboard-create-action">
-            <button type="button" data-dashboard-create-open="${escapeAttr(modalId)}">Create</button>
+            <button type="button" data-dashboard-write-open="${escapeAttr(modalId)}">${escapeHtml(label)}</button>
         </section>
-        <dialog class="dashboard-create-dialog" data-dashboard-create-dialog="${escapeAttr(modalId)}">
+        <dialog class="dashboard-create-dialog" data-dashboard-write-dialog="${escapeAttr(modalId)}">
             <form
                 class="dashboard-create"
-                data-dashboard-create
+                data-dashboard-write
                 data-dashboard-url="${escapeAttr(url)}"
                 data-dashboard-method="${escapeAttr(endpoint.method)}"
+                data-dashboard-success-message="Created"
             >
                 <div class="dashboard-create-head">
-                    <strong>${escapeHtml(widgetTitle(widget))}</strong>
-                    <button type="button" class="dashboard-create-close" data-dashboard-create-close>Close</button>
+                    <strong>${escapeHtml(label)}</strong>
+                    <button type="button" class="dashboard-create-close" data-dashboard-write-close>Close</button>
                 </div>
                 <div class="dashboard-create-fields">
-                    ${fields.map(field => renderCreateField(field, paramFields.has(field.field))).join("")}
+                    ${fields.map(field => renderWriteField(field, paramFields.has(field.field))).join("")}
                 </div>
                 <div class="dashboard-create-actions">
-                    <button type="button" class="dashboard-create-secondary" data-dashboard-create-close>Cancel</button>
-                    <button type="submit">Create</button>
+                    <button type="button" class="dashboard-create-secondary" data-dashboard-write-close>Cancel</button>
+                    <button type="submit">${escapeHtml(submitLabel)}</button>
                 </div>
-                <p class="state dashboard-create-state" data-dashboard-create-state hidden></p>
+                <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
+            </form>
+        </dialog>
+    `;
+}
+
+function renderUpdate(
+    widget: Extract<DashboardWidget, { widget: "w-update" }>,
+    context: RenderContext,
+    key: string,
+): string {
+    const collection = collectionById(context.dashboard, widget.collection);
+    if (!collection) return renderMissing(`Unknown collection "${widget.collection}"`);
+
+    const action = widget.action ?? "update";
+    const ref = collection.item?.[action];
+    if (!ref) return renderMissing(`Collection "${widget.collection}" does not declare item.${action}`);
+
+    const getRef = collection.item?.get;
+    if (!getRef) return renderMissing(`Collection "${widget.collection}" does not declare item.get`);
+
+    const endpoint = endpointById(context.group, ref.endpoint);
+    if (!endpoint) return renderMissing(`Unknown endpoint "${ref.endpoint}"`);
+
+    const getEndpoint = endpointById(context.group, getRef.endpoint);
+    if (!getEndpoint) return renderMissing(`Unknown endpoint "${getRef.endpoint}"`);
+
+    const selected = context.selectedRows.get(collection.id) ?? "";
+    if (!selected) return "";
+
+    const fields = resolveWriteFields(widget.fields, endpoint);
+    if (!fields.length) return renderMissing(`No writable fields for collection "${widget.collection}"`);
+
+    const paramFields = paramFieldNames(ref);
+    const url = endpointUrl(context.group, ref, { selection: selected });
+    const loadUrl = endpointUrl(context.group, getRef, { selection: selected });
+    const modalId = `dashboard-update-${safeDomId(key)}`;
+    const label = writeLabel(widget, "Edit");
+    const submitLabel = writeSubmitLabel(widget, label);
+    return `
+        <section class="dashboard-create-action">
+            <button type="button" data-dashboard-write-open="${escapeAttr(modalId)}">${escapeHtml(label)}</button>
+        </section>
+        <dialog class="dashboard-create-dialog" data-dashboard-write-dialog="${escapeAttr(modalId)}">
+            <form
+                class="dashboard-create"
+                data-dashboard-write
+                data-dashboard-url="${escapeAttr(url)}"
+                data-dashboard-load-url="${escapeAttr(loadUrl)}"
+                data-dashboard-method="${escapeAttr(endpoint.method)}"
+                data-dashboard-success-message="Updated"
+            >
+                <div class="dashboard-create-head">
+                    <strong>${escapeHtml(label)}</strong>
+                    <button type="button" class="dashboard-create-close" data-dashboard-write-close>Close</button>
+                </div>
+                <div class="dashboard-create-fields">
+                    ${fields.map(field => renderWriteField(field, paramFields.has(field.field))).join("")}
+                </div>
+                <div class="dashboard-create-actions">
+                    <button type="button" class="dashboard-create-secondary" data-dashboard-write-close>Cancel</button>
+                    <button type="submit">${escapeHtml(submitLabel)}</button>
+                </div>
+                <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
             </form>
         </dialog>
     `;
@@ -263,15 +329,6 @@ function renderStat(widget: Extract<DashboardWidget, { widget: "w-stat" }>, cont
                 <strong cms-condition="$source.error">-</strong>
             </section>
         </cms-binding-core>
-    `;
-}
-
-function renderPendingWidget(widget: DashboardWidget): string {
-    return `
-        <section class="panel empty">
-            <strong>${escapeHtml(widgetTitle(widget))}</strong>
-            <span>${escapeHtml(widget.widget)} will be enabled with the write/detail phase.</span>
-        </section>
     `;
 }
 
@@ -319,6 +376,7 @@ type ResolvedField = {
     input?: FieldInput;
     format?: FieldFormat;
     required?: boolean;
+    readonly?: boolean;
 };
 
 function resolveColumns(
@@ -357,6 +415,7 @@ function resolveFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpoint
                 input: field.input,
                 format: field.format,
                 required: field.required,
+                readonly: field.readonly,
             };
         });
     }
@@ -375,7 +434,7 @@ function resolveFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpoint
         }));
 }
 
-function resolveCreateFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpointDto): ResolvedField[] {
+function resolveWriteFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpointDto): ResolvedField[] {
     if (fields?.length) return resolveFields(fields, endpoint);
 
     const shape = endpoint.body;
@@ -477,11 +536,11 @@ function rowSelectionAttributes(collection: Collection): string {
     ].join("");
 }
 
-function hasDetailWidget(widgets: DashboardWidget[], collectionId: string): boolean {
+function hasDetailCollectionWidget(widgets: DashboardWidget[], collectionId: string): boolean {
     return widgets.some(widget => {
-        if (widget.widget === "w-detail") return widget.collection === collectionId;
-        if (widget.widget === "w-section") return hasDetailWidget(widget.children, collectionId);
-        if (widget.widget === "w-tabs") return widget.tabs.some(tab => hasDetailWidget(tab.children, collectionId));
+        if (widget.widget === "w-detail" || widget.widget === "w-update") return widget.collection === collectionId;
+        if (widget.widget === "w-section") return hasDetailCollectionWidget(widget.children, collectionId);
+        if (widget.widget === "w-tabs") return widget.tabs.some(tab => hasDetailCollectionWidget(tab.children, collectionId));
         return false;
     });
 }
@@ -513,7 +572,7 @@ function formatDetailBinding(field: ResolvedField): string {
     return binding;
 }
 
-function renderCreateField(field: ResolvedField, isParam: boolean): string {
+function renderWriteField(field: ResolvedField, isParam: boolean): string {
     const attrs = [
         `name="${escapeAttr(field.field)}"`,
         "data-dashboard-field",
@@ -521,6 +580,8 @@ function renderCreateField(field: ResolvedField, isParam: boolean): string {
         `data-dashboard-field-label="${escapeAttr(field.label)}"`,
         isParam ? "data-dashboard-param" : "",
         field.required ? "required" : "",
+        field.readonly ? "data-dashboard-readonly" : "",
+        field.readonly ? "disabled" : "",
     ].filter(Boolean).join(" ");
 
     if (field.input === "cms-user") {
@@ -572,6 +633,14 @@ function paramFieldNames(ref: CollectionEndpointRef): Set<string> {
         if (expr.startsWith("$param.")) names.add(expr.slice("$param.".length));
     }
     return names;
+}
+
+function writeLabel(widget: Extract<DashboardWidget, { widget: "w-create" | "w-update" }>, fallback: string): string {
+    return widget.label ?? fallback;
+}
+
+function writeSubmitLabel(widget: Extract<DashboardWidget, { widget: "w-create" | "w-update" }>, fallback: string): string {
+    return widget.submitLabel ?? widget.label ?? fallback;
 }
 
 function safeDomId(value: string): string {

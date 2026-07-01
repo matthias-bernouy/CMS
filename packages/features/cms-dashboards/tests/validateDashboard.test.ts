@@ -67,6 +67,38 @@ const source: Source = {
             },
         },
         {
+            urn: "urn:commerce:updateOrder",
+            method: "PUT",
+            targetUrl: "https://example.com/orders/{orderId}",
+            input: {
+                params: [
+                    { name: "orderId", in: "path", required: true, schema: { type: "string" } },
+                ],
+                body: {
+                    type: "object",
+                    properties: {
+                        status: { type: "string" },
+                    },
+                },
+            },
+        },
+        {
+            urn: "urn:commerce:patchOrder",
+            method: "PATCH",
+            targetUrl: "https://example.com/orders/{orderId}",
+            input: {
+                params: [
+                    { name: "orderId", in: "path", required: true, schema: { type: "string" } },
+                ],
+                body: {
+                    type: "object",
+                    properties: {
+                        status: { type: "string" },
+                    },
+                },
+            },
+        },
+        {
             urn: "urn:commerce:createOrder",
             method: "POST",
             targetUrl: "https://example.com/orders",
@@ -160,7 +192,7 @@ describe("validateDashboard", () => {
         dashboard.collections[0]!.list.params = { status: "$selection" };
 
         expect(validateDashboard(dashboard, { source })).toContain(
-            "collections.orders.list.params.status uses $selection outside a collection item get endpoint",
+            "collections.orders.list.params.status uses $selection outside a selectable collection item endpoint",
         );
     });
 
@@ -188,6 +220,65 @@ describe("validateDashboard", () => {
 
         expect(validateDashboard(dashboard, { source })).toContain(
             'views.2.collection "orders" must declare item.create for w-create',
+        );
+    });
+
+    test("accepts update widgets backed by selected item update endpoints", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
+            update: { endpoint: "updateOrder", params: { orderId: "$selection" } },
+        };
+        dashboard.views.push({
+            widget: "w-update",
+            collection: "orders",
+            label: "Edit order",
+            submitLabel: "Save order",
+            fields: [{ field: "status", required: true }],
+        });
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+    });
+
+    test("accepts update widgets backed by selected item patch endpoints", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
+            patch: { endpoint: "patchOrder", params: { orderId: "$selection" } },
+        };
+        dashboard.views.push({
+            widget: "w-update",
+            action: "patch",
+            collection: "orders",
+            fields: ["status"],
+        });
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+    });
+
+    test("rejects update widgets without selected item endpoints", () => {
+        const dashboard = validDashboard();
+        dashboard.views.push({ widget: "w-update", collection: "orders", fields: ["status"] });
+
+        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
+            'views.2.collection "orders" must declare item.get for w-update',
+            'views.2.collection "orders" must declare item.update for w-update',
+        ]));
+    });
+
+    test("rejects update widgets whose write endpoint is not bound to the selected row", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
+            update: { endpoint: "updateOrder", params: { orderId: "$param.status" } },
+        };
+        dashboard.views.push({ widget: "w-update", collection: "orders", fields: ["status"] });
+
+        expect(validateDashboard(dashboard, { source })).toContain(
+            'views.2.collection "orders" item.update must bind a param to $selection',
         );
     });
 

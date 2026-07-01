@@ -57,7 +57,15 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                         id: "items-dashboard",
                         meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
                         source: "items",
-                        collections: [{ id: "items", list: { endpoint: "list" } }],
+                        collections: [{
+                            id: "items",
+                            rowKey: "id",
+                            list: { endpoint: "list" },
+                            item: {
+                                get: { endpoint: "get", params: { id: "$selection" } },
+                                update: { endpoint: "update", params: { id: "$selection" } },
+                            },
+                        }],
                         views: [
                             { widget: "w-table", collection: "items" },
                             {
@@ -68,6 +76,13 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                                     { field: "imageUrl", label: "Image", format: "image" },
                                     { field: "website", label: "Website", format: "url" },
                                 ],
+                            },
+                            {
+                                widget: "w-update",
+                                collection: "items",
+                                label: "Edit item",
+                                submitLabel: "Save item",
+                                fields: [{ field: "owner", input: "cms-user" }],
                             },
                         ],
                     },
@@ -82,7 +97,15 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                 id: "items-dashboard",
                 meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
                 source: "items",
-                collections: [{ id: "items", list: { endpoint: "list" } }],
+                collections: [{
+                    id: "items",
+                    rowKey: "id",
+                    list: { endpoint: "list" },
+                    item: {
+                        get: { endpoint: "get", params: { id: "$selection" } },
+                        update: { endpoint: "update", params: { id: "$selection" } },
+                    },
+                }],
                 views: [
                     { widget: "w-table", collection: "items" },
                     {
@@ -93,6 +116,13 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                             { field: "imageUrl", label: "Image", format: "image" },
                             { field: "website", label: "Website", format: "url" },
                         ],
+                    },
+                    {
+                        widget: "w-update",
+                        collection: "items",
+                        label: "Edit item",
+                        submitLabel: "Save item",
+                        fields: [{ field: "owner", input: "cms-user" }],
                     },
                 ],
             },

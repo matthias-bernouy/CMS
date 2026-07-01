@@ -1,4 +1,284 @@
 (() => {
+  // ../../features/cms-content/src/interfaces/Editor/Editor.ts
+  class Editor {
+    target;
+    constructor(target) {
+      this.target = target;
+    }
+    settings() {
+      return [];
+    }
+    dataScopes() {
+      return [];
+    }
+    contentSlots() {
+      return [];
+    }
+    textCapability() {
+      return null;
+    }
+    states() {
+      return [];
+    }
+    structureMode() {
+      return "editable";
+    }
+    getSettings() {
+      return this.settings();
+    }
+    addSettings(_settings) {}
+    getDataScopes() {
+      return this.dataScopes();
+    }
+    declareDataScope(_scope) {}
+    getContentSlots() {
+      return this.contentSlots();
+    }
+    addContentSlots(_slots) {}
+    getTextCapability() {
+      return this.textCapability();
+    }
+    setTextCapability(_capability) {}
+    getStates() {
+      return this.states();
+    }
+    addStates(_states) {}
+    getChildren() {
+      return [];
+    }
+    getStructureMode() {
+      return this.structureMode();
+    }
+    mountEditor() {}
+    unmountEditor() {}
+  }
+  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax.ts
+  var CMS_BINDING_CORE_TAG = "cms-binding-core";
+  var CMS_BINDING_ATTRIBUTES = {
+    bindingDisabled: "cms-binding-disabled",
+    condition: "cms-condition",
+    paramSync: "cms-param-sync",
+    pageState: "cms-page-state",
+    repeat: "cms-repeat",
+    source: "cms-source",
+    sourceBody: "cms-source-body",
+    sourceId: "cms-source-id",
+    sourceMethod: "cms-source-method",
+    sourcePublish: "cms-source-publish",
+    sourceSuccessRedirect: "cms-source-success-redirect",
+    sourceSuccessReset: "cms-source-success-reset",
+    sourceStateForce: "cms-source-state-force",
+    sourceTrigger: "cms-source-trigger"
+  };
+  var CMS_BINDING_RUNTIME_ATTRIBUTES = { ready: "cms-ready" };
+  var CMS_SOURCE_TRIGGERS = ["auto", "submit"];
+  var CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"];
+  var CMS_SOURCE_STATUS_SCOPE = "$source";
+  var CMS_SOURCES_STATUS_SCOPE = "$sources";
+  var SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var REPEAT_ALIAS_PATTERN = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var SOURCE_STATUS_ID_PATTERN = /^[A-Za-z_$][\w$-]*$/;
+  function asInterpolation(expression) {
+    return `{{ ${expression.trim()} }}`;
+  }
+  function asSource(source) {
+    if (typeof source === "string")
+      return source.trim();
+    const url = sourceUrlWithParams(source.url, source.params);
+    const alias = source.alias?.trim();
+    return alias ? `${url} as ${alias}` : url;
+  }
+  function parseSource(value) {
+    const match = SOURCE_ALIAS_PATTERN.exec(value);
+    if (match) {
+      const url2 = match[1].trim();
+      return url2 ? { url: url2, alias: match[2] } : null;
+    }
+    const url = value.trim();
+    return url ? { url } : null;
+  }
+  function asSourceBody(body) {
+    const normalized = normalizeSourceParamMap(body);
+    return Object.keys(normalized).length ? JSON.stringify(normalized) : "";
+  }
+  function parseSourceBody(value) {
+    const raw = value?.trim() ?? "";
+    if (!raw)
+      return null;
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+    if (!isRecord(parsed))
+      return null;
+    const body = {};
+    for (const [name, source] of Object.entries(parsed)) {
+      const param = normalizeSourceParamValue(source);
+      if (name.trim() && param)
+        body[name] = param;
+    }
+    return Object.keys(body).length ? body : null;
+  }
+  function asRepeat(binding) {
+    const path = binding.path.trim();
+    const alias = binding.alias?.trim();
+    return alias ? `${path} as ${alias}` : path;
+  }
+  function parseRepeat(value) {
+    const match = REPEAT_ALIAS_PATTERN.exec(value);
+    if (match)
+      return { path: match[1].trim(), alias: match[2] };
+    const path = value.trim();
+    return path ? { path } : null;
+  }
+  function asSourceStatusCondition(state, sourceId) {
+    const id = sourceId?.trim();
+    if (id && !SOURCE_STATUS_ID_PATTERN.test(id)) {
+      throw new Error(`Invalid source status id: "${sourceId}"`);
+    }
+    return id ? `${CMS_SOURCES_STATUS_SCOPE}.${id}.${state}` : `${CMS_SOURCE_STATUS_SCOPE}.${state}`;
+  }
+  function asSourceStatusConditions(conditions) {
+    return conditions.map((condition) => asSourceStatusCondition(condition.state, condition.sourceId)).join(" || ");
+  }
+  function parseSourceStatusConditionDetails(value) {
+    const conditions = parseSourceStatusConditions(value);
+    return conditions.length === 1 ? conditions[0] : null;
+  }
+  function parseSourceStatusConditions(value) {
+    const expression = value?.trim() ?? "";
+    if (!expression)
+      return [];
+    const conditions = [];
+    for (const part of expression.split(/\s*\|\|\s*/)) {
+      const condition = parseSingleSourceStatusCondition(part);
+      if (!condition)
+        return [];
+      conditions.push(condition);
+    }
+    return conditions;
+  }
+  function sourceStatusConditionDetailsFromElement(element) {
+    return parseSourceStatusConditionDetails(element.getAttribute(CMS_BINDING_ATTRIBUTES.condition));
+  }
+  function sourceStatusConditionsFromElement(element) {
+    return parseSourceStatusConditions(element.getAttribute(CMS_BINDING_ATTRIBUTES.condition));
+  }
+  function applySourceStatusCondition(element, state, sourceId) {
+    element.setAttribute(CMS_BINDING_ATTRIBUTES.condition, asSourceStatusCondition(state, sourceId));
+  }
+  function applySourceStatusConditions(element, conditions) {
+    if (conditions.length === 0) {
+      element.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
+      return;
+    }
+    element.setAttribute(CMS_BINDING_ATTRIBUTES.condition, asSourceStatusConditions(conditions));
+  }
+  function isCmsSourceTrigger(value) {
+    return CMS_SOURCE_TRIGGERS.includes(value ?? "");
+  }
+  function clearBindingRuntimeState(root) {
+    const attr = CMS_BINDING_RUNTIME_ATTRIBUTES.ready;
+    root.removeAttribute(attr);
+    root.querySelectorAll(`[${attr}]`).forEach((element) => element.removeAttribute(attr));
+  }
+  function sourceUrlWithParams(rawUrl, params) {
+    const url = rawUrl.trim();
+    if (!params)
+      return url;
+    const entries = Object.entries(normalizeSourceParamMap(params));
+    if (entries.length === 0)
+      return url;
+    const hashIndex = url.indexOf("#");
+    const beforeHash = hashIndex === -1 ? url : url.slice(0, hashIndex);
+    const hash = hashIndex === -1 ? "" : url.slice(hashIndex);
+    const separator = beforeHash.endsWith("?") || beforeHash.endsWith("&") ? "" : beforeHash.includes("?") ? "&" : "?";
+    const query = entries.map(([name, value]) => `${encodeURIComponent(name)}=${encodeSourceParamValue(value)}`).join("&");
+    return `${beforeHash}${separator}${query}${hash}`;
+  }
+  function parseSingleSourceStatusCondition(value) {
+    const expression = value.trim();
+    for (const state of CMS_SOURCE_STATES) {
+      if (expression === asSourceStatusCondition(state))
+        return { state };
+    }
+    const match = /^\$sources\.([A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)$/.exec(expression);
+    if (!match)
+      return null;
+    return { sourceId: match[1], state: match[2] };
+  }
+  function encodeSourceParamValue(value) {
+    if (value.from === "queryParam")
+      return `#{${value.name.trim()}}`;
+    if (value.from === "state")
+      return `@{${value.name.trim()}}`;
+    return encodeURIComponent(String(value.value).trim());
+  }
+  function normalizeSourceParamMap(params) {
+    const normalized = {};
+    for (const [name, value] of Object.entries(params)) {
+      const param = normalizeSourceParamValue(value);
+      if (name.trim() && param)
+        normalized[name] = param;
+    }
+    return normalized;
+  }
+  function normalizeSourceParamValue(value) {
+    if (!isRecord(value) || typeof value.from !== "string")
+      return null;
+    if (value.from === "queryParam" || value.from === "state") {
+      return typeof value.name === "string" && value.name.trim() ? { from: value.from, name: value.name.trim() } : null;
+    }
+    if (value.from !== "raw")
+      return null;
+    if (typeof value.value === "string")
+      return value.value.trim() ? { from: "raw", value: value.value } : null;
+    if (typeof value.value === "number" && Number.isFinite(value.value))
+      return { from: "raw", value: value.value };
+    if (typeof value.value === "boolean")
+      return { from: "raw", value: value.value };
+    return null;
+  }
+  function isRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+  // ../../features/cms-content/src/core/editor/EditorCatalog.ts
+  function fallbackElementConstructor() {
+    const constructor = globalThis.HTMLElement;
+    if (!constructor) {
+      throw new Error("Cannot create editor catalog entry without HTMLElement.");
+    }
+    return constructor;
+  }
+  function createEditorCatalogEntry(entry, defaults) {
+    const tag = entry.tag ?? defaults.tag;
+    const editor = entry.editor;
+    if (!editor) {
+      throw new Error(`Editor catalog entry for ${tag} is missing an editor constructor.`);
+    }
+    return {
+      tag,
+      label: entry.label ?? defaults.label,
+      description: entry.description ?? defaults.description,
+      icon: entry.icon,
+      category: entry.category ?? defaults.category,
+      subCategory: entry.subCategory,
+      defaultContent: entry.defaultContent ?? defaults.defaultContent,
+      bloc: entry.bloc ?? defaults.bloc ?? globalThis.customElements?.get(tag) ?? fallbackElementConstructor(),
+      editor
+    };
+  }
+  function mergeEditorCatalogs(...catalogs) {
+    const byTag = new Map;
+    for (const catalog of catalogs) {
+      for (const entry of catalog) {
+        byTag.set(entry.tag.toLowerCase(), entry);
+      }
+    }
+    return [...byTag.values()];
+  }
   // ../../foundation/components/dist/index.js
   class s extends HTMLElement {
     _rawStyles = "";
@@ -22,17 +302,17 @@
     }
     connectedCallback() {}
   }
-  function d(t, e) {
+  function u(t, e) {
     if (Object.prototype.hasOwnProperty.call(t, e)) {
       let r = t[e];
       delete t[e], t[e] = r;
     }
   }
-  var Qt = `<div class="accordion" part="accordion">
+  var Ae = `<div class="accordion" part="accordion">
     <slot></slot>
 </div>
 `;
-  var Gt = `:host {
+  var Ce = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -61,9 +341,9 @@
 }
 `;
 
-  class Yt extends s {
+  class Se extends s {
     constructor() {
-      super({ css: Gt, template: Qt });
+      super({ css: Ce, template: Ae });
     }
     connectedCallback() {
       this.addEventListener("accordion-item-toggle", this._handleItemToggle);
@@ -85,7 +365,7 @@
           r.removeAttribute("open");
     };
   }
-  var Jt = `<div class="item" part="item">
+  var Te = `<div class="item" part="item">
     <div class="header" part="header">
         <button class="toggle title-toggle" part="title" type="button" aria-expanded="false">
             <span class="title"><slot name="header"></slot></span>
@@ -106,7 +386,7 @@
     </div>
 </div>
 `;
-  var Ot = `:host {
+  var Me = `:host {
   display: block;
 
   --_text: var(--text-main, #1f2937);
@@ -217,19 +497,19 @@
 }
 `;
 
-  class Wt extends s {
+  class He extends s {
     _toggles;
     _titleToggle;
     static get observedAttributes() {
       return ["open", "disabled"];
     }
     constructor() {
-      super({ css: Ot, template: Jt });
+      super({ css: Me, template: Te });
       this._toggles = Array.from(this.shadowRoot?.querySelectorAll(".toggle") ?? []), this._titleToggle = this.shadowRoot?.querySelector(".title-toggle") ?? null;
     }
     connectedCallback() {
       for (let t of ["open", "disabled"])
-        d(this, t);
+        u(this, t);
       this._toggles.forEach((t) => t.addEventListener("click", this._toggle)), this._syncAria();
     }
     disconnectedCallback() {
@@ -277,7 +557,7 @@
         this.removeAttribute("disabled");
     }
   }
-  var te = `<div class="alert" part="alert" role="alert">
+  var ze = `<div class="alert" part="alert" role="alert">
     <span class="icon" part="icon" aria-hidden="true">
         <slot name="icon"></slot>
     </span>
@@ -288,7 +568,7 @@
     <button class="close" part="close" aria-label="Dismiss" hidden>&times;</button>
 </div>
 `;
-  var ee = `:host {
+  var Ie = `:host {
   display: block;
 
   --_bg: var(--info-muted, #eff6ff);
@@ -365,7 +645,7 @@
 
 .close:hover { opacity: 1; }
 `;
-  var re = `:host([type="success"]) {
+  var Fe = `:host([type="success"]) {
   --_bg: var(--success-muted);
   --_color: var(--success-contrasted);
   --_accent: var(--success-base);
@@ -439,9 +719,9 @@
   to   { opacity: 0; transform: translateY(-6px); }
 }
 `;
-  var wn = ee + re;
+  var zs = Ie + Fe;
 
-  class ie extends s {
+  class Pe extends s {
     _close;
     _message;
     _messageSlot;
@@ -449,7 +729,7 @@
       return ["dismissible"];
     }
     constructor() {
-      super({ css: wn, template: te });
+      super({ css: zs, template: ze });
       this._close = this.shadowRoot?.querySelector(".close") ?? null, this._message = this.shadowRoot?.querySelector(".message") ?? null, this._messageSlot = this.shadowRoot?.querySelector(".message slot") ?? null;
     }
     connectedCallback() {
@@ -482,13 +762,13 @@
       this._handleClose();
     }
   }
-  var ae = `<div class="avatar" part="avatar">
+  var Re = `<div class="avatar" part="avatar">
     <img class="image" part="image" alt="" hidden />
     <span class="initials" part="initials" aria-hidden="true"></span>
     <span class="fallback" part="fallback"><slot></slot></span>
 </div>
 `;
-  var oe = `:host {
+  var qe = `:host {
   display: inline-block;
 
   --_size: 2.5rem;
@@ -570,14 +850,14 @@
 }
 `;
 
-  class ne extends s {
+  class De extends s {
     _img;
     _initials;
     static get observedAttributes() {
       return ["src", "alt", "name", "initials"];
     }
     constructor() {
-      super({ css: oe, template: ae });
+      super({ css: qe, template: Re });
       this._img = this.shadowRoot?.querySelector(".image") ?? null, this._initials = this.shadowRoot?.querySelector(".initials") ?? null;
     }
     connectedCallback() {
@@ -624,12 +904,12 @@
         this._img.hidden = true;
     };
   }
-  var se = `<span class="badge" part="badge">
+  var Ve = `<span class="badge" part="badge">
     <span class="dot" part="dot" aria-hidden="true"></span>
     <span class="content" part="content"><slot></slot></span>
 </span>
 `;
-  var le = `:host {
+  var Be = `:host {
   display: inline-flex;
 
   --_bg: var(--secondary-muted, #f1f5f9);
@@ -702,12 +982,12 @@
 }
 `;
 
-  class de extends s {
+  class je extends s {
     constructor() {
-      super({ css: le, template: se });
+      super({ css: Be, template: Ve });
     }
   }
-  var ge = `<article class="card" part="card">
+  var Ze = `<article class="card" part="card">
     <header class="header" part="header">
         <slot name="header"></slot>
     </header>
@@ -719,7 +999,7 @@
     </footer>
 </article>
 `;
-  var ve = `:host {
+  var Ye = `:host {
   display: block;
 
   --_bg: var(--bg-surface, #ffffff);
@@ -780,8 +1060,8 @@
 
 .body { flex: 1; }
 
-.header:has(slot[name="header"]:not(:has(*))),
-.footer:has(slot[name="footer"]:not(:has(*))) {
+:host(:not([has-header])) .header,
+:host(:not([has-footer])) .footer {
   display: none;
 }
 
@@ -801,12 +1081,34 @@
 }
 `;
 
-  class fe extends s {
+  class Je extends s {
     constructor() {
-      super({ css: ve, template: ge });
+      super({ css: Ye, template: Ze });
+    }
+    connectedCallback() {
+      this._headerSlot.addEventListener("slotchange", this._syncSlots), this._footerSlot.addEventListener("slotchange", this._syncSlots), this._syncSlots();
+    }
+    disconnectedCallback() {
+      this._headerSlot.removeEventListener("slotchange", this._syncSlots), this._footerSlot.removeEventListener("slotchange", this._syncSlots);
+    }
+    _syncSlots = () => {
+      this.toggleAttribute("has-header", Qe(this._headerSlot)), this.toggleAttribute("has-footer", Qe(this._footerSlot));
+    };
+    get _headerSlot() {
+      return this.shadowRoot.querySelector('slot[name="header"]');
+    }
+    get _footerSlot() {
+      return this.shadowRoot.querySelector('slot[name="footer"]');
     }
   }
-  var _e = `:host {
+  function Qe(t) {
+    return t.assignedNodes({ flatten: true }).some((e) => {
+      if (e.nodeType !== Node.TEXT_NODE)
+        return true;
+      return e.textContent?.trim() !== "";
+    });
+  }
+  var Ge = `:host {
     --_modal-width: 500px;
     --_modal-radius: 12px;
     --_modal-bg: var(--bg-surface);
@@ -888,7 +1190,7 @@ footer.actions slot[name="footer"]::slotted(*) {
     --ctx-border: var(--border-default);
 }
 `;
-  var ye = `.close-icon {
+  var tr = `.close-icon {
     background: transparent;
     border: none;
     font-size: 1.5rem;
@@ -943,8 +1245,8 @@ footer.actions slot[name="footer"]::slotted(*) {
     }
 }
 `;
-  var Bn = _e + ye;
-  var Ce = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
+  var Us = Ge + tr;
+  var ar = `<dialog id="drawer" part="dialog" aria-modal="true" role="dialog" aria-labelledby="title">
     <header part="header">
         <div id="title" part="title">
             <slot name="title">Dialog</slot>
@@ -961,7 +1263,7 @@ footer.actions slot[name="footer"]::slotted(*) {
     </footer>
 </dialog>
 `;
-  var Me = `:host {
+  var sr = `:host {
     --drawer-width: 400px;
     --drawer-bg: var(--bg-surface);
     --transition-speed: 0.4s;
@@ -1018,7 +1320,7 @@ dialog > * {
     pointer-events: auto;
 }
 `;
-  var He = `header {
+  var lr = `header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1100,7 +1402,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     filter: brightness(0.9);
 }
 `;
-  var Te = `@media (prefers-reduced-motion: no-preference) {
+  var dr = `@media (prefers-reduced-motion: no-preference) {
     dialog {
         transition:
             transform var(--transition-speed) var(--transition-curve),
@@ -1146,42 +1448,42 @@ footer slot[name="footer"]::slotted(button:hover) {
     }
 }
 `;
-  var ze = (t) => {
+  var cr = (t) => {
     t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
   };
-  var Ie = (t) => {
+  var ur = (t) => {
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var Se = (t, e) => {
+  var pr = (t, e) => {
     let r = t.shadowRoot?.querySelector("dialog");
     if (e.target === r)
       t.close();
   };
-  var qe = (t, e) => {
+  var hr = (t, e) => {
     e.preventDefault(), t.close();
   };
-  var Pe = (t, e) => {
+  var mr = (t, e) => {
     e.preventDefault(), t.close();
   };
-  var Be = (t) => {
+  var br = (t) => {
     if (t.hasAttribute("open"))
       t.removeAttribute("open");
-    Ie(t);
+    ur(t);
   };
-  var Vn = Me + He + Te;
+  var Js = sr + lr + dr;
 
-  class Fe extends s {
+  class gr extends s {
     _dialog;
     _closeBtn;
     static get observedAttributes() {
       return ["open"];
     }
     constructor() {
-      super({ css: Vn, template: Ce });
+      super({ css: Js, template: ar });
       this._dialog = this.shadowRoot?.querySelector("dialog") ?? null, this._closeBtn = this.shadowRoot?.querySelector("#close-btn") ?? null;
     }
     connectedCallback() {
-      d(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this._closeBtn?.addEventListener("click", this._onCloseClick);
+      u(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this._closeBtn?.addEventListener("click", this._onCloseClick);
     }
     disconnectedCallback() {
       this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this._closeBtn?.removeEventListener("click", this._onCloseClick);
@@ -1197,10 +1499,10 @@ footer slot[name="footer"]::slotted(button:hover) {
           this._dialog.close();
       }
     }
-    _onBackdrop = (t) => Se(this, t);
-    _onCloseClick = (t) => qe(this, t);
-    _onCancel = (t) => Pe(this, t);
-    _onClose = () => Be(this);
+    _onBackdrop = (t) => pr(this, t);
+    _onCloseClick = (t) => hr(this, t);
+    _onCancel = (t) => mr(this, t);
+    _onClose = () => br(this);
     get open() {
       return this.hasAttribute("open");
     }
@@ -1217,7 +1519,7 @@ footer slot[name="footer"]::slotted(button:hover) {
         this._dialog.showModal();
       if (!this.hasAttribute("open"))
         this.setAttribute("open", "");
-      ze(this);
+      cr(this);
     }
     showModal() {
       this.show();
@@ -1229,19 +1531,19 @@ footer slot[name="footer"]::slotted(button:hover) {
         this._dialog.close();
     }
   }
-  var Ke = (t, e) => {
+  var fr = (t, e) => {
     if (e.target === e.currentTarget)
       t.hide();
   };
-  var De = (t, e) => {
+  var vr = (t, e) => {
     e.preventDefault(), t.hide();
   };
-  var je = (t) => {
+  var xr = (t) => {
     if (t.hasAttribute("open"))
       t.removeAttribute("open");
     t.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
   };
-  var Ve = `<dialog part="dialog">
+  var _r = `<dialog part="dialog">
     <form method="dialog" id="m-close"></form>
     <div class="panel" part="panel">
         <header class="header" part="header">
@@ -1253,7 +1555,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     </div>
 </dialog>
 `;
-  var Ne = `:host {
+  var yr = `:host {
     --modal-width: var(--p9r-modal-width, 520px);
     --modal-radius: var(--p9r-modal-radius, 12px);
     --modal-bg: var(--p9r-modal-bg, var(--bg-surface, #ffffff));
@@ -1338,19 +1640,19 @@ dialog[open]::backdrop { opacity: 1; }
 .body { padding: var(--modal-pad); overflow: auto; }
 `;
 
-  class Re extends s {
+  class wr extends s {
     _dialog = null;
-    _onBackdrop = (t) => Ke(this, t);
-    _onCancel = (t) => De(this, t);
-    _onClose = () => je(this);
+    _onBackdrop = (t) => fr(this, t);
+    _onCancel = (t) => vr(this, t);
+    _onClose = () => xr(this);
     static get observedAttributes() {
       return ["open", "aria-label"];
     }
     constructor() {
-      super({ css: Ne, template: Ve });
+      super({ css: yr, template: _r });
     }
     connectedCallback() {
-      this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null, d(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this.addEventListener("form:success", this.hide), this._syncLabel(), this._syncOpen();
+      this._dialog ??= this.shadowRoot?.querySelector("dialog") ?? null, u(this, "open"), this._dialog?.addEventListener("click", this._onBackdrop), this._dialog?.addEventListener("cancel", this._onCancel), this._dialog?.addEventListener("close", this._onClose), this.addEventListener("form:success", this.hide), this._syncLabel(), this._syncOpen();
     }
     disconnectedCallback() {
       this._dialog?.removeEventListener("click", this._onBackdrop), this._dialog?.removeEventListener("cancel", this._onCancel), this._dialog?.removeEventListener("close", this._onClose), this.removeEventListener("form:success", this.hide);
@@ -1403,17 +1705,17 @@ dialog[open]::backdrop { opacity: 1; }
         this.show();
     }
   }
-  var $e = `<slot></slot>
+  var kr = `<slot></slot>
 `;
-  var Xe = `:host {
+  var Er = `:host {
     display: contents;
     cursor: pointer;
 }
 `;
 
-  class Ze extends s {
+  class Lr extends s {
     constructor() {
-      super({ css: Xe, template: $e });
+      super({ css: Er, template: kr });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
@@ -1452,7 +1754,7 @@ dialog[open]::backdrop { opacity: 1; }
         this.removeAttribute("modal-target");
     }
   }
-  var Ye = `<button id="btn" class="button" part="button">
+  var Tr = `<button id="btn" class="button" part="button">
     <slot name="icon-left"></slot>
     <span class="label">
         <slot>Button</slot>
@@ -1460,7 +1762,7 @@ dialog[open]::backdrop { opacity: 1; }
     <slot name="icon-right"></slot>
 </button>
 `;
-  var Je = `:host {
+  var Mr = `:host {
   display: inline-block;
 
   --_btn-padding-y: 0.6rem;
@@ -1523,34 +1825,34 @@ dialog[open]::backdrop { opacity: 1; }
   width: 1.2rem;
 }
 `;
-  var Oe = `:host([color="primary"]) {
+  var Hr = `:host([color="primary"]) {
   --_accent-base: var(--primary-base);
   --_accent-muted: var(--primary-muted);
-  --_accent-contrast: var(--primary-contrasted);
+  --_accent-contrast: var(--primary-foreground, var(--primary-contrasted));
 }
 
 :host([color="danger"]) {
   --_accent-base: var(--danger-base);
   --_accent-muted: var(--danger-muted);
-  --_accent-contrast: var(--danger-contrasted);
+  --_accent-contrast: var(--danger-foreground, var(--danger-contrasted));
 }
 
 :host([color="success"]) {
   --_accent-base: var(--success-base);
   --_accent-muted: var(--success-muted);
-  --_accent-contrast: var(--success-contrasted);
+  --_accent-contrast: var(--success-foreground, var(--success-contrasted));
 }
 
 :host([color="info"]) {
   --_accent-base: var(--info-base);
   --_accent-muted: var(--info-muted);
-  --_accent-contrast: var(--info-contrasted);
+  --_accent-contrast: var(--info-foreground, var(--info-contrasted));
 }
 
 :host([color="warning"]) {
   --_accent-base: var(--warning-base);
   --_accent-muted: var(--warning-muted);
-  --_accent-contrast: var(--warning-contrasted);
+  --_accent-contrast: var(--warning-foreground, var(--warning-contrasted));
 }
 
 :host([variant="filled"]) {
@@ -1608,14 +1910,14 @@ dialog[open]::backdrop { opacity: 1; }
   }
 }
 `;
-  var Jn = Je + Oe;
+  var sl = Mr + Hr;
 
-  class We extends s {
+  class zr extends s {
     static formAssociated = true;
     _internals;
     _btn;
     constructor() {
-      super({ css: Jn, template: Ye });
+      super({ css: sl, template: Tr });
       this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
     }
     static get observedAttributes() {
@@ -1623,7 +1925,7 @@ dialog[open]::backdrop { opacity: 1; }
     }
     connectedCallback() {
       for (let t of ["type", "disabled"])
-        d(this, t);
+        u(this, t);
       if (!this.hasAttribute("type"))
         this.setAttribute("type", "button");
       if (!this.hasAttribute("variant"))
@@ -1666,7 +1968,7 @@ dialog[open]::backdrop { opacity: 1; }
     }
   }
 
-  class F extends s {
+  class Y extends s {
     static formAssociated = true;
     _internals;
     _defaultChecked = false;
@@ -1711,7 +2013,7 @@ dialog[open]::backdrop { opacity: 1; }
       return this._internals.form;
     }
   }
-  var tr = `<label class="checkbox-container" part="container">
+  var Ir = `<label class="checkbox-container" part="container">
     <span class="input-wrapper">
         <input type="checkbox" id="native-input" part="input" />
         <span class="custom-box" part="box" aria-hidden="true">
@@ -1726,7 +2028,7 @@ dialog[open]::backdrop { opacity: 1; }
     </span>
 </label>
 `;
-  var er = `:host {
+  var Fr = `:host {
   display: inline-block;
   --cb-size: 20px;
   --cb-border: var(--border-default, #d1d5db);
@@ -1808,7 +2110,7 @@ input {
   display: none;
 }
 `;
-  var rr = `input:checked ~ .custom-box {
+  var Pr = `input:checked ~ .custom-box {
   background-color: var(--cb-active-bg);
   border-color: var(--cb-active-border);
 }
@@ -1861,11 +2163,11 @@ input:focus-visible ~ .custom-box {
   }
 }
 `;
-  var L = (t, e, r) => {
+  var R = (t, e, r) => {
     let i = e?.checked ?? t.hasAttribute("checked");
     r.setFormValue(i ? t.getAttribute("value") ?? "on" : null);
   };
-  var ir = (t, e) => {
+  var Rr = (t, e) => {
     if (!e)
       return;
     if (e.checked = t.hasAttribute("checked"), e.disabled = t.hasAttribute("disabled"), e.indeterminate = t.hasAttribute("indeterminate"), t.hasAttribute("name"))
@@ -1873,36 +2175,36 @@ input:focus-visible ~ .custom-box {
     if (t.hasAttribute("value"))
       e.value = t.getAttribute("value") ?? "";
   };
-  var ar = (t, e, r, i, a) => {
+  var qr = (t, e, r, i, o) => {
     if (!e)
       return;
     if (i === "checked")
-      e.checked = a !== null, L(t, e, r);
+      e.checked = o !== null, R(t, e, r);
     else if (i === "disabled")
-      e.disabled = a !== null;
+      e.disabled = o !== null;
     else if (i === "indeterminate")
-      e.indeterminate = a !== null;
+      e.indeterminate = o !== null;
     else if (i === "name")
-      e.name = a ?? "";
+      e.name = o ?? "";
     else if (i === "value")
-      e.value = a ?? "", L(t, e, r);
+      e.value = o ?? "", R(t, e, r);
   };
-  var or = (t, e, r) => {
+  var Dr = (t, e, r) => {
     if (e?.checked ?? false)
       t.setAttribute("checked", "");
     else
       t.removeAttribute("checked");
     if (e && e.indeterminate === false && t.hasAttribute("indeterminate"))
       t.removeAttribute("indeterminate");
-    L(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
+    R(t, e, r), t.dispatchEvent(new Event("change", { bubbles: true }));
   };
-  var nr = (t, e) => {
+  var Vr = (t, e) => {
     if (t.hasAttribute("disabled"))
       e.preventDefault(), e.stopImmediatePropagation();
   };
-  var es = er + rr;
+  var ul = Fr + Pr;
 
-  class sr extends F {
+  class Br extends Y {
     _input;
     _labelText;
     _labelSlot;
@@ -1911,11 +2213,11 @@ input:focus-visible ~ .custom-box {
       return ["checked", "disabled", "name", "value", "indeterminate"];
     }
     constructor() {
-      super({ css: es, template: tr });
+      super({ css: ul, template: Ir });
       this._input = this.shadowRoot?.querySelector("input") ?? null, this._labelText = this.shadowRoot?.querySelector(".label-text") ?? null, this._labelSlot = this.shadowRoot?.querySelector(".label-text slot:not([name])") ?? null;
     }
     connectedCallback() {
-      this._captureDefaults(), ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => d(this, t)), ir(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), L(this, this._input, this._internals);
+      this._captureDefaults(), ["checked", "disabled", "name", "value", "indeterminate"].forEach((t) => u(this, t)), Rr(this, this._input), this._input?.addEventListener("change", this._onChange), this._input?.addEventListener("click", this._onClick), this._labelSlot?.addEventListener("slotchange", this._syncLabel), this._syncLabel(), R(this, this._input, this._internals);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("change", this._onChange), this._input?.removeEventListener("click", this._onClick), this._labelSlot?.removeEventListener("slotchange", this._syncLabel);
@@ -1935,10 +2237,10 @@ input:focus-visible ~ .custom-box {
       this.indeterminate = this._defaultIndeterminate, super.formResetCallback();
     }
     attributeChangedCallback(t, e, r) {
-      ar(this, this._input, this._internals, t, r);
+      qr(this, this._input, this._internals, t, r);
     }
-    _onChange = () => or(this, this._input, this._internals);
-    _onClick = (t) => nr(this, t);
+    _onChange = () => Dr(this, this._input, this._internals);
+    _onClick = (t) => Vr(this, t);
     get indeterminate() {
       return this._input?.indeterminate ?? this.hasAttribute("indeterminate");
     }
@@ -1950,11 +2252,11 @@ input:focus-visible ~ .custom-box {
       this._input?.click();
     }
   }
-  var hr = `<button id="btn" class="icon-button" part="button">
+  var Ur = `<button id="btn" class="icon-button" part="button">
     <slot></slot>
 </button>
 `;
-  var br = `:host {
+  var Xr = `:host {
   display: inline-block;
 
   --_size: 2.25rem;
@@ -1976,11 +2278,11 @@ input:focus-visible ~ .custom-box {
 :host([size="md"]) { --_size: 2.25rem; --_radius: 8px; }
 :host([size="lg"]) { --_size: 2.75rem; --_radius: 10px; }
 
-:host([color="primary"]) { --_accent: var(--primary-base); --_accent-contrast: var(--primary-contrasted); }
-:host([color="danger"])  { --_accent: var(--danger-base); --_accent-contrast: var(--danger-contrasted); }
-:host([color="success"]) { --_accent: var(--success-base); --_accent-contrast: var(--success-contrasted); }
-:host([color="info"])    { --_accent: var(--info-base); --_accent-contrast: var(--info-contrasted); }
-:host([color="warning"]) { --_accent: var(--warning-base); --_accent-contrast: var(--warning-contrasted); }
+:host([color="primary"]) { --_accent: var(--primary-base); --_accent-contrast: var(--primary-foreground, var(--primary-contrasted)); }
+:host([color="danger"])  { --_accent: var(--danger-base); --_accent-contrast: var(--danger-foreground, var(--danger-contrasted)); }
+:host([color="success"]) { --_accent: var(--success-base); --_accent-contrast: var(--success-foreground, var(--success-contrasted)); }
+:host([color="info"])    { --_accent: var(--info-base); --_accent-contrast: var(--info-foreground, var(--info-contrasted)); }
+:host([color="warning"]) { --_accent: var(--warning-base); --_accent-contrast: var(--warning-foreground, var(--warning-contrasted)); }
 
 :host([variant="filled"]) {
   --_bg: var(--_accent);
@@ -2050,7 +2352,7 @@ input:focus-visible ~ .custom-box {
 }
 `;
 
-  class mr extends s {
+  class Zr extends s {
     static formAssociated = true;
     _internals;
     _btn;
@@ -2058,12 +2360,12 @@ input:focus-visible ~ .custom-box {
       return ["type", "disabled", "aria-label"];
     }
     constructor() {
-      super({ css: br, template: hr });
+      super({ css: Xr, template: Ur });
       this._internals = this.attachInternals(), this._btn = this.shadowRoot?.querySelector("button") ?? null;
     }
     connectedCallback() {
       for (let t of ["type", "disabled"])
-        d(this, t);
+        u(this, t);
       if (!this.hasAttribute("type"))
         this.setAttribute("type", "button");
       if (!this.hasAttribute("variant"))
@@ -2116,7 +2418,7 @@ input:focus-visible ~ .custom-box {
         this.removeAttribute("disabled");
     }
   }
-  var kr = `<div class="field" part="field">
+  var ri = `<div class="field" part="field">
     <label class="label" part="label"></label>
     <input class="input" part="input" type="text" />
     <div class="meta" part="meta" hidden>
@@ -2125,7 +2427,7 @@ input:focus-visible ~ .custom-box {
     </div>
 </div>
 `;
-  var Er = `:host {
+  var ii = `:host {
     display: block;
 }
 
@@ -2197,7 +2499,7 @@ input:focus-visible ~ .custom-box {
     display: none;
 }
 `;
-  var Lr = `.input:hover:not(:disabled) {
+  var oi = `.input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -2233,41 +2535,41 @@ input:focus-visible ~ .custom-box {
     font-weight: 600;
 }
 `;
-  var Ar = `@media (prefers-reduced-motion: no-preference) {
+  var ni = `@media (prefers-reduced-motion: no-preference) {
     .input { transition: border-color 0.15s, box-shadow 0.15s; }
 }
 `;
-  var ct = (t) => {
+  var Mt = (t) => {
     let e = t.getAttribute("max-count");
     if (e === null)
       return null;
     let r = parseInt(e, 10);
     return Number.isFinite(r) && r > 0 ? r : null;
   };
-  var A = (t, e, r, i) => {
+  var q = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let a = ct(t);
-    if (a === null)
+    let o = Mt(t);
+    if (o === null)
       return;
-    let o = e.value.length;
-    i.textContent = String(o), r.dataset.over = String(o > a);
+    let n = e.value.length;
+    i.textContent = String(n), r.dataset.over = String(n > o);
   };
-  var pt = (t, e, r) => {
+  var Ht = (t, e, r) => {
     if (!t || !e || !r)
       return;
-    let i = (t.textContent ?? "").length > 0, a = !e.hidden;
-    r.hidden = !i && !a;
+    let i = (t.textContent ?? "").length > 0, o = !e.hidden;
+    r.hidden = !i && !o;
   };
-  var us = 0;
-  var Cr = () => `p9r-input-label-${++us}`;
-  var ut = (t, e) => {
+  var wl = 0;
+  var ai = () => `p9r-input-label-${++wl}`;
+  var zt = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var hs = (t, e) => {
+  var kl = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -2276,16 +2578,16 @@ input:focus-visible ~ .custom-box {
     else
       e.setAttribute("placeholder", r);
   };
-  var bs = (t, e) => {
+  var El = (t, e) => {
     if (!e)
       return;
     e.setAttribute("type", t.getAttribute("type") ?? "text");
   };
-  var ms = (t, e) => {
+  var Ll = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var gs = (t, e) => {
+  var Al = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -2294,17 +2596,17 @@ input:focus-visible ~ .custom-box {
     else
       e.removeAttribute("aria-required");
   };
-  var vs = (t, e, r, i) => {
+  var Cl = (t, e, r, i) => {
     if (!e)
       return;
-    e.textContent = t.getAttribute("hint") ?? "", pt(e, r, i);
+    e.textContent = t.getAttribute("hint") ?? "", Ht(e, r, i);
   };
-  var fs = (t, e) => {
+  var Sl = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var xs = (t, e) => {
+  var Tl = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -2312,32 +2614,32 @@ input:focus-visible ~ .custom-box {
     else
       e.removeAttribute("aria-invalid");
   };
-  var ht = (t, e, r, i, a) => {
+  var It = (t, e, r, i, o) => {
     if (!e || !r)
       return;
-    let o = ct(t);
-    if (o === null)
+    let n = Mt(t);
+    if (n === null)
       e.hidden = true;
     else
-      e.hidden = false, r.textContent = String(o);
-    pt(i, e, a);
+      e.hidden = false, r.textContent = String(n);
+    Ht(i, e, o);
   };
-  var bt = (t, e, r, i, a, o, n) => {
-    ut(t, r), hs(t, e), bs(t, e), ms(t, e), gs(t, e), vs(t, i, o, a), fs(t, i), xs(t, e), ht(t, o, n, i, a);
+  var Ft = (t, e, r, i, o, n, a) => {
+    zt(t, r), kl(t, e), El(t, e), Ll(t, e), Al(t, e), Cl(t, i, n, o), Sl(t, i), Tl(t, e), It(t, n, a, i, o);
   };
-  var Mr = (t, e, r, i, a) => {
+  var si = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), A(t, e, i, a);
+    r.setFormValue(e.value), q(t, e, i, o);
   };
-  var Hr = (t, e) => {
+  var li = (t, e) => {
     if (!t)
       return;
     e.setFormValue(t.value);
   };
-  var _s = Er + Lr + Ar;
+  var Ml = ii + oi + ni;
 
-  class Tr extends s {
+  class di extends s {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "type", "hint", "hint-level", "max-count", "invalid", "disabled", "required"];
@@ -2353,23 +2655,23 @@ input:focus-visible ~ .custom-box {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: _s, template: kr });
+      super({ css: Ml, template: ri });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._labelEl = t.querySelector(".label"), this._input = t.querySelector(".input"), this._hintEl = t.querySelector(".hint"), this._metaEl = t.querySelector(".meta"), this._counterEl = t.querySelector(".counter"), this._countEl = t.querySelector(".count"), this._maxEl = t.querySelector(".max");
-      let e = Cr();
+      let e = ai();
       if (this._labelEl && this._input)
         this._labelEl.id = e, this._input.setAttribute("aria-labelledby", e);
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["value", "disabled", "required"].forEach((e) => d(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), bt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+      ["value", "disabled", "required"].forEach((e) => u(this, e)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("change", this._onChange), Ft(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
       else
-        A(this, this._input, this._counterEl, this._countEl);
+        q(this, this._input, this._counterEl, this._countEl);
     }
     disconnectedCallback() {
       this._input?.removeEventListener("input", this._onInput), this._input?.removeEventListener("change", this._onChange);
@@ -2383,11 +2685,11 @@ input:focus-visible ~ .custom-box {
       if (t === "value" && r !== null)
         this.value = r;
       else if (t === "label")
-        ut(this, this._labelEl);
+        zt(this, this._labelEl);
       else if (t === "max-count")
-        ht(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), A(this, this._input, this._counterEl, this._countEl);
+        It(this, this._counterEl, this._maxEl, this._hintEl, this._metaEl), q(this, this._input, this._counterEl, this._countEl);
       else
-        bt(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
+        Ft(this, this._input, this._labelEl, this._hintEl, this._metaEl, this._counterEl, this._maxEl);
     }
     get value() {
       return this._input?.value ?? "";
@@ -2395,7 +2697,7 @@ input:focus-visible ~ .custom-box {
     set value(t) {
       if (!this._input)
         return;
-      this._input.value = t, this._internals.setFormValue(t), A(this, this._input, this._counterEl, this._countEl);
+      this._input.value = t, this._internals.setFormValue(t), q(this, this._input, this._counterEl, this._countEl);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -2415,10 +2717,10 @@ input:focus-visible ~ .custom-box {
     focus() {
       this._input?.focus();
     }
-    _onInput = () => Mr(this, this._input, this._internals, this._counterEl, this._countEl);
-    _onChange = () => Hr(this._input, this._internals);
+    _onInput = () => si(this, this._input, this._internals, this._counterEl, this._countEl);
+    _onChange = () => li(this._input, this._internals);
   }
-  var Ir = `:host {
+  var ui = `:host {
     display: block;
 }
 
@@ -2494,7 +2796,7 @@ input:focus-visible ~ .custom-box {
     margin-top: -2px;
 }
 `;
-  var Sr = `:host([disabled]) {
+  var pi = `:host([disabled]) {
     opacity: 0.55;
     pointer-events: none;
 }
@@ -2580,14 +2882,14 @@ input:focus-visible ~ .custom-box {
     border: none;
 }
 `;
-  var qr = `@media (prefers-reduced-motion: no-preference) {
+  var hi = `@media (prefers-reduced-motion: no-preference) {
     .input-wrap { transition: border-color 0.15s; }
     .fill { transition: width 0.05s ease; }
     .slider::-webkit-slider-thumb { transition: transform 0.1s; }
 }
 `;
-  var Ls = Ir + Sr + qr;
-  var Vr = `<div class="field">
+  var Pl = ui + pi + hi;
+  var _i = `<div class="field">
     <span class="label"></span>
     <button class="trigger" type="button" tabindex="0"
             popovertarget="panel" popovertargetaction="toggle">
@@ -2603,7 +2905,7 @@ input:focus-visible ~ .custom-box {
 </div>
 <div hidden><slot></slot></div>
 `;
-  var Nr = `:host {
+  var yi = `:host {
     display: block;
 }
 
@@ -2675,7 +2977,7 @@ input:focus-visible ~ .custom-box {
     transition: background 0.1s;
 }
 `;
-  var Rr = `.trigger:hover {
+  var wi = `.trigger:hover {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -2720,36 +3022,36 @@ input:focus-visible ~ .custom-box {
     font-weight: 600;
 }
 `;
-  var $r = (t, e) => {
+  var ki = (t, e) => {
     t.forEach((r) => r.classList.toggle("selected", r.dataset.value === e));
   };
-  var Xr = (t, e) => {
+  var Ei = (t, e) => {
     if (!t)
       return;
     let r = e.getAttribute("label") ?? e.getAttribute("name") ?? "";
     t.textContent = r, t.hidden = r === "";
   };
-  var Zr = (t, e, r) => {
+  var Li = (t, e, r) => {
     let i = Array.from(t.querySelectorAll("option"));
     if (e)
       e.innerHTML = "";
-    let a = [], o = "", n = "";
+    let o = [], n = "", a = "";
     if (i.forEach((l) => {
       let c = document.createElement("li");
-      if (c.className = "option", c.textContent = l.textContent, c.dataset.value = l.value, c.addEventListener("click", () => r(l.value, l.textContent ?? "")), e?.appendChild(c), a.push(c), l.hasAttribute("selected") && !o)
-        o = l.value, n = l.textContent ?? "";
-    }), !o && i.length > 0)
-      o = i[0].value, n = i[0].textContent ?? "";
-    return { options: a, initialValue: o, initialLabel: n };
+      if (c.className = "option", c.textContent = l.textContent, c.dataset.value = l.value, c.addEventListener("click", () => r(l.value, l.textContent ?? "")), e?.appendChild(c), o.push(c), l.hasAttribute("selected") && !n)
+        n = l.value, a = l.textContent ?? "";
+    }), !n && i.length > 0)
+      n = i[0].value, a = i[0].textContent ?? "";
+    return { options: o, initialValue: n, initialLabel: a };
   };
-  var Ur = (t, e, r, i) => {
+  var Ai = (t, e, r, i) => {
     if (e)
       e.textContent = i;
-    $r(t, r);
+    ki(t, r);
   };
-  var Hs = Nr + Rr;
+  var Vl = yi + wi;
 
-  class Qr extends s {
+  class Ci extends s {
     static formAssociated = true;
     _internals;
     _trigger;
@@ -2760,11 +3062,11 @@ input:focus-visible ~ .custom-box {
     _value = "";
     _isOpen = false;
     constructor() {
-      super({ css: Hs, template: Vr });
+      super({ css: Vl, template: _i });
       this._internals = this.attachInternals(), this._trigger = this.shadowRoot.querySelector(".trigger"), this._display = this.shadowRoot.querySelector(".value"), this._list = this.shadowRoot.querySelector(".list"), this._panel = this.shadowRoot.querySelector(".panel");
     }
     connectedCallback() {
-      Xr(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
+      Ei(this.shadowRoot.querySelector(".label"), this), this.shadowRoot.querySelector("slot").addEventListener("slotchange", this._onSlot), this._panel?.addEventListener("beforetoggle", this._onBeforeToggle), this._panel?.addEventListener("toggle", this._onToggle), this._syncFromSlot();
     }
     disconnectedCallback() {
       if (this.shadowRoot.querySelector("slot")?.removeEventListener("slotchange", this._onSlot), this._panel?.removeEventListener("beforetoggle", this._onBeforeToggle), this._panel?.removeEventListener("toggle", this._onToggle), this._isOpen)
@@ -2772,13 +3074,13 @@ input:focus-visible ~ .custom-box {
       this._unbindReposition();
     }
     _syncFromSlot = () => {
-      let { options: t, initialValue: e, initialLabel: r } = Zr(this, this._list, (a, o) => this._select(a, o));
+      let { options: t, initialValue: e, initialLabel: r } = Li(this, this._list, (o, n) => this._select(o, n));
       this._options = t;
       let i = this.getAttribute("value");
       if (i !== null) {
-        let a = t.find((o) => o.dataset.value === i);
-        if (a) {
-          this._setValue(i, a.textContent ?? "");
+        let o = t.find((n) => n.dataset.value === i);
+        if (o) {
+          this._setValue(i, o.textContent ?? "");
           return;
         }
       }
@@ -2789,7 +3091,7 @@ input:focus-visible ~ .custom-box {
       this._setValue(t, e), this._panel?.hidePopover?.(), this.dispatchEvent(new Event("change", { bubbles: true }));
     }
     _setValue(t, e) {
-      this._value = t, this._internals.setFormValue(t), Ur(this._options, this._display, t, e);
+      this._value = t, this._internals.setFormValue(t), Ai(this._options, this._display, t, e);
     }
     _onBeforeToggle = (t) => {
       if (t.newState === "open")
@@ -2823,7 +3125,7 @@ input:focus-visible ~ .custom-box {
     }
     _onSlot = () => this._syncFromSlot();
   }
-  var ni = `<div class="switch-container" part="container">
+  var Vi = `<div class="switch-container" part="container">
     <span class="label" id="group-label" part="label"></span>
 
     <div class="switch-wrapper" part="wrapper" role="radiogroup" aria-labelledby="group-label">
@@ -2839,7 +3141,7 @@ input:focus-visible ~ .custom-box {
     </span>
 </div>
 `;
-  var si = `:host {
+  var Bi = `:host {
   --active-index: 0;
   --total-options: 1;
   display: block;
@@ -2928,25 +3230,25 @@ input:focus-visible ~ .custom-box {
   pointer-events: none;
 }
 `;
-  var j = (t) => {
+  var W = (t) => {
     if (!t)
       return [];
     return t.assignedElements().filter((e) => e.tagName === "OPTION");
   };
-  var wt = (t, e) => {
+  var Kt = (t, e) => {
     if (t)
       t.textContent = e;
   };
-  var U = (t, e, r) => {
-    let i = e.findIndex((a) => a.getAttribute("value") === r);
+  var ct = (t, e, r) => {
+    let i = e.findIndex((o) => o.getAttribute("value") === r);
     if (i === -1)
       return;
-    t.style.setProperty("--active-index", i.toString()), e.forEach((a, o) => {
-      let n = o === i;
-      a.setAttribute("aria-checked", n.toString()), a.setAttribute("tabindex", n ? "0" : "-1");
+    t.style.setProperty("--active-index", i.toString()), e.forEach((o, n) => {
+      let a = n === i;
+      o.setAttribute("aria-checked", a.toString()), o.setAttribute("tabindex", a ? "0" : "-1");
     });
   };
-  var Q = (t, e) => {
+  var ut = (t, e) => {
     t.forEach((r) => {
       if (r.getAttribute("value") === e)
         r.setAttribute("selected", "");
@@ -2954,51 +3256,51 @@ input:focus-visible ~ .custom-box {
         r.removeAttribute("selected");
     });
   };
-  var kt = (t, e) => {
-    let r = j(e);
-    t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, a) => {
+  var Nt = (t, e) => {
+    let r = W(e);
+    t.style.setProperty("--total-options", r.length.toString()), r.forEach((i, o) => {
       if (i.setAttribute("role", "radio"), i.setAttribute("part", "segment"), !i.hasAttribute("tabindex"))
-        i.setAttribute("tabindex", a === 0 ? "0" : "-1");
+        i.setAttribute("tabindex", o === 0 ? "0" : "-1");
       i.onclick = () => {
         if (t.disabled)
           return;
         t.value = i.getAttribute("value") ?? "", i.focus();
       };
-    }), U(t, r, t.value), Q(r, t.value);
+    }), ct(t, r, t.value), ut(r, t.value);
   };
-  var li = (t, e, r) => {
+  var ji = (t, e, r) => {
     if (t.disabled)
       return;
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(r.key))
       return;
-    let a = j(e);
-    if (a.length === 0)
+    let o = W(e);
+    if (o.length === 0)
       return;
-    let o = a.findIndex((p) => p.getAttribute("value") === t.value), n = o === -1 ? 0 : o, l = n;
+    let n = o.findIndex((d) => d.getAttribute("value") === t.value), a = n === -1 ? 0 : n, l = a;
     switch (r.key) {
       case "ArrowLeft":
       case "ArrowUp":
-        l = (n - 1 + a.length) % a.length;
+        l = (a - 1 + o.length) % o.length;
         break;
       case "ArrowRight":
       case "ArrowDown":
-        l = (n + 1) % a.length;
+        l = (a + 1) % o.length;
         break;
       case "Home":
         l = 0;
         break;
       case "End":
-        l = a.length - 1;
+        l = o.length - 1;
         break;
     }
     r.preventDefault();
-    let c = a[l];
+    let c = o[l];
     if (!c)
       return;
     t.value = c.getAttribute("value") ?? "", c.focus();
   };
 
-  class di extends s {
+  class Ki extends s {
     static formAssociated = true;
     _internals;
     _labelEl;
@@ -3010,17 +3312,17 @@ input:focus-visible ~ .custom-box {
       return ["value", "disabled", "name", "label"];
     }
     constructor() {
-      super({ css: si, template: ni });
+      super({ css: Bi, template: Vi });
       this._internals = this.attachInternals(), this._labelEl = this.shadowRoot?.querySelector(".label") ?? null, this._slot = this.shadowRoot?.querySelector("slot:not([name])") ?? null;
     }
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
       for (let t of ["value", "disabled", "name", "label"])
-        d(this, t);
+        u(this, t);
       if (this._slot)
-        this._slot.addEventListener("slotchange", this._onSlotChange), kt(this, this._slot);
-      this.addEventListener("keydown", this._onKey), wt(this._labelEl, this.getAttribute("label") ?? "");
+        this._slot.addEventListener("slotchange", this._onSlotChange), Nt(this, this._slot);
+      this.addEventListener("keydown", this._onKey), Kt(this._labelEl, this.getAttribute("label") ?? "");
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onSlotChange), this.removeEventListener("keydown", this._onKey);
@@ -3039,7 +3341,7 @@ input:focus-visible ~ .custom-box {
       if (t === "value")
         this.value = r ?? "";
       else if (t === "label")
-        wt(this._labelEl, r ?? "");
+        Kt(this._labelEl, r ?? "");
     }
     get value() {
       return this.getAttribute("value") ?? "";
@@ -3048,8 +3350,8 @@ input:focus-visible ~ .custom-box {
       if (this.getAttribute("value") !== t)
         this.setAttribute("value", t);
       this._internals.setFormValue(t);
-      let e = j(this._slot);
-      if (U(this, e, t), Q(e, t), !this._silentValueChange)
+      let e = W(this._slot);
+      if (ct(this, e, t), ut(e, t), !this._silentValueChange)
         this.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { value: t } }));
     }
     get name() {
@@ -3070,10 +3372,10 @@ input:focus-visible ~ .custom-box {
     set label(t) {
       t ? this.setAttribute("label", t) : this.removeAttribute("label");
     }
-    _onSlotChange = () => kt(this, this._slot);
-    _onKey = (t) => li(this, this._slot, t);
+    _onSlotChange = () => Nt(this, this._slot);
+    _onKey = (t) => ji(this, this._slot, t);
   }
-  var mi = `<div class="container" part="container">
+  var Zi = `<div class="container" part="container">
     <label for="main-input" part="label">
         <slot name="label">Tags</slot>
     </label>
@@ -3112,7 +3414,7 @@ input:focus-visible ~ .custom-box {
     ></div>
 </div>
 `;
-  var gi = `:host {
+  var Yi = `:host {
     display: block;
     font-family: system-ui, -apple-system, sans-serif;
 }
@@ -3180,7 +3482,7 @@ input::placeholder {
     }
 }
 `;
-  var vi = `input:hover:not(:disabled) {
+  var Qi = `input:hover:not(:disabled) {
     border-color: var(--text-muted, #94a3b8);
 }
 
@@ -3258,7 +3560,7 @@ p9r-tag:hover {
     filter: brightness(0.92);
 }
 `;
-  var G = (t, e) => {
+  var pt = (t, e) => {
     if (!t)
       return;
     t.textContent = "", window.setTimeout(() => {
@@ -3266,179 +3568,179 @@ p9r-tag:hover {
         t.textContent = e;
     }, 10);
   };
-  var Et = async (t) => {
+  var $t = async (t) => {
     let e = t.getAttribute("resource");
     if (!e)
       return null;
     let r = t.getAttribute("api") || "../api/tags", i = new URL(r, window.location.href);
     i.searchParams.set("resource", e);
     try {
-      let a = await fetch(i);
-      if (!a.ok)
+      let o = await fetch(i);
+      if (!o.ok)
         return null;
-      return await a.json();
+      return await o.json();
     } catch {
       return null;
     }
   };
-  var fi = (t, e, r, i) => {
+  var Ji = (t, e, r, i) => {
     if (!t)
       return;
     if (t.innerHTML = "", e !== "multiple")
       return;
-    r.forEach((a, o) => {
-      let n = document.createElement("p9r-tag");
-      n.setAttribute("color", "primary"), n.setAttribute("part", "chip"), n.setAttribute("role", "listitem"), n.textContent = a, n.title = `Remove ${a}`, n.setAttribute("aria-label", `Remove ${a}`), n.addEventListener("click", () => i(o)), t.appendChild(n);
+    r.forEach((o, n) => {
+      let a = document.createElement("p9r-tag");
+      a.setAttribute("color", "primary"), a.setAttribute("part", "chip"), a.setAttribute("role", "listitem"), a.textContent = o, a.title = `Remove ${o}`, a.setAttribute("aria-label", `Remove ${o}`), a.addEventListener("click", () => i(n)), t.appendChild(a);
     });
   };
-  var xi = (t, e, r, i, a, o) => {
+  var Wi = (t, e, r, i, o, n) => {
     if (!t || !e)
       return;
     if (r.length === 0) {
-      Lt(t, e);
+      Ot(t, e);
       return;
     }
-    if (t.innerHTML = "", r.forEach((n, l) => {
+    if (t.innerHTML = "", r.forEach((a, l) => {
       let c = document.createElement("div");
-      c.className = "suggestion", c.id = `${a}-opt-${l}`, c.setAttribute("role", "option"), c.setAttribute("part", "option");
-      let p = l === i;
-      c.dataset.active = String(p), c.setAttribute("aria-selected", String(p));
-      let u = document.createElement("span");
-      u.className = "name", u.textContent = n.value, c.appendChild(u);
+      c.className = "suggestion", c.id = `${o}-opt-${l}`, c.setAttribute("role", "option"), c.setAttribute("part", "option");
+      let d = l === i;
+      c.dataset.active = String(d), c.setAttribute("aria-selected", String(d));
+      let p = document.createElement("span");
+      p.className = "name", p.textContent = a.value, c.appendChild(p);
       let m = document.createElement("p9r-tag");
-      m.setAttribute("color", "secondary"), m.setAttribute("part", "count"), m.textContent = String(n.count), c.appendChild(m), c.addEventListener("mousedown", (h) => {
-        h.preventDefault(), o(n.value);
+      m.setAttribute("color", "secondary"), m.setAttribute("part", "count"), m.textContent = String(a.count), c.appendChild(m), c.addEventListener("mousedown", (b) => {
+        b.preventDefault(), n(a.value);
       }), t.appendChild(c);
     }), t.hidden = false, e.setAttribute("aria-expanded", "true"), i >= 0)
-      e.setAttribute("aria-activedescendant", `${a}-opt-${i}`);
+      e.setAttribute("aria-activedescendant", `${o}-opt-${i}`);
     else
       e.removeAttribute("aria-activedescendant");
   };
-  var Lt = (t, e) => {
+  var Ot = (t, e) => {
     if (t)
       t.hidden = true;
     if (e)
       e.setAttribute("aria-expanded", "false"), e.removeAttribute("aria-activedescendant");
   };
-  var _i = (t, e, r) => {
-    let i = t.filter((a) => !e.includes(a.value));
+  var Gi = (t, e, r) => {
+    let i = t.filter((o) => !e.includes(o.value));
     if (r === "")
       return i.slice(0, 8);
-    return i.filter((a) => a.value.toLowerCase().includes(r)).slice(0, 8);
+    return i.filter((o) => o.value.toLowerCase().includes(r)).slice(0, 8);
   };
-  var yi = (t, e) => {
+  var to = (t, e) => {
     if (t === "multiple")
       return e.join(",");
     return e[0] ?? "";
   };
-  var wi = (t, e) => {
+  var eo = (t, e) => {
     if (t === "multiple")
       return e ? e.split(",").map((r) => r.trim()).filter((r) => r !== "") : [];
     return e ? [e.trim()] : [];
   };
-  var v = (t) => t;
-  var V = (t, e) => {
-    let r = v(t), i = t.getAttribute("mode") || "multiple", a = e.trim();
-    if (!a || !r._input)
+  var _ = (t) => t;
+  var G = (t, e) => {
+    let r = _(t), i = t.getAttribute("mode") || "multiple", o = e.trim();
+    if (!o || !r._input)
       return;
     if (i === "multiple") {
-      if (!r._tags.includes(a))
-        r._tags.push(a), G(r._liveRegion, `${a} added`);
+      if (!r._tags.includes(o))
+        r._tags.push(o), pt(r._liveRegion, `${o} added`);
       r._input.value = "";
     } else
-      r._tags = [a], r._input.value = a, G(r._liveRegion, `${a} selected`);
-    r._activeIndex = -1, Y(t), O(t);
+      r._tags = [o], r._input.value = o, pt(r._liveRegion, `${o} selected`);
+    r._activeIndex = -1, ht(t), bt(t);
   };
-  var ki = (t, e) => {
-    let r = v(t), i = e.trim();
+  var ro = (t, e) => {
+    let r = _(t), i = e.trim();
     if (r._tags = i ? [i] : [], r._internals.setFormValue(r.value), r._silent)
       return;
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: r.value, tags: [...r._tags] } }));
   };
-  var Ei = (t, e) => {
-    let r = v(t), i = r._tags[e];
+  var io = (t, e) => {
+    let r = _(t), i = r._tags[e];
     if (i === undefined)
       return;
-    r._tags.splice(e, 1), G(r._liveRegion, `${i} removed`), Y(t), r._input?.focus();
+    r._tags.splice(e, 1), pt(r._liveRegion, `${i} removed`), ht(t), r._input?.focus();
   };
-  var Li = (t) => {
-    let e = v(t);
+  var oo = (t) => {
+    let e = _(t);
     if (e._tags.length === 0)
       return;
-    Ei(t, e._tags.length - 1);
+    io(t, e._tags.length - 1);
   };
-  var Y = (t) => {
-    let e = v(t);
-    if (At(t), e._internals.setFormValue(e.value), e._silent)
+  var ht = (t) => {
+    let e = _(t);
+    if (Ut(t), e._internals.setFormValue(e.value), e._silent)
       return;
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e.value, tags: [...e._tags] } }));
   };
-  var At = (t) => {
-    let e = v(t);
-    fi(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => Ei(t, r));
+  var Ut = (t) => {
+    let e = _(t);
+    Ji(e._display, t.getAttribute("mode") || "multiple", e._tags, (r) => io(t, r));
   };
-  var Ct = (t, e) => {
-    let r = v(t), a = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
-    r._suggestions = _i(r._allSuggestions, a, e), r._activeIndex = -1, J(t);
+  var Xt = (t, e) => {
+    let r = _(t), o = (t.getAttribute("mode") || "multiple") === "multiple" ? r._tags : [];
+    r._suggestions = Gi(r._allSuggestions, o, e), r._activeIndex = -1, mt(t);
   };
-  var J = (t) => {
-    let e = v(t);
-    xi(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => V(t, r));
+  var mt = (t) => {
+    let e = _(t);
+    Wi(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (r) => G(t, r));
   };
-  var O = (t) => {
-    let e = v(t);
-    Lt(e._suggestionsEl, e._input), e._activeIndex = -1;
+  var bt = (t) => {
+    let e = _(t);
+    Ot(e._suggestionsEl, e._input), e._activeIndex = -1;
   };
-  var Ai = (t, e) => {
+  var no = (t, e) => {
     if (!e)
       return;
-    Ct(t, e.value.trim().toLowerCase());
+    Xt(t, e.value.trim().toLowerCase());
   };
-  var Ci = (t) => {
-    setTimeout(() => O(t), 150);
+  var ao = (t) => {
+    setTimeout(() => bt(t), 150);
   };
-  var Mi = (t, e) => {
+  var so = (t, e) => {
     if (!e)
       return;
-    if (Ct(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
-      ki(t, e.value);
+    if (Xt(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
+      ro(t, e.value);
   };
-  var Hi = (t, e, r) => {
+  var lo = (t, e, r) => {
     if (!e)
       return;
-    let i = t.getAttribute("mode") || "multiple", a = t;
+    let i = t.getAttribute("mode") || "multiple", o = t;
     if (r.key === "ArrowDown") {
-      if (r.preventDefault(), a._suggestions.length === 0)
+      if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      a._activeIndex = Math.min(a._activeIndex + 1, a._suggestions.length - 1), J(t);
+      o._activeIndex = Math.min(o._activeIndex + 1, o._suggestions.length - 1), mt(t);
     } else if (r.key === "ArrowUp") {
-      if (r.preventDefault(), a._suggestions.length === 0)
+      if (r.preventDefault(), o._suggestions.length === 0)
         return;
-      a._activeIndex = Math.max(a._activeIndex - 1, -1), J(t);
+      o._activeIndex = Math.max(o._activeIndex - 1, -1), mt(t);
     } else if (r.key === "Enter") {
       r.preventDefault();
-      let o = a._activeIndex >= 0 ? a._suggestions[a._activeIndex] : undefined;
-      if (o)
-        V(t, o.value);
+      let n = o._activeIndex >= 0 ? o._suggestions[o._activeIndex] : undefined;
+      if (n)
+        G(t, n.value);
       else {
-        let n = e.value.trim();
-        if (n)
-          V(t, n);
+        let a = e.value.trim();
+        if (a)
+          G(t, a);
       }
     } else if (r.key === "Escape")
-      r.preventDefault(), O(t);
+      r.preventDefault(), bt(t);
     else if (r.key === "Backspace" && e.value === "" && i === "multiple")
-      Li(t);
+      oo(t);
     else if (r.key === "," && i === "multiple") {
       r.preventDefault();
-      let o = e.value.trim();
-      if (o)
-        V(t, o);
+      let n = e.value.trim();
+      if (n)
+        G(t, n);
     }
   };
-  var Ns = gi + vi;
+  var Wl = Yi + Qi;
 
-  class Ti extends s {
+  class co extends s {
     static formAssociated = true;
     static get observedAttributes() {
       return ["placeholder", "mode", "resource", "api", "disabled", "value"];
@@ -3457,7 +3759,7 @@ p9r-tag:hover {
     _defaultsCaptured = false;
     _silent = false;
     constructor() {
-      super({ css: Ns, template: mi });
+      super({ css: Wl, template: Zi });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       if (this._input = t.querySelector("#main-input"), this._display = t.querySelector("#tags-display"), this._suggestionsEl = t.querySelector("#suggestions"), this._liveRegion = t.querySelector("#live-region"), this._uid = `ts-${Math.random().toString(36).slice(2, 9)}`, this._suggestionsEl)
@@ -3468,7 +3770,7 @@ p9r-tag:hover {
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => d(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), Et(this).then((t) => {
+      ["placeholder", "mode", "resource", "api", "disabled", "value"].forEach((t) => u(this, t)), this._input?.addEventListener("input", this._onInput), this._input?.addEventListener("keydown", this._onKeyDown), this._input?.addEventListener("focus", this._onFocus), this._input?.addEventListener("blur", this._onBlur), $t(this).then((t) => {
         if (t)
           this._allSuggestions = t;
       });
@@ -3492,27 +3794,27 @@ p9r-tag:hover {
       else if (t === "disabled")
         this._input.disabled = this.hasAttribute("disabled");
       else if (t === "resource" || t === "api")
-        this._allSuggestions = [], Et(this).then((i) => {
+        this._allSuggestions = [], $t(this).then((i) => {
           if (i)
             this._allSuggestions = i;
         });
       else if (t === "mode")
-        At(this);
+        Ut(this);
       else if (t === "value")
         this.value = r ?? "";
     }
-    _onFocus = () => Ai(this, this._input);
-    _onBlur = () => Ci(this);
-    _onInput = () => Mi(this, this._input);
-    _onKeyDown = (t) => Hi(this, this._input, t);
+    _onFocus = () => no(this, this._input);
+    _onBlur = () => ao(this);
+    _onInput = () => so(this, this._input);
+    _onKeyDown = (t) => lo(this, this._input, t);
     get value() {
-      return yi(this.getAttribute("mode") || "multiple", this._tags);
+      return to(this.getAttribute("mode") || "multiple", this._tags);
     }
     set value(t) {
       let e = this.getAttribute("mode") || "multiple";
-      if (this._tags = wi(e, t), this._input)
+      if (this._tags = eo(e, t), this._input)
         this._input.value = e === "multiple" ? "" : this._tags[0] ?? "";
-      Y(this);
+      ht(this);
     }
     get name() {
       return this.getAttribute("name") || "";
@@ -3551,7 +3853,7 @@ p9r-tag:hover {
       return [...this._tags];
     }
   }
-  var zi = `<div class="field" part="field">
+  var uo = `<div class="field" part="field">
     <label class="label" part="label" for="ta"></label>
     <textarea id="ta" class="textarea" part="textarea"></textarea>
     <div class="meta" part="meta" hidden>
@@ -3560,7 +3862,7 @@ p9r-tag:hover {
     </div>
 </div>
 `;
-  var Ii = `:host {
+  var po = `:host {
   display: block;
 }
 
@@ -3615,7 +3917,7 @@ p9r-tag:hover {
 
 .meta[hidden] { display: none; }
 `;
-  var Si = `:host([resize="none"]) .textarea       { resize: none; }
+  var ho = `:host([resize="none"]) .textarea       { resize: none; }
 :host([resize="horizontal"]) .textarea { resize: horizontal; }
 :host([resize="vertical"]) .textarea   { resize: vertical; }
 :host([resize="both"]) .textarea       { resize: both; }
@@ -3669,40 +3971,40 @@ p9r-tag:hover {
   font-weight: 600;
 }
 `;
-  var Mt = (t) => {
+  var Zt = (t) => {
     let e = t.getAttribute("max-count");
     if (e === null)
       return null;
     let r = parseInt(e, 10);
     return Number.isFinite(r) && r > 0 ? r : null;
   };
-  var T = (t, e, r, i) => {
+  var j = (t, e, r, i) => {
     if (!e || !r || !i)
       return;
-    let a = Mt(t);
-    if (a === null)
+    let o = Zt(t);
+    if (o === null)
       return;
-    let o = e.value.length;
-    i.textContent = String(o), r.dataset.over = String(o > a);
+    let n = e.value.length;
+    i.textContent = String(n), r.dataset.over = String(n > o);
   };
-  var Ht = (t, e, r) => {
+  var Yt = (t, e, r) => {
     if (!t || !e || !r)
       return;
-    let i = (t.textContent ?? "").length > 0, a = !e.hidden;
-    r.hidden = !i && !a;
+    let i = (t.textContent ?? "").length > 0, o = !e.hidden;
+    r.hidden = !i && !o;
   };
-  var N = (t, e) => {
+  var tt = (t, e) => {
     if (!e || !t.hasAttribute("autosize"))
       return;
     e.style.height = "auto", e.style.height = `${e.scrollHeight}px`;
   };
-  var Zs = (t, e) => {
+  var rd = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("label") ?? "";
     e.textContent = r, e.hidden = r === "";
   };
-  var Us = (t, e) => {
+  var id = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("placeholder");
@@ -3711,14 +4013,14 @@ p9r-tag:hover {
     else
       e.setAttribute("placeholder", r);
   };
-  var Qs = (t, e) => {
+  var od = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("rows");
     if (r)
       e.rows = Number(r) || 3;
   };
-  var Gs = (t, e) => {
+  var nd = (t, e) => {
     if (!e)
       return;
     let r = t.getAttribute("maxlength");
@@ -3727,11 +4029,11 @@ p9r-tag:hover {
     else
       e.setAttribute("maxlength", r);
   };
-  var Ys = (t, e) => {
+  var ad = (t, e) => {
     if (e)
       e.disabled = t.hasAttribute("disabled");
   };
-  var Js = (t, e) => {
+  var sd = (t, e) => {
     if (!e)
       return;
     let r = t.hasAttribute("required");
@@ -3740,17 +4042,17 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-required");
   };
-  var Os = (t, e, r, i) => {
+  var ld = (t, e, r, i) => {
     if (!e)
       return;
-    e.textContent = t.getAttribute("hint") ?? "", Ht(e, r, i);
+    e.textContent = t.getAttribute("hint") ?? "", Yt(e, r, i);
   };
-  var Ws = (t, e) => {
+  var dd = (t, e) => {
     if (!e)
       return;
     e.dataset.level = t.getAttribute("hint-level") ?? "info";
   };
-  var tl = (t, e) => {
+  var cd = (t, e) => {
     if (!e)
       return;
     if (t.hasAttribute("invalid"))
@@ -3758,32 +4060,32 @@ p9r-tag:hover {
     else
       e.removeAttribute("aria-invalid");
   };
-  var Tt = (t, e, r, i, a) => {
+  var Qt = (t, e, r, i, o) => {
     if (!e || !r)
       return;
-    let o = Mt(t);
-    if (o === null)
+    let n = Zt(t);
+    if (n === null)
       e.hidden = true;
     else
-      e.hidden = false, r.textContent = String(o);
-    Ht(i, e, a);
+      e.hidden = false, r.textContent = String(n);
+    Yt(i, e, o);
   };
-  var zt = (t, e, r, i, a, o, n) => {
-    Zs(t, r), Us(t, e), Qs(t, e), Gs(t, e), Ys(t, e), Js(t, e), Os(t, i, o, a), Ws(t, i), tl(t, e), Tt(t, o, n, i, a);
+  var Jt = (t, e, r, i, o, n, a) => {
+    rd(t, r), id(t, e), od(t, e), nd(t, e), ad(t, e), sd(t, e), ld(t, i, n, o), dd(t, i), cd(t, e), Qt(t, n, a, i, o);
   };
-  var qi = (t, e, r, i, a) => {
+  var mo = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), T(t, e, i, a), N(t, e);
+    r.setFormValue(e.value), j(t, e, i, o), tt(t, e);
   };
-  var Pi = (t, e) => {
+  var bo = (t, e) => {
     if (!t)
       return;
     e.setFormValue(t.value);
   };
-  var el = Ii + Si;
+  var ud = po + ho;
 
-  class Bi extends s {
+  class go extends s {
     static formAssociated = true;
     static get observedAttributes() {
       return ["value", "label", "placeholder", "rows", "maxlength", "max-count", "hint", "hint-level", "invalid", "disabled", "required", "autosize"];
@@ -3799,7 +4101,7 @@ p9r-tag:hover {
     _defaultValue = "";
     _defaultsCaptured = false;
     constructor() {
-      super({ css: el, template: zi });
+      super({ css: ud, template: uo });
       this._internals = this.attachInternals();
       let t = this.shadowRoot;
       this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
@@ -3807,12 +4109,12 @@ p9r-tag:hover {
     connectedCallback() {
       if (!this._defaultsCaptured)
         this._defaultValue = this.getAttribute("value") ?? "", this._defaultsCaptured = true;
-      ["value", "disabled", "required"].forEach((e) => d(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), zt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+      ["value", "disabled", "required"].forEach((e) => u(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), Jt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
       else
-        T(this, this._textarea, this._counter, this._count);
+        j(this, this._textarea, this._counter, this._count);
     }
     disconnectedCallback() {
       this._textarea?.removeEventListener("input", this._onInput), this._textarea?.removeEventListener("change", this._onChange);
@@ -3826,11 +4128,11 @@ p9r-tag:hover {
       if (t === "value" && r !== null)
         this.value = r;
       else if (t === "max-count")
-        Tt(this, this._counter, this._max, this._hint, this._meta), T(this, this._textarea, this._counter, this._count);
+        Qt(this, this._counter, this._max, this._hint, this._meta), j(this, this._textarea, this._counter, this._count);
       else if (t === "autosize")
-        N(this, this._textarea);
+        tt(this, this._textarea);
       else
-        zt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+        Jt(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
     }
     get value() {
       return this._textarea?.value ?? "";
@@ -3838,7 +4140,7 @@ p9r-tag:hover {
     set value(t) {
       if (!this._textarea)
         return;
-      this._textarea.value = t, this._internals.setFormValue(t), T(this, this._textarea, this._counter, this._count), N(this, this._textarea);
+      this._textarea.value = t, this._internals.setFormValue(t), j(this, this._textarea, this._counter, this._count), tt(this, this._textarea);
     }
     get name() {
       return this.getAttribute("name") ?? "";
@@ -3858,12 +4160,12 @@ p9r-tag:hover {
     focus() {
       this._textarea?.focus();
     }
-    _onInput = () => qi(this, this._textarea, this._internals, this._counter, this._count);
-    _onChange = () => Pi(this._textarea, this._internals);
+    _onInput = () => mo(this, this._textarea, this._internals, this._counter, this._count);
+    _onChange = () => bo(this._textarea, this._internals);
   }
-  var ji = `<slot></slot>
+  var _o = `<slot></slot>
 `;
-  var Vi = `:host {
+  var yo = `:host {
     --max-width: var(--p9r-container-md, 768px);
     display: block;
     width: 100%;
@@ -3884,14 +4186,14 @@ p9r-tag:hover {
 :host([align="end"])    { margin-inline-start: auto; margin-inline-end: 0;    }
 `;
 
-  class Ni extends s {
+  class wo extends s {
     constructor() {
-      super({ css: Vi, template: ji });
+      super({ css: yo, template: _o });
     }
   }
-  var Ri = `<slot></slot>
+  var ko = `<slot></slot>
 `;
-  var $i = `:host {
+  var Eo = `:host {
     --min: 240px;
     --gap: var(--p9r-space-md, 16px);
     --max-width: 100%;
@@ -3939,12 +4241,12 @@ p9r-tag:hover {
 :host([gap="xl"])   { --gap: var(--p9r-space-xl, 32px); }
 `;
 
-  class Xi extends s {
+  class Lo extends s {
     constructor() {
-      super({ css: $i, template: Ri });
+      super({ css: Eo, template: ko });
     }
   }
-  var Zi = `<div class="app-container" part="container">
+  var Ao = `<div class="app-container" part="container">
     <a class="skip-link" part="skip-link" href="#main-content">
         <slot name="skip-link">Skip to main content</slot>
     </a>
@@ -3955,23 +4257,30 @@ p9r-tag:hover {
         </nav>
     </aside>
 
+    <aside class="secondary-sidebar" part="secondary-sidebar" aria-label="Secondary" hidden>
+        <nav class="secondary-nav" part="secondary-nav" aria-label="Secondary navigation">
+            <slot name="secondary-sidebar"></slot>
+        </nav>
+    </aside>
+
     <main id="main-content" class="app-content" part="content" tabindex="-1">
         <slot></slot>
     </main>
 </div>
 `;
-  var Ui = `:host {
+  var Co = `:host {
     display: block;
     height: 100vh;
     width: 100vw;
     overflow: hidden;
 
-    --_sidebar-width: 260px;
+    --_sidebar-width: 252px;
     --_sidebar-collapsed-width: 0px;
-    --_sidebar-bg: var(--bg-base);
+    --_secondary-sidebar-width: var(--secondary-sidebar-width, 280px);
+    --_sidebar-bg: var(--bg-sidebar, var(--bg-surface));
     --_sidebar-border: var(--border-default);
-    --_content-bg: var(--bg-surface);
-    --_content-padding: 2rem;
+    --_content-bg: var(--bg-base);
+    --_content-padding: 30px;
     --_focus-ring: var(--primary-base, #2563eb);
 
     --ctx-bg: var(--_content-bg);
@@ -4015,7 +4324,25 @@ p9r-tag:hover {
     overflow: hidden;
 }
 
+.secondary-sidebar {
+    flex-shrink: 0;
+    height: 100%;
+    width: var(--_secondary-sidebar-width);
+    background-color: var(--_sidebar-bg);
+    border-right: 1px solid var(--_sidebar-border);
+    overflow: hidden;
+}
+
+.secondary-sidebar[hidden] {
+    display: none;
+}
+
 .app-nav {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.secondary-nav {
     height: 100%;
     overflow-y: auto;
 }
@@ -4025,6 +4352,15 @@ p9r-tag:hover {
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
     --ctx-border: var(--_sidebar-border);
+    --menu-border-width: 0;
+}
+
+::slotted([slot="secondary-sidebar"]) {
+    --ctx-bg: var(--_sidebar-bg);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--_sidebar-border);
+    --menu-border-width: 0;
 }
 
 ::slotted(:not([slot])) {
@@ -4065,22 +4401,26 @@ p9r-tag:hover {
 }
 `;
 
-  class Qi extends s {
+  class So extends s {
     _sidebar;
+    _secondarySidebar;
+    _secondarySlot;
     _content;
     constructor() {
-      super({ css: Ui, template: Zi });
-      this._sidebar = this.shadowRoot?.querySelector(".app-sidebar") ?? null, this._content = this.shadowRoot?.querySelector(".app-content") ?? null;
+      super({ css: Co, template: Ao });
+      this._sidebar = this.shadowRoot?.querySelector(".app-sidebar") ?? null, this._secondarySidebar = this.shadowRoot?.querySelector(".secondary-sidebar") ?? null, this._secondarySlot = this.shadowRoot?.querySelector('slot[name="secondary-sidebar"]') ?? null, this._content = this.shadowRoot?.querySelector(".app-content") ?? null;
     }
     static get observedAttributes() {
       return ["collapsed"];
     }
     connectedCallback() {
       for (let t of ["collapsed"])
-        d(this, t);
-      this._syncAriaState();
+        u(this, t);
+      this._syncAriaState(), this._syncSecondarySidebar(), this._secondarySlot?.addEventListener("slotchange", this._onSecondarySlotChange);
     }
-    disconnectedCallback() {}
+    disconnectedCallback() {
+      this._secondarySlot?.removeEventListener("slotchange", this._onSecondarySlotChange);
+    }
     attributeChangedCallback(t, e, r) {
       if (!this._sidebar)
         return;
@@ -4095,6 +4435,13 @@ p9r-tag:hover {
       let t = this.hasAttribute("collapsed");
       this._sidebar.setAttribute("aria-expanded", String(!t)), this._sidebar.setAttribute("aria-hidden", String(t));
     }
+    _syncSecondarySidebar() {
+      if (!this._secondarySidebar || !this._secondarySlot)
+        return;
+      let t = this._secondarySlot.assignedElements({ flatten: true }).some((e) => e instanceof HTMLElement && !e.hidden);
+      this._secondarySidebar.hidden = !t;
+    }
+    _onSecondarySlotChange = () => this._syncSecondarySidebar();
     get collapsed() {
       return this.hasAttribute("collapsed");
     }
@@ -4111,9 +4458,9 @@ p9r-tag:hover {
       this._content?.focus();
     }
   }
-  var Gi = `<slot></slot>
+  var To = `<slot></slot>
 `;
-  var Yi = `:host {
+  var Mo = `:host {
     --gap: var(--p9r-space-md, 16px);
     --max-width: 100%;
     --divider-color: var(--p9r-stack-divider, var(--border-default, rgba(0,0,0,0.1)));
@@ -4185,29 +4532,29 @@ p9r-tag:hover {
 }
 `;
 
-  class Ji extends s {
+  class Ho extends s {
     constructor() {
-      super({ css: Yi, template: Gi });
+      super({ css: Mo, template: To });
     }
   }
-  var Oi = `<section class="album" part="album">
+  var zo = `<section class="album" part="album">
     <slot class="images" name="images"></slot>
 </section>
 <section class="legend-album" part="legend-album" hidden></section>
-<section class="preview" part="preview" role="dialog" aria-modal="true" aria-label="Apercu photo" hidden>
+<section class="preview" part="preview" role="dialog" aria-modal="true" aria-label="Photo preview" hidden>
     <div class="preview-panel" part="preview-panel">
-        <button class="preview-close" type="button" aria-label="Fermer l'apercu">&times;</button>
+        <button class="preview-close" type="button" aria-label="Close preview">&times;</button>
         <div class="preview-stage">
-            <button class="preview-nav preview-prev" type="button" aria-label="Image precedente">&lsaquo;</button>
+            <button class="preview-nav preview-prev" type="button" aria-label="Previous image">&lsaquo;</button>
             <img class="preview-image" part="preview-image" alt="">
-            <button class="preview-nav preview-next" type="button" aria-label="Image suivante">&rsaquo;</button>
+            <button class="preview-nav preview-next" type="button" aria-label="Next image">&rsaquo;</button>
         </div>
         <p class="preview-caption" part="preview-caption" hidden></p>
-        <div class="preview-strip" part="preview-strip" role="listbox" aria-label="Autres images"></div>
+        <div class="preview-strip" part="preview-strip" role="listbox" aria-label="Other images"></div>
     </div>
 </section>
 `;
-  var Wi = `:host {
+  var Io = `:host {
     --min: 260px;
     --gap: var(--p9r-space-lg, 24px);
     --radius: 8px;
@@ -4539,14 +4886,14 @@ p9r-tag:hover {
 :host([align-self="end"]) { margin-inline: auto 0; }
 `;
 
-  class ta extends s {
+  class Fo extends s {
     _observer = null;
     _activeIndex = 0;
     static get observedAttributes() {
       return ["view-legend"];
     }
     constructor() {
-      super({ css: Wi, template: Oi });
+      super({ css: Io, template: zo });
     }
     connectedCallback() {
       this._slot.addEventListener("slotchange", this._syncImages), this.addEventListener("click", this._onHostClick), this._preview.addEventListener("click", this._onPreviewClick), this._strip.addEventListener("click", this._onStripClick), this._closeButton.addEventListener("click", this._closePreview), this._prevButton.addEventListener("click", this._showPrevious), this._nextButton.addEventListener("click", this._showNext), this._observer = new MutationObserver(this._syncImages), this._observer.observe(this, { attributes: true, childList: true, subtree: true, attributeFilter: ["src", "alt", "width", "height", "slot"] }), this._syncImages();
@@ -4570,25 +4917,25 @@ p9r-tag:hover {
       let r = document.createElement("figure");
       r.className = "figure", r.setAttribute("part", "figure");
       let i = document.createElement("button");
-      i.className = "figure-trigger", i.type = "button", i.dataset.previewIndex = String(e), i.ariaLabel = t.alt.trim() || "Afficher l'image";
-      let a = document.createElement("img");
-      if (a.src = t.currentSrc || t.src, a.alt = t.alt, a.loading = t.loading || "lazy", t.width > 0)
-        a.width = t.width;
+      i.className = "figure-trigger", i.type = "button", i.dataset.previewIndex = String(e), i.ariaLabel = t.alt.trim() || "Open image";
+      let o = document.createElement("img");
+      if (o.src = t.currentSrc || t.src, o.alt = t.alt, o.loading = t.loading || "lazy", t.width > 0)
+        o.width = t.width;
       if (t.height > 0)
-        a.height = t.height;
-      let o = document.createElement("figcaption");
-      return o.setAttribute("part", "legend"), o.textContent = t.alt, o.hidden = t.alt.trim() === "", i.append(a), r.append(i, o), r;
+        o.height = t.height;
+      let n = document.createElement("figcaption");
+      return n.setAttribute("part", "legend"), n.textContent = t.alt, n.hidden = t.alt.trim() === "", i.append(o), r.append(i, n), r;
     }
     _onHostClick = (t) => {
-      let e = this._images, r = t.composedPath().find((a) => {
-        return a instanceof HTMLImageElement && e.includes(a);
+      let e = this._images, r = t.composedPath().find((o) => {
+        return o instanceof HTMLImageElement && e.includes(o);
       });
       if (r) {
         this._openPreview(e.indexOf(r));
         return;
       }
-      let i = t.composedPath().find((a) => {
-        return a instanceof HTMLButtonElement && a.dataset.previewIndex !== undefined;
+      let i = t.composedPath().find((o) => {
+        return o instanceof HTMLButtonElement && o.dataset.previewIndex !== undefined;
       });
       if (!i)
         return;
@@ -4657,8 +5004,8 @@ p9r-tag:hover {
       let t = this._images.map((e, r) => {
         let i = document.createElement("button");
         i.className = "preview-thumb", i.type = "button", i.dataset.previewIndex = String(r), i.ariaSelected = r === this._activeIndex ? "true" : "false", i.setAttribute("role", "option"), i.ariaLabel = e.alt.trim() || `Image ${r + 1}`;
-        let a = document.createElement("img");
-        return a.src = e.currentSrc || e.src, a.alt = "", a.loading = e.loading || "lazy", i.append(a), i;
+        let o = document.createElement("img");
+        return o.src = e.currentSrc || e.src, o.alt = "", o.loading = e.loading || "lazy", i.append(o), i;
       });
       this._strip.replaceChildren(...t), this._strip.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "center" });
     }
@@ -4696,7 +5043,7 @@ p9r-tag:hover {
       return this.shadowRoot.querySelector(".preview-next");
     }
   }
-  var ea = `<aside class="sidebar" part="sidebar">
+  var Po = `<aside class="sidebar" part="sidebar">
     <div class="sidebar-header" part="header">
         <slot name="header">
             <h3>Menu</h3>
@@ -4712,20 +5059,23 @@ p9r-tag:hover {
     </div>
 </aside>
 `;
-  var ra = `:host {
+  var Ro = `:host {
     display: flex;
     flex-direction: column;
-    width: 260px;
+    width: 252px;
     height: 100vh;
-    background-color: var(--bg-surface);
-    border-right: 1px solid var(--secondary-muted);
+    background-color: var(--bg-sidebar, var(--bg-surface));
+    border-right: var(--menu-border-width, 1px) solid var(--border-default);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     box-sizing: border-box;
 
-    --ctx-bg: var(--bg-surface);
+    --ctx-bg: var(--bg-sidebar, var(--bg-surface));
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
-    --ctx-border: var(--secondary-muted);
+    --ctx-border: var(--border-default);
+
+    --menu-brand-mark: "";
+    --menu-brand-mark-display: none;
 }
 
 :host([collapsed]) {
@@ -4745,100 +5095,138 @@ p9r-tag:hover {
     }
 }
 
-.sidebar-header {
-    padding: 2.5rem 1.5rem 1.5rem 1.5rem;
-}
+.sidebar-header { padding: 14px 10px 10px; }
 
 ::slotted([slot="header"]) {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     margin: 0;
-    font-size: 1.4rem;
+    font-size: var(--menu-header-font-size, .8125rem);
     font-weight: 700;
-    color: var(--secondary-contrasted);
-    letter-spacing: -0.04em;
+    color: var(--text-main);
+    letter-spacing: 0;
+}
+
+::slotted([slot="header"])::before {
+    content: var(--menu-brand-mark);
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: var(--menu-brand-mark-display);
+    place-items: center;
+    flex: none;
+    background: var(--text-main);
+    color: var(--bg-surface);
+    font-size: .75rem;
+    font-weight: 700;
 }
 
 ::slotted([slot="header"]) span {
     color: var(--primary-base);
 }
 
-::slotted([slot="header"])::after {
-    content: "";
-    width: 4px;
-    height: 4px;
-    margin-top: 8px;
-    background-color: var(--primary-base);
-    border-radius: 50%;
-}
+::slotted([slot="header"])::after { content: none; }
 
 .sidebar-nav {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 0 0.75rem;
+    gap: 1px;
+    padding: 0 10px;
 }
+
+.sidebar-nav > slot { display: contents; }
 
 .sidebar-footer {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 0.75rem;
+    gap: 2px;
+    padding: 12px 10px 14px;
     margin-top: auto;
-    border-top: 1px solid var(--secondary-muted);
+    border-top: 1px solid var(--border-default);
 }
+
+.sidebar-footer > slot { display: contents; }
 
 ::slotted(w13c-lateral-menu-item) {
     --item-color: var(--secondary-base);
-    --item-color-active: var(--primary-base);
-    --item-bg-hover: var(--primary-muted);
+    --item-color-active: var(--primary-contrasted);
+    --item-bg-active: var(--primary-muted);
+    --item-bg-hover: var(--bg-hover, var(--secondary-muted));
+    --item-font-size: var(--menu-item-font-size, .8125rem);
+    --icon-size: 16px;
+    --icon-box-size: 18px;
+    margin: 1px 0;
+}
+
+::slotted(.menu-section) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 10px 6px;
+    color: var(--text-muted);
+    font-size: var(--menu-section-font-size, .625rem);
+    font-weight: 750;
+    letter-spacing: .08em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+::slotted(.menu-section:first-of-type) {
+    padding-top: 6px;
+}
+
+::slotted(.menu-section)::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: var(--border-default);
 }
 `;
-  var ia = (t) => {
+  var qo = (t) => {
     if (!t)
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled"));
   };
-  var aa = (t, e) => {
-    let r = t.shadowRoot?.querySelector("slot:not([name])"), i = ia(r);
+  var Do = (t, e) => {
+    let r = t.shadowRoot?.querySelector("slot:not([name])"), i = qo(r);
     if (i.length === 0)
       return;
-    let a = document.activeElement, o = i.findIndex((c) => c === a || c.contains(a)), n = -1;
+    let o = document.activeElement, n = i.findIndex((c) => c === o || c.contains(o)), a = -1;
     switch (e.key) {
       case "ArrowDown":
-        n = o < 0 ? 0 : (o + 1) % i.length;
+        a = n < 0 ? 0 : (n + 1) % i.length;
         break;
       case "ArrowUp":
-        n = o < 0 ? i.length - 1 : (o - 1 + i.length) % i.length;
+        a = n < 0 ? i.length - 1 : (n - 1 + i.length) % i.length;
         break;
       case "Home":
-        n = 0;
+        a = 0;
         break;
       case "End":
-        n = i.length - 1;
+        a = i.length - 1;
         break;
       default:
         return;
     }
     e.preventDefault();
-    let l = i[n];
+    let l = i[a];
     if (l)
       l.focus();
   };
 
-  class oa extends s {
+  class Vo extends s {
     _sidebar;
     constructor() {
-      super({ css: ra, template: ea });
+      super({ css: Ro, template: Po });
       this._sidebar = this.shadowRoot?.querySelector(".sidebar") ?? null;
     }
     static get observedAttributes() {
       return ["collapsed"];
     }
     connectedCallback() {
-      if (d(this, "collapsed"), !this.hasAttribute("aria-label"))
+      if (u(this, "collapsed"), !this.hasAttribute("aria-label"))
         this.setAttribute("aria-label", "Main navigation");
       this.addEventListener("keydown", this._onKey);
     }
@@ -4863,9 +5251,9 @@ p9r-tag:hover {
       else
         this.removeAttribute("collapsed");
     }
-    _onKey = (t) => aa(this, t);
+    _onKey = (t) => Do(this, t);
   }
-  var na = `<a class="menu-item" part="item" tabindex="-1">
+  var Bo = `<a class="menu-item" part="item" tabindex="-1">
     <span class="icon-wrapper" part="icon">
         <slot name="icon"></slot>
     </span>
@@ -4875,15 +5263,21 @@ p9r-tag:hover {
     <span class="badge" part="badge" id="badge-element"></span>
 </a>
 `;
-  var sa = `:host {
+  var jo = `:host {
     display: block;
     width: 100%;
+    margin: 0;
+    padding: 0;
     outline: none;
     --item-color: var(--secondary-base, oklch(50% 0.02 260));
-    --item-color-active: var(--primary-base, oklch(60% 0.15 265));
+    --item-color-active: var(--primary-contrasted, oklch(30% 0.12 265));
     --item-bg-active: var(--primary-muted, oklch(95% 0.02 265));
+    --item-bg-hover: var(--bg-hover, var(--secondary-muted, oklch(94% 0.008 265)));
+    --item-color-hover: var(--text-main, currentColor);
+    --item-color-disabled: var(--text-muted, currentColor);
     --item-contrasted: var(--primary-contrasted, oklch(98% 0.01 260));
-    --icon-size: 20px;
+    --icon-size: 16px;
+    --icon-box-size: 18px;
 
     --ctx-bg: transparent;
     --ctx-fg: var(--item-color);
@@ -4901,14 +5295,18 @@ p9r-tag:hover {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 0.75rem 1rem;
+    gap: 10px;
+    height: 34px;
+    padding: 0 10px;
+    box-sizing: border-box;
     text-decoration: none;
     color: var(--item-color);
     font-family: system-ui, -apple-system, sans-serif;
-    font-size: 0.9rem;
-    font-weight: 500;
-    border-radius: 8px;
+    font-size: var(--item-font-size, .8125rem);
+    font-weight: 560;
+    line-height: 1.25;
+    letter-spacing: 0;
+    border-radius: 6px;
     cursor: pointer;
     user-select: none;
 }
@@ -4923,17 +5321,16 @@ p9r-tag:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--icon-size);
-    height: var(--icon-size);
+    width: var(--icon-box-size);
+    height: var(--icon-box-size);
     flex-shrink: 0;
 }
 
 ::slotted(svg), .icon-wrapper svg {
-    width: 100% !important;
-    height: 100% !important;
+    width: var(--icon-size) !important;
+    height: var(--icon-size) !important;
     stroke: currentColor;
     fill: none;
-    stroke-width: 2;
 }
 
 .label {
@@ -4958,9 +5355,9 @@ p9r-tag:hover {
     flex-shrink: 0;
 }
 `;
-  var la = `.menu-item:hover {
-    background-color: var(--item-bg-active);
-    color: var(--item-color-active);
+  var Ko = `.menu-item:hover {
+    background-color: var(--item-bg-hover);
+    color: var(--item-color-hover);
 }
 
 :host(:focus-visible) .menu-item {
@@ -4971,17 +5368,19 @@ p9r-tag:hover {
 .menu-item.active {
     background-color: var(--item-bg-active);
     color: var(--item-color-active);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .menu-item.active::before {
     content: "";
     position: absolute;
     left: 0;
+    top: 9px;
+    bottom: 9px;
     width: 3px;
-    height: 100%;
+    height: auto;
     background-color: var(--item-color-active);
-    border-radius: 0 4px 4px 0;
+    border-radius: 999px;
 }
 
 .menu-item.active ::slotted(svg) {
@@ -4989,10 +5388,10 @@ p9r-tag:hover {
 }
 
 :host([disabled]) .menu-item {
-    cursor: not-allowed;
+    cursor: default;
     pointer-events: none;
-    opacity: 0.5;
-    filter: grayscale(1);
+    color: var(--item-color-disabled);
+    opacity: .66;
     background: transparent !important;
 }
 
@@ -5008,7 +5407,7 @@ p9r-tag:hover {
     box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
 }
 `;
-  var It = (t, e) => {
+  var Wt = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -5016,7 +5415,7 @@ p9r-tag:hover {
     else
       t.removeAttribute("href");
   };
-  var St = (t, e) => {
+  var Gt = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -5024,23 +5423,30 @@ p9r-tag:hover {
     else
       t.textContent = "", t.style.display = "none";
   };
-  var qt = (t, e) => {
+  var gt = (t, e, r) => {
+    if (r)
+      t.setAttribute("active", ""), t.setAttribute("aria-current", "page"), e?.classList.add("active");
+    else
+      t.removeAttribute("active"), t.removeAttribute("aria-current"), e?.classList.remove("active");
+  };
+  var ft = (t, e) => {
+    if (t.hasAttribute("active")) {
+      gt(t, e, true);
+      return;
+    }
     if (!e || !t.hasAttribute("href"))
       return;
     let r = t.getAttribute("href");
     if (!r)
       return;
     try {
-      let i = new URL(r, window.location.href), o = new URL(window.location.href).pathname, n = i.pathname;
-      if (n === "/" ? o === "/" : o === n || o.startsWith(n + "/"))
-        t.setAttribute("active", ""), t.setAttribute("aria-current", "page"), e.classList.add("active");
-      else
-        t.removeAttribute("active"), t.removeAttribute("aria-current"), e.classList.remove("active");
+      let i = new URL(r, window.location.href), n = new URL(window.location.href).pathname, a = i.pathname, l = a === "/" ? n === "/" : n === a || n.startsWith(a + "/");
+      gt(t, e, l);
     } catch {
       console.warn("Invalid href in LateralMenuItem:", r);
     }
   };
-  var da = (t, e, r) => {
+  var No = (t, e, r) => {
     if (t.hasAttribute("disabled"))
       return;
     if (r.key !== "Enter" && r.key !== " ")
@@ -5049,26 +5455,26 @@ p9r-tag:hover {
       return;
     r.preventDefault(), e?.click();
   };
-  var xl = sa + la;
+  var Td = jo + Ko;
 
-  class ca extends s {
+  class $o extends s {
     _anchor;
     _badgeEl;
     constructor() {
-      super({ css: xl, template: na });
+      super({ css: Td, template: Bo });
       this._anchor = this.shadowRoot?.querySelector("a") ?? null, this._badgeEl = this.shadowRoot?.getElementById("badge-element") ?? null;
     }
     static get observedAttributes() {
-      return ["href", "badge", "disabled"];
+      return ["href", "badge", "disabled", "active"];
     }
     connectedCallback() {
-      for (let t of ["href", "badge", "disabled"])
-        d(this, t);
+      for (let t of ["href", "badge", "disabled", "active"])
+        u(this, t);
       if (!this.hasAttribute("role"))
         this.setAttribute("role", "listitem");
       if (!this.hasAttribute("tabindex"))
         this.setAttribute("tabindex", "0");
-      It(this._anchor, this.getAttribute("href")), St(this._badgeEl, this.getAttribute("badge")), qt(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
+      Wt(this._anchor, this.getAttribute("href")), Gt(this._badgeEl, this.getAttribute("badge")), ft(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey);
     }
     disconnectedCallback() {
       window.removeEventListener("popstate", this._onPopstate), this.removeEventListener("keydown", this._onKey);
@@ -5077,9 +5483,14 @@ p9r-tag:hover {
       if (!this._anchor)
         return;
       if (t === "href")
-        It(this._anchor, r);
+        Wt(this._anchor, r);
       if (t === "badge")
-        St(this._badgeEl, r);
+        Gt(this._badgeEl, r);
+      if (t === "active")
+        if (r !== null)
+          gt(this, this._anchor, true);
+        else
+          ft(this, this._anchor);
       if (t === "disabled") {
         let i = this.hasAttribute("disabled");
         this.setAttribute("aria-disabled", i ? "true" : "false"), this.setAttribute("tabindex", i ? "-1" : "0");
@@ -5103,10 +5514,16 @@ p9r-tag:hover {
     set disabled(t) {
       t ? this.setAttribute("disabled", "") : this.removeAttribute("disabled");
     }
-    _onPopstate = () => qt(this, this._anchor);
-    _onKey = (t) => da(this, this._anchor, t);
+    get active() {
+      return this.hasAttribute("active");
+    }
+    set active(t) {
+      t ? this.setAttribute("active", "") : this.removeAttribute("active");
+    }
+    _onPopstate = () => ft(this, this._anchor);
+    _onKey = (t) => No(this, this._anchor, t);
   }
-  var Ia = `:host {
+  var hn = `:host {
   display: flex;
   flex: 1;
 
@@ -5195,7 +5612,7 @@ p9r-tag:hover {
 
 .description.is-empty { display: none; }
 `;
-  var Sa = `:host([data-state="active"], [state="active"]) {
+  var mn = `:host([data-state="active"], [state="active"]) {
   --_color: var(--_active);
   --_label-color: var(--_text);
 }
@@ -5256,14 +5673,14 @@ p9r-tag:hover {
   margin-top: 0.4rem;
 }
 `;
-  var Sl = Ia + Sa;
-  var Pa = `<div class="table-container">
+  var Nd = hn + mn;
+  var gn = `<div class="table-container">
   <div class="p9r-table">
     <slot name="header"></slot>
     <slot></slot>
   </div>
 </div>`;
-  var Ba = `:host {
+  var fn = `:host {
   display: block;
   width: 100%;
 
@@ -5302,14 +5719,14 @@ p9r-tag:hover {
 }
 `;
 
-  class Fa extends s {
+  class vn extends s {
     constructor() {
-      super({ css: Ba, template: Pa });
+      super({ css: fn, template: gn });
     }
   }
-  var Ka = `<slot></slot>
+  var xn = `<slot></slot>
 `;
-  var Da = `:host {
+  var _n = `:host {
   display: table-cell;
   padding: 12px 20px;
   vertical-align: middle;
@@ -5334,16 +5751,16 @@ p9r-tag:hover {
 }
 `;
 
-  class ja extends s {
+  class yn extends s {
     constructor() {
-      super({ css: Da, template: Ka });
+      super({ css: _n, template: xn });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
         this.setAttribute("role", "cell");
     }
   }
-  var Va = `<div class="header-wrapper" part="wrapper">
+  var wn = `<div class="header-wrapper" part="wrapper">
   <button
     type="button"
     class="label-section"
@@ -5373,7 +5790,7 @@ p9r-tag:hover {
   </div>
 </div>
 `;
-  var Na = `:host {
+  var kn = `:host {
   display: table-cell;
   padding: 12px 20px;
   border-bottom: 2px solid var(--border-light);
@@ -5444,7 +5861,7 @@ p9r-tag:hover {
   box-sizing: border-box;
 }
 `;
-  var Ra = `:host([sort]) .label-section {
+  var En = `:host([sort]) .label-section {
   cursor: pointer;
 }
 
@@ -5491,13 +5908,13 @@ p9r-tag:hover {
   background: var(--bg-base, #eee);
 }
 `;
-  var Vl = (t) => {
+  var Jd = (t) => {
     let e = t.getAttribute("filter-name");
     if (!e)
       return "";
     return new URL(window.location.href).searchParams.get(`f_${e}`) ?? "";
   };
-  var Pt = (t, e, r) => {
+  var te = (t, e, r) => {
     let i = t.getAttribute("filter-name");
     if (!e)
       return;
@@ -5506,22 +5923,22 @@ p9r-tag:hover {
       return;
     }
     e.removeAttribute("hidden");
-    let a = Vl(t);
+    let o = Jd(t);
     if (r)
-      r.value = a;
-    if (a)
+      r.value = o;
+    if (o)
       t.setAttribute("data-has-filter", "");
     else
       t.removeAttribute("data-has-filter");
   };
-  var $a = (t) => {
+  var Ln = (t) => {
     let e = t.getAttribute("sort");
     if (!e)
       return;
-    let r = new URL(window.location.href), i = r.searchParams.get("sort"), a = r.searchParams.get("direction"), o = i === e && a === "asc" ? "desc" : "asc";
-    r.searchParams.set("sort", e), r.searchParams.set("direction", o), window.location.href = r.toString();
+    let r = new URL(window.location.href), i = r.searchParams.get("sort"), o = r.searchParams.get("direction"), n = i === e && o === "asc" ? "desc" : "asc";
+    r.searchParams.set("sort", e), r.searchParams.set("direction", n), window.location.href = r.toString();
   };
-  var Xa = (t, e) => {
+  var An = (t, e) => {
     let r = t.getAttribute("filter-name");
     if (!r)
       return;
@@ -5532,12 +5949,12 @@ p9r-tag:hover {
       i.searchParams.delete(`f_${r}`);
     window.location.href = i.toString();
   };
-  var Za = (t, e) => {
+  var Cn = (t, e) => {
     if (e.composedPath().some((r) => r instanceof HTMLInputElement))
       return;
-    $a(t);
+    Ln(t);
   };
-  var Ua = (t, e, r, i) => {
+  var Sn = (t, e, r, i) => {
     if (t.stopPropagation(), !r || !e)
       return;
     if (r.hasAttribute("hidden"))
@@ -5545,17 +5962,17 @@ p9r-tag:hover {
     else
       r.setAttribute("hidden", ""), e.setAttribute("aria-expanded", "false");
   };
-  var Qa = (t, e, r) => {
+  var Tn = (t, e, r) => {
     if (r.key !== "Enter" || !e)
       return;
-    Xa(t, e.value);
+    An(t, e.value);
   };
-  var Ga = (t, e) => {
+  var Mn = (t, e) => {
     e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
   };
-  var Nl = Na + Ra;
+  var Wd = kn + En;
 
-  class Ya extends s {
+  class Hn extends s {
     _sortTrigger;
     _filterBtn;
     _filterPopover;
@@ -5564,27 +5981,27 @@ p9r-tag:hover {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: Nl, template: Va });
+      super({ css: Wd, template: wn });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
-      Pt(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
+      te(this, this._filterBtn, this._filterInput), this._sortTrigger?.addEventListener("click", this._onSort), this._filterBtn?.addEventListener("click", this._onFilterToggle), this._filterPopover?.addEventListener("click", this._stopPropagation), this._filterInput?.addEventListener("keydown", this._onFilterKey), window.addEventListener("click", this._onWindowClick);
     }
     disconnectedCallback() {
       this._sortTrigger?.removeEventListener("click", this._onSort), this._filterBtn?.removeEventListener("click", this._onFilterToggle), this._filterPopover?.removeEventListener("click", this._stopPropagation), this._filterInput?.removeEventListener("keydown", this._onFilterKey), window.removeEventListener("click", this._onWindowClick);
     }
     attributeChangedCallback() {
-      Pt(this, this._filterBtn, this._filterInput);
+      te(this, this._filterBtn, this._filterInput);
     }
-    _onSort = (t) => Za(this, t);
-    _onFilterToggle = (t) => Ua(t, this._filterBtn, this._filterPopover, this._filterInput);
-    _onFilterKey = (t) => Qa(this, this._filterInput, t);
-    _onWindowClick = () => Ga(this._filterBtn, this._filterPopover);
+    _onSort = (t) => Cn(this, t);
+    _onFilterToggle = (t) => Sn(t, this._filterBtn, this._filterPopover, this._filterInput);
+    _onFilterKey = (t) => Tn(this, this._filterInput, t);
+    _onWindowClick = () => Mn(this._filterBtn, this._filterPopover);
     _stopPropagation = (t) => t.stopPropagation();
   }
-  var Ja = `<slot></slot>
+  var zn = `<slot></slot>
 `;
-  var Oa = `:host {
+  var In = `:host {
   display: table-row;
 }
 
@@ -5603,7 +6020,7 @@ p9r-tag:hover {
   }
 }
 `;
-  var Bt = (t) => {
+  var ee = (t) => {
     let e = t.getAttribute("href");
     if (!e)
       return;
@@ -5615,18 +6032,18 @@ p9r-tag:hover {
     else
       window.location.href = e;
   };
-  var Wa = (t) => {
+  var Fn = (t) => {
     if (!t.hasAttribute("href"))
       return;
-    Bt(t);
+    ee(t);
   };
-  var to = (t, e) => {
+  var Pn = (t, e) => {
     if (!t.hasAttribute("href"))
       return;
     if (e.key === "Enter" || e.key === " ")
-      e.preventDefault(), Bt(t);
+      e.preventDefault(), ee(t);
   };
-  var Ft = (t) => {
+  var re = (t) => {
     if (t.hasAttribute("href")) {
       if (!t.hasAttribute("tabindex"))
         t.setAttribute("tabindex", "0");
@@ -5642,27 +6059,27 @@ p9r-tag:hover {
     }
   };
 
-  class eo extends s {
+  class Rn extends s {
     static get observedAttributes() {
       return ["href"];
     }
     constructor() {
-      super({ css: Oa, template: Ja });
+      super({ css: In, template: zn });
     }
     connectedCallback() {
       for (let t of ["href", "target"])
-        d(this, t);
-      this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), Ft(this);
+        u(this, t);
+      this.addEventListener("click", this._onClick), this.addEventListener("keydown", this._onKey), re(this);
     }
     disconnectedCallback() {
       this.removeEventListener("click", this._onClick), this.removeEventListener("keydown", this._onKey);
     }
     attributeChangedCallback(t) {
       if (t === "href")
-        Ft(this);
+        re(this);
     }
-    _onClick = () => Wa(this);
-    _onKey = (t) => to(this, t);
+    _onClick = () => Fn(this);
+    _onKey = (t) => Pn(this, t);
     get href() {
       return this.getAttribute("href");
     }
@@ -5682,14 +6099,14 @@ p9r-tag:hover {
         this.setAttribute("target", t);
     }
   }
-  var ro = `<div class="tabs" part="tabs">
+  var qn = `<div class="tabs" part="tabs">
     <div class="tablist" part="tablist" role="tablist"></div>
     <div class="panels" part="panels">
         <slot></slot>
     </div>
 </div>
 `;
-  var io = `:host {
+  var Dn = `:host {
   display: block;
 
   --_border: var(--border-default, #e5e7eb);
@@ -5766,7 +6183,7 @@ p9r-tag:hover {
   .tab { transition: color 0.15s; }
 }
 `;
-  var ao = `:host([variant="pills"]) .tablist {
+  var Vn = `:host([variant="pills"]) .tablist {
   border-bottom: 0;
   gap: 0.4rem;
   padding: 0.25rem;
@@ -5805,100 +6222,100 @@ p9r-tag:hover {
   padding-left: 1rem;
 }
 `;
-  var Kt = (t) => {
+  var ie = (t) => {
     if (!t)
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
   };
-  var Ql = 0;
-  var oo = () => `tabpanel-${Ql++}`;
-  var no = (t, e) => {
+  var oc = 0;
+  var Bn = () => `tabpanel-${oc++}`;
+  var jn = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
   };
-  var Dt = (t, e, r) => {
+  var oe = (t, e, r) => {
     if (!e)
       return;
     e.innerHTML = "";
-    let i = Kt(r), a = t.getAttribute("active");
-    if (!a && i.length > 0)
-      a = i[0]?.getAttribute("id") ?? null;
-    if (i.forEach((o, n) => {
-      let l = o.getAttribute("id") ?? oo();
-      if (!o.id)
-        o.id = l;
-      let c = o.getAttribute("label") ?? `Tab ${n + 1}`, p = document.createElement("button");
-      if (p.type = "button", p.className = "tab", p.setAttribute("part", "tab"), p.setAttribute("role", "tab"), p.setAttribute("id", `tab-${l}`), p.setAttribute("aria-controls", l), p.dataset.target = l, p.textContent = c, o.hasAttribute("disabled"))
-        p.setAttribute("disabled", "");
-      e.appendChild(p), o.setAttribute("role", "tabpanel"), o.setAttribute("aria-labelledby", `tab-${l}`);
-    }), a)
-      z(t, e, r, a);
+    let i = ie(r), o = t.getAttribute("active");
+    if (!o && i.length > 0)
+      o = i[0]?.getAttribute("id") ?? null;
+    if (i.forEach((n, a) => {
+      let l = n.getAttribute("id") ?? Bn();
+      if (!n.id)
+        n.id = l;
+      let c = n.getAttribute("label") ?? `Tab ${a + 1}`, d = document.createElement("button");
+      if (d.type = "button", d.className = "tab", d.setAttribute("part", "tab"), d.setAttribute("role", "tab"), d.setAttribute("id", `tab-${l}`), d.setAttribute("aria-controls", l), d.dataset.target = l, d.textContent = c, n.hasAttribute("disabled"))
+        d.setAttribute("disabled", "");
+      e.appendChild(d), n.setAttribute("role", "tabpanel"), n.setAttribute("aria-labelledby", `tab-${l}`);
+    }), o)
+      K(t, e, r, o);
   };
-  var z = (t, e, r, i) => {
-    let a = Kt(r), o = Array.from(e?.querySelectorAll(".tab") ?? []), n = false;
-    if (a.forEach((l) => {
+  var K = (t, e, r, i) => {
+    let o = ie(r), n = Array.from(e?.querySelectorAll(".tab") ?? []), a = false;
+    if (o.forEach((l) => {
       let c = l.id === i;
       if (c)
-        n = true;
+        a = true;
       l.toggleAttribute("hidden", !c);
-    }), o.forEach((l) => {
+    }), n.forEach((l) => {
       let c = l.dataset.target === i;
       l.setAttribute("aria-selected", String(c)), l.setAttribute("tabindex", c ? "0" : "-1");
-    }), n && t.getAttribute("active") !== i)
-      t.setAttribute("active", i), no(t, i);
+    }), a && t.getAttribute("active") !== i)
+      t.setAttribute("active", i), jn(t, i);
   };
-  var so = (t, e, r, i) => {
-    let a = i.target.closest(".tab");
-    if (!a || a.hasAttribute("disabled"))
+  var Kn = (t, e, r, i) => {
+    let o = i.target.closest(".tab");
+    if (!o || o.hasAttribute("disabled"))
       return;
-    let o = a.dataset.target;
-    if (o)
-      z(t, e, r, o);
+    let n = o.dataset.target;
+    if (n)
+      K(t, e, r, n);
   };
-  var lo = (t, e, r, i) => {
+  var Nn = (t, e, r, i) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(i.key))
       return;
-    let a = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
-    if (a.length === 0)
+    let o = Array.from(e?.querySelectorAll(".tab:not([disabled])") ?? []);
+    if (o.length === 0)
       return;
-    let o = a.findIndex((u) => u === document.activeElement), n = o === -1 ? 0 : o, l = n;
+    let n = o.findIndex((p) => p === document.activeElement), a = n === -1 ? 0 : n, l = a;
     if (i.key === "ArrowLeft")
-      l = (n - 1 + a.length) % a.length;
+      l = (a - 1 + o.length) % o.length;
     if (i.key === "ArrowRight")
-      l = (n + 1) % a.length;
+      l = (a + 1) % o.length;
     if (i.key === "Home")
       l = 0;
     if (i.key === "End")
-      l = a.length - 1;
+      l = o.length - 1;
     i.preventDefault();
-    let c = a[l];
+    let c = o[l];
     if (!c)
       return;
-    let p = c.dataset.target;
-    if (p)
-      z(t, e, r, p);
+    let d = c.dataset.target;
+    if (d)
+      K(t, e, r, d);
     c.focus();
   };
-  var Gl = io + ao;
+  var nc = Dn + Vn;
 
-  class co extends s {
+  class $n extends s {
     _tablist;
     _slot;
     static get observedAttributes() {
       return ["active"];
     }
     constructor() {
-      super({ css: Gl, template: ro });
+      super({ css: nc, template: qn });
       this._tablist = this.shadowRoot?.querySelector(".tablist") ?? null, this._slot = this.shadowRoot?.querySelector("slot") ?? null;
     }
     connectedCallback() {
-      this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), Dt(this, this._tablist, this._slot);
+      this._slot?.addEventListener("slotchange", this._onRebuild), this._tablist?.addEventListener("click", this._onClick), this._tablist?.addEventListener("keydown", this._onKey), oe(this, this._tablist, this._slot);
     }
     disconnectedCallback() {
       this._slot?.removeEventListener("slotchange", this._onRebuild), this._tablist?.removeEventListener("click", this._onClick), this._tablist?.removeEventListener("keydown", this._onKey);
     }
     attributeChangedCallback(t, e, r) {
       if (t === "active" && r !== null)
-        z(this, this._tablist, this._slot, r);
+        K(this, this._tablist, this._slot, r);
     }
     get active() {
       return this.getAttribute("active") ?? "";
@@ -5906,15 +6323,15 @@ p9r-tag:hover {
     set active(t) {
       this.setAttribute("active", t);
     }
-    _onRebuild = () => Dt(this, this._tablist, this._slot);
-    _onClick = (t) => so(this, this._tablist, this._slot, t);
-    _onKey = (t) => lo(this, this._tablist, this._slot, t);
+    _onRebuild = () => oe(this, this._tablist, this._slot);
+    _onClick = (t) => Kn(this, this._tablist, this._slot, t);
+    _onKey = (t) => Nn(this, this._tablist, this._slot, t);
   }
-  var po = `<div class="panel" part="panel">
+  var On = `<div class="panel" part="panel">
     <slot></slot>
 </div>
 `;
-  var uo = `:host {
+  var Un = `:host {
   display: block;
 }
 
@@ -5925,15 +6342,15 @@ p9r-tag:hover {
 }
 `;
 
-  class ho extends s {
+  class Xn extends s {
     constructor() {
-      super({ css: uo, template: po });
+      super({ css: Un, template: On });
     }
   }
-  var bo = `<span class="label" part="label"><slot></slot></span>
+  var Zn = `<span class="label" part="label"><slot></slot></span>
 <button type="button" class="remove" part="remove" aria-label="Remove" hidden>&times;</button>
 `;
-  var mo = `:host {
+  var Yn = `:host {
     --_tag-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
@@ -6007,7 +6424,7 @@ p9r-tag:hover {
     }
 }
 `;
-  var go = `:host([color="info"]) {
+  var Qn = `:host([color="info"]) {
     --_tag-bg: var(--info-muted, oklch(95% 0.02 230));
     --_tag-color: var(--info-base, oklch(65% 0.12 230));
     --_tag-border: var(--info-contrasted, oklch(25% 0.08 230));
@@ -6043,20 +6460,20 @@ p9r-tag:hover {
     --_tag-border: var(--secondary-contrasted, oklch(25% 0.08 265));
 }
 `;
-  var ed = mo + go;
+  var uc = Yn + Qn;
 
-  class vo extends s {
+  class Jn extends s {
     _removeBtn;
     static get observedAttributes() {
       return ["removable"];
     }
     constructor() {
-      super({ css: ed, template: bo });
+      super({ css: uc, template: Zn });
       this._removeBtn = this.shadowRoot?.querySelector(".remove") ?? null;
     }
     connectedCallback() {
       for (let t of ["removable"])
-        d(this, t);
+        u(this, t);
       this._syncRemovable(), this._removeBtn?.addEventListener("click", this._handleRemoveClick);
     }
     disconnectedCallback() {
@@ -6088,13 +6505,13 @@ p9r-tag:hover {
         this.removeAttribute("removable");
     }
   }
-  var fo = `<div class="icon" part="icon"></div>
+  var Wn = `<div class="icon" part="icon"></div>
 <div class="content">
     <span class="message"><slot></slot></span>
 </div>
 <button class="close" aria-label="Dismiss">&times;</button>
 `;
-  var xo = `:host {
+  var Gn = `:host {
     --_bg: var(--bg-surface, #ffffff);
     --_color: var(--text-main, #1f2937);
     --_border: var(--border-default, #e5e7eb);
@@ -6174,7 +6591,7 @@ p9r-tag:hover {
     opacity: 1;
 }
 `;
-  var _o = `:host([leaving]) {
+  var ta = `:host([leaving]) {
     animation: toast-out 160ms ease-in forwards;
 }
 
@@ -6217,12 +6634,12 @@ p9r-tag:hover {
     to   { opacity: 0; transform: translateX(-20px); }
 }
 `;
-  var od = xo + _o;
+  var bc = Gn + ta;
 
-  class yo extends s {
+  class ea extends s {
     _timer = null;
     constructor() {
-      super({ css: od, template: fo });
+      super({ css: bc, template: Wn });
     }
     connectedCallback() {
       this.shadowRoot?.querySelector(".close")?.addEventListener("click", () => this.dismiss());
@@ -6244,9 +6661,9 @@ p9r-tag:hover {
       }, { once: true });
     }
   }
-  var wo = `<slot></slot>
+  var ra = `<slot></slot>
 `;
-  var ko = `:host {
+  var ia = `:host {
     position: fixed;
     top: 24px;
     left: 24px;
@@ -6296,9 +6713,9 @@ p9r-tag:hover {
 }
 `;
 
-  class Eo extends s {
+  class oa extends s {
     constructor() {
-      super({ css: ko, template: wo });
+      super({ css: ia, template: ra });
     }
     connectedCallback() {
       if (!this.hasAttribute("popover"))
@@ -6314,18 +6731,18 @@ p9r-tag:hover {
       return r.textContent = t, this.appendChild(r), r;
     }
   }
-  var f = null;
-  function ld() {
-    if (f && f.isConnected)
-      return f;
-    if (f = document.querySelector("p9r-toast-stack"), f)
-      return f;
-    return f = document.createElement("p9r-toast-stack"), document.body.appendChild(f), f;
+  var y = null;
+  function vc() {
+    if (y && y.isConnected)
+      return y;
+    if (y = document.querySelector("p9r-toast-stack"), y)
+      return y;
+    return y = document.createElement("p9r-toast-stack"), document.body.appendChild(y), y;
   }
-  function dd(t, e = {}) {
-    return ld().push(t, e);
+  function xc(t, e = {}) {
+    return vc().push(t, e);
   }
-  var Ao = `:host {
+  var aa = `:host {
   display: inline-block;
   position: relative;
 
@@ -6395,7 +6812,7 @@ p9r-tag:hover {
   border-top-color: var(--_bg);
 }
 `;
-  var Co = `:host([position="bottom"]) .tooltip {
+  var sa = `:host([position="bottom"]) .tooltip {
   top: calc(100% + var(--_offset));
   bottom: auto;
   left: 50%;
@@ -6443,61 +6860,61 @@ p9r-tag:hover {
   border-right-color: var(--_bg);
 }
 `;
-  var hd = Ao + Co;
-  function tt(t) {
+  var kc = aa + sa;
+  function da(t) {
     let e = new URL(t, window.location.href);
     for (let [r, i] of new URLSearchParams(window.location.search))
       e.searchParams.append(r, i);
     return e;
   }
-  async function I(t) {
+  async function N(t) {
     try {
-      let e = await fetch(tt(t), { headers: { Accept: "application/json" } });
+      let e = await fetch(da(t), { headers: { Accept: "application/json" } });
       return e.ok ? await e.json() : null;
     } catch {
       return null;
     }
   }
-  var bd = new Intl.NumberFormat("fr-FR");
-  var md = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
-  var x = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
-  var gd = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
-  function jt(t, e) {
+  var Ec = new Intl.NumberFormat("fr-FR");
+  var Lc = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
+  var w = (t) => t.replace(/[&<>"]/g, (e) => e === "&" ? "&amp;" : e === "<" ? "&lt;" : e === ">" ? "&gt;" : "&quot;");
+  var Ac = (t) => t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1000 ? `${(t / 1000).toFixed(1)}k` : String(Math.round(t));
+  function ne(t, e) {
     if (e === "ms")
       return `${Math.round(t)} ms`;
     if (e === "pct")
       return `${(t * 100).toFixed(1).replace(".", ",")} %`;
-    return bd.format(Math.round(t));
+    return Ec.format(Math.round(t));
   }
-  var Ho = (t) => {
+  var ca = (t) => {
     let e = new Date(t);
-    return Number.isNaN(e.getTime()) ? t : md.format(e);
+    return Number.isNaN(e.getTime()) ? t : Lc.format(e);
   };
-  function et(t, e) {
-    return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${x(t)}</p>${e ? `<p class="empty-hint">${x(e)}</p>` : ""}</div>`;
+  function xt(t, e) {
+    return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${w(t)}</p>${e ? `<p class="empty-hint">${w(e)}</p>` : ""}</div>`;
   }
-  function To(t) {
+  function ua(t) {
     if (t.length === 0)
       return "";
-    let e = 320, r = 140, i = 32, a = 8, o = 10, n = 22, l = e - i - a, c = r - o - n, p = o + c, u = Math.max(...t.map((k) => k.value), 1), m = t.length, h = t.map((k, B) => [i + (m === 1 ? l / 2 : B / (m - 1) * l), o + (1 - k.value / u) * c]), _ = h.map(([k, B]) => `${k.toFixed(1)},${B.toFixed(1)}`).join(" "), hn = `${h[0][0].toFixed(1)},${p} ${_} ${h[m - 1][0].toFixed(1)},${p}`, bn = h.map(([k, B]) => `<circle class="dot" cx="${k.toFixed(1)}" cy="${B.toFixed(1)}" r="2.5"/>`).join("");
-    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${o}" x2="${i}" y2="${p}"/><line class="axis" x1="${i}" y1="${p}" x2="${e - a}" y2="${p}"/><text class="tick" x="${i - 4}" y="${o + 3}" text-anchor="end">${gd(u)}</text><text class="tick" x="${i - 4}" y="${p}" text-anchor="end">0</text><polygon class="area" points="${hn}" fill="url(#lc-grad)"/><polyline class="stroke" points="${_}"/>${bn}<text class="tick" x="${i}" y="${r - 6}">${x(t[0].label)}</text><text class="tick" x="${e - a}" y="${r - 6}" text-anchor="end">${x(t[m - 1].label)}</text></svg>`;
+    let e = 320, r = 140, i = 32, o = 8, n = 10, a = 22, l = e - i - o, c = r - n - a, d = n + c, p = Math.max(...t.map((M) => M.value), 1), m = t.length, b = t.map((M, Z) => [i + (m === 1 ? l / 2 : Z / (m - 1) * l), n + (1 - M.value / p) * c]), L = b.map(([M, Z]) => `${M.toFixed(1)},${Z.toFixed(1)}`).join(" "), ks = `${b[0][0].toFixed(1)},${d} ${L} ${b[m - 1][0].toFixed(1)},${d}`, Es = b.map(([M, Z]) => `<circle class="dot" cx="${M.toFixed(1)}" cy="${Z.toFixed(1)}" r="2.5"/>`).join("");
+    return `<svg class="line" viewBox="0 0 ${e} ${r}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${i}" y1="${n}" x2="${i}" y2="${d}"/><line class="axis" x1="${i}" y1="${d}" x2="${e - o}" y2="${d}"/><text class="tick" x="${i - 4}" y="${n + 3}" text-anchor="end">${Ac(p)}</text><text class="tick" x="${i - 4}" y="${d}" text-anchor="end">0</text><polygon class="area" points="${ks}" fill="url(#lc-grad)"/><polyline class="stroke" points="${L}"/>${Es}<text class="tick" x="${i}" y="${r - 6}">${w(t[0].label)}</text><text class="tick" x="${e - o}" y="${r - 6}" text-anchor="end">${w(t[m - 1].label)}</text></svg>`;
   }
-  function zo(t, e) {
+  function pa(t, e) {
     if (t.length === 0)
       return "";
-    let r = t.reduce((i, a) => i + a.value, 0) || 1;
+    let r = t.reduce((i, o) => i + o.value, 0) || 1;
     return t.map((i) => {
-      let a = i.value / r * 100, o = `${a.toFixed(1).replace(".", ",")} %`;
-      return `<div class="bar"><span class="bar-key" title="${x(i.label)}">${x(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${a.toFixed(1)}"/></svg><span class="bar-val">${e ? `${jt(i.value, "int")} · ${o}` : o}</span></div>`;
+      let o = i.value / r * 100, n = `${o.toFixed(1).replace(".", ",")} %`;
+      return `<div class="bar"><span class="bar-key" title="${w(i.label)}">${w(i.label)}</span><svg class="bar-svg" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true"><rect height="8" width="${o.toFixed(1)}"/></svg><span class="bar-val">${e ? `${ne(i.value, "int")} · ${n}` : n}</span></div>`;
     }).join("");
   }
-  var Io = `<div class="stat">
+  var ha = `<div class="stat">
     <span class="label"></span>
     <strong class="value">—</strong>
     <span class="note"></span>
 </div>
 `;
-  var So = `:host {
+  var ma = `:host {
     display: block;
     flex: 1 1 0;
     min-width: 0;
@@ -6542,26 +6959,26 @@ p9r-tag:hover {
 }
 `;
 
-  class qo extends s {
+  class ba extends s {
     constructor() {
-      super({ css: So, template: Io });
+      super({ css: ma, template: ha });
     }
     connectedCallback() {
       let t = this.shadowRoot;
       t.querySelector(".label").textContent = this.getAttribute("label") ?? "", this._load(t);
     }
     async _load(t) {
-      let e = t.querySelector(".value"), r = t.querySelector(".note"), i = this.getAttribute("url"), a = i ? await I(i) : null, o = a && typeof a === "object" ? a[this.getAttribute("field") ?? "value"] : undefined;
-      if (o === undefined || o === null) {
+      let e = t.querySelector(".value"), r = t.querySelector(".note"), i = this.getAttribute("url"), o = i ? await N(i) : null, n = o && typeof o === "object" ? o[this.getAttribute("field") ?? "value"] : undefined;
+      if (n === undefined || n === null) {
         e.textContent = "—", e.classList.add("is-empty"), r.textContent = this.getAttribute("empty") ?? "Aucune donnée";
         return;
       }
-      e.classList.remove("is-empty"), e.textContent = jt(Number(o), this.getAttribute("format") ?? "int"), r.textContent = "";
+      e.classList.remove("is-empty"), e.textContent = ne(Number(n), this.getAttribute("format") ?? "int"), r.textContent = "";
     }
   }
-  var Po = `<div class="chart"></div>
+  var ga = `<div class="chart"></div>
 `;
-  var Bo = `:host {
+  var fa = `:host {
     display: block;
 }
 
@@ -6638,26 +7055,26 @@ p9r-tag:hover {
 }
 `;
 
-  class Fo extends s {
+  class va extends s {
     constructor() {
-      super({ css: Bo, template: Po });
+      super({ css: fa, template: ga });
     }
     connectedCallback() {
       this._load();
     }
     async _load() {
-      let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), r = e ? await I(e) : null, i = Array.isArray(r) ? r : [];
+      let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), r = e ? await N(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
-        t.innerHTML = et(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
+        t.innerHTML = xt(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
         return;
       }
-      let a = this.getAttribute("value") ?? "value", o = this.getAttribute("x") ?? "", n = i.map((l) => ({ label: o ? Ho(String(l[o] ?? "")) : "", value: Number(l[a] ?? 0) }));
-      t.innerHTML = To(n);
+      let o = this.getAttribute("value") ?? "value", n = this.getAttribute("x") ?? "", a = i.map((l) => ({ label: n ? ca(String(l[n] ?? "")) : "", value: Number(l[o] ?? 0) }));
+      t.innerHTML = ua(a);
     }
   }
-  var Ko = `<div class="list"></div>
+  var xa = `<div class="list"></div>
 `;
-  var Do = `:host {
+  var _a = `:host {
     display: block;
 }
 
@@ -6730,26 +7147,26 @@ p9r-tag:hover {
 }
 `;
 
-  class jo extends s {
+  class ya extends s {
     constructor() {
-      super({ css: Do, template: Ko });
+      super({ css: _a, template: xa });
     }
     connectedCallback() {
       this._load();
     }
     async _load() {
-      let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), r = e ? await I(e) : null, i = Array.isArray(r) ? r : [];
+      let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), r = e ? await N(e) : null, i = Array.isArray(r) ? r : [];
       if (i.length === 0) {
-        t.innerHTML = et(this.getAttribute("empty") ?? "Aucune donnée");
+        t.innerHTML = xt(this.getAttribute("empty") ?? "Aucune donnée");
         return;
       }
-      let a = this.getAttribute("label-field") ?? "key", o = this.getAttribute("value-field") ?? "value", n = i.map((l) => ({ label: String(l[a] ?? ""), value: Number(l[o] ?? 0) }));
-      t.innerHTML = zo(n, this.hasAttribute("show-count"));
+      let o = this.getAttribute("label-field") ?? "key", n = this.getAttribute("value-field") ?? "value", a = i.map((l) => ({ label: String(l[o] ?? ""), value: Number(l[n] ?? 0) }));
+      t.innerHTML = pa(a, this.hasAttribute("show-count"));
     }
   }
-  var Vo = `<div class="tabs" role="group" aria-label="Période"></div>
+  var wa = `<div class="tabs" role="group" aria-label="Période"></div>
 `;
-  var No = `:host {
+  var ka = `:host {
     display: inline-block;
 }
 
@@ -6787,136 +7204,76 @@ p9r-tag:hover {
 }
 `;
 
-  class Ro extends s {
+  class Ea extends s {
     constructor() {
-      super({ css: No, template: Vo });
+      super({ css: ka, template: wa });
     }
     connectedCallback() {
-      let t = this.getAttribute("param") ?? "range", e = new URLSearchParams(window.location.search).get(t) ?? this.getAttribute("default") ?? "", r = (this.getAttribute("tabs") ?? "").split(",").map((a) => a.split(":")).filter((a) => a[0]), i = this.shadowRoot.querySelector(".tabs");
-      i.innerHTML = r.map(([a, o]) => `<button type="button" data-v="${x(a)}"${a === e ? ' class="active"' : ""}>${x(o ?? a)}</button>`).join(""), i.addEventListener("click", (a) => {
-        let o = a.target.closest("button")?.dataset.v;
-        if (!o)
+      let t = this.getAttribute("param") ?? "range", e = new URLSearchParams(window.location.search).get(t) ?? this.getAttribute("default") ?? "", r = (this.getAttribute("tabs") ?? "").split(",").map((o) => o.split(":")).filter((o) => o[0]), i = this.shadowRoot.querySelector(".tabs");
+      i.innerHTML = r.map(([o, n]) => `<button type="button" data-v="${w(o)}"${o === e ? ' class="active"' : ""}>${w(n ?? o)}</button>`).join(""), i.addEventListener("click", (o) => {
+        let n = o.target.closest("button")?.dataset.v;
+        if (!n)
           return;
-        let n = new URL(window.location.href);
-        n.searchParams.set(t, o), window.location.assign(n.toString());
+        let a = new URL(window.location.href);
+        a.searchParams.set(t, n), window.location.assign(a.toString());
       });
     }
   }
-  function $o(t, e) {
-    if (t.key !== "Enter")
-      return;
-    if (t.target.tagName === "TEXTAREA")
-      return;
-    t.preventDefault(), e.requestSubmit();
-  }
-  async function Vt(t, e) {
-    t.preventDefault();
-    let r = t.target, i = new FormData(r), a = Object.fromEntries(i.entries()), o = await fetch(tt(e.target), { method: e.method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(a) }), n = await o.json().catch(() => null), l = { status: o.status, body: n };
-    if (o.ok) {
-      if (r.reset(), e.dispatchEvent(new CustomEvent("form:success", { bubbles: true, composed: true, detail: l })), e.emit)
-        document.dispatchEvent(new CustomEvent(e.emit, { bubbles: true, composed: true, detail: l }));
-      if (e.redirect)
-        window.location.href = e.redirect;
-    } else
-      e.dispatchEvent(new CustomEvent("form:failed", { bubbles: true, composed: true, detail: l }));
-  }
-
-  class Xo extends HTMLElement {
-    _nativeForm = null;
-    static get observedAttributes() {
-      return ["redirect", "target", "method", "emit"];
-    }
-    _handleInternalSubmit = (t) => {
-      Vt(t, this);
-    };
-    _handleKeydown = (t) => {
-      $o(t, this._nativeForm);
-    };
-    connectedCallback() {
-      requestAnimationFrame(() => {
-        if (this._nativeForm)
-          return;
-        this._nativeForm = document.createElement("form");
-        let t = this.getAttribute("id");
-        if (t)
-          this._nativeForm.id = t, this.removeAttribute("id");
-        while (this.firstChild)
-          this._nativeForm.appendChild(this.firstChild);
-        this.appendChild(this._nativeForm), this._nativeForm.addEventListener("submit", this._handleInternalSubmit), this.addEventListener("keydown", this._handleKeydown);
-      });
-    }
-    disconnectedCallback() {
-      this._nativeForm?.removeEventListener("submit", this._handleInternalSubmit), this.removeEventListener("keydown", this._handleKeydown);
-    }
-    attributeChangedCallback() {}
-    get redirect() {
-      return this.getAttribute("redirect");
-    }
-    get target() {
-      let t = this.getAttribute("target");
-      if (!t)
-        throw Error("CmsForm target attribute should be set");
-      return t;
-    }
-    get method() {
-      return this.getAttribute("method");
-    }
-    get emit() {
-      return this.getAttribute("emit");
-    }
-  }
-  async function Qo(t, e) {
-    let r;
-    try {
-      r = await fetch(t, { headers: { Accept: "application/json" }, signal: e });
-    } catch (a) {
-      return Zo(a) ? { kind: "aborted" } : { kind: "error", status: null, message: Uo(a) };
-    }
-    if (!r.ok)
-      return { kind: "error", status: r.status, message: `HTTP ${r.status}` };
+  async function Ca(t, e, r = {}) {
     let i;
     try {
-      i = await r.text();
-    } catch (a) {
-      return Zo(a) ? { kind: "aborted" } : { kind: "error", status: r.status, message: Uo(a) };
+      let n = new Headers(r.headers);
+      if (!n.has("Accept"))
+        n.set("Accept", "application/json");
+      i = await fetch(t, { ...r, headers: n, signal: e });
+    } catch (n) {
+      return La(n) ? { kind: "aborted" } : { kind: "error", status: null, message: Aa(n) };
     }
-    if (i.trim() === "")
+    if (!i.ok)
+      return { kind: "error", status: i.status, message: `HTTP ${i.status}` };
+    let o;
+    try {
+      o = await i.text();
+    } catch (n) {
+      return La(n) ? { kind: "aborted" } : { kind: "error", status: i.status, message: Aa(n) };
+    }
+    if (o.trim() === "")
       return { kind: "success", data: null };
     try {
-      return { kind: "success", data: JSON.parse(i) };
+      return { kind: "success", data: JSON.parse(o) };
     } catch {
-      return { kind: "error", status: r.status, message: "Invalid JSON response" };
+      return { kind: "error", status: i.status, message: "Invalid JSON response" };
     }
   }
-  function Zo(t) {
+  function La(t) {
     return t?.name === "AbortError";
   }
-  function Uo(t) {
+  function Aa(t) {
     return t instanceof Error ? t.message : String(t);
   }
-  var Ld = { found: false, value: undefined };
-  function R(t, e) {
+  var Pc = { found: false, value: undefined };
+  function H(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
-      return { found: true, value: Ad(t) };
-    let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r + 1);
-    for (let o = t;o; o = o.parent) {
-      if (o.vars && i in o.vars)
-        return { found: true, value: Go(o.vars[i], a) };
-      let n = o.value;
-      if (Yo(n) && i in n)
-        return { found: true, value: Go(n[i], a) };
+      return { found: true, value: Rc(t) };
+    let r = e.indexOf("."), i = r === -1 ? e : e.slice(0, r), o = r === -1 ? "" : e.slice(r + 1);
+    for (let n = t;n; n = n.parent) {
+      if (n.vars && i in n.vars)
+        return { found: true, value: Sa(n.vars[i], o) };
+      let a = n.value;
+      if (Ta(a) && i in a)
+        return { found: true, value: Sa(a[i], o) };
     }
-    return Ld;
+    return Pc;
   }
-  function Ad(t) {
+  function Rc(t) {
     let e = t.value;
-    if (Yo(e) && "value" in e)
+    if (Ta(e) && "value" in e)
       return e.value;
     return e;
   }
-  function Go(t, e) {
+  function Sa(t, e) {
     if (e === "")
       return t;
     let r = t;
@@ -6927,120 +7284,62 @@ p9r-tag:hover {
     }
     return r;
   }
-  function Yo(t) {
+  function Ta(t) {
     return t !== null && typeof t === "object";
   }
-  var Cd = /\{\{\s*([\w.]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
-  function Nt(t, e, r = {}) {
-    return t.replace(Cd, (i, a, o) => {
-      let n = R(e, a);
-      if (!n.found)
+  var qc = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+  function et(t, e, r = {}) {
+    return t.replace(qc, (i, o, n) => {
+      let a = H(e, o);
+      if (!a.found)
         return "";
-      let l = o ? r[o] : undefined, c = l ? l(n.value) : n.value;
+      let l = n ? r[n] : undefined, c = l ? l(a.value) : a.value;
       return c == null ? "" : String(c);
     });
   }
-  var rt = "cms-repeat";
-  var Md = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function Jo(t) {
-    let e = t.match(Md);
-    if (e)
-      return { path: e[1], name: e[2] };
-    return { path: t.trim() };
+  var f = "cms-binding-core";
+  var rt = "cms-binding-disabled";
+  var _t = "cms-source-state-force";
+  var h = "cms-source";
+  var ae = "cms-source-body";
+  var it = "cms-source-id";
+  var ot = "cms-source-trigger";
+  var Ma = "cms-source-method";
+  var Ha = "cms-source-publish";
+  var za = "cms-source-success-reset";
+  var Ia = "cms-source-success-redirect";
+  var $ = "cms-repeat";
+  var k = "cms-condition";
+  var v = "cms-page-state";
+  var Dc = ["loaded", "loading", "empty", "error"];
+  var Vc = ["auto", "submit"];
+  var x = "cms-bind-stop";
+  var g = "cms-ready";
+  function Fa(t) {
+    return Dc.includes(t ?? "");
   }
-  var g = "cms-source";
-  function Rt(t, e, r = {}) {
-    if (t.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-      Wo(t, e, r);
-      return;
-    }
-    Oo(t, e, r, true);
+  function Pa(t) {
+    return Vc.includes(t ?? "");
   }
-  function Oo(t, e, r, i) {
-    if (t.nodeType === Node.TEXT_NODE) {
-      let o = t.nodeValue ?? "", n = Nt(o, e, r);
-      if (n !== o)
-        t.nodeValue = n;
-      return;
-    }
-    if (t.nodeType !== Node.ELEMENT_NODE)
-      return;
-    let a = t;
-    for (let o of Array.from(a.attributes)) {
-      let n = Nt(o.value, e, r);
-      if (n !== o.value)
-        a.setAttribute(o.name, n);
-    }
-    if (!i && (a.hasAttribute(g) || a.localName === "cms-binding-core"))
-      return;
-    if (Td(a, e))
-      return;
-    Wo(a, e, r);
-  }
-  var Hd = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
-  function Td(t, e) {
-    if (t.childNodes.length !== 1)
-      return false;
-    let r = t.firstChild;
-    if (r.nodeType !== Node.TEXT_NODE)
-      return false;
-    let i = (r.nodeValue ?? "").trim().match(Hd);
-    if (!i)
-      return false;
-    let a = R(e, i[1]), o = (t.ownerDocument ?? document).createElement("template");
-    return o.innerHTML = a.found && a.value != null ? String(a.value) : "", t.replaceWith(o.content), true;
-  }
-  function Wo(t, e, r) {
-    for (let i of Array.from(t.childNodes))
-      if (i.nodeType === Node.ELEMENT_NODE && i.hasAttribute(rt))
-        zd(i, e, r);
+  function Ra(t) {
+    let e = t.ownerDocument ?? document, r = e.createDocumentFragment(), i = e.createDocumentFragment();
+    for (let o of Array.from(t.childNodes))
+      if (i.appendChild(o.cloneNode(true)), o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
+        r.appendChild(o.content), o.remove();
       else
-        Oo(i, e, r, false);
+        r.appendChild(o);
+    return { template: i, body: r };
   }
-  function zd(t, e, r) {
-    let i = t.parentNode;
-    if (!i)
-      return;
-    let a = Jo(t.getAttribute(rt) ?? ""), o = R(e, a.path), n = document.createComment(`cms-repeat ${a.path}`);
-    if (i.replaceChild(n, t), !Array.isArray(o.value)) {
-      if (o.found && o.value != null)
-        console.warn(`cms-repeat="${a.path}" expected an array, got`, o.value);
-      return;
-    }
-    for (let l of o.value) {
-      let c = t.cloneNode(true);
-      c.removeAttribute(rt);
-      let p = a.name ? { vars: { [a.name]: l }, parent: e } : { value: l, parent: e };
-      Rt(c, p, r), i.insertBefore(c, n);
-    }
+  function qa(t) {
+    let e = t.ownerDocument ?? document, r = e.createDocumentFragment(), i = e.createDocumentFragment();
+    for (let o of Array.from(t.childNodes))
+      if (i.appendChild(o.cloneNode(true)), o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
+        r.appendChild(o.content.cloneNode(true));
+      else
+        r.appendChild(o.cloneNode(true));
+    return { template: i, body: r };
   }
-  var tn = "cms-slot";
-  var Id = ["loading", "error", "empty"];
-  function en(t) {
-    let e = {}, r = document.createDocumentFragment(), i = document.createDocumentFragment();
-    for (let a of Array.from(t.childNodes)) {
-      i.appendChild(qd(a));
-      let o = Sd(a);
-      if (!o) {
-        if (a.nodeType === Node.ELEMENT_NODE && a.tagName === "TEMPLATE")
-          r.appendChild(a.content), a.remove();
-        else
-          r.appendChild(a);
-        continue;
-      }
-      a.removeAttribute(tn);
-      let n = e[o] ?? document.createDocumentFragment();
-      n.appendChild(a), e[o] = n;
-    }
-    return { template: i, body: r, slots: e };
-  }
-  function S(t, e, r, i = {}) {
-    let a = e.cloneNode(true);
-    if (r)
-      Rt(a, r, i);
-    t.replaceChildren(a);
-  }
-  function rn(t) {
+  function Da(t) {
     if (t == null)
       return true;
     if (Array.isArray(t))
@@ -7049,28 +7348,29 @@ p9r-tag:hover {
       return Object.keys(t).length === 0;
     return false;
   }
-  function Sd(t) {
-    if (t.nodeType !== Node.ELEMENT_NODE)
-      return null;
-    let e = t.getAttribute(tn);
-    return e && Id.includes(e) ? e : null;
-  }
-  function qd(t) {
-    return t.cloneNode(true);
-  }
-  var E = "cms-params:change";
-  var Pd = /#\{\s*(\w+)\s*\}/g;
-  function an(t) {
+  var z = "cms-params:change";
+  var C = "cms-state:change";
+  var Bc = /#\{\s*(\w+)\s*\}/g;
+  var jc = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
+  var Va = new WeakMap;
+  function Ba(t) {
     return /#\{\s*\w+\s*\}/.test(t);
   }
-  function it() {
+  function ja(t) {
+    return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
+  }
+  function O() {
     return new URLSearchParams(typeof location > "u" ? "" : location.search);
   }
-  function on(t, e = it()) {
-    return t.replace(Pd, (r, i) => encodeURIComponent(e.get(i) ?? ""));
+  function Ka(t, e = O()) {
+    return t.replace(Bc, (r, i) => encodeURIComponent(e.get(i) ?? ""));
   }
-  function $t(t, e) {
-    let r = it();
+  function Na(t, e = document) {
+    let r = le(e);
+    return t.replace(jc, (i, o) => encodeURIComponent(r.get(o) ?? ""));
+  }
+  function se(t, e) {
+    let r = O();
     if (e === "")
       r.delete(t);
     else
@@ -7078,98 +7378,932 @@ p9r-tag:hover {
     let i = r.toString();
     history.replaceState(history.state, "", location.pathname + (i ? `?${i}` : "") + location.hash), document.dispatchEvent(new Event("cms-params:change"));
   }
-  var q = "cms-binding-core";
-  var w = "cms-bind-stop";
-  var b = "cms-ready";
-  var Bd = "cms-reload-on";
-  var Fd = "cms-source:reload";
-  var Kd = /^\s*([\s\S]+?)\s+as\s+[A-Za-z_$][\w$]*\s*$/;
+  function U(t, e = document) {
+    return le(e).get(t.trim()) ?? "";
+  }
+  function yt(t, e, r = document) {
+    let i = t.trim();
+    if (!i)
+      return;
+    let o = le(r), n = e, a = o.get(i) ?? "";
+    if (n === "")
+      o.delete(i);
+    else
+      o.set(i, n);
+    if (n !== a)
+      r.dispatchEvent(new Event("cms-state:change"));
+  }
+  function le(t) {
+    let e = Va.get(t);
+    if (!e)
+      e = new Map, Va.set(t, e);
+    return e;
+  }
+  function $a(t, e) {
+    return Na(Ka(t), e);
+  }
+  function Oa(t, e, r) {
+    let i = Ba(t), o = ja(t);
+    if (i)
+      e.addEventListener(z, r), e.defaultView?.addEventListener?.("popstate", r);
+    if (o)
+      e.addEventListener(C, r);
+    return () => {
+      if (i)
+        e.removeEventListener(z, r), e.defaultView?.removeEventListener?.("popstate", r);
+      if (o)
+        e.removeEventListener(C, r);
+    };
+  }
+  var Kc = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  function wt(t) {
+    return S(t).url;
+  }
+  function S(t) {
+    let e = Kc.exec(t);
+    if (!e)
+      return { url: t.trim() };
+    return { url: e[1].trim(), alias: e[2] };
+  }
+  var Ua = "cms-reload-on";
+  var Xa = "cms-source:reload";
+  function kt(t) {
+    let e = t.getAttribute(ot);
+    return Pa(e) ? e : "auto";
+  }
+  function Za(t, e) {
+    let r = t.ownerDocument, i = [Xa, ...$c(t)];
+    for (let n of i)
+      r.addEventListener(n, e.onReload);
+    if (kt(t) === "submit") {
+      let n = Nc(t) ?? t.closest("form");
+      return n?.addEventListener("submit", e.onSubmit), () => {
+        for (let a of i)
+          r.removeEventListener(a, e.onReload);
+        n?.removeEventListener("submit", e.onSubmit);
+      };
+    }
+    let o = Oa(wt(t.getAttribute(h) ?? ""), r, e.onReactiveUrlChange);
+    return () => {
+      for (let n of i)
+        r.removeEventListener(n, e.onReload);
+      o();
+    };
+  }
+  function Nc(t) {
+    let e = t.ownerDocument.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
+    return typeof e === "function" && t instanceof e ? t : null;
+  }
+  function $c(t) {
+    return (t.getAttribute(Ua) ?? "").split(/\s+/).filter(Boolean);
+  }
+  function Ya(t, e) {
+    let r = Oc(t);
+    if (!r)
+      return;
+    let i = {}, o = O();
+    for (let [n, a] of Object.entries(r))
+      if (a.from === "queryParam")
+        i[n] = o.get(a.name) ?? "";
+      else if (a.from === "state")
+        i[n] = U(a.name, e);
+      else
+        i[n] = a.value;
+    return Object.keys(i).length ? i : undefined;
+  }
+  function Oc(t) {
+    let e = t?.trim() ?? "";
+    if (!e)
+      return null;
+    let r;
+    try {
+      r = JSON.parse(e);
+    } catch {
+      return null;
+    }
+    if (!Qa(r))
+      return null;
+    let i = {};
+    for (let [o, n] of Object.entries(r)) {
+      let a = Uc(n);
+      if (o.trim() && a)
+        i[o] = a;
+    }
+    return Object.keys(i).length ? i : null;
+  }
+  function Uc(t) {
+    if (!Qa(t) || typeof t.from !== "string")
+      return null;
+    if (t.from === "queryParam" || t.from === "state")
+      return typeof t.name === "string" && t.name.trim() ? { from: t.from, name: t.name.trim() } : null;
+    if (t.from !== "raw")
+      return null;
+    if (typeof t.value === "string")
+      return t.value.trim() ? { from: "raw", value: t.value } : null;
+    if (typeof t.value === "number" && Number.isFinite(t.value))
+      return { from: "raw", value: t.value };
+    if (typeof t.value === "boolean")
+      return { from: "raw", value: t.value };
+    return null;
+  }
+  function Qa(t) {
+    return typeof t === "object" && t !== null && !Array.isArray(t);
+  }
+  var Xc = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  function Ja(t) {
+    let e = t.match(Xc);
+    if (e)
+      return { path: e[1], name: e[2] };
+    return { path: t.trim() };
+  }
+  function nt(t, e) {
+    let r = t.trim();
+    if (!r)
+      return true;
+    let i = r.split(/\s*\|\|\s*/);
+    if (i.length > 1)
+      return i.some((n) => nt(n, e));
+    let o = r.split(/\s*&&\s*/);
+    if (o.length > 1)
+      return o.every((n) => nt(n, e));
+    if (r.startsWith("!"))
+      return !Wa(r.slice(1), e);
+    return Wa(r, e);
+  }
+  function Wa(t, e) {
+    let r = H(e, t.trim());
+    return r.found && Boolean(r.value);
+  }
 
-  class Xt {
+  class de {
+    start;
+    end;
+    sites;
+    constructor(t, e, r) {
+      this.start = t;
+      this.end = e;
+      this.sites = r;
+    }
+    update(t) {
+      for (let e of this.sites)
+        e.update(t);
+    }
+    unmount() {
+      for (let t of this.sites)
+        t.unmount?.();
+      Zc(this.start, this.end);
+    }
+  }
+
+  class ce {
+    sites;
+    constructor(t) {
+      this.sites = t;
+    }
+    update(t) {
+      for (let e of this.sites)
+        e.update(t);
+    }
+    unmount() {
+      for (let t of this.sites)
+        t.unmount?.();
+    }
+  }
+  function at(t, e) {
+    let r = t.nextSibling;
+    while (r && r !== e) {
+      let i = r.nextSibling;
+      r.parentNode?.removeChild(r), r = i;
+    }
+  }
+  function Zc(t, e) {
+    let r = t.parentNode;
+    if (!r)
+      return;
+    let i = t;
+    while (i) {
+      let o = i === e ? null : i.nextSibling;
+      r.removeChild(i), i = o;
+    }
+  }
+
+  class I {
+    template;
+    plan;
+    filters;
+    constructor(t, e, r) {
+      this.template = t;
+      this.plan = e;
+      this.filters = r;
+    }
+    static fromFragment(t, e = {}) {
+      let r = t.cloneNode(true);
+      return new I(r, ue(r, e), e);
+    }
+    mount(t, e, r = null) {
+      let i = t.ownerDocument ?? document, o = i.createComment("cms-region start"), n = i.createComment("cms-region end"), a = this.template.cloneNode(true), l = Ga(a, this.plan, this.filters), c = new de(o, n, l);
+      return c.update(e), t.insertBefore(o, r), t.insertBefore(a, r), t.insertBefore(n, r), c;
+    }
+    cloneRaw() {
+      return this.template.cloneNode(true);
+    }
+    static fromTemplate(t, e, r = {}) {
+      return new I(t, ue(t, e, r), e);
+    }
+    static bindChildrenInPlace(t, e, r = {}) {
+      let o = (t.ownerDocument ?? document).createDocumentFragment();
+      for (let c of Array.from(t.childNodes))
+        o.appendChild(c.cloneNode(true));
+      let n = ue(o, r), a = Ga(t, n, r), l = new ce(a);
+      return l.update(e), l;
+    }
+  }
+
+  class os {
+    node;
+    template;
+    filters;
+    constructor(t, e, r) {
+      this.node = t;
+      this.template = e;
+      this.filters = r;
+    }
+    update(t) {
+      this.node.nodeValue = et(this.template, t, this.filters);
+    }
+  }
+
+  class ns {
+    el;
+    name;
+    template;
+    filters;
+    constructor(t, e, r, i) {
+      this.el = t;
+      this.name = e;
+      this.template = r;
+      this.filters = i;
+    }
+    update(t) {
+      this.el.setAttribute(this.name, et(this.template, t, this.filters));
+    }
+  }
+
+  class as {
+    start;
+    end;
+    expression;
+    template;
+    child = null;
+    constructor(t, e, r, i) {
+      this.start = t;
+      this.end = e;
+      this.expression = r;
+      this.template = i;
+    }
+    update(t) {
+      if (!nt(this.expression, t)) {
+        this.unmount();
+        return;
+      }
+      if (this.child) {
+        this.child.update(t);
+        return;
+      }
+      let e = this.end.parentNode;
+      if (!e)
+        return;
+      this.child = this.template.mount(e, t, this.end);
+    }
+    unmount() {
+      this.child?.unmount(), this.child = null, at(this.start, this.end);
+    }
+  }
+
+  class ss {
+    start;
+    end;
+    spec;
+    template;
+    rootCondition;
+    regions = [];
+    constructor(t, e, r, i, o) {
+      this.start = t;
+      this.end = e;
+      this.spec = r;
+      this.template = i;
+      this.rootCondition = o;
+    }
+    update(t) {
+      this.unmount();
+      let e = H(t, this.spec.path);
+      if (!Array.isArray(e.value)) {
+        if (e.found && e.value != null)
+          console.warn(`cms-repeat="${this.spec.path}" expected an array, got`, e.value);
+        return;
+      }
+      let r = this.end.parentNode;
+      if (!r)
+        return;
+      for (let i of e.value) {
+        let o = this.spec.name ? { vars: { [this.spec.name]: i }, parent: t } : { value: i, parent: t };
+        if (this.rootCondition && !nt(this.rootCondition, o))
+          continue;
+        this.regions.push(this.template.mount(r, o, this.end));
+      }
+    }
+    unmount() {
+      for (let t of this.regions)
+        t.unmount();
+      this.regions = [], at(this.start, this.end);
+    }
+  }
+
+  class ls {
+    start;
+    end;
+    expression;
+    constructor(t, e, r) {
+      this.start = t;
+      this.end = e;
+      this.expression = r;
+    }
+    update(t) {
+      at(this.start, this.end);
+      let e = this.end.parentNode;
+      if (!e)
+        return;
+      let r = H(t, this.expression), i = (this.end.ownerDocument ?? document).createElement("template");
+      i.innerHTML = r.found && r.value != null ? String(r.value) : "", e.insertBefore(i.content, this.end);
+    }
+    unmount() {
+      at(this.start, this.end);
+    }
+  }
+  function ue(t, e, r = {}) {
+    let i = { text: [], attributes: [], conditions: [], repeats: [], rawHtml: [] };
+    return Array.from(t.childNodes).forEach((o, n) => {
+      me(o, [n], { skipCondition: r.skipRootCondition === true, skipRepeat: r.skipRootRepeat === true, submitBoundary: r.submitBoundary ?? null }, i, e);
+    }), i;
+  }
+  function me(t, e, r, i, o) {
+    if (t.nodeType === Node.TEXT_NODE) {
+      let l = t.nodeValue ?? "";
+      if (ds(l) && !cs(l, r.submitBoundary))
+        i.text.push({ path: e, template: l });
+      return;
+    }
+    if (t.nodeType !== Node.ELEMENT_NODE)
+      return;
+    let n = t;
+    if (!r.skipRepeat && n.hasAttribute($) && !Et(n.getAttribute($) ?? "", r.submitBoundary)) {
+      let l = n.getAttribute(k), c = l ? is(l, r.submitBoundary) : false;
+      i.repeats.push({ path: e, spec: Ja(n.getAttribute($) ?? ""), template: ts(n, o, { removeRepeat: true, removeCondition: !!r.submitBoundary && !!l && !c, submitBoundary: r.submitBoundary }), rootCondition: c ? null : l });
+      return;
+    }
+    if (!r.skipCondition && n.hasAttribute(k) && !is(n.getAttribute(k) ?? "", r.submitBoundary)) {
+      i.conditions.push({ path: e, expression: n.getAttribute(k) ?? "", template: ts(n, o, { removeCondition: !!r.submitBoundary, submitBoundary: r.submitBoundary }) });
+      return;
+    }
+    if (n.hasAttribute(h)) {
+      if (pe(n, e, i, r.submitBoundary), n.getAttribute(ot)?.trim().toLowerCase() !== "submit")
+        return;
+      let l = Jc(n);
+      Array.from(n.childNodes).forEach((c, d) => {
+        me(c, [...e, d], { skipCondition: false, skipRepeat: false, submitBoundary: l }, i, o);
+      });
+      return;
+    }
+    if (n.localName === f) {
+      pe(n, e, i, r.submitBoundary);
+      return;
+    }
+    let a = Qc(n);
+    if (a) {
+      if (!Et(a, r.submitBoundary))
+        i.rawHtml.push({ path: e, expression: a });
+      return;
+    }
+    pe(n, e, i, r.submitBoundary), Array.from(n.childNodes).forEach((l, c) => {
+      me(l, [...e, c], { skipCondition: false, skipRepeat: false, submitBoundary: r.submitBoundary }, i, o);
+    });
+  }
+  function Ga(t, e, r) {
+    let i = [], o = e.text.map((d) => ({ plan: d, node: st(t, d.path) })), n = e.attributes.map((d) => ({ plan: d, node: st(t, d.path) })), a = e.conditions.map((d) => ({ plan: d, node: st(t, d.path) })), l = e.repeats.map((d) => ({ plan: d, node: st(t, d.path) })), c = e.rawHtml.map((d) => ({ plan: d, node: st(t, d.path) }));
+    for (let { plan: d, node: p } of o) {
+      if (p.nodeType !== Node.TEXT_NODE)
+        throw Error("Compiled text binding no longer points to a text node.");
+      i.push(new os(p, d.template, r));
+    }
+    for (let { plan: d, node: p } of n) {
+      if (p.nodeType !== Node.ELEMENT_NODE)
+        throw Error("Compiled attribute binding no longer points to an element.");
+      i.push(new ns(p, d.name, d.template, r));
+    }
+    for (let { plan: d, node: p } of a) {
+      let m = he(p, "cms-condition");
+      i.push(new as(m.start, m.end, d.expression, d.template));
+    }
+    for (let { plan: d, node: p } of l) {
+      let m = he(p, `cms-repeat ${d.spec.path}`);
+      i.push(new ss(m.start, m.end, d.spec, d.template, d.rootCondition));
+    }
+    for (let { plan: d, node: p } of c) {
+      let m = he(p, `cms-html ${d.expression}`);
+      i.push(new ls(m.start, m.end, d.expression));
+    }
+    return i;
+  }
+  function st(t, e) {
+    let r = t;
+    for (let i of e) {
+      let o = r.childNodes.item(i);
+      if (!o)
+        throw Error(`Compiled binding path is invalid: ${e.join(".")}`);
+      r = o;
+    }
+    return r;
+  }
+  function ds(t) {
+    return t.includes("{{");
+  }
+  function pe(t, e, r, i = null) {
+    for (let o of Array.from(t.attributes))
+      if (ds(o.value) && !cs(o.value, i))
+        r.attributes.push({ path: e, name: o.name, template: o.value });
+  }
+  function ts(t, e, r = {}) {
+    let i = (t.ownerDocument ?? document).createDocumentFragment(), o = t.cloneNode(true);
+    if (r.removeRepeat)
+      o.removeAttribute($);
+    if (r.removeCondition)
+      o.removeAttribute(k);
+    return i.appendChild(o), I.fromTemplate(i, e, { skipRootCondition: true, skipRootRepeat: r.removeRepeat === true, submitBoundary: r.submitBoundary ?? null });
+  }
+  function he(t, e) {
+    let r = t.parentNode;
+    if (!r)
+      throw Error(`Cannot mount ${e}: target node has no parent.`);
+    let i = t.ownerDocument ?? document, o = i.createComment(`${e} start`), n = i.createComment(`${e} end`);
+    return r.replaceChild(n, t), r.insertBefore(o, n), { start: o, end: n };
+  }
+  var Yc = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+  var es = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
+  var rs = /!?([A-Za-z_$][\w$]*(?:\.[\w$-]+)*)/g;
+  function Qc(t) {
+    if (t.childNodes.length !== 1)
+      return null;
+    let e = t.firstChild;
+    if (!e || e.nodeType !== Node.TEXT_NODE)
+      return null;
+    return (e.nodeValue ?? "").trim().match(Yc)?.[1] ?? null;
+  }
+  function Jc(t) {
+    return { alias: S(t.getAttribute(h) ?? "").alias };
+  }
+  function cs(t, e) {
+    if (!e)
+      return false;
+    es.lastIndex = 0;
+    for (let r of t.matchAll(es))
+      if (Et(r[1] ?? "", e))
+        return true;
+    return false;
+  }
+  function is(t, e) {
+    if (!e)
+      return false;
+    rs.lastIndex = 0;
+    for (let r of t.matchAll(rs))
+      if (Et(r[1] ?? "", e))
+        return true;
+    return false;
+  }
+  function Et(t, e) {
+    if (!e)
+      return false;
+    let r = t.trim().split(".")[0] ?? "";
+    return r === "$source" || !!e.alias && r === e.alias;
+  }
+
+  class be {
+    el;
+    captured;
+    filters;
+    options;
+    bodyTemplate;
+    bodyRegion = null;
+    inPlaceRegion = null;
+    rendered = "none";
+    constructor(t, e, r, i = {}) {
+      this.el = t;
+      this.captured = e;
+      this.filters = r;
+      this.options = i;
+      this.bodyTemplate = i.inPlace ? null : I.fromFragment(e.body, r);
+    }
+    body(t) {
+      if (this.options.inPlace) {
+        if (!this.inPlaceRegion) {
+          this.inPlaceRegion = I.bindChildrenInPlace(this.el, t, this.filters), this.rendered = "body";
+          return;
+        }
+        this.inPlaceRegion.update(t);
+        return;
+      }
+      if (this.bodyRegion && this.rendered === "body") {
+        this.bodyRegion.update(t);
+        return;
+      }
+      this.clear(), this.bodyRegion = this.bodyTemplate.mount(this.el, t), this.rendered = "body";
+    }
+    template() {
+      this.inPlaceRegion?.unmount(), this.inPlaceRegion = null, this.clear(), this.el.replaceChildren(this.captured.template.cloneNode(true));
+    }
+    clear() {
+      if (this.options.inPlace)
+        return;
+      this.bodyRegion?.unmount(), this.bodyRegion = null, this.el.replaceChildren(), this.rendered = "none";
+    }
+  }
+  function ps(t) {
+    let e = new Set, r = Array.from(t.children), i = Array.from(t.querySelectorAll(`[${k}]`));
+    for (let o of [...r, ...i])
+      for (let n of Wc(o.getAttribute(k)))
+        e.add(n);
+    return e;
+  }
+  function X(t, e) {
+    return { loading: t === "loading", loaded: t === "loaded", empty: t === "empty", error: t === "error", status: us(e) ? e.status : undefined, message: us(e) ? e.message : undefined };
+  }
+  function F(t, e, r) {
+    r.setSourceStatus?.(t, e);
+  }
+  function hs(t, e, r, i, o) {
+    let n = o.sourceStatusesFor?.(t, r) ?? Gc(t, r), a = { $source: r, $sources: n };
+    if (e)
+      a[e] = i;
+    return { value: i, vars: a };
+  }
+  function Wc(t) {
+    let e = [];
+    for (let r of (t ?? "").split(/\s*\|\|\s*/)) {
+      let i = /^\s*(?:\$source|\$sources\.[A-Za-z_$][\w$-]*)\.(loaded|loading|empty|error)\s*$/.exec(r);
+      if (!i)
+        return [];
+      e.push(i[1]);
+    }
+    return e;
+  }
+  function us(t) {
+    return typeof t === "object" && t !== null && (("status" in t) || ("message" in t));
+  }
+  function Gc(t, e) {
+    let r = t.getAttribute(it)?.trim();
+    return r ? { [r]: e } : {};
+  }
+
+  class ge {
+    el;
+    renderer;
+    options;
+    conditions;
+    renderedBody = false;
+    constructor(t, e, r, i) {
+      this.el = t;
+      this.renderer = r;
+      this.options = i;
+      this.conditions = ps(e.body);
+    }
+    initial(t) {
+      let e = { loading: false, loaded: false, empty: false, error: false };
+      F(this.el, e, this.options), this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
+    }
+    loading(t) {
+      let e = X("loading", undefined);
+      if (F(this.el, e, this.options), this.renderedBody && !this.hasConditions("loading"))
+        return;
+      this.renderer.body(this.scope(t, e, undefined)), this.renderedBody = true;
+    }
+    error(t, e, r, i) {
+      let o = { status: r, message: i }, n = X("error", o);
+      if (F(this.el, n, this.options), this.renderer.body(this.scope(t, n, o)), this.renderedBody = true, !this.hasConditions("error"))
+        console.warn(`cms-source "${e}": ${i}`);
+    }
+    data(t, e) {
+      let r = Da(e) ? "empty" : "loaded", i = X(r, e);
+      F(this.el, i, this.options);
+      let o = this.scope(t, i, e);
+      this.renderer.body(o), this.renderedBody = true;
+    }
+    result(t, e) {
+      let r = e.ok ? "loaded" : "error", i = X(r, e);
+      F(this.el, i, this.options), this.renderer.body(this.scope(t, i, e)), this.renderedBody = true;
+    }
+    forced(t) {
+      let e = t === "error" ? { status: 0, message: "Forced error state" } : undefined, r = X(t, e), i = S(this.el.getAttribute(h) ?? "");
+      F(this.el, r, this.options), this.renderer.body(this.scope(i.alias, r, e)), this.renderedBody = true;
+    }
+    scope(t, e, r) {
+      return hs(this.el, t, e, r, this.options);
+    }
+    hasConditions(t) {
+      return this.conditions.has(t);
+    }
+  }
+  var tu = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  function bs(t, e) {
+    let r = (t ?? "").trim().toUpperCase();
+    if (r === "GET" || r === "POST" || r === "PUT" || r === "PATCH" || r === "DELETE" || r === "HEAD")
+      return r;
+    return e;
+  }
+  function eu(t) {
+    let e = new FormData(t);
+    if (Array.from(e.keys()).length > 0)
+      return e;
+    for (let r of nu(t))
+      au(e, r);
+    return e;
+  }
+  function ru(t, e) {
+    let r = eu(t), i = e.method;
+    if (i === "GET" || i === "HEAD")
+      return { kind: "query", url: iu(e.url, r), formData: r, data: ms(r) };
+    let o = ou(ms(r), r, e.bodyFields);
+    if (tu.has(i) && su(r))
+      return { kind: "formData", url: e.url, formData: r, data: o, body: r };
+    return { kind: "json", url: e.url, formData: r, data: o, body: JSON.stringify(o) };
+  }
+  async function gs(t, e) {
+    let r = ru(t, e), i = new Headers({ Accept: "application/json" }), o = { method: e.method, headers: i, signal: e.signal };
+    if (r.kind === "json")
+      i.set("Content-Type", "application/json"), o.body = r.body;
+    else if (r.kind === "formData")
+      o.body = r.body;
+    try {
+      let n = await fetch(r.url, o), a = await lu(n);
+      return { ok: n.ok, status: n.status, statusText: n.statusText, body: a, message: n.ok ? "" : du(n, a), form: t };
+    } catch (n) {
+      if (n?.name === "AbortError")
+        return { ok: false, status: 0, statusText: "Aborted", body: null, message: "Aborted", form: t };
+      return { ok: false, status: 0, statusText: "Network Error", body: null, message: n instanceof Error ? n.message : String(n), form: t };
+    }
+  }
+  function ms(t) {
+    let e = {};
+    for (let [r, i] of t.entries()) {
+      if (fe(i))
+        continue;
+      let o = e[r];
+      if (o === undefined)
+        e[r] = i;
+      else if (Array.isArray(o))
+        o.push(i);
+      else
+        e[r] = [o, i];
+    }
+    return e;
+  }
+  function iu(t, e) {
+    let r = new URL(t, location.href);
+    for (let [i, o] of e.entries()) {
+      if (fe(o))
+        continue;
+      r.searchParams.append(i, ve(o) ? o.name : o);
+    }
+    return r.toString();
+  }
+  function ou(t, e, r) {
+    if (!r)
+      return t;
+    let i = t;
+    for (let [o, n] of Object.entries(r)) {
+      let a = o.trim();
+      if (!a || e.has(a) || Object.prototype.hasOwnProperty.call(t, a))
+        continue;
+      if (i === t)
+        i = { ...t };
+      i[a] = n, e.append(a, String(n));
+    }
+    return i;
+  }
+  function nu(t) {
+    return Array.from(t.querySelectorAll("input, select, textarea, [name]"));
+  }
+  function au(t, e) {
+    let r = e.name?.trim();
+    if (!r || e.disabled)
+      return;
+    let i = e.ownerDocument.defaultView ?? globalThis;
+    if (e instanceof i.HTMLInputElement) {
+      if ((e.type === "checkbox" || e.type === "radio") && !e.checked)
+        return;
+      if (e.type === "file") {
+        for (let o of Array.from(e.files ?? []))
+          t.append(r, o);
+        return;
+      }
+    }
+    if (e instanceof i.HTMLSelectElement && e.multiple) {
+      for (let o of Array.from(e.selectedOptions))
+        t.append(r, o.value);
+      return;
+    }
+    t.append(r, String(e.value ?? ""));
+  }
+  function su(t) {
+    for (let e of t.values())
+      if (!fe(e) && ve(e))
+        return true;
+    return false;
+  }
+  function fe(t) {
+    return ve(t) && t.name === "" && t.size === 0;
+  }
+  function ve(t) {
+    return typeof t === "object" && t !== null && typeof t.name === "string" && typeof t.size === "number";
+  }
+  async function lu(t) {
+    if (t.status === 204)
+      return null;
+    let e = await t.clone().text().catch(() => "");
+    if (e.trim() === "")
+      return null;
+    if ((t.headers.get("content-type") ?? "").includes("application/json"))
+      try {
+        return JSON.parse(e);
+      } catch {
+        return null;
+      }
+    try {
+      return JSON.parse(e);
+    } catch {
+      return e;
+    }
+  }
+  function du(t, e) {
+    if (e && typeof e === "object" && "error" in e && typeof e.error === "string")
+      return e.error;
+    if (e && typeof e === "object" && "message" in e && typeof e.message === "string")
+      return e.message;
+    return t.statusText || `Request failed (${t.status})`;
+  }
+  var cu = "cms-source:success";
+  var uu = "cms-source:failed";
+  var pu = "form:success";
+  var hu = "form:failed";
+
+  class ye {
     el;
     filters;
-    captured;
+    options;
+    renderer;
+    presenter;
     abort = null;
-    reloadEvents = [];
-    paramReactive = false;
+    stopListeners = null;
     lastUrl = null;
+    formOwned;
     onReload = () => {
       if (this.el.isConnected)
         this.run();
     };
-    onParamsChange = () => {
+    onReactiveUrlChange = () => {
       if (this.el.isConnected)
         this.run({ onlyIfUrlChanged: true });
     };
-    constructor(t, e = {}) {
-      this.el = t;
-      this.filters = e;
-      this.captured = en(t);
-    }
-    start() {
-      this.listen(), this.run(), this.el.setAttribute(b, "");
-    }
-    dispose() {
-      this.abort?.abort(), this.abort = null, this.unlisten();
-    }
-    renderTemplate() {
-      this.abort?.abort(), this.abort = null, S(this.el, this.captured.template, null, this.filters);
-    }
-    listen() {
-      let t = (this.el.getAttribute(Bd) ?? "").split(/\s+/).filter(Boolean);
-      this.reloadEvents = [Fd, ...t];
-      for (let e of this.reloadEvents)
-        document.addEventListener(e, this.onReload);
-      if (an(nn(this.el.getAttribute(g) ?? "")))
-        this.paramReactive = true, document.addEventListener(E, this.onParamsChange), window.addEventListener("popstate", this.onParamsChange);
-    }
-    unlisten() {
-      for (let t of this.reloadEvents)
-        document.removeEventListener(t, this.onReload);
-      if (this.reloadEvents = [], this.paramReactive)
-        document.removeEventListener(E, this.onParamsChange), window.removeEventListener("popstate", this.onParamsChange), this.paramReactive = false;
-    }
-    async run(t) {
-      let e = nn(this.el.getAttribute(g) ?? "");
-      if (!e)
-        return;
-      let r = on(e);
-      if (t?.onlyIfUrlChanged && r === this.lastUrl)
-        return;
-      this.lastUrl = r;
-      let { slots: i, body: a } = this.captured;
-      if (i.loading)
-        S(this.el, i.loading, null, this.filters);
-      this.abort?.abort();
-      let o = new AbortController;
-      this.abort = o;
-      let n = await Qo(r, o.signal);
-      if (o.signal.aborted)
-        return;
-      if (n.kind === "aborted")
-        return;
-      if (n.kind === "error") {
-        if (i.error) {
-          let c = { value: { status: n.status, message: n.message } };
-          S(this.el, i.error, c, this.filters);
-        } else
-          this.el.replaceChildren(), console.warn(`cms-source "${r}": ${n.message}`);
+    onSubmit = (t) => {
+      let e = _e(t.currentTarget, this.el.ownerDocument) ?? this.el.closest("form");
+      if (!(typeof e?.reportValidity === "function" ? e.reportValidity() : true)) {
+        t.preventDefault();
         return;
       }
-      let l = n.data;
-      if (rn(l) && i.empty)
-        S(this.el, i.empty, { value: l }, this.filters);
-      else
-        S(this.el, a, { value: l }, this.filters);
+      if (t.preventDefault(), this.el.isConnected)
+        this.run();
+    };
+    constructor(t, e = {}, r = {}) {
+      this.el = t;
+      this.filters = e;
+      this.options = r;
+      this.formOwned = _e(t, t.ownerDocument) !== null && kt(t) === "submit";
+      let i = this.formOwned ? qa(t) : Ra(t);
+      this.renderer = new be(t, i, this.filters, { inPlace: this.formOwned }), this.presenter = new ge(t, i, this.renderer, this.options);
+    }
+    start() {
+      if (this.stopListeners = Za(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit }), kt(this.el) === "auto" || this.options.sourceStateForce)
+        this.run();
+      else {
+        let t = S(this.el.getAttribute(h) ?? "");
+        if (t.url)
+          this.presenter.initial(t.alias), this.afterRender();
+      }
+      this.el.setAttribute(g, "");
+    }
+    dispose() {
+      this.abort?.abort(), this.abort = null, this.stopListeners?.(), this.stopListeners = null;
+    }
+    renderTemplate() {
+      this.abort?.abort(), this.abort = null, this.renderer.template();
+    }
+    async run(t) {
+      if (this.options.sourceStateForce && this.options.sourceStateForce !== "loaded") {
+        this.abort?.abort(), this.abort = null, this.presenter.forced(this.options.sourceStateForce);
+        return;
+      }
+      let e = S(this.el.getAttribute(h) ?? "");
+      if (!e.url)
+        return;
+      let r = $a(e.url, this.el.ownerDocument);
+      if (t?.onlyIfUrlChanged && r === this.lastUrl)
+        return;
+      this.lastUrl = r, this.presenter.loading(e.alias), this.afterRender(), this.abort?.abort();
+      let i = new AbortController;
+      if (this.abort = i, this.formOwned) {
+        let n = _e(this.el, this.el.ownerDocument);
+        if (!n)
+          return;
+        let a = this.sourceMethod(), l = await gs(n, { url: this.submitUrl(r), method: a, signal: i.signal, bodyFields: a === "GET" || a === "HEAD" ? undefined : Ya(this.el.getAttribute(ae), this.el.ownerDocument) });
+        if (i.signal.aborted)
+          return;
+        this.presenter.result(e.alias, l), this.afterRender(), this.dispatchSubmitEvent(l), this.afterSubmit(l, e.alias);
+        return;
+      }
+      let o = await Ca(r, i.signal);
+      if (i.signal.aborted || o.kind === "aborted")
+        return;
+      if (o.kind === "error") {
+        this.presenter.error(e.alias, r, o.status, o.message), this.afterRender();
+        return;
+      }
+      this.presenter.data(e.alias, o.data), this.afterRender();
+    }
+    sourceMethod() {
+      let t = this.formOwned ? "POST" : "GET";
+      return bs(this.el.getAttribute(Ma), t);
+    }
+    submitUrl(t) {
+      let e = new URL(t, location.href);
+      for (let [r, i] of new URLSearchParams(location.search))
+        e.searchParams.append(r, i);
+      return e.toString();
+    }
+    afterSubmit(t, e) {
+      if (!t.ok)
+        return;
+      if (this.publish(t), this.shouldReset())
+        t.form.reset();
+      let r = this.successRedirect(t, e);
+      if (r)
+        this.redirect(r);
+    }
+    dispatchSubmitEvent(t) {
+      let e = t.ok ? cu : uu, r = t.ok ? pu : hu, i = { bubbles: true, composed: true, detail: t };
+      this.el.dispatchEvent(new CustomEvent(e, i)), this.el.dispatchEvent(new CustomEvent(r, i));
+    }
+    publish(t) {
+      let e = (this.el.getAttribute(Ha) ?? "").split(/\s+/).filter(Boolean);
+      for (let r of e)
+        this.el.ownerDocument.dispatchEvent(new CustomEvent(r, { bubbles: true, composed: true, detail: t }));
+    }
+    shouldReset() {
+      let t = this.el.getAttribute(za)?.trim().toLowerCase();
+      if (t === "false" || t === "0" || t === "no")
+        return false;
+      if (t === "true" || t === "1" || t === "yes" || t === "")
+        return true;
+      let e = this.sourceMethod();
+      return e !== "GET" && e !== "HEAD";
+    }
+    successRedirect(t, e) {
+      let r = this.el.getAttribute(Ia)?.trim();
+      if (!r)
+        return "";
+      let i = { value: t, vars: { ...e ? { [e]: t } : {}, result: t, $source: { loading: false, loaded: t.ok, empty: false, error: !t.ok, status: t.status, message: t.message } } };
+      return et(r, i, this.filters).trim();
+    }
+    redirect(t) {
+      let e;
+      try {
+        e = new URL(t, location.href);
+      } catch {
+        return;
+      }
+      if (e.origin !== location.origin || e.protocol !== "http:" && e.protocol !== "https:")
+        return;
+      location.href = `${e.pathname}${e.search}${e.hash}`;
+    }
+    afterRender() {
+      this.options.afterSourceRender?.(this.el);
     }
   }
-  function nn(t) {
-    return (Kd.exec(t)?.[1] ?? t).trim();
+  function _e(t, e) {
+    let r = e.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
+    return typeof r === "function" && t instanceof r ? t : null;
   }
-  var P = "cms-param-sync";
-  var Dd = 300;
+  var E = "cms-param-sync";
+  var mu = 300;
 
-  class Zt {
+  class we {
     el;
     key;
     timer = null;
@@ -7187,17 +8321,17 @@ p9r-tag:hover {
     };
     constructor(t) {
       this.el = t;
-      this.key = (t.getAttribute(P) || "").trim() || t.name || "";
+      this.key = (t.getAttribute(E) || "").trim() || t.name || "";
     }
     start() {
       if (!this.key) {
-        console.warn(`${P}: no key — set ${P}="<param>" or a name attribute`, this.el);
+        console.warn(`${E}: no key — set ${E}="<param>" or a name attribute`, this.el);
         return;
       }
-      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(E, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
+      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(z, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
     }
     dispose() {
-      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), document.removeEventListener(E, this.onParams), window.removeEventListener("popstate", this.onParams), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
+      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), document.removeEventListener(z, this.onParams), window.removeEventListener("popstate", this.onParams), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
         clearTimeout(this.timer);
       if (this.reflectTimer)
         clearTimeout(this.reflectTimer);
@@ -7206,7 +8340,7 @@ p9r-tag:hover {
     reflect() {
       if (this.timer)
         return;
-      let t = it().get(this.key) ?? "", e = this.el;
+      let t = O().get(this.key) ?? "", e = this.el;
       if (e.type === "checkbox") {
         let r = t !== "" && t === (e.value || "true");
         if (e.checked !== r)
@@ -7236,7 +8370,7 @@ p9r-tag:hover {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), Dd);
+      this.timer = setTimeout(() => this.write(), mu);
     }
     write() {
       if (this.reflecting)
@@ -7246,20 +8380,166 @@ p9r-tag:hover {
       let t = this.currentValue();
       if (t === this.last)
         return;
-      this.last = t, $t(this.key, t);
+      this.last = t, se(this.key, t);
     }
   }
+  var bu = 300;
 
-  class Ut {
+  class ke {
+    el;
+    key;
+    timer = null;
+    reflectTimer = null;
+    last = null;
+    reflecting = false;
+    childObserver = null;
+    onInput = () => this.schedule();
+    onChange = () => this.write();
+    onState = () => this.reflect();
+    onChildren = () => {
+      if (this.reflectTimer)
+        clearTimeout(this.reflectTimer);
+      this.reflectTimer = setTimeout(() => this.reflect(), 0);
+    };
+    constructor(t) {
+      this.el = t;
+      this.key = (t.getAttribute(v) || "").trim() || t.name || "";
+    }
+    start() {
+      if (!this.key) {
+        console.warn(`${v}: no key - set ${v}="<key>" or a name attribute`, this.el);
+        return;
+      }
+      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), this.el.ownerDocument.addEventListener(C, this.onState);
+      let t = this.el.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
+      this.childObserver = new t(this.onChildren), this.childObserver.observe(this.el, { childList: true });
+    }
+    dispose() {
+      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), this.el.ownerDocument.removeEventListener(C, this.onState), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
+        clearTimeout(this.timer);
+      if (this.reflectTimer)
+        clearTimeout(this.reflectTimer);
+      this.timer = this.reflectTimer = null;
+    }
+    reflect() {
+      if (this.timer)
+        return;
+      let t = U(this.key, this.el.ownerDocument), e = this.el;
+      if (e.type === "checkbox") {
+        let r = t !== "" && t === (e.value || "true");
+        if (e.checked !== r)
+          this.set(() => {
+            e.checked = r;
+          });
+      } else if (e.value !== t)
+        this.set(() => {
+          e.value = t;
+        });
+      this.last = this.currentValue();
+    }
+    set(t) {
+      this.reflecting = true;
+      try {
+        t();
+      } finally {
+        this.reflecting = false;
+      }
+    }
+    currentValue() {
+      let t = this.el;
+      return t.type === "checkbox" ? t.checked ? t.value || "true" : "" : t.value ?? "";
+    }
+    schedule() {
+      if (this.reflecting)
+        return;
+      if (this.timer)
+        clearTimeout(this.timer);
+      this.timer = setTimeout(() => this.write(), bu);
+    }
+    write() {
+      if (this.reflecting)
+        return;
+      if (this.timer)
+        clearTimeout(this.timer), this.timer = null;
+      let t = this.currentValue();
+      if (t === this.last)
+        return;
+      this.last = t, yt(this.key, t, this.el.ownerDocument);
+    }
+  }
+  function P(t, e, r, i) {
+    if (t.nodeType !== Node.ELEMENT_NODE)
+      return;
+    let o = t;
+    if (o !== r && fs(o, r))
+      return;
+    if (o.hasAttribute(e))
+      i(o);
+    o.querySelectorAll(`[${e}]`).forEach((n) => {
+      if (!fs(n, r))
+        i(n);
+    });
+  }
+  function fs(t, e) {
+    for (let r = t.parentElement;r && r !== e; r = r.parentElement)
+      if (r.localName === f || r.hasAttribute(x))
+        return true;
+    return false;
+  }
+  function T(t) {
+    if (t.nodeType !== Node.ELEMENT_NODE)
+      return;
+    let e = t;
+    if (e.hasAttribute(h))
+      e.setAttribute(g, "");
+    e.querySelectorAll(`[${h}]`).forEach((r) => r.setAttribute(g, ""));
+  }
+  function Ee(t) {
+    if (t.nodeType !== Node.ELEMENT_NODE)
+      return;
+    let e = t;
+    if (e.hasAttribute(x)) {
+      T(e);
+      return;
+    }
+    e.querySelectorAll(`[${x}]`).forEach(T);
+  }
+  function vs(t, e, r, i) {
+    let o = {};
+    for (let n of gu(t, r)) {
+      if (!n.hasAttribute(h))
+        continue;
+      let a = n.getAttribute(it)?.trim();
+      if (!a)
+        continue;
+      let l = n === r ? i : e.get(n);
+      if (l)
+        o[a] = l;
+    }
+    return o;
+  }
+  function gu(t, e) {
+    let r = [];
+    for (let i = e;i && i !== t.parentElement; i = i.parentElement)
+      if (r.push(i), i === t)
+        break;
+    return r.reverse();
+  }
+
+  class Le {
     root;
     filters;
+    options;
     sources = new Map;
+    sourceStatuses = new Map;
     paramSyncs = new Map;
+    pageStateSyncs = new Map;
     observer = null;
     stopped = false;
-    constructor(t, e = {}) {
+    constructor(t, e = {}, r = {}) {
       this.root = t;
       this.filters = e;
+      this.options = r;
     }
     start() {
       if (typeof document < "u" && document.readyState === "loading")
@@ -7270,18 +8550,25 @@ p9r-tag:hover {
     activate() {
       if (this.stopped)
         return;
-      dn(this.root), this.registerWithin(this.root), this.observer = new MutationObserver((t) => {
-        for (let e of t)
-          e.removedNodes.forEach((r) => this.unregisterWithin(r)), e.addedNodes.forEach((r) => {
-            dn(r), this.registerWithin(r);
+      Ee(this.root), this.registerWithin(this.root);
+      let t = this.root.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
+      this.observer = new t((e) => {
+        for (let r of e) {
+          if (r.type === "attributes") {
+            this.reconcileAttribute(r.target, r.attributeName);
+            continue;
+          }
+          r.removedNodes.forEach((i) => this.unregisterWithin(i)), r.addedNodes.forEach((i) => {
+            Ee(i), this.registerWithin(i);
           });
-      }), this.observer.observe(this.root, { childList: true, subtree: true });
+        }
+      }), this.observer.observe(this.root, { attributes: true, attributeFilter: [h, E, v], childList: true, subtree: true });
     }
     stop() {
       this.teardown();
     }
     deactivate() {
-      this.teardown({ beforeSourceDispose: (t) => t.renderTemplate(), afterDispose: () => $(this.root) });
+      this.teardown({ beforeSourceDispose: (t) => t.renderTemplate(), afterDispose: () => T(this.root) });
     }
     teardown(t) {
       if (this.stopped)
@@ -7291,7 +8578,9 @@ p9r-tag:hover {
         t?.beforeSourceDispose?.(e), e.dispose();
       for (let e of this.paramSyncs.values())
         e.dispose();
-      this.sources.clear(), this.paramSyncs.clear(), t?.afterDispose?.();
+      for (let e of this.pageStateSyncs.values())
+        e.dispose();
+      this.sources.clear(), this.sourceStatuses.clear(), this.paramSyncs.clear(), this.pageStateSyncs.clear(), t?.afterDispose?.();
     }
     get isStopped() {
       return this.stopped;
@@ -7300,80 +8589,121 @@ p9r-tag:hover {
       return this.sources.size;
     }
     registerWithin(t) {
-      at(t, g, this.root, (e) => {
-        if (!e.isConnected || this.sources.has(e))
-          return;
-        let r = new Xt(e, this.filters);
-        this.sources.set(e, r), r.start();
-      }), at(t, P, this.root, (e) => {
-        if (!e.isConnected || this.paramSyncs.has(e))
-          return;
-        let r = new Zt(e);
-        this.paramSyncs.set(e, r), r.start();
+      P(t, h, this.root, (e) => {
+        this.registerSource(e);
+      }), P(t, E, this.root, (e) => {
+        this.registerParamSync(e);
+      }), P(t, v, this.root, (e) => {
+        this.registerPageStateSync(e);
       });
     }
     unregisterWithin(t) {
-      at(t, g, this.root, (e) => {
-        let r = this.sources.get(e);
-        if (!r)
-          return;
-        r.dispose(), this.sources.delete(e);
-      }), at(t, P, this.root, (e) => {
-        let r = this.paramSyncs.get(e);
-        if (!r)
-          return;
-        r.dispose(), this.paramSyncs.delete(e);
+      P(t, h, this.root, (e) => {
+        this.unregisterSource(e);
+      }), P(t, E, this.root, (e) => {
+        this.unregisterParamSync(e);
+      }), P(t, v, this.root, (e) => {
+        this.unregisterPageStateSync(e);
       });
     }
-  }
-  function at(t, e, r, i) {
-    if (t.nodeType !== Node.ELEMENT_NODE)
-      return;
-    let a = t;
-    if (a !== r && ln(a, r))
-      return;
-    if (a.hasAttribute(e))
-      i(a);
-    a.querySelectorAll(`[${e}]`).forEach((o) => {
-      if (!ln(o, r))
-        i(o);
-    });
-  }
-  function ln(t, e) {
-    for (let r = t.parentElement;r && r !== e; r = r.parentElement)
-      if (r.localName === q || r.hasAttribute(w))
-        return true;
-    return false;
-  }
-  function $(t) {
-    if (t.nodeType !== Node.ELEMENT_NODE)
-      return;
-    let e = t;
-    if (e.hasAttribute(g))
-      e.setAttribute(b, "");
-    e.querySelectorAll(`[${g}]:not([${b}])`).forEach((r) => r.setAttribute(b, ""));
-  }
-  function dn(t) {
-    if (t.nodeType !== Node.ELEMENT_NODE)
-      return;
-    let e = t;
-    if (e.hasAttribute(w)) {
-      $(e);
-      return;
-    }
-    e.querySelectorAll(`[${w}]`).forEach($);
-  }
-  var cn = "cms-binding-cloak";
-  var jd = `${q}{display:contents}[${g}]:not([${b}]){visibility:hidden}`;
-  var pn = {};
-  class un extends HTMLElement {
-    _runtime = null;
-    connectedCallback() {
-      if (Nd(this.ownerDocument ?? document), this.closest(`[${w}]`)) {
-        $(this);
+    reconcileAttribute(t, e) {
+      if (t.nodeType !== Node.ELEMENT_NODE || !e)
+        return;
+      let r = t;
+      if (!this.isInScope(r))
+        return;
+      if (e === h) {
+        if (!r.hasAttribute(h) || !this.hasSourceUrl(r)) {
+          this.unregisterSource(r);
+          return;
+        }
+        let i = this.sources.get(r);
+        if (i)
+          i.run({ onlyIfUrlChanged: true });
+        else
+          this.registerSource(r);
         return;
       }
-      this.startRuntime();
+      if (e === E) {
+        if (r.hasAttribute(E))
+          this.registerParamSync(r);
+        else
+          this.unregisterParamSync(r);
+        return;
+      }
+      if (e === v)
+        if (r.hasAttribute(v))
+          this.registerPageStateSync(r);
+        else
+          this.unregisterPageStateSync(r);
+    }
+    registerSource(t) {
+      if (!t.isConnected || this.sources.has(t) || !this.hasSourceUrl(t))
+        return;
+      let e = new ye(t, this.filters, { ...this.options, setSourceStatus: (r, i) => this.sourceStatuses.set(r, i), sourceStatusesFor: (r, i) => vs(this.root, this.sourceStatuses, r, i), afterSourceRender: (r) => {
+        if (!this.stopped && r.isConnected)
+          this.registerWithin(r);
+      } });
+      this.sources.set(t, e), e.start();
+    }
+    unregisterSource(t) {
+      let e = this.sources.get(t);
+      if (!e)
+        return;
+      e.dispose(), this.sources.delete(t), this.sourceStatuses.delete(t);
+    }
+    registerParamSync(t) {
+      if (!t.isConnected || this.paramSyncs.has(t))
+        return;
+      let e = new we(t);
+      this.paramSyncs.set(t, e), e.start();
+    }
+    unregisterParamSync(t) {
+      let e = this.paramSyncs.get(t);
+      if (!e)
+        return;
+      e.dispose(), this.paramSyncs.delete(t);
+    }
+    registerPageStateSync(t) {
+      if (!t.isConnected || this.pageStateSyncs.has(t))
+        return;
+      let e = new ke(t);
+      this.pageStateSyncs.set(t, e), e.start();
+    }
+    unregisterPageStateSync(t) {
+      let e = this.pageStateSyncs.get(t);
+      if (!e)
+        return;
+      e.dispose(), this.pageStateSyncs.delete(t);
+    }
+    hasSourceUrl(t) {
+      return wt(t.getAttribute(h) ?? "").trim() !== "";
+    }
+    isInScope(t) {
+      if (t !== this.root && !this.root.contains(t))
+        return false;
+      for (let e = t.parentElement;e && e !== this.root; e = e.parentElement)
+        if (e.localName === f || e.hasAttribute(x))
+          return false;
+      return true;
+    }
+  }
+  var xs = "cms-binding-cloak";
+  var fu = `${f}{display:contents}[${h}]:not([${g}]){visibility:hidden}`;
+  function _s(t) {
+    if (t.getElementById(xs))
+      return;
+    let e = t.createElement("style");
+    e.id = xs, e.textContent = fu, (t.head ?? t.documentElement).appendChild(e);
+  }
+  var ys = {};
+  class ws extends HTMLElement {
+    _runtime = null;
+    static get observedAttributes() {
+      return [rt, _t];
+    }
+    connectedCallback() {
+      _s(this.ownerDocument ?? document), this._syncRuntime();
     }
     disconnectedCallback() {
       this._runtime?.stop(), this._runtime = null;
@@ -7382,20 +8712,50 @@ p9r-tag:hover {
       return this._runtime;
     }
     startRuntime() {
+      if (this._isRuntimeDisabled()) {
+        this._revealInertSources();
+        return;
+      }
       if (this._runtime && !this._runtime.isStopped)
         return;
-      this._runtime = new Ut(this, pn), this._runtime.start();
+      this._runtime = new Le(this, ys, { sourceStateForce: this._sourceStateForce() }), this._runtime.start();
     }
-  }
-  function Nd(t) {
-    if (t.getElementById(cn))
-      return;
-    let e = t.createElement("style");
-    e.id = cn, e.textContent = jd, (t.head ?? t.documentElement).appendChild(e);
+    attributeChangedCallback() {
+      if (!this.isConnected)
+        return;
+      this._syncRuntime({ restart: true });
+    }
+    _syncRuntime(t = {}) {
+      if (this._isRuntimeDisabled()) {
+        this._runtime?.deactivate(), this._runtime = null, this._revealInertSources();
+        return;
+      }
+      if (t.restart)
+        this._runtime?.deactivate(), this._runtime = null;
+      this.startRuntime();
+    }
+    _isRuntimeDisabled() {
+      if (this.hasAttribute(rt) || this.closest(`[${x}]`) !== null)
+        return true;
+      for (let t = this.parentElement;t; t = t.parentElement)
+        if (t.localName === f && t.hasAttribute(rt))
+          return true;
+      return false;
+    }
+    _sourceStateForce() {
+      let t = this.getAttribute(_t);
+      return Fa(t) ? t : undefined;
+    }
+    _revealInertSources() {
+      T(this), queueMicrotask(() => {
+        if (this.isConnected && this._isRuntimeDisabled())
+          T(this);
+      });
+    }
   }
 
   // ../../foundation/components/dist/base.js
-  class A2 extends HTMLElement {
+  class A extends HTMLElement {
     _rawStyles = "";
     _styles = null;
     constructor(j2) {
@@ -7420,22 +8780,16 @@ p9r-tag:hover {
 
   // src/components/globals.ts
   window.p9r = {
-    Component: A2
+    Component: A
   };
 
   // src/components/admin/AdminLayout/template.html
   var template_default = `<w13c-left-menu-layout>
 
-    <w13c-lateral-menu slot="sidebar">
-        <h2 slot="header">Page Builder</h2>
+    <w13c-lateral-menu slot="sidebar" aria-label="Admin navigation" style="--menu-brand-mark: 'C'; --menu-brand-mark-display: grid; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;">
+        <h2 slot="header" data-admin-brand>CmsCore</h2>
 
-        <w13c-lateral-menu-item data-route="files">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-            </svg>
-            Files
-        </w13c-lateral-menu-item>
+        <div class="menu-section">Content</div>
 
         <w13c-lateral-menu-item data-route="pages">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -7448,15 +8802,7 @@ p9r-tag:hover {
             </svg>
             Pages
         </w13c-lateral-menu-item>
-        <w13c-lateral-menu-item data-route="snippets">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="m18 16 4-4-4-4" />
-                <path d="m6 8-4 4 4 4" />
-                <path d="m14.5 4-5 16" />
-            </svg>
-            Snippets
-        </w13c-lateral-menu-item>
+
         <w13c-lateral-menu-item data-route="templates">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -7467,41 +8813,15 @@ p9r-tag:hover {
             Templates
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="gateway-providers">
+        <w13c-lateral-menu-item data-route="files">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22v-5" />
-                <path d="M9 8V2" />
-                <path d="M15 8V2" />
-                <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
+                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
             </svg>
-            Gateway
+            Files
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="analytics">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10" />
-                <line x1="12" y1="20" x2="12" y2="4" />
-                <line x1="6" y1="20" x2="6" y2="14" />
-            </svg>
-            Analytics
-        </w13c-lateral-menu-item>
-
-        <w13c-lateral-menu-item disabled data-route="components" badge="upcoming">
-            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 3H3v7h7V3Z" />
-                <path d="M21 3h-7v7h7V3Z" />
-                <path d="M10 14H3v7h7v-7Z" />
-                <path d="M21 14h-7v7h7v-7Z" />
-            </svg>
-            Blocks
-        </w13c-lateral-menu-item>
-
-
-
-        <w13c-lateral-menu-item disabled data-route="components" badge="upcoming">
+        <w13c-lateral-menu-item disabled>
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
@@ -7514,8 +8834,72 @@ p9r-tag:hover {
             Theme
         </w13c-lateral-menu-item>
 
+        <w13c-lateral-menu-item disabled>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 3H3v7h7V3Z" />
+                <path d="M21 3h-7v7h7V3Z" />
+                <path d="M10 14H3v7h7v-7Z" />
+                <path d="M21 14h-7v7h7v-7Z" />
+            </svg>
+            Blocs
+        </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="users" slot="footer">
+        <div class="menu-section">Data</div>
+
+        <w13c-lateral-menu-item data-route="analytics">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            Analytics
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item disabled>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.35"
+                stroke-linecap="round">
+                <path d="M9 5c-2.3 2-3.4 4.3-3.4 7S6.7 17 9 19" />
+                <path d="M15 5c2.3 2 3.4 4.3 3.4 7S17.3 17 15 19" />
+            </svg>
+            Functions
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item disabled>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="6" cy="12" r="2.5" />
+                <circle cx="17" cy="7" r="2.5" />
+                <circle cx="17" cy="17" r="2.5" />
+                <path d="M8.5 12h3.5" />
+                <path d="m12 12 2.8-3.1" />
+                <path d="m12 12 2.8 3.1" />
+            </svg>
+            Triggers
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item data-route="sources">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="7" ry="3" />
+                <path d="M5 5v6c0 1.66 3.13 3 7 3s7-1.34 7-3V5" />
+                <path d="M5 11v6c0 1.66 3.13 3 7 3s7-1.34 7-3v-6" />
+            </svg>
+            Sources
+        </w13c-lateral-menu-item>
+
+        <div class="menu-section">Workspace</div>
+
+        <w13c-lateral-menu-item data-route="integrations">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 3v4h1.5a2.5 2.5 0 1 1 0 5H14v4h-4v-1.5a2.5 2.5 0 1 0-5 0V16H3v-6h1.5a2.5 2.5 0 1 0 0-5H3V3h6v1.5a2.5 2.5 0 1 0 5 0V3Z" />
+            </svg>
+            Integrations
+        </w13c-lateral-menu-item>
+
+        <w13c-lateral-menu-item data-route="users">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -7526,7 +8910,7 @@ p9r-tag:hover {
             Users
         </w13c-lateral-menu-item>
 
-        <w13c-lateral-menu-item data-route="settings" slot="footer">
+        <w13c-lateral-menu-item data-route="settings">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path
@@ -7536,6 +8920,16 @@ p9r-tag:hover {
             Settings
         </w13c-lateral-menu-item>
 
+        <w13c-lateral-menu-item disabled>
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l1.7 5.1L19 10l-5.3 1.9L12 17l-1.7-5.1L5 10l5.3-1.9L12 3Z" />
+                <path d="M19 3v4" />
+                <path d="M21 5h-4" />
+            </svg>
+            AI Assistant
+        </w13c-lateral-menu-item>
+
         <w13c-lateral-menu-item data-role="profil" data-route="profil" slot="footer">
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -7543,18 +8937,20 @@ p9r-tag:hover {
                 <circle cx="12" cy="10" r="3" />
                 <path d="M6.5 18.5a6 6 0 0 1 11 0" />
             </svg>
-            Profil
+            Profile
         </w13c-lateral-menu-item>
     </w13c-lateral-menu>
 
+    <slot name="secondary-lateral-nav" slot="secondary-sidebar"></slot>
+
     <div>
 
-        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="admin-page-header" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
             <h1 style="margin: 0; line-height: 1;">
                 <slot name="title"></slot>
             </h1>
 
-            <div style="display: flex; align-items: center; gap: 0.75rem;padding-top: 4px">
+            <div style="display: flex; align-items: center; gap: 0.75rem; padding-top: 4px;">
                 <slot name="action"></slot>
             </div>
         </div>
@@ -7562,10 +8958,17 @@ p9r-tag:hover {
 
     </div>
 
-</w13c-left-menu-layout>`;
+</w13c-left-menu-layout>
+`;
 
   // src/components/admin/AdminLayout/AdminLayout.ts
-  class FixedAdminLayout extends A2 {
+  var DEFAULT_BRAND_NAME = "CmsCore";
+
+  class FixedAdminLayout extends A {
+    _brandRequest = null;
+    _titleSlot = null;
+    _actionSlot = null;
+    _pageHeader = null;
     constructor() {
       super({
         css: "",
@@ -7577,8 +8980,30 @@ p9r-tag:hover {
       const root = this.shadowRoot;
       if (!root)
         return;
+      const basePath = this._basePath();
+      this._titleSlot = root.querySelector('slot[name="title"]');
+      this._actionSlot = root.querySelector('slot[name="action"]');
+      this._pageHeader = root.querySelector(".admin-page-header");
+      this._syncRoutes(root, basePath);
+      this._setBrandName(root, DEFAULT_BRAND_NAME);
+      this._syncPageHeader();
+      this._syncSiteName(root, basePath);
+      document.addEventListener("settings:saved", this._onSettingsSaved);
+      this._titleSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
+      this._actionSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
+    }
+    disconnectedCallback() {
+      this._brandRequest?.abort();
+      this._brandRequest = null;
+      document.removeEventListener("settings:saved", this._onSettingsSaved);
+      this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
+      this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
+    }
+    _basePath() {
       const meta = document.querySelector('meta[name="basePath"]');
-      const basePath = (meta?.getAttribute("content") ?? "").replace(/\/+$/, "");
+      return (meta?.getAttribute("content") ?? "").replace(/\/+$/, "");
+    }
+    _syncRoutes(root, basePath) {
       const items = Array.from(root.querySelectorAll("[data-route]"));
       for (const item of items) {
         const route = item.dataset.route ?? "";
@@ -7587,8 +9012,63 @@ p9r-tag:hover {
         item.setAttribute("href", `${basePath}/admin/${route}`);
       }
     }
+    async _syncSiteName(root, basePath) {
+      this._brandRequest?.abort();
+      const request = new AbortController;
+      this._brandRequest = request;
+      try {
+        const response = await fetch(`${basePath}/api/system/settings`, {
+          headers: { Accept: "application/json" },
+          signal: request.signal
+        });
+        if (!response.ok)
+          return;
+        const data = await response.json();
+        const name = typeof data.site?.name === "string" ? data.site.name.trim() : "";
+        this._setBrandName(root, name || DEFAULT_BRAND_NAME);
+      } catch (error) {
+        if (!isAbortError(error))
+          return;
+      } finally {
+        if (this._brandRequest === request)
+          this._brandRequest = null;
+      }
+    }
+    _setBrandName(root, name) {
+      const brandName = name.trim() || DEFAULT_BRAND_NAME;
+      const label = root.querySelector("[data-admin-brand]");
+      const menu = root.querySelector("w13c-lateral-menu");
+      const mark = Array.from(brandName)[0]?.toUpperCase() ?? "C";
+      if (label)
+        label.textContent = brandName;
+      menu?.style.setProperty("--menu-brand-mark", JSON.stringify(mark));
+    }
+    _syncPageHeader() {
+      if (!this._pageHeader)
+        return;
+      const hasTitle = this._slotHasVisibleContent(this._titleSlot);
+      const hasAction = this._slotHasVisibleContent(this._actionSlot);
+      this._pageHeader.hidden = !hasTitle && !hasAction;
+    }
+    _slotHasVisibleContent(slot) {
+      return !!slot?.assignedNodes({ flatten: true }).some((node) => {
+        if (node instanceof HTMLElement)
+          return !node.hidden && node.textContent?.trim() !== "";
+        return node.textContent?.trim() !== "";
+      });
+    }
+    _onSettingsSaved = () => {
+      const root = this.shadowRoot;
+      if (!root)
+        return;
+      this._syncSiteName(root, this._basePath());
+    };
+    _onPageHeaderSlotChange = () => this._syncPageHeader();
   }
   customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);
+  function isAbortError(error) {
+    return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
+  }
 
   // src/core/dom/BubblesEvent.ts
   class BubblesEvent extends Event {
@@ -7631,7 +9111,7 @@ p9r-tag:hover {
       const target = this.getAttribute("target");
       const method = this.getAttribute("method") || "POST";
       if (!target) {
-        dd("cms-confirm-form: missing target", { type: "error" });
+        xc("cms-confirm-form: missing target", { type: "error" });
         return;
       }
       const url = force ? withForce(target) : target;
@@ -7639,7 +9119,7 @@ p9r-tag:hover {
       try {
         res = await fetch(url, { method });
       } catch (e) {
-        dd(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
+        xc(`Request failed: ${e instanceof Error ? e.message : String(e)}`, { type: "error" });
         return;
       }
       if (res.ok) {
@@ -7666,7 +9146,7 @@ ${followMessage}`)) {
         if (body?.error)
           message = body.error;
       } catch {}
-      dd(message || `HTTP ${res.status}`, { type: "error" });
+      xc(message || `HTTP ${res.status}`, { type: "error" });
     }
     _onSuccess() {
       const emit = this.getAttribute("emit");
@@ -7684,7 +9164,6 @@ ${followMessage}`)) {
     const lines = [];
     const pages = Array.isArray(body?.pages) ? body.pages : [];
     const templates = Array.isArray(body?.templates) ? body.templates : [];
-    const snippets = Array.isArray(body?.snippets) ? body.snippets : [];
     if (pages.length) {
       lines.push("Pages:");
       for (const p of pages)
@@ -7696,13 +9175,6 @@ ${followMessage}`)) {
       lines.push("Templates:");
       for (const t of templates)
         lines.push(`  • ${t.name || t.identifier}`);
-    }
-    if (snippets.length) {
-      if (lines.length)
-        lines.push("");
-      lines.push("Snippets:");
-      for (const s2 of snippets)
-        lines.push(`  • ${s2.name || s2.identifier}`);
     }
     return lines.join(`
 `);
@@ -7920,7 +9392,7 @@ ${followMessage}`)) {
   async function fetchKeys(api) {
     const res = await fetch(`${api}/keys`, { headers: { Accept: "application/json" } });
     if (!res.ok) {
-      dd("Failed to load credentials", { type: "error" });
+      xc("Failed to load credentials", { type: "error" });
       return [];
     }
     return res.json();
@@ -7989,12 +9461,12 @@ ${followMessage}`)) {
   }
   async function refreshList(host) {
     host._keys = await fetchKeys(host._api);
-    host._keys.sort((a, b2) => a.localeCompare(b2));
+    host._keys.sort((a, b) => a.localeCompare(b));
     renderList(host, host._keys);
   }
   function renderList(host, keys) {
     const selected = refToDisplay(host._value);
-    host._refs.list.replaceChildren(...keys.map((k) => buildOption(k, k === selected)));
+    host._refs.list.replaceChildren(...keys.map((k2) => buildOption(k2, k2 === selected)));
   }
   function buildOption(key, selected) {
     const li2 = document.createElement("li");
@@ -8058,19 +9530,19 @@ ${followMessage}`)) {
       keyInput.setAttribute("invalid", "");
       keyInput.setAttribute("hint", keyError);
       keyInput.setAttribute("hint-level", "error");
-      dd(`Invalid key: ${keyError}`, { type: "error" });
+      xc(`Invalid key: ${keyError}`, { type: "error" });
       return;
     }
     if (host._keys.includes(key)) {
-      dd(`Credential ${key} already exists`, { type: "warning" });
+      xc(`Credential ${key} already exists`, { type: "warning" });
       return;
     }
     const r = await createCredential(host._api, key, value);
     if (!r.ok) {
-      dd(`Create failed: ${r.error}`, { type: "error" });
+      xc(`Create failed: ${r.error}`, { type: "error" });
       return;
     }
-    dd(`Credential ${key} created`, { type: "success" });
+    xc(`Credential ${key} created`, { type: "success" });
     m.removeAttribute("open");
     await refreshList(host);
     setValue(host, keyToRef(key));
@@ -8138,7 +9610,7 @@ ${followMessage}`)) {
       });
       r.search.addEventListener("input", () => {
         const q2 = r.search.value.trim().toUpperCase();
-        const filtered = q2 ? this._keys.filter((k) => k.includes(q2)) : this._keys;
+        const filtered = q2 ? this._keys.filter((k2) => k2.includes(q2)) : this._keys;
         renderList(this, filtered);
       });
       r.list.addEventListener("click", (e) => {
@@ -8218,7 +9690,7 @@ ${followMessage}`)) {
 `;
 
   // src/components/admin/EmptyState/EmptyState.ts
-  class EmptyState extends A2 {
+  class EmptyState extends A {
     constructor() {
       super({
         css: style_default,
@@ -8226,27 +9698,27 @@ ${followMessage}`)) {
       });
     }
     static create(opts) {
-      const el2 = document.createElement("cms-empty-state");
-      el2.setAttribute("fluid", "");
+      const el = document.createElement("cms-empty-state");
+      el.setAttribute("fluid", "");
       if (opts.icon) {
         const fragment = document.createRange().createContextualFragment(opts.icon);
         const iconRoot = fragment.firstElementChild;
         if (iconRoot) {
           iconRoot.setAttribute("slot", "icon");
-          el2.appendChild(iconRoot);
+          el.appendChild(iconRoot);
         }
       }
       const title = document.createElement("p");
       title.slot = "title";
       title.textContent = opts.title;
-      el2.appendChild(title);
+      el.appendChild(title);
       if (opts.hint) {
         const hint = document.createElement("p");
         hint.slot = "hint";
         hint.textContent = opts.hint;
-        el2.appendChild(hint);
+        el.appendChild(hint);
       }
-      return el2;
+      return el;
     }
   }
   if (!customElements.get("cms-empty-state")) {
@@ -8255,7 +9727,7 @@ ${followMessage}`)) {
 
   // src/components/admin/EndpointsInput/EndpointsInput.css
   var EndpointsInput_default = `/* \`<cms-endpoints-input>\` is light-DOM (its named controls must stay in the
-   parent <cms-form>'s tree for FormData). This sheet is injected once into the
+   parent form's tree for FormData). This sheet is injected once into the
    document head; every rule is scoped to the tag so nothing leaks. */
 
 cms-endpoints-input {
@@ -8301,9 +9773,18 @@ cms-endpoints-input .ep-meta {
 }
 
 /* Query-param row controls */
+cms-endpoints-input .ep-query-row {
+    align-items: center;
+}
 cms-endpoints-input .ep-name { flex: 1; min-width: 0; }
 cms-endpoints-input .ep-type { min-width: 7rem; }
-cms-endpoints-input .ep-required { white-space: nowrap; }
+cms-endpoints-input .ep-computed { min-width: 6.5rem; }
+cms-endpoints-input .ep-computed[hidden] { display: none; }
+cms-endpoints-input .ep-required {
+    flex: 0 0 auto;
+    align-self: center;
+    white-space: nowrap;
+}
 
 /* Compact response-status chooser (select + custom-code input) — not full-width,
    so the remove ✕ sits next to it. */
@@ -8459,9 +9940,10 @@ cms-endpoints-input .ep-add:hover {
 }
 `;
 
-  // ../../features/cms-gateway/src/interfaces/Gateway.ts
+  // ../../features/cms-sources/src/interfaces/Source.ts
   var HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"];
-  // ../../features/cms-gateway/src/core/headerPolicy.ts
+  var COMPUTED_PARAM_REFS = ["userID"];
+  // ../../features/cms-sources/src/core/headerPolicy.ts
   var FORBIDDEN_REQUEST_HEADERS = new Set([
     "host",
     "connection",
@@ -8478,12 +9960,130 @@ cms-endpoints-input .ep-add:hover {
   var HEADER_NAME_RE = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
   var isForbiddenHeaderName = (n) => FORBIDDEN_REQUEST_HEADERS.has(n.toLowerCase());
   var isValidHeaderName = (n) => HEADER_NAME_RE.test(n);
-  // ../../features/cms-gateway/src/core/validateProvider.ts
+  // ../../features/cms-sources/src/core/urn.ts
+  function parseUrn(urn) {
+    const parts = urn.split(":");
+    if (parts[0] !== "urn")
+      return null;
+    if (parts.length === 2 && parts[1])
+      return { source: parts[1], endpoint: null };
+    if (parts.length === 3 && parts[1] && parts[2])
+      return { source: parts[1], endpoint: parts[2] };
+    return null;
+  }
+  function makeSourceUrn(sourceId) {
+    return `urn:${sourceId}`;
+  }
+  function makeEndpointUrn(sourceId, endpointId) {
+    return `urn:${sourceId}:${endpointId}`;
+  }
+
+  // ../../features/cms-sources/src/core/systemSources.ts
+  var SYSTEM_SOURCE_ID_PREFIX = "system-";
+  var SYSTEM_AUTH_SOURCE_ID = "system-auth";
+  var SYSTEM_AUTH_SOURCE_URN = makeSourceUrn(SYSTEM_AUTH_SOURCE_ID);
+  var SYSTEM_TARGET_SCHEME = "cms-system://";
+  var stringShape = () => ({ type: "string" });
+  var booleanShape = () => ({ type: "boolean" });
+  var objectShape = (properties, required = []) => ({
+    type: "object",
+    properties,
+    ...required.length ? { required } : {}
+  });
+  var subjectShape = objectShape({
+    identifier: stringShape(),
+    role: stringShape()
+  });
+  var okShape = objectShape({ ok: booleanShape() });
+  var emailBody = objectShape({ email: stringShape() }, ["email"]);
+  var tokenBody = objectShape({ token: stringShape() }, ["token"]);
+  var SYSTEM_AUTH_SOURCE = {
+    urn: SYSTEM_AUTH_SOURCE_URN,
+    meta: {
+      name: "Authentication",
+      description: "Built-in first-party authentication actions."
+    },
+    endpoints: [
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "me"),
+        method: "GET",
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/me`,
+        meta: { name: "Current user" },
+        output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "login"),
+        method: "POST",
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/login`,
+        meta: { name: "Log in" },
+        input: { body: objectShape({ email: stringShape(), password: stringShape(), returnTo: stringShape() }, ["email", "password"]) },
+        output: [{ status: "200", body: objectShape({ subject: subjectShape }) }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "logout"),
+        method: "POST",
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/logout`,
+        meta: { name: "Log out" },
+        output: [{ status: "200", body: okShape }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "signup"),
+        method: "POST",
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/signup`,
+        meta: { name: "Sign up" },
+        input: { body: objectShape({ email: stringShape(), password: stringShape(), displayName: stringShape() }, ["email", "password"]) },
+        output: [{ status: "200", body: okShape }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestEmailVerification"),
+        method: "POST",
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/request`,
+        meta: { name: "Request email verification" },
+        input: { body: emailBody },
+        output: [{ status: "200", body: okShape }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmEmailVerification"),
+        method: "POST",
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/email/verification/confirm`,
+        meta: { name: "Confirm email verification" },
+        input: { body: tokenBody },
+        output: [{ status: "200", body: okShape }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "requestPasswordReset"),
+        method: "POST",
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/request`,
+        meta: { name: "Request password reset" },
+        input: { body: emailBody },
+        output: [{ status: "200", body: okShape }]
+      },
+      {
+        urn: makeEndpointUrn(SYSTEM_AUTH_SOURCE_ID, "confirmPasswordReset"),
+        method: "POST",
+        targetUrl: `${SYSTEM_TARGET_SCHEME}auth/password/reset/confirm`,
+        meta: { name: "Confirm password reset" },
+        input: { body: objectShape({ token: stringShape(), password: stringShape() }, ["token", "password"]) },
+        output: [{ status: "200", body: okShape }]
+      }
+    ]
+  };
+  function isSystemSourceId(sourceId) {
+    return sourceId.startsWith(SYSTEM_SOURCE_ID_PREFIX);
+  }
+  function systemSourceUrnOf(urn) {
+    const parsed = parseUrn(urn);
+    if (!parsed || !isSystemSourceId(parsed.source))
+      return null;
+    return makeSourceUrn(parsed.source);
+  }
+
+  // ../../features/cms-sources/src/core/validateSource.ts
   var RESPONSE_STATUS = /^[1-5][0-9][0-9]$/;
   function isValidResponseStatus(status) {
     return status === "default" || RESPONSE_STATUS.test(status);
   }
-  // ../../features/cms-gateway/src/core/buildUpstreamUrl.ts
+  // ../../features/cms-sources/src/core/buildUpstreamUrl.ts
   var PATH_PLACEHOLDER = /\{(\w+)\}/g;
   function extractPathParamNames(targetUrl) {
     const out = [];
@@ -8603,9 +10203,9 @@ cms-endpoints-input .ep-add:hover {
   // src/components/admin/EndpointsInput/shared.ts
   var PARAM_TYPES = ["string", "number", "boolean"];
   var SHAPE_TYPES = ["string", "number", "boolean", "object", "array"];
-  var readControl = (el2) => {
-    const live = el2.value;
-    return typeof live === "string" ? live : el2.getAttribute("value") ?? "";
+  var readControl = (el) => {
+    const live = el.value;
+    return typeof live === "string" ? live : el.getAttribute("value") ?? "";
   };
   function jsonField(name, role) {
     const f2 = document.createElement("input");
@@ -8634,6 +10234,7 @@ cms-endpoints-input .ep-add:hover {
     row.setAttribute("direction", "row");
     row.setAttribute("gap", "sm");
     row.setAttribute("align", "center");
+    row.className = "ep-query-row";
     row.dataset.role = "query-param-row";
     if (seed.description)
       row.dataset.description = seed.description;
@@ -8641,11 +10242,24 @@ cms-endpoints-input .ep-add:hover {
     name.className = "ep-name";
     name.dataset.role = "param-name";
     name.addEventListener("input", onChange);
-    const type = makeSelect(PARAM_TYPES, seed.type);
+    const type = makeSelect([...PARAM_TYPES, "computed"], seed.source?.from === "computed" ? "computed" : seed.type);
     type.className = "ep-type";
     type.dataset.role = "param-type";
-    type.addEventListener("change", onChange);
+    type.addEventListener("change", () => {
+      syncComputedVisibility();
+      onChange();
+    });
     const req = makeRequiredCheckbox(!!seed.required, onChange);
+    const computed = makeSelect(["userID"], seed.source?.from === "computed" ? seed.source.ref : "userID");
+    computed.className = "ep-computed";
+    computed.dataset.role = "param-computed";
+    const syncComputedVisibility = () => {
+      const hidden = readControl(type) !== "computed";
+      computed.toggleAttribute("hidden", hidden);
+      computed.style.display = hidden ? "none" : "";
+    };
+    computed.addEventListener("change", onChange);
+    syncComputedVisibility();
     const remove = makeIconButton(ICON_X, {
       ariaLabel: "Remove param",
       onClick: () => {
@@ -8653,17 +10267,22 @@ cms-endpoints-input .ep-add:hover {
         onChange();
       }
     });
-    row.append(name, type, req, remove);
+    row.append(name, type, computed, req, remove);
     return row;
   }
   function readQueryParamRow(row) {
     const name = readControl(row.querySelector('[data-role="param-name"]')).trim();
     if (!name)
       return null;
-    const type = readControl(row.querySelector('[data-role="param-type"]'));
+    const rawType = readControl(row.querySelector('[data-role="param-type"]'));
+    const type = rawType === "computed" ? "string" : rawType;
     const required = row.querySelector('[data-role="required"]').hasAttribute("checked");
     const description = row.dataset.description;
-    return { name, in: "query", type, required, ...description ? { description } : {} };
+    const source = rawType === "computed" ? readComputedSource(row) : {};
+    return { name, in: "query", type, required, ...description ? { description } : {}, ...source };
+  }
+  function readComputedSource(row) {
+    return { source: { from: "computed", ref: "userID" } };
   }
 
   // src/components/admin/EndpointsInput/bodyNode.ts
@@ -8714,8 +10333,8 @@ cms-endpoints-input .ep-add:hover {
         const list = document.createElement("div");
         list.className = "ep-prop-list";
         const req = new Set(s2.required ?? []);
-        for (const [k, v2] of Object.entries(s2.properties ?? {}))
-          list.appendChild(makeProp(k, v2, req.has(k)));
+        for (const [k2, v2] of Object.entries(s2.properties ?? {}))
+          list.appendChild(makeProp(k2, v2, req.has(k2)));
         const add = document.createElement("button");
         add.type = "button";
         add.className = "ep-add-prop";
@@ -8876,10 +10495,10 @@ cms-endpoints-input .ep-add:hover {
     return f2;
   }
   function heading(text) {
-    const h = document.createElement("strong");
-    h.className = "ep-heading";
-    h.textContent = text;
-    return h;
+    const h2 = document.createElement("strong");
+    h2.className = "ep-heading";
+    h2.textContent = text;
+    return h2;
   }
 
   // src/components/admin/EndpointsInput/statusField.ts
@@ -9016,7 +10635,7 @@ cms-endpoints-input .ep-add:hover {
     rows.setAttribute("gap", "sm");
     rows.dataset.role = "response-rows";
     const handles = [];
-    const readRows = () => handles.map((h) => h.read()).filter((r) => r !== null);
+    const readRows = () => handles.map((h2) => h2.read()).filter((r) => r !== null);
     const sync = () => field.sync(readRows);
     const addRow = (r) => {
       const handle = makeResponseRow(r, sync, () => {
@@ -9045,10 +10664,10 @@ cms-endpoints-input .ep-add:hover {
     return panel;
   }
   function heading2(text) {
-    const h = document.createElement("strong");
-    h.className = "ep-heading";
-    h.textContent = text;
-    return h;
+    const h2 = document.createElement("strong");
+    h2.className = "ep-heading";
+    h2.textContent = text;
+    return h2;
   }
 
   // src/components/admin/EndpointsInput/headerRow.ts
@@ -9059,6 +10678,7 @@ cms-endpoints-input .ep-add:hover {
     row.setAttribute("align", "center");
     row.dataset.role = "header-row";
     const from = seed.source?.from ?? "static";
+    const secretPrefix = from === "secret" ? seed.source?.prefix : undefined;
     const name = makeInput("", "", "X-Api-Version", seed.name);
     name.className = "ep-name";
     name.dataset.role = "header-name";
@@ -9080,7 +10700,7 @@ cms-endpoints-input .ep-add:hover {
     });
     if (seed.name)
       validate();
-    const fromSelect = makeSelect(["static", "secret"], from);
+    const fromSelect = makeSelect(["static", "secret", "computed"], from);
     fromSelect.className = "ep-status";
     fromSelect.dataset.role = "header-from";
     const staticInput = makeInput("", "", "value", from === "static" ? seed.source?.value : undefined);
@@ -9098,22 +10718,39 @@ cms-endpoints-input .ep-add:hover {
       credSelect.setAttribute("value", seed.source.ref ?? "");
     credSelect.style.display = from === "secret" ? "" : "none";
     credSelect.addEventListener("change", onChange);
+    const prefixInput = makeInput("", "", "Prefix", secretPrefix);
+    prefixInput.className = "ep-status";
+    prefixInput.dataset.role = "header-value-secret-prefix";
+    prefixInput.style.display = from === "secret" ? "" : "none";
+    prefixInput.addEventListener("input", onChange);
+    const computedSelect = makeSelect(COMPUTED_PARAM_REFS, from === "computed" ? seed.source.ref : "userID");
+    computedSelect.className = "ep-status";
+    computedSelect.dataset.role = "header-value-computed";
+    computedSelect.style.display = from === "computed" ? "" : "none";
+    computedSelect.addEventListener("change", onChange);
     fromSelect.addEventListener("change", () => {
       const v2 = readControl(fromSelect);
       fromSelect.setAttribute("value", v2);
       staticInput.style.display = v2 === "static" ? "" : "none";
       credSelect.style.display = v2 === "secret" ? "" : "none";
+      prefixInput.style.display = v2 === "secret" ? "" : "none";
+      computedSelect.style.display = v2 === "computed" ? "" : "none";
       onChange();
     });
     const remove = makeIconButton(ICON_X, { ariaLabel: "Remove header", onClick: onRemove });
-    row.append(name, fromSelect, staticInput, credSelect, remove);
+    row.append(name, fromSelect, staticInput, prefixInput, credSelect, computedSelect, remove);
     const read = () => {
       const n = readControl(name).trim();
       if (!n)
         return null;
       if (readControl(fromSelect) === "secret") {
         const ref = (credSelect.value || credSelect.getAttribute("value") || "").trim();
-        return ref ? { name: n, source: { from: "secret", ref } } : null;
+        const prefix = readControl(prefixInput);
+        return ref ? { name: n, source: { from: "secret", ref, ...prefix ? { prefix } : {} } } : null;
+      }
+      if (readControl(fromSelect) === "computed") {
+        const ref = readControl(computedSelect);
+        return { name: n, source: { from: "computed", ref } };
       }
       return { name: n, source: { from: "static", value: readControl(staticInput) } };
     };
@@ -9132,10 +10769,10 @@ cms-endpoints-input .ep-add:hover {
     rows.setAttribute("gap", "sm");
     rows.dataset.role = "header-rows";
     const handles = [];
-    const readRows = () => handles.map((h) => h.read()).filter((r) => r !== null);
+    const readRows = () => handles.map((h2) => h2.read()).filter((r) => r !== null);
     const sync = () => field.sync(readRows);
-    const addRow = (h) => {
-      const handle = makeHeaderRow(h, sync, () => {
+    const addRow = (h2) => {
+      const handle = makeHeaderRow(h2, sync, () => {
         const i = handles.indexOf(handle);
         if (i >= 0)
           handles.splice(i, 1);
@@ -9161,10 +10798,10 @@ cms-endpoints-input .ep-add:hover {
     return panel;
   }
   function heading3(text) {
-    const h = document.createElement("strong");
-    h.className = "ep-heading";
-    h.textContent = text;
-    return h;
+    const h2 = document.createElement("strong");
+    h2.className = "ep-heading";
+    h2.textContent = text;
+    return h2;
   }
 
   // src/components/admin/EndpointsInput/rows.ts
@@ -9194,7 +10831,7 @@ cms-endpoints-input .ep-add:hover {
     infos.setAttribute("label", "Infos");
     const infosBody = document.createElement("p9r-stack");
     infosBody.setAttribute("gap", "m");
-    const idInput = makeInput(`endpoints.${idx}.endpointId`, "Endpoint id", "getUser", seed.endpointId);
+    const idInput = makeInput(`endpoints.${idx}.endpointId`, "SourceEndpoint id", "getUser", seed.endpointId);
     const methodSelect = makeMethodSelect(`endpoints.${idx}.method`, method);
     const urlInput = makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
     infosBody.append(idInput, methodSelect, urlInput);
@@ -9213,9 +10850,9 @@ cms-endpoints-input .ep-add:hover {
       idEl.textContent = readControl(idInput).trim() || "(new endpoint)";
       pathEl.textContent = readControl(urlInput);
     };
-    for (const el2 of [idInput, methodSelect, urlInput]) {
-      el2.addEventListener("input", update);
-      el2.addEventListener("change", update);
+    for (const el of [idInput, methodSelect, urlInput]) {
+      el.addEventListener("input", update);
+      el.addEventListener("change", update);
     }
   }
 
@@ -9297,7 +10934,7 @@ cms-endpoints-input .ep-add:hover {
       const message = this.getAttribute("message") ?? "";
       const type = this.getAttribute("type") ?? "success";
       if (message)
-        dd(message, { type });
+        xc(message, { type });
     };
     connectedCallback() {
       this.style.display = "none";
@@ -9381,7 +11018,7 @@ cms-endpoints-input .ep-add:hover {
     }
     _render() {
       const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
-      const on2 = this._enabled;
+      const on = this._enabled;
       root.innerHTML = `
         <style>
           :host { display: inline-flex; }
@@ -9400,8 +11037,8 @@ cms-endpoints-input .ep-add:hover {
           .remove:hover { background: var(--danger-muted, #fee2e2); }
         </style>
         <div class="row">
-          <button type="button" class="switch ${on2 ? "on" : ""}" role="switch" aria-checked="${on2}" title="${on2 ? "Disable" : "Enable"}"><span class="knob"></span></button>
-          <span class="state">${on2 ? "Enabled" : "Disabled"}</span>
+          <button type="button" class="switch ${on ? "on" : ""}" role="switch" aria-checked="${on}" title="${on ? "Disable" : "Enable"}"><span class="knob"></span></button>
+          <span class="state">${on ? "Enabled" : "Disabled"}</span>
           ${this._builtin ? "" : `<button type="button" class="btn edit">Edit</button>`}
           ${this._builtin ? "" : `<button type="button" class="btn remove">Remove</button>`}
         </div>`;
@@ -9413,7 +11050,7 @@ cms-endpoints-input .ep-add:hover {
       const next = !this._enabled;
       if (await this._send("PATCH", { id: this._id, enabled: next })) {
         this.setAttribute("enabled", String(next));
-        dd(next ? "Provider enabled" : "Provider disabled", { type: "success" });
+        xc(next ? "Provider enabled" : "Provider disabled", { type: "success" });
         this._fire();
       }
     }
@@ -9421,7 +11058,7 @@ cms-endpoints-input .ep-add:hover {
       if (!confirm(`Remove provider "${this._id}"?`))
         return;
       if (await this._send("DELETE", { id: this._id })) {
-        dd("Provider removed", { type: "success" });
+        xc("Provider removed", { type: "success" });
         this._fire();
       }
     }
@@ -9429,12 +11066,12 @@ cms-endpoints-input .ep-add:hover {
       try {
         const res = await fetch(this._base, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
         if (!res.ok) {
-          dd("Action failed", { type: "error" });
+          xc("Action failed", { type: "error" });
           return false;
         }
         return true;
       } catch {
-        dd("Network error", { type: "error" });
+        xc("Network error", { type: "error" });
         return false;
       }
     }
@@ -9521,14 +11158,14 @@ cms-endpoints-input .ep-add:hover {
           body: JSON.stringify({ sub: this._sub, role })
         });
         if (res.ok) {
-          dd("Role updated", { type: "success" });
+          xc("Role updated", { type: "success" });
           if (this._emit)
             document.dispatchEvent(new Event(this._emit, { bubbles: true }));
         } else {
-          dd("Failed to update role", { type: "error" });
+          xc("Failed to update role", { type: "error" });
         }
       } catch {
-        dd("Network error", { type: "error" });
+        xc("Network error", { type: "error" });
       }
     }
     get name() {
@@ -9553,13 +11190,13 @@ cms-endpoints-input .ep-add:hover {
       this._load();
     }
     async _load() {
-      const id = this._id;
-      if (!id) {
+      const id2 = this._id;
+      if (!id2) {
         location.href = this._back;
         return;
       }
       try {
-        const res = await fetch(`${this._api}/editor?id=${encodeURIComponent(id)}`, { headers: { Accept: "application/json" } });
+        const res = await fetch(`${this._api}/editor?id=${encodeURIComponent(id2)}`, { headers: { Accept: "application/json" } });
         if (!res.ok)
           throw new Error;
         this.data = await res.json();
@@ -9572,9 +11209,9 @@ cms-endpoints-input .ep-add:hover {
     }
     _render() {
       const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
-      const d2 = this.data;
-      const checked = new Set(d2.role.grants);
-      const cb = (id, label) => `<w13c-checkbox value="${escapeHtml(id)}"${checked.has(id) ? " checked" : ""}>${escapeHtml(label)}</w13c-checkbox>`;
+      const d = this.data;
+      const checked = new Set(d.role.grants);
+      const cb = (id2, label) => `<w13c-checkbox value="${escapeHtml(id2)}"${checked.has(id2) ? " checked" : ""}>${escapeHtml(label)}</w13c-checkbox>`;
       const section = (label, items) => {
         const n = items.filter((i) => checked.has(i.id)).length;
         return `
@@ -9583,8 +11220,8 @@ cms-endpoints-input .ep-add:hover {
                 <div class="grid">${items.map((i) => cb(i.id, i.label)).join("")}</div>
               </p9r-accordion-item>`;
       };
-      const cmsItems = d2.catalog.cms.map((g2) => section(g2.label, g2.permissions.map((p) => ({ id: p.id, label: p.verb })))).join("");
-      const gwBlock = d2.catalog.gateway.length ? `<p9r-accordion multiple>${d2.catalog.gateway.map((g2) => section(g2.label, g2.endpoints)).join("")}</p9r-accordion>` : `<p class="muted">No gateway providers configured.</p>`;
+      const cmsItems = d.catalog.cms.map((g2) => section(g2.label, g2.permissions.map((p) => ({ id: p.id, label: p.verb })))).join("");
+      const gwBlock = d.catalog.gateway.length ? `<p9r-accordion multiple>${d.catalog.gateway.map((g2) => section(g2.label, g2.endpoints)).join("")}</p9r-accordion>` : `<p class="muted">No gateway providers configured.</p>`;
       root.innerHTML = `
           <style>
             :host { display:block; max-width: 64rem; }
@@ -9601,7 +11238,7 @@ cms-endpoints-input .ep-add:hover {
             .bar { display:flex; align-items:center; gap:1rem; margin-top:1.75rem; }
             .cancel { text-decoration:none; color: var(--text-muted,#666); font:inherit; }
           </style>
-          <p class="intro">Editing role <strong>${escapeHtml(d2.role.label)}</strong> <code>${escapeHtml(d2.role.id)}</code></p>
+          <p class="intro">Editing role <strong>${escapeHtml(d.role.label)}</strong> <code>${escapeHtml(d.role.id)}</code></p>
 
           <section>
             <h3>CMS capabilities</h3>
@@ -9631,7 +11268,7 @@ cms-endpoints-input .ep-add:hover {
       });
     }
     async _save() {
-      const grants = Array.from(this.shadowRoot.querySelectorAll("w13c-checkbox")).filter((el2) => el2.hasAttribute("checked")).map((el2) => ({ permission: el2.getAttribute("value") }));
+      const grants = Array.from(this.shadowRoot.querySelectorAll("w13c-checkbox")).filter((el) => el.hasAttribute("checked")).map((el) => ({ permission: el.getAttribute("value") }));
       try {
         const res = await fetch(this._api, {
           method: "POST",
@@ -9639,13 +11276,13 @@ cms-endpoints-input .ep-add:hover {
           body: JSON.stringify({ id: this.data.role.id, label: this.data.role.label, grants })
         });
         if (res.ok) {
-          dd("Role permissions saved", { type: "success" });
+          xc("Role permissions saved", { type: "success" });
           location.href = this._back;
         } else {
-          dd("Failed to save permissions", { type: "error" });
+          xc("Failed to save permissions", { type: "error" });
         }
       } catch {
-        dd("Network error", { type: "error" });
+        xc("Network error", { type: "error" });
       }
     }
   }
@@ -9688,7 +11325,7 @@ cms-endpoints-input .ep-add:hover {
           body: JSON.stringify({ name })
         });
         if (!res.ok) {
-          dd("Could not create token", { type: "error" });
+          xc("Could not create token", { type: "error" });
           return;
         }
         const { token } = await res.json();
@@ -9698,14 +11335,14 @@ cms-endpoints-input .ep-add:hover {
         this._q('[data-role="reveal"]').hidden = false;
         document.dispatchEvent(new Event(this._emit, { bubbles: true }));
       } catch {
-        dd("Network error", { type: "error" });
+        xc("Network error", { type: "error" });
       } finally {
         btn.removeAttribute("disabled");
       }
     }
     _copy() {
       navigator.clipboard?.writeText(this._token);
-      dd("Token copied", { type: "success" });
+      xc("Token copied", { type: "success" });
     }
     _reset() {
       this._token = "";
@@ -9904,10 +11541,10 @@ cms-endpoints-input .ep-add:hover {
   // src/components/admin/Secrets/icons.ts
   var ICONS = { eye: ICON_EYE, save: ICON_SAVE, trash: ICON_TRASH2 };
   function injectIcons(root) {
-    root.querySelectorAll("[data-icon]").forEach((el2) => {
-      const name = el2.dataset.icon;
+    root.querySelectorAll("[data-icon]").forEach((el) => {
+      const name = el.dataset.icon;
       if (ICONS[name])
-        el2.innerHTML = ICONS[name];
+        el.innerHTML = ICONS[name];
     });
   }
 
@@ -9915,33 +11552,33 @@ cms-endpoints-input .ep-add:hover {
   async function opSaveRow(api, key, value) {
     const r = await postSecret(api, key, value);
     if (r.ok)
-      dd(`Secret ${key} updated`, { type: "success" });
+      xc(`Secret ${key} updated`, { type: "success" });
     else
-      dd(`Update failed: ${r.error}`, { type: "error" });
+      xc(`Update failed: ${r.error}`, { type: "error" });
   }
   async function opAddSecret(api, keyEl, valueEl, knownKeys) {
     const key = keyEl.value.trim();
     const value = valueEl.value;
     if (!key) {
-      dd("Key is required", { type: "error" });
+      xc("Key is required", { type: "error" });
       return;
     }
     const keyError = secretKeyError(key);
     if (keyError) {
-      dd(`Invalid key: ${keyError}`, { type: "error" });
+      xc(`Invalid key: ${keyError}`, { type: "error" });
       return;
     }
     if (knownKeys.has(key)) {
-      dd(`Secret ${key} already exists — edit it inline below`, { type: "warning" });
+      xc(`Secret ${key} already exists — edit it inline below`, { type: "warning" });
       return;
     }
     const r = await postSecret(api, key, value);
     if (r.ok) {
       keyEl.value = "";
       valueEl.value = "";
-      dd(`Secret ${key} created`, { type: "success" });
+      xc(`Secret ${key} created`, { type: "success" });
     } else {
-      dd(`Create failed: ${r.error}`, { type: "error" });
+      xc(`Create failed: ${r.error}`, { type: "error" });
     }
   }
   async function opDeleteSecret(api, key) {
@@ -9949,13 +11586,13 @@ cms-endpoints-input .ep-add:hover {
       return;
     const r = await deleteSecret(api, key);
     if (r.ok)
-      dd(`Secret ${key} deleted`, { type: "success" });
+      xc(`Secret ${key} deleted`, { type: "success" });
     else
-      dd(`Delete failed: ${r.error}`, { type: "error" });
+      xc(`Delete failed: ${r.error}`, { type: "error" });
   }
 
   // src/components/admin/Secrets/Secrets.ts
-  class CmsSecrets extends A2 {
+  class CmsSecrets extends A {
     _list = null;
     _rowTemplate = null;
     _empty = null;
@@ -9984,7 +11621,7 @@ cms-endpoints-input .ep-add:hover {
         return;
       try {
         const items = await fetchSecrets(this._api);
-        items.sort((a, b2) => a.key.localeCompare(b2.key));
+        items.sort((a, b) => a.key.localeCompare(b.key));
         this._knownKeys = new Set(items.map((it2) => it2.key));
         this._list.replaceChildren(...items.map((it2) => this._buildRow(it2.key, it2.value)));
         this._empty.hidden = items.length > 0;
@@ -10025,8 +11662,2962 @@ cms-endpoints-input .ep-add:hover {
   if (!customElements.get("cms-secrets"))
     customElements.define("cms-secrets", CmsSecrets);
 
+  // src/components/admin/Resources/Dashboards/api.ts
+  var DASHBOARD_SELECTION_EVENT = "cms-dashboards:selection";
+  function basePath() {
+    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
+    return raw.replace(/\/+$/, "");
+  }
+  function route(path) {
+    return `${basePath()}${path}`;
+  }
+  function currentSource() {
+    return new URL(window.location.href).searchParams.get("source") ?? "";
+  }
+  function currentDashboard() {
+    return new URL(window.location.href).searchParams.get("dashboard") ?? "";
+  }
+  function currentCollection() {
+    return new URL(window.location.href).searchParams.get("collection") ?? "";
+  }
+  function currentRow() {
+    return new URL(window.location.href).searchParams.get("row") ?? "";
+  }
+  function currentSelection() {
+    const collection = currentCollection();
+    const row = currentRow();
+    return {
+      source: currentSource(),
+      dashboard: currentDashboard(),
+      ...collection && row ? { collection, row } : {}
+    };
+  }
+  function replaceSelectionUrl(selection) {
+    history.replaceState(null, "", selectionUrl(selection));
+  }
+  function pushSelectionUrl(selection) {
+    history.pushState(null, "", selectionUrl(selection));
+  }
+  function selectionUrl(selection) {
+    const params = new URLSearchParams;
+    if (selection.source)
+      params.set("source", selection.source);
+    if (selection.dashboard)
+      params.set("dashboard", selection.dashboard);
+    if (selection.collection && selection.row) {
+      params.set("collection", selection.collection);
+      params.set("row", selection.row);
+    }
+    const suffix = params.toString() ? `?${params.toString()}` : "";
+    return route(`/admin/sources${suffix}`);
+  }
+  function dispatchDashboardSelection(selection) {
+    window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTION_EVENT, { detail: selection }));
+  }
+  async function fetchDashboards() {
+    return getJson(route("/api/dashboards"));
+  }
+  async function fetchDashboardUsers() {
+    return getJson(route("/api/users"));
+  }
+  async function getJson(url) {
+    const response = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!response.ok)
+      throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  }
+
+  // src/components/admin/Resources/Dashboards/icons.ts
+  var SVG_MAX_LENGTH = 8000;
+  var ALLOWED_TAGS = new Set([
+    "svg",
+    "g",
+    "path",
+    "circle",
+    "rect",
+    "line",
+    "polyline",
+    "polygon",
+    "ellipse"
+  ]);
+  var ALLOWED_ATTRS = new Set([
+    "aria-hidden",
+    "class",
+    "clip-rule",
+    "cx",
+    "cy",
+    "d",
+    "fill",
+    "fill-rule",
+    "focusable",
+    "height",
+    "points",
+    "r",
+    "role",
+    "rx",
+    "ry",
+    "stroke",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "stroke-width",
+    "viewbox",
+    "width",
+    "x",
+    "x1",
+    "x2",
+    "y",
+    "y1",
+    "y2"
+  ]);
+  function appendIconSlot(host, svg, icon, fallback) {
+    const element = createIcon(svg, icon, fallback);
+    if (!element)
+      return;
+    element.setAttribute("slot", "icon");
+    host.append(element);
+  }
+  function renderIcon(target, svg, icon, fallback) {
+    target.replaceChildren();
+    const element = createIcon(svg, icon, fallback);
+    if (element)
+      target.append(element);
+  }
+  function createIcon(svg, icon, fallback) {
+    const iconName = toIconName(icon);
+    const source = sanitizeSvg(svg) ?? (iconName ? ICONS2[iconName] : undefined) ?? ICONS2[fallback];
+    const template = document.createElement("template");
+    template.innerHTML = source.trim();
+    const element = template.content.firstElementChild;
+    if (!element || element.tagName.toLowerCase() !== "svg")
+      return null;
+    element.setAttribute("aria-hidden", "true");
+    element.setAttribute("focusable", "false");
+    return element;
+  }
+  function sanitizeSvg(value) {
+    if (!value || value.length > SVG_MAX_LENGTH)
+      return null;
+    const doc = new DOMParser().parseFromString(value, "image/svg+xml");
+    if (doc.querySelector("parsererror"))
+      return null;
+    const root = doc.documentElement;
+    if (!root || root.tagName.toLowerCase() !== "svg")
+      return null;
+    for (const element of [root, ...Array.from(root.querySelectorAll("*"))]) {
+      const tag = element.tagName.toLowerCase();
+      if (!ALLOWED_TAGS.has(tag))
+        return null;
+      for (const attr of Array.from(element.attributes)) {
+        const name = attr.name.toLowerCase();
+        const attrValue = attr.value.toLowerCase();
+        if (name.startsWith("on") || name.includes(":") || attrValue.includes("url(") || attrValue.includes("javascript:") || !ALLOWED_ATTRS.has(name)) {
+          element.removeAttribute(attr.name);
+        }
+      }
+    }
+    return new XMLSerializer().serializeToString(root);
+  }
+  function toIconName(value) {
+    return value && value in ICONS2 ? value : undefined;
+  }
+  var ICONS2 = {
+    database: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="7" ry="3" />
+            <path d="M5 5v6c0 1.66 3.13 3 7 3s7-1.34 7-3V5" />
+            <path d="M5 11v6c0 1.66 3.13 3 7 3s7-1.34 7-3v-6" />
+        </svg>
+    `,
+    "map-pin": `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 4.99-5.54 10.19-7.4 11.79a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+        </svg>
+    `,
+    layout: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M3 9h18" />
+            <path d="M9 21V9" />
+        </svg>
+    `,
+    search: `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+        </svg>
+    `
+  };
+
+  // src/components/admin/Resources/Dashboards/nav.css
+  var nav_default = `:host {
+    display: block;
+    height: 100%;
+}
+
+w13c-lateral-menu {
+    width: 100%;
+    height: 100%;
+    --menu-brand-mark-display: none;
+    --menu-header-font-size: .875rem;
+    --menu-item-font-size: .875rem;
+    --menu-section-font-size: .6875rem;
+}
+
+w13c-lateral-menu-item {
+    --item-font-size: .875rem;
+}
+
+.dashboard-item {
+    margin-left: 18px;
+}
+
+.dashboard-item::part(item) {
+    height: 32px;
+}
+
+.empty {
+    display: block;
+    padding: 8px 10px;
+    color: var(--text-muted, #66736f);
+    font-size: .8125rem;
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/nav.html
+  var nav_default2 = `<w13c-lateral-menu
+    aria-label="Sources navigation"
+    style="width: 100%; height: 100%; --menu-brand-mark-display: none; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;"
+>
+    <span slot="header">Sources</span>
+</w13c-lateral-menu>
+`;
+
+  // src/components/admin/Resources/Dashboards/DashboardNav.ts
+  class DashboardNav extends A {
+    groups = [];
+    selectedSource = "";
+    selectedDashboard = "";
+    constructor() {
+      super({ css: nav_default, template: nav_default2 });
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      this.syncFromUrl();
+      this.shadowRoot.addEventListener("click", this.onClick);
+      window.addEventListener("popstate", this.onPopState);
+      window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
+      this.load();
+    }
+    disconnectedCallback() {
+      this.shadowRoot?.removeEventListener("click", this.onClick);
+      window.removeEventListener("popstate", this.onPopState);
+      window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
+    }
+    async load() {
+      try {
+        this.groups = await fetchDashboards();
+        this.selectedSource ||= this.groups[0]?.source.id ?? "";
+        this.ensureDashboardSelection();
+      } catch {
+        this.groups = [];
+      }
+      this.render();
+    }
+    select(sourceId, dashboardId = "") {
+      this.selectedSource = sourceId;
+      this.selectedDashboard = dashboardId;
+      this.ensureDashboardSelection();
+      const selection = this.selection();
+      replaceSelectionUrl(selection);
+      dispatchDashboardSelection(selection);
+      this.render();
+    }
+    ensureDashboardSelection() {
+      const group = this.activeGroup();
+      if (!group) {
+        this.selectedDashboard = "";
+        return;
+      }
+      if (!group.dashboards.some((dashboard) => dashboard.id === this.selectedDashboard)) {
+        this.selectedDashboard = group.dashboards[0]?.id ?? "";
+      }
+    }
+    render() {
+      const menu = this.query("w13c-lateral-menu");
+      menu.querySelectorAll("[data-generated]").forEach((element) => element.remove());
+      if (!this.groups.length) {
+        const empty = document.createElement("span");
+        empty.className = "empty";
+        empty.dataset.generated = "true";
+        empty.textContent = "No sources";
+        menu.append(empty);
+        return;
+      }
+      for (const group of this.groups) {
+        const sourceItem = this.createItem(group.source.name, group.source.svg, group.source.icon, "database");
+        sourceItem.dataset.generated = "true";
+        sourceItem.dataset.source = group.source.id;
+        sourceItem.toggleAttribute("active", group.source.id === this.selectedSource);
+        menu.append(sourceItem);
+        if (group.source.id === this.selectedSource && group.dashboards.length > 1) {
+          for (const dashboard of group.dashboards) {
+            const dashboardItem = this.createItem(dashboard.meta?.name ?? dashboard.id, dashboard.meta?.svg, dashboard.meta?.icon, "layout");
+            dashboardItem.classList.add("dashboard-item");
+            dashboardItem.dataset.generated = "true";
+            dashboardItem.dataset.source = group.source.id;
+            dashboardItem.dataset.dashboard = dashboard.id;
+            dashboardItem.toggleAttribute("active", dashboard.id === this.selectedDashboard);
+            menu.append(dashboardItem);
+          }
+        }
+      }
+    }
+    createItem(label, svg, icon, fallback) {
+      const item = document.createElement("w13c-lateral-menu-item");
+      appendIconSlot(item, svg, icon, fallback);
+      item.append(document.createTextNode(label));
+      return item;
+    }
+    activeGroup() {
+      return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
+    }
+    selection() {
+      return { source: this.selectedSource, dashboard: this.selectedDashboard };
+    }
+    syncFromUrl() {
+      const selection = currentSelection();
+      this.selectedSource = selection.source;
+      this.selectedDashboard = selection.dashboard;
+    }
+    onClick = (event) => {
+      const target = event.target;
+      const dashboardButton = target?.closest("[data-dashboard]");
+      if (dashboardButton?.dataset.source && dashboardButton.dataset.dashboard) {
+        this.select(dashboardButton.dataset.source, dashboardButton.dataset.dashboard);
+        return;
+      }
+      const sourceButton = target?.closest("[data-source]");
+      if (sourceButton?.dataset.source)
+        this.select(sourceButton.dataset.source);
+    };
+    onPopState = () => {
+      this.syncFromUrl();
+      this.ensureDashboardSelection();
+      this.render();
+      dispatchDashboardSelection(currentSelection());
+    };
+    onExternalSelection = (event) => {
+      this.selectedSource = event.detail.source;
+      this.selectedDashboard = event.detail.dashboard;
+      this.ensureDashboardSelection();
+      this.render();
+    };
+    query(selector) {
+      return this.shadowRoot.querySelector(selector);
+    }
+  }
+  if (!customElements.get("cms-dashboards-nav"))
+    customElements.define("cms-dashboards-nav", DashboardNav);
+
+  // src/components/admin/Resources/Dashboards/style.css
+  var style_default3 = `:host {
+    display: block;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.panel,
+.stat,
+.tabs-panel {
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+}
+
+.tab {
+    border: 1px solid transparent;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+}
+
+.tab:hover {
+    background: var(--bg-hover, #f3f6f5);
+}
+
+small,
+.empty span,
+.state {
+    color: var(--text-muted, #66736f);
+}
+
+.content,
+.widgets,
+.widget-stack,
+.tab-body {
+    display: grid;
+    align-content: start;
+    gap: 16px;
+    min-width: 0;
+}
+
+.dashboard-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dashboard-head {
+    gap: 10px;
+    padding: 0 2px;
+}
+
+.detail-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.detail-toolbar button {
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 7px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-default, #0f1f1a);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 7px 11px;
+}
+
+.detail-toolbar button:hover {
+    background: var(--bg-hover, #f3f6f5);
+}
+
+.detail-toolbar span {
+    color: var(--text-muted, #66736f);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+h2,
+h3,
+p {
+    margin: 0;
+}
+
+.panel {
+    padding: 16px;
+    overflow: auto;
+}
+
+.title-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 8px;
+    background: var(--primary-muted, #e3f2ed);
+    color: var(--primary-base, #165f4b);
+}
+
+.title-icon.compact {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+}
+
+.title-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+}
+
+.title-icon.compact svg {
+    width: 15px;
+    height: 15px;
+}
+
+.dashboard-table {
+    padding: 0;
+    overflow: hidden;
+}
+
+.dashboard-create-action {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.dashboard-create-action button,
+.dashboard-create-actions button {
+    border: 1px solid var(--primary-base, #165f4b);
+    border-radius: 7px;
+    background: var(--primary-base, #165f4b);
+    color: white;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 8px 13px;
+}
+
+.dashboard-create-action button:hover,
+.dashboard-create-actions button:hover {
+    background: var(--primary-strong, #0f4a3a);
+}
+
+.dashboard-create-dialog {
+    width: min(720px, calc(100vw - 32px));
+    max-height: min(760px, calc(100vh - 32px));
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-default, #0f1f1a);
+    padding: 0;
+}
+
+.dashboard-create-dialog::backdrop {
+    background: rgba(15, 31, 26, .32);
+}
+
+.dashboard-create {
+    display: grid;
+    gap: 0;
+}
+
+.dashboard-create-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-default, #dfe5e2);
+    padding: 16px 18px;
+}
+
+.dashboard-create-close,
+.dashboard-create-actions .dashboard-create-secondary {
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 7px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-default, #0f1f1a);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 7px 11px;
+}
+
+.dashboard-create-close:hover,
+.dashboard-create-actions .dashboard-create-secondary:hover {
+    background: var(--bg-hover, #f3f6f5);
+}
+
+.dashboard-create[aria-busy="true"] .dashboard-create-actions button {
+    cursor: wait;
+    opacity: .72;
+}
+
+.dashboard-create-fields {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+}
+
+.dashboard-create-fields p9r-input,
+.dashboard-create-fields p9r-select,
+.dashboard-user-picker {
+    min-width: 0;
+}
+
+.dashboard-user-picker {
+    display: grid;
+    gap: 6px;
+}
+
+.dashboard-user-picker label {
+    color: var(--text-muted, #66736f);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.dashboard-user-picker input {
+    width: 100%;
+    min-height: 36px;
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 7px;
+    background: var(--bg-surface, #fff);
+    color: var(--text-default, #0f1f1a);
+    font: inherit;
+    padding: 7px 10px;
+}
+
+.dashboard-user-picker input:focus {
+    border-color: var(--primary-base, #165f4b);
+    outline: 2px solid color-mix(in srgb, var(--primary-base, #165f4b), transparent 75%);
+    outline-offset: 0;
+}
+
+.dashboard-user-control {
+    position: relative;
+}
+
+.dashboard-user-menu {
+    position: absolute;
+    z-index: 4;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    display: grid;
+    max-height: 220px;
+    overflow: auto;
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    box-shadow: 0 12px 30px rgba(15, 31, 26, .16);
+    padding: 4px;
+}
+
+.dashboard-user-option {
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-default, #0f1f1a);
+    cursor: pointer;
+    font: inherit;
+    padding: 8px 9px;
+    text-align: left;
+}
+
+.dashboard-user-option:hover,
+.dashboard-user-option.active {
+    background: var(--primary-muted, #e3f2ed);
+    color: var(--primary-base, #165f4b);
+}
+
+.dashboard-user-option span {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-user-option small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-user-empty {
+    color: var(--text-muted, #66736f);
+    padding: 9px;
+}
+
+.dashboard-create-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid var(--border-default, #dfe5e2);
+    padding: 14px 18px;
+}
+
+.dashboard-create-state {
+    padding: 0 18px 18px;
+}
+
+.dashboard-create-state[data-state="success"] {
+    color: var(--primary-base, #165f4b);
+}
+
+.dashboard-create-state[data-state="error"] {
+    color: var(--danger-base, #a43333);
+}
+
+.dashboard-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    color: var(--text-default, #0f1f1a);
+    font-weight: 700;
+}
+
+.dashboard-table cms-binding-core {
+    display: block;
+}
+
+.empty {
+    display: grid;
+    gap: 4px;
+}
+
+.dashboard-filters {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-default, #dfe5e2);
+    background: var(--bg-surface, #fff);
+}
+
+.dashboard-filters p9r-input,
+.dashboard-filters p9r-select {
+    width: min(360px, 100%);
+}
+
+.dashboard-table-scroll {
+    overflow: auto;
+}
+
+.dashboard-grid {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.dashboard-grid th,
+.dashboard-grid td {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-default, #dfe5e2);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-grid th {
+    background: var(--bg-subtle, #f5f7f6);
+    color: var(--text-default, #0f1f1a);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.dashboard-grid td {
+    color: var(--text-muted, #51605b);
+}
+
+.dashboard-row {
+    cursor: pointer;
+}
+
+.dashboard-row:focus-visible {
+    outline: 2px solid var(--primary-base, #165f4b);
+    outline-offset: -2px;
+}
+
+.dashboard-grid tbody tr:hover {
+    background: var(--bg-hover, #f3f6f5);
+}
+
+.state {
+    padding: 16px;
+}
+
+.stat {
+    display: grid;
+    gap: 4px;
+    padding: 16px;
+}
+
+.stat span {
+    color: var(--text-muted, #66736f);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.stat strong {
+    font-size: 28px;
+}
+
+.tabs-panel {
+    overflow: hidden;
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border-default, #dfe5e2);
+    padding: 0 12px;
+}
+
+.tab {
+    padding: 10px 12px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-weight: 700;
+}
+
+.tab.active {
+    color: var(--primary-base, #165f4b);
+    border-bottom-color: currentColor;
+}
+
+.tab-body {
+    padding: 16px;
+}
+
+.dashboard-detail {
+    display: grid;
+    gap: 14px;
+}
+
+.dashboard-detail cms-binding-core,
+.dashboard-detail [cms-source] {
+    display: block;
+}
+
+.detail-state {
+    padding: 0;
+}
+
+.dashboard-detail-body {
+    display: grid;
+    gap: 18px;
+    max-width: 960px;
+}
+
+.dashboard-detail-media-list {
+    display: grid;
+    gap: 14px;
+}
+
+.dashboard-detail-media {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+}
+
+.dashboard-detail-media img {
+    width: 96px;
+    height: 96px;
+    border-radius: 8px;
+    background: var(--bg-subtle, #f5f7f6);
+    object-fit: cover;
+}
+
+.dashboard-detail-media figcaption {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.dashboard-detail-media span,
+.dashboard-detail-list dt {
+    color: var(--text-muted, #66736f);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.dashboard-detail-media a {
+    color: var(--text-default, #0f1f1a);
+    overflow-wrap: anywhere;
+}
+
+.dashboard-detail-list {
+    display: grid;
+    margin: 0;
+}
+
+.dashboard-detail-list div {
+    display: grid;
+    grid-template-columns: minmax(140px, 180px) minmax(0, 1fr);
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border-default, #dfe5e2);
+}
+
+.dashboard-detail-list div:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.dashboard-detail-list dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-detail-list a {
+    color: var(--text-default, #0f1f1a);
+}
+
+.widget-section {
+    display: grid;
+    gap: 12px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: var(--bg-subtle, #f5f7f6);
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+@media (max-width: 760px) {
+    .dashboard-detail-media {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-detail-list div {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/template.html
+  var template_default4 = `<main class="content">
+    <section class="panel empty" data-empty>
+        <strong>No dashboards</strong>
+        <span>Install an integration that provides dashboard artifacts.</span>
+    </section>
+
+    <section class="panel empty" data-source-empty hidden>
+        <strong>No dashboards for this source</strong>
+        <span>This source exposes endpoints, but no dashboard artifact has been installed for it yet.</span>
+    </section>
+
+    <section class="dashboard-head" data-dashboard-head hidden>
+        <span class="title-icon compact" data-dashboard-icon></span>
+        <h3 data-dashboard-name></h3>
+    </section>
+
+    <section class="detail-toolbar" data-detail-toolbar hidden>
+        <button type="button" data-dashboard-back>Back</button>
+        <span data-detail-row></span>
+    </section>
+
+    <div class="widgets" data-widgets hidden></div>
+</main>
+`;
+
+  // ../../features/cms-dashboards/src/core/errors.ts
+  class DuplicateDashboardError extends Error {
+    dashboardId;
+    constructor(dashboardId) {
+      super(`duplicate dashboard: ${dashboardId}`);
+      this.dashboardId = dashboardId;
+      this.name = "DuplicateDashboardError";
+    }
+  }
+
+  // ../../features/cms-dashboards/src/default-implementation/InMemoryDashboardRepository.ts
+  class InMemoryDashboardRepository {
+    dashboards = new Map;
+    async createDashboard(dashboard) {
+      if (this.dashboards.has(dashboard.id)) {
+        throw new DuplicateDashboardError(dashboard.id);
+      }
+      this.dashboards.set(dashboard.id, structuredClone(dashboard));
+      return structuredClone(dashboard);
+    }
+    async updateDashboard(dashboard) {
+      if (!this.dashboards.has(dashboard.id))
+        return null;
+      this.dashboards.set(dashboard.id, structuredClone(dashboard));
+      return structuredClone(dashboard);
+    }
+    async deleteDashboard(id2) {
+      return this.dashboards.delete(id2);
+    }
+    async getDashboard(id2) {
+      const found = this.dashboards.get(id2);
+      return found ? structuredClone(found) : null;
+    }
+    async getDashboardsForSource(sourceId) {
+      return Array.from(this.dashboards.values()).filter((dashboard) => dashboard.source === sourceId).map((dashboard) => structuredClone(dashboard));
+    }
+    async getAllDashboards() {
+      return Array.from(this.dashboards.values(), (dashboard) => structuredClone(dashboard));
+    }
+  }
+  // ../../features/cms-dashboards/src/core/flattenDataShape.ts
+  function flattenDataShape(shape) {
+    const fields = [];
+    walk(shape, "", true, false, fields);
+    return fields;
+  }
+  function walk(shape, path, required, array, fields) {
+    if (isScalar(shape)) {
+      if (!path)
+        return;
+      fields.push({
+        path,
+        shape,
+        input: inputType(shape),
+        required,
+        array
+      });
+      return;
+    }
+    if (shape.type === "array") {
+      if (shape.items) {
+        walk(shape.items, path, required, true, fields);
+      }
+      return;
+    }
+    if (shape.type !== "object")
+      return;
+    const requiredProperties = new Set(shape.required ?? []);
+    for (const [name, child] of Object.entries(shape.properties ?? {})) {
+      const childPath = path ? `${path}.${name}` : name;
+      walk(child, childPath, required && requiredProperties.has(name), array, fields);
+    }
+  }
+  function isScalar(shape) {
+    return shape.type === "string" || shape.type === "number" || shape.type === "boolean";
+  }
+  function inputType(shape) {
+    if (shape.type === "number")
+      return "number";
+    if (shape.type === "boolean")
+      return "boolean";
+    return "text";
+  }
+  // ../../features/cms-sources/src/core/errors.ts
+  class SourceValidationError extends Error {
+    status = 400;
+    constructor(field, message) {
+      super(`Invalid ${field}: ${message}`);
+      this.name = "SourceValidationError";
+    }
+  }
+
+  class DuplicateSourceError extends Error {
+    status = 409;
+    constructor(urn) {
+      super(`Source with urn "${urn}" already exists`);
+      this.name = "DuplicateSourceError";
+    }
+  }
+
+  // ../../features/cms-sources/src/default-implementation/InMemorySourceRepository.ts
+  class InMemorySourceRepository {
+    _sources = new Map;
+    async createSource(source) {
+      if (this._sources.has(source.urn)) {
+        throw new DuplicateSourceError(source.urn);
+      }
+      this._sources.set(source.urn, structuredClone(source));
+      return structuredClone(source);
+    }
+    async updateSource(source) {
+      if (!this._sources.has(source.urn))
+        return null;
+      this._sources.set(source.urn, structuredClone(source));
+      return structuredClone(source);
+    }
+    async deleteSource(urn) {
+      return this._sources.delete(urn);
+    }
+    async getSource(urn) {
+      const found = this._sources.get(urn);
+      return found ? structuredClone(found) : null;
+    }
+    async getAllSources() {
+      return Array.from(this._sources.values(), (p) => structuredClone(p));
+    }
+    async getEndpoint(urn) {
+      for (const source of this._sources.values()) {
+        const endpoint = source.endpoints.find((e) => e.urn === urn);
+        if (endpoint)
+          return structuredClone(endpoint);
+      }
+      return null;
+    }
+  }
+  // ../../features/cms-sources/src/core/CompositeSourceRepository.ts
+  class CompositeSourceRepository {
+    inner;
+    systemSources = new Map;
+    constructor(inner, systemSources = []) {
+      this.inner = inner;
+      for (const source of systemSources) {
+        this.systemSources.set(source.urn, structuredClone(source));
+      }
+    }
+    async createSource(source) {
+      this.assertUserSource(source.urn, "system source namespace is reserved");
+      return this.inner.createSource(source);
+    }
+    async updateSource(source) {
+      this.assertUserSource(source.urn, "system sources are readonly");
+      return this.inner.updateSource(source);
+    }
+    async deleteSource(urn) {
+      this.assertUserSource(urn, "system sources are readonly");
+      return this.inner.deleteSource(urn);
+    }
+    async getSource(urn) {
+      const system = this.systemSources.get(urn);
+      if (system)
+        return structuredClone(system);
+      return this.inner.getSource(urn);
+    }
+    async getAllSources() {
+      const systemUrns = new Set(this.systemSources.keys());
+      const system = Array.from(this.systemSources.values(), (source) => structuredClone(source));
+      const user = (await this.inner.getAllSources()).filter((source) => !systemUrns.has(source.urn) && !systemSourceUrnOf(source.urn));
+      return [...system, ...user];
+    }
+    async getEndpoint(urn) {
+      const systemUrn = systemSourceUrnOf(urn);
+      if (systemUrn) {
+        const system = this.systemSources.get(systemUrn);
+        const endpoint = system?.endpoints.find((candidate) => candidate.urn === urn);
+        return endpoint ? structuredClone(endpoint) : null;
+      }
+      return this.inner.getEndpoint(urn);
+    }
+    assertUserSource(urn, message) {
+      if (systemSourceUrnOf(urn))
+        throw new SourceValidationError("urn", message);
+    }
+  }
+  // src/components/admin/Resources/Dashboards/domain.ts
+  function endpointById(group, endpointId) {
+    return group.endpoints.find((endpoint) => endpoint.endpointId === endpointId) ?? null;
+  }
+  function collectionById(dashboard, collectionId) {
+    return dashboard.collections.find((collection) => collection.id === collectionId) ?? null;
+  }
+  function widgetTitle(widget) {
+    if ("label" in widget && widget.label)
+      return widget.label;
+    if (widget.widget === "w-stat")
+      return widget.label ?? widget.endpoint;
+    if ("collection" in widget)
+      return sentenceCase(labelFromPath(widget.collection));
+    if (widget.widget === "w-section")
+      return widget.title ?? "Section";
+    return widget.widget;
+  }
+  var SAFE_BINDING_PATH = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
+  function renderWidget(widget, context, key, tabState) {
+    switch (widget.widget) {
+      case "w-section":
+        return renderSection(widget, context, key, tabState);
+      case "w-tabs":
+        return renderTabs(widget, context, key, tabState);
+      case "w-table":
+        return renderTable(widget, context);
+      case "w-stat":
+        return renderStat(widget, context);
+      case "w-detail":
+        return renderDetail(widget, context);
+      case "w-create":
+        return renderCreate(widget, context, key);
+      case "w-update":
+        return renderUpdate(widget, context, key);
+      default:
+        return `<section class="panel empty"><strong>Unsupported widget</strong></section>`;
+    }
+  }
+  function renderSection(widget, context, key, tabState) {
+    return `
+        <section class="widget-section">
+            ${widget.title ? `<h3>${escapeHtml2(widget.title)}</h3>` : ""}
+            <div class="widget-stack">
+                ${widget.children.map((child, index) => renderWidget(child, context, `${key}.${index}`, tabState)).join("")}
+            </div>
+        </section>
+    `;
+  }
+  function renderTabs(widget, context, key, tabState) {
+    const activeIndex = Math.min(tabState.get(key) ?? 0, Math.max(widget.tabs.length - 1, 0));
+    const active = widget.tabs[activeIndex];
+    return `
+        <section class="tabs-panel">
+            <div class="tabs" role="tablist">
+                ${widget.tabs.map((tab, index) => `
+                    <button class="tab ${index === activeIndex ? "active" : ""}" type="button" data-tab-key="${escapeAttr2(key)}" data-tab-index="${index}">
+                        ${escapeHtml2(tab.label)}
+                    </button>
+                `).join("")}
+            </div>
+            <div class="tab-body">
+                ${active ? active.children.map((child, index) => renderWidget(child, context, `${key}.${activeIndex}.${index}`, tabState)).join("") : ""}
+            </div>
+        </section>
+    `;
+  }
+  function renderTable(widget, context) {
+    const collection = collectionById(context.dashboard, widget.collection);
+    if (!collection)
+      return renderMissing(`Unknown collection "${widget.collection}"`);
+    const endpoint = endpointById(context.group, collection.list.endpoint);
+    if (!endpoint)
+      return renderMissing(`Unknown endpoint "${collection.list.endpoint}"`);
+    const columns = resolveColumns(widget.columns, endpoint, collection);
+    if (!columns.length)
+      return renderMissing(`No displayable columns for collection "${widget.collection}"`);
+    const repeatPath = repeatPathFor(endpoint, collection);
+    const url = endpointUrl(context.group, collection.list);
+    const filters = renderFilters(widget, collection);
+    const rowAttributes = hasDetailCollectionWidget(context.dashboard.views, collection.id) && collection.item?.get ? rowSelectionAttributes(collection) : "";
+    return `
+        <section class="panel dashboard-table">
+            <cms-binding-core>
+                ${filters}
+                <div cms-source="${escapeAttr2(url)} as data">
+                    <p class="state" cms-condition="$source.loading">Loading...</p>
+                    <p class="state" cms-condition="$source.error">Unable to load data.</p>
+                    <div class="dashboard-table-scroll" cms-condition="$source.loaded">
+                        <table class="dashboard-grid">
+                            <thead>
+                                <tr>
+                                    ${columns.map((column) => `<th scope="col">${escapeHtml2(column.label)}</th>`).join("")}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr${rowAttributes} cms-repeat="${escapeAttr2(repeatPath)} as row">
+                                    ${columns.map((column) => `<td>${formatBinding(column.field, column.format)}</td>`).join("")}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </cms-binding-core>
+        </section>
+    `;
+  }
+  function renderDetail(widget, context) {
+    const collection = collectionById(context.dashboard, widget.collection);
+    if (!collection)
+      return renderMissing(`Unknown collection "${widget.collection}"`);
+    const ref = collection.item?.get;
+    if (!ref)
+      return renderMissing(`Collection "${widget.collection}" does not declare item.get`);
+    const endpoint = endpointById(context.group, ref.endpoint);
+    if (!endpoint)
+      return renderMissing(`Unknown endpoint "${ref.endpoint}"`);
+    const selected = context.selectedRows.get(collection.id) ?? "";
+    if (!selected) {
+      return `
+            <section class="panel empty dashboard-detail">
+                <strong>${escapeHtml2(widgetTitle(widget))}</strong>
+                <span>Select a row to view its details.</span>
+            </section>
+        `;
+    }
+    const fields = resolveFields(widget.fields, endpoint);
+    if (!fields.length)
+      return renderMissing(`No displayable fields for collection "${widget.collection}"`);
+    const url = endpointUrl(context.group, ref, { selection: selected });
+    const mediaFields = fields.filter((field) => field.format === "image");
+    const detailFields = fields.filter((field) => field.format !== "image");
+    return `
+        <section class="panel dashboard-detail">
+            <strong>${escapeHtml2(widgetTitle(widget))}</strong>
+            <cms-binding-core>
+                <div cms-source="${escapeAttr2(url)} as item">
+                    <p class="state detail-state" cms-condition="$source.loading">Loading...</p>
+                    <p class="state detail-state" cms-condition="$source.error">Unable to load item.</p>
+                    <div class="dashboard-detail-body" cms-condition="$source.loaded">
+                        ${mediaFields.length ? `
+                            <div class="dashboard-detail-media-list">
+                                ${mediaFields.map(renderImageField).join("")}
+                            </div>
+                        ` : ""}
+                        <dl class="dashboard-detail-list">
+                            ${detailFields.map((field) => `
+                                <div>
+                                    <dt>${escapeHtml2(field.label)}</dt>
+                                    <dd>${formatDetailBinding(field)}</dd>
+                                </div>
+                            `).join("")}
+                        </dl>
+                    </div>
+                </div>
+            </cms-binding-core>
+        </section>
+    `;
+  }
+  function renderCreate(widget, context, key) {
+    const collection = collectionById(context.dashboard, widget.collection);
+    if (!collection)
+      return renderMissing(`Unknown collection "${widget.collection}"`);
+    const ref = collection.item?.create;
+    if (!ref)
+      return renderMissing(`Collection "${widget.collection}" does not declare item.create`);
+    const endpoint = endpointById(context.group, ref.endpoint);
+    if (!endpoint)
+      return renderMissing(`Unknown endpoint "${ref.endpoint}"`);
+    const fields = resolveWriteFields(widget.fields, endpoint);
+    if (!fields.length)
+      return renderMissing(`No writable fields for collection "${widget.collection}"`);
+    const paramFields = paramFieldNames(ref);
+    const url = endpointUrl(context.group, ref);
+    const modalId = `dashboard-create-${safeDomId(key)}`;
+    const label = writeLabel(widget, "Create");
+    const submitLabel = writeSubmitLabel(widget, label);
+    return `
+        <section class="dashboard-create-action">
+            <button type="button" data-dashboard-write-open="${escapeAttr2(modalId)}">${escapeHtml2(label)}</button>
+        </section>
+        <dialog class="dashboard-create-dialog" data-dashboard-write-dialog="${escapeAttr2(modalId)}">
+            <form
+                class="dashboard-create"
+                data-dashboard-write
+                data-dashboard-url="${escapeAttr2(url)}"
+                data-dashboard-method="${escapeAttr2(endpoint.method)}"
+                data-dashboard-success-message="Created"
+            >
+                <div class="dashboard-create-head">
+                    <strong>${escapeHtml2(label)}</strong>
+                    <button type="button" class="dashboard-create-close" data-dashboard-write-close>Close</button>
+                </div>
+                <div class="dashboard-create-fields">
+                    ${fields.map((field) => renderWriteField(field, paramFields.has(field.field))).join("")}
+                </div>
+                <div class="dashboard-create-actions">
+                    <button type="button" class="dashboard-create-secondary" data-dashboard-write-close>Cancel</button>
+                    <button type="submit">${escapeHtml2(submitLabel)}</button>
+                </div>
+                <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
+            </form>
+        </dialog>
+    `;
+  }
+  function renderUpdate(widget, context, key) {
+    const collection = collectionById(context.dashboard, widget.collection);
+    if (!collection)
+      return renderMissing(`Unknown collection "${widget.collection}"`);
+    const action = widget.action ?? "update";
+    const ref = collection.item?.[action];
+    if (!ref)
+      return renderMissing(`Collection "${widget.collection}" does not declare item.${action}`);
+    const getRef = collection.item?.get;
+    if (!getRef)
+      return renderMissing(`Collection "${widget.collection}" does not declare item.get`);
+    const endpoint = endpointById(context.group, ref.endpoint);
+    if (!endpoint)
+      return renderMissing(`Unknown endpoint "${ref.endpoint}"`);
+    const getEndpoint = endpointById(context.group, getRef.endpoint);
+    if (!getEndpoint)
+      return renderMissing(`Unknown endpoint "${getRef.endpoint}"`);
+    const selected = context.selectedRows.get(collection.id) ?? "";
+    if (!selected)
+      return "";
+    const fields = resolveWriteFields(widget.fields, endpoint);
+    if (!fields.length)
+      return renderMissing(`No writable fields for collection "${widget.collection}"`);
+    const paramFields = paramFieldNames(ref);
+    const url = endpointUrl(context.group, ref, { selection: selected });
+    const loadUrl = endpointUrl(context.group, getRef, { selection: selected });
+    const modalId = `dashboard-update-${safeDomId(key)}`;
+    const label = writeLabel(widget, "Edit");
+    const submitLabel = writeSubmitLabel(widget, label);
+    return `
+        <section class="dashboard-create-action">
+            <button type="button" data-dashboard-write-open="${escapeAttr2(modalId)}">${escapeHtml2(label)}</button>
+        </section>
+        <dialog class="dashboard-create-dialog" data-dashboard-write-dialog="${escapeAttr2(modalId)}">
+            <form
+                class="dashboard-create"
+                data-dashboard-write
+                data-dashboard-url="${escapeAttr2(url)}"
+                data-dashboard-load-url="${escapeAttr2(loadUrl)}"
+                data-dashboard-method="${escapeAttr2(endpoint.method)}"
+                data-dashboard-success-message="Updated"
+            >
+                <div class="dashboard-create-head">
+                    <strong>${escapeHtml2(label)}</strong>
+                    <button type="button" class="dashboard-create-close" data-dashboard-write-close>Close</button>
+                </div>
+                <div class="dashboard-create-fields">
+                    ${fields.map((field) => renderWriteField(field, paramFields.has(field.field))).join("")}
+                </div>
+                <div class="dashboard-create-actions">
+                    <button type="button" class="dashboard-create-secondary" data-dashboard-write-close>Cancel</button>
+                    <button type="submit">${escapeHtml2(submitLabel)}</button>
+                </div>
+                <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
+            </form>
+        </dialog>
+    `;
+  }
+  function renderStat(widget, context) {
+    const endpoint = endpointById(context.group, widget.endpoint);
+    if (!endpoint)
+      return renderMissing(`Unknown endpoint "${widget.endpoint}"`);
+    if (!isSafeBindingPath(widget.path))
+      return renderMissing(`Invalid stat path "${widget.path}"`);
+    const url = endpointUrl(context.group, { endpoint: widget.endpoint });
+    return `
+        <cms-binding-core>
+            <section class="stat" cms-source="${escapeAttr2(url)} as data">
+                <span>${escapeHtml2(widget.label ?? widget.endpoint)}</span>
+                <strong cms-condition="$source.loaded">{{ data.${widget.path} }}</strong>
+                <strong cms-condition="$source.loading">...</strong>
+                <strong cms-condition="$source.error">-</strong>
+            </section>
+        </cms-binding-core>
+    `;
+  }
+  function renderMissing(message) {
+    return `<section class="panel empty"><strong>Invalid dashboard</strong><span>${escapeHtml2(message)}</span></section>`;
+  }
+  function renderFilters(widget, collection) {
+    if (!widget.filters?.length)
+      return "";
+    return `
+        <div class="dashboard-filters" role="search" aria-label="Dashboard filters">
+            ${widget.filters.map((filter) => {
+      const param = filter.param ?? filter.field;
+      const label = filter.label ?? filterLabel(filter.field);
+      if (filter.input === "select") {
+        return `
+                        <p9r-select cms-param-sync="${escapeAttr2(param)}" label="${escapeAttr2(label)}" value="">
+                            <option value="">All</option>
+                            ${(filter.options ?? []).map((option) => `<option value="${escapeAttr2(option)}">${escapeHtml2(option)}</option>`).join("")}
+                        </p9r-select>
+                    `;
+      }
+      return `
+                    <p9r-input
+                        cms-param-sync="${escapeAttr2(param)}"
+                        label="${escapeAttr2(label)}"
+                        placeholder="${escapeAttr2(filter.placeholder ?? filterPlaceholder(filter.field, collection))}"
+                        type="search"
+                    ></p9r-input>
+                `;
+    }).join("")}
+        </div>
+    `;
+  }
+  function resolveColumns(columns, endpoint, collection) {
+    if (columns?.length) {
+      return columns.flatMap((column) => {
+        if (typeof column === "string")
+          return isSafeBindingPath(column) ? { field: column, label: labelFromPath(column) } : [];
+        if (!isSafeBindingPath(column.field))
+          return [];
+        return { field: column.field, label: column.label ?? labelFromPath(column.field), format: column.format };
+      });
+    }
+    const itemShape = listItemShape(endpoint, collection);
+    if (!itemShape)
+      return [];
+    return flattenDataShape(itemShape).filter((field) => isSafeBindingPath(field.path)).slice(0, 8).map((field) => ({
+      field: field.path,
+      label: labelFromPath(field.path),
+      format: field.input === "number" ? "text" : "text"
+    }));
+  }
+  function resolveFields(fields, endpoint) {
+    if (fields?.length) {
+      return fields.flatMap((field) => {
+        if (typeof field === "string")
+          return isSafeBindingPath(field) ? { field, label: labelFromPath(field) } : [];
+        if (!isSafeBindingPath(field.field))
+          return [];
+        return {
+          field: field.field,
+          label: field.label ?? labelFromPath(field.field),
+          input: field.input,
+          format: field.format,
+          required: field.required,
+          readonly: field.readonly
+        };
+      });
+    }
+    const shape = detailShape(endpoint);
+    if (!shape)
+      return [];
+    return flattenDataShape(shape).filter((field) => isSafeBindingPath(field.path)).slice(0, 12).map((field) => ({
+      field: field.path,
+      label: labelFromPath(field.path),
+      input: field.input,
+      format: inferFieldFormat(field.path),
+      required: field.required
+    }));
+  }
+  function resolveWriteFields(fields, endpoint) {
+    if (fields?.length)
+      return resolveFields(fields, endpoint);
+    const shape = endpoint.body;
+    if (!shape)
+      return [];
+    return flattenDataShape(shape).filter((field) => isSafeBindingPath(field.path)).slice(0, 12).map((field) => ({
+      field: field.path,
+      label: labelFromPath(field.path),
+      input: field.input,
+      format: inferFieldFormat(field.path),
+      required: field.required
+    }));
+  }
+  function listItemShape(endpoint, collection) {
+    const body = successBody(endpoint);
+    if (!body)
+      return null;
+    const listShape = collection.list.itemsPath ? shapeAtPath(body, collection.list.itemsPath) : defaultListShape(body);
+    if (!listShape)
+      return null;
+    if (listShape.type === "array")
+      return listShape.items ?? null;
+    return listShape;
+  }
+  function detailShape(endpoint) {
+    const body = successBody(endpoint);
+    if (!body)
+      return null;
+    if (body.type === "array")
+      return body.items ?? null;
+    return body;
+  }
+  function repeatPathFor(endpoint, collection) {
+    if (collection.list.itemsPath)
+      return `data.${collection.list.itemsPath}`;
+    const body = successBody(endpoint);
+    if (body?.type === "object" && body.properties?.items?.type === "array")
+      return "data.items";
+    return "data";
+  }
+  function defaultListShape(body) {
+    if (body.type === "object" && body.properties?.items?.type === "array")
+      return body.properties.items;
+    return body;
+  }
+  function successBody(endpoint) {
+    const output = endpoint.output ?? [];
+    return output.find(isSuccessResponse)?.body ?? output.find((response) => response.status === "default")?.body ?? output.find((response) => response.body)?.body ?? null;
+  }
+  function isSuccessResponse(response) {
+    const status = Number(response.status);
+    return Number.isInteger(status) && status >= 200 && status < 300 && Boolean(response.body);
+  }
+  function shapeAtPath(shape, path) {
+    let current = shape;
+    for (const part of path.split(".")) {
+      if (!part)
+        return null;
+      if (current?.type === "array")
+        current = current.items;
+      if (current?.type !== "object")
+        return null;
+      current = current.properties?.[part];
+    }
+    return current ?? null;
+  }
+  function endpointUrl(group, ref, options = {}) {
+    const base = route(`/.cms/sources/${encodeURIComponent(group.source.id)}/${encodeURIComponent(ref.endpoint)}`);
+    const params = Object.entries(ref.params ?? {});
+    if (!params.length)
+      return base;
+    return `${base}?${params.map(([name, expr]) => `${encodeURIComponent(name)}=${paramValue(expr, options)}`).join("&")}`;
+  }
+  function paramValue(expr, options) {
+    if (expr === "$selection")
+      return encodeURIComponent(options.selection ?? "");
+    if (expr.startsWith("$param."))
+      return `#{${expr.slice("$param.".length)}}`;
+    if (expr.startsWith("$row."))
+      return `{{ row.${expr.slice("$row.".length)} }}`;
+    return encodeURIComponent(expr);
+  }
+  function rowSelectionAttributes(collection) {
+    const rowKey = collection.rowKey;
+    if (!rowKey || !isSafeBindingPath(rowKey))
+      return "";
+    return [
+      ' class="dashboard-row"',
+      ' role="button"',
+      ' tabindex="0"',
+      ` aria-label="Select ${escapeAttr2(labelFromPath(collection.id))}"`,
+      ` data-dashboard-collection="${escapeAttr2(collection.id)}"`,
+      ` data-dashboard-row-key="{{ row.${rowKey} }}"`
+    ].join("");
+  }
+  function hasDetailCollectionWidget(widgets, collectionId) {
+    return widgets.some((widget) => {
+      if (widget.widget === "w-detail" || widget.widget === "w-update")
+        return widget.collection === collectionId;
+      if (widget.widget === "w-section")
+        return hasDetailCollectionWidget(widget.children, collectionId);
+      if (widget.widget === "w-tabs")
+        return widget.tabs.some((tab) => hasDetailCollectionWidget(tab.children, collectionId));
+      return false;
+    });
+  }
+  function formatBinding(field, format) {
+    const binding = `{{ row.${field} }}`;
+    if (format === "badge")
+      return `<span class="badge">${binding}</span>`;
+    return binding;
+  }
+  function renderImageField(field) {
+    const binding = `{{ item.${field.field} }}`;
+    return `
+        <figure class="dashboard-detail-media" cms-condition="item.${field.field}">
+            <img src="${binding}" alt="">
+            <figcaption>
+                <span>${escapeHtml2(field.label)}</span>
+                <a href="${binding}" target="_blank" rel="noopener">${binding}</a>
+            </figcaption>
+        </figure>
+    `;
+  }
+  function formatDetailBinding(field) {
+    const binding = `{{ item.${field.field} }}`;
+    if (field.format === "url")
+      return `<a href="${binding}" target="_blank" rel="noopener">${binding}</a>`;
+    if (field.format === "badge" || field.input === "boolean")
+      return `<span class="badge">${binding}</span>`;
+    if (field.format === "date")
+      return `<time>${binding}</time>`;
+    return binding;
+  }
+  function renderWriteField(field, isParam) {
+    const attrs = [
+      `name="${escapeAttr2(field.field)}"`,
+      "data-dashboard-field",
+      `data-dashboard-field-type="${escapeAttr2(field.input ?? "text")}"`,
+      `data-dashboard-field-label="${escapeAttr2(field.label)}"`,
+      isParam ? "data-dashboard-param" : "",
+      field.required ? "required" : "",
+      field.readonly ? "data-dashboard-readonly" : "",
+      field.readonly ? "disabled" : ""
+    ].filter(Boolean).join(" ");
+    if (field.input === "cms-user") {
+      return `
+            <div class="dashboard-user-picker" ${attrs} data-dashboard-user-picker>
+                <label>${escapeHtml2(field.label)}</label>
+                <div class="dashboard-user-control">
+                    <input
+                        type="search"
+                        placeholder="Search by name or email"
+                        autocomplete="off"
+                        role="combobox"
+                        aria-expanded="false"
+                        data-dashboard-user-search
+                    >
+                    <div class="dashboard-user-menu" role="listbox" data-dashboard-user-menu hidden></div>
+                </div>
+            </div>
+        `;
+    }
+    if (field.input === "boolean") {
+      return `
+            <label class="dashboard-checkbox">
+                <input type="checkbox" ${attrs}>
+                <span>${escapeHtml2(field.label)}</span>
+            </label>
+        `;
+    }
+    return `
+        <p9r-input
+            ${attrs}
+            label="${escapeAttr2(field.label)}"
+            type="${escapeAttr2(inputTypeFor(field))}"
+        ></p9r-input>
+    `;
+  }
+  function inputTypeFor(field) {
+    if (field.input === "number")
+      return "number";
+    if (field.format === "url")
+      return "url";
+    return "text";
+  }
+  function paramFieldNames(ref) {
+    const names = new Set;
+    for (const expr of Object.values(ref.params ?? {})) {
+      if (expr.startsWith("$param."))
+        names.add(expr.slice("$param.".length));
+    }
+    return names;
+  }
+  function writeLabel(widget, fallback) {
+    return widget.label ?? fallback;
+  }
+  function writeSubmitLabel(widget, fallback) {
+    return widget.submitLabel ?? widget.label ?? fallback;
+  }
+  function safeDomId(value) {
+    return value.replace(/[^A-Za-z0-9_-]+/g, "-");
+  }
+  function inferFieldFormat(field) {
+    const leaf = field.split(".").filter(Boolean).at(-1)?.toLowerCase() ?? "";
+    if (leaf.endsWith("url") || leaf.endsWith("uri") || leaf === "href")
+      return "url";
+    if (leaf.endsWith("at") || leaf.endsWith("date"))
+      return "date";
+    return;
+  }
+  function isSafeBindingPath(path) {
+    return SAFE_BINDING_PATH.test(path);
+  }
+  function labelFromPath(path) {
+    const leaf = path.split(".").filter(Boolean).at(-1) ?? path;
+    return leaf.replace(/[_-]+/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+  }
+  function filterLabel(field) {
+    if (field === "q")
+      return "Search";
+    return sentenceCase(labelFromPath(field));
+  }
+  function filterPlaceholder(field, collection) {
+    if (field === "q")
+      return `Search ${labelFromPath(collection.id).toLowerCase()}`;
+    return `Filter by ${filterLabel(field).toLowerCase()}`;
+  }
+  function sentenceCase(value) {
+    return value ? `${value.charAt(0).toUpperCase()}${value.slice(1)}` : value;
+  }
+  function escapeHtml2(value) {
+    return value.replace(/[&<>"']/g, (char) => HTML_ESCAPE[char] ?? char);
+  }
+  function escapeAttr2(value) {
+    return escapeHtml2(value);
+  }
+  var HTML_ESCAPE = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  };
+
+  // src/components/admin/Resources/Dashboards/DashboardView.ts
+  class DashboardView extends A {
+    groups = [];
+    selectedSource = "";
+    selectedDashboard = "";
+    detailSelection = null;
+    userOptions = null;
+    userOptionsRequest = null;
+    tabState = new Map;
+    constructor() {
+      super({ css: style_default3, template: template_default4 });
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      this.syncFromSelection(currentSelection());
+      this.shadowRoot.addEventListener("click", this.onClick);
+      this.shadowRoot.addEventListener("keydown", this.onKeydown);
+      this.shadowRoot.addEventListener("submit", this.onSubmit);
+      window.addEventListener("popstate", this.onPopState);
+      window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
+      this.load();
+    }
+    disconnectedCallback() {
+      this.shadowRoot?.removeEventListener("click", this.onClick);
+      this.shadowRoot?.removeEventListener("keydown", this.onKeydown);
+      this.shadowRoot?.removeEventListener("submit", this.onSubmit);
+      window.removeEventListener("popstate", this.onPopState);
+      window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
+    }
+    async load() {
+      try {
+        this.groups = await fetchDashboards();
+        this.selectedSource ||= this.groups[0]?.source.id ?? "";
+        this.ensureDashboardSelection();
+      } catch {
+        this.groups = [];
+      }
+      this.render();
+    }
+    ensureDashboardSelection() {
+      const group = this.activeGroup();
+      if (!group) {
+        this.selectedDashboard = "";
+        this.detailSelection = null;
+        return;
+      }
+      if (!group.dashboards.some((dashboard) => dashboard.id === this.selectedDashboard)) {
+        this.selectedDashboard = group.dashboards[0]?.id ?? "";
+        this.detailSelection = null;
+      }
+    }
+    handleClick(event) {
+      const target = event.target;
+      const openWrite = target?.closest("[data-dashboard-write-open]");
+      if (openWrite?.dataset.dashboardWriteOpen) {
+        this.openWriteDialog(openWrite.dataset.dashboardWriteOpen);
+        return;
+      }
+      if (target?.closest("[data-dashboard-write-close]")) {
+        this.closeWriteDialog(target);
+        return;
+      }
+      if (target?.closest("[data-dashboard-back]")) {
+        this.clearDetailSelection();
+        return;
+      }
+      if (this.selectRow(target))
+        return;
+      const tabButton = target?.closest("[data-tab-key]");
+      if (tabButton?.dataset.tabKey && tabButton.dataset.tabIndex) {
+        this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
+        this.renderWidgets();
+      }
+    }
+    handleKeydown(event) {
+      if (event.key !== "Enter" && event.key !== " ")
+        return;
+      if (!this.selectRow(event.target))
+        return;
+      event.preventDefault();
+    }
+    selectRow(target) {
+      const row = target?.closest("[data-dashboard-collection][data-dashboard-row-key]");
+      const collection = row?.dataset.dashboardCollection;
+      const rowKey = row?.dataset.dashboardRowKey;
+      if (!collection || !rowKey?.trim())
+        return false;
+      this.detailSelection = { collection, row: rowKey };
+      pushSelectionUrl(this.selection());
+      this.renderDetail();
+      return true;
+    }
+    clearDetailSelection() {
+      if (!this.detailSelection)
+        return;
+      this.detailSelection = null;
+      replaceSelectionUrl(this.selection());
+      this.renderDetail();
+    }
+    render() {
+      this.renderDetail();
+    }
+    renderDetail() {
+      const group = this.activeGroup();
+      const dashboard = this.activeDashboard();
+      this.query("[data-empty]").hidden = Boolean(group);
+      this.query("[data-source-empty]").hidden = !group || Boolean(dashboard);
+      this.query("[data-dashboard-head]").hidden = !dashboard;
+      this.query("[data-detail-toolbar]").hidden = !dashboard || !this.detailSelection;
+      this.query("[data-widgets]").hidden = !dashboard;
+      if (!group)
+        return;
+      if (!dashboard)
+        return;
+      this.text("[data-dashboard-name]", dashboard.meta?.name ?? dashboard.id);
+      renderIcon(this.query("[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
+      this.text("[data-detail-row]", this.detailSelection?.row ?? "");
+      this.renderWidgets();
+    }
+    renderWidgets() {
+      const group = this.activeGroup();
+      const dashboard = this.activeDashboard();
+      const root = this.query("[data-widgets]");
+      if (!group || !dashboard) {
+        root.replaceChildren();
+        return;
+      }
+      const detail = this.detailSelection;
+      const widgets = detail ? detailWidgetsFor(dashboard.views, detail.collection) : mainWidgetsFor(dashboard.views);
+      const selectedRows = new Map;
+      if (detail)
+        selectedRows.set(detail.collection, detail.row);
+      if (detail && !widgets.length) {
+        root.innerHTML = `
+                <section class="panel empty">
+                    <strong>No detail view</strong>
+                    <span>This dashboard does not declare a detail widget for this collection.</span>
+                </section>
+            `;
+        return;
+      }
+      root.innerHTML = widgets.map((widget, index) => renderWidget(widget, { group, dashboard, selectedRows }, `root.${index}`, this.tabState)).join("");
+      this.hydrateUserPickers();
+    }
+    async handleSubmit(event) {
+      const target = event.target;
+      if (!(target instanceof HTMLFormElement) || !target.matches("[data-dashboard-write]"))
+        return;
+      event.preventDefault();
+      const form = target;
+      const state = form.querySelector("[data-dashboard-write-state]");
+      setWriteState(state, "");
+      const payload = readWritePayload(form);
+      if (!payload.ok) {
+        setWriteState(state, payload.message, "error");
+        xc(payload.message, { type: "error" });
+        payload.control?.focus();
+        return;
+      }
+      let url;
+      try {
+        url = resolveWriteUrl(form.dataset.dashboardUrl ?? "", payload.params);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Invalid write URL";
+        setWriteState(state, message, "error");
+        xc(message, { type: "error" });
+        return;
+      }
+      const method = form.dataset.dashboardMethod || "POST";
+      form.setAttribute("aria-busy", "true");
+      setWriteState(state, "Saving...");
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json"
+          },
+          body: JSON.stringify(payload.body)
+        });
+        if (!response.ok) {
+          const message = await responseMessage(response);
+          setWriteState(state, message, "error");
+          xc(message, { type: "error" });
+          return;
+        }
+        form.reset();
+        const successMessage = form.dataset.dashboardSuccessMessage || "Saved";
+        setWriteState(state, `${successMessage}.`, "success");
+        xc(successMessage, { type: "success" });
+        this.renderWidgets();
+      } catch {
+        setWriteState(state, "Network error", "error");
+        xc("Network error", { type: "error" });
+      } finally {
+        form.removeAttribute("aria-busy");
+      }
+    }
+    async openWriteDialog(id2) {
+      const dialog = this.shadowRoot.querySelector(`[data-dashboard-write-dialog="${cssEscape(id2)}"]`);
+      if (!dialog)
+        return;
+      const form = dialog.querySelector("[data-dashboard-write]");
+      if (typeof dialog.showModal === "function")
+        dialog.showModal();
+      else
+        dialog.setAttribute("open", "");
+      this.hydrateUserPickers(dialog);
+      if (form?.dataset.dashboardLoadUrl) {
+        await this.hydrateWriteForm(form);
+        this.hydrateUserPickers(dialog);
+      }
+    }
+    closeWriteDialog(target) {
+      const dialog = target?.closest("dialog[data-dashboard-write-dialog]");
+      if (!dialog)
+        return;
+      dialog.close();
+    }
+    async hydrateWriteForm(form) {
+      const state = form.querySelector("[data-dashboard-write-state]");
+      setWriteState(state, "Loading...");
+      try {
+        const response = await fetch(form.dataset.dashboardLoadUrl ?? "", { headers: { accept: "application/json" } });
+        if (!response.ok) {
+          const message = await responseMessage(response);
+          setWriteState(state, message, "error");
+          xc(message, { type: "error" });
+          return;
+        }
+        const item = await response.json();
+        fillWriteForm(form, item);
+        setWriteState(state, "");
+      } catch {
+        setWriteState(state, "Unable to load item", "error");
+        xc("Unable to load item", { type: "error" });
+      }
+    }
+    async hydrateUserPickers(root = this.shadowRoot) {
+      const pickers = Array.from(root.querySelectorAll("[data-dashboard-user-picker]"));
+      if (!pickers.length)
+        return;
+      try {
+        const users = await this.loadUserOptions();
+        for (const picker of pickers)
+          hydrateUserPicker(picker, users);
+      } catch {
+        for (const picker of pickers) {
+          const input = picker.querySelector("[data-dashboard-user-search]");
+          if (input)
+            input.placeholder = "Unable to load users";
+        }
+      }
+    }
+    loadUserOptions() {
+      if (this.userOptions)
+        return Promise.resolve(this.userOptions);
+      this.userOptionsRequest ??= fetchDashboardUsers().then((users) => {
+        this.userOptions = users;
+        return users;
+      });
+      return this.userOptionsRequest;
+    }
+    activeGroup() {
+      return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
+    }
+    activeDashboard() {
+      return this.activeGroup()?.dashboards.find((dashboard) => dashboard.id === this.selectedDashboard) ?? null;
+    }
+    selection() {
+      return {
+        source: this.selectedSource,
+        dashboard: this.selectedDashboard,
+        ...this.detailSelection ? {
+          collection: this.detailSelection.collection,
+          row: this.detailSelection.row
+        } : {}
+      };
+    }
+    syncFromSelection(selection) {
+      this.selectedSource = selection.source;
+      this.selectedDashboard = selection.dashboard;
+      this.detailSelection = selection.collection && selection.row ? { collection: selection.collection, row: selection.row } : null;
+    }
+    text(selector, value) {
+      this.query(selector).textContent = value;
+    }
+    onSelection = (event) => {
+      this.syncFromSelection(event.detail);
+      this.ensureDashboardSelection();
+      this.renderDetail();
+    };
+    onPopState = () => {
+      this.syncFromSelection(currentSelection());
+      this.ensureDashboardSelection();
+      this.renderDetail();
+    };
+    onClick = (event) => {
+      this.handleClick(event);
+    };
+    onKeydown = (event) => {
+      this.handleKeydown(event);
+    };
+    onSubmit = (event) => {
+      this.handleSubmit(event);
+    };
+    query(selector) {
+      return this.shadowRoot.querySelector(selector);
+    }
+  }
+  function readWritePayload(form) {
+    const body = {};
+    const params = new URLSearchParams;
+    const controls = Array.from(form.querySelectorAll("[data-dashboard-field]"));
+    for (const control of controls) {
+      if (control.hasAttribute("data-dashboard-readonly"))
+        continue;
+      const name = control.getAttribute("name") ?? "";
+      if (!name)
+        continue;
+      const value = readFieldValue(control);
+      const required = control.hasAttribute("required");
+      if (required && isEmptyFieldValue(value)) {
+        return { ok: false, message: `${fieldLabel(control, name)} is required`, control };
+      }
+      if (control.dataset.dashboardFieldType === "number" && typeof value === "string" && value) {
+        return { ok: false, message: `${fieldLabel(control, name)} must be a number`, control };
+      }
+      if (isEmptyFieldValue(value))
+        continue;
+      if (control.hasAttribute("data-dashboard-param")) {
+        params.set(name, String(value));
+      } else {
+        setNestedValue(body, name, value);
+      }
+    }
+    return { ok: true, body, params };
+  }
+  function readFieldValue(control) {
+    const type = control.dataset.dashboardFieldType ?? "text";
+    if (type === "cms-user")
+      return control.dataset.value ?? "";
+    if (control instanceof HTMLInputElement && control.type === "checkbox")
+      return control.checked;
+    const valueControl = control;
+    const raw = typeof valueControl.value === "string" ? valueControl.value.trim() : "";
+    if (type === "number") {
+      if (!raw)
+        return "";
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : raw;
+    }
+    return raw;
+  }
+  function isEmptyFieldValue(value) {
+    return value === "" || value === null || value === undefined;
+  }
+  function fieldLabel(control, name) {
+    return control.dataset.dashboardFieldLabel ?? control.getAttribute("label") ?? name;
+  }
+  function setNestedValue(target, path, value) {
+    const parts = path.split(".").filter(Boolean);
+    let current = target;
+    for (const part of parts.slice(0, -1)) {
+      const existing = current[part];
+      if (!existing || typeof existing !== "object" || Array.isArray(existing)) {
+        current[part] = {};
+      }
+      current = current[part];
+    }
+    const leaf = parts.at(-1);
+    if (leaf)
+      current[leaf] = value;
+  }
+  function resolveWriteUrl(template, params) {
+    return template.replace(/#\{([^}]+)\}/g, (_match, rawName) => {
+      const name = rawName.trim();
+      const value = params.get(name);
+      if (value === null)
+        throw new Error(`${name} is required`);
+      return encodeURIComponent(value);
+    });
+  }
+  function setWriteState(target, message, kind = "") {
+    if (!target)
+      return;
+    target.textContent = message;
+    target.hidden = !message;
+    target.dataset.state = kind;
+  }
+  function fillWriteForm(form, item) {
+    const controls = Array.from(form.querySelectorAll("[data-dashboard-field]"));
+    for (const control of controls) {
+      const name = control.getAttribute("name") ?? "";
+      if (!name)
+        continue;
+      setFieldValue(control, valueAtPath(item, name));
+    }
+  }
+  function setFieldValue(control, value) {
+    const type = control.dataset.dashboardFieldType ?? "text";
+    if (type === "cms-user") {
+      if (typeof value === "string" && value)
+        control.dataset.value = value;
+      else
+        delete control.dataset.value;
+      const input = control.querySelector("[data-dashboard-user-search]");
+      if (input)
+        input.value = typeof value === "string" ? value : "";
+      return;
+    }
+    if (control instanceof HTMLInputElement && control.type === "checkbox") {
+      control.checked = value === true;
+      return;
+    }
+    const valueControl = control;
+    const stringValue = value === null || value === undefined ? "" : String(value);
+    if ("value" in valueControl)
+      valueControl.value = stringValue;
+    control.setAttribute("value", stringValue);
+  }
+  function valueAtPath(item, path) {
+    let current = item;
+    for (const part of path.split(".")) {
+      if (!part || !current || typeof current !== "object" || Array.isArray(current))
+        return;
+      current = current[part];
+    }
+    return current;
+  }
+  async function responseMessage(response) {
+    const text = await response.text().catch(() => "");
+    if (!text)
+      return `HTTP ${response.status}`;
+    try {
+      const data = JSON.parse(text);
+      if (typeof data.error === "string")
+        return data.error;
+      if (typeof data.message === "string")
+        return data.message;
+    } catch {}
+    return text;
+  }
+  function hydrateUserPicker(picker, users) {
+    const input = picker.querySelector("[data-dashboard-user-search]");
+    const menu = picker.querySelector("[data-dashboard-user-menu]");
+    if (!input || !menu)
+      return;
+    const syncInitialSelection = () => {
+      const selected = picker.dataset.value;
+      if (!selected)
+        return;
+      const user = users.find((candidate) => candidate.sub === selected);
+      input.value = user ? userLabel(user) : selected;
+    };
+    if (picker.dataset.dashboardUserHydrated === "true") {
+      syncInitialSelection();
+      return;
+    }
+    picker.dataset.dashboardUserHydrated = "true";
+    let activeIndex = -1;
+    const render = () => {
+      const options = matchingUsers(users, input.value);
+      if (activeIndex >= options.length)
+        activeIndex = options.length - 1;
+      renderUserMenu(menu, options, activeIndex);
+      menu.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      menu.querySelector(".active")?.scrollIntoView({ block: "nearest" });
+    };
+    const close = () => {
+      menu.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+      activeIndex = -1;
+    };
+    const select = (user) => {
+      picker.dataset.value = user.sub;
+      input.value = userLabel(user);
+      close();
+    };
+    const syncExactSelection = () => {
+      const value = input.value.trim();
+      const user = users.find((candidate) => userMatchesInput(candidate, value));
+      if (user)
+        select(user);
+      else
+        delete picker.dataset.value;
+    };
+    input.addEventListener("focus", render);
+    input.addEventListener("input", () => {
+      delete picker.dataset.value;
+      activeIndex = 0;
+      render();
+    });
+    input.addEventListener("change", syncExactSelection);
+    input.addEventListener("blur", () => {
+      syncExactSelection();
+      window.setTimeout(close, 120);
+    });
+    input.addEventListener("keydown", (event) => {
+      const options = matchingUsers(users, input.value);
+      if (event.key === "ArrowDown") {
+        activeIndex = Math.min(activeIndex + 1, Math.max(options.length - 1, 0));
+        render();
+        event.preventDefault();
+        return;
+      }
+      if (event.key === "ArrowUp") {
+        activeIndex = Math.max(activeIndex - 1, 0);
+        render();
+        event.preventDefault();
+        return;
+      }
+      if (event.key === "Enter" && activeIndex >= 0 && options[activeIndex]) {
+        select(options[activeIndex]);
+        event.preventDefault();
+        return;
+      }
+      if (event.key === "Escape") {
+        close();
+        event.preventDefault();
+      }
+    });
+    menu.addEventListener("mousedown", (event) => event.preventDefault());
+    menu.addEventListener("click", (event) => {
+      const option = event.target?.closest("[data-dashboard-user-value]");
+      const user = users.find((candidate) => candidate.sub === option?.dataset.dashboardUserValue);
+      if (user)
+        select(user);
+    });
+    syncInitialSelection();
+  }
+  function userMatchesInput(user, value) {
+    if (!value)
+      return false;
+    return [userLabel(user), user.email, user.displayName, user.sub].filter((entry) => typeof entry === "string" && Boolean(entry)).some((entry) => entry.trim().toLowerCase() === value.toLowerCase());
+  }
+  function matchingUsers(users, query) {
+    const normalized = query.trim().toLowerCase();
+    const matches = normalized ? users.filter((user) => userSearchText(user).includes(normalized)) : users;
+    return matches.slice(0, 20);
+  }
+  function renderUserMenu(menu, users, activeIndex) {
+    menu.replaceChildren();
+    if (!users.length) {
+      const empty = document.createElement("div");
+      empty.className = "dashboard-user-empty";
+      empty.textContent = "No users found";
+      menu.append(empty);
+      return;
+    }
+    users.forEach((user, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `dashboard-user-option${index === activeIndex ? " active" : ""}`;
+      button.dataset.dashboardUserValue = user.sub;
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", index === activeIndex ? "true" : "false");
+      const title = document.createElement("span");
+      title.textContent = user.displayName || user.email || user.sub;
+      const meta = document.createElement("small");
+      meta.textContent = user.email && user.email !== title.textContent ? user.email : user.sub;
+      button.append(title, meta);
+      menu.append(button);
+    });
+  }
+  function userLabel(user) {
+    const name = user.displayName || user.email || user.sub;
+    const suffix = user.email && user.email !== name ? ` · ${user.email}` : "";
+    return `${name}${suffix}`;
+  }
+  function userSearchText(user) {
+    return [user.displayName, user.email, user.sub, userLabel(user)].filter((entry) => typeof entry === "string" && Boolean(entry)).join(" ").toLowerCase();
+  }
+  function cssEscape(value) {
+    return value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  }
+  function mainWidgetsFor(widgets) {
+    const result = [];
+    for (const widget of widgets) {
+      if (widget.widget === "w-detail" || widget.widget === "w-update")
+        continue;
+      if (widget.widget === "w-section") {
+        const children = mainWidgetsFor(widget.children);
+        if (children.length)
+          result.push({ ...widget, children });
+        continue;
+      }
+      if (widget.widget === "w-tabs") {
+        const tabs = widget.tabs.map((tab) => ({ label: tab.label, children: mainWidgetsFor(tab.children) })).filter((tab) => tab.children.length);
+        if (tabs.length)
+          result.push({ ...widget, tabs });
+        continue;
+      }
+      result.push(widget);
+    }
+    return result;
+  }
+  function detailWidgetsFor(widgets, collection) {
+    const result = [];
+    for (const widget of widgets) {
+      if ((widget.widget === "w-detail" || widget.widget === "w-update") && widget.collection === collection) {
+        result.push(widget);
+        continue;
+      }
+      if (widget.widget === "w-section") {
+        const children = detailWidgetsFor(widget.children, collection);
+        if (children.length)
+          result.push({ ...widget, children });
+        continue;
+      }
+      if (widget.widget === "w-tabs") {
+        const tabs = widget.tabs.map((tab) => ({ label: tab.label, children: detailWidgetsFor(tab.children, collection) })).filter((tab) => tab.children.length);
+        if (tabs.length)
+          result.push({ ...widget, tabs });
+      }
+    }
+    return result;
+  }
+  if (!customElements.get("cms-dashboards-admin"))
+    customElements.define("cms-dashboards-admin", DashboardView);
+
+  // src/components/admin/Resources/Integrations/style.css
+  var style_default4 = `:host { display: grid; gap: 16px; }
+
+.card-head,
+header,
+footer,
+.footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+footer { justify-content: space-between; }
+
+h2, h3, h4, p { margin: 0; }
+
+h4 { font-size: 13px; }
+
+p,
+small,
+.empty,
+.card-meta,
+.summary-row span,
+.info-grid span { color: var(--text-muted, #66736f); }
+
+input, select, textarea {
+    min-height: 34px; border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 6px; background: var(--bg-surface, #fff); color: inherit; font: inherit;
+}
+
+.panel, .card, .dialog {
+    border: 1px solid var(--border-default, #dfe5e2); border-radius: 8px; background: var(--bg-surface, #fff);
+}
+
+.panel { padding: 16px; }
+.catalogue { display: grid; gap: 14px; padding: 0; border: 0; background: transparent; }
+.filters { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(140px, 220px); gap: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 360px)); gap: 12px; }
+.card { display: grid; gap: 12px; padding: 14px; }
+.card.is-installed { background: var(--bg-subtle, #f5f7f6); }
+
+.mark {
+    display: inline-grid; width: 34px; height: 34px; place-items: center; border-radius: 8px;
+    background: var(--primary-muted, #e2f0ea); color: var(--primary-base, #165f4b); font-weight: 800;
+}
+
+.card-meta,
+.summary-row,
+.summary-row div {
+    display: grid;
+    gap: 3px;
+}
+
+.card-meta {
+    display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px;
+}
+
+.summary-row {
+    grid-template-columns: 78px minmax(0, 1fr);
+    align-items: start;
+    padding-block: 4px;
+    font-size: 13px;
+}
+
+.summary-row strong { line-height: 1.25; }
+.summary-row small:empty { display: none; }
+
+dialog { width: min(760px, calc(100vw - 32px)); padding: 0; border: 0; background: transparent; }
+.dialog { display: grid; gap: 18px; padding: 16px; }
+.dialog header { align-items: flex-start; }
+
+.setup-stepper {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px; padding: 0; margin: 0; list-style: none;
+}
+
+.setup-step {
+    position: relative; display: grid; grid-template-rows: 28px auto; gap: 6px; align-items: start;
+    color: var(--text-muted, #66736f);
+}
+
+.setup-step:not(:last-child)::after {
+    content: ""; position: absolute; top: 14px; left: 36px; right: -12px; height: 2px;
+    background: var(--border-default, #dfe5e2);
+}
+
+.setup-step span {
+    z-index: 1; display: grid; width: 28px; height: 28px; place-items: center;
+    border: 2px solid var(--border-default, #dfe5e2); border-radius: 50%;
+    background: var(--bg-surface, #fff); font-size: 12px; font-weight: 800;
+}
+
+.setup-step strong { z-index: 1; font-size: 13px; line-height: 1.2; }
+.setup-step.is-active,
+.setup-step.is-complete { color: var(--text-main, #17201c); }
+.setup-step.is-complete::after { background: var(--primary-base, #165f4b); }
+.setup-step.is-active span,
+.setup-step.is-complete span { border-color: var(--primary-base, #165f4b); background: var(--primary-base, #165f4b); color: #fff; }
+
+.setup-pages { min-height: 190px; }
+.step-panel,
+.info-grid div,
+.fields,
+.summary-list,
+.field { display: grid; gap: 6px; }
+
+.step-panel { gap: 12px; }
+.info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+.field input,
+.field select,
+.field textarea,
+textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+@media (max-width: 760px) {
+    .filters,
+    .info-grid,
+    .setup-stepper { grid-template-columns: 1fr; }
+    .setup-step::after { display: none; }
+}
+`;
+
+  // src/components/admin/Resources/Integrations/template.html
+  var template_default5 = `<p9r-tabs active="installed">
+    <p9r-tab-panel id="installed" label="Installed">
+        <section class="panel">
+            <div class="grid" data-instances></div>
+            <p class="empty" data-instances-empty hidden>No installed integrations yet.</p>
+        </section>
+    </p9r-tab-panel>
+
+    <p9r-tab-panel id="catalogue" label="Catalogue">
+        <section class="panel catalogue">
+            <div class="filters">
+                <p9r-input type="search" label="Search" placeholder="Search integrations" data-search></p9r-input>
+                <p9r-select label="Category" data-category><option value="">All categories</option></p9r-select>
+            </div>
+            <div class="grid" data-catalogue></div>
+            <p class="empty" data-catalogue-empty hidden>No matching integrations.</p>
+        </section>
+    </p9r-tab-panel>
+</p9r-tabs>
+
+<dialog data-setup>
+    <form method="dialog" class="dialog">
+        <header>
+            <span class="mark" data-setup-mark></span>
+            <div>
+                <h3 data-setup-title></h3>
+                <p data-setup-description></p>
+            </div>
+        </header>
+        <ol class="setup-stepper" aria-label="Integration setup steps">
+            <li class="setup-step" data-step-indicator="0"><span>1</span><strong>Information</strong></li>
+            <li class="setup-step" data-step-indicator="1"><span>2</span><strong>Inputs</strong></li>
+            <li class="setup-step" data-step-indicator="2"><span>3</span><strong>Review</strong></li>
+        </ol>
+        <div class="setup-pages">
+            <section class="step-panel" data-step-panel="0">
+                <h4>Information</h4>
+                <div class="info-grid">
+                    <div><span>Kind</span><strong data-info-kind></strong></div>
+                    <div><span>Category</span><strong data-info-category></strong></div>
+                    <div><span>Version</span><strong data-info-version></strong></div>
+                    <div><span>Artifacts</span><strong data-info-artifacts></strong></div>
+                </div>
+            </section>
+            <section class="step-panel" data-step-panel="1" hidden>
+                <h4>Inputs</h4>
+                <div class="fields" data-fields></div>
+            </section>
+            <section class="step-panel" data-step-panel="2" hidden>
+                <h4>Review installation</h4>
+                <div class="summary-list" data-summary></div>
+            </section>
+        </div>
+        <footer>
+            <p9r-button type="button" variant="outlined" data-close>Close</p9r-button>
+            <span data-status></span>
+            <div class="footer-actions">
+                <p9r-button type="button" variant="outlined" data-back hidden>Back</p9r-button>
+                <p9r-button type="button" color="primary" data-next>Continue</p9r-button>
+                <p9r-button type="button" color="primary" data-import hidden>Import</p9r-button>
+            </div>
+        </footer>
+    </form>
+</dialog>
+
+<dialog data-manual>
+    <form method="dialog" class="dialog">
+        <header>
+            <span class="mark">M</span>
+            <div>
+                <h3>Manual import</h3>
+                <p>Paste a declarative integration payload.</p>
+            </div>
+        </header>
+        <textarea data-manual-json rows="12" spellcheck="false"></textarea>
+        <footer>
+            <p9r-button type="button" variant="outlined" data-manual-close>Close</p9r-button>
+            <span data-manual-status></span>
+            <p9r-button type="button" color="primary" data-manual-submit>Import JSON</p9r-button>
+        </footer>
+    </form>
+</dialog>
+
+<template data-instance-template>
+    <article class="card">
+        <h3 data-label></h3>
+        <code data-id></code>
+        <dl>
+            <dt>Status</dt><dd data-status></dd>
+            <dt>Artifacts</dt><dd data-artifacts></dd>
+            <dt>Runs</dt><dd data-runs></dd>
+        </dl>
+    </article>
+</template>
+
+<template data-card-template>
+    <article class="card">
+        <div class="card-head">
+            <span class="mark" data-mark></span>
+            <div>
+                <h3 data-label></h3>
+                <p data-description></p>
+            </div>
+        </div>
+        <div class="card-meta">
+            <code data-kind></code>
+            <span data-artifacts></span>
+            <span><span data-installed></span> installed</span>
+        </div>
+        <p9r-button type="button" data-open>Configure</p9r-button>
+    </article>
+</template>
+
+<template data-summary-template>
+    <div class="summary-row">
+        <span data-kind></span>
+        <div>
+            <strong data-label></strong>
+            <small data-detail></small>
+        </div>
+    </div>
+</template>
+
+<template data-field-template>
+    <label class="field">
+        <span data-label></span>
+        <span data-control></span>
+        <small data-hint></small>
+    </label>
+</template>
+`;
+
+  // src/components/admin/Resources/Integrations/api.ts
+  function basePath2() {
+    const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
+    return raw.replace(/\/+$/, "");
+  }
+  function route2(path) {
+    return `${basePath2()}${path}`;
+  }
+  async function fetchDefinitions() {
+    return getJson2(route2("/api/integrations/list"));
+  }
+  async function fetchInstances() {
+    return getJson2(route2("/api/integrations/instances"));
+  }
+  async function importIntegration(payload) {
+    await postJson(route2("/api/integrations/import"), payload);
+    document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
+  }
+  async function getJson2(url) {
+    const response = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!response.ok)
+      throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  }
+  async function postJson(url, body) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok)
+      throw new Error(await response.text());
+  }
+
+  // src/components/admin/Resources/Integrations/domain.ts
+  function installedCounts(instances) {
+    const counts = new Map;
+    for (const instance of instances)
+      counts.set(instance.kind, (counts.get(instance.kind) ?? 0) + 1);
+    return counts;
+  }
+  function categories(definitions) {
+    return Array.from(new Set(definitions.map((definition) => definition.category ?? "Other"))).sort();
+  }
+  function matches(definition, query, category) {
+    const text = [definition.kind, definition.label, definition.category, definition.description].join(" ").toLowerCase();
+    const categoryMatch = !category || category === (definition.category ?? "Other");
+    return categoryMatch && (!query || text.includes(query.toLowerCase()));
+  }
+  function artifactSummary(definition) {
+    const types = Array.from(new Set((definition.artifacts ?? []).map((artifact) => artifact.type)));
+    if (!types.length)
+      return "No declared artifacts";
+    return types.map((type) => type[0].toUpperCase() + type.slice(1)).join(", ");
+  }
+  function mark(definition) {
+    return (definition.label.trim()[0] || definition.kind.trim()[0] || "I").toUpperCase();
+  }
+  function defaultInstance(definition, answers) {
+    return typeof answers.id === "string" && answers.id.trim() ? undefined : { id: `${definition.kind}:${definition.kind}`, label: definition.label };
+  }
+
+  // src/components/admin/Resources/Integrations/fields.ts
+  function renderFields(root, template, definition) {
+    root.replaceChildren();
+    if (!definition.inputs.length) {
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "No inputs required.";
+      root.append(empty);
+      return;
+    }
+    for (const input of definition.inputs) {
+      const row = template.content.firstElementChild.cloneNode(true);
+      row.querySelector("[data-label]").textContent = input.label;
+      row.querySelector("[data-hint]").textContent = hint(input);
+      row.querySelector("[data-control]").append(control(input));
+      root.append(row);
+    }
+  }
+  function collectAnswers(root, definition) {
+    const answers = {};
+    for (const input of definition.inputs) {
+      const element = root.querySelector(`[name="${input.name}"]`);
+      if (!element)
+        continue;
+      if (input.type === "boolean")
+        answers[input.name] = element.checked;
+      else if (input.type === "json")
+        answers[input.name] = JSON.parse(element.value || "null");
+      else
+        answers[input.name] = element.value;
+    }
+    return answers;
+  }
+  function control(input) {
+    if (input.type === "json")
+      return textarea(input, 6);
+    if (input.type === "select")
+      return select(input);
+    const element = document.createElement("input");
+    element.name = input.name;
+    element.type = input.type === "password" ? "password" : input.type === "boolean" ? "checkbox" : "text";
+    if (input.defaultValue !== undefined && input.type !== "boolean")
+      element.value = String(input.defaultValue);
+    if (input.defaultValue === true && input.type === "boolean")
+      element.checked = true;
+    if (input.required)
+      element.required = true;
+    return element;
+  }
+  function select(input) {
+    const element = document.createElement("select");
+    element.name = input.name;
+    for (const option of input.options ?? []) {
+      const child = document.createElement("option");
+      child.value = option.value;
+      child.textContent = option.label;
+      element.append(child);
+    }
+    return element;
+  }
+  function textarea(input, rows) {
+    const element = document.createElement("textarea");
+    element.name = input.name;
+    element.rows = rows;
+    if (typeof input.defaultValue === "string")
+      element.value = input.defaultValue;
+    return element;
+  }
+  function hint(input) {
+    if (input.secret || input.type === "password")
+      return "Stored as a secret.";
+    if (input.required)
+      return "Required.";
+    return "";
+  }
+
+  // src/components/admin/Resources/Integrations/setup.ts
+  var LAST_SETUP_STEP = 2;
+  function renderSetup(root, definition) {
+    renderInfo(root, definition);
+    renderFields(query(root, "[data-fields]"), query(root, "[data-field-template]"), definition);
+    renderSummary(query(root, "[data-summary]"), query(root, "[data-summary-template]"), definition);
+  }
+  function showSetupStep(root, step) {
+    const current = Math.max(0, Math.min(LAST_SETUP_STEP, step));
+    for (const panel of Array.from(root.querySelectorAll("[data-step-panel]"))) {
+      panel.hidden = Number(panel.dataset.stepPanel) !== current;
+    }
+    for (const item of Array.from(root.querySelectorAll("[data-step-indicator]"))) {
+      const index = Number(item.dataset.stepIndicator);
+      item.classList.toggle("is-active", index === current);
+      item.classList.toggle("is-complete", index < current);
+    }
+    query(root, "[data-back]").hidden = current === 0;
+    query(root, "[data-next]").hidden = current === LAST_SETUP_STEP;
+    query(root, "[data-import]").hidden = current !== LAST_SETUP_STEP;
+  }
+  function renderInfo(root, definition) {
+    fill(root, "[data-info-kind]", definition.kind);
+    fill(root, "[data-info-category]", definition.category ?? "Other");
+    fill(root, "[data-info-version]", definition.version ?? "Current");
+    fill(root, "[data-info-artifacts]", artifactSummary(definition));
+  }
+  function renderSummary(root, template, definition) {
+    root.replaceChildren();
+    for (const [kind, label, detail] of summaryRows(definition)) {
+      const item = template.content.firstElementChild.cloneNode(true);
+      item.querySelector("[data-kind]").textContent = kind;
+      item.querySelector("[data-label]").textContent = label;
+      item.querySelector("[data-detail]").textContent = detail;
+      root.append(item);
+    }
+  }
+  function summaryRows(definition) {
+    const rows = sourceRows(definition);
+    for (const secret of definition.secrets ?? []) {
+      rows.push(["Secret", inputLabel(definition, secret.input), secret.key]);
+    }
+    if (rows.length)
+      return rows;
+    if (definition.ui?.resources?.length)
+      return definition.ui.resources.map(([kind, label]) => [kind, label, ""]);
+    return [["Artifacts", artifactSummary(definition), ""]];
+  }
+  function sourceRows(definition) {
+    const rows = [];
+    for (const artifact of definition.artifacts ?? []) {
+      if (artifact.type === "dashboard") {
+        const dashboard = artifact.dashboard;
+        rows.push(["Dashboard", dashboard.meta?.name ?? dashboard.id, `Source id: ${dashboard.source}`]);
+        continue;
+      }
+      const source = artifact.source;
+      rows.push(["Source", source.meta?.name ?? source.id, `Source id: ${source.id}`]);
+      for (const endpoint of source.endpoints) {
+        const label = endpoint.meta?.name ?? endpoint.endpointId;
+        rows.push(["Endpoint", label, `${endpoint.method} ${endpoint.endpointId}`]);
+      }
+    }
+    return rows;
+  }
+  function inputLabel(definition, name) {
+    return definition.inputs.find((input) => input.name === name)?.label ?? name;
+  }
+  function fill(root, selector, value) {
+    query(root, selector).textContent = value;
+  }
+  function query(root, selector) {
+    return root.querySelector(selector);
+  }
+
+  // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
+  class IntegrationBrowser extends A {
+    definitions = [];
+    instances = [];
+    activeDefinition = null;
+    setupStep = 0;
+    constructor() {
+      super({ css: style_default4, template: template_default5 });
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      this.bind();
+      this.load();
+    }
+    async load() {
+      [this.definitions, this.instances] = await Promise.all([fetchDefinitions(), fetchInstances()]);
+      this.renderCategories();
+      this.renderInstances();
+      this.renderCatalogue();
+    }
+    bind() {
+      this.query("[data-search]").addEventListener("input", () => this.renderCatalogue());
+      this.query("[data-category]").addEventListener("change", () => this.renderCatalogue());
+      this.query("[data-close]").addEventListener("click", () => this.closeSetup());
+      this.query("[data-back]").addEventListener("click", () => this.moveSetup(-1));
+      this.query("[data-next]").addEventListener("click", () => this.moveSetup(1));
+      this.query("[data-import]").addEventListener("click", () => void this.importActive());
+      document.querySelector("[data-integrations-manual-open]")?.addEventListener("click", () => this.query("[data-manual]").showModal());
+      this.query("[data-manual-close]").addEventListener("click", () => this.query("[data-manual]").close());
+      this.query("[data-manual-submit]").addEventListener("click", () => void this.importManual());
+    }
+    renderCategories() {
+      const select2 = this.query("[data-category]");
+      select2.replaceChildren(new Option("All categories", ""));
+      for (const category of categories(this.definitions)) {
+        select2.append(new Option(category, category));
+      }
+    }
+    renderInstances() {
+      const root = this.query("[data-instances]");
+      const empty = this.query("[data-instances-empty]");
+      const template = this.query("[data-instance-template]");
+      root.replaceChildren();
+      empty.hidden = this.instances.length > 0;
+      for (const instance of this.instances)
+        root.append(this.instanceCard(template, instance));
+    }
+    instanceCard(template, instance) {
+      const card = template.content.firstElementChild.cloneNode(true);
+      this.fill(card, "[data-label]", instance.label);
+      this.fill(card, "[data-id]", instance.id);
+      this.fill(card, "[data-status]", instance.status);
+      this.fill(card, "[data-artifacts]", String(instance.artifactCount));
+      this.fill(card, "[data-runs]", String(instance.runCount));
+      return card;
+    }
+    renderCatalogue() {
+      const root = this.query("[data-catalogue]");
+      const empty = this.query("[data-catalogue-empty]");
+      const template = this.query("[data-card-template]");
+      const query2 = this.query("[data-search]").value.trim();
+      const category = this.query("[data-category]").value;
+      const counts = installedCounts(this.instances);
+      const visible = this.definitions.filter((definition) => matches(definition, query2, category));
+      root.replaceChildren();
+      empty.hidden = visible.length > 0;
+      for (const definition of visible)
+        root.append(this.definitionCard(template, definition, counts.get(definition.kind) ?? 0));
+    }
+    definitionCard(template, definition, count) {
+      const card = template.content.firstElementChild.cloneNode(true);
+      this.fill(card, "[data-mark]", mark(definition));
+      this.fill(card, "[data-label]", definition.label);
+      this.fill(card, "[data-description]", definition.description ?? "");
+      this.fill(card, "[data-kind]", definition.kind);
+      this.fill(card, "[data-artifacts]", artifactSummary(definition));
+      this.fill(card, "[data-installed]", String(count));
+      card.classList.toggle("is-installed", count > 0);
+      const button = card.querySelector("[data-open]");
+      button.textContent = count > 0 ? "Installed" : "Configure";
+      button.disabled = count > 0;
+      if (count === 0)
+        button.addEventListener("click", () => this.openSetup(definition));
+      return card;
+    }
+    openSetup(definition) {
+      this.activeDefinition = definition;
+      this.fill(this.shadowRoot, "[data-setup-mark]", mark(definition));
+      this.fill(this.shadowRoot, "[data-setup-title]", definition.label);
+      this.fill(this.shadowRoot, "[data-setup-description]", definition.description ?? "");
+      renderSetup(this.shadowRoot, definition);
+      this.setupStep = 0;
+      showSetupStep(this.shadowRoot, this.setupStep);
+      this.query("[data-setup]").showModal();
+    }
+    async importActive() {
+      if (!this.activeDefinition)
+        return;
+      const fields = this.query("[data-fields]");
+      const answers = collectAnswers(fields, this.activeDefinition);
+      await importIntegration({
+        kind: this.activeDefinition.kind,
+        answers,
+        instance: defaultInstance(this.activeDefinition, answers)
+      });
+      this.closeSetup();
+      await this.load();
+    }
+    async importManual() {
+      const textarea2 = this.query("[data-manual-json]");
+      await importIntegration(JSON.parse(textarea2.value));
+      this.query("[data-manual]").close();
+      await this.load();
+    }
+    closeSetup() {
+      this.query("[data-setup]").close();
+    }
+    moveSetup(delta) {
+      this.setupStep = Math.max(0, Math.min(LAST_SETUP_STEP, this.setupStep + delta));
+      showSetupStep(this.shadowRoot, this.setupStep);
+    }
+    fill(root, selector, value) {
+      root.querySelector(selector).textContent = value;
+    }
+    query(selector) {
+      return this.shadowRoot.querySelector(selector);
+    }
+  }
+  if (!customElements.get("cms-integrations-admin"))
+    customElements.define("cms-integrations-admin", IntegrationBrowser);
+
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default4 = `<header class="topbar">
+  var template_default6 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -10058,6 +14649,15 @@ cms-endpoints-input .ep-add:hover {
             <button class="active" type="button" data-editor-mode="edit" aria-pressed="true">Edit</button>
             <button type="button" data-editor-mode="view" aria-pressed="false">View</button>
         </div>
+        <div class="segmented state-switch" aria-label="Source state preview">
+            <button type="button" data-source-state="loaded" aria-pressed="false">Loaded</button>
+            <button class="active" type="button" data-source-state="loading" aria-pressed="true">Loading</button>
+            <button type="button" data-source-state="empty" aria-pressed="false">Empty</button>
+            <button type="button" data-source-state="error" aria-pressed="false">Error</button>
+        </div>
+        <button class="view-reload" type="button" data-action="view-reload" aria-label="Reload preview" title="Reload preview" disabled>
+            <span aria-hidden="true">↻</span>
+        </button>
     </div>
     <div class="end">
         <button class="danger" type="button" data-action="delete">Delete</button>
@@ -10068,7 +14668,7 @@ cms-endpoints-input .ep-add:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/style.css
-  var style_default3 = `:host {
+  var style_default5 = `:host {
     display: block;
     min-width: 0;
     border-bottom: 1px solid var(--editor-v2-border);
@@ -10202,6 +14802,42 @@ button {
     min-width: 54px;
 }
 
+.state-switch button {
+    min-width: 58px;
+}
+
+.view-reload {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+    border-color: var(--editor-v2-border);
+    background: var(--editor-v2-surface-muted);
+    opacity: .45;
+    transition: opacity .12s ease;
+}
+
+.view-reload span {
+    font-size: 16px;
+    line-height: 1;
+    transform: translateY(-1px);
+}
+
+.view-reload:disabled {
+    cursor: default;
+}
+
+:host([mode="view"]) .state-switch {
+    opacity: .45;
+    pointer-events: none;
+}
+
+:host([mode="view"]) .view-reload {
+    opacity: 1;
+}
+
 .device-icon {
     display: block;
     margin: 0 auto;
@@ -10291,9 +14927,11 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template = document.createElement("template");
-  template.innerHTML = `<style>${String(style_default3)}</style>${String(template_default4)}`;
+  template.innerHTML = `<style>${String(style_default5)}</style>${String(template_default6)}`;
   var TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
   var TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
+  var TOPBAR_SOURCE_STATE_CHANGE_EVENT = "editor-v2:source-state-change";
+  var TOPBAR_VIEW_RELOAD_EVENT = "editor-v2:view-reload";
   var TOPBAR_SAVE_EVENT = "editor-v2:save";
   var TOPBAR_DELETE_EVENT = "editor-v2:topbar-delete-document";
   var TOPBAR_PAGE_SETTINGS_EVENT = "editor-v2:page-settings";
@@ -10301,6 +14939,7 @@ button:hover {
   class TopBar extends HTMLElement {
     _viewport = "bleed";
     _mode = "edit";
+    _sourceState = "loading";
     constructor() {
       super();
       this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
@@ -10308,6 +14947,7 @@ button:hover {
     connectedCallback() {
       this.shadowRoot.addEventListener("click", this._onClick);
       this._syncButtons();
+      this._syncModeAttribute();
     }
     disconnectedCallback() {
       this.shadowRoot.removeEventListener("click", this._onClick);
@@ -10323,6 +14963,12 @@ button:hover {
     }
     set mode(mode) {
       this._setMode(mode, false);
+    }
+    get sourceState() {
+      return this._sourceState;
+    }
+    set sourceState(sourceState) {
+      this._setSourceState(sourceState, false);
     }
     set saveStatus(label) {
       const target = this.shadowRoot.querySelector(".save-label") ?? this.shadowRoot.querySelector('[data-action="save"]');
@@ -10353,6 +14999,11 @@ button:hover {
         this._setMode(mode, true);
         return;
       }
+      const sourceState = button.dataset.sourceState;
+      if (sourceState) {
+        this._setSourceState(sourceState, true);
+        return;
+      }
       if (button.dataset.action === "save") {
         this.dispatchEvent(new CustomEvent(TOPBAR_SAVE_EVENT, {
           bubbles: true,
@@ -10365,6 +15016,11 @@ button:hover {
         }));
       } else if (button.dataset.action === "page-settings") {
         this.dispatchEvent(new CustomEvent(TOPBAR_PAGE_SETTINGS_EVENT, {
+          bubbles: true,
+          composed: true
+        }));
+      } else if (button.dataset.action === "view-reload") {
+        this.dispatchEvent(new CustomEvent(TOPBAR_VIEW_RELOAD_EVENT, {
           bubbles: true,
           composed: true
         }));
@@ -10384,6 +15040,7 @@ button:hover {
         return;
       this._mode = mode;
       this._syncButtons();
+      this._syncModeAttribute();
       if (!emit)
         return;
       this.dispatchEvent(new CustomEvent(TOPBAR_EDITOR_MODE_CHANGE_EVENT, {
@@ -10392,15 +15049,35 @@ button:hover {
         detail: { mode }
       }));
     }
+    _setSourceState(sourceState, emit) {
+      if (this._sourceState === sourceState)
+        return;
+      this._sourceState = sourceState;
+      this._syncButtons();
+      if (!emit)
+        return;
+      this.dispatchEvent(new CustomEvent(TOPBAR_SOURCE_STATE_CHANGE_EVENT, {
+        bubbles: true,
+        composed: true,
+        detail: { sourceState }
+      }));
+    }
     _syncButtons() {
       this._syncButtonGroup("[data-viewport]", "viewport", this._viewport);
       this._syncButtonGroup("[data-editor-mode]", "editorMode", this._mode);
+      this._syncButtonGroup("[data-source-state]", "sourceState", this._sourceState);
+    }
+    _syncModeAttribute() {
+      this.setAttribute("mode", this._mode);
+      const reload = this.shadowRoot.querySelector('[data-action="view-reload"]');
+      if (reload)
+        reload.disabled = this._mode !== "view";
     }
     _syncButtonGroup(selector, dataKey, value) {
       for (const button of Array.from(this.shadowRoot.querySelectorAll(selector))) {
         const isActive = button.dataset[dataKey] === value;
         button.classList.toggle("active", isActive);
-        button.ariaPressed = String(isActive);
+        button.setAttribute("aria-pressed", String(isActive));
       }
     }
     _emitViewportChange() {
@@ -10416,7 +15093,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default5 = `<aside class="panel">
+  var template_default7 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -10432,7 +15109,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default4 = `:host {
+  var style_default6 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -10532,7 +15209,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template2 = document.createElement("template");
-  template2.innerHTML = `<style>${String(style_default4)}</style>${String(template_default5)}`;
+  template2.innerHTML = `<style>${String(style_default6)}</style>${String(template_default7)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -10552,184 +15229,498 @@ button:hover {
     customElements.define("cms-editor-v2-panel", Panel);
   }
 
-  // ../../features/cms-content/src/interfaces/Editor/Editor.ts
-  class Editor {
-    target;
-    constructor(target) {
-      this.target = target;
-    }
-    settings() {
-      return [];
-    }
-    dataScopes() {
-      return [];
-    }
-    contentSlots() {
-      return [];
-    }
-    textCapability() {
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Binding/dataSourceBinding.ts
+  function sourceForBinding(sources, binding) {
+    if (!binding)
       return null;
-    }
-    states() {
-      return [];
-    }
-    structureMode() {
-      return "editable";
-    }
-    getSettings() {
-      return this.settings();
-    }
-    addSettings(_settings) {}
-    getDataScopes() {
-      return this.dataScopes();
-    }
-    declareDataScope(_scope) {}
-    getContentSlots() {
-      return this.contentSlots();
-    }
-    addContentSlots(_slots) {}
-    getTextCapability() {
-      return this.textCapability();
-    }
-    setTextCapability(_capability) {}
-    getStates() {
-      return this.states();
-    }
-    addStates(_states) {}
-    getChildren() {
-      return [];
-    }
-    getStructureMode() {
-      return this.structureMode();
-    }
-    mountEditor() {}
-    unmountEditor() {}
+    return sources.find((source) => sourceMatchesBinding(source, binding)) ?? null;
   }
-  // ../../features/cms-content/src/interfaces/Editor/BindingSyntax.ts
-  var CMS_BINDING_ATTRIBUTES = {
-    condition: "cms-condition",
-    repeat: "cms-repeat",
-    source: "cms-source",
-    slot: "cms-slot"
-  };
-  var CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"];
-  var CMS_SOURCE_SLOT_VALUES = ["loading", "empty", "error"];
-  var SOURCE_ALIAS_PATTERN = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  var REPEAT_ALIAS_PATTERN = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function asInterpolation(expression) {
-    return `{{ ${expression.trim()} }}`;
+  function sourceMatchesBinding(source, binding) {
+    if (binding.method && (source.method ?? "GET") !== binding.method)
+      return false;
+    return bindingQuery(source.url, binding.url) !== null;
   }
-  function asSource(source) {
-    if (typeof source === "string")
-      return source.trim();
-    const url = sourceUrlWithParams(source.url, source.params);
-    const alias = source.alias?.trim();
-    return alias ? `${url} as ${alias}` : url;
-  }
-  function parseSource(value) {
-    const match = SOURCE_ALIAS_PATTERN.exec(value);
-    if (match) {
-      const url2 = match[1].trim();
-      return url2 ? { url: url2, alias: match[2] } : null;
+  function paramsForBinding(source, binding) {
+    if (!binding)
+      return {};
+    if (binding.params)
+      return binding.params;
+    const query2 = bindingQuery(source.url, binding.url);
+    if (!query2)
+      return {};
+    const params = {};
+    for (const [name, value] of new URLSearchParams(query2).entries()) {
+      params[name] = paramValue2(value);
     }
-    const url = value.trim();
-    return url ? { url } : null;
+    return params;
   }
-  function asRepeat(binding) {
-    const path = binding.path.trim();
-    const alias = binding.alias?.trim();
-    return alias ? `${path} as ${alias}` : path;
+  function paramValue2(value) {
+    const queryParam = tokenValue(value, "#");
+    if (queryParam)
+      return { from: "queryParam", name: queryParam };
+    const state = tokenValue(value, "@");
+    if (state)
+      return { from: "state", name: state };
+    return { from: "raw", value };
   }
-  function parseRepeat(value) {
-    const match = REPEAT_ALIAS_PATTERN.exec(value);
-    if (match) {
-      return {
-        path: match[1].trim(),
-        alias: match[2]
-      };
+  function tokenValue(value, prefix) {
+    const match = new RegExp(`^\\${prefix}\\{([^}]+)\\}$`).exec(value);
+    return match?.[1]?.trim() || null;
+  }
+  function bindingQuery(sourceUrl, bindingUrl) {
+    if (bindingUrl === sourceUrl)
+      return "";
+    if (bindingUrl.startsWith(`${sourceUrl}?`))
+      return bindingUrl.slice(sourceUrl.length + 1);
+    if (sourceUrl.includes("?") && bindingUrl.startsWith(`${sourceUrl}&`)) {
+      return bindingUrl.slice(sourceUrl.length + 1);
     }
-    const path = value.trim();
-    return path ? { path } : null;
+    return null;
   }
-  function isCmsSourceSlotValue(value) {
-    return CMS_SOURCE_SLOT_VALUES.includes(value ?? "");
-  }
-  function sourceStateFromElement(element) {
-    const value = element.getAttribute(CMS_BINDING_ATTRIBUTES.slot);
-    return isCmsSourceSlotValue(value) ? value : "loaded";
-  }
-  function applySourceState(element, state) {
-    if (state === "loaded") {
-      element.removeAttribute(CMS_BINDING_ATTRIBUTES.slot);
-      return;
-    }
-    element.setAttribute(CMS_BINDING_ATTRIBUTES.slot, state);
-  }
-  function sourceUrlWithParams(rawUrl, params) {
-    const url = rawUrl.trim();
-    if (!params)
-      return url;
-    const entries = Object.entries(params).filter((entry) => {
-      const [name, value] = entry;
-      if (name.trim() === "" || value === null || value === undefined)
-        return false;
-      if (value.from === "queryParam")
-        return value.name.trim() !== "";
-      return String(value.value).trim() !== "";
-    });
-    if (entries.length === 0)
-      return url;
-    const hashIndex = url.indexOf("#");
-    const beforeHash = hashIndex === -1 ? url : url.slice(0, hashIndex);
-    const hash = hashIndex === -1 ? "" : url.slice(hashIndex);
-    const separator = beforeHash.endsWith("?") || beforeHash.endsWith("&") ? "" : beforeHash.includes("?") ? "&" : "?";
-    const query = entries.map(([name, value]) => `${encodeURIComponent(name)}=${encodeSourceParamValue(value)}`).join("&");
-    return `${beforeHash}${separator}${query}${hash}`;
-  }
-  function encodeSourceParamValue(value) {
-    if (value.from === "queryParam")
-      return `#{${value.name.trim()}}`;
-    return encodeURIComponent(String(value.value).trim());
-  }
-  // ../../features/cms-content/src/core/editor/EditorCatalog.ts
-  function fallbackElementConstructor() {
-    const constructor = globalThis.HTMLElement;
-    if (!constructor) {
-      throw new Error("Cannot create editor catalog entry without HTMLElement.");
-    }
-    return constructor;
-  }
-  function createEditorCatalogEntry(entry, defaults) {
-    const tag = entry.tag ?? defaults.tag;
-    const editor = entry.editor;
-    if (!editor) {
-      throw new Error(`Editor catalog entry for ${tag} is missing an editor constructor.`);
-    }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Binding/dataSourceFormReader.ts
+  function readSourceBinding(root, source) {
+    const alias = root.querySelector(".source-alias")?.value.trim();
+    const trigger = selectedTrigger(root.querySelector(".source-trigger"));
+    const method = source.method ?? "GET";
+    const params = readRows(root, "param");
+    const body = readRows(root, "body");
     return {
-      tag,
-      label: entry.label ?? defaults.label,
-      description: entry.description ?? defaults.description,
-      icon: entry.icon,
-      category: entry.category ?? defaults.category,
-      subCategory: entry.subCategory,
-      defaultContent: entry.defaultContent ?? defaults.defaultContent,
-      bloc: entry.bloc ?? defaults.bloc ?? globalThis.customElements?.get(tag) ?? fallbackElementConstructor(),
-      editor
+      url: source.url,
+      ...alias ? { alias } : {},
+      ...method !== "GET" || trigger === "submit" ? { method } : {},
+      ...trigger === "submit" ? { trigger } : {},
+      ...Object.keys(params).length ? { params } : {},
+      ...Object.keys(body).length ? { body } : {}
     };
   }
-  function mergeEditorCatalogs(...catalogs) {
-    const byTag = new Map;
-    for (const catalog of catalogs) {
-      for (const entry of catalog) {
-        byTag.set(entry.tag.toLowerCase(), entry);
+  function readRows(root, kind) {
+    const params = {};
+    for (const row of Array.from(root.querySelectorAll(`.param-row[data-binding-kind="${kind}"]`))) {
+      const name = row.dataset.paramName;
+      const modeElement = row.querySelector(".param-mode");
+      const mode = modeElement ? selectedMode(modeElement) : "queryParam";
+      const rawValue = row.querySelector(".param-value")?.value.trim();
+      if (!name || !rawValue)
+        continue;
+      if (mode === "raw")
+        params[name] = { from: "raw", value: rawValue };
+      else
+        params[name] = { from: mode, name: rawValue };
+    }
+    return params;
+  }
+  function selectedMode(select2) {
+    const value = select2.options[select2.selectedIndex]?.value;
+    return value === "raw" || value === "state" ? value : "queryParam";
+  }
+  function selectedTrigger(select2) {
+    const value = select2?.options[select2.selectedIndex]?.value;
+    return value === "submit" ? value : "auto";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/State/dataSourceGroups.ts
+  function filteredSources(sources, query2) {
+    const normalized = query2.trim().toLowerCase();
+    if (!normalized)
+      return sources;
+    return sources.filter((source) => [
+      source.label,
+      source.description,
+      source.provider,
+      source.providerLabel,
+      source.url
+    ].some((value) => value?.toLowerCase().includes(normalized)));
+  }
+  function providerGroups(sources) {
+    const groups = new Map;
+    for (const source of sources) {
+      const key = source.provider ?? "default";
+      const current = groups.get(key) ?? {
+        key,
+        label: source.providerLabel ?? source.provider ?? "Sources",
+        count: 0
+      };
+      current.count += 1;
+      groups.set(key, current);
+    }
+    return [...groups.values()];
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/State/dataSourcePickerEvents.ts
+  function connectDataSourcePickerEvents(target, handlers) {
+    target.closeButton.addEventListener("click", handlers.close);
+    target.backdrop.addEventListener("click", handlers.backdropClick);
+    target.search.addEventListener("input", handlers.searchInput);
+    target.methodFilter.addEventListener("change", handlers.methodChange);
+    target.ownerDocument.addEventListener("keydown", handlers.keydown);
+    return () => {
+      target.closeButton.removeEventListener("click", handlers.close);
+      target.backdrop.removeEventListener("click", handlers.backdropClick);
+      target.search.removeEventListener("input", handlers.searchInput);
+      target.methodFilter.removeEventListener("change", handlers.methodChange);
+      target.ownerDocument.removeEventListener("keydown", handlers.keydown);
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourceListRenderer.ts
+  function renderProviderButtons(container, groups, activeProvider, onSelect) {
+    container.replaceChildren();
+    if (groups.length === 0) {
+      container.append(empty("No sources available."));
+      return;
+    }
+    for (const group of groups) {
+      const button = document.createElement("button");
+      button.className = "provider";
+      button.type = "button";
+      button.ariaPressed = String(group.key === activeProvider);
+      button.innerHTML = `<span>${escapeHtml3(group.label)}</span><span class="count">${group.count}</span>`;
+      button.addEventListener("click", () => onSelect(group.key));
+      container.append(button);
+    }
+  }
+  function renderSourceButtons(container, sources, activeSource, onSelect, onConfirm) {
+    container.replaceChildren();
+    if (sources.length === 0) {
+      container.append(empty("No matching sources."));
+      return;
+    }
+    for (const source of sources) {
+      const button = document.createElement("button");
+      button.className = "source";
+      button.type = "button";
+      button.ariaSelected = String(source === activeSource);
+      const header = document.createElement("span");
+      header.className = "source-header";
+      const method = document.createElement("span");
+      method.className = "method";
+      method.textContent = source.method ?? "GET";
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = source.label;
+      header.append(method, name);
+      const description = document.createElement("span");
+      description.className = "description";
+      description.textContent = source.description ?? "No description.";
+      const url = document.createElement("span");
+      url.className = "url";
+      url.textContent = source.url;
+      button.append(header, description, url);
+      button.addEventListener("click", () => onSelect(source));
+      button.addEventListener("dblclick", () => onConfirm(source));
+      container.append(button);
+    }
+  }
+  function empty(message) {
+    const element = document.createElement("div");
+    element.className = "empty";
+    element.textContent = message;
+    return element;
+  }
+  function escapeHtml3(value) {
+    return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/State/dataSourcePickerState.ts
+  function cloneSources(sources) {
+    return sources.map((source) => ({
+      ...source,
+      params: source.params?.map((param) => ({ ...param })),
+      body: source.body ? { ...source.body, fields: cloneBodyFields(source.body.fields) } : undefined,
+      fields: [...source.fields]
+    }));
+  }
+  function cloneBodyFields(fields) {
+    return fields.map((field) => ({
+      ...field,
+      children: field.children ? cloneBodyFields(field.children) : undefined
+    }));
+  }
+  function firstProviderKey(sources, query2) {
+    return providerGroups(filteredSources(sources, query2))[0]?.key ?? "";
+  }
+  function visibleSources(sources, query2, activeProvider) {
+    return filteredSources(sources, query2).filter((source) => (source.provider ?? "default") === activeProvider);
+  }
+  function initialAlias(binding) {
+    return binding?.alias ?? "data";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Binding/dataSourceBindingRenderer.ts
+  function renderBindingConfig(source, initialBinding) {
+    const section = document.createElement("section");
+    section.className = "binding-config";
+    section.append(renderAliasInput(initialAlias(initialBinding)), renderTriggerSelect(initialBinding?.trigger ?? defaultTrigger(source)));
+    renderRequestParams(section, source, initialBinding);
+    renderRequestBody(section, source, initialBinding);
+    return section;
+  }
+  function renderAliasInput(value) {
+    const aliasLabel = document.createElement("label");
+    aliasLabel.textContent = "Alias";
+    const alias = document.createElement("input");
+    alias.className = "source-alias";
+    alias.value = value;
+    alias.placeholder = "data";
+    aliasLabel.append(alias);
+    return aliasLabel;
+  }
+  function renderTriggerSelect(value) {
+    const label = document.createElement("label");
+    label.textContent = "Trigger";
+    const trigger = document.createElement("select");
+    trigger.className = "source-trigger";
+    trigger.append(option("auto", "Auto"), option("submit", "Submit"));
+    selectOption(trigger, value);
+    label.append(trigger);
+    return label;
+  }
+  function defaultTrigger(source) {
+    return (source.method ?? "GET") === "GET" ? "auto" : "submit";
+  }
+  function renderRequestParams(section, source, initialBinding) {
+    const params = source.params ?? [];
+    if (params.length === 0)
+      return;
+    section.append(renderHeading("Request params"));
+    const initialParams = paramsForBinding(source, initialBinding);
+    for (const param of params) {
+      section.append(renderBindingRow({
+        kind: "param",
+        name: param.name,
+        location: param.in,
+        type: param.type,
+        required: param.required,
+        description: param.description
+      }, initialParams[param.name]));
+    }
+  }
+  function renderRequestBody(section, source, initialBinding) {
+    const fields = bodyBindingFields(source.body?.fields ?? []);
+    if (fields.length === 0)
+      return;
+    section.append(renderHeading("Request body"));
+    for (const field of fields) {
+      section.append(renderBindingRow({
+        kind: "body",
+        name: field.name,
+        location: "body",
+        type: field.type,
+        required: field.required
+      }, initialBinding?.body?.[field.name]));
+    }
+  }
+  function renderBindingRow(rowConfig, initialValue) {
+    const row = document.createElement("div");
+    row.className = "param-row";
+    row.dataset.bindingKind = rowConfig.kind;
+    row.dataset.paramName = rowConfig.name;
+    row.append(renderParamHeader(rowConfig), renderParamDescription(rowConfig), renderParamControls(rowConfig.name, initialValue));
+    return row;
+  }
+  function renderHeading(text) {
+    const heading4 = document.createElement("div");
+    heading4.className = "config-heading";
+    heading4.textContent = text;
+    return heading4;
+  }
+  function renderParamHeader(param) {
+    const header = document.createElement("div");
+    header.className = "param-header";
+    const name = document.createElement("span");
+    name.className = "param-name";
+    name.textContent = param.required ? `${param.name} *` : param.name;
+    const meta = document.createElement("span");
+    meta.className = "param-meta";
+    meta.append(textSpan(param.location), textSpan(param.type ?? "unknown"));
+    header.append(name, meta);
+    return header;
+  }
+  function renderParamDescription(param) {
+    const description = document.createElement("p");
+    description.textContent = param.description ?? "";
+    description.hidden = !param.description;
+    return description;
+  }
+  function renderParamControls(name, initialValue) {
+    const controls = document.createElement("div");
+    controls.className = "param-controls";
+    const mode = document.createElement("select");
+    mode.className = "param-mode";
+    mode.append(option("queryParam", "Query param"), option("raw", "Raw value"), option("state", "Page state"));
+    const value = document.createElement("input");
+    value.className = "param-value";
+    value.placeholder = name;
+    if (initialValue) {
+      selectMode(mode, initialValue.from);
+      value.value = String(initialValue.from === "raw" ? initialValue.value : initialValue.name);
+    }
+    controls.append(mode, value);
+    return controls;
+  }
+  function bodyBindingFields(fields) {
+    const rows = [];
+    for (const field of fields) {
+      if (field.path !== "." && isBindableBodyType(field.type)) {
+        rows.push({ name: field.path, type: field.type, required: field.required });
       }
     }
-    return [...byTag.values()];
+    return rows;
   }
-  // ../../features/cms-content/src/core/constants/snippet.ts
-  var CMS_SNIPPET_TAG = "w13c-snippet";
+  function isBindableBodyType(type) {
+    return type !== "object" && type !== "array";
+  }
+  function option(value, label) {
+    const element = document.createElement("option");
+    element.value = value;
+    element.textContent = label;
+    return element;
+  }
+  function textSpan(value) {
+    const element = document.createElement("span");
+    element.textContent = value;
+    return element;
+  }
+  function selectMode(select2, value) {
+    selectOption(select2, value);
+  }
+  function selectOption(select2, value) {
+    const index = Array.from(select2.options).findIndex((option2) => option2.value === value);
+    if (index >= 0)
+      select2.selectedIndex = index;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourceFieldRenderer.ts
+  function renderDataSourceFields(fields) {
+    return renderFieldList(fields, "No schema fields declared.");
+  }
+  function renderDataSourceBodyFields(fields) {
+    return renderFieldList(fields, "No request body declared.");
+  }
+  function renderFieldList(fields, emptyMessage) {
+    const list = document.createElement("ul");
+    list.className = "fields";
+    for (const field of fields)
+      list.append(renderField(field, 0));
+    if (list.children.length === 0) {
+      const empty2 = document.createElement("p");
+      empty2.className = "details-empty";
+      empty2.textContent = emptyMessage;
+      return empty2;
+    }
+    return list;
+  }
+  function renderField(field, depth) {
+    const item = document.createElement("li");
+    item.className = "field";
+    item.style.setProperty("--field-depth", String(depth));
+    const path = document.createElement("span");
+    path.className = "field-path";
+    path.textContent = field.path;
+    const type = document.createElement("span");
+    type.className = "field-type";
+    type.textContent = field.type ?? "unknown";
+    item.append(path, type);
+    if (field.required) {
+      const required = document.createElement("span");
+      required.className = "field-required";
+      required.textContent = "required";
+      item.append(required);
+    }
+    if (field.children?.length) {
+      const children = document.createElement("ul");
+      children.className = "field-children";
+      for (const child of field.children)
+        children.append(renderField(child, depth + 1));
+      item.append(children);
+    }
+    return item;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourcePanelsRenderer.ts
+  function renderDetailsPanel(container, source) {
+    container.replaceChildren();
+    if (!source) {
+      container.append(detailsEmpty("Select a source to inspect its schema."));
+      return;
+    }
+    if (source.body) {
+      const requestHeading = document.createElement("div");
+      requestHeading.className = "details-eyebrow";
+      requestHeading.textContent = "Request body";
+      container.append(requestHeading, renderDataSourceBodyFields(source.body.fields));
+    }
+    const responseHeading = document.createElement("div");
+    responseHeading.className = "details-eyebrow";
+    responseHeading.textContent = "Response fields";
+    container.append(responseHeading, renderDataSourceFields(source.fields));
+  }
+  function renderBindingPanel(container, source, options) {
+    container.replaceChildren();
+    if (!source) {
+      container.append(detailsEmpty("Select a source to configure its binding."));
+      return;
+    }
+    const title = document.createElement("div");
+    title.className = "config-heading";
+    title.textContent = "Binding";
+    const scroll = document.createElement("div");
+    scroll.className = "binding-scroll";
+    scroll.append(title, renderBindingConfig(source, options.initialBinding));
+    const footer = document.createElement("footer");
+    footer.className = "binding-footer";
+    if (options.canRemove)
+      footer.append(removeButton(options.onRemove));
+    footer.append(insertButton(options.onSelect));
+    container.append(scroll, footer);
+  }
+  function detailsEmpty(message) {
+    const empty2 = document.createElement("div");
+    empty2.className = "details-empty";
+    empty2.textContent = message;
+    return empty2;
+  }
+  function insertButton(onSelect) {
+    const insert = document.createElement("button");
+    insert.className = "insert";
+    insert.type = "button";
+    insert.textContent = "Use source";
+    insert.addEventListener("click", onSelect);
+    return insert;
+  }
+  function removeButton(onRemove) {
+    const remove = document.createElement("button");
+    remove.className = "remove-source";
+    remove.type = "button";
+    remove.textContent = "Remove source";
+    remove.addEventListener("click", onRemove);
+    return remove;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/Renderers/dataSourcePickerRenderer.ts
+  function renderDataSourcePicker(state, handlers) {
+    const activeSource = normalizeActiveSource(state.activeSource, state.visibleSources);
+    renderProviderButtons(state.providers, state.groups, state.activeProvider, handlers.providerSelect);
+    renderSourceButtons(state.sourcesList, state.visibleSources, activeSource, handlers.sourceSelect, handlers.sourceConfirm);
+    renderDetailsPanel(state.details, activeSource);
+    renderBindingPanel(state.binding, activeSource, {
+      canRemove: state.canRemove,
+      initialBinding: state.initialBinding,
+      onSelect: handlers.bindingSelect,
+      onRemove: handlers.remove
+    });
+    return activeSource;
+  }
+  function normalizeActiveSource(activeSource, visibleSources2) {
+    if (!activeSource || !visibleSources2.includes(activeSource)) {
+      return visibleSources2[0] ?? null;
+    }
+    return activeSource;
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/template.html
-  var template_default6 = `<div class="backdrop" hidden>
+  var template_default8 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -10738,7 +15729,17 @@ button:hover {
             </div>
             <button class="close" type="button" aria-label="Close">×</button>
         </header>
-        <input class="search" type="search" placeholder="Search sources" />
+        <div class="toolbar">
+            <input class="search" type="search" placeholder="Search sources" />
+            <select class="method-filter" aria-label="Method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="PATCH">PATCH</option>
+                <option value="DELETE">DELETE</option>
+                <option value="all">All</option>
+            </select>
+        </div>
         <div class="body">
             <aside class="providers" aria-label="Providers"></aside>
             <div class="sources" role="listbox" aria-label="Data sources"></div>
@@ -10750,7 +15751,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/style.css
-  var style_default5 = `:host {
+  var style_default7 = `:host {
     display: contents;
 }
 
@@ -10827,7 +15828,14 @@ h2 {
     color: var(--editor-v2-text);
 }
 
-.search {
+.toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 104px;
+    gap: 8px;
+}
+
+.search,
+.method-filter {
     width: 100%;
     height: 34px;
     border: 1px solid var(--editor-v2-border);
@@ -10840,7 +15848,8 @@ h2 {
     padding: 0 10px;
 }
 
-.search:focus {
+.search:focus,
+.method-filter:focus {
     border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
 }
@@ -10932,6 +15941,23 @@ h2 {
 .source[aria-selected="true"] {
     border-color: color-mix(in srgb, var(--editor-v2-accent) 56%, var(--editor-v2-border));
     background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
+}
+
+.source-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+}
+
+.method {
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 24%, var(--editor-v2-border));
+    border-radius: 5px;
+    color: var(--editor-v2-accent);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 3px 5px;
 }
 
 .name {
@@ -11036,6 +16062,7 @@ h2 {
 }
 
 .source-alias,
+.source-trigger,
 .param-value,
 .param-mode {
     width: 100%;
@@ -11052,6 +16079,7 @@ h2 {
 }
 
 .source-alias:focus,
+.source-trigger:focus,
 .param-value:focus,
 .param-mode:focus {
     border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
@@ -11142,7 +16170,7 @@ h2 {
 
 .field {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     column-gap: 8px;
     color: var(--editor-v2-text);
     font-size: 11px;
@@ -11167,6 +16195,18 @@ h2 {
 .field-type {
     color: var(--editor-v2-muted);
     font-size: 10px;
+}
+
+.field-required {
+    justify-self: start;
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 22%, var(--editor-v2-border));
+    border-radius: 999px;
+    color: var(--editor-v2-accent);
+    font-size: 9px;
+    font-weight: 760;
+    line-height: 1;
+    padding: 3px 6px;
+    text-transform: uppercase;
 }
 
 .insert {
@@ -11213,41 +16253,56 @@ h2 {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/DataSourcePicker.ts
   var template3 = document.createElement("template");
-  template3.innerHTML = `<style>${String(style_default5)}</style>${String(template_default6)}`;
+  template3.innerHTML = `<style>${String(style_default7)}</style>${String(template_default8)}`;
   var DATA_SOURCE_PICKER_SELECT_EVENT = "editor-v2:data-source-select";
   var DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
     _activeProvider = "";
+    _activeMethod = "GET";
     _activeSource = null;
+    _initialBinding = null;
     _canRemove = false;
+    _disconnectEvents = null;
     constructor() {
       super();
       this.attachShadow({ mode: "open" }).append(template3.content.cloneNode(true));
     }
     connectedCallback() {
-      this.closeButton.addEventListener("click", this.close);
-      this.backdrop.addEventListener("click", this._onBackdropClick);
-      this.search.addEventListener("input", this._onSearchInput);
-      this.ownerDocument.addEventListener("keydown", this._onKeydown);
+      this._disconnectEvents = connectDataSourcePickerEvents({
+        closeButton: this.closeButton,
+        backdrop: this.backdrop,
+        search: this.search,
+        methodFilter: this.methodFilter,
+        ownerDocument: this.ownerDocument
+      }, {
+        close: this.close,
+        backdropClick: this._onBackdropClick,
+        searchInput: this._onSearchInput,
+        methodChange: this._onMethodChange,
+        keydown: this._onKeydown
+      });
     }
     disconnectedCallback() {
-      this.closeButton.removeEventListener("click", this.close);
-      this.backdrop.removeEventListener("click", this._onBackdropClick);
-      this.search.removeEventListener("input", this._onSearchInput);
-      this.ownerDocument.removeEventListener("keydown", this._onKeydown);
+      this._disconnectEvents?.();
+      this._disconnectEvents = null;
     }
     open(sources, contextLabel, options = {}) {
-      this._sources = sources.map((source) => ({
-        ...source,
-        fields: [...source.fields]
-      }));
-      this._activeProvider = this._providerGroups()[0]?.key ?? "";
-      this._activeSource = null;
+      this._sources = cloneSources(sources);
+      this._initialBinding = options.initialBinding ?? null;
+      this.search.value = "";
+      this.methodFilter.onchange = this._onMethodChange;
+      this._activeSource = sourceForBinding(this._sources, this._initialBinding);
+      this._activeMethod = this._activeSource ? this._sourceMethod(this._activeSource) : "GET";
+      this._selectMethodFilter(this._activeMethod);
+      if (this._methodSources().length === 0) {
+        this._activeMethod = "all";
+        this._selectMethodFilter("all");
+      }
+      this._activeProvider = this._activeSource?.provider ?? firstProviderKey(this._methodSources(), this.search.value);
       this._canRemove = options.canRemove === true;
       this.subtitle.textContent = contextLabel ? `Choose a data source for ${contextLabel}.` : "Choose a data source.";
-      this.search.value = "";
       this.backdrop.hidden = false;
       this._render();
       this.search.focus();
@@ -11256,211 +16311,31 @@ h2 {
       this.backdrop.hidden = true;
     };
     _render() {
-      this._renderProviders();
-      this._renderSources();
-      this._renderDetails();
-      this._renderBinding();
-    }
-    _renderProviders() {
-      this.providers.replaceChildren();
-      const groups = this._providerGroups();
-      if (groups.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "No sources available.";
-        this.providers.append(empty);
-        return;
-      }
-      for (const group of groups) {
-        const button = document.createElement("button");
-        button.className = "provider";
-        button.type = "button";
-        button.ariaPressed = String(group.key === this._activeProvider);
-        button.innerHTML = `<span>${this._escape(group.label)}</span><span class="count">${group.count}</span>`;
-        button.addEventListener("click", () => {
-          this._activeProvider = group.key;
+      this._activeSource = renderDataSourcePicker({
+        providers: this.providers,
+        sourcesList: this.sourcesList,
+        details: this.details,
+        binding: this.binding,
+        groups: this._providerGroups(),
+        activeProvider: this._activeProvider,
+        visibleSources: this._visibleSources(),
+        activeSource: this._activeSource,
+        canRemove: this._canRemove,
+        initialBinding: this._initialBinding
+      }, {
+        providerSelect: (provider) => {
+          this._activeProvider = provider;
           this._activeSource = null;
           this._render();
-        });
-        this.providers.append(button);
-      }
-    }
-    _renderSources() {
-      this.sourcesList.replaceChildren();
-      const sources = this._visibleSources();
-      if (sources.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "No matching sources.";
-        this.sourcesList.append(empty);
-        return;
-      }
-      if (!this._activeSource || !sources.includes(this._activeSource)) {
-        this._activeSource = sources[0] ?? null;
-      }
-      for (const source of sources) {
-        const button = document.createElement("button");
-        button.className = "source";
-        button.type = "button";
-        button.ariaSelected = String(source === this._activeSource);
-        const name = document.createElement("span");
-        name.className = "name";
-        name.textContent = source.label;
-        const description = document.createElement("span");
-        description.className = "description";
-        description.textContent = source.description ?? "No description.";
-        const url = document.createElement("span");
-        url.className = "url";
-        url.textContent = source.url;
-        button.append(name, description, url);
-        button.addEventListener("click", () => {
+        },
+        sourceSelect: (source) => {
           this._activeSource = source;
-          this._renderSources();
-          this._renderDetails();
-          this._renderBinding();
-        });
-        button.addEventListener("dblclick", () => this._select(source));
-        this.sourcesList.append(button);
-      }
-    }
-    _renderDetails() {
-      this.details.replaceChildren();
-      if (!this._activeSource) {
-        const empty = document.createElement("div");
-        empty.className = "details-empty";
-        empty.textContent = "Select a source to inspect its schema.";
-        this.details.append(empty);
-        return;
-      }
-      const heading4 = document.createElement("div");
-      heading4.className = "details-eyebrow";
-      heading4.textContent = "Response fields";
-      this.details.append(heading4, this._renderFields(this._activeSource.fields));
-    }
-    _renderBinding() {
-      this.binding.replaceChildren();
-      if (!this._activeSource) {
-        const empty = document.createElement("div");
-        empty.className = "details-empty";
-        empty.textContent = "Select a source to configure its binding.";
-        this.binding.append(empty);
-        return;
-      }
-      const title = document.createElement("div");
-      title.className = "config-heading";
-      title.textContent = "Binding";
-      const config = this._renderBindingConfig(this._activeSource);
-      const scroll = document.createElement("div");
-      scroll.className = "binding-scroll";
-      scroll.append(title, config);
-      const insert = document.createElement("button");
-      insert.className = "insert";
-      insert.type = "button";
-      insert.textContent = "Use source";
-      insert.addEventListener("click", () => this._select(this._activeSource));
-      const footer = document.createElement("footer");
-      footer.className = "binding-footer";
-      if (this._canRemove) {
-        const remove = document.createElement("button");
-        remove.className = "remove-source";
-        remove.type = "button";
-        remove.textContent = "Remove source";
-        remove.addEventListener("click", this._remove);
-        footer.append(remove);
-      }
-      footer.append(insert);
-      this.binding.append(scroll, footer);
-    }
-    _renderBindingConfig(source) {
-      const section = document.createElement("section");
-      section.className = "binding-config";
-      const aliasLabel = document.createElement("label");
-      aliasLabel.textContent = "Alias";
-      const alias = document.createElement("input");
-      alias.className = "source-alias";
-      alias.value = "data";
-      alias.placeholder = "data";
-      aliasLabel.append(alias);
-      section.append(aliasLabel);
-      const params = source.params ?? [];
-      if (params.length === 0)
-        return section;
-      const heading4 = document.createElement("div");
-      heading4.className = "config-heading";
-      heading4.textContent = "Request params";
-      section.append(heading4);
-      for (const param of params) {
-        const row = document.createElement("div");
-        row.className = "param-row";
-        row.dataset.paramName = param.name;
-        const header = document.createElement("div");
-        header.className = "param-header";
-        const name = document.createElement("span");
-        name.className = "param-name";
-        name.textContent = param.required ? `${param.name} *` : param.name;
-        const meta = document.createElement("span");
-        meta.className = "param-meta";
-        const location2 = document.createElement("span");
-        location2.textContent = param.in;
-        const type = document.createElement("span");
-        type.textContent = param.type ?? "unknown";
-        meta.append(location2, type);
-        header.append(name, meta);
-        const description = document.createElement("p");
-        description.textContent = param.description ?? "";
-        description.hidden = !param.description;
-        const controls = document.createElement("div");
-        controls.className = "param-controls";
-        const mode = document.createElement("select");
-        mode.className = "param-mode";
-        const queryParamOption = document.createElement("option");
-        queryParamOption.value = "queryParam";
-        queryParamOption.textContent = "Query param";
-        const rawOption = document.createElement("option");
-        rawOption.value = "raw";
-        rawOption.textContent = "Raw value";
-        mode.append(queryParamOption, rawOption);
-        const value = document.createElement("input");
-        value.className = "param-value";
-        value.placeholder = param.name;
-        controls.append(mode, value);
-        row.append(header, description, controls);
-        section.append(row);
-      }
-      return section;
-    }
-    _renderFields(fields) {
-      const list = document.createElement("ul");
-      list.className = "fields";
-      for (const field of fields)
-        list.append(this._renderField(field, 0));
-      if (list.children.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "details-empty";
-        empty.textContent = "No schema fields declared.";
-        return empty;
-      }
-      return list;
-    }
-    _renderField(field, depth) {
-      const item = document.createElement("li");
-      item.className = "field";
-      item.style.setProperty("--field-depth", String(depth));
-      const path = document.createElement("span");
-      path.className = "field-path";
-      path.textContent = field.path;
-      const type = document.createElement("span");
-      type.className = "field-type";
-      type.textContent = field.type ?? "unknown";
-      item.append(path, type);
-      if (field.children?.length) {
-        const children = document.createElement("ul");
-        children.className = "field-children";
-        for (const child of field.children)
-          children.append(this._renderField(child, depth + 1));
-        item.append(children);
-      }
-      return item;
+          this._render();
+        },
+        sourceConfirm: (source) => this._select(source),
+        bindingSelect: () => this._activeSource && this._select(this._activeSource),
+        remove: this._remove
+      });
     }
     _select(source) {
       this.dispatchEvent(new CustomEvent(DATA_SOURCE_PICKER_SELECT_EVENT, {
@@ -11481,61 +16356,32 @@ h2 {
       this.close();
     };
     _sourceBinding(source) {
-      const alias = this.shadowRoot.querySelector(".source-alias")?.value.trim();
-      const params = {};
-      for (const row of Array.from(this.shadowRoot.querySelectorAll(".param-row"))) {
-        const name = row.dataset.paramName;
-        const modeElement = row.querySelector(".param-mode");
-        const mode = modeElement?.getAttribute("value") ?? modeElement?.value;
-        const rawValue = row.querySelector(".param-value")?.value.trim();
-        if (!name || !rawValue)
-          continue;
-        params[name] = mode === "raw" ? { from: "raw", value: rawValue } : { from: "queryParam", name: rawValue };
-      }
-      return {
-        url: source.url,
-        ...alias ? { alias } : {},
-        ...Object.keys(params).length ? { params } : {}
-      };
+      return readSourceBinding(this.shadowRoot, source);
     }
     _providerGroups() {
-      const groups = new Map;
-      for (const source of this._filteredSources()) {
-        const key = source.provider ?? "default";
-        const current = groups.get(key) ?? {
-          key,
-          label: source.providerLabel ?? source.provider ?? "Sources",
-          count: 0
-        };
-        current.count += 1;
-        groups.set(key, current);
-      }
-      return [...groups.values()];
+      return providerGroups(this._filteredSources());
     }
     _visibleSources() {
-      return this._filteredSources().filter((source) => (source.provider ?? "default") === this._activeProvider);
+      return visibleSources(this._methodSources(), this.search.value, this._activeProvider);
     }
     _filteredSources() {
-      const query = this.search.value.trim().toLowerCase();
-      if (!query)
-        return this._sources;
-      return this._sources.filter((source) => [
-        source.label,
-        source.description,
-        source.provider,
-        source.providerLabel,
-        source.url
-      ].some((value) => value?.toLowerCase().includes(query)));
+      return filteredSources(this._methodSources(), this.search.value);
     }
-    _escape(value) {
-      return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+    _methodSources() {
+      return this._sources.filter((source) => this._activeMethod === "all" || this._sourceMethod(source) === this._activeMethod);
     }
     _onBackdropClick = (event) => {
       if (event.target === this.backdrop)
         this.close();
     };
     _onSearchInput = () => {
-      this._activeProvider = this._providerGroups()[0]?.key ?? "";
+      this._activeProvider = firstProviderKey(this._methodSources(), this.search.value);
+      this._activeSource = null;
+      this._render();
+    };
+    _onMethodChange = () => {
+      this._activeMethod = this._selectedMethodFilter();
+      this._activeProvider = firstProviderKey(this._methodSources(), this.search.value);
       this._activeSource = null;
       this._render();
     };
@@ -11543,6 +16389,395 @@ h2 {
       if (!this.backdrop.hidden && event.key === "Escape")
         this.close();
     };
+    get backdrop() {
+      return this.query(".backdrop");
+    }
+    get closeButton() {
+      return this.query(".close");
+    }
+    get subtitle() {
+      return this.query(".subtitle");
+    }
+    get search() {
+      return this.query(".search");
+    }
+    get methodFilter() {
+      return this.query(".method-filter");
+    }
+    get providers() {
+      return this.query(".providers");
+    }
+    get sourcesList() {
+      return this.query(".sources");
+    }
+    get details() {
+      return this.query(".details");
+    }
+    get binding() {
+      return this.query(".binding");
+    }
+    query(selector) {
+      return this.shadowRoot.querySelector(selector);
+    }
+    _sourceMethod(source) {
+      return source.method ?? "GET";
+    }
+    _selectMethodFilter(value) {
+      const options = Array.from(this.methodFilter.options);
+      const index = options.findIndex((option2) => option2.value === value);
+      this.methodFilter.selectedIndex = index >= 0 ? index : 0;
+      options.forEach((option2, i) => {
+        option2.selected = i === this.methodFilter.selectedIndex;
+        option2.toggleAttribute("selected", option2.selected);
+      });
+      this.methodFilter.setAttribute("value", options[this.methodFilter.selectedIndex]?.value ?? "GET");
+    }
+    _selectedMethodFilter() {
+      const options = Array.from(this.methodFilter.options);
+      const selected = options.find((option2) => option2.selected);
+      if (selected?.value)
+        return selected.value;
+      const selectedIndexValue = this.methodFilter.options[this.methodFilter.selectedIndex]?.value;
+      if (selectedIndexValue)
+        return selectedIndexValue;
+      const selectedAttr = options.find((option2) => option2.hasAttribute("selected"));
+      return selectedAttr?.value ?? this.methodFilter.getAttribute("value") ?? "GET";
+    }
+  }
+  if (!customElements.get("cms-editor-v2-data-source-picker")) {
+    customElements.define("cms-editor-v2-data-source-picker", DataSourcePicker);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/template.html
+  var template_default9 = `<div class="backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
+        <header class="header">
+            <div>
+                <h2 id="condition-picker-title">Add condition</h2>
+                <p class="subtitle"></p>
+            </div>
+            <button class="close" type="button" aria-label="Close">×</button>
+        </header>
+        <div class="body"></div>
+        <footer class="footer">
+            <button class="remove" type="button">Remove condition</button>
+            <button class="apply" type="button">Apply condition</button>
+        </footer>
+    </section>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/style.css
+  var style_default8 = `:host {
+    display: contents;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.backdrop {
+    --condition-picker-top-offset: min(8vh, 64px);
+
+    position: fixed;
+    inset: 0;
+    z-index: 135;
+    display: grid;
+    place-items: start center;
+    padding: var(--condition-picker-top-offset) 24px 24px;
+    background: color-mix(in srgb, black 20%, transparent);
+}
+
+.backdrop[hidden] {
+    display: none;
+}
+
+.modal {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    width: min(520px, calc(100vw - 48px));
+    max-height: min(620px, calc(100vh - var(--condition-picker-top-offset) - 24px));
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 10px;
+    background: var(--editor-v2-bg);
+    box-shadow: 0 24px 70px color-mix(in srgb, black 18%, transparent);
+    overflow: hidden;
+    padding: 14px;
+}
+
+.header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+}
+
+h2 {
+    margin: 0;
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 780;
+}
+
+.subtitle {
+    margin: 4px 0 0;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+}
+
+.close {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.body {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 2px;
+}
+
+.source {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-surface);
+    padding: 10px;
+}
+
+.source-title {
+    color: var(--editor-v2-text);
+    font-size: 12px;
+    font-weight: 760;
+    overflow-wrap: anywhere;
+}
+
+.source-name {
+    color: var(--editor-v2-muted);
+    font-size: 11px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.states {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+label {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    min-height: 30px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-bg);
+    color: var(--editor-v2-text);
+    font-size: 12px;
+    padding: 0 8px;
+}
+
+label:has(input:checked) {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+}
+
+input {
+    margin: 0;
+}
+
+.empty {
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    line-height: 1.45;
+    padding: 12px 2px;
+}
+
+.footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--editor-v2-border);
+}
+
+.apply,
+.remove {
+    min-height: 32px;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 730;
+    cursor: pointer;
+}
+
+.apply {
+    border: 1px solid var(--editor-v2-accent);
+    background: var(--editor-v2-accent);
+    color: #fff;
+}
+
+.apply:disabled {
+    border-color: var(--editor-v2-border);
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    cursor: not-allowed;
+}
+
+.remove {
+    border: 1px solid color-mix(in srgb, #b42318 36%, var(--editor-v2-border));
+    background: transparent;
+    color: #b42318;
+}
+
+.remove:disabled {
+    color: color-mix(in srgb, #b42318 36%, var(--editor-v2-muted));
+    cursor: not-allowed;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/ConditionPicker.ts
+  var template4 = document.createElement("template");
+  template4.innerHTML = `<style>${String(style_default8)}</style>${String(template_default9)}`;
+  var CONDITION_PICKER_APPLY_EVENT = "editor-v2:condition-apply";
+  var CONDITION_PICKER_REMOVE_EVENT = "editor-v2:condition-remove";
+  var STATES = ["loaded", "loading", "empty", "error"];
+
+  class ConditionPicker extends HTMLElement {
+    _sources = [];
+    _selected = new Set;
+    _canRemove = false;
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template4.content.cloneNode(true));
+      this.closeButton.addEventListener("click", this.close);
+      this.backdrop.addEventListener("click", this._onBackdropClick);
+      this.applyButton.addEventListener("click", this._apply);
+      this.removeButton.addEventListener("click", this._remove);
+    }
+    connectedCallback() {
+      this.ownerDocument.addEventListener("keydown", this._onKeydown);
+    }
+    disconnectedCallback() {
+      this.ownerDocument.removeEventListener("keydown", this._onKeydown);
+    }
+    open(options) {
+      this._sources = options.sources;
+      this._selected = new Set((options.selected ?? []).map((condition) => this.key(condition.sourceEditor, condition.sourceState)));
+      this._canRemove = options.canRemove === true;
+      this.subtitle.textContent = options.contextLabel ? `Conditions for ${options.contextLabel}.` : "Conditions";
+      this.backdrop.hidden = false;
+      this.render();
+    }
+    close = () => {
+      this.backdrop.hidden = true;
+    };
+    render() {
+      this.body.replaceChildren();
+      if (this._sources.length === 0) {
+        const empty2 = document.createElement("div");
+        empty2.className = "empty";
+        empty2.textContent = "No source available.";
+        this.body.append(empty2);
+      } else {
+        for (const source of this._sources)
+          this.body.append(this.renderSource(source));
+      }
+      this.applyButton.disabled = this._selected.size === 0;
+      this.removeButton.disabled = !this._canRemove;
+    }
+    renderSource(source) {
+      const section = document.createElement("section");
+      section.className = "source";
+      const title = document.createElement("div");
+      title.className = "source-title";
+      title.textContent = source.label;
+      const name = document.createElement("div");
+      name.className = "source-name";
+      name.textContent = source.sourceName ? `Source: ${source.sourceName}` : "";
+      const states = document.createElement("div");
+      states.className = "states";
+      for (const state of STATES)
+        states.append(this.renderState(source, state));
+      section.append(title);
+      if (source.sourceName)
+        section.append(name);
+      section.append(states);
+      return section;
+    }
+    renderState(source, state) {
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = this._selected.has(this.key(source.editor, state));
+      input.addEventListener("change", () => {
+        const key = this.key(source.editor, state);
+        input.checked ? this._selected.add(key) : this._selected.delete(key);
+        this.applyButton.disabled = this._selected.size === 0;
+      });
+      const text = document.createElement("span");
+      text.textContent = state;
+      label.append(input, text);
+      return label;
+    }
+    _apply = () => {
+      const conditions = [];
+      for (const source of this._sources) {
+        for (const state of STATES) {
+          if (this._selected.has(this.key(source.editor, state))) {
+            conditions.push({ sourceEditor: source.editor, sourceState: state });
+          }
+        }
+      }
+      if (conditions.length === 0)
+        return;
+      this.dispatchEvent(new CustomEvent(CONDITION_PICKER_APPLY_EVENT, {
+        bubbles: true,
+        composed: true,
+        detail: { conditions }
+      }));
+      this.close();
+    };
+    _remove = () => {
+      if (!this._canRemove)
+        return;
+      this.dispatchEvent(new CustomEvent(CONDITION_PICKER_REMOVE_EVENT, {
+        bubbles: true,
+        composed: true
+      }));
+      this.close();
+    };
+    _onBackdropClick = (event) => {
+      if (event.target === this.backdrop)
+        this.close();
+    };
+    _onKeydown = (event) => {
+      if (!this.backdrop.hidden && event.key === "Escape")
+        this.close();
+    };
+    key(editor, state) {
+      return `${this._sources.findIndex((source) => source.editor === editor)}:${state}`;
+    }
     get backdrop() {
       return this.shadowRoot.querySelector(".backdrop");
     }
@@ -11552,28 +16787,60 @@ h2 {
     get subtitle() {
       return this.shadowRoot.querySelector(".subtitle");
     }
-    get search() {
-      return this.shadowRoot.querySelector(".search");
+    get body() {
+      return this.shadowRoot.querySelector(".body");
     }
-    get providers() {
-      return this.shadowRoot.querySelector(".providers");
+    get applyButton() {
+      return this.shadowRoot.querySelector(".apply");
     }
-    get sourcesList() {
-      return this.shadowRoot.querySelector(".sources");
-    }
-    get details() {
-      return this.shadowRoot.querySelector(".details");
-    }
-    get binding() {
-      return this.shadowRoot.querySelector(".binding");
+    get removeButton() {
+      return this.shadowRoot.querySelector(".remove");
     }
   }
-  if (!customElements.get("cms-editor-v2-data-source-picker")) {
-    customElements.define("cms-editor-v2-data-source-picker", DataSourcePicker);
+  if (!customElements.get("cms-editor-v2-condition-picker")) {
+    customElements.define("cms-editor-v2-condition-picker", ConditionPicker);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeEmitter.ts
+  class StructureTreeEmitter {
+    host;
+    refs;
+    constructor(host, refs) {
+      this.host = host;
+      this.refs = refs;
+    }
+    selectEditor(editor) {
+      this.host.dispatchEvent(new CustomEvent("editor-v2:select-editor", {
+        bubbles: true,
+        composed: true,
+        detail: { editor }
+      }));
+    }
+    emitAction(action, editor, item, slot, sourceState, sourceEditor, dataSource, sourceBinding, sourceConditions) {
+      this.host.dispatchEvent(new CustomEvent("editor-v2:structure-action", {
+        bubbles: true,
+        composed: true,
+        detail: {
+          action,
+          editor,
+          sourceEditor,
+          item,
+          dataSource,
+          sourceBinding,
+          sourceConditions,
+          entry: item?.kind === "block" ? item.entry : undefined,
+          slot,
+          sourceState
+        }
+      }));
+    }
+    closeContextMenu() {
+      this.refs.contextMenu.remove();
+    }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/template.html
-  var template_default7 = `<div class="backdrop" hidden>
+  var template_default10 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -11603,7 +16870,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/style.css
-  var style_default6 = `:host {
+  var style_default9 = `:host {
     display: contents;
 }
 
@@ -11996,9 +17263,94 @@ dd {
 }
 `;
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/blockPickerItems.ts
+  function normalizeBlockPickerOption(option2) {
+    if (option2.item) {
+      return {
+        ...option2,
+        kind: option2.item.kind
+      };
+    }
+    if (!option2.entry) {
+      throw new Error("Block picker option requires either item or entry.");
+    }
+    return {
+      ...option2,
+      kind: "block",
+      item: {
+        kind: "block",
+        entry: option2.entry
+      }
+    };
+  }
+  function blockPickerOptionItem(option2) {
+    if (option2.item)
+      return option2.item;
+    if (option2.entry) {
+      return {
+        kind: "block",
+        entry: option2.entry
+      };
+    }
+    throw new Error("Block picker option requires either item or entry.");
+  }
+  function blockPickerSourceLabel(kind) {
+    if (kind === "template")
+      return "Template";
+    if (kind === "media")
+      return "Media";
+    return "Block";
+  }
+  function blockPickerItemLabel(item) {
+    return item.kind === "block" ? item.entry.label : item.label;
+  }
+  function blockPickerItemDescription(item) {
+    if (item.kind === "block")
+      return item.entry.description ?? item.entry.tag;
+    return item.description ?? blockPickerItemHandle(item);
+  }
+  function blockPickerItemCategory(item) {
+    return item.kind === "block" ? item.entry.category : item.category;
+  }
+  function blockPickerItemSubCategory(item) {
+    return item.kind === "block" ? item.entry.subCategory : item.subCategory;
+  }
+  function blockPickerItemIcon(item) {
+    return item.kind === "block" ? item.entry.icon : item.icon;
+  }
+  function blockPickerItemHandle(item) {
+    if (item.kind === "block")
+      return item.entry.tag;
+    if (item.kind === "media")
+      return item.accept?.join(", ") ?? "media";
+    return item.id;
+  }
+  function blockPickerIconText(item) {
+    return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
+  }
+  function blockPickerCategoryLabel(option2) {
+    const item = blockPickerOptionItem(option2);
+    const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
+    const subCategory = blockPickerItemSubCategory(item);
+    return subCategory ? `${category} / ${subCategory}` : category;
+  }
+  function blockPickerOptionMatches(option2, query2) {
+    if (!query2)
+      return true;
+    const item = blockPickerOptionItem(option2);
+    return [
+      blockPickerItemLabel(item),
+      blockPickerItemDescription(item),
+      blockPickerItemCategory(item),
+      blockPickerItemSubCategory(item),
+      blockPickerItemHandle(item),
+      option2.slotLabel
+    ].some((value) => value?.toLowerCase().includes(query2));
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/BlockPickerModal.ts
-  var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(style_default6)}</style>${String(template_default7)}`;
+  var template5 = document.createElement("template");
+  template5.innerHTML = `<style>${String(style_default9)}</style>${String(template_default10)}`;
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   class BlockPickerModal extends HTMLElement {
@@ -12009,7 +17361,7 @@ dd {
     _activeOption = null;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template4.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template5.content.cloneNode(true));
     }
     connectedCallback() {
       this.closeButton.addEventListener("click", this.close);
@@ -12026,7 +17378,7 @@ dd {
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option) => this._normalizeOption(option))
+        options: group.options.map((option2) => normalizeBlockPickerOption(option2))
       }));
       this._activeSlotKey = this._firstEnabledGroup()?.slot ?? "";
       this._activeSource = "block";
@@ -12051,24 +17403,24 @@ dd {
       this._renderEntries();
     };
     _renderEntries() {
-      const query = this.search.value.trim().toLowerCase();
+      const query2 = this.search.value.trim().toLowerCase();
       const group = this._activeGroup();
-      const options = group?.options.filter((option) => this._isVisibleOption(option, query)) ?? [];
+      const options = group?.options.filter((option2) => this._isVisibleOption(option2, query2)) ?? [];
       this.results.replaceChildren();
       if (group?.disabledReason) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = group.disabledReason;
-        this.results.append(empty);
+        const empty2 = document.createElement("div");
+        empty2.className = "empty";
+        empty2.textContent = group.disabledReason;
+        this.results.append(empty2);
         this._activeOption = null;
         this._renderDetails();
         return;
       }
       if (options.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "No content available";
-        this.results.append(empty);
+        const empty2 = document.createElement("div");
+        empty2.className = "empty";
+        empty2.textContent = "No content available";
+        this.results.append(empty2);
         this._activeOption = null;
         this._renderDetails();
         return;
@@ -12076,8 +17428,8 @@ dd {
       if (!this._activeOption || !options.includes(this._activeOption)) {
         this._activeOption = options[0] ?? null;
       }
-      for (const option of options) {
-        this.results.append(this._renderOption(option));
+      for (const option2 of options) {
+        this.results.append(this._renderOption(option2));
       }
       this._renderDetails();
     }
@@ -12095,13 +17447,7 @@ dd {
         this._activeOption = null;
         this._renderSidebar();
         this._renderEntries();
-      }, this._sourceCount("template"), this._sourceCount("template") === 0), this._filterButton("Snippets", this._activeSource === "snippet", () => {
-        this._activeSource = "snippet";
-        this._activeCategory = "";
-        this._activeOption = null;
-        this._renderSidebar();
-        this._renderEntries();
-      }, this._sourceCount("snippet"), this._sourceCount("snippet") === 0), this._filterButton("Media", this._activeSource === "media", () => {
+      }, this._sourceCount("template"), this._sourceCount("template") === 0), this._filterButton("Media", this._activeSource === "media", () => {
         if (this._selectSingleSourceOption("media"))
           return;
         this._activeSource = "media";
@@ -12110,13 +17456,13 @@ dd {
         this._renderSidebar();
         this._renderEntries();
       }, this._sourceCount("media"), this._sourceCount("media") === 0));
-      const categories = this._categories();
+      const categories2 = this._categories();
       this.categories.append(this._filterButton("All", this._activeCategory === "", () => {
         this._activeCategory = "";
         this._renderSidebar();
         this._renderEntries();
       }, this._sourceCount(this._activeSource)));
-      for (const category of categories) {
+      for (const category of categories2) {
         this.categories.append(this._filterButton(category, this._activeCategory === category, () => {
           this._activeCategory = category;
           this._renderSidebar();
@@ -12145,35 +17491,35 @@ dd {
     }
     _renderDetails() {
       this.details.replaceChildren();
-      const option = this._activeOption;
-      if (!option) {
-        const empty = document.createElement("div");
-        empty.className = "details-empty";
-        empty.textContent = "Select content to see details.";
-        this.details.append(empty);
+      const option2 = this._activeOption;
+      if (!option2) {
+        const empty2 = document.createElement("div");
+        empty2.className = "details-empty";
+        empty2.textContent = "Select content to see details.";
+        this.details.append(empty2);
         return;
       }
-      const item = this._optionItem(option);
+      const item = blockPickerOptionItem(option2);
       const eyebrow = document.createElement("div");
       eyebrow.className = "details-eyebrow";
-      eyebrow.textContent = this._sourceLabel(item.kind);
+      eyebrow.textContent = blockPickerSourceLabel(item.kind);
       const title = document.createElement("h3");
-      title.textContent = this._itemLabel(item);
+      title.textContent = blockPickerItemLabel(item);
       const description = document.createElement("p");
-      description.textContent = this._itemDescription(item);
+      description.textContent = blockPickerItemDescription(item);
       const preview = document.createElement("div");
       preview.className = "preview";
       const previewIcon = document.createElement("span");
       previewIcon.className = "preview-icon";
-      previewIcon.textContent = this._iconText(item);
+      previewIcon.textContent = blockPickerIconText(item);
       preview.append(previewIcon);
       const meta = document.createElement("dl");
-      meta.append(this._metaRow("Source", this._sourceLabel(item.kind)), this._metaRow("Handle", this._itemHandle(item)), this._metaRow("Slot", option.slotLabel), this._metaRow("Category", this._categoryLabel(option)));
+      meta.append(this._metaRow("Source", blockPickerSourceLabel(item.kind)), this._metaRow("Handle", blockPickerItemHandle(item)), this._metaRow("Slot", option2.slotLabel), this._metaRow("Category", blockPickerCategoryLabel(option2)));
       const insert = document.createElement("button");
       insert.className = "insert";
       insert.type = "button";
       insert.textContent = "Insert";
-      insert.addEventListener("click", () => this._selectOption(option));
+      insert.addEventListener("click", () => this._selectOption(option2));
       this.details.append(preview, eyebrow, title, description, meta, insert);
     }
     _metaRow(label, value) {
@@ -12209,158 +17555,71 @@ dd {
         this.tabs.append(button);
       }
     }
-    _renderOption(option) {
+    _renderOption(option2) {
       const button = document.createElement("button");
       button.className = "block";
       button.type = "button";
-      button.ariaSelected = String(option === this._activeOption);
+      button.ariaSelected = String(option2 === this._activeOption);
       button.addEventListener("click", () => {
-        this._activeOption = option;
+        this._activeOption = option2;
         this._renderEntries();
       });
-      button.addEventListener("dblclick", () => this._selectOption(option));
-      const item = this._optionItem(option);
+      button.addEventListener("dblclick", () => this._selectOption(option2));
+      const item = blockPickerOptionItem(option2);
       const icon = document.createElement("span");
       icon.className = "icon";
-      icon.textContent = this._iconText(item);
+      icon.textContent = blockPickerIconText(item);
       const body = document.createElement("span");
       const name = document.createElement("span");
       name.className = "name";
-      name.textContent = this._itemLabel(item);
+      name.textContent = blockPickerItemLabel(item);
       const description = document.createElement("span");
       description.className = "description";
-      description.textContent = this._itemDescription(item);
+      description.textContent = blockPickerItemDescription(item);
       const category = document.createElement("span");
       category.className = "category";
-      category.textContent = this._categoryLabel(option);
+      category.textContent = blockPickerCategoryLabel(option2);
       body.append(name, description, category);
       button.append(icon, body);
       return button;
     }
-    _selectOption(option) {
+    _selectOption(option2) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option }
+        detail: { option: option2 }
       }));
       this.close();
     }
-    _isVisibleOption(option, query) {
-      const item = this._optionItem(option);
+    _isVisibleOption(option2, query2) {
+      const item = blockPickerOptionItem(option2);
       if (item.kind !== this._activeSource)
         return false;
-      if (this._activeCategory && this._categoryLabel(option) !== this._activeCategory)
+      if (this._activeCategory && blockPickerCategoryLabel(option2) !== this._activeCategory)
         return false;
-      return this._matches(option, query);
+      return blockPickerOptionMatches(option2, query2);
     }
     _sourceCount(source) {
-      return this._activeGroup()?.options.filter((option) => this._optionItem(option).kind === source).length ?? 0;
+      return this._activeGroup()?.options.filter((option2) => blockPickerOptionItem(option2).kind === source).length ?? 0;
     }
     _selectSingleSourceOption(source) {
-      const options = this._activeGroup()?.options.filter((option) => this._optionItem(option).kind === source) ?? [];
+      const options = this._activeGroup()?.options.filter((option2) => blockPickerOptionItem(option2).kind === source) ?? [];
       if (options.length !== 1)
         return false;
       this._selectOption(options[0]);
       return true;
     }
     _categoryCount(category) {
-      return this._activeGroup()?.options.filter((option) => this._optionItem(option).kind === this._activeSource && this._categoryLabel(option) === category).length ?? 0;
+      return this._activeGroup()?.options.filter((option2) => blockPickerOptionItem(option2).kind === this._activeSource && blockPickerCategoryLabel(option2) === category).length ?? 0;
     }
     _categories() {
-      const categories = new Set;
-      for (const option of this._activeGroup()?.options ?? []) {
-        if (this._optionItem(option).kind !== this._activeSource)
+      const categories2 = new Set;
+      for (const option2 of this._activeGroup()?.options ?? []) {
+        if (blockPickerOptionItem(option2).kind !== this._activeSource)
           continue;
-        categories.add(this._categoryLabel(option));
+        categories2.add(blockPickerCategoryLabel(option2));
       }
-      return [...categories].sort((a, b2) => a.localeCompare(b2));
-    }
-    _matches(option, query) {
-      if (!query)
-        return true;
-      const item = this._optionItem(option);
-      return [
-        this._itemLabel(item),
-        this._itemDescription(item),
-        this._itemCategory(item),
-        this._itemSubCategory(item),
-        this._itemHandle(item),
-        option.slotLabel
-      ].some((value) => value?.toLowerCase().includes(query));
-    }
-    _iconText(item) {
-      return (this._itemIcon(item) ?? this._itemLabel(item)).slice(0, 1).toUpperCase();
-    }
-    _categoryLabel(option) {
-      const item = this._optionItem(option);
-      const category = this._itemCategory(item) ?? this._sourceLabel(item.kind);
-      const subCategory = this._itemSubCategory(item);
-      return subCategory ? `${category} / ${subCategory}` : category;
-    }
-    _normalizeOption(option) {
-      if (option.item) {
-        return {
-          ...option,
-          kind: option.item.kind
-        };
-      }
-      if (!option.entry) {
-        throw new Error("Block picker option requires either item or entry.");
-      }
-      return {
-        ...option,
-        kind: "block",
-        item: {
-          kind: "block",
-          entry: option.entry
-        }
-      };
-    }
-    _optionItem(option) {
-      if (option.item)
-        return option.item;
-      if (option.entry) {
-        return {
-          kind: "block",
-          entry: option.entry
-        };
-      }
-      throw new Error("Block picker option requires either item or entry.");
-    }
-    _sourceLabel(kind) {
-      if (kind === "template")
-        return "Template";
-      if (kind === "snippet")
-        return "Snippet";
-      if (kind === "media")
-        return "Media";
-      return "Block";
-    }
-    _itemLabel(item) {
-      return item.kind === "block" ? item.entry.label : item.label;
-    }
-    _itemDescription(item) {
-      if (item.kind === "block")
-        return item.entry.description ?? item.entry.tag;
-      return item.description ?? this._itemHandle(item);
-    }
-    _itemCategory(item) {
-      return item.kind === "block" ? item.entry.category : item.category;
-    }
-    _itemSubCategory(item) {
-      return item.kind === "block" ? item.entry.subCategory : item.subCategory;
-    }
-    _itemIcon(item) {
-      return item.kind === "block" ? item.entry.icon : item.icon;
-    }
-    _itemHandle(item) {
-      if (item.kind === "block")
-        return item.entry.tag;
-      if (item.kind === "snippet")
-        return item.identifier;
-      if (item.kind === "media")
-        return item.accept?.join(", ") ?? "media";
-      return item.id;
+      return [...categories2].sort((a, b) => a.localeCompare(b));
     }
     _activeGroup() {
       return this._groups.find((group) => (group.slot ?? "") === this._activeSlotKey) ?? this._groups[0];
@@ -12408,14 +17667,1398 @@ dd {
     customElements.define("cms-editor-v2-block-picker-modal", BlockPickerModal);
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureDragDrop.ts
+  function onStructureDragStart(state, node, event) {
+    state.draggedNode = node;
+    event.dataTransfer?.setData("text/plain", node.label);
+    if (event.dataTransfer)
+      event.dataTransfer.effectAllowed = "move";
+  }
+  function onStructureDragOver(state, node, row, event, context) {
+    if (!canDropOnNode(state, node, context))
+      return;
+    event.preventDefault();
+    context.clearDropRow();
+    const position = structureDropPosition(row, event);
+    row.classList.add(position === "before" ? "drop-before" : "drop-after");
+    state.dropRow = row;
+    if (event.dataTransfer)
+      event.dataTransfer.dropEffect = "move";
+  }
+  function onStructureDrop(state, node, event, context) {
+    if (!canDropOnNode(state, node, context))
+      return;
+    event.preventDefault();
+    const position = structureDropPosition(event.currentTarget, event);
+    context.emitMove(position === "before" ? "move-before" : "move-after", node, state.draggedNode);
+    clearStructureDragState(state);
+  }
+  function structureDropPosition(target, event) {
+    const rect = target.getBoundingClientRect();
+    return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+  }
+  function clearStructureDragState(state) {
+    state.draggedNode = null;
+    clearStructureDropRow(state);
+  }
+  function clearStructureDropRow(state) {
+    state.dropRow?.classList.remove("drop-before", "drop-after");
+    state.dropRow = null;
+  }
+  function canDropOnNode(state, node, context) {
+    return Boolean(state.draggedNode && state.draggedNode !== node && !context.isDescendantNode(node, state.draggedNode));
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureKeyboard.ts
+  function onStructureDocumentKeydown(event, context) {
+    if (event.key === "Escape") {
+      context.closeContextMenu();
+      return;
+    }
+    if ((event.key === "Delete" || event.key === "Backspace") && context.selectedEditor && !isEditableKeyEvent(event)) {
+      event.preventDefault();
+      context.emitDelete(context.selectedEditor);
+      return;
+    }
+    if (!event.ctrlKey && !event.metaKey)
+      return;
+    if (isEditableKeyEvent(event))
+      return;
+    const key = event.key.toLowerCase();
+    if (key === "c" && context.selectedEditor) {
+      event.preventDefault();
+      context.emitCopy(context.selectedEditor);
+    } else if (key === "v") {
+      event.preventDefault();
+      context.emitPaste(context.selectedEditor ?? undefined);
+    }
+  }
+  function isEditableKeyEvent(event) {
+    return event.composedPath().some((target) => {
+      if (!(target instanceof Element))
+        return false;
+      return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeEvents.ts
+  class StructureTreeEvents {
+    tree;
+    onBlockPickerSelect = (event) => {
+      if (!this.tree.state.pendingPickerAction)
+        return;
+      const { action, editor } = this.tree.state.pendingPickerAction;
+      this.tree.emitter.emitAction(action, editor, event.detail.option.item, event.detail.option.slot);
+      this.tree.state.pendingPickerAction = null;
+    };
+    onDataSourceSelect = (event) => {
+      if (!this.tree.state.pendingSourceEditor)
+        return;
+      this.tree.emitter.emitAction("set-source", this.tree.state.pendingSourceEditor, undefined, undefined, undefined, undefined, event.detail.source, event.detail.binding);
+      this.tree.state.pendingSourceEditor = null;
+    };
+    onDataSourceRemove = () => {
+      if (!this.tree.state.pendingSourceEditor)
+        return;
+      this.tree.emitter.emitAction("remove-source", this.tree.state.pendingSourceEditor);
+      this.tree.state.pendingSourceEditor = null;
+    };
+    onConditionApply = (event) => {
+      if (!this.tree.state.pendingConditionEditor)
+        return;
+      this.tree.emitter.emitAction("set-source-status-conditions", this.tree.state.pendingConditionEditor, undefined, undefined, undefined, undefined, undefined, undefined, event.detail.conditions);
+      this.tree.state.pendingConditionEditor = null;
+    };
+    onConditionRemove = () => {
+      if (!this.tree.state.pendingConditionEditor)
+        return;
+      this.tree.emitter.emitAction("remove-source-status-condition", this.tree.state.pendingConditionEditor);
+      this.tree.state.pendingConditionEditor = null;
+    };
+    onDocumentKeydown = (event) => {
+      onStructureDocumentKeydown(event, {
+        closeContextMenu: () => this.tree.emitter.closeContextMenu(),
+        emitCopy: (editor) => this.tree.emitter.emitAction("copy", editor),
+        emitDelete: (editor) => this.tree.emitter.emitAction("delete", editor),
+        emitPaste: (editor) => this.tree.emitter.emitAction("paste-after", editor),
+        selectedEditor: this.tree.state.selectedEditor
+      });
+    };
+    onDocumentClick = () => {
+      this.tree.emitter.closeContextMenu();
+    };
+    constructor(tree) {
+      this.tree = tree;
+    }
+    connect() {
+      this.tree.host.ownerDocument.addEventListener("click", this.onDocumentClick);
+      this.tree.host.ownerDocument.addEventListener("keydown", this.onDocumentKeydown);
+      this.tree.refs.blockPicker.addEventListener(BLOCK_PICKER_SELECT_EVENT, this.onBlockPickerSelect);
+      this.tree.refs.dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this.onDataSourceSelect);
+      this.tree.refs.dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this.onDataSourceRemove);
+      this.tree.refs.conditionPicker.addEventListener(CONDITION_PICKER_APPLY_EVENT, this.onConditionApply);
+      this.tree.refs.conditionPicker.addEventListener(CONDITION_PICKER_REMOVE_EVENT, this.onConditionRemove);
+      this.tree.refs.tree.addEventListener("click", this.onTreeClick);
+      this.tree.refs.tree.addEventListener("contextmenu", this.onTreeContextMenu);
+    }
+    disconnect() {
+      this.tree.host.ownerDocument.removeEventListener("click", this.onDocumentClick);
+      this.tree.host.ownerDocument.removeEventListener("keydown", this.onDocumentKeydown);
+      this.tree.refs.blockPicker.removeEventListener(BLOCK_PICKER_SELECT_EVENT, this.onBlockPickerSelect);
+      this.tree.refs.dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this.onDataSourceSelect);
+      this.tree.refs.dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this.onDataSourceRemove);
+      this.tree.refs.conditionPicker.removeEventListener(CONDITION_PICKER_APPLY_EVENT, this.onConditionApply);
+      this.tree.refs.conditionPicker.removeEventListener(CONDITION_PICKER_REMOVE_EVENT, this.onConditionRemove);
+      this.tree.refs.tree.removeEventListener("click", this.onTreeClick);
+      this.tree.refs.tree.removeEventListener("contextmenu", this.onTreeContextMenu);
+    }
+    onDragStart(node, event) {
+      onStructureDragStart(this.tree.state.dragDrop, node, event);
+    }
+    onDragOver(node, row, event) {
+      onStructureDragOver(this.tree.state.dragDrop, node, row, event, this.dragDropContext());
+    }
+    onDrop(node, event) {
+      onStructureDrop(this.tree.state.dragDrop, node, event, this.dragDropContext());
+    }
+    clearDragState() {
+      clearStructureDragState(this.tree.state.dragDrop);
+    }
+    clearDropRow() {
+      clearStructureDropRow(this.tree.state.dragDrop);
+    }
+    onTreeClick = (event) => {
+      if (event.target === this.tree.refs.tree)
+        this.tree.pickers.openRootPicker();
+    };
+    onTreeContextMenu = (event) => {
+      if (event.target !== this.tree.refs.tree)
+        return;
+      event.preventDefault();
+      const mouseEvent = event;
+      this.tree.menus.openRootContextMenu(mouseEvent.clientX, mouseEvent.clientY);
+    };
+    dragDropContext() {
+      return {
+        clearDropRow: () => this.clearDropRow(),
+        emitMove: (action, target, dragged) => {
+          this.tree.emitter.emitAction(action, target.editor, undefined, undefined, undefined, dragged.editor);
+        },
+        isDescendantNode: (candidate, parent) => this.tree.nodes.isDescendantNode(candidate, parent)
+      };
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureContextMenuItems.ts
+  function contextMenuButton(label, action, closeContextMenu, variant, disabled = false) {
+    const button = document.createElement("button");
+    button.className = variant ? `context-item ${variant}` : "context-item";
+    button.type = "button";
+    button.disabled = disabled;
+    button.textContent = label;
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (button.disabled)
+        return;
+      closeContextMenu();
+      action();
+    });
+    return button;
+  }
+  function contextSeparator() {
+    const separator = document.createElement("div");
+    separator.className = "context-separator";
+    separator.role = "separator";
+    return separator;
+  }
+  function positionContextMenu(menu, clientX, clientY) {
+    const margin = 6;
+    const menuBounds = menu.getBoundingClientRect();
+    const maxLeft = Math.max(margin, window.innerWidth - menuBounds.width - margin);
+    const maxTop = Math.max(margin, window.innerHeight - menuBounds.height - margin);
+    menu.style.left = `${Math.min(Math.max(clientX, margin), maxLeft)}px`;
+    menu.style.top = `${Math.min(Math.max(clientY, margin), maxTop)}px`;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureContextMenus.ts
+  function openStructureContextMenu(node, clientX, clientY, menu, context) {
+    context.closeContextMenu();
+    menu.replaceChildren();
+    const sourceAction = contextMenuButton(context.sourceActionLabel(node), () => {
+      context.openSourcePicker(node);
+    }, context.closeContextMenu, undefined, context.sourceDataSourceCount() === 0);
+    const repeatAction = node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat) ? contextMenuButton("Remove repeat", () => context.emitAction("remove-repeat", node.editor), context.closeContextMenu) : contextMenuButton("Add repeat", () => context.emitAction("configure-repeat", node.editor), context.closeContextMenu, undefined, !context.repeatableTargets.has(node.target));
+    menu.append(contextMenuButton("Add child", () => {
+      context.openPickerOrEmitSingleMedia({ action: "add-child", editor: node.editor }, context.childGroups(node), node.label);
+    }, context.closeContextMenu, undefined, !context.hasEnabledGroup(context.childGroups(node))), contextMenuButton("Copy", () => context.emitAction("copy", node.editor), context.closeContextMenu), contextMenuButton("Paste after", () => context.emitAction("paste-after", node.editor), context.closeContextMenu), contextMenuButton("Duplicate", () => context.emitAction("duplicate", node.editor), context.closeContextMenu, undefined, !context.canDuplicate(node)), contextSeparator(), sourceAction, repeatAction, contextMenuButton("Add condition", () => context.openConditionPicker(node), context.closeContextMenu), contextSeparator(), contextMenuButton("Replace", () => {
+      context.openPickerOrEmitSingleMedia({ action: "replace", editor: node.editor }, context.replaceGroups(node), node.label);
+    }, context.closeContextMenu, undefined, !context.hasEnabledGroup(context.replaceGroups(node))), contextMenuButton("Delete", () => context.emitAction("delete", node.editor), context.closeContextMenu, "danger", !context.canDelete(node)));
+    appendPositionedMenu(menu, clientX, clientY, context);
+  }
+  function openRootContextMenu(clientX, clientY, menu, context) {
+    context.closeContextMenu();
+    menu.replaceChildren(contextMenuButton("Add block", () => context.openRootPicker(), context.closeContextMenu, undefined, !context.hasEnabledGroup(context.rootGroups())), contextMenuButton("Paste", () => context.emitAction("paste-after"), context.closeContextMenu));
+    appendPositionedMenu(menu, clientX, clientY, context);
+  }
+  function appendPositionedMenu(menu, clientX, clientY, context) {
+    context.appendMenu(menu);
+    positionContextMenu(menu, clientX, clientY);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeMenus.ts
+  class StructureTreeMenus {
+    tree;
+    constructor(tree) {
+      this.tree = tree;
+    }
+    openContextMenu(node, clientX, clientY) {
+      openStructureContextMenu(node, clientX, clientY, this.tree.refs.contextMenu, this.context());
+    }
+    openRootContextMenu(clientX, clientY) {
+      openRootContextMenu(clientX, clientY, this.tree.refs.contextMenu, this.context());
+    }
+    context() {
+      return {
+        appendMenu: (menu) => this.tree.host.shadowRoot.append(menu),
+        canDelete: (node) => this.tree.nodes.canDelete(node),
+        canDuplicate: (node) => this.tree.nodes.canDuplicate(node),
+        childGroups: (node) => this.tree.pickers.childGroups(node),
+        closeContextMenu: () => this.tree.emitter.closeContextMenu(),
+        emitAction: (action, editor) => this.tree.emitter.emitAction(action, editor),
+        hasEnabledGroup: (groups) => this.tree.pickers.hasEnabledGroup(groups),
+        openPickerOrEmitSingleMedia: (action, groups, contextLabel) => this.tree.pickers.openPickerOrEmitSingleMedia(action, groups, contextLabel),
+        openConditionPicker: (node) => this.tree.pickers.openConditionPicker(node),
+        openRootPicker: () => this.tree.pickers.openRootPicker(),
+        openSourcePicker: (node) => this.tree.pickers.openSourcePicker(node),
+        repeatableTargets: this.tree.state.repeatableTargets,
+        replaceGroups: (node) => this.tree.pickers.replaceGroups(node),
+        rootGroups: () => this.tree.pickers.rootGroups(),
+        sourceActionLabel: (node) => this.sourceActionLabel(node),
+        sourceDataSourceCount: () => this.tree.nodes.sourceDataSources().length
+      };
+    }
+    sourceActionLabel(node) {
+      return this.tree.nodes.sourceActionLabel(node);
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/structureNodeRelations.ts
+  function canDuplicateNode(node, parentNode, slotForChild, slotChildCount) {
+    const parent = parentNode(node);
+    if (!parent)
+      return true;
+    const slot = slotForChild(parent, node);
+    if (!slot?.max)
+      return true;
+    return slotChildCount(parent, slot) < slot.max;
+  }
+  function canDeleteNode(node, parentNode, slotForChild, slotChildCount) {
+    const parent = parentNode(node);
+    if (!parent)
+      return true;
+    const slot = slotForChild(parent, node);
+    if (!slot?.min)
+      return true;
+    return slotChildCount(parent, slot) > slot.min;
+  }
+  function slotForChild(parent, child) {
+    const childSlot = child.target.getAttribute("slot") ?? undefined;
+    return parent.editor.getContentSlots().find((slot) => (slot.slot ?? undefined) === childSlot);
+  }
+  function sameSlot(left, right) {
+    return (left.slot ?? undefined) === (right.slot ?? undefined);
+  }
+  function slotChildCount(parent, slot, editorChildrenOf) {
+    return editorChildrenOf(parent).filter((child) => (child.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined)).length;
+  }
+  function parentStructureNode(nodes, child) {
+    for (const node of nodes) {
+      if (node.children.includes(child))
+        return node;
+      const parent = parentStructureNode(node.children, child);
+      if (parent)
+        return parent;
+    }
+    return null;
+  }
+  function nodeForEditor(nodes, editor) {
+    return nodes.flatMap((node) => [node, ...nodeForEditorChildren(node)]).find((node) => node.editor === editor) ?? null;
+  }
+  function nodeForEditorChildren(node) {
+    return node.children.flatMap((child) => [child, ...nodeForEditorChildren(child)]);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/structureTreeTraversal.ts
+  function visibleStructureNodes(nodes, isCollapsed, depth = 0) {
+    return nodes.flatMap((node) => {
+      const current = [{ item: node, depth }];
+      if (isCollapsed(node))
+        return current;
+      return [
+        ...current,
+        ...visibleStructureNodes(node.children, isCollapsed, depth + 1)
+      ];
+    });
+  }
+  function pathToEditor(nodes, editor, ancestors = []) {
+    for (const node of nodes) {
+      const path = [...ancestors, node];
+      if (node.editor === editor)
+        return path;
+      const childPath = pathToEditor(node.children, editor, path);
+      if (childPath)
+        return childPath;
+    }
+    return null;
+  }
+  function flattenStructureNodes(nodes) {
+    return nodes.flatMap((node) => [
+      node,
+      ...flattenStructureNodes(node.children)
+    ]);
+  }
+  function editorChildrenOf(parent) {
+    return parent.children;
+  }
+  function isDescendantStructureNode(candidate, parent) {
+    return parent.children.some((child) => {
+      return child === candidate || isDescendantStructureNode(candidate, child);
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreePresentation.ts
+  function renderStructureBadge(value) {
+    const badge = document.createElement("span");
+    badge.className = structureBadgeClass(value);
+    const icon = structureBadgeIcon(value);
+    if (icon) {
+      const iconEl = document.createElement("span");
+      iconEl.className = "badge-icon";
+      iconEl.textContent = icon;
+      badge.append(iconEl);
+    }
+    const label = document.createElement("span");
+    label.textContent = value;
+    badge.append(label);
+    return badge;
+  }
+  function structureBadgeClass(value) {
+    if (CMS_SOURCE_STATES.includes(value))
+      return `badge source-status ${value}`;
+    return value === "Source" || value === "Repeat" ? "badge data" : "badge";
+  }
+  function structureBadgeIcon(value) {
+    if (value === "Source")
+      return "▦";
+    if (value === "Repeat")
+      return "↻";
+    return null;
+  }
+  function structureIconText(node) {
+    if (node.icon)
+      return node.icon.slice(0, 1).toUpperCase();
+    return node.label.slice(0, 1).toUpperCase();
+  }
+  function structureNodeLabel(node) {
+    return node.label;
+  }
+  function structureRowClass(_node) {
+    return "row";
+  }
+  function structureItemClass(_node) {
+    return "item";
+  }
+  function structureIconClass(_node) {
+    return "icon";
+  }
+  function sourceActionLabel(node) {
+    return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Update source" : "Add source";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeNodes.ts
+  class StructureTreeNodes {
+    state;
+    constructor(state) {
+      this.state = state;
+    }
+    canDuplicate(node) {
+      return canDuplicateNode(node, (child) => this.parentNode(child), (parent, child) => this.slotForChild(parent, child), (parent, slot) => this.slotChildCount(parent, slot));
+    }
+    canDelete(node) {
+      return canDeleteNode(node, (child) => this.parentNode(child), (parent, child) => this.slotForChild(parent, child), (parent, slot) => this.slotChildCount(parent, slot));
+    }
+    slotForChild(parent, child) {
+      return slotForChild(parent, child);
+    }
+    sameSlot(left, right) {
+      return sameSlot(left, right);
+    }
+    slotChildCount(parent, slot) {
+      return slotChildCount(parent, slot, (value) => this.editorChildrenOf(value));
+    }
+    editorChildrenOf(parent) {
+      return editorChildrenOf(parent);
+    }
+    parentNode(child) {
+      return parentStructureNode(this.state.nodes, child);
+    }
+    nodeForEditor(editor) {
+      return nodeForEditor(this.state.nodes, editor);
+    }
+    isDescendantNode(candidate, parent) {
+      return isDescendantStructureNode(candidate, parent);
+    }
+    visibleNodes(nodes = this.state.nodes, depth = 0) {
+      return visibleStructureNodes(nodes, (node) => this.isCollapsed(node), depth);
+    }
+    expandPathToSelected() {
+      if (!this.state.selectedEditor)
+        return;
+      const path = pathToEditor(this.state.nodes, this.state.selectedEditor);
+      if (!path)
+        return;
+      for (const node of path.slice(0, -1))
+        this.state.collapsedTargets.delete(this.nodeCollapseKey(node));
+    }
+    toggleNode(node) {
+      const key = this.nodeCollapseKey(node);
+      this.isCollapsed(node) ? this.state.collapsedTargets.delete(key) : this.state.collapsedTargets.add(key);
+    }
+    isCollapsed(node) {
+      return this.state.collapsedTargets.has(this.nodeCollapseKey(node));
+    }
+    visibleBadges(node) {
+      return this.areBadgesExpanded(node) ? node.badges : node.badges.slice(0, 2);
+    }
+    toggleBadges(node) {
+      const key = this.nodeBadgeKey(node);
+      this.areBadgesExpanded(node) ? this.state.expandedBadgeTargets.delete(key) : this.state.expandedBadgeTargets.add(key);
+    }
+    areBadgesExpanded(node) {
+      return this.state.expandedBadgeTargets.has(this.nodeBadgeKey(node));
+    }
+    setRepeatableTargets(targets) {
+      for (const node of flattenStructureNodes(this.state.nodes)) {
+        if (!targets.includes(node.target))
+          this.state.repeatableTargets.delete(node.target);
+      }
+      for (const target of targets)
+        this.state.repeatableTargets.add(target);
+    }
+    sourceDataSources() {
+      return this.state.dataSources;
+    }
+    flattenNodes(nodes) {
+      return flattenStructureNodes(nodes);
+    }
+    nodeCollapseKey(node) {
+      return node.target;
+    }
+    nodeBadgeKey(node) {
+      return this.nodeCollapseKey(node);
+    }
+    nearestSourceNode(node) {
+      return this.sourceAncestorNodes(node)[0] ?? null;
+    }
+    sourceAncestorNodes(node) {
+      const sources = [];
+      for (let current = this.parentNode(node);current; current = this.parentNode(current)) {
+        if (current.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source))
+          sources.push(current);
+      }
+      return sources;
+    }
+    sourceStatusCondition(node) {
+      return sourceStatusConditionDetailsFromElement(node.target)?.state ?? null;
+    }
+    sourceStatusConditionDetails(node) {
+      return sourceStatusConditionDetailsFromElement(node.target);
+    }
+    sourceStatusConditions(node) {
+      return sourceStatusConditionsFromElement(node.target);
+    }
+    canSetSourceStatusCondition(node, source = this.nearestSourceNode(node)) {
+      if (!source)
+        return false;
+      if (!source.target.contains(node.target) || source.target === node.target)
+        return false;
+      if (hasNonSourceStatusCondition(node.target))
+        return false;
+      return !hasSourceStatusConditionAncestor(node.target, source.target);
+    }
+    iconText(node) {
+      return structureIconText(node);
+    }
+    nodeLabel(node) {
+      return structureNodeLabel(node);
+    }
+    rowClass(node) {
+      return structureRowClass(node);
+    }
+    itemClass(node) {
+      return structureItemClass(node);
+    }
+    iconClass(node) {
+      return structureIconClass(node);
+    }
+    sourceActionLabel(node) {
+      return sourceActionLabel(node);
+    }
+  }
+  function nearestSourceAncestor(target) {
+    for (let current = target.parentElement;current; current = current.parentElement) {
+      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source))
+        return current;
+    }
+    return null;
+  }
+  function hasSourceStatusConditionAncestor(target, source) {
+    for (let current = target.parentElement;current && current !== source; current = current.parentElement) {
+      if (sourceStatusConditionTargetsSource(current, source))
+        return true;
+    }
+    return false;
+  }
+  function hasNonSourceStatusCondition(target) {
+    return target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0;
+  }
+  function sourceStatusConditionTargetsSource(target, source) {
+    const conditions = sourceStatusConditionsFromElement(target);
+    return conditions.some((condition) => {
+      if (condition.sourceId)
+        return condition.sourceId === source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
+      return nearestSourceAncestor(target) === source;
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
+  function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
+    const option2 = singleEnabledOption(groups);
+    if (option2?.item?.kind === "media") {
+      context.emitAction(action.action, option2.item, option2.slot);
+      return;
+    }
+    context.setPendingPickerAction(action);
+    context.openBlockPicker(groups, contextLabel);
+  }
+  function singleEnabledOption(groups) {
+    const options = groups.filter((group) => !group.disabledReason).flatMap((group) => group.options);
+    return options.length === 1 ? options[0] ?? null : null;
+  }
+  function useDefaultTemplate(templates, groups, context) {
+    if (templates.length === 0)
+      return false;
+    if (templates.length === 1) {
+      context.emitAction("add-root", templates[0]);
+      return true;
+    }
+    context.setPendingPickerAction({ action: "add-root" });
+    context.openBlockPicker(groups, "Page");
+    return true;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureSourcePicker.ts
+  function openStructureSourcePicker(node, context) {
+    context.setPendingSourceEditor(node.editor);
+    const { picker } = context;
+    picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, context.onSelect);
+    picker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, context.onRemove);
+    picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, context.onSelect);
+    picker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, context.onRemove);
+    picker.open(context.dataSources, node.label, {
+      canRemove: node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source),
+      initialBinding: sourceBindingForNode(node)
+    });
+  }
+  function sourceBindingForNode(node) {
+    const source = parseSource(node.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    const body = parseSourceBody(node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceBody));
+    const trigger = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
+    const method = node.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
+    return source ? {
+      url: source.url,
+      ...source.alias ? { alias: source.alias } : {},
+      ...method ? { method } : {},
+      ...body ? { body } : {},
+      ...isCmsSourceTrigger(trigger) && trigger !== "auto" ? { trigger } : {}
+    } : null;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Pickers/structurePickerOptions.ts
+  function slotOptions(context, slot, parent, replaced) {
+    const blockOptions = context.catalog.filter((entry) => {
+      if (entry.category === "Runtime")
+        return false;
+      return slot.accepts.some((accept) => acceptsEntry(accept, entry));
+    }).map((entry) => ({
+      item: {
+        kind: "block",
+        entry
+      },
+      entry,
+      slot: slot.slot,
+      slotLabel: slot.label
+    }));
+    const externalOptions = context.insertItems.filter((item) => slot.accepts.some((accept) => acceptsItem(accept, item))).filter((item) => canFitItem(context, parent, slot, item, replaced)).map((item) => ({
+      item,
+      slot: slot.slot,
+      slotLabel: slot.label
+    }));
+    const mediaAccept = mediaAcceptForSlot(slot);
+    const mediaOptions = mediaAccept ? [{
+      item: {
+        kind: "media",
+        label: "Media",
+        description: "Choose a file from the CMS library.",
+        category: "Media",
+        subCategory: mediaAccept.join(", "),
+        icon: "M",
+        accept: mediaAccept
+      },
+      slot: slot.slot,
+      slotLabel: slot.label
+    }] : [];
+    return [
+      ...blockOptions.filter((option2) => canFitItem(context, parent, slot, option2.item, replaced)),
+      ...externalOptions,
+      ...mediaOptions.filter((option2) => option2.item && canFitItem(context, parent, slot, option2.item, replaced))
+    ];
+  }
+  function mediaAcceptForSlot(slot) {
+    const explicit = slot.accepts.find((accept) => accept.kind === "media");
+    if (explicit?.kind === "media")
+      return explicit.accept ?? ["image"];
+    if (slot.accepts.some((accept) => accept.kind === "component" && accept.tag.toLowerCase() === "img")) {
+      return ["image"];
+    }
+    if (slot.accepts.some((accept) => accept.kind === "any-component")) {
+      return ["image"];
+    }
+    return null;
+  }
+  function acceptsEntry(accept, entry) {
+    if (accept.kind === "media")
+      return false;
+    if (accept.kind === "any-component")
+      return true;
+    return accept.tag.toLowerCase() === entry.tag.toLowerCase();
+  }
+  function acceptsItem(accept, item) {
+    if (item.kind === "media")
+      return accept.kind === "media";
+    if (item.kind === "block")
+      return acceptsEntry(accept, item.entry);
+    if (accept.kind === "media")
+      return false;
+    if (accept.kind === "any-component")
+      return true;
+    return false;
+  }
+  function canFitItem(context, parent, slot, item, replaced) {
+    if (typeof slot.max !== "number")
+      return true;
+    const replacedSlot = replaced ? context.slotForChild(parent, replaced) : undefined;
+    const replacedCount = replacedSlot && context.sameSlot(replacedSlot, slot) ? 1 : 0;
+    return context.slotChildCount(parent, slot) - replacedCount + itemRootCount(item) <= slot.max;
+  }
+  function itemRootCount(item) {
+    if (item.kind !== "template")
+      return 1;
+    const template6 = document.createElement("template");
+    template6.innerHTML = item.content;
+    const elementCount = template6.content.children.length;
+    if (elementCount > 0)
+      return elementCount;
+    return template6.content.textContent?.trim() ? 1 : 0;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Pickers/structurePickerGroups.ts
+  function rootGroups(context) {
+    const options = [
+      ...context.catalog.filter((entry) => entry.category !== "Runtime").map((entry) => ({
+        item: {
+          kind: "block",
+          entry
+        },
+        entry,
+        slotLabel: "Page"
+      })),
+      ...context.insertItems.filter((item) => item.kind !== "media").map((item) => ({
+        item,
+        slotLabel: "Page"
+      }))
+    ];
+    return [{
+      label: "Page",
+      disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
+      options
+    }];
+  }
+  function defaultTemplateGroups(templates) {
+    return [{
+      label: "Default templates",
+      disabledReason: templates.length === 0 ? "No default templates." : undefined,
+      options: templates.map((item) => ({
+        item,
+        slotLabel: "Page"
+      }))
+    }];
+  }
+  function childGroups(context, node) {
+    return node.editor.getContentSlots().map((slot) => {
+      const isFull = isSlotFull(context, node, slot);
+      const options = isFull ? [] : slotOptions(context, slot, node);
+      return {
+        slot: slot.slot,
+        label: slot.label,
+        disabledReason: isFull ? "This slot is full." : options.length === 0 ? "No compatible blocks." : undefined,
+        options
+      };
+    });
+  }
+  function replaceGroups(context, node) {
+    const parent = context.parentNode(node);
+    if (!parent)
+      return rootGroups(context);
+    const slot = context.slotForChild(parent, node);
+    if (!slot)
+      return [];
+    const options = slotOptions(context, slot, parent, node);
+    return [{
+      slot: slot.slot,
+      label: slot.label,
+      disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
+      options
+    }];
+  }
+  function hasEnabledGroup(groups) {
+    return groups.some((group) => !group.disabledReason && group.options.length > 0);
+  }
+  function defaultTemplateItems(context) {
+    const templates = context.insertItems.filter((item) => item.kind === "template");
+    if (context.defaultTemplateSelection.category) {
+      return templates.filter((item) => item.category === context.defaultTemplateSelection.category);
+    }
+    return [];
+  }
+  function isSlotFull(context, parent, slot) {
+    return typeof slot.max === "number" && context.slotChildCount(parent, slot) >= slot.max;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreePickers.ts
+  class StructureTreePickers {
+    tree;
+    constructor(tree) {
+      this.tree = tree;
+    }
+    rootGroups() {
+      return rootGroups(this.groupContext());
+    }
+    defaultTemplateGroups(templates) {
+      return defaultTemplateGroups(templates);
+    }
+    childGroups(node) {
+      return childGroups(this.groupContext(), node);
+    }
+    replaceGroups(node) {
+      return replaceGroups(this.groupContext(), node);
+    }
+    isSlotFull(parent, slot) {
+      return isSlotFull(this.groupContext(), parent, slot);
+    }
+    hasEnabledGroup(groups) {
+      return hasEnabledGroup(groups);
+    }
+    openRootPicker() {
+      this.tree.state.pendingPickerAction = { action: "add-root" };
+      this.tree.refs.blockPicker.open(this.rootGroups(), "Page");
+    }
+    openPickerOrEmitSingleMedia(action, groups, contextLabel) {
+      openPickerOrEmitSingleMedia(action, groups, contextLabel, this.blockPickerContext(action.editor));
+    }
+    openSourcePicker(node) {
+      openStructureSourcePicker(node, {
+        dataSources: this.tree.nodes.sourceDataSources(),
+        onRemove: this.tree.events.onDataSourceRemove,
+        onSelect: this.tree.events.onDataSourceSelect,
+        picker: this.tree.refs.dataSourcePicker,
+        setPendingSourceEditor: (editor) => {
+          this.tree.state.pendingSourceEditor = editor;
+        }
+      });
+    }
+    openConditionPicker(node) {
+      this.tree.state.pendingConditionEditor = node.editor;
+      const picker = this.tree.refs.conditionPicker;
+      picker.removeEventListener(CONDITION_PICKER_APPLY_EVENT, this.tree.events.onConditionApply);
+      picker.removeEventListener(CONDITION_PICKER_REMOVE_EVENT, this.tree.events.onConditionRemove);
+      picker.addEventListener(CONDITION_PICKER_APPLY_EVENT, this.tree.events.onConditionApply);
+      picker.addEventListener(CONDITION_PICKER_REMOVE_EVENT, this.tree.events.onConditionRemove);
+      const sources = this.tree.nodes.sourceAncestorNodes(node).filter((source) => this.tree.nodes.canSetSourceStatusCondition(node, source)).map((source) => ({
+        editor: source.editor,
+        label: source.label,
+        sourceName: this.sourceName(source)
+      }));
+      picker.open({
+        sources,
+        selected: this.selectedConditions(node),
+        contextLabel: node.label,
+        canRemove: this.tree.nodes.sourceStatusConditions(node).length > 0
+      });
+    }
+    defaultTemplateItems() {
+      return defaultTemplateItems(this.groupContext());
+    }
+    useDefaultTemplate(templates = this.defaultTemplateItems()) {
+      return useDefaultTemplate(templates, this.defaultTemplateGroups(templates), this.blockPickerContext());
+    }
+    blockPickerContext(editor) {
+      return {
+        emitAction: (action, item, slot) => this.tree.emitter.emitAction(action, editor, item, slot),
+        openBlockPicker: (groups, contextLabel) => this.tree.refs.blockPicker.open(groups, contextLabel),
+        setPendingPickerAction: (action) => {
+          this.tree.state.pendingPickerAction = action;
+        }
+      };
+    }
+    groupContext() {
+      return {
+        catalog: this.tree.state.catalog,
+        insertItems: this.tree.state.insertItems,
+        defaultTemplateSelection: this.tree.state.defaultTemplateSelection,
+        editorChildrenOf: (parent) => this.tree.nodes.editorChildrenOf(parent),
+        nodeForEditor: (editor) => this.tree.nodes.nodeForEditor(editor),
+        parentNode: (child) => this.tree.nodes.parentNode(child),
+        sameSlot: (left, right) => this.tree.nodes.sameSlot(left, right),
+        slotChildCount: (parent, slot) => this.tree.nodes.slotChildCount(parent, slot),
+        slotForChild: (parent, child) => this.tree.nodes.slotForChild(parent, child)
+      };
+    }
+    selectedConditions(node) {
+      const sources = this.tree.nodes.sourceAncestorNodes(node);
+      const selected = [];
+      for (const condition of this.tree.nodes.sourceStatusConditions(node)) {
+        const source = condition.sourceId ? sources.find((candidate) => candidate.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === condition.sourceId) : sources[0];
+        if (!source)
+          continue;
+        selected.push({ sourceEditor: source.editor, sourceState: condition.state });
+      }
+      return selected;
+    }
+    sourceName(source) {
+      const binding = parseSource(source.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+      if (!binding)
+        return;
+      const dataSource = this.tree.state.dataSources.find((candidate) => sourceUrlMatchesBinding(candidate.url, binding.url));
+      return dataSource?.label ?? binding.alias ?? binding.url;
+    }
+  }
+  function sourceUrlMatchesBinding(sourceUrl, bindingUrl) {
+    return bindingUrl === sourceUrl || bindingUrl.startsWith(`${sourceUrl}?`) || sourceUrl.includes("?") && bindingUrl.startsWith(`${sourceUrl}&`);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeRefs.ts
+  class StructureTreeRefs {
+    host;
+    constructor(host) {
+      this.host = host;
+    }
+    get contextMenu() {
+      let menu = this.host.shadowRoot.querySelector(".context-menu");
+      if (!menu) {
+        menu = document.createElement("div");
+        menu.className = "context-menu";
+        menu.setAttribute("role", "menu");
+      }
+      return menu;
+    }
+    get tree() {
+      return this.host.shadowRoot.querySelector(".structure-tree");
+    }
+    get scrollContainer() {
+      const panelBody = this.host.parentElement?.shadowRoot?.querySelector(".panel-body");
+      if (panelBody)
+        return panelBody;
+      return this.host;
+    }
+    get blockPicker() {
+      let picker = this.host.shadowRoot.querySelector("cms-editor-v2-block-picker-modal");
+      if (!picker) {
+        picker = document.createElement("cms-editor-v2-block-picker-modal");
+        this.host.shadowRoot.append(picker);
+      }
+      return picker;
+    }
+    get dataSourcePicker() {
+      let picker = this.host.shadowRoot.querySelector("cms-editor-v2-data-source-picker");
+      if (!picker) {
+        picker = new DataSourcePicker;
+        this.host.shadowRoot.append(picker);
+      }
+      return picker;
+    }
+    get conditionPicker() {
+      let picker = this.host.shadowRoot.querySelector("cms-editor-v2-condition-picker");
+      if (!picker) {
+        picker = new ConditionPicker;
+        this.host.shadowRoot.append(picker);
+      }
+      return picker;
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureEmptyTree.ts
+  function renderEmptyStructureTree(context) {
+    const empty2 = document.createElement("div");
+    empty2.className = "empty";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = context.defaultTemplates.length > 0 ? "Use default template" : "Add block";
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (context.useDefaultTemplate(context.defaultTemplates))
+        return;
+      context.openRootPicker();
+    });
+    empty2.append("No editable elements", button);
+    return empty2;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreeRow.ts
+  function renderStructureTreeRow(node, depth, context) {
+    const row = document.createElement("div");
+    row.className = context.rowClass(node);
+    row.style.setProperty("--structure-depth", String(depth));
+    context.trackRenderedRow(node, row);
+    appendToggle(row, node, context);
+    const item = document.createElement("button");
+    item.className = context.itemClass(node);
+    item.draggable = true;
+    if (node.editor === context.selectedEditor)
+      item.classList.add("selected");
+    item.type = "button";
+    item.addEventListener("click", () => {
+      context.selectEditor(node.editor);
+    });
+    item.addEventListener("contextmenu", (event) => {
+      const mouseEvent = event;
+      event.preventDefault();
+      event.stopPropagation();
+      context.openContextMenu(node, mouseEvent.clientX, mouseEvent.clientY);
+    });
+    item.addEventListener("dragstart", (event) => context.onDragStart(node, event));
+    item.addEventListener("dragover", (event) => context.onDragOver(node, row, event));
+    item.addEventListener("dragleave", () => context.clearDropRow());
+    item.addEventListener("drop", (event) => context.onDrop(node, event));
+    item.addEventListener("dragend", () => context.clearDragState());
+    const icon = document.createElement("span");
+    icon.className = context.iconClass(node);
+    icon.textContent = context.iconText(node);
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = context.nodeLabel(node);
+    const badges = document.createElement("span");
+    badges.className = "badges";
+    appendBadges(badges, node, context);
+    item.append(icon, label, badges);
+    row.append(item);
+    return row;
+  }
+  function appendToggle(row, node, context) {
+    if (node.children.length > 0) {
+      const toggle = document.createElement("button");
+      toggle.className = "toggle";
+      toggle.type = "button";
+      toggle.textContent = context.isCollapsed(node) ? "›" : "⌄";
+      toggle.setAttribute("aria-label", context.isCollapsed(node) ? "Expand" : "Collapse");
+      toggle.addEventListener("click", () => {
+        context.toggleNode(node);
+      });
+      row.append(toggle);
+    } else {
+      const spacer = document.createElement("span");
+      spacer.className = "toggle-spacer";
+      row.append(spacer);
+    }
+  }
+  function appendBadges(badges, node, context) {
+    const visibleBadges = context.visibleBadges(node);
+    for (const value of visibleBadges) {
+      badges.append(context.renderBadge(value));
+    }
+    const hiddenCount = node.badges.length - visibleBadges.length;
+    if (hiddenCount > 0) {
+      const more = document.createElement("span");
+      more.className = "badge more";
+      more.role = "button";
+      more.tabIndex = 0;
+      more.textContent = `+${hiddenCount}`;
+      more.addEventListener("click", (event) => {
+        event.stopPropagation();
+        context.toggleBadges(node);
+      });
+      more.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ")
+          return;
+        event.preventDefault();
+        event.stopPropagation();
+        context.toggleBadges(node);
+      });
+      badges.append(more);
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeRenderer.ts
+  class StructureTreeRenderer {
+    tree;
+    constructor(tree) {
+      this.tree = tree;
+    }
+    render(request = {}) {
+      this.tree.state.scrollRequestId += 1;
+      const treeEl = this.tree.refs.tree;
+      const scrollContainer = this.tree.refs.scrollContainer;
+      const previousScrollTop = scrollContainer.scrollTop;
+      treeEl.replaceChildren();
+      this.tree.refs.contextMenu.remove();
+      if (this.tree.state.nodes.length === 0) {
+        const defaultTemplates = this.tree.pickers.defaultTemplateItems();
+        treeEl.append(renderEmptyStructureTree({
+          defaultTemplates,
+          openRootPicker: () => this.tree.pickers.openRootPicker(),
+          useDefaultTemplate: (templates) => this.tree.pickers.useDefaultTemplate(templates)
+        }));
+        return;
+      }
+      for (const node of this.tree.nodes.visibleNodes())
+        treeEl.append(this.renderNode(node.item, node.depth));
+      if (request.anchor)
+        this.restoreScrollAnchor(request.anchor);
+      else if (this.tree.state.scrollSelectedIntoViewOnRender)
+        this.scrollSelectedIntoView();
+      else
+        scrollContainer.scrollTop = previousScrollTop;
+    }
+    renderNode(node, depth) {
+      return renderStructureTreeRow(node, depth, {
+        selectedEditor: this.tree.state.selectedEditor,
+        clearDragState: () => this.tree.events.clearDragState(),
+        clearDropRow: () => this.tree.events.clearDropRow(),
+        iconClass: (value) => this.tree.nodes.iconClass(value),
+        iconText: (value) => this.tree.nodes.iconText(value),
+        isCollapsed: (value) => this.tree.nodes.isCollapsed(value),
+        itemClass: (value) => this.tree.nodes.itemClass(value),
+        nodeLabel: (value) => this.tree.nodes.nodeLabel(value),
+        onDragOver: (value, row, event) => this.tree.events.onDragOver(value, row, event),
+        onDragStart: (value, event) => this.tree.events.onDragStart(value, event),
+        onDrop: (value, event) => this.tree.events.onDrop(value, event),
+        openContextMenu: (value, clientX, clientY) => this.tree.menus.openContextMenu(value, clientX, clientY),
+        renderBadge: (value) => renderStructureBadge(value),
+        rowClass: (value) => this.tree.nodes.rowClass(value),
+        selectEditor: (editor) => this.tree.emitter.selectEditor(editor),
+        toggleBadges: (value) => this.toggleBadges(value),
+        toggleNode: (value) => this.toggleNode(value),
+        trackRenderedRow: (value, row) => this.trackRenderedRow(value, row),
+        visibleBadges: (value) => this.tree.nodes.visibleBadges(value)
+      });
+    }
+    toggleNode(node) {
+      const key = this.tree.nodes.nodeCollapseKey(node);
+      const row = this.findRenderedRow(key);
+      const anchor = row ? { key, offsetTop: row.getBoundingClientRect().top } : undefined;
+      this.tree.nodes.toggleNode(node);
+      this.render({ anchor });
+    }
+    toggleBadges(node) {
+      this.tree.nodes.toggleBadges(node);
+      this.render();
+    }
+    trackRenderedRow(node, row) {
+      const key = this.tree.nodes.nodeCollapseKey(node);
+      if (typeof key === "object")
+        this.tree.state.renderedRows.set(key, row);
+    }
+    findRenderedRow(key) {
+      return typeof key === "object" ? this.tree.state.renderedRows.get(key) ?? null : null;
+    }
+    scrollSelectedIntoView() {
+      if (!this.tree.state.selectedEditor)
+        return;
+      const requestId = this.tree.state.scrollRequestId;
+      requestAnimationFrame(() => this.scrollSelectedIntoViewNow(requestId));
+    }
+    restoreScrollAnchor(anchor) {
+      const row = this.findRenderedRow(anchor.key);
+      if (!row)
+        return;
+      this.tree.refs.scrollContainer.scrollTop += row.getBoundingClientRect().top - anchor.offsetTop;
+    }
+    scrollSelectedIntoViewNow(requestId) {
+      if (requestId !== this.tree.state.scrollRequestId)
+        return;
+      const selected = this.tree.host.shadowRoot.querySelector(".item.selected");
+      if (!selected)
+        return;
+      const scrollContainer = this.tree.refs.scrollContainer;
+      const top = Math.max(0, selected.offsetTop - scrollContainer.clientHeight * 0.2 + selected.offsetHeight / 2);
+      typeof scrollContainer.scrollTo === "function" ? scrollContainer.scrollTo({ top, behavior: "smooth" }) : scrollContainer.scrollTop = top;
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/structureTreeState.ts
+  class StructureTreeState {
+    nodes = [];
+    selectedEditor = null;
+    catalog = [];
+    dataSources = [];
+    defaultTemplateSelection = {};
+    insertItems = [];
+    scrollSelectedIntoViewOnRender = false;
+    repeatableTargets = new WeakSet;
+    pendingPickerAction = null;
+    pendingSourceEditor = null;
+    pendingConditionEditor = null;
+    dragDrop = {
+      draggedNode: null,
+      dropRow: null
+    };
+    collapsedTargets = new Set;
+    expandedBadgeTargets = new Set;
+    renderedRows = new WeakMap;
+    scrollRequestId = 0;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeController.ts
+  class StructureTreeController {
+    host;
+    state;
+    refs;
+    emitter;
+    nodes;
+    pickers;
+    menus;
+    renderer;
+    events;
+    constructor(host) {
+      this.host = host;
+      this.state = new StructureTreeState;
+      this.refs = new StructureTreeRefs(host);
+      this.emitter = new StructureTreeEmitter(host, this.refs);
+      this.nodes = new StructureTreeNodes(this.state);
+      this.pickers = new StructureTreePickers(this);
+      this.menus = new StructureTreeMenus(this);
+      this.renderer = new StructureTreeRenderer(this);
+      this.events = new StructureTreeEvents(this);
+    }
+    connect() {
+      this.events.connect();
+    }
+    disconnect() {
+      this.events.disconnect();
+    }
+    setCatalog(catalog) {
+      this.catalog = catalog;
+    }
+    setInsertItems(items) {
+      this.state.insertItems = items.map((item) => ({ ...item }));
+    }
+    setDefaultTemplateSelection(selection) {
+      this.state.defaultTemplateSelection = { ...selection };
+      this.renderer.render();
+    }
+    setDataSources(sources) {
+      this.state.dataSources = sources.map((source) => ({ ...source, fields: [...source.fields] }));
+    }
+    get catalog() {
+      return this.state.catalog;
+    }
+    set catalog(catalog) {
+      this.state.catalog = [...catalog];
+    }
+    setStructure(nodes, selectedEditor = null, catalog = this.state.catalog, options = {}) {
+      this.state.nodes = nodes;
+      this.state.selectedEditor = selectedEditor;
+      this.state.catalog = [...catalog];
+      this.state.scrollSelectedIntoViewOnRender = options.scrollSelectedIntoView === true;
+      if (this.state.scrollSelectedIntoViewOnRender)
+        this.nodes.expandPathToSelected();
+      this.nodes.setRepeatableTargets(options.repeatableTargets ?? []);
+      this.renderer.render();
+    }
+    childGroups(node) {
+      return this.pickers.childGroups(node);
+    }
+    replaceGroups(node) {
+      return this.pickers.replaceGroups(node);
+    }
+    openPickerOrEmitSingleMedia(action, groups, contextLabel) {
+      this.pickers.openPickerOrEmitSingleMedia(action, groups, contextLabel);
+    }
+    onDocumentKeydown(event) {
+      this.events.onDocumentKeydown(event);
+    }
+    openSourcePicker(node) {
+      this.pickers.openSourcePicker(node);
+    }
+    sourceActionLabel(node) {
+      return this.menus.sourceActionLabel(node);
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Styles/badges.css
+  var badges_default = `.badges {
+    display: flex;
+    gap: 4px;
+    min-width: 0;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 999px;
+    padding: 1px 6px;
+    background: var(--editor-v2-bg);
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge.data {
+    border-color: color-mix(in srgb, #087f8c 24%, var(--editor-v2-border));
+    background: color-mix(in srgb, #087f8c 7%, var(--editor-v2-bg));
+    color: color-mix(in srgb, #087f8c 72%, var(--editor-v2-text));
+}
+
+.badge-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 10px;
+    height: 10px;
+    font-size: 9px;
+    line-height: 1;
+}
+
+.badge.more {
+    cursor: pointer;
+}
+
+.badge.more:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 32%, var(--editor-v2-border));
+    color: var(--editor-v2-accent);
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Styles/context.css
+  var context_default = `.context-menu {
+    position: fixed;
+    z-index: 120;
+    display: grid;
+    gap: 2px;
+    min-width: 160px;
+    max-width: 220px;
+    max-height: 280px;
+    overflow: auto;
+    padding: 5px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-bg);
+    box-shadow: 0 10px 24px color-mix(in srgb, black 14%, transparent);
+}
+
+.context-item {
+    width: 100%;
+    min-height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.context-item:hover {
+    background: var(--editor-v2-surface);
+}
+
+.context-item:disabled {
+    color: color-mix(in srgb, var(--editor-v2-muted) 58%, transparent);
+    cursor: not-allowed;
+}
+
+.context-item:disabled:hover {
+    background: transparent;
+}
+
+.context-item.danger {
+    color: #9a2f2f;
+}
+
+.context-item.danger:disabled {
+    color: color-mix(in srgb, #9a2f2f 36%, var(--editor-v2-muted));
+}
+
+.context-item.danger:hover {
+    background: #fff0f0;
+}
+
+.context-separator {
+    height: 1px;
+    margin: 4px 2px;
+    background: var(--editor-v2-border);
+}
+
+.context-title {
+    padding: 2px 7px 4px;
+    color: var(--editor-v2-muted);
+    font-size: 10px;
+    font-weight: 780;
+    text-transform: uppercase;
+}
+
+.context-empty {
+    padding: 6px 7px;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Styles/sourceStates.css
+  var sourceStates_default = `.badge.source-status {
+    border-color: color-mix(in srgb, var(--source-status-color) 28%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--source-status-color) 8%, var(--editor-v2-bg));
+    color: color-mix(in srgb, var(--source-status-color) 78%, var(--editor-v2-text));
+}
+
+.badge.source-status.loading {
+    --source-status-color: #087f8c;
+}
+
+.badge.source-status.loaded {
+    --source-status-color: #16704a;
+}
+
+.badge.source-status.empty {
+    --source-status-color: #756222;
+}
+
+.badge.source-status.error {
+    --source-status-color: #9a2f2f;
+}
+`;
+
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default8 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default11 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default7 = `:host {
+  var style_default10 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -12513,78 +19156,6 @@ dd {
     color: var(--editor-v2-accent);
 }
 
-.item.source-state {
-    grid-template-columns: 16px minmax(0, 1fr) auto;
-    min-height: 23px;
-    border: 1px solid transparent;
-    border-radius: 6px;
-    background: transparent;
-    color: color-mix(in srgb, var(--editor-v2-muted) 88%, transparent);
-    cursor: default;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-    font-size: 11px;
-    font-weight: 720;
-}
-
-.source-state-row {
-    opacity: 0.94;
-}
-
-.source-state-row:has(+ .row:not(.source-state-row)) {
-    margin-bottom: 8px;
-}
-
-.item.source-state:hover {
-    background: var(--editor-v2-surface);
-    color: var(--editor-v2-text);
-}
-
-.item.source-state.state-filled {
-    color: var(--editor-v2-text);
-}
-
-.item.source-state.state-loaded {
-    color: color-mix(in srgb, var(--editor-v2-text) 82%, var(--editor-v2-muted));
-}
-
-.item.source-state.state-loading {
-    color: color-mix(in srgb, #087f8c 68%, var(--editor-v2-muted));
-}
-
-.item.source-state.state-empty {
-    color: color-mix(in srgb, #8a6d1d 68%, var(--editor-v2-muted));
-}
-
-.item.source-state.state-error {
-    color: color-mix(in srgb, #9a2f2f 72%, var(--editor-v2-muted));
-}
-
-.state-spacer {
-    width: 16px;
-}
-
-.state-add {
-    display: grid;
-    place-items: center;
-    width: 20px;
-    height: 20px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 999px;
-    background: var(--editor-v2-bg);
-    color: var(--editor-v2-muted);
-    cursor: pointer;
-    font: inherit;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 780;
-    line-height: 1;
-}
-
-.state-add:hover {
-    border-color: color-mix(in srgb, var(--editor-v2-accent) 36%, var(--editor-v2-border));
-    color: var(--editor-v2-accent);
-}
-
 .icon {
     display: grid;
     place-items: center;
@@ -12597,50 +19168,6 @@ dd {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.badges {
-    display: flex;
-    gap: 4px;
-    min-width: 0;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 999px;
-    padding: 1px 6px;
-    background: var(--editor-v2-bg);
-    color: var(--editor-v2-muted);
-    font-size: 10px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.badge.data {
-    border-color: color-mix(in srgb, #087f8c 24%, var(--editor-v2-border));
-    background: color-mix(in srgb, #087f8c 7%, var(--editor-v2-bg));
-    color: color-mix(in srgb, #087f8c 72%, var(--editor-v2-text));
-}
-
-.badge-icon {
-    display: inline-grid;
-    place-items: center;
-    width: 10px;
-    height: 10px;
-    font-size: 9px;
-    line-height: 1;
-}
-
-.badge.more {
-    cursor: pointer;
-}
-
-.badge.more:hover {
-    border-color: color-mix(in srgb, var(--editor-v2-accent) 32%, var(--editor-v2-border));
-    color: var(--editor-v2-accent);
 }
 
 .empty {
@@ -12668,1031 +19195,51 @@ dd {
     border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
     color: var(--editor-v2-accent);
 }
-
-.context-menu {
-    position: fixed;
-    z-index: 120;
-    display: grid;
-    gap: 2px;
-    min-width: 160px;
-    max-width: 220px;
-    max-height: 280px;
-    overflow: auto;
-    padding: 5px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 8px;
-    background: var(--editor-v2-bg);
-    box-shadow: 0 10px 24px color-mix(in srgb, black 14%, transparent);
-}
-
-.context-item {
-    width: 100%;
-    min-height: 28px;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--editor-v2-text);
-    font: inherit;
-    font-size: 12px;
-    text-align: left;
-    cursor: pointer;
-}
-
-.context-item:hover {
-    background: var(--editor-v2-surface);
-}
-
-.context-item:disabled {
-    color: color-mix(in srgb, var(--editor-v2-muted) 58%, transparent);
-    cursor: not-allowed;
-}
-
-.context-item:disabled:hover {
-    background: transparent;
-}
-
-.context-item.danger {
-    color: #9a2f2f;
-}
-
-.context-item.danger:disabled {
-    color: color-mix(in srgb, #9a2f2f 36%, var(--editor-v2-muted));
-}
-
-.context-item.danger:hover {
-    background: #fff0f0;
-}
-
-.context-separator {
-    height: 1px;
-    margin: 4px 2px;
-    background: var(--editor-v2-border);
-}
-
-.context-title {
-    padding: 2px 7px 4px;
-    color: var(--editor-v2-muted);
-    font-size: 10px;
-    font-weight: 780;
-    text-transform: uppercase;
-}
-
-.context-empty {
-    padding: 6px 7px;
-    color: var(--editor-v2-muted);
-    font-size: 12px;
-}
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
-  var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default7)}</style>${String(template_default8)}`;
+  var template6 = document.createElement("template");
+  template6.innerHTML = `<style>${[
+    style_default10,
+    sourceStates_default,
+    badges_default,
+    context_default
+  ].map((css) => String(css)).join(`
+`)}</style>${String(template_default11)}`;
 
   class StructureTree extends HTMLElement {
-    _nodes = [];
-    _selectedEditor = null;
-    _catalog = [];
-    _dataSources = [];
-    _defaultTemplateSelection = {};
-    _insertItems = [];
-    _scrollSelectedIntoViewOnRender = false;
-    _repeatableTargets = new WeakSet;
-    _pendingPickerAction = null;
-    _pendingSourceEditor = null;
-    _draggedNode = null;
-    _dropRow = null;
-    _collapsedTargets = new Set;
-    _expandedBadgeTargets = new Set;
-    _sourceStateKeys = new WeakMap;
-    _renderedRows = new WeakMap;
-    _scrollRequestId = 0;
+    controller;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template5.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template6.content.cloneNode(true));
+      this.controller = new StructureTreeController(this);
     }
     connectedCallback() {
-      this.ownerDocument.addEventListener("click", this._closeContextMenu);
-      this.ownerDocument.addEventListener("keydown", this._onDocumentKeydown);
-      this._blockPicker.addEventListener(BLOCK_PICKER_SELECT_EVENT, this._onBlockPickerSelect);
-      this._dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect);
-      this._dataSourcePicker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this._onDataSourceRemove);
-      this._tree.addEventListener("click", this._onTreeClick);
-      this._tree.addEventListener("contextmenu", this._onTreeContextMenu);
+      this.controller.connect();
     }
     disconnectedCallback() {
-      this.ownerDocument.removeEventListener("click", this._closeContextMenu);
-      this.ownerDocument.removeEventListener("keydown", this._onDocumentKeydown);
-      this._blockPicker.removeEventListener(BLOCK_PICKER_SELECT_EVENT, this._onBlockPickerSelect);
-      this._dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect);
-      this._dataSourcePicker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this._onDataSourceRemove);
-      this._tree.removeEventListener("click", this._onTreeClick);
-      this._tree.removeEventListener("contextmenu", this._onTreeContextMenu);
+      this.controller.disconnect();
     }
     setCatalog(catalog) {
-      this.catalog = catalog;
+      this.controller.setCatalog(catalog);
     }
     setInsertItems(items) {
-      this._insertItems = items.map((item) => ({ ...item }));
+      this.controller.setInsertItems(items);
     }
     setDefaultTemplateSelection(selection) {
-      this._defaultTemplateSelection = { ...selection };
-      this._render();
+      this.controller.setDefaultTemplateSelection(selection);
     }
     setDataSources(sources) {
-      this._dataSources = sources.map((source) => ({
-        ...source,
-        fields: [...source.fields]
-      }));
+      this.controller.setDataSources(sources);
     }
     get catalog() {
-      return this._catalog;
+      return this.controller.catalog;
     }
     set catalog(catalog) {
-      this._catalog = [...catalog];
+      this.controller.catalog = catalog;
     }
-    setStructure(nodes, selectedEditor = null, catalog = this._catalog, options = {}) {
-      this._nodes = nodes;
-      this._selectedEditor = selectedEditor;
-      this._catalog = [...catalog];
-      this._scrollSelectedIntoViewOnRender = options.scrollSelectedIntoView === true;
-      if (this._scrollSelectedIntoViewOnRender)
-        this._expandPathToSelected();
-      this._setRepeatableTargets(options.repeatableTargets ?? []);
-      this._render();
-    }
-    _render(request = {}) {
-      this._scrollRequestId += 1;
-      const tree = this._tree;
-      const scrollContainer = this._scrollContainer;
-      const previousScrollTop = scrollContainer.scrollTop;
-      tree.replaceChildren();
-      this._contextMenu.remove();
-      if (this._nodes.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        const button = document.createElement("button");
-        button.type = "button";
-        const defaultTemplates = this._defaultTemplateItems();
-        button.textContent = defaultTemplates.length > 0 ? "Use default template" : "Add block";
-        button.addEventListener("click", (event) => {
-          event.stopPropagation();
-          if (this._useDefaultTemplate(defaultTemplates))
-            return;
-          this._openRootPicker();
-        });
-        empty.append("No editable elements", button);
-        tree.append(empty);
-        return;
-      }
-      for (const node of this._visibleNodes(this._nodes)) {
-        tree.append(this._renderNode(node.item, node.depth));
-      }
-      if (request.anchor) {
-        this._restoreScrollAnchor(request.anchor);
-      } else if (this._scrollSelectedIntoViewOnRender) {
-        this._scrollSelectedIntoView();
-      } else {
-        scrollContainer.scrollTop = previousScrollTop;
-      }
-    }
-    _renderNode(node, depth) {
-      const row = document.createElement("div");
-      row.className = this._rowClass(node);
-      row.style.setProperty("--structure-depth", String(depth));
-      this._trackRenderedRow(node, row);
-      if (node.children.length > 0) {
-        const toggle = document.createElement("button");
-        toggle.className = "toggle";
-        toggle.type = "button";
-        toggle.textContent = this._isCollapsed(node) ? "›" : "⌄";
-        toggle.setAttribute("aria-label", this._isCollapsed(node) ? "Expand" : "Collapse");
-        toggle.addEventListener("click", () => {
-          this._toggleNode(node);
-        });
-        row.append(toggle);
-      } else if (this._isSourceStateNode(node)) {
-        row.append(document.createElement("span"));
-      } else {
-        const spacer = document.createElement("span");
-        spacer.className = "toggle-spacer";
-        row.append(spacer);
-      }
-      const item = this._isSourceStateNode(node) ? document.createElement("div") : document.createElement("button");
-      item.className = this._itemClass(node);
-      item.draggable = !this._isSourceStateNode(node);
-      if (!this._isSourceStateNode(node) && node.editor === this._selectedEditor)
-        item.classList.add("selected");
-      if (!this._isSourceStateNode(node))
-        item.type = "button";
-      item.addEventListener("click", () => {
-        if (this._isSourceStateNode(node))
-          return;
-        this.dispatchEvent(new CustomEvent("editor-v2:select-editor", {
-          bubbles: true,
-          composed: true,
-          detail: { editor: node.editor }
-        }));
-      });
-      item.addEventListener("contextmenu", (event) => {
-        const mouseEvent = event;
-        event.preventDefault();
-        event.stopPropagation();
-        this._openContextMenu(node, mouseEvent.clientX, mouseEvent.clientY);
-      });
-      if (!this._isSourceStateNode(node)) {
-        item.addEventListener("dragstart", (event) => this._onDragStart(node, event));
-        item.addEventListener("dragover", (event) => this._onDragOver(node, row, event));
-        item.addEventListener("dragleave", () => this._clearDropRow());
-        item.addEventListener("drop", (event) => this._onDrop(node, event));
-        item.addEventListener("dragend", () => this._clearDragState());
-      }
-      const icon = document.createElement("span");
-      icon.className = this._iconClass(node);
-      icon.textContent = this._iconText(node);
-      const label = document.createElement("span");
-      label.className = "label";
-      label.textContent = this._nodeLabel(node);
-      const badges = document.createElement("span");
-      badges.className = "badges";
-      const visibleBadges = this._visibleBadges(node);
-      for (const value of visibleBadges) {
-        badges.append(this._renderBadge(value));
-      }
-      const hiddenCount = node.badges.length - visibleBadges.length;
-      if (hiddenCount > 0) {
-        const more = document.createElement("span");
-        more.className = "badge more";
-        more.role = "button";
-        more.tabIndex = 0;
-        more.textContent = `+${hiddenCount}`;
-        more.addEventListener("click", (event) => {
-          event.stopPropagation();
-          this._toggleBadges(node);
-        });
-        more.addEventListener("keydown", (event) => {
-          if (event.key !== "Enter" && event.key !== " ")
-            return;
-          event.preventDefault();
-          event.stopPropagation();
-          this._toggleBadges(node);
-        });
-        badges.append(more);
-      }
-      if (this._isSourceStateNode(node) && node.children.length === 0) {
-        badges.append(this._sourceStateAddButton(node));
-      }
-      item.append(icon, label, badges);
-      row.append(item);
-      return row;
-    }
-    _sourceStateAddButton(node) {
-      const button = document.createElement("button");
-      button.className = "state-add";
-      button.type = "button";
-      button.textContent = "+";
-      button.setAttribute("aria-label", `Add ${node.state} state content`);
-      button.addEventListener("click", (event) => {
-        event.stopPropagation();
-        this._openSourceStatePicker(node);
-      });
-      return button;
-    }
-    _renderBadge(value) {
-      const badge = document.createElement("span");
-      badge.className = this._badgeClass(value);
-      const icon = this._badgeIcon(value);
-      if (icon) {
-        const iconEl = document.createElement("span");
-        iconEl.className = "badge-icon";
-        iconEl.textContent = icon;
-        badge.append(iconEl);
-      }
-      const label = document.createElement("span");
-      label.textContent = value;
-      badge.append(label);
-      return badge;
-    }
-    _badgeClass(value) {
-      return value === "Source" || value === "Repeat" ? "badge data" : "badge";
-    }
-    _badgeIcon(value) {
-      if (value === "Source")
-        return "▦";
-      if (value === "Repeat")
-        return "↻";
-      return null;
-    }
-    _scrollSelectedIntoView() {
-      if (!this._selectedEditor)
-        return;
-      const requestId = this._scrollRequestId;
-      requestAnimationFrame(() => {
-        if (requestId !== this._scrollRequestId)
-          return;
-        const selected = this.shadowRoot.querySelector(".item.selected");
-        if (!selected)
-          return;
-        const scrollContainer = this._scrollContainer;
-        const selectedTop = selected.offsetTop;
-        const targetOffset = scrollContainer.clientHeight * 0.2;
-        const nextScrollTop = selectedTop - targetOffset + selected.offsetHeight / 2;
-        const top = Math.max(0, nextScrollTop);
-        if (typeof scrollContainer.scrollTo === "function") {
-          scrollContainer.scrollTo({ top, behavior: "smooth" });
-        } else {
-          scrollContainer.scrollTop = top;
-        }
-      });
-    }
-    _restoreScrollAnchor(anchor) {
-      const row = this._findRenderedRow(anchor.key);
-      if (!row)
-        return;
-      const scrollContainer = this._scrollContainer;
-      scrollContainer.scrollTop += row.getBoundingClientRect().top - anchor.offsetTop;
-    }
-    _trackRenderedRow(node, row) {
-      const key = this._nodeCollapseKey(node);
-      if (typeof key !== "object")
-        return;
-      this._renderedRows.set(key, row);
-    }
-    _findRenderedRow(key) {
-      if (typeof key !== "object")
-        return null;
-      return this._renderedRows.get(key) ?? null;
-    }
-    _openContextMenu(node, clientX, clientY) {
-      this._closeContextMenu();
-      if (this._isSourceStateNode(node)) {
-        this._openSourceStateContextMenu(node, clientX, clientY);
-        return;
-      }
-      const menu = this._contextMenu;
-      menu.replaceChildren();
-      const sourceAction = this._contextMenuButton(this._sourceActionLabel(node), () => {
-        this._openSourcePicker(node);
-      }, undefined, this._sourceDataSources.length === 0);
-      const repeatAction = node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat) ? this._contextMenuButton("Remove repeat", () => this._emitAction("remove-repeat", node.editor)) : this._contextMenuButton("Add repeat", () => this._emitAction("configure-repeat", node.editor), undefined, !this._repeatableTargets.has(node.target));
-      const snippet = this._snippetItemForNode(node);
-      const modifySnippetAction = this._contextMenuButton("Modify Snippet", () => {
-        if (!snippet)
-          return;
-        this._redirectToSnippetEditor(snippet.id);
-      }, undefined, !snippet);
-      menu.append(this._contextMenuButton("Add child", () => {
-        this._openPickerOrEmitSingleMedia({ action: "add-child", editor: node.editor }, this._childGroups(node), node.label);
-      }, undefined, !this._hasEnabledGroup(this._childGroups(node))), this._contextMenuButton("Copy", () => this._emitAction("copy", node.editor)), this._contextMenuButton("Paste after", () => this._emitAction("paste-after", node.editor)), this._contextMenuButton("Duplicate", () => this._emitAction("duplicate", node.editor), undefined, !this._canDuplicate(node)), ...this._isSnippetNode(node) ? [modifySnippetAction] : [], this._contextSeparator(), sourceAction, repeatAction, this._contextSeparator(), this._contextMenuButton("Replace", () => {
-        this._openPickerOrEmitSingleMedia({ action: "replace", editor: node.editor }, this._replaceGroups(node), node.label);
-      }, undefined, !this._hasEnabledGroup(this._replaceGroups(node))), this._contextMenuButton("Delete", () => this._emitAction("delete", node.editor), "danger", !this._canDelete(node)));
-      this.shadowRoot.append(menu);
-      this._positionContextMenu(menu, clientX, clientY);
-    }
-    _redirectToSnippetEditor(id) {
-      window.location.href = this._snippetEditorUrl(id);
-    }
-    _snippetEditorUrl(id) {
-      return `${this._basePath()}/editor/snippet?id=${encodeURIComponent(id)}`;
-    }
-    _basePath() {
-      return document.querySelector('meta[name="basePath"]')?.content ?? "";
-    }
-    _positionContextMenu(menu, clientX, clientY) {
-      const margin = 6;
-      const menuBounds = menu.getBoundingClientRect();
-      const maxLeft = Math.max(margin, window.innerWidth - menuBounds.width - margin);
-      const maxTop = Math.max(margin, window.innerHeight - menuBounds.height - margin);
-      menu.style.left = `${Math.min(Math.max(clientX, margin), maxLeft)}px`;
-      menu.style.top = `${Math.min(Math.max(clientY, margin), maxTop)}px`;
-    }
-    _openSourcePicker(node) {
-      this._pendingSourceEditor = node.editor;
-      const picker = this._dataSourcePicker;
-      picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect);
-      picker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this._onDataSourceRemove);
-      picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, this._onDataSourceSelect);
-      picker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, this._onDataSourceRemove);
-      picker.open(this._sourceDataSources, node.label, {
-        canRemove: node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)
-      });
-    }
-    _contextMenuButton(label, action, variant, disabled = false) {
-      const button = document.createElement("button");
-      button.className = variant ? `context-item ${variant}` : "context-item";
-      button.type = "button";
-      button.disabled = disabled;
-      button.textContent = label;
-      button.addEventListener("click", (event) => {
-        event.stopPropagation();
-        if (button.disabled)
-          return;
-        this._closeContextMenu();
-        action();
-      });
-      return button;
-    }
-    _contextSeparator() {
-      const separator = document.createElement("div");
-      separator.className = "context-separator";
-      separator.role = "separator";
-      return separator;
-    }
-    _openRootContextMenu(clientX, clientY) {
-      this._closeContextMenu();
-      const menu = this._contextMenu;
-      menu.replaceChildren(this._contextMenuButton("Add block", () => this._openRootPicker(), undefined, !this._hasEnabledGroup(this._rootGroups())), this._contextMenuButton("Paste", () => this._emitAction("paste-after")));
-      this.shadowRoot.append(menu);
-      this._positionContextMenu(menu, clientX, clientY);
-    }
-    _openRootPicker() {
-      this._pendingPickerAction = { action: "add-root" };
-      this._blockPicker.open(this._rootGroups(), "Page");
-    }
-    _openSourceStateContextMenu(node, clientX, clientY) {
-      const menu = this._contextMenu;
-      menu.replaceChildren(this._contextMenuButton("Add block", () => {
-        this._openSourceStatePicker(node);
-      }, undefined, !this._hasEnabledGroup(this._sourceStateGroups(node))), this._contextMenuButton("Paste", () => this._emitAction("paste-after", node.sourceEditor, undefined, undefined, node.state)), this._contextMenuButton("Clear state", () => this._emitAction("clear-source-state", node.sourceEditor, undefined, undefined, node.state), "danger", node.children.length === 0));
-      this.shadowRoot.append(menu);
-      this._positionContextMenu(menu, clientX, clientY);
-    }
-    _openSourceStatePicker(node) {
-      const groups = this._sourceStateGroups(node);
-      if (!this._hasEnabledGroup(groups))
-        return;
-      this._openPickerOrEmitSingleMedia({
-        action: "add-source-state-child",
-        editor: node.sourceEditor,
-        sourceState: node.state
-      }, groups, node.label);
-    }
-    _openPickerOrEmitSingleMedia(action, groups, contextLabel) {
-      const option = this._singleEnabledOption(groups);
-      if (option?.item?.kind === "media") {
-        this._emitAction(action.action, action.editor, option.item, option.slot, action.sourceState);
-        return;
-      }
-      this._pendingPickerAction = action;
-      this._blockPicker.open(groups, contextLabel);
-    }
-    _singleEnabledOption(groups) {
-      const options = groups.filter((group) => !group.disabledReason).flatMap((group) => group.options);
-      return options.length === 1 ? options[0] ?? null : null;
-    }
-    _emitAction(action, editor, item, slot, sourceState, sourceEditor, dataSource, sourceBinding) {
-      this.dispatchEvent(new CustomEvent("editor-v2:structure-action", {
-        bubbles: true,
-        composed: true,
-        detail: {
-          action,
-          editor,
-          sourceEditor,
-          item,
-          dataSource,
-          sourceBinding,
-          entry: item?.kind === "block" ? item.entry : undefined,
-          slot,
-          sourceState
-        }
-      }));
-    }
-    _rootGroups() {
-      const options = [
-        ...this._catalog.filter((entry) => entry.category !== "Runtime").map((entry) => ({
-          item: {
-            kind: "block",
-            entry
-          },
-          entry,
-          slotLabel: "Page"
-        })),
-        ...this._insertItems.filter((item) => item.kind !== "media").map((item) => ({
-          item,
-          slotLabel: "Page"
-        }))
-      ];
-      return [{
-        label: "Page",
-        disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
-        options
-      }];
-    }
-    _defaultTemplateGroups(templates) {
-      return [{
-        label: "Default templates",
-        disabledReason: templates.length === 0 ? "No default templates." : undefined,
-        options: templates.map((item) => ({
-          item,
-          slotLabel: "Page"
-        }))
-      }];
-    }
-    _childGroups(node) {
-      return node.editor.getContentSlots().map((slot) => {
-        const isFull = this._isSlotFull(node, slot);
-        const options = isFull ? [] : this._slotOptions(slot, node);
-        return {
-          slot: slot.slot,
-          label: slot.label,
-          disabledReason: isFull ? "This slot is full." : options.length === 0 ? "No compatible blocks." : undefined,
-          options
-        };
-      });
-    }
-    _sourceStateGroups(node) {
-      const parentNode = this._nodeForEditor(node.sourceEditor);
-      if (!parentNode)
-        return [];
-      const slot = {
-        label: node.label,
-        accepts: [{ kind: "any-component" }]
-      };
-      const options = this._slotOptions(slot, parentNode).map((option) => ({
-        ...option,
-        slot: undefined,
-        slotLabel: node.label
-      }));
-      return [{
-        label: node.label,
-        disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
-        options
-      }];
-    }
-    _replaceGroups(node) {
-      const parent = this._parentNode(node);
-      if (!parent)
-        return this._rootGroups();
-      const slot = this._slotForChild(parent, node);
-      if (!slot)
-        return [];
-      const options = this._slotOptions(slot, parent, node);
-      return [{
-        slot: slot.slot,
-        label: slot.label,
-        disabledReason: options.length === 0 ? "No compatible blocks." : undefined,
-        options
-      }];
-    }
-    _slotOptions(slot, parent, replaced) {
-      const blockOptions = this._catalog.filter((entry) => {
-        if (entry.category === "Runtime")
-          return false;
-        return slot.accepts.some((accept) => this._acceptsEntry(accept, entry));
-      }).map((entry) => ({
-        item: {
-          kind: "block",
-          entry
-        },
-        entry,
-        slot: slot.slot,
-        slotLabel: slot.label
-      }));
-      const externalOptions = this._insertItems.filter((item) => slot.accepts.some((accept) => this._acceptsItem(accept, item))).filter((item) => this._canFitItem(parent, slot, item, replaced)).map((item) => ({
-        item,
-        slot: slot.slot,
-        slotLabel: slot.label
-      }));
-      const mediaAccept = this._mediaAcceptForSlot(slot);
-      const mediaOptions = mediaAccept ? [{
-        item: {
-          kind: "media",
-          label: "Media",
-          description: "Choose a file from the CMS library.",
-          category: "Media",
-          subCategory: mediaAccept.join(", "),
-          icon: "M",
-          accept: mediaAccept
-        },
-        slot: slot.slot,
-        slotLabel: slot.label
-      }] : [];
-      return [
-        ...blockOptions.filter((option) => this._canFitItem(parent, slot, option.item, replaced)),
-        ...externalOptions,
-        ...mediaOptions.filter((option) => option.item && this._canFitItem(parent, slot, option.item, replaced))
-      ];
-    }
-    _mediaAcceptForSlot(slot) {
-      const explicit = slot.accepts.find((accept) => accept.kind === "media");
-      if (explicit?.kind === "media")
-        return explicit.accept ?? ["image"];
-      if (slot.accepts.some((accept) => accept.kind === "component" && accept.tag.toLowerCase() === "img")) {
-        return ["image"];
-      }
-      if (slot.accepts.some((accept) => accept.kind === "any-component")) {
-        return ["image"];
-      }
-      return null;
-    }
-    _hasEnabledGroup(groups) {
-      return groups.some((group) => !group.disabledReason && group.options.length > 0);
-    }
-    _acceptsEntry(accept, entry) {
-      if (accept.kind === "media")
-        return false;
-      if (accept.kind === "any-component")
-        return true;
-      return accept.tag.toLowerCase() === entry.tag.toLowerCase();
-    }
-    _acceptsItem(accept, item) {
-      if (item.kind === "media")
-        return accept.kind === "media";
-      if (item.kind === "block")
-        return this._acceptsEntry(accept, item.entry);
-      if (accept.kind === "media")
-        return false;
-      if (accept.kind === "any-component")
-        return true;
-      if (item.kind === "snippet")
-        return accept.tag.toLowerCase() === CMS_SNIPPET_TAG;
-      return false;
-    }
-    _canFitItem(parent, slot, item, replaced) {
-      if (typeof slot.max !== "number")
-        return true;
-      const replacedSlot = replaced ? this._slotForChild(parent, replaced) : undefined;
-      const replacedCount = replacedSlot && this._sameSlot(replacedSlot, slot) ? 1 : 0;
-      return this._slotChildCount(parent, slot) - replacedCount + this._itemRootCount(item) <= slot.max;
-    }
-    _itemRootCount(item) {
-      if (item.kind !== "template")
-        return 1;
-      const template6 = document.createElement("template");
-      template6.innerHTML = item.content;
-      const elementCount = template6.content.children.length;
-      if (elementCount > 0)
-        return elementCount;
-      return template6.content.textContent?.trim() ? 1 : 0;
-    }
-    _canDuplicate(node) {
-      const parent = this._parentNode(node);
-      if (!parent)
-        return true;
-      const slot = this._slotForChild(parent, node);
-      if (!slot?.max)
-        return true;
-      return this._slotChildCount(parent, slot) < slot.max;
-    }
-    _canDelete(node) {
-      const parent = this._parentNode(node);
-      if (!parent)
-        return true;
-      const slot = this._slotForChild(parent, node);
-      if (!slot?.min)
-        return true;
-      return this._slotChildCount(parent, slot) > slot.min;
-    }
-    _isSlotFull(parent, slot) {
-      return typeof slot.max === "number" && this._slotChildCount(parent, slot) >= slot.max;
-    }
-    _slotForChild(parent, child) {
-      const childSlot = child.target.getAttribute("slot") ?? undefined;
-      return parent.editor.getContentSlots().find((slot) => (slot.slot ?? undefined) === childSlot);
-    }
-    _sameSlot(left, right) {
-      return (left.slot ?? undefined) === (right.slot ?? undefined);
-    }
-    _slotChildCount(parent, slot) {
-      return this._editorChildrenOf(parent).filter((child) => (child.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined)).length;
-    }
-    _editorChildrenOf(parent) {
-      return parent.children.flatMap((child) => this._isSourceStateNode(child) ? child.children : [child]);
-    }
-    _parentNode(child) {
-      const visit = (nodes) => {
-        for (const node of nodes) {
-          if (this._isSourceStateNode(node)) {
-            if (node.children.includes(child))
-              return this._nodeForEditor(node.sourceEditor);
-            const stateParent = visit(node.children);
-            if (stateParent)
-              return stateParent;
-            continue;
-          }
-          if (node.children.includes(child))
-            return node;
-          const parent = visit(node.children);
-          if (parent)
-            return parent;
-        }
-        return null;
-      };
-      return visit(this._nodes);
-    }
-    _nodeForEditor(editor) {
-      return this._flattenNodes(this._nodes).filter((node) => !this._isSourceStateNode(node)).find((node) => node.editor === editor) ?? null;
-    }
-    _onBlockPickerSelect = (event) => {
-      if (!this._pendingPickerAction)
-        return;
-      const { action, editor, sourceState } = this._pendingPickerAction;
-      this._emitAction(action, editor, event.detail.option.item, event.detail.option.slot, sourceState);
-      this._pendingPickerAction = null;
-    };
-    _onDataSourceSelect = (event) => {
-      if (!this._pendingSourceEditor)
-        return;
-      this._emitAction("set-source", this._pendingSourceEditor, undefined, undefined, undefined, undefined, event.detail.source, event.detail.binding);
-      this._pendingSourceEditor = null;
-    };
-    _onDataSourceRemove = () => {
-      if (!this._pendingSourceEditor)
-        return;
-      this._emitAction("remove-source", this._pendingSourceEditor);
-      this._pendingSourceEditor = null;
-    };
-    _closeContextMenu = () => {
-      this._contextMenu.remove();
-    };
-    _onDocumentKeydown = (event) => {
-      if (event.key === "Escape") {
-        this._closeContextMenu();
-        return;
-      }
-      if ((event.key === "Delete" || event.key === "Backspace") && this._selectedEditor && !this._isEditableKeyEvent(event)) {
-        event.preventDefault();
-        this._emitAction("delete", this._selectedEditor);
-        return;
-      }
-      if (!event.ctrlKey && !event.metaKey)
-        return;
-      if (this._isEditableKeyEvent(event))
-        return;
-      const key = event.key.toLowerCase();
-      if (key === "c" && this._selectedEditor) {
-        event.preventDefault();
-        this._emitAction("copy", this._selectedEditor);
-      } else if (key === "v") {
-        event.preventDefault();
-        this._emitAction("paste-after", this._selectedEditor ?? undefined);
-      }
-    };
-    _onTreeClick = (event) => {
-      if (event.target !== this._tree)
-        return;
-      this._openRootPicker();
-    };
-    _onTreeContextMenu = (event) => {
-      if (event.target !== this._tree)
-        return;
-      event.preventDefault();
-      const mouseEvent = event;
-      this._openRootContextMenu(mouseEvent.clientX, mouseEvent.clientY);
-    };
-    _onDragStart(node, event) {
-      this._draggedNode = node;
-      event.dataTransfer?.setData("text/plain", node.label);
-      if (event.dataTransfer)
-        event.dataTransfer.effectAllowed = "move";
-    }
-    _onDragOver(node, row, event) {
-      if (!this._draggedNode || this._draggedNode === node || this._isDescendantNode(node, this._draggedNode))
-        return;
-      event.preventDefault();
-      this._clearDropRow();
-      const position = this._dropPosition(row, event);
-      row.classList.add(position === "before" ? "drop-before" : "drop-after");
-      this._dropRow = row;
-      if (event.dataTransfer)
-        event.dataTransfer.dropEffect = "move";
-    }
-    _onDrop(node, event) {
-      if (!this._draggedNode || this._draggedNode === node || this._isDescendantNode(node, this._draggedNode))
-        return;
-      event.preventDefault();
-      const position = this._dropPosition(event.currentTarget, event);
-      this._emitAction(position === "before" ? "move-before" : "move-after", node.editor, undefined, undefined, undefined, this._draggedNode.editor);
-      this._clearDragState();
-    }
-    _dropPosition(target, event) {
-      const rect = target.getBoundingClientRect();
-      return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
-    }
-    _clearDragState() {
-      this._draggedNode = null;
-      this._clearDropRow();
-    }
-    _clearDropRow() {
-      this._dropRow?.classList.remove("drop-before", "drop-after");
-      this._dropRow = null;
-    }
-    _isDescendantNode(candidate, parent) {
-      return parent.children.some((child) => {
-        if (this._isSourceStateNode(child)) {
-          return child.children.some((grandChild) => grandChild === candidate || this._isDescendantNode(candidate, grandChild));
-        }
-        return child === candidate || this._isDescendantNode(candidate, child);
-      });
-    }
-    _isEditableKeyEvent(event) {
-      return event.composedPath().some((target) => {
-        if (!(target instanceof Element))
-          return false;
-        return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
-      });
-    }
-    _visibleNodes(nodes, depth = 0) {
-      return nodes.flatMap((node) => {
-        const current = [{ item: node, depth }];
-        if (this._isCollapsed(node))
-          return current;
-        return [
-          ...current,
-          ...this._visibleNodes(node.children, depth + 1)
-        ];
-      });
-    }
-    _expandPathToSelected() {
-      if (!this._selectedEditor)
-        return;
-      const path = this._pathToEditor(this._nodes, this._selectedEditor);
-      if (!path)
-        return;
-      for (const node of path.slice(0, -1)) {
-        this._collapsedTargets.delete(this._nodeCollapseKey(node));
-      }
-    }
-    _pathToEditor(nodes, editor, ancestors = []) {
-      for (const node of nodes) {
-        const path = [...ancestors, node];
-        if (!this._isSourceStateNode(node) && node.editor === editor)
-          return path;
-        const childPath = this._pathToEditor(node.children, editor, path);
-        if (childPath)
-          return childPath;
-      }
-      return null;
-    }
-    _toggleNode(node) {
-      const key = this._nodeCollapseKey(node);
-      const row = this._findRenderedRow(key);
-      const anchor = row ? {
-        key,
-        offsetTop: row.getBoundingClientRect().top
-      } : undefined;
-      if (this._isCollapsed(node)) {
-        this._collapsedTargets.delete(key);
-      } else {
-        this._collapsedTargets.add(key);
-      }
-      this._render({ anchor });
-    }
-    _isCollapsed(node) {
-      return this._collapsedTargets.has(this._nodeCollapseKey(node));
-    }
-    _visibleBadges(node) {
-      if (this._areBadgesExpanded(node))
-        return node.badges;
-      return node.badges.slice(0, 2);
-    }
-    _toggleBadges(node) {
-      if (this._areBadgesExpanded(node)) {
-        this._expandedBadgeTargets.delete(this._nodeBadgeKey(node));
-      } else {
-        this._expandedBadgeTargets.add(this._nodeBadgeKey(node));
-      }
-      this._render();
-    }
-    _areBadgesExpanded(node) {
-      return this._expandedBadgeTargets.has(this._nodeBadgeKey(node));
-    }
-    _iconText(node) {
-      if (this._isSourceStateNode(node))
-        return "";
-      if (node.icon)
-        return node.icon.slice(0, 1).toUpperCase();
-      return node.label.slice(0, 1).toUpperCase();
-    }
-    _nodeLabel(node) {
-      if (!this._isSourceStateNode(node))
-        return node.label;
-      return node.label;
-    }
-    _rowClass(node) {
-      if (this._isSourceStateNode(node))
-        return "row source-state-row";
-      return "row";
-    }
-    _itemClass(node) {
-      if (this._isSourceStateNode(node)) {
-        return node.children.length > 0 ? `item source-state state-filled state-${node.state}` : `item source-state state-${node.state}`;
-      }
-      return "item";
-    }
-    _iconClass(node) {
-      if (this._isSourceStateNode(node))
-        return "icon state-spacer";
-      return "icon";
-    }
-    _sourceActionLabel(node) {
-      return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Update source" : "Add source";
-    }
-    _isSnippetNode(node) {
-      return node.tag.toLowerCase() === CMS_SNIPPET_TAG;
-    }
-    _snippetItemForNode(node) {
-      if (!this._isSnippetNode(node))
-        return null;
-      const identifier = node.target.getAttribute("identifier")?.trim();
-      if (!identifier)
-        return null;
-      return this._insertItems.find((item) => item.kind === "snippet" && item.identifier === identifier) ?? null;
-    }
-    _defaultTemplateItems() {
-      const templates = this._insertItems.filter((item) => item.kind === "template");
-      if (this._defaultTemplateSelection.category) {
-        return templates.filter((item) => item.category === this._defaultTemplateSelection.category);
-      }
-      return [];
-    }
-    _useDefaultTemplate(templates = this._defaultTemplateItems()) {
-      if (templates.length === 0)
-        return false;
-      if (templates.length === 1) {
-        this._emitAction("add-root", undefined, templates[0]);
-        return true;
-      }
-      this._pendingPickerAction = { action: "add-root" };
-      this._blockPicker.open(this._defaultTemplateGroups(templates), "Page");
-      return true;
-    }
-    _setRepeatableTargets(targets) {
-      for (const node of this._flattenNodes(this._nodes)) {
-        if (this._isSourceStateNode(node))
-          continue;
-        if (!targets.includes(node.target))
-          this._repeatableTargets.delete(node.target);
-      }
-      for (const target of targets) {
-        this._repeatableTargets.add(target);
-      }
-    }
-    _flattenNodes(nodes) {
-      return nodes.flatMap((node) => [
-        node,
-        ...this._flattenNodes(node.children)
-      ]);
-    }
-    _isSourceStateNode(node) {
-      return node.kind === "source-state";
-    }
-    _nodeCollapseKey(node) {
-      if (this._isSourceStateNode(node))
-        return this._sourceStateKey(node);
-      return node.target;
-    }
-    _nodeBadgeKey(node) {
-      return this._nodeCollapseKey(node);
-    }
-    _sourceStateKey(node) {
-      let sourceKeys = this._sourceStateKeys.get(node.sourceEditor.target);
-      if (!sourceKeys) {
-        sourceKeys = new Map;
-        this._sourceStateKeys.set(node.sourceEditor.target, sourceKeys);
-      }
-      let key = sourceKeys.get(node.state);
-      if (!key) {
-        key = {};
-        sourceKeys.set(node.state, key);
-      }
-      return key;
-    }
-    get _sourceDataSources() {
-      return this._dataSources.filter((source) => (source.method ?? "GET") === "GET");
-    }
-    get _contextMenu() {
-      let menu = this.shadowRoot.querySelector(".context-menu");
-      if (!menu) {
-        menu = document.createElement("div");
-        menu.className = "context-menu";
-        menu.setAttribute("role", "menu");
-      }
-      return menu;
-    }
-    get _tree() {
-      return this.shadowRoot.querySelector(".structure-tree");
-    }
-    get _scrollContainer() {
-      const panelBody = this.parentElement?.shadowRoot?.querySelector(".panel-body");
-      if (panelBody)
-        return panelBody;
-      return this;
-    }
-    get _blockPicker() {
-      let picker = this.shadowRoot.querySelector("cms-editor-v2-block-picker-modal");
-      if (!picker) {
-        picker = document.createElement("cms-editor-v2-block-picker-modal");
-        this.shadowRoot.append(picker);
-      }
-      return picker;
-    }
-    get _dataSourcePicker() {
-      let picker = this.shadowRoot.querySelector("cms-editor-v2-data-source-picker");
-      if (!picker) {
-        picker = new DataSourcePicker;
-        this.shadowRoot.append(picker);
-      }
-      return picker;
+    setStructure(nodes, selectedEditor = null, catalog = this.controller.catalog, options = {}) {
+      this.controller.setStructure(nodes, selectedEditor, catalog, options);
     }
   }
   if (!customElements.get("cms-editor-v2-structure-tree")) {
@@ -13700,17 +19247,18 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default9 = `<main class="canvas">
+  var template_default12 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
-            <iframe title="Page canvas" sandbox="allow-scripts allow-same-origin"></iframe>
+            <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+            <iframe class="view-frame" data-frame-kind="view" title="Page preview canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
         </div>
     </div>
 </main>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default8 = `:host {
+  var style_default11 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -13752,6 +19300,7 @@ dd {
 }
 
 .page {
+    position: relative;
     width: var(--editor-v2-viewport-width);
     height: var(--editor-v2-viewport-height);
     border: 1px solid var(--editor-v2-border);
@@ -13777,51 +19326,99 @@ iframe {
     border: 0;
     background: var(--editor-v2-surface);
 }
+
+.view-frame {
+    display: none;
+}
+
+:host([mode="view"]) .editor-frame {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+:host([mode="view"]) .view-frame {
+    position: absolute;
+    inset: 0;
+    display: block;
+}
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
-  var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(style_default8)}</style>${String(template_default9)}`;
+  var template7 = document.createElement("template");
+  template7.innerHTML = `<style>${String(style_default11)}</style>${String(template_default12)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
   class Canvas extends HTMLElement {
-    _currentFrameUrl = null;
+    _currentFrameUrls = {
+      editor: null,
+      view: null
+    };
     static get observedAttributes() {
-      return ["max-width", "viewport-width", "viewport-height", "frame-url", "viewport-padding", "viewport-fit"];
+      return [
+        "max-width",
+        "viewport-width",
+        "viewport-height",
+        "frame-url",
+        "editor-frame-url",
+        "view-frame-url",
+        "mode",
+        "viewport-padding",
+        "viewport-fit"
+      ];
     }
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template6.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template7.content.cloneNode(true));
     }
     connectedCallback() {
-      this.frame.addEventListener("load", this.onFrameLoad);
+      this.editorFrame.addEventListener("load", this.onFrameLoad);
+      this.viewFrame.addEventListener("load", this.onFrameLoad);
       this.shadowRoot.addEventListener("click", this.onBackgroundClick);
       this.syncViewportSize();
-      this.syncFrameUrl();
+      this.syncFrameUrls();
     }
     disconnectedCallback() {
-      this.frame.removeEventListener("load", this.onFrameLoad);
+      this.editorFrame.removeEventListener("load", this.onFrameLoad);
+      this.viewFrame.removeEventListener("load", this.onFrameLoad);
       this.shadowRoot.removeEventListener("click", this.onBackgroundClick);
     }
+    reloadViewFrame() {
+      const url = this.viewFrameUrl();
+      if (this.viewFrame.contentWindow) {
+        this.viewFrame.contentWindow.location.replace(url);
+      } else {
+        this.viewFrame.setAttribute("src", url);
+      }
+    }
     attributeChangedCallback(name) {
-      if (name === "frame-url") {
-        this.syncFrameUrl();
+      if (name === "frame-url" || name === "editor-frame-url" || name === "view-frame-url") {
+        this.syncFrameUrls();
         return;
       }
+      if (name === "mode")
+        return;
       this.syncViewportSize();
     }
-    onFrameLoad = () => {
-      const frameDocument = this.frame.contentDocument;
+    onFrameLoad = (event) => {
+      const frame = event.currentTarget;
+      if (!(frame instanceof HTMLElement) || frame.localName !== "iframe")
+        return;
+      const iframe = frame;
+      const kind = iframe.dataset.frameKind === "view" ? "view" : "editor";
+      const frameDocument = iframe.contentDocument;
       if (!frameDocument)
         return;
+      if (kind === "editor")
+        installEditorFormGuard(frameDocument);
       this.dispatchEvent(new CustomEvent(CANVAS_FRAME_READY_EVENT, {
         bubbles: true,
         composed: true,
         detail: {
           document: frameDocument,
-          frame: this.frame,
-          url: this._currentFrameUrl ?? this.frame.src
+          frame: iframe,
+          kind,
+          url: this._currentFrameUrls[kind] ?? iframe.src
         }
       }));
     };
@@ -13836,16 +19433,25 @@ iframe {
         composed: true
       }));
     };
-    syncFrameUrl() {
-      const url = this.getAttribute("frame-url")?.trim() || "about:blank";
-      if (this._currentFrameUrl === url)
+    syncFrameUrls() {
+      this.syncFrameUrl("editor", this.editorFrame, this.editorFrameUrl());
+      this.syncFrameUrl("view", this.viewFrame, this.viewFrameUrl());
+    }
+    syncFrameUrl(kind, frame, url) {
+      if (this._currentFrameUrls[kind] === url)
         return;
-      this._currentFrameUrl = url;
-      if (this.frame.contentWindow) {
-        this.frame.contentWindow.location.replace(url);
+      this._currentFrameUrls[kind] = url;
+      if (frame.contentWindow) {
+        frame.contentWindow.location.replace(url);
       } else {
-        this.frame.setAttribute("src", url);
+        frame.setAttribute("src", url);
       }
+    }
+    editorFrameUrl() {
+      return this.getAttribute("editor-frame-url")?.trim() || this.getAttribute("frame-url")?.trim() || "about:blank";
+    }
+    viewFrameUrl() {
+      return this.getAttribute("view-frame-url")?.trim() || this.getAttribute("frame-url")?.trim() || "about:blank";
     }
     syncViewportSize() {
       const width = this.cssSize(this.getAttribute("viewport-width") ?? this.getAttribute("max-width"));
@@ -13867,16 +19473,30 @@ iframe {
         return null;
       return /^\d+$/.test(size) ? `${size}px` : size;
     }
-    get frame() {
-      return this.shadowRoot.querySelector("iframe");
+    get editorFrame() {
+      return this.shadowRoot.querySelector(".editor-frame");
+    }
+    get viewFrame() {
+      return this.shadowRoot.querySelector(".view-frame");
     }
   }
   if (!customElements.get("cms-editor-v2-canvas")) {
     customElements.define("cms-editor-v2-canvas", Canvas);
   }
+  var EDITOR_FORM_GUARD_KEY = "__cmsEditorFormGuardInstalled";
+  function installEditorFormGuard(document2) {
+    const state = document2;
+    if (state[EDITOR_FORM_GUARD_KEY])
+      return;
+    state[EDITOR_FORM_GUARD_KEY] = true;
+    document2.addEventListener("submit", (event) => {
+      if (!event.defaultPrevented)
+        event.preventDefault();
+    }, true);
+  }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Section/template.html
-  var template_default10 = `<section class="section">
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
+  var template_default13 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -13887,8 +19507,8 @@ iframe {
 </section>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Section/style.css
-  var style_default9 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
+  var style_default12 = `:host {
     display: block;
 }
 
@@ -13898,23 +19518,23 @@ iframe {
 
 .section {
     display: grid;
-    gap: 9px;
+    gap: 7px;
 }
 
 .head {
     display: flex;
     align-items: center;
     gap: 10px;
-    min-height: 22px;
+    min-height: 20px;
     width: 100%;
     border: 0;
     background: transparent;
     color: var(--editor-v2-subtle);
     padding: 0;
     font: inherit;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 780;
-    letter-spacing: .09em;
+    letter-spacing: .08em;
     text-align: left;
     text-transform: uppercase;
     cursor: pointer;
@@ -13940,7 +19560,7 @@ iframe {
 
 .body {
     display: grid;
-    gap: 12px;
+    gap: 10px;
     padding: 0 0 2px;
 }
 
@@ -13953,9 +19573,31 @@ iframe {
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Section/Section.ts
-  var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default9)}</style>${String(template_default10)}`;
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/fieldElement.ts
+  function createFieldTemplate(templateHtml, componentCss) {
+    const template8 = document.createElement("template");
+    template8.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
+    return template8;
+  }
+  function attachFieldShadow(host, template8) {
+    const root = host.attachShadow({ mode: "open" });
+    root.append(template8.content.cloneNode(true));
+    return root;
+  }
+  function syncFieldCopy(host) {
+    const label = host.getAttribute("label") ?? "";
+    host.shadowRoot.querySelector(".label").textContent = label;
+    host.shadowRoot.querySelector(".hint").textContent = host.getAttribute("hint") ?? "";
+    const labelDisplay = host.getAttribute("label-display") ?? "visible";
+    const ariaLabel = host.getAttribute("aria-label");
+    if (ariaLabel || labelDisplay !== "visible") {
+      const control2 = host.shadowRoot.querySelector("input, select, textarea, button");
+      control2?.setAttribute("aria-label", ariaLabel ?? label);
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
+  var template8 = createFieldTemplate(template_default13, style_default12);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -13964,7 +19606,7 @@ iframe {
     };
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template7.content.cloneNode(true));
+      attachFieldShadow(this, template8);
     }
     connectedCallback() {
       this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
@@ -13978,16 +19620,29 @@ iframe {
     customElements.define("cms-editor-v2-section", Section);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/TextInput/template.html
-  var template_default11 = `<label class="field">
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
+  var template_default14 = `<div class="field">
     <span class="label"></span>
-    <input>
+    <div class="control-shell">
+        <input>
+        <button class="dynamic-data-tool" type="button" title="Dynamic data" aria-label="Insert dynamic data" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>
+        </button>
+    </div>
+    <div class="data-picker" hidden role="dialog" aria-label="Insert data">
+        <div class="data-picker-header">
+            <strong>Insert data</strong>
+            <button type="button" class="close-data" aria-label="Close data picker">×</button>
+        </div>
+        <input class="data-search" type="search" placeholder="Search data">
+        <div class="data-list"></div>
+    </div>
     <span class="hint"></span>
-</label>
+</div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/TextInput/style.css
-  var style_default10 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
+  var style_default13 = `:host {
     display: block;
 }
 
@@ -13997,25 +19652,54 @@ iframe {
 
 .field {
     display: grid;
-    gap: 5px;
+    grid-template-columns: minmax(0, var(--field-label-width, 82px)) minmax(0, 1fr);
+    grid-template-areas:
+        "label control"
+        ". picker"
+        ". hint";
+    align-items: center;
+    column-gap: 7px;
+    row-gap: 3px;
+}
+
+.control-shell {
+    grid-area: control;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px;
 }
 
 .label {
+    grid-area: label;
+    overflow: hidden;
+    max-width: var(--field-label-width, 82px);
     color: var(--editor-v2-label);
-    font-size: 12px;
-    font-weight: 640;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 input {
     width: 100%;
-    min-height: 32px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 7px;
-    background: var(--editor-v2-surface);
+    min-height: 27px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
     color: var(--editor-v2-text);
     padding: 0 9px;
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: 620;
+}
+
+input:hover,
+input:focus {
+    border-color: var(--editor-v2-border);
+    outline: none;
+    background: var(--editor-v2-surface);
 }
 
 input:disabled {
@@ -14027,47 +19711,447 @@ input:disabled {
 }
 
 .hint {
+    grid-area: hint;
     color: var(--editor-v2-muted);
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.35;
 }
 
 .hint:empty {
     display: none;
 }
+
+.data-picker {
+    grid-area: picker;
+}
+
+:host(.setting-row-control) .field {
+    grid-template-columns: minmax(0, var(--field-row-label-width, 22px)) minmax(0, 1fr);
+    column-gap: 5px;
+}
+
+:host(.setting-row-control) .label {
+    max-width: var(--field-row-label-width, 22px);
+}
+
+:host([label-display="hidden"]) .field,
+:host([label-display="sr-only"]) .field {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "control"
+        "picker"
+        "hint";
+}
+
+:host([label-display="hidden"]) .label {
+    display: none;
+}
+
+:host([label-display="sr-only"]) .label {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/TextInput/TextInput.ts
-  var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(style_default10)}</style>${String(template_default11)}`;
+  // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.css
+  var dynamicDataPicker_default = `.dynamic-data-tool,
+.close-data {
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    cursor: pointer;
+}
+
+.dynamic-data-tool {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    background: color-mix(in srgb, var(--editor-v2-bg) 72%, var(--editor-v2-surface));
+}
+
+.dynamic-data-tool svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+.dynamic-data-tool:hover,
+.data-option:hover,
+.data-option:focus-visible {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 7%, var(--editor-v2-surface));
+    color: var(--editor-v2-accent);
+    outline: none;
+}
+
+.dynamic-data-tool:disabled,
+.data-picker[hidden] {
+    display: none;
+}
+
+.data-picker {
+    display: grid;
+    gap: 8px;
+    width: min(360px, 100%);
+    padding: 10px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-bg);
+    box-shadow: 0 14px 36px color-mix(in srgb, black 12%, transparent);
+}
+
+.data-picker-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-picker-header strong { color: var(--editor-v2-label); font-size: 12px; font-weight: 760; }
+.close-data { width: 26px; height: 26px; color: var(--editor-v2-muted); font: inherit; font-size: 16px; line-height: 1; }
+
+.data-search {
+    min-height: 30px;
+    width: 100%;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    padding: 0 8px;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.data-list { display: grid; gap: 4px; max-height: 220px; overflow: auto; }
+
+.data-option {
+    display: grid;
+    gap: 3px;
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--editor-v2-text);
+    padding: 7px 8px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.data-label,
+.data-option code,
+.data-empty { overflow-wrap: anywhere; font-size: 12px; }
+
+.data-label { font-weight: 700; }
+.data-option code,
+.data-empty { color: var(--editor-v2-muted); }
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataAttributes.ts
+  function parseDataScopes(raw) {
+    if (!raw)
+      return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
+  function matchingDynamicDataOptions(options, query2) {
+    const normalized = query2.trim().toLowerCase();
+    return normalized ? options.filter((option2) => `${option2.label} ${option2.path}`.toLowerCase().includes(normalized)) : options;
+  }
+  function renderDynamicDataOptions(list, options, totalOptions, onSelect) {
+    list.replaceChildren();
+    if (options.length === 0) {
+      const empty2 = document.createElement("p");
+      empty2.className = "data-empty";
+      empty2.textContent = totalOptions === 0 ? "No data available here." : "No matching data.";
+      list.append(empty2);
+      return;
+    }
+    for (const option2 of options) {
+      const button = document.createElement("button");
+      button.className = "data-option";
+      button.type = "button";
+      button.dataset.path = option2.path;
+      const label = document.createElement("span");
+      label.className = "data-label";
+      label.textContent = option2.label;
+      const path = document.createElement("code");
+      path.textContent = option2.path;
+      button.append(label, path);
+      button.addEventListener("click", () => onSelect(option2.path));
+      list.append(button);
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataOptions.ts
+  function flattenDynamicDataOptions(scopes) {
+    const byPath = new Map;
+    for (const scope of scopes) {
+      const options = fieldOptions(scope.fields, scope.name, scope.label ?? scope.name);
+      for (const option2 of options) {
+        if (!byPath.has(option2.path))
+          byPath.set(option2.path, option2);
+      }
+    }
+    return [...byPath.values()];
+  }
+  function fieldOptions(fields, scopeName, scopeLabel, prefix = "") {
+    return fields.flatMap((field) => {
+      const relativePath = prefix && field.path !== "." ? `${prefix}.${field.path}` : field.path === "." ? prefix : field.path;
+      const path = relativePath ? `${scopeName}.${relativePath}` : scopeName;
+      if (field.type === "array")
+        return [];
+      const children = fieldOptions(field.children ?? [], scopeName, scopeLabel, relativePath);
+      if (field.type === "object" || field.children?.length)
+        return children;
+      const label = field.label ? `${scopeLabel} / ${field.label}` : `${scopeLabel} / ${relativePath}`;
+      return [{ label, path }, ...children];
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/DynamicDataPickerController.ts
+  class DynamicDataPickerController {
+    _refs;
+    _actions;
+    _options = [];
+    constructor(_refs, _actions) {
+      this._refs = _refs;
+      this._actions = _actions;
+    }
+    connect() {
+      this._refs.search().addEventListener("input", this._render);
+      this._refs.search().addEventListener("keydown", this._onSearchKeydown);
+      this._refs.closeButton().addEventListener("click", this._onCloseClick);
+    }
+    disconnect() {
+      this._refs.search().removeEventListener("input", this._render);
+      this._refs.search().removeEventListener("keydown", this._onSearchKeydown);
+      this._refs.closeButton().removeEventListener("click", this._onCloseClick);
+    }
+    open() {
+      this._actions.saveSelection();
+      this._options = flattenDynamicDataOptions(parseDataScopes(this._refs.rawScopes()));
+      this._refs.search().value = "";
+      this._render();
+      this._refs.picker().hidden = false;
+      this._refs.search().focus();
+    }
+    insertExpression(expression) {
+      if (!expression)
+        return;
+      this._actions.insertText(asInterpolation(expression));
+      this.close({ restoreFocus: false });
+      this._actions.finish();
+    }
+    close(options = {}) {
+      this._refs.picker().hidden = true;
+      if (options.restoreFocus === false)
+        return;
+      this._actions.focusControl();
+      this._actions.restoreSelection();
+    }
+    _onSearchKeydown = (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const first = this._refs.list().querySelector(".data-option");
+        if (first)
+          this.insertExpression(first.dataset.path ?? "");
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        this.close();
+      }
+    };
+    _render = () => {
+      renderDynamicDataOptions(this._refs.list(), matchingDynamicDataOptions(this._options, this._refs.search().value), this._options.length, (path) => this.insertExpression(path));
+    };
+    _onCloseClick = () => {
+      this.close();
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/textControlDynamicData.ts
+  class TextControlDynamicData {
+    _refs;
+    _selectionStart = 0;
+    _selectionEnd = 0;
+    _picker;
+    constructor(_refs) {
+      this._refs = _refs;
+      this._picker = new DynamicDataPickerController({
+        picker: () => this._refs.picker(),
+        search: () => this._refs.search(),
+        list: () => this._refs.list(),
+        closeButton: () => this._refs.closeButton(),
+        rawScopes: () => this._refs.host().getAttribute("data-scopes")
+      }, {
+        saveSelection: this.saveSelection,
+        restoreSelection: this.restoreSelection,
+        insertText: (text) => this.insertText(text),
+        focusControl: () => this._refs.control().focus(),
+        finish: this.emitInput
+      });
+    }
+    connect() {
+      this.sync();
+      this._refs.control().addEventListener("keyup", this.saveSelection);
+      this._refs.control().addEventListener("mouseup", this.saveSelection);
+      this._refs.control().addEventListener("select", this.saveSelection);
+      this._refs.control().addEventListener("blur", this.saveSelection);
+      this._refs.button().addEventListener("pointerdown", this.openPicker);
+      this._refs.button().addEventListener("click", this.openPicker);
+      this._picker.connect();
+    }
+    disconnect() {
+      this._refs.control().removeEventListener("keyup", this.saveSelection);
+      this._refs.control().removeEventListener("mouseup", this.saveSelection);
+      this._refs.control().removeEventListener("select", this.saveSelection);
+      this._refs.control().removeEventListener("blur", this.saveSelection);
+      this._refs.button().removeEventListener("pointerdown", this.openPicker);
+      this._refs.button().removeEventListener("click", this.openPicker);
+      this._picker.disconnect();
+    }
+    sync() {
+      const enabled = this._refs.host().hasAttribute("data-scopes") && !this._refs.host().hasAttribute("disabled");
+      this._refs.button().hidden = !enabled;
+      this._refs.button().disabled = !enabled;
+      if (!enabled)
+        this._refs.picker().hidden = true;
+      this.saveSelection();
+    }
+    openPicker = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (this._refs.button().disabled)
+        return;
+      this._picker.open();
+    };
+    saveSelection = () => {
+      const control2 = this._refs.control();
+      this._selectionStart = control2.selectionStart ?? control2.value.length;
+      this._selectionEnd = control2.selectionEnd ?? this._selectionStart;
+    };
+    restoreSelection = () => {
+      this._refs.control().setSelectionRange?.(this._selectionStart, this._selectionEnd);
+    };
+    insertText(text) {
+      const control2 = this._refs.control();
+      const start = control2.selectionStart ?? this._selectionStart;
+      const end = control2.selectionEnd ?? this._selectionEnd;
+      control2.value = `${control2.value.slice(0, start)}${text}${control2.value.slice(end)}`;
+      const next = start + text.length;
+      control2.setSelectionRange?.(next, next);
+      this.saveSelection();
+    }
+    emitInput = () => {
+      this._refs.control().dispatchEvent(new Event("input", {
+        bubbles: true
+      }));
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
+  var template9 = createFieldTemplate(template_default14, `${String(style_default13)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
+    _connected = false;
+    _dynamicData = new TextControlDynamicData({
+      host: () => this,
+      control: () => this.input,
+      button: () => this.dynamicDataButton,
+      picker: () => this.dataPicker,
+      search: () => this.dataSearch,
+      list: () => this.dataList,
+      closeButton: () => this.closeDataButton
+    });
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template8.content.cloneNode(true));
+      attachFieldShadow(this, template9);
     }
     connectedCallback() {
-      this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
-      this.shadowRoot.querySelector(".hint").textContent = this.getAttribute("hint") ?? "";
+      syncFieldCopy(this);
       const input = this.shadowRoot.querySelector("input");
       input.value = this.getAttribute("value") ?? "";
       input.placeholder = this.getAttribute("placeholder") ?? "";
+      if (this._connected) {
+        this._dynamicData.sync();
+        return;
+      }
+      this._connected = true;
+      this._dynamicData.connect();
+    }
+    disconnectedCallback() {
+      this._connected = false;
+      this._dynamicData.disconnect();
+    }
+    query(selector) {
+      return this.shadowRoot.querySelector(selector);
+    }
+    get input() {
+      return this.query("input");
+    }
+    get dynamicDataButton() {
+      return this.query(".dynamic-data-tool");
+    }
+    get dataPicker() {
+      return this.query(".data-picker");
+    }
+    get dataSearch() {
+      return this.query(".data-search");
+    }
+    get dataList() {
+      return this.query(".data-list");
+    }
+    get closeDataButton() {
+      return this.query(".close-data");
     }
   }
   if (!customElements.get("cms-editor-v2-text-input")) {
     customElements.define("cms-editor-v2-text-input", TextInput);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Textarea/template.html
-  var template_default12 = `<label class="field">
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
+  var template_default15 = `<div class="field">
     <span class="label"></span>
-    <textarea rows="3"></textarea>
+    <div class="control-shell">
+        <textarea rows="3"></textarea>
+        <button class="dynamic-data-tool" type="button" title="Dynamic data" aria-label="Insert dynamic data" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>
+        </button>
+    </div>
+    <div class="data-picker" hidden role="dialog" aria-label="Insert data">
+        <div class="data-picker-header">
+            <strong>Insert data</strong>
+            <button type="button" class="close-data" aria-label="Close data picker">×</button>
+        </div>
+        <input class="data-search" type="search" placeholder="Search data">
+        <div class="data-list"></div>
+    </div>
     <span class="hint"></span>
-</label>
+</div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Textarea/style.css
-  var style_default11 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
+  var style_default14 = `:host {
     display: block;
 }
 
@@ -14077,13 +20161,20 @@ input:disabled {
 
 .field {
     display: grid;
-    gap: 5px;
+    gap: 4px;
+}
+
+.control-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 4px;
 }
 
 .label {
     color: var(--editor-v2-label);
-    font-size: 12px;
-    font-weight: 640;
+    font-size: 10px;
+    font-weight: 650;
 }
 
 .hint {
@@ -14100,7 +20191,7 @@ textarea {
     color: var(--editor-v2-text);
     padding: 8px 9px;
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.45;
 }
 
@@ -14115,38 +20206,338 @@ textarea:disabled {
 .hint:empty {
     display: none;
 }
+
+:host([label-display="hidden"]) .label {
+    display: none;
+}
+
+:host([label-display="sr-only"]) .label {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Textarea/Textarea.ts
-  var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default11)}</style>${String(template_default12)}`;
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
+  var template10 = createFieldTemplate(template_default15, `${String(style_default14)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
+    _connected = false;
+    _dynamicData = new TextControlDynamicData({
+      host: () => this,
+      control: () => this.textarea,
+      button: () => this.dynamicDataButton,
+      picker: () => this.dataPicker,
+      search: () => this.dataSearch,
+      list: () => this.dataList,
+      closeButton: () => this.closeDataButton
+    });
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template9.content.cloneNode(true));
+      attachFieldShadow(this, template10);
     }
     connectedCallback() {
-      this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
-      this.shadowRoot.querySelector(".hint").textContent = this.getAttribute("hint") ?? "";
-      this.shadowRoot.querySelector("textarea").value = this.getAttribute("value") ?? "";
+      syncFieldCopy(this);
+      this.textarea.value = this.getAttribute("value") ?? "";
+      if (this._connected) {
+        this._dynamicData.sync();
+        return;
+      }
+      this._connected = true;
+      this._dynamicData.connect();
+    }
+    disconnectedCallback() {
+      this._connected = false;
+      this._dynamicData.disconnect();
+    }
+    query(selector) {
+      return this.shadowRoot.querySelector(selector);
+    }
+    get textarea() {
+      return this.query("textarea");
+    }
+    get dynamicDataButton() {
+      return this.query(".dynamic-data-tool");
+    }
+    get dataPicker() {
+      return this.query(".data-picker");
+    }
+    get dataSearch() {
+      return this.query(".data-search");
+    }
+    get dataList() {
+      return this.query(".data-list");
+    }
+    get closeDataButton() {
+      return this.query(".close-data");
     }
   }
   if (!customElements.get("cms-editor-v2-textarea")) {
     customElements.define("cms-editor-v2-textarea", Textarea);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/RichTextEditor/template.html
-  var template_default13 = `<div class="field">
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextAttributes.ts
+  function parseTextCapability(raw) {
+    try {
+      return JSON.parse(raw ?? "{}");
+    } catch {
+      return { format: "richtext" };
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextRangeDom.ts
+  function wrapRangeContents(range, tagName, attributes = {}) {
+    const wrapper = document.createElement(tagName);
+    for (const [name, value] of Object.entries(attributes)) {
+      wrapper.setAttribute(name, value);
+    }
+    wrapper.append(range.extractContents());
+    range.insertNode(wrapper);
+    const nextRange = document.createRange();
+    nextRange.selectNodeContents(wrapper);
+    return nextRange;
+  }
+  function findRangeWrapper(editor, range, tagName, predicate) {
+    const start = closestWrapper(editor, range.startContainer, tagName, predicate);
+    if (!start)
+      return null;
+    const end = closestWrapper(editor, range.endContainer, tagName, predicate);
+    return start === end ? start : null;
+  }
+  function unwrapElement(editor, element) {
+    const fragment = document.createDocumentFragment();
+    const firstChild = element.firstChild;
+    const lastChild = element.lastChild;
+    while (element.firstChild) {
+      fragment.append(element.firstChild);
+    }
+    element.replaceWith(fragment);
+    const nextRange = document.createRange();
+    if (firstChild && lastChild) {
+      nextRange.setStartBefore(firstChild);
+      nextRange.setEndAfter(lastChild);
+    } else {
+      nextRange.selectNodeContents(editor);
+      nextRange.collapse(false);
+    }
+    return nextRange;
+  }
+  function closestWrapper(editor, node, tagName, predicate) {
+    const normalizedTag = tagName.toUpperCase();
+    let current = node.nodeType === Node.ELEMENT_NODE ? node : node.parentNode;
+    while (current && current !== editor) {
+      if (current instanceof HTMLElement && current.tagName === normalizedTag && predicate(current)) {
+        return current;
+      }
+      current = current.parentNode;
+    }
+    return null;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextRangeCommands.ts
+  var TEXT_SIZE_STEPS = [".875em", "1em", "1.125em", "1.25em", "1.5em"];
+
+  class RichTextRangeCommands {
+    _editor;
+    _selection;
+    _savedRange = null;
+    constructor(_editor, _selection) {
+      this._editor = _editor;
+      this._selection = _selection;
+    }
+    hasSelectedRange() {
+      return Boolean(this._savedRange && !this._savedRange.collapsed);
+    }
+    saveSelection = () => {
+      const selection = this._selection();
+      if (!selection || selection.rangeCount === 0)
+        return;
+      const range = selection.getRangeAt(0);
+      if (!this._editor().contains(range.commonAncestorContainer))
+        return;
+      this._savedRange = range.cloneRange();
+    };
+    restoreSelection() {
+      if (!this._savedRange)
+        return;
+      const selection = this._selection();
+      if (!selection)
+        return;
+      selection.removeAllRanges();
+      selection.addRange(this._savedRange);
+    }
+    toggleRange(tagName) {
+      if (this.unwrapMatchingRange(tagName))
+        return;
+      this.wrapRange(tagName);
+    }
+    wrapRange(tagName, attributes = {}) {
+      const range = this.getUsableRange();
+      if (!range || range.collapsed)
+        return;
+      this.setSavedRange(wrapRangeContents(range, tagName, attributes));
+    }
+    unwrapMatchingRange(tagName, predicate = () => true) {
+      const range = this.getUsableRange();
+      if (!range)
+        return false;
+      const wrapper = findRangeWrapper(this._editor(), range, tagName, predicate);
+      if (!wrapper)
+        return false;
+      this.setSavedRange(unwrapElement(this._editor(), wrapper));
+      return true;
+    }
+    insertText(text) {
+      const range = this.getUsableRange();
+      if (!range) {
+        this._editor().append(text);
+        const nextRange2 = document.createRange();
+        nextRange2.selectNodeContents(this._editor());
+        nextRange2.collapse(false);
+        this.setSavedRange(nextRange2);
+        return;
+      }
+      range.deleteContents();
+      const node = document.createTextNode(text);
+      range.insertNode(node);
+      const nextRange = document.createRange();
+      nextRange.setStartAfter(node);
+      nextRange.collapse(true);
+      this.setSavedRange(nextRange);
+    }
+    stepTextSize(direction) {
+      if (!this.hasSelectedRange())
+        return false;
+      const range = this.getUsableRange();
+      if (!range)
+        return false;
+      const wrapper = findRangeWrapper(this._editor(), range, "span", (element) => element.style.fontSize !== "");
+      const currentIndex = wrapper ? TEXT_SIZE_STEPS.indexOf(wrapper.style.fontSize) : 1;
+      const fallbackIndex = currentIndex >= 0 ? currentIndex : 1;
+      const nextIndex = direction === "increase" ? Math.min(TEXT_SIZE_STEPS.length - 1, fallbackIndex + 1) : Math.max(0, fallbackIndex - 1);
+      if (wrapper)
+        this.setSavedRange(unwrapElement(this._editor(), wrapper));
+      this.wrapRange("span", { style: `font-size: ${TEXT_SIZE_STEPS[nextIndex]}` });
+      return true;
+    }
+    getUsableRange() {
+      if (this._savedRange && this._editor().contains(this._savedRange.commonAncestorContainer)) {
+        return this._savedRange.cloneRange();
+      }
+      const selection = this._selection();
+      if (!selection || selection.rangeCount === 0)
+        return null;
+      const range = selection.getRangeAt(0);
+      if (!this._editor().contains(range.commonAncestorContainer))
+        return null;
+      return range.cloneRange();
+    }
+    setSavedRange(range) {
+      this._savedRange = range.cloneRange();
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextActions.ts
+  function richTextActions(capability) {
+    const actions = [];
+    if (capability.bold)
+      actions.push("bold");
+    if (capability.italic)
+      actions.push("italic");
+    if (capability.underline)
+      actions.push("underline");
+    if (capability.code)
+      actions.push("code");
+    if (capability.link)
+      actions.push("link");
+    if (capability.dynamic)
+      actions.push("dynamic");
+    return actions;
+  }
+  function richTextActionIcon(action) {
+    const icons = {
+      bold: "<strong>B</strong>",
+      italic: "<em>I</em>",
+      underline: '<span class="underline-icon">U</span>',
+      code: "<span>{}</span>",
+      link: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/></svg>`,
+      dynamic: `<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>`
+    };
+    return icons[action];
+  }
+  function richTextActionTitle(action) {
+    if (action === "bold")
+      return "Bold";
+    if (action === "italic")
+      return "Italic";
+    if (action === "underline")
+      return "Underline";
+    if (action === "code")
+      return "Code";
+    if (action === "link")
+      return "Link";
+    return "Dynamic data";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/richTextToolbar.ts
+  function renderRichTextToolbar(toolbar, capability, handlers) {
+    toolbar.replaceChildren();
+    if (capability.size)
+      toolbar.append(renderSizeButton("decrease", handlers.textSize), renderSizeButton("increase", handlers.textSize));
+    for (const action of richTextActions(capability)) {
+      const button = document.createElement("button");
+      button.className = "tool";
+      button.type = "button";
+      button.innerHTML = richTextActionIcon(action);
+      button.title = richTextActionTitle(action);
+      bindToolButton(button, () => handlers.action(action));
+      toolbar.append(button);
+    }
+  }
+  function renderSizeButton(direction, onSelect) {
+    const button = document.createElement("button");
+    button.className = "tool size-tool";
+    button.type = "button";
+    button.title = direction === "increase" ? "Increase text size" : "Decrease text size";
+    button.textContent = direction === "increase" ? "+" : "-";
+    bindToolButton(button, () => onSelect(direction));
+    return button;
+  }
+  function bindToolButton(button, onSelect) {
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onSelect();
+    });
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
+  var template_default16 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
+    <div class="data-picker" hidden role="dialog" aria-label="Insert data">
+        <div class="data-picker-header">
+            <strong>Insert data</strong>
+            <button type="button" class="close-data" aria-label="Close data picker">×</button>
+        </div>
+        <input class="data-search" type="search" placeholder="Search data">
+        <div class="data-list"></div>
+    </div>
     <div class="editor" contenteditable="true" role="textbox" aria-multiline="true"></div>
     <span class="hint"></span>
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/RichTextEditor/style.css
-  var style_default12 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/style.css
+  var style_default15 = `:host {
     display: block;
 }
 
@@ -14231,6 +20622,121 @@ textarea:disabled {
     transform: translateY(1px);
 }
 
+.data-picker {
+    display: grid;
+    gap: 8px;
+    width: min(360px, 100%);
+    padding: 10px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 8px;
+    background: var(--editor-v2-bg);
+    box-shadow: 0 14px 36px color-mix(in srgb, black 12%, transparent);
+}
+
+.data-picker[hidden] {
+    display: none;
+}
+
+.data-picker-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-picker-header strong {
+    color: var(--editor-v2-label);
+    font-size: 12px;
+    font-weight: 760;
+}
+
+.close-data {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-muted);
+    font: inherit;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.close-data:hover {
+    color: var(--editor-v2-text);
+}
+
+.data-search {
+    min-height: 30px;
+    width: 100%;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    padding: 0 8px;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.data-search:focus {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 52%, var(--editor-v2-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
+}
+
+.data-list {
+    display: grid;
+    gap: 4px;
+    max-height: 220px;
+    overflow: auto;
+}
+
+.data-option {
+    display: grid;
+    gap: 3px;
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--editor-v2-text);
+    padding: 7px 8px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.data-option:hover,
+.data-option:focus-visible {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
+    background: color-mix(in srgb, var(--editor-v2-accent) 7%, var(--editor-v2-surface));
+    outline: none;
+}
+
+.data-label {
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.data-option code {
+    color: var(--editor-v2-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    overflow-wrap: anywhere;
+}
+
+.data-empty {
+    margin: 0;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
 .editor {
     min-height: 96px;
     width: 100%;
@@ -14262,16 +20768,28 @@ textarea:disabled {
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/RichTextEditor/RichTextEditor.ts
-  var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(style_default12)}</style>${String(template_default13)}`;
-  var TEXT_SIZE_STEPS = [".875em", "1em", "1.125em", "1.25em", "1.5em"];
+  // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
+  var template11 = document.createElement("template");
+  template11.innerHTML = `<style>${String(style_default15)}</style>${String(template_default16)}`;
 
   class RichTextEditor extends HTMLElement {
-    _savedRange = null;
+    _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
+    _dataPicker = new DynamicDataPickerController({
+      picker: () => this.dataPicker,
+      search: () => this.dataSearch,
+      list: () => this.dataList,
+      closeButton: () => this.closeDataButton,
+      rawScopes: () => this.getAttribute("data-scopes")
+    }, {
+      saveSelection: this._range.saveSelection,
+      restoreSelection: () => this._range.restoreSelection(),
+      insertText: (text) => this._range.insertText(text),
+      focusControl: () => this.editor.focus(),
+      finish: () => this.finishAction()
+    });
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template10.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template11.content.cloneNode(true));
     }
     connectedCallback() {
       this.label.textContent = this.getAttribute("label") ?? "";
@@ -14279,278 +20797,62 @@ textarea:disabled {
       this.editor.innerHTML = this.getAttribute("value") ?? "";
       this.renderToolbar();
       this.editor.addEventListener("input", this.emitInput);
-      this.editor.addEventListener("keyup", this.saveSelection);
-      this.editor.addEventListener("mouseup", this.saveSelection);
-      this.editor.addEventListener("pointerup", this.saveSelection);
-      this.editor.addEventListener("blur", this.saveSelection);
+      this.editor.addEventListener("keyup", this._range.saveSelection);
+      this.editor.addEventListener("mouseup", this._range.saveSelection);
+      this.editor.addEventListener("pointerup", this._range.saveSelection);
+      this.editor.addEventListener("blur", this._range.saveSelection);
+      this._dataPicker.connect();
     }
     disconnectedCallback() {
       this.editor.removeEventListener("input", this.emitInput);
-      this.editor.removeEventListener("keyup", this.saveSelection);
-      this.editor.removeEventListener("mouseup", this.saveSelection);
-      this.editor.removeEventListener("pointerup", this.saveSelection);
-      this.editor.removeEventListener("blur", this.saveSelection);
+      this.editor.removeEventListener("keyup", this._range.saveSelection);
+      this.editor.removeEventListener("mouseup", this._range.saveSelection);
+      this.editor.removeEventListener("pointerup", this._range.saveSelection);
+      this.editor.removeEventListener("blur", this._range.saveSelection);
+      this._dataPicker.disconnect();
     }
     renderToolbar() {
-      this.toolbar.replaceChildren();
-      const capability = this.capability;
-      const actions = [];
-      if (capability.size)
-        this.toolbar.append(this.renderSizeButton("decrease"), this.renderSizeButton("increase"));
-      if (capability.bold)
-        actions.push("bold");
-      if (capability.italic)
-        actions.push("italic");
-      if (capability.underline)
-        actions.push("underline");
-      if (capability.code)
-        actions.push("code");
-      if (capability.link)
-        actions.push("link");
-      if (capability.dynamic)
-        actions.push("dynamic");
-      for (const action of actions) {
-        const button = document.createElement("button");
-        button.className = "tool";
-        button.type = "button";
-        button.innerHTML = this.actionIcon(action);
-        button.title = this.actionTitle(action);
-        button.addEventListener("pointerdown", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          this.runAction(action);
-        });
-        button.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        });
-        this.toolbar.append(button);
-      }
-    }
-    renderSizeButton(direction) {
-      const button = document.createElement("button");
-      button.className = "tool size-tool";
-      button.type = "button";
-      button.title = direction === "increase" ? "Increase text size" : "Decrease text size";
-      button.textContent = direction === "increase" ? "+" : "-";
-      button.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        this.stepTextSize(direction);
+      renderRichTextToolbar(this.toolbar, this.capability, {
+        action: (action) => this.runAction(action),
+        textSize: (direction) => {
+          if (this._range.stepTextSize(direction))
+            this.finishAction();
+        }
       });
-      button.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-      return button;
     }
     runAction(action) {
-      if (action !== "dynamic" && (!this._savedRange || this._savedRange.collapsed))
+      if (action !== "dynamic" && !this._range.hasSelectedRange())
         return;
       if (action === "bold") {
-        this.toggleRange("strong");
+        this._range.toggleRange("strong");
       } else if (action === "italic") {
-        this.toggleRange("em");
+        this._range.toggleRange("em");
       } else if (action === "underline") {
-        this.toggleRange("u");
+        this._range.toggleRange("u");
       } else if (action === "code") {
-        this.toggleRange("code");
+        this._range.toggleRange("code");
       } else if (action === "link") {
-        if (this.unwrapMatchingRange("a")) {
+        if (this._range.unwrapMatchingRange("a")) {
           this.finishAction();
           return;
         }
         const href = window.prompt("Link URL");
         if (href)
-          this.wrapRange("a", { href });
+          this._range.wrapRange("a", { href });
       } else {
-        const expression = window.prompt("Data expression");
-        if (expression)
-          this.insertText(asInterpolation(expression));
-      }
-      this.finishAction();
-    }
-    stepTextSize(direction) {
-      if (!this._savedRange || this._savedRange.collapsed)
-        return;
-      const range = this.getUsableRange();
-      if (!range)
-        return;
-      const wrapper = this.findRangeWrapper(range, "span", (element) => element.style.fontSize !== "");
-      const currentIndex = wrapper ? TEXT_SIZE_STEPS.indexOf(wrapper.style.fontSize) : 1;
-      const fallbackIndex = currentIndex >= 0 ? currentIndex : 1;
-      const nextIndex = direction === "increase" ? Math.min(TEXT_SIZE_STEPS.length - 1, fallbackIndex + 1) : Math.max(0, fallbackIndex - 1);
-      if (wrapper)
-        this.unwrapElement(wrapper);
-      this.applySpanStyle("fontSize", TEXT_SIZE_STEPS[nextIndex]);
-    }
-    applySpanStyle(property, value) {
-      if (!this._savedRange || this._savedRange.collapsed)
-        return;
-      if (!value) {
-        if (this.unwrapMatchingRange("span", (element) => element.style[property] !== "")) {
-          this.finishAction();
-        }
+        this._dataPicker.open();
         return;
       }
-      this.wrapRange("span", { style: `${this.cssPropertyName(property)}: ${value}` });
       this.finishAction();
-    }
-    cssPropertyName(property) {
-      return property === "fontSize" ? "font-size" : "color";
     }
     finishAction() {
       this.editor.focus();
-      this.restoreSelection();
+      this._range.restoreSelection();
       this.emitInput();
-    }
-    toggleRange(tagName) {
-      if (this.unwrapMatchingRange(tagName))
-        return;
-      this.wrapRange(tagName);
-    }
-    wrapRange(tagName, attributes = {}) {
-      const range = this.getUsableRange();
-      if (!range)
-        return;
-      if (range.collapsed)
-        return;
-      const wrapper = document.createElement(tagName);
-      for (const [name, value] of Object.entries(attributes)) {
-        wrapper.setAttribute(name, value);
-      }
-      wrapper.append(range.extractContents());
-      range.insertNode(wrapper);
-      const nextRange = document.createRange();
-      nextRange.selectNodeContents(wrapper);
-      this.setSavedRange(nextRange);
-    }
-    unwrapMatchingRange(tagName, predicate = () => true) {
-      const range = this.getUsableRange();
-      if (!range)
-        return false;
-      const wrapper = this.findRangeWrapper(range, tagName, predicate);
-      if (!wrapper)
-        return false;
-      this.unwrapElement(wrapper);
-      return true;
-    }
-    findRangeWrapper(range, tagName, predicate) {
-      const start = this.closestWrapper(range.startContainer, tagName, predicate);
-      if (!start)
-        return null;
-      const end = this.closestWrapper(range.endContainer, tagName, predicate);
-      if (start === end)
-        return start;
-      return null;
-    }
-    closestWrapper(node, tagName, predicate) {
-      const normalizedTag = tagName.toUpperCase();
-      let current = node.nodeType === Node.ELEMENT_NODE ? node : node.parentNode;
-      while (current && current !== this.editor) {
-        if (current instanceof HTMLElement && current.tagName === normalizedTag && predicate(current)) {
-          return current;
-        }
-        current = current.parentNode;
-      }
-      return null;
-    }
-    unwrapElement(element) {
-      const fragment = document.createDocumentFragment();
-      const firstChild = element.firstChild;
-      const lastChild = element.lastChild;
-      while (element.firstChild) {
-        fragment.append(element.firstChild);
-      }
-      element.replaceWith(fragment);
-      const nextRange = document.createRange();
-      if (firstChild && lastChild) {
-        nextRange.setStartBefore(firstChild);
-        nextRange.setEndAfter(lastChild);
-      } else {
-        nextRange.selectNodeContents(this.editor);
-        nextRange.collapse(false);
-      }
-      this.setSavedRange(nextRange);
-    }
-    insertText(text) {
-      const range = this.getUsableRange();
-      if (!range) {
-        this.editor.append(text);
-        const nextRange2 = document.createRange();
-        nextRange2.selectNodeContents(this.editor);
-        nextRange2.collapse(false);
-        this.setSavedRange(nextRange2);
-        return;
-      }
-      range.deleteContents();
-      const node = document.createTextNode(text);
-      range.insertNode(node);
-      const nextRange = document.createRange();
-      nextRange.setStartAfter(node);
-      nextRange.collapse(true);
-      this.setSavedRange(nextRange);
     }
     getSelection() {
       const shadowSelection = this.shadowRoot.getSelection?.();
-      return shadowSelection ?? this.ownerDocument.getSelection();
-    }
-    saveSelection = () => {
-      const selection = this.getSelection();
-      if (!selection || selection.rangeCount === 0)
-        return;
-      const range = selection.getRangeAt(0);
-      if (!this.editor.contains(range.commonAncestorContainer))
-        return;
-      this._savedRange = range.cloneRange();
-    };
-    getUsableRange() {
-      if (this._savedRange && this.editor.contains(this._savedRange.commonAncestorContainer)) {
-        return this._savedRange.cloneRange();
-      }
-      const selection = this.getSelection();
-      if (!selection || selection.rangeCount === 0)
-        return null;
-      const range = selection.getRangeAt(0);
-      if (!this.editor.contains(range.commonAncestorContainer))
-        return null;
-      return range.cloneRange();
-    }
-    setSavedRange(range) {
-      this._savedRange = range.cloneRange();
-    }
-    restoreSelection() {
-      if (!this._savedRange)
-        return;
-      const selection = this.getSelection();
-      if (!selection)
-        return;
-      selection.removeAllRanges();
-      selection.addRange(this._savedRange);
-    }
-    actionIcon(action) {
-      const icons = {
-        bold: "<strong>B</strong>",
-        italic: "<em>I</em>",
-        underline: '<span class="underline-icon">U</span>',
-        code: "<span>{}</span>",
-        link: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.1-1.1"/></svg>`,
-        dynamic: `<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>`
-      };
-      return icons[action];
-    }
-    actionTitle(action) {
-      if (action === "bold")
-        return "Bold";
-      if (action === "italic")
-        return "Italic";
-      if (action === "underline")
-        return "Underline";
-      if (action === "code")
-        return "Code";
-      if (action === "link")
-        return "Link";
-      return "Dynamic data";
+      return shadowSelection ?? this.ownerDocument.getSelection?.() ?? null;
     }
     emitInput = () => {
       this.dispatchEvent(new CustomEvent("input", {
@@ -14560,40 +20862,50 @@ textarea:disabled {
       }));
     };
     get capability() {
-      const raw = this.getAttribute("capability") ?? "{}";
-      try {
-        return JSON.parse(raw);
-      } catch {
-        return { format: "richtext" };
-      }
+      return parseTextCapability(this.getAttribute("capability"));
+    }
+    query(selector) {
+      return this.shadowRoot.querySelector(selector);
     }
     get label() {
-      return this.shadowRoot.querySelector(".label");
+      return this.query(".label");
     }
     get hint() {
-      return this.shadowRoot.querySelector(".hint");
+      return this.query(".hint");
     }
     get toolbar() {
-      return this.shadowRoot.querySelector(".toolbar");
+      return this.query(".toolbar");
+    }
+    get dataPicker() {
+      return this.query(".data-picker");
+    }
+    get dataSearch() {
+      return this.query(".data-search");
+    }
+    get dataList() {
+      return this.query(".data-list");
+    }
+    get closeDataButton() {
+      return this.query(".close-data");
     }
     get editor() {
-      return this.shadowRoot.querySelector(".editor");
+      return this.query(".editor");
     }
   }
   if (!customElements.get("cms-editor-v2-rich-text-editor")) {
     customElements.define("cms-editor-v2-rich-text-editor", RichTextEditor);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Select/template.html
-  var template_default14 = `<label class="field">
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
+  var template_default17 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
 </label>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Select/style.css
-  var style_default13 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
+  var style_default16 = `:host {
     display: block;
 }
 
@@ -14603,30 +20915,53 @@ textarea:disabled {
 
 .field {
     display: grid;
-    gap: 5px;
+    grid-template-columns: minmax(0, var(--field-label-width, 82px)) minmax(0, 1fr);
+    grid-template-areas:
+        "label control"
+        ". hint";
+    align-items: center;
+    column-gap: 7px;
+    row-gap: 3px;
 }
 
 .label {
+    grid-area: label;
+    overflow: hidden;
+    max-width: var(--field-label-width, 82px);
     color: var(--editor-v2-label);
-    font-size: 12px;
-    font-weight: 640;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .hint {
+    grid-area: hint;
     color: var(--editor-v2-muted);
-    font-size: 11px;
+    font-size: 10px;
+    line-height: 1.3;
 }
 
 select {
+    grid-area: control;
     width: 100%;
-    min-height: 32px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 7px;
-    background: var(--editor-v2-surface);
+    min-height: 27px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
     color: var(--editor-v2-text);
-    padding: 0 8px;
+    padding: 0 24px 0 9px;
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: 620;
+}
+
+select:hover,
+select:focus {
+    border-color: var(--editor-v2-border);
+    outline: none;
+    background: var(--editor-v2-surface);
 }
 
 select:disabled {
@@ -14640,27 +20975,56 @@ select:disabled {
 .hint:empty {
     display: none;
 }
+
+:host(.setting-row-control) .field {
+    grid-template-columns: minmax(0, var(--field-row-label-width, 22px)) minmax(0, 1fr);
+    column-gap: 5px;
+}
+
+:host(.setting-row-control) .label {
+    max-width: var(--field-row-label-width, 22px);
+}
+
+:host([label-display="hidden"]) .field,
+:host([label-display="sr-only"]) .field {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "control"
+        "hint";
+}
+
+:host([label-display="hidden"]) .label {
+    display: none;
+}
+
+:host([label-display="sr-only"]) .label {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Select/Select.ts
-  var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${String(style_default13)}</style>${String(template_default14)}`;
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
+  var template12 = createFieldTemplate(template_default17, style_default16);
 
   class Select extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template11.content.cloneNode(true));
+      attachFieldShadow(this, template12);
     }
     connectedCallback() {
-      this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
-      this.shadowRoot.querySelector(".hint").textContent = this.getAttribute("hint") ?? "";
+      syncFieldCopy(this);
       const current = this.getAttribute("value");
       const options = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options.map((option) => {
+      this.shadowRoot.querySelector("select").replaceChildren(...options.map((option2) => {
         const element = document.createElement("option");
-        element.textContent = option.label;
-        element.value = option.value;
-        element.selected = option.value === current;
+        element.textContent = option2.label;
+        element.value = option2.value;
+        element.selected = option2.value === current;
         return element;
       }));
     }
@@ -14681,8 +21045,8 @@ select:disabled {
     customElements.define("cms-editor-v2-select", Select);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Toggle/template.html
-  var template_default15 = `<button class="toggle" type="button" aria-pressed="false">
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
+  var template_default18 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -14691,8 +21055,8 @@ select:disabled {
 </button>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Toggle/style.css
-  var style_default14 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
+  var style_default17 = `:host {
     display: block;
 }
 
@@ -14704,20 +21068,19 @@ select:disabled {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     width: 100%;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 8px;
-    background: var(--editor-v2-surface-muted);
+    min-height: 27px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     color: var(--editor-v2-text);
-    padding: 10px 11px;
+    padding: 0;
     font: inherit;
     text-align: left;
 }
 
 .toggle:disabled {
-    border-color: color-mix(in srgb, var(--editor-v2-border) 70%, transparent);
-    background: color-mix(in srgb, var(--editor-v2-surface-muted) 82%, var(--editor-v2-surface));
     color: var(--editor-v2-muted);
     cursor: not-allowed;
     opacity: .72;
@@ -14729,23 +21092,38 @@ select:disabled {
 
 .copy {
     display: grid;
-    gap: 2px;
+    grid-template-columns: minmax(0, var(--field-label-width, 82px)) minmax(0, 1fr);
+    grid-template-areas:
+        "label hint";
+    align-items: center;
+    column-gap: 7px;
 }
 
 .label {
-    font-size: 12px;
-    font-weight: 700;
+    grid-area: label;
+    overflow: hidden;
+    max-width: var(--field-label-width, 82px);
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .hint {
+    grid-area: hint;
     color: var(--editor-v2-muted);
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.35;
 }
 
+.hint:empty {
+    display: none;
+}
+
 .switch {
-    width: 32px;
-    height: 18px;
+    width: 28px;
+    height: 16px;
     border-radius: 999px;
     background: var(--editor-v2-border-strong);
     padding: 2px;
@@ -14754,8 +21132,8 @@ select:disabled {
 .switch::after {
     content: "";
     display: block;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 999px;
     background: #fff;
 }
@@ -14765,22 +21143,41 @@ select:disabled {
 }
 
 :host([checked]) .switch::after {
-    transform: translateX(14px);
+    transform: translateX(12px);
+}
+
+:host([label-display="hidden"]) .copy,
+:host([label-display="sr-only"]) .copy {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "hint";
+}
+
+:host([label-display="hidden"]) .label {
+    display: none;
+}
+
+:host([label-display="sr-only"]) .label {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Toggle/Toggle.ts
-  var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default14)}</style>${String(template_default15)}`;
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
+  var template13 = createFieldTemplate(template_default18, style_default17);
 
   class Toggle extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template12.content.cloneNode(true));
+      attachFieldShadow(this, template13);
     }
     connectedCallback() {
-      this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
-      this.shadowRoot.querySelector(".hint").textContent = this.getAttribute("hint") ?? "";
+      syncFieldCopy(this);
       this.shadowRoot.querySelector("button").ariaPressed = String(this.hasAttribute("checked"));
     }
   }
@@ -14788,35 +21185,35 @@ select:disabled {
     customElements.define("cms-editor-v2-toggle", Toggle);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/SegmentedControl/template.html
-  var template_default16 = `<div class="segmented">
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
+  var template_default19 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/SegmentedControl/style.css
-  var style_default15 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
+  var style_default18 = `:host {
     display: block;
 }
 
 .segmented {
     display: flex;
     gap: 2px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 8px;
-    background: var(--editor-v2-surface-muted);
-    padding: 3px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 68%, transparent);
+    padding: 2px;
 }
 
 ::slotted(button) {
     flex: 1;
-    min-height: 28px;
+    min-height: 24px;
     border: 0;
-    border-radius: 6px;
+    border-radius: 4px;
     background: transparent;
     color: var(--editor-v2-muted);
     font: inherit;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 650;
     cursor: pointer;
 }
@@ -14840,22 +21237,21 @@ select:disabled {
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/SegmentedControl/SegmentedControl.ts
-  var template13 = document.createElement("template");
-  template13.innerHTML = `<style>${String(style_default15)}</style>${String(template_default16)}`;
+  // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
+  var template14 = createFieldTemplate(template_default19, style_default18);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template13.content.cloneNode(true));
+      attachFieldShadow(this, template14);
     }
   }
   if (!customElements.get("cms-editor-v2-segmented-control")) {
     customElements.define("cms-editor-v2-segmented-control", SegmentedControl);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/PageLink/template.html
-  var template_default17 = `<div class="page-link">
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
+  var template_default20 = `<div class="page-link">
     <div class="head">
         <span class="label"></span>
         <span class="hint"></span>
@@ -14891,8 +21287,8 @@ select:disabled {
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/PageLink/style.css
-  var style_default16 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/style.css
+  var style_default19 = `:host {
     display: block;
 }
 
@@ -15190,8 +21586,8 @@ code {
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/FilesCenter/template.html
-  var template_default18 = `<div class="backdrop" hidden>
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
+  var template_default21 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
         <header class="top">
             <div>
@@ -15223,8 +21619,8 @@ code {
 </div>
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/FilesCenter/style.css
-  var style_default17 = `:host {
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/style.css
+  var style_default20 = `:host {
     color: var(--editor-v2-text, #111);
     font: 12px/1.35 system-ui, sans-serif;
 }
@@ -15515,9 +21911,60 @@ input {
 }
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/FilesCenter/FilesCenter.ts
-  var template14 = document.createElement("template");
-  template14.innerHTML = `<style>${String(style_default17)}</style>${String(template_default18)}`;
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
+  function fileUrl(basePath3, id2) {
+    return `${basePath3}/.cms/files/by-id/${encodeURIComponent(id2)}`;
+  }
+  function fileDetail(basePath3, item) {
+    return {
+      id: item.id,
+      label: item.name,
+      src: fileUrl(basePath3, item.id),
+      mimeType: item.mimeType
+    };
+  }
+  function fileKind(item) {
+    if (item.mimeType?.startsWith("image/"))
+      return "image";
+    if (item.mimeType?.includes("pdf"))
+      return "pdf";
+    return "file";
+  }
+  function matchesFileAccept(item, accept) {
+    if (!accept || accept.length === 0)
+      return true;
+    const mimeType = item.mimeType ?? "";
+    if (accept.includes("image") && mimeType.startsWith("image/"))
+      return true;
+    if (accept.includes("svg") && mimeType === "image/svg+xml")
+      return true;
+    if (accept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml")
+      return true;
+    if (accept.includes("video") && mimeType.startsWith("video/"))
+      return true;
+    if (accept.includes("audio") && mimeType.startsWith("audio/"))
+      return true;
+    if (accept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/"))
+      return true;
+    return false;
+  }
+  function fileMeta(item) {
+    const parts = [item.mimeType ?? "File"];
+    if (typeof item.size === "number")
+      parts.push(formatFileSize(item.size));
+    return parts.join(" · ");
+  }
+  function formatFileSize(size) {
+    if (size < 1024)
+      return `${size} B`;
+    if (size < 1024 * 1024)
+      return `${Math.round(size / 1024)} KB`;
+    return `${(size / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
+  var template15 = document.createElement("template");
+  template15.innerHTML = `<style>${String(style_default20)}</style>${String(template_default21)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -15532,7 +21979,7 @@ input {
     _maxSelection = null;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template14.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template15.content.cloneNode(true));
     }
     connectedCallback() {
       this._wire();
@@ -15604,19 +22051,19 @@ input {
     }
     _renderItems() {
       this.grid.replaceChildren();
-      const query = this.searchInput.value.trim().toLowerCase();
+      const query2 = this.searchInput.value.trim().toLowerCase();
       const items = this._items.filter((item) => {
-        if (item.type === "file" && !this._matchesFileAccept(item))
+        if (item.type === "file" && !matchesFileAccept(item, this._fileAccept))
           return false;
-        if (!query)
+        if (!query2)
           return true;
-        return item.name.toLowerCase().includes(query);
+        return item.name.toLowerCase().includes(query2);
       });
       this.empty.hidden = items.length > 0;
       for (const item of items) {
         const button = document.createElement("button");
         button.className = "item";
-        button.dataset.type = item.type === "folder" ? "folder" : this._fileKind(item);
+        button.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
         button.type = "button";
         button.ariaSelected = String(this._isSelected(item));
         button.addEventListener("click", () => {
@@ -15640,7 +22087,7 @@ input {
         name.textContent = item.name;
         const meta = document.createElement("span");
         meta.className = "meta";
-        meta.textContent = item.type === "folder" ? "Folder" : this._fileMeta(item);
+        meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
         copy.append(name, meta);
         button.append(preview, copy);
         this.grid.append(button);
@@ -15664,7 +22111,7 @@ input {
       this.selectButton.disabled = !this._selected;
       this.selectButton.textContent = "Select file";
       this.selectionTitle.textContent = this._selected?.name ?? "No file selected";
-      this.selectionValue.textContent = this._selected ? this._fileMeta(this._selected) : "Choose a file";
+      this.selectionValue.textContent = this._selected ? fileMeta(this._selected) : "Choose a file";
     }
     _confirm() {
       if (this._multiple) {
@@ -15674,7 +22121,7 @@ input {
           bubbles: true,
           composed: true,
           detail: {
-            files: this._selectedMany.map((file) => this._fileDetail(file))
+            files: this._selectedMany.map((file) => fileDetail(this._basePath(), file))
           }
         }));
         this._close();
@@ -15685,7 +22132,7 @@ input {
       this.dispatchEvent(new CustomEvent("select-file", {
         bubbles: true,
         composed: true,
-        detail: this._fileDetail(this._selected)
+        detail: fileDetail(this._basePath(), this._selected)
       }));
       this._close();
     }
@@ -15708,20 +22155,9 @@ input {
         return this._selectedMany.some((selected) => selected.id === item.id);
       return this._selected?.id === item.id;
     }
-    _fileDetail(item) {
-      return {
-        id: item.id,
-        label: item.name,
-        src: this._fileUrl(item.id),
-        mimeType: item.mimeType
-      };
-    }
     _close() {
       this.backdrop.hidden = true;
       this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
-    }
-    _fileUrl(id) {
-      return `${this._basePath()}/.cms/files/by-id/${encodeURIComponent(id)}`;
     }
     _preview(item) {
       const preview = document.createElement("span");
@@ -15734,50 +22170,12 @@ input {
         const image = document.createElement("img");
         image.alt = "";
         image.loading = "lazy";
-        image.src = this._fileUrl(item.id);
+        image.src = fileUrl(this._basePath(), item.id);
         preview.append(image);
         return preview;
       }
-      preview.innerHTML = this._fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
+      preview.innerHTML = fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
       return preview;
-    }
-    _fileKind(item) {
-      if (item.mimeType?.startsWith("image/"))
-        return "image";
-      if (item.mimeType?.includes("pdf"))
-        return "pdf";
-      return "file";
-    }
-    _matchesFileAccept(item) {
-      if (!this._fileAccept || this._fileAccept.length === 0)
-        return true;
-      const mimeType = item.mimeType ?? "";
-      if (this._fileAccept.includes("image") && mimeType.startsWith("image/"))
-        return true;
-      if (this._fileAccept.includes("svg") && mimeType === "image/svg+xml")
-        return true;
-      if (this._fileAccept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml")
-        return true;
-      if (this._fileAccept.includes("video") && mimeType.startsWith("video/"))
-        return true;
-      if (this._fileAccept.includes("audio") && mimeType.startsWith("audio/"))
-        return true;
-      if (this._fileAccept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/"))
-        return true;
-      return false;
-    }
-    _fileMeta(item) {
-      const parts = [item.mimeType ?? "File"];
-      if (typeof item.size === "number")
-        parts.push(this._formatSize(item.size));
-      return parts.join(" · ");
-    }
-    _formatSize(size) {
-      if (size < 1024)
-        return `${size} B`;
-      if (size < 1024 * 1024)
-        return `${Math.round(size / 1024)} KB`;
-      return `${(size / 1024 / 1024).toFixed(1)} MB`;
     }
     _basePath() {
       return document.querySelector('meta[name="basePath"]')?.content ?? "";
@@ -15817,9 +22215,66 @@ input {
     customElements.define("cms-editor-v2-files-center", FilesCenter);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/PageLink/PageLink.ts
-  var template15 = document.createElement("template");
-  template15.innerHTML = `<style>${String(style_default16)}</style>${String(template_default17)}`;
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
+  function allowedLinkModes(options) {
+    const modes = [];
+    if (options.allowPage)
+      modes.push("page");
+    if (options.allowExternal)
+      modes.push("external");
+    if (options.allowMedia)
+      modes.push("media");
+    return modes;
+  }
+  function modeForLinkValue(value, options) {
+    if (value && isMediaLink(value))
+      return "media";
+    if (value && isExternalLink(value))
+      return "external";
+    if (!options.allowPage && !options.allowExternal && options.allowMedia)
+      return "media";
+    if (!options.allowPage && options.allowExternal)
+      return "external";
+    return "page";
+  }
+  function isExternalLink(value) {
+    return /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("//");
+  }
+  function isMediaLink(value) {
+    return value.includes("/.cms/files/by-id/");
+  }
+  function isImageMediaLink(value) {
+    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value) || value.includes("/.cms/files/by-id/");
+  }
+  function mediaDisplayName(value, isImage, mediaLabel = "") {
+    if (mediaLabel)
+      return mediaLabel;
+    if (value.includes("/.cms/files/by-id/"))
+      return isImage ? "Image" : "Selected file";
+    const clean = value.split(/[?#]/, 1)[0] ?? value;
+    const segment = clean.split("/").filter(Boolean).at(-1);
+    if (!segment)
+      return "File";
+    try {
+      return decodeURIComponent(segment);
+    } catch {
+      return segment;
+    }
+  }
+  function mediaSelectionLabel(isImage) {
+    return isImage ? "Image" : "File selected";
+  }
+  function linkSummaryFallback(mode) {
+    if (mode === "external")
+      return "External URL";
+    if (mode === "media")
+      return "File";
+    return "Internal page";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
+  var template16 = document.createElement("template");
+  template16.innerHTML = `<style>${String(style_default19)}</style>${String(template_default20)}`;
 
   class PageLink extends HTMLElement {
     _pages = [];
@@ -15832,7 +22287,7 @@ input {
     _mediaLabel = "";
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template15.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template16.content.cloneNode(true));
     }
     connectedCallback() {
       this._syncFromAttributes();
@@ -15861,17 +22316,7 @@ input {
     }
     _syncFromAttributes() {
       this._value = this.getAttribute("value") ?? "";
-      if (this._value && this._isMedia(this._value)) {
-        this._mode = "media";
-      } else if (this._value && this._isExternal(this._value)) {
-        this._mode = "external";
-      } else if (!this._allowPage() && !this._allowExternal() && this._allowMedia()) {
-        this._mode = "media";
-      } else if (!this._allowPage() && this._allowExternal()) {
-        this._mode = "external";
-      } else {
-        this._mode = "page";
-      }
+      this._mode = modeForLinkValue(this._value, this._modeOptions());
     }
     _wire() {
       if (this._wired)
@@ -15979,11 +22424,11 @@ input {
     _renderPages() {
       this.pageList.replaceChildren();
       this.picker.hidden = !this._pickerOpen || this.pagePanel.hidden;
-      const query = this.searchInput.value.trim().toLowerCase();
+      const query2 = this.searchInput.value.trim().toLowerCase();
       const pages = this._pages.filter((page) => {
-        if (!query)
+        if (!query2)
           return true;
-        return page.title.toLowerCase().includes(query) || page.path.toLowerCase().includes(query);
+        return page.title.toLowerCase().includes(query2) || page.path.toLowerCase().includes(query2);
       });
       this.empty.hidden = !this._pickerOpen || pages.length > 0;
       for (const page of pages) {
@@ -16011,7 +22456,7 @@ input {
     }
     _renderSummary() {
       const page = this._pages.find((candidate) => candidate.path === this._value);
-      this.summaryTitle.textContent = page?.title ?? (this._value ? this._summaryFallback() : "No link selected");
+      this.summaryTitle.textContent = page?.title ?? (this._value ? linkSummaryFallback(this._mode) : "No link selected");
       this.summaryValue.textContent = this._value || "Choose a target";
       this.target.hidden = !this._value || this._mode === "media";
     }
@@ -16060,9 +22505,9 @@ input {
       const preview = this.filePreview;
       const action = this.fileAction;
       const hasValue = this._mode === "media" && this._value !== "";
-      const isImage = hasValue && this._isImageMedia(this._value);
-      title.textContent = hasValue ? this._mediaDisplayName(this._value, isImage) : "Choose file";
-      value.textContent = hasValue ? this._mediaSelectionLabel(isImage) : "No file selected";
+      const isImage = hasValue && isImageMediaLink(this._value);
+      title.textContent = hasValue ? mediaDisplayName(this._value, isImage, this._mediaLabel) : "Choose file";
+      value.textContent = hasValue ? mediaSelectionLabel(isImage) : "No file selected";
       value.toggleAttribute("hidden", hasValue && isImage);
       action.textContent = hasValue ? "Change" : "Choose";
       preview.replaceChildren();
@@ -16092,48 +22537,14 @@ input {
       return this.getAttribute("allow-media") !== "false";
     }
     _allowedModes() {
-      const modes = [];
-      if (this._allowPage())
-        modes.push("page");
-      if (this._allowExternal())
-        modes.push("external");
-      if (this._allowMedia())
-        modes.push("media");
-      return modes;
+      return allowedLinkModes(this._modeOptions());
     }
-    _isExternal(value) {
-      return /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("//");
-    }
-    _isMedia(value) {
-      return value.includes("/.cms/files/by-id/");
-    }
-    _isImageMedia(value) {
-      return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value) || value.includes("/.cms/files/by-id/");
-    }
-    _mediaDisplayName(value, isImage) {
-      if (this._mediaLabel)
-        return this._mediaLabel;
-      if (value.includes("/.cms/files/by-id/"))
-        return isImage ? "Image" : "Selected file";
-      const clean = value.split(/[?#]/, 1)[0] ?? value;
-      const segment = clean.split("/").filter(Boolean).at(-1);
-      if (!segment)
-        return "File";
-      try {
-        return decodeURIComponent(segment);
-      } catch {
-        return segment;
-      }
-    }
-    _mediaSelectionLabel(isImage) {
-      return isImage ? "Image" : "File selected";
-    }
-    _summaryFallback() {
-      if (this._mode === "external")
-        return "External URL";
-      if (this._mode === "media")
-        return "File";
-      return "Internal page";
+    _modeOptions() {
+      return {
+        allowPage: this._allowPage(),
+        allowExternal: this._allowExternal(),
+        allowMedia: this._allowMedia()
+      };
     }
     _basePath() {
       return document.querySelector('meta[name="basePath"]')?.content ?? "";
@@ -16203,142 +22614,21 @@ input {
     customElements.define("cms-editor-v2-page-link", PageLink);
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/SchemaPicker/template.html
-  var template_default19 = `<div class="schema">
-    <div class="source">
-        <span class="dot"></span>
-        <span>
-            <strong></strong>
-            <code></code>
-        </span>
-    </div>
-    <div class="fields">
-        <button type="button">plans[].name</button>
-        <button class="active" type="button">plans[].cta.label</button>
-        <button type="button">plans[].cta.href</button>
-    </div>
-</div>
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/SchemaPicker/style.css
-  var style_default18 = `:host {
-    display: block;
-}
-
-:host([disabled]) {
-    cursor: not-allowed;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.schema {
-    display: grid;
-    gap: 8px;
-}
-
-.source {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 8px;
-    background: var(--editor-v2-surface-muted);
-    padding: 10px;
-}
-
-.dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--editor-v2-success);
-}
-
-strong,
-code {
-    display: block;
-}
-
-strong {
-    font-size: 12px;
-}
-
-code {
-    color: var(--editor-v2-muted);
-    font-size: 11px;
-}
-
-.fields {
-    display: grid;
-    gap: 5px;
-}
-
-button {
-    min-height: 28px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 7px;
-    background: var(--editor-v2-surface);
-    color: var(--editor-v2-muted);
-    padding: 0 9px;
-    font: inherit;
-    font-size: 12px;
-    text-align: left;
-}
-
-:host([disabled]) .source,
-:host([disabled]) button {
-    border-color: color-mix(in srgb, var(--editor-v2-border) 70%, transparent);
-    background: color-mix(in srgb, var(--editor-v2-surface-muted) 82%, var(--editor-v2-surface));
-    color: var(--editor-v2-muted);
-    cursor: not-allowed;
-    opacity: .72;
-}
-
-:host([disabled]) .dot {
-    background: var(--editor-v2-border-strong);
-}
-
-button.active {
-    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
-    color: var(--editor-v2-accent);
-    background: color-mix(in srgb, var(--editor-v2-accent) 8%, var(--editor-v2-surface));
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/SchemaPicker/SchemaPicker.ts
-  var template16 = document.createElement("template");
-  template16.innerHTML = `<style>${String(style_default18)}</style>${String(template_default19)}`;
-
-  class SchemaPicker extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({ mode: "open" }).append(template16.content.cloneNode(true));
-    }
-    connectedCallback() {
-      this.shadowRoot.querySelector("strong").textContent = this.getAttribute("source") ?? "Plans data";
-      this.shadowRoot.querySelector("code").textContent = this.getAttribute("path") ?? "urn:supabase:listPlans";
-    }
-  }
-  if (!customElements.get("cms-editor-v2-schema-picker")) {
-    customElements.define("cms-editor-v2-schema-picker", SchemaPicker);
-  }
-
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default20 = `<div class="settings-view">
+  var template_default22 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/style.css
-  var style_default19 = `:host {
+  var style_default21 = `:host {
     display: block;
 }
 
 .settings-view {
     display: grid;
-    gap: 17px;
-    padding: 0 12px 16px;
+    gap: 10px;
+    padding: 0 10px 14px;
 }
 
 .empty,
@@ -16353,13 +22643,211 @@ button.active {
 
 .field {
     display: grid;
-    gap: 7px;
+    gap: 4px;
 }
 
 .field-label {
+    overflow: hidden;
+    max-width: var(--settings-label-max, 104px);
+    color: var(--editor-v2-label);
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sr-only {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.field-help {
     color: var(--editor-v2-muted);
     font-size: 11px;
-    font-weight: 760;
+    line-height: 1.35;
+}
+
+.setting-row {
+    display: grid;
+    gap: 5px;
+}
+
+.setting-row-labeled {
+    grid-template-columns: minmax(0, var(--settings-row-label-width, 62px)) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 8px;
+}
+
+.setting-row-label {
+    max-width: var(--settings-row-label-width, 62px);
+}
+
+.setting-row-controls {
+    display: grid;
+    grid-template-columns: repeat(var(--setting-row-count, 2), minmax(0, 1fr));
+    gap: 5px;
+    align-items: center;
+}
+
+.setting-row-control {
+    min-width: 0;
+    --field-row-label-width: 22px;
+}
+
+.setting-row-control .field-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+cms-editor-v2-segmented-control button {
+    display: inline-grid;
+    grid-auto-flow: column;
+    place-content: center;
+    align-items: center;
+    gap: 4px;
+}
+
+cms-editor-v2-segmented-control button svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+cms-editor-v2-segmented-control button svg:only-child {
+    margin: 0 auto;
+}
+
+.color-field {
+    gap: 4px;
+}
+
+.color-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19px, 1fr));
+    gap: 3px;
+}
+
+.color-swatch-button {
+    display: grid;
+    place-items: center;
+    min-height: 22px;
+    border: 0;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 64%, transparent);
+    color: var(--editor-v2-text);
+    padding: 0;
+    cursor: pointer;
+}
+
+.color-swatch-button[aria-pressed="true"] {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--editor-v2-accent) 46%, var(--editor-v2-border)), 0 0 0 1px color-mix(in srgb, var(--editor-v2-accent) 12%, transparent);
+}
+
+.color-swatch-button:disabled {
+    cursor: not-allowed;
+    opacity: .58;
+}
+
+.color-swatch {
+    width: 12px;
+    height: 12px;
+    border: 1px solid rgba(16, 24, 21, .12);
+    border-radius: 3px;
+    background: var(--color-swatch);
+}
+
+.color-custom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 5px;
+}
+
+.color-custom[hidden] {
+    display: none;
+}
+
+.color-custom-input {
+    width: 100%;
+    min-height: 27px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 11px;
+    padding: 0 8px;
+}
+
+.color-custom-apply {
+    min-height: 27px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
+    color: var(--editor-v2-label);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 650;
+    padding: 0 9px;
+    cursor: pointer;
+}
+
+.endpoint-button {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 34px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    padding: 7px 9px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.endpoint-button:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent) 34%, var(--editor-v2-border));
+}
+
+.endpoint-button:disabled {
+    cursor: not-allowed;
+    opacity: .58;
+}
+
+.endpoint-method {
+    border: 1px solid color-mix(in srgb, var(--editor-v2-accent) 24%, var(--editor-v2-border));
+    border-radius: 5px;
+    color: var(--editor-v2-accent);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 3px 5px;
+}
+
+.endpoint-value,
+.endpoint-placeholder {
+    overflow: hidden;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.endpoint-placeholder {
+    color: var(--editor-v2-muted);
 }
 
 .state-button {
@@ -16386,7 +22874,7 @@ button.active {
 }
 
 .state-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 760;
 }
 
@@ -16421,31 +22909,76 @@ button.active {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template17 = document.createElement("template");
-  template17.innerHTML = `<style>${String(style_default19)}</style>${String(template_default20)}`;
+  template17.innerHTML = `<style>${String(style_default21)}</style>${String(template_default22)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
+  var SETTING_ICON_PATHS = {
+    "layout-none": `<rect x="8" y="8" width="8" height="8" rx="1.5"></rect>`,
+    "layout-column": `<path d="M8 4h8M8 12h8M8 20h8"></path>`,
+    "layout-row": `<path d="M4 8v8M12 8v8M20 8v8"></path>`,
+    "layout-grid": `<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"></path>`,
+    "align-start": `<path d="M5 4v16M9 8h10M9 16h7"></path>`,
+    "align-center": `<path d="M12 4v16M6 8h12M8 16h8"></path>`,
+    "align-end": `<path d="M19 4v16M5 8h10M8 16h7"></path>`,
+    "align-stretch": `<path d="M5 5h14M5 12h14M5 19h14"></path>`,
+    "justify-start": `<path d="M4 6h16M8 10v8M16 10v5"></path>`,
+    "justify-center": `<path d="M4 12h16M8 6v12M16 8v8"></path>`,
+    "justify-end": `<path d="M4 18h16M8 6v8M16 9v5"></path>`,
+    "justify-between": `<path d="M4 5h16M8 8v3M16 13v3M4 19h16"></path>`,
+    "side-top": `<path d="M5 6h14M8 10h8v8H8z"></path>`,
+    "side-right": `<path d="M18 5v14M6 8h8v8H6z"></path>`,
+    "side-bottom": `<path d="M5 18h14M8 6h8v8H8z"></path>`,
+    "side-left": `<path d="M6 5v14M10 8h8v8h-8z"></path>`,
+    "axis-x": `<path d="M4 12h16M7 9l-3 3 3 3M17 9l3 3-3 3"></path>`,
+    "axis-y": `<path d="M12 4v16M9 7l3-3 3 3M9 17l3 3 3-3"></path>`,
+    radius: `<path d="M6 18V9a3 3 0 0 1 3-3h9"></path>`,
+    color: `<path d="M12 3s6 6.1 6 11a6 6 0 0 1-12 0c0-4.9 6-11 6-11z"></path>`,
+    visibility: `<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle>`,
+    remove: `<path d="M5 12h14"></path>`,
+    add: `<path d="M12 5v14M5 12h14"></path>`,
+    more: `<path d="M5 12h.01M12 12h.01M19 12h.01"></path>`
+  };
+  var COLOR_TOKEN_SWATCHES = {
+    auto: "linear-gradient(135deg, #ffffff 0 45%, #e7ecea 45% 55%, #ffffff 55%)",
+    base: "#ffffff",
+    surface: "#f8faf9",
+    muted: "#eef5f2",
+    primary: "var(--editor-v2-accent)",
+    secondary: "#315ce9",
+    success: "var(--editor-v2-success)",
+    warning: "#f1c232",
+    danger: "#c74436",
+    info: "#315ce9",
+    custom: "linear-gradient(135deg, #165f4b, #315ce9, #f1c232)"
+  };
 
   class SettingsView extends HTMLElement {
+    _dataSources = [];
+    _dataScopes = [];
+    _endpointPicker = null;
+    _disconnectEndpointPickerEvents = null;
     constructor() {
       super();
       this.attachShadow({ mode: "open" }).append(template17.content.cloneNode(true));
     }
-    setSettings(sections, textCapability = null, textValue = "", mode = "settings", states = []) {
+    setSettings(sections, textCapability = null, textValue = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
+      this._dataSources = dataSources;
+      this._dataScopes = dataScopes;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
       const visibleSections = sections.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
       const shouldRenderText = mode === "settings" && textCapability;
       const shouldRenderStates = mode === "settings" && states.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = sections.length === 0 && !textCapability ? "Select an editable element" : mode === "settings" ? "No settings" : "No overrides";
-        view.append(empty);
+        const empty2 = document.createElement("div");
+        empty2.className = "empty";
+        empty2.textContent = sections.length === 0 && !textCapability ? "Select an editable element" : mode === "settings" ? "No settings" : "No overrides";
+        view.append(empty2);
         return;
       }
       if (shouldRenderText) {
-        view.append(this._renderTextCapability(textCapability, textValue));
+        view.append(this._renderTextCapability(textCapability, textValue, dataScopes));
       }
       if (shouldRenderStates) {
         view.append(this._renderStates(states));
@@ -16483,96 +23016,373 @@ button.active {
     _renderSettingSection(section) {
       const element = document.createElement("cms-editor-v2-section");
       element.setAttribute("label", section.kind === "surcharge" ? `${section.label} override` : section.label);
-      if (section.settings.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "section-empty";
-        empty.textContent = "No settings";
-        element.append(empty);
+      const settings = visibleSettings(section.settings);
+      if (settings.length === 0) {
+        const empty2 = document.createElement("div");
+        empty2.className = "section-empty";
+        empty2.textContent = "No settings";
+        element.append(empty2);
         return element;
       }
-      for (const setting of section.settings) {
+      for (const setting of settings) {
         element.append(this._renderSetting(setting));
       }
       return element;
     }
     _renderSetting(setting) {
+      if (setting.type === "row") {
+        return this._renderSettingRow(setting);
+      }
+      return this._renderSettingControl(setting);
+    }
+    _renderSettingRow(setting) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "setting-row";
+      const label = setting.label ? this._renderFieldLabel(setting.label, setting.labelDisplay) : null;
+      if (label) {
+        label.classList.add("setting-row-label");
+        wrapper.classList.add("setting-row-labeled");
+        wrapper.append(label);
+      }
+      const controls = document.createElement("div");
+      controls.className = "setting-row-controls";
+      controls.style.setProperty("--setting-row-count", String(Math.max(1, setting.settings.length)));
+      for (const child of setting.settings) {
+        const element = this._renderSettingControl(child);
+        element.classList.add("setting-row-control");
+        controls.append(element);
+      }
+      wrapper.append(controls);
+      return wrapper;
+    }
+    _renderSettingControl(setting) {
       if (setting.type === "textarea") {
-        const control2 = this._control("cms-editor-v2-textarea", setting);
-        this._wireTextControl(control2, "textarea", setting);
-        return control2;
+        const control3 = this._control("cms-editor-v2-textarea", setting);
+        this._setDataScopes(control3);
+        this._wireTextControl(control3, "textarea", setting);
+        return control3;
       }
       if (setting.type === "select") {
-        const control2 = this._control("cms-editor-v2-select", setting);
-        control2.setAttribute("options", JSON.stringify(setting.options));
-        this._wireTextControl(control2, "select", setting);
-        return control2;
+        const control3 = this._control("cms-editor-v2-select", setting);
+        control3.setAttribute("options", JSON.stringify(setting.options));
+        this._wireTextControl(control3, "select", setting);
+        return control3;
       }
       if (setting.type === "segmented") {
         const wrapper = document.createElement("div");
         wrapper.className = "field";
-        const label = document.createElement("div");
-        label.className = "field-label";
-        label.textContent = setting.label;
-        const control2 = document.createElement("cms-editor-v2-segmented-control");
-        for (const option of setting.options) {
+        const label = this._renderFieldLabel(setting.label, setting.labelDisplay);
+        const control3 = document.createElement("cms-editor-v2-segmented-control");
+        control3.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
+        for (const option2 of setting.options) {
           const button = document.createElement("button");
           button.type = "button";
-          button.textContent = option.label;
-          button.value = option.value;
+          button.value = option2.value;
           button.disabled = setting.disabled === true;
-          button.ariaPressed = String(option.value === setting.defaultValue);
+          button.title = option2.ariaLabel ?? option2.label;
+          button.ariaLabel = option2.ariaLabel ?? option2.label;
+          button.ariaPressed = String(option2.value === setting.defaultValue);
+          button.append(...this._renderOptionContent(setting.display, option2.display, option2.icon ?? setting.icon, option2.label));
           button.addEventListener("click", () => {
             if (setting.disabled)
               return;
-            for (const item of Array.from(control2.querySelectorAll("button"))) {
+            for (const item of Array.from(control3.querySelectorAll("button"))) {
               item.ariaPressed = String(item === button);
             }
-            this._emitSettingChange(setting, option.value);
+            this._emitSettingChange(setting, option2.value);
           });
-          control2.append(button);
+          control3.append(button);
         }
-        wrapper.append(label, control2);
+        if (label)
+          wrapper.append(label);
+        wrapper.append(control3);
         return wrapper;
       }
       if (setting.type === "toggle") {
-        const control2 = this._control("cms-editor-v2-toggle", setting);
+        const control3 = this._control("cms-editor-v2-toggle", setting);
         if (setting.defaultValue)
-          control2.setAttribute("checked", "");
-        this._wireToggleControl(control2, setting);
-        return control2;
+          control3.setAttribute("checked", "");
+        this._wireToggleControl(control3, setting);
+        return control3;
       }
       if (setting.type === "page-link") {
-        const control2 = this._control("cms-editor-v2-page-link", setting);
-        control2.setAttribute("allow-page", String(setting.allowPage !== false));
-        control2.setAttribute("allow-external", String(setting.allowExternal !== false));
-        control2.setAttribute("allow-media", String(setting.allowMedia !== false));
-        this._applyDisabled(control2, setting);
-        this._wirePageLinkControl(control2, setting);
-        return control2;
+        const control3 = this._control("cms-editor-v2-page-link", setting);
+        control3.setAttribute("allow-page", String(setting.allowPage !== false));
+        control3.setAttribute("allow-external", String(setting.allowExternal !== false));
+        control3.setAttribute("allow-media", String(setting.allowMedia !== false));
+        this._applyDisabled(control3, setting);
+        this._wirePageLinkControl(control3, setting);
+        return control3;
       }
-      if (setting.type === "schema-picker") {
-        const control2 = document.createElement("cms-editor-v2-schema-picker");
-        control2.setAttribute("source", setting.label);
-        control2.setAttribute("path", setting.defaultValue ?? setting.attribute);
-        this._applyDisabled(control2, setting);
-        return control2;
+      if (setting.type === "endpoint-picker") {
+        return this._renderEndpointPickerSetting(setting);
       }
-      const control = this._control("cms-editor-v2-text-input", setting);
-      this._wireTextControl(control, "input", setting);
-      return control;
+      if (setting.type === "color") {
+        return this._renderColorSetting(setting);
+      }
+      const control2 = this._control("cms-editor-v2-text-input", setting);
+      this._setDataScopes(control2);
+      this._wireTextControl(control2, "input", setting);
+      return control2;
+    }
+    _renderColorSetting(setting) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "field color-field";
+      const label = this._renderFieldLabel(setting.label, setting.labelDisplay);
+      if (label)
+        wrapper.append(label);
+      const tokens = setting.tokens ?? [];
+      if (tokens.length > 0) {
+        const swatches = document.createElement("div");
+        swatches.className = "color-swatches";
+        for (const option2 of tokens) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "color-swatch-button";
+          button.disabled = setting.disabled === true;
+          button.title = option2.ariaLabel ?? option2.label;
+          button.ariaLabel = option2.ariaLabel ?? option2.label;
+          button.ariaPressed = String(option2.value === setting.defaultValue);
+          button.style.setProperty("--color-swatch", colorSwatchValue(option2.value));
+          const swatch = document.createElement("span");
+          swatch.className = "color-swatch";
+          button.append(swatch);
+          button.addEventListener("click", () => {
+            if (setting.disabled)
+              return;
+            const customInput = wrapper.querySelector(".color-custom-input");
+            const customValue = customInput?.value.trim() ?? setting.customDefaultValue ?? "";
+            for (const item of Array.from(swatches.querySelectorAll("button"))) {
+              item.ariaPressed = String(item === button);
+            }
+            const custom = wrapper.querySelector(".color-custom");
+            if (custom)
+              custom.hidden = option2.value !== "custom" || setting.allowCustom !== true;
+            wrapper.toggleAttribute("data-custom-open", option2.value === "custom" && setting.allowCustom === true);
+            this._emitSettingChange(setting, option2.value, colorAttributes(setting, option2.value, customValue));
+          });
+          swatches.append(button);
+        }
+        wrapper.append(swatches);
+      }
+      if (setting.allowCustom) {
+        const custom = document.createElement("div");
+        custom.className = "color-custom";
+        custom.hidden = setting.defaultValue !== "custom";
+        const input = document.createElement("input");
+        input.className = "color-custom-input";
+        input.type = "text";
+        input.placeholder = setting.placeholder ?? "#f6f7f8";
+        input.value = setting.customDefaultValue ?? "";
+        input.disabled = setting.disabled === true;
+        const apply = document.createElement("button");
+        apply.className = "color-custom-apply";
+        apply.type = "button";
+        apply.textContent = "Apply";
+        apply.disabled = setting.disabled === true;
+        apply.addEventListener("click", () => {
+          if (setting.disabled)
+            return;
+          this._emitSettingChange(setting, "custom", colorAttributes(setting, "custom", input.value.trim()));
+        });
+        input.addEventListener("change", () => {
+          if (setting.disabled)
+            return;
+          this._emitSettingChange(setting, "custom", colorAttributes(setting, "custom", input.value.trim()));
+        });
+        custom.append(input, apply);
+        wrapper.append(custom);
+      }
+      if (setting.help) {
+        const help = document.createElement("div");
+        help.className = "field-help";
+        help.textContent = setting.help;
+        wrapper.append(help);
+      }
+      return wrapper;
+    }
+    _renderOptionContent(settingDisplay, optionDisplay, iconName, label) {
+      const display = optionDisplay ?? settingDisplay ?? (iconName ? "icon-label" : "label");
+      const nodes = [];
+      const icon = iconName ? settingIcon(iconName) : null;
+      if (icon && (display === "icon" || display === "icon-label")) {
+        nodes.push(icon);
+      }
+      if (display !== "icon" || !icon) {
+        const text = document.createElement("span");
+        text.textContent = label;
+        nodes.push(text);
+      }
+      return nodes;
     }
     _control(tag, setting) {
-      const control = document.createElement(tag);
-      control.setAttribute("label", setting.label);
-      control.setAttribute("value", String(setting.defaultValue ?? ""));
+      const control2 = document.createElement(tag);
+      control2.setAttribute("label", setting.label);
+      control2.setAttribute("value", String(setting.defaultValue ?? ""));
+      control2.setAttribute("label-display", setting.labelDisplay ?? "visible");
+      if (setting.ariaLabel) {
+        control2.setAttribute("aria-label", setting.ariaLabel);
+      } else if (setting.labelDisplay && setting.labelDisplay !== "visible") {
+        control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
+      }
       if (setting.help)
-        control.setAttribute("hint", setting.help);
+        control2.setAttribute("hint", setting.help);
       if (setting.placeholder)
-        control.setAttribute("placeholder", setting.placeholder);
-      this._applyDisabled(control, setting);
-      return control;
+        control2.setAttribute("placeholder", setting.placeholder);
+      this._applyDisabled(control2, setting);
+      return control2;
     }
-    _renderTextCapability(capability, value) {
+    _renderFieldLabel(label, display) {
+      if (display === "hidden")
+        return null;
+      const element = document.createElement("div");
+      element.className = display === "sr-only" ? "field-label sr-only" : "field-label";
+      element.textContent = label;
+      return element;
+    }
+    _renderEndpointPickerSetting(setting) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "field endpoint-field";
+      const label = this._renderFieldLabel(setting.label, setting.labelDisplay);
+      const button = document.createElement("button");
+      button.className = "endpoint-button";
+      button.type = "button";
+      button.ariaLabel = setting.ariaLabel ?? setting.label;
+      button.disabled = setting.disabled === true;
+      this._syncEndpointButton(button, setting);
+      if (!setting.disabled) {
+        button.addEventListener("click", () => this._openEndpointPicker(setting, button));
+      }
+      if (label)
+        wrapper.append(label);
+      wrapper.append(button);
+      if (setting.help) {
+        const help = document.createElement("div");
+        help.className = "field-help";
+        help.textContent = setting.help;
+        wrapper.append(help);
+      }
+      return wrapper;
+    }
+    _syncEndpointButton(button, setting, selected = this._selectedEndpoint(setting), fallbackValue = setting.defaultValue) {
+      button.replaceChildren();
+      const method = selected?.method ?? setting.defaultMethod;
+      if (method) {
+        const methodBadge = document.createElement("span");
+        methodBadge.className = "endpoint-method";
+        methodBadge.textContent = method;
+        button.append(methodBadge);
+      }
+      const value = document.createElement("span");
+      value.className = selected ? "endpoint-value" : "endpoint-placeholder";
+      value.textContent = selected?.label ?? fallbackValue ?? setting.placeholder ?? "Select endpoint";
+      button.append(value);
+    }
+    _openEndpointPicker(setting, button) {
+      const picker = this._ensureEndpointPicker();
+      this._disconnectEndpointPickerEvents?.();
+      const onSelect = (event) => {
+        this._disconnectEndpointPickerEvents?.();
+        const detail = event.detail;
+        const value = this._endpointValue(setting, detail);
+        this._syncEndpointButton(button, setting, detail.source, value);
+        this._emitSettingChange(setting, value, this._endpointAttributes(setting, detail, value));
+      };
+      const onRemove = () => {
+        this._disconnectEndpointPickerEvents?.();
+        const attributes = { [setting.attribute]: null };
+        if (setting.methodAttribute)
+          attributes[setting.methodAttribute] = null;
+        if (this._usesSourceBinding(setting)) {
+          attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = null;
+          attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = null;
+        }
+        this._syncEndpointButton(button, setting, null, "");
+        this._emitSettingChange(setting, "", attributes);
+      };
+      const cleanup = () => {
+        picker.removeEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
+        picker.removeEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
+        if (this._disconnectEndpointPickerEvents === cleanup)
+          this._disconnectEndpointPickerEvents = null;
+      };
+      this._disconnectEndpointPickerEvents = cleanup;
+      picker.addEventListener(DATA_SOURCE_PICKER_SELECT_EVENT, onSelect);
+      picker.addEventListener(DATA_SOURCE_PICKER_REMOVE_EVENT, onRemove);
+      picker.open(this._endpointOptions(setting), setting.label, {
+        canRemove: setting.required !== true && Boolean(setting.defaultValue),
+        initialBinding: this._initialEndpointBinding(setting)
+      });
+    }
+    _ensureEndpointPicker() {
+      if (this._endpointPicker)
+        return this._endpointPicker;
+      const picker = new DataSourcePicker;
+      this.shadowRoot.append(picker);
+      this._endpointPicker = picker;
+      return picker;
+    }
+    _endpointOptions(setting) {
+      const methods = new Set(setting.methods ?? []);
+      return this._dataSources.filter((source) => {
+        const method = this._endpointMethod(source);
+        if (methods.size > 0 && !methods.has(method))
+          return false;
+        return true;
+      });
+    }
+    _selectedEndpoint(setting) {
+      const value = setting.defaultValue;
+      if (!value)
+        return null;
+      const binding = this._initialEndpointBinding(setting);
+      return this._endpointOptions(setting).find((source) => {
+        if (this._usesSourceBinding(setting) && binding) {
+          return binding.url === source.url || binding.url.startsWith(`${source.url}?`) || source.url.includes("?") && binding.url.startsWith(`${source.url}&`);
+        }
+        return source.url === value;
+      }) ?? null;
+    }
+    _initialEndpointBinding(setting) {
+      const value = setting.defaultValue;
+      if (!value)
+        return null;
+      if (this._usesSourceBinding(setting)) {
+        const source = parseSource(value);
+        const body = parseSourceBody(setting.defaultBody);
+        return source ? {
+          url: source.url,
+          ...source.alias ? { alias: source.alias } : {},
+          ...setting.defaultMethod ? { method: setting.defaultMethod } : {},
+          ...body ? { body } : {}
+        } : null;
+      }
+      return { url: value };
+    }
+    _endpointValue(setting, detail) {
+      if (this._usesSourceBinding(setting)) {
+        return asSource(detail.binding);
+      }
+      return detail.source.url;
+    }
+    _endpointAttributes(setting, detail, value) {
+      const attributes = { [setting.attribute]: value };
+      if (setting.methodAttribute)
+        attributes[setting.methodAttribute] = detail.binding.method ?? this._endpointMethod(detail.source);
+      if (this._usesSourceBinding(setting)) {
+        const body = detail.binding.body ? asSourceBody(detail.binding.body) : "";
+        attributes[CMS_BINDING_ATTRIBUTES.sourceBody] = body || null;
+        attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] = detail.binding.trigger === "submit" ? "submit" : null;
+      }
+      return attributes;
+    }
+    _endpointMethod(source) {
+      return source.method ?? "GET";
+    }
+    _usesSourceBinding(setting) {
+      return setting.attribute === CMS_BINDING_ATTRIBUTES.source;
+    }
+    _renderTextCapability(capability, value, dataScopes) {
       const section = document.createElement("cms-editor-v2-section");
       section.setAttribute("label", "Content");
       const setting = {
@@ -16582,14 +23392,17 @@ button.active {
         defaultValue: value,
         help: capability.format === "richtext" ? undefined : this._formatTextCapability(capability)
       };
-      const control = this._control(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
+      const control2 = this._control(capability.format === "richtext" ? "cms-editor-v2-rich-text-editor" : "cms-editor-v2-text-input", setting);
       if (capability.format === "richtext") {
-        control.setAttribute("capability", JSON.stringify(capability));
-        this._wireRichTextControl(control);
+        control2.setAttribute("capability", JSON.stringify(capability));
+        control2.setAttribute("data-scopes", JSON.stringify(dataScopes));
+        this._wireRichTextControl(control2);
       } else {
-        this._wireContentControl(control, "input");
+        if (capability.dynamic)
+          this._setDataScopes(control2, dataScopes);
+        this._wireContentControl(control2, "input");
       }
-      section.append(control);
+      section.append(control2);
       return section;
     }
     _formatTextCapability(capability) {
@@ -16599,12 +23412,12 @@ button.active {
         capability.link ? "link" : null,
         capability.code ? "code" : null,
         capability.dynamic ? "dynamic" : null
-      ].filter((option) => Boolean(option));
+      ].filter((option2) => Boolean(option2));
       return options.length > 0 ? options.join(", ") : "Plain text";
     }
-    _wireTextControl(control, selector, setting) {
+    _wireTextControl(control2, selector, setting) {
       const wire = () => {
-        const input = control.shadowRoot?.querySelector(selector);
+        const input = control2.shadowRoot?.querySelector(selector);
         if (!input)
           return;
         input.disabled = setting.disabled === true;
@@ -16613,45 +23426,45 @@ button.active {
         input.addEventListener("input", () => this._emitSettingChange(setting, input.value));
         input.addEventListener("change", () => this._emitSettingChange(setting, input.value));
       };
-      this._whenDefined(control, wire);
+      this._whenDefined(control2, wire);
     }
-    _wireContentControl(control, selector) {
+    _wireContentControl(control2, selector) {
       const wire = () => {
-        const input = control.shadowRoot?.querySelector(selector);
+        const input = control2.shadowRoot?.querySelector(selector);
         if (!input)
           return;
         input.addEventListener("input", () => this._emitContentChange(input.value, "text"));
         input.addEventListener("change", () => this._emitContentChange(input.value, "text"));
       };
-      this._whenDefined(control, wire);
+      this._whenDefined(control2, wire);
     }
-    _wireRichTextControl(control) {
+    _wireRichTextControl(control2) {
       const wire = () => {
-        control.addEventListener("input", (event) => {
+        control2.addEventListener("input", (event) => {
           const value = event.detail?.value;
           if (typeof value !== "string")
             return;
           this._emitContentChange(value, "html");
         });
       };
-      this._whenDefined(control, wire);
+      this._whenDefined(control2, wire);
     }
-    _wirePageLinkControl(control, setting) {
+    _wirePageLinkControl(control2, setting) {
       const wire = () => {
         if (setting.disabled)
           return;
-        control.addEventListener("input", (event) => {
+        control2.addEventListener("input", (event) => {
           const value = event.detail?.value;
           if (typeof value !== "string")
             return;
           this._emitSettingChange(setting, value);
         });
       };
-      this._whenDefined(control, wire);
+      this._whenDefined(control2, wire);
     }
-    _wireToggleControl(control, setting) {
+    _wireToggleControl(control2, setting) {
       const wire = () => {
-        const button = control.shadowRoot?.querySelector("button");
+        const button = control2.shadowRoot?.querySelector("button");
         if (!button)
           return;
         button.disabled = setting.disabled === true;
@@ -16660,33 +23473,37 @@ button.active {
         button.addEventListener("click", () => {
           const checked = button.ariaPressed !== "true";
           button.ariaPressed = String(checked);
-          control.toggleAttribute("checked", checked);
+          control2.toggleAttribute("checked", checked);
           this._emitSettingChange(setting, checked);
         });
       };
-      this._whenDefined(control, wire);
+      this._whenDefined(control2, wire);
     }
-    _applyDisabled(control, setting) {
+    _applyDisabled(control2, setting) {
       if (setting.disabled) {
-        control.setAttribute("disabled", "");
-        control.setAttribute("aria-disabled", "true");
+        control2.setAttribute("disabled", "");
+        control2.setAttribute("aria-disabled", "true");
       } else {
-        control.removeAttribute("disabled");
-        control.removeAttribute("aria-disabled");
+        control2.removeAttribute("disabled");
+        control2.removeAttribute("aria-disabled");
       }
     }
-    _whenDefined(control, callback) {
-      if (customElements.get(control.localName)) {
+    _setDataScopes(control2, dataScopes = this._dataScopes) {
+      control2.setAttribute("data-scopes", JSON.stringify(dataScopes));
+    }
+    _whenDefined(control2, callback) {
+      if (customElements.get(control2.localName)) {
         callback();
         return;
       }
-      customElements.whenDefined(control.localName).then(callback);
+      customElements.whenDefined(control2.localName).then(callback);
     }
-    _emitSettingChange(setting, value) {
+    _emitSettingChange(setting, value, attributes) {
+      const changes = attributes ?? attributesForSettingValue(setting, value);
       this.dispatchEvent(new CustomEvent(SETTINGS_VIEW_SETTING_CHANGE_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { setting, value }
+        detail: changes ? { setting, value, attributes: changes } : { setting, value }
       }));
     }
     _emitContentChange(value, format) {
@@ -16697,12 +23514,89 @@ button.active {
       }));
     }
   }
+  function visibleSettings(settings) {
+    const values = collectSettingValues(settings);
+    return settings.flatMap((setting) => {
+      if (!isSettingVisible(setting.visibleWhen, values))
+        return [];
+      if (setting.type !== "row")
+        return [setting];
+      const visibleChildren = setting.settings.filter((child) => isSettingVisible(child.visibleWhen, values));
+      return visibleChildren.length > 0 ? [{ ...setting, settings: visibleChildren }] : [];
+    });
+  }
+  function collectSettingValues(settings) {
+    const values = new Map;
+    for (const setting of settings) {
+      if (setting.type === "row") {
+        for (const child of setting.settings)
+          values.set(child.attribute, child.defaultValue);
+      } else {
+        values.set(setting.attribute, setting.defaultValue);
+      }
+    }
+    return values;
+  }
+  function attributesForSettingValue(setting, value) {
+    const matchingRules = setting.attributesOnValue?.filter((rule) => visibilityValueMatches(value, rule.value)) ?? [];
+    if (matchingRules.length === 0)
+      return;
+    const attributes = { [setting.attribute]: value };
+    for (const rule of matchingRules) {
+      Object.assign(attributes, rule.attributes);
+    }
+    return attributes;
+  }
+  function isSettingVisible(visibleWhen, values) {
+    if (!visibleWhen)
+      return true;
+    const rules = Array.isArray(visibleWhen) ? visibleWhen : [visibleWhen];
+    return rules.every((rule) => matchesVisibilityRule(rule, values.get(rule.attribute)));
+  }
+  function matchesVisibilityRule(rule, actual) {
+    if (rule.equals !== undefined && !visibilityValueMatches(actual, rule.equals))
+      return false;
+    if (rule.notEquals !== undefined && visibilityValueMatches(actual, rule.notEquals))
+      return false;
+    return true;
+  }
+  function visibilityValueMatches(actual, expected) {
+    const expectedValues = Array.isArray(expected) ? expected : [expected];
+    return expectedValues.some((value) => normalizeVisibilityValue(actual) === normalizeVisibilityValue(value));
+  }
+  function normalizeVisibilityValue(value) {
+    return typeof value === "boolean" ? value : String(value ?? "");
+  }
+  function colorAttributes(setting, value, customValue) {
+    const base = attributesForSettingValue(setting, value) ?? { [setting.attribute]: value };
+    if (!setting.customAttribute)
+      return base;
+    return {
+      ...base,
+      [setting.customAttribute]: value === "custom" ? customValue || null : null
+    };
+  }
+  function colorSwatchValue(value) {
+    if (value.startsWith("#") || value.startsWith("rgb") || value.startsWith("hsl") || value.startsWith("var("))
+      return value;
+    return COLOR_TOKEN_SWATCHES[value] ?? "linear-gradient(135deg, #eef2f1, #d9d9d9)";
+  }
+  function settingIcon(name) {
+    const path = SETTING_ICON_PATHS[name];
+    if (!path)
+      return null;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = path;
+    return svg;
+  }
   if (!customElements.get("cms-editor-v2-settings-view")) {
     customElements.define("cms-editor-v2-settings-view", SettingsView);
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/template.html
-  var template_default21 = `<div class="backdrop" hidden>
+  var template_default23 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -16722,7 +23616,7 @@ button.active {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/style.css
-  var style_default20 = `:host {
+  var style_default22 = `:host {
     display: contents;
 }
 
@@ -17024,9 +23918,48 @@ label {
 }
 `;
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/repeatOptions.ts
+  function repeatArrayOptions(scopes) {
+    const byPath = new Map;
+    for (const option2 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option2.path))
+        byPath.set(option2.path, option2);
+    }
+    return [...byPath.values()];
+  }
+  function repeatArrayFields(fields, scopeName, scopeLabel, prefix = "") {
+    return fields.flatMap((field) => {
+      const relativePath = prefix && field.path !== "." ? `${prefix}.${field.path}` : field.path === "." ? prefix : field.path;
+      const fullPath = relativePath ? `${scopeName}.${relativePath}` : scopeName;
+      if (field.type !== "array")
+        return repeatArrayFields(field.children ?? [], scopeName, scopeLabel, relativePath);
+      return [{
+        path: fullPath,
+        label: field.path,
+        scopeLabel,
+        fields: field.children ?? []
+      }];
+    });
+  }
+  function visibleRepeatOptions(options, query2) {
+    const normalizedQuery = query2.trim().toLowerCase();
+    if (!normalizedQuery)
+      return options;
+    return options.filter((option2) => [
+      option2.path,
+      option2.label,
+      option2.scopeLabel
+    ].some((value) => value.toLowerCase().includes(normalizedQuery)));
+  }
+  function defaultRepeatAlias(path) {
+    const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
+    const singular = segment.endsWith("ies") ? `${segment.slice(0, -3)}y` : segment.endsWith("s") && segment.length > 1 ? segment.slice(0, -1) : segment;
+    return singular.replace(/[^A-Za-z0-9_$]/g, "") || "item";
+  }
+
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/RepeatPicker.ts
   var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(style_default20)}</style>${String(template_default21)}`;
+  template18.innerHTML = `<style>${String(style_default22)}</style>${String(template_default23)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -17049,7 +23982,7 @@ label {
       this.ownerDocument.removeEventListener("keydown", this._onKeydown);
     }
     open(scopes, contextLabel) {
-      this._options = this._arrayOptions(scopes);
+      this._options = repeatArrayOptions(scopes);
       this._activeOption = null;
       this.subtitle.textContent = contextLabel ? `Choose an array to repeat ${contextLabel}.` : "Choose an array to repeat.";
       this.search.value = "";
@@ -17069,61 +24002,61 @@ label {
       this.arrays.replaceChildren();
       const options = this._visibleOptions();
       if (options.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "No array fields available.";
-        this.arrays.append(empty);
+        const empty2 = document.createElement("div");
+        empty2.className = "empty";
+        empty2.textContent = "No array fields available.";
+        this.arrays.append(empty2);
         this._activeOption = null;
         return;
       }
       if (!this._activeOption || !options.includes(this._activeOption)) {
         this._activeOption = options[0] ?? null;
       }
-      for (const option of options) {
+      for (const option2 of options) {
         const button = document.createElement("button");
         button.className = "array";
         button.type = "button";
-        button.ariaSelected = String(option === this._activeOption);
+        button.ariaSelected = String(option2 === this._activeOption);
         const name = document.createElement("span");
         name.className = "name";
-        name.textContent = option.path;
+        name.textContent = option2.path;
         const scope = document.createElement("span");
         scope.className = "scope";
-        scope.textContent = option.scopeLabel;
+        scope.textContent = option2.scopeLabel;
         button.append(name, scope);
         button.addEventListener("click", () => {
-          this._activeOption = option;
+          this._activeOption = option2;
           this._render();
         });
-        button.addEventListener("dblclick", () => this._select(option));
+        button.addEventListener("dblclick", () => this._select(option2));
         this.arrays.append(button);
       }
     }
     _renderDetails() {
       this.details.replaceChildren();
       if (!this._activeOption) {
-        const empty = document.createElement("div");
-        empty.className = "details-empty";
-        empty.textContent = "Select an array field to inspect item fields.";
-        this.details.append(empty);
+        const empty2 = document.createElement("div");
+        empty2.className = "details-empty";
+        empty2.textContent = "Select an array field to inspect item fields.";
+        this.details.append(empty2);
         return;
       }
-      const option = this._activeOption;
+      const option2 = this._activeOption;
       const heading4 = document.createElement("div");
       heading4.className = "details-eyebrow";
       heading4.textContent = "Response fields";
-      this.details.append(heading4, this._renderFields(option.fields));
+      this.details.append(heading4, this._renderFields(option2.fields));
     }
     _renderBinding() {
       this.binding.replaceChildren();
       if (!this._activeOption) {
-        const empty = document.createElement("div");
-        empty.className = "details-empty";
-        empty.textContent = "Select an array field to configure repeat.";
-        this.binding.append(empty);
+        const empty2 = document.createElement("div");
+        empty2.className = "details-empty";
+        empty2.textContent = "Select an array field to configure repeat.";
+        this.binding.append(empty2);
         return;
       }
-      const option = this._activeOption;
+      const option2 = this._activeOption;
       const heading4 = document.createElement("div");
       heading4.className = "details-eyebrow";
       heading4.textContent = "Binding";
@@ -17132,7 +24065,7 @@ label {
       const pathLabel = document.createElement("span");
       pathLabel.textContent = "Array";
       const pathValue = document.createElement("strong");
-      pathValue.textContent = option.path;
+      pathValue.textContent = option2.path;
       path.append(pathLabel, pathValue);
       const config = document.createElement("section");
       config.className = "binding-config";
@@ -17140,14 +24073,14 @@ label {
       label.textContent = "Alias";
       const alias = document.createElement("input");
       alias.className = "alias";
-      alias.value = this._defaultAlias(option.path);
+      alias.value = defaultRepeatAlias(option2.path);
       label.append(alias);
       config.append(label);
       const insert = document.createElement("button");
       insert.className = "insert";
       insert.type = "button";
       insert.textContent = "Use repeat";
-      insert.addEventListener("click", () => this._select(option, alias.value));
+      insert.addEventListener("click", () => this._select(option2, alias.value));
       const scroll = document.createElement("div");
       scroll.className = "binding-scroll";
       scroll.append(heading4, path, config);
@@ -17162,10 +24095,10 @@ label {
       for (const field of fields)
         list.append(this._renderField(field, 0));
       if (list.children.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "details-empty";
-        empty.textContent = "No item fields declared.";
-        return empty;
+        const empty2 = document.createElement("p");
+        empty2.className = "details-empty";
+        empty2.textContent = "No item fields declared.";
+        return empty2;
       }
       return list;
     }
@@ -17189,7 +24122,7 @@ label {
       }
       return item;
     }
-    _select(option, alias = this._defaultAlias(option.path)) {
+    _select(option2, alias = defaultRepeatAlias(option2.path)) {
       const cleanAlias = alias.trim();
       if (!cleanAlias)
         return;
@@ -17197,48 +24130,14 @@ label {
         bubbles: true,
         composed: true,
         detail: {
-          path: option.path,
+          path: option2.path,
           alias: cleanAlias
         }
       }));
       this.close();
     }
-    _arrayOptions(scopes) {
-      const byPath = new Map;
-      for (const option of scopes.flatMap((scope) => this._arrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-        if (!byPath.has(option.path))
-          byPath.set(option.path, option);
-      }
-      return [...byPath.values()];
-    }
-    _arrayFields(fields, scopeName, scopeLabel, prefix = "") {
-      return fields.flatMap((field) => {
-        const relativePath = prefix && field.path !== "." ? `${prefix}.${field.path}` : field.path === "." ? prefix : field.path;
-        const fullPath = relativePath ? `${scopeName}.${relativePath}` : scopeName;
-        if (field.type !== "array")
-          return this._arrayFields(field.children ?? [], scopeName, scopeLabel, relativePath);
-        return [{
-          path: fullPath,
-          label: field.path,
-          scopeLabel,
-          fields: field.children ?? []
-        }];
-      });
-    }
     _visibleOptions() {
-      const query = this.search.value.trim().toLowerCase();
-      if (!query)
-        return this._options;
-      return this._options.filter((option) => [
-        option.path,
-        option.label,
-        option.scopeLabel
-      ].some((value) => value.toLowerCase().includes(query)));
-    }
-    _defaultAlias(path) {
-      const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
-      const singular = segment.endsWith("ies") ? `${segment.slice(0, -3)}y` : segment.endsWith("s") && segment.length > 1 ? segment.slice(0, -1) : segment;
-      return singular.replace(/[^A-Za-z0-9_$]/g, "") || "item";
+      return visibleRepeatOptions(this._options, this.search.value);
     }
     _onBackdropClick = (event) => {
       if (event.target === this.backdrop)
@@ -17278,6 +24177,1892 @@ label {
     customElements.define("cms-editor-v2-repeat-picker", RepeatPicker);
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellDomRefs.ts
+  class ShellDomRefs {
+    host;
+    constructor(host) {
+      this.host = host;
+    }
+    get structureTree() {
+      this.defineElement("cms-editor-v2-structure-tree", StructureTree);
+      return this.upgrade(this.host.shadowRoot.querySelector("cms-editor-v2-structure-tree"));
+    }
+    get settings() {
+      this.defineElement("cms-editor-v2-settings-view", SettingsView);
+      return this.upgrade(this.host.shadowRoot.querySelector("cms-editor-v2-settings-view"));
+    }
+    get settingsTabs() {
+      return this.host.shadowRoot.querySelector(".panel-tabs");
+    }
+    get canvas() {
+      this.defineElement("cms-editor-v2-canvas", Canvas);
+      return this.upgrade(this.host.shadowRoot.querySelector("cms-editor-v2-canvas"));
+    }
+    get topBar() {
+      this.defineElement("cms-editor-v2-topbar", TopBar);
+      return this.upgrade(this.host.shadowRoot.querySelector("cms-editor-v2-topbar"));
+    }
+    get repeatPicker() {
+      let picker = this.host.shadowRoot.querySelector("cms-editor-v2-repeat-picker");
+      if (!picker) {
+        picker = new RepeatPicker;
+        this.host.shadowRoot.append(picker);
+      }
+      return picker;
+    }
+    get pageSettingsModal() {
+      return this.host.shadowRoot.querySelector(".page-settings-modal");
+    }
+    pageField(name) {
+      return this.host.shadowRoot.querySelector(`[data-page-field="${name}"]`);
+    }
+    upgrade(element) {
+      if (element)
+        customElements.upgrade(element);
+      return element;
+    }
+    defineElement(tagName, constructor) {
+      if (customElements.get(tagName))
+        return;
+      try {
+        customElements.define(tagName, constructor);
+      } catch {
+        const ElementClass = class extends constructor {
+        };
+        customElements.define(tagName, ElementClass);
+      }
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/FrameHighlight.ts
+  var STYLE_ID = "cms-editor-v2-highlight-style";
+  var HIGHLIGHT_ATTR = "data-cms-editor-v2-highlight";
+
+  class FrameHighlight {
+    _target = null;
+    _overlay = null;
+    _resizeObserver = null;
+    show(editor, options = {}) {
+      this.hide();
+      this._target = editor.target;
+      const doc = editor.target.ownerDocument;
+      this._ensureStyle(doc);
+      if (options.scrollIntoView) {
+        editor.target.scrollIntoView({
+          block: "center",
+          inline: "nearest",
+          behavior: "smooth"
+        });
+      }
+      this._overlay = doc.createElement("div");
+      this._overlay.setAttribute(HIGHLIGHT_ATTR, "");
+      doc.body.append(this._overlay);
+      this._resizeObserver = new ResizeObserver(() => this.update());
+      this._resizeObserver.observe(editor.target);
+      doc.defaultView?.addEventListener("scroll", this.update, true);
+      doc.defaultView?.addEventListener("resize", this.update);
+      this.update();
+    }
+    hide() {
+      if (this._target) {
+        const win = this._target.ownerDocument.defaultView;
+        win?.removeEventListener("scroll", this.update, true);
+        win?.removeEventListener("resize", this.update);
+      }
+      this._resizeObserver?.disconnect();
+      this._resizeObserver = null;
+      this._overlay?.remove();
+      this._overlay = null;
+      this._target = null;
+    }
+    dispose() {
+      this.hide();
+    }
+    update = () => {
+      if (!this._target || !this._overlay)
+        return;
+      const win = this._target.ownerDocument.defaultView;
+      if (!win)
+        return;
+      const rect = this._target.getBoundingClientRect();
+      this._overlay.style.left = `${rect.left + win.scrollX}px`;
+      this._overlay.style.top = `${rect.top + win.scrollY}px`;
+      this._overlay.style.width = `${rect.width}px`;
+      this._overlay.style.height = `${rect.height}px`;
+    };
+    _ensureStyle(doc) {
+      if (doc.getElementById(STYLE_ID))
+        return;
+      const style = doc.createElement("style");
+      style.id = STYLE_ID;
+      style.textContent = `
+[${HIGHLIGHT_ATTR}] {
+    position: absolute;
+    z-index: 2147483647;
+    pointer-events: none;
+    outline: 2px solid #16775f;
+    outline-offset: -2px;
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px rgba(22, 119, 95, 0.18), 0 8px 24px rgba(22, 119, 95, 0.14);
+}
+`;
+      doc.head.append(style);
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellBindingPreview.ts
+  var BINDING_PREVIEW_STYLE_ID = "cms-editor-binding-preview-style";
+  function syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce) {
+    const editorCore = bindingPreviewCore(editorDocument);
+    if (editorCore) {
+      editorCore.setAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce, sourceStateForce);
+      editorCore.setAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled, "");
+    }
+    const viewCore = bindingPreviewCore(viewDocument);
+    if (viewCore) {
+      viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceStateForce);
+      viewCore.removeAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled);
+    }
+  }
+  function bindingPreviewCore(document2) {
+    const root = document2?.querySelector("[data-cms-editor-root]");
+    if (root?.matches(CMS_BINDING_CORE_TAG))
+      return root;
+    return root?.querySelector(CMS_BINDING_CORE_TAG) ?? document2?.querySelector(CMS_BINDING_CORE_TAG) ?? null;
+  }
+  function syncViewFrameContent(editorDocument, viewDocument, sourceStateForce) {
+    const editorContent = editorDocument?.querySelector("[data-cms-content]");
+    const viewContent = viewDocument?.querySelector("[data-cms-content]");
+    if (!editorContent || !viewContent)
+      return;
+    viewContent.innerHTML = editorContent.innerHTML;
+    syncBindingPreviewCore(editorDocument, viewDocument, sourceStateForce);
+    restartViewBindingRuntime(viewDocument);
+  }
+  function restartViewBindingRuntime(viewDocument) {
+    const core = bindingPreviewCore(viewDocument);
+    if (!core || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled))
+      return;
+    if (startViewBindingRuntime(core))
+      return;
+    viewDocument?.defaultView?.customElements.whenDefined(core.localName).then(() => {
+      viewDocument.defaultView?.customElements.upgrade(core);
+      if (!core.isConnected || core.hasAttribute(CMS_BINDING_ATTRIBUTES.bindingDisabled))
+        return;
+      startViewBindingRuntime(core);
+    }).catch(() => {
+      return;
+    });
+  }
+  function startViewBindingRuntime(core) {
+    if (typeof core.startRuntime !== "function")
+      return false;
+    if (typeof core.runtime?.deactivate === "function")
+      core.runtime.deactivate();
+    else
+      core.runtime?.stop();
+    core.startRuntime();
+    return true;
+  }
+  function injectBindingPreviewStyle(document2) {
+    if (document2.getElementById(BINDING_PREVIEW_STYLE_ID))
+      return;
+    const style = document2.createElement("style");
+    style.id = BINDING_PREVIEW_STYLE_ID;
+    style.textContent = bindingPreviewCss();
+    (document2.head ?? document2.documentElement).append(style);
+  }
+  function bindingPreviewCss() {
+    const core = `${CMS_BINDING_CORE_TAG}[${CMS_BINDING_ATTRIBUTES.bindingDisabled}]`;
+    const source = `[${CMS_BINDING_ATTRIBUTES.source}]`;
+    const condition = CMS_BINDING_ATTRIBUTES.condition;
+    const state = CMS_BINDING_ATTRIBUTES.sourceStateForce;
+    const hiddenFor = (current) => {
+      const selectors = [
+        `${core}[${state}="${current}"] ${source} [${condition}^="$source."]:not([${condition}*=".${current}"])`,
+        `${core}[${state}="${current}"] ${source} [${condition}^="$sources."]:not([${condition}*=".${current}"])`
+      ];
+      return `${selectors.join(",")}{display:none!important}`;
+    };
+    return [
+      hiddenFor("loaded"),
+      hiddenFor("loading"),
+      hiddenFor("empty"),
+      hiddenFor("error")
+    ].join(`
+`);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureDocument.ts
+  function isEmptyDocumentContent(contentRoot) {
+    if (!contentRoot)
+      return true;
+    const meaningfulNodes = Array.from(contentRoot.childNodes).filter((node2) => node2.nodeType !== Node.TEXT_NODE || (node2.textContent ?? "").trim() !== "");
+    if (meaningfulNodes.length === 0)
+      return true;
+    if (meaningfulNodes.length !== 1)
+      return false;
+    const node = meaningfulNodes[0];
+    if (!node)
+      return true;
+    if (node.nodeType !== Node.ELEMENT_NODE)
+      return false;
+    const element = node;
+    if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0)
+      return false;
+    return Array.from(element.childNodes).every((child) => {
+      if (child.nodeType === Node.TEXT_NODE)
+        return (child.textContent ?? "").trim() === "";
+      return child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === "br";
+    });
+  }
+  function contentHtml(frameDocument) {
+    const content = frameDocument?.querySelector("[data-cms-content]")?.cloneNode(true);
+    if (!content)
+      return "";
+    clearBindingRuntimeState(content);
+    return content.innerHTML;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellFrames.ts
+  class ShellFrames {
+    frameDocument = null;
+    viewFrameDocument = null;
+    bindFrameDocument(document2, onFrameClick) {
+      this.unbindFrameDocument(onFrameClick);
+      this.frameDocument = document2;
+      document2.addEventListener("click", onFrameClick, true);
+      this.injectBindingPreviewStyle(document2);
+    }
+    bindViewFrameDocument(document2) {
+      this.viewFrameDocument = document2;
+      this.injectBindingPreviewStyle(document2);
+    }
+    unbindFrameDocument(onFrameClick) {
+      this.frameDocument?.removeEventListener("click", onFrameClick, true);
+      this.frameDocument = null;
+    }
+    unbindViewFrameDocument() {
+      this.viewFrameDocument = null;
+    }
+    syncBindingPreviewCore(sourceStateForce) {
+      syncBindingPreviewCore(this.frameDocument, this.viewFrameDocument, sourceStateForce);
+    }
+    syncViewFrameContent(sourceStateForce) {
+      syncViewFrameContent(this.frameDocument, this.viewFrameDocument, sourceStateForce);
+    }
+    contentHtml() {
+      return contentHtml(this.frameDocument);
+    }
+    handleFrameReady(kind, document2, callbacks) {
+      if (kind === "view") {
+        callbacks.bindViewFrameDocument(document2);
+        callbacks.syncViewFrameContent();
+        callbacks.syncBindingPreviewCore();
+        return;
+      }
+      callbacks.bindFrameDocument(document2);
+      const root = document2.querySelector("[data-cms-editor-root]") ?? document2.querySelector(CMS_BINDING_CORE_TAG);
+      const contentRoot = document2.querySelector("[data-cms-content]");
+      if (!root || !contentRoot) {
+        callbacks.clearDocument();
+        callbacks.renderStructure();
+        callbacks.settings().setSettings([]);
+        return;
+      }
+      callbacks.loadDocument({ root, contentRoot });
+      callbacks.syncBindingPreviewCore();
+      callbacks.syncViewFrameContent();
+    }
+    injectBindingPreviewStyle(document2) {
+      injectBindingPreviewStyle(document2);
+    }
+  }
+  function eventElement(event) {
+    const target = event.target;
+    if (!target || !("nodeType" in target))
+      return null;
+    if (target.nodeType === Node.ELEMENT_NODE)
+      return target;
+    return target.parentElement;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/insertion.ts
+  function createInsertion(document2, item, slotName, sourceStatusConditions) {
+    if (!document2)
+      return null;
+    if (item.kind === "media")
+      return null;
+    if (item.kind === "block") {
+      const fragment2 = createBlockFragment(document2, item.entry);
+      const slotElements2 = slotElementChildren(fragment2);
+      for (const child of slotElements2) {
+        applySlot(child, slotName);
+        applyCondition(child, sourceStatusConditions);
+      }
+      const selectionTarget2 = slotElements2.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements2[0] ?? null;
+      if (!selectionTarget2)
+        return null;
+      return {
+        fragment: fragment2,
+        selectionTarget: selectionTarget2,
+        slotElements: slotElements2
+      };
+    }
+    const template19 = document2.createElement("template");
+    template19.innerHTML = item.content;
+    const fragment = template19.content.cloneNode(true);
+    const slotElements = slotElementChildren(fragment);
+    for (const child of slotElements) {
+      applySlot(child, slotName);
+      applyCondition(child, sourceStatusConditions);
+    }
+    const selectionTarget = slotElements[0] ?? null;
+    if (!selectionTarget)
+      return null;
+    return {
+      fragment,
+      selectionTarget,
+      slotElements
+    };
+  }
+  function applySlot(element, slotName) {
+    if (slotName) {
+      element.setAttribute("slot", slotName);
+    } else {
+      element.removeAttribute("slot");
+    }
+  }
+  function applyCondition(element, sourceStatusConditions) {
+    if (sourceStatusConditions?.length)
+      applySourceStatusConditions(element, sourceStatusConditions);
+  }
+  function createBlockFragment(document2, entry) {
+    if (!entry.defaultContent) {
+      const fragment = document2.createDocumentFragment();
+      fragment.append(document2.createElement(entry.tag));
+      return fragment;
+    }
+    const template19 = document2.createElement("template");
+    template19.innerHTML = entry.defaultContent;
+    return template19.content.cloneNode(true);
+  }
+  function slotElementChildren(fragment) {
+    return Array.from(fragment.children).filter(isElementNode);
+  }
+  function isElementNode(node) {
+    return node.nodeType === Node.ELEMENT_NODE;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/slots.ts
+  function canInsertNodeCount(parent, slot, insertedElements) {
+    if (typeof slot.max !== "number")
+      return true;
+    return slotChildCount2(parent, slot) + insertedElements.length <= slot.max;
+  }
+  function canReplaceNodeCount(parent, replaced, slot, insertedElements) {
+    if (typeof slot.max !== "number")
+      return true;
+    const replacedCount = (replaced.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined) ? 1 : 0;
+    return slotChildCount2(parent, slot) - replacedCount + insertedElements.length <= slot.max;
+  }
+  function canDuplicate(runtime, editor) {
+    const parent = parentEditor(runtime, editor);
+    if (!parent)
+      return true;
+    const slot = findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
+    if (!slot)
+      return true;
+    return !isSlotFull2(parent, slot);
+  }
+  function canDelete(runtime, editor) {
+    const parent = parentEditor(runtime, editor);
+    if (!parent)
+      return true;
+    const slot = findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
+    if (!slot?.min)
+      return true;
+    return slotChildCount2(parent, slot) > slot.min;
+  }
+  function canInsertSibling(runtime, reference, insertedElement, applySourceConditions, sourceConditionsForSibling) {
+    const parent = parentEditor(runtime, reference);
+    if (!parent) {
+      applySlot(insertedElement, undefined);
+      applySourceConditions(insertedElement, []);
+      return true;
+    }
+    const slotName = reference.target.getAttribute("slot") ?? undefined;
+    const slot = findSlot(parent, slotName);
+    if (!slot || !canInsertNodeCount(parent, slot, [insertedElement]))
+      return false;
+    applySlot(insertedElement, slotName);
+    applySourceConditions(insertedElement, sourceConditionsForSibling(reference));
+    return true;
+  }
+  function canMoveEditor(runtime, source, target) {
+    if (!canDelete(runtime, source))
+      return false;
+    const targetParent = parentEditor(runtime, target);
+    if (!targetParent)
+      return true;
+    const targetSlotName = target.target.getAttribute("slot") ?? undefined;
+    const targetSlot = findSlot(targetParent, targetSlotName);
+    if (!targetSlot)
+      return false;
+    const sourceParent = parentEditor(runtime, source);
+    const isSameSlot = sourceParent === targetParent && (source.target.getAttribute("slot") ?? undefined) === targetSlotName;
+    if (isSameSlot)
+      return true;
+    return canInsertNodeCount(targetParent, targetSlot, [source.target]);
+  }
+  function isSlotFull2(parent, slot) {
+    return typeof slot.max === "number" && slotChildCount2(parent, slot) >= slot.max;
+  }
+  function findSlot(parent, slotName) {
+    return parent.getContentSlots().find((slot) => (slot.slot ?? undefined) === slotName);
+  }
+  function remainingSlotCapacity(parent, slot) {
+    if (typeof slot.max !== "number")
+      return Number.MAX_SAFE_INTEGER;
+    return Math.max(0, slot.max - slotChildCount2(parent, slot));
+  }
+  function parentEditor(runtime, editor) {
+    if (!runtime || !editor.target.parentElement)
+      return null;
+    return runtime.getClosestEditor(editor.target.parentElement)?.target === editor.target ? null : runtime.getClosestEditor(editor.target.parentElement) ?? null;
+  }
+  function slotChildCount2(parent, slot) {
+    return Array.from(parent.target.children).filter((child) => (child.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined)).length;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/media.ts
+  function openMediaPicker(frameDocument, accept, options, onSelect) {
+    const center = new FilesCenter;
+    const cleanup = () => center.remove();
+    center.addEventListener("close", cleanup, { once: true });
+    center.addEventListener("select-file", (event) => {
+      const detail = event.detail;
+      const element = createMediaElement(frameDocument, detail);
+      if (!element)
+        return;
+      onSelect([element]);
+    }, { once: true });
+    center.addEventListener("select-files", (event) => {
+      const detail = event.detail;
+      const elements = detail.files.map((file) => createMediaElement(frameDocument, file)).filter((element) => Boolean(element));
+      onSelect(elements);
+    }, { once: true });
+    document.body.append(center);
+    center.show({
+      accept: ["folder", "file"],
+      fileAccept: accept ?? ["image"],
+      multiple: options.multiple === true,
+      maxSelection: options.maxSelection
+    });
+  }
+  function createMediaElement(document2, detail) {
+    if (!document2)
+      return null;
+    if (detail.mimeType?.startsWith("image/") ?? true) {
+      const image = document2.createElement("img");
+      image.setAttribute("src", detail.src);
+      image.setAttribute("alt", detail.label);
+      image.addEventListener("load", () => {
+        if (image.naturalWidth > 0)
+          image.setAttribute("width", String(image.naturalWidth));
+        if (image.naturalHeight > 0)
+          image.setAttribute("height", String(image.naturalHeight));
+      }, { once: true });
+      return image;
+    }
+    if (detail.mimeType?.startsWith("video/")) {
+      const video = document2.createElement("video");
+      video.setAttribute("src", detail.src);
+      video.setAttribute("controls", "");
+      return video;
+    }
+    if (detail.mimeType?.startsWith("audio/")) {
+      const audio = document2.createElement("audio");
+      audio.setAttribute("src", detail.src);
+      audio.setAttribute("controls", "");
+      return audio;
+    }
+    const link = document2.createElement("a");
+    link.setAttribute("href", detail.src);
+    link.textContent = detail.label;
+    return link;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/shellContentMutations.ts
+  class ShellContentMutations {
+    context;
+    constructor(context) {
+      this.context = context;
+    }
+    addChild(parent, item, slotName) {
+      const slot = findSlot(parent, slotName);
+      if (!slot || isSlotFull2(parent, slot))
+        return;
+      if (item.kind === "media")
+        return this.insertMedia(parent, item, slot, slotName);
+      const insertion = this.createInsertion(item, slotName);
+      if (!insertion || !canInsertNodeCount(parent, slot, insertion.slotElements))
+        return;
+      parent.target.append(insertion.fragment);
+      this.reloadFrameDocument(insertion.selectionTarget);
+    }
+    addRoot(item) {
+      const document2 = this.context.editorDocument();
+      if (!document2 || item.kind === "media")
+        return;
+      const insertion = this.createInsertion(item);
+      if (!insertion)
+        return;
+      if (this.context.isEmptyDocumentContent())
+        document2.contentRoot.replaceChildren();
+      document2.contentRoot.append(insertion.fragment);
+      this.reloadFrameDocument(insertion.selectionTarget);
+    }
+    replaceEditor(editor, item, slotName) {
+      const parent = parentEditor(this.context.runtime(), editor);
+      if (!parent)
+        return this.replaceRootEditor(editor, item);
+      const slot = findSlot(parent, slotName);
+      if (!slot)
+        return;
+      const sourceStatusConditions = sourceStatusConditionsFromElement(editor.target);
+      if (item.kind === "media")
+        return this.replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions);
+      const insertion = this.createInsertion(item, slotName, sourceStatusConditions);
+      if (!insertion || !canReplaceNodeCount(parent, editor, slot, insertion.slotElements))
+        return;
+      editor.target.replaceWith(insertion.fragment);
+      this.reloadFrameDocument(insertion.selectionTarget);
+    }
+    reloadFrameDocument(selectedTarget = null) {
+      const frameDocument = this.context.frameDocument();
+      if (!frameDocument)
+        return;
+      const root = frameDocument.querySelector("[data-cms-editor-root]") ?? frameDocument.querySelector(CMS_BINDING_CORE_TAG);
+      const contentRoot = frameDocument.querySelector("[data-cms-content]");
+      if (!root || !contentRoot)
+        return;
+      this.context.loadDocument({ root, contentRoot }, selectedTarget);
+      this.context.syncViewFrameContent();
+    }
+    replaceRootEditor(editor, item) {
+      if (item.kind === "media")
+        return;
+      const insertion = this.createInsertion(item);
+      if (!insertion)
+        return;
+      editor.target.replaceWith(insertion.fragment);
+      this.reloadFrameDocument(insertion.selectionTarget);
+    }
+    createInsertion(item, slotName, sourceStatusConditions) {
+      return createInsertion(this.context.frameDocument(), item, slotName, sourceStatusConditions);
+    }
+    insertMedia(parent, item, slot, slotName, sourceStatusConditions) {
+      const remaining = remainingSlotCapacity(parent, slot);
+      if (remaining <= 0)
+        return;
+      openMediaPicker(this.context.frameDocument(), item.accept, {
+        multiple: remaining > 1,
+        maxSelection: typeof slot.max === "number" ? remaining : undefined
+      }, (elements) => this.appendMedia(parent, slot, elements, slotName, sourceStatusConditions));
+    }
+    appendMedia(parent, slot, elements, slotName, sourceStatusConditions) {
+      if (elements.length === 0 || !canInsertNodeCount(parent, slot, elements))
+        return;
+      for (const element of elements) {
+        applySlot(element, slotName);
+        if (sourceStatusConditions?.length)
+          applySourceStatusConditions(element, sourceStatusConditions);
+      }
+      parent.target.append(...elements);
+      this.reloadFrameDocument(elements[0] ?? null);
+    }
+    replaceWithMedia(editor, parent, item, slot, slotName, sourceStatusConditions) {
+      if (!canReplaceNodeCount(parent, editor, slot, [editor.target]))
+        return;
+      openMediaPicker(this.context.frameDocument(), item.accept, { multiple: false }, (elements) => {
+        const element = elements[0];
+        if (!element)
+          return;
+        applySlot(element, slotName);
+        if (sourceStatusConditions?.length)
+          applySourceStatusConditions(element, sourceStatusConditions);
+        editor.target.replaceWith(element);
+        this.reloadFrameDocument(element);
+      });
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/shellEditorMutations.ts
+  class ShellEditorMutations {
+    context;
+    content;
+    _clipboardElement = null;
+    constructor(context, content) {
+      this.context = context;
+      this.content = content;
+    }
+    duplicateEditor(editor) {
+      if (!canDuplicate(this.context.runtime(), editor))
+        return;
+      const clone = editor.target.cloneNode(true);
+      editor.target.after(clone);
+      this.content.reloadFrameDocument(clone);
+    }
+    deleteEditor(editor) {
+      if (!canDelete(this.context.runtime(), editor))
+        return;
+      const nextSelectionTarget = this.findNextSelectionTargetAfterDelete(editor);
+      editor.target.remove();
+      this.content.reloadFrameDocument(nextSelectionTarget);
+    }
+    copyEditor(editor) {
+      this._clipboardElement = editor.target.cloneNode(true);
+    }
+    pasteAfter(editor) {
+      const document2 = this.context.editorDocument();
+      if (!this._clipboardElement || !document2)
+        return;
+      const clone = this._clipboardElement.cloneNode(true);
+      if (!editor) {
+        document2.contentRoot.append(clone);
+        this.content.reloadFrameDocument(clone);
+        return;
+      }
+      if (!canInsertSibling(this.context.runtime(), editor, clone, (element, state) => {
+        if (state.length)
+          applySourceStatusConditions(element, state);
+      }, (reference) => sourceStatusConditionsFromElement(reference.target)))
+        return;
+      editor.target.after(clone);
+      this.content.reloadFrameDocument(clone);
+    }
+    moveEditor(source, target, position) {
+      if (source === target || source.target.contains(target.target))
+        return;
+      if (!canMoveEditor(this.context.runtime(), source, target))
+        return;
+      applySlot(source.target, target.target.getAttribute("slot") ?? undefined);
+      applySiblingSourceStatus(source.target, sourceStatusConditionsFromElement(target.target));
+      if (position === "before")
+        target.target.before(source.target);
+      else
+        target.target.after(source.target);
+      this.content.reloadFrameDocument(source.target);
+    }
+    findNextSelectionTargetAfterDelete(editor) {
+      const parent = editor.target.parentElement;
+      if (!parent)
+        return null;
+      return this.context.runtime()?.getClosestEditor(parent)?.target ?? null;
+    }
+  }
+  function applySiblingSourceStatus(target, state) {
+    if (state.length)
+      applySourceStatusConditions(target, state);
+    else if (sourceStatusConditionsFromElement(target).length)
+      target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/sourceDependencyCleanup.ts
+  function collectSourceDependencyUsages(editor, sourceAlias, sourceId) {
+    const usages = [];
+    const scope = collectElementDependencies(editor.target, {
+      aliases: sourceAlias ? new Set([sourceAlias]) : new Set,
+      sourceId,
+      sourceLocal: true
+    }, usages, { isRoot: true });
+    collectBindingDependencies(editor.target, scope, usages);
+    collectEditorBindingDependencies(editor, scope, usages);
+    return dedupeDependencyUsages(usages);
+  }
+  function clearSourceDependencyUsage(usage) {
+    if (usage.target.nodeType === Node.TEXT_NODE) {
+      usage.target.textContent = withoutBindingExpressions(usage.target.textContent ?? "");
+      return;
+    }
+    if (!usage.attribute || !(usage.target instanceof Element))
+      return;
+    if (usage.attribute === CMS_BINDING_ATTRIBUTES.repeat || usage.attribute === CMS_BINDING_ATTRIBUTES.condition) {
+      usage.target.removeAttribute(usage.attribute);
+      return;
+    }
+    const current = usage.target.getAttribute(usage.attribute) ?? "";
+    const next = withoutBindingExpressions(current).trim();
+    if (next) {
+      usage.target.setAttribute(usage.attribute, next);
+    } else {
+      usage.target.removeAttribute(usage.attribute);
+    }
+  }
+  function collectBindingDependencies(root, inheritedScope, usages) {
+    for (const child of Array.from(root.childNodes)) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = child;
+        if (bindingTextDependsOn(text.data, inheritedScope))
+          usages.push({ target: text });
+        continue;
+      }
+      if (child.nodeType !== Node.ELEMENT_NODE)
+        continue;
+      const element = child;
+      const scope = collectElementDependencies(element, inheritedScope, usages);
+      if (isBindingBoundary(element))
+        continue;
+      collectBindingDependencies(element, scope, usages);
+    }
+  }
+  function collectElementDependencies(element, inheritedScope, usages, options = {}) {
+    const scope = {
+      aliases: new Set(inheritedScope.aliases),
+      sourceId: inheritedScope.sourceId,
+      sourceLocal: inheritedScope.sourceLocal
+    };
+    if (!options.isRoot && isBindingBoundary(element))
+      return scope;
+    const repeat = element.getAttribute(CMS_BINDING_ATTRIBUTES.repeat);
+    if (repeat && (inheritedScope.sourceLocal || bindingTextDependsOn(repeat, inheritedScope))) {
+      usages.push({ target: element, attribute: CMS_BINDING_ATTRIBUTES.repeat });
+      const parsed = parseRepeat(repeat);
+      const repeatAlias = parsed?.alias?.trim();
+      if (repeatAlias)
+        scope.aliases.add(repeatAlias);
+    }
+    for (const attribute of Array.from(element.attributes)) {
+      if (attribute.name === CMS_BINDING_ATTRIBUTES.source)
+        continue;
+      if (attribute.name === CMS_BINDING_ATTRIBUTES.repeat)
+        continue;
+      if (bindingTextDependsOn(attribute.value, scope)) {
+        usages.push({ target: element, attribute: attribute.name });
+      }
+    }
+    return scope;
+  }
+  function collectEditorBindingDependencies(editor, inheritedScope, usages) {
+    for (const child of editor.getChildren()) {
+      const scope = collectElementDependencies(child.target, inheritedScope, usages);
+      if (isBindingBoundary(child.target))
+        continue;
+      collectBindingDependencies(child.target, scope, usages);
+      collectEditorBindingDependencies(child, scope, usages);
+    }
+  }
+  function isBindingBoundary(element) {
+    return element.hasAttribute(CMS_BINDING_ATTRIBUTES.source) || element.localName === CMS_BINDING_CORE_TAG;
+  }
+  function bindingTextDependsOn(value, scope) {
+    for (const alias of scope.aliases) {
+      if (expressionReferencesScope(value, alias))
+        return true;
+    }
+    if (!scope.sourceLocal)
+      return false;
+    return containsBindingSyntax(value, scope);
+  }
+  function expressionReferencesScope(value, scope) {
+    const escaped = scope.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?:^|[^A-Za-z0-9_$])${escaped}(?:\\b|\\s*\\.)`).test(value);
+  }
+  function containsBindingSyntax(value, scope) {
+    const statusConditions = parseSourceStatusConditions(value);
+    if (statusConditions.length > 0) {
+      return statusConditions.some((condition) => !condition.sourceId || condition.sourceId === scope.sourceId);
+    }
+    if (/\S+\s+as\s+[A-Za-z_$][\w$]*\s*$/.test(value))
+      return true;
+    const matches2 = value.matchAll(/\{\{\s*([\s\S]*?)\s*\}\}/g);
+    for (const match of matches2) {
+      const expression = match[1]?.trim() ?? "";
+      const head = /^[A-Za-z_$][\w$]*/.exec(expression)?.[0] ?? "";
+      if (head && expression[head.length] !== ".")
+        return true;
+    }
+    return false;
+  }
+  function withoutBindingExpressions(value) {
+    return value.replace(/\{\{\s*[\s\S]*?\s*\}\}/g, "").replace(/\s+/g, " ").trim();
+  }
+  function dedupeDependencyUsages(usages) {
+    const seen = new Set;
+    const ids = new WeakMap;
+    let nextId = 0;
+    return usages.filter((usage) => {
+      let id2 = ids.get(usage.target);
+      if (id2 === undefined) {
+        id2 = nextId;
+        nextId += 1;
+        ids.set(usage.target, id2);
+      }
+      const key = `${id2}:${usage.attribute ?? ""}`;
+      if (seen.has(key))
+        return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/sourceBindings.ts
+  var BINDING_READY_ATTRIBUTE = "cms-ready";
+  function setSource(editor, source, binding = { url: source.url }) {
+    editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, asSource(binding));
+    if (binding.trigger === "submit")
+      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger, "submit");
+    else
+      editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
+    const method = binding.method ?? source.method ?? "GET";
+    if (method && (method !== "GET" || binding.trigger === "submit"))
+      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod, method);
+    else
+      editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
+    const body = binding.body ? asSourceBody(binding.body) : "";
+    if (body)
+      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.sourceBody, body);
+    else
+      editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceBody);
+  }
+  function removeSource(editor, confirmRemoveSourceDependents) {
+    const usages = sourceDependentBindings(editor);
+    if (usages.length > 0 && !confirmRemoveSourceDependents(usages.length))
+      return false;
+    for (const usage of usages)
+      clearSourceDependencyUsage(usage);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.source);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceBody);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourcePublish);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessReset);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
+    editor.target.removeAttribute(BINDING_READY_ATTRIBUTE);
+    return true;
+  }
+  function sourceDependentBindings(editor) {
+    const source = parseSource(editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    const alias = source?.alias?.trim();
+    const sourceId = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId)?.trim();
+    return collectSourceDependencyUsages(editor, alias, sourceId || undefined);
+  }
+  function confirmRemoveSourceDependents(count) {
+    const confirm2 = globalThis.confirm;
+    if (typeof confirm2 !== "function")
+      return true;
+    const plural = count === 1 ? "binding depends" : "bindings depend";
+    return confirm2(`This source has ${count} descendant ${plural} on its data. Remove the source and clean those dependent bindings?`);
+  }
+  function setRepeat(editor, path, alias) {
+    editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.repeat, asRepeat({ path, alias }));
+  }
+  function removeRepeat(editor) {
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.repeat);
+  }
+  function setSourceStatusCondition(editor, sourceEditor, state) {
+    if (!canUseSourceForStatusCondition(editor.target, sourceEditor.target))
+      return false;
+    if (hasNonSourceStatusCondition2(editor.target))
+      return false;
+    const sourceId = ensureSourceId(sourceEditor.target);
+    if (hasSourceStatusConditionAncestor2(editor.target, sourceEditor.target))
+      return false;
+    applySourceStatusCondition(editor.target, state, sourceId);
+    return true;
+  }
+  function setSourceStatusConditions(editor, conditions) {
+    if (conditions.length === 0)
+      return false;
+    if (hasNonSourceStatusCondition2(editor.target))
+      return false;
+    const next = [];
+    for (const condition of conditions) {
+      if (!canUseSourceForStatusCondition(editor.target, condition.sourceEditor.target))
+        return false;
+      if (hasSourceStatusConditionAncestor2(editor.target, condition.sourceEditor.target))
+        return false;
+      next.push({
+        sourceId: ensureSourceId(condition.sourceEditor.target),
+        state: condition.sourceState
+      });
+    }
+    applySourceStatusConditions(editor.target, dedupeSourceStatusConditions(next));
+    return true;
+  }
+  function removeSourceStatusCondition(editor) {
+    if (sourceStatusConditionsFromElement(editor.target).length === 0)
+      return false;
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.condition);
+    return true;
+  }
+  function canUseSourceForStatusCondition(target, source) {
+    return target !== source && source.contains(target);
+  }
+  function hasNonSourceStatusCondition2(target) {
+    return target.hasAttribute(CMS_BINDING_ATTRIBUTES.condition) && sourceStatusConditionsFromElement(target).length === 0;
+  }
+  function hasSourceStatusConditionAncestor2(target, source) {
+    for (let current = target.parentElement;current && current !== source; current = current.parentElement) {
+      if (sourceStatusConditionTargetsSource2(current, source))
+        return true;
+    }
+    return false;
+  }
+  function sourceStatusConditionTargetsSource2(target, source) {
+    const conditions = sourceStatusConditionsFromElement(target);
+    return conditions.some((condition) => {
+      if (condition.sourceId)
+        return condition.sourceId === source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
+      return nearestSourceAncestor2(target) === source;
+    });
+  }
+  function nearestSourceAncestor2(target) {
+    for (let current = target.parentElement;current; current = current.parentElement) {
+      if (current.hasAttribute(CMS_BINDING_ATTRIBUTES.source))
+        return current;
+    }
+    return null;
+  }
+  function ensureSourceId(source) {
+    const current = source.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId)?.trim();
+    if (current && isSourceId(current))
+      return current;
+    const parsed = parseSource(source.getAttribute(CMS_BINDING_ATTRIBUTES.source) ?? "");
+    const base = normalizeSourceId(parsed?.alias ?? source.localName) || "source";
+    const id2 = uniqueSourceId(source, base);
+    source.setAttribute(CMS_BINDING_ATTRIBUTES.sourceId, id2);
+    return id2;
+  }
+  function uniqueSourceId(source, base) {
+    let candidate = base;
+    let index = 2;
+    while (sourceIdExists(source, candidate)) {
+      candidate = `${base}-${index}`;
+      index += 1;
+    }
+    return candidate;
+  }
+  function sourceIdExists(source, id2) {
+    const root = source.getRootNode();
+    for (const element of Array.from(root.querySelectorAll?.(`[${CMS_BINDING_ATTRIBUTES.sourceId}]`) ?? [])) {
+      if (element !== source && element.getAttribute(CMS_BINDING_ATTRIBUTES.sourceId) === id2)
+        return true;
+    }
+    return false;
+  }
+  function normalizeSourceId(value) {
+    return value.trim().replace(/[^A-Za-z0-9_$-]+/g, "-").replace(/^-+|-+$/g, "").replace(/^[^A-Za-z_$]+/, "");
+  }
+  function isSourceId(value) {
+    return /^[A-Za-z_$][\w$-]*$/.test(value);
+  }
+  function dedupeSourceStatusConditions(conditions) {
+    const seen = new Set;
+    return conditions.filter((condition) => {
+      const key = `${condition.sourceId ?? ""}:${condition.state}`;
+      if (seen.has(key))
+        return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/shellBindingMutations.ts
+  class ShellBindingMutations {
+    context;
+    _pendingRepeatEditor = null;
+    constructor(context) {
+      this.context = context;
+    }
+    setSource(editor, source, binding = { url: source.url }) {
+      setSource(editor, source, binding);
+      this.reload(editor.target);
+    }
+    removeSource(editor) {
+      if (!removeSource(editor, confirmRemoveSourceDependents))
+        return;
+      this.reload(editor.target);
+    }
+    openRepeatPicker(editor) {
+      const runtime = this.context.runtime();
+      if (!runtime)
+        return;
+      this._pendingRepeatEditor = editor;
+      runtime.select(editor);
+      this.context.repeatPicker().open(runtime.getSelectedDataScopes(), this.context.findStructureNodeLabel(editor) ?? editor.target.localName);
+    }
+    applyRepeatSelection(path, alias) {
+      if (!this._pendingRepeatEditor)
+        return;
+      this.setRepeat(this._pendingRepeatEditor, path, alias);
+      this._pendingRepeatEditor = null;
+    }
+    removeRepeat(editor) {
+      removeRepeat(editor);
+      this.reload(editor.target);
+    }
+    setRepeat(editor, path, alias) {
+      setRepeat(editor, path, alias);
+      this.reload(editor.target);
+    }
+    setSourceStatusCondition(editor, sourceEditor, state) {
+      if (!setSourceStatusCondition(editor, sourceEditor, state))
+        return;
+      this.reload(editor.target);
+    }
+    setSourceStatusConditions(editor, conditions) {
+      if (!setSourceStatusConditions(editor, conditions))
+        return;
+      this.reload(editor.target);
+    }
+    removeSourceStatusCondition(editor) {
+      if (!removeSourceStatusCondition(editor))
+        return;
+      this.reload(editor.target);
+    }
+    reload(selectedTarget) {
+      const frameDocument = this.context.frameDocument();
+      if (!frameDocument)
+        return;
+      const root = frameDocument.querySelector("[data-cms-editor-root]") ?? frameDocument.querySelector(CMS_BINDING_CORE_TAG);
+      const contentRoot = frameDocument.querySelector("[data-cms-content]");
+      if (!root || !contentRoot)
+        return;
+      this.context.loadDocument({ root, contentRoot }, selectedTarget);
+      this.context.syncViewFrameContent();
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Mutations/shellMutations.ts
+  class ShellMutations {
+    content;
+    editor;
+    bindings;
+    constructor(context) {
+      this.content = new ShellContentMutations(context);
+      this.editor = new ShellEditorMutations(context, this.content);
+      this.bindings = new ShellBindingMutations(context);
+    }
+    handleStructureAction(detail) {
+      const { action, editor, entry, item, sourceEditor, sourceState } = detail;
+      const blockItem = item ?? (entry ? { kind: "block", entry } : null);
+      if (action === "duplicate" && editor)
+        this.editor.duplicateEditor(editor);
+      else if (action === "delete" && editor)
+        this.editor.deleteEditor(editor);
+      else if (action === "copy" && editor)
+        this.editor.copyEditor(editor);
+      else if (action === "paste-after")
+        this.editor.pasteAfter(editor ?? null);
+      else if (action === "set-source" && editor && detail.dataSource)
+        this.bindings.setSource(editor, detail.dataSource, detail.sourceBinding);
+      else if (action === "remove-source" && editor)
+        this.bindings.removeSource(editor);
+      else if (action === "configure-repeat" && editor)
+        this.bindings.openRepeatPicker(editor);
+      else if (action === "remove-repeat" && editor)
+        this.bindings.removeRepeat(editor);
+      else if (action === "set-source-status-condition" && editor && sourceEditor && sourceState)
+        this.bindings.setSourceStatusCondition(editor, sourceEditor, sourceState);
+      else if (action === "set-source-status-conditions" && editor && detail.sourceConditions)
+        this.bindings.setSourceStatusConditions(editor, detail.sourceConditions);
+      else if (action === "remove-source-status-condition" && editor)
+        this.bindings.removeSourceStatusCondition(editor);
+      else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
+        this.editor.moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
+      } else if (action === "replace" && editor && blockItem)
+        this.content.replaceEditor(editor, blockItem, detail.slot);
+      else if (action === "add-root" && blockItem)
+        this.content.addRoot(blockItem);
+      else if (editor && blockItem)
+        this.content.addChild(editor, blockItem, detail.slot);
+    }
+    applyRepeatSelection(path, alias) {
+      this.bindings.applyRepeatSelection(path, alias);
+    }
+    addChild(parent, item, slotName) {
+      this.content.addChild(parent, item, slotName);
+    }
+    addRoot(item) {
+      this.content.addRoot(item);
+    }
+    replaceEditor(editor, item, slotName) {
+      this.content.replaceEditor(editor, item, slotName);
+    }
+    setRepeat(editor, path, alias) {
+      this.bindings.setRepeat(editor, path, alias);
+    }
+    setSource(editor, source, binding = { url: source.url }) {
+      this.bindings.setSource(editor, source, binding);
+    }
+    removeSource(editor) {
+      this.bindings.removeSource(editor);
+    }
+    setSourceStatusCondition(editor, sourceEditor, state) {
+      this.bindings.setSourceStatusCondition(editor, sourceEditor, state);
+    }
+    setSourceStatusConditions(editor, conditions) {
+      this.bindings.setSourceStatusConditions(editor, conditions);
+    }
+    removeSourceStatusCondition(editor) {
+      this.bindings.removeSourceStatusCondition(editor);
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/valueSurface.ts
+  var VALUE_KEY_PATTERN = /^[A-Za-z0-9_.-]+$/;
+  function hasStandardValueSurface(target) {
+    if (!("value" in target))
+      return false;
+    try {
+      const value = target.value;
+      target.value = value;
+      return typeof value === "string";
+    } catch {
+      return false;
+    }
+  }
+  function valueSurfaceName(target) {
+    const propertyName = "name" in target ? target.name : undefined;
+    return String(typeof propertyName === "string" ? propertyName : target.getAttribute("name") ?? target.id ?? "").trim();
+  }
+  function isValidValueKey(value) {
+    return VALUE_KEY_PATTERN.test(value.trim());
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/paramSync.ts
+  var PARAM_SYNC_ENABLE_SETTING = "__cms-param-sync-enabled";
+  var PARAM_SYNC_USE_NAME_SETTING = "__cms-param-sync-use-name";
+  var PARAM_SYNC_NAME_SETTING = "__cms-param-sync-name";
+  function applyParamSyncSetting(editor, setting, value) {
+    if (!isParamSyncSetting(setting))
+      return false;
+    const target = editor.target;
+    const current = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target);
+    if (setting.attribute === PARAM_SYNC_ENABLE_SETTING) {
+      if (value !== true) {
+        target.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
+        return true;
+      }
+      const next = current || fieldName;
+      if (isValidValueKey(next)) {
+        target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
+      }
+      return true;
+    }
+    if (setting.attribute === PARAM_SYNC_USE_NAME_SETTING) {
+      if (value === true && isValidValueKey(fieldName)) {
+        target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, fieldName);
+      } else if (current === fieldName) {
+        target.removeAttribute(CMS_BINDING_ATTRIBUTES.paramSync);
+      }
+      return true;
+    }
+    if (typeof value === "string") {
+      const next = value.trim();
+      if (isValidValueKey(next)) {
+        target.setAttribute(CMS_BINDING_ATTRIBUTES.paramSync, next);
+      }
+    }
+    return true;
+  }
+  function settingsWithParamSync(editor, sections) {
+    const section = paramSyncSettings(editor);
+    return section ? [...sections, section] : sections;
+  }
+  function paramSyncSettings(editor) {
+    const target = editor.target;
+    if (!hasStandardValueSurface(target))
+      return null;
+    const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.paramSync)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target);
+    const hasFieldName = isValidValueKey(fieldName);
+    const isEnabled = syncValue !== "";
+    const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
+    const settings = [
+      {
+        type: "toggle",
+        label: "Sync with query params",
+        attribute: PARAM_SYNC_ENABLE_SETTING,
+        defaultValue: isEnabled
+      }
+    ];
+    if (isEnabled && hasFieldName) {
+      settings.push({
+        type: "toggle",
+        label: "Use field name",
+        attribute: PARAM_SYNC_USE_NAME_SETTING,
+        defaultValue: usesFieldName,
+        help: `Uses "${fieldName}" as the query parameter name.`
+      });
+    }
+    if (isEnabled && !usesFieldName) {
+      settings.push({
+        type: "text",
+        label: "Param name",
+        attribute: PARAM_SYNC_NAME_SETTING,
+        defaultValue: syncValue,
+        placeholder: hasFieldName ? fieldName : "search",
+        help: "Letters, numbers, underscores, dashes and dots only.",
+        required: true
+      });
+    }
+    return {
+      kind: "surcharge",
+      label: "Query params",
+      settings
+    };
+  }
+  function isParamSyncSetting(setting) {
+    return setting.attribute === PARAM_SYNC_ENABLE_SETTING || setting.attribute === PARAM_SYNC_USE_NAME_SETTING || setting.attribute === PARAM_SYNC_NAME_SETTING;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/pageState.ts
+  var PAGE_STATE_ENABLE_SETTING = "__cms-page-state-enabled";
+  var PAGE_STATE_USE_NAME_SETTING = "__cms-page-state-use-name";
+  var PAGE_STATE_NAME_SETTING = "__cms-page-state-name";
+  function applyPageStateSetting(editor, setting, value) {
+    if (!isPageStateSetting(setting))
+      return false;
+    const target = editor.target;
+    const current = target.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target);
+    if (setting.attribute === PAGE_STATE_ENABLE_SETTING) {
+      if (value !== true) {
+        target.removeAttribute(CMS_BINDING_ATTRIBUTES.pageState);
+        return true;
+      }
+      const next = current || fieldName;
+      if (isValidValueKey(next))
+        target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
+      return true;
+    }
+    if (setting.attribute === PAGE_STATE_USE_NAME_SETTING) {
+      if (value === true && isValidValueKey(fieldName)) {
+        target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, fieldName);
+      } else if (current === fieldName) {
+        target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, "");
+      }
+      return true;
+    }
+    if (typeof value === "string") {
+      const next = value.trim();
+      if (isValidValueKey(next))
+        target.setAttribute(CMS_BINDING_ATTRIBUTES.pageState, next);
+    }
+    return true;
+  }
+  function settingsWithPageState(editor, sections) {
+    const section = pageStateSettings(editor);
+    return section ? [...sections, section] : sections;
+  }
+  function pageStateSettings(editor) {
+    const target = editor.target;
+    if (!hasStandardValueSurface(target))
+      return null;
+    const hasSyncAttribute = target.hasAttribute(CMS_BINDING_ATTRIBUTES.pageState);
+    const syncValue = target.getAttribute(CMS_BINDING_ATTRIBUTES.pageState)?.trim() ?? "";
+    const fieldName = valueSurfaceName(target);
+    const hasFieldName = isValidValueKey(fieldName);
+    const isEnabled = hasSyncAttribute;
+    const usesFieldName = isEnabled && hasFieldName && syncValue === fieldName;
+    const settings = [{
+      type: "toggle",
+      label: "Sync with page state",
+      attribute: PAGE_STATE_ENABLE_SETTING,
+      defaultValue: isEnabled
+    }];
+    if (isEnabled && hasFieldName)
+      settings.push({
+        type: "toggle",
+        label: "Use field name",
+        attribute: PAGE_STATE_USE_NAME_SETTING,
+        defaultValue: usesFieldName,
+        help: `Uses "${fieldName}" as the page state key.`
+      });
+    if (isEnabled && !usesFieldName)
+      settings.push({
+        type: "text",
+        label: "State key",
+        attribute: PAGE_STATE_NAME_SETTING,
+        defaultValue: syncValue,
+        placeholder: hasFieldName ? fieldName : "deliveryAddress",
+        help: "Letters, numbers, underscores, dashes and dots only.",
+        required: true
+      });
+    return { kind: "surcharge", label: "Page state", settings };
+  }
+  function isPageStateSetting(setting) {
+    return setting.attribute === PAGE_STATE_ENABLE_SETTING || setting.attribute === PAGE_STATE_USE_NAME_SETTING || setting.attribute === PAGE_STATE_NAME_SETTING;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingsValues.ts
+  function resolveSettingsValues(editor, sections) {
+    return sections.map((section) => ({
+      ...section,
+      settings: section.settings.map((setting) => resolveSetting(editor, setting))
+    }));
+  }
+  function getTextValue(editor, format) {
+    assertTextSlotCompatibility(editor);
+    const textFragment = textContentFragment(editor);
+    const value = format === "richtext" ? textFragment.innerHTML : textFragment.textContent ?? "";
+    return editor.getContentSlots().length > 0 ? value.trim() : value;
+  }
+  function setTextValue(editor, format, value) {
+    assertTextSlotCompatibility(editor);
+    const reserved = reservedSlotNames(editor.getContentSlots());
+    const currentNodes = Array.from(editor.target.childNodes);
+    const referenceNode = currentNodes.find((node) => !isReservedSlotNode(node, reserved)) ?? editor.target.firstChild;
+    const fragment = editor.target.ownerDocument.createDocumentFragment();
+    if (format === "richtext") {
+      const template19 = editor.target.ownerDocument.createElement("template");
+      template19.innerHTML = value;
+      fragment.append(template19.content.cloneNode(true));
+    } else if (value !== "") {
+      fragment.append(editor.target.ownerDocument.createTextNode(value));
+    }
+    editor.target.insertBefore(fragment, referenceNode);
+    for (const node of currentNodes) {
+      if (!isReservedSlotNode(node, reserved))
+        node.remove();
+    }
+  }
+  function resolveSetting(editor, setting) {
+    if (setting.type === "row") {
+      return {
+        ...setting,
+        settings: setting.settings.map((child) => resolveSettingValue(editor, child))
+      };
+    }
+    return resolveSettingValue(editor, setting);
+  }
+  function resolveSettingValue(editor, setting) {
+    if (isParamSyncSetting(setting) || isPageStateSetting(setting))
+      return setting;
+    if (setting.type === "toggle") {
+      return {
+        ...setting,
+        defaultValue: editor.target.hasAttribute(setting.attribute)
+      };
+    }
+    const resolved = {
+      ...setting,
+      defaultValue: editor.target.getAttribute(setting.attribute) ?? setting.defaultValue
+    };
+    if (resolved.type === "color" && resolved.customAttribute) {
+      return {
+        ...resolved,
+        customDefaultValue: editor.target.getAttribute(resolved.customAttribute) ?? resolved.customDefaultValue
+      };
+    }
+    return resolved;
+  }
+  function assertTextSlotCompatibility(editor) {
+    const hasDefaultSlot = editor.getContentSlots().some((slot) => !slot.slot);
+    if (!hasDefaultSlot)
+      return;
+    throw new Error("Editors cannot combine textCapability() with an unnamed content slot.");
+  }
+  function textContentFragment(editor) {
+    const reserved = reservedSlotNames(editor.getContentSlots());
+    const container = editor.target.ownerDocument.createElement("div");
+    for (const node of Array.from(editor.target.childNodes)) {
+      if (isReservedSlotNode(node, reserved))
+        continue;
+      container.append(node.cloneNode(true));
+    }
+    return container;
+  }
+  function reservedSlotNames(slots) {
+    return new Set(slots.map((slot) => slot.slot).filter((slot) => Boolean(slot)));
+  }
+  function isReservedSlotNode(node, reserved) {
+    return node.nodeType === 1 && reserved.has(node.getAttribute("slot") ?? "");
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/stateSessions.ts
+  function toggleStateSession(sessionsByEditor, editor, state) {
+    const sessions = sessionsByEditor.get(editor) ?? new Map;
+    if (sessions.has(state.id)) {
+      exitStateSession(sessionsByEditor, editor, state.id);
+      return;
+    }
+    if (state.group) {
+      for (const candidate of editor.getStates()) {
+        if (candidate.id !== state.id && candidate.group === state.group) {
+          exitStateSession(sessionsByEditor, editor, candidate.id);
+        }
+      }
+    }
+    const session = state.enter();
+    sessions.set(state.id, session);
+    sessionsByEditor.set(editor, sessions);
+  }
+  function exitStateSession(sessionsByEditor, editor, stateId) {
+    const sessions = sessionsByEditor.get(editor);
+    const session = sessions?.get(stateId);
+    if (!sessions || !session)
+      return;
+    session.exit();
+    sessions.delete(stateId);
+  }
+  function exitAllStateSessions(sessionsByEditor, nodes) {
+    for (const node of flattenStructure(nodes)) {
+      const sessions = sessionsByEditor.get(node.editor);
+      if (!sessions)
+        continue;
+      for (const session of sessions.values()) {
+        session.exit();
+      }
+      sessions.clear();
+    }
+  }
+  function flattenStructure(nodes) {
+    return nodes.flatMap((node) => [node, ...flattenStructure(node.children)]);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellSelection.ts
+  class ShellSelection {
+    context;
+    constructor(context) {
+      this.context = context;
+    }
+    select(editor, options = {}) {
+      const runtime = this.context.runtime();
+      if (!runtime)
+        return;
+      const selection = runtime.select(editor);
+      this.context.renderStructure(options);
+      if (!selection) {
+        this.context.settings().setSettings([]);
+        this.context.highlight().hide();
+        return;
+      }
+      this.renderSettings();
+      this.context.highlight().show(selection.editor, {
+        scrollIntoView: options.scrollFrameIntoView === true
+      });
+    }
+    renderSettings() {
+      const runtime = this.context.runtime();
+      if (!runtime)
+        return;
+      const selection = runtime.getSelection();
+      if (!selection) {
+        this.context.settings().setSettings([]);
+        return;
+      }
+      this.context.settings().setSettings(resolveSettingsValues(selection.editor, settingsWithPageState(selection.editor, settingsWithParamSync(selection.editor, selection.settings))), selection.textCapability, selection.textCapability ? getTextValue(selection.editor, selection.textCapability.format) : "", this.context.settingsMode(), selection.states, runtime.getSelectedDataScopes(), this.context.dataSources());
+    }
+    applySetting(editor, setting, value, attributes) {
+      if (attributes) {
+        this.applyAttributes(editor, attributes);
+        return;
+      }
+      if (applyParamSyncSetting(editor, setting, value) || applyPageStateSetting(editor, setting, value)) {
+        this.renderSettings();
+        this.context.syncViewFrameContent();
+        this.context.highlight().show(editor);
+        return;
+      }
+      const attribute = setting.attribute;
+      if (typeof value === "boolean") {
+        editor.target.toggleAttribute(attribute, value);
+      } else if (value === "") {
+        editor.target.removeAttribute(attribute);
+      } else if (typeof value === "string") {
+        editor.target.setAttribute(attribute, value);
+      }
+      if (setting.type === "select" || setting.type === "segmented" || setting.type === "toggle") {
+        this.renderSettings();
+      }
+    }
+    applyAttributes(editor, attributes) {
+      for (const [attribute, value] of Object.entries(attributes)) {
+        if (value === null || value === "") {
+          editor.target.removeAttribute(attribute);
+        } else if (typeof value === "boolean") {
+          editor.target.toggleAttribute(attribute, value);
+        } else {
+          editor.target.setAttribute(attribute, value);
+        }
+      }
+      this.renderSettings();
+    }
+    toggleState(editor, state) {
+      toggleStateSession(this.context.stateSessions(), editor, state);
+    }
+    exitAllStateSessions() {
+      const runtime = this.context.runtime();
+      if (!runtime)
+        return;
+      exitAllStateSessions(this.context.stateSessions(), runtime.getStructure());
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellChrome.ts
+  function shellResourceChromeDefaults(resource) {
+    if (resource === "template") {
+      return chromeDefaults("Templates", "/admin/templates", "Template settings", "Configure template metadata.", "Identifier", "Category", "Status", "Description");
+    }
+    return chromeDefaults("Pages", "/admin/pages", "Page settings", "Configure page-level metadata and routing.", "Path", "Tags", "Status", "SEO description");
+  }
+  function applyShellChromeLabels(host, topBar, resource, defaults, pageField) {
+    topBar.setNavigation({
+      backHref: host.getAttribute("back-href") ?? defaults.backHref,
+      backLabel: host.getAttribute("back-label") ?? defaults.backLabel,
+      settingsLabel: host.getAttribute("settings-label") ?? defaults.settingsLabel
+    });
+    host.shadowRoot.querySelector("#page-settings-title").textContent = host.getAttribute("settings-title") ?? defaults.settingsTitle;
+    host.shadowRoot.querySelector(".settings-description").textContent = host.getAttribute("settings-description") ?? defaults.settingsDescription;
+    host.shadowRoot.querySelector('[data-page-label="path"]').textContent = host.getAttribute("settings-path-label") ?? defaults.pathLabel;
+    host.shadowRoot.querySelector('[data-page-label="tags"]').textContent = host.getAttribute("settings-tags-label") ?? defaults.tagsLabel;
+    host.shadowRoot.querySelector('[data-page-label="published"]').textContent = host.getAttribute("settings-status-label") ?? defaults.statusLabel;
+    host.shadowRoot.querySelector('[data-page-label="description"]').textContent = host.getAttribute("settings-description-label") ?? defaults.descriptionLabel;
+    const isPage = resource === "page";
+    pageField("path").disabled = !isPage;
+    pageField("published").closest("label").hidden = !isPage;
+  }
+  function chromeDefaults(backLabel, backHref, settingsTitle, settingsDescription, pathLabel, tagsLabel, statusLabel, descriptionLabel) {
+    return {
+      backHref,
+      backLabel,
+      settingsLabel: settingsTitle,
+      settingsTitle,
+      settingsDescription,
+      pathLabel,
+      tagsLabel,
+      statusLabel,
+      descriptionLabel
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellPageSettings.ts
+  function openPageSettingsModal(modal) {
+    modal.hidden = false;
+    modal.querySelector("input")?.focus();
+  }
+  function closePageSettingsModal(modal) {
+    modal.hidden = true;
+  }
+  function syncPageSettingsForm(config, pageField) {
+    if (!config)
+      return;
+    pageField("title").value = config.title;
+    pageField("path").value = config.path;
+    pageField("published").value = String(config.published);
+    pageField("description").value = config.description;
+    pageField("tags").value = config.tags.join(", ");
+  }
+  function readPageSettingsForm(config, pageField) {
+    if (!config)
+      return null;
+    return {
+      id: config.id,
+      title: pageField("title").value.trim(),
+      path: pageField("path").value.trim(),
+      published: pageField("published").value === "true",
+      description: pageField("description").value,
+      tags: parseTags(pageField("tags").value)
+    };
+  }
+  function applyPageSettingsTitle(topBar, config) {
+    if (config)
+      topBar.setPageTitle(config.title, config.path);
+  }
+  function parseTags(value) {
+    return [...new Set(value.split(",").map((tag) => tag.trim()).filter(Boolean))];
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/shellStructureTreeSync.ts
+  function isStructureTree(value) {
+    return Boolean(value && "catalog" in value && "setStructure" in value && "setInsertItems" in value && "setDefaultTemplateSelection" in value);
+  }
+  function syncStructureTreeCatalog(root, catalog, insertItems, defaultTemplateSelection) {
+    withStructureTree(root, (tree) => {
+      tree.catalog = catalog;
+      tree.setInsertItems(insertItems);
+      tree.setDefaultTemplateSelection(defaultTemplateSelection);
+    });
+  }
+  function syncStructureTreeInsertItems(root, insertItems, defaultTemplateSelection) {
+    withStructureTree(root, (tree) => {
+      tree.setInsertItems(insertItems);
+      tree.setDefaultTemplateSelection(defaultTemplateSelection);
+    });
+  }
+  function syncStructureTreeDefaultTemplateSelection(root, defaultTemplateSelection) {
+    withStructureTree(root, (tree) => {
+      tree.setDefaultTemplateSelection(defaultTemplateSelection);
+    });
+  }
+  function withStructureTree(root, apply) {
+    const tree = root.querySelector("cms-editor-v2-structure-tree");
+    if (isStructureTree(tree)) {
+      apply(tree);
+      return;
+    }
+    customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
+      const upgradedTree = root.querySelector("cms-editor-v2-structure-tree");
+      if (isStructureTree(upgradedTree))
+        apply(upgradedTree);
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureDataSources.ts
+  function syncStructureTreeDataSources(root, dataSources, isStructureTree2) {
+    const tree = root.querySelector("cms-editor-v2-structure-tree");
+    if (isStructureTree2(tree)) {
+      tree.setDataSources(dataSources);
+      return;
+    }
+    customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
+      const upgradedTree = root.querySelector("cms-editor-v2-structure-tree");
+      if (isStructureTree2(upgradedTree))
+        upgradedTree.setDataSources(dataSources);
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Structure/structureRender.ts
+  function renderStructure(tree, runtime, catalog, _insertItems, isEmptyDocumentContent2, options = {}) {
+    if (!runtime || isEmptyDocumentContent2()) {
+      tree.setStructure([], null, catalog);
+      return;
+    }
+    const structure = decorateStructure(runtime.getStructure());
+    tree.setStructure(structure, runtime.getSelection()?.editor ?? null, catalog, {
+      scrollSelectedIntoView: options.scrollStructureIntoView === true,
+      repeatableTargets: repeatableTargets(runtime, structure)
+    });
+  }
+  function decorateStructure(nodes) {
+    return nodes.map((node) => decorateEditorStructureNode(node));
+  }
+  function findStructureNodeLabel(runtime, editor) {
+    const visit = (nodes) => {
+      for (const node of nodes) {
+        if (node.editor === editor)
+          return node.label;
+        const childLabel = visit(node.children);
+        if (childLabel)
+          return childLabel;
+      }
+      return null;
+    };
+    return runtime ? visit(runtime.getStructure()) : null;
+  }
+  function decorateEditorStructureNode(node) {
+    return {
+      ...node,
+      children: decorateStructure(node.children)
+    };
+  }
+  function repeatableTargets(runtime, nodes) {
+    return flattenStructure2(nodes).filter((node) => hasArrayFields(runtime.registry.collectDataScopes(node.target))).map((node) => node.target);
+  }
+  function hasArrayFields(scopes) {
+    return scopes.some((scope) => fieldsContainArray(scope.fields));
+  }
+  function fieldsContainArray(fields) {
+    return fields.some((field) => field.type === "array" || fieldsContainArray(field.children ?? []));
+  }
+  function flattenStructure2(nodes) {
+    return nodes.flatMap((node) => [node, ...flattenStructure2(node.children)]);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellSync.ts
+  class ShellSync {
+    context;
+    constructor(context) {
+      this.context = context;
+    }
+    syncChromeLabels() {
+      const resource = this.context.host.getAttribute("resource") ?? "page";
+      const defaults = shellResourceChromeDefaults(resource);
+      const topBar = this.context.host.shadowRoot.querySelector("cms-editor-v2-topbar");
+      if (!this.isTopBar(topBar)) {
+        this.requestChromeSyncWhenTopBarIsReady();
+        return;
+      }
+      this.applyChromeLabels(topBar, resource, defaults);
+    }
+    openPageSettings() {
+      openPageSettingsModal(this.context.refs.pageSettingsModal);
+    }
+    closePageSettings() {
+      closePageSettingsModal(this.context.refs.pageSettingsModal);
+    }
+    syncPageSettingsForm() {
+      syncPageSettingsForm(this.context.state.pageConfig, (name) => this.pageField(name));
+    }
+    applyPageSettingsForm() {
+      const pageConfig = readPageSettingsForm(this.context.state.pageConfig, (name) => this.pageField(name));
+      this.context.state.pageConfig = pageConfig;
+      applyPageSettingsTitle(this.context.refs.topBar, pageConfig);
+    }
+    setSaveStatus(label) {
+      this.context.refs.topBar.saveStatus = label;
+    }
+    syncStructureTreeCatalog() {
+      syncStructureTreeCatalog(this.context.host.shadowRoot, this.context.state.catalog, this.context.state.insertItems, this.context.state.defaultTemplateSelection);
+    }
+    syncStructureTreeInsertItems() {
+      syncStructureTreeInsertItems(this.context.host.shadowRoot, this.context.state.insertItems, this.context.state.defaultTemplateSelection);
+    }
+    syncStructureTreeDefaultTemplateSelection() {
+      syncStructureTreeDefaultTemplateSelection(this.context.host.shadowRoot, this.context.state.defaultTemplateSelection);
+    }
+    syncStructureTreeDataSources() {
+      syncStructureTreeDataSources(this.context.host.shadowRoot, this.context.state.dataSources, isStructureTree);
+    }
+    findStructureNodeLabel(editor) {
+      return findStructureNodeLabel(this.context.state.runtime, editor);
+    }
+    isStructureTree(value) {
+      return isStructureTree(value);
+    }
+    applyChromeLabels(topBar, resource, defaults) {
+      applyShellChromeLabels(this.context.host, topBar, resource, defaults, (name) => this.pageField(name));
+    }
+    requestChromeSyncWhenTopBarIsReady() {
+      if (this.context.state.chromeSyncPending)
+        return;
+      this.context.state.chromeSyncPending = true;
+      customElements.whenDefined("cms-editor-v2-topbar").then(() => {
+        this.context.state.chromeSyncPending = false;
+        const topBar = this.context.host.shadowRoot.querySelector("cms-editor-v2-topbar");
+        if (topBar)
+          customElements.upgrade(topBar);
+        if (!this.isTopBar(topBar))
+          return;
+        const resource = this.context.host.getAttribute("resource") ?? "page";
+        this.applyChromeLabels(topBar, resource, shellResourceChromeDefaults(resource));
+      });
+    }
+    pageField(name) {
+      return this.context.refs.pageField(name);
+    }
+    isTopBar(value) {
+      return Boolean(value && "setNavigation" in value);
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Events/shellEvents.ts
+  class ShellEvents {
+    context;
+    constructor(context) {
+      this.context = context;
+    }
+    onSelectEditor = (event) => {
+      const editor = event.detail.editor;
+      this.context.commands.select(editor, {
+        scrollFrameIntoView: true,
+        scrollStructureIntoView: false
+      });
+    };
+    onSettingsTabsClick = (event) => {
+      const button = event.target?.closest("[data-settings-mode]");
+      if (!button)
+        return;
+      this.context.state.settingsMode = button.dataset.settingsMode === "overrides" ? "overrides" : "settings";
+      this.context.commands.syncSettingsTabs();
+      this.context.commands.renderSettings();
+    };
+    onViewportChange = (event) => {
+      this.context.state.viewport = event.detail.viewport;
+      this.context.commands.syncViewport();
+    };
+    onEditorModeChange = (event) => {
+      this.context.state.editorMode = event.detail.mode;
+      this.context.commands.syncEditorMode();
+    };
+    onSourceStateChange = (event) => {
+      this.context.state.sourceStateForce = event.detail.sourceState;
+      this.context.commands.syncEditorMode();
+    };
+    onViewReload = () => this.context.refs.canvas.reloadViewFrame();
+    onPageSettings = () => this.context.renderSync.openPageSettings();
+    onSave = () => {
+      this.context.renderSync.applyPageSettingsForm();
+      this.context.commands.saveDocument();
+    };
+    onDeleteDocument = () => {
+      if (!this.context.state.pageConfig) {
+        this.context.commands.setSaveStatus("No page");
+        return;
+      }
+      this.context.commands.dispatchDeleteDocument();
+    };
+    onPageSettingsModalClick = (event) => {
+      if (event.target?.closest("[data-page-settings-apply]")) {
+        this.context.renderSync.applyPageSettingsForm();
+        this.context.renderSync.closePageSettings();
+        this.context.commands.saveDocument();
+        return;
+      }
+      if (event.target?.closest("[data-page-settings-close]")) {
+        this.context.renderSync.closePageSettings();
+      }
+    };
+    onKeyDown = (event) => {
+      const keyboardEvent = event;
+      if (keyboardEvent.key === "Escape" && !this.context.refs.pageSettingsModal.hidden) {
+        this.context.renderSync.closePageSettings();
+      }
+    };
+    onStructureAction = (event) => {
+      this.context.mutations.handleStructureAction(event.detail);
+    };
+    onFrameReady = (event) => {
+      this.context.commands.handleFrameReady(event.detail);
+    };
+    onSettingChange = (event) => {
+      const selection = this.context.state.runtime?.getSelection();
+      if (!selection)
+        return;
+      this.context.commands.applySetting(selection.editor, event.detail.setting, event.detail.value, event.detail.attributes);
+      this.context.commands.syncViewFrameContent();
+      this.context.highlight.show(selection.editor);
+    };
+    onContentChange = (event) => {
+      const selection = this.context.state.runtime?.getSelection();
+      if (!selection?.textCapability)
+        return;
+      setTextValue(selection.editor, selection.textCapability.format, event.detail.value);
+      this.context.commands.syncViewFrameContent();
+      this.context.highlight.show(selection.editor);
+    };
+    onStateToggle = (event) => {
+      const selection = this.context.state.runtime?.getSelection();
+      if (!selection)
+        return;
+      this.context.commands.toggleState(selection.editor, event.detail.state);
+      this.context.commands.renderSettings();
+      this.context.highlight.show(selection.editor);
+    };
+    onRepeatSelect = (event) => {
+      this.context.mutations.applyRepeatSelection(event.detail.path, event.detail.alias);
+    };
+    onFrameClick = (event) => {
+      const runtime = this.context.state.runtime;
+      if (!runtime)
+        return;
+      event.preventDefault();
+      this.context.commands.select(runtime.getClosestEditor(this.context.frameClickTarget(event)) ?? null, {
+        scrollStructureIntoView: true
+      });
+    };
+    onCanvasBackgroundClick = () => {
+      if (this.context.state.runtime)
+        this.context.commands.select(null, { scrollStructureIntoView: false });
+    };
+  }
+
   // ../../features/cms-editor-system-v2/src/runtime/EditorRegistry/EditorRegistry.ts
   class EditorRegistry {
     _editorsByTarget = new Map;
@@ -17308,10 +26093,22 @@ label {
       }
       return;
     }
+    getRichTextOwner(target) {
+      let current = target.parentElement;
+      while (current) {
+        const editor = this._editorsByTarget.get(current);
+        if (editor && this._containsTargetInRichText(editor, target))
+          return editor;
+        current = current.parentElement;
+      }
+      return;
+    }
     getDirectChildren(parent) {
       const children = [];
       for (const editor of this._editorsByTarget.values()) {
         if (editor.target === parent)
+          continue;
+        if (this.getRichTextOwner(editor.target))
           continue;
         if (!parent.contains(editor.target))
           continue;
@@ -17332,21 +26129,38 @@ label {
       }
       return ancestors;
     }
-    collectDataScopes(target) {
+    collectDataScopes(target, options = {}) {
       const editors = [
         ...this.getAncestors(target),
-        this.getEditor(target)
+        options.includeTarget === false ? undefined : this.getEditor(target)
       ].filter((editor) => Boolean(editor));
       return editors.flatMap((editor) => editor.getDataScopes());
     }
     _getClosestRegisteredAncestor(target) {
       let current = target.parentElement;
       while (current) {
-        if (this._editorsByTarget.has(current))
+        const editor = this._editorsByTarget.get(current);
+        if (editor && !this.getRichTextOwner(editor.target))
           return current;
         current = current.parentElement;
       }
       return;
+    }
+    _containsTargetInRichText(editor, target) {
+      return editor.getTextCapability()?.format === "richtext" && editor.target !== target && editor.target.contains(target) && !this._isInsideNamedContentSlot(editor, target);
+    }
+    _isInsideNamedContentSlot(editor, target) {
+      const namedSlots = new Set(editor.getContentSlots().map((slot) => slot.slot).filter((slot) => Boolean(slot)));
+      if (namedSlots.size === 0)
+        return false;
+      let current = target;
+      while (current && current !== editor.target) {
+        const slot = current.getAttribute("slot");
+        if (slot && namedSlots.has(slot))
+          return true;
+        current = current.parentElement;
+      }
+      return false;
     }
   }
   // ../../features/cms-editor-system-v2/src/runtime/events.ts
@@ -17470,14 +26284,6 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/runtime/EditorRuntime/EditorRuntime.ts
-  var SOURCE_STATE_NAMES = CMS_SOURCE_STATES;
-  var SOURCE_STATE_LABELS = {
-    loaded: ":loaded",
-    loading: ":loading",
-    empty: ":empty",
-    error: ":error"
-  };
-
   class EditorRuntime {
     _dataSources;
     registry = new EditorRegistry;
@@ -17537,7 +26343,7 @@ label {
           break;
         current = current.parentElement;
       }
-      return closest;
+      return this._getRichTextOwner(closest.target) ?? closest;
     }
     getStructure() {
       const document2 = this._requireDocument();
@@ -17549,7 +26355,7 @@ label {
         return null;
       }
       const editor = targetOrEditor instanceof Editor ? targetOrEditor : this.registry.getEditor(targetOrEditor);
-      this._selectedEditor = editor ?? null;
+      this._selectedEditor = editor ? this._getRichTextOwner(editor.target) ?? editor : null;
       return this.getSelection();
     }
     getSelection() {
@@ -17569,7 +26375,9 @@ label {
     getSelectedDataScopes() {
       if (!this._selectedEditor)
         return [];
-      return this.registry.collectDataScopes(this._selectedEditor.target);
+      return this.registry.collectDataScopes(this._selectedEditor.target, {
+        includeTarget: !this._selectedEditor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source)
+      });
     }
     _declareBindingDataScopes(editor) {
       this._declareSourceDataScope(editor);
@@ -17640,6 +26448,8 @@ label {
           continue;
         if (editor.target === parent)
           continue;
+        if (this._getRichTextOwner(editor.target))
+          continue;
         if (!parent.contains(editor.target))
           continue;
         if (this._getClosestStructureParent(editor.target, parent) !== parent)
@@ -17658,29 +26468,7 @@ label {
           children: editor.getStructureMode() === "opaque" ? [] : this._getStructureChildren(editor.target)
         });
       }
-      if (parent.hasAttribute(CMS_BINDING_ATTRIBUTES.source)) {
-        return this._groupSourceChildren(this.registry.getEditor(parent), parent, children);
-      }
       return children;
-    }
-    _groupSourceChildren(sourceEditor, sourceTarget, children) {
-      if (!sourceEditor)
-        return children;
-      return SOURCE_STATE_NAMES.map((state) => {
-        const stateChildren = children.filter((child) => this._sourceStateOf(child.target) === state);
-        return {
-          kind: "source-state",
-          sourceEditor,
-          target: sourceTarget,
-          state,
-          label: SOURCE_STATE_LABELS[state],
-          badges: [],
-          children: stateChildren
-        };
-      });
-    }
-    _sourceStateOf(target) {
-      return sourceStateFromElement(target);
     }
     _getStructureBadges(editor) {
       const badges = [];
@@ -17691,6 +26479,12 @@ label {
         badges.push("Source");
       if (editor.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat))
         badges.push("Repeat");
+      const condition = editor.target.getAttribute(CMS_BINDING_ATTRIBUTES.condition);
+      const sourceStatuses = [...new Set(parseSourceStatusConditions(condition).map((item) => item.state))];
+      if (sourceStatuses.length > 0)
+        badges.push(...sourceStatuses);
+      else if (condition?.trim())
+        badges.push("condition");
       return badges;
     }
     _getClosestStructureParent(target, stopAt) {
@@ -17699,12 +26493,17 @@ label {
       while (current && current !== stopAt) {
         if (document2.contentRoot.contains(current)) {
           const editor = this.registry.getEditor(current);
-          if (editor)
+          if (editor && !this._getRichTextOwner(editor.target))
             return current;
         }
         current = current.parentElement;
       }
       return stopAt;
+    }
+    _getRichTextOwner(target) {
+      const document2 = this._requireDocument();
+      const owner = this.registry.getRichTextOwner(target);
+      return owner && document2.contentRoot.contains(owner.target) ? owner : undefined;
     }
     _walkElements(root) {
       return [
@@ -17724,84 +26523,566 @@ label {
       return this._document;
     }
   }
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/FrameHighlight.ts
-  var STYLE_ID = "cms-editor-v2-highlight-style";
-  var HIGHLIGHT_ATTR = "data-cms-editor-v2-highlight";
-
-  class FrameHighlight {
-    _target = null;
-    _overlay = null;
-    _resizeObserver = null;
-    show(editor, options = {}) {
-      this.hide();
-      this._target = editor.target;
-      const doc = editor.target.ownerDocument;
-      this._ensureStyle(doc);
-      if (options.scrollIntoView) {
-        editor.target.scrollIntoView({
-          block: "center",
-          inline: "nearest",
-          behavior: "smooth"
-        });
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/shellApi.ts
+  class ShellApi {
+    context;
+    constructor(context) {
+      this.context = context;
+    }
+    setCatalog(catalog) {
+      this.context.state.catalog = [...catalog];
+      this.context.host.setAttribute("catalog-size", String(catalog.length));
+      this.context.renderSync.syncStructureTreeCatalog();
+    }
+    setInsertItems(items) {
+      this.context.state.insertItems = items.map((item) => ({ ...item }));
+      this.context.renderSync.syncStructureTreeInsertItems();
+      if (this.context.state.runtime)
+        this.context.commands.renderStructure();
+    }
+    setDefaultTemplateSelection(selection) {
+      this.context.state.defaultTemplateSelection = { ...selection };
+      this.context.renderSync.syncStructureTreeDefaultTemplateSelection();
+    }
+    setDataSources(sources) {
+      this.context.state.dataSources = sources.map((source) => ({
+        ...source,
+        fields: [...source.fields],
+        ...source.params ? { params: [...source.params] } : {},
+        ...source.body ? { body: {
+          ...source.body,
+          fields: [...source.body.fields]
+        } } : {}
+      }));
+      this.context.renderSync.syncStructureTreeDataSources();
+    }
+    setPageConfig(config) {
+      this.context.state.pageConfig = {
+        ...config,
+        tags: [...config.tags]
+      };
+      if (config.defaultTemplateCategory) {
+        this.setDefaultTemplateSelection({ category: config.defaultTemplateCategory });
       }
-      this._overlay = doc.createElement("div");
-      this._overlay.setAttribute(HIGHLIGHT_ATTR, "");
-      doc.body.append(this._overlay);
-      this._resizeObserver = new ResizeObserver(() => this.update());
-      this._resizeObserver.observe(editor.target);
-      doc.defaultView?.addEventListener("scroll", this.update, true);
-      doc.defaultView?.addEventListener("resize", this.update);
-      this.update();
+      this.context.refs.topBar.setPageTitle(config.title, config.path);
+      this.context.renderSync.syncPageSettingsForm();
     }
-    hide() {
-      if (this._target) {
-        const win = this._target.ownerDocument.defaultView;
-        win?.removeEventListener("scroll", this.update, true);
-        win?.removeEventListener("resize", this.update);
-      }
-      this._resizeObserver?.disconnect();
-      this._resizeObserver = null;
-      this._overlay?.remove();
-      this._overlay = null;
-      this._target = null;
-    }
-    dispose() {
-      this.hide();
-    }
-    update = () => {
-      if (!this._target || !this._overlay)
-        return;
-      const win = this._target.ownerDocument.defaultView;
-      if (!win)
-        return;
-      const rect = this._target.getBoundingClientRect();
-      this._overlay.style.left = `${rect.left + win.scrollX}px`;
-      this._overlay.style.top = `${rect.top + win.scrollY}px`;
-      this._overlay.style.width = `${rect.width}px`;
-      this._overlay.style.height = `${rect.height}px`;
-    };
-    _ensureStyle(doc) {
-      if (doc.getElementById(STYLE_ID))
-        return;
-      const style = doc.createElement("style");
-      style.id = STYLE_ID;
-      style.textContent = `
-[${HIGHLIGHT_ATTR}] {
-    position: absolute;
-    z-index: 2147483647;
-    pointer-events: none;
-    outline: 2px solid #16775f;
-    outline-offset: -2px;
-    border-radius: 8px;
-    box-shadow: 0 0 0 1px rgba(22, 119, 95, 0.18), 0 8px 24px rgba(22, 119, 95, 0.14);
-}
-`;
-      doc.head.append(style);
+    loadDocument(document2, selectedTarget = null) {
+      this.context.commands.exitAllStateSessions();
+      this.context.state.runtime?.dispose();
+      this.context.state.editorDocument = document2;
+      const runtime = new EditorRuntime(this.context.state.catalog, this.context.state.dataSources);
+      this.context.state.runtime = runtime;
+      runtime.load(document2);
+      this.context.commands.renderStructure();
+      this.context.commands.select(selectedTarget ? runtime.getEditor(selectedTarget) ?? runtime.getClosestEditor(selectedTarget) ?? null : null, { scrollStructureIntoView: true });
     }
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Document/shellDocumentFlow.ts
+  function dispatchSaveDocument(context) {
+    const pageConfig = context.pageConfig();
+    if (!pageConfig) {
+      context.setSaveStatus("No page");
+      return;
+    }
+    context.syncEditorMode();
+    context.setSaveStatus("Saving");
+    context.host.dispatchEvent(new CustomEvent(context.saveEventName, {
+      bubbles: true,
+      composed: true,
+      detail: {
+        page: {
+          ...pageConfig,
+          tags: [...pageConfig.tags]
+        },
+        content: context.contentHtml()
+      }
+    }));
+  }
+  function dispatchDeleteDocument(host, eventName) {
+    host.dispatchEvent(new CustomEvent(eventName, {
+      bubbles: true,
+      composed: true
+    }));
+  }
+  function handleShellFrameReady(context) {
+    context.frames.handleFrameReady(context.detail.kind, context.detail.document, {
+      bindViewFrameDocument: context.bindViewFrameDocument,
+      bindFrameDocument: context.bindFrameDocument,
+      syncViewFrameContent: context.syncViewFrameContent,
+      syncBindingPreviewCore: context.syncBindingPreviewCore,
+      loadDocument: context.loadDocument,
+      clearDocument: context.clearDocument,
+      renderStructure: context.renderStructure,
+      settings: context.settings
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/shellCommands.ts
+  class ShellCommands {
+    context;
+    constructor(context) {
+      this.context = context;
+    }
+    dispatchDeleteDocument() {
+      dispatchDeleteDocument(this.context.host, this.context.deleteEventName);
+    }
+    saveDocument() {
+      dispatchSaveDocument({
+        host: this.context.host,
+        pageConfig: () => this.context.state.pageConfig,
+        contentHtml: () => this.getContentHtml(),
+        syncEditorMode: () => this.syncEditorMode(),
+        setSaveStatus: (label) => this.setSaveStatus(label),
+        saveEventName: this.context.saveEventName
+      });
+    }
+    handleFrameReady(detail) {
+      handleShellFrameReady({
+        frames: this.context.frames,
+        detail,
+        bindViewFrameDocument: (document2) => this.bindViewFrameDocument(document2),
+        bindFrameDocument: (document2) => this.bindFrameDocument(document2),
+        syncViewFrameContent: () => this.syncViewFrameContent(),
+        syncBindingPreviewCore: () => this.syncBindingPreviewCore(),
+        loadDocument: (document2) => this.context.host.loadDocument(document2),
+        clearDocument: () => this.clearDocument(),
+        renderStructure: () => this.renderStructure(),
+        settings: () => this.context.renderSync.settings()
+      });
+    }
+    select(editor, options = {}) {
+      this.context.selection.select(editor, options);
+    }
+    renderSettings() {
+      this.context.selection.renderSettings();
+    }
+    applySetting(editor, setting, value, attributes) {
+      this.context.selection.applySetting(editor, setting, value, attributes);
+    }
+    toggleState(editor, state) {
+      this.context.selection.toggleState(editor, state);
+    }
+    exitAllStateSessions() {
+      this.context.selection.exitAllStateSessions();
+    }
+    bindFrameDocument(document2) {
+      this.context.frames.bindFrameDocument(document2, this.context.frameClickHandler());
+    }
+    bindViewFrameDocument(document2) {
+      this.context.frames.bindViewFrameDocument(document2);
+    }
+    unbindFrameDocument() {
+      this.context.frames.unbindFrameDocument(this.context.frameClickHandler());
+    }
+    unbindViewFrameDocument() {
+      this.context.frames.unbindViewFrameDocument();
+    }
+    clearDocument() {
+      this.context.state.runtime?.dispose();
+      this.context.state.runtime = null;
+      this.context.state.editorDocument = null;
+    }
+    renderStructure(options = {}) {
+      this.context.renderSync.renderStructure(options);
+    }
+    isEmptyDocumentContent() {
+      return this.context.renderSync.isEmptyDocumentContent();
+    }
+    syncSettingsTabs() {
+      this.context.renderSync.syncSettingsTabs();
+    }
+    syncViewport() {
+      this.context.renderSync.syncViewport();
+    }
+    syncEditorMode() {
+      this.context.renderSync.syncEditorMode();
+    }
+    syncBindingPreviewCore() {
+      this.context.renderSync.syncBindingPreviewCore();
+    }
+    syncViewFrameContent() {
+      this.context.renderSync.syncViewFrameContent();
+    }
+    getContentHtml() {
+      return this.context.renderSync.getContentHtml();
+    }
+    setSaveStatus(label) {
+      this.context.renderSync.setSaveStatus(label);
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellViewport.ts
+  var VIEWPORTS = {
+    desktop: {
+      label: "Desktop",
+      width: 1440,
+      height: 900,
+      padding: "normal",
+      fit: "fixed"
+    },
+    tablet: {
+      label: "Tablet",
+      width: 768,
+      height: 900,
+      padding: "normal",
+      fit: "fixed"
+    },
+    mobile: {
+      label: "Mobile",
+      width: 390,
+      height: 844,
+      padding: "normal",
+      fit: "fixed"
+    },
+    full: {
+      label: "Full",
+      width: "100%",
+      height: "100%",
+      padding: "normal",
+      fit: "fluid"
+    },
+    bleed: {
+      label: "Bleed",
+      width: "100%",
+      height: "100%",
+      padding: "none",
+      fit: "fluid"
+    }
+  };
+  function syncViewport(canvas, topBar, viewportName) {
+    const viewport = VIEWPORTS[viewportName];
+    canvas.setAttribute("viewport-width", String(viewport.width));
+    canvas.setAttribute("viewport-height", String(viewport.height));
+    canvas.setAttribute("viewport-padding", viewport.padding);
+    canvas.setAttribute("viewport-fit", viewport.fit);
+    topBar.viewport = viewportName;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/shellRenderSyncCommands.ts
+  class ShellRenderSyncCommands {
+    context;
+    constructor(context) {
+      this.context = context;
+    }
+    renderStructure(options = {}) {
+      renderStructure(this.context.refs.structureTree, this.context.state.runtime, this.context.state.catalog, this.context.state.insertItems, () => this.isEmptyDocumentContent(), options);
+    }
+    isEmptyDocumentContent() {
+      return isEmptyDocumentContent(this.context.state.editorDocument?.contentRoot);
+    }
+    syncSettingsTabs() {
+      const buttons = this.context.refs.settingsTabs.querySelectorAll("[data-settings-mode]");
+      for (const button of Array.from(buttons)) {
+        const isActive = button.dataset.settingsMode === this.context.state.settingsMode;
+        button.classList.toggle("active", isActive);
+        button.ariaPressed = String(isActive);
+      }
+    }
+    syncViewport() {
+      syncViewport(this.context.refs.canvas, this.context.refs.topBar, this.context.state.viewport);
+    }
+    syncEditorMode() {
+      this.context.refs.topBar.mode = this.context.state.editorMode;
+      this.context.refs.topBar.sourceState = this.context.state.sourceStateForce;
+      this.context.host.toggleAttribute("view-mode", this.context.state.editorMode === "view");
+      this.context.refs.canvas.setAttribute("mode", this.context.state.editorMode);
+      this.syncBindingPreviewCore();
+    }
+    syncBindingPreviewCore() {
+      this.context.frames.syncBindingPreviewCore(this.context.state.sourceStateForce);
+    }
+    syncViewFrameContent() {
+      this.context.frames.syncViewFrameContent(this.context.state.sourceStateForce);
+    }
+    syncChromeLabels() {
+      this.context.sync.syncChromeLabels();
+    }
+    openPageSettings() {
+      this.context.sync.openPageSettings();
+    }
+    closePageSettings() {
+      this.context.sync.closePageSettings();
+    }
+    syncPageSettingsForm() {
+      this.context.sync.syncPageSettingsForm();
+    }
+    applyPageSettingsForm() {
+      this.context.sync.applyPageSettingsForm();
+    }
+    getContentHtml() {
+      return this.context.frames.contentHtml();
+    }
+    setSaveStatus(label) {
+      this.context.sync.setSaveStatus(label);
+    }
+    syncStructureTreeCatalog() {
+      this.context.sync.syncStructureTreeCatalog();
+    }
+    syncStructureTreeInsertItems() {
+      this.context.sync.syncStructureTreeInsertItems();
+    }
+    syncStructureTreeDefaultTemplateSelection() {
+      this.context.sync.syncStructureTreeDefaultTemplateSelection();
+    }
+    syncStructureTreeDataSources() {
+      this.context.sync.syncStructureTreeDataSources();
+    }
+    findStructureNodeLabel(editor) {
+      return this.context.sync.findStructureNodeLabel(editor);
+    }
+    settings() {
+      return this.context.refs.settings;
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellServices.ts
+  function createShellControllerServices(host, state, refs, frames, highlight, stateSessions) {
+    let events;
+    const mutations = new ShellMutations({
+      frameDocument: () => frames.frameDocument,
+      editorDocument: () => state.editorDocument,
+      runtime: () => state.runtime,
+      insertItems: () => state.insertItems,
+      repeatPicker: () => refs.repeatPicker,
+      findStructureNodeLabel: (editor) => renderSync.findStructureNodeLabel(editor),
+      isEmptyDocumentContent: () => renderSync.isEmptyDocumentContent(),
+      loadDocument: (document2, selectedTarget = null) => host.loadDocument(document2, selectedTarget),
+      syncViewFrameContent: () => renderSync.syncViewFrameContent()
+    });
+    const selection = new ShellSelection({
+      runtime: () => state.runtime,
+      settings: () => refs.settings,
+      dataSources: () => state.dataSources,
+      settingsMode: () => state.settingsMode,
+      stateSessions: () => stateSessions,
+      highlight: () => highlight,
+      renderStructure: (options) => renderSync.renderStructure(options),
+      syncViewFrameContent: () => renderSync.syncViewFrameContent()
+    });
+    const sync = new ShellSync({
+      host,
+      state,
+      refs
+    });
+    const renderSync = new ShellRenderSyncCommands({ host, state, refs, frames, sync });
+    const commands = new ShellCommands({
+      host,
+      state,
+      frames,
+      selection,
+      renderSync,
+      frameClickHandler: () => events.onFrameClick,
+      saveEventName: "editor-v2:save-document",
+      deleteEventName: "editor-v2:delete-document"
+    });
+    events = new ShellEvents({
+      state,
+      refs,
+      mutations,
+      commands,
+      renderSync,
+      highlight,
+      frameClickTarget: (event) => eventElement(event)
+    });
+    return {
+      mutations,
+      selection,
+      sync,
+      commands,
+      renderSync,
+      events,
+      api: new ShellApi({
+        host,
+        state,
+        refs,
+        renderSync,
+        commands
+      })
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellState.ts
+  function createShellState() {
+    return {
+      catalog: [],
+      dataSources: [],
+      defaultTemplateSelection: {},
+      insertItems: [],
+      runtime: null,
+      editorDocument: null,
+      settingsMode: "settings",
+      viewport: "bleed",
+      editorMode: "edit",
+      sourceStateForce: "loading",
+      pageConfig: null,
+      chromeSyncPending: false
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Styles/pageSettings.css
+  var pageSettings_default = `.page-settings-modal[hidden] {
+    display: none;
+}
+
+.page-settings-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.page-settings-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(21, 27, 25, .32);
+}
+
+.page-settings-dialog {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    width: min(520px, 100%);
+    max-height: min(680px, calc(100vh - 48px));
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 10px;
+    background: var(--editor-v2-surface);
+    box-shadow: 0 18px 48px rgba(16, 24, 21, .16);
+    overflow: hidden;
+}
+
+.page-settings-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    border-bottom: 1px solid var(--editor-v2-border);
+    padding: 16px 18px;
+}
+
+.page-settings-header h2 {
+    margin: 0;
+    color: var(--editor-v2-text);
+    font-size: 15px;
+    line-height: 1.25;
+}
+
+.page-settings-header p {
+    margin: 4px 0 0;
+    color: var(--editor-v2-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.page-settings-body {
+    display: grid;
+    gap: 14px;
+    min-height: 0;
+    overflow: auto;
+    padding: 18px;
+}
+
+.page-settings-body label {
+    display: grid;
+    gap: 6px;
+}
+
+.page-settings-body span {
+    color: var(--editor-v2-label);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.page-settings-body input,
+.page-settings-body select,
+.page-settings-body textarea {
+    width: 100%;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 13px;
+    padding: 8px 10px;
+}
+
+.page-settings-body textarea {
+    resize: vertical;
+}
+
+.page-settings-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid var(--editor-v2-border);
+    padding: 12px 18px;
+}
+
+.page-settings-footer button {
+    min-height: 30px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 6px;
+    background: var(--editor-v2-surface);
+    color: var(--editor-v2-text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    padding: 0 12px;
+    cursor: pointer;
+}
+
+.page-settings-footer .primary {
+    border-color: var(--editor-v2-accent);
+    background: var(--editor-v2-accent);
+    color: #fff;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Styles/pageSettingsTags.css
+  var pageSettingsTags_default = `.tag-field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 7px;
+    background: var(--editor-v2-surface);
+    padding: 5px 6px;
+}
+
+.tag-field .tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    border: 1px solid var(--editor-v2-border);
+    border-radius: 999px;
+    background: var(--editor-v2-surface-muted);
+    color: var(--editor-v2-text);
+    padding: 0 9px;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.tag-field input {
+    flex: 1;
+    min-width: 96px;
+    min-height: 24px;
+    border: 0;
+    border-radius: 0;
+    padding: 0 4px;
+}
+
+.tag-field input:focus {
+    outline: none;
+}
+`;
+
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default22 = `<div class="shell">
+  var template_default24 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -17863,7 +27144,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default21 = `:host {
+  var style_default23 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -17966,61 +27247,6 @@ label {
     flex: 1;
 }
 
-.page-settings-modal[hidden] {
-    display: none;
-}
-
-.page-settings-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-}
-
-.page-settings-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(21, 27, 25, .32);
-}
-
-.page-settings-dialog {
-    position: relative;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    width: min(520px, 100%);
-    max-height: min(680px, calc(100vh - 48px));
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 10px;
-    background: var(--editor-v2-surface);
-    box-shadow: 0 18px 48px rgba(16, 24, 21, .16);
-    overflow: hidden;
-}
-
-.page-settings-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 18px;
-    border-bottom: 1px solid var(--editor-v2-border);
-    padding: 16px 18px;
-}
-
-.page-settings-header h2 {
-    margin: 0;
-    color: var(--editor-v2-text);
-    font-size: 15px;
-    line-height: 1.25;
-}
-
-.page-settings-header p {
-    margin: 4px 0 0;
-    color: var(--editor-v2-muted);
-    font-size: 12px;
-    line-height: 1.45;
-}
-
 .icon-button {
     display: inline-grid;
     place-items: center;
@@ -18041,1394 +27267,189 @@ label {
     background: var(--editor-v2-surface-muted);
     color: var(--editor-v2-text);
 }
-
-.page-settings-body {
-    display: grid;
-    gap: 14px;
-    min-height: 0;
-    overflow: auto;
-    padding: 18px;
-}
-
-.page-settings-body label {
-    display: grid;
-    gap: 6px;
-}
-
-.page-settings-body span {
-    color: var(--editor-v2-label);
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.page-settings-body input,
-.page-settings-body select,
-.page-settings-body textarea {
-    width: 100%;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 7px;
-    background: var(--editor-v2-surface);
-    color: var(--editor-v2-text);
-    font: inherit;
-    font-size: 13px;
-    padding: 8px 10px;
-}
-
-.page-settings-body textarea {
-    resize: vertical;
-}
-
-.tag-field {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    min-height: 36px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 7px;
-    background: var(--editor-v2-surface);
-    padding: 5px 6px;
-}
-
-.tag-field .tag {
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 999px;
-    background: var(--editor-v2-surface-muted);
-    color: var(--editor-v2-text);
-    padding: 0 9px;
-    font-size: 12px;
-    font-weight: 650;
-}
-
-.tag-field input {
-    flex: 1;
-    min-width: 96px;
-    min-height: 24px;
-    border: 0;
-    border-radius: 0;
-    padding: 0 4px;
-}
-
-.tag-field input:focus {
-    outline: none;
-}
-
-.page-settings-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    border-top: 1px solid var(--editor-v2-border);
-    padding: 12px 18px;
-}
-
-.page-settings-footer button {
-    min-height: 30px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 6px;
-    background: var(--editor-v2-surface);
-    color: var(--editor-v2-text);
-    font: inherit;
-    font-size: 12px;
-    font-weight: 650;
-    padding: 0 12px;
-    cursor: pointer;
-}
-
-.page-settings-footer .primary {
-    border-color: var(--editor-v2-accent);
-    background: var(--editor-v2-accent);
-    color: #fff;
-}
 `;
 
-  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Shell.ts
-  var template19 = document.createElement("template");
-  template19.innerHTML = `<style>${String(style_default21)}</style>${String(template_default22)}`;
-  var VIEWPORTS = {
-    desktop: {
-      label: "Desktop",
-      width: 1440,
-      height: 900,
-      padding: "normal",
-      fit: "fixed"
-    },
-    tablet: {
-      label: "Tablet",
-      width: 768,
-      height: 900,
-      padding: "normal",
-      fit: "fixed"
-    },
-    mobile: {
-      label: "Mobile",
-      width: 390,
-      height: 844,
-      padding: "normal",
-      fit: "fixed"
-    },
-    full: {
-      label: "Full",
-      width: "100%",
-      height: "100%",
-      padding: "normal",
-      fit: "fluid"
-    },
-    bleed: {
-      label: "Bleed",
-      width: "100%",
-      height: "100%",
-      padding: "none",
-      fit: "fluid"
-    }
-  };
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
+  function createShellTemplate() {
+    const template19 = document.createElement("template");
+    template19.innerHTML = `<style>${[
+      style_default23,
+      pageSettings_default,
+      pageSettingsTags_default
+    ].map((css) => String(css)).join(`
+`)}</style>${String(template_default24)}`;
+    return template19;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellControllerParts.ts
+  function createShellControllerParts(host) {
+    host.attachShadow({ mode: "open" }).append(createShellTemplate().content.cloneNode(true));
+    const state = createShellState();
+    const refs = new ShellDomRefs(host);
+    const frames = new ShellFrames;
+    const highlight = new FrameHighlight;
+    const stateSessions = new WeakMap;
+    const services = createShellControllerServices(host, state, refs, frames, highlight, stateSessions);
+    return {
+      state,
+      refs,
+      frames,
+      mutations: services.mutations,
+      sync: services.sync,
+      commands: services.commands,
+      renderSync: services.renderSync,
+      api: services.api,
+      lifecycle: {
+        root: host.shadowRoot,
+        refs,
+        events: services.events,
+        commands: services.commands,
+        renderSync: services.renderSync,
+        highlight,
+        runtime: () => state.runtime,
+        setRuntime: (runtime) => {
+          state.runtime = runtime;
+        }
+      }
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Events/shellLifecycle.ts
+  function bindShellLifecycle(targets, handlers) {
+    updateShellLifecycle("addEventListener", targets, handlers);
+  }
+  function unbindShellLifecycle(targets, handlers) {
+    updateShellLifecycle("removeEventListener", targets, handlers);
+  }
+  function lifecycleTargets(host) {
+    return host;
+  }
+  function lifecycleHandlers(host) {
+    return host.events;
+  }
+  function updateShellLifecycle(method, targets, handlers) {
+    targets.structureTree[method]("editor-v2:select-editor", handlers.onSelectEditor);
+    targets.structureTree[method]("editor-v2:structure-action", handlers.onStructureAction);
+    targets.settings[method](SETTINGS_VIEW_SETTING_CHANGE_EVENT, handlers.onSettingChange);
+    targets.settings[method](SETTINGS_VIEW_CONTENT_CHANGE_EVENT, handlers.onContentChange);
+    targets.settings[method](SETTINGS_VIEW_STATE_TOGGLE_EVENT, handlers.onStateToggle);
+    targets.repeatPicker[method](REPEAT_PICKER_SELECT_EVENT, handlers.onRepeatSelect);
+    targets.canvas[method](CANVAS_FRAME_READY_EVENT, handlers.onFrameReady);
+    targets.canvas[method](CANVAS_BACKGROUND_CLICK_EVENT, handlers.onCanvasBackgroundClick);
+    targets.topBar[method](TOPBAR_VIEWPORT_CHANGE_EVENT, handlers.onViewportChange);
+    targets.topBar[method](TOPBAR_EDITOR_MODE_CHANGE_EVENT, handlers.onEditorModeChange);
+    targets.topBar[method](TOPBAR_SOURCE_STATE_CHANGE_EVENT, handlers.onSourceStateChange);
+    targets.topBar[method](TOPBAR_VIEW_RELOAD_EVENT, handlers.onViewReload);
+    targets.topBar[method](TOPBAR_PAGE_SETTINGS_EVENT, handlers.onPageSettings);
+    targets.topBar[method](TOPBAR_SAVE_EVENT, handlers.onSave);
+    targets.topBar[method](TOPBAR_DELETE_EVENT, handlers.onDeleteDocument);
+    targets.pageSettingsModal[method]("click", handlers.onPageSettingsModalClick);
+    targets.root[method]("keydown", handlers.onKeyDown);
+    targets.settingsTabs[method]("click", handlers.onSettingsTabsClick);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Lifecycle/shellLifecycleFlow.ts
+  function connectShellController(context) {
+    bindShellLifecycle(lifecycleTargetsFor(context), lifecycleHandlersFor(context));
+    context.renderSync.syncStructureTreeCatalog();
+    context.renderSync.syncStructureTreeDataSources();
+    context.renderSync.syncViewport();
+    context.renderSync.syncEditorMode();
+    context.renderSync.syncChromeLabels();
+  }
+  function disconnectShellController(context) {
+    unbindShellLifecycle(lifecycleTargetsFor(context), lifecycleHandlersFor(context));
+    context.commands.unbindFrameDocument();
+    context.commands.unbindViewFrameDocument();
+    context.highlight.dispose();
+    context.commands.exitAllStateSessions();
+    context.runtime()?.dispose();
+    context.setRuntime(null);
+  }
+  function lifecycleTargetsFor(context) {
+    return lifecycleTargets({
+      structureTree: context.refs.structureTree,
+      settings: context.refs.settings,
+      repeatPicker: context.refs.repeatPicker,
+      canvas: context.refs.canvas,
+      topBar: context.refs.topBar,
+      pageSettingsModal: context.refs.pageSettingsModal,
+      root: context.root,
+      settingsTabs: context.refs.settingsTabs
+    });
+  }
+  function lifecycleHandlersFor(context) {
+    return lifecycleHandlers({
+      events: context.events
+    });
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Lifecycle/shellAttributes.ts
+  var SHELL_OBSERVED_ATTRIBUTES = [
+    "resource",
+    "back-href",
+    "back-label",
+    "settings-label",
+    "settings-title",
+    "settings-description",
+    "settings-path-label",
+    "settings-tags-label",
+    "settings-status-label",
+    "settings-description-label"
+  ];
+
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/ShellController.ts
   var EDITOR_V2_SAVE_DOCUMENT_EVENT = "editor-v2:save-document";
   var EDITOR_V2_DELETE_DOCUMENT_EVENT = "editor-v2:delete-document";
 
-  class Shell extends HTMLElement {
+  class ShellController extends HTMLElement {
     static get observedAttributes() {
-      return [
-        "resource",
-        "back-href",
-        "back-label",
-        "settings-label",
-        "settings-title",
-        "settings-description",
-        "settings-path-label",
-        "settings-tags-label",
-        "settings-status-label",
-        "settings-description-label"
-      ];
+      return [...SHELL_OBSERVED_ATTRIBUTES];
     }
-    _catalog = [];
-    _dataSources = [];
-    _defaultTemplateSelection = {};
-    _insertItems = [];
-    _runtime = null;
-    _frameDocument = null;
-    _editorDocument = null;
-    _settingsMode = "settings";
-    _viewport = "bleed";
-    _editorMode = "edit";
-    _pageConfig = null;
-    _clipboardElement = null;
-    _chromeSyncPending = false;
-    _stateSessions = new WeakMap;
-    _pendingRepeatEditor = null;
-    _highlight = new FrameHighlight;
+    _parts;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template19.content.cloneNode(true));
+      this._parts = createShellControllerParts(this);
     }
     attributeChangedCallback() {
-      this._syncChromeLabels();
+      this._parts.renderSync.syncChromeLabels();
     }
     connectedCallback() {
-      this._structureTree.addEventListener("editor-v2:select-editor", this._onSelectEditor);
-      this._structureTree.addEventListener("editor-v2:structure-action", this._onStructureAction);
-      this._settings.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange);
-      this._settings.addEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange);
-      this._settings.addEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle);
-      this._repeatPicker.addEventListener(REPEAT_PICKER_SELECT_EVENT, this._onRepeatSelect);
-      this._canvas.addEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady);
-      this._canvas.addEventListener(CANVAS_BACKGROUND_CLICK_EVENT, this._onCanvasBackgroundClick);
-      this._topBar.addEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange);
-      this._topBar.addEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange);
-      this._topBar.addEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
-      this._topBar.addEventListener(TOPBAR_SAVE_EVENT, this._onSave);
-      this._topBar.addEventListener(TOPBAR_DELETE_EVENT, this._onDeleteDocument);
-      this._pageSettingsModal.addEventListener("click", this._onPageSettingsModalClick);
-      this.shadowRoot.addEventListener("keydown", this._onKeyDown);
-      this._settingsTabs.addEventListener("click", this._onSettingsTabsClick);
-      this._syncStructureTreeCatalog();
-      this._syncStructureTreeDataSources();
-      this._syncViewport();
-      this._syncEditorMode();
-      this._syncChromeLabels();
+      connectShellController(this._parts.lifecycle);
     }
     disconnectedCallback() {
-      this._structureTree.removeEventListener("editor-v2:select-editor", this._onSelectEditor);
-      this._structureTree.removeEventListener("editor-v2:structure-action", this._onStructureAction);
-      this._settings.removeEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, this._onSettingChange);
-      this._settings.removeEventListener(SETTINGS_VIEW_CONTENT_CHANGE_EVENT, this._onContentChange);
-      this._settings.removeEventListener(SETTINGS_VIEW_STATE_TOGGLE_EVENT, this._onStateToggle);
-      this._repeatPicker.removeEventListener(REPEAT_PICKER_SELECT_EVENT, this._onRepeatSelect);
-      this._canvas.removeEventListener(CANVAS_FRAME_READY_EVENT, this._onFrameReady);
-      this._canvas.removeEventListener(CANVAS_BACKGROUND_CLICK_EVENT, this._onCanvasBackgroundClick);
-      this._topBar.removeEventListener(TOPBAR_VIEWPORT_CHANGE_EVENT, this._onViewportChange);
-      this._topBar.removeEventListener(TOPBAR_EDITOR_MODE_CHANGE_EVENT, this._onEditorModeChange);
-      this._topBar.removeEventListener(TOPBAR_PAGE_SETTINGS_EVENT, this._onPageSettings);
-      this._topBar.removeEventListener(TOPBAR_SAVE_EVENT, this._onSave);
-      this._topBar.removeEventListener(TOPBAR_DELETE_EVENT, this._onDeleteDocument);
-      this._pageSettingsModal.removeEventListener("click", this._onPageSettingsModalClick);
-      this.shadowRoot.removeEventListener("keydown", this._onKeyDown);
-      this._settingsTabs.removeEventListener("click", this._onSettingsTabsClick);
-      this._unbindFrameDocument();
-      this._highlight.dispose();
-      this._exitAllStateSessions();
-      this._runtime?.dispose();
-      this._runtime = null;
+      disconnectShellController(this._parts.lifecycle);
     }
     get catalog() {
-      return this._catalog;
+      return this._parts.state.catalog;
     }
     set catalog(catalog) {
       this.setCatalog(catalog);
     }
     setCatalog(catalog) {
-      this._catalog = [...catalog];
-      this.setAttribute("catalog-size", String(this._catalog.length));
-      this._syncStructureTreeCatalog();
+      this._parts.api.setCatalog(catalog);
     }
     setInsertItems(items) {
-      this._insertItems = items.map((item) => ({ ...item }));
-      this._syncStructureTreeInsertItems();
-      if (this._runtime)
-        this._renderStructure();
+      this._parts.api.setInsertItems(items);
     }
     setDefaultTemplateSelection(selection) {
-      this._defaultTemplateSelection = { ...selection };
-      this._syncStructureTreeDefaultTemplateSelection();
+      this._parts.api.setDefaultTemplateSelection(selection);
     }
     setDataSources(sources) {
-      this._dataSources = sources.map((source) => ({
-        ...source,
-        fields: [...source.fields]
-      }));
-      this._syncStructureTreeDataSources();
+      this._parts.api.setDataSources(sources);
     }
     setPageConfig(config) {
-      this._pageConfig = {
-        ...config,
-        tags: [...config.tags]
-      };
-      if (config.defaultTemplateCategory) {
-        this.setDefaultTemplateSelection({
-          category: config.defaultTemplateCategory
-        });
-      }
-      this._topBar.setPageTitle(config.title, config.path);
-      this._syncPageSettingsForm();
+      this._parts.api.setPageConfig(config);
     }
     setSaveStatus(label) {
-      this._setSaveStatus(label);
+      this._parts.renderSync.setSaveStatus(label);
     }
     loadDocument(document2, selectedTarget = null) {
-      this._exitAllStateSessions();
-      this._runtime?.dispose();
-      this._editorDocument = document2;
-      this._runtime = new EditorRuntime(this._catalog, this._dataSources);
-      this._runtime.load(document2);
-      this._renderStructure();
-      this._select(selectedTarget ? this._runtime.getEditor(selectedTarget) ?? this._runtime.getClosestEditor(selectedTarget) ?? null : null, { scrollStructureIntoView: true });
-    }
-    _onSelectEditor = (event) => {
-      if (this._editorMode !== "edit")
-        return;
-      const editor = event.detail.editor;
-      this._select(editor, {
-        scrollFrameIntoView: true,
-        scrollStructureIntoView: false
-      });
-    };
-    _onSettingsTabsClick = (event) => {
-      const button = event.target?.closest("[data-settings-mode]");
-      if (!button)
-        return;
-      this._settingsMode = button.dataset.settingsMode === "overrides" ? "overrides" : "settings";
-      this._syncSettingsTabs();
-      this._renderSettings();
-    };
-    _onViewportChange = (event) => {
-      this._viewport = event.detail.viewport;
-      this._syncViewport();
-    };
-    _onEditorModeChange = (event) => {
-      this._editorMode = event.detail.mode;
-      this._syncEditorMode();
-    };
-    _onPageSettings = () => {
-      this._openPageSettings();
-    };
-    _onSave = () => {
-      this._applyPageSettingsForm();
-      this._saveDocument();
-    };
-    _onDeleteDocument = () => {
-      if (!this._pageConfig) {
-        this._setSaveStatus("No page");
-        return;
-      }
-      this.dispatchEvent(new CustomEvent(EDITOR_V2_DELETE_DOCUMENT_EVENT, {
-        bubbles: true,
-        composed: true
-      }));
-    };
-    _saveDocument() {
-      if (!this._pageConfig) {
-        this._setSaveStatus("No page");
-        return;
-      }
-      this._setSaveStatus("Saving");
-      this.dispatchEvent(new CustomEvent(EDITOR_V2_SAVE_DOCUMENT_EVENT, {
-        bubbles: true,
-        composed: true,
-        detail: {
-          page: {
-            ...this._pageConfig,
-            tags: [...this._pageConfig.tags]
-          },
-          content: this._getContentHtml()
-        }
-      }));
-    }
-    _onPageSettingsModalClick = (event) => {
-      const applyTarget = event.target?.closest("[data-page-settings-apply]");
-      if (applyTarget) {
-        this._applyPageSettingsForm();
-        this._closePageSettings();
-        this._saveDocument();
-        return;
-      }
-      const closeTarget = event.target?.closest("[data-page-settings-close]");
-      if (closeTarget)
-        this._closePageSettings();
-    };
-    _onKeyDown = (event) => {
-      const keyboardEvent = event;
-      if (keyboardEvent.key === "Escape" && !this._pageSettingsModal.hidden) {
-        this._closePageSettings();
-      }
-    };
-    _onStructureAction = (event) => {
-      if (!this._runtime)
-        return;
-      if (this._editorMode !== "edit")
-        return;
-      const { action, editor, entry, item, sourceEditor, sourceState } = event.detail;
-      if (action === "duplicate") {
-        if (!editor)
-          return;
-        this._duplicateEditor(editor);
-      } else if (action === "delete") {
-        if (!editor)
-          return;
-        this._deleteEditor(editor);
-      } else if (action === "copy") {
-        if (!editor)
-          return;
-        this._copyEditor(editor);
-      } else if (action === "paste-after") {
-        this._pasteAfter(editor ?? null, sourceState);
-      } else if (action === "set-source" && editor && event.detail.dataSource) {
-        this._setSource(editor, event.detail.dataSource, event.detail.sourceBinding);
-      } else if (action === "remove-source" && editor) {
-        this._removeSource(editor);
-      } else if (action === "configure-repeat" && editor) {
-        this._openRepeatPicker(editor);
-      } else if (action === "remove-repeat" && editor) {
-        this._removeRepeat(editor);
-      } else if (action === "clear-source-state" && editor && sourceState) {
-        this._clearSourceState(editor, sourceState);
-      } else if ((action === "move-before" || action === "move-after") && editor && sourceEditor) {
-        this._moveEditor(sourceEditor, editor, action === "move-before" ? "before" : "after");
-      } else if (action === "replace" && (item || entry)) {
-        if (!editor)
-          return;
-        this._replaceEditor(editor, item ?? { kind: "block", entry }, event.detail.slot);
-      } else if (action === "add-root" && (item || entry)) {
-        this._addRoot(item ?? { kind: "block", entry });
-      } else if (action === "add-source-state-child" && editor && (item || entry)) {
-        if (!sourceState)
-          return;
-        this._addSourceStateChild(editor, item ?? { kind: "block", entry }, sourceState);
-      } else if (item || entry) {
-        if (!editor)
-          return;
-        this._addChild(editor, item ?? { kind: "block", entry }, event.detail.slot);
-      }
-    };
-    _onFrameReady = (event) => {
-      const frameDocument = event.detail.document;
-      this._bindFrameDocument(frameDocument);
-      const root = frameDocument.querySelector("[data-cms-editor-root]") ?? frameDocument.querySelector("cms-binding-core");
-      const contentRoot = frameDocument.querySelector("[data-cms-content]");
-      if (!root || !contentRoot) {
-        this._runtime?.dispose();
-        this._runtime = null;
-        this._editorDocument = null;
-        this._renderStructure();
-        this._settings.setSettings([]);
-        return;
-      }
-      this.loadDocument({
-        root,
-        contentRoot
-      });
-    };
-    _onSettingChange = (event) => {
-      if (!this._runtime)
-        return;
-      if (this._editorMode !== "edit")
-        return;
-      const selection = this._runtime.getSelection();
-      if (!selection)
-        return;
-      this._applySetting(selection.editor, event.detail.setting, event.detail.value);
-      this._highlight.show(selection.editor);
-    };
-    _onContentChange = (event) => {
-      if (!this._runtime)
-        return;
-      if (this._editorMode !== "edit")
-        return;
-      const selection = this._runtime.getSelection();
-      if (!selection?.textCapability)
-        return;
-      if (event.detail.format === "html") {
-        selection.editor.target.innerHTML = event.detail.value;
-      } else {
-        selection.editor.target.textContent = event.detail.value;
-      }
-      this._highlight.show(selection.editor);
-    };
-    _onStateToggle = (event) => {
-      if (!this._runtime)
-        return;
-      if (this._editorMode !== "edit")
-        return;
-      const selection = this._runtime.getSelection();
-      if (!selection)
-        return;
-      this._toggleState(selection.editor, event.detail.state);
-      this._renderSettings();
-      this._highlight.show(selection.editor);
-    };
-    _onRepeatSelect = (event) => {
-      if (!this._pendingRepeatEditor)
-        return;
-      this._setRepeat(this._pendingRepeatEditor, event.detail.path, event.detail.alias);
-      this._pendingRepeatEditor = null;
-    };
-    _onFrameClick = (event) => {
-      if (!this._runtime)
-        return;
-      if (this._editorMode !== "edit")
-        return;
-      event.preventDefault();
-      const target = this._eventElement(event);
-      const editor = this._runtime.getClosestEditor(target);
-      this._select(editor ?? null, { scrollStructureIntoView: true });
-    };
-    _onCanvasBackgroundClick = () => {
-      if (!this._runtime)
-        return;
-      if (this._editorMode !== "edit")
-        return;
-      this._select(null, { scrollStructureIntoView: false });
-    };
-    _select(editor, options = {}) {
-      if (!this._runtime)
-        return;
-      const selection = this._runtime.select(editor);
-      this._renderStructure(options);
-      if (!selection) {
-        this._settings.setSettings([]);
-        this._highlight.hide();
-        return;
-      }
-      this._renderSettings();
-      this._highlight.show(selection.editor, {
-        scrollIntoView: options.scrollFrameIntoView === true
-      });
-    }
-    _renderSettings() {
-      if (!this._runtime)
-        return;
-      const selection = this._runtime.getSelection();
-      if (!selection) {
-        this._settings.setSettings([]);
-        return;
-      }
-      this._settings.setSettings(this._resolveSettingsValues(selection.editor, selection.settings), selection.textCapability, selection.textCapability ? this._getTextValue(selection.editor, selection.textCapability.format) : "", this._settingsMode, selection.states);
-    }
-    _applySetting(editor, setting, value) {
-      const attribute = setting.attribute;
-      if (typeof value === "boolean") {
-        editor.target.toggleAttribute(attribute, value);
-        return;
-      }
-      if (value === "") {
-        editor.target.removeAttribute(attribute);
-        return;
-      }
-      if (typeof value !== "string")
-        return;
-      editor.target.setAttribute(attribute, value);
-    }
-    _toggleState(editor, state) {
-      const sessions = this._stateSessions.get(editor) ?? new Map;
-      if (sessions.has(state.id)) {
-        this._exitStateSession(editor, state.id);
-        return;
-      }
-      if (state.group) {
-        for (const candidate of editor.getStates()) {
-          if (candidate.id !== state.id && candidate.group === state.group) {
-            this._exitStateSession(editor, candidate.id);
-          }
-        }
-      }
-      const session = state.enter();
-      sessions.set(state.id, session);
-      this._stateSessions.set(editor, sessions);
-    }
-    _exitStateSession(editor, stateId) {
-      const sessions = this._stateSessions.get(editor);
-      const session = sessions?.get(stateId);
-      if (!sessions || !session)
-        return;
-      session.exit();
-      sessions.delete(stateId);
-    }
-    _exitAllStateSessions() {
-      if (!this._runtime)
-        return;
-      for (const node of this._flattenStructure(this._runtime.getStructure())) {
-        if (this._isSourceStateNode(node))
-          continue;
-        const sessions = this._stateSessions.get(node.editor);
-        if (!sessions)
-          continue;
-        for (const session of sessions.values()) {
-          session.exit();
-        }
-        sessions.clear();
-      }
-    }
-    _addChild(parent, item, slotName) {
-      const slot = this._findSlot(parent, slotName);
-      if (!slot || this._isSlotFull(parent, slot))
-        return;
-      if (item.kind === "media") {
-        this._insertMedia(parent, item, slot, slotName);
-        return;
-      }
-      const insertion = this._createInsertion(item, slotName);
-      if (!insertion || !this._canInsertNodeCount(parent, slot, insertion.slotElements))
-        return;
-      parent.target.append(insertion.fragment);
-      this._reloadFrameDocument(insertion.selectionTarget);
-    }
-    _addRoot(item) {
-      if (!this._editorDocument || item.kind === "media")
-        return;
-      const insertion = this._createInsertion(item);
-      if (!insertion)
-        return;
-      if (this._isEmptyDocumentContent()) {
-        this._editorDocument.contentRoot.replaceChildren();
-      }
-      this._editorDocument.contentRoot.append(insertion.fragment);
-      this._reloadFrameDocument(insertion.selectionTarget);
-    }
-    _duplicateEditor(editor) {
-      if (!this._canDuplicate(editor))
-        return;
-      const clone = editor.target.cloneNode(true);
-      editor.target.after(clone);
-      this._reloadFrameDocument(clone);
-    }
-    _deleteEditor(editor) {
-      if (!this._canDelete(editor))
-        return;
-      const nextSelectionTarget = this._findNextSelectionTargetAfterDelete(editor);
-      editor.target.remove();
-      this._reloadFrameDocument(nextSelectionTarget);
-    }
-    _replaceEditor(editor, item, slotName) {
-      const parent = this._parentEditor(editor);
-      if (!parent) {
-        this._replaceRootEditor(editor, item);
-        return;
-      }
-      const slot = this._findSlot(parent, slotName);
-      if (!slot)
-        return;
-      const sourceState = this._sourceStateForSibling(editor);
-      if (item.kind === "media") {
-        this._replaceWithMedia(editor, parent, item, slot, slotName, sourceState);
-        return;
-      }
-      const insertion = this._createInsertion(item, slotName, sourceState);
-      if (!insertion || !this._canReplaceNodeCount(parent, editor, slot, insertion.slotElements))
-        return;
-      editor.target.replaceWith(insertion.fragment);
-      this._reloadFrameDocument(insertion.selectionTarget);
-    }
-    _replaceRootEditor(editor, item) {
-      if (item.kind === "media")
-        return;
-      const insertion = this._createInsertion(item);
-      if (!insertion)
-        return;
-      editor.target.replaceWith(insertion.fragment);
-      this._reloadFrameDocument(insertion.selectionTarget);
-    }
-    _copyEditor(editor) {
-      this._clipboardElement = editor.target.cloneNode(true);
-    }
-    _pasteAfter(editor, sourceState) {
-      if (!this._clipboardElement || !this._editorDocument)
-        return;
-      const clone = this._clipboardElement.cloneNode(true);
-      if (!editor) {
-        this._editorDocument.contentRoot.append(clone);
-        this._reloadFrameDocument(clone);
-        return;
-      }
-      if (sourceState) {
-        this._applySourceState(clone, sourceState);
-        editor.target.append(clone);
-        this._reloadFrameDocument(clone);
-        return;
-      }
-      if (!this._canInsertSibling(editor, clone))
-        return;
-      editor.target.after(clone);
-      this._reloadFrameDocument(clone);
-    }
-    _addSourceStateChild(parent, item, sourceState) {
-      const slot = this._sourceStateSlot(parent, sourceState);
-      if (!slot || this._isSlotFull(parent, slot))
-        return;
-      if (item.kind === "media") {
-        this._insertMedia(parent, item, slot, undefined, sourceState);
-        return;
-      }
-      const insertion = this._createInsertion(item, undefined, sourceState);
-      if (!insertion || !this._canInsertNodeCount(parent, slot, insertion.slotElements))
-        return;
-      parent.target.append(insertion.fragment);
-      this._reloadFrameDocument(insertion.selectionTarget);
-    }
-    _sourceStateSlot(parent, sourceState) {
-      return {
-        label: sourceState.slice(0, 1).toUpperCase() + sourceState.slice(1),
-        accepts: [{ kind: "any-component" }]
-      };
-    }
-    _clearSourceState(parent, sourceState) {
-      if (sourceState === "loaded") {
-        for (const child of Array.from(parent.target.children)) {
-          if (!child.hasAttribute(CMS_BINDING_ATTRIBUTES.slot))
-            child.remove();
-        }
-        this._reloadFrameDocument(parent.target);
-        return;
-      }
-      for (const child of Array.from(parent.target.children)) {
-        if (child.getAttribute(CMS_BINDING_ATTRIBUTES.slot) === sourceState)
-          child.remove();
-      }
-      this._reloadFrameDocument(parent.target);
-    }
-    _setSource(editor, source, binding = { url: source.url }) {
-      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.source, asSource(binding));
-      this._reloadFrameDocument(editor.target);
-    }
-    _removeSource(editor) {
-      editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.source);
-      this._reloadFrameDocument(editor.target);
-    }
-    _openRepeatPicker(editor) {
-      if (!this._runtime)
-        return;
-      this._pendingRepeatEditor = editor;
-      this._runtime.select(editor);
-      this._repeatPicker.open(this._runtime.getSelectedDataScopes(), this._findStructureNodeLabel(editor) ?? editor.target.localName);
-    }
-    _setRepeat(editor, path, alias) {
-      editor.target.setAttribute(CMS_BINDING_ATTRIBUTES.repeat, asRepeat({ path, alias }));
-      this._reloadFrameDocument(editor.target);
-    }
-    _removeRepeat(editor) {
-      editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.repeat);
-      this._reloadFrameDocument(editor.target);
-    }
-    _moveEditor(source, target, position) {
-      if (source === target || source.target.contains(target.target))
-        return;
-      if (!this._canMoveEditor(source, target))
-        return;
-      this._applySlot(source.target, target.target.getAttribute("slot") ?? undefined);
-      this._applySourceState(source.target, this._sourceStateForSibling(target));
-      if (position === "before") {
-        target.target.before(source.target);
-      } else {
-        target.target.after(source.target);
-      }
-      this._reloadFrameDocument(source.target);
-    }
-    _createInsertion(item, slotName, sourceState) {
-      const document2 = this._frameDocument;
-      if (!document2)
-        return null;
-      if (item.kind === "media")
-        return null;
-      if (item.kind === "block") {
-        const fragment2 = this._createBlockFragment(document2, item.entry);
-        const slotElements2 = Array.from(fragment2.children).filter(this._isElementNode);
-        for (const child of slotElements2) {
-          this._applySlot(child, slotName);
-          this._applySourceState(child, sourceState);
-        }
-        const selectionTarget2 = slotElements2.find((child) => child.tagName.toLowerCase() === item.entry.tag) ?? slotElements2[0] ?? null;
-        if (!selectionTarget2)
-          return null;
-        return {
-          fragment: fragment2,
-          selectionTarget: selectionTarget2,
-          slotElements: slotElements2
-        };
-      }
-      if (item.kind === "snippet") {
-        const snippet = document2.createElement(CMS_SNIPPET_TAG);
-        snippet.setAttribute("identifier", item.identifier);
-        snippet.innerHTML = item.content;
-        this._applySlot(snippet, slotName);
-        this._applySourceState(snippet, sourceState);
-        const fragment2 = document2.createDocumentFragment();
-        fragment2.append(snippet);
-        return {
-          fragment: fragment2,
-          selectionTarget: snippet,
-          slotElements: [snippet]
-        };
-      }
-      const template20 = document2.createElement("template");
-      template20.innerHTML = item.content;
-      const fragment = template20.content.cloneNode(true);
-      this._expandSnippetReferences(fragment);
-      const slotElements = Array.from(fragment.children).filter(this._isElementNode);
-      for (const child of slotElements) {
-        this._applySlot(child, slotName);
-        this._applySourceState(child, sourceState);
-      }
-      const selectionTarget = slotElements[0] ?? null;
-      if (!selectionTarget)
-        return null;
-      return {
-        fragment,
-        selectionTarget,
-        slotElements
-      };
-    }
-    _createBlockFragment(document2, entry) {
-      if (!entry.defaultContent) {
-        const fragment2 = document2.createDocumentFragment();
-        fragment2.append(document2.createElement(entry.tag));
-        return fragment2;
-      }
-      const template20 = document2.createElement("template");
-      template20.innerHTML = entry.defaultContent;
-      const fragment = template20.content.cloneNode(true);
-      this._expandSnippetReferences(fragment);
-      return fragment;
-    }
-    _insertMedia(parent, item, slot, slotName, sourceState) {
-      const remaining = this._remainingSlotCapacity(parent, slot);
-      if (remaining <= 0)
-        return;
-      this._openMediaPicker(item.accept, {
-        multiple: remaining > 1,
-        maxSelection: typeof slot.max === "number" ? remaining : undefined
-      }, (elements) => {
-        if (elements.length === 0 || !this._canInsertNodeCount(parent, slot, elements))
-          return;
-        for (const element of elements) {
-          this._applySlot(element, slotName);
-          this._applySourceState(element, sourceState);
-        }
-        parent.target.append(...elements);
-        this._reloadFrameDocument(elements[0] ?? null);
-      });
-    }
-    _replaceWithMedia(editor, parent, item, slot, slotName, sourceState) {
-      if (!this._canReplaceNodeCount(parent, editor, slot, [editor.target]))
-        return;
-      this._openMediaPicker(item.accept, {
-        multiple: false
-      }, (elements) => {
-        const element = elements[0];
-        if (!element)
-          return;
-        this._applySlot(element, slotName);
-        this._applySourceState(element, sourceState);
-        editor.target.replaceWith(element);
-        this._reloadFrameDocument(element);
-      });
-    }
-    _openMediaPicker(accept, options, onSelect) {
-      const center = new FilesCenter;
-      const cleanup = () => center.remove();
-      center.addEventListener("close", cleanup, { once: true });
-      center.addEventListener("select-file", (event) => {
-        const detail = event.detail;
-        const element = this._createMediaElement(detail);
-        if (!element)
-          return;
-        onSelect([element]);
-      }, { once: true });
-      center.addEventListener("select-files", (event) => {
-        const detail = event.detail;
-        const elements = detail.files.map((file) => this._createMediaElement(file)).filter((element) => Boolean(element));
-        onSelect(elements);
-      }, { once: true });
-      document.body.append(center);
-      center.show({
-        accept: ["folder", "file"],
-        fileAccept: accept ?? ["image"],
-        multiple: options.multiple === true,
-        maxSelection: options.maxSelection
-      });
-    }
-    _createMediaElement(detail) {
-      const document2 = this._frameDocument;
-      if (!document2)
-        return null;
-      if (detail.mimeType?.startsWith("image/") ?? true) {
-        const image = document2.createElement("img");
-        image.setAttribute("src", detail.src);
-        image.setAttribute("alt", detail.label);
-        image.addEventListener("load", () => {
-          if (image.naturalWidth > 0)
-            image.setAttribute("width", String(image.naturalWidth));
-          if (image.naturalHeight > 0)
-            image.setAttribute("height", String(image.naturalHeight));
-        }, { once: true });
-        return image;
-      }
-      if (detail.mimeType?.startsWith("video/")) {
-        const video = document2.createElement("video");
-        video.setAttribute("src", detail.src);
-        video.setAttribute("controls", "");
-        return video;
-      }
-      if (detail.mimeType?.startsWith("audio/")) {
-        const audio = document2.createElement("audio");
-        audio.setAttribute("src", detail.src);
-        audio.setAttribute("controls", "");
-        return audio;
-      }
-      const link = document2.createElement("a");
-      link.setAttribute("href", detail.src);
-      link.textContent = detail.label;
-      return link;
-    }
-    _expandSnippetReferences(fragment) {
-      const snippets = this._insertItems.filter((item) => item.kind === "snippet");
-      if (snippets.length === 0)
-        return;
-      for (const element of Array.from(fragment.querySelectorAll(CMS_SNIPPET_TAG))) {
-        const identifier = element.getAttribute("identifier");
-        if (!identifier)
-          continue;
-        const snippet = snippets.find((item) => item.identifier === identifier);
-        if (!snippet)
-          continue;
-        element.innerHTML = snippet.content;
-      }
-    }
-    _isElementNode(node) {
-      return node.nodeType === Node.ELEMENT_NODE;
-    }
-    _canInsertNodeCount(parent, slot, insertedElements) {
-      if (typeof slot.max !== "number")
-        return true;
-      return this._slotChildCount(parent, slot) + insertedElements.length <= slot.max;
-    }
-    _canReplaceNodeCount(parent, replaced, slot, insertedElements) {
-      if (typeof slot.max !== "number")
-        return true;
-      const replacedCount = (replaced.target.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined) ? 1 : 0;
-      return this._slotChildCount(parent, slot) - replacedCount + insertedElements.length <= slot.max;
-    }
-    _findNextSelectionTargetAfterDelete(editor) {
-      const parent = editor.target.parentElement;
-      if (!parent || !this._runtime)
-        return null;
-      return this._runtime.getClosestEditor(parent)?.target ?? null;
-    }
-    _canDuplicate(editor) {
-      const parent = this._parentEditor(editor);
-      if (!parent)
-        return true;
-      const slot = this._findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
-      if (!slot)
-        return true;
-      return !this._isSlotFull(parent, slot);
-    }
-    _canDelete(editor) {
-      const parent = this._parentEditor(editor);
-      if (!parent)
-        return true;
-      const slot = this._findSlot(parent, editor.target.getAttribute("slot") ?? undefined);
-      if (!slot?.min)
-        return true;
-      return this._slotChildCount(parent, slot) > slot.min;
-    }
-    _canInsertSibling(reference, insertedElement) {
-      const parent = this._parentEditor(reference);
-      if (!parent) {
-        this._applySlot(insertedElement, undefined);
-        this._applySourceState(insertedElement, undefined);
-        return true;
-      }
-      const slotName = reference.target.getAttribute("slot") ?? undefined;
-      const slot = this._findSlot(parent, slotName);
-      if (!slot || !this._canInsertNodeCount(parent, slot, [insertedElement]))
-        return false;
-      this._applySlot(insertedElement, slotName);
-      this._applySourceState(insertedElement, this._sourceStateForSibling(reference));
-      return true;
-    }
-    _canMoveEditor(source, target) {
-      if (!this._canDelete(source))
-        return false;
-      const targetParent = this._parentEditor(target);
-      if (!targetParent)
-        return true;
-      const targetSlotName = target.target.getAttribute("slot") ?? undefined;
-      const targetSlot = this._findSlot(targetParent, targetSlotName);
-      if (!targetSlot)
-        return false;
-      const sourceParent = this._parentEditor(source);
-      const isSameSlot = sourceParent === targetParent && (source.target.getAttribute("slot") ?? undefined) === targetSlotName;
-      if (isSameSlot)
-        return true;
-      return this._canInsertNodeCount(targetParent, targetSlot, [source.target]);
-    }
-    _isSlotFull(parent, slot) {
-      return typeof slot.max === "number" && this._slotChildCount(parent, slot) >= slot.max;
-    }
-    _findSlot(parent, slotName) {
-      return parent.getContentSlots().find((slot) => (slot.slot ?? undefined) === slotName);
-    }
-    _slotChildCount(parent, slot) {
-      return Array.from(parent.target.children).filter((child) => (child.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined)).length;
-    }
-    _remainingSlotCapacity(parent, slot) {
-      if (typeof slot.max !== "number")
-        return Number.MAX_SAFE_INTEGER;
-      return Math.max(0, slot.max - this._slotChildCount(parent, slot));
-    }
-    _parentEditor(editor) {
-      if (!this._runtime || !editor.target.parentElement)
-        return null;
-      return this._runtime.getClosestEditor(editor.target.parentElement)?.target === editor.target ? null : this._runtime.getClosestEditor(editor.target.parentElement) ?? null;
-    }
-    _applySlot(element, slotName) {
-      if (slotName) {
-        element.setAttribute("slot", slotName);
-      } else {
-        element.removeAttribute("slot");
-      }
-    }
-    _applySourceState(element, sourceState) {
-      applySourceState(element, sourceState ?? "loaded");
-    }
-    _sourceStateForSibling(reference) {
-      return sourceStateFromElement(reference.target);
-    }
-    _reloadFrameDocument(selectedTarget = null) {
-      if (!this._frameDocument)
-        return;
-      const root = this._frameDocument.querySelector("[data-cms-editor-root]") ?? this._frameDocument.querySelector("cms-binding-core");
-      const contentRoot = this._frameDocument.querySelector("[data-cms-content]");
-      if (!root || !contentRoot)
-        return;
-      this.loadDocument({ root, contentRoot }, selectedTarget);
-    }
-    _resolveSettingsValues(editor, sections) {
-      return sections.map((section) => ({
-        ...section,
-        settings: section.settings.map((setting) => this._resolveSettingValue(editor, setting))
-      }));
-    }
-    _resolveSettingValue(editor, setting) {
-      if (setting.type === "toggle") {
-        return {
-          ...setting,
-          defaultValue: editor.target.hasAttribute(setting.attribute)
-        };
-      }
-      return {
-        ...setting,
-        defaultValue: editor.target.getAttribute(setting.attribute) ?? setting.defaultValue
-      };
-    }
-    _getTextValue(editor, format) {
-      return format === "richtext" ? editor.target.innerHTML : editor.target.textContent ?? "";
-    }
-    _bindFrameDocument(document2) {
-      this._unbindFrameDocument();
-      this._frameDocument = document2;
-      document2.addEventListener("click", this._onFrameClick, true);
-    }
-    _unbindFrameDocument() {
-      this._frameDocument?.removeEventListener("click", this._onFrameClick, true);
-      this._frameDocument = null;
-    }
-    _eventElement(event) {
-      const target = event.target;
-      if (!target || !("nodeType" in target))
-        return null;
-      if (target.nodeType === Node.ELEMENT_NODE)
-        return target;
-      return target.parentElement;
-    }
-    _renderStructure(options = {}) {
-      if (!this._runtime || this._isEmptyDocumentContent()) {
-        this._structureTree.setStructure([], null, this._catalog);
-        return;
-      }
-      const structure = this._decorateStructure(this._runtime.getStructure());
-      this._structureTree.setStructure(structure, this._runtime.getSelection()?.editor ?? null, this._catalog, {
-        scrollSelectedIntoView: options.scrollStructureIntoView === true,
-        repeatableTargets: this._repeatableTargets(structure)
-      });
-    }
-    _decorateStructure(nodes) {
-      return nodes.map((node) => {
-        if (this._isSourceStateNode(node)) {
-          return {
-            ...node,
-            children: this._decorateEditorStructure(node.children)
-          };
-        }
-        return this._decorateEditorStructureNode(node);
-      });
-    }
-    _decorateEditorStructure(nodes) {
-      return nodes.map((node) => this._decorateEditorStructureNode(node));
-    }
-    _decorateEditorStructureNode(node) {
-      const snippet = this._snippetStructureDetails(node);
-      return {
-        ...node,
-        label: snippet?.label ?? node.label,
-        icon: snippet?.icon ?? node.icon,
-        children: this._decorateStructure(node.children)
-      };
-    }
-    _snippetStructureDetails(node) {
-      if (node.tag.toLowerCase() !== CMS_SNIPPET_TAG)
-        return null;
-      const identifier = node.target.getAttribute("identifier")?.trim() ?? "";
-      const item = this._insertItems.find((candidate) => candidate.kind === "snippet" && candidate.identifier === identifier);
-      return {
-        label: item?.label || identifier || node.label,
-        icon: item?.icon || "S"
-      };
-    }
-    _isEmptyDocumentContent() {
-      const contentRoot = this._editorDocument?.contentRoot;
-      if (!contentRoot)
-        return true;
-      const meaningfulNodes = Array.from(contentRoot.childNodes).filter((node2) => node2.nodeType !== Node.TEXT_NODE || (node2.textContent ?? "").trim() !== "");
-      if (meaningfulNodes.length === 0)
-        return true;
-      if (meaningfulNodes.length !== 1)
-        return false;
-      const node = meaningfulNodes[0];
-      if (!node)
-        return true;
-      if (node.nodeType !== Node.ELEMENT_NODE)
-        return false;
-      const element = node;
-      if (element.tagName.toLowerCase() !== "p" || element.attributes.length > 0)
-        return false;
-      return Array.from(element.childNodes).every((child) => {
-        if (child.nodeType === Node.TEXT_NODE)
-          return (child.textContent ?? "").trim() === "";
-        return child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === "br";
-      });
-    }
-    _repeatableTargets(nodes) {
-      if (!this._runtime)
-        return [];
-      return this._flattenStructure(nodes).filter((node) => !this._isSourceStateNode(node)).filter((node) => this._hasArrayFields(this._runtime.registry.collectDataScopes(node.target))).map((node) => node.target);
-    }
-    _hasArrayFields(scopes) {
-      return scopes.some((scope) => this._fieldsContainArray(scope.fields));
-    }
-    _fieldsContainArray(fields) {
-      return fields.some((field) => field.type === "array" || this._fieldsContainArray(field.children ?? []));
-    }
-    _syncStructureTreeDataSources() {
-      const tree = this.shadowRoot.querySelector("cms-editor-v2-structure-tree");
-      if (this._isStructureTree(tree)) {
-        tree.setDataSources(this._dataSources);
-        return;
-      }
-      customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
-        const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
-        if (this._isStructureTree(upgradedTree))
-          upgradedTree.setDataSources(this._dataSources);
-      });
-    }
-    _syncSettingsTabs() {
-      for (const button of Array.from(this._settingsTabs.querySelectorAll("[data-settings-mode]"))) {
-        const isActive = button.dataset.settingsMode === this._settingsMode;
-        button.classList.toggle("active", isActive);
-        button.ariaPressed = String(isActive);
-      }
-    }
-    _syncViewport() {
-      const viewport = VIEWPORTS[this._viewport];
-      this._canvas.setAttribute("viewport-width", String(viewport.width));
-      this._canvas.setAttribute("viewport-height", String(viewport.height));
-      this._canvas.setAttribute("viewport-padding", viewport.padding);
-      this._canvas.setAttribute("viewport-fit", viewport.fit);
-      this._topBar.viewport = this._viewport;
-    }
-    _syncEditorMode() {
-      this._topBar.mode = this._editorMode;
-      this.toggleAttribute("view-mode", this._editorMode === "view");
-      if (this._editorMode === "view") {
-        this._select(null);
-      }
-    }
-    _syncChromeLabels() {
-      const resource = this.getAttribute("resource") ?? "page";
-      const defaults = this._resourceChromeDefaults(resource);
-      const topBar = this.shadowRoot.querySelector("cms-editor-v2-topbar");
-      if (!this._isTopBar(topBar)) {
-        this._requestChromeSyncWhenTopBarIsReady();
-        return;
-      }
-      this._applyChromeLabels(topBar, resource, defaults);
-    }
-    _requestChromeSyncWhenTopBarIsReady() {
-      if (this._chromeSyncPending)
-        return;
-      this._chromeSyncPending = true;
-      customElements.whenDefined("cms-editor-v2-topbar").then(() => {
-        this._chromeSyncPending = false;
-        const topBar = this.shadowRoot?.querySelector("cms-editor-v2-topbar");
-        if (topBar)
-          customElements.upgrade(topBar);
-        if (!this._isTopBar(topBar))
-          return;
-        const resource = this.getAttribute("resource") ?? "page";
-        this._applyChromeLabels(topBar, resource, this._resourceChromeDefaults(resource));
-      });
-    }
-    _applyChromeLabels(topBar, resource, defaults) {
-      topBar.setNavigation({
-        backHref: this.getAttribute("back-href") ?? defaults.backHref,
-        backLabel: this.getAttribute("back-label") ?? defaults.backLabel,
-        settingsLabel: this.getAttribute("settings-label") ?? defaults.settingsLabel
-      });
-      this.shadowRoot.querySelector("#page-settings-title").textContent = this.getAttribute("settings-title") ?? defaults.settingsTitle;
-      this.shadowRoot.querySelector(".settings-description").textContent = this.getAttribute("settings-description") ?? defaults.settingsDescription;
-      this.shadowRoot.querySelector('[data-page-label="path"]').textContent = this.getAttribute("settings-path-label") ?? defaults.pathLabel;
-      this.shadowRoot.querySelector('[data-page-label="tags"]').textContent = this.getAttribute("settings-tags-label") ?? defaults.tagsLabel;
-      this.shadowRoot.querySelector('[data-page-label="published"]').textContent = this.getAttribute("settings-status-label") ?? defaults.statusLabel;
-      this.shadowRoot.querySelector('[data-page-label="description"]').textContent = this.getAttribute("settings-description-label") ?? defaults.descriptionLabel;
-      const isPage = resource === "page";
-      this._pageField("path").disabled = !isPage;
-      this._pageField("published").closest("label").hidden = !isPage;
-    }
-    _resourceChromeDefaults(resource) {
-      if (resource === "template") {
-        return {
-          backHref: "/admin/templates",
-          backLabel: "Templates",
-          settingsLabel: "Template settings",
-          settingsTitle: "Template settings",
-          settingsDescription: "Configure template metadata.",
-          pathLabel: "Identifier",
-          tagsLabel: "Category",
-          statusLabel: "Status",
-          descriptionLabel: "Description"
-        };
-      }
-      if (resource === "snippet") {
-        return {
-          backHref: "/admin/snippets",
-          backLabel: "Snippets",
-          settingsLabel: "Snippet settings",
-          settingsTitle: "Snippet settings",
-          settingsDescription: "Configure snippet metadata.",
-          pathLabel: "Identifier",
-          tagsLabel: "Category",
-          statusLabel: "Status",
-          descriptionLabel: "Description"
-        };
-      }
-      return {
-        backHref: "/admin/pages",
-        backLabel: "Pages",
-        settingsLabel: "Page settings",
-        settingsTitle: "Page settings",
-        settingsDescription: "Configure page-level metadata and routing.",
-        pathLabel: "Path",
-        tagsLabel: "Tags",
-        statusLabel: "Status",
-        descriptionLabel: "SEO description"
-      };
-    }
-    _openPageSettings() {
-      this._pageSettingsModal.hidden = false;
-      const firstInput = this._pageSettingsModal.querySelector("input");
-      firstInput?.focus();
-    }
-    _closePageSettings() {
-      this._pageSettingsModal.hidden = true;
-    }
-    _syncPageSettingsForm() {
-      if (!this._pageConfig)
-        return;
-      this._pageField("title").value = this._pageConfig.title;
-      this._pageField("path").value = this._pageConfig.path;
-      this._pageField("published").value = String(this._pageConfig.published);
-      this._pageField("description").value = this._pageConfig.description;
-      this._pageField("tags").value = this._pageConfig.tags.join(", ");
-    }
-    _applyPageSettingsForm() {
-      if (!this._pageConfig)
-        return;
-      this._pageConfig = {
-        id: this._pageConfig.id,
-        title: this._pageField("title").value.trim(),
-        path: this._pageField("path").value.trim(),
-        published: this._pageField("published").value === "true",
-        description: this._pageField("description").value,
-        tags: this._parseTags(this._pageField("tags").value)
-      };
-      this._topBar.setPageTitle(this._pageConfig.title, this._pageConfig.path);
-    }
-    _getContentHtml() {
-      const content = this._frameDocument?.querySelector("[data-cms-content]")?.cloneNode(true);
-      if (!content)
-        return "";
-      for (const snippet of Array.from(content.querySelectorAll(CMS_SNIPPET_TAG))) {
-        snippet.replaceChildren();
-      }
-      return content.innerHTML;
-    }
-    _parseTags(value) {
-      return [...new Set(value.split(",").map((tag) => tag.trim()).filter(Boolean))];
-    }
-    _pageField(name) {
-      return this.shadowRoot.querySelector(`[data-page-field="${name}"]`);
-    }
-    _setSaveStatus(label) {
-      this._topBar.saveStatus = label;
-    }
-    _syncStructureTreeCatalog() {
-      const tree = this.shadowRoot.querySelector("cms-editor-v2-structure-tree");
-      if (this._isStructureTree(tree)) {
-        tree.catalog = this._catalog;
-        tree.setInsertItems(this._insertItems);
-        tree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-        return;
-      }
-      customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
-        const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
-        if (this._isStructureTree(upgradedTree)) {
-          upgradedTree.catalog = this._catalog;
-          upgradedTree.setInsertItems(this._insertItems);
-          upgradedTree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-        }
-      });
-    }
-    _syncStructureTreeInsertItems() {
-      const tree = this.shadowRoot.querySelector("cms-editor-v2-structure-tree");
-      if (this._isStructureTree(tree)) {
-        tree.setInsertItems(this._insertItems);
-        tree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-        return;
-      }
-      customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
-        const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
-        if (this._isStructureTree(upgradedTree)) {
-          upgradedTree.setInsertItems(this._insertItems);
-          upgradedTree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-        }
-      });
-    }
-    _syncStructureTreeDefaultTemplateSelection() {
-      const tree = this.shadowRoot.querySelector("cms-editor-v2-structure-tree");
-      if (this._isStructureTree(tree)) {
-        tree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-        return;
-      }
-      customElements.whenDefined("cms-editor-v2-structure-tree").then(() => {
-        const upgradedTree = this.shadowRoot?.querySelector("cms-editor-v2-structure-tree");
-        if (this._isStructureTree(upgradedTree)) {
-          upgradedTree.setDefaultTemplateSelection(this._defaultTemplateSelection);
-        }
-      });
-    }
-    _isStructureTree(value) {
-      return Boolean(value && "catalog" in value && "setStructure" in value && "setInsertItems" in value && "setDefaultTemplateSelection" in value);
-    }
-    _isTopBar(value) {
-      return Boolean(value && "setNavigation" in value);
-    }
-    _findStructureNodeLabel(editor) {
-      const visit = (nodes) => {
-        for (const node of nodes) {
-          if (!this._isSourceStateNode(node) && node.editor === editor)
-            return node.label;
-          const childLabel = visit(node.children);
-          if (childLabel)
-            return childLabel;
-        }
-        return null;
-      };
-      return this._runtime ? visit(this._runtime.getStructure()) : null;
-    }
-    _flattenStructure(nodes) {
-      return nodes.flatMap((node) => [
-        node,
-        ...this._flattenStructure(node.children)
-      ]);
-    }
-    _isSourceStateNode(node) {
-      return node.kind === "source-state";
-    }
-    get _structureTree() {
-      return this.shadowRoot.querySelector("cms-editor-v2-structure-tree");
-    }
-    get _settings() {
-      return this.shadowRoot.querySelector("cms-editor-v2-settings-view");
-    }
-    get _settingsTabs() {
-      return this.shadowRoot.querySelector(".panel-tabs");
-    }
-    get _canvas() {
-      return this.shadowRoot.querySelector("cms-editor-v2-canvas");
-    }
-    get _topBar() {
-      return this.shadowRoot.querySelector("cms-editor-v2-topbar");
-    }
-    get _repeatPicker() {
-      let picker = this.shadowRoot.querySelector("cms-editor-v2-repeat-picker");
-      if (!picker) {
-        picker = new RepeatPicker;
-        this.shadowRoot.append(picker);
-      }
-      return picker;
-    }
-    get _pageSettingsModal() {
-      return this.shadowRoot.querySelector(".page-settings-modal");
-    }
+      this._parts.api.loadDocument(document2, selectedTarget);
+    }
+  }
+  // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Shell.ts
+  class Shell extends ShellController {
   }
   if (!customElements.get("cms-editor-shell")) {
     customElements.define("cms-editor-shell", Shell);
@@ -19442,297 +27463,22 @@ label {
     return content.replace(/\/+$/, "");
   }
 
-  // src/core/editorSystemV2/defaultEditors/BindingCoreEditor.ts
+  // src/core/editorSystemV2/builtInEditors/BindingCoreEditor.ts
   class BindingCoreEditor extends Editor {
-    mountEditor() {
-      this.declareDataScope({
-        name: "plans",
-        label: "Plans data",
-        source: "urn:demo:plans",
-        fields: [
-          { path: "name", type: "string" },
-          { path: "price", type: "number" },
-          { path: "cta.label", type: "string" }
-        ]
-      });
-    }
-  }
-  // src/core/editorSystemV2/defaultEditors/CodeEditor.ts
-  class CodeEditor extends Editor {
-    textCapability() {
-      return {
-        format: "text",
-        dynamic: true
-      };
-    }
-  }
-  // src/core/editorSystemV2/defaultEditors/HeadingEditor.ts
-  class HeadingEditor extends Editor {
-    textCapability() {
-      return {
-        format: "richtext",
-        bold: true,
-        italic: true,
-        underline: true,
-        link: true,
-        color: true,
-        dynamic: true
-      };
-    }
-  }
-  // src/core/editorSystemV2/defaultEditors/ImageEditor.ts
-  class ImageEditor extends Editor {
-    settings() {
-      return [
-        {
-          kind: "self",
-          label: "Image",
-          settings: [
-            {
-              type: "page-link",
-              label: "Source",
-              attribute: "src",
-              allowPage: false,
-              allowExternal: false,
-              allowMedia: true
-            },
-            {
-              type: "text",
-              label: "Alt text",
-              attribute: "alt"
-            },
-            {
-              type: "text",
-              label: "Width",
-              attribute: "width"
-            },
-            {
-              type: "text",
-              label: "Height",
-              attribute: "height"
-            }
-          ]
-        }
-      ];
-    }
-  }
-  // src/core/editorSystemV2/defaultEditors/ListEditor.ts
-  class ListEditor extends Editor {
-    contentSlots() {
-      return [
-        {
-          label: "Items",
-          min: 1,
-          accepts: [{ kind: "component", tag: "li" }]
-        }
-      ];
-    }
-  }
-  // src/core/editorSystemV2/defaultEditors/ListItemEditor.ts
-  class ListItemEditor extends Editor {
-    textCapability() {
-      return {
-        format: "richtext",
-        bold: true,
-        italic: true,
-        underline: true,
-        link: true,
-        color: true,
-        size: true,
-        dynamic: true
-      };
-    }
-  }
-  // src/core/editorSystemV2/defaultEditors/ParagraphEditor.ts
-  class ParagraphEditor extends Editor {
-    textCapability() {
-      return {
-        format: "richtext",
-        bold: true,
-        italic: true,
-        underline: true,
-        link: true,
-        color: true,
-        size: true,
-        dynamic: true
-      };
-    }
-  }
-  // src/core/editorSystemV2/defaultEditors/QuoteEditor.ts
-  class QuoteEditor extends Editor {
-    textCapability() {
-      return {
-        format: "richtext",
-        bold: true,
-        italic: true,
-        underline: true,
-        link: true,
-        dynamic: true
-      };
-    }
-  }
-  // src/core/editorSystemV2/defaultEditors/SnippetEditor.ts
-  class SnippetEditor extends Editor {
-    structureMode() {
-      return "opaque";
-    }
-    settings() {
-      return [
-        {
-          kind: "self",
-          label: "Snippet",
-          settings: [
-            {
-              type: "text",
-              label: "Identifier",
-              attribute: "identifier",
-              disabled: true
-            }
-          ]
-        }
-      ];
-    }
-  }
-  // src/core/editorSystemV2/defaultEditors/SpanEditor.ts
-  class SpanEditor extends Editor {
-    textCapability() {
-      return {
-        format: "richtext",
-        bold: true,
-        italic: true,
-        underline: true,
-        link: true,
-        dynamic: true
-      };
-    }
   }
   // src/core/editorSystemV2/editorCatalog.ts
-  function nativeElementConstructor(name) {
-    const constructor = globalThis[name];
-    if (!constructor) {
-      throw new Error(`Cannot create editor catalog: ${name} is not available.`);
-    }
-    return constructor;
-  }
   function createControlEditorCatalog() {
     return [
       {
-        tag: "cms-binding-core",
+        tag: CMS_BINDING_CORE_TAG,
         label: "Binding core",
         description: "Provides global data scopes to editable content.",
         icon: "database",
         category: "Runtime",
-        bloc: un,
+        bloc: ws,
         editor: BindingCoreEditor
-      },
-      {
-        tag: CMS_SNIPPET_TAG,
-        label: "Snippet",
-        description: "References a reusable snippet. Edit the snippet itself from the snippet editor.",
-        icon: "braces",
-        category: "Content",
-        subCategory: "Reusable",
-        bloc: nativeElementConstructor("HTMLElement"),
-        editor: SnippetEditor
-      },
-      {
-        tag: "p",
-        label: "Paragraph",
-        description: "Plain rich text content.",
-        icon: "pilcrow",
-        category: "Text",
-        defaultContent: "<p>Text</p>",
-        bloc: nativeElementConstructor("HTMLParagraphElement"),
-        editor: ParagraphEditor
-      },
-      ...headingCatalogEntries(),
-      {
-        tag: "img",
-        label: "Image",
-        description: "A media image with source, alt text and intrinsic dimensions.",
-        icon: "image",
-        category: "Media",
-        subCategory: "Image",
-        bloc: nativeElementConstructor("HTMLImageElement"),
-        editor: ImageEditor
-      },
-      {
-        tag: "span",
-        label: "Span",
-        description: "Inline rich text content.",
-        icon: "type",
-        category: "Text",
-        subCategory: "Inline",
-        bloc: nativeElementConstructor("HTMLSpanElement"),
-        editor: SpanEditor
-      },
-      {
-        tag: "code",
-        label: "Code",
-        description: "Inline code content.",
-        icon: "code",
-        category: "Text",
-        subCategory: "Inline",
-        bloc: nativeElementConstructor("HTMLElement"),
-        editor: CodeEditor
-      },
-      {
-        tag: "blockquote",
-        label: "Quote",
-        description: "Quoted rich text content.",
-        icon: "quote",
-        category: "Text",
-        subCategory: "Blocks",
-        bloc: nativeElementConstructor("HTMLQuoteElement"),
-        editor: QuoteEditor
-      },
-      {
-        tag: "ul",
-        label: "Unordered list",
-        description: "A list of unordered items.",
-        icon: "list",
-        category: "Text",
-        subCategory: "Lists",
-        defaultContent: "<ul><li>List item</li></ul>",
-        bloc: nativeElementConstructor("HTMLUListElement"),
-        editor: ListEditor
-      },
-      {
-        tag: "ol",
-        label: "Ordered list",
-        description: "A list of ordered items.",
-        icon: "list-ordered",
-        category: "Text",
-        subCategory: "Lists",
-        defaultContent: "<ol><li>List item</li></ol>",
-        bloc: nativeElementConstructor("HTMLOListElement"),
-        editor: ListEditor
-      },
-      {
-        tag: "li",
-        label: "List item",
-        description: "An item inside a list.",
-        icon: "list-tree",
-        category: "Text",
-        subCategory: "Lists",
-        defaultContent: "<li>List item</li>",
-        bloc: nativeElementConstructor("HTMLLIElement"),
-        editor: ListItemEditor
       }
     ];
-  }
-  function headingCatalogEntries() {
-    return [1, 2, 3, 4, 5, 6].map((level) => ({
-      tag: `h${level}`,
-      label: `Heading ${level}`,
-      description: `Level ${level} section heading.`,
-      icon: "heading",
-      category: "Text",
-      subCategory: "Headings",
-      defaultContent: `<h${level}>Heading</h${level}>`,
-      bloc: nativeElementConstructor("HTMLHeadingElement"),
-      editor: HeadingEditor
-    }));
   }
 
   // src/components/editorSystemV2/bootstrap.ts
@@ -19749,7 +27495,7 @@ label {
   }
   function shellResource(shell) {
     const resource = shell.getAttribute("resource");
-    if (resource === "template" || resource === "snippet")
+    if (resource === "template")
       return resource;
     return "page";
   }
@@ -19772,7 +27518,6 @@ label {
       loadDataSources(),
       loadEditorSettings()
     ]);
-    console.log(dataSources);
     shell.setCatalog(catalog);
     shell.setInsertItems(insertItems);
     shell.setDataSources(dataSources);
@@ -19785,14 +27530,7 @@ label {
     shell.shadowRoot?.querySelector("cms-editor-v2-canvas")?.setAttribute("frame-url", frameUrl);
   }
   async function loadInsertItems() {
-    const [templates, snippets] = await Promise.all([
-      loadTemplateItems(),
-      loadSnippetItems()
-    ]);
-    return [
-      ...templates,
-      ...snippets
-    ];
+    return loadTemplateItems();
   }
   async function loadDataSources() {
     return fetchJson("editor/sources", []);
@@ -19802,35 +27540,18 @@ label {
   }
   async function loadTemplateItems() {
     const templates = await fetchJson("template/list", []);
-    const details = await Promise.all(templates.map((template20) => fetchJson(`template?id=${encodeURIComponent(template20.id)}`, {
-      ...template20,
+    const details = await Promise.all(templates.map((template19) => fetchJson(`template?id=${encodeURIComponent(template19.id)}`, {
+      ...template19,
       content: ""
     })));
-    return details.filter((template20) => template20.content).map((template20) => ({
+    return details.filter((template19) => template19.content).map((template19) => ({
       kind: "template",
-      id: template20.id,
-      label: template20.name,
-      description: template20.description,
-      category: template20.category || "Templates",
+      id: template19.id,
+      label: template19.name,
+      description: template19.description,
+      category: template19.category || "Templates",
       icon: "T",
-      content: template20.content ?? ""
-    }));
-  }
-  async function loadSnippetItems() {
-    const snippets = await fetchJson("snippet/list", []);
-    const details = await Promise.all(snippets.map((snippet) => fetchJson(`snippet?id=${encodeURIComponent(snippet.id)}`, {
-      ...snippet,
-      content: ""
-    })));
-    return details.filter((snippet) => snippet.identifier).map((snippet) => ({
-      kind: "snippet",
-      id: snippet.id,
-      identifier: snippet.identifier,
-      label: snippet.name,
-      description: snippet.description,
-      category: snippet.category || "Snippets",
-      icon: "S",
-      content: snippet.content ?? ""
+      content: template19.content ?? ""
     }));
   }
   async function fetchJson(path, fallback) {
@@ -19898,12 +27619,12 @@ label {
       document.head.append(script);
     });
   }
-  async function loadDocumentConfig(shell, resource, id) {
+  async function loadDocumentConfig(shell, resource, id2) {
     if (resource !== "page") {
-      await loadReusableConfig(shell, resource, id);
+      await loadReusableConfig(shell, resource, id2);
       return;
     }
-    await loadPageConfig(shell, id);
+    await loadPageConfig(shell, id2);
   }
   async function loadPageConfig(shell, pageId) {
     const response = await fetch(`${getMetaBasePath()}/api/page/configDetail?id=${encodeURIComponent(pageId)}`);
@@ -19926,8 +27647,8 @@ label {
       defaultTemplateCategory: page.defaultTemplateCategory
     });
   }
-  async function loadReusableConfig(shell, resource, id) {
-    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id)}`);
+  async function loadReusableConfig(shell, resource, id2) {
+    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id2)}`);
     if (response.redirected) {
       window.location.href = response.url;
       return;
@@ -19963,15 +27684,15 @@ label {
     if (!(shell instanceof Shell))
       return;
     const resource = shellResource(shell);
-    const id = currentPageIdentifier();
-    if (!id) {
+    const id2 = currentPageIdentifier();
+    if (!id2) {
       shell.setSaveStatus(`${resourceLabel(resource)} delete failed`);
       return;
     }
     if (!window.confirm(`Delete this ${resource}? This cannot be undone.`))
       return;
     try {
-      await deleteDocument(resource, id);
+      await deleteDocument(resource, id2);
       window.location.href = listUrl(resource);
     } catch (error) {
       console.error("[editor] delete failed", error);
@@ -20023,34 +27744,12 @@ label {
       throw new Error(`${resourceLabel(resource)} save failed with ${response.status}`);
     }
   }
-  async function deleteDocument(resource, id) {
-    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id)}`, {
+  async function deleteDocument(resource, id2) {
+    const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id2)}`, {
       method: "DELETE"
     });
-    if (response.status === 409 && resource === "snippet") {
-      await deleteSnippetInUse(id, response);
-      return;
-    }
     if (!response.ok) {
       throw new Error(`${resourceLabel(resource)} delete failed with ${response.status}`);
-    }
-  }
-  async function deleteSnippetInUse(id, response) {
-    const body = await response.json().catch(() => null);
-    const pages = Array.isArray(body?.pages) ? body.pages : [];
-    const suffix = pages.length ? `
-
-Used by:
-${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
-`)}` : "";
-    if (!window.confirm(`This snippet is used by pages. Delete it anyway?${suffix}`)) {
-      throw new Error("Snippet delete cancelled");
-    }
-    const forced = await fetch(`${getMetaBasePath()}/api/snippet?id=${encodeURIComponent(id)}&force=true`, {
-      method: "DELETE"
-    });
-    if (!forced.ok) {
-      throw new Error(`Snippet delete failed with ${forced.status}`);
     }
   }
   function listUrl(resource) {
@@ -20086,7 +27785,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
   });
 
   // src/components/media/CardMedia/template.html
-  var template_default23 = `<div class="card">
+  var template_default25 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -20108,7 +27807,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default22 = `:host {
+  var style_default24 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -20230,11 +27929,11 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
 `;
 
   // src/components/media/CardMedia/CardMedia.ts
-  class CardMedia extends A2 {
+  class CardMedia extends A {
     constructor() {
       super({
-        css: style_default22,
-        template: template_default23
+        css: style_default24,
+        template: template_default25
       });
     }
   }
@@ -20243,7 +27942,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default24 = `<div class="backdrop" id="backdrop">
+  var template_default26 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3>Crop image</h3>
@@ -20282,7 +27981,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
 `;
 
   // src/components/media/CropSystem/style.css
-  var style_default23 = `:host {
+  var style_default25 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -20481,11 +28180,11 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
 `;
 
   // src/components/media/CropSystem/CropSystem.ts
-  class CropSystem extends A2 {
+  class CropSystem extends A {
     constructor() {
       super({
-        css: style_default23,
-        template: template_default24
+        css: style_default25,
+        template: template_default26
       });
     }
     connectedCallback() {
@@ -20506,7 +28205,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
       const ratioButtons = this.shadowRoot.querySelectorAll(".ratio-btn");
       ratioButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
-          ratioButtons.forEach((b2) => b2.classList.remove("active"));
+          ratioButtons.forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
         });
       });
@@ -20522,7 +28221,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default25 = `<div class="backdrop" id="backdrop">
+  var template_default27 = `<div class="backdrop" id="backdrop">
     <div class="modal">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -20564,7 +28263,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
 `;
 
   // src/components/media/DetailMedia/style.css
-  var style_default24 = `:host {
+  var style_default26 = `:host {
     --modal-bg: var(--bg-surface, #fff);
     --modal-border: var(--border-default, #e2e8f0);
     --modal-radius: 16px;
@@ -20774,11 +28473,11 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
 `;
 
   // src/components/media/DetailMedia/DetailMedia.ts
-  class DetailMedia extends A2 {
+  class DetailMedia extends A {
     constructor() {
       super({
-        css: style_default24,
-        template: template_default25
+        css: style_default26,
+        template: template_default27
       });
     }
     connectedCallback() {
@@ -20810,7 +28509,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default26 = `<div class="toolbar">
+  var template_default28 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -20872,7 +28571,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
 `;
 
   // src/components/media/GridMedia/view/style.css
-  var style_default25 = `:host {
+  var style_default27 = `:host {
     --grid-gap: 16px;
     --grid-min-col: 180px;
     --empty-color: var(--text-muted, #94a3b8);
@@ -21242,14 +28941,14 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
   var CMS_FILES_BY_ID_ROUTE = `${CMS_FILES_ROUTE}/${CMS_FILES_BY_ID_SEGMENT}`;
   var CMS_FILES_BY_ID_MARKER = `${CMS_FILES_BY_ID_ROUTE}/`;
   function joinBase(base, path) {
-    const b2 = base === "/" ? "" : base.replace(/\/$/, "");
-    return `${b2}${path}`;
+    const b = base === "/" ? "" : base.replace(/\/$/, "");
+    return `${b}${path}`;
   }
-  function cmsFilesByIdPath(id) {
-    return `${CMS_FILES_BY_ID_ROUTE}/${encodeURIComponent(id)}`;
+  function cmsFilesByIdPath(id2) {
+    return `${CMS_FILES_BY_ID_ROUTE}/${encodeURIComponent(id2)}`;
   }
-  function cmsFilesByIdUrl(base, id) {
-    return joinBase(base, cmsFilesByIdPath(id));
+  function cmsFilesByIdUrl(base, id2) {
+    return joinBase(base, cmsFilesByIdPath(id2));
   }
   function withFileVersion(url, hash) {
     return url.includes("?") ? `${url}&v=${hash}` : `${url}?v=${hash}`;
@@ -21258,8 +28957,8 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
   function filesBase() {
     return `${getMetaBasePath()}/api/files`;
   }
-  function cmsFilesIdUrl(id) {
-    return cmsFilesByIdUrl(getMetaBasePath(), id);
+  function cmsFilesIdUrl(id2) {
+    return cmsFilesByIdUrl(getMetaBasePath(), id2);
   }
   function toLocal(item) {
     const isImage = item.type === "file" && (item.mimeType?.startsWith("image/") ?? false);
@@ -21295,12 +28994,12 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
     if (types && types.length > 0) {
       items = items.filter((i) => types.includes(i.type));
     }
-    items.sort((a, b2) => {
-      if (a.type === "folder" && b2.type !== "folder")
+    items.sort((a, b) => {
+      if (a.type === "folder" && b.type !== "folder")
         return -1;
-      if (a.type !== "folder" && b2.type === "folder")
+      if (a.type !== "folder" && b.type === "folder")
         return 1;
-      return a.label.localeCompare(b2.label);
+      return a.label.localeCompare(b.label);
     });
     return items;
   }
@@ -21314,9 +29013,9 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
       accept.add("file");
     return accept.size > 0 ? [...accept].join(",") : undefined;
   }
-  async function resolveBreadcrumbTrail(id) {
+  async function resolveBreadcrumbTrail(id2) {
     const trail = [];
-    let currentId = id;
+    let currentId = id2;
     while (currentId) {
       const url = new URL(`${filesBase()}/item`, window.location.origin);
       url.searchParams.set("id", currentId);
@@ -21330,9 +29029,9 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
     return trail;
   }
   // src/components/media/GridMedia/api/write.ts
-  async function renameItem(id, label) {
+  async function renameItem(id2, label) {
     const url = new URL(filesBase(), window.location.origin);
-    url.searchParams.set("id", id);
+    url.searchParams.set("id", id2);
     const res = await fetch(url.toString(), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -21340,9 +29039,9 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
     });
     return res.ok;
   }
-  async function deleteItem(id) {
+  async function deleteItem(id2) {
     const url = new URL(filesBase(), window.location.origin);
-    url.searchParams.set("id", id);
+    url.searchParams.set("id", id2);
     url.searchParams.set("recursive", "true");
     const res = await fetch(url.toString(), { method: "DELETE" });
     return res.ok;
@@ -21356,8 +29055,8 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
     return res.ok;
   }
   var _localPreview = new Map;
-  function localPreview(id) {
-    return _localPreview.get(id);
+  function localPreview(id2) {
+    return _localPreview.get(id2);
   }
   async function uploadFiles(files, folder) {
     for (let i = 0;i < files.length; i++) {
@@ -21375,16 +29074,16 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
       }
     }
   }
-  async function replaceFileContent(id, file) {
+  async function replaceFileContent(id2, file) {
     const form = new FormData;
     form.append("file", file);
-    form.append("id", id);
+    form.append("id", id2);
     const res = await fetch(`${filesBase()}/content`, { method: "PUT", body: form });
     if (res.ok)
-      _localPreview.set(id, URL.createObjectURL(file));
+      _localPreview.set(id2, URL.createObjectURL(file));
     return res.ok;
   }
-  async function saveItemMetadata(id, data) {
+  async function saveItemMetadata(id2, data) {
     const patch = {};
     if (typeof data["label"] === "string")
       patch.name = data["label"];
@@ -21393,7 +29092,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
     if (Object.keys(patch).length === 0)
       return true;
     const url = new URL(filesBase(), window.location.origin);
-    url.searchParams.set("id", id);
+    url.searchParams.set("id", id2);
     const res = await fetch(url.toString(), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -21520,9 +29219,9 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
       const name = input.value.trim();
       if (!name || !currentItem)
         return;
-      const id = currentItem.id;
+      const id2 = currentItem.id;
       hide();
-      callbacks.onApply(id, name);
+      callbacks.onApply(id2, name);
     };
     confirmBtn.addEventListener("click", apply);
     cancelBtn.addEventListener("click", hide);
@@ -21657,9 +29356,9 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
     const size = item.size ? formatSize(item.size) : "";
     const dims = item.width && item.height ? `${item.width}×${item.height}` : "";
     const mediaUrl = item.absoluteURL ?? "";
-    const el2 = document.createElement("div");
-    el2.slot = "fields";
-    el2.innerHTML = `
+    const el = document.createElement("div");
+    el.slot = "fields";
+    el.innerHTML = `
         <div class="detail-field">
             <label>Name</label>
             <input type="text" id="detail-label" value="${escapeAttr(item.label)}">
@@ -21692,7 +29391,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
             </div>
         </div>
     `;
-    const copyBtn = el2.querySelector("#btn-copy");
+    const copyBtn = el.querySelector("#btn-copy");
     copyBtn.addEventListener("click", () => {
       navigator.clipboard.writeText(mediaUrl);
       copyBtn.innerHTML = ICON_CHECK;
@@ -21700,20 +29399,20 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
         copyBtn.innerHTML = ICON_COPY;
       }, 1500);
     });
-    return el2;
+    return el;
   }
   function buildActions(item) {
     const canReplace = item.type !== "folder";
-    const el2 = document.createElement("div");
-    el2.slot = "actions";
-    el2.innerHTML = `
+    const el = document.createElement("div");
+    el.slot = "actions";
+    el.innerHTML = `
         <div class="detail-actions">
             <p9r-button id="btn-save" variant="filled" color="primary">Save</p9r-button>
             ${canReplace ? `<p9r-button id="btn-replace" variant="outlined">Replace</p9r-button>` : ""}
             <p9r-button id="btn-delete" variant="ghost" color="danger">Delete</p9r-button>
         </div>
     `;
-    return el2;
+    return el;
   }
 
   // src/components/media/GridMedia/features/detail/setup.ts
@@ -21774,11 +29473,11 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
     const refresh = () => host._refresh();
     const ctxMenu = setupContextMenu(s2, {
       onRename: (item) => rename.open(item),
-      onDelete: (id) => host._confirmDelete(id)
+      onDelete: (id2) => host._confirmDelete(id2)
     });
     const rename = setupRename(s2, {
-      onApply: async (id, name) => {
-        await renameItem(id, name);
+      onApply: async (id2, name) => {
+        await renameItem(id2, name);
         refresh();
       }
     });
@@ -21795,20 +29494,20 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
       }
     });
     const detail = setupDetail(host.detail, {
-      onSave: async (id, data) => {
-        if (await saveItemMetadata(id, data))
+      onSave: async (id2, data) => {
+        if (await saveItemMetadata(id2, data))
           host.detail.close();
       },
-      onReplace: async (id, file) => {
-        if (await replaceFileContent(id, file)) {
+      onReplace: async (id2, file) => {
+        if (await replaceFileContent(id2, file)) {
           host.detail.close();
           refresh();
         }
       },
-      onDelete: async (id) => {
+      onDelete: async (id2) => {
         if (!confirm("Delete this file?"))
           return;
-        if (await deleteItem(id)) {
+        if (await deleteItem(id2)) {
           host.detail.close();
           refresh();
         }
@@ -21825,12 +29524,12 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
       const card = e.target.closest("p9r-card-media");
       if (!card)
         return;
-      const id = card.dataset.id;
+      const id2 = card.dataset.id;
       if (card.dataset.type === "folder") {
-        const folder = host._items.find((i) => i.id === id);
-        host._navigateTo(id, folder?.label);
+        const folder = host._items.find((i) => i.id === id2);
+        host._navigateTo(id2, folder?.label);
       } else {
-        const item = host._items.find((i) => i.id === id);
+        const item = host._items.find((i) => i.id === id2);
         if (item)
           detail.open(item);
       }
@@ -21861,14 +29560,14 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
   }
 
   // src/components/media/GridMedia/GridMedia.ts
-  class GridMedia extends A2 {
+  class GridMedia extends A {
     _folder = null;
     _breadcrumb = [];
     _items = [];
     constructor() {
       super({
-        css: style_default25,
-        template: template_default26
+        css: style_default27,
+        template: template_default28
       });
     }
     get detail() {
@@ -21918,10 +29617,10 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
         this._breadcrumb.push({ id: folderId, label });
       this._refresh();
     }
-    async _confirmDelete(id) {
+    async _confirmDelete(id2) {
       if (!confirm("Delete this item?"))
         return;
-      if (await deleteItem(id))
+      if (await deleteItem(id2))
         this._refresh();
     }
   }
@@ -22009,7 +29708,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
     customElements.define("cms-media-admin", MediaAdmin);
 
   // src/components/media/MediaCenter/template.html
-  var template_default27 = `<dialog>
+  var template_default29 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -22077,7 +29776,7 @@ ${pages.map((page) => `- ${page.title || page.path || "Untitled"}`).join(`
 `;
 
   // src/components/media/MediaCenter/style.css
-  var style_default26 = `:host {
+  var style_default28 = `:host {
     --mc-bg: #ffffff;
     --mc-border: #e2e8f0;
     --mc-text: #1e293b;
@@ -22466,7 +30165,7 @@ dialog::backdrop {
 `;
 
   // src/components/media/MediaCenter/MediaCenter.ts
-  class MediaCenter extends A2 {
+  class MediaCenter extends A {
     _dialog = null;
     _grid = null;
     _btnSelect = null;
@@ -22478,8 +30177,8 @@ dialog::backdrop {
     _dragCounter = 0;
     constructor() {
       super({
-        css: style_default26,
-        template: template_default27
+        css: style_default28,
+        template: template_default29
       });
     }
     connectedCallback() {
@@ -22518,13 +30217,13 @@ dialog::backdrop {
         const card = e.target.closest("p9r-card-media");
         if (!card)
           return;
-        const id = card.dataset.id;
+        const id2 = card.dataset.id;
         const type = card.dataset.type;
         if (type === "folder") {
-          const folder = this._items.find((i) => i.id === id);
-          this._navigateTo(id, folder?.label);
+          const folder = this._items.find((i) => i.id === id2);
+          this._navigateTo(id2, folder?.label);
         } else {
-          this._select(card, id);
+          this._select(card, id2);
         }
       });
       this._grid.addEventListener("dblclick", (e) => {
@@ -22590,19 +30289,19 @@ dialog::backdrop {
     _render() {
       renderGrid(this._grid, this._items);
       renderBreadcrumb(this.shadowRoot.getElementById("breadcrumb"), this._folder, this._breadcrumb);
-      const empty = this.shadowRoot.getElementById("empty");
-      empty.style.display = this._items.length === 0 ? "flex" : "none";
+      const empty2 = this.shadowRoot.getElementById("empty");
+      empty2.style.display = this._items.length === 0 ? "flex" : "none";
       const pathDisplay = this.shadowRoot.getElementById("pathDisplay");
       if (this._breadcrumb.length > 0) {
-        pathDisplay.textContent = this._breadcrumb.map((b2) => b2.label).join(" / ");
+        pathDisplay.textContent = this._breadcrumb.map((b) => b.label).join(" / ");
       } else {
         pathDisplay.textContent = "Root";
       }
     }
-    _select(card, id) {
-      this._grid.querySelectorAll("p9r-card-media.selected").forEach((el2) => el2.classList.remove("selected"));
+    _select(card, id2) {
+      this._grid.querySelectorAll("p9r-card-media.selected").forEach((el) => el.classList.remove("selected"));
       card.classList.add("selected");
-      this._selectedItem = this._items.find((i) => i.id === id) || null;
+      this._selectedItem = this._items.find((i) => i.id === id2) || null;
       this._updateSelectButton();
     }
     _updateSelectButton() {
@@ -22648,128 +30347,6 @@ dialog::backdrop {
     }
   }
   customElements.define("cms-media-center", MediaCenter);
-
-  // src/components/CustomHTMLElement.ts
-  class CustomHTMLElement extends HTMLElement {
-    constructor(html, css, shadow) {
-      super();
-      if (shadow) {
-        const ele = this.attachShadow({ mode: "open" });
-        ele.innerHTML = `<style>${css ?? ""}</style>${html ?? ""}`;
-      }
-    }
-    static get observedAttributes() {
-      return [];
-    }
-  }
-
-  // src/components/form/Form/events/onKeyboardEvent.ts
-  function onKeyboardEvent(e, nativeForm) {
-    if (e.key !== "Enter")
-      return;
-    const target = e.target;
-    if (target.tagName === "TEXTAREA")
-      return;
-    e.preventDefault();
-    nativeForm.requestSubmit();
-  }
-
-  // src/core/dom/buildRequestUrl.ts
-  function buildRequestUrl(target) {
-    const u = new URL(target, window.location.href);
-    for (const [k, v2] of new URLSearchParams(window.location.search))
-      u.searchParams.append(k, v2);
-    return u;
-  }
-
-  // src/components/form/Form/events/onSubmit.ts
-  function onSubmit(e, me) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-    fetch(buildRequestUrl(me.target), {
-      method: me.method || "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    }).then(async (res) => {
-      if (res.ok) {
-        form.reset();
-        me.dispatchEvent(new BubblesEvent("form:success"));
-        if (me.emit) {
-          document.dispatchEvent(new BubblesEvent(me.emit));
-        }
-      } else {
-        dd(await readErrorMessage(res), { type: "error" });
-        me.dispatchEvent(new BubblesEvent("form:failed"));
-      }
-    }).catch(() => {
-      dd("Network error — please try again.", { type: "error" });
-      me.dispatchEvent(new BubblesEvent("form:failed"));
-    });
-  }
-  async function readErrorMessage(res) {
-    try {
-      const body = await res.json();
-      if (body && typeof body.error === "string" && body.error)
-        return body.error;
-    } catch {}
-    return res.statusText || `Request failed (${res.status})`;
-  }
-
-  // src/components/form/Form/Form.ts
-  class CmsForm extends CustomHTMLElement {
-    _nativeForm = null;
-    _handleInternalSubmit = (e) => {
-      onSubmit(e, this);
-    };
-    _handleKeydown = (e) => {
-      onKeyboardEvent(e, this._nativeForm);
-    };
-    connectedCallback() {
-      requestAnimationFrame(() => {
-        if (this._nativeForm)
-          return;
-        this._nativeForm = document.createElement("form");
-        const id = this.getAttribute("id");
-        if (id) {
-          this._nativeForm.id = id;
-          this.removeAttribute("id");
-        }
-        while (this.firstChild) {
-          this._nativeForm.appendChild(this.firstChild);
-        }
-        this.appendChild(this._nativeForm);
-        this._nativeForm.addEventListener("submit", this._handleInternalSubmit);
-        this.addEventListener("keydown", this._handleKeydown);
-      });
-    }
-    disconnectedCallback() {
-      this._nativeForm?.removeEventListener("submit", this._handleInternalSubmit);
-      this.removeEventListener("keydown", this._handleKeydown);
-    }
-    attributeChangedCallback() {}
-    get redirect() {
-      return this.getAttribute("redirect");
-    }
-    get target() {
-      const val = this.getAttribute("target");
-      if (!val)
-        throw new Error("CmsForm target attribute should be set");
-      return val;
-    }
-    get method() {
-      return this.getAttribute("method");
-    }
-    get emit() {
-      return this.getAttribute("emit");
-    }
-  }
-  if (!customElements.get("cms-form")) {
-    customElements.define("cms-form", CmsForm);
-  }
 
   // src/components/form/MediaInput/MediaInput.css
   var MediaInput_default = `:host { display: block; }
@@ -22933,43 +30510,42 @@ dialog::backdrop {
     if (!customElements.get(tag))
       customElements.define(tag, constructor);
   }
-  define("cms-binding-core", un);
-  define("p9r-accordion", Yt);
-  define("p9r-accordion-item", Wt);
-  define("p9r-alert", ie);
-  define("p9r-avatar", ne);
-  define("p9r-badge", de);
-  define("p9r-button", We);
-  define("p9r-card", fe);
-  define("w13c-checkbox", sr);
-  define("p9r-container", Ni);
-  define("w13c-form", Xo);
-  define("p9r-grid", Xi);
-  define("p9r-icon-button", mr);
-  define("w13c-lateral-dialog", Fe);
-  define("w13c-lateral-menu", oa);
-  define("w13c-lateral-menu-item", ca);
-  define("w13c-left-menu-layout", Qi);
-  define("p9r-modal", Re);
-  define("p9r-open-modal", Ze);
-  define("p9r-input", Tr);
-  define("p9r-select", Qr);
-  define("p9r-photo-album", ta);
-  define("p9r-segmented-switch", di);
-  define("p9r-stack", Ji);
-  define("p9r-tab-panel", ho);
-  define("p9r-table", Fa);
-  define("p9r-cell", ja);
-  define("p9r-header-cell", Ya);
-  define("p9r-row", eo);
-  define("p9r-tabs", co);
-  define("p9r-tag", vo);
-  define("p9r-tag-suggest", Ti);
-  define("p9r-textarea", Bi);
-  define("p9r-toast", yo);
-  define("p9r-toast-stack", Eo);
-  define("p9r-stat", qo);
-  define("p9r-line-chart", Fo);
-  define("p9r-bar-list", jo);
-  define("p9r-range-tabs", Ro);
+  define(CMS_BINDING_CORE_TAG, ws);
+  define("p9r-accordion", Se);
+  define("p9r-accordion-item", He);
+  define("p9r-alert", Pe);
+  define("p9r-avatar", De);
+  define("p9r-badge", je);
+  define("p9r-button", zr);
+  define("p9r-card", Je);
+  define("w13c-checkbox", Br);
+  define("p9r-container", wo);
+  define("p9r-grid", Lo);
+  define("p9r-icon-button", Zr);
+  define("w13c-lateral-dialog", gr);
+  define("w13c-lateral-menu", Vo);
+  define("w13c-lateral-menu-item", $o);
+  define("w13c-left-menu-layout", So);
+  define("p9r-modal", wr);
+  define("p9r-open-modal", Lr);
+  define("p9r-input", di);
+  define("p9r-select", Ci);
+  define("p9r-photo-album", Fo);
+  define("p9r-segmented-switch", Ki);
+  define("p9r-stack", Ho);
+  define("p9r-tab-panel", Xn);
+  define("p9r-table", vn);
+  define("p9r-cell", yn);
+  define("p9r-header-cell", Hn);
+  define("p9r-row", Rn);
+  define("p9r-tabs", $n);
+  define("p9r-tag", Jn);
+  define("p9r-tag-suggest", co);
+  define("p9r-textarea", go);
+  define("p9r-toast", ea);
+  define("p9r-toast-stack", oa);
+  define("p9r-stat", ba);
+  define("p9r-line-chart", va);
+  define("p9r-bar-list", ya);
+  define("p9r-range-tabs", Ea);
 })();
