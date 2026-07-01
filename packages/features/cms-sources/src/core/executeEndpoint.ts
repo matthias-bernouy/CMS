@@ -1,4 +1,5 @@
 import type { ComputedParamRef, SourceEndpoint } from "../interfaces/Source";
+import type { DataShape } from "../interfaces/DataShape";
 import { buildUpstreamUrl, type SourceComputedContext } from "./buildUpstreamUrl";
 import { isForbiddenHeaderName } from "./headerPolicy";
 
@@ -25,6 +26,16 @@ const REQUEST_ALLOWLIST  = ["accept", "accept-language", "content-type", "range"
 // upstream's compressed bytes; a client would then fail to gunzip / truncate).
 // The runtime sets the correct length for the streamed body.
 const RESPONSE_ALLOWLIST = ["content-type", "cache-control", "etag", "last-modified"] as const;
+
+type UpstreamBody =
+    | { ok: true; body?: BodyInit; streaming: boolean }
+    | { ok: false; response: Response };
+
+class BodyCoercionError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}
 
 /**
  * Executor proxy (step 0). Takes an ALREADY resolved `SourceEndpoint` + the incoming
@@ -93,7 +104,8 @@ export async function executeEndpoint(
         catch { return new Response(`invalid header: "${name}"`, { status: 400 }); }
     }
 
-    const hasBody = endpoint.method !== "GET" && endpoint.method !== "HEAD" && request.body != null;
+    const body = await upstreamBody(endpoint, request);
+    if (!body.ok) return body.response;
 
     const doFetch = deps?.fetchImpl ?? fetch;
     const ac = new AbortController();
@@ -107,7 +119,10 @@ export async function executeEndpoint(
             redirect: "manual",
             signal:   ac.signal,
         };
-        if (hasBody) { init.body = request.body; init.duplex = "half"; }
+        if (body.body !== undefined) {
+            init.body = body.body;
+            if (body.streaming) init.duplex = "half";
+        }
         upstream = await doFetch(built.url, init);
     } catch (err) {
         const aborted = (err as { name?: string })?.name === "AbortError";
@@ -135,4 +150,80 @@ function hasComputedHeaders(endpoint: SourceEndpoint): boolean {
 function computedValue(ref: ComputedParamRef, computed: SourceComputedContext): string | undefined {
     if (ref === "userID") return computed.userID || undefined;
     return undefined;
+}
+
+async function upstreamBody(endpoint: SourceEndpoint, request: Request): Promise<UpstreamBody> {
+    if (endpoint.method === "GET" || endpoint.method === "HEAD" || request.body == null) {
+        return { ok: true, streaming: false };
+    }
+
+    const shape = endpoint.input?.body;
+    if (!shape || !isJsonRequest(request)) {
+        return { ok: true, body: request.body, streaming: true };
+    }
+
+    let value: unknown;
+    try {
+        value = await request.json();
+    } catch {
+        return { ok: false, response: new Response("invalid JSON body", { status: 400 }) };
+    }
+
+    try {
+        return {
+            ok: true,
+            body: JSON.stringify(coerceBodyValue(value, shape, "body")),
+            streaming: false,
+        };
+    } catch (error) {
+        if (error instanceof BodyCoercionError) {
+            return { ok: false, response: new Response(error.message, { status: 400 }) };
+        }
+        throw error;
+    }
+}
+
+function isJsonRequest(request: Request): boolean {
+    const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+    return contentType.includes("application/json") || contentType.includes("+json");
+}
+
+function coerceBodyValue(value: unknown, shape: DataShape, path: string): unknown {
+    if (shape.type === "boolean") return coerceBoolean(value, path);
+    if (shape.type === "object") return coerceObject(value, shape, path);
+    if (shape.type === "array") return coerceArray(value, shape, path);
+    return value;
+}
+
+function coerceObject(value: unknown, shape: DataShape, path: string): unknown {
+    if (!isRecord(value) || !shape.properties) return value;
+    const next: Record<string, unknown> = { ...value };
+    for (const [key, child] of Object.entries(shape.properties)) {
+        if (!Object.hasOwn(value, key)) continue;
+        next[key] = coerceBodyValue(value[key], child, `${path}.${key}`);
+    }
+    return next;
+}
+
+function coerceArray(value: unknown, shape: DataShape, path: string): unknown {
+    if (!Array.isArray(value) || !shape.items) return value;
+    return value.map((item, index) => coerceBodyValue(item, shape.items!, `${path}.${index}`));
+}
+
+function coerceBoolean(value: unknown, path: string): boolean {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === "true" || normalized === "1" || normalized === "on" || normalized === "yes") return true;
+        if (normalized === "false" || normalized === "0" || normalized === "off" || normalized === "no") return false;
+    }
+    if (typeof value === "number") {
+        if (value === 1) return true;
+        if (value === 0) return false;
+    }
+    throw new BodyCoercionError(`${path} must be a boolean`);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
 }

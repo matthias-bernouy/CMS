@@ -230,6 +230,94 @@ describe("executeEndpoint", () => {
         expect((getFetch.mock.calls[0]![1]! as RequestInit).body).toBeUndefined();
     });
 
+    test("coerces JSON body booleans from the declared endpoint body shape", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({
+            method: "POST",
+            input: {
+                body: {
+                    type: "object",
+                    properties: {
+                        email: { type: "string" },
+                        subscribed: { type: "boolean" },
+                        active: { type: "boolean" },
+                        consent: { type: "boolean" },
+                        numeric: { type: "boolean" },
+                        nested: {
+                            type: "object",
+                            properties: {
+                                marketing: { type: "boolean" },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        await executeEndpoint(e, new Request("http://local/x", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+                email: "reader@example.com",
+                subscribed: "true",
+                active: "on",
+                consent: "0",
+                numeric: 1,
+                nested: { marketing: "false" },
+                undeclared: "true",
+            }),
+        }), { fetchImpl });
+
+        const passed = fetchImpl.mock.calls[0]![1] as RequestInit;
+        expect(passed.body).toBe(JSON.stringify({
+            email: "reader@example.com",
+            subscribed: true,
+            active: true,
+            consent: false,
+            numeric: true,
+            nested: { marketing: false },
+            undeclared: "true",
+        }));
+    });
+
+    test("rejects invalid JSON boolean values declared by the endpoint body shape", async () => {
+        const fetchImpl = okFetch();
+        const e = ep({
+            method: "POST",
+            input: {
+                body: {
+                    type: "object",
+                    properties: {
+                        subscribed: { type: "boolean" },
+                    },
+                },
+            },
+        });
+
+        const res = await executeEndpoint(e, new Request("http://local/x", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ subscribed: "maybe" }),
+        }), { fetchImpl });
+
+        expect(res.status).toBe(400);
+        expect(await res.text()).toBe("body.subscribed must be a boolean");
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    test("does not coerce JSON bodies when the endpoint has no body shape", async () => {
+        const fetchImpl = okFetch();
+        await executeEndpoint(ep({ method: "POST" }), new Request("http://local/x", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ subscribed: "true" }),
+        }), { fetchImpl });
+
+        const passed = fetchImpl.mock.calls[0]![1] as RequestInit;
+        expect(passed.body).not.toBeUndefined();
+        expect(await new Response(passed.body).text()).toBe(JSON.stringify({ subscribed: "true" }));
+    });
+
     test("aborted/timed-out upstream → 504", async () => {
         const fetchImpl = mock(async () => { const e = new Error("aborted"); e.name = "AbortError"; throw e; });
         const res = await executeEndpoint(ep(), new Request("http://local/x"), { fetchImpl });
