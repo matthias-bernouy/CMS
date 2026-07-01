@@ -33,8 +33,12 @@ export function assertDefinitionUsable(definition: IntegrationDefinition): void 
 export function parseOptionalDefinition(value: unknown): IntegrationDefinition | undefined {
     if (value === undefined || value === null || value === "") return undefined;
     const parsed = parseJsonAnswer(value, "definition");
-    if (!isRecord(parsed)) throw new IntegrationInputError("definition", "must be an object");
-    return parseDefinition(parsed);
+    return parseIntegrationDefinition(parsed);
+}
+
+export function parseIntegrationDefinition(value: unknown): IntegrationDefinition {
+    if (!isRecord(value)) throw new IntegrationInputError("definition", "must be an object");
+    return parseDefinition(value);
 }
 
 function parseDefinition(value: Record<string, unknown>): IntegrationDefinition {

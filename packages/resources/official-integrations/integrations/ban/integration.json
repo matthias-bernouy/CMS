@@ -1,0 +1,16 @@
+{
+    "schema": "cms.integration.index.v1",
+    "kind": "ban",
+    "label": "Base Adresse Nationale",
+    "category": "Data",
+    "description": "Install French national address geocoding source contracts.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
+    "versions": [
+        {
+            "version": "1.0.0",
+            "path": "versions/1.0.0",
+            "definition": "versions/1.0.0/definition.json"
+        }
+    ]
+}

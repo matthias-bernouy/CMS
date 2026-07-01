@@ -1,0 +1,13 @@
+{
+    "name": "@bernouy/cms-official-integrations",
+    "version": "0.1.0",
+    "description": "Local repository of official CmsCore integration resources.",
+    "license": "UNLICENSED",
+    "type": "module",
+    "files": [
+        "integrations"
+    ],
+    "exports": {
+        "./integrations/*": "./integrations/*"
+    }
+}

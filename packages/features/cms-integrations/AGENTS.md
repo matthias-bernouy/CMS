@@ -4,8 +4,8 @@ Feature package for declarative integration definitions and import execution.
 
 ## Boundaries
 
-- Root export exposes integration contracts, the built-in declarative registry,
-  DTO parsing, template resolution, and import execution.
+- Root export exposes integration contracts, declarative registry helpers, DTO
+  parsing, template resolution, and import execution.
 - This package may depend on feature contracts such as `@bernouy/cms-sources`
   and `@bernouy/cms-secrets`.
 - Surfaces inject host-owned operations such as bloc artifact imports. This

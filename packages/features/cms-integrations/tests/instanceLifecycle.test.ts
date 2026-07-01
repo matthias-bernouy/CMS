@@ -5,6 +5,7 @@ import {
 } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
+import { STRIPE_DEFINITION } from "./helpers";
 
 describe("@bernouy/cms-integrations instance lifecycle", () => {
     test("does not persist a new instance when the first import fails", async () => {
@@ -16,6 +17,7 @@ describe("@bernouy/cms-integrations instance lifecycle", () => {
             mode: "create",
             deps: { sources, secrets },
             instances,
+            siteIntegrations: [STRIPE_DEFINITION],
             dto: { kind: "stripe", answers: { id: "stripe-main" }, options: {} },
         })).rejects.toThrow(/apiKey/);
 
@@ -31,6 +33,7 @@ describe("@bernouy/cms-integrations instance lifecycle", () => {
             mode: "create",
             deps: { sources, secrets },
             instances,
+            siteIntegrations: [STRIPE_DEFINITION],
             dto: { kind: "stripe", answers: { id: "stripe-main", apiKey: "sk_test" }, options: {} },
         });
 
@@ -57,6 +60,7 @@ describe("@bernouy/cms-integrations instance lifecycle", () => {
             mode: "create",
             deps: { sources, secrets },
             instances,
+            siteIntegrations: [STRIPE_DEFINITION],
             dto: { kind: "stripe", answers: { id: "stripe-main", apiKey: "sk_test" }, options: {} },
         });
 

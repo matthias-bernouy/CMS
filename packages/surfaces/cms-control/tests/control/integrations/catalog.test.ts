@@ -4,17 +4,17 @@ import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 import { makeCms } from "./helpers";
 
 describe("GET /api/integrations/list", () => {
-    test("lists built-in declarative integrations", async () => {
+    test("lists configured declarative integrations", async () => {
         const { cms } = makeCms();
 
         const res = await getIntegrations(new Request("http://localhost/cms/api/integrations/list"), cms);
         const body = await res.json();
 
         expect(res.status).toBe(200);
-        expect(body.map((item: IntegrationDefinition) => item.kind).sort()).toEqual(["ban", "stripe"]);
+        expect(body.map((item: IntegrationDefinition) => item.kind).sort()).toEqual(["stripe"]);
     });
 
-    test("lets site definitions shadow built-ins by kind", async () => {
+    test("uses provided site definitions directly", async () => {
         const localStripe: IntegrationDefinition = {
             kind: "stripe",
             label: "Local Stripe",

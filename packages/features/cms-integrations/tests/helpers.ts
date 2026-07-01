@@ -1,19 +1,146 @@
 import {
-    BAN_INTEGRATION,
     InMemoryIntegrationInstanceRepository,
+    type IntegrationDefinition,
     type IntegrationInstance,
 } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import {
     sourceDtoToSource,
+    type DataShape,
     type Source,
+    type SourceDto,
     type SourceRepository,
 } from "@bernouy/cms-sources";
 
-const banSourceArtifact = BAN_INTEGRATION.artifacts?.find(artifact => artifact.type === "source");
-if (!banSourceArtifact) throw new Error("BAN integration must declare a source artifact.");
+const FEATURE_COLLECTION: DataShape = {
+    type: "object",
+    properties: {
+        type: { type: "string" },
+        features: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    type: { type: "string" },
+                    geometry: {
+                        type: "object",
+                        properties: {
+                            type: { type: "string" },
+                            coordinates: { type: "array", items: { type: "number" } },
+                        },
+                    },
+                    properties: {
+                        type: "object",
+                        properties: {
+                            label:    { type: "string" },
+                            score:    { type: "number" },
+                            type:     { type: "string" },
+                            name:     { type: "string" },
+                            postcode: { type: "string" },
+                            citycode: { type: "string" },
+                            city:     { type: "string" },
+                            context:  { type: "string" },
+                            x:        { type: "number" },
+                            y:        { type: "number" },
+                        },
+                    },
+                },
+            },
+        },
+    },
+};
 
-export const BAN_SOURCE = sourceDtoToSource(banSourceArtifact.source);
+const BAN_SOURCE_DTO: SourceDto = {
+    id: "ban",
+    meta: {
+        name: "Base Adresse Nationale",
+        description: "French national address geocoding API",
+        icon: "map-pin",
+    },
+    endpoints: [
+        {
+            endpointId: "search",
+            method: "GET",
+            targetUrl: "https://api-adresse.data.gouv.fr/search/",
+            meta: {
+                name: "Address search",
+                description: "Address to coordinates (GeoJSON)",
+            },
+            params: [
+                { name: "q",            in: "query", required: true, description: "Address to geocode", type: "string" },
+                { name: "limit",        in: "query", description: "Maximum number of results", type: "number" },
+                { name: "autocomplete", in: "query", description: "1 enables autocomplete", type: "number" },
+                { name: "type",         in: "query", description: "housenumber | street | locality | municipality", type: "string" },
+                { name: "postcode",     in: "query", type: "string" },
+                { name: "citycode",     in: "query", type: "string" },
+            ],
+            output: [{ status: "200", body: FEATURE_COLLECTION }],
+        },
+        {
+            endpointId: "reverse",
+            method: "GET",
+            targetUrl: "https://api-adresse.data.gouv.fr/reverse/",
+            meta: {
+                name: "Reverse geocoding",
+                description: "Coordinates to address",
+            },
+            params: [
+                { name: "lat",  in: "query", required: true, description: "Latitude", type: "number" },
+                { name: "lon",  in: "query", required: true, description: "Longitude", type: "number" },
+                { name: "type", in: "query", type: "string" },
+            ],
+            output: [{ status: "200", body: FEATURE_COLLECTION }],
+        },
+    ],
+};
+
+export const BAN_DEFINITION: IntegrationDefinition = {
+    kind: "ban",
+    label: "Base Adresse Nationale",
+    version: "1.0.0",
+    category: "Data",
+    inputs: [],
+    artifacts: [{ type: "source", source: BAN_SOURCE_DTO }],
+};
+
+export const STRIPE_DEFINITION: IntegrationDefinition = {
+    kind: "stripe",
+    label: "Stripe",
+    version: "1.0.0",
+    category: "Payments",
+    inputs: [
+        { name: "id", label: "Source id", type: "text", required: true, defaultValue: "stripe" },
+        { name: "apiKey", label: "Secret key", type: "password", required: true, secret: true },
+    ],
+    secrets: [
+        { input: "apiKey", key: "STRIPE_{{env answers.id}}_API_KEY" },
+    ],
+    artifacts: [
+        {
+            type: "source",
+            source: {
+                id: "{{answers.id}}",
+                meta: { name: "Stripe", icon: "credit-card" },
+                endpoints: [
+                    {
+                        endpointId: "listCustomers",
+                        method: "GET",
+                        targetUrl: "https://api.stripe.com/v1/customers",
+                        params: [],
+                        headers: [
+                            {
+                                name: "authorization",
+                                source: { from: "secret", ref: "{{secrets.apiKey}}", prefix: "Bearer " },
+                            },
+                        ],
+                    },
+                ],
+            },
+        },
+    ],
+};
+
+export const BAN_SOURCE = sourceDtoToSource(BAN_SOURCE_DTO);
 
 export const searchParams = (value: string) => new URL(`http://local/?${value}`).searchParams;
 

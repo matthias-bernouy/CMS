@@ -6,6 +6,7 @@ import {
 } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
+import { STRIPE_DEFINITION } from "./helpers";
 
 describe("@bernouy/cms-integrations instance secrets", () => {
     test("tracks a named import without storing secret values", async () => {
@@ -17,6 +18,7 @@ describe("@bernouy/cms-integrations instance secrets", () => {
             mode: "create",
             deps: { sources, secrets },
             instances,
+            siteIntegrations: [STRIPE_DEFINITION],
             dto: { kind: "stripe", answers: { id: "stripe-main", apiKey: "sk_test" }, options: {} },
         });
 

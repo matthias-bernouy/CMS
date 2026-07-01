@@ -33,6 +33,12 @@ export type {
     IntegrationInstanceCreate,
     IntegrationInstanceRepository,
 } from "../interfaces/IntegrationInstanceRepository";
+export type {
+    IntegrationDefinitionIndex,
+    IntegrationDefinitionRepository,
+    IntegrationDefinitionSummary,
+    IntegrationDefinitionVersion,
+} from "../interfaces/IntegrationDefinitionRepository";
 
 export {
     DuplicateIntegrationInstanceError,
@@ -42,11 +48,6 @@ export {
     MissingIntegrationParam,
 } from "../core/errors";
 export {
-    BUILT_IN_INTEGRATIONS,
-    BAN_INTEGRATION,
-    STRIPE_INTEGRATION,
-} from "../built-in";
-export {
     findIntegration,
     integrationRegistry,
 } from "../core/catalog";
@@ -54,6 +55,9 @@ export {
     parseIntegrationImportRequest,
     parseIntegrationImportDto,
 } from "../core/parsing/parseIntegrationImportDto";
+export {
+    parseIntegrationDefinition,
+} from "../core/parsing/definition";
 export {
     importIntegration,
 } from "../core/importIntegration";

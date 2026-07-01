@@ -3,7 +3,44 @@ import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import type { IntegrationDefinition } from "@bernouy/cms-integrations";
 
-export function makeCms(siteIntegrations: IntegrationDefinition[] = []) {
+export const STRIPE_DEFINITION: IntegrationDefinition = {
+    kind: "stripe",
+    label: "Stripe",
+    version: "1.0.0",
+    category: "Payments",
+    inputs: [
+        { name: "id", label: "Source id", type: "text", required: true, defaultValue: "stripe" },
+        { name: "apiKey", label: "Secret key", type: "password", required: true, secret: true },
+    ],
+    secrets: [
+        { input: "apiKey", key: "STRIPE_{{env answers.id}}_API_KEY" },
+    ],
+    artifacts: [
+        {
+            type: "source",
+            source: {
+                id: "{{answers.id}}",
+                meta: { name: "Stripe", icon: "credit-card" },
+                endpoints: [
+                    {
+                        endpointId: "listCustomers",
+                        method: "GET",
+                        targetUrl: "https://api.stripe.com/v1/customers",
+                        params: [],
+                        headers: [
+                            {
+                                name: "authorization",
+                                source: { from: "secret", ref: "{{secrets.apiKey}}", prefix: "Bearer " },
+                            },
+                        ],
+                    },
+                ],
+            },
+        },
+    ],
+};
+
+export function makeCms(siteIntegrations: IntegrationDefinition[] = [STRIPE_DEFINITION]) {
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
     const integrationInstances = new InMemoryIntegrationInstanceRepository();

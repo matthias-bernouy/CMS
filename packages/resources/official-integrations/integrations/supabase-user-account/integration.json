@@ -1,0 +1,16 @@
+{
+    "schema": "cms.integration.index.v1",
+    "kind": "supabase-user-account",
+    "label": "Supabase User Account",
+    "category": "Users",
+    "description": "Store minimal CMS user account fields in a private Supabase table.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
+    "versions": [
+        {
+            "version": "1.0.0",
+            "path": "versions/1.0.0",
+            "definition": "versions/1.0.0/definition.json"
+        }
+    ]
+}

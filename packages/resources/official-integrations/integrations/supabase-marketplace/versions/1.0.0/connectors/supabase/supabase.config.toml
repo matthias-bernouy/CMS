@@ -1,0 +1,6 @@
+# Copy this section into the target Supabase project's supabase/config.toml.
+# The function verifies either CMS_MARKETPLACE_API_KEY or Stripe-Signature
+# itself, so Supabase JWT verification must not run before the handler.
+
+[functions.cms-marketplace]
+verify_jwt = false

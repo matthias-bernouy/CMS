@@ -1,0 +1,2 @@
+[functions.cms-commerce]
+verify_jwt = false

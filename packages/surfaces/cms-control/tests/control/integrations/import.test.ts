@@ -44,10 +44,10 @@ describe("POST /api/integrations/import", () => {
     });
 
     test("requires a tracked identity for integrations without an id answer", async () => {
-        const { cms } = makeCms();
+        const { cms } = makeCms([{ kind: "no-id", label: "No ID", inputs: [] }]);
 
         await expect(postIntegrationImport(postImport({
-            kind: "ban",
+            kind: "no-id",
             answers: {},
         }), cms)).rejects.toThrow(/instance\.id/);
     });

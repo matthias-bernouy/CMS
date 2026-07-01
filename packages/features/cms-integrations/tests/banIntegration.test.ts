@@ -8,14 +8,18 @@ import {
     seedSources,
     validateSource,
 } from "@bernouy/cms-sources";
-import { banEndpoint, BAN_SOURCE, searchParams } from "./helpers";
+import { banEndpoint, BAN_DEFINITION, BAN_SOURCE, searchParams } from "./helpers";
 
 describe("@bernouy/cms-integrations BAN integration", () => {
     test("imports the first-party BAN address source declaratively", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
 
-        const result = await importIntegration({ sources, secrets }, { kind: "ban", answers: {}, options: {} });
+        const result = await importIntegration(
+            { sources, secrets },
+            { kind: "ban", answers: {}, options: {} },
+            [BAN_DEFINITION],
+        );
 
         expect(result).toEqual({ artifacts: [{ type: "source", id: "urn:ban", action: "created" }] });
         const installed = await sources.getSource("urn:ban");

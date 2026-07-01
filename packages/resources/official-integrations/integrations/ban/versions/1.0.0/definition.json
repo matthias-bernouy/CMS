@@ -1,0 +1,295 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "ban",
+    "label": "Base Adresse Nationale",
+    "version": "1.0.0",
+    "category": "Data",
+    "description": "Install French national address geocoding source contracts.",
+    "inputs": [],
+    "ui": {
+        "mark": "B",
+        "markClass": "data",
+        "emit": "source:updated",
+        "instructions": [
+            [
+                "Review the public API",
+                "BAN exposes public geocoding and reverse-geocoding endpoints without credentials."
+            ],
+            [
+                "Install the source",
+                "CmsCore creates the source contract and response fields used by bindings."
+            ],
+            [
+                "Use stable endpoints",
+                "Bindings can target search and reverse geocoding by their endpoint ids."
+            ]
+        ],
+        "scopes": [
+            "Source contract write",
+            "Public address lookup"
+        ],
+        "checks": [
+            "No secret is required for the public BAN API.",
+            "The source contract is validated before import.",
+            "Existing sources require force when re-importing."
+        ],
+        "resources": [
+            [
+                "Sources",
+                "BAN address search and reverse-geocoding contracts"
+            ],
+            [
+                "Endpoints",
+                "GeoJSON response fields for address bindings"
+            ]
+        ],
+        "review": [
+            "Search resolves French addresses to GeoJSON features.",
+            "Reverse geocoding resolves coordinates to an address.",
+            "The source is public and does not store credentials."
+        ],
+        "sync": [
+            "Validate source contract",
+            "Install BAN source",
+            "Refresh Sources"
+        ],
+        "syncNote": "The import installs the public BAN source contract without writing secrets."
+    },
+    "artifacts": [
+        {
+            "type": "source",
+            "source": {
+                "id": "ban",
+                "meta": {
+                    "name": "Base Adresse Nationale",
+                    "description": "French national address geocoding API",
+                    "icon": "map-pin"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "search",
+                        "method": "GET",
+                        "targetUrl": "https://api-adresse.data.gouv.fr/search/",
+                        "meta": {
+                            "name": "Address search",
+                            "description": "Address to coordinates (GeoJSON)"
+                        },
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "required": true,
+                                "description": "Address to geocode",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "description": "Maximum number of results",
+                                "type": "number"
+                            },
+                            {
+                                "name": "autocomplete",
+                                "in": "query",
+                                "description": "1 enables autocomplete",
+                                "type": "number"
+                            },
+                            {
+                                "name": "type",
+                                "in": "query",
+                                "description": "housenumber | street | locality | municipality",
+                                "type": "string"
+                            },
+                            {
+                                "name": "postcode",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "citycode",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "features": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "geometry": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            },
+                                                            "coordinates": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "number"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "properties": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "score": {
+                                                                "type": "number"
+                                                            },
+                                                            "type": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "postcode": {
+                                                                "type": "string"
+                                                            },
+                                                            "citycode": {
+                                                                "type": "string"
+                                                            },
+                                                            "city": {
+                                                                "type": "string"
+                                                            },
+                                                            "context": {
+                                                                "type": "string"
+                                                            },
+                                                            "x": {
+                                                                "type": "number"
+                                                            },
+                                                            "y": {
+                                                                "type": "number"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "reverse",
+                        "method": "GET",
+                        "targetUrl": "https://api-adresse.data.gouv.fr/reverse/",
+                        "meta": {
+                            "name": "Reverse geocoding",
+                            "description": "Coordinates to address"
+                        },
+                        "params": [
+                            {
+                                "name": "lat",
+                                "in": "query",
+                                "required": true,
+                                "description": "Latitude",
+                                "type": "number"
+                            },
+                            {
+                                "name": "lon",
+                                "in": "query",
+                                "required": true,
+                                "description": "Longitude",
+                                "type": "number"
+                            },
+                            {
+                                "name": "type",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string"
+                                        },
+                                        "features": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "geometry": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            },
+                                                            "coordinates": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "number"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "properties": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "score": {
+                                                                "type": "number"
+                                                            },
+                                                            "type": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "postcode": {
+                                                                "type": "string"
+                                                            },
+                                                            "citycode": {
+                                                                "type": "string"
+                                                            },
+                                                            "city": {
+                                                                "type": "string"
+                                                            },
+                                                            "context": {
+                                                                "type": "string"
+                                                            },
+                                                            "x": {
+                                                                "type": "number"
+                                                            },
+                                                            "y": {
+                                                                "type": "number"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,1812 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "supabase-commerce",
+    "label": "Supabase Commerce",
+    "version": "1.0.0",
+    "category": "Commerce",
+    "description": "Manage a Supabase-backed commerce catalogue with products, variants, offers, vendors, attributes and media.",
+    "inputs": [
+        {
+            "name": "id",
+            "label": "Source id",
+            "type": "text",
+            "required": true,
+            "defaultValue": "commerce"
+        },
+        {
+            "name": "functionsBaseUrl",
+            "label": "Supabase Functions base URL",
+            "type": "url",
+            "required": true,
+            "defaultValue": "https://PROJECT_REF.functions.supabase.co/functions/v1"
+        },
+        {
+            "name": "apiKey",
+            "label": "Private CMS commerce API key",
+            "type": "password",
+            "required": true,
+            "secret": true
+        }
+    ],
+    "ui": {
+        "mark": "C",
+        "markClass": "commerce",
+        "emit": "source:updated",
+        "instructions": [
+            [
+                "Run the database schema",
+                "Apply connectors/supabase/schema.sql to the target Supabase database."
+            ],
+            [
+                "Deploy Supabase function",
+                "Deploy the cms-commerce Edge Function and set its production secrets."
+            ],
+            [
+                "Connect the CMS",
+                "Enter the Functions base URL without a trailing slash and the private CMS commerce API key."
+            ]
+        ],
+        "scopes": [
+            "Commerce catalogue reads",
+            "Idempotent catalogue writes",
+            "Vendor offer management",
+            "Category facets and product listings"
+        ],
+        "checks": [
+            "The CMS only stores the source configuration and private API key reference.",
+            "Read endpoints use only the private CMS API key.",
+            "Write endpoints also forward x-cms-user-id for audit context.",
+            "The Edge Function does not infer roles or permissions from x-cms-user-id."
+        ],
+        "resources": [
+            [
+                "Sources",
+                "Commerce source contract"
+            ],
+            [
+                "Secrets",
+                "Private CMS commerce API key"
+            ],
+            [
+                "Supabase",
+                "Private commerce schema and Edge Function"
+            ]
+        ],
+        "review": [
+            "Keep commerce tables private to anon and authenticated roles.",
+            "Do not expose the CMS commerce API key, Supabase service-role key, or secret keys to browser code.",
+            "Use Stripe Connect or payment-specific functions separately from this catalogue integration."
+        ],
+        "sync": [
+            "Validate answers",
+            "Store private API key",
+            "Install commerce source",
+            "Refresh Sources"
+        ],
+        "syncNote": "This integration creates a stateless CMS source. Supabase owns commerce catalogue rows."
+    },
+    "secrets": [
+        {
+            "input": "apiKey",
+            "key": "COMMERCE_{{env answers.id}}_API_KEY"
+        }
+    ],
+    "artifacts": [
+        {
+            "type": "source",
+            "source": {
+                "id": "{{answers.id}}",
+                "meta": {
+                    "name": "Commerce",
+                    "description": "Supabase-backed commerce catalogue endpoints.",
+                    "icon": "shopping-bag"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "health",
+                        "method": "GET",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/health",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "categories",
+                        "method": "GET",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/categories",
+                        "params": [
+                            {
+                                "name": "parentId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "parentId": {
+                                                        "type": "string"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "fullSlug": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "slug",
+                                                    "fullSlug",
+                                                    "title",
+                                                    "status",
+                                                    "position"
+                                                ]
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "items",
+                                        "limit",
+                                        "offset"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "category",
+                        "method": "GET",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/category",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "fullSlug",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "parentId": {
+                                            "type": "string"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "fullSlug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "position": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "slug",
+                                        "fullSlug",
+                                        "title",
+                                        "status",
+                                        "position"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "products",
+                        "method": "GET",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/products",
+                        "params": [
+                            {
+                                "name": "categoryId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "categoryFullSlug",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "brandId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "vendorId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "minPrice",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "maxPrice",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "stockStatus",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "condition",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "visibility",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "sort",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "includeTotal",
+                                "in": "query",
+                                "type": "boolean"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "productId": {
+                                                        "type": "string"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "brandId": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "visibility": {
+                                                        "type": "string"
+                                                    },
+                                                    "minPriceAmountMinor": {
+                                                        "type": "number"
+                                                    },
+                                                    "maxPriceAmountMinor": {
+                                                        "type": "number"
+                                                    },
+                                                    "inStock": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "activeOfferCount": {
+                                                        "type": "number"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "productId",
+                                                    "slug",
+                                                    "title",
+                                                    "status",
+                                                    "visibility",
+                                                    "inStock",
+                                                    "activeOfferCount"
+                                                ]
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "items",
+                                        "limit",
+                                        "offset"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "product",
+                        "method": "GET",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/product",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "slug",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "slug": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "brandId": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "visibility": {
+                                            "type": "string"
+                                        },
+                                        "variants": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "categories": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "parentId": {
+                                                        "type": "string"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "fullSlug": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "position": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "slug",
+                                                    "fullSlug",
+                                                    "title",
+                                                    "status",
+                                                    "position"
+                                                ]
+                                            }
+                                        },
+                                        "media": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "slug",
+                                        "title",
+                                        "status",
+                                        "visibility"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "productOffers",
+                        "method": "GET",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/product-offers",
+                        "params": [
+                            {
+                                "name": "productId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "variantId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "vendorId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "stockStatus",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "condition",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "vendorId": {
+                                                        "type": "string"
+                                                    },
+                                                    "productId": {
+                                                        "type": "string"
+                                                    },
+                                                    "variantId": {
+                                                        "type": "string"
+                                                    },
+                                                    "priceAmountMinor": {
+                                                        "type": "number"
+                                                    },
+                                                    "compareAtPriceAmountMinor": {
+                                                        "type": "number"
+                                                    },
+                                                    "currency": {
+                                                        "type": "string"
+                                                    },
+                                                    "condition": {
+                                                        "type": "string"
+                                                    },
+                                                    "stockQuantity": {
+                                                        "type": "number"
+                                                    },
+                                                    "stockStatus": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "vendorId",
+                                                    "productId",
+                                                    "variantId",
+                                                    "priceAmountMinor",
+                                                    "currency",
+                                                    "condition",
+                                                    "stockQuantity",
+                                                    "stockStatus",
+                                                    "status"
+                                                ]
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "items",
+                                        "limit",
+                                        "offset"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "categoryFacets",
+                        "method": "GET",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/category-facets",
+                        "params": [
+                            {
+                                "name": "categoryId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "categoryFullSlug",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "brandId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "vendorId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "minPrice",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "maxPrice",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "stockStatus",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "condition",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "visibility",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "brands": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "vendors": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "attributes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "price": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "required": [
+                                        "brands",
+                                        "vendors",
+                                        "attributes",
+                                        "price"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertVendor",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/vendor",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertBrand",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/brand",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertCategory",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/category",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertProduct",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/product",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertProductVariant",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/product-variant",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertOffer",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/offer",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertAttribute",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/attribute",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertAttributeOption",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/attribute-option",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertCategoryAttribute",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/category-attribute",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertProductVariantAxis",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/product-variant-axis",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertProductAttributeValue",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/product-attribute-value",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertVariantAttributeValue",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/variant-attribute-value",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertProductCategory",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/product-category",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertMedia",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/media",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertMediaLink",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/media-link",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertExternalReference",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/external-reference",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "upsertSettings",
+                        "method": "POST",
+                        "targetUrl": "{{answers.functionsBaseUrl}}/cms-commerce/settings",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.apiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "externalReference": {
+                                    "type": "object"
+                                },
+                                "data": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -10,6 +10,7 @@ import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import {
     CreateFailingIntegrationInstanceRepository,
     sourceArtifact,
+    STRIPE_DEFINITION,
     SuccessReplaceFailingIntegrationInstanceRepository,
 } from "./helpers";
 
@@ -72,6 +73,7 @@ describe("@bernouy/cms-integrations instance persistence", () => {
             mode: "create",
             deps: { sources, secrets },
             instances,
+            siteIntegrations: [STRIPE_DEFINITION],
             dto: { kind: "stripe", answers: { id: "stripe-main", apiKey: "sk_old" }, options: {} },
         });
         const before = await instances.get("stripe:stripe-main");

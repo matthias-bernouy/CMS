@@ -6,8 +6,8 @@ import {
 } from "@bernouy/cms-integrations";
 
 describe("@bernouy/cms-integrations DTO parsing", () => {
-    test("lists only declarative built-in integrations in the public registry", () => {
-        expect(integrationRegistry().map(definition => definition.kind).sort()).toEqual(["ban", "stripe"]);
+    test("has no implicit definitions in the public registry", () => {
+        expect(integrationRegistry()).toEqual([]);
     });
 
     test("rejects malformed manual source artifacts before import execution", () => {
@@ -109,7 +109,7 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
         expect(request.dto.answers).toEqual({ branch: "main", enabled: true });
     });
 
-    test("site definitions shadow bundled definitions with the same kind", () => {
+    test("uses provided definitions for registry and import parsing", () => {
         const definition: IntegrationDefinition = { kind: "stripe", label: "Custom Stripe", inputs: [] };
 
         expect(integrationRegistry([definition]).filter(item => item.kind === "stripe")).toEqual([definition]);
