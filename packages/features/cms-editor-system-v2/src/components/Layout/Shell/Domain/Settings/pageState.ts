@@ -2,6 +2,7 @@ import {
     CMS_BINDING_ATTRIBUTES,
     type Editor,
     type Setting,
+    type SettingControl,
     type SettingSection,
 } from "@bernouy/cms-content/editor";
 import { hasStandardValueSurface, isValidValueKey, valueSurfaceName } from "./valueSurface";
@@ -12,7 +13,7 @@ export const PAGE_STATE_NAME_SETTING = "__cms-page-state-name";
 
 export function applyPageStateSetting(
     editor: Editor,
-    setting: Pick<Setting, "attribute">,
+    setting: Pick<SettingControl, "attribute">,
     value: string | boolean,
 ): boolean {
     if (!isPageStateSetting(setting)) return false;
@@ -91,7 +92,7 @@ export function pageStateSettings(editor: Editor): SettingSection | null {
     return { kind: "surcharge", label: "Page state", settings };
 }
 
-export function isPageStateSetting(setting: Pick<Setting, "attribute">): boolean {
+export function isPageStateSetting(setting: Pick<SettingControl, "attribute">): boolean {
     return setting.attribute === PAGE_STATE_ENABLE_SETTING
         || setting.attribute === PAGE_STATE_USE_NAME_SETTING
         || setting.attribute === PAGE_STATE_NAME_SETTING;

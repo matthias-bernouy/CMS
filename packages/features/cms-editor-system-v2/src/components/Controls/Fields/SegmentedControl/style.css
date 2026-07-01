@@ -5,21 +5,21 @@
 .segmented {
     display: flex;
     gap: 2px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 8px;
-    background: var(--editor-v2-surface-muted);
-    padding: 3px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 68%, transparent);
+    padding: 2px;
 }
 
 ::slotted(button) {
     flex: 1;
-    min-height: 28px;
+    min-height: 24px;
     border: 0;
-    border-radius: 6px;
+    border-radius: 4px;
     background: transparent;
     color: var(--editor-v2-muted);
     font: inherit;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 650;
     cursor: pointer;
 }

@@ -10,20 +10,19 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     width: 100%;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 8px;
-    background: var(--editor-v2-surface-muted);
+    min-height: 27px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     color: var(--editor-v2-text);
-    padding: 10px 11px;
+    padding: 0;
     font: inherit;
     text-align: left;
 }
 
 .toggle:disabled {
-    border-color: color-mix(in srgb, var(--editor-v2-border) 70%, transparent);
-    background: color-mix(in srgb, var(--editor-v2-surface-muted) 82%, var(--editor-v2-surface));
     color: var(--editor-v2-muted);
     cursor: not-allowed;
     opacity: .72;
@@ -35,23 +34,38 @@
 
 .copy {
     display: grid;
-    gap: 2px;
+    grid-template-columns: minmax(0, var(--field-label-width, 82px)) minmax(0, 1fr);
+    grid-template-areas:
+        "label hint";
+    align-items: center;
+    column-gap: 7px;
 }
 
 .label {
-    font-size: 12px;
-    font-weight: 700;
+    grid-area: label;
+    overflow: hidden;
+    max-width: var(--field-label-width, 82px);
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .hint {
+    grid-area: hint;
     color: var(--editor-v2-muted);
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.35;
 }
 
+.hint:empty {
+    display: none;
+}
+
 .switch {
-    width: 32px;
-    height: 18px;
+    width: 28px;
+    height: 16px;
     border-radius: 999px;
     background: var(--editor-v2-border-strong);
     padding: 2px;
@@ -60,8 +74,8 @@
 .switch::after {
     content: "";
     display: block;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 999px;
     background: #fff;
 }
@@ -71,5 +85,26 @@
 }
 
 :host([checked]) .switch::after {
-    transform: translateX(14px);
+    transform: translateX(12px);
+}
+
+:host([label-display="hidden"]) .copy,
+:host([label-display="sr-only"]) .copy {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "hint";
+}
+
+:host([label-display="hidden"]) .label {
+    display: none;
+}
+
+:host([label-display="sr-only"]) .label {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
 }

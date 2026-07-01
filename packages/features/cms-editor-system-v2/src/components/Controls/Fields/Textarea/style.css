@@ -8,7 +8,7 @@
 
 .field {
     display: grid;
-    gap: 5px;
+    gap: 4px;
 }
 
 .control-shell {
@@ -20,8 +20,8 @@
 
 .label {
     color: var(--editor-v2-label);
-    font-size: 12px;
-    font-weight: 640;
+    font-size: 10px;
+    font-weight: 650;
 }
 
 .hint {
@@ -38,7 +38,7 @@ textarea {
     color: var(--editor-v2-text);
     padding: 8px 9px;
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.45;
 }
 
@@ -52,4 +52,18 @@ textarea:disabled {
 
 .hint:empty {
     display: none;
+}
+
+:host([label-display="hidden"]) .label {
+    display: none;
+}
+
+:host([label-display="sr-only"]) .label {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
 }

@@ -8,10 +8,18 @@
 
 .field {
     display: grid;
-    gap: 5px;
+    grid-template-columns: minmax(0, var(--field-label-width, 82px)) minmax(0, 1fr);
+    grid-template-areas:
+        "label control"
+        ". picker"
+        ". hint";
+    align-items: center;
+    column-gap: 7px;
+    row-gap: 3px;
 }
 
 .control-shell {
+    grid-area: control;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
@@ -19,21 +27,35 @@
 }
 
 .label {
+    grid-area: label;
+    overflow: hidden;
+    max-width: var(--field-label-width, 82px);
     color: var(--editor-v2-label);
-    font-size: 12px;
-    font-weight: 640;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 input {
     width: 100%;
-    min-height: 32px;
-    border: 1px solid var(--editor-v2-border);
-    border-radius: 7px;
-    background: var(--editor-v2-surface);
+    min-height: 27px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--editor-v2-surface-muted) 80%, var(--editor-v2-surface));
     color: var(--editor-v2-text);
     padding: 0 9px;
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: 620;
+}
+
+input:hover,
+input:focus {
+    border-color: var(--editor-v2-border);
+    outline: none;
+    background: var(--editor-v2-surface);
 }
 
 input:disabled {
@@ -45,11 +67,48 @@ input:disabled {
 }
 
 .hint {
+    grid-area: hint;
     color: var(--editor-v2-muted);
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.35;
 }
 
 .hint:empty {
     display: none;
+}
+
+.data-picker {
+    grid-area: picker;
+}
+
+:host(.setting-row-control) .field {
+    grid-template-columns: minmax(0, var(--field-row-label-width, 22px)) minmax(0, 1fr);
+    column-gap: 5px;
+}
+
+:host(.setting-row-control) .label {
+    max-width: var(--field-row-label-width, 22px);
+}
+
+:host([label-display="hidden"]) .field,
+:host([label-display="sr-only"]) .field {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "control"
+        "picker"
+        "hint";
+}
+
+:host([label-display="hidden"]) .label {
+    display: none;
+}
+
+:host([label-display="sr-only"]) .label {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
 }

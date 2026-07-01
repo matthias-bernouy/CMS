@@ -1,6 +1,7 @@
 import {
     CMS_BINDING_ATTRIBUTES,
     type Setting,
+    type SettingControl,
     type SettingSection,
     type Editor,
 } from "@bernouy/cms-content/editor";
@@ -12,7 +13,7 @@ export const PARAM_SYNC_NAME_SETTING = "__cms-param-sync-name";
 
 export function applyParamSyncSetting(
     editor: Editor,
-    setting: Pick<Setting, "attribute">,
+    setting: Pick<SettingControl, "attribute">,
     value: string | boolean,
 ): boolean {
     if (!isParamSyncSetting(setting)) return false;
@@ -105,7 +106,7 @@ export function paramSyncSettings(editor: Editor): SettingSection | null {
     };
 }
 
-export function isParamSyncSetting(setting: Pick<Setting, "attribute">): boolean {
+export function isParamSyncSetting(setting: Pick<SettingControl, "attribute">): boolean {
     return setting.attribute === PARAM_SYNC_ENABLE_SETTING
         || setting.attribute === PARAM_SYNC_USE_NAME_SETTING
         || setting.attribute === PARAM_SYNC_NAME_SETTING;

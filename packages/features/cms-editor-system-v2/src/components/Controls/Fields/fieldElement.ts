@@ -11,6 +11,13 @@ export function attachFieldShadow(host: HTMLElement, template: HTMLTemplateEleme
 }
 
 export function syncFieldCopy(host: HTMLElement): void {
-    host.shadowRoot!.querySelector(".label")!.textContent = host.getAttribute("label") ?? "";
+    const label = host.getAttribute("label") ?? "";
+    host.shadowRoot!.querySelector(".label")!.textContent = label;
     host.shadowRoot!.querySelector(".hint")!.textContent = host.getAttribute("hint") ?? "";
+    const labelDisplay = host.getAttribute("label-display") ?? "visible";
+    const ariaLabel = host.getAttribute("aria-label");
+    if (ariaLabel || labelDisplay !== "visible") {
+        const control = host.shadowRoot!.querySelector<HTMLElement>("input, select, textarea, button");
+        control?.setAttribute("aria-label", ariaLabel ?? label);
+    }
 }

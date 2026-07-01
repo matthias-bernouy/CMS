@@ -2,6 +2,7 @@ import {
     type ContentSlot,
     type Editor,
     type Setting,
+    type SettingControl,
     type SettingSection,
 } from "@bernouy/cms-content/editor";
 
@@ -11,7 +12,7 @@ import { isPageStateSetting } from "./pageState";
 export function resolveSettingsValues(editor: Editor, sections: SettingSection[]): SettingSection[] {
     return sections.map(section => ({
         ...section,
-        settings: section.settings.map(setting => resolveSettingValue(editor, setting)),
+        settings: section.settings.map(setting => resolveSetting(editor, setting)),
     }));
 }
 
@@ -50,7 +51,18 @@ export function setTextValue(editor: Editor, format: "text" | "richtext", value:
     }
 }
 
-function resolveSettingValue(editor: Editor, setting: Setting): Setting {
+function resolveSetting(editor: Editor, setting: Setting): Setting {
+    if (setting.type === "row") {
+        return {
+            ...setting,
+            settings: setting.settings.map(child => resolveSettingValue(editor, child)),
+        };
+    }
+
+    return resolveSettingValue(editor, setting);
+}
+
+function resolveSettingValue(editor: Editor, setting: SettingControl): SettingControl {
     if (isParamSyncSetting(setting) || isPageStateSetting(setting)) return setting;
 
     if (setting.type === "toggle") {
@@ -60,10 +72,19 @@ function resolveSettingValue(editor: Editor, setting: Setting): Setting {
         };
     }
 
-    return {
+    const resolved = {
         ...setting,
         defaultValue: editor.target.getAttribute(setting.attribute) ?? setting.defaultValue,
-    } as Setting;
+    } as SettingControl;
+
+    if (resolved.type === "color" && resolved.customAttribute) {
+        return {
+            ...resolved,
+            customDefaultValue: editor.target.getAttribute(resolved.customAttribute) ?? resolved.customDefaultValue,
+        };
+    }
+
+    return resolved;
 }
 
 function assertTextSlotCompatibility(editor: Editor): void {

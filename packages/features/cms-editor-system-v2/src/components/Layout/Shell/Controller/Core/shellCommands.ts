@@ -1,4 +1,4 @@
-import type { Editor, Setting } from "@bernouy/cms-content/editor";
+import type { Editor, SettingControl } from "@bernouy/cms-content/editor";
 import type { CanvasFrameReadyDetail } from "../../../Canvas/Canvas";
 import type { ShellSelection } from "../shellSelection";
 import type { ShellFrames } from "../shellFrames";
@@ -61,7 +61,7 @@ export class ShellCommands {
         this.context.selection.renderSettings();
     }
 
-    applySetting(editor: Editor, setting: Setting, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
+    applySetting(editor: Editor, setting: SettingControl, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
         this.context.selection.applySetting(editor, setting, value, attributes);
     }
 

@@ -2,7 +2,7 @@ import {
     type EditableState,
     type EditableStateSession,
     type Editor,
-    type Setting,
+    type SettingControl,
 } from "@bernouy/cms-content/editor";
 
 import type { EditorRuntime } from "../../../../runtime";
@@ -85,7 +85,7 @@ export class ShellSelection {
         );
     }
 
-    applySetting(editor: Editor, setting: Setting, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
+    applySetting(editor: Editor, setting: SettingControl, value: string | boolean, attributes?: SettingsViewAttributeChanges): void {
         if (attributes) {
             this.applyAttributes(editor, attributes);
             return;
