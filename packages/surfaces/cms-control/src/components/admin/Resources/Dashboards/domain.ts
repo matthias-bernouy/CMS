@@ -49,9 +49,10 @@ export function renderWidget(widget: DashboardWidget, context: RenderContext, ke
             return renderStat(widget, context);
         case "w-detail":
             return renderDetail(widget, context);
+        case "w-create":
+            return renderCreate(widget, context, key);
         case "w-detail-item-put":
         case "w-detail-patch":
-        case "w-create":
             return renderPendingWidget(widget);
         default:
             return `<section class="panel empty"><strong>Unsupported widget</strong></section>`;
@@ -200,6 +201,54 @@ function renderDetail(
     `;
 }
 
+function renderCreate(
+    widget: Extract<DashboardWidget, { widget: "w-create" }>,
+    context: RenderContext,
+    key: string,
+): string {
+    const collection = collectionById(context.dashboard, widget.collection);
+    if (!collection) return renderMissing(`Unknown collection "${widget.collection}"`);
+
+    const ref = collection.item?.create;
+    if (!ref) return renderMissing(`Collection "${widget.collection}" does not declare item.create`);
+
+    const endpoint = endpointById(context.group, ref.endpoint);
+    if (!endpoint) return renderMissing(`Unknown endpoint "${ref.endpoint}"`);
+
+    const fields = resolveCreateFields(widget.fields, endpoint);
+    if (!fields.length) return renderMissing(`No writable fields for collection "${widget.collection}"`);
+
+    const paramFields = paramFieldNames(ref);
+    const url = endpointUrl(context.group, ref);
+    const modalId = `dashboard-create-${safeDomId(key)}`;
+    return `
+        <section class="dashboard-create-action">
+            <button type="button" data-dashboard-create-open="${escapeAttr(modalId)}">Create</button>
+        </section>
+        <dialog class="dashboard-create-dialog" data-dashboard-create-dialog="${escapeAttr(modalId)}">
+            <form
+                class="dashboard-create"
+                data-dashboard-create
+                data-dashboard-url="${escapeAttr(url)}"
+                data-dashboard-method="${escapeAttr(endpoint.method)}"
+            >
+                <div class="dashboard-create-head">
+                    <strong>${escapeHtml(widgetTitle(widget))}</strong>
+                    <button type="button" class="dashboard-create-close" data-dashboard-create-close>Close</button>
+                </div>
+                <div class="dashboard-create-fields">
+                    ${fields.map(field => renderCreateField(field, paramFields.has(field.field))).join("")}
+                </div>
+                <div class="dashboard-create-actions">
+                    <button type="button" class="dashboard-create-secondary" data-dashboard-create-close>Cancel</button>
+                    <button type="submit">Create</button>
+                </div>
+                <p class="state dashboard-create-state" data-dashboard-create-state hidden></p>
+            </form>
+        </dialog>
+    `;
+}
+
 function renderStat(widget: Extract<DashboardWidget, { widget: "w-stat" }>, context: RenderContext): string {
     const endpoint = endpointById(context.group, widget.endpoint);
     if (!endpoint) return renderMissing(`Unknown endpoint "${widget.endpoint}"`);
@@ -269,6 +318,7 @@ type ResolvedField = {
     label: string;
     input?: FieldInput;
     format?: FieldFormat;
+    required?: boolean;
 };
 
 function resolveColumns(
@@ -301,7 +351,13 @@ function resolveFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpoint
         return fields.flatMap(field => {
             if (typeof field === "string") return isSafeBindingPath(field) ? { field, label: labelFromPath(field) } : [];
             if (!isSafeBindingPath(field.field)) return [];
-            return { field: field.field, label: field.label ?? labelFromPath(field.field), input: field.input, format: field.format };
+            return {
+                field: field.field,
+                label: field.label ?? labelFromPath(field.field),
+                input: field.input,
+                format: field.format,
+                required: field.required,
+            };
         });
     }
 
@@ -315,6 +371,24 @@ function resolveFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpoint
             label: labelFromPath(field.path),
             input: field.input,
             format: inferFieldFormat(field.path),
+            required: field.required,
+        }));
+}
+
+function resolveCreateFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpointDto): ResolvedField[] {
+    if (fields?.length) return resolveFields(fields, endpoint);
+
+    const shape = endpoint.body;
+    if (!shape) return [];
+    return flattenDataShape(shape)
+        .filter(field => isSafeBindingPath(field.path))
+        .slice(0, 12)
+        .map(field => ({
+            field: field.path,
+            label: labelFromPath(field.path),
+            input: field.input,
+            format: inferFieldFormat(field.path),
+            required: field.required,
         }));
 }
 
@@ -437,6 +511,71 @@ function formatDetailBinding(field: ResolvedField): string {
     if (field.format === "badge" || field.input === "boolean") return `<span class="badge">${binding}</span>`;
     if (field.format === "date") return `<time>${binding}</time>`;
     return binding;
+}
+
+function renderCreateField(field: ResolvedField, isParam: boolean): string {
+    const attrs = [
+        `name="${escapeAttr(field.field)}"`,
+        "data-dashboard-field",
+        `data-dashboard-field-type="${escapeAttr(field.input ?? "text")}"`,
+        `data-dashboard-field-label="${escapeAttr(field.label)}"`,
+        isParam ? "data-dashboard-param" : "",
+        field.required ? "required" : "",
+    ].filter(Boolean).join(" ");
+
+    if (field.input === "cms-user") {
+        return `
+            <div class="dashboard-user-picker" ${attrs} data-dashboard-user-picker>
+                <label>${escapeHtml(field.label)}</label>
+                <div class="dashboard-user-control">
+                    <input
+                        type="search"
+                        placeholder="Search by name or email"
+                        autocomplete="off"
+                        role="combobox"
+                        aria-expanded="false"
+                        data-dashboard-user-search
+                    >
+                    <div class="dashboard-user-menu" role="listbox" data-dashboard-user-menu hidden></div>
+                </div>
+            </div>
+        `;
+    }
+
+    if (field.input === "boolean") {
+        return `
+            <label class="dashboard-checkbox">
+                <input type="checkbox" ${attrs}>
+                <span>${escapeHtml(field.label)}</span>
+            </label>
+        `;
+    }
+
+    return `
+        <p9r-input
+            ${attrs}
+            label="${escapeAttr(field.label)}"
+            type="${escapeAttr(inputTypeFor(field))}"
+        ></p9r-input>
+    `;
+}
+
+function inputTypeFor(field: ResolvedField): string {
+    if (field.input === "number") return "number";
+    if (field.format === "url") return "url";
+    return "text";
+}
+
+function paramFieldNames(ref: CollectionEndpointRef): Set<string> {
+    const names = new Set<string>();
+    for (const expr of Object.values(ref.params ?? {})) {
+        if (expr.startsWith("$param.")) names.add(expr.slice("$param.".length));
+    }
+    return names;
+}
+
+function safeDomId(value: string): string {
+    return value.replace(/[^A-Za-z0-9_-]+/g, "-");
 }
 
 function inferFieldFormat(field: string): FieldFormat | undefined {

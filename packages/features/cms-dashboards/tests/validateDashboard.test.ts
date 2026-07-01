@@ -67,6 +67,22 @@ const source: Source = {
             },
         },
         {
+            urn: "urn:commerce:createOrder",
+            method: "POST",
+            targetUrl: "https://example.com/orders",
+            input: {
+                params: [
+                    { name: "userId", in: "query", required: true, schema: { type: "string" } },
+                ],
+                body: {
+                    type: "object",
+                    properties: {
+                        amount: { type: "number" },
+                    },
+                },
+            },
+        },
+        {
             urn: "urn:commerce:orderStats",
             method: "GET",
             targetUrl: "https://example.com/orders/stats",
@@ -145,6 +161,33 @@ describe("validateDashboard", () => {
 
         expect(validateDashboard(dashboard, { source })).toContain(
             "collections.orders.list.params.status uses $selection outside a collection item get endpoint",
+        );
+    });
+
+    test("accepts create widgets backed by item create endpoints", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            create: { endpoint: "createOrder", params: { userId: "$param.userId" } },
+        };
+        dashboard.views.push({
+            widget: "w-create",
+            collection: "orders",
+            fields: [
+                { field: "userId", input: "cms-user", required: true },
+                { field: "amount", input: "number", required: true },
+            ],
+        });
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+    });
+
+    test("rejects create widgets without an item create endpoint", () => {
+        const dashboard = validDashboard();
+        dashboard.views.push({ widget: "w-create", collection: "orders", fields: ["amount"] });
+
+        expect(validateDashboard(dashboard, { source })).toContain(
+            'views.2.collection "orders" must declare item.create for w-create',
         );
     });
 

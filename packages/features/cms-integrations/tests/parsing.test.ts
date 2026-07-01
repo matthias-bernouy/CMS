@@ -64,6 +64,7 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                                 widget: "w-detail",
                                 collection: "items",
                                 fields: [
+                                    { field: "owner", label: "Owner", input: "cms-user", required: true },
                                     { field: "imageUrl", label: "Image", format: "image" },
                                     { field: "website", label: "Website", format: "url" },
                                 ],
@@ -88,6 +89,7 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                         widget: "w-detail",
                         collection: "items",
                         fields: [
+                            { field: "owner", label: "Owner", input: "cms-user", required: true },
                             { field: "imageUrl", label: "Image", format: "image" },
                             { field: "website", label: "Website", format: "url" },
                         ],

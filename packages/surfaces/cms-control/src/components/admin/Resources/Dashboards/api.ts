@@ -2,6 +2,13 @@ import type { DashboardListResponse } from "./types";
 
 export const DASHBOARD_SELECTION_EVENT = "cms-dashboards:selection";
 
+export type DashboardUserOption = {
+    sub: string;
+    displayName?: string;
+    email?: string;
+    role?: string;
+};
+
 export type DashboardSelection = {
     source: string;
     dashboard: string;
@@ -70,6 +77,10 @@ export function dispatchDashboardSelection(selection: DashboardSelection): void 
 
 export async function fetchDashboards(): Promise<DashboardListResponse> {
     return getJson<DashboardListResponse>(route("/api/dashboards"));
+}
+
+export async function fetchDashboardUsers(): Promise<DashboardUserOption[]> {
+    return getJson<DashboardUserOption[]>(route("/api/users"));
 }
 
 async function getJson<T>(url: string): Promise<T> {

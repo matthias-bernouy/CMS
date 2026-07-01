@@ -42,7 +42,7 @@ export type ColumnSpec =
         format?: ColumnFormat;
     };
 
-export type FieldInput = "text" | "select" | "boolean" | "number";
+export type FieldInput = "text" | "select" | "boolean" | "number" | "cms-user";
 
 export type FieldSpec =
     | string

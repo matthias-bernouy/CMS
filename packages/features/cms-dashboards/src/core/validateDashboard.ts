@@ -109,8 +109,17 @@ function validateWidget(
             break;
         case "w-detail-item-put":
         case "w-detail-patch":
+            validateCollectionRef(widget.collection, `${path}.collection`, collections, errors);
+            widget.fields?.forEach((field, index) => validateSpecPath(field, `${path}.fields.${index}`, errors));
+            break;
         case "w-create":
             validateCollectionRef(widget.collection, `${path}.collection`, collections, errors);
+            {
+                const collection = collections.get(widget.collection);
+                if (collection && !collection.item?.create) {
+                    errors.push(`${path}.collection "${widget.collection}" must declare item.create for w-create`);
+                }
+            }
             widget.fields?.forEach((field, index) => validateSpecPath(field, `${path}.fields.${index}`, errors));
             break;
         case "w-stat":

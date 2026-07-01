@@ -322,8 +322,8 @@ function parseFieldFormat(value: unknown, name: string): FieldFormat | undefined
 
 function parseFieldInput(value: unknown, name: string): FieldInput | undefined {
     if (value === undefined) return undefined;
-    if (value === "text" || value === "select" || value === "boolean" || value === "number") return value;
-    throw new IntegrationInputError(name, "must be text, select, boolean, or number");
+    if (value === "text" || value === "select" || value === "boolean" || value === "number" || value === "cms-user") return value;
+    throw new IntegrationInputError(name, "must be text, select, boolean, number, or cms-user");
 }
 
 function parseFilters(value: unknown, name: string): FilterSpec[] {
