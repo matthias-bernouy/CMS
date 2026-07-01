@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { isValidPathFormat, isValidSnippetIdentifier, isValidCustomElementTag } from "@bernouy/cms-content";
+import { isValidPathFormat, isValidResourceIdentifier, isValidCustomElementTag } from "@bernouy/cms-content";
 
 describe("isValidPathFormat", () => {
     test("accepts root", () => {
@@ -67,7 +67,7 @@ describe("isValidPathFormat", () => {
     });
 });
 
-describe("isValidSnippetIdentifier", () => {
+describe("isValidResourceIdentifier", () => {
     test.each([
         ["hero"],
         ["hero-v1"],
@@ -77,16 +77,16 @@ describe("isValidSnippetIdentifier", () => {
         ["hero-2"],
         ["v1-card"],
     ])("accepts valid kebab-case %p", (id) => {
-        expect(isValidSnippetIdentifier(id)).toBe(true);
+        expect(isValidResourceIdentifier(id)).toBe(true);
     });
 
     test("rejects empty string", () => {
-        expect(isValidSnippetIdentifier("")).toBe(false);
+        expect(isValidResourceIdentifier("")).toBe(false);
     });
 
     test("rejects non-string", () => {
-        expect(isValidSnippetIdentifier(null as unknown as string)).toBe(false);
-        expect(isValidSnippetIdentifier(undefined as unknown as string)).toBe(false);
+        expect(isValidResourceIdentifier(null as unknown as string)).toBe(false);
+        expect(isValidResourceIdentifier(undefined as unknown as string)).toBe(false);
     });
 
     test.each([
@@ -94,7 +94,7 @@ describe("isValidSnippetIdentifier", () => {
         ["HERO"],       // all caps
         ["HeroV1"],     // camelCase
     ])("rejects non-lowercase %p", (id) => {
-        expect(isValidSnippetIdentifier(id)).toBe(false);
+        expect(isValidResourceIdentifier(id)).toBe(false);
     });
 
     test.each([
@@ -103,7 +103,7 @@ describe("isValidSnippetIdentifier", () => {
         ["hero--v1"],   // double dash
         ["--"],         // dashes only
     ])("rejects malformed dashes %p", (id) => {
-        expect(isValidSnippetIdentifier(id)).toBe(false);
+        expect(isValidResourceIdentifier(id)).toBe(false);
     });
 
     test.each([
@@ -113,7 +113,7 @@ describe("isValidSnippetIdentifier", () => {
         ["hero/v1"],    // slash
         ["héro"],       // non-ASCII
     ])("rejects forbidden characters %p", (id) => {
-        expect(isValidSnippetIdentifier(id)).toBe(false);
+        expect(isValidResourceIdentifier(id)).toBe(false);
     });
 });
 

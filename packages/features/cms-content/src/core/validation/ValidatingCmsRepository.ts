@@ -3,11 +3,9 @@ import type {
 } from "cms-content/interfaces/CmsRepository";
 import type { TBloc } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
-import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import type { TSystem } from "cms-content/interfaces/settings";
 import { validatePagePath, validatePageTitle, validatePagePatch } from "cms-content/core/validation/pages";
-import { validateSnippetCreate, validateSnippetPatch } from "cms-content/core/validation/snippets";
 import { validateTemplateCreate, validateTemplatePatch } from "cms-content/core/validation/templates";
 import { assertContentRefsExist } from "cms-content/core/validation/assertContentRefsExist";
 import { validateSettingsPatch } from "cms-content/core/validation/settings";
@@ -34,18 +32,6 @@ export class ValidatingCmsRepository implements CmsRepository {
         const valid = validatePagePatch(page);
         if (valid.content !== undefined) await assertContentRefsExist(this.inner, valid.content);
         return this.inner.updatePage(valid);
-    }
-
-    async createSnippet(snippet: Omit<TSnippet, "id">): Promise<TSnippet> {
-        const valid = validateSnippetCreate(snippet);
-        await assertContentRefsExist(this.inner, valid.content);
-        return this.inner.createSnippet(valid);
-    }
-
-    async updateSnippet(id: string, data: Partial<TSnippet>): Promise<TSnippet | null> {
-        const valid = validateSnippetPatch(data);
-        if (valid.content !== undefined) await assertContentRefsExist(this.inner, valid.content);
-        return this.inner.updateSnippet(id, valid);
     }
 
     async createTemplate(template: Omit<TTemplate, "id">): Promise<TTemplate> {
@@ -79,22 +65,16 @@ export class ValidatingCmsRepository implements CmsRepository {
     getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]> { return this.inner.getPagesMetadata(opts); }
     getTemplatesMetadata()   { return this.inner.getTemplatesMetadata(); }
     getTagCounts()           { return this.inner.getTagCounts(); }
-    getCategoryCounts(resource: "snippets" | "templates") { return this.inner.getCategoryCounts(resource); }
+    getCategoryCounts(resource: "templates") { return this.inner.getCategoryCounts(resource); }
 
     // ── Pass-through: system (settings validated elsewhere) ────────────────
     getSystem(): Promise<TSystem> { return this.inner.getSystem(); }
     updateSystem(system: Partial<TSystem>): Promise<TSystem> { return this.inner.updateSystem(validateSettingsPatch(system)); }
 
-    // ── Pass-through: template/snippet reads + deletes ─────────────────────
+    // ── Pass-through: template reads + deletes ─────────────────────────────
     getTemplateById(id: string)               { return this.inner.getTemplateById(id); }
     getTemplateByIdentifier(identifier: string){ return this.inner.getTemplateByIdentifier(identifier); }
     getAllTemplates()                          { return this.inner.getAllTemplates(); }
     getTemplateCategories()                    { return this.inner.getTemplateCategories(); }
     deleteTemplate(id: string)                 { return this.inner.deleteTemplate(id); }
-    getSnippetById(id: string)                 { return this.inner.getSnippetById(id); }
-    getSnippetByIdentifier(identifier: string) { return this.inner.getSnippetByIdentifier(identifier); }
-    getAllSnippets()                           { return this.inner.getAllSnippets(); }
-    getSnippetsMetadata()                      { return this.inner.getSnippetsMetadata(); }
-    deleteSnippet(id: string)                  { return this.inner.deleteSnippet(id); }
-    findPagesUsingSnippet(identifier: string)  { return this.inner.findPagesUsingSnippet(identifier); }
 }

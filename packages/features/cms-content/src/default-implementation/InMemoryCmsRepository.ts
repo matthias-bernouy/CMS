@@ -2,11 +2,9 @@ import { randomUUIDv7 } from "bun";
 import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
 import type { TBloc } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
-import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TSystem } from "cms-content/interfaces/settings";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import { filterAndSortPages } from "cms-content/core/pagesQuery";
-import { snippetRefPattern } from "cms-content/core/utils/contentRefs";
 import { defaultSystem, mergeSystemUpdate } from "cms-content/core/system";
 import { countValues, normalizeTags } from "cms-content/core/counts";
 import { DuplicateBlocTagError } from "cms-content/core/errors";
@@ -28,7 +26,6 @@ export class InMemoryCmsRepository implements CmsRepository {
 
     private _blocs         = new Map<string, TBloc>();          // by tag (= TBloc.id)
     private _pages         = new Map<string, TPage>();          // by path (unique key)
-    private _snippets      = new Map<string, TSnippet>();       // by id
     private _templates     = new Map<string, TTemplate>();      // by id
     private _system: TSystem = defaultSystem();
 
@@ -166,11 +163,8 @@ export class InMemoryCmsRepository implements CmsRepository {
         );
     }
 
-    async getCategoryCounts(resource: "snippets" | "templates") {
-        const values = resource === "snippets"
-            ? Array.from(this._snippets.values()).map(s => s.category)
-            : Array.from(this._templates.values()).map(t => t.category);
-        return countValues(values);
+    async getCategoryCounts(_resource: "templates") {
+        return countValues(Array.from(this._templates.values()).map(t => t.category));
     }
 
     private _findPageEntryById(id: string): [string, TPage] | null {
@@ -194,7 +188,7 @@ export class InMemoryCmsRepository implements CmsRepository {
     // ── Templates ──
 
     async createTemplate(template: Omit<TTemplate, "id">): Promise<TTemplate> {
-        // Identifier uniqueness — same constraint as snippets.
+        // Identifier uniqueness mirrors the Mongo provider.
         for (const t of this._templates.values()) {
             if (t.identifier === template.identifier) {
                 throw new Error(`Template with identifier "${template.identifier}" already exists`);
@@ -243,64 +237,4 @@ export class InMemoryCmsRepository implements CmsRepository {
         this._templates.delete(id);
     }
 
-    // ── Snippets ──
-
-    async createSnippet(snippet: Omit<TSnippet, "id">): Promise<TSnippet> {
-        // Mirrors the unique index on `identifier` in the Mongo provider.
-        for (const s of this._snippets.values()) {
-            if (s.identifier === snippet.identifier) {
-                throw new Error(`Snippet with identifier "${snippet.identifier}" already exists`);
-            }
-        }
-        const stored: TSnippet = { ...snippet, id: randomUUIDv7() };
-        this._snippets.set(stored.id, stored);
-        return { ...stored };
-    }
-
-    async getSnippetById(id: string): Promise<TSnippet | null> {
-        const found = this._snippets.get(id);
-        return found ? { ...found } : null;
-    }
-
-    async getSnippetByIdentifier(identifier: string): Promise<TSnippet | null> {
-        for (const s of this._snippets.values()) {
-            if (s.identifier === identifier) return { ...s };
-        }
-        return null;
-    }
-
-    async getAllSnippets(): Promise<TSnippet[]> {
-        return Array.from(this._snippets.values()).map(s => ({ ...s }));
-    }
-
-    async getSnippetsMetadata(): Promise<{ id: string; identifier: string; name: string; category: string; updatedAt: string }[]> {
-        return Array.from(this._snippets.values()).map(s => ({
-            id:         s.id,
-            identifier: s.identifier,
-            name:       s.name,
-            category:   s.category,
-            updatedAt:  s.updatedAt.toDateString(),
-        }));
-    }
-
-    async updateSnippet(id: string, data: Partial<TSnippet>): Promise<TSnippet | null> {
-        const existing = this._snippets.get(id);
-        if (!existing) return null;
-        // Strip immutable fields so callers can't accidentally rewrite them.
-        const { id: _, identifier: __, createdAt: ___, ...rest } = data;
-        const updated: TSnippet = { ...existing, ...rest, updatedAt: new Date() };
-        this._snippets.set(id, updated);
-        return { ...updated };
-    }
-
-    async deleteSnippet(id: string): Promise<void> {
-        this._snippets.delete(id);
-    }
-
-    async findPagesUsingSnippet(identifier: string): Promise<TPage[]> {
-        const regex = new RegExp(snippetRefPattern(identifier), "i");
-        return Array.from(this._pages.values())
-            .filter(p => regex.test(p.content ?? ""))
-            .map(p => ({ ...p }));
-    }
 }

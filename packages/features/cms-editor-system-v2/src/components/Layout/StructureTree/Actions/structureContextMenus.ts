@@ -19,18 +19,15 @@ export type StructureContextMenuContext = {
     closeContextMenu(): void;
     emitAction(action: "copy" | "paste-after" | "duplicate" | "delete" | "remove-repeat" | "configure-repeat" | "remove-source-status-condition", editor?: EditorStructureNode["editor"]): void;
     hasEnabledGroup(groups: BlockPickerSlotGroup[]): boolean;
-    isSnippetNode(node: EditorStructureNode): boolean;
     openPickerOrEmitSingleMedia(action: PendingPickerAction, groups: BlockPickerSlotGroup[], contextLabel: string): void;
     openConditionPicker(node: EditorStructureNode): void;
     openRootPicker(): void;
     openSourcePicker(node: EditorStructureNode): void;
-    redirectToSnippetEditor(id: string): void;
     repeatableTargets: WeakSet<HTMLElement>;
     replaceGroups(node: EditorStructureNode): BlockPickerSlotGroup[];
     rootGroups(): BlockPickerSlotGroup[];
     sourceActionLabel(node: EditorStructureNode): string;
     sourceDataSourceCount(): number;
-    snippetItemForNode(node: EditorStructureNode): { id: string } | null;
 };
 
 export function openStructureContextMenu(
@@ -49,11 +46,6 @@ export function openStructureContextMenu(
     const repeatAction = node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.repeat)
         ? contextMenuButton("Remove repeat", () => context.emitAction("remove-repeat", node.editor), context.closeContextMenu)
         : contextMenuButton("Add repeat", () => context.emitAction("configure-repeat", node.editor), context.closeContextMenu, undefined, !context.repeatableTargets.has(node.target));
-    const snippet = context.snippetItemForNode(node);
-    const modifySnippetAction = contextMenuButton("Modify Snippet", () => {
-        if (!snippet) return;
-        context.redirectToSnippetEditor(snippet.id);
-    }, context.closeContextMenu, undefined, !snippet);
 
     menu.append(
         contextMenuButton("Add child", () => {
@@ -62,7 +54,6 @@ export function openStructureContextMenu(
         contextMenuButton("Copy", () => context.emitAction("copy", node.editor), context.closeContextMenu),
         contextMenuButton("Paste after", () => context.emitAction("paste-after", node.editor), context.closeContextMenu),
         contextMenuButton("Duplicate", () => context.emitAction("duplicate", node.editor), context.closeContextMenu, undefined, !context.canDuplicate(node)),
-        ...(context.isSnippetNode(node) ? [modifySnippetAction] : []),
         contextSeparator(),
         sourceAction,
         repeatAction,

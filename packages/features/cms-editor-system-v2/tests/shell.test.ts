@@ -5,7 +5,7 @@ import type {
     EditorCatalog,
     EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
-import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, CMS_SNIPPET_TAG, Editor } from "@bernouy/cms-content/editor";
+import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG, Editor } from "@bernouy/cms-content/editor";
 import type { BlockPickerSelectDetail } from "../src/components/Layout/BlockPickerModal/BlockPickerModal";
 import type { StructureTreeActionDetail } from "../src/components/Layout/StructureTree/StructureTree";
 import type { TopBarSourceStateChangeDetail, TopBarViewportChangeDetail } from "../src/components/Layout/TopBar/TopBar";
@@ -221,7 +221,7 @@ describe("Shell", () => {
             ],
         }], "Media feature");
 
-        picker.shadowRoot!.querySelector<HTMLButtonElement>(".sources .filter:nth-child(4)")!.click();
+        picker.shadowRoot!.querySelector<HTMLButtonElement>(".sources .filter:nth-child(3)")!.click();
 
         expect(selected).toEqual(["media"]);
     });
@@ -831,15 +831,15 @@ describe("Shell", () => {
         document.body.append(topbar);
 
         topbar.setNavigation({
-            backHref:      "/cms/admin/snippets",
-            backLabel:     "Snippets",
-            settingsLabel: "Snippet settings",
+            backHref:      "/cms/admin/templates",
+            backLabel:     "Templates",
+            settingsLabel: "Template settings",
         });
 
         const back = topbar.shadowRoot!.querySelector<HTMLAnchorElement>(".back")!;
-        expect(back.getAttribute("href")).toBe("/cms/admin/snippets");
-        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Snippets");
-        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Snippet settings");
+        expect(back.getAttribute("href")).toBe("/cms/admin/templates");
+        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Templates");
+        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Template settings");
     });
 
     test("topbar updates save status label", async () => {
@@ -889,12 +889,12 @@ describe("Shell", () => {
         }
 
         const shell = new Shell();
-        shell.setAttribute("resource", "snippet");
-        shell.setAttribute("back-href", "/cms/admin/snippets");
-        shell.setAttribute("back-label", "Snippets");
-        shell.setAttribute("settings-label", "Snippet settings");
-        shell.setAttribute("settings-title", "Snippet settings");
-        shell.setAttribute("settings-description", "Configure snippet metadata.");
+        shell.setAttribute("resource", "template");
+        shell.setAttribute("back-href", "/cms/admin/templates");
+        shell.setAttribute("back-label", "Templates");
+        shell.setAttribute("settings-label", "Template settings");
+        shell.setAttribute("settings-title", "Template settings");
+        shell.setAttribute("settings-description", "Configure template metadata.");
         shell.setAttribute("settings-path-label", "Identifier");
         shell.setAttribute("settings-tags-label", "Category");
         document.body.append(shell);
@@ -902,11 +902,11 @@ describe("Shell", () => {
         const topbar = shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!;
         const back = topbar.shadowRoot!.querySelector<HTMLAnchorElement>(".back")!;
 
-        expect(back.getAttribute("href")).toBe("/cms/admin/snippets");
-        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Snippets");
-        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Snippet settings");
-        expect(shell.shadowRoot!.querySelector("#page-settings-title")!.textContent).toBe("Snippet settings");
-        expect(shell.shadowRoot!.querySelector(".settings-description")!.textContent).toBe("Configure snippet metadata.");
+        expect(back.getAttribute("href")).toBe("/cms/admin/templates");
+        expect(topbar.shadowRoot!.querySelector(".back-label")!.textContent).toBe("Templates");
+        expect(topbar.shadowRoot!.querySelector(".settings-label")!.textContent).toBe("Template settings");
+        expect(shell.shadowRoot!.querySelector("#page-settings-title")!.textContent).toBe("Template settings");
+        expect(shell.shadowRoot!.querySelector(".settings-description")!.textContent).toBe("Configure template metadata.");
         expect(shell.shadowRoot!.querySelector('[data-page-label="path"]')!.textContent).toBe("Identifier");
         expect(shell.shadowRoot!.querySelector('[data-page-label="tags"]')!.textContent).toBe("Category");
         expect(shell.shadowRoot!.querySelector('[data-page-field="path"]')!.hasAttribute("disabled")).toBe(true);
@@ -1337,9 +1337,9 @@ describe("Shell", () => {
         const topbar = shell.shadowRoot!.querySelector("cms-editor-v2-topbar")!;
         Object.setPrototypeOf(topbar, HTMLElement.prototype);
 
-        shell.setAttribute("resource", "snippet");
-        shell.setAttribute("back-label", "Snippets");
-        shell.setAttribute("settings-label", "Snippet settings");
+        shell.setAttribute("resource", "template");
+        shell.setAttribute("back-label", "Templates");
+        shell.setAttribute("settings-label", "Template settings");
         await Promise.resolve();
         await Promise.resolve();
 
@@ -1370,12 +1370,12 @@ describe("Shell", () => {
             },
         });
 
-        canvas.setAttribute("frame-url", "/cms/api/editor/frame?type=snippet&id=s1");
+        canvas.setAttribute("frame-url", "/cms/api/editor/frame?type=template&id=t1");
 
         expect(calls).toEqual([
-            "/cms/api/editor/frame?type=snippet&id=s1",
+            "/cms/api/editor/frame?type=template&id=t1",
         ]);
-        expect(frame.getAttribute("src")).not.toBe("/cms/api/editor/frame?type=snippet&id=s1");
+        expect(frame.getAttribute("src")).not.toBe("/cms/api/editor/frame?type=template&id=t1");
     });
 
     test("canvas allows form-capable preview frames and blocks native editor form submits", async () => {
@@ -1441,7 +1441,7 @@ describe("Shell", () => {
         expect(shell.getAttribute("catalog-size")).toBe("1");
     });
 
-    test("serializes expanded snippets as snippet references", async () => {
+    test("serializes content after clearing binding runtime state", async () => {
         installDom();
 
         const { Shell } = await import("../src/exports");
@@ -1450,7 +1450,7 @@ describe("Shell", () => {
 
         const contentRoot = document.createElement("div");
         contentRoot.setAttribute("data-cms-content", "");
-        contentRoot.innerHTML = `<w13c-snippet identifier="main-nav"><nav>Expanded</nav></w13c-snippet>`;
+        contentRoot.innerHTML = `<demo-bloc cms-ready><p>Content</p></demo-bloc>`;
         const frameDocument = {
             querySelector: (selector: string) => selector === "[data-cms-content]" ? contentRoot : null,
         };
@@ -1458,108 +1458,7 @@ describe("Shell", () => {
         setShellFrameDocument(shell, frameDocument);
 
         expect(shellParts(shell).commands.getContentHtml())
-            .toBe(`<w13c-snippet identifier="main-nav"></w13c-snippet>`);
-    });
-
-    test("structure tree shows snippet names and snippet icons", async () => {
-        installDom();
-
-        const { Shell } = await import("../src/exports");
-
-        class SnippetEditor extends Editor {
-            protected override structureMode() {
-                return "opaque" as const;
-            }
-        }
-
-        const { document: frameDocument } = parseHTML(`
-            <!DOCTYPE html>
-            <html>
-                <body></body>
-            </html>
-        `);
-        const root = frameDocument.createElement("div");
-        const contentRoot = frameDocument.createElement("main");
-        contentRoot.setAttribute("data-cms-content", "");
-        contentRoot.innerHTML = `<w13c-snippet identifier="main-nav"><nav>Expanded nav</nav></w13c-snippet>`;
-        root.append(contentRoot);
-        frameDocument.body.append(root);
-
-        const shell = new Shell();
-        document.body.append(shell);
-        shell.setCatalog([{
-            tag:    CMS_SNIPPET_TAG,
-            label:  "Snippet",
-            icon:   "braces",
-            bloc:   HTMLElement as unknown as CustomElementConstructor,
-            editor: SnippetEditor,
-        }]);
-        shell.setInsertItems([{
-            kind:       "snippet",
-            id:         "snippet-main-nav",
-            identifier: "main-nav",
-            label:      "Main nav",
-            icon:       "S",
-            content:    "<nav>Expanded nav</nav>",
-        }]);
-        setShellFrameDocument(shell, frameDocument);
-        shell.loadDocument({ root, contentRoot });
-
-        const tree = shell.shadowRoot!.querySelector("cms-editor-v2-structure-tree")!;
-        expect(tree.shadowRoot!.querySelector(".label")!.textContent).toBe("Main nav");
-        expect(tree.shadowRoot!.querySelector(".icon")!.textContent).toBe("S");
-    });
-
-    test("structure tree can redirect to the referenced snippet editor", async () => {
-        installDom();
-        Object.assign(globalThis, {
-            window: {
-                innerWidth:  1280,
-                innerHeight: 720,
-                location:    { href: "" },
-            },
-        });
-
-        const { StructureTree } = await import("../src/components/Layout/StructureTree/StructureTree");
-
-        class SnippetEditor extends Editor {}
-
-        const meta = document.createElement("meta");
-        meta.name = "basePath";
-        meta.content = "/cms";
-        document.head.append(meta);
-
-        const target = document.createElement(CMS_SNIPPET_TAG);
-        target.setAttribute("identifier", "main-nav");
-        const node: EditorStructureNode = {
-            editor: new SnippetEditor(target),
-            target,
-            tag: CMS_SNIPPET_TAG,
-            label: "Main nav",
-            icon: "S",
-            badges: [],
-            children: [],
-        };
-        const tree = new StructureTree();
-        document.body.append(tree);
-        tree.setInsertItems([{
-            kind:       "snippet",
-            id:         "snippet-main-nav",
-            identifier: "main-nav",
-            label:      "Main nav",
-            icon:       "S",
-            content:    "<nav></nav>",
-        }]);
-        tree.setStructure([node], null);
-
-        tree.controller.menus.openContextMenu(node, 10, 10);
-
-        const modifyButton = Array.from(tree.shadowRoot!.querySelectorAll<HTMLButtonElement>(".context-item"))
-            .find(button => button.textContent === "Modify Snippet");
-        modifyButton?.click();
-
-        expect(modifyButton?.disabled).toBe(false);
-        expect(window.location.href).toBe("/cms/editor/snippet?id=snippet-main-nav");
+            .toBe(`<demo-bloc><p>Content</p></demo-bloc>`);
     });
 
     test("inserts template fragments into selected content slots", async () => {
@@ -1601,13 +1500,6 @@ describe("Shell", () => {
         };
         structureTree.setInsertItems = () => undefined;
         structureTree.setStructure = () => undefined;
-        shell.setInsertItems([{
-            kind:       "snippet",
-            id:         "snippet-main-nav",
-            identifier: "main-nav",
-            label:      "Main nav",
-            content:    "<nav>Expanded nav</nav>",
-        }]);
         shell.setCatalog([
             {
                 tag:    "demo-container",
@@ -1633,10 +1525,10 @@ describe("Shell", () => {
             kind:    "template",
             id:      "tpl-hero",
             label:   "Hero template",
-            content: `<p>Inserted from template</p><w13c-snippet identifier="main-nav"></w13c-snippet>`,
+            content: `<p>Inserted from template</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`,
         });
 
-        expect(container.innerHTML).toBe(`<p>Inserted from template</p><w13c-snippet identifier="main-nav"><nav>Expanded nav</nav></w13c-snippet>`);
+        expect(container.innerHTML).toBe(`<p>Inserted from template</p><w13c-reserved-example data-id="main-nav"></w13c-reserved-example>`);
     });
 
     test("inserts catalog block default content", async () => {
@@ -1876,6 +1768,105 @@ describe("Shell", () => {
         expect([...view.shadowRoot!.querySelectorAll("cms-editor-v2-select")].map(el => el.getAttribute("label"))).toEqual([
             "Columns",
         ]);
+    });
+
+    test("settings view renders visible row children inline", async () => {
+        installDom();
+
+        const { SettingsView } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const view = new SettingsView();
+
+        const settings = (mode: "auto" | "columns" | "manual") => [{
+            kind: "self" as const,
+            label: "Grid",
+            settings: [
+                {
+                    type: "segmented" as const,
+                    label: "Mode",
+                    attribute: "mode",
+                    defaultValue: mode,
+                    options: [
+                        { label: "Auto", value: "auto" },
+                        { label: "Columns", value: "columns" },
+                        { label: "Manual", value: "manual" },
+                    ],
+                },
+                {
+                    type: "row" as const,
+                    label: "Sizing",
+                    settings: [
+                        {
+                            type: "select" as const,
+                            label: "X",
+                            ariaLabel: "Minimum item width",
+                            attribute: "min",
+                            defaultValue: "md",
+                            options: [{ label: "Medium", value: "md" }],
+                            visibleWhen: { attribute: "mode", equals: "auto" },
+                        },
+                        {
+                            type: "select" as const,
+                            label: "Columns",
+                            attribute: "columns",
+                            defaultValue: "3",
+                            options: [{ label: "3 columns", value: "3" }],
+                            visibleWhen: { attribute: "mode", equals: "columns" },
+                        },
+                    ],
+                },
+            ],
+        }];
+
+        view.setSettings(settings("auto"));
+        expect(view.shadowRoot!.querySelector(".setting-row")?.classList.contains("setting-row-labeled")).toBe(true);
+        expect(view.shadowRoot!.querySelector(".setting-row-label")?.textContent).toBe("Sizing");
+        expect([...view.shadowRoot!.querySelectorAll(".setting-row cms-editor-v2-select")].map(el => el.getAttribute("label"))).toEqual([
+            "X",
+        ]);
+        expect([...view.shadowRoot!.querySelectorAll(".setting-row cms-editor-v2-select")].map(el => el.getAttribute("aria-label"))).toEqual([
+            "Minimum item width",
+        ]);
+
+        view.setSettings(settings("columns"));
+        expect([...view.shadowRoot!.querySelectorAll(".setting-row cms-editor-v2-select")].map(el => el.getAttribute("label"))).toEqual([
+            "Columns",
+        ]);
+
+        view.setSettings(settings("manual"));
+        expect(view.shadowRoot!.querySelector(".setting-row")).toBeNull();
+    });
+
+    test("settings view renders segmented icon options without visible text", async () => {
+        installDom();
+
+        const { SettingsView } = await import("../src/components/Settings/SettingsView/SettingsView");
+        const view = new SettingsView();
+
+        view.setSettings([{
+            kind: "self",
+            label: "Layout",
+            settings: [{
+                type: "segmented",
+                label: "Flow",
+                ariaLabel: "Layout",
+                attribute: "layout",
+                defaultValue: "column",
+                display: "icon",
+                labelDisplay: "hidden",
+                options: [
+                    { label: "None", value: "none", icon: "layout-none", ariaLabel: "No layout" },
+                    { label: "Column", value: "column", icon: "layout-column" },
+                ],
+            }],
+        }]);
+
+        const buttons = Array.from(view.shadowRoot!.querySelectorAll<HTMLButtonElement>("cms-editor-v2-segmented-control button"));
+        const labels = Array.from(view.shadowRoot!.querySelectorAll(".field-label")).map(label => label.textContent);
+        expect(labels).not.toContain("Flow");
+        expect(view.shadowRoot!.querySelector("cms-editor-v2-segmented-control")?.getAttribute("aria-label")).toBe("Layout");
+        expect(buttons.map(button => button.textContent)).toEqual(["", ""]);
+        expect(buttons.map(button => button.ariaLabel)).toEqual(["No layout", "Column"]);
+        expect(buttons.map(button => button.querySelector("svg") !== null)).toEqual([true, true]);
     });
 
     test("settings view emits attribute cleanup rules for setting values", async () => {
@@ -2681,7 +2672,7 @@ describe("Shell", () => {
         view.setSettings([
             {
                 kind: "self",
-                label: "Snippet",
+                label: "Template",
                 settings: [
                     {
                         type: "text",
@@ -2747,6 +2738,79 @@ describe("Shell", () => {
         expect(buttons.map(button => button.disabled)).toEqual([true, true]);
         buttons[1]?.click();
         expect(emitted).toBe(false);
+    });
+
+    test("settings view emits color setting attributes for tokens and custom values", async () => {
+        installDom();
+
+        const {
+            SETTINGS_VIEW_SETTING_CHANGE_EVENT,
+            SettingsView,
+        } = await import("../src/components/Settings/SettingsView/SettingsView");
+
+        const view = new SettingsView();
+        const events: Array<{
+            value: string | boolean;
+            attributes?: Record<string, string | boolean | null>;
+        }> = [];
+        view.addEventListener(SETTINGS_VIEW_SETTING_CHANGE_EVENT, (event) => {
+            const detail = (event as CustomEvent<{
+                value: string | boolean;
+                attributes?: Record<string, string | boolean | null>;
+            }>).detail;
+            events.push({
+                value:      detail.value,
+                attributes: detail.attributes,
+            });
+        });
+
+        view.setSettings([{
+            kind: "self",
+            label: "Appearance",
+            settings: [{
+                type: "color",
+                label: "Background",
+                attribute: "background",
+                defaultValue: "base",
+                tokens: [
+                    { label: "Base", value: "base" },
+                    { label: "Custom", value: "custom" },
+                ],
+                allowCustom: true,
+                customAttribute: "background-custom",
+                customDefaultValue: "#eef5d8",
+            }],
+        }]);
+
+        const buttons = Array.from(view.shadowRoot!.querySelectorAll<HTMLButtonElement>(".color-swatch-button"));
+        buttons[1]!.click();
+        expect(events.at(-1)).toEqual({
+            value:      "custom",
+            attributes: {
+                background:          "custom",
+                "background-custom": "#eef5d8",
+            },
+        });
+
+        const input = view.shadowRoot!.querySelector<HTMLInputElement>(".color-custom-input")!;
+        input.value = "#123456";
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        expect(events.at(-1)).toEqual({
+            value:      "custom",
+            attributes: {
+                background:          "custom",
+                "background-custom": "#123456",
+            },
+        });
+
+        buttons[0]!.click();
+        expect(events.at(-1)).toEqual({
+            value:      "base",
+            attributes: {
+                background:          "base",
+                "background-custom": null,
+            },
+        });
     });
 
     test("canvas emits a background click outside the page frame", async () => {

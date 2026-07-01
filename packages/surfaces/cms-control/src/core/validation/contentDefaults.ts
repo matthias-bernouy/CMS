@@ -1,6 +1,5 @@
-/** Initial content for a freshly-created snippet/template (before the editor's
+/** Initial content for a freshly-created template (before the editor's
  *  first save). Surface-side coercion default — not a domain rule. */
-export const DEFAULT_SNIPPET_CONTENT  = "<p></p>";
 export const DEFAULT_TEMPLATE_CONTENT = "<p></p>";
 
 /** Coerce a raw `tags` field (form `"a,b"` or JSON `["a","b"]`) to a string[].

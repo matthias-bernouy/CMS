@@ -32,17 +32,6 @@ export type BlockPickerItem =
         content: string;
     }
     | {
-        kind: "snippet";
-        id: string;
-        identifier: string;
-        label: string;
-        description?: string;
-        category?: string;
-        subCategory?: string;
-        icon?: string;
-        content: string;
-    }
-    | {
         kind: "media";
         label: string;
         description?: string;
@@ -185,13 +174,6 @@ export class BlockPickerModal extends HTMLElement {
                 this._renderSidebar();
                 this._renderEntries();
             }, this._sourceCount("template"), this._sourceCount("template") === 0),
-            this._filterButton("Snippets", this._activeSource === "snippet", () => {
-                this._activeSource = "snippet";
-                this._activeCategory = "";
-                this._activeOption = null;
-                this._renderSidebar();
-                this._renderEntries();
-            }, this._sourceCount("snippet"), this._sourceCount("snippet") === 0),
             this._filterButton("Media", this._activeSource === "media", () => {
                 if (this._selectSingleSourceOption("media")) return;
                 this._activeSource = "media";

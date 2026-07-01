@@ -1,15 +1,1 @@
 export { BindingCoreEditor } from "./BindingCoreEditor";
-export { CodeEditor } from "./CodeEditor";
-export { FormEditor } from "./FormEditor";
-export { HeadingEditor } from "./HeadingEditor";
-export { ImageEditor } from "./ImageEditor";
-export { InputEditor } from "./InputEditor";
-export { LinkEditor } from "./LinkEditor";
-export { ListEditor } from "./ListEditor";
-export { ListItemEditor } from "./ListItemEditor";
-export { OptionEditor } from "./OptionEditor";
-export { ParagraphEditor } from "./ParagraphEditor";
-export { QuoteEditor } from "./QuoteEditor";
-export { SelectEditor } from "./SelectEditor";
-export { SnippetEditor } from "./SnippetEditor";
-export { SpanEditor } from "./SpanEditor";

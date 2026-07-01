@@ -35,7 +35,6 @@ export function blockPickerOptionItem(option: BlockPickerOption): BlockPickerIte
 
 export function blockPickerSourceLabel(kind: BlockPickerItem["kind"]): string {
     if (kind === "template") return "Template";
-    if (kind === "snippet") return "Snippet";
     if (kind === "media") return "Media";
     return "Block";
 }
@@ -63,7 +62,6 @@ export function blockPickerItemIcon(item: BlockPickerItem): string | undefined {
 
 export function blockPickerItemHandle(item: BlockPickerItem): string {
     if (item.kind === "block") return item.entry.tag;
-    if (item.kind === "snippet") return item.identifier;
     if (item.kind === "media") return item.accept?.join(", ") ?? "media";
     return item.id;
 }

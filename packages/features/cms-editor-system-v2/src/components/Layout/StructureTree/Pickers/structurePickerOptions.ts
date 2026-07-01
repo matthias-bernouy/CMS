@@ -1,4 +1,3 @@
-import { CMS_SNIPPET_TAG } from "@bernouy/cms-content/editor";
 import type {
     ContentSlot,
     ContentSlotAccept,
@@ -89,7 +88,6 @@ export function acceptsItem(accept: ContentSlotAccept, item: BlockPickerItem): b
     if (item.kind === "block") return acceptsEntry(accept, item.entry);
     if (accept.kind === "media") return false;
     if (accept.kind === "any-component") return true;
-    if (item.kind === "snippet") return accept.tag.toLowerCase() === CMS_SNIPPET_TAG;
     return false;
 }
 

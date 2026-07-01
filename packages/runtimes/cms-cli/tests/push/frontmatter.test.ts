@@ -26,7 +26,7 @@ tags: [public, "marketing", 'top']
         expect(content).toBe("<bloc-card></bloc-card>");
     });
 
-    test("parses snippet/template keys (name, description) — same vocabulary", () => {
+    test("parses template keys (name, description)", () => {
         const raw = `---
 name: "Header global"
 description: "Navbar shared across pages"

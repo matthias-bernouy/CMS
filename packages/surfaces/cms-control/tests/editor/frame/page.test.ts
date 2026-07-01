@@ -23,31 +23,25 @@ describe("editor frame endpoint - pages", () => {
         expect(html).not.toContain("/cms/api/editor/script.js");
     });
 
-    test("expands snippets before rendering the frame", async () => {
-        const { cms } = cmsWithPage(pricingPage(`<w13c-snippet identifier="hero">stale</w13c-snippet>`), {
-            hero: "<p>Expanded hero</p>",
-        });
+    test("renders stored content directly without resolving reserved custom elements", async () => {
+        const { cms } = cmsWithPage(pricingPage(`<w13c-reserved-example data-id="hero">stale</w13c-reserved-example>`));
         const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
         const html = await response.text();
 
         expect(response.status).toBe(200);
-        expect(html).toContain(`<w13c-snippet identifier="hero"><p>Expanded hero</p></w13c-snippet>`);
-        expect(html).not.toContain("stale");
+        expect(html).toContain(`<w13c-reserved-example data-id="hero">stale</w13c-reserved-example>`);
     });
 
-    test("sanitizes stored and expanded HTML before rendering the frame", async () => {
+    test("sanitizes stored HTML before rendering the frame", async () => {
         const { cms } = cmsWithPage(pricingPage(`
             <a href="javascript:alert(1)">bad link</a>
             <iframe srcdoc="<script>alert(1)</script>"></iframe>
-            <w13c-snippet identifier="hero">stale</w13c-snippet>
-        `), {
-            hero: `<img src="x" onerror="alert(1)"><script>alert(1)</script><p>Expanded hero</p>`,
-        });
+            <w13c-reserved-example data-id="hero">stale</w13c-reserved-example>
+        `));
         const response = await getEditorFrame(new Request("http://localhost/cms/api/editor/frame?id=page-1"), cms as any);
         const html = await response.text();
 
         expect(response.status).toBe(200);
-        expect(html).toContain("<p>Expanded hero</p>");
         expect(html).not.toContain("<script>alert");
         expect(html).not.toContain("onerror");
         expect(html).not.toContain("javascript:alert");

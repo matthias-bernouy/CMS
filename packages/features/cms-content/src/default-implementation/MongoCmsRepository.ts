@@ -3,11 +3,9 @@ import type { Collection, Db, OptionalUnlessRequiredId } from "mongodb";
 import type { BlocListItemResponse, CmsRepository, PageLink, PageMeta, PagesQuery } from "cms-content/interfaces/CmsRepository";
 import type { TBloc } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
-import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TSystem } from "cms-content/interfaces/settings";
 import type { TTemplate } from "cms-content/interfaces/templates";
 import { escapeRegex } from "cms-content/core/utils/escapeRegex";
-import { snippetRefPattern } from "cms-content/core/utils/contentRefs";
 import { defaultSystem, mergeSystemUpdate } from "cms-content/core/system";
 import { countValues, normalizeTags } from "cms-content/core/counts";
 import { DuplicateBlocTagError } from "cms-content/core/errors";
@@ -16,9 +14,9 @@ import { isPublishedPage } from "cms-content/core/publication";
 /**
  * MongoDB implementation of `CmsRepository`. Designed for small/medium
  * single-instance deployments — no transactions, no sharding, no replica-set
- * assumptions. Concurrency is handled through unique indexes (paths,
- * snippet identifiers, bloc tags); admin write traffic is low enough that
- * read-modify-write on the system singleton is acceptable.
+ * assumptions. Concurrency is handled through unique indexes (paths, template
+ * identifiers, bloc tags); admin write traffic is low enough that read-modify-
+ * write on the system singleton is acceptable.
  *
  * The caller owns the `MongoClient` lifecycle (connect / close). Pass the
  * `Db` instance and call `init()` once at startup to create indexes.
@@ -69,7 +67,6 @@ export class MongoCmsRepository implements CmsRepository {
         );
         await Promise.all([
             this.pages.createIndex    ({ path: 1 },       { unique: true }),
-            this.snippets.createIndex ({ identifier: 1 }, { unique: true }),
             this.templates.createIndex({ identifier: 1 }, { unique: true }),
         ]);
     }
@@ -78,7 +75,6 @@ export class MongoCmsRepository implements CmsRepository {
 
     private get blocs():         Collection<BlocDoc>         { return this.db.collection<BlocDoc>         (this._prefix + "blocs"); }
     private get pages():         Collection<PageDoc>         { return this.db.collection<PageDoc>         (this._prefix + "pages"); }
-    private get snippets():      Collection<SnippetDoc>      { return this.db.collection<SnippetDoc>      (this._prefix + "snippets"); }
     private get templates():     Collection<TemplateDoc>     { return this.db.collection<TemplateDoc>     (this._prefix + "templates"); }
     private get system():        Collection<SystemDoc>       { return this.db.collection<SystemDoc>       (this._prefix + "system"); }
 
@@ -247,9 +243,8 @@ export class MongoCmsRepository implements CmsRepository {
         return countValues(docs.flatMap(d => normalizeTags((d as { tags: unknown }).tags)));
     }
 
-    async getCategoryCounts(resource: "snippets" | "templates") {
-        const collection = resource === "snippets" ? this.snippets : this.templates;
-        const docs = await collection.find({}, { projection: { category: 1 } }).toArray();
+    async getCategoryCounts(_resource: "templates") {
+        const docs = await this.templates.find({}, { projection: { category: 1 } }).toArray();
         return countValues(docs.map(d => d.category));
     }
 
@@ -324,63 +319,6 @@ export class MongoCmsRepository implements CmsRepository {
         await this.templates.deleteOne({ _id: id });
     }
 
-    // ── Snippets ──
-
-    async createSnippet(snippet: Omit<TSnippet, "id">): Promise<TSnippet> {
-        const id = randomUUIDv7();
-        await this.snippets.insertOne({ _id: id, ...snippet });
-        return { id, ...snippet };
-    }
-
-    async getSnippetById(id: string): Promise<TSnippet | null> {
-        const doc = await this.snippets.findOne({ _id: id });
-        return fromSnippetDoc(doc);
-    }
-
-    async getSnippetByIdentifier(identifier: string): Promise<TSnippet | null> {
-        const doc = await this.snippets.findOne({ identifier });
-        return fromSnippetDoc(doc);
-    }
-
-    async getAllSnippets(): Promise<TSnippet[]> {
-        const docs = await this.snippets.find().toArray();
-        return docs.map(d => fromSnippetDoc(d)!);
-    }
-
-    async getSnippetsMetadata(): Promise<{ id: string; identifier: string; name: string; category: string; updatedAt: string }[]> {
-        const docs = await this.snippets.find(
-            {},
-            { projection: { identifier: 1, name: 1, category: 1, updatedAt: 1 } },
-        ).toArray();
-        return docs.map(d => ({
-            id:         d._id,
-            identifier: d.identifier,
-            name:       d.name,
-            category:   d.category,
-            updatedAt:  d.updatedAt.toDateString(),
-        }));
-    }
-
-    async updateSnippet(id: string, data: Partial<TSnippet>): Promise<TSnippet | null> {
-        // Strip immutable fields so callers can't accidentally rewrite them.
-        const { id: _id, identifier: _identifier, createdAt: _createdAt, ...rest } = data;
-        const doc = await this.snippets.findOneAndUpdate(
-            { _id: id },
-            { $set: { ...rest, updatedAt: new Date() } },
-            { returnDocument: "after" },
-        );
-        return fromSnippetDoc(doc);
-    }
-
-    async deleteSnippet(id: string): Promise<void> {
-        await this.snippets.deleteOne({ _id: id });
-    }
-
-    async findPagesUsingSnippet(identifier: string): Promise<TPage[]> {
-        const pattern = snippetRefPattern(identifier);
-        const docs = await this.pages.find({ content: { $regex: pattern, $options: "i" } }).toArray();
-        return docs.map(d => fromPageDoc(d)!);
-    }
 }
 
 // ── Document shapes (collection generics) ──
@@ -389,7 +327,6 @@ type WithMongoId<T extends { id: string }> = Omit<T, "id"> & { _id: string };
 
 type BlocDoc         = WithMongoId<TBloc>;
 type PageDoc         = WithMongoId<TPage>;
-type SnippetDoc      = WithMongoId<TSnippet>;
 type TemplateDoc     = WithMongoId<TTemplate>;
 type SystemDoc       = TSystem & { _id: typeof SYSTEM_ID };
 
@@ -408,11 +345,6 @@ function fromPageDoc(d: PageDoc | null): TPage | null {
     if (!d) return null;
     const { _id, ...rest } = d;
     return { id: _id, ...rest, visible: d.visible === true };
-}
-function fromSnippetDoc(d: SnippetDoc | null): TSnippet | null {
-    if (!d) return null;
-    const { _id, ...rest } = d;
-    return { id: _id, ...rest };
 }
 function fromTemplateDoc(d: TemplateDoc | null): TTemplate | null {
     if (!d) return null;

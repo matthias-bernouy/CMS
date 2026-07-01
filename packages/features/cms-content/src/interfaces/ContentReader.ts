@@ -1,5 +1,4 @@
 import type { TPage } from "cms-content/interfaces/pages";
-import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TSystem } from "cms-content/interfaces/settings";
 
 /**
@@ -28,9 +27,5 @@ export interface ContentReader {
 
     // SYSTEM (theme, favicon, host, language, notFound, serverError)
     getSystem(): Promise<TSystem>;
-
-    // SNIPPET (for expandSnippets during render)
-    getSnippetByIdentifier(identifier: string): Promise<TSnippet | null>;
-    getAllSnippets(): Promise<TSnippet[]>;
 
 }

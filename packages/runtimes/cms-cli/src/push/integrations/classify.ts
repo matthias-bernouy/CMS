@@ -13,8 +13,8 @@ export type ClassifiedIntegration = {
 /**
  * Diff local integrations against the remote instance list + last-pushed state.
  *
- * V1 mirrors the snippets push: ADDITIVE (create new instances, rerun changed
- * ones, skip unchanged). Remote-only instances are left untouched — no push
+ * V1 is additive: create new instances, rerun changed ones, and skip
+ * unchanged entries. Remote-only instances are left untouched — no push
  * resource deletes. No remote-hash conflict detection yet (`--force` re-runs
  * everything regardless of state).
  */

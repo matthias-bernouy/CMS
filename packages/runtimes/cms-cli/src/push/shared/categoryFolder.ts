@@ -1,7 +1,7 @@
 import { isValidCategoryFolder } from "@bernouy/cms-content";
 
 /**
- * Snippets and templates carry a `category` whose value is the parent
+ * Templates carry a `category` whose value is the parent
  * folder name on disk. When the category is empty, files live under
  * `_uncategorized/` so every entity always has exactly one canonical
  * filesystem location (no flat-vs-nested ambiguity).

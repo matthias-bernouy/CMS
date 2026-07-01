@@ -16,9 +16,6 @@ export function shellResourceChromeDefaults(resource: string): ShellChromeDefaul
     if (resource === "template") {
         return chromeDefaults("Templates", "/admin/templates", "Template settings", "Configure template metadata.", "Identifier", "Category", "Status", "Description");
     }
-    if (resource === "snippet") {
-        return chromeDefaults("Snippets", "/admin/snippets", "Snippet settings", "Configure snippet metadata.", "Identifier", "Category", "Status", "Description");
-    }
     return chromeDefaults("Pages", "/admin/pages", "Page settings", "Configure page-level metadata and routing.", "Path", "Tags", "Status", "SEO description");
 }
 

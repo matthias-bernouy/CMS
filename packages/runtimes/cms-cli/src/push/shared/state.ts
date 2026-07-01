@@ -4,7 +4,6 @@ import { join } from "node:path";
 
 export type EntityKey =
     | `page:${string}`
-    | `snippet:${string}`
     | `template:${string}`
     | `file:${string}`
     | `integration:${string}`

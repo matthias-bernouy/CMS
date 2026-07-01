@@ -62,19 +62,7 @@ type TemplateDetail = TemplateListItem & {
     content?: string;
 };
 
-type SnippetListItem = {
-    id: string;
-    identifier: string;
-    name: string;
-    category: string;
-};
-
-type SnippetDetail = SnippetListItem & {
-    description?: string;
-    content?: string;
-};
-
-type EditorResource = "page" | "template" | "snippet";
+type EditorResource = "page" | "template";
 
 function currentPageIdentifier(): string | null {
     return new URL(window.location.href).searchParams.get("id");
@@ -82,7 +70,7 @@ function currentPageIdentifier(): string | null {
 
 function shellResource(shell: Shell): EditorResource {
     const resource = shell.getAttribute("resource");
-    if (resource === "template" || resource === "snippet") return resource;
+    if (resource === "template") return resource;
     return "page";
 }
 
@@ -125,15 +113,7 @@ async function configureShellCatalogAndFrame(shell: Shell): Promise<void> {
 }
 
 async function loadInsertItems(): Promise<BlockPickerItem[]> {
-    const [templates, snippets] = await Promise.all([
-        loadTemplateItems(),
-        loadSnippetItems(),
-    ]);
-
-    return [
-        ...templates,
-        ...snippets,
-    ];
+    return loadTemplateItems();
 }
 
 async function loadDataSources(): Promise<EditorDataSource[]> {
@@ -161,27 +141,6 @@ async function loadTemplateItems(): Promise<BlockPickerItem[]> {
             category:    template.category || "Templates",
             icon:        "T",
             content:     template.content ?? "",
-        }));
-}
-
-async function loadSnippetItems(): Promise<BlockPickerItem[]> {
-    const snippets = await fetchJson<SnippetListItem[]>("snippet/list", []);
-    const details = await Promise.all(snippets.map(snippet => fetchJson<SnippetDetail>(`snippet?id=${encodeURIComponent(snippet.id)}`, {
-        ...snippet,
-        content: "",
-    })));
-
-    return details
-        .filter(snippet => snippet.identifier)
-        .map(snippet => ({
-            kind:        "snippet",
-            id:          snippet.id,
-            identifier:  snippet.identifier,
-            label:       snippet.name,
-            description: snippet.description,
-            category:    snippet.category || "Snippets",
-            icon:        "S",
-            content:     snippet.content ?? "",
         }));
 }
 
@@ -294,7 +253,7 @@ async function loadPageConfig(shell: Shell, pageId: string): Promise<void> {
     });
 }
 
-async function loadReusableConfig(shell: Shell, resource: "template" | "snippet", id: string): Promise<void> {
+async function loadReusableConfig(shell: Shell, resource: "template", id: string): Promise<void> {
     const response = await fetch(`${getMetaBasePath()}/api/${resource}?id=${encodeURIComponent(id)}`);
     if (response.redirected) {
         window.location.href = response.url;
@@ -305,7 +264,7 @@ async function loadReusableConfig(shell: Shell, resource: "template" | "snippet"
         return;
     }
 
-    const detail = await response.json() as TemplateDetail | SnippetDetail;
+    const detail = await response.json() as TemplateDetail;
     shell.setPageConfig({
         id:          detail.id,
         title:       detail.name,
@@ -382,7 +341,7 @@ async function savePage(page: EditorV2PageConfig, content: string): Promise<void
     }
 }
 
-async function saveReusable(resource: "template" | "snippet", page: EditorV2PageConfig, content: string): Promise<void> {
+async function saveReusable(resource: "template", page: EditorV2PageConfig, content: string): Promise<void> {
     const response = await fetch(`${getMetaBasePath()}/api/${resource}`, {
         method:  "PUT",
         headers: {
@@ -407,33 +366,8 @@ async function deleteDocument(resource: EditorResource, id: string): Promise<voi
         method: "DELETE",
     });
 
-    if (response.status === 409 && resource === "snippet") {
-        await deleteSnippetInUse(id, response);
-        return;
-    }
-
     if (!response.ok) {
         throw new Error(`${resourceLabel(resource)} delete failed with ${response.status}`);
-    }
-}
-
-async function deleteSnippetInUse(id: string, response: Response): Promise<void> {
-    const body = await response.json().catch(() => null) as { pages?: Array<{ path?: string; title?: string }> } | null;
-    const pages = Array.isArray(body?.pages) ? body.pages : [];
-    const suffix = pages.length
-        ? `\n\nUsed by:\n${pages.map(page => `- ${page.title || page.path || "Untitled"}`).join("\n")}`
-        : "";
-
-    if (!window.confirm(`This snippet is used by pages. Delete it anyway?${suffix}`)) {
-        throw new Error("Snippet delete cancelled");
-    }
-
-    const forced = await fetch(`${getMetaBasePath()}/api/snippet?id=${encodeURIComponent(id)}&force=true`, {
-        method: "DELETE",
-    });
-
-    if (!forced.ok) {
-        throw new Error(`Snippet delete failed with ${forced.status}`);
     }
 }
 

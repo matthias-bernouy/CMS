@@ -1,9 +1,7 @@
 import {
     CMS_BINDING_ATTRIBUTES,
     CMS_SOURCE_STATES,
-    CMS_SNIPPET_TAG,
 } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem } from "../../BlockPickerModal/BlockPickerModal";
 import type {
     EditorStructureNode,
     StructureNode,
@@ -61,18 +59,4 @@ export function structureIconClass(_node: StructureNode): string {
 
 export function sourceActionLabel(node: EditorStructureNode): string {
     return node.target.hasAttribute(CMS_BINDING_ATTRIBUTES.source) ? "Update source" : "Add source";
-}
-
-export function isSnippetNode(node: EditorStructureNode): boolean {
-    return node.tag.toLowerCase() === CMS_SNIPPET_TAG;
-}
-
-export function snippetItemForNode(node: EditorStructureNode, items: BlockPickerItem[]): Extract<BlockPickerItem, { kind: "snippet" }> | null {
-    if (!isSnippetNode(node)) return null;
-
-    const identifier = node.target.getAttribute("identifier")?.trim();
-    if (!identifier) return null;
-
-    return items.find((item): item is Extract<BlockPickerItem, { kind: "snippet" }> =>
-        item.kind === "snippet" && item.identifier === identifier) ?? null;
 }

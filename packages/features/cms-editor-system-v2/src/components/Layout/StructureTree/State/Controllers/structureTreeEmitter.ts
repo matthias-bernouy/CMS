@@ -52,12 +52,4 @@ export class StructureTreeEmitter {
     closeContextMenu(): void {
         this.refs.contextMenu.remove();
     }
-
-    redirectToSnippetEditor(id: string): void {
-        window.location.href = `${this.basePath()}/editor/snippet?id=${encodeURIComponent(id)}`;
-    }
-
-    private basePath(): string {
-        return document.querySelector<HTMLMetaElement>('meta[name="basePath"]')?.content ?? "";
-    }
 }

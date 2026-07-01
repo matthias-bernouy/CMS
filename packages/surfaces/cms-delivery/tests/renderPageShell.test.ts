@@ -17,7 +17,6 @@ function makeCtx(legacyEditor?: Record<string, unknown>): RenderContext {
         repository: {
             getSystem: async () => system,
             getBlocsList: async () => [],
-            getSnippetByIdentifier: async () => null,
         } as unknown as ContentReader,
         resolveAssets: async () => ({
             componentUrl:   "/.cms/assets/component.js?v=c",

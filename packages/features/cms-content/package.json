@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-content",
     "version": "0.1.0",
-    "description": "The CMS content aggregate behind `CmsRepository` — pages, blocs, templates, snippets and settings (TSystem: site, editor shell, security extras, roles config), with in-memory and Mongo (`./mongo`) implementations, the theme style endpoint under `http/`, cache key builders and content utils. One package because it is ONE consistency domain: entities are copied, provisioned and rendered together.",
+    "description": "The CMS content aggregate behind `CmsRepository` — pages, blocs, templates and settings (TSystem: site, editor shell, security extras, roles config), with in-memory and Mongo (`./mongo`) implementations, the theme style endpoint under `http/`, cache key builders and content utils. One package because it is ONE consistency domain: entities are copied, provisioned and rendered together.",
     "license": "UNLICENSED",
     "type": "module",
     "main": "./src/exports/index.ts",

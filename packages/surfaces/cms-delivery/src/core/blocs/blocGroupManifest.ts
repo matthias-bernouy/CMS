@@ -1,5 +1,4 @@
 import type DeliveryCms from "cms-delivery/DeliveryCms";
-import { expandSnippets } from "@bernouy/cms-content";
 import { findUsedBlocTags } from "@bernouy/cms-content";
 import { groupBlocsBySignature, type BlocGroups } from "cms-delivery/core/blocs/groupBlocsBySignature";
 
@@ -7,9 +6,8 @@ import { groupBlocsBySignature, type BlocGroups } from "cms-delivery/core/blocs/
  * Lazy, TTL-cached signature grouping of every bloc across all stored pages.
  *
  * The grouping is derived from real usage: each page's bloc set is computed
- * exactly as `renderPage` does (`expandSnippets` → `findUsedBlocTags`), then
- * `groupBlocsBySignature` buckets blocs by the set of pages that use them. No
- * analytics, no hand-assigned categories.
+ * exactly as `renderPage` does, then `groupBlocsBySignature` buckets blocs by
+ * the set of pages that use them. No analytics, no hand-assigned categories.
  *
  * Recompute policy = lazy + TTL: the manifest is built on first use and reused
  * for `TTL_MS`, then rebuilt on the next request after expiry. A stale manifest
@@ -19,10 +17,10 @@ import { groupBlocsBySignature, type BlocGroups } from "cms-delivery/core/blocs/
  * when group membership genuinely shifts). Full freshness (invalidate on page
  * publish) is a later refinement; this keeps the scan off the hot path.
  *
- * Scanning every page (+ snippet expansion) is the cost; TTL amortises it. The
- * in-flight promise is cached so concurrent cold requests share one scan, and a
- * failed scan is dropped so the next request retries instead of caching the
- * rejection. Memoised per `DeliveryCms` instance via a WeakMap (GC-friendly).
+ * Scanning every page is the cost; TTL amortises it. The in-flight promise is
+ * cached so concurrent cold requests share one scan, and a failed scan is
+ * dropped so the next request retries instead of caching the rejection.
+ * Memoised per `DeliveryCms` instance via a WeakMap (GC-friendly).
  */
 const TTL_MS = 5 * 60_000;
 
@@ -47,9 +45,7 @@ async function computeBlocGroupManifest(delivery: DeliveryCms): Promise<BlocGrou
         repository.getBlocsList(),
     ]);
 
-    const pageBlocSets = await Promise.all(
-        pages.map(async page => findUsedBlocTags(await expandSnippets(page.content, repository), blocList)),
-    );
+    const pageBlocSets = pages.map(page => findUsedBlocTags(page.content, blocList));
 
     return groupBlocsBySignature(pageBlocSets);
 }

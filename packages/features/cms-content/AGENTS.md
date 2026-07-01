@@ -1,12 +1,12 @@
 # @bernouy/cms-content
 
-Feature package for the content aggregate: pages, blocs, templates, snippets,
-settings, editor contracts, validation, and read models.
+Feature package for the content aggregate: pages, blocs, templates, settings,
+editor contracts, validation, and read models.
 
 ## Boundaries
 
 - Root export exposes entity types, `CmsRepository`, `ContentReader`, in-memory
-  repository, validation, snippet expansion, constants, and style generation.
+  repository, validation, constants, and style generation.
 - `@bernouy/cms-content/editor` exposes browser/editor-safe authoring
   contracts.
 - `@bernouy/cms-content/mongo` exposes `MongoCmsRepository` for composition
@@ -19,7 +19,7 @@ settings, editor contracts, validation, and read models.
 - Content validation belongs in `core/validation/` and should be enforced by
   `ValidatingCmsRepository`.
 - Stored HTML/SVG must pass through the existing hardening/sanitizing helpers.
-- Page/template/snippet references should use the existing content-ref helpers.
+- Page/template bloc references should use the existing content-ref helpers.
 - Editor contracts must remain stable; authored blocs depend on them.
 - When changing repository behavior, update both in-memory and Mongo behavior
   or document why only one implementation changes.

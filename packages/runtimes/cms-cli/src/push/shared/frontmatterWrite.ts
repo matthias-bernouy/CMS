@@ -21,8 +21,8 @@ export function serializeFrontmatter(fm: Frontmatter): string {
 
 /**
  * Stable key order so the same frontmatter object always produces the same
- * file content. Pages share `description` with snippets/templates so the
- * order is split into "intro" + "scalars" + "tags last".
+ * file content. Pages share `description` with templates, so the order is
+ * split into "intro" + "scalars" + "tags last".
  */
 function orderedEntries(fm: Frontmatter): [string, unknown][] {
     const KEY_ORDER = ["title", "name", "description", "visible", "tags"] as const;

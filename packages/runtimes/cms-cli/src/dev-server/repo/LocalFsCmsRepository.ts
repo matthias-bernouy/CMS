@@ -1,9 +1,8 @@
 import type { CmsRepository, BlocListItemResponse, PageLink, PagesQuery } from "@bernouy/cms-content";
 import { countValues, isPublishedPage, normalizeTags } from "@bernouy/cms-content";
-import type { TBloc, TPage, TSnippet, TSystem, TTemplate } from "@bernouy/cms-content";
+import type { TBloc, TPage, TSystem, TTemplate } from "@bernouy/cms-content";
 import type { BuiltBloc } from "../build";
 import { PagesStore } from "./pages";
-import { SnippetsStore } from "./snippets";
 import { TemplatesStore } from "./templates";
 import { SystemStore } from "./system";
 import { BlocsStore } from "./blocs";
@@ -19,14 +18,12 @@ import { BlocsStore } from "./blocs";
  */
 export class LocalFsCmsRepository implements CmsRepository {
     private readonly _pages:         PagesStore;
-    private readonly _snippets:      SnippetsStore;
     private readonly _templates:     TemplatesStore;
     private readonly _system:        SystemStore;
     private readonly _blocs:         BlocsStore;
 
     constructor(siteDir: string, builtBlocs: Map<string, BuiltBloc>) {
         this._pages         = new PagesStore(siteDir);
-        this._snippets      = new SnippetsStore(siteDir);
         this._templates     = new TemplatesStore(siteDir);
         this._system        = new SystemStore(siteDir);
         this._blocs         = new BlocsStore(siteDir, builtBlocs);
@@ -60,11 +57,8 @@ export class LocalFsCmsRepository implements CmsRepository {
     async getTagCounts() {
         return countValues((await this._pages.getAll()).flatMap(p => normalizeTags((p as { tags: unknown }).tags)));
     }
-    async getCategoryCounts(resource: "snippets" | "templates") {
-        const values = resource === "snippets"
-            ? (await this._snippets.getAll()).map(s => s.category)
-            : (await this._templates.getAll()).map(t => t.category);
-        return countValues(values);
+    async getCategoryCounts(_resource: "templates") {
+        return countValues((await this._templates.getAll()).map(t => t.category));
     }
 
     // ── System ──
@@ -79,16 +73,4 @@ export class LocalFsCmsRepository implements CmsRepository {
     getTemplateCategories():                               Promise<string[]>           { return this._templates.categories(); }
     updateTemplate(id: string, data: Partial<TTemplate>):  Promise<TTemplate | null>   { return this._templates.update(id, data); }
     deleteTemplate(id: string):                            Promise<void>               { return this._templates.delete(id); }
-
-    // ── Snippet ──
-    createSnippet(s: Omit<TSnippet, "id">):                Promise<TSnippet>           { return this._snippets.create(s); }
-    getSnippetById(id: string):                            Promise<TSnippet | null>    { return this._snippets.getById(id); }
-    getSnippetByIdentifier(identifier: string):            Promise<TSnippet | null>    { return this._snippets.getByIdentifier(identifier); }
-    getAllSnippets():                                      Promise<TSnippet[]>         { return this._snippets.getAll(); }
-    getSnippetsMetadata() { return this._snippets.metadata(); }
-    updateSnippet(id: string, data: Partial<TSnippet>):    Promise<TSnippet | null>    { return this._snippets.update(id, data); }
-    deleteSnippet(id: string):                             Promise<void>               { return this._snippets.delete(id); }
-    async findPagesUsingSnippet(identifier: string): Promise<TPage[]> {
-        return this._snippets.findPagesUsing(identifier, await this._pages.getAll());
-    }
 }

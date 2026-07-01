@@ -4,7 +4,7 @@ import { resolve, sep } from "node:path";
  * Join untrusted path segments onto a trusted base directory and guarantee the
  * result stays inside that base. `p9r pull` writes files whose on-disk location
  * is derived from server-controlled values (bloc tags, page paths,
- * snippet/template identifiers, bundle file names); without containment a
+ * template identifiers, bundle file names); without containment a
  * crafted value like `../../../home/user/.bashrc` would let a malicious or
  * compromised server write arbitrary files outside `siteDir`. Throws when a
  * segment escapes `base`, so the caller surfaces a per-entity error.

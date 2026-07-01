@@ -1,9 +1,8 @@
-import {
-    CMS_SNIPPET_TAG,
-    type DataField,
-    type DataScope,
-    type Editor,
-    type EditorCatalog,
+import type {
+    DataField,
+    DataScope,
+    Editor,
+    EditorCatalog,
 } from "@bernouy/cms-content/editor";
 
 import type {
@@ -11,7 +10,6 @@ import type {
     EditorStructureNode,
     StructureNode,
 } from "../../../../../runtime";
-import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
 import type { StructureTree } from "../../../StructureTree/StructureTree";
 
 export type StructureRenderOptions = {
@@ -22,7 +20,7 @@ export function renderStructure(
     tree: StructureTree,
     runtime: EditorRuntime | null,
     catalog: EditorCatalog,
-    insertItems: BlockPickerItem[],
+    _insertItems: unknown[],
     isEmptyDocumentContent: () => boolean,
     options: StructureRenderOptions = {},
 ): void {
@@ -31,7 +29,7 @@ export function renderStructure(
         return;
     }
 
-    const structure = decorateStructure(runtime.getStructure(), insertItems);
+    const structure = decorateStructure(runtime.getStructure());
     tree.setStructure(
         structure,
         runtime.getSelection()?.editor ?? null,
@@ -43,8 +41,8 @@ export function renderStructure(
     );
 }
 
-export function decorateStructure(nodes: StructureNode[], insertItems: BlockPickerItem[]): StructureNode[] {
-    return nodes.map(node => decorateEditorStructureNode(node, insertItems));
+export function decorateStructure(nodes: StructureNode[]): StructureNode[] {
+    return nodes.map(node => decorateEditorStructureNode(node));
 }
 
 export function findStructureNodeLabel(runtime: EditorRuntime | null, editor: Editor): string | null {
@@ -60,34 +58,14 @@ export function findStructureNodeLabel(runtime: EditorRuntime | null, editor: Ed
     return runtime ? visit(runtime.getStructure()) : null;
 }
 
-function decorateEditorStructure(nodes: EditorStructureNode[], insertItems: BlockPickerItem[]): EditorStructureNode[] {
-    return nodes.map(node => decorateEditorStructureNode(node, insertItems));
+function decorateEditorStructure(nodes: EditorStructureNode[]): EditorStructureNode[] {
+    return nodes.map(node => decorateEditorStructureNode(node));
 }
 
-function decorateEditorStructureNode(node: EditorStructureNode, insertItems: BlockPickerItem[]): EditorStructureNode {
-    const snippet = snippetStructureDetails(node, insertItems);
-
+function decorateEditorStructureNode(node: EditorStructureNode): EditorStructureNode {
     return {
         ...node,
-        label:    snippet?.label ?? node.label,
-        icon:     snippet?.icon ?? node.icon,
-        children: decorateStructure(node.children, insertItems),
-    };
-}
-
-function snippetStructureDetails(
-    node: EditorStructureNode,
-    insertItems: BlockPickerItem[],
-): { label: string; icon: string } | null {
-    if (node.tag.toLowerCase() !== CMS_SNIPPET_TAG) return null;
-
-    const identifier = node.target.getAttribute("identifier")?.trim() ?? "";
-    const item = insertItems.find((candidate): candidate is Extract<BlockPickerItem, { kind: "snippet" }> =>
-        candidate.kind === "snippet" && candidate.identifier === identifier);
-
-    return {
-        label: item?.label || identifier || node.label,
-        icon:  item?.icon || "S",
+        children: decorateStructure(node.children),
     };
 }
 

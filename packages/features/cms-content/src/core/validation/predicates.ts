@@ -22,11 +22,11 @@ export function isValidPathFormat(path: string): boolean {
 }
 
 /**
- * Kebab-case check for snippet identifiers: lowercase letters, digits, and
+ * Kebab-case check for resource identifiers: lowercase letters, digits, and
  * single dashes. At least one character, no leading or trailing dash, no
  * consecutive dashes.
  */
-export function isValidSnippetIdentifier(id: string): boolean {
+export function isValidResourceIdentifier(id: string): boolean {
     if (!id || typeof id !== "string") return false;
     return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
 }
@@ -44,7 +44,7 @@ export function isValidCustomElementTag(tag: string): boolean {
 }
 
 /**
- * Folder name used by `p9r pull/push` to carry a snippet/template category.
+ * Folder name used by `p9r pull/push` to carry a resource category.
  * One filesystem segment, no separators, no traversal, no hidden files.
  * Permissive otherwise — the category itself is human-authored and may
  * already contain spaces/accents on existing sites.

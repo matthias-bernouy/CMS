@@ -4,19 +4,16 @@ import type { CmsRepository } from "@bernouy/cms-content";
 
 /** Capturing inner repo: records what the decorator forwards after validation
  *  + normalization, and answers the ref-existence reads. */
-function makeRepo(opts: { blocs?: string[]; snippets?: string[] } = {}) {
+function makeRepo(opts: { blocs?: string[] } = {}) {
     const calls: Record<string, any[]> = {
-        insertPage: [], updatePage: [], createSnippet: [], updateSnippet: [], createTemplate: [], updateTemplate: [],
+        insertPage: [], updatePage: [], createTemplate: [], updateTemplate: [],
     };
     const inner = {
         insertPage:     async (path: string, title: string) => { calls.insertPage.push([path, title]); },
         updatePage:     async (p: any) => { calls.updatePage.push(p); },
-        createSnippet:  async (s: any) => { calls.createSnippet.push(s); return { ...s, id: "s1" }; },
-        updateSnippet:  async (id: string, d: any) => { calls.updateSnippet.push([id, d]); return null; },
         createTemplate: async (t: any) => { calls.createTemplate.push(t); return { ...t, id: "t1" }; },
         updateTemplate: async (id: string, d: any) => { calls.updateTemplate.push([id, d]); return null; },
-        getBlocsList:        async () => (opts.blocs ?? []).map((id) => ({ id, name: id, group: "", description: "" })),
-        getSnippetsMetadata: async () => (opts.snippets ?? []).map((identifier) => ({ id: identifier, identifier, name: identifier, category: "", updatedAt: "" })),
+        getBlocsList: async () => (opts.blocs ?? []).map((id) => ({ id, name: id, group: "", description: "" })),
     } as unknown as CmsRepository;
     return { repo: new ValidatingCmsRepository(inner), calls };
 }
@@ -60,37 +57,6 @@ describe("ValidatingCmsRepository — pages", () => {
         await repo.updatePage({ id: "p1", content: "<cs-card></cs-card>" });
         expect(calls.updatePage[0].content).toContain("cs-card");
         await expect(repo.updatePage({ id: "p1", content: "<cs-ghost></cs-ghost>" })).rejects.toThrow();
-    });
-});
-
-describe("ValidatingCmsRepository — snippets", () => {
-    test("createSnippet rejects a non-kebab identifier", async () => {
-        const { repo } = makeRepo();
-        for (const bad of ["Hero", "hero_section", "hero section", "-leading", "trailing-", "double--dash"]) {
-            await expect(repo.createSnippet({ identifier: bad, name: "X", description: "", content: "", category: "", createdAt: new Date(), updatedAt: new Date() }))
-                .rejects.toThrow(ContentValidationError);
-        }
-    });
-
-    test("createSnippet normalizes the name", async () => {
-        const { repo, calls } = makeRepo();
-        await repo.createSnippet({ identifier: "hero", name: "  Hero  ", description: "", content: "", category: "", createdAt: new Date(), updatedAt: new Date() });
-        expect(calls.createSnippet[0].name).toBe("Hero");
-    });
-
-    test("createSnippet requires all create fields", async () => {
-        const { repo } = makeRepo();
-        const base = { identifier: "hero", name: "Hero", description: "", content: "", category: "", createdAt: new Date(), updatedAt: new Date() };
-
-        await expect(repo.createSnippet({ ...base, content: undefined } as any)).rejects.toThrow(ContentValidationError);
-        await expect(repo.createSnippet({ ...base, createdAt: undefined } as any)).rejects.toThrow(ContentValidationError);
-        await expect(repo.createSnippet({ ...base, updatedAt: new Date(Number.NaN) } as any)).rejects.toThrow(ContentValidationError);
-    });
-
-    test("updateSnippet trims the name", async () => {
-        const { repo, calls } = makeRepo();
-        await repo.updateSnippet("s1", { name: "  Redacted  " });
-        expect(calls.updateSnippet[0][1].name).toBe("Redacted");
     });
 });
 

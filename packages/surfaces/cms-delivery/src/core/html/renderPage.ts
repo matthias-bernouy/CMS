@@ -4,7 +4,6 @@ import type { CacheEntry } from "@bernouy/http-runner";
 import { compress } from "@bernouy/http-runner";
 import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
-import { expandSnippets } from "@bernouy/cms-content";
 import { injectMediaVersions } from "@bernouy/cms-files";
 import { findUsedBlocTags } from "@bernouy/cms-content";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
@@ -37,15 +36,14 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
 
     const composed = wrapBindingCore(page.content);
 
-    const expandedContent = await expandSnippets(composed, ctx.repository);
-    document.body.innerHTML = expandedContent;
+    document.body.innerHTML = composed;
     // Authoritative stored-XSS guard at the actual innerHTML sink: strip
     // scripts / on* handlers / dangerous URL schemes from the parsed tree
     // before this HTML reaches a public visitor, whatever path stored it.
     sanitizeDomTree(document.body);
 
     const blocList = await ctx.repository.getBlocsList();
-    const usedTags = findUsedBlocTags(expandedContent, blocList);
+    const usedTags = findUsedBlocTags(composed, blocList);
     const assets   = await ctx.resolveAssets(usedTags);
 
     // Whitelist asset hosts in CSP. When the build pipeline pre-uploads CSS

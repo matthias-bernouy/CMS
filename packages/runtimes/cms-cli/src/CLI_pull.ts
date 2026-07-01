@@ -4,15 +4,14 @@ import { loadPushConfig } from "./push/shared/config";
 import { confirm } from "./push/shared/recap";
 import { pullBlocs } from "./push/blocs/pull";
 import { pullPages } from "./push/pages/pull";
-import { pullSnippets } from "./push/snippets/pull";
 import { pullTemplates } from "./push/templates/pull";
 import { pullSystem } from "./push/system/pull";
 import { pullIntegrations } from "./push/integrations/pull";
 
 type Flags = { force: boolean; yes: boolean; type: string };
 
-const TYPES = ["*", "system", "integrations", "blocs", "snippets", "templates", "pages"] as const;
-const ORDER = ["system", "integrations", "blocs", "snippets", "templates", "pages"] as const;
+const TYPES = ["*", "system", "integrations", "blocs", "templates", "pages"] as const;
+const ORDER = ["system", "integrations", "blocs", "templates", "pages"] as const;
 type Stage = typeof ORDER[number];
 
 function parseFlags(args: string[]): Flags {
@@ -43,7 +42,6 @@ async function runStage(stage: Stage, adminBase: URL, token: string, siteDir: st
     if      (stage === "system")    await pullSystem(adminBase, token, siteDir);
     else if (stage === "integrations") reportItems(await pullIntegrations(adminBase, token, siteDir), "integrations", "id");
     else if (stage === "blocs")     reportBlocs   (await pullBlocs   (adminBase, token, siteDir));
-    else if (stage === "snippets")  reportItems   (await pullSnippets(adminBase, token, siteDir), "snippets", "identifier");
     else if (stage === "templates") reportTemplates(await pullTemplates(adminBase, token, siteDir));
     else                            reportItems   (await pullPages   (adminBase, token, siteDir), "pages", "path");
     if (stage === "system") console.log("→ system: pulled.");

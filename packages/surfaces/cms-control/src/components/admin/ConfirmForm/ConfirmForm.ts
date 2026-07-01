@@ -87,15 +87,14 @@ function withForce(target: string): string {
 
 /**
  * Compose a human-readable list of consumer names from a 409 response body
- * shaped like `{ pages: [{path,title}], templates: [{identifier,name}],
- * snippets: [{identifier,name}] }`. Returns an empty string when nothing
- * matches so the caller doesn't have to special-case.
+ * shaped like `{ pages: [{path,title}], templates: [{identifier,name}] }`.
+ * Returns an empty string when nothing matches so the caller doesn't have to
+ * special-case.
  */
 function formatConflict(body: any): string {
     const lines: string[] = [];
     const pages     = Array.isArray(body?.pages)     ? body.pages     : [];
     const templates = Array.isArray(body?.templates) ? body.templates : [];
-    const snippets  = Array.isArray(body?.snippets)  ? body.snippets  : [];
     if (pages.length) {
         lines.push('Pages:');
         for (const p of pages) lines.push(`  • ${p.title || p.path}`);
@@ -104,11 +103,6 @@ function formatConflict(body: any): string {
         if (lines.length) lines.push('');
         lines.push('Templates:');
         for (const t of templates) lines.push(`  • ${t.name || t.identifier}`);
-    }
-    if (snippets.length) {
-        if (lines.length) lines.push('');
-        lines.push('Snippets:');
-        for (const s of snippets) lines.push(`  • ${s.name || s.identifier}`);
     }
     return lines.join('\n');
 }

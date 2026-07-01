@@ -27,7 +27,7 @@ export type DeliveryCmsConfig = {
      * at the very top of <head>, before any preload, meta, stylesheet or
      * deferred script.
      *
-     * Use cases: analytics tags, observability agents, A/B test snippets,
+     * Use cases: analytics tags, observability agents, A/B test scripts,
      * any third-party `<head>` content owned by the consumer rather than
      * by Delivery itself.
      */

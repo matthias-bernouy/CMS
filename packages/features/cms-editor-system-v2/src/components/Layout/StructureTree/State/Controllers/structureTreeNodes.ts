@@ -7,7 +7,6 @@ import {
     type CmsSourceState,
     type CmsSourceStatusCondition,
 } from "@bernouy/cms-content/editor";
-import type { BlockPickerItem } from "../../../BlockPickerModal/BlockPickerModal";
 import type { EditorDataSource, EditorStructureNode, StructureNode } from "../../../../../runtime";
 import {
     canDeleteNode,
@@ -26,8 +25,6 @@ import {
     visibleStructureNodes,
 } from "../structureTreeTraversal";
 import {
-    isSnippetNode,
-    snippetItemForNode,
     sourceActionLabel,
     structureIconClass,
     structureIconText,
@@ -169,10 +166,6 @@ export class StructureTreeNodes {
     itemClass(node: StructureNode): string { return structureItemClass(node); }
     iconClass(node: StructureNode): string { return structureIconClass(node); }
     sourceActionLabel(node: EditorStructureNode): string { return sourceActionLabel(node); }
-    isSnippetNode(node: EditorStructureNode): boolean { return isSnippetNode(node); }
-    snippetItemForNode(node: EditorStructureNode): Extract<BlockPickerItem, { kind: "snippet" }> | null {
-        return snippetItemForNode(node, this.state.insertItems);
-    }
 }
 
 function nearestSourceAncestor(target: HTMLElement): HTMLElement | null {

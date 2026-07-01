@@ -1,7 +1,6 @@
 import type { ContentReader } from "cms-content/interfaces/ContentReader";
 import type { TBloc } from "cms-content/interfaces/blocs";
 import type { TPage } from "cms-content/interfaces/pages";
-import type { TSnippet } from "cms-content/interfaces/snippets";
 import type { TSystem } from "cms-content/interfaces/settings";
 import type { TTemplate } from "cms-content/interfaces/templates";
 
@@ -74,7 +73,7 @@ export interface CmsRepository extends ContentReader {
     getPagesMetadata(opts?: PagesQuery): Promise<PageMeta[]>
     getTemplatesMetadata(): Promise<{id: string, identifier: string, name: string, category: string, createdAt: string}[]>
     getTagCounts(): Promise<ValueCount[]>;
-    getCategoryCounts(resource: "snippets" | "templates"): Promise<ValueCount[]>;
+    getCategoryCounts(resource: "templates"): Promise<ValueCount[]>;
 
 
     // SYSTEM
@@ -90,15 +89,5 @@ export interface CmsRepository extends ContentReader {
     getTemplateCategories(): Promise<string[]>;
     updateTemplate(id: string, data: Partial<TTemplate>): Promise<TTemplate | null>;
     deleteTemplate(id: string): Promise<void>;
-
-    // SNIPPET
-    createSnippet(snippet: Omit<TSnippet, 'id'>): Promise<TSnippet>;
-    getSnippetById(id: string): Promise<TSnippet | null>;
-    getSnippetByIdentifier(identifier: string): Promise<TSnippet | null>;
-    getAllSnippets(): Promise<TSnippet[]>;
-    getSnippetsMetadata(): Promise<{id: string, identifier: string, name: string, category: string, updatedAt: string}[]>;
-    updateSnippet(id: string, data: Partial<TSnippet>): Promise<TSnippet | null>;
-    deleteSnippet(id: string): Promise<void>;
-    findPagesUsingSnippet(identifier: string): Promise<TPage[]>;
 
 }

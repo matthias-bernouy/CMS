@@ -1,12 +1,12 @@
 import type { TTemplate } from "cms-content/interfaces/templates";
 import { ContentValidationError } from "cms-content/core/errors";
-import { isValidSnippetIdentifier } from "cms-content/core/validation/predicates";
+import { isValidResourceIdentifier } from "cms-content/core/validation/predicates";
 import { validateLabel, validateOptionalText, validateCategory, validateContent, validateId } from "cms-content/core/validation/fields";
 
-/** Template identifier: same kebab-case rule as snippets. */
+/** Template identifier: kebab-case. */
 export function validateTemplateIdentifier(value: string): string {
     if (value.length === 0) throw new ContentValidationError("identifier", "required");
-    if (!isValidSnippetIdentifier(value)) {
+    if (!isValidResourceIdentifier(value)) {
         throw new ContentValidationError("identifier", "use kebab-case (lowercase letters, digits, single dashes)");
     }
     return value;

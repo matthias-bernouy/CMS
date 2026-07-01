@@ -22,18 +22,15 @@ export class StructureTreeMenus {
             closeContextMenu:            () => this.tree.emitter.closeContextMenu(),
             emitAction:                  (action, editor) => this.tree.emitter.emitAction(action, editor),
             hasEnabledGroup:             groups => this.tree.pickers.hasEnabledGroup(groups),
-            isSnippetNode:               node => this.tree.nodes.isSnippetNode(node),
             openPickerOrEmitSingleMedia: (action, groups, contextLabel) => this.tree.pickers.openPickerOrEmitSingleMedia(action, groups, contextLabel),
             openConditionPicker:         node => this.tree.pickers.openConditionPicker(node),
             openRootPicker:              () => this.tree.pickers.openRootPicker(),
             openSourcePicker:            node => this.tree.pickers.openSourcePicker(node),
-            redirectToSnippetEditor:     id => this.tree.emitter.redirectToSnippetEditor(id),
             repeatableTargets:           this.tree.state.repeatableTargets,
             replaceGroups:               node => this.tree.pickers.replaceGroups(node),
             rootGroups:                  () => this.tree.pickers.rootGroups(),
             sourceActionLabel:           node => this.sourceActionLabel(node),
             sourceDataSourceCount:       () => this.tree.nodes.sourceDataSources().length,
-            snippetItemForNode:          node => this.tree.nodes.snippetItemForNode(node),
         };
     }
 

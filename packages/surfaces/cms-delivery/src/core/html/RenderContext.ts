@@ -11,8 +11,7 @@ import type { AssetsManifest } from "cms-delivery/core/assets/resolveAssets";
  * `absoluteURL`s).
  *
  * `resolveAssets` is the strategy seam — it receives the bloc tags actually
- * used in the page after snippet expansion, and returns hashed URLs ready
- * to inject into `<head>`.
+ * used in the page and returns hashed URLs ready to inject into `<head>`.
  */
 export type RenderContext = {
     repository: ContentReader;

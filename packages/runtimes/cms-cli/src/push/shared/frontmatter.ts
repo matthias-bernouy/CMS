@@ -1,7 +1,7 @@
 /**
  * Frontmatter shape shared by every push'able resource. Each type only uses
- * the subset it cares about (pages: title/description/visible/tags ;
- * snippets/templates: name/description) — the parser accepts the whole
+ * the subset it cares about (pages: title/description/visible/tags;
+ * templates: name/description) — the parser accepts the whole
  * vocabulary and the caller picks. `category` is intentionally absent: it
  * is derived from the parent folder name (see `categoryFolder.ts`).
  */

@@ -12,7 +12,6 @@ import type { MutationContext } from "./shellMutations";
 import {
     applySlot,
     createInsertion,
-    snippetItems,
 } from "./insertion";
 import {
     canInsertNodeCount,
@@ -89,7 +88,7 @@ export class ShellContentMutations {
     }
 
     private createInsertion(item: BlockPickerItem, slotName?: string, sourceStatusConditions?: CmsSourceStatusCondition[]) {
-        return createInsertion(this.context.frameDocument(), item, snippetItems(this.context.insertItems()), slotName, sourceStatusConditions);
+        return createInsertion(this.context.frameDocument(), item, slotName, sourceStatusConditions);
     }
 
     private insertMedia(parent: Editor, item: Extract<BlockPickerItem, { kind: "media" }>, slot: ContentSlot, slotName?: string, sourceStatusConditions?: CmsSourceStatusCondition[]): void {

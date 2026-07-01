@@ -1,6 +1,5 @@
 import { getAccessToken } from "./credentials";
 import { runPages } from "./push/pages/run";
-import { runSnippets } from "./push/snippets/run";
 import { runTemplates } from "./push/templates/run";
 import { runSystem } from "./push/system/run";
 import { runFiles } from "./push/files/run";
@@ -9,12 +8,12 @@ import { runBlocs } from "./push/blocs/run";
 
 type Flags = { force: boolean; yes: boolean; dryRun: boolean; type: string; only: Set<string> | null };
 
-const TYPES = ["*", "system", "integrations", "files", "blocs", "snippets", "templates", "pages"] as const;
-// Files (media) ship right after system so pages/snippets that reference
+const TYPES = ["*", "system", "integrations", "files", "blocs", "templates", "pages"] as const;
+// Files (media) ship right after system so pages/templates that reference
 // `/.cms/files/<path>` resolve once the rest of the content lands. Integrations
 // ship right after system too because they generate source contracts referenced
 // at runtime via `/.cms/sources/*`.
-const ORDER = ["system", "integrations", "files", "blocs", "snippets", "templates", "pages"] as const;
+const ORDER = ["system", "integrations", "files", "blocs", "templates", "pages"] as const;
 type Stage = typeof ORDER[number];
 
 function parseFlags(args: string[]): Flags {
@@ -51,7 +50,6 @@ async function runStage(stage: Stage, args: string[], adminBase: URL, token: str
         case "integrations": return runIntegrations(adminBase, token, flags);
         case "files":     return runFiles(adminBase, token, flags);
         case "blocs":     return runBlocs(adminBase, token, flags);
-        case "snippets":  return runSnippets(adminBase, token, flags);
         case "templates": return runTemplates(adminBase, token, flags);
         case "pages":     return runPages(adminBase, token, flags);
     }

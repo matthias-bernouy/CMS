@@ -1,9 +1,9 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { expandSnippets, hardenStoredHtml, wrapBindingCore } from "@bernouy/cms-content";
+import { hardenStoredHtml, wrapBindingCore } from "@bernouy/cms-content";
 import { CMS_BINDING_ATTRIBUTES, CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { CONTENT_REGION_ATTR } from "cms-control/core/editorSystemV2/contentRegionAttrs";
 
-type EditorFrameType = "page" | "template" | "snippet";
+type EditorFrameType = "page" | "template";
 
 export default async function getEditorFrame(req: Request, cms: ControlCms): Promise<Response> {
     const url = new URL(req.url);
@@ -18,9 +18,7 @@ export default async function getEditorFrame(req: Request, cms: ControlCms): Pro
         return redirectToListing(url, type);
     }
 
-    const document = type === "template"
-        ? await cms.repository.getTemplateById(id)
-        : await cms.repository.getSnippetById(id);
+    const document = await cms.repository.getTemplateById(id);
 
     if (!document) {
         return redirectToListing(url, type);
@@ -28,13 +26,13 @@ export default async function getEditorFrame(req: Request, cms: ControlCms): Pro
 
     const basePath = controlBasePath(url.pathname);
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${document.content}</div>`;
-    const expanded = hardenStoredHtml(await expandSnippets(content, cms.repository));
+    const composed = hardenStoredHtml(content);
 
     return new Response(renderFrameDocument({
         basePath,
         title: document.name,
         description: document.description ?? "",
-        composed: expanded,
+        composed,
     }), {
         headers: {
             "Content-Type": "text/html; charset=utf-8",
@@ -58,13 +56,13 @@ async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
     const basePath = controlBasePath(url.pathname);
     const content = `<div ${CONTENT_REGION_ATTR} style="display:contents">${page.content}</div>`;
     const composed = wrapBindingCore(content);
-    const expanded = hardenStoredHtml(await expandSnippets(composed, cms.repository));
+    const hardened = hardenStoredHtml(composed);
 
     return new Response(renderFrameDocument({
         basePath,
         title: page.title,
         description: page.description,
-        composed: expanded,
+        composed: hardened,
     }), {
         headers: {
             "Content-Type": "text/html; charset=utf-8",
@@ -73,7 +71,7 @@ async function renderPageFrame(url: URL, cms: ControlCms): Promise<Response> {
 }
 
 function frameType(value: string | null): EditorFrameType {
-    if (value === "template" || value === "snippet") return value;
+    if (value === "template") return value;
     return "page";
 }
 

@@ -2,10 +2,10 @@ import { extractRefs } from "@bernouy/cms-content";
 
 export { extractRefs };
 
-export type ValidationKind = "bloc" | "snippet";
+export type ValidationKind = "bloc";
 
 export type ValidationIssue = {
-    /** Human-readable origin of the offending content (page path, snippet identifier, …). */
+    /** Human-readable origin of the offending content (page path, template identifier, ...). */
     source: string;
     kind:   ValidationKind;
     name:   string;
@@ -24,16 +24,13 @@ export function validateDocs(
     docs:         ValidatableDoc[],
     remoteBlocs:  Set<string>,
     localBlocs:   Set<string>,
-    remoteSnips:  Set<string>,
-    localSnips:   Set<string>,
 ): ValidationReport {
     const errors:   ValidationIssue[] = [];
     const warnings: ValidationIssue[] = [];
 
     for (const doc of docs) {
-        const { blocs, snippets } = extractRefs(doc.content);
-        for (const tag of blocs)    classify(tag, "bloc",    doc.source, remoteBlocs, localBlocs, errors, warnings);
-        for (const id  of snippets) classify(id,  "snippet", doc.source, remoteSnips, localSnips, errors, warnings);
+        const { blocs } = extractRefs(doc.content);
+        for (const tag of blocs) classify(tag, "bloc", doc.source, remoteBlocs, localBlocs, errors, warnings);
     }
     return { errors, warnings };
 }
@@ -48,8 +45,7 @@ function classify(
 }
 
 const HINT: Record<ValidationKind, string> = {
-    bloc:    "missing on remote — push it via `p9r push --type=blocs` first",
-    snippet: "missing on remote — push it via `p9r push --type=snippets` first",
+    bloc: "missing on remote — push it via `p9r push --type=blocs` first",
 };
 
 /**

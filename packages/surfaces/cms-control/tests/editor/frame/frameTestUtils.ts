@@ -4,7 +4,7 @@ export function cmsWithPage(page: {
     title: string;
     description: string;
     content: string;
-} | null, snippets: Record<string, string> = {}) {
+} | null) {
     const requestedIds: string[] = [];
     const requestedPaths: string[] = [];
     const cms = {
@@ -18,38 +18,26 @@ export function cmsWithPage(page: {
                 return page && page.path === path ? { visible: true, tags: [], ...page } : null;
             },
             getSystem: async () => ({ editor: { layoutCategory: "" } }),
-            getSnippetByIdentifier: async (identifier: string) => snippets[identifier]
-                ? { content: snippets[identifier] }
-                : null,
         },
     };
     return { cms, requestedIds, requestedPaths };
 }
 
-export function cmsWithReusableDocument(kind: "template" | "snippet", document: {
+export function cmsWithReusableDocument(document: {
     id: string;
     identifier: string;
     name: string;
     description: string;
     category: string;
     content: string;
-} | null, snippets: Record<string, string> = {}) {
+} | null) {
     const requestedIds: string[] = [];
     const cms = {
         repository: {
             getTemplateById: async (id: string) => {
-                if (kind !== "template") return null;
                 requestedIds.push(id);
                 return document && document.id === id ? document : null;
             },
-            getSnippetById: async (id: string) => {
-                if (kind !== "snippet") return null;
-                requestedIds.push(id);
-                return document && document.id === id ? document : null;
-            },
-            getSnippetByIdentifier: async (identifier: string) => snippets[identifier]
-                ? { content: snippets[identifier] }
-                : null,
         },
     };
     return { cms, requestedIds };

@@ -1,4 +1,4 @@
-import { clearBindingRuntimeState, CMS_SNIPPET_TAG } from "@bernouy/cms-content/editor";
+import { clearBindingRuntimeState } from "@bernouy/cms-content/editor";
 
 export function isEmptyDocumentContent(contentRoot: HTMLElement | null | undefined): boolean {
     if (!contentRoot) return true;
@@ -27,9 +27,6 @@ export function contentHtml(frameDocument: Document | null): string {
 
     if (!content) return "";
 
-    for (const snippet of Array.from(content.querySelectorAll(CMS_SNIPPET_TAG))) {
-        snippet.replaceChildren();
-    }
     clearBindingRuntimeState(content);
 
     return content.innerHTML;

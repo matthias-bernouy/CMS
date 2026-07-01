@@ -26,7 +26,7 @@ export async function runTemplates(
     const avail  = await gatherAvailability(adminBase, token, config.siteDir);
     const report = validateDocs(
         local.map(t => ({ source: `template:${t.identifier}`, content: t.content })),
-        avail.remoteBlocs, avail.localBlocs, avail.remoteSnips, avail.localSnips,
+        avail.remoteBlocs, avail.localBlocs,
     );
     if (!printValidation(report, force)) return 1;
 

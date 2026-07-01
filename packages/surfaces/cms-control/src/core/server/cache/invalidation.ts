@@ -4,10 +4,9 @@ import { cmsFilesByIdRef } from "@bernouy/cms-files";
 
 /**
  * Invalidate every cached rendered page that references a given bloc tag —
- * either directly in its content or transitively via a snippet that
- * contains the bloc. Called after a bloc is re-imported so the HTML — which
- * now points at a stale `?v=<hash>` for that bloc — is regenerated on
- * the next hit.
+ * directly in its content. Called after a bloc is re-imported so the HTML —
+ * which now points at a stale `?v=<hash>` for that bloc — is regenerated on the
+ * next hit.
  *
  * Pages that don't use the bloc are left untouched so they keep serving
  * from cache, and their existing image-optimization work is preserved.
@@ -34,10 +33,10 @@ export function invalidateUpdatedPage(cms: ControlCms, previousPath: string, nex
 
 /**
  * Invalidate every cached rendered page that references a given file id —
- * directly (a `<img src="/.cms/files/by-id/<id>">`) or transitively via a
- * snippet. Called after a file's bytes are updated in place: the cached HTML
- * carries the file's old `?v=<contentHash>`, so it must regenerate to pick up
- * the new hash. If the file is the site favicon, every page changes → all.
+ * directly (a `<img src="/.cms/files/by-id/<id>">`). Called after a file's
+ * bytes are updated in place: the cached HTML carries the file's old
+ * `?v=<contentHash>`, so it must regenerate to pick up the new hash. If the
+ * file is the site favicon, every page changes → all.
  *
  * Pages that don't reference the file keep serving from cache.
  */

@@ -4,7 +4,7 @@
  * meta tags, stylesheet, deferred scripts) so injectors are guaranteed to
  * land at the top of <head> in the order they were registered.
  *
- * Use cases: analytics tags, A/B testing snippets, observability agents,
+ * Use cases: analytics tags, A/B testing scripts, observability agents,
  * `<link rel="preconnect">` to a third-party CDN — anything that needs to
  * be in <head> but isn't part of Delivery's own render pipeline.
  *

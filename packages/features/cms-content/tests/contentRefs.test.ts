@@ -1,12 +1,9 @@
 import { describe, test, expect } from "bun:test";
 import { assertContentRefsExist } from "@bernouy/cms-content";
 
-function makeSystem(opts: { blocs?: string[]; snippets?: string[] } = {}) {
+function makeSystem(opts: { blocs?: string[] } = {}) {
     const cms: any = {
-            getBlocsList: async () => (opts.blocs ?? []).map(id => ({ id, name: id, group: "", description: "" })),
-            getSnippetsMetadata: async () => (opts.snippets ?? []).map(identifier => ({
-                id: `id-${identifier}`, identifier, name: identifier, category: "", updatedAt: "",
-            })),
+        getBlocsList: async () => (opts.blocs ?? []).map(id => ({ id, name: id, group: "", description: "" })),
     };
     return cms;
 }
@@ -20,9 +17,9 @@ describe("assertContentRefsExist", () => {
         await assertContentRefsExist(makeSystem(), "<p>hello</p><div>x</div>");
     });
 
-    test("passes when every bloc + snippet ref is registered", async () => {
-        const cms = makeSystem({ blocs: ["cs-card"], snippets: ["header"] });
-        await assertContentRefsExist(cms, `<cs-card></cs-card><w13c-snippet identifier="header"></w13c-snippet>`);
+    test("passes when every bloc ref is registered", async () => {
+        const cms = makeSystem({ blocs: ["cs-card"] });
+        await assertContentRefsExist(cms, `<cs-card></cs-card><w13c-reserved-example data-id="header"></w13c-reserved-example>`);
     });
 
     test("rejects unknown bloc tag", async () => {
@@ -31,21 +28,15 @@ describe("assertContentRefsExist", () => {
             .rejects.toThrow(/unknown reference\(s\): bloc "cs-mystery"/);
     });
 
-    test("rejects unknown snippet identifier", async () => {
-        const cms = makeSystem({ snippets: ["header"] });
-        await expect(assertContentRefsExist(cms, `<w13c-snippet identifier="ghost"></w13c-snippet>`))
-            .rejects.toThrow(/unknown reference\(s\): snippet "ghost"/);
-    });
-
     test("aggregates multiple missing refs in one error", async () => {
         const cms = makeSystem();
         await expect(assertContentRefsExist(
             cms,
-            `<cs-a></cs-a><cs-b></cs-b><w13c-snippet identifier="hdr"></w13c-snippet>`,
-        )).rejects.toThrow(/bloc "cs-a".*bloc "cs-b".*snippet "hdr"/);
+            `<cs-a></cs-a><cs-b></cs-b><w13c-reserved-example data-id="hdr"></w13c-reserved-example>`,
+        )).rejects.toThrow(/bloc "cs-a".*bloc "cs-b"/);
     });
 
-    test("ignores reserved system prefixes (w13c-* except snippet, cms-*)", async () => {
+    test("ignores reserved system prefixes (w13c-*, cms-*)", async () => {
         const cms = makeSystem();
         await assertContentRefsExist(cms, `<cms-binding-core></cms-binding-core><w13c-fixed-admin-layout></w13c-fixed-admin-layout>`);
     });
@@ -53,10 +44,9 @@ describe("assertContentRefsExist", () => {
     test("does not query bloc list when content has no bloc refs", async () => {
         let blocCalls = 0;
         const cms: any = {
-            getBlocsList:        async () => { blocCalls++; return []; },
-            getSnippetsMetadata: async () => [{ id: "x", identifier: "header", name: "h", category: "", updatedAt: "" }],
+            getBlocsList: async () => { blocCalls++; return []; },
         };
-        await assertContentRefsExist(cms, `<w13c-snippet identifier="header"></w13c-snippet>`);
+        await assertContentRefsExist(cms, `<w13c-reserved-example data-id="header"></w13c-reserved-example>`);
         expect(blocCalls).toBe(0);
     });
 });

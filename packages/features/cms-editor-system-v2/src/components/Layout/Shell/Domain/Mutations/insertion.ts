@@ -1,6 +1,5 @@
 import {
     applySourceStatusConditions,
-    CMS_SNIPPET_TAG,
     type CmsSourceStatusCondition,
     type EditorCatalogEntry,
 } from "@bernouy/cms-content/editor";
@@ -16,7 +15,6 @@ export type ContentInsertion = {
 export function createInsertion(
     document: Document | null,
     item: BlockPickerItem,
-    snippetItems: Array<Extract<BlockPickerItem, { kind: "snippet" }>>,
     slotName?: string,
     sourceStatusConditions?: CmsSourceStatusCondition[],
 ): ContentInsertion | null {
@@ -24,7 +22,7 @@ export function createInsertion(
     if (item.kind === "media") return null;
 
     if (item.kind === "block") {
-        const fragment = createBlockFragment(document, item.entry, snippetItems);
+        const fragment = createBlockFragment(document, item.entry);
         const slotElements = slotElementChildren(fragment);
         for (const child of slotElements) {
             applySlot(child, slotName);
@@ -39,25 +37,9 @@ export function createInsertion(
         };
     }
 
-    if (item.kind === "snippet") {
-        const snippet = document.createElement(CMS_SNIPPET_TAG);
-        snippet.setAttribute("identifier", item.identifier);
-        snippet.innerHTML = item.content;
-        applySlot(snippet, slotName);
-        applyCondition(snippet, sourceStatusConditions);
-        const fragment = document.createDocumentFragment();
-        fragment.append(snippet);
-        return {
-            fragment,
-            selectionTarget: snippet,
-            slotElements: [snippet],
-        };
-    }
-
     const template = document.createElement("template");
     template.innerHTML = item.content;
     const fragment = template.content.cloneNode(true) as DocumentFragment;
-    expandSnippetReferences(fragment, snippetItems);
     const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
         applySlot(child, slotName);
@@ -86,14 +68,9 @@ export function applyCondition(element: HTMLElement, sourceStatusConditions: Cms
     if (sourceStatusConditions?.length) applySourceStatusConditions(element, sourceStatusConditions);
 }
 
-export function snippetItems(items: BlockPickerItem[]): Array<Extract<BlockPickerItem, { kind: "snippet" }>> {
-    return items.filter((item): item is Extract<BlockPickerItem, { kind: "snippet" }> => item.kind === "snippet");
-}
-
 function createBlockFragment(
     document: Document,
     entry: EditorCatalogEntry,
-    snippets: Array<Extract<BlockPickerItem, { kind: "snippet" }>>,
 ): DocumentFragment {
     if (!entry.defaultContent) {
         const fragment = document.createDocumentFragment();
@@ -103,26 +80,7 @@ function createBlockFragment(
 
     const template = document.createElement("template");
     template.innerHTML = entry.defaultContent;
-    const fragment = template.content.cloneNode(true) as DocumentFragment;
-    expandSnippetReferences(fragment, snippets);
-    return fragment;
-}
-
-function expandSnippetReferences(
-    fragment: ParentNode,
-    snippets: Array<Extract<BlockPickerItem, { kind: "snippet" }>>,
-): void {
-    if (snippets.length === 0) return;
-
-    for (const element of Array.from(fragment.querySelectorAll(CMS_SNIPPET_TAG))) {
-        const identifier = element.getAttribute("identifier");
-        if (!identifier) continue;
-
-        const snippet = snippets.find(item => item.identifier === identifier);
-        if (!snippet) continue;
-
-        element.innerHTML = snippet.content;
-    }
+    return template.content.cloneNode(true) as DocumentFragment;
 }
 
 function slotElementChildren(fragment: DocumentFragment): HTMLElement[] {
