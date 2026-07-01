@@ -108,7 +108,7 @@ new ControlCms(
     identityProviders?:  IdentityProviderRepository,
     pats?:               PatRepository,
     credentials?:        LocalCredentialStore,
-    gateway?:            GatewayRepository,
+    sources?:            SourceRepository,
     analytics?:          AnalyticsStore,
     roles?:              RolesRepository,
     authBackends?:       { local?: LocalAuthentication<CMS_ROLES>; oidc?: OidcAuthentication<CMS_ROLES> },

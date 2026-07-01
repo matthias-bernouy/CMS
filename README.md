@@ -1,9 +1,9 @@
 # CmsCore — Bernouy CMS platform
 
 Bun + TypeScript monorepo (`@bernouy/cms-core`). Packages are organized in
-four layers with a one-way dependency rule:
+five layers with a one-way dependency rule:
 
-> **runtimes → surfaces → features → foundation**
+> **runtimes → surfaces → resources → features → foundation**
 
 - **foundation/** — generic, zero CMS knowledge; a non-CMS product could use
   these as-is (no `cms-` prefix).
@@ -11,6 +11,9 @@ four layers with a one-way dependency rule:
   exports contracts + dependency-free implementations from its root, network
   adapters under `./mongo` / `./s3` subpaths, and its mountable HTTP values
   (handlers, registrars, middlewares, page renderers) under `src/http/`.
+- **resources/** — versioned declarative CMS resources such as official
+  integration packages. They may depend on feature contracts to describe
+  resources, but do not mount routes or choose runtime adapters.
 - **surfaces/** — mountable HTTP modules: define behavior, decide nothing
   (everything injected; no `process.env`, no `listen`).
 - **runtimes/** — executables: read env, pick adapters, mount surfaces, listen.
@@ -31,12 +34,16 @@ CmsCore/
 |   |   |-- cms-secrets/       @bernouy/cms-secrets
 |   |   |-- cms-permissions/   @bernouy/cms-permissions
 |   |   |-- cms-auth/          @bernouy/cms-auth
-|   |   |-- cms-gateway/       @bernouy/cms-gateway
+|   |   |-- cms-sources/       @bernouy/cms-sources
+|   |   |-- cms-integrations/  @bernouy/cms-integrations
 |   |   |-- cms-analytics/     @bernouy/cms-analytics
 |   |   |-- cms-bloc-compile/  @bernouy/cms-bloc-compile
 |   |   `-- cms-editor-system-v2/ @bernouy/cms-editor-system-v2
+|   |-- resources/
+|   |   `-- official-integrations/ @bernouy/cms-official-integrations
 |   |-- surfaces/
 |   |   |-- cms-control/       @bernouy/cms-control
+|   |   |-- cms-repository/    @bernouy/cms-repository
 |   |   `-- cms-delivery/      @bernouy/cms-delivery
 |   `-- runtimes/
 |       |-- cms-cli/           @bernouy/cms-cli
@@ -53,7 +60,7 @@ CmsCore/
 
 ## Dependency rules
 
-- One direction only: `runtimes → surfaces → features → foundation`. Never
+- One direction only: `runtimes → surfaces → resources → features → foundation`. Never
   upward, never surface→surface (compose through features).
 - Lateral feature→feature edges are allowed when one feature consumes
   another's contract (e.g. cms-auth → cms-secrets for `SecretReader`,

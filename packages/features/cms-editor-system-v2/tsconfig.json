@@ -8,5 +8,8 @@
             "cms-editor-system-v2/*": ["./*"]
         }
     },
-    "include": ["src/**/*.ts"]
+    "include": ["src/**/*.ts"],
+    "references": [
+        { "path": "../cms-content" }
+    ]
 }

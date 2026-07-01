@@ -84,7 +84,7 @@ describe("Shell page state bindings", () => {
 
         picker.open([{
             label: "Log in",
-            url: "/.cms/gateway/system-auth/login",
+            url: "/.cms/sources/system-auth/login",
             method: "POST",
             provider: "system-auth",
             providerLabel: "Authentication",

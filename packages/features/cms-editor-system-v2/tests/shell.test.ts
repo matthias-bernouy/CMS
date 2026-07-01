@@ -2549,7 +2549,7 @@ describe("Shell", () => {
             }],
         }], null, "", "settings", [], [], [{
             label:       "Current user",
-            url:         "/cms/.cms/gateway/system-auth/me",
+            url:         "/cms/.cms/sources/system-auth/me",
             method:      "GET",
             provider:    "system-auth",
             providerUrn: "urn:system-auth",
@@ -2557,7 +2557,7 @@ describe("Shell", () => {
             fields:      [],
         }, {
             label:       "Log in",
-            url:         "/cms/.cms/gateway/system-auth/login",
+            url:         "/cms/.cms/sources/system-auth/login",
             method:      "POST",
             provider:    "system-auth",
             providerUrn: "urn:system-auth",
@@ -2569,15 +2569,15 @@ describe("Shell", () => {
 
         const picker = view.shadowRoot!.querySelector("cms-editor-v2-data-source-picker")!;
         const sources = Array.from(picker.shadowRoot!.querySelectorAll<HTMLButtonElement>(".source"));
-        expect(sources.map(source => source.textContent)).toEqual(["POSTLog inNo description./cms/.cms/gateway/system-auth/login"]);
+        expect(sources.map(source => source.textContent)).toEqual(["POSTLog inNo description./cms/.cms/sources/system-auth/login"]);
 
         sources[0]!.click();
         picker.shadowRoot!.querySelector<HTMLButtonElement>(".insert")!.click();
 
         expect(events).toEqual([{
-            value:      "/cms/.cms/gateway/system-auth/login",
+            value:      "/cms/.cms/sources/system-auth/login",
             attributes: {
-                target: "/cms/.cms/gateway/system-auth/login",
+                target: "/cms/.cms/sources/system-auth/login",
                 method: "POST",
             },
         }]);

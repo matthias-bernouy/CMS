@@ -6,8 +6,8 @@ Production runtime composition root.
 
 - Read environment variables.
 - Connect MongoDB.
-- Instantiate crypto, repositories, stores, auth, rate limiting, gateway,
-  analytics, cache, files, Control, and Delivery.
+- Instantiate crypto, repositories, stores, auth, rate limiting, sources,
+  integrations, analytics, cache, files, Control, and Delivery.
 - Start one Control runner and one Delivery runner.
 
 ## Rules

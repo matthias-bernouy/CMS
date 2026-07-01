@@ -6,7 +6,17 @@
     },
     "include": ["src/**/*.ts"],
     "references": [
+        { "path": "../../foundation/http-runner" },
+        { "path": "../../foundation/envelope-crypto" },
+        { "path": "../../foundation/rate-limiter" },
+        { "path": "../../features/cms-auth" },
+        { "path": "../../features/cms-secrets" },
+        { "path": "../../features/cms-content" },
+        { "path": "../../features/cms-files" },
         { "path": "../../features/cms-sources" },
+        { "path": "../../features/cms-integrations" },
+        { "path": "../../features/cms-analytics" },
+        { "path": "../../features/cms-permissions" },
         { "path": "../../surfaces/cms-control" },
         { "path": "../../surfaces/cms-delivery" }
     ]

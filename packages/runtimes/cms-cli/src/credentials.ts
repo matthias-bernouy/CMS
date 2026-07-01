@@ -3,9 +3,7 @@
 // `Authorization: Bearer <pat>`. It is provider-agnostic: it authenticates as
 // the issuing user no matter how they log in to the CMS.
 //
-// There is no `p9r login` anymore — the old Keycloak Device Authorization
-// Grant was retired when Keycloak stopped being the CMS auth backend (it is now
-// just one optional per-tenant OIDC provider). Supply the PAT one of two ways:
+// Supply the PAT one of two ways:
 //   - `P9R_TOKEN=pat_...` in the environment / .env, or
 //   - an entry in `~/.config/p9r/credentials.json` (see `CredentialEntry`),
 //     keyed by CMS base URL so one machine can hold tokens for several

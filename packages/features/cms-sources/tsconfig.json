@@ -8,8 +8,5 @@
             "cms-sources/*": ["./*"]
         }
     },
-    "include": ["src/**/*.ts"],
-    "references": [
-        { "path": "../../foundation/http-runner" }
-    ]
+    "include": ["src/**/*.ts"]
 }

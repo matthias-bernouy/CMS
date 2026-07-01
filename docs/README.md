@@ -19,9 +19,9 @@ implementation notes live in each package's `AGENTS.md`.
 - [static-folder.md](./static-folder.md) documents the static HTML routing and
   template system used by `@bernouy/cms-control`.
 
-## Authoring And Gateway
+## Authoring And Sources
 
 - [cms-bloc-development.md](./cms-bloc-development.md) documents the contracts
   for authored blocs and editor-facing bloc code.
-- [auth-system-gateway.md](./auth-system-gateway.md) documents the readonly
-  system auth gateway provider exposed through `/.cms/gateway/system-auth/*`.
+- [auth-system-source.md](./auth-system-source.md) documents the readonly
+  system auth source exposed through `/.cms/sources/system-auth/*`.

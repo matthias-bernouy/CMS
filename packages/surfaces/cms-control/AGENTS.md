@@ -1,7 +1,7 @@
 # @bernouy/cms-control
 
 Admin surface. It mounts on a provided `Runner` and exposes authenticated admin
-HTML, the admin REST API, editor endpoints, gateway/admin media routes, and the
+HTML, the admin REST API, editor endpoints, sources/admin media routes, and the
 browser bundle in `src/static/assets/control-components.js`.
 
 ## Export Boundaries

@@ -5,11 +5,10 @@ Runtime package for the `p9r` command.
 ## Responsibilities
 
 - `p9r dev`: run the local editor against `site/`.
-- `p9r push` / `p9r pull`: sync system, gateways, files, blocs, templates, and
+- `p9r push` / `p9r pull`: sync system, sources, files, blocs, templates, and
   pages.
 - `p9r files reindex`: reconcile the local media tree and registry.
 - `p9r secrets`: work with remote secret keys without exposing values.
-- `p9r list-blocs`: inspect remote bloc catalogue.
 
 ## Rules
 

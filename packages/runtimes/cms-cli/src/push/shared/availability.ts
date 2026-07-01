@@ -13,7 +13,7 @@ export async function fetchRemoteBlocs(adminBase: URL, token: string): Promise<S
     return new Set(data.map(b => b.id));
 }
 
-/** Bloc tags pending a future `p9r import`. Empty when site/blocs/ doesn't exist. */
+/** Locally available bloc tags. Empty when site/blocs/ doesn't exist. */
 export async function scanLocalBlocs(siteDir: string): Promise<Set<string>> {
     const root = join(siteDir, "blocs");
     if (!existsSync(root)) return new Set();

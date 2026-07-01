@@ -1,7 +1,7 @@
 {
     "name": "@bernouy/cms-cli",
     "version": "0.1.0",
-    "description": "p9r CLI — run a local editor against a `site/` folder (`p9r dev`), and push/pull/list content between the workstation and a remote CMS (`p9r push`, `p9r pull`, `p9r list-blocs`, `p9r secrets`).",
+    "description": "p9r CLI — run a local editor against a `site/` folder (`p9r dev`), and push/pull content between the workstation and a remote CMS (`p9r push`, `p9r pull`, `p9r secrets`).",
     "license": "UNLICENSED",
     "type": "module",
     "bin": {

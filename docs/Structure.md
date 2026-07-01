@@ -43,8 +43,8 @@ Resource packages:
 
 Feature packages:
 
-- `@bernouy/cms-content`: pages, blocs, templates, snippets, settings,
-  validation, snippet expansion, editor contracts, and repository contracts.
+- `@bernouy/cms-content`: pages, blocs, templates, settings, validation,
+  editor contracts, and repository contracts.
 - `@bernouy/cms-files`: metadata and blob stores, media lifecycle, local/S3
   storage, image variants, and file-serving handlers.
 - `@bernouy/cms-secrets`: secret storage contracts, `${VAR}` resolution, and
@@ -53,8 +53,10 @@ Feature packages:
   and role repository contracts.
 - `@bernouy/cms-auth`: local auth, OIDC auth, PATs, signed cookies, public auth
   flows, user/provider repositories, and auth route registrars.
-- `@bernouy/cms-gateway`: data-provider contracts, endpoint execution, system
-  providers, and gateway proxy helpers.
+- `@bernouy/cms-sources`: data-source contracts, endpoint execution, system
+  sources, and source proxy helpers.
+- `@bernouy/cms-integrations`: declarative integration definitions, install
+  artifacts, instance state, and repository contracts.
 - `@bernouy/cms-analytics`: privacy-first server-side analytics events,
   counters, stores, and dashboard handlers.
 - `@bernouy/cms-bloc-compile`: bloc validation, view/editor bundling, and the
@@ -65,17 +67,20 @@ Feature packages:
 Surface packages:
 
 - `@bernouy/cms-control`: admin UI, REST API, authenticated static pages, media
-  admin, settings, users, gateway admin, and editor endpoints.
+  admin, settings, users, sources admin, integrations admin, and editor
+  endpoints.
 - `@bernouy/cms-delivery`: public rendering, page lookup, bloc bundles,
-  component runtime, gateway proxy, media serving, sitemap, robots, and
+  component runtime, source proxy, media serving, sitemap, robots, and
   analytics collection.
+- `@bernouy/cms-repository`: HTTP surface for browsing repository-backed CMS
+  resources such as official integration catalogues.
 
 Runtime packages:
 
 - `@bernouy/cms-cli`: `p9r` CLI for scaffolding, local development, push/pull,
   files reindexing, secrets, and bloc listing.
 - `@bernouy/cms-server`: production composition root. It reads environment,
-  wires Mongo/local filesystem/crypto/auth/gateway/analytics, and starts
+  wires Mongo/local filesystem/crypto/auth/sources/integrations/analytics, and starts
   Control and Delivery runners.
 
 ## Feature Anatomy

@@ -5,7 +5,7 @@ import type { Cache, CacheEntry } from "http-runner/interfaces/Cache";
  * surface (compressed editor bundle, admin HTML, etc.).
  *
  * In `MODE=DEV`, reads always miss and writes are no-ops so any edit to
- * theme/snippets/blocs is immediately visible without manual invalidation.
+ * theme/blocs/pages is immediately visible without manual invalidation.
  */
 export class InMemoryCache implements Cache {
 

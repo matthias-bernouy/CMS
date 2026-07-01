@@ -44,7 +44,7 @@ Adapter subpaths isolate optional infrastructure:
 
 - `./mongo` imports MongoDB-backed repositories.
 - `./s3` imports S3-backed file blobs.
-- `./browser` imports browser-safe gateway types and helpers.
+- `./browser` imports browser-safe source types and helpers.
 - `./components` imports browser components for auth.
 
 Only composition roots should import production adapters. In practice this

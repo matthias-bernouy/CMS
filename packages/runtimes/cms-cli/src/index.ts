@@ -2,7 +2,6 @@
 import CLI_push from "./CLI_push";
 import CLI_pull from "./CLI_pull";
 import CLI_dev from "./CLI_dev";
-import CLI_listBlocs from "./CLI_listBlocs";
 import CLI_secrets from "./CLI_secrets";
 import CLI_filesReindex from "./CLI_filesReindex";
 
@@ -27,8 +26,6 @@ Usage:
   p9r pull [flags]                 Inverse of push: materialize remote into
                                    site/. Same --type set; --yes / --force
                                    to skip the overwrite confirmation.
-  p9r list-blocs [--json]          List blocs registered on the remote CMS
-                                   (id, name, group, description).
   p9r files reindex [--force]      Scan the media tree, heal files you moved or
                                    renamed in your IDE (by content hash), mint
                                    ids for new files. Commit
@@ -52,11 +49,6 @@ Env (loaded from .env or the environment):
 
 try {
     switch (command) {
-        case "login":
-        case "logout":
-            console.error("✖ `p9r login`/`logout` were removed. Create a Personal Access Token in the CMS admin Profile page, then set P9R_TOKEN=pat_... (or add it to ~/.config/p9r/credentials.json).");
-            process.exit(1);
-            break;
         case "dev":
             await CLI_dev(rest);
             break;
@@ -65,13 +57,6 @@ try {
             break;
         case "pull":
             await CLI_pull(rest);
-            break;
-        case "import":
-            console.error("✖ `p9r import` has been removed — use `p9r push --type=blocs` (or just `p9r push` for blocs + pages).");
-            process.exit(1);
-            break;
-        case "list-blocs":
-            await CLI_listBlocs(rest);
             break;
         case "secrets":
             await CLI_secrets(rest);
