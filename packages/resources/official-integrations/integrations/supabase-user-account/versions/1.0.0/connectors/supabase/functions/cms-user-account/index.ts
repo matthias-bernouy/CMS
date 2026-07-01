@@ -215,12 +215,9 @@ function requireCmsRequest(
 }
 
 function acceptedCmsApiKeys(): string[] {
-    const keys = unique([
-        Deno.env.get("CMS_USER_ACCOUNT_API_KEY") ?? "",
-        ...supabaseSecretKeys(),
-    ]);
+    const keys = unique([Deno.env.get("CMS_USER_ACCOUNT_API_KEY") ?? ""]);
 
-    if (!keys.length) throw new HttpError(500, "missing CMS_USER_ACCOUNT_API_KEY or Supabase secret key");
+    if (!keys.length) throw new HttpError(500, "missing CMS_USER_ACCOUNT_API_KEY");
     return keys;
 }
 

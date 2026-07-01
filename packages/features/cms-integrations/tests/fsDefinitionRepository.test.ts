@@ -11,6 +11,7 @@ function writeJson(path: string, value: unknown): void {
 describe("FsIntegrationDefinitionRepository", () => {
     test("lists indexes and resolves stable, latest and exact versions", async () => {
         const root = mkdtempSync(join(tmpdir(), "cms-integrations-"));
+        mkdirSync(join(root, "README-assets"), { recursive: true });
         const integrationRoot = join(root, "demo");
         mkdirSync(join(integrationRoot, "versions", "1.0.0"), { recursive: true });
         mkdirSync(join(integrationRoot, "versions", "1.0.1"), { recursive: true });
@@ -59,5 +60,46 @@ describe("FsIntegrationDefinitionRepository", () => {
         expect((await stableRepo.get("demo", "1.0.1"))?.description).toBe("Patch release");
         expect(await stableRepo.get("missing")).toBeNull();
         expect(await stableRepo.get("demo", "2.0.0")).toBeNull();
+    });
+
+    test("falls back to the first version when no channel is declared", async () => {
+        const root = mkdtempSync(join(tmpdir(), "cms-integrations-"));
+        const integrationRoot = join(root, "minimal");
+        mkdirSync(join(integrationRoot, "versions", "1.0.0"), { recursive: true });
+        writeJson(join(integrationRoot, "integration.json"), {
+            kind: "minimal",
+            label: "Minimal",
+            versions: [
+                { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
+            ],
+        });
+        writeJson(join(integrationRoot, "versions", "1.0.0", "definition.json"), {
+            kind: "minimal",
+            label: "Minimal",
+            version: "1.0.0",
+            inputs: [],
+        });
+
+        const repo = new FsIntegrationDefinitionRepository(root);
+
+        expect((await repo.get("minimal"))?.version).toBe("1.0.0");
+    });
+
+    test("does not treat internal names starting with dots as path escapes", async () => {
+        const root = mkdtempSync(join(tmpdir(), "cms-integrations-"));
+        const integrationRoot = join(root, "..foo");
+        mkdirSync(join(integrationRoot, "versions", "1.0.0"), { recursive: true });
+        writeJson(join(integrationRoot, "integration.json"), {
+            kind: "..foo",
+            label: "Dot Foo",
+            stable: "1.0.0",
+            versions: [
+                { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
+            ],
+        });
+
+        const repo = new FsIntegrationDefinitionRepository(root);
+
+        expect((await repo.getIndex("..foo"))?.kind).toBe("..foo");
     });
 });

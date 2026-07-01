@@ -9,13 +9,13 @@ describe("HttpIntegrationDefinitionRepository", () => {
             fetch: async (input) => {
                 const url = input instanceof URL ? input : new URL(String(input));
                 calls.push(`${url.pathname}${url.search}`);
-                if (url.pathname === "/api/integrations") {
+                if (url.pathname === "/base/api/integrations") {
                     return json([{ kind: "demo", label: "Demo", versions: ["1.0.0"], stable: "1.0.0" }]);
                 }
-                if (url.pathname === "/api/integrations/definition") {
+                if (url.pathname === "/base/api/integrations/definition") {
                     return json({ kind: "demo", label: "Demo", version: "1.0.0", inputs: [] });
                 }
-                if (url.pathname === "/api/integrations/index") {
+                if (url.pathname === "/base/api/integrations/index") {
                     return json({
                         kind: "demo",
                         label: "Demo",
@@ -23,7 +23,7 @@ describe("HttpIntegrationDefinitionRepository", () => {
                         versions: [{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }],
                     });
                 }
-                if (url.pathname === "/api/integrations/versions") {
+                if (url.pathname === "/base/api/integrations/versions") {
                     return json([{ version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" }]);
                 }
                 return json({ error: "not found" }, 404);
@@ -42,10 +42,10 @@ describe("HttpIntegrationDefinitionRepository", () => {
             { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
         ]);
         expect(calls).toEqual([
-            "/api/integrations",
-            "/api/integrations/definition?kind=demo&version=1.0.0",
-            "/api/integrations/index?kind=demo",
-            "/api/integrations/versions?kind=demo",
+            "/base/api/integrations",
+            "/base/api/integrations/definition?kind=demo&version=1.0.0",
+            "/base/api/integrations/index?kind=demo",
+            "/base/api/integrations/versions?kind=demo",
         ]);
     });
 

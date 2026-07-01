@@ -9,7 +9,13 @@ export async function listIntegrationDefinitions(
     repository: IntegrationDefinitionRepository,
 ): Promise<IntegrationDefinition[]> {
     const summaries = await repository.list();
-    const definitions = await Promise.all(summaries.map(summary => repository.get(summary.kind)));
+    const definitions = await Promise.all(summaries.map(async (summary) => {
+        try {
+            return await repository.get(summary.kind);
+        } catch {
+            return null;
+        }
+    }));
     return integrationRegistry(compact(definitions));
 }
 

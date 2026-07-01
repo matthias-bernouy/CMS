@@ -46,7 +46,7 @@ export class HttpIntegrationDefinitionRepository implements IntegrationDefinitio
     }
 
     private async getJson(path: string): Promise<unknown> {
-        const response = await this.fetchImpl(new URL(path, normalizedBaseUrl(this.baseUrl)), {
+        const response = await this.fetchImpl(repositoryUrl(this.baseUrl, path), {
             headers: requestHeaders(this.headers),
         });
         if (!response.ok) throw new Error(`Integration repository request failed: ${response.status} ${response.statusText}`);
@@ -54,7 +54,7 @@ export class HttpIntegrationDefinitionRepository implements IntegrationDefinitio
     }
 
     private async getJsonOrNull(path: string): Promise<unknown | null> {
-        const response = await this.fetchImpl(new URL(path, normalizedBaseUrl(this.baseUrl)), {
+        const response = await this.fetchImpl(repositoryUrl(this.baseUrl, path), {
             headers: requestHeaders(this.headers),
         });
         if (response.status === 404) return null;
@@ -65,6 +65,10 @@ export class HttpIntegrationDefinitionRepository implements IntegrationDefinitio
 
 function normalizedBaseUrl(value: string): string {
     return value.endsWith("/") ? value : `${value}/`;
+}
+
+function repositoryUrl(baseUrl: string, path: string): URL {
+    return new URL(path.replace(/^\/+/, ""), normalizedBaseUrl(baseUrl));
 }
 
 function requestHeaders(headers: HeadersInit | undefined): Headers {

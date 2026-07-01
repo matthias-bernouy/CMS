@@ -85,11 +85,10 @@ type StripePaymentIntent = JsonRecord & {
     latest_charge?: string | JsonRecord | null;
 };
 
-type StripeTransfer = JsonRecord & {
+type StripeTransferReversal = JsonRecord & {
     id: string;
     amount: number;
     currency: string;
-    destination?: string;
 };
 
 class HttpError extends Error {
@@ -121,7 +120,6 @@ Deno.serve(async (request) => {
         if (route === "/connect-onboarding") return await withMethod(request, "POST", () => connectOnboarding(request));
         if (route === "/create-payment") return await withMethod(request, "POST", () => createPayment(request));
         if (route === "/order-status") return await withMethod(request, "GET", () => orderStatus(request));
-        if (route === "/release-transfer") return await withMethod(request, "POST", () => releaseTransfer(request));
         if (route === "/stripe-webhook") return await withMethod(request, "POST", () => stripeWebhook(request));
 
         return json({ error: "not found" }, 404);
@@ -274,62 +272,6 @@ async function orderStatus(request: Request): Promise<Response> {
     });
 }
 
-async function releaseTransfer(request: Request): Promise<Response> {
-    requireCmsRequest(request);
-    const body = await readJsonObject(request);
-    const orderId = integerField(body, "orderId");
-
-    const order = await getOrderById(orderId);
-    if (!order) throw new HttpError(404, "order not found");
-    if (order.status === "transferred") {
-        const existing = await getTransferByOrder(order.id);
-        return json({
-            orderId: order.id,
-            status: order.status,
-            transferId: existing?.stripe_transfer_id ?? "",
-        });
-    }
-    if (order.status !== "paid" && order.status !== "transfer_pending") {
-        throw new HttpError(409, "order is not ready for transfer");
-    }
-    if (!order.transfer_group) throw new HttpError(409, "order has no transfer group");
-
-    const existing = await getTransferByOrder(order.id);
-    if (existing?.stripe_transfer_id) {
-        await updateOrder(order.id, { status: "transferred" });
-        return json({ orderId: order.id, status: "transferred", transferId: existing.stripe_transfer_id });
-    }
-
-    const seller = await getProfile(order.seller_cms_user_id);
-    if (!seller || !sellerCanReceiveTransfers(seller) || !seller.stripe_account_id) {
-        throw new HttpError(409, "seller is not eligible to receive transfers");
-    }
-
-    await updateOrder(order.id, { status: "transfer_pending" });
-    const idempotencyKey = `cms-release-transfer:${order.id}`;
-    const transfer = await createTransfer({
-        amount: order.seller_amount,
-        currency: order.currency,
-        destination: seller.stripe_account_id,
-        transferGroup: order.transfer_group,
-        orderId: order.id,
-        sellerCmsUserId: order.seller_cms_user_id,
-    });
-
-    await insertTransfer({
-        order_id: order.id,
-        seller_cms_user_id: order.seller_cms_user_id,
-        stripe_transfer_id: transfer.id,
-        idempotency_key: idempotencyKey,
-        currency: order.currency,
-        amount: order.seller_amount,
-        status: "submitted",
-    });
-    await updateOrder(order.id, { status: "transferred" });
-
-    return json({ orderId: order.id, status: "transferred", transferId: transfer.id });
-}
-
 async function stripeWebhook(request: Request): Promise<Response> {
     const event = await verifyStripeWebhook(request);
     const eventId = stringValue(event.id) ?? "";
@@ -351,7 +293,19 @@ async function stripeWebhook(request: Request): Promise<Response> {
         status: "received",
     });
 
-    if (!inserted) return json({ received: true, duplicate: true });
+    if (!inserted) {
+        const existing = await getStripeEvent(eventId);
+        if (!existing || (existing.status !== "failed" && existing.status !== "received")) {
+            return json({ received: true, duplicate: true, status: existing?.status ?? "duplicate" });
+        }
+        await updateStripeEvent(eventId, {
+            status: "received",
+            error_message: null,
+            payload: event,
+            stripe_account_id: stripeAccountId,
+            stripe_object_id: stripeObjectId,
+        });
+    }
 
     try {
         const status = await processStripeEvent(eventType, dataObject, eventId, unixSecondsToIso(event.created));
@@ -401,21 +355,49 @@ async function processStripeEvent(
         if (!paymentIntentId) return "ignored";
         const amountRefunded = numberValue(dataObject.amount_refunded);
         const amount = numberValue(dataObject.amount);
-        await updateOrderByPaymentIntent(paymentIntentId, {
+        const order = await updateOrderByPaymentIntent(paymentIntentId, {
             status: amountRefunded && amount && amountRefunded < amount ? "partially_refunded" : "refunded",
             refunded_at: new Date().toISOString(),
         });
+        if (order && amountRefunded) await reverseTransferForOrder(order, amountRefunded);
         return "processed";
     }
 
     if (eventType === "charge.dispute.created") {
         const paymentIntentId = stringValue(dataObject.payment_intent);
         if (!paymentIntentId) return "ignored";
-        await updateOrderByPaymentIntent(paymentIntentId, { status: "disputed" });
+        const order = await updateOrderByPaymentIntent(paymentIntentId, { status: "disputed" });
+        if (order) await reverseTransferForOrder(order, order.amount_total);
         return "processed";
     }
 
     return "ignored";
+}
+
+async function reverseTransferForOrder(order: MarketplaceOrder, refundAmountTotal: number): Promise<void> {
+    const transfer = await getTransferByOrder(order.id);
+    if (!transfer?.stripe_transfer_id) return;
+
+    const targetSellerReversal = sellerReversalAmount(order, refundAmountTotal);
+    const remaining = Math.max(targetSellerReversal - transfer.reversed_amount, 0);
+    if (remaining <= 0) return;
+
+    const reversal = await createTransferReversal(transfer.stripe_transfer_id, {
+        amount: remaining,
+        orderId: order.id,
+    });
+    const reversedAmount = transfer.reversed_amount + remaining;
+    await updateTransfer(transfer.id, {
+        stripe_reversal_id: reversal.id,
+        reversed_amount: reversedAmount,
+        status: reversedAmount >= transfer.amount ? "reversed" : "partially_reversed",
+    });
+}
+
+function sellerReversalAmount(order: MarketplaceOrder, refundAmountTotal: number): number {
+    const boundedRefund = Math.min(Math.max(refundAmountTotal, 0), order.amount_total);
+    const sellerShare = Math.floor((boundedRefund * order.seller_amount) / order.amount_total);
+    return Math.min(sellerShare, order.seller_amount);
 }
 
 async function handleAccountUpdated(account: StripeAccount, eventId: string, eventAt: string | undefined): Promise<void> {
@@ -647,8 +629,12 @@ async function getTransferByOrder(orderId: number): Promise<MarketplaceTransfer 
     return selectOne<MarketplaceTransfer>("transfers", { order_id: orderId });
 }
 
-async function insertTransfer(values: JsonRecord): Promise<MarketplaceTransfer> {
-    return insertOne<MarketplaceTransfer>("transfers", values);
+async function updateTransfer(id: number, patch: JsonRecord): Promise<MarketplaceTransfer | null> {
+    return updateOne<MarketplaceTransfer>("transfers", { id }, patch);
+}
+
+async function getStripeEvent(eventId: string): Promise<{ status: string } | null> {
+    return selectOne<{ status: string }>("stripe_events", { event_id: eventId });
 }
 
 async function insertStripeEvent(values: JsonRecord): Promise<boolean> {
@@ -810,24 +796,14 @@ async function retrievePaymentIntent(paymentIntentId: string): Promise<StripePay
     return stripeRequest<StripePaymentIntent>("GET", `/payment_intents/${encodeURIComponent(paymentIntentId)}`);
 }
 
-async function createTransfer(input: {
-    amount: number;
-    currency: string;
-    destination: string;
-    transferGroup: string;
-    orderId: number;
-    sellerCmsUserId: string;
-}): Promise<StripeTransfer> {
-    return stripeRequest<StripeTransfer>("POST", "/transfers", {
+async function createTransferReversal(
+    transferId: string,
+    input: { amount: number; orderId: number },
+): Promise<StripeTransferReversal> {
+    return stripeRequest<StripeTransferReversal>("POST", `/transfers/${encodeURIComponent(transferId)}/reversals`, {
         amount: input.amount,
-        currency: input.currency,
-        destination: input.destination,
-        transfer_group: input.transferGroup,
-        metadata: {
-            order_id: String(input.orderId),
-            seller_cms_user_id: input.sellerCmsUserId,
-        },
-    }, `cms-release-transfer:${input.orderId}`);
+        metadata: { order_id: String(input.orderId) },
+    }, `cms-reverse-transfer:${input.orderId}:${input.amount}`);
 }
 
 async function stripeRequest<T>(

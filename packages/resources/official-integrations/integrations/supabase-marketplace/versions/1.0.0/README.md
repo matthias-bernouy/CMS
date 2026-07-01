@@ -188,8 +188,8 @@ integration smoke tests.
 Do not expose settlement operations through the public CMS source by default.
 Implement them as internal/admin-only Supabase functions or background jobs:
 
-- `POST /release-transfer`: creates a Stripe Transfer for an eligible
-  paid order and writes `marketplace.transfers`.
+- `marketplace-release-transfer`: creates Stripe Transfers from trusted backend
+  automation or admin tooling only, after buyer/seller/escrow checks.
 - `marketplace-refund-order`: creates/records refunds and transfer reversals.
 - `POST /stripe-webhook`: receives Stripe webhooks, verifies the Stripe signature
   against the raw request body, records `marketplace.stripe_events`, and updates
@@ -200,9 +200,9 @@ For Connect webhooks, listen at minimum to `account.updated`. Add
 flows should also handle `payment_intent.succeeded`, refund/dispute events, and
 transfer or payout failure events relevant to the rollout.
 
-This blueprint includes `/release-transfer`, but `definition.json`
-does not expose it as a CMS source endpoint. Call it only from trusted backend
-automation or admin tooling with the CMS API key.
+This blueprint does not expose transfer release through the public CMS source or
+the bundled Edge Function route. Implement transfer release as trusted backend
+automation or admin tooling with explicit buyer/seller/escrow checks.
 
 ## Webhook Requirement
 

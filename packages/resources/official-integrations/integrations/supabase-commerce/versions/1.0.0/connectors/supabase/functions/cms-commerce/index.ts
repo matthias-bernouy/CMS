@@ -192,7 +192,7 @@ async function categories(request: Request): Promise<Response> {
     const offset = offsetParam(url);
     const filters: string[] = [`select=${encodeURIComponent("id,parent_id,slug,full_slug,title,description,position,status,created_at,updated_at")}`];
     appendNullableFilter(filters, "parent_id", url.searchParams.get("parentId"));
-    appendEqualFilter(filters, "status", url.searchParams.get("status") ?? "active");
+    appendEqualFilter(filters, "status", queryText(url, "status") ?? "active");
     filters.push(`order=${encodeURIComponent("position.asc,title.asc")}`);
     filters.push(`limit=${limit}`, `offset=${offset}`);
 
@@ -210,7 +210,7 @@ async function category(request: Request): Promise<Response> {
     const id = url.searchParams.get("id");
     const fullSlug = url.searchParams.get("fullSlug");
     if (!id && !fullSlug) throw new HttpError(400, "id or fullSlug is required");
-    const filters = [`select=${encodeURIComponent("id,parent_id,slug,full_slug,title,description,position,status,created_at,updated_at")}`, "limit=1"];
+    const filters = [`select=${encodeURIComponent("id,parent_id,slug,full_slug,title,description,position,status,created_at,updated_at")}`, "status=eq.active", "limit=1"];
     if (id) appendEqualFilter(filters, "id", id);
     else appendEqualFilter(filters, "full_slug", fullSlug);
     const rows = await restJson<JsonRecord[]>(`categories?${filters.join("&")}`, { method: "GET" });
@@ -233,8 +233,8 @@ async function products(request: Request): Promise<Response> {
         p_max_price: numberOrNull(url.searchParams.get("maxPrice")),
         p_stock_status: nullableString(url.searchParams.get("stockStatus")),
         p_condition: nullableString(url.searchParams.get("condition")),
-        p_status: url.searchParams.has("status") ? nullableString(url.searchParams.get("status")) : "active",
-        p_visibility: url.searchParams.has("visibility") ? nullableString(url.searchParams.get("visibility")) : "public",
+        p_status: queryText(url, "status") ?? "active",
+        p_visibility: queryText(url, "visibility") ?? "public",
         p_sort: sort,
         p_limit: limitParam(url, 20),
         p_offset: offsetParam(url),
@@ -251,7 +251,7 @@ async function product(request: Request): Promise<Response> {
     if (!id && !slug) throw new HttpError(400, "id or slug is required");
 
     const productRows = await restJson<JsonRecord[]>(
-        `products?select=${encodeURIComponent("id,slug,title,description,brand_id,status,visibility,metadata,created_at,updated_at")}&${id ? `id=eq.${encodeURIComponent(id)}` : `slug=eq.${encodeURIComponent(slug!)}`}&limit=1`,
+        `products?select=${encodeURIComponent("id,slug,title,description,brand_id,status,visibility,metadata,created_at,updated_at")}&${id ? `id=eq.${encodeURIComponent(id)}` : `slug=eq.${encodeURIComponent(slug!)}`}&status=eq.active&visibility=eq.public&limit=1`,
         { method: "GET" },
     );
     const row = productRows[0];
@@ -292,7 +292,7 @@ async function productOffers(request: Request): Promise<Response> {
     appendEqualFilter(filters, "vendor_id", url.searchParams.get("vendorId"));
     appendEqualFilter(filters, "stock_status", url.searchParams.get("stockStatus"));
     appendEqualFilter(filters, "condition", url.searchParams.get("condition"));
-    appendEqualFilter(filters, "status", url.searchParams.get("status") ?? "active");
+    appendEqualFilter(filters, "status", queryText(url, "status") ?? "active");
     filters.push(`order=${encodeURIComponent("price_amount_minor.asc")}`);
     filters.push(`limit=${limit}`, `offset=${offset}`);
 
@@ -317,8 +317,8 @@ async function categoryFacets(request: Request): Promise<Response> {
         p_max_price: numberOrNull(url.searchParams.get("maxPrice")),
         p_stock_status: nullableString(url.searchParams.get("stockStatus")),
         p_condition: nullableString(url.searchParams.get("condition")),
-        p_status: url.searchParams.has("status") ? nullableString(url.searchParams.get("status")) : "active",
-        p_visibility: url.searchParams.has("visibility") ? nullableString(url.searchParams.get("visibility")) : "public",
+        p_status: queryText(url, "status") ?? "active",
+        p_visibility: queryText(url, "visibility") ?? "public",
     });
     return json(camelizeValue(result));
 }
@@ -581,6 +581,11 @@ function appendNullableFilter(filters: string[], column: string, value: string |
     if (value === undefined || value === null || value === "") return;
     if (value === "null") filters.push(`${column}=is.null`);
     else appendEqualFilter(filters, column, value);
+}
+
+function queryText(url: URL, name: string): string | undefined {
+    const value = url.searchParams.get(name);
+    return value && value.trim() ? value.trim() : undefined;
 }
 
 function limitParam(url: URL, fallback: number): number {

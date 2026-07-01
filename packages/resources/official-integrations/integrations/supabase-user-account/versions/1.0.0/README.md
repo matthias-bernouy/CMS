@@ -40,16 +40,15 @@ computes this value and injects it into the source request.
    `connectors/supabase/functions/cms-user-account/index.ts` as its `index.ts`.
 4. Copy the function config from `connectors/supabase/supabase.config.toml`;
    the function validates its own CMS API key, so `verify_jwt` must be `false`.
-5. Configure the CMS source with one of these server-side secrets:
-   - `CMS_USER_ACCOUNT_API_KEY`: optional shared bearer token accepted from the
-     CMS source when you want a dedicated integration key.
-   - A Supabase secret key: accepted as a fallback when no dedicated
-     `CMS_USER_ACCOUNT_API_KEY` is configured.
+5. Configure the CMS source with one dedicated server-side secret:
+   - `CMS_USER_ACCOUNT_API_KEY`: shared bearer token accepted from the CMS
+     source. Use a random value distinct from Supabase service keys.
 
 Supabase provides `SUPABASE_URL` and secret/service-role keys to Edge Functions
 through environment variables. The function prefers `SUPABASE_SECRET_KEYS` and
-falls back to legacy `SUPABASE_SERVICE_ROLE_KEY`. Never expose secret or
-service-role keys in browser code.
+falls back to legacy `SUPABASE_SERVICE_ROLE_KEY` for Supabase REST access only.
+Never expose secret/service-role keys in browser code, and never use them as
+the CMS integration API key.
 
 ## Table
 
@@ -75,7 +74,7 @@ are lowercased and trimmed.
 Account routes require:
 
 ```text
-authorization: Bearer <CMS_USER_ACCOUNT_API_KEY or Supabase secret key>
+authorization: Bearer <CMS_USER_ACCOUNT_API_KEY>
 x-user-id: <computed CMS user id>
 ```
 
@@ -126,9 +125,8 @@ Import the standalone definition from `definition.json` with kind
 - `id`: usually `user-account`.
 - `functionsBaseUrl`: `https://PROJECT_REF.functions.supabase.co/functions/v1`
   without a trailing slash.
-- `apiKey`: the same value as `CMS_USER_ACCOUNT_API_KEY` in Supabase secrets,
-  or the Supabase secret key if you do not configure a dedicated integration
-  key.
+- `apiKey`: the same dedicated value as `CMS_USER_ACCOUNT_API_KEY` in Supabase
+  secrets.
 
 After import, CMS pages or blocs can call:
 

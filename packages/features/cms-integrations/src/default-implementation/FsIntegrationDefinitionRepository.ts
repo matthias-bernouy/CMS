@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { parseIntegrationDefinition } from "../core/parsing/definition";
 import type { IntegrationDefinition } from "../interfaces/Integration";
 import type {
@@ -69,8 +69,8 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         const entries = await readdir(this.root, { withFileTypes: true });
         const indexes = await Promise.all(entries
             .filter(entry => entry.isDirectory())
-            .map(entry => this.readIndex(entry.name)));
-        return indexes;
+            .map(entry => this.readIndexFromList(entry.name)));
+        return indexes.filter((index): index is IntegrationDefinitionIndex => index !== null);
     }
 
     private async readIndexOrNull(kind: string): Promise<IntegrationDefinitionIndex | null> {
@@ -91,6 +91,15 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         }
         return index;
     }
+
+    private async readIndexFromList(kind: string): Promise<IntegrationDefinitionIndex | null> {
+        try {
+            return await this.readIndex(kind);
+        } catch (e) {
+            if (isNodeError(e) && e.code === "ENOENT") return null;
+            throw e;
+        }
+    }
 }
 
 function resolveVersion(
@@ -98,8 +107,9 @@ function resolveVersion(
     requestedVersion: string | undefined,
     defaultChannel: "stable" | "latest",
 ): IntegrationDefinitionVersion | null {
-    const target = requestedVersion ?? index[defaultChannel] ?? index.stable ?? index.latest;
-    if (!target) return null;
+    if (requestedVersion) return index.versions.find(version => version.version === requestedVersion) ?? null;
+    const target = index[defaultChannel] ?? index.stable ?? index.latest;
+    if (!target) return index.versions[0] ?? null;
     return index.versions.find(version => version.version === target) ?? null;
 }
 
@@ -139,7 +149,7 @@ function safeJoin(root: string, ...parts: string[]): string {
     const base = resolve(root);
     const target = resolve(join(base, ...parts));
     const rel = relative(base, target);
-    if (rel.startsWith("..") || isAbsolute(rel)) {
+    if (rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
         throw new Error(`Path escapes integration repository root: ${parts.join("/")}`);
     }
     return target;
