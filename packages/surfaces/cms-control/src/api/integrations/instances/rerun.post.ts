@@ -1,4 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
+import { definitionsForRerun } from "cms-control/core/integrations/definitions";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import {
@@ -10,6 +11,7 @@ export default async function postIntegrationInstanceRerun(req: Request, cms: Co
     const id = new URL(req.url).searchParams.get("id");
     if (!id) throw new MissingParam("id");
     const body = await readOptionalJsonBody(req);
+    const definitions = await definitionsForRerun(cms.integrationCatalog, cms.integrationInstances, id, body);
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
         secrets: cms.secrets,
@@ -20,7 +22,7 @@ export default async function postIntegrationInstanceRerun(req: Request, cms: Co
         instances: cms.integrationInstances,
         instanceId: id,
         body,
-        siteIntegrations: cms.integrations,
+        siteIntegrations: definitions,
     });
     return Response.json(result);
 }

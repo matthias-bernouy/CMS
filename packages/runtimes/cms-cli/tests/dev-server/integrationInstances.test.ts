@@ -12,33 +12,33 @@ describe("LocalFsIntegrationInstanceRepository", () => {
         const run = runRecord(1);
 
         await first.create({
-            id: "stripe:main",
-            kind: "stripe",
-            label: "Stripe",
+            id: "test:main",
+            kind: "test",
+            label: "Test",
             definitionVersion: "1",
             answersSnapshot: { id: "main" },
-            secretRefs: { apiKey: "STRIPE_MAIN_API_KEY" },
+            secretRefs: { apiKey: "TEST_MAIN_API_KEY" },
             secretInputs: ["apiKey"],
             artifacts: [{ type: "source", id: "urn:main", action: "created" }],
             runs: [run],
         });
 
         const second = new LocalFsIntegrationInstanceRepository(siteDir);
-        const loaded = await second.get("stripe:main");
+        const loaded = await second.get("test:main");
 
-        expect(loaded?.id).toBe("stripe:main");
+        expect(loaded?.id).toBe("test:main");
         expect(loaded?.createdAt).toBeInstanceOf(Date);
         expect(loaded?.runs[0]?.startedAt).toBeInstanceOf(Date);
-        expect((await second.list()).map(instance => instance.id)).toEqual(["stripe:main"]);
+        expect((await second.list()).map(instance => instance.id)).toEqual(["test:main"]);
     });
 
     test("keeps only the last twenty runs on replace", async () => {
         const siteDir = await mkdtemp(join(tmpdir(), "p9r-integrations-"));
         const repo = new LocalFsIntegrationInstanceRepository(siteDir);
         const created = await repo.create({
-            id: "stripe:main",
-            kind: "stripe",
-            label: "Stripe",
+            id: "test:main",
+            kind: "test",
+            label: "Test",
             definitionVersion: "1",
             answersSnapshot: {},
             secretRefs: {},

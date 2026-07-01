@@ -4,10 +4,19 @@
     "description": "Local repository of official CmsCore integration resources.",
     "license": "UNLICENSED",
     "type": "module",
+    "main": "./index.ts",
+    "types": "./dist/index.d.ts",
     "files": [
+        "index.ts",
+        "dist/",
         "integrations"
     ],
     "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "bun": "./index.ts",
+            "default": "./index.ts"
+        },
         "./integrations/*": "./integrations/*"
     }
 }

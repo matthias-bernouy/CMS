@@ -41,7 +41,10 @@ import { serveApi } from "./core/registerEndpoints/serveApiFolder";
 import { join } from "node:path";
 import type { CspExtras } from "@bernouy/http-runner";
 import { renderForbiddenPage, renderLoginPage } from "cms-control/core/auth/authPages";
-import type { IntegrationDefinition, IntegrationInstanceRepository } from "@bernouy/cms-integrations";
+import type {
+    IntegrationDefinitionRepository,
+    IntegrationInstanceRepository,
+} from "@bernouy/cms-integrations";
 
 type Configuration = {
     /**
@@ -61,9 +64,10 @@ type Configuration = {
 }
 
 export type ControlCmsOptions = Configuration & {
-    /** Optional site-provided declarative integrations. They may define
-     *  artifact templates, but cannot execute official backend handlers. */
-    integrations?: IntegrationDefinition[];
+    /** Optional catalogue of declarative integrations available to this
+     *  Control surface. Runtimes can provide a local FS repository today and
+     *  an HTTP-backed official repository later. */
+    integrationCatalog?: IntegrationDefinitionRepository;
     /** Integration instance/run store. Runtimes must pass a durable repository
      *  before enabling the integration API. */
     integrationInstances?: IntegrationInstanceRepository;
@@ -72,6 +76,13 @@ export type ControlCmsOptions = Configuration & {
 type ControlAuthBackends = {
     local?: LocalAuthentication<CMS_ROLES>;
     oidc?:  OidcAuthentication<CMS_ROLES>;
+};
+
+const EMPTY_INTEGRATION_CATALOG: IntegrationDefinitionRepository = {
+    list:         async () => [],
+    getIndex:     async () => null,
+    listVersions: async () => [],
+    get:          async () => null,
 };
 
 /**
@@ -110,7 +121,7 @@ export class ControlCms {
     private _sources:             SourceRepository | null;
     private _analytics:           AnalyticsStore | null;
     private _roles:               RolesRepository;
-    private _integrations:        IntegrationDefinition[];
+    private _integrationCatalog: IntegrationDefinitionRepository;
     private _integrationInstances: IntegrationInstanceRepository | null;
 
     constructor(
@@ -146,7 +157,7 @@ export class ControlCms {
         this._sources = sources ?? null;
         this._analytics = analytics ?? null;
         this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
-        this._integrations = configuration.integrations ?? [];
+        this._integrationCatalog = configuration.integrationCatalog ?? EMPTY_INTEGRATION_CATALOG;
         this._integrationInstances = configuration.integrationInstances ?? null;
         this.ready = Promise.resolve();
 
@@ -338,10 +349,9 @@ export class ControlCms {
         return this.configuration.publicAuth;
     }
 
-    /** Site-provided declarative integrations. Official integrations are
-     *  registered by Control itself and merged at the API boundary. */
-    get integrations(): IntegrationDefinition[] {
-        return this._integrations;
+    /** Declarative integration catalogue. */
+    get integrationCatalog(): IntegrationDefinitionRepository {
+        return this._integrationCatalog;
     }
 
     get integrationInstances(): IntegrationInstanceRepository {

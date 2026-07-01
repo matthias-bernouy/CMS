@@ -1,4 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
+import { definitionsForImport } from "cms-control/core/integrations/definitions";
 import { readJsonBody } from "cms-control/core/http/readJsonBody";
 import {
     type IntegrationImportDeps,
@@ -8,7 +9,8 @@ import {
 
 export default async function postIntegrationImport(req: Request, cms: ControlCms) {
     const body = await readJsonBody(req);
-    const request = parseIntegrationImportRequest(body, cms.integrations);
+    const definitions = await definitionsForImport(cms.integrationCatalog, body);
+    const request = parseIntegrationImportRequest(body, definitions);
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
         secrets: cms.secrets,

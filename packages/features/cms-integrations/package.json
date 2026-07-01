@@ -8,6 +8,7 @@
     "exports": {
         ".": "./src/exports/index.ts",
         "./fs": "./src/exports/fs.ts",
+        "./http": "./src/exports/http.ts",
         "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {

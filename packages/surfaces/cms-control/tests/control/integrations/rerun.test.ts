@@ -8,17 +8,17 @@ describe("POST /api/integrations/instances/rerun", () => {
         const { cms, sources } = makeCms();
 
         await postIntegrationImport(postImport({
-            kind: "stripe",
-            answers: { id: "stripe-main", apiKey: "sk_test" },
+            kind: "test-secret-source",
+            answers: { id: "secret-source-main", apiKey: "sk_test" },
         }), cms);
 
-        const res = await postIntegrationInstanceRerun(postRerun("stripe:stripe-main"), cms);
+        const res = await postIntegrationInstanceRerun(postRerun("test-secret-source:secret-source-main"), cms);
         const body = await res.json();
 
         expect(res.status).toBe(200);
-        expect(body.artifacts).toEqual([{ type: "source", id: "urn:stripe-main", action: "updated" }]);
+        expect(body.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "updated" }]);
         expect(body.instance.runCount).toBe(2);
-        expect((await sources.getSource("urn:stripe-main"))?.endpoints).toHaveLength(1);
+        expect((await sources.getSource("urn:secret-source-main"))?.endpoints).toHaveLength(1);
         expect(JSON.stringify(body)).not.toContain("sk_test");
     });
 
@@ -26,11 +26,11 @@ describe("POST /api/integrations/instances/rerun", () => {
         const { cms } = makeCms();
 
         await postIntegrationImport(postImport({
-            kind: "stripe",
-            answers: { id: "stripe-main", apiKey: "sk_old" },
+            kind: "test-secret-source",
+            answers: { id: "secret-source-main", apiKey: "sk_old" },
         }), cms);
 
-        const res = await postIntegrationInstanceRerun(postRerun("stripe:stripe-main", {
+        const res = await postIntegrationInstanceRerun(postRerun("test-secret-source:secret-source-main", {
             answers: { apiKey: "sk_new" },
         }), cms);
         const body = await res.json();

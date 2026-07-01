@@ -15,6 +15,10 @@ import { scanDevBlocs } from "./dev-server/scan";
 import { buildAllDevBlocs, type BuiltBloc } from "./dev-server/build";
 import { createDevSources } from "./dev-server/integrations";
 import { LocalFsIntegrationInstanceRepository } from "./dev-server/integrationInstances";
+import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
+import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
 import { ValidatingCmsRepository } from "@bernouy/cms-content";
@@ -105,6 +109,7 @@ export default async function CLI_dev(args: string[]) {
     const filesMetadata = new ValidatingCmsFilesMetadata(files);
     const { auth, users, identityProviders, pats, credentials, devAdmin } = await createDevAuth();
     const sources = await createDevSources(config.siteDir);
+    const integrationCatalog = createIntegrationCatalog();
     const integrationInstances = new LocalFsIntegrationInstanceRepository(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
     const resolveSecret = createSecretResolver(secrets);
@@ -146,6 +151,7 @@ export default async function CLI_dev(args: string[]) {
     const cms = new ControlCms(runner, repo, auth, {
         deliveryUrl: `http://${publicHost}:${deliveryPort}`,
         publicAuth: { ...publicAuth, allowSignup: false },
+        integrationCatalog,
         integrationInstances,
     }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, sources, undefined, roles);
     await cms.ready;
@@ -203,6 +209,12 @@ export default async function CLI_dev(args: string[]) {
     };
     process.on("SIGINT",  () => shutdown("SIGINT"));
     process.on("SIGTERM", () => shutdown("SIGTERM"));
+}
+
+function createIntegrationCatalog(): IntegrationDefinitionRepository {
+    const repositoryUrl = process.env.P9R_INTEGRATION_REPOSITORY_URL?.trim();
+    if (repositoryUrl) return new HttpIntegrationDefinitionRepository(repositoryUrl);
+    return new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
 }
 
 function parsePortFlag(raw: string): number {

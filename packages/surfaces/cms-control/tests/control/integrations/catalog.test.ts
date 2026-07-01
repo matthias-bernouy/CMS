@@ -11,22 +11,22 @@ describe("GET /api/integrations/list", () => {
         const body = await res.json();
 
         expect(res.status).toBe(200);
-        expect(body.map((item: IntegrationDefinition) => item.kind).sort()).toEqual(["stripe"]);
+        expect(body.map((item: IntegrationDefinition) => item.kind).sort()).toEqual(["test-secret-source"]);
     });
 
     test("uses provided site definitions directly", async () => {
-        const localStripe: IntegrationDefinition = {
-            kind: "stripe",
-            label: "Local Stripe",
+        const localDefinition: IntegrationDefinition = {
+            kind: "test-secret-source",
+            label: "Local Test secret source",
             inputs: [],
         };
-        const { cms } = makeCms([localStripe]);
+        const { cms } = makeCms([localDefinition]);
 
         const body = await (await getIntegrations(
             new Request("http://localhost/cms/api/integrations/list"),
             cms,
         )).json();
 
-        expect(body.filter((item: IntegrationDefinition) => item.kind === "stripe")).toEqual([localStripe]);
+        expect(body.filter((item: IntegrationDefinition) => item.kind === "test-secret-source")).toEqual([localDefinition]);
     });
 });

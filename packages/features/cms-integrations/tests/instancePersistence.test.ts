@@ -10,7 +10,7 @@ import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import {
     CreateFailingIntegrationInstanceRepository,
     sourceArtifact,
-    STRIPE_DEFINITION,
+    TEST_SECRET_SOURCE_DEFINITION,
     SuccessReplaceFailingIntegrationInstanceRepository,
 } from "./helpers";
 
@@ -73,22 +73,22 @@ describe("@bernouy/cms-integrations instance persistence", () => {
             mode: "create",
             deps: { sources, secrets },
             instances,
-            siteIntegrations: [STRIPE_DEFINITION],
-            dto: { kind: "stripe", answers: { id: "stripe-main", apiKey: "sk_old" }, options: {} },
+            siteIntegrations: [TEST_SECRET_SOURCE_DEFINITION],
+            dto: { kind: "test-secret-source", answers: { id: "secret-source-main", apiKey: "sk_old" }, options: {} },
         });
-        const before = await instances.get("stripe:stripe-main");
+        const before = await instances.get("test-secret-source:secret-source-main");
         const key = before!.secretRefs.apiKey;
 
         await expect(runIntegrationInstance({
             mode: "rerun",
             deps: { sources, secrets },
             instances,
-            instanceId: "stripe:stripe-main",
+            instanceId: "test-secret-source:secret-source-main",
             body: { answers: { apiKey: "sk_new" } },
         })).rejects.toThrow(/instance replace failed/);
 
         expect(await secrets.get(key)).toBe("sk_old");
-        const after = await instances.get("stripe:stripe-main");
+        const after = await instances.get("test-secret-source:secret-source-main");
         expect(after?.status).toBe("failed");
     });
 });

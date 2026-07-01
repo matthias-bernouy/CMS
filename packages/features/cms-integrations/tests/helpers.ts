@@ -103,29 +103,29 @@ export const BAN_DEFINITION: IntegrationDefinition = {
     artifacts: [{ type: "source", source: BAN_SOURCE_DTO }],
 };
 
-export const STRIPE_DEFINITION: IntegrationDefinition = {
-    kind: "stripe",
-    label: "Stripe",
+export const TEST_SECRET_SOURCE_DEFINITION: IntegrationDefinition = {
+    kind: "test-secret-source",
+    label: "Test secret source",
     version: "1.0.0",
-    category: "Payments",
+    category: "Test",
     inputs: [
-        { name: "id", label: "Source id", type: "text", required: true, defaultValue: "stripe" },
-        { name: "apiKey", label: "Secret key", type: "password", required: true, secret: true },
+        { name: "id", label: "Source id", type: "text", required: true, defaultValue: "test-source" },
+        { name: "apiKey", label: "API key", type: "password", required: true, secret: true },
     ],
     secrets: [
-        { input: "apiKey", key: "STRIPE_{{env answers.id}}_API_KEY" },
+        { input: "apiKey", key: "TEST_SOURCE_{{env answers.id}}_API_KEY" },
     ],
     artifacts: [
         {
             type: "source",
             source: {
                 id: "{{answers.id}}",
-                meta: { name: "Stripe", icon: "credit-card" },
+                meta: { name: "Test secret source", icon: "key" },
                 endpoints: [
                     {
-                        endpointId: "listCustomers",
+                        endpointId: "listItems",
                         method: "GET",
-                        targetUrl: "https://api.stripe.com/v1/customers",
+                        targetUrl: "https://api.example.com/items",
                         params: [],
                         headers: [
                             {

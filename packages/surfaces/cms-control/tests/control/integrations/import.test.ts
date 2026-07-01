@@ -3,25 +3,25 @@ import postIntegrationImport from "cms-control/api/integrations/import.post";
 import { makeCms, manualSourceDefinition, postImport } from "./helpers";
 
 describe("POST /api/integrations/import", () => {
-    test("creates a tracked Stripe instance without exposing the secret value", async () => {
+    test("creates a tracked Test secret source instance without exposing the secret value", async () => {
         const { cms, secrets, sources, integrationInstances } = makeCms();
 
         const res = await postIntegrationImport(postImport({
-            kind: "stripe",
-            answers: { id: "stripe-main", apiKey: "sk_test" },
+            kind: "test-secret-source",
+            answers: { id: "secret-source-main", apiKey: "sk_test" },
         }), cms);
         const body = await res.json();
         const secretKey = body.instance.secretRefs.apiKey;
 
         expect(res.status).toBe(200);
-        expect(body.artifacts).toEqual([{ type: "source", id: "urn:stripe-main", action: "created" }]);
+        expect(body.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "created" }]);
         expect(body.secrets).toEqual([{ input: "apiKey", key: secretKey, action: "created" }]);
-        expect(secretKey).toMatch(/^STRIPE_STRIPE_MAIN_[A-F0-9]{8}_API_KEY$/);
+        expect(secretKey).toMatch(/^TEST_SOURCE_SECRET_SOURCE_MAIN_[A-F0-9]{8}_API_KEY$/);
         expect(JSON.stringify(body)).not.toContain("sk_test");
         expect(await secrets.get(secretKey)).toBe("sk_test");
-        expect(await integrationInstances.get("stripe:stripe-main")).not.toBeNull();
+        expect(await integrationInstances.get("test-secret-source:secret-source-main")).not.toBeNull();
 
-        const source = await sources.getSource("urn:stripe-main");
+        const source = await sources.getSource("urn:secret-source-main");
         expect(source?.endpoints[0]?.headers).toEqual([
             { name: "authorization", source: { from: "secret", ref: `\${${secretKey}}`, prefix: "Bearer " } },
         ]);
@@ -61,11 +61,11 @@ describe("POST /api/integrations/import", () => {
         });
 
         await expect(postIntegrationImport(postImport({
-            kind: "stripe",
-            answers: { id: "stripe-main", apiKey: "sk_test" },
+            kind: "test-secret-source",
+            answers: { id: "secret-source-main", apiKey: "sk_test" },
         }), cms)).rejects.toThrow(/integration instances repository not configured/);
 
-        expect(await sources.getSource("urn:stripe-main")).toBeNull();
+        expect(await sources.getSource("urn:secret-source-main")).toBeNull();
         expect(await secrets.listKeys()).toEqual([]);
     });
 });

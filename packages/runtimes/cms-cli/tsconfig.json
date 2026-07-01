@@ -21,6 +21,7 @@
         { "path": "../../features/cms-integrations" },
         { "path": "../../features/cms-secrets" },
         { "path": "../../features/cms-sources" },
+        { "path": "../../resources/official-integrations" },
         { "path": "../../surfaces/cms-control" },
         { "path": "../../surfaces/cms-delivery" }
     ]

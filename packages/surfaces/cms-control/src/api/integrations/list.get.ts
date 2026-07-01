@@ -1,6 +1,6 @@
 import type { ControlCms } from "cms-control/ControlCms";
-import { integrationRegistry } from "@bernouy/cms-integrations";
+import { listIntegrationDefinitions } from "cms-control/core/integrations/definitions";
 
 export default async function getIntegrations(_req: Request, cms: ControlCms) {
-    return Response.json(integrationRegistry(cms.integrations));
+    return Response.json(await listIntegrationDefinitions(cms.integrationCatalog));
 }

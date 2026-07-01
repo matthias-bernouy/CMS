@@ -1,31 +1,34 @@
 import { InMemoryIntegrationInstanceRepository } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import type { IntegrationDefinition } from "@bernouy/cms-integrations";
+import type {
+    IntegrationDefinition,
+    IntegrationDefinitionRepository,
+} from "@bernouy/cms-integrations";
 
-export const STRIPE_DEFINITION: IntegrationDefinition = {
-    kind: "stripe",
-    label: "Stripe",
+export const TEST_SECRET_SOURCE_DEFINITION: IntegrationDefinition = {
+    kind: "test-secret-source",
+    label: "Test secret source",
     version: "1.0.0",
-    category: "Payments",
+    category: "Test",
     inputs: [
-        { name: "id", label: "Source id", type: "text", required: true, defaultValue: "stripe" },
-        { name: "apiKey", label: "Secret key", type: "password", required: true, secret: true },
+        { name: "id", label: "Source id", type: "text", required: true, defaultValue: "test-source" },
+        { name: "apiKey", label: "API key", type: "password", required: true, secret: true },
     ],
     secrets: [
-        { input: "apiKey", key: "STRIPE_{{env answers.id}}_API_KEY" },
+        { input: "apiKey", key: "TEST_SOURCE_{{env answers.id}}_API_KEY" },
     ],
     artifacts: [
         {
             type: "source",
             source: {
                 id: "{{answers.id}}",
-                meta: { name: "Stripe", icon: "credit-card" },
+                meta: { name: "Test secret source", icon: "key" },
                 endpoints: [
                     {
-                        endpointId: "listCustomers",
+                        endpointId: "listItems",
                         method: "GET",
-                        targetUrl: "https://api.stripe.com/v1/customers",
+                        targetUrl: "https://api.example.com/items",
                         params: [],
                         headers: [
                             {
@@ -40,17 +43,37 @@ export const STRIPE_DEFINITION: IntegrationDefinition = {
     ],
 };
 
-export function makeCms(siteIntegrations: IntegrationDefinition[] = [STRIPE_DEFINITION]) {
+export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET_SOURCE_DEFINITION]) {
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
     const integrationInstances = new InMemoryIntegrationInstanceRepository();
+    const integrationCatalog = integrationDefinitionRepository(siteIntegrations);
     const cms = {
         sources,
         secrets,
-        integrations: siteIntegrations,
+        integrationCatalog,
         integrationInstances,
     };
-    return { cms: cms as any, sources, secrets, integrationInstances };
+    return { cms: cms as any, sources, secrets, integrationInstances, integrationCatalog };
+}
+
+export function integrationDefinitionRepository(
+    definitions: IntegrationDefinition[],
+): IntegrationDefinitionRepository {
+    return {
+        list: async () => definitions.map(definition => ({
+            kind: definition.kind,
+            label: definition.label,
+            ...(definition.version ? { stable: definition.version, latest: definition.version } : {}),
+            versions: definition.version ? [definition.version] : [],
+        })),
+        getIndex: async () => null,
+        listVersions: async () => [],
+        get: async (kind: string, version?: string) =>
+            definitions.find(definition =>
+                definition.kind === kind && (!version || definition.version === version)
+            ) ?? null,
+    };
 }
 
 export function postImport(body: Record<string, unknown>) {

@@ -19,7 +19,7 @@ export type LocalIntegrationImport = {
 };
 
 export type LocalIntegration = {
-    /** Tracked integration instance id (e.g. "stripe:main"). */
+    /** Tracked integration instance id (e.g. "test:main"). */
     id:      string;
     /** File stem (e.g. "shop"). */
     slug:    string;

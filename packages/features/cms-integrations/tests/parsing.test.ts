@@ -110,10 +110,10 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
     });
 
     test("uses provided definitions for registry and import parsing", () => {
-        const definition: IntegrationDefinition = { kind: "stripe", label: "Custom Stripe", inputs: [] };
+        const definition: IntegrationDefinition = { kind: "test-secret-source", label: "Custom Test secret source", inputs: [] };
 
-        expect(integrationRegistry([definition]).filter(item => item.kind === "stripe")).toEqual([definition]);
-        expect(parseIntegrationImportRequest({ kind: "stripe", answers: {} }, [definition]).dto.answers).toEqual({});
+        expect(integrationRegistry([definition]).filter(item => item.kind === "test-secret-source")).toEqual([definition]);
+        expect(parseIntegrationImportRequest({ kind: "test-secret-source", answers: {} }, [definition]).dto.answers).toEqual({});
     });
 
     test("sanitizes site-provided ui metadata in the registry", () => {

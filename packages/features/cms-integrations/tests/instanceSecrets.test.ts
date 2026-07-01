@@ -6,7 +6,7 @@ import {
 } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
-import { STRIPE_DEFINITION } from "./helpers";
+import { TEST_SECRET_SOURCE_DEFINITION } from "./helpers";
 
 describe("@bernouy/cms-integrations instance secrets", () => {
     test("tracks a named import without storing secret values", async () => {
@@ -18,15 +18,15 @@ describe("@bernouy/cms-integrations instance secrets", () => {
             mode: "create",
             deps: { sources, secrets },
             instances,
-            siteIntegrations: [STRIPE_DEFINITION],
-            dto: { kind: "stripe", answers: { id: "stripe-main", apiKey: "sk_test" }, options: {} },
+            siteIntegrations: [TEST_SECRET_SOURCE_DEFINITION],
+            dto: { kind: "test-secret-source", answers: { id: "secret-source-main", apiKey: "sk_test" }, options: {} },
         });
 
-        expect(result.instance.id).toBe("stripe:stripe-main");
+        expect(result.instance.id).toBe("test-secret-source:secret-source-main");
         expect(result.instance.runCount).toBe(1);
-        expect(result.instance.artifacts).toEqual([{ type: "source", id: "urn:stripe-main", action: "created" }]);
+        expect(result.instance.artifacts).toEqual([{ type: "source", id: "urn:secret-source-main", action: "created" }]);
         const secretKey = result.instance.secretRefs.apiKey;
-        expect(secretKey).toMatch(/^STRIPE_STRIPE_MAIN_[A-F0-9]{8}_API_KEY$/);
+        expect(secretKey).toMatch(/^TEST_SOURCE_SECRET_SOURCE_MAIN_[A-F0-9]{8}_API_KEY$/);
         expect(JSON.stringify(result.instance)).not.toContain("sk_test");
         expect(await secrets.get(secretKey)).toBe("sk_test");
     });

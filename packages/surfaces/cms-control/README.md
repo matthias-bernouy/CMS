@@ -99,7 +99,7 @@ new ControlCms(
     runner:              Runner,
     repository:          CmsRepository,
     auth:                Authentication<CMS_ROLES>,
-    options:             { publicAuth?: PublicAuthRoutesConfig<CMS_ROLES>; integrations?: IntegrationDefinition[] } = {},
+    options:             { publicAuth?: PublicAuthRoutesConfig<CMS_ROLES>; integrationCatalog?: IntegrationDefinitionRepository } = {},
     cache?:              Cache,
     secrets?:            SecretStore,
     filesMetadata?:      CmsFilesMetadataRepository,

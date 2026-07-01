@@ -4,9 +4,10 @@ Local repository of official CmsCore integration resources.
 
 ## Boundaries
 
-- This package stores versioned integration resource files only: manifests,
-  source contracts, typed declarative definitions, connector blueprints, SQL,
-  Edge Functions, and docs.
+- This package stores versioned integration resource files: manifests, source
+  contracts, typed declarative definitions, connector blueprints, SQL, Edge
+  Functions, and docs. The root `index.ts` may expose resource path constants
+  only.
 - This package may depend on feature contracts to express resources, but it must
   not import surfaces or runtimes.
 - Do not add runtime installation logic, HTTP handlers, database adapters, or

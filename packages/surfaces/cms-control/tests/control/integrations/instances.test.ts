@@ -8,18 +8,18 @@ describe("GET /api/integrations/instances", () => {
         const { cms, sources } = makeCms();
 
         await postIntegrationImport(postImport({
-            kind: "stripe",
-            answers: { id: "stripe-main", apiKey: "sk_test" },
+            kind: "test-secret-source",
+            answers: { id: "secret-source-main", apiKey: "sk_test" },
         }), cms);
 
         let res = await getIntegrationInstances(getInstances(), cms);
         let body = await res.json();
         expect(body).toHaveLength(1);
-        expect(body[0].id).toBe("stripe:stripe-main");
+        expect(body[0].id).toBe("test-secret-source:secret-source-main");
         expect(body[0].missingArtifactCount).toBe(0);
 
-        await sources.deleteSource("urn:stripe-main");
-        res = await getIntegrationInstances(getInstances("stripe:stripe-main"), cms);
+        await sources.deleteSource("urn:secret-source-main");
+        res = await getIntegrationInstances(getInstances("test-secret-source:secret-source-main"), cms);
         body = await res.json();
         expect(body.missingArtifactCount).toBe(1);
         expect(body.artifacts[0].exists).toBe(false);
@@ -30,8 +30,8 @@ describe("GET /api/integrations/instances", () => {
         const { cms } = makeCms();
 
         await postIntegrationImport(postImport({
-            kind: "stripe",
-            answers: { id: "stripe-main", apiKey: "sk_test" },
+            kind: "test-secret-source",
+            answers: { id: "secret-source-main", apiKey: "sk_test" },
         }), cms);
         cms.sources.getAllSources = async () => {
             throw new Error("source store unavailable");
@@ -64,7 +64,7 @@ describe("GET /api/integrations/instances", () => {
     test("returns 404 for missing instance details", async () => {
         const { cms } = makeCms();
 
-        const res = await getIntegrationInstances(getInstances("stripe:missing"), cms);
+        const res = await getIntegrationInstances(getInstances("test-secret-source:missing"), cms);
 
         expect(res.status).toBe(404);
     });
