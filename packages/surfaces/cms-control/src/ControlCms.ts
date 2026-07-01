@@ -27,6 +27,8 @@ import type { RolesRepository } from "@bernouy/cms-permissions";
 import { ADMIN_ROLE, can, grantsFor, InMemoryRolesRepository, ValidatingRolesRepository } from "@bernouy/cms-permissions";
 import type { SourceRepository } from "@bernouy/cms-sources";
 import { CMS_SOURCES_ROUTE, SOURCE_PROXY_METHODS, sourcesPrefix, handleSourceRequest } from "@bernouy/cms-sources";
+import type { DashboardRepository } from "@bernouy/cms-dashboards";
+import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import {
     ANALYTICS_ROUTES,
     analyticsBreakdownHandler,
@@ -71,6 +73,10 @@ export type ControlCmsOptions = Configuration & {
     /** Integration instance/run store. Runtimes must pass a durable repository
      *  before enabling the integration API. */
     integrationInstances?: IntegrationInstanceRepository;
+    /** Dashboard store. Runtimes can inject a durable implementation; the
+     *  default memory store keeps the admin surface bootable before persistence
+     *  is wired. */
+    dashboards?: DashboardRepository;
 }
 
 type ControlAuthBackends = {
@@ -123,6 +129,7 @@ export class ControlCms {
     private _roles:               RolesRepository;
     private _integrationCatalog: IntegrationDefinitionRepository;
     private _integrationInstances: IntegrationInstanceRepository | null;
+    private _dashboards: DashboardRepository;
 
     constructor(
         runner: Runner,
@@ -159,6 +166,7 @@ export class ControlCms {
         this._roles = roles ?? new ValidatingRolesRepository(new InMemoryRolesRepository());
         this._integrationCatalog = configuration.integrationCatalog ?? EMPTY_INTEGRATION_CATALOG;
         this._integrationInstances = configuration.integrationInstances ?? null;
+        this._dashboards = configuration.dashboards ?? new InMemoryDashboardRepository();
         this.ready = Promise.resolve();
 
         const authGuard = createAuthGuard<CMS_ROLES>({
@@ -357,6 +365,10 @@ export class ControlCms {
     get integrationInstances(): IntegrationInstanceRepository {
         if (!this._integrationInstances) throw new Error("integration instances repository not configured");
         return this._integrationInstances;
+    }
+
+    get dashboards(): DashboardRepository {
+        return this._dashboards;
     }
 
     /** Source store. Backs source reads and integration-created writes;

@@ -33,6 +33,12 @@ export class InMemoryDashboardRepository implements DashboardRepository {
         return found ? structuredClone(found) : null;
     }
 
+    async getDashboardsForSource(sourceId: string): Promise<Dashboard[]> {
+        return Array.from(this.dashboards.values())
+            .filter(dashboard => dashboard.source === sourceId)
+            .map(dashboard => structuredClone(dashboard));
+    }
+
     async getAllDashboards(): Promise<Dashboard[]> {
         return Array.from(this.dashboards.values(), dashboard => structuredClone(dashboard));
     }

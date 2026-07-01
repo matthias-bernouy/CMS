@@ -1,4 +1,4 @@
-import type { SourceDetail, SourceRow } from "./types";
+import type { DashboardListResponse } from "./types";
 
 export function basePath(): string {
     const raw = document.querySelector('meta[name="basePath"]')?.getAttribute("content") ?? "";
@@ -9,16 +9,16 @@ export function route(path: string): string {
     return `${basePath()}${path}`;
 }
 
-export function currentUrn(): string {
-    return new URL(window.location.href).searchParams.get("urn") ?? "";
+export function currentSource(): string {
+    return new URL(window.location.href).searchParams.get("source") ?? "";
 }
 
-export async function fetchSources(): Promise<SourceRow[]> {
-    return getJson<SourceRow[]>(route("/api/sources/list"));
+export function currentDashboard(): string {
+    return new URL(window.location.href).searchParams.get("dashboard") ?? "";
 }
 
-export async function fetchSource(urn: string): Promise<SourceDetail> {
-    return getJson<SourceDetail>(route(`/api/sources?urn=${encodeURIComponent(urn)}`));
+export async function fetchDashboards(): Promise<DashboardListResponse> {
+    return getJson<DashboardListResponse>(route("/api/dashboards"));
 }
 
 async function getJson<T>(url: string): Promise<T> {

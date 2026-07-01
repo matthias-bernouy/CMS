@@ -112,4 +112,13 @@ describe("validateDashboard", () => {
             "collections.orders.list.params.unexpected does not match a declared endpoint param",
         );
     });
+
+    test("rejects unsafe field paths", () => {
+        const dashboard = validDashboard();
+        dashboard.views = [{ widget: "w-stat", endpoint: "orderStats", path: "count }}<script>" }];
+
+        expect(validateDashboard(dashboard, { source })).toContain(
+            "views.0.path must be a dotted field path",
+        );
+    });
 });

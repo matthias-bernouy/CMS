@@ -20,6 +20,8 @@ describe("InMemoryDashboardRepository", () => {
         expect(await repo.getDashboard("commerce")).toEqual(dashboard());
         expect(await repo.updateDashboard({ ...dashboard(), meta: { name: "Commerce" } }))
             .toEqual({ ...dashboard(), meta: { name: "Commerce" } });
+        expect(await repo.getDashboardsForSource("commerce")).toEqual([{ ...dashboard(), meta: { name: "Commerce" } }]);
+        expect(await repo.getDashboardsForSource("missing")).toEqual([]);
         expect(await repo.getAllDashboards()).toEqual([{ ...dashboard(), meta: { name: "Commerce" } }]);
         expect(await repo.deleteDashboard("commerce")).toBe(true);
         expect(await repo.getDashboard("commerce")).toBeNull();

@@ -10,7 +10,8 @@ import type {
 } from "../interfaces/Dashboard";
 
 const SIMPLE_ID = /^[^\s/]+$/;
-const PARAM_EXPR = /^(\$row|\$param|\$user)\.[A-Za-z0-9_.-]+$/;
+const PARAM_EXPR = /^(\$row|\$param|\$user)\.[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
+const SAFE_PATH = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
 
 export type ValidateDashboardOptions = {
     source?: Source | null;
@@ -194,5 +195,11 @@ function validateId(path: string, value: string, errors: string[]): void {
 
 function validatePath(name: string, value: string | undefined, path: string, errors: string[]): void {
     if (value === undefined) return;
-    if (!value) errors.push(`${path}.${name} must be non-empty when provided`);
+    if (!value) {
+        errors.push(`${path}.${name} must be non-empty when provided`);
+        return;
+    }
+    if (!SAFE_PATH.test(value)) {
+        errors.push(`${path}.${name} must be a dotted field path`);
+    }
 }
