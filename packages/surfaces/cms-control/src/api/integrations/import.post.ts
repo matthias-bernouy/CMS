@@ -14,6 +14,7 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
         secrets: cms.secrets,
+        dashboards: cms.dashboards,
     };
     const result = await runIntegrationInstance({
         mode: "create",

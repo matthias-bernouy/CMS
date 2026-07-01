@@ -15,6 +15,7 @@ export default async function postIntegrationInstanceRerun(req: Request, cms: Co
     const deps: IntegrationImportDeps = {
         sources: cms.sources,
         secrets: cms.secrets,
+        dashboards: cms.dashboards,
     };
     const result = await runIntegrationInstance({
         mode: "rerun",

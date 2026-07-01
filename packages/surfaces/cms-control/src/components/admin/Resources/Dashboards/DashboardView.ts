@@ -1,8 +1,9 @@
 import { Component } from "@bernouy/components/base";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
-import { currentDashboard, currentSource, fetchDashboards, route } from "./api";
+import { currentDashboard, currentSource, DASHBOARD_SELECTION_EVENT, fetchDashboards, type DashboardSelection } from "./api";
 import { renderWidget } from "./domain";
+import { renderIcon } from "./icons";
 import type { DashboardSourceGroup } from "./types";
 
 export class DashboardView extends Component {
@@ -20,7 +21,12 @@ export class DashboardView extends Component {
         this.selectedSource = currentSource();
         this.selectedDashboard = currentDashboard();
         this.shadowRoot!.addEventListener("click", event => this.handleClick(event));
+        window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection as EventListener);
         void this.load();
+    }
+
+    disconnectedCallback(): void {
+        window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection as EventListener);
     }
 
     private async load(): Promise<void> {
@@ -31,14 +37,6 @@ export class DashboardView extends Component {
         } catch {
             this.groups = [];
         }
-        this.render();
-    }
-
-    private select(sourceId: string, dashboardId = ""): void {
-        this.selectedSource = sourceId;
-        this.selectedDashboard = dashboardId;
-        this.ensureDashboardSelection();
-        this.replaceUrl();
         this.render();
     }
 
@@ -53,26 +51,8 @@ export class DashboardView extends Component {
         }
     }
 
-    private replaceUrl(): void {
-        const params = new URLSearchParams();
-        if (this.selectedSource) params.set("source", this.selectedSource);
-        if (this.selectedDashboard) params.set("dashboard", this.selectedDashboard);
-        const suffix = params.toString() ? `?${params.toString()}` : "";
-        history.replaceState(null, "", route(`/admin/sources${suffix}`));
-    }
-
     private handleClick(event: Event): void {
         const target = event.target as Element | null;
-        const sourceButton = target?.closest<HTMLElement>("[data-source]");
-        if (sourceButton?.dataset.source) {
-            this.select(sourceButton.dataset.source);
-            return;
-        }
-        const dashboardButton = target?.closest<HTMLElement>("[data-dashboard]");
-        if (dashboardButton?.dataset.source && dashboardButton.dataset.dashboard) {
-            this.select(dashboardButton.dataset.source, dashboardButton.dataset.dashboard);
-            return;
-        }
         const tabButton = target?.closest<HTMLElement>("[data-tab-key]");
         if (tabButton?.dataset.tabKey && tabButton.dataset.tabIndex) {
             this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
@@ -81,77 +61,21 @@ export class DashboardView extends Component {
     }
 
     private render(): void {
-        this.renderList();
         this.renderDetail();
-    }
-
-    private renderList(): void {
-        const list = this.query<HTMLElement>("[data-list]");
-        const sourceTemplate = this.query<HTMLTemplateElement>("[data-source-template]");
-        const dashboardTemplate = this.query<HTMLTemplateElement>("[data-dashboard-template]");
-        list.replaceChildren();
-
-        if (!this.groups.length) {
-            const empty = document.createElement("div");
-            empty.className = "empty";
-            empty.textContent = "No sources. Install an integration to generate source contracts.";
-            list.append(empty);
-            return;
-        }
-
-        for (const group of this.groups) {
-            const sourceItem = sourceTemplate.content.firstElementChild!.cloneNode(true) as HTMLButtonElement;
-            sourceItem.dataset.source = group.source.id;
-            sourceItem.classList.toggle("active", group.source.id === this.selectedSource);
-            sourceItem.querySelector("[data-name]")!.textContent = group.source.name;
-            sourceItem.querySelector("[data-meta]")!.textContent = `${group.source.dashboardCount} dashboard${group.source.dashboardCount === 1 ? "" : "s"}`;
-            list.append(sourceItem);
-
-            if (group.source.id === this.selectedSource) {
-                this.renderDashboardNav(list, dashboardTemplate, group);
-            }
-        }
-    }
-
-    private renderDashboardNav(root: HTMLElement, template: HTMLTemplateElement, group: DashboardSourceGroup): void {
-        const nav = document.createElement("div");
-        nav.className = "dashboard-nav";
-        if (!group.dashboards.length) {
-            const empty = document.createElement("small");
-            empty.textContent = "No dashboards";
-            nav.append(empty);
-            root.append(nav);
-            return;
-        }
-        for (const dashboard of group.dashboards) {
-            const item = template.content.firstElementChild!.cloneNode(true) as HTMLButtonElement;
-            item.dataset.source = group.source.id;
-            item.dataset.dashboard = dashboard.id;
-            item.classList.toggle("active", dashboard.id === this.selectedDashboard);
-            item.querySelector("[data-name]")!.textContent = dashboard.meta?.name ?? dashboard.id;
-            item.querySelector("[data-meta]")!.textContent = `${dashboard.views.length} widget${dashboard.views.length === 1 ? "" : "s"}`;
-            nav.append(item);
-        }
-        root.append(nav);
     }
 
     private renderDetail(): void {
         const group = this.activeGroup();
         const dashboard = this.activeDashboard();
         this.query<HTMLElement>("[data-empty]").hidden = Boolean(group);
-        this.query<HTMLElement>("[data-hero]").hidden = !group;
         this.query<HTMLElement>("[data-source-empty]").hidden = !group || Boolean(dashboard);
         this.query<HTMLElement>("[data-dashboard-head]").hidden = !dashboard;
         this.query<HTMLElement>("[data-widgets]").hidden = !dashboard;
         if (!group) return;
 
-        this.text("[data-source-name]", group.source.name);
-        this.text("[data-source-urn]", group.source.urn);
-        this.text("[data-source-state]", group.source.readonly ? "Readonly" : `${group.source.dashboardCount} dashboards`);
-
         if (!dashboard) return;
         this.text("[data-dashboard-name]", dashboard.meta?.name ?? dashboard.id);
-        this.text("[data-dashboard-meta]", `${group.source.endpointCount} endpoints available`);
+        renderIcon(this.query<HTMLElement>("[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
         this.renderWidgets();
     }
 
@@ -179,6 +103,13 @@ export class DashboardView extends Component {
     private text(selector: string, value: string): void {
         this.query<HTMLElement>(selector).textContent = value;
     }
+
+    private onSelection = (event: CustomEvent<DashboardSelection>): void => {
+        this.selectedSource = event.detail.source;
+        this.selectedDashboard = event.detail.dashboard;
+        this.ensureDashboardSelection();
+        this.renderDetail();
+    };
 
     private query<T extends Element>(selector: string): T {
         return this.shadowRoot!.querySelector(selector) as T;

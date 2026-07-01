@@ -128,6 +128,7 @@
       "name": "@bernouy/cms-integrations",
       "version": "0.1.0",
       "dependencies": {
+        "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
       },

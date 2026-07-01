@@ -98,6 +98,7 @@ import "./admin/RoleSelect/RoleSelect"
 import "./admin/RoleEditor/RoleEditor"
 import "./admin/Tokens/TokenCreate"
 import "./admin/Secrets/Secrets"
+import "./admin/Resources/Dashboards/DashboardNav"
 import "./admin/Resources/Dashboards/DashboardView"
 import "./admin/Resources/Integrations/IntegrationBrowser"
 

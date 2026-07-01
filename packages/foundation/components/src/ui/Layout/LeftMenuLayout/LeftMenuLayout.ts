@@ -5,11 +5,15 @@ import css from './style.css' with { type: 'text' };
 
 export class LeftMenuLayout extends Component {
     private _sidebar: HTMLElement | null;
+    private _secondarySidebar: HTMLElement | null;
+    private _secondarySlot: HTMLSlotElement | null;
     private _content: HTMLElement | null;
 
     constructor() {
         super({ css, template: template as unknown as string });
         this._sidebar = this.shadowRoot?.querySelector('.app-sidebar') ?? null;
+        this._secondarySidebar = this.shadowRoot?.querySelector('.secondary-sidebar') ?? null;
+        this._secondarySlot = this.shadowRoot?.querySelector('slot[name="secondary-sidebar"]') ?? null;
         this._content = this.shadowRoot?.querySelector('.app-content') ?? null;
     }
 
@@ -23,10 +27,12 @@ export class LeftMenuLayout extends Component {
         }
 
         this._syncAriaState();
+        this._syncSecondarySidebar();
+        this._secondarySlot?.addEventListener('slotchange', this._onSecondarySlotChange);
     }
 
     disconnectedCallback() {
-        // no instance listeners bound today; keep hook for symmetry with addEventListener pairs
+        this._secondarySlot?.removeEventListener('slotchange', this._onSecondarySlotChange);
     }
 
     attributeChangedCallback(name: string, oldVal: string | null, newVal: string | null) {
@@ -49,6 +55,16 @@ export class LeftMenuLayout extends Component {
         this._sidebar.setAttribute('aria-expanded', String(!isCollapsed));
         this._sidebar.setAttribute('aria-hidden', String(isCollapsed));
     }
+
+    private _syncSecondarySidebar() {
+        if (!this._secondarySidebar || !this._secondarySlot) return;
+        const hasSecondaryNavigation = this._secondarySlot
+            .assignedElements({ flatten: true })
+            .some(element => element instanceof HTMLElement && !element.hidden);
+        this._secondarySidebar.hidden = !hasSecondaryNavigation;
+    }
+
+    private _onSecondarySlotChange = () => this._syncSecondarySidebar();
 
     get collapsed(): boolean {
         return this.hasAttribute('collapsed');

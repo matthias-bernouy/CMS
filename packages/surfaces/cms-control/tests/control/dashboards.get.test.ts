@@ -16,7 +16,7 @@ describe("GET /api/dashboards", () => {
         const dashboards = new InMemoryDashboardRepository();
         await sources.createSource({
             urn: "urn:commerce",
-            meta: { name: "Commerce" },
+            meta: { name: "Commerce", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
             endpoints: [
                 {
                     urn: "urn:commerce:listOrders",
@@ -39,6 +39,8 @@ describe("GET /api/dashboards", () => {
             urn: "urn:commerce",
             id: "commerce",
             name: "Commerce",
+            icon: "database",
+            svg: "<svg viewBox=\"0 0 24 24\"></svg>",
             endpointCount: 1,
             dashboardCount: 1,
             readonly: false,

@@ -1,46 +1,18 @@
-<div class="layout">
-    <nav class="sidebar" aria-label="Dashboard sources" data-list></nav>
+<main class="content">
+    <section class="panel empty" data-empty>
+        <strong>No dashboards</strong>
+        <span>Install an integration that provides dashboard artifacts.</span>
+    </section>
 
-    <main class="content">
-        <section class="panel empty" data-empty>
-            <strong>No dashboards</strong>
-            <span>Install an integration that provides dashboard artifacts.</span>
-        </section>
+    <section class="panel empty" data-source-empty hidden>
+        <strong>No dashboards for this source</strong>
+        <span>This source exposes endpoints, but no dashboard artifact has been installed for it yet.</span>
+    </section>
 
-        <section class="hero" data-hero hidden>
-            <div>
-                <h2 data-source-name></h2>
-                <p><code data-source-urn></code></p>
-            </div>
-            <span class="pill" data-source-state></span>
-        </section>
+    <section class="dashboard-head" data-dashboard-head hidden>
+        <span class="title-icon compact" data-dashboard-icon></span>
+        <h3 data-dashboard-name></h3>
+    </section>
 
-        <section class="panel empty" data-source-empty hidden>
-            <strong>No dashboards for this source</strong>
-            <span>This source exposes endpoints, but no dashboard artifact has been installed for it yet.</span>
-        </section>
-
-        <section class="dashboard-head" data-dashboard-head hidden>
-            <div>
-                <h3 data-dashboard-name></h3>
-                <p data-dashboard-meta></p>
-            </div>
-        </section>
-
-        <div class="widgets" data-widgets hidden></div>
-    </main>
-</div>
-
-<template data-source-template>
-    <button class="source-item" type="button">
-        <span data-name></span>
-        <small data-meta></small>
-    </button>
-</template>
-
-<template data-dashboard-template>
-    <button class="dashboard-item" type="button">
-        <span data-name></span>
-        <small data-meta></small>
-    </button>
-</template>
+    <div class="widgets" data-widgets hidden></div>
+</main>

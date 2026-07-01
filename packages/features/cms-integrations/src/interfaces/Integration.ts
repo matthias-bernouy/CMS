@@ -1,3 +1,4 @@
+import type { DashboardDto } from "@bernouy/cms-dashboards";
 import type { SourceDto } from "@bernouy/cms-sources";
 
 export type IntegrationAnswerValue =
@@ -41,7 +42,14 @@ export type DeclarativeSourceArtifactTemplate = {
     source: SourceDto;
 };
 
-export type DeclarativeArtifactTemplate = DeclarativeSourceArtifactTemplate;
+export type DeclarativeDashboardArtifactTemplate = {
+    type: "dashboard";
+    dashboard: DashboardDto;
+};
+
+export type DeclarativeArtifactTemplate =
+    | DeclarativeSourceArtifactTemplate
+    | DeclarativeDashboardArtifactTemplate;
 
 export type IntegrationDefinition = {
     kind: string;

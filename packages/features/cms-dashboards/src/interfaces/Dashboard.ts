@@ -1,6 +1,7 @@
 export type DashboardMeta = {
     name: string;
     icon?: string;
+    svg?: string;
 };
 
 export type ParamExpr = string;

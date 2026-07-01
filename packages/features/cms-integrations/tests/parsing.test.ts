@@ -17,6 +17,66 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
         })).toThrow(/definition\.artifacts\.0\.source\.id/);
     });
 
+    test("parses manual source svg metadata before import execution", () => {
+        const request = parseIntegrationImportRequest({
+            definition: {
+                kind: "source-svg",
+                label: "Source SVG",
+                inputs: [],
+                artifacts: [{
+                    type: "source",
+                    source: {
+                        id: "items",
+                        meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
+                        endpoints: [],
+                    },
+                }],
+            },
+            answers: {},
+        });
+
+        expect(request.siteIntegrations[0]?.artifacts?.[0]).toEqual({
+            type: "source",
+            source: {
+                id: "items",
+                meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
+                endpoints: [],
+            },
+        });
+    });
+
+    test("parses manual dashboard artifacts before import execution", () => {
+        const request = parseIntegrationImportRequest({
+            definition: {
+                kind: "dashboard",
+                label: "Dashboard",
+                inputs: [],
+                artifacts: [{
+                    type: "dashboard",
+                    dashboard: {
+                        id: "items-dashboard",
+                        meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
+                        source: "items",
+                        collections: [{ id: "items", list: { endpoint: "list" } }],
+                        views: [{ widget: "w-table", collection: "items" }],
+                    },
+                }],
+            },
+            answers: {},
+        });
+
+        expect(request.siteIntegrations[0]?.artifacts?.[0]).toEqual({
+            type: "dashboard",
+            dashboard: {
+                id: "items-dashboard",
+                meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
+                source: "items",
+                collections: [{ id: "items", list: { endpoint: "list" } }],
+                views: [{ widget: "w-table", collection: "items" }],
+            },
+        });
+    });
+
     test("rejects malformed manual header artifacts before import execution", () => {
         expect(() => parseIntegrationImportRequest({
             definition: {

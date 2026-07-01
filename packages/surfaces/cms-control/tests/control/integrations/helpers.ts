@@ -1,4 +1,5 @@
 import { InMemoryIntegrationInstanceRepository } from "@bernouy/cms-integrations";
+import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import { InMemorySourceRepository } from "@bernouy/cms-sources";
 import type {
@@ -46,15 +47,17 @@ export const TEST_SECRET_SOURCE_DEFINITION: IntegrationDefinition = {
 export function makeCms(siteIntegrations: IntegrationDefinition[] = [TEST_SECRET_SOURCE_DEFINITION]) {
     const sources = new InMemorySourceRepository();
     const secrets = new InMemorySecretStore();
+    const dashboards = new InMemoryDashboardRepository();
     const integrationInstances = new InMemoryIntegrationInstanceRepository();
     const integrationCatalog = integrationDefinitionRepository(siteIntegrations);
     const cms = {
         sources,
         secrets,
+        dashboards,
         integrationCatalog,
         integrationInstances,
     };
-    return { cms: cms as any, sources, secrets, integrationInstances, integrationCatalog };
+    return { cms: cms as any, sources, secrets, dashboards, integrationInstances, integrationCatalog };
 }
 
 export function integrationDefinitionRepository(

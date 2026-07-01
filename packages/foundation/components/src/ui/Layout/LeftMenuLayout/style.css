@@ -6,6 +6,7 @@
 
     --_sidebar-width: 252px;
     --_sidebar-collapsed-width: 0px;
+    --_secondary-sidebar-width: var(--secondary-sidebar-width, 280px);
     --_sidebar-bg: var(--bg-sidebar, var(--bg-surface));
     --_sidebar-border: var(--border-default);
     --_content-bg: var(--bg-base);
@@ -53,12 +54,38 @@
     overflow: hidden;
 }
 
+.secondary-sidebar {
+    flex-shrink: 0;
+    height: 100%;
+    width: var(--_secondary-sidebar-width);
+    background-color: var(--_sidebar-bg);
+    border-right: 1px solid var(--_sidebar-border);
+    overflow: hidden;
+}
+
+.secondary-sidebar[hidden] {
+    display: none;
+}
+
 .app-nav {
     height: 100%;
     overflow-y: auto;
 }
 
+.secondary-nav {
+    height: 100%;
+    overflow-y: auto;
+}
+
 ::slotted([slot="sidebar"]) {
+    --ctx-bg: var(--_sidebar-bg);
+    --ctx-fg: var(--text-main);
+    --ctx-fg-muted: var(--text-muted);
+    --ctx-border: var(--_sidebar-border);
+    --menu-border-width: 0;
+}
+
+::slotted([slot="secondary-sidebar"]) {
     --ctx-bg: var(--_sidebar-bg);
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);

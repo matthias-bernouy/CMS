@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { importIntegration } from "@bernouy/cms-integrations";
+import { InMemoryDashboardRepository } from "@bernouy/cms-dashboards";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
 import {
     buildUpstreamUrl,
@@ -14,21 +15,32 @@ describe("@bernouy/cms-integrations BAN integration", () => {
     test("imports the first-party BAN address source declaratively", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
+        const dashboards = new InMemoryDashboardRepository();
 
         const result = await importIntegration(
-            { sources, secrets },
+            { sources, secrets, dashboards },
             { kind: "ban", answers: {}, options: {} },
             [BAN_DEFINITION],
         );
 
-        expect(result).toEqual({ artifacts: [{ type: "source", id: "urn:ban", action: "created" }] });
+        expect(result).toEqual({ artifacts: [
+            { type: "source", id: "urn:ban", action: "created" },
+            { type: "dashboard", id: "ban-addresses", action: "created" },
+        ] });
         const installed = await sources.getSource("urn:ban");
+        const dashboard = await dashboards.getDashboard("ban-addresses");
         expect(validateSource(installed!)).toEqual([]);
         expect(installed?.meta).toEqual(BAN_SOURCE.meta);
         expect(installed?.endpoints.map(endpoint => [endpoint.urn, endpoint.targetUrl])).toEqual(
             BAN_SOURCE.endpoints.map(endpoint => [endpoint.urn, endpoint.targetUrl]),
         );
         expect(installed?.endpoints[0]?.output).toEqual(BAN_SOURCE.endpoints[0]?.output);
+        expect(dashboard?.source).toBe("ban");
+        expect(dashboard?.collections[0]?.list).toEqual({
+            endpoint: "search",
+            params: { q: "$param.q" },
+            itemsPath: "features",
+        });
         expect(await secrets.listKeys()).toEqual([]);
     });
 

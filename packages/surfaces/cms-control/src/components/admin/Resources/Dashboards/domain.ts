@@ -103,25 +103,32 @@ function renderTable(
     if (!endpoint) return renderMissing(`Unknown endpoint "${collection.list.endpoint}"`);
 
     const columns = resolveColumns(widget.columns, endpoint, collection);
+    if (!columns.length) return renderMissing(`No displayable columns for collection "${widget.collection}"`);
     const repeatPath = repeatPathFor(endpoint, collection);
     const url = endpointUrl(context.group, collection.list);
     const filters = renderFilters(widget, collection);
 
     return `
         <section class="panel dashboard-table">
-            ${filters}
             <cms-binding-core>
+                ${filters}
                 <div cms-source="${escapeAttr(url)} as data">
                     <p class="state" cms-condition="$source.loading">Loading...</p>
                     <p class="state" cms-condition="$source.error">Unable to load data.</p>
-                    <p9r-table cms-condition="$source.loaded">
-                        <p9r-row slot="header">
-                            ${columns.map(column => `<p9r-header-cell>${escapeHtml(column.label)}</p9r-header-cell>`).join("")}
-                        </p9r-row>
-                        <p9r-row cms-repeat="${escapeAttr(repeatPath)} as row">
-                            ${columns.map(column => `<p9r-cell>${formatBinding(column.field, column.format)}</p9r-cell>`).join("")}
-                        </p9r-row>
-                    </p9r-table>
+                    <div class="dashboard-table-scroll" cms-condition="$source.loaded">
+                        <table class="dashboard-grid">
+                            <thead>
+                                <tr>
+                                    ${columns.map(column => `<th scope="col">${escapeHtml(column.label)}</th>`).join("")}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr cms-repeat="${escapeAttr(repeatPath)} as row">
+                                    ${columns.map(column => `<td>${formatBinding(column.field, column.format)}</td>`).join("")}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </cms-binding-core>
         </section>
@@ -161,28 +168,27 @@ function renderMissing(message: string): string {
 function renderFilters(widget: Extract<DashboardWidget, { widget: "w-table" }>, collection: Collection): string {
     if (!widget.filters?.length) return "";
     return `
-        <div class="toolbar">
+        <div class="dashboard-filters" role="search" aria-label="Dashboard filters">
             ${widget.filters.map(filter => {
                 const param = filter.param ?? filter.field;
+                const label = filterLabel(filter.field);
                 if (filter.input === "select") {
                     return `
-                        <label>
-                            <span>${escapeHtml(filter.field)}</span>
-                            <select cms-param-sync="${escapeAttr(param)}">
-                                <option value="">All</option>
-                                ${(filter.options ?? []).map(option => `<option value="${escapeAttr(option)}">${escapeHtml(option)}</option>`).join("")}
-                            </select>
-                        </label>
+                        <p9r-select cms-param-sync="${escapeAttr(param)}" label="${escapeAttr(label)}" value="">
+                            <option value="">All</option>
+                            ${(filter.options ?? []).map(option => `<option value="${escapeAttr(option)}">${escapeHtml(option)}</option>`).join("")}
+                        </p9r-select>
                     `;
                 }
                 return `
-                    <label>
-                        <span>${escapeHtml(filter.field)}</span>
-                        <input cms-param-sync="${escapeAttr(param)}" type="search">
-                    </label>
+                    <p9r-input
+                        cms-param-sync="${escapeAttr(param)}"
+                        label="${escapeAttr(label)}"
+                        placeholder="${escapeAttr(filterPlaceholder(filter.field, collection))}"
+                        type="search"
+                    ></p9r-input>
                 `;
             }).join("")}
-            <small>Source: ${escapeHtml(collection.list.endpoint)}</small>
         </div>
     `;
 }
@@ -291,6 +297,20 @@ function isSafeBindingPath(path: string): boolean {
 function labelFromPath(path: string): string {
     const leaf = path.split(".").filter(Boolean).at(-1) ?? path;
     return leaf.replace(/[_-]+/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+}
+
+function filterLabel(field: string): string {
+    if (field === "q") return "Search";
+    return sentenceCase(labelFromPath(field));
+}
+
+function filterPlaceholder(field: string, collection: Collection): string {
+    if (field === "q") return `Search ${labelFromPath(collection.id).toLowerCase()}`;
+    return `Filter by ${filterLabel(field).toLowerCase()}`;
+}
+
+function sentenceCase(value: string): string {
+    return value ? `${value.charAt(0).toUpperCase()}${value.slice(1)}` : value;
 }
 
 function escapeHtml(value: string): string {

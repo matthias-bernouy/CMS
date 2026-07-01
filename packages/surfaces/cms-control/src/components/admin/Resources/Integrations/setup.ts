@@ -65,6 +65,11 @@ function summaryRows(definition: IntegrationDefinition): SummaryRow[] {
 function sourceRows(definition: IntegrationDefinition): SummaryRow[] {
     const rows: SummaryRow[] = [];
     for (const artifact of definition.artifacts ?? []) {
+        if (artifact.type === "dashboard") {
+            const dashboard = artifact.dashboard;
+            rows.push(["Dashboard", dashboard.meta?.name ?? dashboard.id, `Source id: ${dashboard.source}`]);
+            continue;
+        }
         const source = artifact.source;
         rows.push(["Source", source.meta?.name ?? source.id, `Source id: ${source.id}`]);
         for (const endpoint of source.endpoints) {

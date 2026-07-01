@@ -49,6 +49,7 @@ export type SourceMeta = {
     name: string;
     description?: string;
     icon?: string;
+    svg?: string;
 };
 
 /** One response entry of an endpoint's contract, keyed by HTTP status.

@@ -1,12 +1,15 @@
+import { DuplicateDashboardError, validateDashboard, type Dashboard } from "@bernouy/cms-dashboards";
 import { DuplicateSourceError, sourceDtoToSource, validateSource, type Source } from "@bernouy/cms-sources";
+import { parseUrn } from "@bernouy/cms-sources";
 import { secretKeyError, secretKeyToRef } from "@bernouy/cms-secrets";
-import { IntegrationInputError } from "../errors";
+import { IntegrationInputError, IntegrationRuntimeError } from "../errors";
 import {
     assertPasswordInputsDeclareSecrets,
     sensitiveInputNames,
 } from "../shared/inputSensitivity";
 import { resolveTemplate, resolveTemplates, type TemplateContext } from "../templates";
 import { writeSecretsWithRollback } from "./secretWrites";
+import { writeDashboardsWithRollback, type IntegrationDashboardWrite } from "./dashboardWrites";
 import { writeSourcesWithRollback, type IntegrationSourceWrite } from "./sourceWrites";
 import type {
     DeclarativeSecretTemplate,
@@ -65,18 +68,24 @@ async function executeDeclarativeIntegration<T>(
     };
     const sourceArtifacts = buildSourceArtifacts(definition, context);
     const sourceWrites = await buildSourceWrites(deps, sourceArtifacts, options);
+    const dashboardArtifacts = buildDashboardArtifacts(definition, context);
+    const dashboardWrites = await buildDashboardWrites(deps, dashboardArtifacts, sourceArtifacts, options);
 
     return writeSecretsWithRollback(
         deps.secrets,
         secretWrites,
         (secretResults) => writeSourcesWithRollback(deps.sources, sourceWrites, async artifacts => {
-            const importResult = {
-                artifacts,
-                ...(secretResults.length ? { secrets: secretResults } : {}),
+            const buildResult = async (dashboardArtifacts: typeof artifacts) => {
+                const importResult = {
+                    artifacts: [...artifacts, ...dashboardArtifacts],
+                    ...(secretResults.length ? { secrets: secretResults } : {}),
+                };
+                return commit
+                    ? { importResult, committed: await commit(importResult) }
+                    : { importResult };
             };
-            return commit
-                ? { importResult, committed: await commit(importResult) }
-                : { importResult };
+            if (!dashboardWrites.length) return buildResult([]);
+            return writeDashboardsWithRollback(deps.dashboards ?? missingDashboardRepository(), dashboardWrites, buildResult);
         }),
     );
 }
@@ -89,6 +98,17 @@ function buildSourceArtifacts(definition: IntegrationDefinition, context: Templa
     } catch (error) {
         if (error instanceof IntegrationInputError) throw error;
         throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid source artifact");
+    }
+}
+
+function buildDashboardArtifacts(definition: IntegrationDefinition, context: TemplateContext): Dashboard[] {
+    try {
+        return (definition.artifacts ?? [])
+            .filter(artifact => artifact.type === "dashboard")
+            .map(artifact => resolveTemplates(artifact.dashboard, context));
+    } catch (error) {
+        if (error instanceof IntegrationInputError) throw error;
+        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid dashboard artifact");
     }
 }
 
@@ -116,6 +136,51 @@ function buildSecretWrites(
         seenKeys.set(key, template.input);
         return { input: template.input, key, value: rawValue };
     });
+}
+
+async function buildDashboardWrites(
+    deps: IntegrationImportDeps,
+    dashboardArtifacts: Dashboard[],
+    sourceArtifacts: Source[],
+    options: IntegrationImportOptions,
+): Promise<IntegrationDashboardWrite[]> {
+    if (!dashboardArtifacts.length) return [];
+    if (!deps.dashboards) throw new IntegrationRuntimeError("dashboard repository not configured");
+
+    const sourceById = new Map(sourceArtifacts.map(source => [sourceId(source), source]));
+    const dashboardWrites: IntegrationDashboardWrite[] = [];
+    const seen = new Set<string>();
+
+    for (const dashboard of dashboardArtifacts) {
+        if (seen.has(dashboard.id)) throw new DuplicateDashboardError(dashboard.id);
+        seen.add(dashboard.id);
+
+        const source = sourceById.get(dashboard.source);
+        if (!source) {
+            throw new IntegrationInputError(
+                "artifacts",
+                `dashboard "${dashboard.id}" references source "${dashboard.source}" not declared by this integration`,
+            );
+        }
+
+        const errors = validateDashboard(dashboard, { source });
+        if (errors.length) throw new IntegrationInputError("artifacts", errors.join("; "));
+        const previous = await deps.dashboards.getDashboard(dashboard.id);
+        if (!options.force && previous) {
+            throw new DuplicateDashboardError(dashboard.id);
+        }
+        dashboardWrites.push({ dashboard, previous });
+    }
+
+    return dashboardWrites;
+}
+
+function sourceId(source: Source): string {
+    return parseUrn(source.urn)?.source ?? source.urn;
+}
+
+function missingDashboardRepository(): never {
+    throw new IntegrationRuntimeError("dashboard repository not configured");
 }
 
 async function buildSourceWrites(

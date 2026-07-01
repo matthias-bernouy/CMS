@@ -9,6 +9,12 @@
         </nav>
     </aside>
 
+    <aside class="secondary-sidebar" part="secondary-sidebar" aria-label="Secondary" hidden>
+        <nav class="secondary-nav" part="secondary-nav" aria-label="Secondary navigation">
+            <slot name="secondary-sidebar"></slot>
+        </nav>
+    </aside>
+
     <main id="main-content" class="app-content" part="content" tabindex="-1">
         <slot></slot>
     </main>

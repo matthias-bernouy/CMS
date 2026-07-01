@@ -100,7 +100,41 @@ export const BAN_DEFINITION: IntegrationDefinition = {
     version: "1.0.0",
     category: "Data",
     inputs: [],
-    artifacts: [{ type: "source", source: BAN_SOURCE_DTO }],
+    artifacts: [
+        { type: "source", source: BAN_SOURCE_DTO },
+        {
+            type: "dashboard",
+            dashboard: {
+                id: "ban-addresses",
+                meta: { name: "Address search", icon: "map-pin" },
+                source: "ban",
+                collections: [
+                    {
+                        id: "addresses",
+                        rowKey: "properties.label",
+                        list: {
+                            endpoint: "search",
+                            params: { q: "$param.q" },
+                            itemsPath: "features",
+                        },
+                    },
+                ],
+                views: [
+                    {
+                        widget: "w-table",
+                        collection: "addresses",
+                        filters: [{ field: "q", param: "q", input: "text" }],
+                        columns: [
+                            { field: "properties.label", label: "Address" },
+                            { field: "properties.city", label: "City" },
+                            { field: "properties.postcode", label: "Postcode" },
+                            { field: "properties.score", label: "Score" },
+                        ],
+                    },
+                ],
+            },
+        },
+    ],
 };
 
 export const TEST_SECRET_SOURCE_DEFINITION: IntegrationDefinition = {

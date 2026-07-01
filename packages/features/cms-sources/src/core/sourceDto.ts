@@ -72,6 +72,7 @@ export function sourceToFlatDto(source: Source): SourceFlatDto {
     flat["meta.name"] = dto.meta.name;
     if (dto.meta.description !== undefined) flat["meta.description"] = dto.meta.description;
     if (dto.meta.icon !== undefined)        flat["meta.icon"]        = dto.meta.icon;
+    if (dto.meta.svg !== undefined)         flat["meta.svg"]         = dto.meta.svg;
 
     dto.endpoints.forEach((e, i) => {
         flat[`endpoints.${i}.endpointId`] = e.endpointId;
@@ -94,6 +95,7 @@ export function sourceToCanonicalDto(source: Source): CanonicalSourceDto {
             name: dto.meta.name ?? "",
             description: dto.meta.description ?? "",
             icon: dto.meta.icon ?? "",
+            svg: dto.meta.svg ?? "",
         },
         endpoints: dto.endpoints.map(e => ({
             endpointId: e.endpointId,

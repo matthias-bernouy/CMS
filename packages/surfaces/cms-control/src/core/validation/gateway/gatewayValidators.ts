@@ -22,8 +22,10 @@ export function buildMeta(body: Record<string, unknown>, id: string): SourceMeta
     const meta: SourceMeta = { name: str(body["meta.name"]) ?? id };
     const description = str(body["meta.description"]);
     const icon        = str(body["meta.icon"]);
+    const svg         = str(body["meta.svg"]);
     if (description) meta.description = description;
     if (icon)        meta.icon = icon;
+    if (svg)         meta.svg = svg;
     return meta;
 }
 /** Parse a per-endpoint `params` JSON blob into validated DTOs. `reserved` holds
@@ -87,7 +89,9 @@ export function parseMetaField(raw: unknown): SourceMeta | undefined {
     const meta: SourceMeta = { name };
     const description = str(m.description);
     const icon = str(m.icon);
+    const svg = str(m.svg);
     if (description) meta.description = description;
     if (icon) meta.icon = icon;
+    if (svg) meta.svg = svg;
     return meta;
 }

@@ -25,6 +25,9 @@ type SiteSettingsResponse = {
  */
 export class FixedAdminLayout extends Component {
     private _brandRequest: AbortController | null = null;
+    private _titleSlot: HTMLSlotElement | null = null;
+    private _actionSlot: HTMLSlotElement | null = null;
+    private _pageHeader: HTMLElement | null = null;
 
     constructor(){
         super({
@@ -39,18 +42,26 @@ export class FixedAdminLayout extends Component {
         if (!root) return;
 
         const basePath = this._basePath();
+        this._titleSlot = root.querySelector('slot[name="title"]');
+        this._actionSlot = root.querySelector('slot[name="action"]');
+        this._pageHeader = root.querySelector(".admin-page-header");
 
         this._syncRoutes(root, basePath);
         this._setBrandName(root, DEFAULT_BRAND_NAME);
+        this._syncPageHeader();
         void this._syncSiteName(root, basePath);
 
         document.addEventListener("settings:saved", this._onSettingsSaved);
+        this._titleSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
+        this._actionSlot?.addEventListener("slotchange", this._onPageHeaderSlotChange);
     }
 
     disconnectedCallback() {
         this._brandRequest?.abort();
         this._brandRequest = null;
         document.removeEventListener("settings:saved", this._onSettingsSaved);
+        this._titleSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
+        this._actionSlot?.removeEventListener("slotchange", this._onPageHeaderSlotChange);
     }
 
     private _basePath(): string {
@@ -100,11 +111,27 @@ export class FixedAdminLayout extends Component {
         menu?.style.setProperty("--menu-brand-mark", JSON.stringify(mark));
     }
 
+    private _syncPageHeader(): void {
+        if (!this._pageHeader) return;
+        const hasTitle = this._slotHasVisibleContent(this._titleSlot);
+        const hasAction = this._slotHasVisibleContent(this._actionSlot);
+        this._pageHeader.hidden = !hasTitle && !hasAction;
+    }
+
+    private _slotHasVisibleContent(slot: HTMLSlotElement | null): boolean {
+        return !!slot?.assignedNodes({ flatten: true }).some(node => {
+            if (node instanceof HTMLElement) return !node.hidden && node.textContent?.trim() !== "";
+            return node.textContent?.trim() !== "";
+        });
+    }
+
     private _onSettingsSaved = (): void => {
         const root = this.shadowRoot;
         if (!root) return;
         void this._syncSiteName(root, this._basePath());
     };
+
+    private _onPageHeaderSlotChange = (): void => this._syncPageHeader();
 }
 
 customElements.define("w13c-fixed-admin-layout", FixedAdminLayout);

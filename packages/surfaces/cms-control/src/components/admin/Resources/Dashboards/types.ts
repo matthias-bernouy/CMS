@@ -5,6 +5,8 @@ export type DashboardSourceSummary = {
     urn: string;
     id: string;
     name: string;
+    icon?: string;
+    svg?: string;
     endpointCount: number;
     dashboardCount: number;
     readonly: boolean;

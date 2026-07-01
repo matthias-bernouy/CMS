@@ -4,7 +4,7 @@ import baseCss from './base.css' with { type: 'text' };
 import variantCss from './variant.css' with { type: 'text' };
 const css = baseCss + variantCss;
 
-import { upgradeProperty, updateHref, updateBadge, checkActiveState } from './compute';
+import { upgradeProperty, updateHref, updateBadge, checkActiveState, setActiveState } from './compute';
 import { handleKeydown } from './listener';
 
 export class LateralMenuItem extends Component {
@@ -18,11 +18,11 @@ export class LateralMenuItem extends Component {
     }
 
     static get observedAttributes(): string[] {
-        return ['href', 'badge', 'disabled'];
+        return ['href', 'badge', 'disabled', 'active'];
     }
 
     override connectedCallback(): void {
-        for (const prop of ['href', 'badge', 'disabled']) upgradeProperty(this, prop);
+        for (const prop of ['href', 'badge', 'disabled', 'active']) upgradeProperty(this, prop);
 
         if (!this.hasAttribute('role')) this.setAttribute('role', 'listitem');
         if (!this.hasAttribute('tabindex')) this.setAttribute('tabindex', '0');
@@ -44,6 +44,10 @@ export class LateralMenuItem extends Component {
         if (!this._anchor) return;
         if (name === 'href') updateHref(this._anchor, newVal);
         if (name === 'badge') updateBadge(this._badgeEl, newVal);
+        if (name === 'active') {
+            if (newVal !== null) setActiveState(this, this._anchor, true);
+            else checkActiveState(this, this._anchor);
+        }
         if (name === 'disabled') {
             const isDisabled = this.hasAttribute('disabled');
             this.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
@@ -59,6 +63,9 @@ export class LateralMenuItem extends Component {
 
     get disabled() { return this.hasAttribute('disabled'); }
     set disabled(v: boolean) { v ? this.setAttribute('disabled', '') : this.removeAttribute('disabled'); }
+
+    get active() { return this.hasAttribute('active'); }
+    set active(v: boolean) { v ? this.setAttribute('active', '') : this.removeAttribute('active'); }
 
     private _onPopstate = () => checkActiveState(this, this._anchor);
     private _onKey = (e: KeyboardEvent) => handleKeydown(this, this._anchor, e);

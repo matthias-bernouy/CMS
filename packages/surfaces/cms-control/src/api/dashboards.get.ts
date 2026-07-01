@@ -6,6 +6,8 @@ export type DashboardSourceSummary = {
     urn: string;
     id: string;
     name: string;
+    icon?: string;
+    svg?: string;
     endpointCount: number;
     dashboardCount: number;
     readonly: boolean;
@@ -40,6 +42,8 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
                 urn: source.urn,
                 id,
                 name: source.meta?.name ?? id,
+                ...(source.meta?.icon ? { icon: source.meta.icon } : {}),
+                ...(source.meta?.svg ? { svg: source.meta.svg } : {}),
                 endpointCount: source.endpoints.length,
                 dashboardCount: sourceDashboards.length,
                 readonly: isSystemSourceUrn(source.urn),

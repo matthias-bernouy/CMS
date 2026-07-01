@@ -1,0 +1,32 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
+w13c-lateral-menu {
+    width: 100%;
+    height: 100%;
+    --menu-brand-mark-display: none;
+    --menu-header-font-size: .875rem;
+    --menu-item-font-size: .875rem;
+    --menu-section-font-size: .6875rem;
+}
+
+w13c-lateral-menu-item {
+    --item-font-size: .875rem;
+}
+
+.dashboard-item {
+    margin-left: 18px;
+}
+
+.dashboard-item::part(item) {
+    height: 32px;
+}
+
+.empty {
+    display: block;
+    padding: 8px 10px;
+    color: var(--text-muted, #66736f);
+    font-size: .8125rem;
+}

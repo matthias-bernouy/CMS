@@ -202,6 +202,11 @@ describe("parseSourceDto", () => {
         expect(dto.meta).toEqual({ name: "Shop", icon: "map-pin" } as any);
     });
 
+    test("provider meta.svg round-trips when the form posts it", () => {
+        const dto = parseSourceDto(validBody({ "meta.svg": "<svg viewBox=\"0 0 24 24\"></svg>" }));
+        expect(dto.meta).toEqual({ name: "Shop", svg: "<svg viewBox=\"0 0 24 24\"></svg>" } as any);
+    });
+
     test("blank meta.icon → no icon (provider had none)", () => {
         const dto = parseSourceDto(validBody({ "meta.icon": "" }));
         expect(dto.meta.icon).toBeUndefined();

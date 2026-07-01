@@ -17,7 +17,23 @@ export const updateBadge = (badgeEl: HTMLElement | null, value: string | null) =
     }
 };
 
+export const setActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | null, active: boolean) => {
+    if (active) {
+        host.setAttribute('active', '');
+        host.setAttribute('aria-current', 'page');
+        anchor?.classList.add('active');
+    } else {
+        host.removeAttribute('active');
+        host.removeAttribute('aria-current');
+        anchor?.classList.remove('active');
+    }
+};
+
 export const checkActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | null) => {
+    if (host.hasAttribute('active')) {
+        setActiveState(host, anchor, true);
+        return;
+    }
     if (!anchor || !host.hasAttribute('href')) return;
     const hrefAttr = host.getAttribute('href');
     if (!hrefAttr) return;
@@ -31,15 +47,7 @@ export const checkActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | 
             ? currentPath === '/'
             : currentPath === targetPath || currentPath.startsWith(targetPath + '/');
 
-        if (isActive) {
-            host.setAttribute('active', '');
-            host.setAttribute('aria-current', 'page');
-            anchor.classList.add('active');
-        } else {
-            host.removeAttribute('active');
-            host.removeAttribute('aria-current');
-            anchor.classList.remove('active');
-        }
+        setActiveState(host, anchor, isActive);
     } catch {
         console.warn('Invalid href in LateralMenuItem:', hrefAttr);
     }

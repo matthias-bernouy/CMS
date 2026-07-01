@@ -3,13 +3,17 @@ import type { IntegrationArtifactResult, IntegrationInstance } from "@bernouy/cm
 
 export type IntegrationArtifactContext = {
     sourceUrns: Set<string> | null;
+    dashboardIds: Set<string> | null;
 };
 
 export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<IntegrationArtifactContext> {
     const sourceUrns = await cms.sources.getAllSources()
         .then(sources => new Set(sources.map(source => source.urn)))
         .catch(() => null);
-    return { sourceUrns };
+    const dashboardIds = await cms.dashboards.getAllDashboards()
+        .then(dashboards => new Set(dashboards.map(dashboard => dashboard.id)))
+        .catch(() => null);
+    return { sourceUrns, dashboardIds };
 }
 
 export function buildIntegrationInstanceView(
@@ -43,6 +47,8 @@ export function buildIntegrationInstanceView(
 function artifactView(context: IntegrationArtifactContext, artifact: IntegrationArtifactResult) {
     return {
         ...artifact,
-        exists: context.sourceUrns?.has(artifact.id) ?? "unknown",
+        exists: artifact.type === "dashboard"
+            ? context.dashboardIds?.has(artifact.id) ?? "unknown"
+            : context.sourceUrns?.has(artifact.id) ?? "unknown",
     };
 }

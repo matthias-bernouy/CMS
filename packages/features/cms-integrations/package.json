@@ -12,6 +12,7 @@
         "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {
+        "@bernouy/cms-dashboards": "workspace:*",
         "@bernouy/cms-sources": "workspace:*",
         "@bernouy/cms-secrets": "workspace:*"
     },
