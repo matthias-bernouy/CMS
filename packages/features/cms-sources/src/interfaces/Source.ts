@@ -52,8 +52,8 @@ export type SourceMeta = {
 };
 
 /** One response entry of an endpoint's contract, keyed by HTTP status.
- *  `status` is an HTTP code "100".."599" OR the literal "default" (OpenAPI
- *  fallback). `body` absent → a no-content response (e.g. 204). */
+ *  `status` is an HTTP code "100".."599" or the literal "default".
+ *  `body` absent → a no-content response (e.g. 204). */
 export type EndpointResponse = {
     status: string;
     body?: DataShape;

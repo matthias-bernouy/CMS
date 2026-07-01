@@ -78,15 +78,3 @@ export {
     type SourceSystemExecutor,
     type SourceEndpointAuthorizer,
 } from "../http/handleSourceRequest";
-
-// ── OpenAPI spec machinery (source endpoint schemas) ────────────────
-export { parseSpec }      from "../core/openapi/parseSpec";
-export { SpecResolver }   from "../core/openapi/SpecResolver";
-export { SpecParseError } from "../core/openapi/SpecParseError";
-export { openApiSpecToSource, type OpenApiImportOperation, type OpenApiSourceImportOptions } from "../core/openapi/source";
-export { stubFromSchema } from "../core/openapi/stubFromSchema";
-export { resolveRef }     from "../core/openapi/resolveRef";
-export { deref }          from "../core/openapi/deref";
-export { flattenSchema }  from "../core/openapi/flattenSchema";
-export { swagger2to3 }    from "../core/openapi/swagger2to3";
-export type { ParsedSpec, JSONSchema, PathItem, Operation, Parameter } from "../core/openapi/types";

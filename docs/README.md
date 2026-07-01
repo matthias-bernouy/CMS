@@ -25,5 +25,3 @@ implementation notes live in each package's `AGENTS.md`.
   for authored blocs and editor-facing bloc code.
 - [auth-system-gateway.md](./auth-system-gateway.md) documents the readonly
   system auth gateway provider exposed through `/.cms/gateway/system-auth/*`.
-- [supabase-gateway-import.md](./supabase-gateway-import.md) documents the
-  guided Supabase provider import and optional RPC metadata function.

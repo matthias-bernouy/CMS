@@ -58,8 +58,7 @@ export function isAllowedSourceTargetUrl(value: string, opts?: SourceTargetUrlVa
     return validateSourceTargetUrl(value, opts).ok;
 }
 
-/** An HTTP status code "100".."599", or the OpenAPI fallback literal "default" —
- *  the rule for an `EndpointResponse.status`. */
+/** An HTTP status code "100".."599", or the fallback literal "default". */
 const RESPONSE_STATUS = /^[1-5][0-9][0-9]$/;
 export function isValidResponseStatus(status: string): boolean {
     return status === "default" || RESPONSE_STATUS.test(status);

@@ -53,8 +53,8 @@ Feature packages:
   and role repository contracts.
 - `@bernouy/cms-auth`: local auth, OIDC auth, PATs, signed cookies, public auth
   flows, user/provider repositories, and auth route registrars.
-- `@bernouy/cms-gateway`: data-provider contracts, endpoint execution,
-  OpenAPI import, system providers, and gateway proxy helpers.
+- `@bernouy/cms-gateway`: data-provider contracts, endpoint execution, system
+  providers, and gateway proxy helpers.
 - `@bernouy/cms-analytics`: privacy-first server-side analytics events,
   counters, stores, and dashboard handlers.
 - `@bernouy/cms-bloc-compile`: bloc validation, view/editor bundling, and the
