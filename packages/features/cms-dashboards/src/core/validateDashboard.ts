@@ -11,6 +11,7 @@ import type {
 
 const SIMPLE_ID = /^[^\s/]+$/;
 const PARAM_EXPR = /^(\$row|\$param|\$user)\.[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
+const SELECTION_EXPR = "$selection";
 const SAFE_PATH = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
 
 export type ValidateDashboardOptions = {
@@ -90,6 +91,22 @@ function validateWidget(
             }
             break;
         case "w-detail":
+            validateCollectionRef(widget.collection, `${path}.collection`, collections, errors);
+            {
+                const collection = collections.get(widget.collection);
+                const getRef = collection?.item?.get;
+                if (collection && !getRef) {
+                    errors.push(`${path}.collection "${widget.collection}" must declare item.get for w-detail`);
+                }
+                if (collection && !collection.rowKey) {
+                    errors.push(`${path}.collection "${widget.collection}" must declare rowKey for w-detail`);
+                }
+                if (getRef && !Object.values(getRef.params ?? {}).includes(SELECTION_EXPR)) {
+                    errors.push(`${path}.collection "${widget.collection}" item.get must bind a param to $selection`);
+                }
+            }
+            widget.fields?.forEach((field, index) => validateSpecPath(field, `${path}.fields.${index}`, errors));
+            break;
         case "w-detail-item-put":
         case "w-detail-patch":
         case "w-create":
@@ -170,6 +187,10 @@ function validateParamBindings(
         }
         if (typeof expr !== "string" || !expr) {
             errors.push(`${path}.params.${name} must be a non-empty string`);
+        } else if (expr === SELECTION_EXPR) {
+            if (!path.includes(".item.get")) {
+                errors.push(`${path}.params.${name} uses $selection outside a collection item get endpoint`);
+            }
         } else if (expr.startsWith("$") && !PARAM_EXPR.test(expr)) {
             errors.push(`${path}.params.${name} has invalid binding expression "${expr}"`);
         }

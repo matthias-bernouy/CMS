@@ -6,6 +6,8 @@ import {
     type ColumnSpec,
     type DashboardDto,
     type DashboardWidget,
+    type FieldInput,
+    type FieldSpec,
 } from "@bernouy/cms-dashboards";
 import type { DataShape, EndpointResponse, SourceEndpointDto } from "@bernouy/cms-sources";
 import { route } from "./api";
@@ -14,6 +16,7 @@ import type { DashboardSourceGroup } from "./types";
 export type RenderContext = {
     group: DashboardSourceGroup;
     dashboard: DashboardDto;
+    selectedRows: ReadonlyMap<string, string>;
 };
 
 export function endpointById(group: DashboardSourceGroup, endpointId: string): SourceEndpointDto | null {
@@ -44,6 +47,7 @@ export function renderWidget(widget: DashboardWidget, context: RenderContext, ke
         case "w-stat":
             return renderStat(widget, context);
         case "w-detail":
+            return renderDetail(widget, context);
         case "w-detail-item-put":
         case "w-detail-patch":
         case "w-create":
@@ -107,6 +111,9 @@ function renderTable(
     const repeatPath = repeatPathFor(endpoint, collection);
     const url = endpointUrl(context.group, collection.list);
     const filters = renderFilters(widget, collection);
+    const rowAttributes = hasDetailWidget(context.dashboard.views, collection.id) && collection.item?.get
+        ? rowSelectionAttributes(collection)
+        : "";
 
     return `
         <section class="panel dashboard-table">
@@ -123,12 +130,60 @@ function renderTable(
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr cms-repeat="${escapeAttr(repeatPath)} as row">
+                                <tr${rowAttributes} cms-repeat="${escapeAttr(repeatPath)} as row">
                                     ${columns.map(column => `<td>${formatBinding(column.field, column.format)}</td>`).join("")}
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </cms-binding-core>
+        </section>
+    `;
+}
+
+function renderDetail(
+    widget: Extract<DashboardWidget, { widget: "w-detail" }>,
+    context: RenderContext,
+): string {
+    const collection = collectionById(context.dashboard, widget.collection);
+    if (!collection) return renderMissing(`Unknown collection "${widget.collection}"`);
+
+    const ref = collection.item?.get;
+    if (!ref) return renderMissing(`Collection "${widget.collection}" does not declare item.get`);
+
+    const endpoint = endpointById(context.group, ref.endpoint);
+    if (!endpoint) return renderMissing(`Unknown endpoint "${ref.endpoint}"`);
+
+    const selected = context.selectedRows.get(collection.id) ?? "";
+    if (!selected) {
+        return `
+            <section class="panel empty dashboard-detail">
+                <strong>${escapeHtml(widgetTitle(widget))}</strong>
+                <span>Select a row to view its details.</span>
+            </section>
+        `;
+    }
+
+    const fields = resolveFields(widget.fields, endpoint);
+    if (!fields.length) return renderMissing(`No displayable fields for collection "${widget.collection}"`);
+
+    const url = endpointUrl(context.group, ref, { selection: selected });
+    return `
+        <section class="panel dashboard-detail">
+            <strong>${escapeHtml(widgetTitle(widget))}</strong>
+            <cms-binding-core>
+                <div cms-source="${escapeAttr(url)} as item">
+                    <p class="state detail-state" cms-condition="$source.loading">Loading...</p>
+                    <p class="state detail-state" cms-condition="$source.error">Unable to load item.</p>
+                    <dl class="dashboard-detail-grid" cms-condition="$source.loaded">
+                        ${fields.map(field => `
+                            <div>
+                                <dt>${escapeHtml(field.label)}</dt>
+                                <dd>${formatDetailBinding(field.field, field.input)}</dd>
+                            </div>
+                        `).join("")}
+                    </dl>
                 </div>
             </cms-binding-core>
         </section>
@@ -199,6 +254,12 @@ type ResolvedColumn = {
     format?: ColumnFormat;
 };
 
+type ResolvedField = {
+    field: string;
+    label: string;
+    input?: FieldInput;
+};
+
 function resolveColumns(
     columns: ColumnSpec[] | undefined,
     endpoint: SourceEndpointDto,
@@ -224,6 +285,27 @@ function resolveColumns(
         }));
 }
 
+function resolveFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpointDto): ResolvedField[] {
+    if (fields?.length) {
+        return fields.flatMap(field => {
+            if (typeof field === "string") return isSafeBindingPath(field) ? { field, label: labelFromPath(field) } : [];
+            if (!isSafeBindingPath(field.field)) return [];
+            return { field: field.field, label: field.label ?? labelFromPath(field.field), input: field.input };
+        });
+    }
+
+    const shape = detailShape(endpoint);
+    if (!shape) return [];
+    return flattenDataShape(shape)
+        .filter(field => isSafeBindingPath(field.path))
+        .slice(0, 12)
+        .map(field => ({
+            field: field.path,
+            label: labelFromPath(field.path),
+            input: field.input,
+        }));
+}
+
 function listItemShape(endpoint: SourceEndpointDto, collection: Collection): DataShape | null {
     const body = successBody(endpoint);
     if (!body) return null;
@@ -231,6 +313,13 @@ function listItemShape(endpoint: SourceEndpointDto, collection: Collection): Dat
     if (!listShape) return null;
     if (listShape.type === "array") return listShape.items ?? null;
     return listShape;
+}
+
+function detailShape(endpoint: SourceEndpointDto): DataShape | null {
+    const body = successBody(endpoint);
+    if (!body) return null;
+    if (body.type === "array") return body.items ?? null;
+    return body;
 }
 
 function repeatPathFor(endpoint: SourceEndpointDto, collection: Collection): string {
@@ -271,22 +360,55 @@ function shapeAtPath(shape: DataShape, path: string): DataShape | null {
     return current ?? null;
 }
 
-function endpointUrl(group: DashboardSourceGroup, ref: CollectionEndpointRef): string {
+type EndpointUrlOptions = {
+    selection?: string;
+};
+
+function endpointUrl(group: DashboardSourceGroup, ref: CollectionEndpointRef, options: EndpointUrlOptions = {}): string {
     const base = route(`/.cms/sources/${encodeURIComponent(group.source.id)}/${encodeURIComponent(ref.endpoint)}`);
     const params = Object.entries(ref.params ?? {});
     if (!params.length) return base;
-    return `${base}?${params.map(([name, expr]) => `${encodeURIComponent(name)}=${paramValue(expr)}`).join("&")}`;
+    return `${base}?${params.map(([name, expr]) => `${encodeURIComponent(name)}=${paramValue(expr, options)}`).join("&")}`;
 }
 
-function paramValue(expr: string): string {
+function paramValue(expr: string, options: EndpointUrlOptions): string {
+    if (expr === "$selection") return encodeURIComponent(options.selection ?? "");
     if (expr.startsWith("$param.")) return `#{${expr.slice("$param.".length)}}`;
     if (expr.startsWith("$row.")) return `{{ row.${expr.slice("$row.".length)} }}`;
     return encodeURIComponent(expr);
 }
 
+function rowSelectionAttributes(collection: Collection): string {
+    const rowKey = collection.rowKey;
+    if (!rowKey || !isSafeBindingPath(rowKey)) return "";
+    return [
+        " class=\"dashboard-row\"",
+        " role=\"button\"",
+        " tabindex=\"0\"",
+        ` aria-label="Select ${escapeAttr(labelFromPath(collection.id))}"`,
+        ` data-dashboard-collection="${escapeAttr(collection.id)}"`,
+        ` data-dashboard-row-key="{{ row.${rowKey} }}"`,
+    ].join("");
+}
+
+function hasDetailWidget(widgets: DashboardWidget[], collectionId: string): boolean {
+    return widgets.some(widget => {
+        if (widget.widget === "w-detail") return widget.collection === collectionId;
+        if (widget.widget === "w-section") return hasDetailWidget(widget.children, collectionId);
+        if (widget.widget === "w-tabs") return widget.tabs.some(tab => hasDetailWidget(tab.children, collectionId));
+        return false;
+    });
+}
+
 function formatBinding(field: string, format: ResolvedColumn["format"]): string {
     const binding = `{{ row.${field} }}`;
     if (format === "badge") return `<span class="badge">${binding}</span>`;
+    return binding;
+}
+
+function formatDetailBinding(field: string, input: ResolvedField["input"]): string {
+    const binding = `{{ item.${field} }}`;
+    if (input === "boolean") return `<span class="badge">${binding}</span>`;
     return binding;
 }
 

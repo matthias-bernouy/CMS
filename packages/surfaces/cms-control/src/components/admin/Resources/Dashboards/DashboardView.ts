@@ -11,6 +11,7 @@ export class DashboardView extends Component {
     private selectedSource = "";
     private selectedDashboard = "";
     private readonly tabState = new Map<string, number>();
+    private readonly selectedRows = new Map<string, string>();
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
@@ -20,12 +21,15 @@ export class DashboardView extends Component {
         super.connectedCallback();
         this.selectedSource = currentSource();
         this.selectedDashboard = currentDashboard();
-        this.shadowRoot!.addEventListener("click", event => this.handleClick(event));
+        this.shadowRoot!.addEventListener("click", this.onClick);
+        this.shadowRoot!.addEventListener("keydown", this.onKeydown);
         window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection as EventListener);
         void this.load();
     }
 
     disconnectedCallback(): void {
+        this.shadowRoot?.removeEventListener("click", this.onClick);
+        this.shadowRoot?.removeEventListener("keydown", this.onKeydown);
         window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection as EventListener);
     }
 
@@ -53,11 +57,29 @@ export class DashboardView extends Component {
 
     private handleClick(event: Event): void {
         const target = event.target as Element | null;
+        if (this.selectRow(target)) return;
+
         const tabButton = target?.closest<HTMLElement>("[data-tab-key]");
         if (tabButton?.dataset.tabKey && tabButton.dataset.tabIndex) {
             this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
             this.renderWidgets();
         }
+    }
+
+    private handleKeydown(event: KeyboardEvent): void {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        if (!this.selectRow(event.target as Element | null)) return;
+        event.preventDefault();
+    }
+
+    private selectRow(target: Element | null): boolean {
+        const row = target?.closest<HTMLElement>("[data-dashboard-collection][data-dashboard-row-key]");
+        const collection = row?.dataset.dashboardCollection;
+        const rowKey = row?.dataset.dashboardRowKey;
+        if (!collection || !rowKey?.trim()) return false;
+        this.selectedRows.set(collection, rowKey);
+        this.renderWidgets();
+        return true;
     }
 
     private render(): void {
@@ -88,7 +110,7 @@ export class DashboardView extends Component {
             return;
         }
         root.innerHTML = dashboard.views
-            .map((widget, index) => renderWidget(widget, { group, dashboard }, `root.${index}`, this.tabState))
+            .map((widget, index) => renderWidget(widget, { group, dashboard, selectedRows: this.selectedRows }, `root.${index}`, this.tabState))
             .join("");
     }
 
@@ -105,10 +127,20 @@ export class DashboardView extends Component {
     }
 
     private onSelection = (event: CustomEvent<DashboardSelection>): void => {
+        const changed = event.detail.source !== this.selectedSource || event.detail.dashboard !== this.selectedDashboard;
         this.selectedSource = event.detail.source;
         this.selectedDashboard = event.detail.dashboard;
+        if (changed) this.selectedRows.clear();
         this.ensureDashboardSelection();
         this.renderDetail();
+    };
+
+    private readonly onClick = (event: Event): void => {
+        this.handleClick(event);
+    };
+
+    private readonly onKeydown = (event: Event): void => {
+        this.handleKeydown(event as KeyboardEvent);
     };
 
     private query<T extends Element>(selector: string): T {

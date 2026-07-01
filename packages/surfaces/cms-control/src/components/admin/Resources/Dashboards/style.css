@@ -152,6 +152,15 @@ p {
     color: var(--text-muted, #51605b);
 }
 
+.dashboard-row {
+    cursor: pointer;
+}
+
+.dashboard-row:focus-visible {
+    outline: 2px solid var(--primary-base, #165f4b);
+    outline-offset: -2px;
+}
+
 .dashboard-grid tbody tr:hover {
     background: var(--bg-hover, #f3f6f5);
 }
@@ -202,6 +211,45 @@ p {
 
 .tab-body {
     padding: 16px;
+}
+
+.dashboard-detail {
+    display: grid;
+    gap: 14px;
+}
+
+.dashboard-detail cms-binding-core,
+.dashboard-detail [cms-source] {
+    display: block;
+}
+
+.detail-state {
+    padding: 0;
+}
+
+.dashboard-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px 24px;
+    margin: 0;
+}
+
+.dashboard-detail-grid div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.dashboard-detail-grid dt {
+    color: var(--text-muted, #66736f);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.dashboard-detail-grid dd {
+    margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .widget-section {

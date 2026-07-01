@@ -35,6 +35,28 @@ const source: Source = {
             ],
         },
         {
+            urn: "urn:commerce:getOrder",
+            method: "GET",
+            targetUrl: "https://example.com/orders/{orderId}",
+            input: {
+                params: [
+                    { name: "orderId", in: "path", required: true, schema: { type: "string" } },
+                ],
+            },
+            output: [
+                {
+                    status: "200",
+                    body: {
+                        type: "object",
+                        properties: {
+                            id: { type: "string" },
+                            status: { type: "string" },
+                        },
+                    },
+                },
+            ],
+        },
+        {
             urn: "urn:commerce:refundOrder",
             method: "DELETE",
             targetUrl: "https://example.com/orders/{orderId}",
@@ -80,6 +102,50 @@ const validDashboard = (): Dashboard => ({
 describe("validateDashboard", () => {
     test("accepts a valid dashboard against its source", () => {
         expect(validateDashboard(validDashboard(), { source })).toEqual([]);
+    });
+
+    test("accepts item detail widgets backed by selection params", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
+        };
+        dashboard.views.push({ widget: "w-detail", collection: "orders", fields: ["id", "status"] });
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+    });
+
+    test("rejects item detail widgets without an item get endpoint", () => {
+        const dashboard = validDashboard();
+        dashboard.views.push({ widget: "w-detail", collection: "orders", fields: ["id"] });
+
+        expect(validateDashboard(dashboard, { source })).toContain(
+            'views.2.collection "orders" must declare item.get for w-detail',
+        );
+    });
+
+    test("rejects item detail widgets without a selectable row binding", () => {
+        const dashboard = validDashboard();
+        delete dashboard.collections[0]!.rowKey;
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            get: { endpoint: "getOrder", params: { orderId: "$param.status" } },
+        };
+        dashboard.views.push({ widget: "w-detail", collection: "orders", fields: ["id"] });
+
+        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
+            'views.2.collection "orders" must declare rowKey for w-detail',
+            'views.2.collection "orders" item.get must bind a param to $selection',
+        ]));
+    });
+
+    test("rejects selection params outside item detail endpoints", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.list.params = { status: "$selection" };
+
+        expect(validateDashboard(dashboard, { source })).toContain(
+            "collections.orders.list.params.status uses $selection outside a collection item get endpoint",
+        );
     });
 
     test("rejects dangling collections and row actions", () => {
