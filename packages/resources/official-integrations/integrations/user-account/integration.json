@@ -1,9 +1,9 @@
 {
     "schema": "cms.integration.index.v1",
-    "kind": "supabase-user-account",
-    "label": "Supabase User Account",
+    "kind": "user-account",
+    "label": "User Personal Information",
     "category": "Users",
-    "description": "Store minimal CMS user account fields in a private Supabase table.",
+    "description": "Store personal information for CMS users with the configured connector.",
     "stable": "1.0.0",
     "latest": "1.0.0",
     "versions": [

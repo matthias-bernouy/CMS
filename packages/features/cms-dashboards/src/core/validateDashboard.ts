@@ -139,6 +139,22 @@ function validateWidget(
             }
             widget.fields?.forEach((field, index) => validateFieldSpec(field, `${path}.fields.${index}`, dashboard, source, errors));
             break;
+        case "w-delete":
+            validateCollectionRef(widget.collection, `${path}.collection`, collections, errors);
+            {
+                const collection = collections.get(widget.collection);
+                const deleteRef = collection?.item?.delete;
+                if (collection && !collection.rowKey) {
+                    errors.push(`${path}.collection "${widget.collection}" must declare rowKey for w-delete`);
+                }
+                if (collection && !deleteRef) {
+                    errors.push(`${path}.collection "${widget.collection}" must declare item.delete for w-delete`);
+                }
+                if (collection && deleteRef && !bindsSelectedRow(deleteRef, collection)) {
+                    errors.push(`${path}.collection "${widget.collection}" item.delete must bind a param to $selection or $row.${collection.rowKey}`);
+                }
+            }
+            break;
         case "w-stat":
             validateEndpointRef(dashboard, { endpoint: widget.endpoint }, `${path}.endpoint`, source, errors);
             validatePath("path", widget.path, path, errors);
@@ -170,6 +186,11 @@ function validateRowAction(
     if (!collection.item?.[action.action]) {
         errors.push(`${path}.action "${action.action}" has no matching collection item endpoint`);
     }
+}
+
+function bindsSelectedRow(ref: CollectionEndpointRef, collection: Collection): boolean {
+    const rowExpr = collection.rowKey ? `$row.${collection.rowKey}` : "";
+    return Object.values(ref.params ?? {}).some(expr => expr === SELECTION_EXPR || expr === rowExpr);
 }
 
 function validateFilter(filter: FilterSpec, path: string, errors: string[]): void {

@@ -9,6 +9,7 @@ import {
     type FieldFormat,
     type FieldInput,
     type FieldSpec,
+    type RowAction,
 } from "@bernouy/cms-dashboards";
 import type { DataShape, EndpointResponse, SourceEndpointDto } from "@bernouy/cms-sources";
 import { route } from "./api";
@@ -54,6 +55,8 @@ export function renderWidget(widget: DashboardWidget, context: RenderContext, ke
             return renderCreate(widget, context, key);
         case "w-update":
             return renderUpdate(widget, context, key);
+        case "w-delete":
+            return renderDelete(widget, context);
         default:
             return `<section class="panel empty"><strong>Unsupported widget</strong></section>`;
     }
@@ -113,9 +116,10 @@ function renderTable(
     const repeatPath = repeatPathFor(endpoint, collection);
     const url = endpointUrl(context.group, collection.list);
     const filters = renderFilters(widget, collection);
-    const rowAttributes = hasDetailCollectionWidget(context.dashboard.views, collection.id) && collection.item?.get
+    const rowAttributes = hasDetailCollectionWidget(context.dashboard.views, collection.id) && collection.rowKey
         ? rowSelectionAttributes(collection)
         : "";
+    const rowActions = widget.rowActions?.length ? renderRowActions(widget.rowActions, context, collection) : "";
 
     return `
         <section class="panel dashboard-table">
@@ -126,14 +130,22 @@ function renderTable(
                     <p class="state" cms-condition="$source.error">Unable to load data.</p>
                     <div class="dashboard-table-scroll" cms-condition="$source.loaded">
                         <table class="dashboard-grid">
+                            ${rowActions ? `
+                                <colgroup>
+                                    ${columns.map(() => "<col>").join("")}
+                                    <col class="dashboard-actions-col">
+                                </colgroup>
+                            ` : ""}
                             <thead>
                                 <tr>
                                     ${columns.map(column => `<th scope="col">${escapeHtml(column.label)}</th>`).join("")}
+                                    ${rowActions ? `<th scope="col" class="dashboard-actions-head" aria-label="Actions"></th>` : ""}
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr${rowAttributes} cms-repeat="${escapeAttr(repeatPath)} as row">
                                     ${columns.map(column => `<td>${formatBinding(column.field, column.format)}</td>`).join("")}
+                                    ${rowActions ? `<td class="dashboard-actions-cell">${rowActions}</td>` : ""}
                                 </tr>
                             </tbody>
                         </table>
@@ -142,6 +154,32 @@ function renderTable(
             </cms-binding-core>
         </section>
     `;
+}
+
+function renderRowActions(actions: RowAction[], context: RenderContext, collection: Collection): string {
+    const buttons = actions.flatMap(action => {
+        const ref = collection.item?.[action.action];
+        if (!ref) return [];
+        const endpoint = endpointById(context.group, ref.endpoint);
+        if (!endpoint) return [];
+        const label = action.label || sentenceCase(action.action);
+        const confirmLabel = action.confirm || action.action === "delete" ? `Confirm ${label.toLowerCase()}?` : "";
+        const successMessage = action.action === "delete" ? "Deleted" : `${label} completed`;
+        return `
+            <button
+                type="button"
+                class="dashboard-action ${action.action === "delete" ? "danger" : ""}"
+                data-dashboard-action
+                data-dashboard-action-url="${escapeAttr(endpointUrl(context.group, ref, { rowBinding: true, rowKey: collection.rowKey }))}"
+                data-dashboard-action-method="${escapeAttr(endpoint.method)}"
+                data-dashboard-action-success-message="${escapeAttr(successMessage)}"
+                ${confirmLabel ? `data-dashboard-action-confirm="${escapeAttr(confirmLabel)}"` : ""}
+                ${action.body ? `data-dashboard-action-body="${escapeAttr(JSON.stringify(action.body))}"` : ""}
+            >${escapeHtml(label)}</button>
+        `;
+    });
+    if (!buttons.length) return "";
+    return `<div class="dashboard-row-actions">${buttons.join("")}</div>`;
 }
 
 function renderDetail(
@@ -312,6 +350,40 @@ function renderUpdate(
                 <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
             </form>
         </dialog>
+    `;
+}
+
+function renderDelete(
+    widget: Extract<DashboardWidget, { widget: "w-delete" }>,
+    context: RenderContext,
+): string {
+    const collection = collectionById(context.dashboard, widget.collection);
+    if (!collection) return renderMissing(`Unknown collection "${widget.collection}"`);
+
+    const ref = collection.item?.delete;
+    if (!ref) return renderMissing(`Collection "${widget.collection}" does not declare item.delete`);
+
+    const endpoint = endpointById(context.group, ref.endpoint);
+    if (!endpoint) return renderMissing(`Unknown endpoint "${ref.endpoint}"`);
+
+    const selected = context.selectedRows.get(collection.id) ?? "";
+    if (!selected) return "";
+
+    const label = widget.label ?? "Delete";
+    return `
+        <section class="dashboard-delete-action">
+            <button
+                type="button"
+                class="danger"
+                data-dashboard-action
+                data-dashboard-action-scope="detail-delete"
+                data-dashboard-action-url="${escapeAttr(endpointUrl(context.group, ref, { selection: selected, rowKey: collection.rowKey }))}"
+                data-dashboard-action-method="${escapeAttr(endpoint.method)}"
+                data-dashboard-action-success-message="${escapeAttr(widget.successMessage ?? "Deleted")}"
+                data-dashboard-action-confirm="${escapeAttr(widget.confirmLabel ?? "Delete this item?")}"
+                ${widget.body ? `data-dashboard-action-body="${escapeAttr(JSON.stringify(widget.body))}"` : ""}
+            >${escapeHtml(label)}</button>
+        </section>
     `;
 }
 
@@ -514,6 +586,8 @@ function shapeAtPath(shape: DataShape, path: string): DataShape | null {
 type EndpointUrlOptions = {
     selection?: string;
     fieldAlias?: string;
+    rowBinding?: boolean;
+    rowKey?: string;
 };
 
 function endpointUrl(group: DashboardSourceGroup, ref: CollectionEndpointRef, options: EndpointUrlOptions = {}): string {
@@ -524,9 +598,16 @@ function endpointUrl(group: DashboardSourceGroup, ref: CollectionEndpointRef, op
 }
 
 function paramValue(expr: string, options: EndpointUrlOptions): string {
-    if (expr === "$selection") return encodeURIComponent(options.selection ?? "");
+    if (expr === "$selection") {
+        if (options.rowBinding && options.rowKey && isSafeBindingPath(options.rowKey)) return `{{ row.${options.rowKey} }}`;
+        return encodeURIComponent(options.selection ?? "");
+    }
     if (expr.startsWith("$param.")) return `#{${expr.slice("$param.".length)}}`;
-    if (expr.startsWith("$row.")) return `{{ row.${expr.slice("$row.".length)} }}`;
+    if (expr.startsWith("$row.")) {
+        const rowPath = expr.slice("$row.".length);
+        if (options.selection && options.rowKey === rowPath) return encodeURIComponent(options.selection);
+        return `{{ row.${rowPath} }}`;
+    }
     if (expr.startsWith("$field.")) return `{{ ${options.fieldAlias ?? "item"}.${expr.slice("$field.".length)} }}`;
     return encodeURIComponent(expr);
 }
@@ -546,7 +627,7 @@ function rowSelectionAttributes(collection: Collection): string {
 
 function hasDetailCollectionWidget(widgets: DashboardWidget[], collectionId: string): boolean {
     return widgets.some(widget => {
-        if (widget.widget === "w-detail" || widget.widget === "w-update") return widget.collection === collectionId;
+        if (widget.widget === "w-detail" || widget.widget === "w-update" || widget.widget === "w-delete") return widget.collection === collectionId;
         if (widget.widget === "w-section") return hasDetailCollectionWidget(widget.children, collectionId);
         if (widget.widget === "w-tabs") return widget.tabs.some(tab => hasDetailCollectionWidget(tab.children, collectionId));
         return false;

@@ -1,0 +1,1143 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "user-account",
+    "label": "User Personal Information",
+    "version": "1.0.0",
+    "category": "Users",
+    "description": "Store personal information for CMS users with the configured connector.",
+    "inputs": [
+        {
+            "name": "id",
+            "label": "Source id",
+            "type": "text",
+            "required": true,
+            "defaultValue": "user-account"
+        }
+    ],
+    "ui": {
+        "mark": "U",
+        "markClass": "user-account",
+        "emit": "source:updated",
+        "instructions": [
+            [
+                "Deploy connector resources",
+                "Apply the bundled Supabase schema and Edge Function to the configured project."
+            ],
+            [
+                "Generate CMS API key",
+                "Create a dedicated bearer token and install it in both the CMS secret store and the Supabase function secrets."
+            ],
+            [
+                "Connect the CMS",
+                "Install the user personal information source with the deployed function URL."
+            ]
+        ],
+        "scopes": [
+            "CMS x-user-id forwarding",
+            "Current user personal information reads",
+            "Minimal user personal information updates",
+            "User personal information row deletion",
+            "Admin-targeted personal information creation",
+            "Admin user dashboard reads",
+            "Private avatar uploads and reads"
+        ],
+        "checks": [
+            "The CMS only stores the source configuration and private API key reference.",
+            "Each self-service request forwards x-user-id from the authenticated CMS subject.",
+            "Backoffice create requests keep x-user-id as the actor and pass the target user as a request param.",
+            "Admin dashboard personal information reads must stay behind CMS gateway permissions.",
+            "Avatar files stay in the private connector bucket and are served only through the CMS source proxy.",
+            "The connector deployer owns Supabase project credentials; the CMS source only stores its generated API key reference."
+        ],
+        "resources": [
+            [
+                "Sources",
+                "User personal information source contract"
+            ],
+            [
+                "Dashboards",
+                "Users dashboard"
+            ],
+            [
+                "Secrets",
+                "Private CMS user personal information API key"
+            ],
+            [
+                "Supabase",
+                "Private user_account schema, avatar bucket, and Edge Function"
+            ]
+        ],
+        "review": [
+            "Keep the user_account schema private to anon and authenticated roles.",
+            "Use x-user-id only when it has been computed by the CMS, never from browser input.",
+            "Do not expose Supabase service-role or secret keys to browser code."
+        ],
+        "sync": [
+            "Validate answers",
+            "Generate private API key",
+            "Deploy Supabase connector",
+            "Install user personal information source",
+            "Install users dashboard",
+            "Refresh Sources"
+        ],
+        "syncNote": "This integration creates a stateless CMS source. Supabase owns minimal personal information rows."
+    },
+    "generatedSecrets": [
+        {
+            "name": "cmsApiKey",
+            "key": "USER_ACCOUNT_{{env answers.id}}_API_KEY",
+            "generator": "token",
+            "bytes": 32,
+            "prefix": "cms_ua_"
+        }
+    ],
+    "connectors": [
+        {
+            "provider": "supabase",
+            "root": "connectors/supabase",
+            "dataApiSchemas": [
+                "user_account"
+            ],
+            "schemas": [
+                "schema.sql"
+            ],
+            "functions": [
+                {
+                    "name": "cms-user-account",
+                    "directory": "functions/cms-user-account",
+                    "configPath": "supabase.config.toml",
+                    "secrets": {
+                        "CMS_USER_ACCOUNT_API_KEY": "{{generated.cmsApiKey}}"
+                    }
+                }
+            ]
+        }
+    ],
+    "artifacts": [
+        {
+            "type": "source",
+            "source": {
+                "id": "{{answers.id}}",
+                "meta": {
+                    "name": "User Personal Information",
+                    "description": "Supabase-backed personal information endpoints and dashboard reads.",
+                    "icon": "user"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "getAccount",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "phone": {
+                                            "type": "string"
+                                        },
+                                        "displayName": {
+                                            "type": "string"
+                                        },
+                                        "avatarUrl": {
+                                            "type": "string"
+                                        },
+                                        "avatarFileId": {
+                                            "type": "string"
+                                        },
+                                        "locale": {
+                                            "type": "string"
+                                        },
+                                        "timezone": {
+                                            "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "exists",
+                                        "userId"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "updateAccount",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "email": {
+                                    "type": "string"
+                                },
+                                "phone": {
+                                    "type": "string"
+                                },
+                                "displayName": {
+                                    "type": "string"
+                                },
+                                "avatarUrl": {
+                                    "type": "string"
+                                },
+                                "avatarFileId": {
+                                    "type": "string"
+                                },
+                                "locale": {
+                                    "type": "string"
+                                },
+                                "timezone": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "phone": {
+                                            "type": "string"
+                                        },
+                                        "displayName": {
+                                            "type": "string"
+                                        },
+                                        "avatarUrl": {
+                                            "type": "string"
+                                        },
+                                        "avatarFileId": {
+                                            "type": "string"
+                                        },
+                                        "locale": {
+                                            "type": "string"
+                                        },
+                                        "timezone": {
+                                            "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "exists",
+                                        "userId"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "uploadAccountAvatar",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/avatar",
+                        "meta": {
+                            "name": "Upload current user avatar",
+                            "description": "Upload an avatar image for the current CMS user. The request must be multipart/form-data with a file field."
+                        },
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "fileId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "fileId"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getAccountAvatar",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/avatar",
+                        "responseKind": "file",
+                        "mediaType": "image/*",
+                        "meta": {
+                            "name": "Get current user avatar",
+                            "description": "Read the current CMS user avatar file."
+                        },
+                        "params": [
+                            {
+                                "name": "fileId",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Avatar file id returned by uploadAccountAvatar."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "deleteAccount",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/delete-account",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "deleted": {
+                                            "type": "boolean"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "deleted",
+                                        "userId"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "listAccounts",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/records",
+                        "meta": {
+                            "name": "List users",
+                            "description": "Search user personal information rows for the admin dashboard."
+                        },
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Search by CMS user id, email, phone, or display name."
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number",
+                                "description": "Maximum number of rows to return."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accounts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "exists": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "userId": {
+                                                        "type": "string"
+                                                    },
+                                                    "email": {
+                                                        "type": "string"
+                                                    },
+                                                    "phone": {
+                                                        "type": "string"
+                                                    },
+                                                    "displayName": {
+                                                        "type": "string"
+                                                    },
+                                                    "avatarUrl": {
+                                                        "type": "string"
+                                                    },
+                                                    "avatarFileId": {
+                                                        "type": "string"
+                                                    },
+                                                    "locale": {
+                                                        "type": "string"
+                                                    },
+                                                    "timezone": {
+                                                        "type": "string"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "exists",
+                                                    "userId"
+                                                ]
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "accounts",
+                                        "total"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getAccountByUserId",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/record",
+                        "meta": {
+                            "name": "Get user",
+                            "description": "Read one user personal information row by CMS user id."
+                        },
+                        "params": [
+                            {
+                                "name": "userId",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "CMS user id."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "phone": {
+                                            "type": "string"
+                                        },
+                                        "displayName": {
+                                            "type": "string"
+                                        },
+                                        "avatarUrl": {
+                                            "type": "string"
+                                        },
+                                        "avatarFileId": {
+                                            "type": "string"
+                                        },
+                                        "locale": {
+                                            "type": "string"
+                                        },
+                                        "timezone": {
+                                            "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "exists",
+                                        "userId"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createUserPersonalInformation",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/record",
+                        "meta": {
+                            "name": "Create user personal information",
+                            "description": "Create or update personal information for a target CMS user."
+                        },
+                        "params": [
+                            {
+                                "name": "userId",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Target CMS user id."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "email": {
+                                    "type": "string"
+                                },
+                                "phone": {
+                                    "type": "string"
+                                },
+                                "displayName": {
+                                    "type": "string"
+                                },
+                                "avatarUrl": {
+                                    "type": "string"
+                                },
+                                "avatarFileId": {
+                                    "type": "string"
+                                },
+                                "locale": {
+                                    "type": "string"
+                                },
+                                "timezone": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "phone": {
+                                            "type": "string"
+                                        },
+                                        "displayName": {
+                                            "type": "string"
+                                        },
+                                        "avatarUrl": {
+                                            "type": "string"
+                                        },
+                                        "avatarFileId": {
+                                            "type": "string"
+                                        },
+                                        "locale": {
+                                            "type": "string"
+                                        },
+                                        "timezone": {
+                                            "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "exists",
+                                        "userId"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "deleteUserPersonalInformation",
+                        "method": "DELETE",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/record",
+                        "meta": {
+                            "name": "Delete user personal information",
+                            "description": "Delete personal information for a target CMS user."
+                        },
+                        "params": [
+                            {
+                                "name": "userId",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Target CMS user id."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "deleted": {
+                                            "type": "boolean"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "deleted",
+                                        "userId"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "uploadUserPersonalInformationAvatar",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/record/avatar",
+                        "meta": {
+                            "name": "Upload user avatar",
+                            "description": "Upload an avatar image for a target CMS user. The request must be multipart/form-data with a file field."
+                        },
+                        "params": [
+                            {
+                                "name": "userId",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Target CMS user id."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "fileId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "fileId"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getUserPersonalInformationAvatar",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/personal-information/record/avatar",
+                        "responseKind": "file",
+                        "mediaType": "image/*",
+                        "meta": {
+                            "name": "Get user avatar",
+                            "description": "Read one target CMS user avatar file for the admin dashboard."
+                        },
+                        "params": [
+                            {
+                                "name": "userId",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Target CMS user id."
+                            },
+                            {
+                                "name": "fileId",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Avatar file id stored on the personal information row."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "health",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-user-account/health",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-users",
+                "meta": {
+                    "name": "Users",
+                    "icon": "database"
+                },
+                "source": "{{answers.id}}",
+                "collections": [
+                    {
+                        "id": "users",
+                        "rowKey": "userId",
+                        "list": {
+                            "endpoint": "listAccounts",
+                            "params": {
+                                "q": "$param.q",
+                                "limit": "100"
+                            },
+                            "itemsPath": "accounts",
+                            "totalPath": "total"
+                        },
+                        "item": {
+                            "get": {
+                                "endpoint": "getAccountByUserId",
+                                "params": {
+                                    "userId": "$selection"
+                                }
+                            },
+                            "create": {
+                                "endpoint": "createUserPersonalInformation",
+                                "params": {
+                                    "userId": "$param.userId"
+                                }
+                            },
+                            "update": {
+                                "endpoint": "createUserPersonalInformation",
+                                "params": {
+                                    "userId": "$selection"
+                                }
+                            },
+                            "delete": {
+                                "endpoint": "deleteUserPersonalInformation",
+                                "params": {
+                                    "userId": "$selection"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "views": [
+                    {
+                        "widget": "w-create",
+                        "collection": "users",
+                        "label": "Create user",
+                        "submitLabel": "Create user",
+                        "fields": [
+                            {
+                                "field": "userId",
+                                "label": "User",
+                                "input": "cms-user",
+                                "required": true
+                            },
+                            {
+                                "field": "displayName",
+                                "label": "Name"
+                            },
+                            {
+                                "field": "email",
+                                "label": "Email"
+                            },
+                            {
+                                "field": "phone",
+                                "label": "Phone"
+                            },
+                            {
+                                "field": "avatarFileId",
+                                "label": "Avatar",
+                                "input": "file",
+                                "accept": "image/*",
+                                "upload": {
+                                    "endpoint": "uploadUserPersonalInformationAvatar",
+                                    "params": {
+                                        "userId": "$param.userId"
+                                    },
+                                    "resultPath": "fileId"
+                                }
+                            },
+                            {
+                                "field": "locale",
+                                "label": "Locale"
+                            },
+                            {
+                                "field": "timezone",
+                                "label": "Timezone"
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-table",
+                        "collection": "users",
+                        "rowActions": [
+                            {
+                                "widget": "w-table-row-action",
+                                "label": "Delete",
+                                "action": "delete",
+                                "confirm": true
+                            }
+                        ],
+                        "filters": [
+                            {
+                                "field": "q",
+                                "param": "q",
+                                "input": "text",
+                                "label": "Search",
+                                "placeholder": "Search users"
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "field": "displayName",
+                                "label": "Name"
+                            },
+                            {
+                                "field": "email",
+                                "label": "Email"
+                            },
+                            {
+                                "field": "phone",
+                                "label": "Phone"
+                            },
+                            {
+                                "field": "locale",
+                                "label": "Locale"
+                            },
+                            {
+                                "field": "timezone",
+                                "label": "Timezone"
+                            },
+                            {
+                                "field": "updatedAt",
+                                "label": "Updated",
+                                "format": "date"
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-update",
+                        "collection": "users",
+                        "label": "Edit user",
+                        "submitLabel": "Save user",
+                        "fields": [
+                            {
+                                "field": "displayName",
+                                "label": "Name"
+                            },
+                            {
+                                "field": "email",
+                                "label": "Email"
+                            },
+                            {
+                                "field": "phone",
+                                "label": "Phone"
+                            },
+                            {
+                                "field": "avatarFileId",
+                                "label": "Avatar",
+                                "input": "file",
+                                "accept": "image/*",
+                                "upload": {
+                                    "endpoint": "uploadUserPersonalInformationAvatar",
+                                    "params": {
+                                        "userId": "$selection"
+                                    },
+                                    "resultPath": "fileId"
+                                }
+                            },
+                            {
+                                "field": "locale",
+                                "label": "Locale"
+                            },
+                            {
+                                "field": "timezone",
+                                "label": "Timezone"
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-delete",
+                        "collection": "users",
+                        "label": "Delete user",
+                        "confirmLabel": "Delete this user's personal information?",
+                        "successMessage": "User personal information deleted"
+                    },
+                    {
+                        "widget": "w-detail",
+                        "collection": "users",
+                        "fields": [
+                            {
+                                "field": "userId",
+                                "label": "User id"
+                            },
+                            {
+                                "field": "displayName",
+                                "label": "Name"
+                            },
+                            {
+                                "field": "email",
+                                "label": "Email"
+                            },
+                            {
+                                "field": "phone",
+                                "label": "Phone"
+                            },
+                            {
+                                "field": "avatarFileId",
+                                "label": "Avatar",
+                                "format": "image",
+                                "media": {
+                                    "endpoint": "getUserPersonalInformationAvatar",
+                                    "params": {
+                                        "userId": "$selection",
+                                        "fileId": "$field.avatarFileId"
+                                    }
+                                }
+                            },
+                            {
+                                "field": "locale",
+                                "label": "Locale"
+                            },
+                            {
+                                "field": "timezone",
+                                "label": "Timezone"
+                            },
+                            {
+                                "field": "createdAt",
+                                "label": "Created",
+                                "format": "date"
+                            },
+                            {
+                                "field": "updatedAt",
+                                "label": "Updated",
+                                "format": "date"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

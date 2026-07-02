@@ -1,4 +1,4 @@
--- Supabase user account schema for CMS-backed user profile data.
+-- Supabase personal information schema for CMS-backed user profile data.
 --
 -- Run this SQL against the target Supabase database. The CMS must not query
 -- this table directly; the Edge Function owns all reads and writes.
@@ -17,6 +17,7 @@ create table if not exists user_account.accounts (
     phone text,
     display_name text,
     avatar_url text,
+    avatar_file_id text,
     locale text,
     timezone text,
     created_at timestamptz not null default now(),
@@ -49,6 +50,12 @@ create table if not exists user_account.accounts (
     constraint accounts_avatar_url_length check (
         avatar_url is null or length(avatar_url) <= 2048
     ),
+    constraint accounts_avatar_file_id_not_blank check (
+        avatar_file_id is null or length(btrim(avatar_file_id)) > 0
+    ),
+    constraint accounts_avatar_file_id_length check (
+        avatar_file_id is null or length(avatar_file_id) <= 512
+    ),
     constraint accounts_locale_not_blank check (
         locale is null or length(btrim(locale)) > 0
     ),
@@ -62,6 +69,49 @@ create table if not exists user_account.accounts (
         timezone is null or length(timezone) <= 64
     )
 );
+
+alter table user_account.accounts
+    add column if not exists avatar_file_id text;
+
+do $$
+begin
+    if not exists (
+        select 1
+        from pg_constraint
+        where conname = 'accounts_avatar_file_id_not_blank'
+          and conrelid = 'user_account.accounts'::regclass
+    ) then
+        alter table user_account.accounts
+            add constraint accounts_avatar_file_id_not_blank check (
+                avatar_file_id is null or length(btrim(avatar_file_id)) > 0
+            );
+    end if;
+
+    if not exists (
+        select 1
+        from pg_constraint
+        where conname = 'accounts_avatar_file_id_length'
+          and conrelid = 'user_account.accounts'::regclass
+    ) then
+        alter table user_account.accounts
+            add constraint accounts_avatar_file_id_length check (
+                avatar_file_id is null or length(avatar_file_id) <= 512
+            );
+    end if;
+end $$;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+    'user-account-avatars',
+    'user-account-avatars',
+    false,
+    5242880,
+    array['image/jpeg', 'image/png', 'image/webp', 'image/gif']::text[]
+)
+on conflict (id) do update set
+    public = false,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
 
 create index if not exists accounts_email_idx
     on user_account.accounts(email)
@@ -104,14 +154,16 @@ alter default privileges in schema user_account
 grant execute on functions to service_role;
 
 comment on schema user_account is
-    'Private user account schema owned by Supabase Edge Functions.';
+    'Private user personal information schema owned by Supabase Edge Functions.';
 comment on table user_account.accounts is
-    'Minimal CMS user account data keyed by the trusted x-user-id header.';
+    'Minimal CMS user personal information data keyed by the trusted x-user-id header.';
 comment on column user_account.accounts.cms_user_id is
     'Stable user id computed by the CMS and forwarded as x-user-id.';
 comment on column user_account.accounts.email is
     'Optional lowercase trimmed email address.';
 comment on column user_account.accounts.display_name is
     'Optional public or private display name depending on the CMS site design.';
+comment on column user_account.accounts.avatar_file_id is
+    'Private Supabase Storage object path for an uploaded avatar.';
 
 commit;

@@ -12179,6 +12179,38 @@ p {
     background: var(--primary-strong, #0f4a3a);
 }
 
+.dashboard-delete-action button.danger {
+    border-color: var(--danger-base, #a43333);
+    background: var(--danger-base, #a43333);
+    color: white;
+}
+
+.dashboard-delete-action button.danger:hover {
+    background: var(--danger-strong, #862525);
+}
+
+.dashboard-delete-action button:disabled,
+.dashboard-row-actions .dashboard-action:disabled {
+    cursor: wait;
+    opacity: .7;
+}
+
+.dashboard-delete-action {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.dashboard-delete-action button {
+    border: 1px solid var(--danger-base, #a43333);
+    border-radius: 7px;
+    background: var(--danger-base, #a43333);
+    color: white;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 8px 13px;
+}
+
 .dashboard-create-dialog {
     width: min(720px, calc(100vw - 32px));
     max-height: min(760px, calc(100vh - 32px));
@@ -12451,6 +12483,10 @@ p {
     table-layout: fixed;
 }
 
+.dashboard-actions-col {
+    width: 72px;
+}
+
 .dashboard-grid th,
 .dashboard-grid td {
     padding: 12px 16px;
@@ -12469,6 +12505,47 @@ p {
 
 .dashboard-grid td {
     color: var(--text-muted, #51605b);
+}
+
+.dashboard-actions-head {
+    width: 72px;
+}
+
+.dashboard-actions-cell {
+    padding-right: 12px;
+    padding-left: 8px;
+    white-space: nowrap;
+}
+
+.dashboard-row-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.dashboard-action {
+    min-height: 30px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-default, #0f1f1a);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 5px 8px;
+}
+
+.dashboard-action:hover {
+    background: var(--bg-hover, #f3f6f5);
+}
+
+.dashboard-row-actions .dashboard-action.danger {
+    color: var(--danger-base, #a43333);
+}
+
+.dashboard-row-actions .dashboard-action.danger:hover {
+    border-color: color-mix(in srgb, var(--danger-base, #a43333), transparent 68%);
+    background: color-mix(in srgb, var(--danger-base, #a43333), transparent 92%);
 }
 
 .dashboard-row {
@@ -12890,6 +12967,8 @@ p {
         return renderCreate(widget, context, key);
       case "w-update":
         return renderUpdate(widget, context, key);
+      case "w-delete":
+        return renderDelete(widget, context);
       default:
         return `<section class="panel empty"><strong>Unsupported widget</strong></section>`;
     }
@@ -12935,7 +13014,8 @@ p {
     const repeatPath = repeatPathFor(endpoint, collection);
     const url = endpointUrl(context.group, collection.list);
     const filters = renderFilters(widget, collection);
-    const rowAttributes = hasDetailCollectionWidget(context.dashboard.views, collection.id) && collection.item?.get ? rowSelectionAttributes(collection) : "";
+    const rowAttributes = hasDetailCollectionWidget(context.dashboard.views, collection.id) && collection.rowKey ? rowSelectionAttributes(collection) : "";
+    const rowActions = widget.rowActions?.length ? renderRowActions(widget.rowActions, context, collection) : "";
     return `
         <section class="panel dashboard-table">
             <cms-binding-core>
@@ -12945,14 +13025,22 @@ p {
                     <p class="state" cms-condition="$source.error">Unable to load data.</p>
                     <div class="dashboard-table-scroll" cms-condition="$source.loaded">
                         <table class="dashboard-grid">
+                            ${rowActions ? `
+                                <colgroup>
+                                    ${columns.map(() => "<col>").join("")}
+                                    <col class="dashboard-actions-col">
+                                </colgroup>
+                            ` : ""}
                             <thead>
                                 <tr>
                                     ${columns.map((column) => `<th scope="col">${escapeHtml2(column.label)}</th>`).join("")}
+                                    ${rowActions ? `<th scope="col" class="dashboard-actions-head" aria-label="Actions"></th>` : ""}
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr${rowAttributes} cms-repeat="${escapeAttr2(repeatPath)} as row">
                                     ${columns.map((column) => `<td>${formatBinding(column.field, column.format)}</td>`).join("")}
+                                    ${rowActions ? `<td class="dashboard-actions-cell">${rowActions}</td>` : ""}
                                 </tr>
                             </tbody>
                         </table>
@@ -12961,6 +13049,34 @@ p {
             </cms-binding-core>
         </section>
     `;
+  }
+  function renderRowActions(actions, context, collection) {
+    const buttons = actions.flatMap((action) => {
+      const ref = collection.item?.[action.action];
+      if (!ref)
+        return [];
+      const endpoint = endpointById(context.group, ref.endpoint);
+      if (!endpoint)
+        return [];
+      const label = action.label || sentenceCase(action.action);
+      const confirmLabel = action.confirm || action.action === "delete" ? `Confirm ${label.toLowerCase()}?` : "";
+      const successMessage = action.action === "delete" ? "Deleted" : `${label} completed`;
+      return `
+            <button
+                type="button"
+                class="dashboard-action ${action.action === "delete" ? "danger" : ""}"
+                data-dashboard-action
+                data-dashboard-action-url="${escapeAttr2(endpointUrl(context.group, ref, { rowBinding: true, rowKey: collection.rowKey }))}"
+                data-dashboard-action-method="${escapeAttr2(endpoint.method)}"
+                data-dashboard-action-success-message="${escapeAttr2(successMessage)}"
+                ${confirmLabel ? `data-dashboard-action-confirm="${escapeAttr2(confirmLabel)}"` : ""}
+                ${action.body ? `data-dashboard-action-body="${escapeAttr2(JSON.stringify(action.body))}"` : ""}
+            >${escapeHtml2(label)}</button>
+        `;
+    });
+    if (!buttons.length)
+      return "";
+    return `<div class="dashboard-row-actions">${buttons.join("")}</div>`;
   }
   function renderDetail(widget, context) {
     const collection = collectionById(context.dashboard, widget.collection);
@@ -13116,6 +13232,36 @@ p {
                 <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
             </form>
         </dialog>
+    `;
+  }
+  function renderDelete(widget, context) {
+    const collection = collectionById(context.dashboard, widget.collection);
+    if (!collection)
+      return renderMissing(`Unknown collection "${widget.collection}"`);
+    const ref = collection.item?.delete;
+    if (!ref)
+      return renderMissing(`Collection "${widget.collection}" does not declare item.delete`);
+    const endpoint = endpointById(context.group, ref.endpoint);
+    if (!endpoint)
+      return renderMissing(`Unknown endpoint "${ref.endpoint}"`);
+    const selected = context.selectedRows.get(collection.id) ?? "";
+    if (!selected)
+      return "";
+    const label = widget.label ?? "Delete";
+    return `
+        <section class="dashboard-delete-action">
+            <button
+                type="button"
+                class="danger"
+                data-dashboard-action
+                data-dashboard-action-scope="detail-delete"
+                data-dashboard-action-url="${escapeAttr2(endpointUrl(context.group, ref, { selection: selected, rowKey: collection.rowKey }))}"
+                data-dashboard-action-method="${escapeAttr2(endpoint.method)}"
+                data-dashboard-action-success-message="${escapeAttr2(widget.successMessage ?? "Deleted")}"
+                data-dashboard-action-confirm="${escapeAttr2(widget.confirmLabel ?? "Delete this item?")}"
+                ${widget.body ? `data-dashboard-action-body="${escapeAttr2(JSON.stringify(widget.body))}"` : ""}
+            >${escapeHtml2(label)}</button>
+        </section>
     `;
   }
   function renderStat(widget, context) {
@@ -13292,12 +13438,19 @@ p {
     return `${base}?${params.map(([name, expr]) => `${encodeURIComponent(name)}=${paramValue(expr, options)}`).join("&")}`;
   }
   function paramValue(expr, options) {
-    if (expr === "$selection")
+    if (expr === "$selection") {
+      if (options.rowBinding && options.rowKey && isSafeBindingPath(options.rowKey))
+        return `{{ row.${options.rowKey} }}`;
       return encodeURIComponent(options.selection ?? "");
+    }
     if (expr.startsWith("$param."))
       return `#{${expr.slice("$param.".length)}}`;
-    if (expr.startsWith("$row."))
-      return `{{ row.${expr.slice("$row.".length)} }}`;
+    if (expr.startsWith("$row.")) {
+      const rowPath = expr.slice("$row.".length);
+      if (options.selection && options.rowKey === rowPath)
+        return encodeURIComponent(options.selection);
+      return `{{ row.${rowPath} }}`;
+    }
     if (expr.startsWith("$field."))
       return `{{ ${options.fieldAlias ?? "item"}.${expr.slice("$field.".length)} }}`;
     return encodeURIComponent(expr);
@@ -13317,7 +13470,7 @@ p {
   }
   function hasDetailCollectionWidget(widgets, collectionId) {
     return widgets.some((widget) => {
-      if (widget.widget === "w-detail" || widget.widget === "w-update")
+      if (widget.widget === "w-detail" || widget.widget === "w-update" || widget.widget === "w-delete")
         return widget.collection === collectionId;
       if (widget.widget === "w-section")
         return hasDetailCollectionWidget(widget.children, collectionId);
@@ -13539,6 +13692,11 @@ p {
     }
     handleClick(event) {
       const target = event.target;
+      const action = target?.closest("[data-dashboard-action]");
+      if (action) {
+        this.handleAction(action);
+        return;
+      }
       const openWrite = target?.closest("[data-dashboard-write-open]");
       if (openWrite?.dataset.dashboardWriteOpen) {
         this.openWriteDialog(openWrite.dataset.dashboardWriteOpen);
@@ -13562,6 +13720,8 @@ p {
     }
     handleKeydown(event) {
       if (event.key !== "Enter" && event.key !== " ")
+        return;
+      if (event.target?.closest("button, a, input, select, textarea, [data-dashboard-action]"))
         return;
       if (!this.selectRow(event.target))
         return;
@@ -13690,6 +13850,51 @@ p {
         form.removeAttribute("aria-busy");
       }
     }
+    async handleAction(button) {
+      if (button.getAttribute("aria-busy") === "true")
+        return;
+      const confirmLabel = button.dataset.dashboardActionConfirm;
+      if (confirmLabel && !window.confirm(confirmLabel))
+        return;
+      const url = button.dataset.dashboardActionUrl;
+      if (!url) {
+        xc("Missing action URL", { type: "error" });
+        return;
+      }
+      const previousDisabled = button.getAttribute("aria-disabled");
+      button.setAttribute("aria-disabled", "true");
+      button.setAttribute("aria-busy", "true");
+      if (button instanceof HTMLButtonElement)
+        button.disabled = true;
+      try {
+        const body = readActionBody(button);
+        const response = await fetch(url, {
+          method: button.dataset.dashboardActionMethod || "POST",
+          headers: body === undefined ? { accept: "application/json" } : { accept: "application/json", "content-type": "application/json" },
+          ...body === undefined ? {} : { body: JSON.stringify(body) }
+        });
+        if (!response.ok) {
+          xc(await responseMessage(response), { type: "error" });
+          return;
+        }
+        xc(button.dataset.dashboardActionSuccessMessage || "Done", { type: "success" });
+        if (button.dataset.dashboardActionScope === "detail-delete") {
+          this.clearDetailSelection();
+        } else {
+          this.renderWidgets();
+        }
+      } catch {
+        xc("Network error", { type: "error" });
+      } finally {
+        if (previousDisabled === null)
+          button.removeAttribute("aria-disabled");
+        else
+          button.setAttribute("aria-disabled", previousDisabled);
+        button.removeAttribute("aria-busy");
+        if (button instanceof HTMLButtonElement)
+          button.disabled = false;
+      }
+    }
     async openWriteDialog(id2) {
       const dialog = this.shadowRoot.querySelector(`[data-dashboard-write-dialog="${cssEscape(id2)}"]`);
       if (!dialog)
@@ -13803,6 +14008,17 @@ p {
     };
     query(selector) {
       return this.shadowRoot.querySelector(selector);
+    }
+  }
+  function readActionBody(button) {
+    const raw = button.dataset.dashboardActionBody;
+    if (!raw)
+      return;
+    try {
+      const value = JSON.parse(raw);
+      return value && typeof value === "object" && !Array.isArray(value) ? value : undefined;
+    } catch {
+      return;
     }
   }
   async function readWritePayload(form) {
@@ -14162,7 +14378,7 @@ p {
   function mainWidgetsFor(widgets) {
     const result = [];
     for (const widget of widgets) {
-      if (widget.widget === "w-detail" || widget.widget === "w-update")
+      if (widget.widget === "w-detail" || widget.widget === "w-update" || widget.widget === "w-delete")
         continue;
       if (widget.widget === "w-section") {
         const children = mainWidgetsFor(widget.children);
@@ -14182,7 +14398,12 @@ p {
   }
   function detailWidgetsFor(widgets, collection) {
     const result = [];
+    const deleteWidgets = [];
     for (const widget of widgets) {
+      if (widget.widget === "w-delete" && widget.collection === collection) {
+        deleteWidgets.push(widget);
+        continue;
+      }
       if ((widget.widget === "w-detail" || widget.widget === "w-update") && widget.collection === collection) {
         result.push(widget);
         continue;
@@ -14199,7 +14420,7 @@ p {
           result.push({ ...widget, tabs });
       }
     }
-    return result;
+    return [...result, ...deleteWidgets];
   }
   if (!customElements.get("cms-dashboards-admin"))
     customElements.define("cms-dashboards-admin", DashboardView);

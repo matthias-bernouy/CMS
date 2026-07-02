@@ -87,6 +87,13 @@ export type WriteWidgetLabels = {
     submitLabel?: string;
 };
 
+export type DeleteWidgetLabels = {
+    label?: string;
+    confirmLabel?: string;
+    successMessage?: string;
+    body?: Record<string, unknown>;
+};
+
 export type DashboardWidget =
     | { widget: "w-section"; title?: string; children: DashboardWidget[] }
     | { widget: "w-tabs"; tabs: Array<{ label: string; children: DashboardWidget[] }> }
@@ -101,6 +108,7 @@ export type DashboardWidget =
     | { widget: "w-detail"; collection: string; fields?: FieldSpec[] }
     | ({ widget: "w-create"; collection: string; fields?: FieldSpec[] } & WriteWidgetLabels)
     | ({ widget: "w-update"; collection: string; action?: "update" | "patch"; fields?: FieldSpec[] } & WriteWidgetLabels)
+    | ({ widget: "w-delete"; collection: string } & DeleteWidgetLabels)
     | { widget: "w-stat"; endpoint: string; path: string; label?: string };
 
 export type DashboardDto = {

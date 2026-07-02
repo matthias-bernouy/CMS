@@ -326,6 +326,25 @@ describe("validateDashboard", () => {
         expect(validateDashboard(dashboard, { source })).toEqual([]);
     });
 
+    test("accepts delete widgets backed by selected item delete endpoints", () => {
+        const dashboard = validDashboard();
+        dashboard.views.push({ widget: "w-delete", collection: "orders", label: "Delete order" });
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+    });
+
+    test("rejects delete widgets without a selected item delete endpoint", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            delete: { endpoint: "refundOrder", params: { orderId: "$param.status" } },
+        };
+        dashboard.views.push({ widget: "w-delete", collection: "orders" });
+
+        expect(validateDashboard(dashboard, { source })).toContain(
+            'views.2.collection "orders" item.delete must bind a param to $selection or $row.id',
+        );
+    });
+
     test("rejects update widgets without selected item endpoints", () => {
         const dashboard = validDashboard();
         dashboard.views.push({ widget: "w-update", collection: "orders", fields: ["status"] });

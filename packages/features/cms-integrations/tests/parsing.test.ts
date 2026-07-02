@@ -78,6 +78,7 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                             item: {
                                 get: { endpoint: "get", params: { id: "$selection" } },
                                 update: { endpoint: "update", params: { id: "$selection" } },
+                                delete: { endpoint: "delete", params: { id: "$selection" } },
                             },
                         }],
                         views: [
@@ -111,6 +112,13 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                                     },
                                 ],
                             },
+                            {
+                                widget: "w-delete",
+                                collection: "items",
+                                label: "Delete item",
+                                confirmLabel: "Delete this item?",
+                                successMessage: "Item deleted",
+                            },
                         ],
                     },
                 }],
@@ -131,6 +139,7 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                     item: {
                         get: { endpoint: "get", params: { id: "$selection" } },
                         update: { endpoint: "update", params: { id: "$selection" } },
+                        delete: { endpoint: "delete", params: { id: "$selection" } },
                     },
                 }],
                 views: [
@@ -164,9 +173,66 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                             },
                         ],
                     },
+                    {
+                        widget: "w-delete",
+                        collection: "items",
+                        label: "Delete item",
+                        confirmLabel: "Delete this item?",
+                        successMessage: "Item deleted",
+                    },
                 ],
             },
         });
+    });
+
+    test("parses generated secrets and connector deployment metadata", () => {
+        const request = parseIntegrationImportRequest({
+            definition: {
+                kind: "connector",
+                label: "Connector",
+                inputs: [{ name: "id", label: "Source id", type: "text", required: true }],
+                generatedSecrets: [{
+                    name: "cmsApiKey",
+                    key: "CONNECTOR_{{env answers.id}}_API_KEY",
+                    generator: "token",
+                    bytes: 32,
+                    prefix: "cms_",
+                }],
+                connectors: [{
+                    provider: "supabase",
+                    root: "connectors/supabase",
+                    dataApiSchemas: ["user_account"],
+                    schemas: ["schema.sql"],
+                    functions: [{
+                        name: "cms-connector",
+                        directory: "functions/cms-connector",
+                        configPath: "supabase.config.toml",
+                        secrets: { CMS_API_KEY: "{{generated.cmsApiKey}}" },
+                    }],
+                }],
+            },
+            answers: { id: "main" },
+        });
+
+        expect(request.siteIntegrations[0]?.generatedSecrets).toEqual([{
+            name: "cmsApiKey",
+            key: "CONNECTOR_{{env answers.id}}_API_KEY",
+            generator: "token",
+            bytes: 32,
+            prefix: "cms_",
+        }]);
+        expect(request.siteIntegrations[0]?.connectors).toEqual([{
+            provider: "supabase",
+            root: "connectors/supabase",
+            dataApiSchemas: ["user_account"],
+            schemas: [{ path: "schema.sql" }],
+            functions: [{
+                name: "cms-connector",
+                directory: "functions/cms-connector",
+                configPath: "supabase.config.toml",
+                secrets: { CMS_API_KEY: "{{generated.cmsApiKey}}" },
+            }],
+        }]);
     });
 
     test("rejects malformed manual header artifacts before import execution", () => {

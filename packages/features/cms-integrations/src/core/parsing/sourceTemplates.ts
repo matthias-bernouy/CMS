@@ -273,6 +273,18 @@ function parseWidget(value: unknown, name: string): DashboardWidget {
                 ...(value.fields !== undefined ? { fields: parseFields(value.fields, `${name}.fields`) } : {}),
             };
         }
+        case "w-delete":
+            if (value.body !== undefined && !isRecord(value.body)) {
+                throw new IntegrationInputError(`${name}.body`, "must be an object");
+            }
+            return {
+                widget,
+                collection: requiredText(value.collection, `${name}.collection`),
+                ...(text(value.label) ? { label: text(value.label)! } : {}),
+                ...(text(value.confirmLabel) ? { confirmLabel: text(value.confirmLabel)! } : {}),
+                ...(text(value.successMessage) ? { successMessage: text(value.successMessage)! } : {}),
+                ...(isRecord(value.body) ? { body: value.body } : {}),
+            };
         case "w-stat":
             return {
                 widget,

@@ -6,6 +6,7 @@ type UserAccountRow = {
     phone: string | null;
     display_name: string | null;
     avatar_url: string | null;
+    avatar_file_id: string | null;
     locale: string | null;
     timezone: string | null;
     created_at: string;
@@ -28,12 +29,21 @@ const corsHeaders = {
 };
 
 const accountSchema = "user_account";
+const avatarBucket = "user-account-avatars";
+const maxAvatarBytes = 5 * 1024 * 1024;
+const avatarContentTypes = new Map([
+    ["image/jpeg", ".jpg"],
+    ["image/png", ".png"],
+    ["image/webp", ".webp"],
+    ["image/gif", ".gif"],
+]);
 const accountSelect = [
     "cms_user_id",
     "email",
     "phone",
     "display_name",
     "avatar_url",
+    "avatar_file_id",
     "locale",
     "timezone",
     "created_at",
@@ -46,9 +56,28 @@ Deno.serve(async (request) => {
 
         const route = routePath(request);
         if (route === "/health") return await withMethod(request, "GET", () => health(request));
-        if (route === "/account") {
+        if (route === "/account" || route === "/personal-information") {
             if (request.method === "GET") return await getAccount(request);
             if (request.method === "POST") return await updateAccount(request);
+            return methodNotAllowed("GET, POST, OPTIONS");
+        }
+        if (route === "/account/avatar" || route === "/personal-information/avatar") {
+            if (request.method === "GET") return await getAccountAvatar(request);
+            if (request.method === "POST") return await uploadAccountAvatar(request);
+            return methodNotAllowed("GET, POST, OPTIONS");
+        }
+        if (route === "/accounts" || route === "/personal-information/records") {
+            return await withMethod(request, "GET", () => listAccounts(request));
+        }
+        if (route === "/accounts/account" || route === "/personal-information/record") {
+            if (request.method === "GET") return await getAccountByUserId(request);
+            if (request.method === "POST") return await createAccountByUserId(request);
+            if (request.method === "DELETE") return await deleteAccountByUserId(request);
+            return methodNotAllowed("GET, POST, DELETE, OPTIONS");
+        }
+        if (route === "/accounts/account/avatar" || route === "/personal-information/record/avatar") {
+            if (request.method === "GET") return await getAccountAvatarByUserId(request);
+            if (request.method === "POST") return await uploadAccountAvatarByUserId(request);
             return methodNotAllowed("GET, POST, OPTIONS");
         }
         if (route === "/delete-account") return await withMethod(request, "POST", () => deleteAccount(request));
@@ -78,8 +107,26 @@ async function updateAccount(request: Request): Promise<Response> {
     return json(publicAccount(row, userId));
 }
 
+async function uploadAccountAvatar(request: Request): Promise<Response> {
+    const { userId } = requireCmsRequest(request);
+    const file = await readUploadFile(request);
+    const fileId = await uploadAvatarFile(userId, file);
+    return json({ fileId });
+}
+
+async function getAccountAvatar(request: Request): Promise<Response> {
+    const { userId } = requireCmsRequest(request);
+    const fileId = requiredQueryText(request, "fileId", 512);
+    return await serveAvatarFile(userId, fileId);
+}
+
 async function deleteAccount(request: Request): Promise<Response> {
     const { userId } = requireCmsRequest(request);
+    const deleted = await deleteAccountRow(userId);
+    return json({ deleted, userId });
+}
+
+async function deleteAccountRow(userId: string): Promise<boolean> {
     const response = await rest(
         `accounts?cms_user_id=eq.${encodeURIComponent(userId)}&select=cms_user_id`,
         {
@@ -89,7 +136,81 @@ async function deleteAccount(request: Request): Promise<Response> {
     );
     if (!response.ok) throw await restError(response);
     const rows = await response.json() as Array<{ cms_user_id: string }>;
-    return json({ deleted: rows.length > 0, userId });
+    return rows.length > 0;
+}
+
+async function listAccounts(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+
+    const params = new URL(request.url).searchParams;
+    const limit = queryLimit(params.get("limit"));
+    const search = searchPattern(params.get("q"));
+    const query = new URLSearchParams({
+        select: accountSelect,
+        order: "updated_at.desc",
+        limit: String(limit),
+    });
+
+    if (search) {
+        const clauses = [
+            `cms_user_id.ilike.${search}`,
+            `email.ilike.${search}`,
+            `phone.ilike.${search}`,
+            `display_name.ilike.${search}`,
+        ].join(",");
+        query.set("or", `(${clauses})`);
+    }
+
+    const response = await rest(`accounts?${query.toString()}`, { method: "GET" });
+    if (!response.ok) throw await restError(response);
+    const rows = await response.json() as UserAccountRow[];
+    return json({
+        accounts: rows.map(row => publicAccount(row, row.cms_user_id)),
+        total: rows.length,
+    });
+}
+
+async function getAccountByUserId(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+
+    const userId = requiredQueryText(request, "userId", 200);
+    const row = await getAccountRow(userId);
+    return json(publicAccount(row, userId));
+}
+
+async function createAccountByUserId(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+
+    const userId = requiredQueryText(request, "userId", 200);
+    const body = await readJsonObject(request);
+    const values = accountValues(body);
+    const row = await upsertAccountRow(userId, values);
+    return json(publicAccount(row, userId));
+}
+
+async function deleteAccountByUserId(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+
+    const userId = requiredQueryText(request, "userId", 200);
+    const deleted = await deleteAccountRow(userId);
+    return json({ deleted, userId });
+}
+
+async function uploadAccountAvatarByUserId(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+
+    const userId = requiredQueryText(request, "userId", 200);
+    const file = await readUploadFile(request);
+    const fileId = await uploadAvatarFile(userId, file);
+    return json({ fileId });
+}
+
+async function getAccountAvatarByUserId(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+
+    const userId = requiredQueryText(request, "userId", 200);
+    const fileId = requiredQueryText(request, "fileId", 512);
+    return await serveAvatarFile(userId, fileId);
 }
 
 async function upsertAccountRow(userId: string, values: JsonRecord): Promise<UserAccountRow> {
@@ -140,6 +261,7 @@ function accountValues(body: JsonRecord): JsonRecord {
         phone: optionalText(body, "phone", 64),
         display_name: optionalText(body, "displayName", 160),
         avatar_url: optionalUrl(body, "avatarUrl"),
+        avatar_file_id: optionalText(body, "avatarFileId", 512),
         locale: optionalText(body, "locale", 35),
         timezone: optionalText(body, "timezone", 64),
     });
@@ -154,6 +276,7 @@ function publicAccount(row: UserAccountRow | null, userId: string): JsonRecord {
             phone: null,
             displayName: null,
             avatarUrl: null,
+            avatarFileId: null,
             locale: null,
             timezone: null,
             createdAt: null,
@@ -168,6 +291,7 @@ function publicAccount(row: UserAccountRow | null, userId: string): JsonRecord {
         phone: row.phone,
         displayName: row.display_name,
         avatarUrl: row.avatar_url,
+        avatarFileId: row.avatar_file_id,
         locale: row.locale,
         timezone: row.timezone,
         createdAt: row.created_at,
@@ -233,12 +357,91 @@ async function rest(path: string, init: RequestInit): Promise<Response> {
     return fetch(`${base}/rest/v1/${path}`, { ...init, headers });
 }
 
+async function uploadAvatarFile(userId: string, file: File): Promise<string> {
+    const contentType = file.type.toLowerCase();
+    const extension = avatarContentTypes.get(contentType);
+    if (!extension) throw new HttpError(400, "unsupported avatar content type");
+
+    const fileId = `${await avatarPrefix(userId)}/${crypto.randomUUID()}${extension}`;
+    const response = await storage(fileId, {
+        method: "POST",
+        headers: {
+            "cache-control": "3600",
+            "content-type": contentType,
+        },
+        body: file,
+    });
+    if (!response.ok) throw await storageError(response);
+    return fileId;
+}
+
+async function serveAvatarFile(userId: string, fileId: string): Promise<Response> {
+    const prefix = `${await avatarPrefix(userId)}/`;
+    if (!fileId.startsWith(prefix)) throw new HttpError(404, "avatar not found");
+
+    const row = await getAccountRow(userId);
+    if (row?.avatar_file_id !== fileId) throw new HttpError(404, "avatar not found");
+
+    const response = await storage(fileId, { method: "GET" });
+    if (response.status === 404) throw new HttpError(404, "avatar not found");
+    if (!response.ok) throw await storageError(response);
+
+    const headers = new Headers(corsHeaders);
+    copyResponseHeader(response, headers, "content-type", "application/octet-stream");
+    headers.set("cache-control", "private, max-age=3600");
+    copyResponseHeader(response, headers, "etag");
+    copyResponseHeader(response, headers, "last-modified");
+    copyResponseHeader(response, headers, "content-length");
+    return new Response(response.body, { status: 200, headers });
+}
+
+async function storage(path: string, init: RequestInit): Promise<Response> {
+    const key = serviceRoleKey();
+    const base = requiredEnv("SUPABASE_URL").replace(/\/$/, "");
+    const headers = new Headers(init.headers);
+    headers.set("apikey", key);
+    headers.set("authorization", `Bearer ${key}`);
+
+    const bucket = encodeURIComponent(avatarBucket);
+    const objectPath = path.split("/").map(encodeURIComponent).join("/");
+    return fetch(`${base}/storage/v1/object/${bucket}/${objectPath}`, { ...init, headers });
+}
+
 async function restError(response: Response): Promise<HttpError> {
     const data = await response.json().catch(() => null);
     const message = isRecord(data) && typeof data.message === "string"
         ? data.message
         : `Supabase request failed (${response.status})`;
     return new HttpError(502, message);
+}
+
+async function storageError(response: Response): Promise<HttpError> {
+    const text = await response.text().catch(() => "");
+    let message = text.trim();
+    try {
+        const data = JSON.parse(text);
+        if (isRecord(data) && typeof data.message === "string") message = data.message;
+        if (isRecord(data) && typeof data.error === "string") message = data.error;
+    } catch {
+        // Keep the raw text fallback.
+    }
+    return new HttpError(502, message || `Supabase Storage request failed (${response.status})`);
+}
+
+async function avatarPrefix(userId: string): Promise<string> {
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(userId));
+    return `avatars/${hexDigest(digest)}`;
+}
+
+function hexDigest(buffer: ArrayBuffer): string {
+    return [...new Uint8Array(buffer)]
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+function copyResponseHeader(source: Response, target: Headers, name: string, fallback?: string): void {
+    const value = source.headers.get(name) ?? fallback;
+    if (value) target.set(name, value);
 }
 
 function firstRow<T>(value: unknown): T {
@@ -277,6 +480,29 @@ async function readJsonObject(request: Request): Promise<JsonRecord> {
     return value;
 }
 
+async function readUploadFile(request: Request): Promise<File> {
+    const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
+    if (!contentType.includes("multipart/form-data")) {
+        throw new HttpError(400, "avatar upload must use multipart/form-data");
+    }
+
+    let formData: FormData;
+    try {
+        formData = await request.formData();
+    } catch {
+        throw new HttpError(400, "invalid multipart body");
+    }
+
+    const value = formData.get("file");
+    if (!(value instanceof File)) throw new HttpError(400, "file is required");
+    if (value.size <= 0) throw new HttpError(400, "file is empty");
+    if (value.size > maxAvatarBytes) throw new HttpError(413, "file is too large");
+    if (!avatarContentTypes.has(value.type.toLowerCase())) {
+        throw new HttpError(400, "file must be a JPEG, PNG, WebP, or GIF image");
+    }
+    return value;
+}
+
 function optionalText(body: JsonRecord, name: string, maxLength: number): string | null | undefined {
     if (!Object.hasOwn(body, name)) return undefined;
     const value = body[name];
@@ -310,6 +536,32 @@ function optionalUrl(body: JsonRecord, name: string): string | null | undefined 
         throw new HttpError(400, `${name} must be an http or https URL`);
     }
     return parsed.toString();
+}
+
+function requiredQueryText(request: Request, name: string, maxLength: number): string {
+    const value = new URL(request.url).searchParams.get(name)?.trim() ?? "";
+    if (!value) throw new HttpError(400, `${name} is required`);
+    if (value.length > maxLength) throw new HttpError(400, `${name} is too long`);
+    return value;
+}
+
+function queryLimit(value: string | null): number {
+    if (!value) return 100;
+    const limit = Number(value);
+    if (!Number.isInteger(limit) || limit < 1) throw new HttpError(400, "limit must be a positive integer");
+    return Math.min(limit, 200);
+}
+
+function searchPattern(value: string | null): string | null {
+    const normalized = value?.trim() ?? "";
+    if (!normalized) return null;
+    if (normalized.length > 160) throw new HttpError(400, "q is too long");
+
+    const safe = normalized
+        .replace(/[^A-Za-z0-9@._+\-\s]/g, " ")
+        .trim()
+        .replace(/\s+/g, "*");
+    return safe ? `*${safe}*` : null;
 }
 
 function serviceRoleKey(): string {

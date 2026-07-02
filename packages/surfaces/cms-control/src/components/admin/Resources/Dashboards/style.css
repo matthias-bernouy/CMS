@@ -149,6 +149,38 @@ p {
     background: var(--primary-strong, #0f4a3a);
 }
 
+.dashboard-delete-action button.danger {
+    border-color: var(--danger-base, #a43333);
+    background: var(--danger-base, #a43333);
+    color: white;
+}
+
+.dashboard-delete-action button.danger:hover {
+    background: var(--danger-strong, #862525);
+}
+
+.dashboard-delete-action button:disabled,
+.dashboard-row-actions .dashboard-action:disabled {
+    cursor: wait;
+    opacity: .7;
+}
+
+.dashboard-delete-action {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.dashboard-delete-action button {
+    border: 1px solid var(--danger-base, #a43333);
+    border-radius: 7px;
+    background: var(--danger-base, #a43333);
+    color: white;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 8px 13px;
+}
+
 .dashboard-create-dialog {
     width: min(720px, calc(100vw - 32px));
     max-height: min(760px, calc(100vh - 32px));
@@ -421,6 +453,10 @@ p {
     table-layout: fixed;
 }
 
+.dashboard-actions-col {
+    width: 72px;
+}
+
 .dashboard-grid th,
 .dashboard-grid td {
     padding: 12px 16px;
@@ -439,6 +475,47 @@ p {
 
 .dashboard-grid td {
     color: var(--text-muted, #51605b);
+}
+
+.dashboard-actions-head {
+    width: 72px;
+}
+
+.dashboard-actions-cell {
+    padding-right: 12px;
+    padding-left: 8px;
+    white-space: nowrap;
+}
+
+.dashboard-row-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.dashboard-action {
+    min-height: 30px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-default, #0f1f1a);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 5px 8px;
+}
+
+.dashboard-action:hover {
+    background: var(--bg-hover, #f3f6f5);
+}
+
+.dashboard-row-actions .dashboard-action.danger {
+    color: var(--danger-base, #a43333);
+}
+
+.dashboard-row-actions .dashboard-action.danger:hover {
+    border-color: color-mix(in srgb, var(--danger-base, #a43333), transparent 68%);
+    background: color-mix(in srgb, var(--danger-base, #a43333), transparent 92%);
 }
 
 .dashboard-row {

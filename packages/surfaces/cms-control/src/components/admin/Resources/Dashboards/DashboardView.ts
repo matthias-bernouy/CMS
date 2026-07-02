@@ -82,6 +82,11 @@ export class DashboardView extends Component {
 
     private handleClick(event: Event): void {
         const target = event.target as Element | null;
+        const action = target?.closest<HTMLElement>("[data-dashboard-action]");
+        if (action) {
+            void this.handleAction(action);
+            return;
+        }
         const openWrite = target?.closest<HTMLElement>("[data-dashboard-write-open]");
         if (openWrite?.dataset.dashboardWriteOpen) {
             void this.openWriteDialog(openWrite.dataset.dashboardWriteOpen);
@@ -106,6 +111,7 @@ export class DashboardView extends Component {
 
     private handleKeydown(event: KeyboardEvent): void {
         if (event.key !== "Enter" && event.key !== " ") return;
+        if ((event.target as Element | null)?.closest("button, a, input, select, textarea, [data-dashboard-action]")) return;
         if (!this.selectRow(event.target as Element | null)) return;
         event.preventDefault();
     }
@@ -240,6 +246,51 @@ export class DashboardView extends Component {
             showToast("Network error", { type: "error" });
         } finally {
             form.removeAttribute("aria-busy");
+        }
+    }
+
+    private async handleAction(button: HTMLElement): Promise<void> {
+        if (button.getAttribute("aria-busy") === "true") return;
+        const confirmLabel = button.dataset.dashboardActionConfirm;
+        if (confirmLabel && !window.confirm(confirmLabel)) return;
+
+        const url = button.dataset.dashboardActionUrl;
+        if (!url) {
+            showToast("Missing action URL", { type: "error" });
+            return;
+        }
+
+        const previousDisabled = button.getAttribute("aria-disabled");
+        button.setAttribute("aria-disabled", "true");
+        button.setAttribute("aria-busy", "true");
+        if (button instanceof HTMLButtonElement) button.disabled = true;
+        try {
+            const body = readActionBody(button);
+            const response = await fetch(url, {
+                method: button.dataset.dashboardActionMethod || "POST",
+                headers: body === undefined
+                    ? { accept: "application/json" }
+                    : { accept: "application/json", "content-type": "application/json" },
+                ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+            });
+            if (!response.ok) {
+                showToast(await responseMessage(response), { type: "error" });
+                return;
+            }
+
+            showToast(button.dataset.dashboardActionSuccessMessage || "Done", { type: "success" });
+            if (button.dataset.dashboardActionScope === "detail-delete") {
+                this.clearDetailSelection();
+            } else {
+                this.renderWidgets();
+            }
+        } catch {
+            showToast("Network error", { type: "error" });
+        } finally {
+            if (previousDisabled === null) button.removeAttribute("aria-disabled");
+            else button.setAttribute("aria-disabled", previousDisabled);
+            button.removeAttribute("aria-busy");
+            if (button instanceof HTMLButtonElement) button.disabled = false;
         }
     }
 
@@ -381,6 +432,19 @@ type PendingFileUpload = {
     url: string;
     resultPath: string;
 };
+
+function readActionBody(button: HTMLElement): Record<string, unknown> | undefined {
+    const raw = button.dataset.dashboardActionBody;
+    if (!raw) return undefined;
+    try {
+        const value = JSON.parse(raw) as unknown;
+        return value && typeof value === "object" && !Array.isArray(value)
+            ? value as Record<string, unknown>
+            : undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 async function readWritePayload(form: HTMLFormElement): Promise<WritePayload> {
     const body: Record<string, unknown> = {};
@@ -749,7 +813,7 @@ function cssEscape(value: string): string {
 function mainWidgetsFor(widgets: DashboardWidget[]): DashboardWidget[] {
     const result: DashboardWidget[] = [];
     for (const widget of widgets) {
-        if (widget.widget === "w-detail" || widget.widget === "w-update") continue;
+        if (widget.widget === "w-detail" || widget.widget === "w-update" || widget.widget === "w-delete") continue;
         if (widget.widget === "w-section") {
             const children = mainWidgetsFor(widget.children);
             if (children.length) result.push({ ...widget, children });
@@ -769,7 +833,12 @@ function mainWidgetsFor(widgets: DashboardWidget[]): DashboardWidget[] {
 
 function detailWidgetsFor(widgets: DashboardWidget[], collection: string): DashboardWidget[] {
     const result: DashboardWidget[] = [];
+    const deleteWidgets: DashboardWidget[] = [];
     for (const widget of widgets) {
+        if (widget.widget === "w-delete" && widget.collection === collection) {
+            deleteWidgets.push(widget);
+            continue;
+        }
         if ((widget.widget === "w-detail" || widget.widget === "w-update") && widget.collection === collection) {
             result.push(widget);
             continue;
@@ -786,7 +855,7 @@ function detailWidgetsFor(widgets: DashboardWidget[], collection: string): Dashb
             if (tabs.length) result.push({ ...widget, tabs });
         }
     }
-    return result;
+    return [...result, ...deleteWidgets];
 }
 
 if (!customElements.get("cms-dashboards-admin")) customElements.define("cms-dashboards-admin", DashboardView);
