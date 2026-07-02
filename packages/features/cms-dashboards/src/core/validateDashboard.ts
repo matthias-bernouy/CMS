@@ -10,7 +10,7 @@ import type {
 } from "../interfaces/Dashboard";
 
 const SIMPLE_ID = /^[^\s/]+$/;
-const PARAM_EXPR = /^(\$row|\$param|\$user)\.[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
+const PARAM_EXPR = /^(\$row|\$param|\$user|\$field)\.[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
 const SELECTION_EXPR = "$selection";
 const SAFE_PATH = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
 
@@ -105,7 +105,7 @@ function validateWidget(
                     errors.push(`${path}.collection "${widget.collection}" item.get must bind a param to $selection`);
                 }
             }
-            widget.fields?.forEach((field, index) => validateSpecPath(field, `${path}.fields.${index}`, errors));
+            widget.fields?.forEach((field, index) => validateFieldSpec(field, `${path}.fields.${index}`, dashboard, source, errors));
             break;
         case "w-update":
             validateCollectionRef(widget.collection, `${path}.collection`, collections, errors);
@@ -127,7 +127,7 @@ function validateWidget(
                     errors.push(`${path}.collection "${widget.collection}" item.${action} must bind a param to $selection`);
                 }
             }
-            widget.fields?.forEach((field, index) => validateSpecPath(field, `${path}.fields.${index}`, errors));
+            widget.fields?.forEach((field, index) => validateFieldSpec(field, `${path}.fields.${index}`, dashboard, source, errors));
             break;
         case "w-create":
             validateCollectionRef(widget.collection, `${path}.collection`, collections, errors);
@@ -137,7 +137,7 @@ function validateWidget(
                     errors.push(`${path}.collection "${widget.collection}" must declare item.create for w-create`);
                 }
             }
-            widget.fields?.forEach((field, index) => validateSpecPath(field, `${path}.fields.${index}`, errors));
+            widget.fields?.forEach((field, index) => validateFieldSpec(field, `${path}.fields.${index}`, dashboard, source, errors));
             break;
         case "w-stat":
             validateEndpointRef(dashboard, { endpoint: widget.endpoint }, `${path}.endpoint`, source, errors);
@@ -180,6 +180,23 @@ function validateFilter(filter: FilterSpec, path: string, errors: string[]): voi
 function validateSpecPath(spec: FieldSpec | string, path: string, errors: string[]): void {
     const field = typeof spec === "string" ? spec : spec.field;
     validatePath("field", field, path, errors);
+}
+
+function validateFieldSpec(
+    spec: FieldSpec | string,
+    path: string,
+    dashboard: DashboardDto,
+    source: Source | null,
+    errors: string[],
+): void {
+    validateSpecPath(spec, path, errors);
+    if (typeof spec === "string") return;
+    if (spec.accept !== undefined && !spec.accept) errors.push(`${path}.accept must be non-empty when provided`);
+    if (spec.media) validateEndpointRef(dashboard, spec.media, `${path}.media`, source, errors);
+    if (spec.upload) {
+        validateEndpointRef(dashboard, spec.upload, `${path}.upload`, source, errors);
+        validatePath("resultPath", spec.upload.resultPath, `${path}.upload`, errors);
+    }
 }
 
 function validateEndpointRef(
@@ -234,7 +251,9 @@ function supportsSelectionParam(path: string): boolean {
     return path.includes(".item.get") ||
         path.includes(".item.update") ||
         path.includes(".item.patch") ||
-        path.includes(".item.delete");
+        path.includes(".item.delete") ||
+        path.endsWith(".media") ||
+        path.endsWith(".upload");
 }
 
 function validateId(path: string, value: string, errors: string[]): void {

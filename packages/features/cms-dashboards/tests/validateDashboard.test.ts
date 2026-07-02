@@ -51,6 +51,40 @@ const source: Source = {
                         properties: {
                             id: { type: "string" },
                             status: { type: "string" },
+                            imageFileId: { type: "string" },
+                        },
+                    },
+                },
+            ],
+        },
+        {
+            urn: "urn:commerce:getOrderImage",
+            method: "GET",
+            targetUrl: "https://example.com/order-images/{fileId}",
+            responseKind: "file",
+            mediaType: "image/*",
+            input: {
+                params: [
+                    { name: "fileId", in: "path", required: true, schema: { type: "string" } },
+                ],
+            },
+        },
+        {
+            urn: "urn:commerce:uploadOrderImage",
+            method: "POST",
+            targetUrl: "https://example.com/orders/{orderId}/image",
+            input: {
+                params: [
+                    { name: "orderId", in: "path", required: true, schema: { type: "string" } },
+                ],
+            },
+            output: [
+                {
+                    status: "200",
+                    body: {
+                        type: "object",
+                        properties: {
+                            fileId: { type: "string" },
                         },
                     },
                 },
@@ -237,6 +271,40 @@ describe("validateDashboard", () => {
             submitLabel: "Save order",
             fields: [{ field: "status", required: true }],
         });
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+    });
+
+    test("accepts media fields and file upload fields backed by source endpoints", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
+            update: { endpoint: "updateOrder", params: { orderId: "$selection" } },
+        };
+        dashboard.views.push(
+            {
+                widget: "w-detail",
+                collection: "orders",
+                fields: [{
+                    field: "imageFileId",
+                    label: "Image",
+                    format: "image",
+                    media: { endpoint: "getOrderImage", params: { fileId: "$field.imageFileId" } },
+                }],
+            },
+            {
+                widget: "w-update",
+                collection: "orders",
+                fields: [{
+                    field: "imageFileId",
+                    label: "Image",
+                    input: "file",
+                    accept: "image/*",
+                    upload: { endpoint: "uploadOrderImage", params: { orderId: "$selection" }, resultPath: "fileId" },
+                }],
+            },
+        );
 
         expect(validateDashboard(dashboard, { source })).toEqual([]);
     });

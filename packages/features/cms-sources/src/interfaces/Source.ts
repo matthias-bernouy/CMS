@@ -5,6 +5,9 @@ import type { DataShape } from "./DataShape";
 export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const;
 export type HTTPMethod = typeof HTTP_METHODS[number];
 
+export const RESPONSE_KINDS = ['json', 'file'] as const;
+export type ResponseKind = typeof RESPONSE_KINDS[number];
+
 /** Where a request header's value comes from.
  *  - `static`: a plaintext fixed value injected verbatim upstream.
  *  - `secret`: a credential reference (`${KEY}` shape) resolved server-side — NOT
@@ -64,6 +67,8 @@ export type SourceEndpoint = {
     urn: string;            // e.g. "urn:source-id:getUser" (method NOT in the urn)
     method: HTTPMethod;
     targetUrl: string;      // e.g. "https://api.example.com/v1/users/{id}"
+    responseKind?: ResponseKind;
+    mediaType?: string;
 
     /** Request headers injected into the upstream call. `static` = a plaintext
      *  fixed value forwarded verbatim; `secret` = a credential ref resolved

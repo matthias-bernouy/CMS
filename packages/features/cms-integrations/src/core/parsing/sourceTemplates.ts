@@ -75,16 +75,25 @@ function parseEndpointTemplate(value: unknown, name: string): SourceEndpointDto 
     const targetUrl = text(value.targetUrl);
     if (!targetUrl) throw new MissingIntegrationParam(`${name}.targetUrl`);
     if (!Array.isArray(value.params)) throw new IntegrationInputError(`${name}.params`, "must be an array");
+    const responseKind = parseResponseKind(value.responseKind, `${name}.responseKind`);
     return {
         endpointId,
         method: method as SourceEndpointDto["method"],
         targetUrl,
+        ...(responseKind ? { responseKind } : {}),
+        ...(text(value.mediaType) ? { mediaType: text(value.mediaType)! } : {}),
         params: value.params.map((param, index) => parseParamTemplate(param, `${name}.params.${index}`)),
         ...(isJsonValue(value.body) ? { body: value.body as SourceEndpointDto["body"] } : {}),
         ...(Array.isArray(value.output) ? { output: value.output as SourceEndpointDto["output"] } : {}),
         ...(isRecord(value.meta) ? { meta: value.meta as SourceEndpointDto["meta"] } : {}),
         ...(value.headers !== undefined ? { headers: parseHeaderTemplates(value.headers, `${name}.headers`) } : {}),
     };
+}
+
+function parseResponseKind(value: unknown, name: string): SourceEndpointDto["responseKind"] | undefined {
+    if (value === undefined) return undefined;
+    if (value === "json" || value === "file") return value;
+    throw new IntegrationInputError(name, "must be json or file");
 }
 
 function parseHeaderTemplates(value: unknown, name: string): EndpointHeader[] {
@@ -329,8 +338,24 @@ function parseField(value: unknown, name: string): FieldSpec {
         ...(text(value.label) ? { label: text(value.label)! } : {}),
         ...(parseFieldFormat(value.format, `${name}.format`) ? { format: parseFieldFormat(value.format, `${name}.format`)! } : {}),
         ...(parseFieldInput(value.input, `${name}.input`) ? { input: parseFieldInput(value.input, `${name}.input`)! } : {}),
+        ...(text(value.accept) ? { accept: text(value.accept)! } : {}),
+        ...(value.media !== undefined ? { media: parseFieldMedia(value.media, `${name}.media`) } : {}),
+        ...(value.upload !== undefined ? { upload: parseFieldUpload(value.upload, `${name}.upload`) } : {}),
         ...(value.readonly === true ? { readonly: true } : {}),
         ...(value.required === true ? { required: true } : {}),
+    };
+}
+
+function parseFieldMedia(value: unknown, name: string): NonNullable<Extract<FieldSpec, { field: string }>["media"]> {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    return parseEndpointRef(value, name);
+}
+
+function parseFieldUpload(value: unknown, name: string): NonNullable<Extract<FieldSpec, { field: string }>["upload"]> {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    return {
+        ...parseEndpointRef(value, name),
+        resultPath: requiredText(value.resultPath, `${name}.resultPath`),
     };
 }
 
@@ -344,8 +369,8 @@ function parseFieldFormat(value: unknown, name: string): FieldFormat | undefined
 
 function parseFieldInput(value: unknown, name: string): FieldInput | undefined {
     if (value === undefined) return undefined;
-    if (value === "text" || value === "select" || value === "boolean" || value === "number" || value === "cms-user") return value;
-    throw new IntegrationInputError(name, "must be text, select, boolean, number, or cms-user");
+    if (value === "text" || value === "select" || value === "boolean" || value === "number" || value === "cms-user" || value === "file") return value;
+    throw new IntegrationInputError(name, "must be text, select, boolean, number, cms-user, or file");
 }
 
 function parseFilters(value: unknown, name: string): FilterSpec[] {

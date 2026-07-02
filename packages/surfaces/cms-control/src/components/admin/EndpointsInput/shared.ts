@@ -14,6 +14,8 @@ export type EndpointSeed = {
     endpointId?: string;
     method?: string;
     targetUrl?: string;
+    responseKind?: string;
+    mediaType?: string;
     params?: ParamSeed[];
     /** Request-body shape (recursive) — drives the Body tree editor. */
     body?: DataShape;

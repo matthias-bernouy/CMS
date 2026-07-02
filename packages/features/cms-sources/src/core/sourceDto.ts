@@ -8,6 +8,7 @@ import type {
     ParamIn,
     ParamValueSource,
     Source,
+    ResponseKind,
 } from "../interfaces/Source";
 import type { DataShape } from "../interfaces/DataShape";
 import { makeEndpointUrn, makeSourceUrn, parseUrn } from "./urn";
@@ -25,6 +26,8 @@ export type SourceEndpointDto = {
     endpointId: string;
     method: HTTPMethod;
     targetUrl: string;
+    responseKind?: ResponseKind;
+    mediaType?: string;
     params: SourceParamDto[];
     body?: DataShape;
     output?: EndpointResponse[];
@@ -78,6 +81,8 @@ export function sourceToFlatDto(source: Source): SourceFlatDto {
         flat[`endpoints.${i}.endpointId`] = e.endpointId;
         flat[`endpoints.${i}.method`]     = e.method;
         flat[`endpoints.${i}.targetUrl`]  = e.targetUrl;
+        if (e.responseKind !== undefined) flat[`endpoints.${i}.responseKind`] = e.responseKind;
+        if (e.mediaType !== undefined)    flat[`endpoints.${i}.mediaType`]    = e.mediaType;
         if (e.params.length)    flat[`endpoints.${i}.params`]  = JSON.stringify(e.params);
         if (e.body !== undefined)    flat[`endpoints.${i}.body`]    = JSON.stringify(e.body);
         if (e.output !== undefined)  flat[`endpoints.${i}.output`]  = JSON.stringify(e.output);
@@ -101,6 +106,8 @@ export function sourceToCanonicalDto(source: Source): CanonicalSourceDto {
             endpointId: e.endpointId,
             method: e.method,
             targetUrl: e.targetUrl,
+            responseKind: e.responseKind ?? "json",
+            mediaType: e.mediaType ?? "",
             params: e.params.map(p => ({
                 name: p.name,
                 in: p.in,
@@ -131,6 +138,8 @@ function endpointDtoToEndpoint(sourceId: string, e: SourceEndpointDto): SourceEn
         method: e.method,
         targetUrl: e.targetUrl,
     };
+    if (e.responseKind !== undefined) endpoint.responseKind = e.responseKind;
+    if (e.mediaType !== undefined) endpoint.mediaType = e.mediaType;
     if (params.length || e.body) {
         endpoint.input = {};
         if (params.length) endpoint.input.params = params;
@@ -147,6 +156,8 @@ function endpointToDto(endpoint: SourceEndpoint): SourceEndpointDto {
         endpointId: parseUrn(endpoint.urn)?.endpoint ?? "",
         method: endpoint.method,
         targetUrl: endpoint.targetUrl,
+        ...(endpoint.responseKind !== undefined ? { responseKind: endpoint.responseKind } : {}),
+        ...(endpoint.mediaType !== undefined ? { mediaType: endpoint.mediaType } : {}),
         params: (endpoint.input?.params ?? []).map(p => ({
             name: p.name,
             in: p.in,

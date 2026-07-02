@@ -8,9 +8,9 @@
 export type {
     Source, SourceEndpoint, HTTPMethod, ParamIn,
     EndpointHeader, HeaderSource, EndpointParam, SourceMeta, EndpointResponse,
-    ComputedParamRef, ParamValueSource,
+    ComputedParamRef, ParamValueSource, ResponseKind,
 } from "../interfaces/Source";
-export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS } from "../interfaces/Source";
+export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS, RESPONSE_KINDS } from "../interfaces/Source";
 export type { DataShape } from "../interfaces/DataShape";
 export {
     FORBIDDEN_REQUEST_HEADERS, HEADER_NAME_RE, isForbiddenHeaderName, isValidHeaderName,

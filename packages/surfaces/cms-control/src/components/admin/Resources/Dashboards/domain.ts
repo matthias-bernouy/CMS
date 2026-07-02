@@ -183,7 +183,7 @@ function renderDetail(
                     <div class="dashboard-detail-body" cms-condition="$source.loaded">
                         ${mediaFields.length ? `
                             <div class="dashboard-detail-media-list">
-                                ${mediaFields.map(renderImageField).join("")}
+                                ${mediaFields.map(field => renderImageField(field, context)).join("")}
                             </div>
                         ` : ""}
                         <dl class="dashboard-detail-list">
@@ -240,7 +240,7 @@ function renderCreate(
                     <button type="button" class="dashboard-create-close" data-dashboard-write-close>Close</button>
                 </div>
                 <div class="dashboard-create-fields">
-                    ${fields.map(field => renderWriteField(field, paramFields.has(field.field))).join("")}
+                    ${fields.map(field => renderWriteField(field, paramFields.has(field.field), context)).join("")}
                 </div>
                 <div class="dashboard-create-actions">
                     <button type="button" class="dashboard-create-secondary" data-dashboard-write-close>Cancel</button>
@@ -303,7 +303,7 @@ function renderUpdate(
                     <button type="button" class="dashboard-create-close" data-dashboard-write-close>Close</button>
                 </div>
                 <div class="dashboard-create-fields">
-                    ${fields.map(field => renderWriteField(field, paramFields.has(field.field))).join("")}
+                    ${fields.map(field => renderWriteField(field, paramFields.has(field.field), context, selected)).join("")}
                 </div>
                 <div class="dashboard-create-actions">
                     <button type="button" class="dashboard-create-secondary" data-dashboard-write-close>Cancel</button>
@@ -377,6 +377,9 @@ type ResolvedField = {
     format?: FieldFormat;
     required?: boolean;
     readonly?: boolean;
+    accept?: string;
+    media?: CollectionEndpointRef;
+    upload?: CollectionEndpointRef & { resultPath: string };
 };
 
 function resolveColumns(
@@ -416,6 +419,9 @@ function resolveFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpoint
                 format: field.format,
                 required: field.required,
                 readonly: field.readonly,
+                accept: field.accept,
+                media: field.media,
+                upload: field.upload,
             };
         });
     }
@@ -507,6 +513,7 @@ function shapeAtPath(shape: DataShape, path: string): DataShape | null {
 
 type EndpointUrlOptions = {
     selection?: string;
+    fieldAlias?: string;
 };
 
 function endpointUrl(group: DashboardSourceGroup, ref: CollectionEndpointRef, options: EndpointUrlOptions = {}): string {
@@ -520,6 +527,7 @@ function paramValue(expr: string, options: EndpointUrlOptions): string {
     if (expr === "$selection") return encodeURIComponent(options.selection ?? "");
     if (expr.startsWith("$param.")) return `#{${expr.slice("$param.".length)}}`;
     if (expr.startsWith("$row.")) return `{{ row.${expr.slice("$row.".length)} }}`;
+    if (expr.startsWith("$field.")) return `{{ ${options.fieldAlias ?? "item"}.${expr.slice("$field.".length)} }}`;
     return encodeURIComponent(expr);
 }
 
@@ -551,14 +559,19 @@ function formatBinding(field: string, format: ResolvedColumn["format"]): string 
     return binding;
 }
 
-function renderImageField(field: ResolvedField): string {
-    const binding = `{{ item.${field.field} }}`;
+function renderImageField(field: ResolvedField, context: RenderContext): string {
+    const binding = field.media
+        ? endpointUrl(context.group, field.media, {
+            selection: context.selectedRows.values().next().value ?? "",
+            fieldAlias: "item",
+        })
+        : `{{ item.${field.field} }}`;
     return `
         <figure class="dashboard-detail-media" cms-condition="item.${field.field}">
             <img src="${binding}" alt="">
             <figcaption>
                 <span>${escapeHtml(field.label)}</span>
-                <a href="${binding}" target="_blank" rel="noopener">${binding}</a>
+                <a href="${binding}" target="_blank" rel="noopener">Open image</a>
             </figcaption>
         </figure>
     `;
@@ -572,7 +585,8 @@ function formatDetailBinding(field: ResolvedField): string {
     return binding;
 }
 
-function renderWriteField(field: ResolvedField, isParam: boolean): string {
+function renderWriteField(field: ResolvedField, isParam: boolean, context: RenderContext, selection = ""): string {
+    const uploadEndpoint = field.upload ? endpointById(context.group, field.upload.endpoint) : null;
     const attrs = [
         `name="${escapeAttr(field.field)}"`,
         "data-dashboard-field",
@@ -582,6 +596,9 @@ function renderWriteField(field: ResolvedField, isParam: boolean): string {
         field.required ? "required" : "",
         field.readonly ? "data-dashboard-readonly" : "",
         field.readonly ? "disabled" : "",
+        field.upload ? `data-dashboard-upload-url="${escapeAttr(endpointUrl(context.group, field.upload, { selection }))}"` : "",
+        field.upload ? `data-dashboard-upload-method="${escapeAttr(uploadEndpoint?.method ?? "POST")}"` : "",
+        field.upload ? `data-dashboard-upload-result-path="${escapeAttr(field.upload.resultPath)}"` : "",
     ].filter(Boolean).join(" ");
 
     if (field.input === "cms-user") {
@@ -608,6 +625,19 @@ function renderWriteField(field: ResolvedField, isParam: boolean): string {
             <label class="dashboard-checkbox">
                 <input type="checkbox" ${attrs}>
                 <span>${escapeHtml(field.label)}</span>
+            </label>
+        `;
+    }
+
+    if (field.input === "file") {
+        return `
+            <label class="dashboard-file-field">
+                <span class="dashboard-file-label">${escapeHtml(field.label)}</span>
+                <span class="dashboard-file-control">
+                    <span class="dashboard-file-button">Choose file</span>
+                    <span class="dashboard-file-name" data-dashboard-file-name>No file selected</span>
+                </span>
+                <input class="dashboard-file-input" type="file" ${attrs} ${field.accept ? `accept="${escapeAttr(field.accept)}"` : ""}>
             </label>
         `;
     }

@@ -6,9 +6,10 @@ export type {
     ParamIn,
     ComputedParamRef,
     ParamValueSource,
+    ResponseKind,
 } from "../interfaces/Source";
 export type { DataShape } from "../interfaces/DataShape";
-export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS } from "../interfaces/Source";
+export { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS, RESPONSE_KINDS } from "../interfaces/Source";
 export {
     isValidHeaderName,
     isForbiddenHeaderName,

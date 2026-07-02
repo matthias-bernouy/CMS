@@ -39,6 +39,7 @@ export class DashboardView extends Component {
         super.connectedCallback();
         this.syncFromSelection(currentSelection());
         this.shadowRoot!.addEventListener("click", this.onClick);
+        this.shadowRoot!.addEventListener("change", this.onChange);
         this.shadowRoot!.addEventListener("keydown", this.onKeydown);
         this.shadowRoot!.addEventListener("submit", this.onSubmit);
         window.addEventListener("popstate", this.onPopState);
@@ -48,6 +49,7 @@ export class DashboardView extends Component {
 
     disconnectedCallback(): void {
         this.shadowRoot?.removeEventListener("click", this.onClick);
+        this.shadowRoot?.removeEventListener("change", this.onChange);
         this.shadowRoot?.removeEventListener("keydown", this.onKeydown);
         this.shadowRoot?.removeEventListener("submit", this.onSubmit);
         window.removeEventListener("popstate", this.onPopState);
@@ -106,6 +108,13 @@ export class DashboardView extends Component {
         if (event.key !== "Enter" && event.key !== " ") return;
         if (!this.selectRow(event.target as Element | null)) return;
         event.preventDefault();
+    }
+
+    private handleChange(event: Event): void {
+        const target = event.target;
+        if (target instanceof HTMLInputElement && target.type === "file" && target.dataset.dashboardFieldType === "file") {
+            syncFileInputLabel(target);
+        }
     }
 
     private selectRow(target: Element | null): boolean {
@@ -184,28 +193,28 @@ export class DashboardView extends Component {
         const form = target;
         const state = form.querySelector<HTMLElement>("[data-dashboard-write-state]");
         setWriteState(state, "");
-        const payload = readWritePayload(form);
-        if (!payload.ok) {
-            setWriteState(state, payload.message, "error");
-            showToast(payload.message, { type: "error" });
-            payload.control?.focus();
-            return;
-        }
-
-        let url: string;
-        try {
-            url = resolveWriteUrl(form.dataset.dashboardUrl ?? "", payload.params);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "Invalid write URL";
-            setWriteState(state, message, "error");
-            showToast(message, { type: "error" });
-            return;
-        }
-
-        const method = form.dataset.dashboardMethod || "POST";
         form.setAttribute("aria-busy", "true");
         setWriteState(state, "Saving...");
         try {
+            const payload = await readWritePayload(form);
+            if (!payload.ok) {
+                setWriteState(state, payload.message, "error");
+                showToast(payload.message, { type: "error" });
+                payload.control?.focus();
+                return;
+            }
+
+            let url: string;
+            try {
+                url = resolveWriteUrl(form.dataset.dashboardUrl ?? "", payload.params);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Invalid write URL";
+                setWriteState(state, message, "error");
+                showToast(message, { type: "error" });
+                return;
+            }
+
+            const method = form.dataset.dashboardMethod || "POST";
             const response = await fetch(url, {
                 method,
                 headers: {
@@ -343,6 +352,10 @@ export class DashboardView extends Component {
         this.handleClick(event);
     };
 
+    private readonly onChange = (event: Event): void => {
+        this.handleChange(event);
+    };
+
     private readonly onKeydown = (event: Event): void => {
         this.handleKeydown(event as KeyboardEvent);
     };
@@ -360,15 +373,31 @@ type WritePayload =
     | { ok: true; body: Record<string, unknown>; params: URLSearchParams }
     | { ok: false; message: string; control?: HTMLElement };
 
-function readWritePayload(form: HTMLFormElement): WritePayload {
+type PendingFileUpload = {
+    control: HTMLElement;
+    field: string;
+    file: File;
+    method: string;
+    url: string;
+    resultPath: string;
+};
+
+async function readWritePayload(form: HTMLFormElement): Promise<WritePayload> {
     const body: Record<string, unknown> = {};
     const params = new URLSearchParams();
     const controls = Array.from(form.querySelectorAll<HTMLElement>("[data-dashboard-field]"));
+    const uploads: PendingFileUpload[] = [];
 
     for (const control of controls) {
         if (control.hasAttribute("data-dashboard-readonly")) continue;
         const name = control.getAttribute("name") ?? "";
         if (!name) continue;
+        if (control.dataset.dashboardFieldType === "file") {
+            const pending = readFileUpload(control, name);
+            if (!pending.ok) return pending;
+            if (pending.upload) uploads.push(pending.upload);
+            continue;
+        }
         const value = readFieldValue(control);
         const required = control.hasAttribute("required");
         if (required && isEmptyFieldValue(value)) {
@@ -385,7 +414,67 @@ function readWritePayload(form: HTMLFormElement): WritePayload {
         }
     }
 
+    for (const upload of uploads) {
+        const result = await uploadFile(upload, params);
+        if (!result.ok) return { ok: false, message: result.message, control: upload.control };
+        setNestedValue(body, upload.field, result.value);
+    }
+
     return { ok: true, body, params };
+}
+
+function readFileUpload(control: HTMLElement, name: string): { ok: true; upload?: PendingFileUpload } | { ok: false; message: string; control?: HTMLElement } {
+    const input = control instanceof HTMLInputElement && control.type === "file" ? control : null;
+    const file = input?.files?.[0];
+    const required = control.hasAttribute("required");
+    if (!file) {
+        if (required && !control.dataset.existingValue) {
+            return { ok: false, message: `${fieldLabel(control, name)} is required`, control };
+        }
+        return { ok: true };
+    }
+    const url = control.dataset.dashboardUploadUrl;
+    const resultPath = control.dataset.dashboardUploadResultPath;
+    if (!url || !resultPath) {
+        return { ok: false, message: `${fieldLabel(control, name)} has no upload endpoint`, control };
+    }
+    return {
+        ok: true,
+        upload: {
+            control,
+            field: name,
+            file,
+            method: control.dataset.dashboardUploadMethod || "POST",
+            url,
+            resultPath,
+        },
+    };
+}
+
+async function uploadFile(upload: PendingFileUpload, params: URLSearchParams): Promise<{ ok: true; value: unknown } | { ok: false; message: string }> {
+    let url: string;
+    try {
+        url = resolveWriteUrl(upload.url, params);
+    } catch (error) {
+        return { ok: false, message: error instanceof Error ? error.message : "Invalid upload URL" };
+    }
+    const body = new FormData();
+    body.append("file", upload.file, upload.file.name);
+    const response = await fetch(url, {
+        method: upload.method,
+        headers: { accept: "application/json" },
+        body,
+    });
+    if (!response.ok) return { ok: false, message: await responseMessage(response) };
+    let data: unknown;
+    try {
+        data = await response.json();
+    } catch {
+        return { ok: false, message: "Upload did not return JSON" };
+    }
+    const value = valueAtPathUnknown(data, upload.resultPath);
+    if (value === undefined) return { ok: false, message: `Upload response is missing ${upload.resultPath}` };
+    return { ok: true, value };
 }
 
 function readFieldValue(control: HTMLElement): unknown {
@@ -461,6 +550,12 @@ function setFieldValue(control: HTMLElement, value: unknown): void {
         if (input) input.value = typeof value === "string" ? value : "";
         return;
     }
+    if (control instanceof HTMLInputElement && control.type === "file") {
+        if (typeof value === "string" && value) control.dataset.existingValue = value;
+        else delete control.dataset.existingValue;
+        syncFileInputLabel(control);
+        return;
+    }
     if (control instanceof HTMLInputElement && control.type === "checkbox") {
         control.checked = value === true;
         return;
@@ -471,8 +566,19 @@ function setFieldValue(control: HTMLElement, value: unknown): void {
     control.setAttribute("value", stringValue);
 }
 
+function syncFileInputLabel(input: HTMLInputElement): void {
+    const label = input.closest(".dashboard-file-field")?.querySelector<HTMLElement>("[data-dashboard-file-name]");
+    if (!label) return;
+    const file = input.files?.[0];
+    label.textContent = file?.name || (input.dataset.existingValue ? "Current file kept" : "No file selected");
+}
+
 function valueAtPath(item: Record<string, unknown>, path: string): unknown {
-    let current: unknown = item;
+    return valueAtPathUnknown(item, path);
+}
+
+function valueAtPathUnknown(value: unknown, path: string): unknown {
+    let current: unknown = value;
     for (const part of path.split(".")) {
         if (!part || !current || typeof current !== "object" || Array.isArray(current)) return undefined;
         current = (current as Record<string, unknown>)[part];

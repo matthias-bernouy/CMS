@@ -1,5 +1,5 @@
 import type { Source, SourceEndpoint } from "../interfaces/Source";
-import { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS } from "../interfaces/Source";
+import { COMPUTED_PARAM_REFS, HTTP_METHODS, PARAM_INS, RESPONSE_KINDS } from "../interfaces/Source";
 import { isSourceUrn, isEndpointUrn, sourceUrnOf } from "./urn";
 import { isValidHeaderName, isForbiddenHeaderName, isValidHeaderValue, MAX_ENDPOINT_HEADERS } from "./headerPolicy";
 import { isSystemSourceUrn } from "./systemSources";
@@ -98,6 +98,7 @@ export function validateSource(source: Source): string[] {
         }
 
         validateParams(ep, errors);
+        validateResponseKind(ep, errors);
         validateHeaders(ep, errors);
         validateResponses(ep, errors);
     }
@@ -222,6 +223,15 @@ function isBlockedIpv6(bytes: readonly number[]): boolean {
     const compatibleIpv4 = bytes.slice(0, 12).every((b) => b === 0);
     const embeddedIpv4 = mappedIpv4 || compatibleIpv4 ? bytes.slice(12, 16) : null;
     return allZero || loopback || uniqueLocal || linkLocal || multicast || (!!embeddedIpv4 && isBlockedIpv4(embeddedIpv4));
+}
+
+function validateResponseKind(ep: SourceEndpoint, errors: string[]): void {
+    if (ep.responseKind !== undefined && !(RESPONSE_KINDS as readonly string[]).includes(ep.responseKind)) {
+        errors.push(`invalid responseKind for "${ep.urn}": "${ep.responseKind}"`);
+    }
+    if (ep.mediaType !== undefined && !ep.mediaType.trim()) {
+        errors.push(`empty mediaType for "${ep.urn}"`);
+    }
 }
 
 function validateHeaders(ep: SourceEndpoint, errors: string[]): void {

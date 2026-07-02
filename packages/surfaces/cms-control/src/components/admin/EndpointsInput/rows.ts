@@ -50,7 +50,7 @@ export function makeEndpointRow(idx: number, seed: EndpointSeed = {}, api?: stri
     const idInput = makeInput(`endpoints.${idx}.endpointId`, 'SourceEndpoint id', 'getUser', seed.endpointId);
     const methodSelect = makeMethodSelect(`endpoints.${idx}.method`, method);
     const urlInput = makeInput(`endpoints.${idx}.targetUrl`, 'Target URL', 'https://api.example.com/path', seed.targetUrl);
-    infosBody.append(idInput, methodSelect, urlInput);
+    infosBody.append(idInput, methodSelect, urlInput, hiddenScalar(`endpoints.${idx}.responseKind`, seed.responseKind), hiddenScalar(`endpoints.${idx}.mediaType`, seed.mediaType));
     infos.appendChild(infosBody);
 
     tabs.append(
@@ -64,6 +64,14 @@ export function makeEndpointRow(idx: number, seed: EndpointSeed = {}, api?: stri
     item.append(header, makeDeleteButton(), tabs);
     bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
     return item;
+}
+
+function hiddenScalar(name: string, value: string | undefined): HTMLInputElement {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value ?? '';
+    return input;
 }
 
 /** Keep the collapsed-header summary in sync with the body controls. `input`

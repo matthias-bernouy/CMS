@@ -28,7 +28,14 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                     source: {
                         id: "items",
                         meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
-                        endpoints: [],
+                        endpoints: [{
+                            endpointId: "getImage",
+                            method: "GET",
+                            targetUrl: "https://api.example.com/images/{fileId}",
+                            responseKind: "file",
+                            mediaType: "image/*",
+                            params: [{ name: "fileId", in: "path", required: true, type: "string" }],
+                        }],
                     },
                 }],
             },
@@ -40,7 +47,14 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
             source: {
                 id: "items",
                 meta: { name: "Items", icon: "database", svg: "<svg viewBox=\"0 0 24 24\"></svg>" },
-                endpoints: [],
+                endpoints: [{
+                    endpointId: "getImage",
+                    method: "GET",
+                    targetUrl: "https://api.example.com/images/{fileId}",
+                    responseKind: "file",
+                    mediaType: "image/*",
+                    params: [{ name: "fileId", in: "path", required: true, type: "string" }],
+                }],
             },
         });
     });
@@ -73,7 +87,12 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                                 collection: "items",
                                 fields: [
                                     { field: "owner", label: "Owner", input: "cms-user", required: true },
-                                    { field: "imageUrl", label: "Image", format: "image" },
+                                    {
+                                        field: "imageUrl",
+                                        label: "Image",
+                                        format: "image",
+                                        media: { endpoint: "getImage", params: { fileId: "$field.imageUrl" } },
+                                    },
                                     { field: "website", label: "Website", format: "url" },
                                 ],
                             },
@@ -82,7 +101,15 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                                 collection: "items",
                                 label: "Edit item",
                                 submitLabel: "Save item",
-                                fields: [{ field: "owner", input: "cms-user" }],
+                                fields: [
+                                    { field: "owner", input: "cms-user" },
+                                    {
+                                        field: "imageUrl",
+                                        input: "file",
+                                        accept: "image/*",
+                                        upload: { endpoint: "uploadImage", resultPath: "fileId" },
+                                    },
+                                ],
                             },
                         ],
                     },
@@ -113,7 +140,12 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                         collection: "items",
                         fields: [
                             { field: "owner", label: "Owner", input: "cms-user", required: true },
-                            { field: "imageUrl", label: "Image", format: "image" },
+                            {
+                                field: "imageUrl",
+                                label: "Image",
+                                format: "image",
+                                media: { endpoint: "getImage", params: { fileId: "$field.imageUrl" } },
+                            },
                             { field: "website", label: "Website", format: "url" },
                         ],
                     },
@@ -122,7 +154,15 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
                         collection: "items",
                         label: "Edit item",
                         submitLabel: "Save item",
-                        fields: [{ field: "owner", input: "cms-user" }],
+                        fields: [
+                            { field: "owner", input: "cms-user" },
+                            {
+                                field: "imageUrl",
+                                input: "file",
+                                accept: "image/*",
+                                upload: { endpoint: "uploadImage", resultPath: "fileId" },
+                            },
+                        ],
                     },
                 ],
             },

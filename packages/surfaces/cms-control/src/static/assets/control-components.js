@@ -10834,13 +10834,20 @@ cms-endpoints-input .ep-add:hover {
     const idInput = makeInput(`endpoints.${idx}.endpointId`, "SourceEndpoint id", "getUser", seed.endpointId);
     const methodSelect = makeMethodSelect(`endpoints.${idx}.method`, method);
     const urlInput = makeInput(`endpoints.${idx}.targetUrl`, "Target URL", "https://api.example.com/path", seed.targetUrl);
-    infosBody.append(idInput, methodSelect, urlInput);
+    infosBody.append(idInput, methodSelect, urlInput, hiddenScalar(`endpoints.${idx}.responseKind`, seed.responseKind), hiddenScalar(`endpoints.${idx}.mediaType`, seed.mediaType));
     infos.appendChild(infosBody);
     tabs.append(infos, makeInPanel(idx, seed, urlInput), makeOutPanel(idx, seed), makeHeadersPanel(idx, seed, { api }));
     tabs.setAttribute("active", `infos-${idx}`);
     item.append(header, makeDeleteButton(), tabs);
     bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput);
     return item;
+  }
+  function hiddenScalar(name, value) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value ?? "";
+    return input;
   }
   function bindHeaderSync(methodTag, idEl, pathEl, idInput, methodSelect, urlInput) {
     const update = () => {
@@ -12350,6 +12357,66 @@ p {
     font-weight: 700;
 }
 
+.dashboard-file-field {
+    position: relative;
+    display: grid;
+    gap: 6px;
+}
+
+.dashboard-file-label {
+    color: var(--text-muted, #66736f);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.dashboard-file-control {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 36px;
+    border: 1px solid var(--border-default, #dfe5e2);
+    border-radius: 7px;
+    background: var(--bg-surface, #fff);
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.dashboard-file-field:focus-within .dashboard-file-control {
+    border-color: var(--primary-base, #165f4b);
+    outline: 2px solid color-mix(in srgb, var(--primary-base, #165f4b), transparent 75%);
+    outline-offset: 0;
+}
+
+.dashboard-file-button {
+    display: inline-flex;
+    align-items: center;
+    align-self: stretch;
+    border-right: 1px solid var(--border-default, #dfe5e2);
+    background: var(--bg-subtle, #f5f7f6);
+    color: var(--text-default, #0f1f1a);
+    font-weight: 700;
+    padding: 0 12px;
+    white-space: nowrap;
+}
+
+.dashboard-file-name {
+    min-width: 0;
+    color: var(--text-muted, #66736f);
+    overflow: hidden;
+    padding: 0 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
 .dashboard-table cms-binding-core {
     display: block;
 }
@@ -12521,7 +12588,7 @@ p {
 
 .dashboard-detail-media a {
     color: var(--text-default, #0f1f1a);
-    overflow-wrap: anywhere;
+    font-weight: 700;
 }
 
 .dashboard-detail-list {
@@ -12930,7 +12997,7 @@ p {
                     <div class="dashboard-detail-body" cms-condition="$source.loaded">
                         ${mediaFields.length ? `
                             <div class="dashboard-detail-media-list">
-                                ${mediaFields.map(renderImageField).join("")}
+                                ${mediaFields.map((field) => renderImageField(field, context)).join("")}
                             </div>
                         ` : ""}
                         <dl class="dashboard-detail-list">
@@ -12982,7 +13049,7 @@ p {
                     <button type="button" class="dashboard-create-close" data-dashboard-write-close>Close</button>
                 </div>
                 <div class="dashboard-create-fields">
-                    ${fields.map((field) => renderWriteField(field, paramFields.has(field.field))).join("")}
+                    ${fields.map((field) => renderWriteField(field, paramFields.has(field.field), context)).join("")}
                 </div>
                 <div class="dashboard-create-actions">
                     <button type="button" class="dashboard-create-secondary" data-dashboard-write-close>Cancel</button>
@@ -13040,7 +13107,7 @@ p {
                     <button type="button" class="dashboard-create-close" data-dashboard-write-close>Close</button>
                 </div>
                 <div class="dashboard-create-fields">
-                    ${fields.map((field) => renderWriteField(field, paramFields.has(field.field))).join("")}
+                    ${fields.map((field) => renderWriteField(field, paramFields.has(field.field), context, selected)).join("")}
                 </div>
                 <div class="dashboard-create-actions">
                     <button type="button" class="dashboard-create-secondary" data-dashboard-write-close>Cancel</button>
@@ -13132,7 +13199,10 @@ p {
           input: field.input,
           format: field.format,
           required: field.required,
-          readonly: field.readonly
+          readonly: field.readonly,
+          accept: field.accept,
+          media: field.media,
+          upload: field.upload
         };
       });
     }
@@ -13228,6 +13298,8 @@ p {
       return `#{${expr.slice("$param.".length)}}`;
     if (expr.startsWith("$row."))
       return `{{ row.${expr.slice("$row.".length)} }}`;
+    if (expr.startsWith("$field."))
+      return `{{ ${options.fieldAlias ?? "item"}.${expr.slice("$field.".length)} }}`;
     return encodeURIComponent(expr);
   }
   function rowSelectionAttributes(collection) {
@@ -13260,14 +13332,17 @@ p {
       return `<span class="badge">${binding}</span>`;
     return binding;
   }
-  function renderImageField(field) {
-    const binding = `{{ item.${field.field} }}`;
+  function renderImageField(field, context) {
+    const binding = field.media ? endpointUrl(context.group, field.media, {
+      selection: context.selectedRows.values().next().value ?? "",
+      fieldAlias: "item"
+    }) : `{{ item.${field.field} }}`;
     return `
         <figure class="dashboard-detail-media" cms-condition="item.${field.field}">
             <img src="${binding}" alt="">
             <figcaption>
                 <span>${escapeHtml2(field.label)}</span>
-                <a href="${binding}" target="_blank" rel="noopener">${binding}</a>
+                <a href="${binding}" target="_blank" rel="noopener">Open image</a>
             </figcaption>
         </figure>
     `;
@@ -13282,7 +13357,8 @@ p {
       return `<time>${binding}</time>`;
     return binding;
   }
-  function renderWriteField(field, isParam) {
+  function renderWriteField(field, isParam, context, selection = "") {
+    const uploadEndpoint = field.upload ? endpointById(context.group, field.upload.endpoint) : null;
     const attrs = [
       `name="${escapeAttr2(field.field)}"`,
       "data-dashboard-field",
@@ -13291,7 +13367,10 @@ p {
       isParam ? "data-dashboard-param" : "",
       field.required ? "required" : "",
       field.readonly ? "data-dashboard-readonly" : "",
-      field.readonly ? "disabled" : ""
+      field.readonly ? "disabled" : "",
+      field.upload ? `data-dashboard-upload-url="${escapeAttr2(endpointUrl(context.group, field.upload, { selection }))}"` : "",
+      field.upload ? `data-dashboard-upload-method="${escapeAttr2(uploadEndpoint?.method ?? "POST")}"` : "",
+      field.upload ? `data-dashboard-upload-result-path="${escapeAttr2(field.upload.resultPath)}"` : ""
     ].filter(Boolean).join(" ");
     if (field.input === "cms-user") {
       return `
@@ -13316,6 +13395,18 @@ p {
             <label class="dashboard-checkbox">
                 <input type="checkbox" ${attrs}>
                 <span>${escapeHtml2(field.label)}</span>
+            </label>
+        `;
+    }
+    if (field.input === "file") {
+      return `
+            <label class="dashboard-file-field">
+                <span class="dashboard-file-label">${escapeHtml2(field.label)}</span>
+                <span class="dashboard-file-control">
+                    <span class="dashboard-file-button">Choose file</span>
+                    <span class="dashboard-file-name" data-dashboard-file-name>No file selected</span>
+                </span>
+                <input class="dashboard-file-input" type="file" ${attrs} ${field.accept ? `accept="${escapeAttr2(field.accept)}"` : ""}>
             </label>
         `;
     }
@@ -13409,6 +13500,7 @@ p {
       super.connectedCallback();
       this.syncFromSelection(currentSelection());
       this.shadowRoot.addEventListener("click", this.onClick);
+      this.shadowRoot.addEventListener("change", this.onChange);
       this.shadowRoot.addEventListener("keydown", this.onKeydown);
       this.shadowRoot.addEventListener("submit", this.onSubmit);
       window.addEventListener("popstate", this.onPopState);
@@ -13417,6 +13509,7 @@ p {
     }
     disconnectedCallback() {
       this.shadowRoot?.removeEventListener("click", this.onClick);
+      this.shadowRoot?.removeEventListener("change", this.onChange);
       this.shadowRoot?.removeEventListener("keydown", this.onKeydown);
       this.shadowRoot?.removeEventListener("submit", this.onSubmit);
       window.removeEventListener("popstate", this.onPopState);
@@ -13473,6 +13566,12 @@ p {
       if (!this.selectRow(event.target))
         return;
       event.preventDefault();
+    }
+    handleChange(event) {
+      const target = event.target;
+      if (target instanceof HTMLInputElement && target.type === "file" && target.dataset.dashboardFieldType === "file") {
+        syncFileInputLabel(target);
+      }
     }
     selectRow(target) {
       const row = target?.closest("[data-dashboard-collection][data-dashboard-row-key]");
@@ -13545,26 +13644,26 @@ p {
       const form = target;
       const state = form.querySelector("[data-dashboard-write-state]");
       setWriteState(state, "");
-      const payload = readWritePayload(form);
-      if (!payload.ok) {
-        setWriteState(state, payload.message, "error");
-        xc(payload.message, { type: "error" });
-        payload.control?.focus();
-        return;
-      }
-      let url;
-      try {
-        url = resolveWriteUrl(form.dataset.dashboardUrl ?? "", payload.params);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Invalid write URL";
-        setWriteState(state, message, "error");
-        xc(message, { type: "error" });
-        return;
-      }
-      const method = form.dataset.dashboardMethod || "POST";
       form.setAttribute("aria-busy", "true");
       setWriteState(state, "Saving...");
       try {
+        const payload = await readWritePayload(form);
+        if (!payload.ok) {
+          setWriteState(state, payload.message, "error");
+          xc(payload.message, { type: "error" });
+          payload.control?.focus();
+          return;
+        }
+        let url;
+        try {
+          url = resolveWriteUrl(form.dataset.dashboardUrl ?? "", payload.params);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Invalid write URL";
+          setWriteState(state, message, "error");
+          xc(message, { type: "error" });
+          return;
+        }
+        const method = form.dataset.dashboardMethod || "POST";
         const response = await fetch(url, {
           method,
           headers: {
@@ -13693,6 +13792,9 @@ p {
     onClick = (event) => {
       this.handleClick(event);
     };
+    onChange = (event) => {
+      this.handleChange(event);
+    };
     onKeydown = (event) => {
       this.handleKeydown(event);
     };
@@ -13703,16 +13805,25 @@ p {
       return this.shadowRoot.querySelector(selector);
     }
   }
-  function readWritePayload(form) {
+  async function readWritePayload(form) {
     const body = {};
     const params = new URLSearchParams;
     const controls = Array.from(form.querySelectorAll("[data-dashboard-field]"));
+    const uploads = [];
     for (const control of controls) {
       if (control.hasAttribute("data-dashboard-readonly"))
         continue;
       const name = control.getAttribute("name") ?? "";
       if (!name)
         continue;
+      if (control.dataset.dashboardFieldType === "file") {
+        const pending = readFileUpload(control, name);
+        if (!pending.ok)
+          return pending;
+        if (pending.upload)
+          uploads.push(pending.upload);
+        continue;
+      }
       const value = readFieldValue(control);
       const required = control.hasAttribute("required");
       if (required && isEmptyFieldValue(value)) {
@@ -13729,7 +13840,67 @@ p {
         setNestedValue(body, name, value);
       }
     }
+    for (const upload of uploads) {
+      const result = await uploadFile(upload, params);
+      if (!result.ok)
+        return { ok: false, message: result.message, control: upload.control };
+      setNestedValue(body, upload.field, result.value);
+    }
     return { ok: true, body, params };
+  }
+  function readFileUpload(control, name) {
+    const input = control instanceof HTMLInputElement && control.type === "file" ? control : null;
+    const file = input?.files?.[0];
+    const required = control.hasAttribute("required");
+    if (!file) {
+      if (required && !control.dataset.existingValue) {
+        return { ok: false, message: `${fieldLabel(control, name)} is required`, control };
+      }
+      return { ok: true };
+    }
+    const url = control.dataset.dashboardUploadUrl;
+    const resultPath = control.dataset.dashboardUploadResultPath;
+    if (!url || !resultPath) {
+      return { ok: false, message: `${fieldLabel(control, name)} has no upload endpoint`, control };
+    }
+    return {
+      ok: true,
+      upload: {
+        control,
+        field: name,
+        file,
+        method: control.dataset.dashboardUploadMethod || "POST",
+        url,
+        resultPath
+      }
+    };
+  }
+  async function uploadFile(upload, params) {
+    let url;
+    try {
+      url = resolveWriteUrl(upload.url, params);
+    } catch (error) {
+      return { ok: false, message: error instanceof Error ? error.message : "Invalid upload URL" };
+    }
+    const body = new FormData;
+    body.append("file", upload.file, upload.file.name);
+    const response = await fetch(url, {
+      method: upload.method,
+      headers: { accept: "application/json" },
+      body
+    });
+    if (!response.ok)
+      return { ok: false, message: await responseMessage(response) };
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      return { ok: false, message: "Upload did not return JSON" };
+    }
+    const value = valueAtPathUnknown(data, upload.resultPath);
+    if (value === undefined)
+      return { ok: false, message: `Upload response is missing ${upload.resultPath}` };
+    return { ok: true, value };
   }
   function readFieldValue(control) {
     const type = control.dataset.dashboardFieldType ?? "text";
@@ -13804,6 +13975,14 @@ p {
         input.value = typeof value === "string" ? value : "";
       return;
     }
+    if (control instanceof HTMLInputElement && control.type === "file") {
+      if (typeof value === "string" && value)
+        control.dataset.existingValue = value;
+      else
+        delete control.dataset.existingValue;
+      syncFileInputLabel(control);
+      return;
+    }
     if (control instanceof HTMLInputElement && control.type === "checkbox") {
       control.checked = value === true;
       return;
@@ -13814,8 +13993,18 @@ p {
       valueControl.value = stringValue;
     control.setAttribute("value", stringValue);
   }
+  function syncFileInputLabel(input) {
+    const label = input.closest(".dashboard-file-field")?.querySelector("[data-dashboard-file-name]");
+    if (!label)
+      return;
+    const file = input.files?.[0];
+    label.textContent = file?.name || (input.dataset.existingValue ? "Current file kept" : "No file selected");
+  }
   function valueAtPath(item, path) {
-    let current = item;
+    return valueAtPathUnknown(item, path);
+  }
+  function valueAtPathUnknown(value, path) {
+    let current = value;
     for (const part of path.split(".")) {
       if (!part || !current || typeof current !== "object" || Array.isArray(current))
         return;

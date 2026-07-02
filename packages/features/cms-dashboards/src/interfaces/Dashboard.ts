@@ -42,7 +42,13 @@ export type ColumnSpec =
         format?: ColumnFormat;
     };
 
-export type FieldInput = "text" | "select" | "boolean" | "number" | "cms-user";
+export type FieldInput = "text" | "select" | "boolean" | "number" | "cms-user" | "file";
+
+export type FieldMediaRef = CollectionEndpointRef;
+
+export type FieldUploadRef = CollectionEndpointRef & {
+    resultPath: string;
+};
 
 export type FieldSpec =
     | string
@@ -51,6 +57,9 @@ export type FieldSpec =
         label?: string;
         format?: FieldFormat;
         input?: FieldInput;
+        accept?: string;
+        media?: FieldMediaRef;
+        upload?: FieldUploadRef;
         readonly?: boolean;
         required?: boolean;
     };

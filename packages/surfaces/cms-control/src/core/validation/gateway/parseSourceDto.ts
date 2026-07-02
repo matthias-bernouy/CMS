@@ -1,6 +1,6 @@
 import MissingParam from "cms-control/errors/Http/MissingParam";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
-import { HTTP_METHODS, isAllowedSourceTargetUrl, isSystemSourceId, SYSTEM_SOURCE_ID_PREFIX, type HTTPMethod, type SourceDto } from "@bernouy/cms-sources";
+import { HTTP_METHODS, RESPONSE_KINDS, isAllowedSourceTargetUrl, isSystemSourceId, SYSTEM_SOURCE_ID_PREFIX, type HTTPMethod, type ResponseKind, type SourceDto } from "@bernouy/cms-sources";
 import { slugify } from "cms-control/core/validation/slugify";
 import { parseShapeField } from "./parseShapeField";
 import { pathParamsFromUrl, parseParamsBlob, parseMetaField, buildMeta } from "./gatewayValidators";
@@ -8,7 +8,7 @@ import { parseResponsesBlob, parseHeadersBlob } from "./blobParsers";
 export type { SourceDto };
 
 /** Matches the flat indexed endpoint scalar keys, e.g. `endpoints.0.targetUrl`. */
-const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl)$/;
+const ENDPOINT_KEY = /^endpoints\.(\d+)\.(endpointId|method|targetUrl|responseKind|mediaType)$/;
 /** Matches the per-endpoint JSON blobs, e.g. `endpoints.0.params`. Every structured field
  *  (params/body/output/meta/headers) is posted as one JSON blob — the parser validates it. */
 const BLOB_KEY = /^endpoints\.(\d+)\.(params|body|output|meta|headers)$/;
@@ -30,7 +30,7 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
     if (isSystemSourceId(id)) throw new InvalidParam("id", `reserved prefix "${SYSTEM_SOURCE_ID_PREFIX}"`);
 
     // Group flat scalar keys by row index; collect per-endpoint JSON blobs separately.
-    const rows = new Map<number, Partial<Record<"endpointId" | "method" | "targetUrl", string>>>();
+    const rows = new Map<number, Partial<Record<"endpointId" | "method" | "targetUrl" | "responseKind" | "mediaType", string>>>();
     const blobRows = new Map<number, BlobFields>();
     for (const [key, value] of Object.entries(body)) {
         const sm = BLOB_KEY.exec(key);
@@ -45,7 +45,7 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
         if (!m) continue;
         if (typeof value !== "string") throw new InvalidParam(key, "expected a string.");
         const idx = Number(m[1]);
-        const field = m[2] as "endpointId" | "method" | "targetUrl";
+        const field = m[2] as "endpointId" | "method" | "targetUrl" | "responseKind" | "mediaType";
         const row = rows.get(idx) ?? {};
         row[field] = value;
         rows.set(idx, row);
@@ -66,6 +66,10 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
         if (!isAllowedSourceTargetUrl(targetUrl)) {
             throw new InvalidParam(`endpoints.${idx}.targetUrl`, "invalid or blocked URL");
         }
+        if (row.responseKind && !(RESPONSE_KINDS as readonly string[]).includes(row.responseKind)) {
+            throw new InvalidParam(`endpoints.${idx}.responseKind`, `must be ${RESPONSE_KINDS.join("|")}`);
+        }
+        const mediaType = row.mediaType?.trim();
         if (seenIds.has(endpointId)) {
             throw new InvalidParam(`endpoints.${idx}.endpointId`, "duplicate within provider");
         }
@@ -82,6 +86,8 @@ export function parseSourceDto(body: Record<string, unknown>): SourceDto {
         const headers = parseHeadersBlob(blobs?.headers, `endpoints.${idx}.headers`);
         endpoints.push({
             endpointId, method: method as HTTPMethod, targetUrl,
+            ...(row.responseKind ? { responseKind: row.responseKind as ResponseKind } : {}),
+            ...(mediaType ? { mediaType } : {}),
             params: [...pathParams, ...queryParams],
             ...(body ? { body } : {}),
             ...(output ? { output } : {}),

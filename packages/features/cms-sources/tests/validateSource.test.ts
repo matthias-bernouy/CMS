@@ -153,6 +153,15 @@ describe("validateSource", () => {
         expect(errs.some(m => m.includes("invalid response status"))).toBe(true);
         expect(errs.some(m => m.includes("duplicate response status"))).toBe(true);
     });
+    test("response kind accepts file endpoints and rejects unknown values", () => {
+        const good = { ...ep("urn:shop:file"), responseKind: "file" as const, mediaType: "image/*" };
+        expect(validateSource(source({ endpoints: [good] }))).toEqual([]);
+
+        const bad = { ...ep("urn:shop:file"), responseKind: "stream" as any, mediaType: "" };
+        const errs = validateSource(source({ endpoints: [bad] }));
+        expect(errs.some(m => m.includes("invalid responseKind"))).toBe(true);
+        expect(errs.some(m => m.includes("empty mediaType"))).toBe(true);
+    });
     test("a fully-furnished valid endpoint stays valid", () => {
         const e = {
             ...ep("urn:shop:x"),

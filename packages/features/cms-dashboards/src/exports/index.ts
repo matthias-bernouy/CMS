@@ -18,6 +18,8 @@ export type {
     FieldSpec,
     FieldFormat,
     FieldInput,
+    FieldMediaRef,
+    FieldUploadRef,
     FilterSpec,
 } from "../interfaces/Dashboard";
 export type { DashboardRepository } from "../interfaces/DashboardRepository";
