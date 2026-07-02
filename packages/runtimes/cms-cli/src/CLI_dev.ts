@@ -188,6 +188,7 @@ export default async function CLI_dev(args: string[]) {
         filesBlob: files,
         variantStore,
         sources,
+        integrationInstances,
         sourceResolveSecret: resolveSecret,
         roles,
         auth: publicAuth,

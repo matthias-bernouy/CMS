@@ -7,8 +7,10 @@
 
 export type {
     IntegrationAnswerValue,
+    IntegrationCspPolicy,
     IntegrationDefinition,
     IntegrationInput,
+    IntegrationSecurityDefinition,
     IntegrationUiDefinition,
 } from "../interfaces/Integration";
 export type {
@@ -72,6 +74,12 @@ export {
     resolveTemplates,
     type TemplateContext,
 } from "../core/templates";
+export {
+    collectIntegrationDefinitionCspExtras,
+    collectIntegrationInstanceCspExtras,
+    emptyIntegrationCspExtras,
+    type IntegrationCspExtras,
+} from "../core/security/csp";
 export {
     InMemoryIntegrationInstanceRepository,
 } from "../default-implementation/InMemoryIntegrationInstanceRepository";

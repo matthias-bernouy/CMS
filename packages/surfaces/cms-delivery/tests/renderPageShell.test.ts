@@ -53,4 +53,29 @@ describe("renderPage — binding core wrapper", () => {
         expect(html).not.toContain("HDR_X");
     });
 
+    test("includes CSP origins declared by successful integration instances", async () => {
+        const ctx = makeCtx();
+        ctx.integrationInstances = {
+            list: async () => [{
+                status: "success",
+                definitionSnapshot: {
+                    kind: "secure-embed",
+                    label: "Secure Embed",
+                    inputs: [],
+                    security: {
+                        csp: {
+                            script: ["https://connect-js.stripe.com"],
+                            frame: ["https://connect.stripe.com"],
+                        },
+                    },
+                },
+            }],
+        } as RenderContext["integrationInstances"];
+
+        const entry = await renderPage(page, ctx);
+        const html = new TextDecoder().decode(entry.raw);
+        expect(html).toContain("script-src 'self' https://connect-js.stripe.com");
+        expect(html).toContain("frame-src 'self' https://connect.stripe.com");
+    });
+
 });

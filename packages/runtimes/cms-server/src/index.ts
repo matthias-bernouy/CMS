@@ -202,6 +202,7 @@ await controlCms.ready;
 const deliveryRunner = new BunRunner();
 new DeliveryCms({
     runner: deliveryRunner, repository: repo, cache, sources, analytics,
+    integrationInstances: integrationsStore,
     analyticsSalt: ANALYTICS_SALT_SECRET,
     sourceResolveSecret: resolveSecret,
     roles, filesMetadata, filesBlob, variantStore,

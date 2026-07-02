@@ -36,6 +36,15 @@ describe("buildCspContent", () => {
         expect(csp).toContain("media-src 'self' https://cdn.example.com");
     });
 
+    test("emits frame-src 'self' <urls> when frameExtras is non-empty", () => {
+        const csp = buildCspContent({
+            connectExtras: [],
+            mediaExtras:   [],
+            frameExtras:   ["https://connect-js.stripe.com"],
+        });
+        expect(csp).toContain("frame-src 'self' https://connect-js.stripe.com");
+    });
+
     test("emits both directives when both extras are non-empty", () => {
         const csp = buildCspContent({
             connectExtras: ["https://api.example.com"],

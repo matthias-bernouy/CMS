@@ -6,6 +6,7 @@ import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import { sanitizeDomTree, wrapBindingCore } from "@bernouy/cms-content";
 import { injectMediaVersions } from "@bernouy/cms-files";
 import { findUsedBlocTags } from "@bernouy/cms-content";
+import { collectIntegrationInstanceCspExtras } from "@bernouy/cms-integrations";
 import { buildHtmlBasics } from "cms-delivery/core/head/buildHtmlBasics";
 import { buildMetaCsp } from "cms-delivery/core/head/buildMetaCsp";
 import { buildAssetPreloads, buildFoucShell, buildStylesheetLink } from "cms-delivery/core/head/buildAssets";
@@ -54,11 +55,15 @@ export async function renderPage(page: TPage, ctx: RenderContext): Promise<Cache
     // unique-host set naturally drops them via Set semantics.
     const styleHosts  = uniqueOrigins([assets.styleUrl]);
     const scriptHosts = uniqueOrigins(assets.scriptUrls);
+    const integrationCsp = ctx.integrationInstances
+        ? collectIntegrationInstanceCspExtras(await ctx.integrationInstances.list())
+        : null;
     const cspExtras = {
-        connectExtras: [...settings.security.connectExtras],
-        mediaExtras:   [...settings.security.mediaExtras],
-        styleExtras:   styleHosts,
-        scriptExtras:  scriptHosts,
+        connectExtras: mergeUnique(settings.security.connectExtras, integrationCsp?.connectExtras),
+        mediaExtras:   mergeUnique(settings.security.mediaExtras,   integrationCsp?.mediaExtras),
+        styleExtras:   mergeUnique(styleHosts,                       integrationCsp?.styleExtras),
+        scriptExtras:  mergeUnique(scriptHosts,                      integrationCsp?.scriptExtras),
+        frameExtras:   mergeUnique([],                               integrationCsp?.frameExtras),
     };
 
     // <head> assembly, in exact document order. Consumer-supplied head
@@ -106,4 +111,8 @@ function uniqueOrigins(urls: string[]): string[] {
         try { out.add(new URL(u).origin); } catch { /* relative URL → no origin to whitelist */ }
     }
     return [...out];
+}
+
+function mergeUnique(primary: readonly string[], secondary: readonly string[] | undefined): string[] {
+    return [...new Set([...primary, ...(secondary ?? [])])];
 }

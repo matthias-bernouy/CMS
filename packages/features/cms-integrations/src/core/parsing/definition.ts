@@ -7,6 +7,7 @@ import type {
     DeclarativeSecretTemplate,
     IntegrationDefinition,
     IntegrationInput,
+    IntegrationSecurityDefinition,
 } from "../../interfaces/Integration";
 import { parseArtifactTemplates } from "./sourceTemplates";
 import { parseUiDefinition } from "./uiDefinition";
@@ -28,6 +29,7 @@ export function assertDefinitionUsable(definition: IntegrationDefinition): void 
             throw new IntegrationInputError(`definition.secrets.${secret.input}`, "must reference a secret input");
         }
     }
+    if (definition.security) validateSecurityDefinition(definition.security);
 }
 
 export function parseOptionalDefinition(value: unknown): IntegrationDefinition | undefined {
@@ -54,6 +56,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     const secrets = parseSecretTemplates(value.secrets, new Set(sensitiveInputNames(parsedDefinition)));
     const artifacts = parseArtifactTemplates(value.artifacts);
     const ui = parseUiDefinition(value.ui);
+    const security = parseSecurityDefinition(value.security);
     return {
         kind,
         label,
@@ -64,6 +67,7 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
         ...(secrets.length ? { secrets } : {}),
         ...(artifacts.length ? { artifacts } : {}),
         ...(ui ? { ui } : {}),
+        ...(security ? { security } : {}),
     };
 }
 
@@ -103,6 +107,11 @@ function validateInputDefinition(input: IntegrationInput): void {
     }
 }
 
+function validateSecurityDefinition(security: IntegrationSecurityDefinition): void {
+    if (security.csp === undefined) return;
+    parseCspPolicy(security.csp, "definition.security.csp");
+}
+
 function assertUniqueInputs(inputs: IntegrationInput[]): void {
     const seen = new Set<string>();
     for (const input of inputs) {
@@ -125,6 +134,41 @@ function parseSecretTemplate(value: unknown, name: string, secretInputs: Readonl
     const key = text(value.key);
     if (!key) throw new MissingIntegrationParam(`${name}.key`);
     return { input, key };
+}
+
+function parseSecurityDefinition(value: unknown): IntegrationSecurityDefinition | undefined {
+    if (value === undefined || value === null) return undefined;
+    if (!isRecord(value)) throw new IntegrationInputError("definition.security", "must be an object");
+    const csp = parseCspPolicy(value.csp, "definition.security.csp");
+    return csp ? { csp } : undefined;
+}
+
+function parseCspPolicy(value: unknown, name: string): NonNullable<IntegrationSecurityDefinition["csp"]> | undefined {
+    if (value === undefined || value === null) return undefined;
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const out: NonNullable<IntegrationSecurityDefinition["csp"]> = {};
+    for (const directive of ["connect", "media", "style", "script", "frame"] as const) {
+        if (value[directive] !== undefined) {
+            const sources = parseCspSourceList(value[directive], `${name}.${directive}`);
+            if (sources.length) out[directive] = sources;
+        }
+    }
+    return Object.keys(out).length ? out : undefined;
+}
+
+function parseCspSourceList(value: unknown, name: string): string[] {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return [...new Set(value.map((entry, index) => parseCspSource(entry, `${name}.${index}`)))];
+}
+
+function parseCspSource(value: unknown, name: string): string {
+    const source = text(value);
+    if (!source) throw new IntegrationInputError(name, "must be a non-empty string");
+    try {
+        return new URL(source).origin;
+    } catch {
+        throw new IntegrationInputError(name, "must be an absolute origin");
+    }
 }
 
 function parseOptionsList(values: unknown[], name: string): Array<{ label: string; value: string }> {

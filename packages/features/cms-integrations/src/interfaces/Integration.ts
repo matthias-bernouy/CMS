@@ -32,6 +32,18 @@ export type IntegrationUiDefinition = {
     syncNote?: string;
 };
 
+export type IntegrationCspPolicy = {
+    connect?: string[];
+    media?: string[];
+    style?: string[];
+    script?: string[];
+    frame?: string[];
+};
+
+export type IntegrationSecurityDefinition = {
+    csp?: IntegrationCspPolicy;
+};
+
 export type DeclarativeSecretTemplate = {
     input: string;
     key: string;
@@ -59,6 +71,7 @@ export type IntegrationDefinition = {
     description?: string;
     inputs: IntegrationInput[];
     ui?: IntegrationUiDefinition;
+    security?: IntegrationSecurityDefinition;
     secrets?: DeclarativeSecretTemplate[];
     artifacts?: DeclarativeArtifactTemplate[];
 };

@@ -47,6 +47,7 @@ import type {
     IntegrationDefinitionRepository,
     IntegrationInstanceRepository,
 } from "@bernouy/cms-integrations";
+import { collectIntegrationInstanceCspExtras } from "@bernouy/cms-integrations";
 
 type Configuration = {
     /**
@@ -406,10 +407,20 @@ export class ControlCms {
      */
     async getCspExtras(): Promise<CspExtras> {
         const settings = await this._repository.getSystem();
+        const integrationCsp = this._integrationInstances
+            ? collectIntegrationInstanceCspExtras(await this._integrationInstances.list())
+            : null;
         return {
-            connectExtras: [...settings.security.connectExtras],
-            mediaExtras:   [...settings.security.mediaExtras],
+            connectExtras: mergeUnique(settings.security.connectExtras, integrationCsp?.connectExtras),
+            mediaExtras:   mergeUnique(settings.security.mediaExtras,   integrationCsp?.mediaExtras),
+            styleExtras:   mergeUnique([],                              integrationCsp?.styleExtras),
+            scriptExtras:  mergeUnique([],                              integrationCsp?.scriptExtras),
+            frameExtras:   mergeUnique([],                              integrationCsp?.frameExtras),
         };
     }
 
+}
+
+function mergeUnique(primary: readonly string[], secondary: readonly string[] | undefined): string[] {
+    return [...new Set([...primary, ...(secondary ?? [])])];
 }

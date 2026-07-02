@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+    collectIntegrationDefinitionCspExtras,
     integrationRegistry,
     parseIntegrationImportRequest,
     type IntegrationDefinition,
@@ -235,6 +236,67 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
         }]);
     });
 
+    test("parses declarative CSP security metadata", () => {
+        const request = parseIntegrationImportRequest({
+            definition: {
+                kind: "secure-embed",
+                label: "Secure Embed",
+                inputs: [],
+                security: {
+                    csp: {
+                        script: ["https://connect-js.stripe.com/v1.0/connect.js"],
+                        frame: ["https://connect.stripe.com/embedded/loading"],
+                        connect: ["https://api.stripe.com", "https://api.stripe.com/v1/account_sessions"],
+                    },
+                },
+            },
+            answers: {},
+        });
+
+        expect(request.siteIntegrations[0]?.security).toEqual({
+            csp: {
+                script: ["https://connect-js.stripe.com"],
+                frame: ["https://connect.stripe.com"],
+                connect: ["https://api.stripe.com"],
+            },
+        });
+    });
+
+    test("collects CSP extras from integration definitions", () => {
+        const extras = collectIntegrationDefinitionCspExtras([
+            {
+                kind: "one",
+                label: "One",
+                inputs: [],
+                security: {
+                    csp: {
+                        script: ["https://connect-js.stripe.com"],
+                        frame: ["https://connect.stripe.com"],
+                    },
+                },
+            },
+            {
+                kind: "two",
+                label: "Two",
+                inputs: [],
+                security: {
+                    csp: {
+                        script: ["https://connect-js.stripe.com"],
+                        connect: ["https://api.stripe.com"],
+                    },
+                },
+            },
+        ]);
+
+        expect(extras).toEqual({
+            connectExtras: ["https://api.stripe.com"],
+            mediaExtras:   [],
+            styleExtras:   [],
+            scriptExtras:  ["https://connect-js.stripe.com"],
+            frameExtras:   ["https://connect.stripe.com"],
+        });
+    });
+
     test("rejects malformed manual header artifacts before import execution", () => {
         expect(() => parseIntegrationImportRequest({
             definition: {
@@ -278,6 +340,16 @@ describe("@bernouy/cms-integrations DTO parsing", () => {
             },
             answers: { kind: "value" },
         })).toThrow(/reserved integration field name/);
+
+        expect(() => parseIntegrationImportRequest({
+            definition: {
+                kind: "bad-csp",
+                label: "Bad CSP",
+                inputs: [],
+                security: { csp: { script: ["not-a-url"] } },
+            },
+            answers: {},
+        })).toThrow(/definition\.security\.csp\.script\.0/);
     });
 
     test("rejects unsafe url input answers", () => {

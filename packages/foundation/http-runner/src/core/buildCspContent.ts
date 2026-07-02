@@ -10,6 +10,8 @@
  *     `default-src 'self'` (current behavior).
  *   - `mediaExtras` → emitted as `media-src 'self' <urls>`. Same omission
  *     rule.
+ *   - `frameExtras` → emitted as `frame-src 'self' <urls>`. Same omission
+ *     rule.
  *
  * `img-src` keeps `'self' data: https: blob:` regardless: tightening it would
  * break every bloc that references CDN images, with no upside (images can't
@@ -26,6 +28,8 @@ export type CspExtras = {
     /** Hosts to allow as origins for `<script src>`. Same rationale as
      *  `styleExtras` — pre-uploaded JS bundles on a cross-origin CDN. */
     scriptExtras?: string[];
+    /** Hosts to allow as origins for child browsing contexts such as iframes. */
+    frameExtras?:  string[];
 };
 
 const EMPTY_EXTRAS: CspExtras = { connectExtras: [], mediaExtras: [] };
@@ -49,6 +53,9 @@ export function buildCspContent(extras: CspExtras = EMPTY_EXTRAS): string {
     }
     if (extras.mediaExtras.length) {
         parts.push(`media-src 'self' ${extras.mediaExtras.join(" ")}`);
+    }
+    if (extras.frameExtras?.length) {
+        parts.push(`frame-src 'self' ${extras.frameExtras.join(" ")}`);
     }
     return parts.join("; ");
 }
