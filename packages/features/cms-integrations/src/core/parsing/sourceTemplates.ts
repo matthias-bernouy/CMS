@@ -293,7 +293,9 @@ function parseWidget(value: unknown, name: string): DashboardWidget {
                 collection: requiredText(value.collection, `${name}.collection`),
                 ...(text(value.label) ? { label: text(value.label)! } : {}),
                 ...(text(value.submitLabel) ? { submitLabel: text(value.submitLabel)! } : {}),
+                ...(text(value.successMessage) ? { successMessage: text(value.successMessage)! } : {}),
                 ...(value.fields !== undefined ? { fields: parseFields(value.fields, `${name}.fields`) } : {}),
+                ...(value.resultFields !== undefined ? { resultFields: parseFields(value.resultFields, `${name}.resultFields`) } : {}),
             };
         case "w-update": {
             const action = parseUpdateAction(value.action, `${name}.action`);
@@ -303,7 +305,9 @@ function parseWidget(value: unknown, name: string): DashboardWidget {
                 ...(action ? { action } : {}),
                 ...(text(value.label) ? { label: text(value.label)! } : {}),
                 ...(text(value.submitLabel) ? { submitLabel: text(value.submitLabel)! } : {}),
+                ...(text(value.successMessage) ? { successMessage: text(value.successMessage)! } : {}),
                 ...(value.fields !== undefined ? { fields: parseFields(value.fields, `${name}.fields`) } : {}),
+                ...(value.resultFields !== undefined ? { resultFields: parseFields(value.resultFields, `${name}.resultFields`) } : {}),
             };
         }
         case "w-delete":
@@ -317,6 +321,15 @@ function parseWidget(value: unknown, name: string): DashboardWidget {
                 ...(text(value.confirmLabel) ? { confirmLabel: text(value.confirmLabel)! } : {}),
                 ...(text(value.successMessage) ? { successMessage: text(value.successMessage)! } : {}),
                 ...(isRecord(value.body) ? { body: value.body } : {}),
+            };
+        case "w-action":
+            return {
+                widget,
+                ...parseEndpointRef(value, name),
+                label: requiredText(value.label, `${name}.label`),
+                ...(text(value.successMessage) ? { successMessage: text(value.successMessage)! } : {}),
+                ...(text(value.downloadName) ? { downloadName: text(value.downloadName)! } : {}),
+                ...(typeof value.refresh === "boolean" ? { refresh: value.refresh } : {}),
             };
         case "w-stat":
             return {
@@ -383,9 +396,11 @@ function parseField(value: unknown, name: string): FieldSpec {
         ...(text(value.label) ? { label: text(value.label)! } : {}),
         ...(parseFieldFormat(value.format, `${name}.format`) ? { format: parseFieldFormat(value.format, `${name}.format`)! } : {}),
         ...(parseFieldInput(value.input, `${name}.input`) ? { input: parseFieldInput(value.input, `${name}.input`)! } : {}),
+        ...(value.options !== undefined ? { options: parseStringList(value.options, `${name}.options`) } : {}),
         ...(text(value.accept) ? { accept: text(value.accept)! } : {}),
         ...(value.media !== undefined ? { media: parseFieldMedia(value.media, `${name}.media`) } : {}),
         ...(value.upload !== undefined ? { upload: parseFieldUpload(value.upload, `${name}.upload`) } : {}),
+        ...(value.lookup !== undefined ? { lookup: parseFieldLookup(value.lookup, `${name}.lookup`) } : {}),
         ...(value.readonly === true ? { readonly: true } : {}),
         ...(value.required === true ? { required: true } : {}),
     };
@@ -404,6 +419,17 @@ function parseFieldUpload(value: unknown, name: string): NonNullable<Extract<Fie
     };
 }
 
+function parseFieldLookup(value: unknown, name: string): NonNullable<Extract<FieldSpec, { field: string }>["lookup"]> {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    return {
+        ...parseListEndpointRef(value, name),
+        valuePath: requiredText(value.valuePath, `${name}.valuePath`),
+        labelPath: requiredText(value.labelPath, `${name}.labelPath`),
+        ...(value.descriptionPaths !== undefined ? { descriptionPaths: parseStringList(value.descriptionPaths, `${name}.descriptionPaths`) } : {}),
+        ...(value.map !== undefined ? { map: parseStringMap(value.map, `${name}.map`) } : {}),
+    };
+}
+
 function parseFieldFormat(value: unknown, name: string): FieldFormat | undefined {
     if (value === undefined) return undefined;
     if (value === "date" || value === "money" || value === "badge" || value === "text" || value === "image" || value === "url") {
@@ -414,8 +440,8 @@ function parseFieldFormat(value: unknown, name: string): FieldFormat | undefined
 
 function parseFieldInput(value: unknown, name: string): FieldInput | undefined {
     if (value === undefined) return undefined;
-    if (value === "text" || value === "select" || value === "boolean" || value === "number" || value === "cms-user" || value === "file") return value;
-    throw new IntegrationInputError(name, "must be text, select, boolean, number, cms-user, or file");
+    if (value === "text" || value === "select" || value === "boolean" || value === "number" || value === "cms-user" || value === "file" || value === "lookup") return value;
+    throw new IntegrationInputError(name, "must be text, select, boolean, number, cms-user, file, or lookup");
 }
 
 function parseFilters(value: unknown, name: string): FilterSpec[] {
@@ -440,6 +466,20 @@ function parseFilter(value: unknown, name: string): FilterSpec {
         filter.options = value.options.map((option, index) => requiredText(option, `${name}.options.${index}`));
     }
     return filter;
+}
+
+function parseStringList(value: unknown, name: string): string[] {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return value.map((entry, index) => requiredText(entry, `${name}.${index}`));
+}
+
+function parseStringMap(value: unknown, name: string): Record<string, string> {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const out: Record<string, string> = {};
+    for (const [key, entry] of Object.entries(value)) {
+        out[key] = requiredText(entry, `${name}.${key}`);
+    }
+    return out;
 }
 
 function parseRowActions(value: unknown, name: string): RowAction[] {

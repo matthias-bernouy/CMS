@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import {
     importIntegration,
+    parseIntegrationDefinition,
     type IntegrationDefinition,
 } from "@bernouy/cms-integrations";
 import { InMemoryDashboardRepository, type Dashboard } from "@bernouy/cms-dashboards";
@@ -138,6 +139,135 @@ describe("@bernouy/cms-integrations declarative imports", () => {
 
         expect(await secrets.listKeys()).toEqual([]);
         expect(await sources.getSource("urn:bad-key")).toBeNull();
+    });
+
+    test("parses dashboard select options and lookup field definitions", () => {
+        const definition = parseIntegrationDefinition({
+            kind: "delivery",
+            label: "Delivery",
+            inputs: [],
+            artifacts: [
+                {
+                    type: "source",
+                    source: {
+                        id: "delivery",
+                        meta: { name: "Delivery" },
+                        endpoints: [
+                            {
+                                endpointId: "createShipment",
+                                method: "POST",
+                                targetUrl: "https://example.com/shipments",
+                                params: [],
+                            },
+                            {
+                                endpointId: "relayPoints",
+                                method: "GET",
+                                targetUrl: "https://example.com/relay-points",
+                                params: [
+                                    { name: "country", in: "query", type: "string" },
+                                    { name: "postalCode", in: "query", type: "string" },
+                                    { name: "city", in: "query", type: "string" },
+                                    { name: "limit", in: "query", type: "number" },
+                                ],
+                            },
+                        ],
+                    },
+                },
+                {
+                    type: "dashboard",
+                    dashboard: {
+                        id: "delivery",
+                        source: "delivery",
+                        collections: [{
+                            id: "shipments",
+                            list: { endpoint: "relayPoints", itemsPath: "items" },
+                            item: { create: { endpoint: "createShipment" } },
+                        }],
+                        views: [{
+                            widget: "w-create",
+                            collection: "shipments",
+                            fields: [
+                                {
+                                    field: "recipientCountry",
+                                    input: "select",
+                                    options: ["FR"],
+                                    required: true,
+                                },
+                                {
+                                    field: "deliveryRelayNumber",
+                                    input: "lookup",
+                                    required: true,
+                                    lookup: {
+                                        endpoint: "relayPoints",
+                                        params: {
+                                            country: "FR",
+                                            postalCode: "$field.recipientPostalCode",
+                                            city: "$field.recipientCity",
+                                            limit: "10",
+                                        },
+                                        itemsPath: "items",
+                                        valuePath: "number",
+                                        labelPath: "name",
+                                        descriptionPaths: ["addressLine1", "postalCode", "city"],
+                                        map: {
+                                            deliveryRelayCountry: "country",
+                                            deliveryRelayNumber: "number",
+                                        },
+                                    },
+                                },
+                            ],
+                        }],
+                    },
+                },
+            ],
+        });
+
+        expect(definition.artifacts?.[1]).toEqual({
+            type: "dashboard",
+            dashboard: {
+                id: "delivery",
+                source: "delivery",
+                collections: [{
+                    id: "shipments",
+                    list: { endpoint: "relayPoints", itemsPath: "items" },
+                    item: { create: { endpoint: "createShipment" } },
+                }],
+                views: [{
+                    widget: "w-create",
+                    collection: "shipments",
+                    fields: [
+                        {
+                            field: "recipientCountry",
+                            input: "select",
+                            options: ["FR"],
+                            required: true,
+                        },
+                        {
+                            field: "deliveryRelayNumber",
+                            input: "lookup",
+                            required: true,
+                            lookup: {
+                                endpoint: "relayPoints",
+                                params: {
+                                    country: "FR",
+                                    postalCode: "$field.recipientPostalCode",
+                                    city: "$field.recipientCity",
+                                    limit: "10",
+                                },
+                                itemsPath: "items",
+                                valuePath: "number",
+                                labelPath: "name",
+                                descriptionPaths: ["addressLine1", "postalCode", "city"],
+                                map: {
+                                    deliveryRelayCountry: "country",
+                                    deliveryRelayNumber: "number",
+                                },
+                            },
+                        },
+                    ],
+                }],
+            },
+        });
     });
 
     test("rejects duplicate source urns within one import before writing", async () => {
