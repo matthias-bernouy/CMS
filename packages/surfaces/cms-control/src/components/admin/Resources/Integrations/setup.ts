@@ -70,6 +70,11 @@ function sourceRows(definition: IntegrationDefinition): SummaryRow[] {
             rows.push(["Dashboard", dashboard.meta?.name ?? dashboard.id, `Source id: ${dashboard.source}`]);
             continue;
         }
+        if (artifact.type === "bloc") {
+            const bloc = artifact.bloc;
+            rows.push(["Bloc", bloc.name, `Tag: ${bloc.tag}`]);
+            continue;
+        }
         const source = artifact.source;
         rows.push(["Source", source.meta?.name ?? source.id, `Source id: ${source.id}`]);
         for (const endpoint of source.endpoints) {

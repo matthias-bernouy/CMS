@@ -1,0 +1,9 @@
+{
+    "default-tag": "basic-button",
+    "bloc": "./Bloc.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Basic button",
+        "description": "Neutral button bloc with inherited typography and CSS custom properties."
+    }
+}

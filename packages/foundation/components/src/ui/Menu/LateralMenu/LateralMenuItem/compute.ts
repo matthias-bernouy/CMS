@@ -19,11 +19,11 @@ export const updateBadge = (badgeEl: HTMLElement | null, value: string | null) =
 
 export const setActiveState = (host: HTMLElement, anchor: HTMLAnchorElement | null, active: boolean) => {
     if (active) {
-        host.setAttribute('active', '');
+        if (!host.hasAttribute('active')) host.setAttribute('active', '');
         host.setAttribute('aria-current', 'page');
         anchor?.classList.add('active');
     } else {
-        host.removeAttribute('active');
+        if (host.hasAttribute('active')) host.removeAttribute('active');
         host.removeAttribute('aria-current');
         anchor?.classList.remove('active');
     }

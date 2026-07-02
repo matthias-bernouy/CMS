@@ -1,0 +1,72 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "basic-blocs",
+    "label": "Basic Blocs",
+    "version": "1.0.0",
+    "category": "Blocks",
+    "description": "Install neutral official UI blocs used by other integrations.",
+    "inputs": [],
+    "ui": {
+        "mark": "B",
+        "markClass": "content",
+        "emit": "bloc:updated",
+        "instructions": [
+            [
+                "Install official blocks",
+                "CmsCore imports the neutral UI blocs used as shared building blocks by official integrations."
+            ],
+            [
+                "Keep site styling",
+                "The blocs inherit typography and expose CSS custom properties and parts for site-level themes."
+            ]
+        ],
+        "scopes": [
+            "Bloc source write",
+            "Editor catalog update"
+        ],
+        "checks": [
+            "No source, secret, connector, or dashboard is installed.",
+            "Existing blocs require force when re-importing.",
+            "The imported source remains editable in the site bloc folder."
+        ],
+        "resources": [
+            [
+                "Blocs",
+                "Basic button and panel blocs"
+            ]
+        ],
+        "review": [
+            "Use these blocs as neutral defaults for official integration UI.",
+            "Override visual treatment through the site theme before creating specialized copies."
+        ],
+        "sync": [
+            "Validate bloc sources",
+            "Install basic-button",
+            "Install basic-panel",
+            "Refresh Blocs"
+        ],
+        "syncNote": "This integration installs only bloc artifacts."
+    },
+    "artifacts": [
+        {
+            "type": "bloc",
+            "bloc": {
+                "tag": "basic-button",
+                "name": "Basic button",
+                "group": "Basic",
+                "description": "Neutral button bloc with inherited typography and CSS custom properties.",
+                "path": "blocs/basic-button"
+            }
+        },
+        {
+            "type": "bloc",
+            "bloc": {
+                "tag": "basic-panel",
+                "name": "Basic panel",
+                "group": "Basic",
+                "description": "Neutral panel bloc for grouping content.",
+                "path": "blocs/basic-panel"
+            }
+        }
+    ]
+}

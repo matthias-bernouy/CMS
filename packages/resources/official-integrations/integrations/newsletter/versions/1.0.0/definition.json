@@ -1,0 +1,631 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "newsletter",
+    "label": "Newsletter",
+    "version": "1.0.0",
+    "category": "Marketing",
+    "description": "Store newsletter subscription state with the configured connector.",
+    "inputs": [
+        {
+            "name": "id",
+            "label": "Source id",
+            "type": "text",
+            "required": true,
+            "defaultValue": "newsletter"
+        }
+    ],
+    "ui": {
+        "mark": "N",
+        "markClass": "newsletter",
+        "emit": "source:updated",
+        "instructions": [
+            [
+                "Deploy connector resources",
+                "Apply the bundled Supabase schema and Edge Function to the configured project."
+            ],
+            [
+                "Generate CMS API key",
+                "Create a dedicated bearer token and install it in both the CMS secret store and the Supabase function secrets."
+            ],
+            [
+                "Connect the CMS",
+                "Install the newsletter source and subscriptions dashboard with the deployed function URL."
+            ]
+        ],
+        "scopes": [
+            "Newsletter subscription creation",
+            "Newsletter subscription reads",
+            "Newsletter subscription updates",
+            "Newsletter subscription deletion",
+            "Backoffice subscriptions dashboard"
+        ],
+        "checks": [
+            "The CMS only stores the source configuration and private API key reference.",
+            "Newsletter requests do not require a CMS user identity.",
+            "The connector schema stays private to anon and authenticated Supabase roles.",
+            "The connector deployer owns Supabase project credentials; the CMS source only stores its generated API key reference."
+        ],
+        "resources": [
+            [
+                "Sources",
+                "Newsletter source contract"
+            ],
+            [
+                "Dashboards",
+                "Newsletter subscriptions dashboard"
+            ],
+            [
+                "Secrets",
+                "Private CMS newsletter API key"
+            ],
+            [
+                "Supabase",
+                "Private newsletter schema and Edge Function"
+            ]
+        ],
+        "review": [
+            "Keep the newsletter schema private to anon and authenticated roles.",
+            "Do not expose Supabase service-role or secret keys to browser code.",
+            "Use the CMS source proxy for all backoffice access."
+        ],
+        "sync": [
+            "Validate answers",
+            "Generate private API key",
+            "Deploy Supabase connector",
+            "Install newsletter source",
+            "Install subscriptions dashboard",
+            "Refresh Sources"
+        ],
+        "syncNote": "This integration creates a stateless CMS source. Supabase owns newsletter subscription rows."
+    },
+    "generatedSecrets": [
+        {
+            "name": "cmsApiKey",
+            "key": "NEWSLETTER_{{env answers.id}}_API_KEY",
+            "generator": "token",
+            "bytes": 32,
+            "prefix": "cms_nl_"
+        }
+    ],
+    "connectors": [
+        {
+            "provider": "supabase",
+            "root": "connectors/supabase",
+            "dataApiSchemas": [
+                "newsletter"
+            ],
+            "schemas": [
+                "schema.sql"
+            ],
+            "functions": [
+                {
+                    "name": "cms-newsletter",
+                    "directory": "functions/cms-newsletter",
+                    "configPath": "supabase.config.toml",
+                    "secrets": {
+                        "CMS_NEWSLETTER_API_KEY": "{{generated.cmsApiKey}}"
+                    }
+                }
+            ]
+        }
+    ],
+    "artifacts": [
+        {
+            "type": "source",
+            "source": {
+                "id": "{{answers.id}}",
+                "meta": {
+                    "name": "Newsletter",
+                    "description": "Supabase-backed newsletter subscription endpoints.",
+                    "icon": "mail"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "setSubscription",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/subscription",
+                        "meta": {
+                            "name": "Set subscription",
+                            "description": "Create or update one newsletter subscription."
+                        },
+                        "params": [
+                            {
+                                "name": "email",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Normalized subscription email. Optional when the email is provided in the body."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "email": {
+                                    "type": "string"
+                                },
+                                "subscribed": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "subscribed"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "subscribed": {
+                                            "type": "boolean"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "exists",
+                                        "email",
+                                        "subscribed"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "listSubscriptions",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/subscriptions",
+                        "meta": {
+                            "name": "List subscriptions",
+                            "description": "List newsletter subscriptions for the backoffice dashboard."
+                        },
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Email search."
+                            },
+                            {
+                                "name": "subscribed",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Filter by subscription status. Use true or false."
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number",
+                                "description": "Maximum number of subscriptions to return."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "subscriptions": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "email": {
+                                                        "type": "string"
+                                                    },
+                                                    "subscribed": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "email",
+                                                    "subscribed"
+                                                ]
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "subscriptions",
+                                        "total"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "exportSubscriptions",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/subscriptions/export",
+                        "responseKind": "file",
+                        "mediaType": "text/csv",
+                        "meta": {
+                            "name": "Export subscriptions",
+                            "description": "Export newsletter subscriptions as a CSV file."
+                        },
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Email search."
+                            },
+                            {
+                                "name": "subscribed",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Filter by subscription status. Use true or false."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getSubscription",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/subscription",
+                        "meta": {
+                            "name": "Get subscription",
+                            "description": "Read one newsletter subscription by email."
+                        },
+                        "params": [
+                            {
+                                "name": "email",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Subscription email."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "subscribed": {
+                                            "type": "boolean"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "exists",
+                                        "email"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "deleteSubscription",
+                        "method": "DELETE",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/subscription",
+                        "meta": {
+                            "name": "Delete subscription",
+                            "description": "Delete one newsletter subscription by email."
+                        },
+                        "params": [
+                            {
+                                "name": "email",
+                                "in": "query",
+                                "required": true,
+                                "type": "string",
+                                "description": "Subscription email."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "deleted": {
+                                            "type": "boolean"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "deleted",
+                                        "email"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "health",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-newsletter/health",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-subscriptions",
+                "meta": {
+                    "name": "Newsletter",
+                    "icon": "mail"
+                },
+                "source": "{{answers.id}}",
+                "collections": [
+                    {
+                        "id": "subscriptions",
+                        "rowKey": "email",
+                        "list": {
+                            "endpoint": "listSubscriptions",
+                            "params": {
+                                "q": "$param.q",
+                                "subscribed": "$param.subscribed",
+                                "limit": "100"
+                            },
+                            "itemsPath": "subscriptions",
+                            "totalPath": "total"
+                        },
+                        "item": {
+                            "get": {
+                                "endpoint": "getSubscription",
+                                "params": {
+                                    "email": "$selection"
+                                }
+                            },
+                            "create": {
+                                "endpoint": "setSubscription"
+                            },
+                            "update": {
+                                "endpoint": "setSubscription",
+                                "params": {
+                                    "email": "$selection"
+                                }
+                            },
+                            "delete": {
+                                "endpoint": "deleteSubscription",
+                                "params": {
+                                    "email": "$selection"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "views": [
+                    {
+                        "widget": "w-create",
+                        "collection": "subscriptions",
+                        "label": "Add subscription",
+                        "submitLabel": "Add subscription",
+                        "fields": [
+                            {
+                                "field": "email",
+                                "label": "Email",
+                                "required": true
+                            },
+                            {
+                                "field": "subscribed",
+                                "label": "Subscribed",
+                                "input": "boolean",
+                                "required": true
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-action",
+                        "endpoint": "exportSubscriptions",
+                        "label": "Export CSV",
+                        "params": {
+                            "q": "$param.q",
+                            "subscribed": "$param.subscribed"
+                        },
+                        "downloadName": "newsletter-subscriptions.csv",
+                        "successMessage": "Export downloaded",
+                        "refresh": false
+                    },
+                    {
+                        "widget": "w-table",
+                        "collection": "subscriptions",
+                        "rowActions": [
+                            {
+                                "widget": "w-table-row-action",
+                                "label": "Delete",
+                                "action": "delete",
+                                "confirm": true
+                            }
+                        ],
+                        "filters": [
+                            {
+                                "field": "q",
+                                "param": "q",
+                                "input": "text",
+                                "label": "Search",
+                                "placeholder": "Search emails"
+                            },
+                            {
+                                "field": "subscribed",
+                                "param": "subscribed",
+                                "input": "select",
+                                "label": "Status",
+                                "options": [
+                                    "true",
+                                    "false"
+                                ]
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "field": "email",
+                                "label": "Email"
+                            },
+                            {
+                                "field": "subscribed",
+                                "label": "Subscribed",
+                                "format": "badge"
+                            },
+                            {
+                                "field": "createdAt",
+                                "label": "Created",
+                                "format": "date"
+                            },
+                            {
+                                "field": "updatedAt",
+                                "label": "Updated",
+                                "format": "date"
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-update",
+                        "collection": "subscriptions",
+                        "label": "Edit subscription",
+                        "submitLabel": "Save subscription",
+                        "fields": [
+                            {
+                                "field": "subscribed",
+                                "label": "Subscribed",
+                                "input": "boolean",
+                                "required": true
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-delete",
+                        "collection": "subscriptions",
+                        "label": "Delete subscription",
+                        "confirmLabel": "Delete this newsletter subscription?",
+                        "successMessage": "Newsletter subscription deleted"
+                    },
+                    {
+                        "widget": "w-detail",
+                        "collection": "subscriptions",
+                        "fields": [
+                            {
+                                "field": "email",
+                                "label": "Email"
+                            },
+                            {
+                                "field": "subscribed",
+                                "label": "Subscribed",
+                                "input": "boolean"
+                            },
+                            {
+                                "field": "createdAt",
+                                "label": "Created",
+                                "format": "date"
+                            },
+                            {
+                                "field": "updatedAt",
+                                "label": "Updated",
+                                "format": "date"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

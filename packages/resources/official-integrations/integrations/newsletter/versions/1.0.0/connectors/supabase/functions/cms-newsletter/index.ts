@@ -1,8 +1,10 @@
 type JsonRecord = Record<string, unknown>;
 
-type NewsletterSubscription = {
+type NewsletterSubscriptionRow = {
     email: string;
     subscribed: boolean;
+    created_at?: string;
+    updated_at?: string;
 };
 
 class HttpError extends Error {
@@ -17,10 +19,11 @@ class HttpError extends Error {
 const corsHeaders = {
     "access-control-allow-origin": "*",
     "access-control-allow-headers": "authorization, content-type",
-    "access-control-allow-methods": "GET, POST, OPTIONS",
+    "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
 };
 
 const newsletterSchema = "newsletter";
+const subscriptionSelect = "email,subscribed,created_at,updated_at";
 
 Deno.serve(async (request) => {
     try {
@@ -28,8 +31,12 @@ Deno.serve(async (request) => {
 
         const route = routePath(request);
         if (route === "/health") return await withMethod(request, "GET", () => health(request));
+        if (route === "/subscriptions") return await withMethod(request, "GET", () => listSubscriptions(request));
+        if (route === "/subscriptions/export") return await withMethod(request, "GET", () => exportSubscriptions(request));
+        if (route === "/subscription") return await subscriptionRoute(request);
+
         if (route === "/set-subscription") return await withMethod(request, "POST", () => setSubscription(request));
-        if (route === "/subscription-status") return await withMethod(request, "GET", () => subscriptionStatus(request));
+        if (route === "/subscription-status") return await withMethod(request, "GET", () => getSubscriptionStatus(request));
 
         return json({ error: "not found" }, 404);
     } catch (error) {
@@ -37,35 +44,111 @@ Deno.serve(async (request) => {
     }
 });
 
+async function subscriptionRoute(request: Request): Promise<Response> {
+    if (request.method === "GET") return getSubscriptionStatus(request);
+    if (request.method === "POST") return setSubscription(request);
+    if (request.method === "DELETE") return deleteSubscription(request);
+    return new Response("Method Not Allowed", {
+        status: 405,
+        headers: { ...corsHeaders, allow: "GET, POST, DELETE, OPTIONS" },
+    });
+}
+
 async function health(request: Request): Promise<Response> {
     requireCmsRequest(request);
     return json({ ok: true });
 }
 
+async function listSubscriptions(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+
+    const url = new URL(request.url);
+    const q = optionalSearch(url.searchParams.get("q"));
+    const subscribed = optionalBoolean(url.searchParams.get("subscribed"), "subscribed");
+    const limit = boundedLimit(url.searchParams.get("limit"));
+
+    const query = new URLSearchParams();
+    query.set("select", subscriptionSelect);
+    query.set("order", "updated_at.desc");
+    query.set("limit", String(limit));
+    if (q) query.set("email", `ilike.*${q}*`);
+    if (subscribed !== null) query.set("subscribed", `eq.${subscribed}`);
+
+    const response = await rest(`subscriptions?${query.toString()}`, {
+        method: "GET",
+        headers: { prefer: "count=exact" },
+    });
+    if (!response.ok) throw await restError(response);
+
+    const rows = await response.json() as NewsletterSubscriptionRow[];
+    return json({
+        subscriptions: rows.map(publicSubscription),
+        total: countFromContentRange(response.headers.get("content-range")) ?? rows.length,
+    });
+}
+
+async function exportSubscriptions(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+
+    const url = new URL(request.url);
+    const q = optionalSearch(url.searchParams.get("q"));
+    const subscribed = optionalBoolean(url.searchParams.get("subscribed"), "subscribed");
+
+    const query = new URLSearchParams();
+    query.set("select", subscriptionSelect);
+    query.set("order", "updated_at.desc");
+    query.set("limit", "10000");
+    if (q) query.set("email", `ilike.*${q}*`);
+    if (subscribed !== null) query.set("subscribed", `eq.${subscribed}`);
+
+    const response = await rest(`subscriptions?${query.toString()}`, { method: "GET" });
+    if (!response.ok) throw await restError(response);
+
+    const rows = await response.json() as NewsletterSubscriptionRow[];
+    return csv(subscriptionsCsv(rows), "newsletter-subscriptions.csv");
+}
+
 async function setSubscription(request: Request): Promise<Response> {
     requireCmsRequest(request);
+
     const body = await readJsonObject(request);
-    const email = normalizeEmail(stringField(body, "email")!);
+    const url = new URL(request.url);
+    const email = normalizeEmail(url.searchParams.get("email") ?? stringField(body, "email", false) ?? "");
     const subscribed = booleanField(body, "subscribed");
 
     const row = await upsertSubscription({ email, subscribed });
     return json(publicSubscription(row));
 }
 
-async function subscriptionStatus(request: Request): Promise<Response> {
+async function getSubscriptionStatus(request: Request): Promise<Response> {
     requireCmsRequest(request);
+
     const url = new URL(request.url);
     const email = normalizeEmail(url.searchParams.get("email") ?? "");
     const row = await getSubscription(email);
 
     if (!row) {
         return json({
+            exists: false,
             email,
             subscribed: false,
         });
     }
 
     return json(publicSubscription(row));
+}
+
+async function deleteSubscription(request: Request): Promise<Response> {
+    requireCmsRequest(request);
+
+    const url = new URL(request.url);
+    const email = normalizeEmail(url.searchParams.get("email") ?? "");
+    const row = await deleteSubscriptionRow(email);
+
+    return json({
+        deleted: !!row,
+        email,
+    });
 }
 
 function routePath(request: Request): string {
@@ -93,8 +176,12 @@ function requireCmsRequest(request: Request): void {
     if (!token || !safeEqual(token, expected)) throw new HttpError(401, "invalid CMS API key");
 }
 
-async function upsertSubscription(values: JsonRecord): Promise<NewsletterSubscription> {
-    const response = await rest("subscriptions?on_conflict=email&select=email,subscribed", {
+async function upsertSubscription(values: JsonRecord): Promise<NewsletterSubscriptionRow> {
+    const query = new URLSearchParams();
+    query.set("on_conflict", "email");
+    query.set("select", subscriptionSelect);
+
+    const response = await rest(`subscriptions?${query.toString()}`, {
         method: "POST",
         headers: {
             "content-type": "application/json",
@@ -103,16 +190,32 @@ async function upsertSubscription(values: JsonRecord): Promise<NewsletterSubscri
         body: JSON.stringify(stripUndefined(values)),
     });
     if (!response.ok) throw await restError(response);
-    return firstRow<NewsletterSubscription>(await response.json());
+    return firstRow<NewsletterSubscriptionRow>(await response.json());
 }
 
-async function getSubscription(email: string): Promise<NewsletterSubscription | null> {
-    const response = await rest(
-        `subscriptions?email=eq.${encodeURIComponent(email)}&select=email,subscribed&limit=1`,
-        { method: "GET" },
-    );
+async function getSubscription(email: string): Promise<NewsletterSubscriptionRow | null> {
+    const query = new URLSearchParams();
+    query.set("select", subscriptionSelect);
+    query.set("email", `eq.${email}`);
+    query.set("limit", "1");
+
+    const response = await rest(`subscriptions?${query.toString()}`, { method: "GET" });
     if (!response.ok) throw await restError(response);
-    const rows = await response.json() as NewsletterSubscription[];
+    const rows = await response.json() as NewsletterSubscriptionRow[];
+    return rows[0] ?? null;
+}
+
+async function deleteSubscriptionRow(email: string): Promise<NewsletterSubscriptionRow | null> {
+    const query = new URLSearchParams();
+    query.set("select", "email");
+    query.set("email", `eq.${email}`);
+
+    const response = await rest(`subscriptions?${query.toString()}`, {
+        method: "DELETE",
+        headers: { prefer: "return=representation" },
+    });
+    if (!response.ok) throw await restError(response);
+    const rows = await response.json() as NewsletterSubscriptionRow[];
     return rows[0] ?? null;
 }
 
@@ -141,10 +244,13 @@ function firstRow<T>(value: unknown): T {
     return value[0] as T;
 }
 
-function publicSubscription(row: NewsletterSubscription): JsonRecord {
+function publicSubscription(row: NewsletterSubscriptionRow): JsonRecord {
     return {
+        exists: true,
         email: row.email,
         subscribed: row.subscribed,
+        ...(row.created_at ? { createdAt: row.created_at } : {}),
+        ...(row.updated_at ? { updatedAt: row.updated_at } : {}),
     };
 }
 
@@ -160,6 +266,34 @@ function json(data: unknown, status = 200): Response {
             "content-type": "application/json; charset=utf-8",
         },
     });
+}
+
+function csv(data: string, fileName: string): Response {
+    return new Response(data, {
+        status: 200,
+        headers: {
+            ...corsHeaders,
+            "cache-control": "no-store",
+            "content-disposition": `attachment; filename="${fileName}"`,
+            "content-type": "text/csv; charset=utf-8",
+        },
+    });
+}
+
+function subscriptionsCsv(rows: NewsletterSubscriptionRow[]): string {
+    const header = ["email", "subscribed", "createdAt", "updatedAt"];
+    const lines = rows.map(row => [
+        row.email,
+        row.subscribed ? "true" : "false",
+        row.created_at ?? "",
+        row.updated_at ?? "",
+    ].map(csvCell).join(","));
+    return [header.join(","), ...lines].join("\n") + "\n";
+}
+
+function csvCell(value: string): string {
+    if (!/[",\r\n]/.test(value)) return value;
+    return `"${value.replace(/"/g, "\"\"")}"`;
 }
 
 function handleError(error: unknown): Response {
@@ -201,6 +335,35 @@ function normalizeEmail(value: string): string {
     if (email.length > 320) throw new HttpError(400, "email is too long");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, "email is invalid");
     return email;
+}
+
+function optionalSearch(value: string | null): string | null {
+    const search = (value ?? "").trim().toLowerCase();
+    if (!search) return null;
+    return search.slice(0, 120).replace(/[*,()%_]/g, "");
+}
+
+function optionalBoolean(value: string | null, name: string): boolean | null {
+    const text = (value ?? "").trim().toLowerCase();
+    if (!text) return null;
+    if (text === "true") return true;
+    if (text === "false") return false;
+    throw new HttpError(400, `${name} must be true or false`);
+}
+
+function boundedLimit(value: string | null): number {
+    if (!value) return 100;
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1) throw new HttpError(400, "limit must be a positive integer");
+    return Math.min(parsed, 200);
+}
+
+function countFromContentRange(value: string | null): number | null {
+    if (!value) return null;
+    const total = value.split("/")[1];
+    if (!total || total === "*") return null;
+    const parsed = Number(total);
+    return Number.isFinite(parsed) ? parsed : null;
 }
 
 function serviceRoleKey(): string {

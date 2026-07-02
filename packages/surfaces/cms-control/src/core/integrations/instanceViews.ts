@@ -4,6 +4,7 @@ import type { IntegrationArtifactResult, IntegrationInstance } from "@bernouy/cm
 export type IntegrationArtifactContext = {
     sourceUrns: Set<string> | null;
     dashboardIds: Set<string> | null;
+    blocIds: Set<string> | null;
 };
 
 export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<IntegrationArtifactContext> {
@@ -13,7 +14,10 @@ export async function loadIntegrationArtifactContext(cms: ControlCms): Promise<I
     const dashboardIds = await cms.dashboards.getAllDashboards()
         .then(dashboards => new Set(dashboards.map(dashboard => dashboard.id)))
         .catch(() => null);
-    return { sourceUrns, dashboardIds };
+    const blocIds = await cms.repository.getBlocsList()
+        .then(blocs => new Set(blocs.map(bloc => bloc.id)))
+        .catch(() => null);
+    return { sourceUrns, dashboardIds, blocIds };
 }
 
 export function buildIntegrationInstanceView(
@@ -45,10 +49,15 @@ export function buildIntegrationInstanceView(
 }
 
 function artifactView(context: IntegrationArtifactContext, artifact: IntegrationArtifactResult) {
+    const exists = artifactExists(context, artifact);
     return {
         ...artifact,
-        exists: artifact.type === "dashboard"
-            ? context.dashboardIds?.has(artifact.id) ?? "unknown"
-            : context.sourceUrns?.has(artifact.id) ?? "unknown",
+        exists,
     };
+}
+
+function artifactExists(context: IntegrationArtifactContext, artifact: IntegrationArtifactResult): boolean | "unknown" {
+    if (artifact.type === "dashboard") return context.dashboardIds?.has(artifact.id) ?? "unknown";
+    if (artifact.type === "bloc") return context.blocIds?.has(artifact.id) ?? "unknown";
+    return context.sourceUrns?.has(artifact.id) ?? "unknown";
 }

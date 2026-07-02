@@ -25,7 +25,6 @@ function makeSystem() {
             getBlocViewJS: async () => null,
             createBloc: async (b: any) => b,
             getAllPages: async () => [],
-            getAllSnippets: async () => [],
         },
         cache: { delete: () => {}, deleteMatching: () => {} },
     } as any;

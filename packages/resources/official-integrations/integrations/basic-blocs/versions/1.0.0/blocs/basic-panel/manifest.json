@@ -1,0 +1,10 @@
+{
+    "default-tag": "basic-panel",
+    "bloc": "./Bloc.ts",
+    "editor": "./BlocEditor.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Basic panel",
+        "description": "Neutral panel bloc for grouping content."
+    }
+}

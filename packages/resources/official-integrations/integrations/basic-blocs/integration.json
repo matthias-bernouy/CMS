@@ -1,9 +1,9 @@
 {
     "schema": "cms.integration.index.v1",
-    "kind": "supabase-newsletter",
-    "label": "Supabase Newsletter",
-    "category": "Marketing",
-    "description": "Store newsletter subscription state in a small Supabase table.",
+    "kind": "basic-blocs",
+    "label": "Basic Blocs",
+    "category": "Blocks",
+    "description": "Install neutral official UI blocs used by other integrations.",
     "stable": "1.0.0",
     "latest": "1.0.0",
     "versions": [
