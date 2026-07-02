@@ -1,0 +1,1715 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "mondial-relay",
+    "label": "Mondial Relay Delivery",
+    "version": "1.0.0",
+    "category": "Delivery",
+    "description": "Create Mondial Relay Connect shipments, print delivery labels, and track stored parcels through a Supabase connector.",
+    "inputs": [
+        {
+            "name": "id",
+            "label": "Source id",
+            "type": "text",
+            "required": true,
+            "defaultValue": "delivery"
+        },
+        {
+            "name": "mondialRelayConnectEndpoint",
+            "label": "Mondial Relay Connect endpoint",
+            "type": "text",
+            "required": true,
+            "defaultValue": "https://connect-api-sandbox.mondialrelay.com/api/shipment"
+        },
+        {
+            "name": "mondialRelayConnectLogin",
+            "label": "Mondial Relay Connect login",
+            "type": "text",
+            "required": true
+        },
+        {
+            "name": "mondialRelayConnectPassword",
+            "label": "Mondial Relay Connect password",
+            "type": "password",
+            "required": true,
+            "secret": true
+        },
+        {
+            "name": "mondialRelayConnectCustomerId",
+            "label": "Mondial Relay Connect customer id",
+            "type": "text",
+            "required": true
+        }
+    ],
+    "ui": {
+        "mark": "MR",
+        "markClass": "delivery",
+        "emit": "source:updated",
+        "instructions": [
+            [
+                "Deploy connector resources",
+                "Apply the bundled Supabase schema and Edge Function to the configured project."
+            ],
+            [
+                "Set Mondial Relay secrets",
+                "Configure the Mondial Relay Connect login, password, customer id, and CMS delivery API key in Supabase Function secrets."
+            ],
+            [
+                "Connect the CMS",
+                "Install the delivery source and dashboard backed by the deployed function URL."
+            ]
+        ],
+        "scopes": [
+            "Mondial Relay Connect shipment creation",
+            "Mondial Relay pickup point lookup",
+            "Delivery label retrieval",
+            "Stored parcel tracking",
+            "Optional external order id linking"
+        ],
+        "checks": [
+            "The CMS only stores the source configuration and private CMS API key reference.",
+            "Mondial Relay Connect credentials live only in Supabase Function secrets.",
+            "Create requests forward x-cms-user-id for audit context.",
+            "The connector schema stays private to anon and authenticated roles."
+        ],
+        "resources": [
+            [
+                "Sources",
+                "Mondial Relay delivery source contract"
+            ],
+            [
+                "Dashboards",
+                "Delivery shipments dashboard"
+            ],
+            [
+                "Secrets",
+                "Generated private CMS delivery API key"
+            ],
+            [
+                "Supabase",
+                "Private delivery schema and Edge Function"
+            ]
+        ],
+        "review": [
+            "Keep the delivery schema private to anon and authenticated roles.",
+            "Do not expose Mondial Relay Connect passwords, Supabase service-role keys, or generated CMS API keys to browser code.",
+            "Use externalOrderId only as an integration reference; this module does not own commerce orders."
+        ],
+        "sync": [
+            "Validate answers",
+            "Generate private API key",
+            "Deploy Supabase connector",
+            "Install delivery source",
+            "Install delivery dashboard",
+            "Refresh Sources"
+        ],
+        "syncNote": "This integration creates a stateless CMS source. Supabase owns delivery rows, editable delivery settings, and Mondial Relay API calls."
+    },
+    "secrets": [
+        {
+            "input": "mondialRelayConnectPassword",
+            "key": "MONDIAL_RELAY_{{env answers.id}}_CONNECT_PASSWORD"
+        }
+    ],
+    "generatedSecrets": [
+        {
+            "name": "cmsApiKey",
+            "key": "MONDIAL_RELAY_{{env answers.id}}_API_KEY",
+            "generator": "token",
+            "bytes": 32,
+            "prefix": "cms_mr_"
+        }
+    ],
+    "connectors": [
+        {
+            "provider": "supabase",
+            "root": "connectors/supabase",
+            "dataApiSchemas": [
+                "delivery"
+            ],
+            "schemas": [
+                "schema.sql"
+            ],
+            "functions": [
+                {
+                    "name": "cms-delivery",
+                    "directory": "functions/cms-delivery",
+                    "configPath": "supabase.config.toml",
+                    "secrets": {
+                        "CMS_DELIVERY_API_KEY": "{{generated.cmsApiKey}}",
+                        "MONDIAL_RELAY_CONNECT_ENDPOINT": "{{answers.mondialRelayConnectEndpoint}}",
+                        "MONDIAL_RELAY_CONNECT_LOGIN": "{{answers.mondialRelayConnectLogin}}",
+                        "MONDIAL_RELAY_CONNECT_PASSWORD": "{{connectorSecrets.mondialRelayConnectPassword}}",
+                        "MONDIAL_RELAY_CONNECT_CUSTOMER_ID": "{{answers.mondialRelayConnectCustomerId}}",
+                        "MONDIAL_RELAY_WIDGET_BRAND": "{{answers.mondialRelayConnectCustomerId}}"
+                    }
+                }
+            ]
+        }
+    ],
+    "artifacts": [
+        {
+            "type": "source",
+            "source": {
+                "id": "{{answers.id}}",
+                "meta": {
+                    "name": "Mondial Relay Delivery",
+                    "description": "Supabase-backed Mondial Relay Connect shipment, label, and tracking endpoints.",
+                    "icon": "truck"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "health",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/health",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "shipments",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/shipments",
+                        "params": [
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "externalOrderId",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "offset",
+                                "in": "query",
+                                "type": "number"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "externalOrderId": {
+                                                        "type": "string"
+                                                    },
+                                                    "expeditionNumber": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "recipientName": {
+                                                        "type": "string"
+                                                    },
+                                                    "recipientPostalCode": {
+                                                        "type": "string"
+                                                    },
+                                                    "recipientCity": {
+                                                        "type": "string"
+                                                    },
+                                                    "labelUrl": {
+                                                        "type": "string"
+                                                    },
+                                                    "trackingUrl": {
+                                                        "type": "string"
+                                                    },
+                                                    "latestEventLabel": {
+                                                        "type": "string"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "deliveryRelayLocation": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "status",
+                                                    "recipientName",
+                                                    "recipientPostalCode",
+                                                    "recipientCity",
+                                                    "createdAt"
+                                                ]
+                                            }
+                                        },
+                                        "limit": {
+                                            "type": "number"
+                                        },
+                                        "offset": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "items",
+                                        "limit",
+                                        "offset"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "shipment",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/shipment",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "expeditionNumber",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "externalOrderId": {
+                                            "type": "string"
+                                        },
+                                        "expeditionNumber": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "labelUrl": {
+                                            "type": "string"
+                                        },
+                                        "trackingUrl": {
+                                            "type": "string"
+                                        },
+                                        "recipientName": {
+                                            "type": "string"
+                                        },
+                                        "recipientEmail": {
+                                            "type": "string"
+                                        },
+                                        "recipientPhone": {
+                                            "type": "string"
+                                        },
+                                        "recipientAddressLine1": {
+                                            "type": "string"
+                                        },
+                                        "recipientAddressLine2": {
+                                            "type": "string"
+                                        },
+                                        "recipientPostalCode": {
+                                            "type": "string"
+                                        },
+                                        "recipientCity": {
+                                            "type": "string"
+                                        },
+                                        "recipientCountry": {
+                                            "type": "string"
+                                        },
+                                        "weightGrams": {
+                                            "type": "number"
+                                        },
+                                        "packageCount": {
+                                            "type": "number"
+                                        },
+                                        "latestEventLabel": {
+                                            "type": "string"
+                                        },
+                                        "latestEventAt": {
+                                            "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "events": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "eventLabel": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventDate": {
+                                                        "type": "string"
+                                                    },
+                                                    "eventTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "location": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "deliveryRelayLocation": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "status",
+                                        "recipientName",
+                                        "recipientPostalCode",
+                                        "recipientCity",
+                                        "createdAt"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "relayPoints",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/relay-points",
+                        "params": [
+                            {
+                                "name": "country",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "postalCode",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "city",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "weightGrams",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "modeDelivery",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number"
+                            },
+                            {
+                                "name": "latitude",
+                                "in": "query",
+                                "type": "string"
+                            },
+                            {
+                                "name": "longitude",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "location": {
+                                                        "type": "string"
+                                                    },
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "country": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "addressLine1": {
+                                                        "type": "string"
+                                                    },
+                                                    "addressLine2": {
+                                                        "type": "string"
+                                                    },
+                                                    "postalCode": {
+                                                        "type": "string"
+                                                    },
+                                                    "city": {
+                                                        "type": "string"
+                                                    },
+                                                    "latitude": {
+                                                        "type": "number"
+                                                    },
+                                                    "longitude": {
+                                                        "type": "number"
+                                                    },
+                                                    "nature": {
+                                                        "type": "string"
+                                                    },
+                                                    "available": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "warning": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "location",
+                                                    "number",
+                                                    "country",
+                                                    "name",
+                                                    "label",
+                                                    "postalCode",
+                                                    "city"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "items"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createShipment",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/shipments",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "externalOrderId": {
+                                    "type": "string"
+                                },
+                                "modeCollection": {
+                                    "type": "string"
+                                },
+                                "modeDelivery": {
+                                    "type": "string"
+                                },
+                                "recipientName": {
+                                    "type": "string"
+                                },
+                                "recipientEmail": {
+                                    "type": "string"
+                                },
+                                "recipientPhone": {
+                                    "type": "string"
+                                },
+                                "recipientAddressLine1": {
+                                    "type": "string"
+                                },
+                                "recipientAddressLine2": {
+                                    "type": "string"
+                                },
+                                "recipientAddressLine3": {
+                                    "type": "string"
+                                },
+                                "recipientPostalCode": {
+                                    "type": "string"
+                                },
+                                "recipientCity": {
+                                    "type": "string"
+                                },
+                                "recipientCountry": {
+                                    "type": "string"
+                                },
+                                "weightGrams": {
+                                    "type": "number"
+                                },
+                                "packageCount": {
+                                    "type": "number"
+                                },
+                                "lengthCm": {
+                                    "type": "number"
+                                },
+                                "instructions": {
+                                    "type": "string"
+                                },
+                                "deliveryRelayLocation": {
+                                    "type": "string"
+                                },
+                                "widthCm": {
+                                    "type": "number"
+                                },
+                                "heightCm": {
+                                    "type": "number"
+                                },
+                                "content": {
+                                    "type": "string"
+                                },
+                                "declaredValue": {
+                                    "type": "string"
+                                },
+                                "declaredCurrency": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "recipientName",
+                                "recipientAddressLine1",
+                                "recipientPostalCode",
+                                "recipientCity",
+                                "deliveryRelayLocation"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "201",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "expeditionNumber": {
+                                            "type": "string"
+                                        },
+                                        "labelUrl": {
+                                            "type": "string"
+                                        },
+                                        "trackingUrl": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok",
+                                        "id",
+                                        "expeditionNumber",
+                                        "status"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "settings",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/settings",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "setting",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/settings",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "setSettings",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/settings",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "modeCollection": {
+                                    "type": "string"
+                                },
+                                "modeDelivery": {
+                                    "type": "string"
+                                },
+                                "senderName": {
+                                    "type": "string"
+                                },
+                                "senderFirstName": {
+                                    "type": "string"
+                                },
+                                "senderLastName": {
+                                    "type": "string"
+                                },
+                                "senderAddressLine1": {
+                                    "type": "string"
+                                },
+                                "senderAddressLine2": {
+                                    "type": "string"
+                                },
+                                "senderAddressLine3": {
+                                    "type": "string"
+                                },
+                                "senderPostalCode": {
+                                    "type": "string"
+                                },
+                                "senderCity": {
+                                    "type": "string"
+                                },
+                                "senderCountry": {
+                                    "type": "string"
+                                },
+                                "senderPhone": {
+                                    "type": "string"
+                                },
+                                "senderMobile": {
+                                    "type": "string"
+                                },
+                                "senderEmail": {
+                                    "type": "string"
+                                },
+                                "defaultWeightGrams": {
+                                    "type": "number"
+                                },
+                                "defaultPackageCount": {
+                                    "type": "number"
+                                },
+                                "defaultLengthCm": {
+                                    "type": "number"
+                                },
+                                "defaultWidthCm": {
+                                    "type": "number"
+                                },
+                                "defaultHeightCm": {
+                                    "type": "number"
+                                },
+                                "defaultContent": {
+                                    "type": "string"
+                                },
+                                "declaredCurrency": {
+                                    "type": "string"
+                                },
+                                "connectCulture": {
+                                    "type": "string"
+                                },
+                                "connectVersionApi": {
+                                    "type": "string"
+                                },
+                                "connectOutputFormat": {
+                                    "type": "string"
+                                },
+                                "connectOutputType": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "endpointId": "label",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/label",
+                        "responseKind": "file",
+                        "mediaType": "application/pdf",
+                        "params": [
+                            {
+                                "name": "expeditionNumber",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "tracking",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/tracking",
+                        "params": [
+                            {
+                                "name": "expeditionNumber",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            },
+                            {
+                                "name": "language",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "expeditionNumber": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "latestEventLabel": {
+                                            "type": "string"
+                                        },
+                                        "latestEventAt": {
+                                            "type": "string"
+                                        },
+                                        "events": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "time": {
+                                                        "type": "string"
+                                                    },
+                                                    "location": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "expeditionNumber",
+                                        "status",
+                                        "events"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "parseTrackingLink",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery/parse-tracking-link",
+                        "params": [
+                            {
+                                "name": "url",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            },
+                            {
+                                "name": "language",
+                                "in": "query",
+                                "type": "string"
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "carrier": {
+                                            "type": "string"
+                                        },
+                                        "url": {
+                                            "type": "string"
+                                        },
+                                        "expeditionNumber": {
+                                            "type": "string"
+                                        },
+                                        "postalCode": {
+                                            "type": "string"
+                                        },
+                                        "tracking": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "required": [
+                                        "carrier",
+                                        "url",
+                                        "expeditionNumber",
+                                        "tracking"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-delivery",
+                "meta": {
+                    "name": "Delivery",
+                    "icon": "truck"
+                },
+                "source": "{{answers.id}}",
+                "collections": [
+                    {
+                        "id": "shipments",
+                        "rowKey": "id",
+                        "list": {
+                            "endpoint": "shipments",
+                            "params": {
+                                "status": "$param.status",
+                                "q": "$param.q",
+                                "limit": "50"
+                            },
+                            "itemsPath": "items"
+                        },
+                        "item": {
+                            "get": {
+                                "endpoint": "shipment",
+                                "params": {
+                                    "id": "$selection"
+                                }
+                            },
+                            "create": {
+                                "endpoint": "createShipment"
+                            }
+                        }
+                    },
+                    {
+                        "id": "relayPoints",
+                        "rowKey": "location",
+                        "list": {
+                            "endpoint": "relayPoints",
+                            "params": {
+                                "country": "$param.country",
+                                "postalCode": "$param.postalCode",
+                                "city": "$param.city",
+                                "weightGrams": "$param.weightGrams",
+                                "limit": "20"
+                            },
+                            "itemsPath": "items"
+                        }
+                    },
+                    {
+                        "id": "settings",
+                        "rowKey": "id",
+                        "list": {
+                            "endpoint": "settings",
+                            "itemsPath": "items"
+                        },
+                        "item": {
+                            "get": {
+                                "endpoint": "setting",
+                                "params": {
+                                    "id": "$selection"
+                                }
+                            },
+                            "update": {
+                                "endpoint": "setSettings",
+                                "params": {
+                                    "id": "$selection"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "views": [
+                    {
+                        "widget": "w-create",
+                        "collection": "shipments",
+                        "label": "Create shipment",
+                        "submitLabel": "Create shipment",
+                        "fields": [
+                            {
+                                "field": "externalOrderId",
+                                "label": "External order id"
+                            },
+                            {
+                                "field": "modeCollection",
+                                "label": "Collection mode",
+                                "input": "select",
+                                "options": [
+                                    "CCC"
+                                ],
+                                "required": true
+                            },
+                            {
+                                "field": "modeDelivery",
+                                "label": "Delivery mode",
+                                "input": "select",
+                                "options": [
+                                    "24R"
+                                ],
+                                "required": true
+                            },
+                            {
+                                "field": "recipientName",
+                                "label": "Recipient",
+                                "required": true
+                            },
+                            {
+                                "field": "recipientEmail",
+                                "label": "Recipient email"
+                            },
+                            {
+                                "field": "recipientPhone",
+                                "label": "Recipient phone"
+                            },
+                            {
+                                "field": "recipientAddressLine1",
+                                "label": "Address",
+                                "required": true
+                            },
+                            {
+                                "field": "recipientAddressLine2",
+                                "label": "Address line 2"
+                            },
+                            {
+                                "field": "recipientPostalCode",
+                                "label": "Postal code",
+                                "required": true
+                            },
+                            {
+                                "field": "recipientCity",
+                                "label": "City",
+                                "required": true
+                            },
+                            {
+                                "field": "recipientCountry",
+                                "label": "Country",
+                                "input": "select",
+                                "options": [
+                                    "FR"
+                                ],
+                                "required": true
+                            },
+                            {
+                                "field": "weightGrams",
+                                "label": "Weight grams",
+                                "input": "number"
+                            },
+                            {
+                                "field": "deliveryRelayLocation",
+                                "label": "Pickup point",
+                                "input": "lookup",
+                                "required": true,
+                                "lookup": {
+                                    "endpoint": "relayPoints",
+                                    "params": {
+                                        "country": "$field.recipientCountry",
+                                        "postalCode": "$field.recipientPostalCode",
+                                        "city": "$field.recipientCity",
+                                        "weightGrams": "$field.weightGrams",
+                                        "modeDelivery": "$field.modeDelivery",
+                                        "limit": "10"
+                                    },
+                                    "itemsPath": "items",
+                                    "valuePath": "location",
+                                    "labelPath": "label",
+                                    "descriptionPaths": [
+                                        "addressLine1",
+                                        "postalCode",
+                                        "city"
+                                    ],
+                                    "map": {
+                                        "deliveryRelayLocation": "location"
+                                    }
+                                }
+                            },
+                            {
+                                "field": "packageCount",
+                                "label": "Packages",
+                                "input": "number"
+                            },
+                            {
+                                "field": "lengthCm",
+                                "label": "Length cm",
+                                "input": "number"
+                            },
+                            {
+                                "field": "widthCm",
+                                "label": "Width cm",
+                                "input": "number"
+                            },
+                            {
+                                "field": "heightCm",
+                                "label": "Height cm",
+                                "input": "number"
+                            },
+                            {
+                                "field": "content",
+                                "label": "Content"
+                            },
+                            {
+                                "field": "declaredValue",
+                                "label": "Declared value"
+                            },
+                            {
+                                "field": "declaredCurrency",
+                                "label": "Declared currency",
+                                "input": "select",
+                                "options": [
+                                    "EUR"
+                                ]
+                            },
+                            {
+                                "field": "instructions",
+                                "label": "Instructions"
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-tabs",
+                        "tabs": [
+                            {
+                                "label": "Shipments",
+                                "children": [
+                                    {
+                                        "widget": "w-table",
+                                        "collection": "shipments",
+                                        "filters": [
+                                            {
+                                                "field": "q",
+                                                "param": "q",
+                                                "input": "text",
+                                                "label": "Search",
+                                                "placeholder": "Search shipments"
+                                            },
+                                            {
+                                                "field": "status",
+                                                "param": "status",
+                                                "input": "select",
+                                                "label": "Status",
+                                                "options": [
+                                                    "created",
+                                                    "label_ready",
+                                                    "in_transit",
+                                                    "delivered",
+                                                    "incident",
+                                                    "cancelled",
+                                                    "unknown"
+                                                ]
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "field": "externalOrderId",
+                                                "label": "Order"
+                                            },
+                                            {
+                                                "field": "expeditionNumber",
+                                                "label": "Expedition"
+                                            },
+                                            {
+                                                "field": "recipientName",
+                                                "label": "Recipient"
+                                            },
+                                            {
+                                                "field": "recipientPostalCode",
+                                                "label": "Postcode"
+                                            },
+                                            {
+                                                "field": "recipientCity",
+                                                "label": "City"
+                                            },
+                                            {
+                                                "field": "status",
+                                                "label": "Status",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "createdAt",
+                                                "label": "Created",
+                                                "format": "date"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "label": "Pickup points",
+                                "children": [
+                                    {
+                                        "widget": "w-table",
+                                        "collection": "relayPoints",
+                                        "filters": [
+                                            {
+                                                "field": "country",
+                                                "param": "country",
+                                                "input": "select",
+                                                "label": "Country",
+                                                "options": [
+                                                    "FR"
+                                                ]
+                                            },
+                                            {
+                                                "field": "postalCode",
+                                                "param": "postalCode",
+                                                "input": "text",
+                                                "label": "Postal code"
+                                            },
+                                            {
+                                                "field": "city",
+                                                "param": "city",
+                                                "input": "text",
+                                                "label": "City"
+                                            },
+                                            {
+                                                "field": "weightGrams",
+                                                "param": "weightGrams",
+                                                "input": "text",
+                                                "label": "Weight grams"
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "field": "label",
+                                                "label": "Pickup point"
+                                            },
+                                            {
+                                                "field": "addressLine1",
+                                                "label": "Address"
+                                            },
+                                            {
+                                                "field": "postalCode",
+                                                "label": "Postcode"
+                                            },
+                                            {
+                                                "field": "city",
+                                                "label": "City"
+                                            },
+                                            {
+                                                "field": "nature",
+                                                "label": "Type"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "label": "Settings",
+                                "children": [
+                                    {
+                                        "widget": "w-table",
+                                        "collection": "settings",
+                                        "columns": [
+                                            {
+                                                "field": "id",
+                                                "label": "Profile"
+                                            },
+                                            {
+                                                "field": "senderName",
+                                                "label": "Sender"
+                                            },
+                                            {
+                                                "field": "senderPostalCode",
+                                                "label": "Postcode"
+                                            },
+                                            {
+                                                "field": "senderCity",
+                                                "label": "City"
+                                            },
+                                            {
+                                                "field": "updatedAt",
+                                                "label": "Updated",
+                                                "format": "date"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget": "w-detail",
+                                        "collection": "settings",
+                                        "fields": [
+                                            {
+                                                "field": "senderName",
+                                                "label": "Sender"
+                                            },
+                                            {
+                                                "field": "senderAddressLine1",
+                                                "label": "Sender address"
+                                            },
+                                            {
+                                                "field": "senderAddressLine2",
+                                                "label": "Sender address line 2"
+                                            },
+                                            {
+                                                "field": "senderAddressLine3",
+                                                "label": "Sender address line 3"
+                                            },
+                                            {
+                                                "field": "senderPostalCode",
+                                                "label": "Sender postal code"
+                                            },
+                                            {
+                                                "field": "senderCity",
+                                                "label": "Sender city"
+                                            },
+                                            {
+                                                "field": "senderCountry",
+                                                "label": "Sender country"
+                                            },
+                                            {
+                                                "field": "senderPhone",
+                                                "label": "Sender phone"
+                                            },
+                                            {
+                                                "field": "senderMobile",
+                                                "label": "Sender mobile"
+                                            },
+                                            {
+                                                "field": "senderEmail",
+                                                "label": "Sender email"
+                                            },
+                                            {
+                                                "field": "modeCollection",
+                                                "label": "Collection mode"
+                                            },
+                                            {
+                                                "field": "modeDelivery",
+                                                "label": "Delivery mode"
+                                            },
+                                            {
+                                                "field": "defaultWeightGrams",
+                                                "label": "Default weight grams"
+                                            },
+                                            {
+                                                "field": "defaultPackageCount",
+                                                "label": "Default packages"
+                                            },
+                                            {
+                                                "field": "defaultLengthCm",
+                                                "label": "Default length cm"
+                                            },
+                                            {
+                                                "field": "defaultWidthCm",
+                                                "label": "Default width cm"
+                                            },
+                                            {
+                                                "field": "defaultHeightCm",
+                                                "label": "Default height cm"
+                                            },
+                                            {
+                                                "field": "defaultContent",
+                                                "label": "Default content"
+                                            },
+                                            {
+                                                "field": "declaredCurrency",
+                                                "label": "Declared currency"
+                                            },
+                                            {
+                                                "field": "connectOutputFormat",
+                                                "label": "Label format"
+                                            },
+                                            {
+                                                "field": "connectOutputType",
+                                                "label": "Label output type"
+                                            },
+                                            {
+                                                "field": "updatedAt",
+                                                "label": "Updated",
+                                                "format": "date"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget": "w-update",
+                                        "collection": "settings",
+                                        "label": "Edit settings",
+                                        "submitLabel": "Save settings",
+                                        "fields": [
+                                            {
+                                                "field": "modeCollection",
+                                                "label": "Collection mode",
+                                                "input": "select",
+                                                "options": [
+                                                    "CCC"
+                                                ],
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "modeDelivery",
+                                                "label": "Delivery mode",
+                                                "input": "select",
+                                                "options": [
+                                                    "24R"
+                                                ],
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "senderName",
+                                                "label": "Sender",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "senderFirstName",
+                                                "label": "Sender first name"
+                                            },
+                                            {
+                                                "field": "senderLastName",
+                                                "label": "Sender last name"
+                                            },
+                                            {
+                                                "field": "senderAddressLine1",
+                                                "label": "Sender address",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "senderAddressLine2",
+                                                "label": "Sender address line 2"
+                                            },
+                                            {
+                                                "field": "senderAddressLine3",
+                                                "label": "Sender address line 3"
+                                            },
+                                            {
+                                                "field": "senderPostalCode",
+                                                "label": "Sender postal code",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "senderCity",
+                                                "label": "Sender city",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "senderCountry",
+                                                "label": "Sender country",
+                                                "input": "select",
+                                                "options": [
+                                                    "FR"
+                                                ],
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "senderPhone",
+                                                "label": "Sender phone"
+                                            },
+                                            {
+                                                "field": "senderMobile",
+                                                "label": "Sender mobile"
+                                            },
+                                            {
+                                                "field": "senderEmail",
+                                                "label": "Sender email"
+                                            },
+                                            {
+                                                "field": "defaultWeightGrams",
+                                                "label": "Default weight grams",
+                                                "input": "number",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "defaultPackageCount",
+                                                "label": "Default packages",
+                                                "input": "number",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "defaultLengthCm",
+                                                "label": "Default length cm",
+                                                "input": "number",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "defaultWidthCm",
+                                                "label": "Default width cm",
+                                                "input": "number",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "defaultHeightCm",
+                                                "label": "Default height cm",
+                                                "input": "number",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "defaultContent",
+                                                "label": "Default content",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "declaredCurrency",
+                                                "label": "Declared currency",
+                                                "input": "select",
+                                                "options": [
+                                                    "EUR"
+                                                ],
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "connectCulture",
+                                                "label": "Connect culture",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "connectVersionApi",
+                                                "label": "Connect API version",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "connectOutputFormat",
+                                                "label": "Label format",
+                                                "input": "select",
+                                                "options": [
+                                                    "10x15",
+                                                    "A4"
+                                                ],
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "connectOutputType",
+                                                "label": "Label output type",
+                                                "input": "select",
+                                                "options": [
+                                                    "PdfUrl"
+                                                ],
+                                                "required": true
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "widget": "w-detail",
+                        "collection": "shipments",
+                        "fields": [
+                            {
+                                "field": "externalOrderId",
+                                "label": "External order id"
+                            },
+                            {
+                                "field": "expeditionNumber",
+                                "label": "Expedition"
+                            },
+                            {
+                                "field": "status",
+                                "label": "Status",
+                                "format": "badge"
+                            },
+                            {
+                                "field": "recipientName",
+                                "label": "Recipient"
+                            },
+                            {
+                                "field": "recipientEmail",
+                                "label": "Email"
+                            },
+                            {
+                                "field": "recipientPhone",
+                                "label": "Phone"
+                            },
+                            {
+                                "field": "recipientAddressLine1",
+                                "label": "Address"
+                            },
+                            {
+                                "field": "recipientPostalCode",
+                                "label": "Postal code"
+                            },
+                            {
+                                "field": "recipientCity",
+                                "label": "City"
+                            },
+                            {
+                                "field": "deliveryRelayLocation",
+                                "label": "Relay location"
+                            },
+                            {
+                                "field": "weightGrams",
+                                "label": "Weight"
+                            },
+                            {
+                                "field": "latestEventLabel",
+                                "label": "Latest event"
+                            },
+                            {
+                                "field": "latestEventAt",
+                                "label": "Latest event date",
+                                "format": "date"
+                            },
+                            {
+                                "field": "trackingUrl",
+                                "label": "Tracking URL",
+                                "format": "url"
+                            },
+                            {
+                                "field": "labelUrl",
+                                "label": "Label URL",
+                                "format": "url"
+                            },
+                            {
+                                "field": "createdAt",
+                                "label": "Created",
+                                "format": "date"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

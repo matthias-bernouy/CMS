@@ -1,0 +1,16 @@
+{
+    "schema": "cms.integration.index.v1",
+    "kind": "mondial-relay",
+    "label": "Mondial Relay Delivery",
+    "category": "Delivery",
+    "description": "Create Mondial Relay Connect shipments, select pickup points, print delivery labels, and track stored parcels through a Supabase connector.",
+    "stable": "1.0.0",
+    "latest": "1.0.0",
+    "versions": [
+        {
+            "version": "1.0.0",
+            "path": "versions/1.0.0",
+            "definition": "versions/1.0.0/definition.json"
+        }
+    ]
+}
