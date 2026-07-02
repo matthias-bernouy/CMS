@@ -1,0 +1,2 @@
+[functions.cms-stripe-connect]
+verify_jwt = false

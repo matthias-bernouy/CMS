@@ -1,0 +1,9 @@
+{
+    "default-tag": "stripe-connect-onboarding",
+    "bloc": "./Bloc.ts",
+    "defaultContent": "./default.html",
+    "meta": {
+        "title": "Stripe Connect onboarding",
+        "description": "Embeds Stripe Connect Account Onboarding for the current CMS user."
+    }
+}

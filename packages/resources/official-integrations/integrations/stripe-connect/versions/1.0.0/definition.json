@@ -1,0 +1,1823 @@
+{
+    "schema": "cms.integration.definition.v1",
+    "kind": "stripe-connect",
+    "label": "Stripe Connect",
+    "version": "1.0.0",
+    "category": "Payments",
+    "description": "Connect CMS users to Stripe connected accounts and destination-charge payments.",
+    "inputs": [
+        {
+            "name": "id",
+            "label": "Source id",
+            "type": "text",
+            "required": true,
+            "defaultValue": "stripe-connect"
+        },
+        {
+            "name": "stripeSecretKey",
+            "label": "Stripe secret key",
+            "type": "password",
+            "required": true,
+            "secret": true
+        },
+        {
+            "name": "stripePublishableKey",
+            "label": "Stripe publishable key",
+            "type": "text",
+            "required": true
+        },
+        {
+            "name": "defaultCountry",
+            "label": "Default connected account country",
+            "type": "text",
+            "required": true,
+            "defaultValue": "FR"
+        },
+        {
+            "name": "defaultCurrency",
+            "label": "Default payment currency",
+            "type": "text",
+            "required": true,
+            "defaultValue": "eur"
+        }
+    ],
+    "ui": {
+        "mark": "S",
+        "markClass": "stripe-connect",
+        "emit": "source:updated",
+        "instructions": [
+            [
+                "Configure Stripe Connect",
+                "Create or reuse a Stripe platform account and copy its restricted or secret key."
+            ],
+            [
+                "Deploy connector resources",
+                "Apply the bundled Supabase schema and Edge Function to the configured project."
+            ],
+            [
+                "Connect the CMS",
+                "Install the Stripe Connect source and backoffice dashboard with the deployed function URL."
+            ]
+        ],
+        "scopes": [
+            "CMS x-user-id forwarding",
+            "Stripe connected account creation",
+            "Stripe Connect embedded onboarding sessions",
+            "Stripe Connect hosted onboarding links",
+            "Destination-charge PaymentIntent creation",
+            "Payment status reads",
+            "Backoffice connected account and payment dashboards"
+        ],
+        "checks": [
+            "The browser never receives the Stripe secret key.",
+            "The CMS only stores the source configuration and secret references.",
+            "Each user-facing request forwards x-user-id from the authenticated CMS subject.",
+            "Dashboard reads remain behind CMS gateway permissions.",
+            "The connector deployer owns Supabase project credentials."
+        ],
+        "resources": [
+            [
+                "Sources",
+                "Stripe Connect source contract"
+            ],
+            [
+                "Dashboards",
+                "Stripe Connect accounts and payments dashboard"
+            ],
+            [
+                "Blocs",
+                "Embedded onboarding bloc for connected users"
+            ],
+            [
+                "Secrets",
+                "Stripe secret key and private CMS API key"
+            ],
+            [
+                "Supabase",
+                "Private stripe_connect schema and Edge Function"
+            ]
+        ],
+        "review": [
+            "Use a restricted Stripe key when possible.",
+            "Do not expose Stripe secret keys to the CMS browser bundle.",
+            "Add Stripe webhooks before relying on payment state as a settlement source of truth.",
+            "Review Stripe Connect fraud and platform-loss responsibilities before going live."
+        ],
+        "sync": [
+            "Validate answers",
+            "Store Stripe secret key",
+            "Generate private CMS API key",
+            "Deploy Supabase connector",
+            "Install Stripe Connect source",
+            "Install dashboards",
+            "Install blocs",
+            "Refresh Sources"
+        ],
+        "syncNote": "This integration creates a CMS source backed by a Supabase Edge Function. Supabase stores connector state; Stripe owns connected accounts and payments."
+    },
+    "security": {
+        "csp": {
+            "script": [
+                "https://connect-js.stripe.com"
+            ],
+            "connect": [
+                "https://connect-js.stripe.com",
+                "https://connect.stripe.com",
+                "https://api.stripe.com"
+            ],
+            "frame": [
+                "https://connect-js.stripe.com",
+                "https://connect.stripe.com"
+            ]
+        }
+    },
+    "secrets": [
+        {
+            "input": "stripeSecretKey",
+            "key": "STRIPE_CONNECT_{{env answers.id}}_SECRET_KEY"
+        }
+    ],
+    "generatedSecrets": [
+        {
+            "name": "cmsApiKey",
+            "key": "STRIPE_CONNECT_{{env answers.id}}_API_KEY",
+            "generator": "token",
+            "bytes": 32,
+            "prefix": "cms_sc_"
+        }
+    ],
+    "connectors": [
+        {
+            "provider": "supabase",
+            "root": "connectors/supabase",
+            "dataApiSchemas": [
+                "stripe_connect"
+            ],
+            "schemas": [
+                "schema.sql"
+            ],
+            "functions": [
+                {
+                    "name": "cms-stripe-connect",
+                    "directory": "functions/cms-stripe-connect",
+                    "configPath": "supabase.config.toml",
+                    "secrets": {
+                        "CMS_STRIPE_CONNECT_API_KEY": "{{generated.cmsApiKey}}",
+                        "STRIPE_PUBLISHABLE_KEY": "{{answers.stripePublishableKey}}",
+                        "STRIPE_SECRET_KEY": "{{connectorSecrets.stripeSecretKey}}",
+                        "STRIPE_CONNECT_DEFAULT_COUNTRY": "{{answers.defaultCountry}}",
+                        "STRIPE_CONNECT_DEFAULT_CURRENCY": "{{answers.defaultCurrency}}"
+                    }
+                }
+            ]
+        }
+    ],
+    "artifacts": [
+        {
+            "type": "source",
+            "source": {
+                "id": "{{answers.id}}",
+                "meta": {
+                    "name": "Stripe Connect",
+                    "description": "Supabase-backed Stripe Connect account and payment endpoints.",
+                    "icon": "credit-card"
+                },
+                "endpoints": [
+                    {
+                        "endpointId": "health",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/health",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "ok"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getConnectClientConfig",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/config",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "publishableKey": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "publishableKey"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getConnectStatus",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/status",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "stripeAccountId": {
+                                            "type": "string"
+                                        },
+                                        "connected": {
+                                            "type": "boolean"
+                                        },
+                                        "country": {
+                                            "type": "string"
+                                        },
+                                        "businessType": {
+                                            "type": "string"
+                                        },
+                                        "onboardingStatus": {
+                                            "type": "string"
+                                        },
+                                        "chargesEnabled": {
+                                            "type": "boolean"
+                                        },
+                                        "payoutsEnabled": {
+                                            "type": "boolean"
+                                        },
+                                        "detailsSubmitted": {
+                                            "type": "boolean"
+                                        },
+                                        "disabledReason": {
+                                            "type": "string"
+                                        },
+                                        "currentlyDue": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "eventuallyDue": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "pastDue": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "pendingVerification": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "exists",
+                                        "userId",
+                                        "connected",
+                                        "onboardingStatus",
+                                        "chargesEnabled",
+                                        "payoutsEnabled",
+                                        "detailsSubmitted",
+                                        "currentlyDue",
+                                        "eventuallyDue",
+                                        "pastDue",
+                                        "pendingVerification"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createOnboardingLink",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/onboarding",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "returnUrl": {
+                                    "type": "string"
+                                },
+                                "refreshUrl": {
+                                    "type": "string"
+                                },
+                                "email": {
+                                    "type": "string"
+                                },
+                                "country": {
+                                    "type": "string"
+                                },
+                                "businessType": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "returnUrl",
+                                "refreshUrl"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "url": {
+                                            "type": "string"
+                                        },
+                                        "expiresAt": {
+                                            "type": "number"
+                                        },
+                                        "onboardingStatus": {
+                                            "type": "string"
+                                        },
+                                        "connected": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "url",
+                                        "connected",
+                                        "onboardingStatus"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createOnboardingSession",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/connect/onboarding/session",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "email": {
+                                    "type": "string"
+                                },
+                                "country": {
+                                    "type": "string"
+                                },
+                                "businessType": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": []
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "clientSecret": {
+                                            "type": "string"
+                                        },
+                                        "expiresAt": {
+                                            "type": "number"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "stripeAccountId": {
+                                            "type": "string"
+                                        },
+                                        "connected": {
+                                            "type": "boolean"
+                                        },
+                                        "onboardingStatus": {
+                                            "type": "string"
+                                        },
+                                        "chargesEnabled": {
+                                            "type": "boolean"
+                                        },
+                                        "payoutsEnabled": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "clientSecret",
+                                        "userId",
+                                        "connected",
+                                        "onboardingStatus",
+                                        "chargesEnabled",
+                                        "payoutsEnabled"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createPayment",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/payments",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "sellerUserId": {
+                                    "type": "string"
+                                },
+                                "amountTotal": {
+                                    "type": "number"
+                                },
+                                "applicationFeeAmount": {
+                                    "type": "number"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "clientReferenceId": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "sellerUserId",
+                                "amountTotal",
+                                "applicationFeeAmount"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paymentId": {
+                                            "type": "number"
+                                        },
+                                        "stripePaymentIntentId": {
+                                            "type": "string"
+                                        },
+                                        "clientSecret": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "paymentId",
+                                        "clientSecret",
+                                        "status"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getPayment",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/payments/payment",
+                        "params": [
+                            {
+                                "name": "paymentId",
+                                "in": "query",
+                                "type": "number",
+                                "required": true,
+                                "description": "Payment id returned by createPayment."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paymentId": {
+                                            "type": "number"
+                                        },
+                                        "buyerUserId": {
+                                            "type": "string"
+                                        },
+                                        "sellerUserId": {
+                                            "type": "string"
+                                        },
+                                        "currency": {
+                                            "type": "string"
+                                        },
+                                        "amountTotal": {
+                                            "type": "number"
+                                        },
+                                        "applicationFeeAmount": {
+                                            "type": "number"
+                                        },
+                                        "sellerAmount": {
+                                            "type": "number"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "paymentId",
+                                        "buyerUserId",
+                                        "sellerUserId",
+                                        "currency",
+                                        "amountTotal",
+                                        "applicationFeeAmount",
+                                        "sellerAmount",
+                                        "status"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "listConnectAccounts",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/accounts",
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Search CMS user id or Stripe account id."
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Filter by onboarding status."
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number",
+                                "description": "Maximum number of accounts to return."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accounts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "userId": {
+                                                        "type": "string"
+                                                    },
+                                                    "stripeAccountId": {
+                                                        "type": "string"
+                                                    },
+                                                    "connected": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "country": {
+                                                        "type": "string"
+                                                    },
+                                                    "onboardingStatus": {
+                                                        "type": "string"
+                                                    },
+                                                    "chargesEnabled": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "payoutsEnabled": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "userId",
+                                                    "connected",
+                                                    "onboardingStatus",
+                                                    "chargesEnabled",
+                                                    "payoutsEnabled"
+                                                ]
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "accounts",
+                                        "total"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getConnectAccount",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/accounts/account",
+                        "params": [
+                            {
+                                "name": "userId",
+                                "in": "query",
+                                "type": "string",
+                                "required": true,
+                                "description": "CMS user id."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "stripeAccountId": {
+                                            "type": "string"
+                                        },
+                                        "connected": {
+                                            "type": "boolean"
+                                        },
+                                        "country": {
+                                            "type": "string"
+                                        },
+                                        "businessType": {
+                                            "type": "string"
+                                        },
+                                        "onboardingStatus": {
+                                            "type": "string"
+                                        },
+                                        "chargesEnabled": {
+                                            "type": "boolean"
+                                        },
+                                        "payoutsEnabled": {
+                                            "type": "boolean"
+                                        },
+                                        "detailsSubmitted": {
+                                            "type": "boolean"
+                                        },
+                                        "disabledReason": {
+                                            "type": "string"
+                                        },
+                                        "lastOnboardingStartedAt": {
+                                            "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "exists",
+                                        "userId",
+                                        "connected",
+                                        "onboardingStatus",
+                                        "chargesEnabled",
+                                        "payoutsEnabled",
+                                        "detailsSubmitted"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createConnectOnboardingLinkForUser",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/accounts/account/onboarding",
+                        "params": [
+                            {
+                                "name": "userId",
+                                "in": "query",
+                                "type": "string",
+                                "required": true,
+                                "description": "Target CMS user id."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "returnUrl": {
+                                    "type": "string"
+                                },
+                                "refreshUrl": {
+                                    "type": "string"
+                                },
+                                "email": {
+                                    "type": "string"
+                                },
+                                "country": {
+                                    "type": "string"
+                                },
+                                "businessType": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "returnUrl",
+                                "refreshUrl"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "url": {
+                                            "type": "string"
+                                        },
+                                        "expiresAt": {
+                                            "type": "number"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "stripeAccountId": {
+                                            "type": "string"
+                                        },
+                                        "connected": {
+                                            "type": "boolean"
+                                        },
+                                        "onboardingStatus": {
+                                            "type": "string"
+                                        },
+                                        "chargesEnabled": {
+                                            "type": "boolean"
+                                        },
+                                        "payoutsEnabled": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "url",
+                                        "userId",
+                                        "connected",
+                                        "onboardingStatus",
+                                        "chargesEnabled",
+                                        "payoutsEnabled"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createConnectOnboardingSessionForUser",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/accounts/account/onboarding/session",
+                        "params": [
+                            {
+                                "name": "userId",
+                                "in": "query",
+                                "type": "string",
+                                "required": true,
+                                "description": "Target CMS user id."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "email": {
+                                    "type": "string"
+                                },
+                                "country": {
+                                    "type": "string"
+                                },
+                                "businessType": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": []
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "clientSecret": {
+                                            "type": "string"
+                                        },
+                                        "expiresAt": {
+                                            "type": "number"
+                                        },
+                                        "userId": {
+                                            "type": "string"
+                                        },
+                                        "stripeAccountId": {
+                                            "type": "string"
+                                        },
+                                        "connected": {
+                                            "type": "boolean"
+                                        },
+                                        "onboardingStatus": {
+                                            "type": "string"
+                                        },
+                                        "chargesEnabled": {
+                                            "type": "boolean"
+                                        },
+                                        "payoutsEnabled": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "clientSecret",
+                                        "userId",
+                                        "connected",
+                                        "onboardingStatus",
+                                        "chargesEnabled",
+                                        "payoutsEnabled"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "listPayments",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/payments",
+                        "params": [
+                            {
+                                "name": "q",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Search reference, user ids, or Stripe PaymentIntent id."
+                            },
+                            {
+                                "name": "status",
+                                "in": "query",
+                                "type": "string",
+                                "description": "Filter by payment status."
+                            },
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "type": "number",
+                                "description": "Maximum number of payments to return."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "payments": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "paymentId": {
+                                                        "type": "number"
+                                                    },
+                                                    "clientReferenceId": {
+                                                        "type": "string"
+                                                    },
+                                                    "buyerUserId": {
+                                                        "type": "string"
+                                                    },
+                                                    "sellerUserId": {
+                                                        "type": "string"
+                                                    },
+                                                    "currency": {
+                                                        "type": "string"
+                                                    },
+                                                    "amountTotal": {
+                                                        "type": "number"
+                                                    },
+                                                    "applicationFeeAmount": {
+                                                        "type": "number"
+                                                    },
+                                                    "sellerAmount": {
+                                                        "type": "number"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "createdAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "updatedAt": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "paymentId",
+                                                    "buyerUserId",
+                                                    "sellerUserId",
+                                                    "currency",
+                                                    "amountTotal",
+                                                    "applicationFeeAmount",
+                                                    "sellerAmount",
+                                                    "status"
+                                                ]
+                                            }
+                                        },
+                                        "total": {
+                                            "type": "number"
+                                        }
+                                    },
+                                    "required": [
+                                        "payments",
+                                        "total"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "createPaymentForUsers",
+                        "method": "POST",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/payments",
+                        "params": [],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "body": {
+                            "type": "object",
+                            "properties": {
+                                "buyerUserId": {
+                                    "type": "string"
+                                },
+                                "sellerUserId": {
+                                    "type": "string"
+                                },
+                                "amountTotal": {
+                                    "type": "number"
+                                },
+                                "applicationFeeAmount": {
+                                    "type": "number"
+                                },
+                                "currency": {
+                                    "type": "string"
+                                },
+                                "clientReferenceId": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "buyerUserId",
+                                "sellerUserId",
+                                "amountTotal",
+                                "applicationFeeAmount"
+                            ]
+                        },
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paymentId": {
+                                            "type": "number"
+                                        },
+                                        "clientReferenceId": {
+                                            "type": "string"
+                                        },
+                                        "buyerUserId": {
+                                            "type": "string"
+                                        },
+                                        "sellerUserId": {
+                                            "type": "string"
+                                        },
+                                        "stripePaymentIntentId": {
+                                            "type": "string"
+                                        },
+                                        "clientSecret": {
+                                            "type": "string"
+                                        },
+                                        "currency": {
+                                            "type": "string"
+                                        },
+                                        "amountTotal": {
+                                            "type": "number"
+                                        },
+                                        "applicationFeeAmount": {
+                                            "type": "number"
+                                        },
+                                        "sellerAmount": {
+                                            "type": "number"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "paymentId",
+                                        "buyerUserId",
+                                        "sellerUserId",
+                                        "clientSecret",
+                                        "currency",
+                                        "amountTotal",
+                                        "applicationFeeAmount",
+                                        "sellerAmount",
+                                        "status"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "endpointId": "getPaymentById",
+                        "method": "GET",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-stripe-connect/admin/payments/payment",
+                        "params": [
+                            {
+                                "name": "paymentId",
+                                "in": "query",
+                                "type": "number",
+                                "required": true,
+                                "description": "Payment id."
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            }
+                        ],
+                        "output": [
+                            {
+                                "status": "200",
+                                "body": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paymentId": {
+                                            "type": "number"
+                                        },
+                                        "clientReferenceId": {
+                                            "type": "string"
+                                        },
+                                        "buyerUserId": {
+                                            "type": "string"
+                                        },
+                                        "sellerUserId": {
+                                            "type": "string"
+                                        },
+                                        "stripePaymentIntentId": {
+                                            "type": "string"
+                                        },
+                                        "stripeChargeId": {
+                                            "type": "string"
+                                        },
+                                        "transferGroup": {
+                                            "type": "string"
+                                        },
+                                        "currency": {
+                                            "type": "string"
+                                        },
+                                        "amountTotal": {
+                                            "type": "number"
+                                        },
+                                        "applicationFeeAmount": {
+                                            "type": "number"
+                                        },
+                                        "sellerAmount": {
+                                            "type": "number"
+                                        },
+                                        "status": {
+                                            "type": "string"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "paidAt": {
+                                            "type": "string"
+                                        },
+                                        "cancelledAt": {
+                                            "type": "string"
+                                        },
+                                        "refundedAt": {
+                                            "type": "string"
+                                        },
+                                        "createdAt": {
+                                            "type": "string"
+                                        },
+                                        "updatedAt": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "paymentId",
+                                        "buyerUserId",
+                                        "sellerUserId",
+                                        "currency",
+                                        "amountTotal",
+                                        "applicationFeeAmount",
+                                        "sellerAmount",
+                                        "status"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "bloc",
+            "bloc": {
+                "tag": "stripe-connect-onboarding",
+                "name": "Stripe Connect onboarding",
+                "group": "Payments",
+                "description": "Embeds Stripe Connect Account Onboarding for the current CMS user.",
+                "path": "blocs/stripe-connect-onboarding"
+            }
+        },
+        {
+            "type": "dashboard",
+            "dashboard": {
+                "id": "{{answers.id}}-dashboard",
+                "source": "{{answers.id}}",
+                "meta": {
+                    "name": "Stripe Connect",
+                    "icon": "credit-card"
+                },
+                "collections": [
+                    {
+                        "id": "accounts",
+                        "rowKey": "userId",
+                        "list": {
+                            "endpoint": "listConnectAccounts",
+                            "params": {
+                                "q": "$param.q",
+                                "status": "$param.status",
+                                "limit": "100"
+                            },
+                            "itemsPath": "accounts",
+                            "totalPath": "total"
+                        },
+                        "item": {
+                            "get": {
+                                "endpoint": "getConnectAccount",
+                                "params": {
+                                    "userId": "$selection"
+                                }
+                            },
+                            "create": {
+                                "endpoint": "createConnectOnboardingSessionForUser",
+                                "params": {
+                                    "userId": "$param.userId"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "id": "payments",
+                        "rowKey": "paymentId",
+                        "list": {
+                            "endpoint": "listPayments",
+                            "params": {
+                                "q": "$param.q",
+                                "status": "$param.status",
+                                "limit": "100"
+                            },
+                            "itemsPath": "payments",
+                            "totalPath": "total"
+                        },
+                        "item": {
+                            "get": {
+                                "endpoint": "getPaymentById",
+                                "params": {
+                                    "paymentId": "$selection"
+                                }
+                            },
+                            "create": {
+                                "endpoint": "createPaymentForUsers"
+                            }
+                        }
+                    }
+                ],
+                "views": [
+                    {
+                        "widget": "w-tabs",
+                        "tabs": [
+                            {
+                                "label": "Accounts",
+                                "children": [
+                                    {
+                                        "widget": "w-create",
+                                        "collection": "accounts",
+                                        "label": "Create onboarding session",
+                                        "submitLabel": "Create session",
+                                        "successMessage": "Onboarding session created",
+                                        "fields": [
+                                            {
+                                                "field": "userId",
+                                                "label": "User",
+                                                "input": "cms-user",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "email",
+                                                "label": "Email"
+                                            },
+                                            {
+                                                "field": "country",
+                                                "label": "Country"
+                                            },
+                                            {
+                                                "field": "businessType",
+                                                "label": "Business type",
+                                                "input": "select",
+                                                "options": [
+                                                    "individual",
+                                                    "company",
+                                                    "government_entity",
+                                                    "non_profit"
+                                                ]
+                                            }
+                                        ],
+                                        "resultFields": [
+                                            {
+                                                "field": "clientSecret",
+                                                "label": "Client secret"
+                                            },
+                                            {
+                                                "field": "expiresAt",
+                                                "label": "Expires at"
+                                            },
+                                            {
+                                                "field": "stripeAccountId",
+                                                "label": "Stripe account"
+                                            },
+                                            {
+                                                "field": "onboardingStatus",
+                                                "label": "Status",
+                                                "format": "badge"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget": "w-table",
+                                        "collection": "accounts",
+                                        "filters": [
+                                            {
+                                                "field": "q",
+                                                "param": "q",
+                                                "input": "text",
+                                                "label": "Search",
+                                                "placeholder": "Search users or Stripe accounts"
+                                            },
+                                            {
+                                                "field": "status",
+                                                "param": "status",
+                                                "input": "select",
+                                                "label": "Status",
+                                                "options": [
+                                                    "not_started",
+                                                    "link_created",
+                                                    "onboarding_started",
+                                                    "requirements_due",
+                                                    "pending_verification",
+                                                    "enabled",
+                                                    "restricted",
+                                                    "rejected"
+                                                ]
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "field": "userId",
+                                                "label": "User"
+                                            },
+                                            {
+                                                "field": "stripeAccountId",
+                                                "label": "Stripe account"
+                                            },
+                                            {
+                                                "field": "onboardingStatus",
+                                                "label": "Status",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "chargesEnabled",
+                                                "label": "Charges",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "payoutsEnabled",
+                                                "label": "Payouts",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "updatedAt",
+                                                "label": "Updated",
+                                                "format": "date"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget": "w-detail",
+                                        "collection": "accounts",
+                                        "fields": [
+                                            {
+                                                "field": "userId",
+                                                "label": "User"
+                                            },
+                                            {
+                                                "field": "stripeAccountId",
+                                                "label": "Stripe account"
+                                            },
+                                            {
+                                                "field": "country",
+                                                "label": "Country"
+                                            },
+                                            {
+                                                "field": "businessType",
+                                                "label": "Business type"
+                                            },
+                                            {
+                                                "field": "onboardingStatus",
+                                                "label": "Status",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "chargesEnabled",
+                                                "label": "Charges enabled",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "payoutsEnabled",
+                                                "label": "Payouts enabled",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "detailsSubmitted",
+                                                "label": "Details submitted",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "disabledReason",
+                                                "label": "Disabled reason"
+                                            },
+                                            {
+                                                "field": "lastOnboardingStartedAt",
+                                                "label": "Last onboarding start",
+                                                "format": "date"
+                                            },
+                                            {
+                                                "field": "createdAt",
+                                                "label": "Created",
+                                                "format": "date"
+                                            },
+                                            {
+                                                "field": "updatedAt",
+                                                "label": "Updated",
+                                                "format": "date"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "label": "Payments",
+                                "children": [
+                                    {
+                                        "widget": "w-create",
+                                        "collection": "payments",
+                                        "label": "Create payment",
+                                        "submitLabel": "Create payment",
+                                        "successMessage": "Payment created",
+                                        "fields": [
+                                            {
+                                                "field": "buyerUserId",
+                                                "label": "Buyer",
+                                                "input": "cms-user",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "sellerUserId",
+                                                "label": "Seller",
+                                                "input": "lookup",
+                                                "required": true,
+                                                "lookup": {
+                                                    "endpoint": "listConnectAccounts",
+                                                    "params": {
+                                                        "q": "$lookup.search",
+                                                        "status": "enabled",
+                                                        "limit": "20"
+                                                    },
+                                                    "itemsPath": "accounts",
+                                                    "totalPath": "total",
+                                                    "valuePath": "userId",
+                                                    "labelPath": "userId",
+                                                    "descriptionPaths": [
+                                                        "stripeAccountId",
+                                                        "onboardingStatus"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "field": "amountTotal",
+                                                "label": "Amount",
+                                                "input": "number",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "applicationFeeAmount",
+                                                "label": "Application fee",
+                                                "input": "number",
+                                                "required": true
+                                            },
+                                            {
+                                                "field": "currency",
+                                                "label": "Currency"
+                                            },
+                                            {
+                                                "field": "clientReferenceId",
+                                                "label": "Client reference"
+                                            },
+                                            {
+                                                "field": "description",
+                                                "label": "Description"
+                                            }
+                                        ],
+                                        "resultFields": [
+                                            {
+                                                "field": "paymentId",
+                                                "label": "Payment"
+                                            },
+                                            {
+                                                "field": "stripePaymentIntentId",
+                                                "label": "PaymentIntent"
+                                            },
+                                            {
+                                                "field": "clientSecret",
+                                                "label": "Client secret"
+                                            },
+                                            {
+                                                "field": "status",
+                                                "label": "Status",
+                                                "format": "badge"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget": "w-table",
+                                        "collection": "payments",
+                                        "filters": [
+                                            {
+                                                "field": "q",
+                                                "param": "q",
+                                                "input": "text",
+                                                "label": "Search",
+                                                "placeholder": "Search references, users, or Stripe ids"
+                                            },
+                                            {
+                                                "field": "status",
+                                                "param": "status",
+                                                "input": "select",
+                                                "label": "Status",
+                                                "options": [
+                                                    "payment_pending",
+                                                    "requires_action",
+                                                    "paid",
+                                                    "payment_failed",
+                                                    "cancelled",
+                                                    "partially_refunded",
+                                                    "refunded",
+                                                    "disputed"
+                                                ]
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "field": "paymentId",
+                                                "label": "Payment"
+                                            },
+                                            {
+                                                "field": "status",
+                                                "label": "Status",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "buyerUserId",
+                                                "label": "Buyer"
+                                            },
+                                            {
+                                                "field": "sellerUserId",
+                                                "label": "Seller"
+                                            },
+                                            {
+                                                "field": "amountTotal",
+                                                "label": "Amount"
+                                            },
+                                            {
+                                                "field": "currency",
+                                                "label": "Currency"
+                                            },
+                                            {
+                                                "field": "applicationFeeAmount",
+                                                "label": "Fee"
+                                            },
+                                            {
+                                                "field": "updatedAt",
+                                                "label": "Updated",
+                                                "format": "date"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget": "w-detail",
+                                        "collection": "payments",
+                                        "fields": [
+                                            {
+                                                "field": "paymentId",
+                                                "label": "Payment"
+                                            },
+                                            {
+                                                "field": "status",
+                                                "label": "Status",
+                                                "format": "badge"
+                                            },
+                                            {
+                                                "field": "clientReferenceId",
+                                                "label": "Client reference"
+                                            },
+                                            {
+                                                "field": "buyerUserId",
+                                                "label": "Buyer"
+                                            },
+                                            {
+                                                "field": "sellerUserId",
+                                                "label": "Seller"
+                                            },
+                                            {
+                                                "field": "stripePaymentIntentId",
+                                                "label": "PaymentIntent"
+                                            },
+                                            {
+                                                "field": "stripeChargeId",
+                                                "label": "Charge"
+                                            },
+                                            {
+                                                "field": "transferGroup",
+                                                "label": "Transfer group"
+                                            },
+                                            {
+                                                "field": "currency",
+                                                "label": "Currency"
+                                            },
+                                            {
+                                                "field": "amountTotal",
+                                                "label": "Amount"
+                                            },
+                                            {
+                                                "field": "applicationFeeAmount",
+                                                "label": "Application fee"
+                                            },
+                                            {
+                                                "field": "sellerAmount",
+                                                "label": "Seller amount"
+                                            },
+                                            {
+                                                "field": "description",
+                                                "label": "Description"
+                                            },
+                                            {
+                                                "field": "paidAt",
+                                                "label": "Paid",
+                                                "format": "date"
+                                            },
+                                            {
+                                                "field": "cancelledAt",
+                                                "label": "Cancelled",
+                                                "format": "date"
+                                            },
+                                            {
+                                                "field": "createdAt",
+                                                "label": "Created",
+                                                "format": "date"
+                                            },
+                                            {
+                                                "field": "updatedAt",
+                                                "label": "Updated",
+                                                "format": "date"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
