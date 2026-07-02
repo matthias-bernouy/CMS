@@ -15,7 +15,7 @@ import {
     InMemorySourceRepository,
     SYSTEM_SOURCES,
 } from "@bernouy/cms-sources";
-import { InMemoryRolesRepository, PUBLIC_ROLE, USER_ROLE } from "@bernouy/cms-permissions";
+import { InMemoryRolesRepository } from "@bernouy/cms-permissions";
 import type { Middleware, RouteHandler, Runner } from "@bernouy/http-runner";
 
 type Role = "user";
@@ -81,18 +81,6 @@ async function setup() {
     };
     const gateway = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
     const roles = new InMemoryRolesRepository();
-    const grants = [
-        "me",
-        "login",
-        "logout",
-        "signup",
-        "requestEmailVerification",
-        "confirmEmailVerification",
-        "requestPasswordReset",
-        "confirmPasswordReset",
-    ].map((endpoint) => ({ permission: `urn:system-auth:${endpoint}` }));
-    await roles.upsert({ id: PUBLIC_ROLE, label: "Public", builtin: true, grants });
-    await roles.upsert({ id: USER_ROLE, label: "User", builtin: true, grants });
     new DeliveryCms({ runner, repository: {} as any, auth, sources: gateway, roles });
     return {
         emailer,
