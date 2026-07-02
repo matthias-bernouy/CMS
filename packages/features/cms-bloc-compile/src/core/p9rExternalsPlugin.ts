@@ -28,6 +28,28 @@ export const p9rExternalsPlugin: BunPlugin = {
                 }
                 return {
                     contents:
+                        `export const CMS_BINDING_CORE_TAG = "cms-binding-core";\n` +
+                        `export const CMS_BINDING_ATTRIBUTES = {\n` +
+                        `    bindingDisabled: "cms-binding-disabled",\n` +
+                        `    condition: "cms-condition",\n` +
+                        `    paramSync: "cms-param-sync",\n` +
+                        `    pageState: "cms-page-state",\n` +
+                        `    repeat: "cms-repeat",\n` +
+                        `    source: "cms-source",\n` +
+                        `    sourceBody: "cms-source-body",\n` +
+                        `    sourceId: "cms-source-id",\n` +
+                        `    sourceMethod: "cms-source-method",\n` +
+                        `    sourcePublish: "cms-source-publish",\n` +
+                        `    sourceSuccessRedirect: "cms-source-success-redirect",\n` +
+                        `    sourceSuccessReset: "cms-source-success-reset",\n` +
+                        `    sourceStateForce: "cms-source-state-force",\n` +
+                        `    sourceTrigger: "cms-source-trigger",\n` +
+                        `};\n` +
+                        `export const CMS_BINDING_RUNTIME_ATTRIBUTES = { ready: "cms-ready" };\n` +
+                        `export const CMS_SOURCE_STATUS_SCOPE = "$source";\n` +
+                        `export const CMS_SOURCES_STATUS_SCOPE = "$sources";\n` +
+                        `export const CMS_SOURCE_STATES = ["loaded", "loading", "empty", "error"];\n` +
+                        `export const CMS_SOURCE_TRIGGERS = ["auto", "submit"];\n` +
                         `export const Editor = window.p9rEditor.Editor;\n` +
                         `export const registerEditor = (props) => window.p9rEditor.registerEditor({\n` +
                         `    ...props,\n` +

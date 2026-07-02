@@ -7,6 +7,15 @@
 import { Editor, type EditorCatalogRegistration } from "@bernouy/cms-content/editor";
 
 export { Editor };
+export {
+    CMS_BINDING_ATTRIBUTES,
+    CMS_BINDING_CORE_TAG,
+    CMS_BINDING_RUNTIME_ATTRIBUTES,
+    CMS_SOURCE_STATUS_SCOPE,
+    CMS_SOURCE_STATES,
+    CMS_SOURCE_TRIGGERS,
+    CMS_SOURCES_STATUS_SCOPE,
+} from "@bernouy/cms-content/editor";
 export type {
     ContentSlot,
     ContentSlotAccept,

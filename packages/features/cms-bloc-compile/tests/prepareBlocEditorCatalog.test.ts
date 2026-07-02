@@ -55,6 +55,52 @@ describe("prepare_bloc editor catalog output", () => {
         expect(bloc.editorJS).toContain('return "opaque";');
     });
 
+    test("exposes binding constants to bloc editor bundles", async () => {
+        const view = new File([
+            "customElements.define('demo-form', class extends HTMLElement {});",
+        ], "DemoForm.ts", { type: "text/typescript" });
+        const editor = new File([
+            "import { Editor, CMS_BINDING_ATTRIBUTES, registerEditor } from '@bernouy/cms-content/editor';",
+            "class DemoFormEditor extends Editor { getSettings() { return [{ type: 'text', label: CMS_BINDING_ATTRIBUTES.source, attribute: CMS_BINDING_ATTRIBUTES.source }]; } }",
+            "registerEditor({ editor: DemoFormEditor });",
+        ], "DemoFormEditor.ts", { type: "text/typescript" });
+
+        const bloc = await prepare_bloc(
+            view,
+            editor,
+            "Demo form",
+            "Forms",
+            "",
+            "demo-form",
+        );
+
+        expect(bloc.editorJS).toContain("CMS_BINDING_ATTRIBUTES");
+        expect(bloc.editorJS).toContain("cms-source");
+    });
+
+    test("exposes binding constants through the control editor subpath", async () => {
+        const view = new File([
+            "customElements.define('demo-control-form', class extends HTMLElement {});",
+        ], "DemoControlForm.ts", { type: "text/typescript" });
+        const editor = new File([
+            "import { Editor, CMS_BINDING_ATTRIBUTES, registerEditor } from '@bernouy/cms-control/editor';",
+            "class DemoControlFormEditor extends Editor { getSettings() { return [{ type: 'text', label: CMS_BINDING_ATTRIBUTES.source, attribute: CMS_BINDING_ATTRIBUTES.source }]; } }",
+            "registerEditor({ editor: DemoControlFormEditor });",
+        ], "DemoControlFormEditor.ts", { type: "text/typescript" });
+
+        const bloc = await prepare_bloc(
+            view,
+            editor,
+            "Demo control form",
+            "Forms",
+            "",
+            "demo-control-form",
+        );
+
+        expect(bloc.editorJS).toContain("CMS_BINDING_ATTRIBUTES");
+        expect(bloc.editorJS).toContain("cms-source");
+    });
+
     test("embeds default content into editor catalog registrations", async () => {
         const view = new File([
             "customElements.define('demo-card', class extends HTMLElement {});",
