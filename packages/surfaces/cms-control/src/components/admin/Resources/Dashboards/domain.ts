@@ -57,9 +57,43 @@ export function renderWidget(widget: DashboardWidget, context: RenderContext, ke
             return renderUpdate(widget, context, key);
         case "w-delete":
             return renderDelete(widget, context);
+        case "w-action":
+            return renderAction(widget, context);
         default:
             return `<section class="panel empty"><strong>Unsupported widget</strong></section>`;
     }
+}
+
+export function renderWidgetList(widgets: DashboardWidget[], context: RenderContext, key: string, tabState: Map<string, number>): string {
+    const chunks: string[] = [];
+    let actions: string[] = [];
+
+    const flushActions = () => {
+        if (!actions.length) return;
+        chunks.push(`<div class="dashboard-actions-bar">${actions.join("")}</div>`);
+        actions = [];
+    };
+
+    widgets.forEach((widget, index) => {
+        const rendered = renderWidget(widget, context, `${key}.${index}`, tabState);
+        if (!rendered.trim()) return;
+        if (isInlineActionWidget(widget)) {
+            actions.push(rendered);
+            return;
+        }
+        flushActions();
+        chunks.push(rendered);
+    });
+
+    flushActions();
+    return chunks.join("");
+}
+
+function isInlineActionWidget(widget: DashboardWidget): boolean {
+    return widget.widget === "w-create" ||
+        widget.widget === "w-update" ||
+        widget.widget === "w-delete" ||
+        widget.widget === "w-action";
 }
 
 function renderSection(
@@ -72,7 +106,7 @@ function renderSection(
         <section class="widget-section">
             ${widget.title ? `<h3>${escapeHtml(widget.title)}</h3>` : ""}
             <div class="widget-stack">
-                ${widget.children.map((child, index) => renderWidget(child, context, `${key}.${index}`, tabState)).join("")}
+                ${renderWidgetList(widget.children, context, key, tabState)}
             </div>
         </section>
     `;
@@ -96,7 +130,7 @@ function renderTabs(
                 `).join("")}
             </div>
             <div class="tab-body">
-                ${active ? active.children.map((child, index) => renderWidget(child, context, `${key}.${activeIndex}.${index}`, tabState)).join("") : ""}
+                ${active ? renderWidgetList(active.children, context, `${key}.${activeIndex}`, tabState) : ""}
             </div>
         </section>
     `;
@@ -261,6 +295,7 @@ function renderCreate(
     const modalId = `dashboard-create-${safeDomId(key)}`;
     const label = writeLabel(widget, "Create");
     const submitLabel = writeSubmitLabel(widget, label);
+    const resultFields = resolveWriteResultFields(widget.resultFields, endpoint);
     return `
         <section class="dashboard-create-action">
             <button type="button" data-dashboard-write-open="${escapeAttr(modalId)}">${escapeHtml(label)}</button>
@@ -271,7 +306,8 @@ function renderCreate(
                 data-dashboard-write
                 data-dashboard-url="${escapeAttr(url)}"
                 data-dashboard-method="${escapeAttr(endpoint.method)}"
-                data-dashboard-success-message="Created"
+                data-dashboard-success-message="${escapeAttr(widget.successMessage ?? "Created")}"
+                ${resultFields.length ? `data-dashboard-result-fields="${escapeAttr(JSON.stringify(resultFields))}"` : ""}
             >
                 <div class="dashboard-create-head">
                     <strong>${escapeHtml(label)}</strong>
@@ -285,6 +321,7 @@ function renderCreate(
                     <button type="submit">${escapeHtml(submitLabel)}</button>
                 </div>
                 <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
+                <div class="dashboard-write-result" data-dashboard-write-result hidden></div>
             </form>
         </dialog>
     `;
@@ -323,6 +360,7 @@ function renderUpdate(
     const modalId = `dashboard-update-${safeDomId(key)}`;
     const label = writeLabel(widget, "Edit");
     const submitLabel = writeSubmitLabel(widget, label);
+    const resultFields = resolveWriteResultFields(widget.resultFields, endpoint);
     return `
         <section class="dashboard-create-action">
             <button type="button" data-dashboard-write-open="${escapeAttr(modalId)}">${escapeHtml(label)}</button>
@@ -334,7 +372,8 @@ function renderUpdate(
                 data-dashboard-url="${escapeAttr(url)}"
                 data-dashboard-load-url="${escapeAttr(loadUrl)}"
                 data-dashboard-method="${escapeAttr(endpoint.method)}"
-                data-dashboard-success-message="Updated"
+                data-dashboard-success-message="${escapeAttr(widget.successMessage ?? "Updated")}"
+                ${resultFields.length ? `data-dashboard-result-fields="${escapeAttr(JSON.stringify(resultFields))}"` : ""}
             >
                 <div class="dashboard-create-head">
                     <strong>${escapeHtml(label)}</strong>
@@ -348,6 +387,7 @@ function renderUpdate(
                     <button type="submit">${escapeHtml(submitLabel)}</button>
                 </div>
                 <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
+                <div class="dashboard-write-result" data-dashboard-write-result hidden></div>
             </form>
         </dialog>
     `;
@@ -383,6 +423,30 @@ function renderDelete(
                 data-dashboard-action-confirm="${escapeAttr(widget.confirmLabel ?? "Delete this item?")}"
                 ${widget.body ? `data-dashboard-action-body="${escapeAttr(JSON.stringify(widget.body))}"` : ""}
             >${escapeHtml(label)}</button>
+        </section>
+    `;
+}
+
+function renderAction(
+    widget: Extract<DashboardWidget, { widget: "w-action" }>,
+    context: RenderContext,
+): string {
+    const endpoint = endpointById(context.group, widget.endpoint);
+    if (!endpoint) return renderMissing(`Unknown endpoint "${widget.endpoint}"`);
+
+    return `
+        <section class="dashboard-create-action dashboard-generic-action">
+            <button
+                type="button"
+                data-dashboard-action
+                data-dashboard-action-url="${escapeAttr(endpointUrl(context.group, widget))}"
+                data-dashboard-action-method="${escapeAttr(endpoint.method)}"
+                data-dashboard-action-response-kind="${escapeAttr(endpoint.responseKind ?? "json")}"
+                data-dashboard-action-media-type="${escapeAttr(endpoint.mediaType ?? "")}"
+                data-dashboard-action-success-message="${escapeAttr(widget.successMessage ?? "Done")}"
+                ${widget.downloadName ? `data-dashboard-action-download-name="${escapeAttr(widget.downloadName)}"` : ""}
+                ${widget.refresh === false ? `data-dashboard-action-refresh="false"` : ""}
+            >${escapeHtml(widget.label)}</button>
         </section>
     `;
 }
@@ -449,9 +513,11 @@ type ResolvedField = {
     format?: FieldFormat;
     required?: boolean;
     readonly?: boolean;
+    options?: string[];
     accept?: string;
     media?: CollectionEndpointRef;
     upload?: CollectionEndpointRef & { resultPath: string };
+    lookup?: NonNullable<Extract<FieldSpec, { field: string }>["lookup"]>;
 };
 
 function resolveColumns(
@@ -491,9 +557,11 @@ function resolveFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpoint
                 format: field.format,
                 required: field.required,
                 readonly: field.readonly,
+                options: field.options,
                 accept: field.accept,
                 media: field.media,
                 upload: field.upload,
+                lookup: field.lookup,
             };
         });
     }
@@ -526,6 +594,16 @@ function resolveWriteFields(fields: FieldSpec[] | undefined, endpoint: SourceEnd
             input: field.input,
             format: inferFieldFormat(field.path),
             required: field.required,
+        }));
+}
+
+function resolveWriteResultFields(fields: FieldSpec[] | undefined, endpoint: SourceEndpointDto): Array<Pick<ResolvedField, "field" | "label" | "format">> {
+    if (!fields?.length) return [];
+    return resolveFields(fields, endpoint)
+        .map(field => ({
+            field: field.field,
+            label: field.label,
+            ...(field.format ? { format: field.format } : {}),
         }));
 }
 
@@ -608,7 +686,12 @@ function paramValue(expr: string, options: EndpointUrlOptions): string {
         if (options.selection && options.rowKey === rowPath) return encodeURIComponent(options.selection);
         return `{{ row.${rowPath} }}`;
     }
-    if (expr.startsWith("$field.")) return `{{ ${options.fieldAlias ?? "item"}.${expr.slice("$field.".length)} }}`;
+    if (expr.startsWith("$lookup.")) return `#{lookup.${expr.slice("$lookup.".length)}}`;
+    if (expr.startsWith("$field.")) {
+        const field = expr.slice("$field.".length);
+        if (options.fieldAlias === "$form") return `#{field.${field}}`;
+        return `{{ ${options.fieldAlias ?? "item"}.${field} }}`;
+    }
     return encodeURIComponent(expr);
 }
 
@@ -701,6 +784,35 @@ function renderWriteField(field: ResolvedField, isParam: boolean, context: Rende
         `;
     }
 
+    if (field.input === "lookup" && field.lookup) {
+        return `
+            <div
+                class="dashboard-user-picker dashboard-lookup-picker"
+                ${attrs}
+                data-dashboard-lookup
+                data-dashboard-lookup-url="${escapeAttr(endpointUrl(context.group, field.lookup, { fieldAlias: "$form" }))}"
+                data-dashboard-lookup-items-path="${escapeAttr(field.lookup.itemsPath ?? "")}"
+                data-dashboard-lookup-value-path="${escapeAttr(field.lookup.valuePath)}"
+                data-dashboard-lookup-label-path="${escapeAttr(field.lookup.labelPath)}"
+                data-dashboard-lookup-description-paths="${escapeAttr(JSON.stringify(field.lookup.descriptionPaths ?? []))}"
+                data-dashboard-lookup-map="${escapeAttr(JSON.stringify(field.lookup.map ?? {}))}"
+            >
+                <label>${escapeHtml(field.label)}</label>
+                <div class="dashboard-user-control">
+                    <input
+                        type="search"
+                        placeholder="Search"
+                        autocomplete="off"
+                        role="combobox"
+                        aria-expanded="false"
+                        data-dashboard-lookup-search
+                    >
+                    <div class="dashboard-user-menu" role="listbox" data-dashboard-lookup-menu hidden></div>
+                </div>
+            </div>
+        `;
+    }
+
     if (field.input === "boolean") {
         return `
             <label class="dashboard-checkbox">
@@ -720,6 +832,14 @@ function renderWriteField(field: ResolvedField, isParam: boolean, context: Rende
                 </span>
                 <input class="dashboard-file-input" type="file" ${attrs} ${field.accept ? `accept="${escapeAttr(field.accept)}"` : ""}>
             </label>
+        `;
+    }
+
+    if (field.input === "select") {
+        return `
+            <p9r-select ${attrs} label="${escapeAttr(field.label)}">
+                ${(field.options ?? []).map(option => `<option value="${escapeAttr(option)}">${escapeHtml(option)}</option>`).join("")}
+            </p9r-select>
         `;
     }
 

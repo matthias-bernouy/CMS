@@ -20,7 +20,9 @@ export type {
     FieldInput,
     FieldMediaRef,
     FieldUploadRef,
+    FieldLookupRef,
     FilterSpec,
+    ActionWidgetLabels,
 } from "../interfaces/Dashboard";
 export type { DashboardRepository } from "../interfaces/DashboardRepository";
 export { InMemoryDashboardRepository } from "../default-implementation/InMemoryDashboardRepository";

@@ -13,7 +13,7 @@ import {
     type DashboardSelection,
     type DashboardUserOption,
 } from "./api";
-import { renderWidget } from "./domain";
+import { renderWidgetList } from "./domain";
 import { renderIcon } from "./icons";
 import type { DashboardSourceGroup } from "./types";
 
@@ -185,10 +185,9 @@ export class DashboardView extends Component {
             return;
         }
 
-        root.innerHTML = widgets
-            .map((widget, index) => renderWidget(widget, { group, dashboard, selectedRows }, `root.${index}`, this.tabState))
-            .join("");
+        root.innerHTML = renderWidgetList(widgets, { group, dashboard, selectedRows }, "root", this.tabState);
         void this.hydrateUserPickers();
+        void this.hydrateLookupFields();
     }
 
     private async handleSubmit(event: SubmitEvent): Promise<void> {
@@ -236,11 +235,16 @@ export class DashboardView extends Component {
                 return;
             }
 
+            const result = form.dataset.dashboardResultFields
+                ? await response.json().catch(() => null) as unknown
+                : null;
             form.reset();
+            resetCustomWriteFields(form);
             const successMessage = form.dataset.dashboardSuccessMessage || "Saved";
             setWriteState(state, `${successMessage}.`, "success");
+            const hasResult = renderWriteResult(form, result);
             showToast(successMessage, { type: "success" });
-            this.renderWidgets();
+            if (!hasResult) this.renderWidgets();
         } catch {
             setWriteState(state, "Network error", "error");
             showToast("Network error", { type: "error" });
@@ -254,11 +258,12 @@ export class DashboardView extends Component {
         const confirmLabel = button.dataset.dashboardActionConfirm;
         if (confirmLabel && !window.confirm(confirmLabel)) return;
 
-        const url = button.dataset.dashboardActionUrl;
-        if (!url) {
+        const rawUrl = button.dataset.dashboardActionUrl;
+        if (!rawUrl) {
             showToast("Missing action URL", { type: "error" });
             return;
         }
+        const url = resolveActionUrl(rawUrl);
 
         const previousDisabled = button.getAttribute("aria-disabled");
         button.setAttribute("aria-disabled", "true");
@@ -266,10 +271,11 @@ export class DashboardView extends Component {
         if (button instanceof HTMLButtonElement) button.disabled = true;
         try {
             const body = readActionBody(button);
+            const responseKind = button.dataset.dashboardActionResponseKind ?? "json";
             const response = await fetch(url, {
                 method: button.dataset.dashboardActionMethod || "POST",
                 headers: body === undefined
-                    ? { accept: "application/json" }
+                    ? { accept: responseKind === "file" ? button.dataset.dashboardActionMediaType || "*/*" : "application/json" }
                     : { accept: "application/json", "content-type": "application/json" },
                 ...(body === undefined ? {} : { body: JSON.stringify(body) }),
             });
@@ -278,10 +284,13 @@ export class DashboardView extends Component {
                 return;
             }
 
+            if (responseKind === "file") {
+                await downloadActionResponse(response, button);
+            }
             showToast(button.dataset.dashboardActionSuccessMessage || "Done", { type: "success" });
             if (button.dataset.dashboardActionScope === "detail-delete") {
                 this.clearDetailSelection();
-            } else {
+            } else if (button.dataset.dashboardActionRefresh !== "false") {
                 this.renderWidgets();
             }
         } catch {
@@ -298,12 +307,15 @@ export class DashboardView extends Component {
         const dialog = this.shadowRoot!.querySelector<HTMLDialogElement>(`[data-dashboard-write-dialog="${cssEscape(id)}"]`);
         if (!dialog) return;
         const form = dialog.querySelector<HTMLFormElement>("[data-dashboard-write]");
+        clearWriteResult(form);
         if (typeof dialog.showModal === "function") dialog.showModal();
         else dialog.setAttribute("open", "");
         void this.hydrateUserPickers(dialog);
+        void this.hydrateLookupFields(dialog);
         if (form?.dataset.dashboardLoadUrl) {
             await this.hydrateWriteForm(form);
             void this.hydrateUserPickers(dialog);
+            void this.hydrateLookupFields(dialog);
         }
     }
 
@@ -354,6 +366,12 @@ export class DashboardView extends Component {
             return users;
         });
         return this.userOptionsRequest;
+    }
+
+    private async hydrateLookupFields(root: ParentNode = this.shadowRoot!): Promise<void> {
+        for (const lookup of Array.from(root.querySelectorAll<HTMLElement>("[data-dashboard-lookup]"))) {
+            hydrateLookupField(lookup);
+        }
     }
 
     private activeGroup(): DashboardSourceGroup | null {
@@ -446,6 +464,36 @@ function readActionBody(button: HTMLElement): Record<string, unknown> | undefine
     }
 }
 
+function resolveActionUrl(template: string): string {
+    const params = new URLSearchParams(window.location.search);
+    return template.replace(/#\{([^}]+)\}/g, (_match, rawName: string) => {
+        const name = rawName.trim();
+        const paramName = name.startsWith("param.") ? name.slice("param.".length) : name;
+        return encodeURIComponent(params.get(paramName) ?? "");
+    });
+}
+
+async function downloadActionResponse(response: Response, button: HTMLElement): Promise<void> {
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = button.dataset.dashboardActionDownloadName ||
+        fileNameFromContentDisposition(response.headers.get("content-disposition")) ||
+        "download";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function fileNameFromContentDisposition(value: string | null): string {
+    if (!value) return "";
+    const utf8 = value.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    if (utf8) return decodeURIComponent(utf8.replace(/^"|"$/g, ""));
+    return value.match(/filename="?([^";]+)"?/i)?.[1] ?? "";
+}
+
 async function readWritePayload(form: HTMLFormElement): Promise<WritePayload> {
     const body: Record<string, unknown> = {};
     const params = new URLSearchParams();
@@ -462,6 +510,10 @@ async function readWritePayload(form: HTMLFormElement): Promise<WritePayload> {
             if (pending.upload) uploads.push(pending.upload);
             continue;
         }
+        if (control.dataset.dashboardFieldType === "lookup") {
+            const message = lookupSelectionError(control, name);
+            if (message) return { ok: false, message, control };
+        }
         const value = readFieldValue(control);
         const required = control.hasAttribute("required");
         if (required && isEmptyFieldValue(value)) {
@@ -475,6 +527,9 @@ async function readWritePayload(form: HTMLFormElement): Promise<WritePayload> {
             params.set(name, String(value));
         } else {
             setNestedValue(body, name, value);
+            for (const [target, mappedValue] of readLookupMappedValues(control)) {
+                if (!isEmptyFieldValue(mappedValue)) setNestedValue(body, target, mappedValue);
+            }
         }
     }
 
@@ -544,6 +599,7 @@ async function uploadFile(upload: PendingFileUpload, params: URLSearchParams): P
 function readFieldValue(control: HTMLElement): unknown {
     const type = control.dataset.dashboardFieldType ?? "text";
     if (type === "cms-user") return control.dataset.value ?? "";
+    if (type === "lookup") return control.dataset.value ?? "";
     if (control instanceof HTMLInputElement && control.type === "checkbox") return control.checked;
 
     const valueControl = control as HTMLElement & { value?: unknown };
@@ -556,6 +612,19 @@ function readFieldValue(control: HTMLElement): unknown {
         return Number.isFinite(value) ? value : raw;
     }
     return raw;
+}
+
+function readLookupMappedValues(control: HTMLElement): Array<[string, unknown]> {
+    if (control.dataset.dashboardFieldType !== "lookup") return [];
+    const raw = control.dataset.dashboardLookupMapped;
+    if (!raw) return [];
+    try {
+        const parsed = JSON.parse(raw) as unknown;
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return [];
+        return Object.entries(parsed as Record<string, unknown>);
+    } catch {
+        return [];
+    }
 }
 
 function isEmptyFieldValue(value: unknown): boolean {
@@ -596,6 +665,87 @@ function setWriteState(target: HTMLElement | null, message: string, kind = ""): 
     target.dataset.state = kind;
 }
 
+type WriteResultField = {
+    field: string;
+    label: string;
+    format?: string;
+};
+
+function renderWriteResult(form: HTMLFormElement, result: unknown): boolean {
+    const target = form.querySelector<HTMLElement>("[data-dashboard-write-result]");
+    if (!target) return false;
+    const fields = parseWriteResultFields(form.dataset.dashboardResultFields);
+    if (!fields.length || !isRecord(result)) {
+        target.replaceChildren();
+        target.hidden = true;
+        return false;
+    }
+
+    const list = document.createElement("dl");
+    for (const field of fields) {
+        const value = valueAtPathUnknown(result, field.field);
+        if (value === undefined || value === null || value === "") continue;
+
+        const row = document.createElement("div");
+        const label = document.createElement("dt");
+        const content = document.createElement("dd");
+        label.textContent = field.label;
+        appendWriteResultValue(content, value, field.format);
+        row.append(label, content);
+        list.append(row);
+    }
+
+    target.replaceChildren(list);
+    target.hidden = !list.children.length;
+    return !target.hidden;
+}
+
+function clearWriteResult(form: HTMLFormElement | null): void {
+    const target = form?.querySelector<HTMLElement>("[data-dashboard-write-result]");
+    if (!target) return;
+    target.replaceChildren();
+    target.hidden = true;
+}
+
+function parseWriteResultFields(value: string | undefined): WriteResultField[] {
+    if (!value) return [];
+    try {
+        const parsed = JSON.parse(value) as unknown;
+        if (!Array.isArray(parsed)) return [];
+        return parsed.flatMap(entry => {
+            if (!isRecord(entry) || typeof entry.field !== "string" || typeof entry.label !== "string") return [];
+            return [{
+                field: entry.field,
+                label: entry.label,
+                ...(typeof entry.format === "string" ? { format: entry.format } : {}),
+            }];
+        });
+    } catch {
+        return [];
+    }
+}
+
+function appendWriteResultValue(target: HTMLElement, value: unknown, format: string | undefined): void {
+    const text = String(value);
+    if (format === "url") {
+        const link = document.createElement("a");
+        link.href = text;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = text;
+        target.append(link);
+        return;
+    }
+    if (format === "badge") {
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = text;
+        target.append(badge);
+        return;
+    }
+    target.textContent = text;
+}
+
 function fillWriteForm(form: HTMLFormElement, item: Record<string, unknown>): void {
     const controls = Array.from(form.querySelectorAll<HTMLElement>("[data-dashboard-field]"));
     for (const control of controls) {
@@ -605,12 +755,44 @@ function fillWriteForm(form: HTMLFormElement, item: Record<string, unknown>): vo
     }
 }
 
+function resetCustomWriteFields(form: HTMLFormElement): void {
+    for (const control of Array.from(form.querySelectorAll<HTMLElement>("[data-dashboard-field]"))) {
+        const type = control.dataset.dashboardFieldType ?? "text";
+        if (type === "cms-user") {
+            delete control.dataset.value;
+            const input = control.querySelector<HTMLInputElement>("[data-dashboard-user-search]");
+            if (input) input.value = "";
+        }
+        if (type === "lookup") {
+            delete control.dataset.value;
+            delete control.dataset.dashboardLookupMapped;
+            delete control.dataset.dashboardLookupDisplay;
+            const input = control.querySelector<HTMLInputElement>("[data-dashboard-lookup-search]");
+            if (input) input.value = "";
+        }
+        if (control instanceof HTMLInputElement && control.type === "file") syncFileInputLabel(control);
+    }
+}
+
 function setFieldValue(control: HTMLElement, value: unknown): void {
     const type = control.dataset.dashboardFieldType ?? "text";
     if (type === "cms-user") {
         if (typeof value === "string" && value) control.dataset.value = value;
         else delete control.dataset.value;
         const input = control.querySelector<HTMLInputElement>("[data-dashboard-user-search]");
+        if (input) input.value = typeof value === "string" ? value : "";
+        return;
+    }
+    if (type === "lookup") {
+        if (typeof value === "string" && value) {
+            control.dataset.value = value;
+            control.dataset.dashboardLookupDisplay = value;
+        } else {
+            delete control.dataset.value;
+            delete control.dataset.dashboardLookupDisplay;
+        }
+        delete control.dataset.dashboardLookupMapped;
+        const input = control.querySelector<HTMLInputElement>("[data-dashboard-lookup-search]");
         if (input) input.value = typeof value === "string" ? value : "";
         return;
     }
@@ -806,8 +988,289 @@ function userSearchText(user: DashboardUserOption): string {
         .toLowerCase();
 }
 
+type LookupOption = {
+    value: string;
+    label: string;
+    description: string;
+    mapped: Record<string, unknown>;
+};
+
+function hydrateLookupField(lookup: HTMLElement): void {
+    const input = lookup.querySelector<HTMLInputElement>("[data-dashboard-lookup-search]");
+    const menu = lookup.querySelector<HTMLElement>("[data-dashboard-lookup-menu]");
+    const form = lookup.closest("form");
+    if (!input || !menu || !form) return;
+
+    if (lookup.dataset.dashboardLookupHydrated === "true") return;
+    lookup.dataset.dashboardLookupHydrated = "true";
+
+    let options: LookupOption[] = [];
+    let activeIndex = -1;
+    let requestId = 0;
+    let timer: number | null = null;
+
+    const clearSelection = () => {
+        delete lookup.dataset.value;
+        delete lookup.dataset.dashboardLookupMapped;
+        delete lookup.dataset.dashboardLookupDisplay;
+    };
+    const close = () => {
+        menu.hidden = true;
+        input.setAttribute("aria-expanded", "false");
+        activeIndex = -1;
+    };
+    const render = (items: LookupOption[], emptyLabel = "No results") => {
+        if (activeIndex >= items.length) activeIndex = items.length - 1;
+        renderLookupMenu(menu, items, activeIndex, emptyLabel);
+        menu.hidden = false;
+        input.setAttribute("aria-expanded", "true");
+        menu.querySelector(".active")?.scrollIntoView({ block: "nearest" });
+    };
+    const load = async (emptyLabel = "No results") => {
+        const currentRequest = ++requestId;
+        const url = resolveLookupUrl(lookup.dataset.dashboardLookupUrl ?? "", form, input.value);
+        if (!url) {
+            options = [];
+            render(options, "Fill the search fields first");
+            return;
+        }
+        render([], "Loading...");
+        try {
+            const response = await fetch(url, { headers: { accept: "application/json" } });
+            if (!response.ok) {
+                options = [];
+                render(options, await responseMessage(response));
+                return;
+            }
+            const data = await response.json() as unknown;
+            if (currentRequest !== requestId) return;
+            options = lookupOptionsFromResponse(lookup, data);
+            activeIndex = options.length ? 0 : -1;
+            render(matchingLookupOptions(options, input.value), emptyLabel);
+        } catch {
+            options = [];
+            render(options, "Unable to load options");
+        }
+    };
+    const scheduleLoad = () => {
+        if (timer) window.clearTimeout(timer);
+        timer = window.setTimeout(() => void load(), 220);
+    };
+    const select = (option: LookupOption) => {
+        lookup.dataset.value = option.value;
+        lookup.dataset.dashboardLookupDisplay = option.label;
+        lookup.dataset.dashboardLookupMapped = JSON.stringify(option.mapped);
+        input.value = option.label;
+        applyLookupMappedValues(form, option.mapped, lookup);
+        close();
+    };
+    const syncExactSelection = () => {
+        if (lookup.dataset.value && input.value.trim()) return;
+        const text = input.value.trim().toLowerCase();
+        const option = options.find(candidate =>
+            candidate.label.toLowerCase() === text || candidate.value.toLowerCase() === text);
+        if (option) select(option);
+        else clearSelection();
+    };
+
+    for (const dependency of lookupFieldDependencies(lookup.dataset.dashboardLookupUrl ?? "")) {
+        const control = findDashboardField(form, dependency);
+        control?.addEventListener("input", () => {
+            input.value = "";
+            clearSelection();
+            options = [];
+        });
+        control?.addEventListener("change", () => {
+            input.value = "";
+            clearSelection();
+            options = [];
+        });
+    }
+
+    input.addEventListener("focus", () => {
+        if (options.length) render(matchingLookupOptions(options, input.value));
+        else void load();
+    });
+    input.addEventListener("input", () => {
+        clearSelection();
+        activeIndex = 0;
+        scheduleLoad();
+    });
+    input.addEventListener("change", syncExactSelection);
+    input.addEventListener("blur", () => {
+        syncExactSelection();
+        window.setTimeout(close, 120);
+    });
+    input.addEventListener("keydown", (event) => {
+        const matches = matchingLookupOptions(options, input.value);
+        if (event.key === "ArrowDown") {
+            activeIndex = Math.min(activeIndex + 1, Math.max(matches.length - 1, 0));
+            render(matches);
+            event.preventDefault();
+            return;
+        }
+        if (event.key === "ArrowUp") {
+            activeIndex = Math.max(activeIndex - 1, 0);
+            render(matches);
+            event.preventDefault();
+            return;
+        }
+        if (event.key === "Enter" && activeIndex >= 0 && matches[activeIndex]) {
+            select(matches[activeIndex]!);
+            event.preventDefault();
+            return;
+        }
+        if (event.key === "Escape") {
+            close();
+            event.preventDefault();
+        }
+    });
+    menu.addEventListener("mousedown", event => event.preventDefault());
+    menu.addEventListener("click", (event) => {
+        const option = (event.target as Element | null)?.closest<HTMLElement>("[data-dashboard-lookup-index]");
+        const index = Number(option?.dataset.dashboardLookupIndex);
+        const match = matchingLookupOptions(options, input.value)[index];
+        if (match) select(match);
+    });
+}
+
+function lookupOptionsFromResponse(lookup: HTMLElement, data: unknown): LookupOption[] {
+    const itemsPath = lookup.dataset.dashboardLookupItemsPath ?? "";
+    const valuePath = lookup.dataset.dashboardLookupValuePath ?? "";
+    const labelPath = lookup.dataset.dashboardLookupLabelPath ?? "";
+    const descriptionPaths = jsonStringArray(lookup.dataset.dashboardLookupDescriptionPaths);
+    const map = jsonStringRecord(lookup.dataset.dashboardLookupMap);
+    const rawItems = itemsPath ? valueAtPathUnknown(data, itemsPath) : data;
+    if (!Array.isArray(rawItems)) return [];
+
+    return rawItems.flatMap(item => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+        const value = valueAtPathUnknown(item, valuePath);
+        const label = valueAtPathUnknown(item, labelPath);
+        if (value === undefined || value === null || label === undefined || label === null) return [];
+        const mapped: Record<string, unknown> = {};
+        for (const [target, source] of Object.entries(map)) {
+            mapped[target] = valueAtPathUnknown(item, source);
+        }
+        return [{
+            value: String(value),
+            label: String(label),
+            description: descriptionPaths
+                .map(path => valueAtPathUnknown(item, path))
+                .filter(value => value !== undefined && value !== null && value !== "")
+                .map(String)
+                .join(" · "),
+            mapped,
+        }];
+    });
+}
+
+function renderLookupMenu(menu: HTMLElement, options: LookupOption[], activeIndex: number, emptyLabel: string): void {
+    menu.replaceChildren();
+    if (!options.length) {
+        const empty = document.createElement("div");
+        empty.className = "dashboard-user-empty";
+        empty.textContent = emptyLabel;
+        menu.append(empty);
+        return;
+    }
+    options.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `dashboard-user-option${index === activeIndex ? " active" : ""}`;
+        button.dataset.dashboardLookupIndex = String(index);
+        button.setAttribute("role", "option");
+        button.setAttribute("aria-selected", index === activeIndex ? "true" : "false");
+
+        const title = document.createElement("span");
+        title.textContent = option.label;
+        const meta = document.createElement("small");
+        meta.textContent = option.description || option.value;
+        button.append(title, meta);
+        menu.append(button);
+    });
+}
+
+function matchingLookupOptions(options: LookupOption[], query: string): LookupOption[] {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return options.slice(0, 20);
+    return options.filter(option =>
+        `${option.label} ${option.value} ${option.description}`.toLowerCase().includes(normalized)).slice(0, 20);
+}
+
+function lookupSelectionError(control: HTMLElement, name: string): string | null {
+    const input = control.querySelector<HTMLInputElement>("[data-dashboard-lookup-search]");
+    const visible = input?.value.trim() ?? "";
+    const value = control.dataset.value ?? "";
+    if (!visible && !value) return null;
+    if (!value) return `${fieldLabel(control, name)} must be selected from the list`;
+    const display = control.dataset.dashboardLookupDisplay ?? value;
+    if (visible && visible !== display) return `${fieldLabel(control, name)} must be selected from the list`;
+    return null;
+}
+
+function applyLookupMappedValues(form: HTMLFormElement, mapped: Record<string, unknown>, source?: HTMLElement): void {
+    for (const [field, value] of Object.entries(mapped)) {
+        const control = findDashboardField(form, field);
+        if (control && control !== source) setFieldValue(control, value);
+    }
+}
+
+function resolveLookupUrl(template: string, form: HTMLFormElement, search: string): string {
+    return template.replace(/#\{([^}]+)\}/g, (_match, rawName: string) => {
+        const name = rawName.trim();
+        if (name === "lookup.search") return encodeURIComponent(search.trim());
+        if (name.startsWith("field.")) {
+            const value = fieldValueForUrl(form, name.slice("field.".length));
+            return encodeURIComponent(value);
+        }
+        return "";
+    });
+}
+
+function fieldValueForUrl(form: HTMLFormElement, name: string): string {
+    const control = findDashboardField(form, name);
+    const value = control ? readFieldValue(control) : "";
+    return value === undefined || value === null ? "" : String(value);
+}
+
+function findDashboardField(form: HTMLFormElement, name: string): HTMLElement | null {
+    for (const control of Array.from(form.querySelectorAll<HTMLElement>("[data-dashboard-field]"))) {
+        if (control.getAttribute("name") === name) return control;
+    }
+    return null;
+}
+
+function lookupFieldDependencies(template: string): string[] {
+    return Array.from(template.matchAll(/#\{field\.([^}]+)\}/g), match => match[1]!.trim()).filter(Boolean);
+}
+
+function jsonStringArray(value: string | undefined): string[] {
+    try {
+        const parsed = value ? JSON.parse(value) as unknown : [];
+        return Array.isArray(parsed) ? parsed.filter((entry): entry is string => typeof entry === "string" && Boolean(entry)) : [];
+    } catch {
+        return [];
+    }
+}
+
+function jsonStringRecord(value: string | undefined): Record<string, string> {
+    try {
+        const parsed = value ? JSON.parse(value) as unknown : {};
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+        return Object.fromEntries(Object.entries(parsed as Record<string, unknown>)
+            .filter((entry): entry is [string, string] => typeof entry[1] === "string" && Boolean(entry[1])));
+    } catch {
+        return {};
+    }
+}
+
 function cssEscape(value: string): string {
     return value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
 function mainWidgetsFor(widgets: DashboardWidget[]): DashboardWidget[] {
@@ -857,5 +1320,10 @@ function detailWidgetsFor(widgets: DashboardWidget[], collection: string): Dashb
     }
     return [...result, ...deleteWidgets];
 }
+
+export const __dashboardViewTestInternals = {
+    applyLookupMappedValues,
+    readWritePayload,
+};
 
 if (!customElements.get("cms-dashboards-admin")) customElements.define("cms-dashboards-admin", DashboardView);

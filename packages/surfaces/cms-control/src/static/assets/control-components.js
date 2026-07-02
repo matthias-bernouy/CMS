@@ -5424,10 +5424,15 @@ p9r-tag:hover {
       t.textContent = "", t.style.display = "none";
   };
   var gt = (t, e, r) => {
-    if (r)
-      t.setAttribute("active", ""), t.setAttribute("aria-current", "page"), e?.classList.add("active");
-    else
-      t.removeAttribute("active"), t.removeAttribute("aria-current"), e?.classList.remove("active");
+    if (r) {
+      if (!t.hasAttribute("active"))
+        t.setAttribute("active", "");
+      t.setAttribute("aria-current", "page"), e?.classList.add("active");
+    } else {
+      if (t.hasAttribute("active"))
+        t.removeAttribute("active");
+      t.removeAttribute("aria-current"), e?.classList.remove("active");
+    }
   };
   var ft = (t, e) => {
     if (t.hasAttribute("active")) {
@@ -12157,6 +12162,13 @@ p {
     overflow: hidden;
 }
 
+.dashboard-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .dashboard-create-action {
     display: flex;
     justify-content: flex-start;
@@ -12189,6 +12201,7 @@ p {
     background: var(--danger-strong, #862525);
 }
 
+.dashboard-create-action button:disabled,
 .dashboard-delete-action button:disabled,
 .dashboard-row-actions .dashboard-action:disabled {
     cursor: wait;
@@ -12370,6 +12383,34 @@ p {
 
 .dashboard-create-state {
     padding: 0 18px 18px;
+}
+
+.dashboard-write-result {
+    padding: 0 18px 18px;
+}
+
+.dashboard-write-result dl {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+}
+
+.dashboard-write-result div {
+    display: grid;
+    gap: 4px;
+}
+
+.dashboard-write-result dt {
+    color: var(--text-muted, #66736f);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.dashboard-write-result dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .dashboard-create-state[data-state="success"] {
@@ -12969,16 +13010,44 @@ p {
         return renderUpdate(widget, context, key);
       case "w-delete":
         return renderDelete(widget, context);
+      case "w-action":
+        return renderAction(widget, context);
       default:
         return `<section class="panel empty"><strong>Unsupported widget</strong></section>`;
     }
+  }
+  function renderWidgetList(widgets, context, key, tabState) {
+    const chunks = [];
+    let actions = [];
+    const flushActions = () => {
+      if (!actions.length)
+        return;
+      chunks.push(`<div class="dashboard-actions-bar">${actions.join("")}</div>`);
+      actions = [];
+    };
+    widgets.forEach((widget, index) => {
+      const rendered = renderWidget(widget, context, `${key}.${index}`, tabState);
+      if (!rendered.trim())
+        return;
+      if (isInlineActionWidget(widget)) {
+        actions.push(rendered);
+        return;
+      }
+      flushActions();
+      chunks.push(rendered);
+    });
+    flushActions();
+    return chunks.join("");
+  }
+  function isInlineActionWidget(widget) {
+    return widget.widget === "w-create" || widget.widget === "w-update" || widget.widget === "w-delete" || widget.widget === "w-action";
   }
   function renderSection(widget, context, key, tabState) {
     return `
         <section class="widget-section">
             ${widget.title ? `<h3>${escapeHtml2(widget.title)}</h3>` : ""}
             <div class="widget-stack">
-                ${widget.children.map((child, index) => renderWidget(child, context, `${key}.${index}`, tabState)).join("")}
+                ${renderWidgetList(widget.children, context, key, tabState)}
             </div>
         </section>
     `;
@@ -12996,7 +13065,7 @@ p {
                 `).join("")}
             </div>
             <div class="tab-body">
-                ${active ? active.children.map((child, index) => renderWidget(child, context, `${key}.${activeIndex}.${index}`, tabState)).join("") : ""}
+                ${active ? renderWidgetList(active.children, context, `${key}.${activeIndex}`, tabState) : ""}
             </div>
         </section>
     `;
@@ -13148,6 +13217,7 @@ p {
     const modalId = `dashboard-create-${safeDomId(key)}`;
     const label = writeLabel(widget, "Create");
     const submitLabel = writeSubmitLabel(widget, label);
+    const resultFields = resolveWriteResultFields(widget.resultFields, endpoint);
     return `
         <section class="dashboard-create-action">
             <button type="button" data-dashboard-write-open="${escapeAttr2(modalId)}">${escapeHtml2(label)}</button>
@@ -13158,7 +13228,8 @@ p {
                 data-dashboard-write
                 data-dashboard-url="${escapeAttr2(url)}"
                 data-dashboard-method="${escapeAttr2(endpoint.method)}"
-                data-dashboard-success-message="Created"
+                data-dashboard-success-message="${escapeAttr2(widget.successMessage ?? "Created")}"
+                ${resultFields.length ? `data-dashboard-result-fields="${escapeAttr2(JSON.stringify(resultFields))}"` : ""}
             >
                 <div class="dashboard-create-head">
                     <strong>${escapeHtml2(label)}</strong>
@@ -13172,6 +13243,7 @@ p {
                     <button type="submit">${escapeHtml2(submitLabel)}</button>
                 </div>
                 <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
+                <div class="dashboard-write-result" data-dashboard-write-result hidden></div>
             </form>
         </dialog>
     `;
@@ -13205,6 +13277,7 @@ p {
     const modalId = `dashboard-update-${safeDomId(key)}`;
     const label = writeLabel(widget, "Edit");
     const submitLabel = writeSubmitLabel(widget, label);
+    const resultFields = resolveWriteResultFields(widget.resultFields, endpoint);
     return `
         <section class="dashboard-create-action">
             <button type="button" data-dashboard-write-open="${escapeAttr2(modalId)}">${escapeHtml2(label)}</button>
@@ -13216,7 +13289,8 @@ p {
                 data-dashboard-url="${escapeAttr2(url)}"
                 data-dashboard-load-url="${escapeAttr2(loadUrl)}"
                 data-dashboard-method="${escapeAttr2(endpoint.method)}"
-                data-dashboard-success-message="Updated"
+                data-dashboard-success-message="${escapeAttr2(widget.successMessage ?? "Updated")}"
+                ${resultFields.length ? `data-dashboard-result-fields="${escapeAttr2(JSON.stringify(resultFields))}"` : ""}
             >
                 <div class="dashboard-create-head">
                     <strong>${escapeHtml2(label)}</strong>
@@ -13230,6 +13304,7 @@ p {
                     <button type="submit">${escapeHtml2(submitLabel)}</button>
                 </div>
                 <p class="state dashboard-create-state" data-dashboard-write-state hidden></p>
+                <div class="dashboard-write-result" data-dashboard-write-result hidden></div>
             </form>
         </dialog>
     `;
@@ -13261,6 +13336,26 @@ p {
                 data-dashboard-action-confirm="${escapeAttr2(widget.confirmLabel ?? "Delete this item?")}"
                 ${widget.body ? `data-dashboard-action-body="${escapeAttr2(JSON.stringify(widget.body))}"` : ""}
             >${escapeHtml2(label)}</button>
+        </section>
+    `;
+  }
+  function renderAction(widget, context) {
+    const endpoint = endpointById(context.group, widget.endpoint);
+    if (!endpoint)
+      return renderMissing(`Unknown endpoint "${widget.endpoint}"`);
+    return `
+        <section class="dashboard-create-action dashboard-generic-action">
+            <button
+                type="button"
+                data-dashboard-action
+                data-dashboard-action-url="${escapeAttr2(endpointUrl(context.group, widget))}"
+                data-dashboard-action-method="${escapeAttr2(endpoint.method)}"
+                data-dashboard-action-response-kind="${escapeAttr2(endpoint.responseKind ?? "json")}"
+                data-dashboard-action-media-type="${escapeAttr2(endpoint.mediaType ?? "")}"
+                data-dashboard-action-success-message="${escapeAttr2(widget.successMessage ?? "Done")}"
+                ${widget.downloadName ? `data-dashboard-action-download-name="${escapeAttr2(widget.downloadName)}"` : ""}
+                ${widget.refresh === false ? `data-dashboard-action-refresh="false"` : ""}
+            >${escapeHtml2(widget.label)}</button>
         </section>
     `;
   }
@@ -13346,9 +13441,11 @@ p {
           format: field.format,
           required: field.required,
           readonly: field.readonly,
+          options: field.options,
           accept: field.accept,
           media: field.media,
-          upload: field.upload
+          upload: field.upload,
+          lookup: field.lookup
         };
       });
     }
@@ -13375,6 +13472,15 @@ p {
       input: field.input,
       format: inferFieldFormat(field.path),
       required: field.required
+    }));
+  }
+  function resolveWriteResultFields(fields, endpoint) {
+    if (!fields?.length)
+      return [];
+    return resolveFields(fields, endpoint).map((field) => ({
+      field: field.field,
+      label: field.label,
+      ...field.format ? { format: field.format } : {}
     }));
   }
   function listItemShape(endpoint, collection) {
@@ -13451,8 +13557,14 @@ p {
         return encodeURIComponent(options.selection);
       return `{{ row.${rowPath} }}`;
     }
-    if (expr.startsWith("$field."))
-      return `{{ ${options.fieldAlias ?? "item"}.${expr.slice("$field.".length)} }}`;
+    if (expr.startsWith("$lookup."))
+      return `#{lookup.${expr.slice("$lookup.".length)}}`;
+    if (expr.startsWith("$field.")) {
+      const field = expr.slice("$field.".length);
+      if (options.fieldAlias === "$form")
+        return `#{field.${field}}`;
+      return `{{ ${options.fieldAlias ?? "item"}.${field} }}`;
+    }
     return encodeURIComponent(expr);
   }
   function rowSelectionAttributes(collection) {
@@ -13543,6 +13655,34 @@ p {
             </div>
         `;
     }
+    if (field.input === "lookup" && field.lookup) {
+      return `
+            <div
+                class="dashboard-user-picker dashboard-lookup-picker"
+                ${attrs}
+                data-dashboard-lookup
+                data-dashboard-lookup-url="${escapeAttr2(endpointUrl(context.group, field.lookup, { fieldAlias: "$form" }))}"
+                data-dashboard-lookup-items-path="${escapeAttr2(field.lookup.itemsPath ?? "")}"
+                data-dashboard-lookup-value-path="${escapeAttr2(field.lookup.valuePath)}"
+                data-dashboard-lookup-label-path="${escapeAttr2(field.lookup.labelPath)}"
+                data-dashboard-lookup-description-paths="${escapeAttr2(JSON.stringify(field.lookup.descriptionPaths ?? []))}"
+                data-dashboard-lookup-map="${escapeAttr2(JSON.stringify(field.lookup.map ?? {}))}"
+            >
+                <label>${escapeHtml2(field.label)}</label>
+                <div class="dashboard-user-control">
+                    <input
+                        type="search"
+                        placeholder="Search"
+                        autocomplete="off"
+                        role="combobox"
+                        aria-expanded="false"
+                        data-dashboard-lookup-search
+                    >
+                    <div class="dashboard-user-menu" role="listbox" data-dashboard-lookup-menu hidden></div>
+                </div>
+            </div>
+        `;
+    }
     if (field.input === "boolean") {
       return `
             <label class="dashboard-checkbox">
@@ -13561,6 +13701,13 @@ p {
                 </span>
                 <input class="dashboard-file-input" type="file" ${attrs} ${field.accept ? `accept="${escapeAttr2(field.accept)}"` : ""}>
             </label>
+        `;
+    }
+    if (field.input === "select") {
+      return `
+            <p9r-select ${attrs} label="${escapeAttr2(field.label)}">
+                ${(field.options ?? []).map((option) => `<option value="${escapeAttr2(option)}">${escapeHtml2(option)}</option>`).join("")}
+            </p9r-select>
         `;
     }
     return `
@@ -13793,8 +13940,9 @@ p {
             `;
         return;
       }
-      root.innerHTML = widgets.map((widget, index) => renderWidget(widget, { group, dashboard, selectedRows }, `root.${index}`, this.tabState)).join("");
+      root.innerHTML = renderWidgetList(widgets, { group, dashboard, selectedRows }, "root", this.tabState);
       this.hydrateUserPickers();
+      this.hydrateLookupFields();
     }
     async handleSubmit(event) {
       const target = event.target;
@@ -13838,11 +13986,15 @@ p {
           xc(message, { type: "error" });
           return;
         }
+        const result = form.dataset.dashboardResultFields ? await response.json().catch(() => null) : null;
         form.reset();
+        resetCustomWriteFields(form);
         const successMessage = form.dataset.dashboardSuccessMessage || "Saved";
         setWriteState(state, `${successMessage}.`, "success");
+        const hasResult = renderWriteResult(form, result);
         xc(successMessage, { type: "success" });
-        this.renderWidgets();
+        if (!hasResult)
+          this.renderWidgets();
       } catch {
         setWriteState(state, "Network error", "error");
         xc("Network error", { type: "error" });
@@ -13856,11 +14008,12 @@ p {
       const confirmLabel = button.dataset.dashboardActionConfirm;
       if (confirmLabel && !window.confirm(confirmLabel))
         return;
-      const url = button.dataset.dashboardActionUrl;
-      if (!url) {
+      const rawUrl = button.dataset.dashboardActionUrl;
+      if (!rawUrl) {
         xc("Missing action URL", { type: "error" });
         return;
       }
+      const url = resolveActionUrl(rawUrl);
       const previousDisabled = button.getAttribute("aria-disabled");
       button.setAttribute("aria-disabled", "true");
       button.setAttribute("aria-busy", "true");
@@ -13868,19 +14021,23 @@ p {
         button.disabled = true;
       try {
         const body = readActionBody(button);
+        const responseKind = button.dataset.dashboardActionResponseKind ?? "json";
         const response = await fetch(url, {
           method: button.dataset.dashboardActionMethod || "POST",
-          headers: body === undefined ? { accept: "application/json" } : { accept: "application/json", "content-type": "application/json" },
+          headers: body === undefined ? { accept: responseKind === "file" ? button.dataset.dashboardActionMediaType || "*/*" : "application/json" } : { accept: "application/json", "content-type": "application/json" },
           ...body === undefined ? {} : { body: JSON.stringify(body) }
         });
         if (!response.ok) {
           xc(await responseMessage(response), { type: "error" });
           return;
         }
+        if (responseKind === "file") {
+          await downloadActionResponse(response, button);
+        }
         xc(button.dataset.dashboardActionSuccessMessage || "Done", { type: "success" });
         if (button.dataset.dashboardActionScope === "detail-delete") {
           this.clearDetailSelection();
-        } else {
+        } else if (button.dataset.dashboardActionRefresh !== "false") {
           this.renderWidgets();
         }
       } catch {
@@ -13900,14 +14057,17 @@ p {
       if (!dialog)
         return;
       const form = dialog.querySelector("[data-dashboard-write]");
+      clearWriteResult(form);
       if (typeof dialog.showModal === "function")
         dialog.showModal();
       else
         dialog.setAttribute("open", "");
       this.hydrateUserPickers(dialog);
+      this.hydrateLookupFields(dialog);
       if (form?.dataset.dashboardLoadUrl) {
         await this.hydrateWriteForm(form);
         this.hydrateUserPickers(dialog);
+        this.hydrateLookupFields(dialog);
       }
     }
     closeWriteDialog(target) {
@@ -13959,6 +14119,11 @@ p {
         return users;
       });
       return this.userOptionsRequest;
+    }
+    async hydrateLookupFields(root = this.shadowRoot) {
+      for (const lookup of Array.from(root.querySelectorAll("[data-dashboard-lookup]"))) {
+        hydrateLookupField(lookup);
+      }
     }
     activeGroup() {
       return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
@@ -14021,6 +14186,33 @@ p {
       return;
     }
   }
+  function resolveActionUrl(template) {
+    const params = new URLSearchParams(window.location.search);
+    return template.replace(/#\{([^}]+)\}/g, (_match, rawName) => {
+      const name = rawName.trim();
+      const paramName = name.startsWith("param.") ? name.slice("param.".length) : name;
+      return encodeURIComponent(params.get(paramName) ?? "");
+    });
+  }
+  async function downloadActionResponse(response, button) {
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = button.dataset.dashboardActionDownloadName || fileNameFromContentDisposition(response.headers.get("content-disposition")) || "download";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+  function fileNameFromContentDisposition(value) {
+    if (!value)
+      return "";
+    const utf8 = value.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    if (utf8)
+      return decodeURIComponent(utf8.replace(/^"|"$/g, ""));
+    return value.match(/filename="?([^";]+)"?/i)?.[1] ?? "";
+  }
   async function readWritePayload(form) {
     const body = {};
     const params = new URLSearchParams;
@@ -14040,6 +14232,11 @@ p {
           uploads.push(pending.upload);
         continue;
       }
+      if (control.dataset.dashboardFieldType === "lookup") {
+        const message = lookupSelectionError(control, name);
+        if (message)
+          return { ok: false, message, control };
+      }
       const value = readFieldValue(control);
       const required = control.hasAttribute("required");
       if (required && isEmptyFieldValue(value)) {
@@ -14054,6 +14251,10 @@ p {
         params.set(name, String(value));
       } else {
         setNestedValue(body, name, value);
+        for (const [target, mappedValue] of readLookupMappedValues(control)) {
+          if (!isEmptyFieldValue(mappedValue))
+            setNestedValue(body, target, mappedValue);
+        }
       }
     }
     for (const upload of uploads) {
@@ -14122,6 +14323,8 @@ p {
     const type = control.dataset.dashboardFieldType ?? "text";
     if (type === "cms-user")
       return control.dataset.value ?? "";
+    if (type === "lookup")
+      return control.dataset.value ?? "";
     if (control instanceof HTMLInputElement && control.type === "checkbox")
       return control.checked;
     const valueControl = control;
@@ -14133,6 +14336,21 @@ p {
       return Number.isFinite(value) ? value : raw;
     }
     return raw;
+  }
+  function readLookupMappedValues(control) {
+    if (control.dataset.dashboardFieldType !== "lookup")
+      return [];
+    const raw = control.dataset.dashboardLookupMapped;
+    if (!raw)
+      return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+        return [];
+      return Object.entries(parsed);
+    } catch {
+      return [];
+    }
   }
   function isEmptyFieldValue(value) {
     return value === "" || value === null || value === undefined;
@@ -14170,6 +14388,80 @@ p {
     target.hidden = !message;
     target.dataset.state = kind;
   }
+  function renderWriteResult(form, result) {
+    const target = form.querySelector("[data-dashboard-write-result]");
+    if (!target)
+      return false;
+    const fields = parseWriteResultFields(form.dataset.dashboardResultFields);
+    if (!fields.length || !isRecord2(result)) {
+      target.replaceChildren();
+      target.hidden = true;
+      return false;
+    }
+    const list = document.createElement("dl");
+    for (const field of fields) {
+      const value = valueAtPathUnknown(result, field.field);
+      if (value === undefined || value === null || value === "")
+        continue;
+      const row = document.createElement("div");
+      const label = document.createElement("dt");
+      const content = document.createElement("dd");
+      label.textContent = field.label;
+      appendWriteResultValue(content, value, field.format);
+      row.append(label, content);
+      list.append(row);
+    }
+    target.replaceChildren(list);
+    target.hidden = !list.children.length;
+    return !target.hidden;
+  }
+  function clearWriteResult(form) {
+    const target = form?.querySelector("[data-dashboard-write-result]");
+    if (!target)
+      return;
+    target.replaceChildren();
+    target.hidden = true;
+  }
+  function parseWriteResultFields(value) {
+    if (!value)
+      return [];
+    try {
+      const parsed = JSON.parse(value);
+      if (!Array.isArray(parsed))
+        return [];
+      return parsed.flatMap((entry) => {
+        if (!isRecord2(entry) || typeof entry.field !== "string" || typeof entry.label !== "string")
+          return [];
+        return [{
+          field: entry.field,
+          label: entry.label,
+          ...typeof entry.format === "string" ? { format: entry.format } : {}
+        }];
+      });
+    } catch {
+      return [];
+    }
+  }
+  function appendWriteResultValue(target, value, format) {
+    const text = String(value);
+    if (format === "url") {
+      const link = document.createElement("a");
+      link.href = text;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = text;
+      target.append(link);
+      return;
+    }
+    if (format === "badge") {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = text;
+      target.append(badge);
+      return;
+    }
+    target.textContent = text;
+  }
   function fillWriteForm(form, item) {
     const controls = Array.from(form.querySelectorAll("[data-dashboard-field]"));
     for (const control of controls) {
@@ -14177,6 +14469,27 @@ p {
       if (!name)
         continue;
       setFieldValue(control, valueAtPath(item, name));
+    }
+  }
+  function resetCustomWriteFields(form) {
+    for (const control of Array.from(form.querySelectorAll("[data-dashboard-field]"))) {
+      const type = control.dataset.dashboardFieldType ?? "text";
+      if (type === "cms-user") {
+        delete control.dataset.value;
+        const input = control.querySelector("[data-dashboard-user-search]");
+        if (input)
+          input.value = "";
+      }
+      if (type === "lookup") {
+        delete control.dataset.value;
+        delete control.dataset.dashboardLookupMapped;
+        delete control.dataset.dashboardLookupDisplay;
+        const input = control.querySelector("[data-dashboard-lookup-search]");
+        if (input)
+          input.value = "";
+      }
+      if (control instanceof HTMLInputElement && control.type === "file")
+        syncFileInputLabel(control);
     }
   }
   function setFieldValue(control, value) {
@@ -14187,6 +14500,20 @@ p {
       else
         delete control.dataset.value;
       const input = control.querySelector("[data-dashboard-user-search]");
+      if (input)
+        input.value = typeof value === "string" ? value : "";
+      return;
+    }
+    if (type === "lookup") {
+      if (typeof value === "string" && value) {
+        control.dataset.value = value;
+        control.dataset.dashboardLookupDisplay = value;
+      } else {
+        delete control.dataset.value;
+        delete control.dataset.dashboardLookupDisplay;
+      }
+      delete control.dataset.dashboardLookupMapped;
+      const input = control.querySelector("[data-dashboard-lookup-search]");
       if (input)
         input.value = typeof value === "string" ? value : "";
       return;
@@ -14372,8 +14699,277 @@ p {
   function userSearchText(user) {
     return [user.displayName, user.email, user.sub, userLabel(user)].filter((entry) => typeof entry === "string" && Boolean(entry)).join(" ").toLowerCase();
   }
+  function hydrateLookupField(lookup) {
+    const input = lookup.querySelector("[data-dashboard-lookup-search]");
+    const menu = lookup.querySelector("[data-dashboard-lookup-menu]");
+    const form = lookup.closest("form");
+    if (!input || !menu || !form)
+      return;
+    if (lookup.dataset.dashboardLookupHydrated === "true")
+      return;
+    lookup.dataset.dashboardLookupHydrated = "true";
+    let options = [];
+    let activeIndex = -1;
+    let requestId = 0;
+    let timer = null;
+    const clearSelection = () => {
+      delete lookup.dataset.value;
+      delete lookup.dataset.dashboardLookupMapped;
+      delete lookup.dataset.dashboardLookupDisplay;
+    };
+    const close = () => {
+      menu.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+      activeIndex = -1;
+    };
+    const render = (items, emptyLabel = "No results") => {
+      if (activeIndex >= items.length)
+        activeIndex = items.length - 1;
+      renderLookupMenu(menu, items, activeIndex, emptyLabel);
+      menu.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      menu.querySelector(".active")?.scrollIntoView({ block: "nearest" });
+    };
+    const load = async (emptyLabel = "No results") => {
+      const currentRequest = ++requestId;
+      const url = resolveLookupUrl(lookup.dataset.dashboardLookupUrl ?? "", form, input.value);
+      if (!url) {
+        options = [];
+        render(options, "Fill the search fields first");
+        return;
+      }
+      render([], "Loading...");
+      try {
+        const response = await fetch(url, { headers: { accept: "application/json" } });
+        if (!response.ok) {
+          options = [];
+          render(options, await responseMessage(response));
+          return;
+        }
+        const data = await response.json();
+        if (currentRequest !== requestId)
+          return;
+        options = lookupOptionsFromResponse(lookup, data);
+        activeIndex = options.length ? 0 : -1;
+        render(matchingLookupOptions(options, input.value), emptyLabel);
+      } catch {
+        options = [];
+        render(options, "Unable to load options");
+      }
+    };
+    const scheduleLoad = () => {
+      if (timer)
+        window.clearTimeout(timer);
+      timer = window.setTimeout(() => void load(), 220);
+    };
+    const select = (option) => {
+      lookup.dataset.value = option.value;
+      lookup.dataset.dashboardLookupDisplay = option.label;
+      lookup.dataset.dashboardLookupMapped = JSON.stringify(option.mapped);
+      input.value = option.label;
+      applyLookupMappedValues(form, option.mapped, lookup);
+      close();
+    };
+    const syncExactSelection = () => {
+      if (lookup.dataset.value && input.value.trim())
+        return;
+      const text = input.value.trim().toLowerCase();
+      const option = options.find((candidate) => candidate.label.toLowerCase() === text || candidate.value.toLowerCase() === text);
+      if (option)
+        select(option);
+      else
+        clearSelection();
+    };
+    for (const dependency of lookupFieldDependencies(lookup.dataset.dashboardLookupUrl ?? "")) {
+      const control = findDashboardField(form, dependency);
+      control?.addEventListener("input", () => {
+        input.value = "";
+        clearSelection();
+        options = [];
+      });
+      control?.addEventListener("change", () => {
+        input.value = "";
+        clearSelection();
+        options = [];
+      });
+    }
+    input.addEventListener("focus", () => {
+      if (options.length)
+        render(matchingLookupOptions(options, input.value));
+      else
+        load();
+    });
+    input.addEventListener("input", () => {
+      clearSelection();
+      activeIndex = 0;
+      scheduleLoad();
+    });
+    input.addEventListener("change", syncExactSelection);
+    input.addEventListener("blur", () => {
+      syncExactSelection();
+      window.setTimeout(close, 120);
+    });
+    input.addEventListener("keydown", (event) => {
+      const matches = matchingLookupOptions(options, input.value);
+      if (event.key === "ArrowDown") {
+        activeIndex = Math.min(activeIndex + 1, Math.max(matches.length - 1, 0));
+        render(matches);
+        event.preventDefault();
+        return;
+      }
+      if (event.key === "ArrowUp") {
+        activeIndex = Math.max(activeIndex - 1, 0);
+        render(matches);
+        event.preventDefault();
+        return;
+      }
+      if (event.key === "Enter" && activeIndex >= 0 && matches[activeIndex]) {
+        select(matches[activeIndex]);
+        event.preventDefault();
+        return;
+      }
+      if (event.key === "Escape") {
+        close();
+        event.preventDefault();
+      }
+    });
+    menu.addEventListener("mousedown", (event) => event.preventDefault());
+    menu.addEventListener("click", (event) => {
+      const option = event.target?.closest("[data-dashboard-lookup-index]");
+      const index = Number(option?.dataset.dashboardLookupIndex);
+      const match = matchingLookupOptions(options, input.value)[index];
+      if (match)
+        select(match);
+    });
+  }
+  function lookupOptionsFromResponse(lookup, data) {
+    const itemsPath = lookup.dataset.dashboardLookupItemsPath ?? "";
+    const valuePath = lookup.dataset.dashboardLookupValuePath ?? "";
+    const labelPath = lookup.dataset.dashboardLookupLabelPath ?? "";
+    const descriptionPaths = jsonStringArray(lookup.dataset.dashboardLookupDescriptionPaths);
+    const map = jsonStringRecord(lookup.dataset.dashboardLookupMap);
+    const rawItems = itemsPath ? valueAtPathUnknown(data, itemsPath) : data;
+    if (!Array.isArray(rawItems))
+      return [];
+    return rawItems.flatMap((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item))
+        return [];
+      const value = valueAtPathUnknown(item, valuePath);
+      const label = valueAtPathUnknown(item, labelPath);
+      if (value === undefined || value === null || label === undefined || label === null)
+        return [];
+      const mapped = {};
+      for (const [target, source] of Object.entries(map)) {
+        mapped[target] = valueAtPathUnknown(item, source);
+      }
+      return [{
+        value: String(value),
+        label: String(label),
+        description: descriptionPaths.map((path) => valueAtPathUnknown(item, path)).filter((value2) => value2 !== undefined && value2 !== null && value2 !== "").map(String).join(" · "),
+        mapped
+      }];
+    });
+  }
+  function renderLookupMenu(menu, options, activeIndex, emptyLabel) {
+    menu.replaceChildren();
+    if (!options.length) {
+      const empty = document.createElement("div");
+      empty.className = "dashboard-user-empty";
+      empty.textContent = emptyLabel;
+      menu.append(empty);
+      return;
+    }
+    options.forEach((option, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `dashboard-user-option${index === activeIndex ? " active" : ""}`;
+      button.dataset.dashboardLookupIndex = String(index);
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", index === activeIndex ? "true" : "false");
+      const title = document.createElement("span");
+      title.textContent = option.label;
+      const meta = document.createElement("small");
+      meta.textContent = option.description || option.value;
+      button.append(title, meta);
+      menu.append(button);
+    });
+  }
+  function matchingLookupOptions(options, query) {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized)
+      return options.slice(0, 20);
+    return options.filter((option) => `${option.label} ${option.value} ${option.description}`.toLowerCase().includes(normalized)).slice(0, 20);
+  }
+  function lookupSelectionError(control, name) {
+    const input = control.querySelector("[data-dashboard-lookup-search]");
+    const visible = input?.value.trim() ?? "";
+    const value = control.dataset.value ?? "";
+    if (!visible && !value)
+      return null;
+    if (!value)
+      return `${fieldLabel(control, name)} must be selected from the list`;
+    const display = control.dataset.dashboardLookupDisplay ?? value;
+    if (visible && visible !== display)
+      return `${fieldLabel(control, name)} must be selected from the list`;
+    return null;
+  }
+  function applyLookupMappedValues(form, mapped, source) {
+    for (const [field, value] of Object.entries(mapped)) {
+      const control = findDashboardField(form, field);
+      if (control && control !== source)
+        setFieldValue(control, value);
+    }
+  }
+  function resolveLookupUrl(template, form, search) {
+    return template.replace(/#\{([^}]+)\}/g, (_match, rawName) => {
+      const name = rawName.trim();
+      if (name === "lookup.search")
+        return encodeURIComponent(search.trim());
+      if (name.startsWith("field.")) {
+        const value = fieldValueForUrl(form, name.slice("field.".length));
+        return encodeURIComponent(value);
+      }
+      return "";
+    });
+  }
+  function fieldValueForUrl(form, name) {
+    const control = findDashboardField(form, name);
+    const value = control ? readFieldValue(control) : "";
+    return value === undefined || value === null ? "" : String(value);
+  }
+  function findDashboardField(form, name) {
+    for (const control of Array.from(form.querySelectorAll("[data-dashboard-field]"))) {
+      if (control.getAttribute("name") === name)
+        return control;
+    }
+    return null;
+  }
+  function lookupFieldDependencies(template) {
+    return Array.from(template.matchAll(/#\{field\.([^}]+)\}/g), (match) => match[1].trim()).filter(Boolean);
+  }
+  function jsonStringArray(value) {
+    try {
+      const parsed = value ? JSON.parse(value) : [];
+      return Array.isArray(parsed) ? parsed.filter((entry) => typeof entry === "string" && Boolean(entry)) : [];
+    } catch {
+      return [];
+    }
+  }
+  function jsonStringRecord(value) {
+    try {
+      const parsed = value ? JSON.parse(value) : {};
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+        return {};
+      return Object.fromEntries(Object.entries(parsed).filter((entry) => typeof entry[1] === "string" && Boolean(entry[1])));
+    } catch {
+      return {};
+    }
+  }
   function cssEscape(value) {
     return value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  }
+  function isRecord2(value) {
+    return !!value && typeof value === "object" && !Array.isArray(value);
   }
   function mainWidgetsFor(widgets) {
     const result = [];
@@ -14874,6 +15470,11 @@ textarea { width: 100%; padding: 8px; box-sizing: border-box; }
       if (artifact.type === "dashboard") {
         const dashboard = artifact.dashboard;
         rows.push(["Dashboard", dashboard.meta?.name ?? dashboard.id, `Source id: ${dashboard.source}`]);
+        continue;
+      }
+      if (artifact.type === "bloc") {
+        const bloc = artifact.bloc;
+        rows.push(["Bloc", bloc.name, `Tag: ${bloc.tag}`]);
         continue;
       }
       const source = artifact.source;

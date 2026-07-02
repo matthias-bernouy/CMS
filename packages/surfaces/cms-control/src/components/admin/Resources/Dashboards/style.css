@@ -127,6 +127,13 @@ p {
     overflow: hidden;
 }
 
+.dashboard-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .dashboard-create-action {
     display: flex;
     justify-content: flex-start;
@@ -159,6 +166,7 @@ p {
     background: var(--danger-strong, #862525);
 }
 
+.dashboard-create-action button:disabled,
 .dashboard-delete-action button:disabled,
 .dashboard-row-actions .dashboard-action:disabled {
     cursor: wait;
@@ -340,6 +348,34 @@ p {
 
 .dashboard-create-state {
     padding: 0 18px 18px;
+}
+
+.dashboard-write-result {
+    padding: 0 18px 18px;
+}
+
+.dashboard-write-result dl {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+}
+
+.dashboard-write-result div {
+    display: grid;
+    gap: 4px;
+}
+
+.dashboard-write-result dt {
+    color: var(--text-muted, #66736f);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.dashboard-write-result dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .dashboard-create-state[data-state="success"] {

@@ -153,6 +153,54 @@ const source: Source = {
             method: "GET",
             targetUrl: "https://example.com/orders/stats",
         },
+        {
+            urn: "urn:commerce:exportOrders",
+            method: "GET",
+            targetUrl: "https://example.com/orders/export",
+            responseKind: "file",
+            mediaType: "text/csv",
+            input: {
+                params: [
+                    { name: "status", in: "query", schema: { type: "string" } },
+                ],
+            },
+        },
+        {
+            urn: "urn:commerce:relayPoints",
+            method: "GET",
+            targetUrl: "https://example.com/relay-points",
+            input: {
+                params: [
+                    { name: "country", in: "query", schema: { type: "string" } },
+                    { name: "postalCode", in: "query", schema: { type: "string" } },
+                    { name: "city", in: "query", schema: { type: "string" } },
+                    { name: "limit", in: "query", schema: { type: "string" } },
+                ],
+            },
+            output: [
+                {
+                    status: "200",
+                    body: {
+                        type: "object",
+                        properties: {
+                            items: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        number: { type: "string" },
+                                        name: { type: "string" },
+                                        postalCode: { type: "string" },
+                                        city: { type: "string" },
+                                        country: { type: "string" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            ],
+        },
     ],
 };
 
@@ -309,6 +357,97 @@ describe("validateDashboard", () => {
         expect(validateDashboard(dashboard, { source })).toEqual([]);
     });
 
+    test("accepts select and lookup write fields backed by source endpoints", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            create: { endpoint: "createOrder", params: { userId: "$param.userId" } },
+        };
+        dashboard.views.push({
+            widget: "w-create",
+            collection: "orders",
+            fields: [
+                { field: "status", input: "select", options: ["created", "paid"], required: true },
+                {
+                    field: "deliveryRelayNumber",
+                    input: "lookup",
+                    required: true,
+                    lookup: {
+                        endpoint: "relayPoints",
+                        params: {
+                            country: "$field.recipientCountry",
+                            postalCode: "$field.recipientPostalCode",
+                            city: "$field.recipientCity",
+                            limit: "10",
+                        },
+                        itemsPath: "items",
+                        valuePath: "number",
+                        labelPath: "name",
+                        descriptionPaths: ["postalCode", "city"],
+                        map: {
+                            deliveryRelayCountry: "country",
+                            deliveryRelayNumber: "number",
+                        },
+                    },
+                },
+            ],
+        });
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+    });
+
+    test("rejects select and lookup write fields without required configuration", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            create: { endpoint: "createOrder", params: { userId: "$param.userId" } },
+        };
+        dashboard.views.push({
+            widget: "w-create",
+            collection: "orders",
+            fields: [
+                { field: "status", input: "select" },
+                { field: "deliveryRelayNumber", input: "lookup" },
+            ],
+        });
+
+        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
+            "views.2.fields.0.options must contain at least one option for select fields",
+            "views.2.fields.1.lookup is required for lookup fields",
+        ]));
+    });
+
+    test("rejects lookup fields with invalid endpoint or paths", () => {
+        const dashboard = validDashboard();
+        dashboard.collections[0]!.item = {
+            ...dashboard.collections[0]!.item,
+            create: { endpoint: "createOrder", params: { userId: "$param.userId" } },
+        };
+        dashboard.views.push({
+            widget: "w-create",
+            collection: "orders",
+            fields: [{
+                field: "deliveryRelayNumber",
+                input: "lookup",
+                lookup: {
+                    endpoint: "missingRelayPoints",
+                    itemsPath: "items",
+                    valuePath: "number }}",
+                    labelPath: "name",
+                    map: {
+                        "delivery relay": "country",
+                    },
+                },
+            }],
+        });
+
+        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
+            'views.2.fields.0.lookup.endpoint references unknown endpoint "missingRelayPoints"',
+            "views.2.fields.0.lookup.valuePath must be a dotted field path",
+            "views.2.fields.0.lookup.map.delivery relay.map target must be a dotted field path",
+        ]));
+    });
+
     test("accepts update widgets backed by selected item patch endpoints", () => {
         const dashboard = validDashboard();
         dashboard.collections[0]!.item = {
@@ -329,6 +468,20 @@ describe("validateDashboard", () => {
     test("accepts delete widgets backed by selected item delete endpoints", () => {
         const dashboard = validDashboard();
         dashboard.views.push({ widget: "w-delete", collection: "orders", label: "Delete order" });
+
+        expect(validateDashboard(dashboard, { source })).toEqual([]);
+    });
+
+    test("accepts action widgets backed by source endpoints", () => {
+        const dashboard = validDashboard();
+        dashboard.views.push({
+            widget: "w-action",
+            endpoint: "exportOrders",
+            label: "Export CSV",
+            params: { status: "$param.status" },
+            downloadName: "orders.csv",
+            refresh: false,
+        });
 
         expect(validateDashboard(dashboard, { source })).toEqual([]);
     });
@@ -394,10 +547,17 @@ describe("validateDashboard", () => {
     test("rejects bindings for params not declared by the endpoint", () => {
         const dashboard = validDashboard();
         dashboard.collections[0]!.list.params = { unexpected: "$param.status" };
+        dashboard.views.push({
+            widget: "w-action",
+            endpoint: "exportOrders",
+            label: "Export CSV",
+            params: { unexpected: "$param.status" },
+        });
 
-        expect(validateDashboard(dashboard, { source })).toContain(
+        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
             "collections.orders.list.params.unexpected does not match a declared endpoint param",
-        );
+            "views.2.params.unexpected does not match a declared endpoint param",
+        ]));
     });
 
     test("rejects unsafe field paths", () => {

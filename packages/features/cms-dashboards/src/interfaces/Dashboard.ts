@@ -42,12 +42,19 @@ export type ColumnSpec =
         format?: ColumnFormat;
     };
 
-export type FieldInput = "text" | "select" | "boolean" | "number" | "cms-user" | "file";
+export type FieldInput = "text" | "select" | "boolean" | "number" | "cms-user" | "file" | "lookup";
 
 export type FieldMediaRef = CollectionEndpointRef;
 
 export type FieldUploadRef = CollectionEndpointRef & {
     resultPath: string;
+};
+
+export type FieldLookupRef = CollectionListEndpointRef & {
+    valuePath: string;
+    labelPath: string;
+    descriptionPaths?: string[];
+    map?: Record<string, string>;
 };
 
 export type FieldSpec =
@@ -57,9 +64,11 @@ export type FieldSpec =
         label?: string;
         format?: FieldFormat;
         input?: FieldInput;
+        options?: string[];
         accept?: string;
         media?: FieldMediaRef;
         upload?: FieldUploadRef;
+        lookup?: FieldLookupRef;
         readonly?: boolean;
         required?: boolean;
     };
@@ -85,6 +94,8 @@ export type RowAction = {
 export type WriteWidgetLabels = {
     label?: string;
     submitLabel?: string;
+    successMessage?: string;
+    resultFields?: FieldSpec[];
 };
 
 export type DeleteWidgetLabels = {
@@ -92,6 +103,13 @@ export type DeleteWidgetLabels = {
     confirmLabel?: string;
     successMessage?: string;
     body?: Record<string, unknown>;
+};
+
+export type ActionWidgetLabels = {
+    label: string;
+    successMessage?: string;
+    downloadName?: string;
+    refresh?: boolean;
 };
 
 export type DashboardWidget =
@@ -109,6 +127,7 @@ export type DashboardWidget =
     | ({ widget: "w-create"; collection: string; fields?: FieldSpec[] } & WriteWidgetLabels)
     | ({ widget: "w-update"; collection: string; action?: "update" | "patch"; fields?: FieldSpec[] } & WriteWidgetLabels)
     | ({ widget: "w-delete"; collection: string } & DeleteWidgetLabels)
+    | ({ widget: "w-action" } & CollectionEndpointRef & ActionWidgetLabels)
     | { widget: "w-stat"; endpoint: string; path: string; label?: string };
 
 export type DashboardDto = {

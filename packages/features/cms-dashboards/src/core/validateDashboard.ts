@@ -10,7 +10,7 @@ import type {
 } from "../interfaces/Dashboard";
 
 const SIMPLE_ID = /^[^\s/]+$/;
-const PARAM_EXPR = /^(\$row|\$param|\$user|\$field)\.[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
+const PARAM_EXPR = /^(\$row|\$param|\$user|\$field|\$lookup)\.[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
 const SELECTION_EXPR = "$selection";
 const SAFE_PATH = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
 
@@ -128,6 +128,7 @@ function validateWidget(
                 }
             }
             widget.fields?.forEach((field, index) => validateFieldSpec(field, `${path}.fields.${index}`, dashboard, source, errors));
+            widget.resultFields?.forEach((field, index) => validateFieldSpec(field, `${path}.resultFields.${index}`, dashboard, source, errors));
             break;
         case "w-create":
             validateCollectionRef(widget.collection, `${path}.collection`, collections, errors);
@@ -153,6 +154,13 @@ function validateWidget(
                 if (collection && deleteRef && !bindsSelectedRow(deleteRef, collection)) {
                     errors.push(`${path}.collection "${widget.collection}" item.delete must bind a param to $selection or $row.${collection.rowKey}`);
                 }
+            }
+            break;
+        case "w-action":
+            if (!widget.label) errors.push(`${path}.label is required`);
+            validateEndpointRef(dashboard, widget, path, source, errors);
+            if (widget.downloadName !== undefined && !widget.downloadName) {
+                errors.push(`${path}.downloadName must be non-empty when provided`);
             }
             break;
         case "w-stat":
@@ -213,10 +221,35 @@ function validateFieldSpec(
     validateSpecPath(spec, path, errors);
     if (typeof spec === "string") return;
     if (spec.accept !== undefined && !spec.accept) errors.push(`${path}.accept must be non-empty when provided`);
+    if (spec.input === "select" && !spec.options?.length) {
+        errors.push(`${path}.options must contain at least one option for select fields`);
+    }
+    if (spec.input === "lookup" && !spec.lookup) {
+        errors.push(`${path}.lookup is required for lookup fields`);
+    }
+    if (spec.options !== undefined) {
+        if (!Array.isArray(spec.options) || !spec.options.length) errors.push(`${path}.options must contain at least one option`);
+        else spec.options.forEach((option, index) => {
+            if (!option) errors.push(`${path}.options.${index} must be non-empty`);
+        });
+    }
     if (spec.media) validateEndpointRef(dashboard, spec.media, `${path}.media`, source, errors);
     if (spec.upload) {
         validateEndpointRef(dashboard, spec.upload, `${path}.upload`, source, errors);
         validatePath("resultPath", spec.upload.resultPath, `${path}.upload`, errors);
+    }
+    if (spec.lookup) {
+        validateEndpointRef(dashboard, spec.lookup, `${path}.lookup`, source, errors);
+        validatePath("itemsPath", spec.lookup.itemsPath, `${path}.lookup`, errors);
+        validatePath("totalPath", spec.lookup.totalPath, `${path}.lookup`, errors);
+        validatePath("valuePath", spec.lookup.valuePath, `${path}.lookup`, errors);
+        validatePath("labelPath", spec.lookup.labelPath, `${path}.lookup`, errors);
+        spec.lookup.descriptionPaths?.forEach((descriptionPath, index) =>
+            validatePath(`descriptionPaths.${index}`, descriptionPath, `${path}.lookup`, errors));
+        for (const [targetPath, sourcePath] of Object.entries(spec.lookup.map ?? {})) {
+            validatePath("map target", targetPath, `${path}.lookup.map.${targetPath}`, errors);
+            validatePath("map source", sourcePath, `${path}.lookup.map.${targetPath}`, errors);
+        }
     }
 }
 
