@@ -6,7 +6,7 @@ import type {
     IntegrationDefinition,
 } from "./Integration";
 
-export type IntegrationArtifactType = "source" | "dashboard";
+export type IntegrationArtifactType = "source" | "dashboard" | "bloc";
 
 export type IntegrationArtifactAction = "created" | "updated" | "skipped";
 
@@ -52,4 +52,22 @@ export type IntegrationImportDeps = {
     sources: SourceRepository;
     secrets: SecretStore;
     dashboards?: DashboardRepository;
+    blocs?: IntegrationBlocImporter;
+};
+
+export type IntegrationBlocArtifact = {
+    tag: string;
+    name: string;
+    group?: string;
+    description?: string;
+    viewJS: string;
+    editorJS?: string | null;
+    source?: Record<string, string>;
+};
+
+export type IntegrationBlocImporter = {
+    importBloc(
+        artifact: IntegrationBlocArtifact,
+        options: IntegrationImportOptions,
+    ): Promise<{ id: string; action: IntegrationArtifactAction }>;
 };

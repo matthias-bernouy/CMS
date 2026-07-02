@@ -85,6 +85,50 @@ describe("FsIntegrationDefinitionRepository", () => {
         expect((await repo.get("minimal"))?.version).toBe("1.0.0");
     });
 
+    test("hydrates bloc artifact files from version directories", async () => {
+        const root = mkdtempSync(join(tmpdir(), "cms-integrations-"));
+        const integrationRoot = join(root, "bloc-pack");
+        const versionRoot = join(integrationRoot, "versions", "1.0.0");
+        const blocRoot = join(versionRoot, "blocs", "demo-card");
+        mkdirSync(blocRoot, { recursive: true });
+        writeJson(join(integrationRoot, "integration.json"), {
+            kind: "bloc-pack",
+            label: "Bloc Pack",
+            stable: "1.0.0",
+            versions: [
+                { version: "1.0.0", path: "versions/1.0.0", definition: "versions/1.0.0/definition.json" },
+            ],
+        });
+        writeJson(join(versionRoot, "definition.json"), {
+            kind: "bloc-pack",
+            label: "Bloc Pack",
+            version: "1.0.0",
+            inputs: [],
+            artifacts: [{
+                type: "bloc",
+                bloc: {
+                    tag: "demo-card",
+                    name: "Demo card",
+                    path: "blocs/demo-card",
+                },
+            }],
+        });
+        writeFileSync(join(blocRoot, "Bloc.ts"), `customElements.define("BE5_TAG_TO_BE_REPLACED", class extends HTMLElement {});`);
+        writeFileSync(join(blocRoot, "default.html"), `<demo-card></demo-card>`);
+        writeJson(join(blocRoot, "manifest.json"), { defaultContent: "./default.html" });
+
+        const repo = new FsIntegrationDefinitionRepository(root);
+        const definition = await repo.get("bloc-pack");
+        const artifact = definition?.artifacts?.[0];
+
+        expect(artifact?.type).toBe("bloc");
+        if (artifact?.type !== "bloc") throw new Error("expected bloc artifact");
+        expect(artifact.bloc.viewJS).toContain("BE5_TAG_TO_BE_REPLACED");
+        expect(artifact.bloc.source?.["Bloc.ts"]).toBeTruthy();
+        expect(artifact.bloc.source?.["manifest.json"]).toBeTruthy();
+        expect(artifact.bloc.source?.["default.html"]).toBeTruthy();
+    });
+
     test("does not treat internal names starting with dots as path escapes", async () => {
         const root = mkdtempSync(join(tmpdir(), "cms-integrations-"));
         const integrationRoot = join(root, "..foo");

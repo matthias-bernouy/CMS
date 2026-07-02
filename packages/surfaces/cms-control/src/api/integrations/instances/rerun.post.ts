@@ -1,4 +1,5 @@
 import type { ControlCms } from "cms-control/ControlCms";
+import { importBlocArtifact } from "cms-control/core/bloc/importBlocArtifact";
 import { definitionsForRerun } from "cms-control/core/integrations/definitions";
 import InvalidParam from "cms-control/errors/Http/InvalidParam";
 import MissingParam from "cms-control/errors/Http/MissingParam";
@@ -16,6 +17,9 @@ export default async function postIntegrationInstanceRerun(req: Request, cms: Co
         sources: cms.sources,
         secrets: cms.secrets,
         dashboards: cms.dashboards,
+        blocs: {
+            importBloc: (artifact, options) => importBlocArtifact(cms, { ...artifact, force: options.force }),
+        },
     };
     const result = await runIntegrationInstance({
         mode: "rerun",

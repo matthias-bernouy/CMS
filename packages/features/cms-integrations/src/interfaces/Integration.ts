@@ -59,9 +59,26 @@ export type DeclarativeDashboardArtifactTemplate = {
     dashboard: DashboardDto;
 };
 
+export type DeclarativeBlocArtifactTemplate = {
+    type: "bloc";
+    bloc: {
+        tag: string;
+        name: string;
+        group?: string;
+        description?: string;
+        path?: string;
+        view?: string;
+        editor?: string | null;
+        viewJS?: string;
+        editorJS?: string | null;
+        source?: Record<string, string>;
+    };
+};
+
 export type DeclarativeArtifactTemplate =
     | DeclarativeSourceArtifactTemplate
-    | DeclarativeDashboardArtifactTemplate;
+    | DeclarativeDashboardArtifactTemplate
+    | DeclarativeBlocArtifactTemplate;
 
 export type IntegrationDefinition = {
     kind: string;

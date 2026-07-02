@@ -44,7 +44,40 @@ function parseArtifactTemplate(value: unknown, name: string): DeclarativeArtifac
         if (!isRecord(value.dashboard)) throw new IntegrationInputError(`${name}.dashboard`, "must be an object");
         return { type: "dashboard", dashboard: parseDashboardTemplate(value.dashboard, `${name}.dashboard`) };
     }
-    throw new IntegrationInputError(`${name}.type`, "must be source or dashboard");
+    if (type === "bloc") {
+        if (!isRecord(value.bloc)) throw new IntegrationInputError(`${name}.bloc`, "must be an object");
+        return { type: "bloc", bloc: parseBlocTemplate(value.bloc, `${name}.bloc`) };
+    }
+    throw new IntegrationInputError(`${name}.type`, "must be source, dashboard, or bloc");
+}
+
+function parseBlocTemplate(value: Record<string, unknown>, name: string): Extract<DeclarativeArtifactTemplate, { type: "bloc" }>["bloc"] {
+    const tag = text(value.tag);
+    const blocName = text(value.name);
+    if (!tag) throw new MissingIntegrationParam(`${name}.tag`);
+    if (!blocName) throw new MissingIntegrationParam(`${name}.name`);
+    return {
+        tag,
+        name: blocName,
+        ...(text(value.group) ? { group: text(value.group)! } : {}),
+        ...(text(value.description) ? { description: text(value.description)! } : {}),
+        ...(text(value.path) ? { path: text(value.path)! } : {}),
+        ...(text(value.view) ? { view: text(value.view)! } : {}),
+        ...(value.editor === null ? { editor: null } : text(value.editor) ? { editor: text(value.editor)! } : {}),
+        ...(text(value.viewJS) ? { viewJS: text(value.viewJS)! } : {}),
+        ...(value.editorJS === null ? { editorJS: null } : text(value.editorJS) ? { editorJS: text(value.editorJS)! } : {}),
+        ...(value.source !== undefined ? { source: parseSourceBundle(value.source, `${name}.source`) } : {}),
+    };
+}
+
+function parseSourceBundle(value: unknown, name: string): Record<string, string> {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const out: Record<string, string> = {};
+    for (const [path, content] of Object.entries(value)) {
+        if (typeof content !== "string") throw new IntegrationInputError(`${name}.${path}`, "must be a string");
+        out[path] = content;
+    }
+    return out;
 }
 
 function parseSourceTemplate(value: Record<string, unknown>, name: string): SourceDto {

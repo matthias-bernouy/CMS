@@ -1,7 +1,8 @@
+import { Buffer } from "node:buffer";
 import { readdir, readFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { parseIntegrationDefinition } from "../core/parsing/definition";
-import type { IntegrationDefinition } from "../interfaces/Integration";
+import type { DeclarativeArtifactTemplate, IntegrationDefinition } from "../interfaces/Integration";
 import type {
     IntegrationDefinitionIndex,
     IntegrationDefinitionRepository,
@@ -62,7 +63,7 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
         if (definition.version !== entry.version) {
             throw new Error(`${definitionPath}: definition version "${definition.version ?? ""}" does not match index version "${entry.version}"`);
         }
-        return definition;
+        return await hydrateVersionAssets(definition, safeJoin(this.root, index.kind, entry.path));
     }
 
     private async readIndexes(): Promise<IntegrationDefinitionIndex[]> {
@@ -99,6 +100,74 @@ export class FsIntegrationDefinitionRepository implements IntegrationDefinitionR
             if (isNodeError(e) && e.code === "ENOENT") return null;
             throw e;
         }
+    }
+}
+
+async function hydrateVersionAssets(
+    definition: IntegrationDefinition,
+    versionRoot: string,
+): Promise<IntegrationDefinition> {
+    if (!definition.artifacts?.some(artifact => artifact.type === "bloc")) return definition;
+    const artifacts = await Promise.all(definition.artifacts.map(artifact => hydrateArtifact(artifact, versionRoot)));
+    return { ...definition, artifacts };
+}
+
+async function hydrateArtifact(
+    artifact: DeclarativeArtifactTemplate,
+    versionRoot: string,
+): Promise<DeclarativeArtifactTemplate> {
+    if (artifact.type !== "bloc" || artifact.bloc.viewJS) return artifact;
+    if (!artifact.bloc.path) throw new Error(`Bloc artifact "${artifact.bloc.tag}" requires path or viewJS`);
+
+    const blocRoot = safeJoin(versionRoot, artifact.bloc.path);
+    const viewPath = artifact.bloc.view ?? "Bloc.ts";
+    const viewJS = await readFile(safeJoin(blocRoot, viewPath), "utf-8");
+    const editorJS = await readOptionalEditor(blocRoot, artifact.bloc.editor);
+    const source = await readSourceBundle(blocRoot);
+
+    return {
+        ...artifact,
+        bloc: {
+            ...artifact.bloc,
+            viewJS,
+            ...(editorJS !== undefined ? { editorJS } : {}),
+            source,
+        },
+    };
+}
+
+async function readOptionalEditor(root: string, editor: string | null | undefined): Promise<string | null | undefined> {
+    if (editor === null) return null;
+    const editorPath = editor ?? "BlocEditor.ts";
+    try {
+        return await readFile(safeJoin(root, editorPath), "utf-8");
+    } catch (error) {
+        if (editor === undefined && isNodeError(error) && error.code === "ENOENT") return undefined;
+        throw error;
+    }
+}
+
+async function readSourceBundle(root: string): Promise<Record<string, string>> {
+    const out: Record<string, string> = {};
+    await readSourceDirectory(root, root, out);
+    return out;
+}
+
+async function readSourceDirectory(
+    root: string,
+    dir: string,
+    out: Record<string, string>,
+): Promise<void> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+        const absolutePath = safeJoin(dir, entry.name);
+        if (entry.isDirectory()) {
+            await readSourceDirectory(root, absolutePath, out);
+            continue;
+        }
+        if (!entry.isFile()) continue;
+        const key = relative(root, absolutePath).split(sep).join("/");
+        out[key] = Buffer.from(await readFile(absolutePath)).toString("base64");
     }
 }
 

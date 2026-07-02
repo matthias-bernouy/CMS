@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { Buffer } from "node:buffer";
 import {
     importIntegration,
     type IntegrationDefinition,
@@ -64,6 +65,55 @@ describe("@bernouy/cms-integrations declarative imports", () => {
 
         expect(await innerSources.getSource("urn:one")).toBeNull();
         expect(await secrets.get("API_KEY")).toBeNull();
+    });
+
+    test("imports bloc artifacts through the injected bloc importer", async () => {
+        const sources = new InMemorySourceRepository();
+        const secrets = new InMemorySecretStore();
+        const imported: unknown[] = [];
+        const definition: IntegrationDefinition = {
+            kind: "bloc-pack",
+            label: "Bloc Pack",
+            inputs: [],
+            artifacts: [{
+                type: "bloc",
+                bloc: {
+                    tag: "demo-card",
+                    name: "Demo card",
+                    group: "Content",
+                    viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
+                    source: {
+                        "Bloc.ts": Buffer.from(`customElements.define("demo-card", class extends HTMLElement {});`).toString("base64"),
+                    },
+                },
+            }],
+        };
+
+        const result = await importIntegration(
+            {
+                sources,
+                secrets,
+                blocs: {
+                    importBloc: async (artifact) => {
+                        imported.push(artifact);
+                        return { id: artifact.tag, action: "created" };
+                    },
+                },
+            },
+            { kind: "bloc-pack", answers: {}, options: {} },
+            [definition],
+        );
+
+        expect(result.artifacts).toEqual([{ type: "bloc", id: "demo-card", action: "created" }]);
+        expect(imported).toEqual([{
+            tag: "demo-card",
+            name: "Demo card",
+            group: "Content",
+            viewJS: `customElements.define("demo-card", class extends HTMLElement {});`,
+            source: {
+                "Bloc.ts": Buffer.from(`customElements.define("demo-card", class extends HTMLElement {});`).toString("base64"),
+            },
+        }]);
     });
 
     test("validates resolved declarative secret keys before writing", async () => {

@@ -17,6 +17,8 @@ export type {
     IntegrationArtifactAction,
     IntegrationArtifactResult,
     IntegrationArtifactType,
+    IntegrationBlocArtifact,
+    IntegrationBlocImporter,
     IntegrationImportDeps,
     IntegrationImportDto,
     IntegrationImportInstanceInput,

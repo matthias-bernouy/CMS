@@ -12,10 +12,12 @@ import { writeSecretsWithRollback } from "./secretWrites";
 import { writeDashboardsWithRollback, type IntegrationDashboardWrite } from "./dashboardWrites";
 import { writeSourcesWithRollback, type IntegrationSourceWrite } from "./sourceWrites";
 import type {
+    DeclarativeBlocArtifactTemplate,
     DeclarativeSecretTemplate,
     IntegrationDefinition,
 } from "../../interfaces/Integration";
 import type {
+    IntegrationBlocArtifact,
     IntegrationImportDeps,
     IntegrationImportOptions,
     IntegrationImportResult,
@@ -70,14 +72,16 @@ async function executeDeclarativeIntegration<T>(
     const sourceWrites = await buildSourceWrites(deps, sourceArtifacts, options);
     const dashboardArtifacts = buildDashboardArtifacts(definition, context);
     const dashboardWrites = await buildDashboardWrites(deps, dashboardArtifacts, sourceArtifacts, options);
+    const blocArtifacts = buildBlocArtifacts(definition, context);
 
     return writeSecretsWithRollback(
         deps.secrets,
         secretWrites,
         (secretResults) => writeSourcesWithRollback(deps.sources, sourceWrites, async artifacts => {
             const buildResult = async (dashboardArtifacts: typeof artifacts) => {
+                const blocImportResults = await importBlocArtifacts(deps, blocArtifacts, options);
                 const importResult = {
-                    artifacts: [...artifacts, ...dashboardArtifacts],
+                    artifacts: [...artifacts, ...dashboardArtifacts, ...blocImportResults],
                     ...(secretResults.length ? { secrets: secretResults } : {}),
                 };
                 return commit
@@ -110,6 +114,51 @@ function buildDashboardArtifacts(definition: IntegrationDefinition, context: Tem
         if (error instanceof IntegrationInputError) throw error;
         throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid dashboard artifact");
     }
+}
+
+function buildBlocArtifacts(definition: IntegrationDefinition, context: TemplateContext): IntegrationBlocArtifact[] {
+    try {
+        return (definition.artifacts ?? [])
+            .filter((artifact): artifact is DeclarativeBlocArtifactTemplate => artifact.type === "bloc")
+            .map(artifact => {
+                const tag = resolveTemplate(artifact.bloc.tag, context);
+                const name = resolveTemplate(artifact.bloc.name, context);
+                if (!artifact.bloc.viewJS) {
+                    throw new IntegrationInputError("artifacts", `bloc "${tag}" is missing viewJS`);
+                }
+                return {
+                    tag,
+                    name,
+                    ...(artifact.bloc.group ? { group: resolveTemplate(artifact.bloc.group, context) } : {}),
+                    ...(artifact.bloc.description ? { description: resolveTemplate(artifact.bloc.description, context) } : {}),
+                    viewJS: artifact.bloc.viewJS,
+                    ...(artifact.bloc.editorJS !== undefined ? { editorJS: artifact.bloc.editorJS } : {}),
+                    ...(artifact.bloc.source ? { source: artifact.bloc.source } : {}),
+                };
+            });
+    } catch (error) {
+        if (error instanceof IntegrationInputError) throw error;
+        throw new IntegrationInputError("artifacts", error instanceof Error ? error.message : "invalid bloc artifact");
+    }
+}
+
+async function importBlocArtifacts(
+    deps: IntegrationImportDeps,
+    artifacts: IntegrationBlocArtifact[],
+    options: IntegrationImportOptions,
+) {
+    if (!artifacts.length) return [];
+    if (!deps.blocs) throw new IntegrationRuntimeError("bloc importer not configured");
+
+    const seen = new Set<string>();
+    const results = [];
+    for (const artifact of artifacts) {
+        if (seen.has(artifact.tag)) throw new IntegrationInputError("artifacts", `duplicate bloc artifact "${artifact.tag}"`);
+        seen.add(artifact.tag);
+        const result = await deps.blocs.importBloc(artifact, options);
+        results.push({ type: "bloc" as const, id: result.id, action: result.action });
+    }
+    return results;
 }
 
 function buildSecretWrites(
