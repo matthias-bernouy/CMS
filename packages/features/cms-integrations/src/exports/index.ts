@@ -7,12 +7,26 @@
 
 export type {
     IntegrationAnswerValue,
+    DeclarativeConnectorFunctionTemplate,
+    DeclarativeConnectorSchemaTemplate,
+    DeclarativeConnectorTemplate,
+    DeclarativeGeneratedSecretTemplate,
+    DeclarativeSecretTemplate,
     IntegrationCspPolicy,
     IntegrationDefinition,
     IntegrationInput,
     IntegrationSecurityDefinition,
     IntegrationUiDefinition,
 } from "../interfaces/Integration";
+export type {
+    IntegrationConnectorDeployer,
+    IntegrationConnectorDeployContext,
+    IntegrationConnectorDeployment,
+    IntegrationConnectorDeployResult,
+    IntegrationConnectorFunctionDeployment,
+    IntegrationConnectorResourceResult,
+    IntegrationConnectorSchemaDeployment,
+} from "../interfaces/IntegrationConnectorDeployer";
 export type {
     IntegrationArtifactAction,
     IntegrationArtifactResult,

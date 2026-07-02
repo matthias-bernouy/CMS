@@ -49,6 +49,33 @@ export type DeclarativeSecretTemplate = {
     key: string;
 };
 
+export type DeclarativeGeneratedSecretTemplate = {
+    name: string;
+    key: string;
+    generator?: "token";
+    bytes?: number;
+    prefix?: string;
+};
+
+export type DeclarativeConnectorSchemaTemplate = {
+    path: string;
+};
+
+export type DeclarativeConnectorFunctionTemplate = {
+    name: string;
+    directory: string;
+    configPath?: string;
+    secrets?: Record<string, string>;
+};
+
+export type DeclarativeConnectorTemplate = {
+    provider: string;
+    root?: string;
+    dataApiSchemas?: string[];
+    schemas?: DeclarativeConnectorSchemaTemplate[];
+    functions?: DeclarativeConnectorFunctionTemplate[];
+};
+
 export type DeclarativeSourceArtifactTemplate = {
     type: "source";
     source: SourceDto;
@@ -90,5 +117,7 @@ export type IntegrationDefinition = {
     ui?: IntegrationUiDefinition;
     security?: IntegrationSecurityDefinition;
     secrets?: DeclarativeSecretTemplate[];
+    generatedSecrets?: DeclarativeGeneratedSecretTemplate[];
+    connectors?: DeclarativeConnectorTemplate[];
     artifacts?: DeclarativeArtifactTemplate[];
 };

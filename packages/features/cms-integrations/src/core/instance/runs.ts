@@ -29,6 +29,7 @@ export function successRun(runNumber: number, startedAt: Date, result: Integrati
         finishedAt: new Date(),
         artifacts: result.artifacts,
         ...(result.secrets?.length ? { secrets: result.secrets } : {}),
+        ...(result.connectors?.length ? { connectors: result.connectors } : {}),
     };
 }
 

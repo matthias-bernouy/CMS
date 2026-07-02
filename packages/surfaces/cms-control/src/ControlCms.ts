@@ -44,6 +44,7 @@ import { join } from "node:path";
 import type { CspExtras } from "@bernouy/http-runner";
 import { renderForbiddenPage, renderLoginPage } from "cms-control/core/auth/authPages";
 import type {
+    IntegrationConnectorDeployer,
     IntegrationDefinitionRepository,
     IntegrationInstanceRepository,
 } from "@bernouy/cms-integrations";
@@ -74,6 +75,9 @@ export type ControlCmsOptions = Configuration & {
     /** Integration instance/run store. Runtimes must pass a durable repository
      *  before enabling the integration API. */
     integrationInstances?: IntegrationInstanceRepository;
+    /** Optional connector deployers used by declarative integrations that ship
+     *  deployable provider assets. */
+    integrationConnectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
     /** Dashboard store. Runtimes can inject a durable implementation; the
      *  default memory store keeps the admin surface bootable before persistence
      *  is wired. */
@@ -366,6 +370,10 @@ export class ControlCms {
     get integrationInstances(): IntegrationInstanceRepository {
         if (!this._integrationInstances) throw new Error("integration instances repository not configured");
         return this._integrationInstances;
+    }
+
+    get integrationConnectorDeployers(): IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer> | undefined {
+        return this.configuration.integrationConnectorDeployers;
     }
 
     get dashboards(): DashboardRepository {

@@ -1,11 +1,12 @@
 import { findIntegration } from "../catalog";
 import { IntegrationInputError, MissingIntegrationInstanceError } from "../errors";
 import {
+    declarativeSecretBindingNames,
     importDeclarativeIntegrationWithCommit,
     resolveDeclarativeSecretRefs,
 } from "../import/declarative";
 import { parseIntegrationImportDto } from "../parsing/parseIntegrationImportDto";
-import { isSensitiveInput, sensitiveInputNames } from "../shared/inputSensitivity";
+import { isSensitiveInput } from "../shared/inputSensitivity";
 import { hasAnswer } from "./ids";
 import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "./secretRefs";
@@ -47,7 +48,7 @@ async function runRerunImport(
     siteIntegrations: IntegrationDefinition[],
 ): Promise<RunIntegrationInstanceResult> {
     const dto = await buildRerunDto(request.deps, instance, definition, request.body ?? {}, siteIntegrations);
-    const secretInputs = sensitiveInputNames(definition);
+    const secretInputs = declarativeSecretBindingNames(definition);
     const plannedSecretRefs = resolveDeclarativeSecretRefs(definition, dto.answers);
     await assertSecretKeysAvailable(request.instances, instance.id, plannedSecretRefs);
 

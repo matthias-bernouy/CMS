@@ -18,7 +18,8 @@ import { LocalFsDashboardRepository } from "./dev-server/dashboards";
 import { LocalFsIntegrationInstanceRepository } from "./dev-server/integrationInstances";
 import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
-import type { IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import { SupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import type { IntegrationConnectorDeployer, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { createReloadEmitter, createBlocRegistry, type ReloadEmitter } from "./dev-server/watch";
 import { LocalFsCmsRepository } from "./dev-server/repo/LocalFsCmsRepository";
@@ -111,6 +112,7 @@ export default async function CLI_dev(args: string[]) {
     const { auth, users, identityProviders, pats, credentials, devAdmin } = await createDevAuth();
     const sources = await createDevSources(config.siteDir);
     const integrationCatalog = createIntegrationCatalog();
+    const integrationConnectorDeployers = createIntegrationConnectorDeployers();
     const integrationInstances = new LocalFsIntegrationInstanceRepository(config.siteDir);
     const dashboards = new LocalFsDashboardRepository(config.siteDir);
     const secrets = new ValidatingSecretStore(LocalFsEnvSecretStore.forSite(config.siteDir));
@@ -155,6 +157,7 @@ export default async function CLI_dev(args: string[]) {
         publicAuth: { ...publicAuth, allowSignup: false },
         integrationCatalog,
         integrationInstances,
+        integrationConnectorDeployers,
         dashboards,
     }, undefined, secrets, filesMetadata, files, users, identityProviders, pats, credentials, sources, undefined, roles);
     await cms.ready;
@@ -219,6 +222,20 @@ function createIntegrationCatalog(): IntegrationDefinitionRepository {
     const repositoryUrl = process.env.P9R_INTEGRATION_REPOSITORY_URL?.trim();
     if (repositoryUrl) return new HttpIntegrationDefinitionRepository(repositoryUrl);
     return new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+}
+
+function createIntegrationConnectorDeployers(): IntegrationConnectorDeployer[] | undefined {
+    const accessToken = process.env.SUPABASE_ACCESS_TOKEN?.trim() || process.env.SUPABASE_TOKEN_CONNECTION?.trim();
+    const projectRef = process.env.SUPABASE_PROJECT_REF?.trim() || process.env.SUPABASE_PROJECT_ID?.trim();
+    if (!accessToken && !projectRef) return undefined;
+    if (!accessToken || !projectRef) {
+        throw new Error("Supabase connector deployment requires SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF");
+    }
+    return [new SupabaseConnectorDeployer({
+        integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
+        accessToken,
+        projectRef,
+    })];
 }
 
 function parsePortFlag(raw: string): number {

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
     InMemoryIntegrationInstanceRepository,
     runIntegrationInstance,
+    type IntegrationConnectorDeployer,
     type IntegrationDefinition,
 } from "@bernouy/cms-integrations";
 import { InMemorySecretStore } from "@bernouy/cms-secrets";
@@ -77,6 +78,37 @@ describe("@bernouy/cms-integrations instance secrets", () => {
 
         expect(result.instance.secretRefs).toEqual({ apiKey: "API_KEY", serviceKey: "SERVICE_KEY" });
     });
+
+    test("tracks generated connector secrets without storing generated values on the instance", async () => {
+        const sources = new InMemorySourceRepository();
+        const secrets = new InMemorySecretStore();
+        const instances = new InMemoryIntegrationInstanceRepository();
+        const deployer: IntegrationConnectorDeployer = {
+            provider: "supabase",
+            async deploy() {
+                return { provider: "supabase", outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" } };
+            },
+        };
+
+        const result = await runIntegrationInstance({
+            mode: "create",
+            deps: { sources, secrets, connectorDeployers: [deployer] },
+            instances,
+            siteIntegrations: [generatedSecretDefinition()],
+            dto: { kind: "generated-secret", answers: { id: "main" }, options: {} },
+        });
+
+        expect(result.instance.secretInputs).toEqual(["cmsApiKey"]);
+        expect(result.instance.secretRefs).toEqual({ cmsApiKey: "GENERATED_MAIN_API_KEY" });
+        const generated = await secrets.get("GENERATED_MAIN_API_KEY");
+        expect(generated?.startsWith("cms_")).toBe(true);
+        if (!generated) throw new Error("missing generated secret");
+        expect(JSON.stringify(result.instance)).not.toContain(generated);
+        expect(result.instance.runs[0]?.connectors).toEqual([{
+            provider: "supabase",
+            outputs: { functionsBaseUrl: "https://project.supabase.co/functions/v1" },
+        }]);
+    });
 });
 
 function twoSecretsDefinition(): IntegrationDefinition {
@@ -92,5 +124,37 @@ function twoSecretsDefinition(): IntegrationDefinition {
             { input: "serviceKey", key: "SERVICE_KEY" },
             { input: "apiKey", key: "API_KEY" },
         ],
+    };
+}
+
+function generatedSecretDefinition(): IntegrationDefinition {
+    return {
+        kind: "generated-secret",
+        label: "Generated Secret",
+        inputs: [{ name: "id", label: "ID", type: "text", required: true }],
+        generatedSecrets: [{
+            name: "cmsApiKey",
+            key: "GENERATED_{{env answers.id}}_API_KEY",
+            bytes: 16,
+            prefix: "cms_",
+        }],
+        connectors: [{ provider: "supabase" }],
+        artifacts: [{
+            type: "source",
+            source: {
+                id: "{{answers.id}}",
+                meta: { name: "Generated Secret" },
+                endpoints: [{
+                    endpointId: "health",
+                    method: "GET",
+                    targetUrl: "{{connectors.supabase.functionsBaseUrl}}/health",
+                    params: [],
+                    headers: [{
+                        name: "authorization",
+                        source: { from: "secret", ref: "{{secrets.cmsApiKey}}", prefix: "Bearer " },
+                    }],
+                }],
+            },
+        }],
     };
 }

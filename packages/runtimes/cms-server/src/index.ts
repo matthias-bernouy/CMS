@@ -20,6 +20,11 @@ import { MongoDashboardRepository } from "@bernouy/cms-dashboards/mongo";
 import { ValidatingAnalyticsStore } from "@bernouy/cms-analytics";
 import { MongoAnalyticsStore } from "@bernouy/cms-analytics/mongo";
 import { MongoIntegrationInstanceRepository } from "@bernouy/cms-integrations/mongo";
+import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
+import { HttpIntegrationDefinitionRepository } from "@bernouy/cms-integrations/http";
+import { SupabaseConnectorDeployer } from "@bernouy/cms-integrations/supabase";
+import type { IntegrationConnectorDeployer, IntegrationDefinitionRepository } from "@bernouy/cms-integrations";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { MongoClient } from "mongodb";
 import { InMemoryCache } from "@bernouy/http-runner";
 import { LocalFsCmsFilesBlob, ValidatingCmsFilesMetadata } from "@bernouy/cms-files";
@@ -109,6 +114,8 @@ const dashboards        = new MongoDashboardRepository(db);                     
 const mongoAnalytics    = new MongoAnalyticsStore(db);                             await mongoAnalytics.init();
 const analytics         = new ValidatingAnalyticsStore(mongoAnalytics);
 const integrationsStore = new MongoIntegrationInstanceRepository(db);              await integrationsStore.init();
+const integrationCatalog = createIntegrationCatalog(process.env);
+const integrationConnectorDeployers = createIntegrationConnectorDeployers(process.env);
 const rateLimit         = new MongoRateLimiter(db, { limit: 8, windowSeconds: 300 }); await rateLimit.init();
 const mongoRoles        = new MongoRolesRepository(db.collection("cms_roles"));    await mongoRoles.init();
 const roles             = new ValidatingRolesRepository(mongoRoles);
@@ -185,8 +192,10 @@ const publicAuthBase = {
 };
 const controlCms = new ControlCms(controlRunner, repo, auth, {
     deliveryUrl: DELIVERY_PUBLIC_URL,
-    dashboards,
+    integrationCatalog,
     integrationInstances: integrationsStore,
+    integrationConnectorDeployers,
+    dashboards,
     publicAuth: {
         ...publicAuthBase,
         emailVerificationUrl: CMS_CONTROL_AUTH_EMAIL_VERIFICATION_URL,
@@ -221,3 +230,23 @@ console.log(`   admin:        ${CONTROL_PUBLIC_URL}/admin/`);
 console.log(`   sign in:      ${CONTROL_PUBLIC_URL}/login`);
 console.log(`   public site:  ${DELIVERY_PUBLIC_URL}/`);
 console.log(`   storage:      mongo=${db.databaseName}, files=${CMS_FILES_DIR}`);
+
+function createIntegrationCatalog(source: Record<string, string | undefined>): IntegrationDefinitionRepository {
+    const repositoryUrl = source.P9R_INTEGRATION_REPOSITORY_URL?.trim();
+    if (repositoryUrl) return new HttpIntegrationDefinitionRepository(repositoryUrl);
+    return new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT);
+}
+
+function createIntegrationConnectorDeployers(source: Record<string, string | undefined>): IntegrationConnectorDeployer[] | undefined {
+    const accessToken = source.SUPABASE_ACCESS_TOKEN?.trim() || source.SUPABASE_TOKEN_CONNECTION?.trim();
+    const projectRef = source.SUPABASE_PROJECT_REF?.trim() || source.SUPABASE_PROJECT_ID?.trim();
+    if (!accessToken && !projectRef) return undefined;
+    if (!accessToken || !projectRef) {
+        throw new Error("Supabase connector deployment requires SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF");
+    }
+    return [new SupabaseConnectorDeployer({
+        integrationsRoot: OFFICIAL_INTEGRATIONS_ROOT,
+        accessToken,
+        projectRef,
+    })];
+}

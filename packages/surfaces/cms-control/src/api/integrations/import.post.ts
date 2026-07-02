@@ -19,6 +19,7 @@ export default async function postIntegrationImport(req: Request, cms: ControlCm
         blocs: {
             importBloc: (artifact, options) => importBlocArtifact(cms, { ...artifact, force: options.force }),
         },
+        connectorDeployers: cms.integrationConnectorDeployers,
     };
     const result = await runIntegrationInstance({
         mode: "create",

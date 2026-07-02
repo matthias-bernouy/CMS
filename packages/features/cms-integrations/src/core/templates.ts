@@ -5,6 +5,9 @@ import type { IntegrationAnswerValue } from "../interfaces/Integration";
 export type TemplateContext = {
     answers: Record<string, IntegrationAnswerValue>;
     secrets: Record<string, string>;
+    generated?: Record<string, string>;
+    connectors?: Record<string, Record<string, string>>;
+    connectorSecrets?: Record<string, string>;
     secretInputs?: ReadonlySet<string>;
 };
 
@@ -62,6 +65,26 @@ function resolveExpression(expression: string, context: TemplateContext): string
         const key = expression.slice("secrets.".length);
         const value = context.secrets[key];
         if (!value) throw new IntegrationInputError("template", `unknown secret "${key}"`);
+        return value;
+    }
+    if (expression.startsWith("generated.")) {
+        const key = expression.slice("generated.".length);
+        const value = context.generated?.[key];
+        if (!value) throw new IntegrationInputError("template", `unknown generated value "${key}"`);
+        return value;
+    }
+    if (expression.startsWith("connectorSecrets.")) {
+        const key = expression.slice("connectorSecrets.".length);
+        const value = context.connectorSecrets?.[key];
+        if (!value) throw new IntegrationInputError("template", `unknown connector secret "${key}"`);
+        return value;
+    }
+    if (expression.startsWith("connectors.")) {
+        const path = expression.slice("connectors.".length).split(".");
+        if (path.length !== 2) throw new IntegrationInputError("template", `invalid connector expression "${expression}"`);
+        const [provider, key] = path;
+        const value = provider && key ? context.connectors?.[provider]?.[key] : undefined;
+        if (!value) throw new IntegrationInputError("template", `unknown connector output "${expression}"`);
         return value;
     }
     throw new IntegrationInputError("template", `unsupported expression "${expression}"`);

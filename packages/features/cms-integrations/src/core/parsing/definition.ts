@@ -4,6 +4,8 @@ import {
     sensitiveInputNames,
 } from "../shared/inputSensitivity";
 import type {
+    DeclarativeConnectorTemplate,
+    DeclarativeGeneratedSecretTemplate,
     DeclarativeSecretTemplate,
     IntegrationDefinition,
     IntegrationInput,
@@ -29,6 +31,9 @@ export function assertDefinitionUsable(definition: IntegrationDefinition): void 
             throw new IntegrationInputError(`definition.secrets.${secret.input}`, "must reference a secret input");
         }
     }
+    assertUniqueSecretBindingNames(definition.secrets ?? [], definition.generatedSecrets ?? []);
+    for (const secret of definition.generatedSecrets ?? []) validateGeneratedSecretDefinition(secret);
+    for (const connector of definition.connectors ?? []) validateConnectorDefinition(connector);
     if (definition.security) validateSecurityDefinition(definition.security);
 }
 
@@ -54,6 +59,9 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
     const parsedDefinition = { kind, label, inputs } satisfies Pick<IntegrationDefinition, "kind" | "label" | "inputs">;
     assertPasswordInputsDeclareSecrets(parsedDefinition);
     const secrets = parseSecretTemplates(value.secrets, new Set(sensitiveInputNames(parsedDefinition)));
+    const generatedSecrets = parseGeneratedSecretTemplates(value.generatedSecrets);
+    assertUniqueSecretBindingNames(secrets, generatedSecrets);
+    const connectors = parseConnectorTemplates(value.connectors);
     const artifacts = parseArtifactTemplates(value.artifacts);
     const ui = parseUiDefinition(value.ui);
     const security = parseSecurityDefinition(value.security);
@@ -65,6 +73,8 @@ function parseDefinition(value: Record<string, unknown>): IntegrationDefinition 
         ...(text(value.description) ? { description: text(value.description)! } : {}),
         inputs,
         ...(secrets.length ? { secrets } : {}),
+        ...(generatedSecrets.length ? { generatedSecrets } : {}),
+        ...(connectors.length ? { connectors } : {}),
         ...(artifacts.length ? { artifacts } : {}),
         ...(ui ? { ui } : {}),
         ...(security ? { security } : {}),
@@ -107,6 +117,31 @@ function validateInputDefinition(input: IntegrationInput): void {
     }
 }
 
+function validateGeneratedSecretDefinition(secret: DeclarativeGeneratedSecretTemplate): void {
+    if (!secret.name) throw new IntegrationInputError("definition.generatedSecrets.name", "is required");
+    if (!secret.key) throw new IntegrationInputError(`definition.generatedSecrets.${secret.name}.key`, "is required");
+    if (secret.generator !== undefined && secret.generator !== "token") {
+        throw new IntegrationInputError(`definition.generatedSecrets.${secret.name}.generator`, "must be token");
+    }
+    if (secret.bytes !== undefined && (!Number.isInteger(secret.bytes) || secret.bytes < 16 || secret.bytes > 64)) {
+        throw new IntegrationInputError(`definition.generatedSecrets.${secret.name}.bytes`, "must be an integer between 16 and 64");
+    }
+}
+
+function validateConnectorDefinition(connector: DeclarativeConnectorTemplate): void {
+    if (!connector.provider) throw new IntegrationInputError("definition.connectors.provider", "is required");
+    for (const schema of connector.dataApiSchemas ?? []) {
+        if (!schema) throw new IntegrationInputError(`definition.connectors.${connector.provider}.dataApiSchemas`, "must contain non-empty strings");
+    }
+    for (const schema of connector.schemas ?? []) {
+        if (!schema.path) throw new IntegrationInputError(`definition.connectors.${connector.provider}.schemas.path`, "is required");
+    }
+    for (const fn of connector.functions ?? []) {
+        if (!fn.name) throw new IntegrationInputError(`definition.connectors.${connector.provider}.functions.name`, "is required");
+        if (!fn.directory) throw new IntegrationInputError(`definition.connectors.${connector.provider}.functions.directory`, "is required");
+    }
+}
+
 function validateSecurityDefinition(security: IntegrationSecurityDefinition): void {
     if (security.csp === undefined) return;
     parseCspPolicy(security.csp, "definition.security.csp");
@@ -134,6 +169,68 @@ function parseSecretTemplate(value: unknown, name: string, secretInputs: Readonl
     const key = text(value.key);
     if (!key) throw new MissingIntegrationParam(`${name}.key`);
     return { input, key };
+}
+
+function parseGeneratedSecretTemplates(value: unknown): DeclarativeGeneratedSecretTemplate[] {
+    if (value === undefined || value === null) return [];
+    if (!Array.isArray(value)) throw new IntegrationInputError("definition.generatedSecrets", "must be an array");
+    return value.map((entry, index) => parseGeneratedSecretTemplate(entry, `definition.generatedSecrets.${index}`));
+}
+
+function parseGeneratedSecretTemplate(value: unknown, name: string): DeclarativeGeneratedSecretTemplate {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const secretName = text(value.name);
+    if (!secretName) throw new MissingIntegrationParam(`${name}.name`);
+    const key = text(value.key);
+    if (!key) throw new MissingIntegrationParam(`${name}.key`);
+    if (value.generator !== undefined && value.generator !== "token") {
+        throw new IntegrationInputError(`${name}.generator`, "must be token");
+    }
+    const bytes = value.bytes;
+    if (bytes !== undefined && (typeof bytes !== "number" || !Number.isInteger(bytes) || bytes < 16 || bytes > 64)) {
+        throw new IntegrationInputError(`${name}.bytes`, "must be an integer between 16 and 64");
+    }
+    return {
+        name: secretName,
+        key,
+        ...(value.generator === "token" ? { generator: "token" } : {}),
+        ...(typeof bytes === "number" ? { bytes } : {}),
+        ...(text(value.prefix) ? { prefix: text(value.prefix)! } : {}),
+    };
+}
+
+function assertUniqueSecretBindingNames(
+    secrets: DeclarativeSecretTemplate[],
+    generatedSecrets: DeclarativeGeneratedSecretTemplate[],
+): void {
+    const seen = new Set<string>();
+    for (const secret of secrets) {
+        if (seen.has(secret.input)) throw new IntegrationInputError(`definition.secrets.${secret.input}`, "duplicate secret binding name");
+        seen.add(secret.input);
+    }
+    for (const secret of generatedSecrets) {
+        if (seen.has(secret.name)) throw new IntegrationInputError(`definition.generatedSecrets.${secret.name}`, "duplicate secret binding name");
+        seen.add(secret.name);
+    }
+}
+
+function parseConnectorTemplates(value: unknown): DeclarativeConnectorTemplate[] {
+    if (value === undefined || value === null) return [];
+    if (!Array.isArray(value)) throw new IntegrationInputError("definition.connectors", "must be an array");
+    return value.map((entry, index) => parseConnectorTemplate(entry, `definition.connectors.${index}`));
+}
+
+function parseConnectorTemplate(value: unknown, name: string): DeclarativeConnectorTemplate {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const provider = text(value.provider);
+    if (!provider) throw new MissingIntegrationParam(`${name}.provider`);
+    return {
+        provider,
+        ...(text(value.root) ? { root: text(value.root)! } : {}),
+        ...(value.dataApiSchemas !== undefined ? { dataApiSchemas: parseConnectorStringList(value.dataApiSchemas, `${name}.dataApiSchemas`) } : {}),
+        ...(value.schemas !== undefined ? { schemas: parseConnectorSchemas(value.schemas, `${name}.schemas`) } : {}),
+        ...(value.functions !== undefined ? { functions: parseConnectorFunctions(value.functions, `${name}.functions`) } : {}),
+    };
 }
 
 function parseSecurityDefinition(value: unknown): IntegrationSecurityDefinition | undefined {
@@ -169,6 +266,55 @@ function parseCspSource(value: unknown, name: string): string {
     } catch {
         throw new IntegrationInputError(name, "must be an absolute origin");
     }
+}
+
+function parseConnectorStringList(value: unknown, name: string): string[] {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return value.map((entry, index) => {
+        const parsed = text(entry);
+        if (!parsed) throw new IntegrationInputError(`${name}.${index}`, "must be a non-empty string");
+        return parsed;
+    });
+}
+
+function parseConnectorSchemas(value: unknown, name: string): NonNullable<DeclarativeConnectorTemplate["schemas"]> {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return value.map((entry, index) => {
+        if (typeof entry === "string") return { path: entry };
+        if (!isRecord(entry)) throw new IntegrationInputError(`${name}.${index}`, "must be a string or object");
+        const path = text(entry.path);
+        if (!path) throw new MissingIntegrationParam(`${name}.${index}.path`);
+        return { path };
+    });
+}
+
+function parseConnectorFunctions(value: unknown, name: string): NonNullable<DeclarativeConnectorTemplate["functions"]> {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return value.map((entry, index) => parseConnectorFunction(entry, `${name}.${index}`));
+}
+
+function parseConnectorFunction(value: unknown, name: string): NonNullable<DeclarativeConnectorTemplate["functions"]>[number] {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const functionName = text(value.name);
+    if (!functionName) throw new MissingIntegrationParam(`${name}.name`);
+    const directory = text(value.directory);
+    if (!directory) throw new MissingIntegrationParam(`${name}.directory`);
+    return {
+        name: functionName,
+        directory,
+        ...(text(value.configPath) ? { configPath: text(value.configPath)! } : {}),
+        ...(value.secrets !== undefined ? { secrets: parseConnectorSecretMap(value.secrets, `${name}.secrets`) } : {}),
+    };
+}
+
+function parseConnectorSecretMap(value: unknown, name: string): Record<string, string> {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const out: Record<string, string> = {};
+    for (const [key, entry] of Object.entries(value)) {
+        if (typeof entry !== "string") throw new IntegrationInputError(`${name}.${key}`, "must be a string");
+        out[key] = entry;
+    }
+    return out;
 }
 
 function parseOptionsList(values: unknown[], name: string): Array<{ label: string; value: string }> {

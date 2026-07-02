@@ -9,6 +9,7 @@
         ".": "./src/exports/index.ts",
         "./fs": "./src/exports/fs.ts",
         "./http": "./src/exports/http.ts",
+        "./supabase": "./src/exports/supabase.ts",
         "./mongo": "./src/exports/mongo.ts"
     },
     "dependencies": {

@@ -6,6 +6,7 @@ import type {
     IntegrationArtifactResult,
     IntegrationSecretResult,
 } from "./IntegrationImport";
+import type { IntegrationConnectorDeployResult } from "./IntegrationConnectorDeployer";
 
 export type IntegrationInstanceStatus = "success" | "failed" | "pending";
 
@@ -22,6 +23,7 @@ export type IntegrationRun = {
     finishedAt: Date;
     artifacts: IntegrationArtifactResult[];
     secrets?: IntegrationSecretResult[];
+    connectors?: IntegrationConnectorDeployResult[];
     error?: IntegrationRunError;
 };
 

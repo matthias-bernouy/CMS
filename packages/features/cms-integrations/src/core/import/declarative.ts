@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { DuplicateDashboardError, validateDashboard, type Dashboard } from "@bernouy/cms-dashboards";
 import { DuplicateSourceError, sourceDtoToSource, validateSource, type Source } from "@bernouy/cms-sources";
 import { parseUrn } from "@bernouy/cms-sources";
@@ -9,10 +10,12 @@ import {
 } from "../shared/inputSensitivity";
 import { resolveTemplate, resolveTemplates, type TemplateContext } from "../templates";
 import { writeSecretsWithRollback } from "./secretWrites";
+import { buildConnectorDeployments, deployConnectorDeployments } from "./connectorDeployments";
 import { writeDashboardsWithRollback, type IntegrationDashboardWrite } from "./dashboardWrites";
 import { writeSourcesWithRollback, type IntegrationSourceWrite } from "./sourceWrites";
 import type {
     DeclarativeBlocArtifactTemplate,
+    DeclarativeGeneratedSecretTemplate,
     DeclarativeSecretTemplate,
     IntegrationDefinition,
 } from "../../interfaces/Integration";
@@ -50,8 +53,18 @@ export function resolveDeclarativeSecretRefs(
     answers: TemplateContext["answers"],
 ): Record<string, string> {
     const secretInputNames = sensitiveInputs(definition);
-    const secretWrites = buildSecretWrites(definition.secrets ?? [], answers, secretInputNames);
-    return Object.fromEntries(secretWrites.map(secret => [secret.input, secret.key]));
+    const inputSecrets = buildInputSecretWrites(definition.secrets ?? [], answers, secretInputNames);
+    const generatedSecrets = buildGeneratedSecretWrites(definition.generatedSecrets ?? [], answers, false);
+    const writes = [...inputSecrets, ...generatedSecrets];
+    assertUniqueSecretWrites(writes);
+    return Object.fromEntries(writes.map(secret => [secret.input, secret.key]));
+}
+
+export function declarativeSecretBindingNames(definition: IntegrationDefinition): string[] {
+    return [
+        ...sensitiveInputNames(definition),
+        ...(definition.generatedSecrets ?? []).map(secret => secret.name),
+    ];
 }
 
 async function executeDeclarativeIntegration<T>(
@@ -62,35 +75,52 @@ async function executeDeclarativeIntegration<T>(
     commit?: (result: IntegrationImportResult) => Promise<T>,
 ): Promise<{ result: { importResult: IntegrationImportResult } | { importResult: IntegrationImportResult; committed: T } }> {
     const secretInputNames = sensitiveInputs(definition);
-    const secretWrites = buildSecretWrites(definition.secrets ?? [], answers, secretInputNames);
-    const context: TemplateContext = {
+    const inputSecretWrites = buildInputSecretWrites(definition.secrets ?? [], answers, secretInputNames);
+    const generatedSecretWrites = buildGeneratedSecretWrites(definition.generatedSecrets ?? [], answers, true);
+    const secretWrites = [...inputSecretWrites, ...generatedSecretWrites];
+    assertUniqueSecretWrites(secretWrites);
+    const baseContext: TemplateContext = {
         answers,
         secrets: Object.fromEntries(secretWrites.map(secret => [secret.input, secretKeyToRef(secret.key)])),
+        generated: Object.fromEntries(generatedSecretWrites.map(secret => [secret.input, secret.value])),
         secretInputs: secretInputNames,
     };
-    const sourceArtifacts = buildSourceArtifacts(definition, context);
-    const sourceWrites = await buildSourceWrites(deps, sourceArtifacts, options);
-    const dashboardArtifacts = buildDashboardArtifacts(definition, context);
-    const dashboardWrites = await buildDashboardWrites(deps, dashboardArtifacts, sourceArtifacts, options);
-    const blocArtifacts = buildBlocArtifacts(definition, context);
+    const connectorDeployments = buildConnectorDeployments(definition, {
+        ...baseContext,
+        connectorSecrets: Object.fromEntries(secretWrites.map(secret => [secret.input, secret.value])),
+    });
 
     return writeSecretsWithRollback(
         deps.secrets,
         secretWrites,
-        (secretResults) => writeSourcesWithRollback(deps.sources, sourceWrites, async artifacts => {
-            const buildResult = async (dashboardArtifacts: typeof artifacts) => {
-                const blocImportResults = await importBlocArtifacts(deps, blocArtifacts, options);
-                const importResult = {
-                    artifacts: [...artifacts, ...dashboardArtifacts, ...blocImportResults],
-                    ...(secretResults.length ? { secrets: secretResults } : {}),
-                };
-                return commit
-                    ? { importResult, committed: await commit(importResult) }
-                    : { importResult };
+        async (secretResults) => {
+            const connectorDeployResult = await deployConnectorDeployments(deps, connectorDeployments, baseContext);
+            const context: TemplateContext = {
+                ...baseContext,
+                connectors: connectorDeployResult.outputs,
             };
-            if (!dashboardWrites.length) return buildResult([]);
-            return writeDashboardsWithRollback(deps.dashboards ?? missingDashboardRepository(), dashboardWrites, buildResult);
-        }),
+            const sourceArtifacts = buildSourceArtifacts(definition, context);
+            const sourceWrites = await buildSourceWrites(deps, sourceArtifacts, options);
+            const dashboardArtifacts = buildDashboardArtifacts(definition, context);
+            const dashboardWrites = await buildDashboardWrites(deps, dashboardArtifacts, sourceArtifacts, options);
+            const blocArtifacts = buildBlocArtifacts(definition, context);
+
+            return writeSourcesWithRollback(deps.sources, sourceWrites, async artifacts => {
+                const buildResult = async (dashboardArtifacts: typeof artifacts) => {
+                    const blocImportResults = await importBlocArtifacts(deps, blocArtifacts, options);
+                    const importResult = {
+                        artifacts: [...artifacts, ...dashboardArtifacts, ...blocImportResults],
+                        ...(secretResults.length ? { secrets: secretResults } : {}),
+                        ...(connectorDeployResult.results.length ? { connectors: connectorDeployResult.results } : {}),
+                    };
+                    return commit
+                        ? { importResult, committed: await commit(importResult) }
+                        : { importResult };
+                };
+                if (!dashboardWrites.length) return buildResult([]);
+                return writeDashboardsWithRollback(deps.dashboards ?? missingDashboardRepository(), dashboardWrites, buildResult);
+            });
+        },
     );
 }
 
@@ -161,7 +191,7 @@ async function importBlocArtifacts(
     return results;
 }
 
-function buildSecretWrites(
+function buildInputSecretWrites(
     templates: DeclarativeSecretTemplate[],
     answers: TemplateContext["answers"],
     secretInputNames: ReadonlySet<string>,
@@ -185,6 +215,54 @@ function buildSecretWrites(
         seenKeys.set(key, template.input);
         return { input: template.input, key, value: rawValue };
     });
+}
+
+function buildGeneratedSecretWrites(
+    templates: DeclarativeGeneratedSecretTemplate[],
+    answers: TemplateContext["answers"],
+    generateValues: boolean,
+): Array<{ input: string; key: string; value: string }> {
+    const seenNames = new Set<string>();
+    const seenKeys = new Set<string>();
+    return templates.map(template => {
+        if (!template.name) throw new IntegrationInputError("generatedSecrets.name", "is required");
+        if (seenNames.has(template.name)) throw new IntegrationInputError("generatedSecrets", `duplicate generated secret "${template.name}"`);
+        seenNames.add(template.name);
+
+        const key = resolveTemplate(template.key, { answers, secrets: {}, secretInputs: new Set() });
+        const keyError = secretKeyError(key);
+        if (keyError) throw new IntegrationInputError(`generatedSecrets.${template.name}.key`, keyError);
+        if (seenKeys.has(key)) throw new IntegrationInputError("generatedSecrets", `duplicate resolved secret key "${key}"`);
+        seenKeys.add(key);
+
+        return {
+            input: template.name,
+            key,
+            value: generateValues ? generateSecretValue(template) : "__generated__",
+        };
+    });
+}
+
+function assertUniqueSecretWrites(writes: Array<{ input: string; key: string }>): void {
+    const names = new Set<string>();
+    const keys = new Set<string>();
+    for (const write of writes) {
+        if (names.has(write.input)) throw new IntegrationInputError("secrets", `duplicate secret binding "${write.input}"`);
+        if (keys.has(write.key)) throw new IntegrationInputError("secrets", `duplicate resolved secret key "${write.key}"`);
+        names.add(write.input);
+        keys.add(write.key);
+    }
+}
+
+function generateSecretValue(template: DeclarativeGeneratedSecretTemplate): string {
+    if (template.generator !== undefined && template.generator !== "token") {
+        throw new IntegrationInputError(`generatedSecrets.${template.name}.generator`, "must be token");
+    }
+    const bytes = template.bytes ?? 32;
+    if (!Number.isInteger(bytes) || bytes < 16 || bytes > 64) {
+        throw new IntegrationInputError(`generatedSecrets.${template.name}.bytes`, "must be an integer between 16 and 64");
+    }
+    return `${template.prefix ?? ""}${randomBytes(bytes).toString("base64url")}`;
 }
 
 async function buildDashboardWrites(

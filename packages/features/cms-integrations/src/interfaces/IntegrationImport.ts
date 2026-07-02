@@ -5,6 +5,10 @@ import type {
     IntegrationAnswerValue,
     IntegrationDefinition,
 } from "./Integration";
+import type {
+    IntegrationConnectorDeployer,
+    IntegrationConnectorDeployResult,
+} from "./IntegrationConnectorDeployer";
 
 export type IntegrationArtifactType = "source" | "dashboard" | "bloc";
 
@@ -25,6 +29,7 @@ export type IntegrationSecretResult = {
 export type IntegrationImportResult = {
     artifacts: IntegrationArtifactResult[];
     secrets?: IntegrationSecretResult[];
+    connectors?: IntegrationConnectorDeployResult[];
 };
 
 export type IntegrationImportOptions = {
@@ -53,6 +58,8 @@ export type IntegrationImportDeps = {
     secrets: SecretStore;
     dashboards?: DashboardRepository;
     blocs?: IntegrationBlocImporter;
+    connectorDeployers?: IntegrationConnectorDeployer[] | Record<string, IntegrationConnectorDeployer>;
+    env?: Record<string, string | undefined>;
 };
 
 export type IntegrationBlocArtifact = {

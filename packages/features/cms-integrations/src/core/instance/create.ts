@@ -4,10 +4,10 @@ import {
     IntegrationInputError,
 } from "../errors";
 import {
+    declarativeSecretBindingNames,
     importDeclarativeIntegrationWithCommit,
     resolveDeclarativeSecretRefs,
 } from "../import/declarative";
-import { sensitiveInputNames } from "../shared/inputSensitivity";
 import { createIntegrationInstanceId } from "./ids";
 import { successRun } from "./runs";
 import { assertSecretKeysAvailable } from "./secretRefs";
@@ -31,7 +31,7 @@ export async function runCreate(request: RunIntegrationInstanceCreateRequest): P
     if (!instanceId) throw new IntegrationInputError("instance.id", "is required for tracked imports without answers.id");
     if (await request.instances.get(instanceId)) throw new DuplicateIntegrationInstanceError(instanceId);
 
-    const secretInputs = sensitiveInputNames(definition);
+    const secretInputs = declarativeSecretBindingNames(definition);
     const plannedSecretRefs = resolveDeclarativeSecretRefs(definition, request.dto.answers);
     await assertSecretKeysAvailable(request.instances, instanceId, plannedSecretRefs);
     const startedAt = new Date();
