@@ -1,17 +1,11 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import type { DashboardSourceGroup } from "../types";
 import type { DetailSelection, RenderContext } from "../domain";
 import "./../widgets/w-section/WSection";
 import "./../widgets/w-table/WTable";
 import "./../widgets/w-detail/WDetail";
-import type { DashboardWTable } from "../widgets/w-table/WTable";
-import type { DashboardWDetail } from "../widgets/w-detail/WDetail";
-import { fetchSourceJson, itemFrom, itemsFrom } from "./source";
-import { detailData, fieldValues, tableData, type DetailOptions } from "./mapping";
-import { detailLookupOptions } from "./lookups";
-import { detailKey } from "../domain";
-
-const detailOptionsCache = new Map<string, DetailOptions>();
+import { route } from "../api";
+import { resolveParams, type RuntimeVars } from "./expressions";
+import { detailReloadEvent } from "./reload";
 
 export function mountDashboardWidgets(
     root: HTMLElement,
@@ -21,9 +15,12 @@ export function mountDashboardWidgets(
     tabState: Map<string, number>,
     detail: DetailSelection | null,
 ): void {
-    root.replaceChildren(...widgets.map((widget, index) =>
+    const core = document.createElement("cms-binding-core");
+    core.className = "dashboard-widget-binding";
+    core.replaceChildren(...widgets.map((widget, index) =>
         widgetElement(widget, context, `${key}.${index}`, tabState, detail),
     ));
+    root.replaceChildren(core);
 }
 
 function widgetElement(widget: DashboardWidget, context: RenderContext, key: string, tabState: Map<string, number>, detail: DetailSelection | null): HTMLElement {
@@ -70,43 +67,68 @@ function tabsElement(widget: Extract<DashboardWidget, { widget: "w-tabs" }>, con
 }
 
 function tableElement(widget: Extract<DashboardWidget, { widget: "w-table" }>, context: RenderContext): HTMLElement {
-    const element = document.createElement("cms-dashboard-w-table") as unknown as DashboardWTable;
-    element.data = tableData(widget, []);
-    element.selected = context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "";
-    void fetchSourceJson(context.dashboard.source, widget.source, {})
-        .then(data => { element.data = tableData(widget, itemsFrom(data, widget.source)); })
-        .catch(error => { element.data = { ...tableData(widget, []), subtitle: error instanceof Error ? error.message : "Source request failed" }; });
-    return element as unknown as HTMLElement;
+    const wrapper = sourceWrapper(context.dashboard.source, widget.source, {}, "dashboardData");
+    const element = document.createElement("cms-dashboard-w-table");
+    element.setAttribute("data-config-json", jsonAttr(widget));
+    element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
+    element.append(tableRowsTemplate(widget));
+    wrapper.append(element);
+    return wrapper;
 }
 
 function detailElement(widget: Extract<DashboardWidget, { widget: "w-detail" }>, context: RenderContext, detail: DetailSelection | null): HTMLElement {
-    const element = document.createElement("cms-dashboard-w-detail") as unknown as DashboardWDetail;
     const rowKey = detail?.row ?? "";
-    const optionsKey = detailOptionKey(context, widget.id, rowKey);
-    const cachedOptions = detailOptionsCache.get(optionsKey) ?? {};
-    const draft = context.drafts.get(detailKey(widget.id, rowKey)) ?? {};
-    element.data = detailData(widget, {}, rowKey, draft, cachedOptions, context.dashboard.source);
-    void fetchSourceJson(context.dashboard.source, widget.source, { selection: { id: rowKey } })
-        .then(async data => {
-            const resource = itemFrom(data, widget.source);
-            const fields = { ...fieldValues(widget, resource), ...draft };
-            element.data = detailData(widget, resource, rowKey, draft, cachedOptions, context.dashboard.source);
-            const options = await detailLookupOptions(context.dashboard.source, widget, resource, fields);
-            const mergedOptions = storeDetailOptions(optionsKey, options);
-            element.data = detailData(widget, resource, rowKey, draft, mergedOptions, context.dashboard.source);
-        })
-        .catch(error => {
-            element.data = detailData({ ...widget, title: { fallback: error instanceof Error ? error.message : "Source request failed", path: "" } }, {}, rowKey, draft, cachedOptions, context.dashboard.source);
-        });
-    return element as unknown as HTMLElement;
+    const wrapper = sourceWrapper(context.dashboard.source, widget.source, { selection: { id: rowKey } }, "dashboardData");
+    wrapper.setAttribute("cms-reload-on", detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey));
+    const element = document.createElement("cms-dashboard-w-detail");
+    element.setAttribute("data-config-json", jsonAttr(widget));
+    element.setAttribute("data-source-json", "{{ dashboardData | json }}");
+    element.setAttribute("data-row-key", rowKey);
+    element.setAttribute("data-source-id", context.dashboard.source);
+    wrapper.append(element);
+    return wrapper;
 }
 
-function detailOptionKey(context: RenderContext, widgetId: string, rowKey: string): string {
-    return `${context.dashboard.source}:${context.dashboard.id}:${widgetId}:${rowKey}`;
+function sourceWrapper(sourceId: string, ref: { endpoint: string; params?: Record<string, string> }, vars: RuntimeVars, alias: string): HTMLElement {
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("cms-source", `${sourceUrl(sourceId, ref, vars)} as ${alias}`);
+    return wrapper;
 }
 
-function storeDetailOptions(key: string, options: DetailOptions): DetailOptions {
-    const merged = { ...(detailOptionsCache.get(key) ?? {}), ...options };
-    detailOptionsCache.set(key, merged);
-    return merged;
+function sourceUrl(sourceId: string, ref: { endpoint: string; params?: Record<string, string> }, vars: RuntimeVars): string {
+    const url = new URL(route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) url.searchParams.set(key, value);
+    return `${url.pathname}${url.search}`;
+}
+
+function jsonAttr(value: unknown): string {
+    return JSON.stringify(value);
+}
+
+function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-table" }>): HTMLElement {
+    const row = document.createElement("span");
+    row.setAttribute("data-table-row", "");
+    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
+    row.setAttribute("data-row-id", bindingPath("row", widget.rowKey));
+    row.setAttribute("data-collection", widget.selection?.opens ?? widget.id);
+    for (const column of widget.columns) {
+        const cell = document.createElement("span");
+        cell.setAttribute("data-table-cell", column.id);
+        cell.setAttribute("data-title", bindingPath("row", column.path));
+        if (column.primary) {
+            cell.setAttribute("data-primary", "true");
+            cell.setAttribute("data-meta", "{{ row.id }}");
+        }
+        if (column.format === "badge") cell.setAttribute("data-tone", "badge");
+        row.append(cell);
+    }
+    return row;
+}
+
+function repeatPath(alias: string, path: string | undefined): string {
+    return path ? `${alias}.${path}` : alias;
+}
+
+function bindingPath(alias: string, path: string): string {
+    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
 }

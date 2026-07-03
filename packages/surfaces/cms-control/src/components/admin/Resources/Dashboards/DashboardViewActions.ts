@@ -11,6 +11,7 @@ export type DashboardViewActionContext = {
     detail: DetailSelection | null;
     drafts: Map<string, Record<string, unknown>>;
     render: () => void;
+    reload: (collection: string, row: string) => void;
 };
 
 export async function runDashboardWidgetAction(context: DashboardViewActionContext, action: string): Promise<void> {
@@ -21,7 +22,7 @@ export async function runDashboardWidgetAction(context: DashboardViewActionConte
         await executeDashboardAction(group, dashboard, detail, action, context.drafts.get(key) ?? {});
         context.drafts.delete(key);
         showToast(`${action} completed`, { type: "success" });
-        context.render();
+        context.reload(detail.collection, detail.row);
     } catch (error) {
         showToast(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
@@ -35,7 +36,7 @@ export async function runDashboardMediaAction(context: DashboardViewActionContex
         await executeDashboardMediaAction(group, dashboard, detail, media, context.drafts.get(key) ?? {});
         removeDraftField(context.drafts, key, media.field);
         showToast(`Media ${media.action} completed`, { type: "success" });
-        context.render();
+        context.reload(detail.collection, detail.row);
     } catch (error) {
         showToast(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
     }

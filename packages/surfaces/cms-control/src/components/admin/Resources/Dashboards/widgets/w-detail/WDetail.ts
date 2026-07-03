@@ -1,4 +1,5 @@
 import { Component } from "@bernouy/components/base";
+import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import {
     emitWidgetEvent,
     setText,
@@ -9,6 +10,9 @@ import {
 } from "../shared";
 import "../w-section/WSection";
 import { W_MEDIA_FIELD_ACTION_EVENT, type DashboardMediaActionDetail } from "../w-media-field/types";
+import { detailData, fieldValues, type DetailOptions } from "../../runtime/mapping";
+import { valueAt } from "../../runtime/expressions";
+import { detailLookupOptions } from "../../runtime/lookups";
 import { renderDetailActions } from "./actions";
 import { createFieldControl, fieldUsesInternalLabel, readFieldControlValue } from "./controls";
 import type { WDetailData, WDetailField, WDetailSection } from "./types";
@@ -18,6 +22,9 @@ import template from "./template.html" with { type: "text" };
 export class DashboardWDetail extends Component {
     private value: WDetailData = { rowKey: "", eyebrow: "", title: "", actions: [], main: [], aside: [] };
     private bound = false;
+    private dynamicOptions: DetailOptions = {};
+    private optionsRequestKey = "";
+    private optionsScopeKey = "";
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
@@ -28,6 +35,14 @@ export class DashboardWDetail extends Component {
         if (this.isConnected) this.render();
     }
 
+    static get observedAttributes(): string[] {
+        return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
+    }
+
+    attributeChangedCallback(): void {
+        this.syncBoundData();
+    }
+
     override connectedCallback(): void {
         if (!this.bound) {
             this.shadowRoot!.addEventListener("click", this.onClick);
@@ -35,6 +50,7 @@ export class DashboardWDetail extends Component {
             this.shadowRoot!.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
             this.bound = true;
         }
+        this.syncBoundData();
         this.render();
     }
 
@@ -123,6 +139,39 @@ export class DashboardWDetail extends Component {
         });
     }
 
+    private syncBoundData(): void {
+        const widget = parseJson<DetailWidget>(this.dataset.configJson ?? "");
+        if (!widget || widget.widget !== "w-detail") return;
+        const sourceJson = this.dataset.sourceJson ?? "";
+        const sourceData = parseJson<unknown>(sourceJson) ?? {};
+        const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
+        const rowKey = this.dataset.rowKey ?? "";
+        const sourceId = this.dataset.sourceId ?? "";
+        const scopeKey = `${sourceId}:${widget.id}:${rowKey}`;
+        if (this.optionsScopeKey !== scopeKey) {
+            this.optionsScopeKey = scopeKey;
+            this.dynamicOptions = {};
+        }
+        this.value = detailData(widget, resource, rowKey, {}, this.dynamicOptions, sourceId);
+        if (this.isConnected) this.render();
+        if (!sourceJson || !sourceId) return;
+        void this.loadLookupOptions(widget, resource, rowKey, sourceId);
+    }
+
+    private async loadLookupOptions(widget: DetailWidget, resource: unknown, rowKey: string, sourceId: string): Promise<void> {
+        const requestKey = `${sourceId}:${widget.id}:${rowKey}:${this.dataset.sourceJson ?? ""}`;
+        this.optionsRequestKey = requestKey;
+        try {
+            const options = await detailLookupOptions(sourceId, widget, resource, fieldValues(widget, resource));
+            if (this.optionsRequestKey !== requestKey) return;
+            this.dynamicOptions = options;
+            this.value = detailData(widget, resource, rowKey, {}, options, sourceId);
+            if (this.isConnected) this.render();
+        } catch {
+            if (this.optionsRequestKey === requestKey) this.dynamicOptions = {};
+        }
+    }
+
     private findField(id: string): WDetailField | undefined {
         return [...this.value.main, ...this.value.aside].flatMap(section => section.fields).find(field => field.id === id);
     }
@@ -140,6 +189,17 @@ export class DashboardWDetail extends Component {
 if (!customElements.get("cms-dashboard-w-detail")) customElements.define("cms-dashboard-w-detail", DashboardWDetail);
 
 export type { WDetailData, WDetailField, WDetailSection };
+
+type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
+
+function parseJson<T>(value: string): T | null {
+    if (!value) return null;
+    try {
+        return JSON.parse(value) as T;
+    } catch {
+        return null;
+    }
+}
 
 function findActionTarget(event: Event): HTMLElement | undefined {
     return event.composedPath().find((target): target is HTMLElement =>

@@ -43,6 +43,7 @@ import {
     BarList,
     RangeTabs,
     BindingCore,
+    setBindingFilters,
 } from "@bernouy/components";
 
 function define(tag: string, constructor: CustomElementConstructor) {
@@ -50,6 +51,9 @@ function define(tag: string, constructor: CustomElementConstructor) {
 }
 
 define(CMS_BINDING_CORE_TAG, BindingCore);
+setBindingFilters({
+    json: (value) => value === undefined ? undefined : JSON.stringify(value),
+});
 define("p9r-accordion", Accordion);
 define("p9r-accordion-item", AccordionItem);
 define("p9r-action-menu", ActionMenu);

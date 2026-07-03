@@ -9735,6 +9735,10 @@ p {
     e.id = Xs, e.textContent = op, (t.head ?? t.documentElement).appendChild(e);
   }
   var Ys = {};
+  function np(t) {
+    Ys = t;
+  }
+
   class Qs extends HTMLElement {
     _runtime = null;
     static get observedAttributes() {
@@ -12742,15 +12746,6 @@ cms-endpoints-input .ep-add:hover {
   function dispatchDashboardSelection(selection) {
     window.dispatchEvent(new CustomEvent(DASHBOARD_SELECTION_EVENT, { detail: selection }));
   }
-  async function fetchDashboards() {
-    return getJson(route("/api/dashboards"));
-  }
-  async function getJson(url) {
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!response.ok)
-      throw new Error(`HTTP ${response.status}`);
-    return response.json();
-  }
 
   // src/components/admin/Resources/Dashboards/icons.ts
   var SVG_MAX_LENGTH = 8000;
@@ -12874,6 +12869,17 @@ cms-endpoints-input .ep-add:hover {
     `
   };
 
+  // src/components/admin/Resources/Dashboards/runtime/bindingFilters.ts
+  var configured = false;
+  function configureDashboardBindingFilters() {
+    if (configured)
+      return;
+    configured = true;
+    np({
+      json: (value) => value === undefined ? undefined : JSON.stringify(value)
+    });
+  }
+
   // src/components/admin/Resources/Dashboards/nav.css
   var nav_default = `:host {
     display: block;
@@ -12887,6 +12893,10 @@ w13c-lateral-menu {
     --menu-header-font-size: .875rem;
     --menu-item-font-size: .875rem;
     --menu-section-font-size: .6875rem;
+}
+
+.binding-source {
+    display: none;
 }
 
 w13c-lateral-menu-item {
@@ -12910,7 +12920,13 @@ w13c-lateral-menu-item {
 `;
 
   // src/components/admin/Resources/Dashboards/nav.html
-  var nav_default2 = `<w13c-lateral-menu
+  var nav_default2 = `<cms-binding-core class="binding-source">
+    <span data-nav-list-source hidden>
+        <span data-nav-groups-json="{{ dashboards | json }}"></span>
+    </span>
+</cms-binding-core>
+
+<w13c-lateral-menu
     aria-label="Sources navigation"
     style="width: 100%; height: 100%; --menu-brand-mark-display: none; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;"
 >
@@ -12923,8 +12939,10 @@ w13c-lateral-menu-item {
     groups = [];
     selectedSource = "";
     selectedDashboard = "";
+    observer = null;
     constructor() {
       super({ css: nav_default, template: nav_default2 });
+      configureDashboardBindingFilters();
     }
     connectedCallback() {
       super.connectedCallback();
@@ -12932,25 +12950,34 @@ w13c-lateral-menu-item {
       this.shadowRoot.addEventListener("click", this.onClick);
       window.addEventListener("popstate", this.onPopState);
       window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
-      this.load();
+      this.startBoundSource();
     }
     disconnectedCallback() {
       this.shadowRoot?.removeEventListener("click", this.onClick);
       window.removeEventListener("popstate", this.onPopState);
       window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
+      this.observer?.disconnect();
+      this.observer = null;
     }
-    async load() {
+    startBoundSource() {
       if (this.isExampleMode()) {
         this.renderExample();
         return;
       }
-      try {
-        this.groups = await fetchDashboards();
-        this.selectedSource ||= this.groups[0]?.source.id ?? "";
-        this.ensureDashboardSelection();
-      } catch {
-        this.groups = [];
-      }
+      const source = this.query("[data-nav-list-source]");
+      source.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
+      this.observer = new MutationObserver(() => this.readBoundGroups());
+      this.observer.observe(source, { attributes: true, childList: true, subtree: true });
+      this.readBoundGroups();
+    }
+    readBoundGroups() {
+      const target = this.shadowRoot.querySelector("[data-nav-groups-json]");
+      const next = parseGroups(target?.dataset.navGroupsJson ?? "");
+      if (!next)
+        return;
+      this.groups = next;
+      this.selectedSource ||= this.groups[0]?.source.id ?? "";
+      this.ensureDashboardSelection();
       this.render();
     }
     select(sourceId, dashboardId = "") {
@@ -13064,6 +13091,16 @@ w13c-lateral-menu-item {
   }
   if (!customElements.get("cms-dashboards-nav"))
     customElements.define("cms-dashboards-nav", DashboardNav);
+  function parseGroups(value) {
+    if (!value)
+      return null;
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
 
   // src/components/admin/Resources/Dashboards/style.css
   var style_default3 = `:host {
@@ -13074,6 +13111,10 @@ w13c-lateral-menu-item {
     display: none !important;
 }
 
+.binding-source {
+    display: none;
+}
+
 h3,
 p {
     margin: 0;
@@ -13082,7 +13123,8 @@ p {
 .content,
 .widgets,
 .widget-stack,
-.tab-body {
+.tab-body,
+.dashboard-widget-binding {
     display: grid;
     align-content: start;
     min-width: 0;
@@ -13094,7 +13136,8 @@ p {
 
 .widgets,
 .widget-stack,
-.tab-body {
+.tab-body,
+.dashboard-widget-binding {
     gap: 16px;
 }
 
@@ -13206,6 +13249,12 @@ p {
 
   // src/components/admin/Resources/Dashboards/template.html
   var template_default4 = `<main class="content">
+    <cms-binding-core class="binding-source">
+        <span data-dashboard-list-source hidden>
+            <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
+        </span>
+    </cms-binding-core>
+
     <section class="panel empty" data-empty>
         <strong>No dashboards</strong>
         <span>Install an integration that provides dashboard artifacts.</span>
@@ -13631,7 +13680,7 @@ p {
       await executeDashboardAction(group, dashboard, detail, action, context.drafts.get(key) ?? {});
       context.drafts.delete(key);
       au(`${action} completed`, { type: "success" });
-      context.render();
+      context.reload(detail.collection, detail.row);
     } catch (error) {
       au(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
@@ -13645,7 +13694,7 @@ p {
       await executeDashboardMediaAction(group, dashboard, detail, media, context.drafts.get(key) ?? {});
       removeDraftField(context.drafts, key, media.field);
       au(`Media ${media.action} completed`, { type: "success" });
-      context.render();
+      context.reload(detail.collection, detail.row);
     } catch (error) {
       au(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
     }
@@ -13656,51 +13705,9 @@ p {
     Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
   }
 
-  // src/components/admin/Resources/Dashboards/DashboardViewFields.ts
-  function fieldChangeNeedsRender(dashboard, detail, fieldId) {
-    if (!dashboard || !detail)
-      return false;
-    const widget = findDetailWidget2(dashboard.views, detail.collection);
-    if (!widget)
-      return false;
-    return detailFields(widget).some((field) => dependsOnField(field, fieldId));
-  }
-  function findDetailWidget2(widgets, id2) {
-    for (const widget of widgets) {
-      if (widget.widget === "w-detail" && widget.id === id2)
-        return widget;
-      if (widget.widget === "w-section") {
-        const found = findDetailWidget2(widget.children, id2);
-        if (found)
-          return found;
-      }
-      if (widget.widget === "w-tabs") {
-        for (const tab of widget.tabs) {
-          const found = findDetailWidget2(tab.children, id2);
-          if (found)
-            return found;
-        }
-      }
-    }
-    return null;
-  }
-  function detailFields(widget) {
-    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
-  }
-  function dependsOnField(field, fieldId) {
-    if (field.visibleWhen?.field === fieldId)
-      return true;
-    if (field.type !== "combobox" && field.type !== "tokens" || !field.lookup)
-      return false;
-    return Object.values(field.lookup.params ?? {}).some((expression) => expressionUsesField(expression, fieldId));
-  }
-  function expressionUsesField(expression, fieldId) {
-    return expression === `$field.${fieldId}` || expression.startsWith(`$field.${fieldId}.`);
-  }
-
   // src/components/admin/Resources/Dashboards/runtime/lookupCreate.ts
   async function executeLookupCreate(group, dashboard, detail, fieldId, previousDraft, nextDraft) {
-    const widget = findDetailWidget3(dashboard.views, detail.collection);
+    const widget = findDetailWidget2(dashboard.views, detail.collection);
     const field = widget ? lookupField(widget, fieldId) : null;
     const create = field?.lookup?.create;
     if (!widget || !field || !create || create.mode !== "inline")
@@ -13745,18 +13752,18 @@ p {
   function endpointMethod2(group, endpointId) {
     return group.endpoints.find((endpoint) => endpoint.endpointId === endpointId)?.method ?? "POST";
   }
-  function findDetailWidget3(widgets, id2) {
+  function findDetailWidget2(widgets, id2) {
     for (const widget of widgets) {
       if (widget.widget === "w-detail" && widget.id === id2)
         return widget;
       if (widget.widget === "w-section") {
-        const found = findDetailWidget3(widget.children, id2);
+        const found = findDetailWidget2(widget.children, id2);
         if (found)
           return found;
       }
       if (widget.widget === "w-tabs") {
         for (const tab of widget.tabs) {
-          const found = findDetailWidget3(tab.children, id2);
+          const found = findDetailWidget2(tab.children, id2);
           if (found)
             return found;
         }
@@ -14026,6 +14033,7 @@ tbody tr[aria-selected="true"] {
     value = { title: "", columns: [], rows: [], statusOptions: [], sortOptions: [] };
     selectedRow = "";
     bound = false;
+    lightDomObserver = null;
     constructor() {
       super({ css: style_default4, template: template_default5 });
     }
@@ -14039,19 +14047,30 @@ tbody tr[aria-selected="true"] {
       if (this.isConnected)
         this.renderRows();
     }
+    static get observedAttributes() {
+      return ["data-config-json", "data-source-json", "data-selected"];
+    }
+    attributeChangedCallback() {
+      this.syncBoundData();
+    }
     connectedCallback() {
       if (!this.bound) {
         this.shadowRoot.addEventListener("click", this.onClick);
         this.shadowRoot.addEventListener("input", this.onFilter);
         this.shadowRoot.addEventListener("change", this.onFilter);
+        this.lightDomObserver = new MutationObserver(() => this.syncBoundData());
+        this.lightDomObserver.observe(this, { attributes: true, childList: true, subtree: true });
         this.bound = true;
       }
+      this.syncBoundData();
       this.render();
     }
     disconnectedCallback() {
       this.shadowRoot?.removeEventListener("click", this.onClick);
       this.shadowRoot?.removeEventListener("input", this.onFilter);
       this.shadowRoot?.removeEventListener("change", this.onFilter);
+      this.lightDomObserver?.disconnect();
+      this.lightDomObserver = null;
       this.bound = false;
     }
     render() {
@@ -14128,7 +14147,27 @@ tbody tr[aria-selected="true"] {
       });
     }
     fillOptions(select, options) {
-      select.replaceChildren(...options.map((option) => new Option(option.label, option.value)));
+      select.replaceChildren(...options.map((option) => {
+        const element = document.createElement("option");
+        element.value = option.value;
+        element.textContent = option.label;
+        return element;
+      }));
+    }
+    syncBoundData() {
+      const widget = parseJson(this.dataset.configJson ?? "");
+      if (!widget || widget.widget !== "w-table")
+        return;
+      const data = parseJson(this.dataset.sourceJson ?? "");
+      this.selectedRow = this.dataset.selected ?? "";
+      const lightRows = this.boundRows(widget);
+      this.value = {
+        ...tableData(widget, lightRows.length ? [] : arrayAt(data, widget.source.itemsPath)),
+        rows: lightRows.length ? lightRows : tableData(widget, arrayAt(data, widget.source.itemsPath)).rows
+      };
+    }
+    boundRows(widget) {
+      return Array.from(this.querySelectorAll("[data-table-row]")).map((row) => lightRow(widget, row)).filter((row) => row !== null);
     }
     onFilter = () => this.renderRows();
     onClick = (event) => {
@@ -14151,6 +14190,36 @@ tbody tr[aria-selected="true"] {
   }
   if (!customElements.get("cms-dashboard-w-table"))
     customElements.define("cms-dashboard-w-table", DashboardWTable);
+  function parseJson(value) {
+    if (!value)
+      return null;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+  function lightRow(widget, row) {
+    const id2 = row.dataset.rowId ?? "";
+    if (!id2)
+      return null;
+    return {
+      id: id2,
+      collection: row.dataset.collection || widget.selection?.opens || widget.id,
+      cells: Object.fromEntries(widget.columns.map((column) => [column.id, lightCell(row, column)]))
+    };
+  }
+  function lightCell(row, column) {
+    const element = Array.from(row.querySelectorAll("[data-table-cell]")).find((cell) => cell.dataset.tableCell === column.id);
+    const title = element?.dataset.title ?? "";
+    if (!element)
+      return title;
+    if (element.dataset.tone === "badge")
+      return { title, tone: "badge" };
+    if (element.dataset.primary === "true")
+      return { title, meta: element.dataset.meta ?? "" };
+    return title;
+  }
 
   // src/components/admin/Resources/Dashboards/widgets/w-section/template.html
   var template_default6 = `<section class="section">
@@ -14286,6 +14355,70 @@ p {
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/types.ts
   var W_MEDIA_FIELD_ACTION_EVENT = "cms-dashboard-w-media-field:action";
+
+  // src/components/admin/Resources/Dashboards/runtime/lookups.ts
+  async function detailLookupOptions(sourceId, widget, resource, fields) {
+    const entries = await Promise.all(detailFields(widget).filter(isLookupField).map(async (field) => [field.id, await lookupOptions(sourceId, field, resource, fields)]));
+    return Object.fromEntries(entries);
+  }
+  function detailFields(widget) {
+    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+  }
+  function isLookupField(field) {
+    return (field.type === "combobox" || field.type === "tokens") && Boolean(field.lookup);
+  }
+  async function lookupOptions(sourceId, field, resource, fields) {
+    const lookup = field.lookup;
+    if (!lookup)
+      return [];
+    const data = await fetchSourceJson(sourceId, lookup, { resource, fields });
+    const items = itemsFrom(data, lookup);
+    const selected = [...selectedItems(field, resource, fields), ...await selectedLookupItems(sourceId, field, resource, fields)];
+    return dedupeOptions([...items, ...selected].map((item) => ({
+      value: textAt(item, lookup.valuePath),
+      label: textAt(item, lookup.labelPath, textAt(item, lookup.valuePath)),
+      subtitle: lookup.subtitlePath ? textAt(item, lookup.subtitlePath) : undefined,
+      media: lookup.mediaPath ? textAt(item, lookup.mediaPath) : undefined
+    })).filter((option) => option.value && option.label));
+  }
+  function selectedItems(field, resource, fields) {
+    const value = fields[field.id];
+    if (Array.isArray(value))
+      return value;
+    const pathValue = arrayAt(resource, field.path);
+    return pathValue.length ? pathValue : [];
+  }
+  async function selectedLookupItems(sourceId, field, resource, fields) {
+    const lookup = field.lookup;
+    if (!lookup?.selected)
+      return [];
+    const values = selectedValues(fields[field.id]);
+    const items = await Promise.all(values.map(async (value) => itemFromSelectedLookup(sourceId, lookup.selected, resource, fields, value)));
+    return items.filter((item) => item !== undefined && item !== null);
+  }
+  async function itemFromSelectedLookup(sourceId, selected, resource, fields, value) {
+    try {
+      return await fetchSourceJson(sourceId, selected, { resource, fields, value });
+    } catch {
+      return null;
+    }
+  }
+  function selectedValues(value) {
+    if (Array.isArray(value))
+      return value.map((item) => String(item)).filter(Boolean);
+    if (value === null || value === undefined || value === "")
+      return [];
+    return [String(value)];
+  }
+  function dedupeOptions(options) {
+    const seen = new Set;
+    return options.filter((option) => {
+      if (seen.has(option.value))
+        return false;
+      seen.add(option.value);
+      return true;
+    });
+  }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
   var SVG_NS = "http://www.w3.org/2000/svg";
@@ -15155,6 +15288,9 @@ p9r-textarea {
   class DashboardWDetail extends A {
     value = { rowKey: "", eyebrow: "", title: "", actions: [], main: [], aside: [] };
     bound = false;
+    dynamicOptions = {};
+    optionsRequestKey = "";
+    optionsScopeKey = "";
     constructor() {
       super({ css: style_default7, template: template_default8 });
     }
@@ -15163,6 +15299,12 @@ p9r-textarea {
       if (this.isConnected)
         this.render();
     }
+    static get observedAttributes() {
+      return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
+    }
+    attributeChangedCallback() {
+      this.syncBoundData();
+    }
     connectedCallback() {
       if (!this.bound) {
         this.shadowRoot.addEventListener("click", this.onClick);
@@ -15170,6 +15312,7 @@ p9r-textarea {
         this.shadowRoot.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
         this.bound = true;
       }
+      this.syncBoundData();
       this.render();
     }
     disconnectedCallback() {
@@ -15254,6 +15397,43 @@ p9r-textarea {
         ...created ? { created } : {}
       });
     }
+    syncBoundData() {
+      const widget = parseJson2(this.dataset.configJson ?? "");
+      if (!widget || widget.widget !== "w-detail")
+        return;
+      const sourceJson = this.dataset.sourceJson ?? "";
+      const sourceData = parseJson2(sourceJson) ?? {};
+      const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
+      const rowKey = this.dataset.rowKey ?? "";
+      const sourceId = this.dataset.sourceId ?? "";
+      const scopeKey = `${sourceId}:${widget.id}:${rowKey}`;
+      if (this.optionsScopeKey !== scopeKey) {
+        this.optionsScopeKey = scopeKey;
+        this.dynamicOptions = {};
+      }
+      this.value = detailData(widget, resource, rowKey, {}, this.dynamicOptions, sourceId);
+      if (this.isConnected)
+        this.render();
+      if (!sourceJson || !sourceId)
+        return;
+      this.loadLookupOptions(widget, resource, rowKey, sourceId);
+    }
+    async loadLookupOptions(widget, resource, rowKey, sourceId) {
+      const requestKey = `${sourceId}:${widget.id}:${rowKey}:${this.dataset.sourceJson ?? ""}`;
+      this.optionsRequestKey = requestKey;
+      try {
+        const options = await detailLookupOptions(sourceId, widget, resource, fieldValues(widget, resource));
+        if (this.optionsRequestKey !== requestKey)
+          return;
+        this.dynamicOptions = options;
+        this.value = detailData(widget, resource, rowKey, {}, options, sourceId);
+        if (this.isConnected)
+          this.render();
+      } catch {
+        if (this.optionsRequestKey === requestKey)
+          this.dynamicOptions = {};
+      }
+    }
     findField(id2) {
       return [...this.value.main, ...this.value.aside].flatMap((section) => section.fields).find((field) => field.id === id2);
     }
@@ -15267,6 +15447,15 @@ p9r-textarea {
   }
   if (!customElements.get("cms-dashboard-w-detail"))
     customElements.define("cms-dashboard-w-detail", DashboardWDetail);
+  function parseJson2(value) {
+    if (!value)
+      return null;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
   function findActionTarget(event) {
     return event.composedPath().find((target) => target instanceof HTMLElement && Boolean(target.dataset.action));
   }
@@ -15404,74 +15593,20 @@ p9r-textarea {
     return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null && ("url" in item));
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/lookups.ts
-  async function detailLookupOptions(sourceId, widget, resource, fields) {
-    const entries = await Promise.all(detailFields2(widget).filter(isLookupField).map(async (field) => [field.id, await lookupOptions(sourceId, field, resource, fields)]));
-    return Object.fromEntries(entries);
+  // src/components/admin/Resources/Dashboards/runtime/reload.ts
+  function detailReloadEvent(sourceId, dashboardId, collection, row) {
+    return `cms-dashboard:${encodePart(sourceId)}:${encodePart(dashboardId)}:${encodePart(collection)}:${encodePart(row || "new")}:reload`;
   }
-  function detailFields2(widget) {
-    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
-  }
-  function isLookupField(field) {
-    return (field.type === "combobox" || field.type === "tokens") && Boolean(field.lookup);
-  }
-  async function lookupOptions(sourceId, field, resource, fields) {
-    const lookup = field.lookup;
-    if (!lookup)
-      return [];
-    const data = await fetchSourceJson(sourceId, lookup, { resource, fields });
-    const items = itemsFrom(data, lookup);
-    const selected = [...selectedItems(field, resource, fields), ...await selectedLookupItems(sourceId, field, resource, fields)];
-    return dedupeOptions([...items, ...selected].map((item) => ({
-      value: textAt(item, lookup.valuePath),
-      label: textAt(item, lookup.labelPath, textAt(item, lookup.valuePath)),
-      subtitle: lookup.subtitlePath ? textAt(item, lookup.subtitlePath) : undefined,
-      media: lookup.mediaPath ? textAt(item, lookup.mediaPath) : undefined
-    })).filter((option) => option.value && option.label));
-  }
-  function selectedItems(field, resource, fields) {
-    const value = fields[field.id];
-    if (Array.isArray(value))
-      return value;
-    const pathValue = arrayAt(resource, field.path);
-    return pathValue.length ? pathValue : [];
-  }
-  async function selectedLookupItems(sourceId, field, resource, fields) {
-    const lookup = field.lookup;
-    if (!lookup?.selected)
-      return [];
-    const values = selectedValues(fields[field.id]);
-    const items = await Promise.all(values.map(async (value) => itemFromSelectedLookup(sourceId, lookup.selected, resource, fields, value)));
-    return items.filter((item) => item !== undefined && item !== null);
-  }
-  async function itemFromSelectedLookup(sourceId, selected, resource, fields, value) {
-    try {
-      return await fetchSourceJson(sourceId, selected, { resource, fields, value });
-    } catch {
-      return null;
-    }
-  }
-  function selectedValues(value) {
-    if (Array.isArray(value))
-      return value.map((item) => String(item)).filter(Boolean);
-    if (value === null || value === undefined || value === "")
-      return [];
-    return [String(value)];
-  }
-  function dedupeOptions(options2) {
-    const seen = new Set;
-    return options2.filter((option) => {
-      if (seen.has(option.value))
-        return false;
-      seen.add(option.value);
-      return true;
-    });
+  function encodePart(value) {
+    return encodeURIComponent(value);
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mount.ts
-  var detailOptionsCache = new Map;
   function mountDashboardWidgets(root, widgets, context, key, tabState, detail) {
-    root.replaceChildren(...widgets.map((widget, index) => widgetElement(widget, context, `${key}.${index}`, tabState, detail)));
+    const core = document.createElement("cms-binding-core");
+    core.className = "dashboard-widget-binding";
+    core.replaceChildren(...widgets.map((widget, index) => widgetElement(widget, context, `${key}.${index}`, tabState, detail)));
+    root.replaceChildren(core);
   }
   function widgetElement(widget, context, key, tabState, detail) {
     if (widget.widget === "w-section")
@@ -15520,42 +15655,65 @@ p9r-textarea {
     return panel;
   }
   function tableElement2(widget, context) {
+    const wrapper = sourceWrapper(context.dashboard.source, widget.source, {}, "dashboardData");
     const element = document.createElement("cms-dashboard-w-table");
-    element.data = tableData(widget, []);
-    element.selected = context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "";
-    fetchSourceJson(context.dashboard.source, widget.source, {}).then((data) => {
-      element.data = tableData(widget, itemsFrom(data, widget.source));
-    }).catch((error) => {
-      element.data = { ...tableData(widget, []), subtitle: error instanceof Error ? error.message : "Source request failed" };
-    });
-    return element;
+    element.setAttribute("data-config-json", jsonAttr(widget));
+    element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
+    element.append(tableRowsTemplate(widget));
+    wrapper.append(element);
+    return wrapper;
   }
   function detailElement2(widget, context, detail) {
-    const element = document.createElement("cms-dashboard-w-detail");
     const rowKey = detail?.row ?? "";
-    const optionsKey = detailOptionKey(context, widget.id, rowKey);
-    const cachedOptions = detailOptionsCache.get(optionsKey) ?? {};
-    const draft = context.drafts.get(detailKey(widget.id, rowKey)) ?? {};
-    element.data = detailData(widget, {}, rowKey, draft, cachedOptions, context.dashboard.source);
-    fetchSourceJson(context.dashboard.source, widget.source, { selection: { id: rowKey } }).then(async (data) => {
-      const resource = itemFrom(data, widget.source);
-      const fields = { ...fieldValues(widget, resource), ...draft };
-      element.data = detailData(widget, resource, rowKey, draft, cachedOptions, context.dashboard.source);
-      const options2 = await detailLookupOptions(context.dashboard.source, widget, resource, fields);
-      const mergedOptions = storeDetailOptions(optionsKey, options2);
-      element.data = detailData(widget, resource, rowKey, draft, mergedOptions, context.dashboard.source);
-    }).catch((error) => {
-      element.data = detailData({ ...widget, title: { fallback: error instanceof Error ? error.message : "Source request failed", path: "" } }, {}, rowKey, draft, cachedOptions, context.dashboard.source);
-    });
-    return element;
+    const wrapper = sourceWrapper(context.dashboard.source, widget.source, { selection: { id: rowKey } }, "dashboardData");
+    wrapper.setAttribute("cms-reload-on", detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey));
+    const element = document.createElement("cms-dashboard-w-detail");
+    element.setAttribute("data-config-json", jsonAttr(widget));
+    element.setAttribute("data-source-json", "{{ dashboardData | json }}");
+    element.setAttribute("data-row-key", rowKey);
+    element.setAttribute("data-source-id", context.dashboard.source);
+    wrapper.append(element);
+    return wrapper;
   }
-  function detailOptionKey(context, widgetId, rowKey) {
-    return `${context.dashboard.source}:${context.dashboard.id}:${widgetId}:${rowKey}`;
+  function sourceWrapper(sourceId, ref, vars, alias) {
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("cms-source", `${sourceUrl2(sourceId, ref, vars)} as ${alias}`);
+    return wrapper;
   }
-  function storeDetailOptions(key, options2) {
-    const merged = { ...detailOptionsCache.get(key) ?? {}, ...options2 };
-    detailOptionsCache.set(key, merged);
-    return merged;
+  function sourceUrl2(sourceId, ref, vars) {
+    const url = new URL(route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    for (const [key, value] of Object.entries(resolveParams(ref.params, vars)))
+      url.searchParams.set(key, value);
+    return `${url.pathname}${url.search}`;
+  }
+  function jsonAttr(value) {
+    return JSON.stringify(value);
+  }
+  function tableRowsTemplate(widget) {
+    const row = document.createElement("span");
+    row.setAttribute("data-table-row", "");
+    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
+    row.setAttribute("data-row-id", bindingPath("row", widget.rowKey));
+    row.setAttribute("data-collection", widget.selection?.opens ?? widget.id);
+    for (const column of widget.columns) {
+      const cell = document.createElement("span");
+      cell.setAttribute("data-table-cell", column.id);
+      cell.setAttribute("data-title", bindingPath("row", column.path));
+      if (column.primary) {
+        cell.setAttribute("data-primary", "true");
+        cell.setAttribute("data-meta", "{{ row.id }}");
+      }
+      if (column.format === "badge")
+        cell.setAttribute("data-tone", "badge");
+      row.append(cell);
+    }
+    return row;
+  }
+  function repeatPath(alias, path) {
+    return path ? `${alias}.${path}` : alias;
+  }
+  function bindingPath(alias, path) {
+    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
   }
 
   // src/components/admin/Resources/Dashboards/rendering.ts
@@ -15597,8 +15755,10 @@ p9r-textarea {
     detailSelection = null;
     tabState = new Map;
     drafts = new Map;
+    observer = null;
     constructor() {
       super({ css: style_default3, template: template_default4 });
+      configureDashboardBindingFilters();
     }
     connectedCallback() {
       super.connectedCallback();
@@ -15611,7 +15771,7 @@ p9r-textarea {
       this.shadowRoot.addEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction);
       window.addEventListener("popstate", this.onPopState);
       window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
-      this.load();
+      this.startBoundSource();
     }
     disconnectedCallback() {
       this.shadowRoot?.removeEventListener("click", this.onClick);
@@ -15622,17 +15782,27 @@ p9r-textarea {
       this.shadowRoot?.removeEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction);
       window.removeEventListener("popstate", this.onPopState);
       window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection);
+      this.observer?.disconnect();
+      this.observer = null;
     }
-    async load() {
+    startBoundSource() {
       if (this.isExampleMode())
         return this.render();
-      try {
-        this.groups = await fetchDashboards();
-        this.selectedSource ||= this.groups[0]?.source.id ?? "";
-        this.ensureDashboardSelection();
-      } catch {
-        this.groups = [];
-      }
+      const source = this.shadowRoot.querySelector("[data-dashboard-list-source]");
+      source?.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
+      this.observer = new MutationObserver(() => this.readBoundGroups());
+      if (source)
+        this.observer.observe(source, { attributes: true, childList: true, subtree: true });
+      this.readBoundGroups();
+    }
+    readBoundGroups() {
+      const target = this.shadowRoot.querySelector("[data-dashboard-groups-json]");
+      const next = parseGroups2(target?.dataset.dashboardGroupsJson ?? "");
+      if (!next)
+        return;
+      this.groups = next;
+      this.selectedSource ||= this.groups[0]?.source.id ?? "";
+      this.ensureDashboardSelection();
       this.render();
     }
     ensureDashboardSelection() {
@@ -15715,8 +15885,6 @@ p9r-textarea {
       this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
       if (event.detail.created)
         runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft);
-      if (fieldChangeNeedsRender(this.activeDashboard(), this.detailSelection, event.detail.field))
-        this.render();
     };
     syncSelectionAndRender(selection) {
       this.syncFromSelection(selection);
@@ -15724,11 +15892,34 @@ p9r-textarea {
       this.render();
     }
     actionContext() {
-      return { group: this.activeGroup(), dashboard: this.activeDashboard(), detail: this.detailSelection, drafts: this.drafts, render: () => this.render() };
+      return {
+        group: this.activeGroup(),
+        dashboard: this.activeDashboard(),
+        detail: this.detailSelection,
+        drafts: this.drafts,
+        render: () => this.render(),
+        reload: (collection, row) => this.reloadDetail(collection, row)
+      };
+    }
+    reloadDetail(collection, row) {
+      const dashboard = this.activeDashboard();
+      if (!dashboard)
+        return;
+      document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
     }
   }
   if (!customElements.get("cms-dashboards-admin"))
     customElements.define("cms-dashboards-admin", DashboardView);
+  function parseGroups2(value) {
+    if (!value)
+      return null;
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
 
   // src/components/admin/Resources/Integrations/style.css
   var style_default8 = `:host { display: grid; gap: 16px; }
@@ -15996,16 +16187,16 @@ textarea { width: 100%; padding: 8px; box-sizing: border-box; }
     return `${basePath2()}${path}`;
   }
   async function fetchDefinitions() {
-    return getJson2(route2("/api/integrations/list"));
+    return getJson(route2("/api/integrations/list"));
   }
   async function fetchInstances() {
-    return getJson2(route2("/api/integrations/instances"));
+    return getJson(route2("/api/integrations/instances"));
   }
   async function importIntegration(payload) {
     await postJson(route2("/api/integrations/import"), payload);
     document.dispatchEvent(new Event("integration:updated", { bubbles: true }));
   }
-  async function getJson2(url) {
+  async function getJson(url) {
     const response = await fetch(url, { headers: { Accept: "application/json" } });
     if (!response.ok)
       throw new Error(`HTTP ${response.status}`);
@@ -16987,13 +17178,13 @@ button:hover {
     const match = new RegExp(`^\\${prefix}\\{([^}]+)\\}$`).exec(value);
     return match?.[1]?.trim() || null;
   }
-  function bindingQuery(sourceUrl2, bindingUrl) {
-    if (bindingUrl === sourceUrl2)
+  function bindingQuery(sourceUrl3, bindingUrl) {
+    if (bindingUrl === sourceUrl3)
       return "";
-    if (bindingUrl.startsWith(`${sourceUrl2}?`))
-      return bindingUrl.slice(sourceUrl2.length + 1);
-    if (sourceUrl2.includes("?") && bindingUrl.startsWith(`${sourceUrl2}&`)) {
-      return bindingUrl.slice(sourceUrl2.length + 1);
+    if (bindingUrl.startsWith(`${sourceUrl3}?`))
+      return bindingUrl.slice(sourceUrl3.length + 1);
+    if (sourceUrl3.includes("?") && bindingUrl.startsWith(`${sourceUrl3}&`)) {
+      return bindingUrl.slice(sourceUrl3.length + 1);
     }
     return null;
   }
@@ -20273,8 +20464,8 @@ dd {
       return dataSource?.label ?? binding.alias ?? binding.url;
     }
   }
-  function sourceUrlMatchesBinding(sourceUrl2, bindingUrl) {
-    return bindingUrl === sourceUrl2 || bindingUrl.startsWith(`${sourceUrl2}?`) || sourceUrl2.includes("?") && bindingUrl.startsWith(`${sourceUrl2}&`);
+  function sourceUrlMatchesBinding(sourceUrl3, bindingUrl) {
+    return bindingUrl === sourceUrl3 || bindingUrl.startsWith(`${sourceUrl3}?`) || sourceUrl3.includes("?") && bindingUrl.startsWith(`${sourceUrl3}&`);
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeRefs.ts
@@ -32231,6 +32422,9 @@ dialog::backdrop {
       customElements.define(tag, constructor);
   }
   define(CMS_BINDING_CORE_TAG, Qs);
+  np({
+    json: (value) => value === undefined ? undefined : JSON.stringify(value)
+  });
   define("p9r-accordion", Fe);
   define("p9r-accordion-item", De);
   define("p9r-action-menu", rn);

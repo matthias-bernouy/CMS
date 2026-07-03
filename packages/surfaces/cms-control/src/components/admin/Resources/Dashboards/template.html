@@ -1,4 +1,10 @@
 <main class="content">
+    <cms-binding-core class="binding-source">
+        <span data-dashboard-list-source hidden>
+            <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
+        </span>
+    </cms-binding-core>
+
     <section class="panel empty" data-empty>
         <strong>No dashboards</strong>
         <span>Install an integration that provides dashboard artifacts.</span>

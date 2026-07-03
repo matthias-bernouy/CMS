@@ -12,6 +12,10 @@ w13c-lateral-menu {
     --menu-section-font-size: .6875rem;
 }
 
+.binding-source {
+    display: none;
+}
+
 w13c-lateral-menu-item {
     --item-font-size: .875rem;
 }

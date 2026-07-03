@@ -3,11 +3,12 @@ import {
     currentSelection,
     DASHBOARD_SELECTION_EVENT,
     dispatchDashboardSelection,
-    fetchDashboards,
+    route,
     replaceSelectionUrl,
     type DashboardSelection,
 } from "./api";
 import { appendIconSlot } from "./icons";
+import { configureDashboardBindingFilters } from "./runtime/bindingFilters";
 import css from "./nav.css" with { type: "text" };
 import template from "./nav.html" with { type: "text" };
 import type { DashboardSourceGroup } from "./types";
@@ -16,9 +17,11 @@ export class DashboardNav extends Component {
     private groups: DashboardSourceGroup[] = [];
     private selectedSource = "";
     private selectedDashboard = "";
+    private observer: MutationObserver | null = null;
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
+        configureDashboardBindingFilters();
     }
 
     override connectedCallback(): void {
@@ -27,27 +30,36 @@ export class DashboardNav extends Component {
         this.shadowRoot!.addEventListener("click", this.onClick);
         window.addEventListener("popstate", this.onPopState);
         window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection as EventListener);
-        void this.load();
+        this.startBoundSource();
     }
 
     disconnectedCallback(): void {
         this.shadowRoot?.removeEventListener("click", this.onClick);
         window.removeEventListener("popstate", this.onPopState);
         window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection as EventListener);
+        this.observer?.disconnect();
+        this.observer = null;
     }
 
-    private async load(): Promise<void> {
+    private startBoundSource(): void {
         if (this.isExampleMode()) {
             this.renderExample();
             return;
         }
-        try {
-            this.groups = await fetchDashboards();
-            this.selectedSource ||= this.groups[0]?.source.id ?? "";
-            this.ensureDashboardSelection();
-        } catch {
-            this.groups = [];
-        }
+        const source = this.query<HTMLElement>("[data-nav-list-source]");
+        source.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
+        this.observer = new MutationObserver(() => this.readBoundGroups());
+        this.observer.observe(source, { attributes: true, childList: true, subtree: true });
+        this.readBoundGroups();
+    }
+
+    private readBoundGroups(): void {
+        const target = this.shadowRoot!.querySelector<HTMLElement>("[data-nav-groups-json]");
+        const next = parseGroups(target?.dataset.navGroupsJson ?? "");
+        if (!next) return;
+        this.groups = next;
+        this.selectedSource ||= this.groups[0]?.source.id ?? "";
+        this.ensureDashboardSelection();
         this.render();
     }
 
@@ -178,3 +190,13 @@ export class DashboardNav extends Component {
 }
 
 if (!customElements.get("cms-dashboards-nav")) customElements.define("cms-dashboards-nav", DashboardNav);
+
+function parseGroups(value: string): DashboardSourceGroup[] | null {
+    if (!value) return null;
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed as DashboardSourceGroup[] : [];
+    } catch {
+        return [];
+    }
+}

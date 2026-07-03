@@ -6,6 +6,10 @@
     display: none !important;
 }
 
+.binding-source {
+    display: none;
+}
+
 h3,
 p {
     margin: 0;
@@ -14,7 +18,8 @@ p {
 .content,
 .widgets,
 .widget-stack,
-.tab-body {
+.tab-body,
+.dashboard-widget-binding {
     display: grid;
     align-content: start;
     min-width: 0;
@@ -26,7 +31,8 @@ p {
 
 .widgets,
 .widget-stack,
-.tab-body {
+.tab-body,
+.dashboard-widget-binding {
     gap: 16px;
 }
 
