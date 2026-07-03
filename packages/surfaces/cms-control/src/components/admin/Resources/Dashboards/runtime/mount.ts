@@ -106,20 +106,17 @@ function jsonAttr(value: unknown): string {
 }
 
 function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-table" }>): HTMLElement {
-    const row = document.createElement("span");
-    row.setAttribute("data-table-row", "");
+    const row = document.createElement("cms-dashboard-w-row");
     row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    row.setAttribute("data-row-id", bindingPath("row", widget.rowKey));
-    row.setAttribute("data-collection", widget.selection?.opens ?? widget.id);
+    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
+    row.setAttribute("collection", widget.selection?.opens ?? widget.id);
     for (const column of widget.columns) {
-        const cell = document.createElement("span");
-        cell.setAttribute("data-table-cell", column.id);
-        cell.setAttribute("data-title", bindingPath("row", column.path));
-        if (column.primary) {
-            cell.setAttribute("data-primary", "true");
-            cell.setAttribute("data-meta", "{{ row.id }}");
-        }
-        if (column.format === "badge") cell.setAttribute("data-tone", "badge");
+        const cell = document.createElement("cms-dashboard-w-cell");
+        cell.setAttribute("column", column.id);
+        if (column.primary) cell.toggleAttribute("primary", true);
+        if (column.primary) cell.setAttribute("meta", "{{ row.id }}");
+        if (column.format === "badge") cell.setAttribute("tone", "badge");
+        cell.textContent = bindingPath("row", column.path);
         row.append(cell);
     }
     return row;

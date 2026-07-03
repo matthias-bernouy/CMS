@@ -56,9 +56,7 @@ function detailElement(product: ExampleProduct): DashboardWDetail {
 function tableData(): WTableData {
     return {
         title: "Products",
-        subtitle: "Widget sandbox: filters, selection and bulk checkboxes only.",
-        statusOptions: [{ label: "All statuses", value: "" }, { label: "Active", value: "active" }, { label: "Draft", value: "draft" }, { label: "Archived", value: "archived" }],
-        sortOptions: [{ label: "Product title", value: "title-asc" }, { label: "Status", value: "status-asc" }, { label: "Vendor", value: "vendor-asc" }],
+        subtitle: "Widget sandbox: selection and bulk checkboxes only.",
         columns: [
             { key: "title", label: "Product", primary: true },
             { key: "status", label: "Status", width: "140px" },

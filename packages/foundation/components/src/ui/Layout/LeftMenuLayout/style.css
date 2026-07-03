@@ -4,9 +4,9 @@
     width: 100vw;
     overflow: hidden;
 
-    --_sidebar-width: 252px;
+    --_sidebar-width: 224px;
     --_sidebar-collapsed-width: 0px;
-    --_secondary-sidebar-width: var(--secondary-sidebar-width, 280px);
+    --_secondary-sidebar-width: var(--secondary-sidebar-width, 248px);
     --_sidebar-bg: var(--bg-sidebar, var(--bg-surface));
     --_sidebar-border: var(--border-default);
     --_content-bg: var(--bg-base);
@@ -78,6 +78,7 @@
 }
 
 ::slotted([slot="sidebar"]) {
+    width: 100%;
     --ctx-bg: var(--_sidebar-bg);
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
@@ -86,6 +87,7 @@
 }
 
 ::slotted([slot="secondary-sidebar"]) {
+    width: 100%;
     --ctx-bg: var(--_sidebar-bg);
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);

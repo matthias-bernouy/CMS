@@ -4984,9 +4984,9 @@ input:hover:not(:disabled) {
     width: 100vw;
     overflow: hidden;
 
-    --_sidebar-width: 252px;
+    --_sidebar-width: 224px;
     --_sidebar-collapsed-width: 0px;
-    --_secondary-sidebar-width: var(--secondary-sidebar-width, 280px);
+    --_secondary-sidebar-width: var(--secondary-sidebar-width, 248px);
     --_sidebar-bg: var(--bg-sidebar, var(--bg-surface));
     --_sidebar-border: var(--border-default);
     --_content-bg: var(--bg-base);
@@ -5058,6 +5058,7 @@ input:hover:not(:disabled) {
 }
 
 ::slotted([slot="sidebar"]) {
+    width: 100%;
     --ctx-bg: var(--_sidebar-bg);
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
@@ -5066,6 +5067,7 @@ input:hover:not(:disabled) {
 }
 
 ::slotted([slot="secondary-sidebar"]) {
+    width: 100%;
     --ctx-bg: var(--_sidebar-bg);
     --ctx-fg: var(--text-main);
     --ctx-fg-muted: var(--text-muted);
@@ -13386,9 +13388,6 @@ p {
     }
     return out;
   }
-  function pathLabel(path) {
-    return path.split(".").filter(Boolean).at(-1)?.replace(/[_-]+/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2") ?? path;
-  }
 
   // src/components/admin/Resources/Dashboards/runtime/source.ts
   async function fetchSourceJson(sourceId, ref, vars) {
@@ -13465,20 +13464,6 @@ p {
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping.ts
-  function tableData(widget, items) {
-    return {
-      title: widget.title ?? pathLabel(widget.source.endpoint),
-      columns: widget.columns.map((column) => ({
-        key: column.id,
-        label: column.label,
-        ...column.width ? { width: column.width } : {},
-        ...column.primary ? { primary: true } : {}
-      })),
-      rows: items.map((item) => tableRow(widget, item)),
-      statusOptions: filterOptions(widget),
-      sortOptions: sortOptions(widget)
-    };
-  }
   function detailData(widget, resource, rowKey, draft = {}, options = {}, sourceId = "") {
     const fields = { ...fieldValues(widget, resource), ...draft };
     return {
@@ -13490,29 +13475,6 @@ p {
       main: sections(widget.main, resource, fields, options, sourceId),
       aside: sections(widget.aside ?? [], resource, fields, options, sourceId)
     };
-  }
-  function tableRow(widget, item) {
-    const id2 = textAt(item, widget.rowKey);
-    return {
-      id: id2,
-      collection: widget.selection?.opens ?? widget.id,
-      cells: Object.fromEntries(widget.columns.map((column) => [column.id, tableCell(item, column)]))
-    };
-  }
-  function tableCell(item, column) {
-    const value = textAt(item, column.path);
-    if (column.format === "badge")
-      return { title: value, tone: "badge" };
-    if (column.primary)
-      return { title: value, meta: textAt(item, "id") };
-    return value;
-  }
-  function filterOptions(widget) {
-    const filter = widget.filters?.find((item) => item.type === "select" && item.options?.length);
-    return [{ label: "All statuses", value: "" }, ...(filter?.options ?? []).map(optionData)];
-  }
-  function sortOptions(widget) {
-    return widget.columns.map((column) => ({ label: column.label, value: `${column.id}-asc` }));
   }
   function sections(sections2, resource, fields, options, sourceId) {
     return sections2.map((section) => ({
@@ -13811,44 +13773,188 @@ p {
       element.textContent = value;
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-table/cells.ts
-  function cellText(cell) {
-    if (!cell)
-      return "";
-    return typeof cell === "string" ? cell : [cell.title, cell.meta ?? ""].filter(Boolean).join(" ");
+  // src/components/admin/Resources/Dashboards/widgets/w-table/WCell.ts
+  var template = document.createElement("template");
+  template.innerHTML = `
+    <style>
+        :host {
+            display: block;
+            min-width: 0;
+            color: #0f1f1a;
+        }
+
+        .cell {
+            display: grid;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        :host([primary]) .title {
+            font-weight: 700;
+        }
+
+        small {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #66736f;
+        }
+
+        small:empty {
+            display: none;
+        }
+
+        :host([tone="badge"]) .title {
+            justify-self: start;
+            border-radius: 999px;
+            background: #edf7f0;
+            color: #105d3e;
+            font-size: 12px;
+            font-weight: 750;
+            padding: 3px 8px;
+        }
+
+        :host([tone="muted"]) {
+            color: #66736f;
+        }
+    </style>
+    <span class="cell">
+        <span class="title"><slot></slot></span>
+        <small data-meta></small>
+    </span>
+`;
+
+  class DashboardWCell extends HTMLElement {
+    static get observedAttributes() {
+      return ["meta"];
+    }
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+    }
+    connectedCallback() {
+      this.render();
+    }
+    attributeChangedCallback() {
+      this.render();
+    }
+    render() {
+      const meta = this.shadowRoot?.querySelector("[data-meta]");
+      if (meta)
+        meta.textContent = this.getAttribute("meta") ?? "";
+    }
   }
-  function appendTableCellValue(target, cell, primary) {
-    if (!cell)
-      return;
-    if (typeof cell === "string") {
-      target.textContent = cell;
-      return;
+  if (!customElements.get("cms-dashboard-w-cell"))
+    customElements.define("cms-dashboard-w-cell", DashboardWCell);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/WRow.ts
+  var template2 = document.createElement("template");
+  template2.innerHTML = `
+    <style>
+        :host {
+            display: block;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: var(--dashboard-table-columns, 46px 1fr);
+            align-items: center;
+            min-height: 54px;
+            border-top: 1px solid #e8ecea;
+            cursor: pointer;
+        }
+
+        .row:hover,
+        :host([selected]) .row {
+            background: #f3f7f5;
+        }
+
+        .check {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        input {
+            margin: 0;
+        }
+
+        slot {
+            display: contents;
+        }
+
+        ::slotted(cms-dashboard-w-cell) {
+            min-width: 0;
+            padding: 13px 16px;
+        }
+    </style>
+    <div class="row" role="row" tabindex="0">
+        <span class="check" role="cell">
+            <input type="checkbox" data-check aria-label="Select row">
+        </span>
+        <slot></slot>
+    </div>
+`;
+
+  class DashboardWRow extends HTMLElement {
+    onClick = (event) => {
+      if (event.target?.closest("input"))
+        return;
+      this.select();
+    };
+    onKeydown = (event) => {
+      const key = event instanceof KeyboardEvent ? event.key : "";
+      if (key !== "Enter" && key !== " ")
+        return;
+      event.preventDefault();
+      this.select();
+    };
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" }).append(template2.content.cloneNode(true));
     }
-    if (cell.tone === "badge") {
-      const badge = document.createElement("span");
-      badge.className = "badge";
-      badge.textContent = cell.title;
-      target.append(badge);
-      return;
+    connectedCallback() {
+      this.shadowRoot?.querySelector("[data-check]")?.setAttribute("aria-label", `Select row ${this.rowKey}`);
+      this.shadowRoot?.querySelector(".row")?.addEventListener("click", this.onClick);
+      this.shadowRoot?.querySelector(".row")?.addEventListener("keydown", this.onKeydown);
     }
-    const wrap = document.createElement("span");
-    wrap.className = primary ? "cell-primary" : "cell-stack";
-    const title = document.createElement(primary ? "strong" : "span");
-    title.textContent = cell.title;
-    wrap.append(title);
-    if (cell.meta) {
-      const meta = document.createElement("small");
-      meta.textContent = cell.meta;
-      wrap.append(meta);
+    disconnectedCallback() {
+      this.shadowRoot?.querySelector(".row")?.removeEventListener("click", this.onClick);
+      this.shadowRoot?.querySelector(".row")?.removeEventListener("keydown", this.onKeydown);
     }
-    if (cell.tone === "muted")
-      wrap.classList.add("muted");
-    target.append(wrap);
+    get rowKey() {
+      return this.getAttribute("row-key") ?? "";
+    }
+    get collection() {
+      return this.getAttribute("collection") ?? "";
+    }
+    set checked(value) {
+      const input = this.shadowRoot?.querySelector("[data-check]");
+      if (input)
+        input.checked = value;
+    }
+    select() {
+      if (!this.collection || !this.rowKey)
+        return;
+      emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: this.collection, rowKey: this.rowKey });
+    }
   }
+  if (!customElements.get("cms-dashboard-w-row"))
+    customElements.define("cms-dashboard-w-row", DashboardWRow);
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
   var style_default4 = `:host {
     display: block;
+    --dashboard-table-columns: 46px 1fr;
 }
 
 .w-table-shell {
@@ -13859,10 +13965,9 @@ p {
     box-shadow: 0 1px 2px rgb(15 31 26 / 6%);
 }
 
-.w-table-header,
-.w-table-toolbar {
+.w-table-header {
     display: flex;
-    align-items: end;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
     padding: 16px;
@@ -13878,104 +13983,44 @@ p {
 }
 
 .w-table-header p,
-label span,
 small,
 .muted {
     color: #66736f;
 }
 
-.w-table-toolbar {
-    justify-content: flex-start;
-    border-bottom: 1px solid #e8ecea;
-    background: #fbfcfb;
-}
-
-label {
-    display: grid;
-    gap: 6px;
-    min-width: 180px;
-    font-size: 13px;
-}
-
-label span {
-    font-size: 11px;
-    font-weight: 750;
-    letter-spacing: 0;
-    text-transform: uppercase;
-}
-
-.w-table-search {
-    min-width: min(440px, 100%);
-}
-
-input,
-select {
-    min-height: 36px;
-    border: 1px solid #cfd8d4;
-    border-radius: 6px;
-    background: #fff;
-    color: #0f1f1a;
-    font: inherit;
-    padding: 7px 10px;
-}
-
-.w-table-frame {
+.w-table-frame,
+.w-table-grid {
     overflow: auto;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-}
-
-.w-table-check-col {
-    width: 46px;
-}
-
-th,
-td {
-    border-top: 1px solid #e8ecea;
-    padding: 13px 16px;
-    text-align: left;
-    vertical-align: middle;
-}
-
-thead th {
-    border-top: 0;
+.w-table-head {
+    display: grid;
+    grid-template-columns: var(--dashboard-table-columns);
+    align-items: center;
+    min-width: max-content;
     background: #f7f8f7;
+}
+
+.w-table-head span {
     color: #3d4a46;
     font-size: 12px;
     font-weight: 750;
+    padding: 13px 16px;
+    text-align: left;
 }
 
 .check-cell {
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    padding-inline: 0;
 }
 
-tbody tr {
-    cursor: pointer;
+.w-table-body {
+    min-width: max-content;
 }
 
-tbody tr:hover,
-tbody tr[aria-selected="true"] {
-    background: #f3f7f5;
-}
-
-.cell-primary,
-.cell-stack {
-    display: grid;
-    gap: 2px;
-}
-
-.badge {
-    display: inline-flex;
-    border-radius: 999px;
-    background: #edf7f0;
-    color: #105d3e;
-    font-size: 12px;
-    font-weight: 750;
-    padding: 3px 8px;
+slot {
+    display: contents;
 }
 
 .w-table-empty {
@@ -13992,197 +14037,131 @@ tbody tr[aria-selected="true"] {
             <h3 data-title></h3>
             <p data-subtitle></p>
         </div>
-        <label class="w-table-sort">
-            <span>Sort</span>
-            <select data-sort></select>
-        </label>
     </header>
 
-    <div class="w-table-toolbar">
-        <label class="w-table-search">
-            <span>Search</span>
-            <input type="search" placeholder="Search" data-search>
-        </label>
-        <label class="w-table-filter">
-            <span>Status</span>
-            <select data-status></select>
-        </label>
-    </div>
-
     <div class="w-table-frame">
-        <table>
-            <colgroup data-colgroup>
-                <col class="w-table-check-col">
-            </colgroup>
-            <thead>
-                <tr data-head-row>
-                    <th scope="col" class="check-cell">
-                        <input type="checkbox" aria-label="Select all rows" data-select-all>
-                    </th>
-                </tr>
-            </thead>
-            <tbody data-body></tbody>
-        </table>
-        <p class="w-table-empty" data-empty hidden>No rows match these filters.</p>
+        <div class="w-table-grid" role="table">
+            <div class="w-table-head" role="row" data-head-row>
+                <span class="check-cell" role="columnheader">
+                    <input type="checkbox" aria-label="Select all rows" data-select-all>
+                </span>
+            </div>
+            <div class="w-table-body" data-body>
+                <slot></slot>
+            </div>
+        </div>
+        <p class="w-table-empty" data-empty hidden>No rows.</p>
     </div>
 </section>
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/WTable.ts
   class DashboardWTable extends A {
-    value = { title: "", columns: [], rows: [], statusOptions: [], sortOptions: [] };
+    value = { title: "", columns: [], rows: [] };
     selectedRow = "";
-    bound = false;
-    lightDomObserver = null;
     constructor() {
       super({ css: style_default4, template: template_default5 });
     }
     set data(value) {
       this.value = value;
-      if (this.isConnected)
+      this.replaceChildren(...value.rows.map((row) => this.createRow(row)));
+      if (this.isConnected) {
         this.render();
+        this.syncRows();
+      }
     }
     set selected(value) {
       this.selectedRow = value;
-      if (this.isConnected)
-        this.renderRows();
+      this.setAttribute("data-selected", value);
     }
     static get observedAttributes() {
-      return ["data-config-json", "data-source-json", "data-selected"];
+      return ["data-config-json", "data-selected"];
     }
     attributeChangedCallback() {
-      this.syncBoundData();
+      this.syncConfig();
+      if (this.isConnected)
+        this.render();
     }
     connectedCallback() {
-      if (!this.bound) {
-        this.shadowRoot.addEventListener("click", this.onClick);
-        this.shadowRoot.addEventListener("input", this.onFilter);
-        this.shadowRoot.addEventListener("change", this.onFilter);
-        this.lightDomObserver = new MutationObserver(() => this.syncBoundData());
-        this.lightDomObserver.observe(this, { attributes: true, childList: true, subtree: true });
-        this.bound = true;
-      }
-      this.syncBoundData();
+      this.shadowRoot.querySelector("slot")?.addEventListener("slotchange", this.onSlotChange);
+      this.shadowRoot.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
+      this.syncConfig();
       this.render();
     }
     disconnectedCallback() {
-      this.shadowRoot?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.removeEventListener("input", this.onFilter);
-      this.shadowRoot?.removeEventListener("change", this.onFilter);
-      this.lightDomObserver?.disconnect();
-      this.lightDomObserver = null;
-      this.bound = false;
+      this.shadowRoot?.querySelector("slot")?.removeEventListener("slotchange", this.onSlotChange);
+      this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
     }
     render() {
       setText(this.shadowRoot, "[data-title]", this.value.title);
       setText(this.shadowRoot, "[data-subtitle]", this.value.subtitle ?? "");
-      this.fillOptions(this.query("[data-status]"), this.value.statusOptions);
-      this.fillOptions(this.query("[data-sort]"), this.value.sortOptions);
       this.renderColumns();
-      this.renderRows();
+      this.syncRows();
     }
     renderColumns() {
-      const colgroup = this.query("[data-colgroup]");
       const head = this.query("[data-head-row]");
-      colgroup.querySelectorAll("col:not(.w-table-check-col)").forEach((col) => col.remove());
-      head.querySelectorAll("th:not(.check-cell)").forEach((th) => th.remove());
+      head.querySelectorAll("[data-column-header]").forEach((th) => th.remove());
+      this.style.setProperty("--dashboard-table-columns", tableColumns(this.value.columns));
       for (const column of this.value.columns) {
-        const col = document.createElement("col");
-        if (column.width)
-          col.style.width = column.width;
-        colgroup.append(col);
-        const th = document.createElement("th");
-        th.scope = "col";
+        const th = document.createElement("span");
+        th.dataset.columnHeader = column.key;
+        th.setAttribute("role", "columnheader");
         th.textContent = column.label;
         head.append(th);
       }
     }
-    renderRows() {
-      const body = this.query("[data-body]");
-      const rows = this.visibleRows();
-      body.replaceChildren(...rows.map((row) => this.renderRow(row)));
-      this.query("[data-empty]").hidden = rows.length > 0;
-    }
-    renderRow(row) {
-      const tr2 = document.createElement("tr");
-      tr2.dataset.collection = row.collection;
-      tr2.dataset.rowKey = row.id;
-      tr2.tabIndex = 0;
-      tr2.setAttribute("aria-selected", String(row.id === this.selectedRow));
-      tr2.append(this.checkboxCell(row), ...this.value.columns.map((column) => this.renderCell(row, column)));
-      return tr2;
-    }
-    checkboxCell(row) {
-      const td2 = document.createElement("td");
-      td2.className = "check-cell";
-      const input = document.createElement("input");
-      input.type = "checkbox";
-      input.ariaLabel = `Select row ${row.id}`;
-      td2.append(input);
-      return td2;
-    }
-    renderCell(row, column) {
-      const td2 = document.createElement("td");
-      appendTableCellValue(td2, row.cells[column.key], Boolean(column.primary));
-      return td2;
-    }
-    visibleRows() {
-      const search = this.query("[data-search]").value.trim().toLowerCase();
-      const status = this.query("[data-status]").value;
-      const rows = this.value.rows.filter((row) => this.rowMatches(row, search, status));
-      return this.sortRows(rows, this.query("[data-sort]").value);
-    }
-    rowMatches(row, search, status) {
-      const haystack = Object.values(row.cells).map(cellText).join(" ").toLowerCase();
-      const rowStatus = cellText(row.cells.status).toLowerCase();
-      return (!search || haystack.includes(search)) && (!status || rowStatus === status);
-    }
-    sortRows(rows, sort) {
-      const [key, direction] = sort.split("-");
-      if (!key)
-        return rows;
-      return rows.slice().sort((left, right) => {
-        const result = cellText(left.cells[key]).localeCompare(cellText(right.cells[key]));
-        return direction === "desc" ? -result : result;
-      });
-    }
-    fillOptions(select, options) {
-      select.replaceChildren(...options.map((option) => {
-        const element = document.createElement("option");
-        element.value = option.value;
-        element.textContent = option.label;
-        return element;
-      }));
-    }
-    syncBoundData() {
+    syncConfig() {
+      this.selectedRow = this.dataset.selected ?? "";
       const widget = parseJson(this.dataset.configJson ?? "");
       if (!widget || widget.widget !== "w-table")
         return;
-      const data = parseJson(this.dataset.sourceJson ?? "");
-      this.selectedRow = this.dataset.selected ?? "";
-      const lightRows = this.boundRows(widget);
       this.value = {
-        ...tableData(widget, lightRows.length ? [] : arrayAt(data, widget.source.itemsPath)),
-        rows: lightRows.length ? lightRows : tableData(widget, arrayAt(data, widget.source.itemsPath)).rows
+        title: widget.title ?? widget.source.endpoint,
+        columns: widget.columns.map((column) => ({
+          key: column.id,
+          label: column.label,
+          ...column.width ? { width: column.width } : {},
+          ...column.primary ? { primary: true } : {}
+        })),
+        rows: []
       };
     }
-    boundRows(widget) {
-      return Array.from(this.querySelectorAll("[data-table-row]")).map((row) => lightRow(widget, row)).filter((row) => row !== null);
+    syncRows() {
+      const rows = this.rows();
+      for (const row of rows)
+        row.toggleAttribute("selected", Boolean(this.selectedRow && row.rowKey === this.selectedRow));
+      this.query("[data-empty]").hidden = rows.length > 0;
     }
-    onFilter = () => this.renderRows();
-    onClick = (event) => {
-      const target = event.target;
-      const selectAll = target?.closest("[data-select-all]");
-      if (selectAll)
-        this.shadowRoot.querySelectorAll("tbody input").forEach((input) => {
-          input.checked = selectAll.checked;
-        });
-      if (target?.closest("input"))
-        return;
-      const row = target?.closest("tr[data-row-key]");
-      if (!row?.dataset.collection || !row.dataset.rowKey)
-        return;
-      emitWidgetEvent(this, WIDGET_ROW_SELECT_EVENT, { collection: row.dataset.collection, rowKey: row.dataset.rowKey });
+    rows() {
+      return Array.from(this.querySelectorAll("cms-dashboard-w-row"));
+    }
+    createRow(row) {
+      const element = document.createElement("cms-dashboard-w-row");
+      element.setAttribute("row-key", row.id);
+      element.setAttribute("collection", row.collection);
+      for (const column of this.value.columns) {
+        const cell = document.createElement("cms-dashboard-w-cell");
+        const value = row.cells[column.key];
+        if (column.primary)
+          cell.toggleAttribute("primary", true);
+        if (typeof value === "object") {
+          if (value.tone)
+            cell.setAttribute("tone", value.tone);
+          if (value.meta)
+            cell.setAttribute("meta", value.meta);
+          cell.textContent = value.title;
+        } else {
+          cell.textContent = value ?? "";
+        }
+        element.append(cell);
+      }
+      return element;
+    }
+    onSlotChange = () => this.syncRows();
+    onSelectAll = (event) => {
+      const checked = Boolean(event.target?.checked);
+      for (const row of this.rows())
+        row.checked = checked;
     };
     query(selector) {
       return this.shadowRoot.querySelector(selector);
@@ -14190,6 +14169,9 @@ tbody tr[aria-selected="true"] {
   }
   if (!customElements.get("cms-dashboard-w-table"))
     customElements.define("cms-dashboard-w-table", DashboardWTable);
+  function tableColumns(columns) {
+    return ["46px", ...columns.map((column) => column.width ?? "minmax(0, 1fr)")].join(" ");
+  }
   function parseJson(value) {
     if (!value)
       return null;
@@ -14198,27 +14180,6 @@ tbody tr[aria-selected="true"] {
     } catch {
       return null;
     }
-  }
-  function lightRow(widget, row) {
-    const id2 = row.dataset.rowId ?? "";
-    if (!id2)
-      return null;
-    return {
-      id: id2,
-      collection: row.dataset.collection || widget.selection?.opens || widget.id,
-      cells: Object.fromEntries(widget.columns.map((column) => [column.id, lightCell(row, column)]))
-    };
-  }
-  function lightCell(row, column) {
-    const element = Array.from(row.querySelectorAll("[data-table-cell]")).find((cell) => cell.dataset.tableCell === column.id);
-    const title = element?.dataset.title ?? "";
-    if (!element)
-      return title;
-    if (element.dataset.tone === "badge")
-      return { title, tone: "badge" };
-    if (element.dataset.primary === "true")
-      return { title, meta: element.dataset.meta ?? "" };
-    return title;
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-section/template.html
@@ -15495,7 +15456,7 @@ p9r-textarea {
   }
   function tableElement() {
     const element = document.createElement("cms-dashboard-w-table");
-    element.data = tableData2();
+    element.data = tableData();
     return element;
   }
   function detailElement(product) {
@@ -15503,12 +15464,10 @@ p9r-textarea {
     element.data = detailData2(product);
     return element;
   }
-  function tableData2() {
+  function tableData() {
     return {
       title: "Products",
-      subtitle: "Widget sandbox: filters, selection and bulk checkboxes only.",
-      statusOptions: [{ label: "All statuses", value: "" }, { label: "Active", value: "active" }, { label: "Draft", value: "draft" }, { label: "Archived", value: "archived" }],
-      sortOptions: [{ label: "Product title", value: "title-asc" }, { label: "Status", value: "status-asc" }, { label: "Vendor", value: "vendor-asc" }],
+      subtitle: "Widget sandbox: selection and bulk checkboxes only.",
       columns: [
         { key: "title", label: "Product", primary: true },
         { key: "status", label: "Status", width: "140px" },
@@ -15516,10 +15475,10 @@ p9r-textarea {
         { key: "category", label: "Category", width: "180px" },
         { key: "updated", label: "Updated", width: "140px" }
       ],
-      rows: PRODUCTS.map(tableRow2)
+      rows: PRODUCTS.map(tableRow)
     };
   }
-  function tableRow2(product) {
+  function tableRow(product) {
     return {
       id: product.id,
       collection: "example-products",
@@ -15690,21 +15649,20 @@ p9r-textarea {
     return JSON.stringify(value);
   }
   function tableRowsTemplate(widget) {
-    const row = document.createElement("span");
-    row.setAttribute("data-table-row", "");
+    const row = document.createElement("cms-dashboard-w-row");
     row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    row.setAttribute("data-row-id", bindingPath("row", widget.rowKey));
-    row.setAttribute("data-collection", widget.selection?.opens ?? widget.id);
+    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
+    row.setAttribute("collection", widget.selection?.opens ?? widget.id);
     for (const column of widget.columns) {
-      const cell = document.createElement("span");
-      cell.setAttribute("data-table-cell", column.id);
-      cell.setAttribute("data-title", bindingPath("row", column.path));
-      if (column.primary) {
-        cell.setAttribute("data-primary", "true");
-        cell.setAttribute("data-meta", "{{ row.id }}");
-      }
+      const cell = document.createElement("cms-dashboard-w-cell");
+      cell.setAttribute("column", column.id);
+      if (column.primary)
+        cell.toggleAttribute("primary", true);
+      if (column.primary)
+        cell.setAttribute("meta", "{{ row.id }}");
       if (column.format === "badge")
-        cell.setAttribute("data-tone", "badge");
+        cell.setAttribute("tone", "badge");
+      cell.textContent = bindingPath("row", column.path);
       row.append(cell);
     }
     return row;
@@ -16241,7 +16199,7 @@ textarea { width: 100%; padding: 8px; box-sizing: border-box; }
   }
 
   // src/components/admin/Resources/Integrations/fields.ts
-  function renderFields(root, template, definition) {
+  function renderFields(root, template3, definition) {
     root.replaceChildren();
     if (!definition.inputs.length) {
       const empty = document.createElement("p");
@@ -16251,7 +16209,7 @@ textarea { width: 100%; padding: 8px; box-sizing: border-box; }
       return;
     }
     for (const input of definition.inputs) {
-      const row = template.content.firstElementChild.cloneNode(true);
+      const row = template3.content.firstElementChild.cloneNode(true);
       row.querySelector("[data-label]").textContent = input.label;
       row.querySelector("[data-hint]").textContent = hint(input);
       row.querySelector("[data-control]").append(control(input));
@@ -16343,10 +16301,10 @@ textarea { width: 100%; padding: 8px; box-sizing: border-box; }
     fill(root, "[data-info-version]", definition.version ?? "Current");
     fill(root, "[data-info-artifacts]", artifactSummary(definition));
   }
-  function renderSummary(root, template, definition) {
+  function renderSummary(root, template3, definition) {
     root.replaceChildren();
     for (const [kind, label, detail] of summaryRows(definition)) {
-      const item = template.content.firstElementChild.cloneNode(true);
+      const item = template3.content.firstElementChild.cloneNode(true);
       item.querySelector("[data-kind]").textContent = kind;
       item.querySelector("[data-label]").textContent = label;
       item.querySelector("[data-detail]").textContent = detail;
@@ -16437,14 +16395,14 @@ textarea { width: 100%; padding: 8px; box-sizing: border-box; }
     renderInstances() {
       const root = this.query("[data-instances]");
       const empty = this.query("[data-instances-empty]");
-      const template = this.query("[data-instance-template]");
+      const template3 = this.query("[data-instance-template]");
       root.replaceChildren();
       empty.hidden = this.instances.length > 0;
       for (const instance of this.instances)
-        root.append(this.instanceCard(template, instance));
+        root.append(this.instanceCard(template3, instance));
     }
-    instanceCard(template, instance) {
-      const card = template.content.firstElementChild.cloneNode(true);
+    instanceCard(template3, instance) {
+      const card = template3.content.firstElementChild.cloneNode(true);
       this.fill(card, "[data-label]", instance.label);
       this.fill(card, "[data-id]", instance.id);
       this.fill(card, "[data-status]", instance.status);
@@ -16455,7 +16413,7 @@ textarea { width: 100%; padding: 8px; box-sizing: border-box; }
     renderCatalogue() {
       const root = this.query("[data-catalogue]");
       const empty = this.query("[data-catalogue-empty]");
-      const template = this.query("[data-card-template]");
+      const template3 = this.query("[data-card-template]");
       const query3 = this.query("[data-search]").value.trim();
       const category = this.query("[data-category]").value;
       const counts = installedCounts(this.instances);
@@ -16463,10 +16421,10 @@ textarea { width: 100%; padding: 8px; box-sizing: border-box; }
       root.replaceChildren();
       empty.hidden = visible.length > 0;
       for (const definition of visible)
-        root.append(this.definitionCard(template, definition, counts.get(definition.kind) ?? 0));
+        root.append(this.definitionCard(template3, definition, counts.get(definition.kind) ?? 0));
     }
-    definitionCard(template, definition, count) {
-      const card = template.content.firstElementChild.cloneNode(true);
+    definitionCard(template3, definition, count) {
+      const card = template3.content.firstElementChild.cloneNode(true);
       this.fill(card, "[data-mark]", mark(definition));
       this.fill(card, "[data-label]", definition.label);
       this.fill(card, "[data-description]", definition.description ?? "");
@@ -16837,8 +16795,8 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
-  var template = document.createElement("template");
-  template.innerHTML = `<style>${String(style_default9)}</style>${String(template_default10)}`;
+  var template3 = document.createElement("template");
+  template3.innerHTML = `<style>${String(style_default9)}</style>${String(template_default10)}`;
   var TOPBAR_VIEWPORT_CHANGE_EVENT = "editor-v2:viewport-change";
   var TOPBAR_EDITOR_MODE_CHANGE_EVENT = "editor-v2:editor-mode-change";
   var TOPBAR_SOURCE_STATE_CHANGE_EVENT = "editor-v2:source-state-change";
@@ -16853,7 +16811,7 @@ button:hover {
     _sourceState = "loading";
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template3.content.cloneNode(true));
     }
     connectedCallback() {
       this.shadowRoot.addEventListener("click", this._onClick);
@@ -17119,13 +17077,13 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
-  var template2 = document.createElement("template");
-  template2.innerHTML = `<style>${String(style_default10)}</style>${String(template_default11)}`;
+  var template4 = document.createElement("template");
+  template4.innerHTML = `<style>${String(style_default10)}</style>${String(template_default11)}`;
 
   class Panel extends HTMLElement {
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template2.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template4.content.cloneNode(true));
     }
     connectedCallback() {
       this._syncHeaderVisibility();
@@ -18163,8 +18121,8 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/DataSourcePicker/DataSourcePicker.ts
-  var template3 = document.createElement("template");
-  template3.innerHTML = `<style>${String(style_default11)}</style>${String(template_default12)}`;
+  var template5 = document.createElement("template");
+  template5.innerHTML = `<style>${String(style_default11)}</style>${String(template_default12)}`;
   var DATA_SOURCE_PICKER_SELECT_EVENT = "editor-v2:data-source-select";
   var DATA_SOURCE_PICKER_REMOVE_EVENT = "editor-v2:data-source-remove";
 
@@ -18178,7 +18136,7 @@ h2 {
     _disconnectEvents = null;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template3.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template5.content.cloneNode(true));
     }
     connectedCallback() {
       this._disconnectEvents = connectDataSourcePickerEvents({
@@ -18568,8 +18526,8 @@ input {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/ConditionPicker/ConditionPicker.ts
-  var template4 = document.createElement("template");
-  template4.innerHTML = `<style>${String(style_default12)}</style>${String(template_default13)}`;
+  var template6 = document.createElement("template");
+  template6.innerHTML = `<style>${String(style_default12)}</style>${String(template_default13)}`;
   var CONDITION_PICKER_APPLY_EVENT = "editor-v2:condition-apply";
   var CONDITION_PICKER_REMOVE_EVENT = "editor-v2:condition-remove";
   var STATES = ["loaded", "loading", "empty", "error"];
@@ -18580,7 +18538,7 @@ input {
     _canRemove = false;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template4.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template6.content.cloneNode(true));
       this.closeButton.addEventListener("click", this.close);
       this.backdrop.addEventListener("click", this._onBackdropClick);
       this.applyButton.addEventListener("click", this._apply);
@@ -19260,8 +19218,8 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/BlockPickerModal/BlockPickerModal.ts
-  var template5 = document.createElement("template");
-  template5.innerHTML = `<style>${String(style_default13)}</style>${String(template_default14)}`;
+  var template7 = document.createElement("template");
+  template7.innerHTML = `<style>${String(style_default13)}</style>${String(template_default14)}`;
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   class BlockPickerModal extends HTMLElement {
@@ -19272,7 +19230,7 @@ dd {
     _activeOption = null;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template5.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template7.content.cloneNode(true));
     }
     connectedCallback() {
       this.closeButton.addEventListener("click", this.close);
@@ -20275,12 +20233,12 @@ dd {
   function itemRootCount(item) {
     if (item.kind !== "template")
       return 1;
-    const template6 = document.createElement("template");
-    template6.innerHTML = item.content;
-    const elementCount = template6.content.children.length;
+    const template8 = document.createElement("template");
+    template8.innerHTML = item.content;
+    const elementCount = template8.content.children.length;
     if (elementCount > 0)
       return elementCount;
-    return template6.content.textContent?.trim() ? 1 : 0;
+    return template8.content.textContent?.trim() ? 1 : 0;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Pickers/structurePickerGroups.ts
@@ -21109,8 +21067,8 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
-  var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${[
+  var template8 = document.createElement("template");
+  template8.innerHTML = `<style>${[
     style_default14,
     sourceStates_default,
     badges_default,
@@ -21122,7 +21080,7 @@ dd {
     controller;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template6.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template8.content.cloneNode(true));
       this.controller = new StructureTreeController(this);
     }
     connectedCallback() {
@@ -21255,8 +21213,8 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
-  var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default15)}</style>${String(template_default16)}`;
+  var template9 = document.createElement("template");
+  template9.innerHTML = `<style>${String(style_default15)}</style>${String(template_default16)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -21280,7 +21238,7 @@ iframe {
     }
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template7.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template9.content.cloneNode(true));
     }
     connectedCallback() {
       this.editorFrame.addEventListener("load", this.onFrameLoad);
@@ -21486,13 +21444,13 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/fieldElement.ts
   function createFieldTemplate(templateHtml, componentCss) {
-    const template8 = document.createElement("template");
-    template8.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
-    return template8;
+    const template10 = document.createElement("template");
+    template10.innerHTML = `<style>${String(componentCss)}</style>${String(templateHtml)}`;
+    return template10;
   }
-  function attachFieldShadow(host, template8) {
+  function attachFieldShadow(host, template10) {
     const root = host.attachShadow({ mode: "open" });
-    root.append(template8.content.cloneNode(true));
+    root.append(template10.content.cloneNode(true));
     return root;
   }
   function syncFieldCopy(host) {
@@ -21508,7 +21466,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template8 = createFieldTemplate(template_default17, style_default16);
+  var template10 = createFieldTemplate(template_default17, style_default16);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -21517,7 +21475,7 @@ iframe {
     };
     constructor() {
       super();
-      attachFieldShadow(this, template8);
+      attachFieldShadow(this, template10);
     }
     connectedCallback() {
       this.shadowRoot.querySelector(".label").textContent = this.getAttribute("label") ?? "";
@@ -21981,7 +21939,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template9 = createFieldTemplate(template_default18, `${String(style_default17)}${String(dynamicDataPicker_default)}`);
+  var template11 = createFieldTemplate(template_default18, `${String(style_default17)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -21996,7 +21954,7 @@ input:disabled {
     });
     constructor() {
       super();
-      attachFieldShadow(this, template9);
+      attachFieldShadow(this, template11);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -22134,7 +22092,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template10 = createFieldTemplate(template_default19, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
+  var template12 = createFieldTemplate(template_default19, `${String(style_default18)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -22149,7 +22107,7 @@ textarea:disabled {
     });
     constructor() {
       super();
-      attachFieldShadow(this, template10);
+      attachFieldShadow(this, template12);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -22680,8 +22638,8 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
-  var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${String(style_default19)}</style>${String(template_default20)}`;
+  var template13 = document.createElement("template");
+  template13.innerHTML = `<style>${String(style_default19)}</style>${String(template_default20)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -22700,7 +22658,7 @@ textarea:disabled {
     });
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template11.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template13.content.cloneNode(true));
     }
     connectedCallback() {
       this.label.textContent = this.getAttribute("label") ?? "";
@@ -22920,12 +22878,12 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template12 = createFieldTemplate(template_default21, style_default20);
+  var template14 = createFieldTemplate(template_default21, style_default20);
 
   class Select extends HTMLElement {
     constructor() {
       super();
-      attachFieldShadow(this, template12);
+      attachFieldShadow(this, template14);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -23080,12 +23038,12 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template13 = createFieldTemplate(template_default22, style_default21);
+  var template15 = createFieldTemplate(template_default22, style_default21);
 
   class Toggle extends HTMLElement {
     constructor() {
       super();
-      attachFieldShadow(this, template13);
+      attachFieldShadow(this, template15);
     }
     connectedCallback() {
       syncFieldCopy(this);
@@ -23149,12 +23107,12 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template14 = createFieldTemplate(template_default23, style_default22);
+  var template16 = createFieldTemplate(template_default23, style_default22);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
       super();
-      attachFieldShadow(this, template14);
+      attachFieldShadow(this, template16);
     }
   }
   if (!customElements.get("cms-editor-v2-segmented-control")) {
@@ -23874,8 +23832,8 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
-  var template15 = document.createElement("template");
-  template15.innerHTML = `<style>${String(style_default24)}</style>${String(template_default25)}`;
+  var template17 = document.createElement("template");
+  template17.innerHTML = `<style>${String(style_default24)}</style>${String(template_default25)}`;
 
   class FilesCenter extends HTMLElement {
     _folder = null;
@@ -23890,7 +23848,7 @@ input {
     _maxSelection = null;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template15.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template17.content.cloneNode(true));
     }
     connectedCallback() {
       this._wire();
@@ -24184,8 +24142,8 @@ input {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
-  var template16 = document.createElement("template");
-  template16.innerHTML = `<style>${String(style_default23)}</style>${String(template_default24)}`;
+  var template18 = document.createElement("template");
+  template18.innerHTML = `<style>${String(style_default23)}</style>${String(template_default24)}`;
 
   class PageLink extends HTMLElement {
     _pages = [];
@@ -24198,7 +24156,7 @@ input {
     _mediaLabel = "";
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template16.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template18.content.cloneNode(true));
     }
     connectedCallback() {
       this._syncFromAttributes();
@@ -24819,8 +24777,8 @@ cms-editor-v2-segmented-control button svg:only-child {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
-  var template17 = document.createElement("template");
-  template17.innerHTML = `<style>${String(style_default25)}</style>${String(template_default26)}`;
+  var template19 = document.createElement("template");
+  template19.innerHTML = `<style>${String(style_default25)}</style>${String(template_default26)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -24871,7 +24829,7 @@ cms-editor-v2-segmented-control button svg:only-child {
     _disconnectEndpointPickerEvents = null;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template17.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template19.content.cloneNode(true));
     }
     setSettings(sections2, textCapability = null, textValue2 = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
       this._dataSources = dataSources;
@@ -25869,8 +25827,8 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/RepeatPicker/RepeatPicker.ts
-  var template18 = document.createElement("template");
-  template18.innerHTML = `<style>${String(style_default26)}</style>${String(template_default27)}`;
+  var template20 = document.createElement("template");
+  template20.innerHTML = `<style>${String(style_default26)}</style>${String(template_default27)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -25878,7 +25836,7 @@ label {
     _activeOption = null;
     constructor() {
       super();
-      this.attachShadow({ mode: "open" }).append(template18.content.cloneNode(true));
+      this.attachShadow({ mode: "open" }).append(template20.content.cloneNode(true));
     }
     connectedCallback() {
       this.closeButton.addEventListener("click", this.close);
@@ -26420,9 +26378,9 @@ label {
         slotElements: slotElements2
       };
     }
-    const template19 = document2.createElement("template");
-    template19.innerHTML = item.content;
-    const fragment = template19.content.cloneNode(true);
+    const template21 = document2.createElement("template");
+    template21.innerHTML = item.content;
+    const fragment = template21.content.cloneNode(true);
     const slotElements = slotElementChildren(fragment);
     for (const child of slotElements) {
       applySlot(child, slotName);
@@ -26454,9 +26412,9 @@ label {
       fragment.append(document2.createElement(entry.tag));
       return fragment;
     }
-    const template19 = document2.createElement("template");
-    template19.innerHTML = entry.defaultContent;
-    return template19.content.cloneNode(true);
+    const template21 = document2.createElement("template");
+    template21.innerHTML = entry.defaultContent;
+    return template21.content.cloneNode(true);
   }
   function slotElementChildren(fragment) {
     return Array.from(fragment.children).filter(isElementNode);
@@ -27431,9 +27389,9 @@ label {
     const referenceNode = currentNodes.find((node) => !isReservedSlotNode(node, reserved)) ?? editor.target.firstChild;
     const fragment = editor.target.ownerDocument.createDocumentFragment();
     if (format === "richtext") {
-      const template19 = editor.target.ownerDocument.createElement("template");
-      template19.innerHTML = value;
-      fragment.append(template19.content.cloneNode(true));
+      const template21 = editor.target.ownerDocument.createElement("template");
+      template21.innerHTML = value;
+      fragment.append(template21.content.cloneNode(true));
     } else if (value !== "") {
       fragment.append(editor.target.ownerDocument.createTextNode(value));
     }
@@ -29182,14 +29140,14 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
-    const template19 = document.createElement("template");
-    template19.innerHTML = `<style>${[
+    const template21 = document.createElement("template");
+    template21.innerHTML = `<style>${[
       style_default27,
       pageSettings_default,
       pageSettingsTags_default
     ].map((css) => String(css)).join(`
 `)}</style>${String(template_default28)}`;
-    return template19;
+    return template21;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/Core/Services/shellControllerParts.ts
@@ -29451,18 +29409,18 @@ label {
   }
   async function loadTemplateItems() {
     const templates = await fetchJson("template/list", []);
-    const details = await Promise.all(templates.map((template19) => fetchJson(`template?id=${encodeURIComponent(template19.id)}`, {
-      ...template19,
+    const details = await Promise.all(templates.map((template21) => fetchJson(`template?id=${encodeURIComponent(template21.id)}`, {
+      ...template21,
       content: ""
     })));
-    return details.filter((template19) => template19.content).map((template19) => ({
+    return details.filter((template21) => template21.content).map((template21) => ({
       kind: "template",
-      id: template19.id,
-      label: template19.name,
-      description: template19.description,
-      category: template19.category || "Templates",
+      id: template21.id,
+      label: template21.name,
+      description: template21.description,
+      category: template21.category || "Templates",
       icon: "T",
-      content: template19.content ?? ""
+      content: template21.content ?? ""
     }));
   }
   async function fetchJson(path, fallback) {

@@ -1,6 +1,6 @@
 import type { DashboardAction, DashboardField, DashboardOption, DashboardWidget } from "@bernouy/cms-dashboards";
 import type { WDetailData, WDetailField, WDetailSection } from "../widgets/w-detail/types";
-import type { WTableCell, WTableData, WTableOption, WTableRow } from "../widgets/w-table/types";
+import type { WTableCell, WTableData, WTableRow } from "../widgets/w-table/types";
 import { pathLabel, textAt, valueAt } from "./expressions";
 import { mediaValue } from "./media";
 
@@ -18,8 +18,6 @@ export function tableData(widget: TableWidget, items: unknown[]): WTableData {
             ...(column.primary ? { primary: true } : {}),
         })),
         rows: items.map(item => tableRow(widget, item)),
-        statusOptions: filterOptions(widget),
-        sortOptions: sortOptions(widget),
     };
 }
 
@@ -50,15 +48,6 @@ function tableCell(item: unknown, column: TableWidget["columns"][number]): WTabl
     if (column.format === "badge") return { title: value, tone: "badge" };
     if (column.primary) return { title: value, meta: textAt(item, "id") };
     return value;
-}
-
-function filterOptions(widget: TableWidget): WTableOption[] {
-    const filter = widget.filters?.find(item => item.type === "select" && item.options?.length);
-    return [{ label: "All statuses", value: "" }, ...(filter?.options ?? []).map(optionData)];
-}
-
-function sortOptions(widget: TableWidget): WTableOption[] {
-    return widget.columns.map(column => ({ label: column.label, value: `${column.id}-asc` }));
 }
 
 function sections(sections: DetailWidget["main"], resource: unknown, fields: Record<string, unknown>, options: DetailOptions, sourceId: string): WDetailSection[] {
@@ -107,11 +96,11 @@ function actionData(action: DashboardAction): WDetailData["actions"][number] {
     };
 }
 
-function optionData(option: DashboardOption): WTableOption {
+function optionData(option: DashboardOption): { label: string; value: string } {
     return { label: option.label, value: option.value };
 }
 
-function optionList(staticOptions: DashboardOption[] | undefined, dynamicOptions: DashboardOption[]): WTableOption[] {
+function optionList(staticOptions: DashboardOption[] | undefined, dynamicOptions: DashboardOption[]): Array<{ label: string; value: string }> {
     const seen = new Set<string>();
     return [...(staticOptions ?? []), ...dynamicOptions]
         .filter(option => {

@@ -17,16 +17,9 @@ export type WTableRow = {
     cells: Record<string, WTableCell>;
 };
 
-export type WTableOption = {
-    label: string;
-    value: string;
-};
-
 export type WTableData = {
     title: string;
     subtitle?: string;
     columns: WTableColumn[];
     rows: WTableRow[];
-    statusOptions: WTableOption[];
-    sortOptions: WTableOption[];
 };
