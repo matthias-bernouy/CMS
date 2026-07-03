@@ -1,0 +1,23 @@
+<div class="field">
+    <div class="label-row">
+        <label class="label" for="input"></label>
+        <button class="create-button" type="button" data-create aria-label="Add value" hidden>
+            <span aria-hidden="true">+</span>
+        </button>
+    </div>
+    <div class="control token-control">
+        <div class="tokens" data-tokens></div>
+        <input
+            id="input"
+            type="text"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-haspopup="listbox"
+            autocomplete="off"
+            spellcheck="false"
+        />
+        <div class="listbox" role="listbox" hidden></div>
+    </div>
+</div>
+<div hidden><slot></slot></div>

@@ -1,0 +1,115 @@
+.label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 13px;
+}
+
+.create-button {
+    appearance: none;
+    display: inline-grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    padding: 0;
+}
+
+.create-button[hidden] {
+    display: none;
+}
+
+.create-button:hover {
+    border-color: var(--border-default, #e2e8f0);
+    background: var(--bg-hover, #f1f4f3);
+    color: var(--primary-base, #4361ee);
+}
+
+.create-button span {
+    display: block;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1;
+    transform: translateY(-1px);
+}
+
+.token-control {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    min-height: 34px;
+    box-sizing: border-box;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-surface, #fff);
+    padding: 4px 7px;
+}
+
+.token-control:focus-within {
+    border-color: var(--primary-base, #4361ee);
+    box-shadow: 0 0 0 3px var(--primary-muted, rgb(67 97 238 / 15%));
+}
+
+.tokens {
+    display: contents;
+}
+
+input {
+    flex: 1 1 72px;
+    min-width: 72px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 3px 0;
+}
+
+input:focus-visible,
+input:hover:not(:disabled) {
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.token {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    border-radius: 6px;
+    background: var(--bg-hover, #f1f4f3);
+    color: var(--text-main, #1e293b);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    padding: 3px 5px 3px 7px;
+}
+
+.token span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.token button {
+    display: inline-grid;
+    width: 16px;
+    height: 16px;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    font: inherit;
+    line-height: 1;
+    padding: 0;
+}
+
+.token button:hover {
+    background: var(--bg-surface, #fff);
+    color: var(--text-main, #1e293b);
+}

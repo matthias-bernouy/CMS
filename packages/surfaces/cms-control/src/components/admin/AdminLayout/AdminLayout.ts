@@ -115,7 +115,10 @@ export class FixedAdminLayout extends Component {
         if (!this._pageHeader) return;
         const hasTitle = this._slotHasVisibleContent(this._titleSlot);
         const hasAction = this._slotHasVisibleContent(this._actionSlot);
-        this._pageHeader.hidden = !hasTitle && !hasAction;
+        const visible = hasTitle || hasAction;
+        this._pageHeader.hidden = !visible;
+        this._pageHeader.style.display = visible ? "flex" : "none";
+        this._pageHeader.style.marginBottom = visible ? "2rem" : "0";
     }
 
     private _slotHasVisibleContent(slot: HTMLSlotElement | null): boolean {

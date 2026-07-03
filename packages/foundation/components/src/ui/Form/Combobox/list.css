@@ -1,0 +1,99 @@
+.listbox {
+    position: absolute;
+    inset-block-start: calc(100% + 3px);
+    inset-inline: 0;
+    z-index: 100;
+    overflow: auto;
+    max-height: 220px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    border-radius: 8px;
+    background: var(--bg-overlay, var(--bg-surface, #fff));
+    box-shadow: 0 8px 22px rgb(0 0 0 / 10%), 0 1px 2px rgb(0 0 0 / 8%);
+    padding: 3px;
+}
+
+.option,
+.empty {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    border-radius: 6px;
+    color: var(--text-main, #1e293b);
+    font-size: 12px;
+    font-weight: 450;
+    padding: 4px 7px;
+}
+
+.option {
+    cursor: pointer;
+}
+
+.option[data-active="true"],
+.option:hover {
+    background: var(--bg-hover, #f1f4f3);
+}
+
+.option[data-selected="true"] {
+    background: var(--primary-muted, rgb(67 97 238 / 10%));
+    color: var(--primary-base, #4361ee);
+}
+
+.option[data-selected="true"] .option-label {
+    font-weight: 650;
+}
+
+.option.create {
+    color: var(--primary-base, #4361ee);
+}
+
+.empty {
+    grid-template-columns: 1fr;
+    color: var(--text-muted, #94a3b8);
+}
+
+.option-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.indicator {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted, #94a3b8);
+}
+
+.option[data-selected="true"] .indicator {
+    color: var(--primary-base, currentColor);
+}
+
+.option[data-selected="true"] .indicator::before {
+    position: absolute;
+    inset-block-start: 1px;
+    inset-inline-start: 4px;
+    width: 4px;
+    height: 8px;
+    border: solid currentColor;
+    border-width: 0 2px 2px 0;
+    content: "";
+    transform: rotate(45deg);
+}
+
+.option.create .indicator::before,
+.option.create .indicator::after {
+    position: absolute;
+    inset-block-start: 6px;
+    inset-inline-start: 2px;
+    width: 10px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    content: "";
+}
+
+.option.create .indicator::after {
+    transform: rotate(90deg);
+}

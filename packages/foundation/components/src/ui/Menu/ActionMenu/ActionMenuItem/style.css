@@ -1,0 +1,77 @@
+:host {
+    display: block;
+    padding: 0 6px;
+}
+
+.item {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 34px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-body, var(--text-main));
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    padding: 7px 8px;
+    text-align: left;
+}
+
+:host(:not([has-icon])) .item {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+:host(:not([has-icon])) .icon {
+    display: none;
+}
+
+.item:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+}
+
+.item:disabled {
+    cursor: default;
+    opacity: .5;
+}
+
+:host([color="danger"]) .item {
+    color: var(--danger-base);
+}
+
+:host([color="danger"]) .item:hover {
+    background: var(--danger-muted);
+    color: var(--danger-contrasted);
+}
+
+.icon {
+    display: inline-grid;
+    place-items: center;
+    color: var(--text-muted);
+}
+
+:host([color="danger"]) .icon {
+    color: currentColor;
+}
+
+.label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::slotted(svg) {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}

@@ -2,12 +2,16 @@ import { CMS_BINDING_CORE_TAG } from "@bernouy/cms-content/editor";
 import {
     Accordion,
     AccordionItem,
+    ActionMenu,
+    ActionMenuItem,
+    ActionMenuSection,
     Alert,
     Avatar,
     Badge,
     Button,
     Card,
     Checkbox,
+    Combobox,
     Container,
     Grid,
     IconButton,
@@ -31,6 +35,7 @@ import {
     Tag,
     TagSuggest,
     Textarea,
+    TokenInput,
     Toast,
     ToastStack,
     Stat,
@@ -47,12 +52,16 @@ function define(tag: string, constructor: CustomElementConstructor) {
 define(CMS_BINDING_CORE_TAG, BindingCore);
 define("p9r-accordion", Accordion);
 define("p9r-accordion-item", AccordionItem);
+define("p9r-action-menu", ActionMenu);
+define("p9r-action-menu-item", ActionMenuItem);
+define("p9r-action-menu-section", ActionMenuSection);
 define("p9r-alert", Alert);
 define("p9r-avatar", Avatar);
 define("p9r-badge", Badge);
 define("p9r-button", Button);
 define("p9r-card", Card);
 define("w13c-checkbox", Checkbox);
+define("p9r-combobox", Combobox);
 define("p9r-container", Container);
 define("p9r-grid", Grid);
 define("p9r-icon-button", IconButton);
@@ -76,6 +85,7 @@ define("p9r-tabs", Tabs);
 define("p9r-tag", Tag);
 define("p9r-tag-suggest", TagSuggest);
 define("p9r-textarea", Textarea);
+define("p9r-token-input", TokenInput);
 define("p9r-toast", Toast);
 define("p9r-toast-stack", ToastStack);
 define("p9r-stat", Stat);

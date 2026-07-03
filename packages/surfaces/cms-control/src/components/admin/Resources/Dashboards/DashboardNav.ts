@@ -37,6 +37,10 @@ export class DashboardNav extends Component {
     }
 
     private async load(): Promise<void> {
+        if (this.isExampleMode()) {
+            this.renderExample();
+            return;
+        }
         try {
             this.groups = await fetchDashboards();
             this.selectedSource ||= this.groups[0]?.source.id ?? "";
@@ -102,6 +106,22 @@ export class DashboardNav extends Component {
         }
     }
 
+    private renderExample(): void {
+        const menu = this.query<HTMLElement>("w13c-lateral-menu");
+        menu.querySelectorAll("[data-generated]").forEach(element => element.remove());
+
+        const sourceItem = this.createItem("Example source", undefined, "database", "database");
+        sourceItem.dataset.generated = "true";
+        sourceItem.toggleAttribute("active", true);
+        menu.append(sourceItem);
+
+        const dashboardItem = this.createItem("Product dashboard", undefined, "layout", "layout");
+        dashboardItem.classList.add("dashboard-item");
+        dashboardItem.dataset.generated = "true";
+        dashboardItem.toggleAttribute("active", true);
+        menu.append(dashboardItem);
+    }
+
     private createItem(label: string, svg: string | undefined, icon: string | undefined, fallback: "database" | "layout"): HTMLElement {
         const item = document.createElement("w13c-lateral-menu-item");
         appendIconSlot(item, svg, icon, fallback);
@@ -121,6 +141,10 @@ export class DashboardNav extends Component {
         const selection = currentSelection();
         this.selectedSource = selection.source;
         this.selectedDashboard = selection.dashboard;
+    }
+
+    private isExampleMode(): boolean {
+        return this.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
     }
 
     private onClick = (event: Event): void => {

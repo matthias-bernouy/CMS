@@ -1,0 +1,40 @@
+<section class="w-table-shell">
+    <header class="w-table-header">
+        <div>
+            <h3 data-title></h3>
+            <p data-subtitle></p>
+        </div>
+        <label class="w-table-sort">
+            <span>Sort</span>
+            <select data-sort></select>
+        </label>
+    </header>
+
+    <div class="w-table-toolbar">
+        <label class="w-table-search">
+            <span>Search</span>
+            <input type="search" placeholder="Search" data-search>
+        </label>
+        <label class="w-table-filter">
+            <span>Status</span>
+            <select data-status></select>
+        </label>
+    </div>
+
+    <div class="w-table-frame">
+        <table>
+            <colgroup data-colgroup>
+                <col class="w-table-check-col">
+            </colgroup>
+            <thead>
+                <tr data-head-row>
+                    <th scope="col" class="check-cell">
+                        <input type="checkbox" aria-label="Select all rows" data-select-all>
+                    </th>
+                </tr>
+            </thead>
+            <tbody data-body></tbody>
+        </table>
+        <p class="w-table-empty" data-empty hidden>No rows match these filters.</p>
+    </div>
+</section>

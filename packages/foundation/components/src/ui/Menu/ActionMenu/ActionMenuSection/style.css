@@ -1,0 +1,25 @@
+:host {
+    display: block;
+}
+
+:host(:not(:first-child)) {
+    border-top: 1px solid var(--border-light, var(--border-default));
+}
+
+.section {
+    display: grid;
+    gap: 3px;
+    padding: 6px 0;
+}
+
+p {
+    margin: 0;
+    padding: 5px 14px 3px;
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.items {
+    display: grid;
+}

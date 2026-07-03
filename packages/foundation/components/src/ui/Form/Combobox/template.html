@@ -1,0 +1,30 @@
+<div class="field">
+    <label class="label" for="input"></label>
+    <div class="control">
+        <svg class="search" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m16.5 16.5 3.5 3.5"></path>
+        </svg>
+        <input
+            id="input"
+            type="text"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-haspopup="listbox"
+            autocomplete="off"
+            spellcheck="false"
+        />
+        <button class="clear" type="button" data-clear aria-label="Clear" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m7 7 10 10"></path>
+                <path d="m17 7-10 10"></path>
+            </svg>
+        </button>
+        <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"></path>
+        </svg>
+        <div class="listbox" role="listbox" hidden></div>
+    </div>
+</div>
+<div hidden><slot></slot></div>
