@@ -12,7 +12,8 @@ export async function scanStaticFolder() {
     const glob = new Glob("**/*");
 
     const files: { relativePath: string, absolutePath: string }[] = []
-    for (const relativePath of glob.scanSync(rootDir)) {
+    for (const scannedPath of glob.scanSync(rootDir)) {
+        const relativePath = toRouteRelativePath(scannedPath);
         // Full-page auth templates are rendered explicitly by ControlCms because
         // the login page is intentionally unguarded while the static tree is not.
         // These root-relative paths are the canonical render targets.
@@ -29,6 +30,10 @@ export async function scanStaticFolder() {
     }
 
     return files;
+}
+
+export function toRouteRelativePath(path: string): string {
+    return path.replaceAll("\\", "/");
 }
 
 export const STATIC_ROOT_DIR = resolve(import.meta.dir, "../../../static");

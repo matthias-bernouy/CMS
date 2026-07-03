@@ -9,12 +9,17 @@ function isHTTPMethod(s: string): s is HTTPMethod {
 }
 
 function deriveRoute(namePart: string): string {
-    const dir = dirname(namePart);
-    const name = basename(namePart);
+    const routePath = toRoutePath(namePart);
+    const dir = dirname(routePath);
+    const name = basename(routePath);
 
     if (dir === ".") return name;
     if (name === basename(dir)) return dir;
-    return namePart;
+    return routePath;
+}
+
+export function toRoutePath(path: string): string {
+    return path.replaceAll("\\", "/");
 }
 
 export async function serveApi<T>(runner: Runner, folder: string, system: T): Promise<void> {
