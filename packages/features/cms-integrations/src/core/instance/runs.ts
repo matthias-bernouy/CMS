@@ -9,7 +9,7 @@ import type {
 export function appendRun(
     instance: IntegrationInstance,
     run: IntegrationRun,
-    patch: Partial<Pick<IntegrationInstance, "status" | "artifacts" | "answersSnapshot" | "secretRefs" | "secretInputs" | "label" | "definitionVersion">>,
+    patch: Partial<Pick<IntegrationInstance, "status" | "artifacts" | "answersSnapshot" | "secretRefs" | "secretInputs" | "label" | "definitionVersion" | "definitionSnapshot">>,
 ): IntegrationInstance {
     return {
         ...instance,

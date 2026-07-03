@@ -36,20 +36,31 @@ describe("@bernouy/cms-integrations BAN integration", () => {
         );
         expect(installed?.endpoints[0]?.output).toEqual(BAN_SOURCE.endpoints[0]?.output);
         expect(dashboard?.source).toBe("ban");
-        expect(dashboard?.collections[0]?.list).toEqual({
-            endpoint: "search",
-            params: { q: "$param.q" },
-            itemsPath: "features",
+        expect(dashboard?.views[0]).toMatchObject({
+            widget: "w-table",
+            id: "addressesTable",
+            source: {
+                endpoint: "search",
+                params: { q: "$filter.q" },
+                itemsPath: "features",
+            },
+            rowKey: "properties.label",
         });
         expect(dashboard?.views[0]).toMatchObject({
             widget: "w-table",
             filters: [{
-                field: "q",
+                id: "q",
                 param: "q",
-                input: "text",
+                type: "text",
                 label: "Search",
                 placeholder: "Search addresses",
             }],
+            columns: [
+                { id: "address", path: "properties.label", label: "Address", primary: true },
+                { id: "city", path: "properties.city", label: "City" },
+                { id: "postcode", path: "properties.postcode", label: "Postcode" },
+                { id: "score", path: "properties.score", label: "Score" },
+            ],
         });
         expect(await secrets.listKeys()).toEqual([]);
     });

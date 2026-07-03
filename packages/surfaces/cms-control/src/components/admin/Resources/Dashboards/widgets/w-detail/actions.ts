@@ -4,8 +4,10 @@ import { actionIcon } from "./icons";
 type DetailAction = WDetailData["actions"][number];
 
 export function renderDetailActions(actions: WDetailData["actions"]): HTMLElement[] {
-    const result = actions.slice(0, 3).map(renderButton);
-    if (actions.length > 3) result.push(renderOverflowMenu(actions.slice(3)));
+    const visible = actions.filter(action => action.placement !== "more");
+    const overflow = [...visible.slice(3), ...actions.filter(action => action.placement === "more")];
+    const result = visible.slice(0, 3).map(renderButton);
+    if (overflow.length) result.push(renderOverflowMenu(overflow));
     return result;
 }
 

@@ -181,44 +181,62 @@ describe("@bernouy/cms-integrations declarative imports", () => {
                     dashboard: {
                         id: "delivery",
                         source: "delivery",
-                        collections: [{
-                            id: "shipments",
-                            list: { endpoint: "relayPoints", itemsPath: "items" },
-                            item: { create: { endpoint: "createShipment" } },
-                        }],
                         views: [{
-                            widget: "w-create",
-                            collection: "shipments",
-                            fields: [
-                                {
-                                    field: "recipientCountry",
-                                    input: "select",
-                                    options: ["FR"],
-                                    required: true,
-                                },
-                                {
-                                    field: "deliveryRelayNumber",
-                                    input: "lookup",
-                                    required: true,
-                                    lookup: {
-                                        endpoint: "relayPoints",
-                                        params: {
-                                            country: "FR",
-                                            postalCode: "$field.recipientPostalCode",
-                                            city: "$field.recipientCity",
-                                            limit: "10",
-                                        },
-                                        itemsPath: "items",
-                                        valuePath: "number",
-                                        labelPath: "name",
-                                        descriptionPaths: ["addressLine1", "postalCode", "city"],
-                                        map: {
-                                            deliveryRelayCountry: "country",
-                                            deliveryRelayNumber: "number",
+                            widget: "w-detail",
+                            id: "shipmentDetail",
+                            source: { endpoint: "relayPoints", params: { country: "FR" }, itemPath: "item" },
+                            actions: [{
+                                id: "create",
+                                label: "Create shipment",
+                                placement: "primary",
+                                endpoint: { endpoint: "createShipment" },
+                            }],
+                            main: [{
+                                id: "shipment",
+                                title: "Shipment",
+                                fields: [
+                                    {
+                                        id: "recipientCountry",
+                                        label: "Recipient country",
+                                        path: "recipientCountry",
+                                        type: "select",
+                                        options: ["FR"],
+                                        required: true,
+                                    },
+                                    {
+                                        id: "deliveryRelayNumber",
+                                        label: "Pickup point",
+                                        path: "deliveryRelayNumber",
+                                        type: "combobox",
+                                        required: true,
+                                        lookup: {
+                                            endpoint: "relayPoints",
+                                            params: {
+                                                country: "FR",
+                                                postalCode: "$field.recipientPostalCode",
+                                                city: "$field.recipientCity",
+                                                limit: "10",
+                                            },
+                                            itemsPath: "items",
+                                            valuePath: "number",
+                                            labelPath: "name",
+                                            subtitlePath: "city",
+                                            descriptionPaths: ["addressLine1", "postalCode", "city"],
                                         },
                                     },
-                                },
-                            ],
+                                    {
+                                        id: "options",
+                                        label: "Options",
+                                        path: "options",
+                                        type: "tokens",
+                                        allowCustom: true,
+                                        visibleWhen: {
+                                            field: "recipientCountry",
+                                            equals: "FR",
+                                        },
+                                    },
+                                ],
+                            }],
                         }],
                     },
                 },
@@ -230,49 +248,66 @@ describe("@bernouy/cms-integrations declarative imports", () => {
             dashboard: {
                 id: "delivery",
                 source: "delivery",
-                collections: [{
-                    id: "shipments",
-                    list: { endpoint: "relayPoints", itemsPath: "items" },
-                    item: { create: { endpoint: "createShipment" } },
-                }],
                 views: [{
-                    widget: "w-create",
-                    collection: "shipments",
-                    fields: [
-                        {
-                            field: "recipientCountry",
-                            input: "select",
-                            options: ["FR"],
-                            required: true,
-                        },
-                        {
-                            field: "deliveryRelayNumber",
-                            input: "lookup",
-                            required: true,
-                            lookup: {
-                                endpoint: "relayPoints",
-                                params: {
-                                    country: "FR",
-                                    postalCode: "$field.recipientPostalCode",
-                                    city: "$field.recipientCity",
-                                    limit: "10",
-                                },
-                                itemsPath: "items",
-                                valuePath: "number",
-                                labelPath: "name",
-                                descriptionPaths: ["addressLine1", "postalCode", "city"],
-                                map: {
-                                    deliveryRelayCountry: "country",
-                                    deliveryRelayNumber: "number",
+                    widget: "w-detail",
+                    id: "shipmentDetail",
+                    source: { endpoint: "relayPoints", params: { country: "FR" }, itemPath: "item" },
+                    actions: [{
+                        id: "create",
+                        label: "Create shipment",
+                        placement: "primary",
+                        endpoint: { endpoint: "createShipment" },
+                    }],
+                    main: [{
+                        id: "shipment",
+                        title: "Shipment",
+                        fields: [
+                            {
+                                id: "recipientCountry",
+                                label: "Recipient country",
+                                path: "recipientCountry",
+                                type: "select",
+                                options: [{ value: "FR", label: "FR" }],
+                                required: true,
+                            },
+                            {
+                                id: "deliveryRelayNumber",
+                                label: "Pickup point",
+                                path: "deliveryRelayNumber",
+                                type: "combobox",
+                                required: true,
+                                lookup: {
+                                    endpoint: "relayPoints",
+                                    params: {
+                                        country: "FR",
+                                        postalCode: "$field.recipientPostalCode",
+                                        city: "$field.recipientCity",
+                                        limit: "10",
+                                    },
+                                    itemsPath: "items",
+                                    valuePath: "number",
+                                    labelPath: "name",
+                                    subtitlePath: "city",
+                                    descriptionPaths: ["addressLine1", "postalCode", "city"],
                                 },
                             },
-                        },
-                    ],
+                            {
+                                id: "options",
+                                label: "Options",
+                                path: "options",
+                                type: "tokens",
+                                allowCustom: true,
+                                visibleWhen: {
+                                    field: "recipientCountry",
+                                    equals: "FR",
+                                },
+                            },
+                        ],
+                    }],
                 }],
             },
         });
     });
-
     test("rejects duplicate source urns within one import before writing", async () => {
         const sources = new InMemorySourceRepository();
         const secrets = new InMemorySecretStore();
@@ -507,11 +542,14 @@ function dashboardArtifact(id: string, source: string) {
         dashboard: {
             id,
             source,
-            collections: [
-                { id: "items", list: { endpoint: "list" } },
-            ],
             views: [
-                { widget: "w-table" as const, collection: "items" },
+                {
+                    widget: "w-table" as const,
+                    id: "itemsTable",
+                    source: { endpoint: "list", itemsPath: "items" },
+                    rowKey: "id",
+                    columns: [{ id: "id", label: "ID", path: "id" }],
+                },
             ],
         },
     };

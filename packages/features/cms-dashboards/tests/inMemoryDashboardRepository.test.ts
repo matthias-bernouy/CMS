@@ -4,11 +4,14 @@ import { DuplicateDashboardError, InMemoryDashboardRepository, type Dashboard } 
 const dashboard = (id = "commerce"): Dashboard => ({
     id,
     source: "commerce",
-    collections: [
-        { id: "orders", list: { endpoint: "listOrders" } },
-    ],
     views: [
-        { widget: "w-table", collection: "orders" },
+        {
+            widget: "w-table",
+            id: "ordersTable",
+            source: { endpoint: "listOrders", itemsPath: "items" },
+            rowKey: "id",
+            columns: [{ id: "id", label: "ID", path: "id" }],
+        },
     ],
 });
 
@@ -30,7 +33,7 @@ describe("InMemoryDashboardRepository", () => {
     test("rejects duplicates and clones stored data", async () => {
         const repo = new InMemoryDashboardRepository();
         const created = await repo.createDashboard(dashboard());
-        created.collections[0]!.id = "mutated";
+        created.views[0]!.id = "mutated";
 
         await expect(repo.createDashboard(dashboard())).rejects.toBeInstanceOf(DuplicateDashboardError);
         expect(await repo.getDashboard("commerce")).toEqual(dashboard());

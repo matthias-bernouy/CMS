@@ -1,571 +1,273 @@
 import { describe, expect, test } from "bun:test";
-import type { Source } from "@bernouy/cms-sources";
+import type { Source, SourceEndpoint } from "@bernouy/cms-sources";
 import { validateDashboard, type Dashboard } from "@bernouy/cms-dashboards";
 
+const endpoint = (
+    endpointId: string,
+    inputParams: string[] = [],
+): SourceEndpoint => ({
+    urn: `urn:products:${endpointId}`,
+    method: "GET",
+    targetUrl: `https://example.com/${endpointId}`,
+    input: {
+        params: inputParams.map(name => ({
+            name,
+            in: "query",
+            schema: { type: "string" },
+        })),
+    },
+});
+
 const source: Source = {
-    urn: "urn:commerce",
+    urn: "urn:products",
     endpoints: [
-        {
-            urn: "urn:commerce:listOrders",
-            method: "GET",
-            targetUrl: "https://example.com/orders",
-            input: {
-                params: [
-                    { name: "status", in: "query", schema: { type: "string" } },
-                ],
-            },
-            output: [
-                {
-                    status: "200",
-                    body: {
-                        type: "object",
-                        properties: {
-                            items: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        id: { type: "string" },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            ],
-        },
-        {
-            urn: "urn:commerce:getOrder",
-            method: "GET",
-            targetUrl: "https://example.com/orders/{orderId}",
-            input: {
-                params: [
-                    { name: "orderId", in: "path", required: true, schema: { type: "string" } },
-                ],
-            },
-            output: [
-                {
-                    status: "200",
-                    body: {
-                        type: "object",
-                        properties: {
-                            id: { type: "string" },
-                            status: { type: "string" },
-                            imageFileId: { type: "string" },
-                        },
-                    },
-                },
-            ],
-        },
-        {
-            urn: "urn:commerce:getOrderImage",
-            method: "GET",
-            targetUrl: "https://example.com/order-images/{fileId}",
-            responseKind: "file",
-            mediaType: "image/*",
-            input: {
-                params: [
-                    { name: "fileId", in: "path", required: true, schema: { type: "string" } },
-                ],
-            },
-        },
-        {
-            urn: "urn:commerce:uploadOrderImage",
-            method: "POST",
-            targetUrl: "https://example.com/orders/{orderId}/image",
-            input: {
-                params: [
-                    { name: "orderId", in: "path", required: true, schema: { type: "string" } },
-                ],
-            },
-            output: [
-                {
-                    status: "200",
-                    body: {
-                        type: "object",
-                        properties: {
-                            fileId: { type: "string" },
-                        },
-                    },
-                },
-            ],
-        },
-        {
-            urn: "urn:commerce:refundOrder",
-            method: "DELETE",
-            targetUrl: "https://example.com/orders/{orderId}",
-            input: {
-                params: [
-                    { name: "orderId", in: "path", required: true, schema: { type: "string" } },
-                ],
-            },
-        },
-        {
-            urn: "urn:commerce:updateOrder",
-            method: "PUT",
-            targetUrl: "https://example.com/orders/{orderId}",
-            input: {
-                params: [
-                    { name: "orderId", in: "path", required: true, schema: { type: "string" } },
-                ],
-                body: {
-                    type: "object",
-                    properties: {
-                        status: { type: "string" },
-                    },
-                },
-            },
-        },
-        {
-            urn: "urn:commerce:patchOrder",
-            method: "PATCH",
-            targetUrl: "https://example.com/orders/{orderId}",
-            input: {
-                params: [
-                    { name: "orderId", in: "path", required: true, schema: { type: "string" } },
-                ],
-                body: {
-                    type: "object",
-                    properties: {
-                        status: { type: "string" },
-                    },
-                },
-            },
-        },
-        {
-            urn: "urn:commerce:createOrder",
-            method: "POST",
-            targetUrl: "https://example.com/orders",
-            input: {
-                params: [
-                    { name: "userId", in: "query", required: true, schema: { type: "string" } },
-                ],
-                body: {
-                    type: "object",
-                    properties: {
-                        amount: { type: "number" },
-                    },
-                },
-            },
-        },
-        {
-            urn: "urn:commerce:orderStats",
-            method: "GET",
-            targetUrl: "https://example.com/orders/stats",
-        },
-        {
-            urn: "urn:commerce:exportOrders",
-            method: "GET",
-            targetUrl: "https://example.com/orders/export",
-            responseKind: "file",
-            mediaType: "text/csv",
-            input: {
-                params: [
-                    { name: "status", in: "query", schema: { type: "string" } },
-                ],
-            },
-        },
-        {
-            urn: "urn:commerce:relayPoints",
-            method: "GET",
-            targetUrl: "https://example.com/relay-points",
-            input: {
-                params: [
-                    { name: "country", in: "query", schema: { type: "string" } },
-                    { name: "postalCode", in: "query", schema: { type: "string" } },
-                    { name: "city", in: "query", schema: { type: "string" } },
-                    { name: "limit", in: "query", schema: { type: "string" } },
-                ],
-            },
-            output: [
-                {
-                    status: "200",
-                    body: {
-                        type: "object",
-                        properties: {
-                            items: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        number: { type: "string" },
-                                        name: { type: "string" },
-                                        postalCode: { type: "string" },
-                                        city: { type: "string" },
-                                        country: { type: "string" },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            ],
-        },
+        endpoint("listProducts", ["q", "status"]),
+        endpoint("getProduct", ["productId"]),
+        endpoint("updateProduct", ["productId"]),
+        endpoint("deleteProduct", ["productId"]),
+        endpoint("searchBrands", ["q"]),
+        endpoint("getBrand", ["brandId"]),
+        endpoint("createBrand"),
+        endpoint("uploadProductImage", ["productId"]),
+        endpoint("removeProductImage", ["productId", "mediaId"]),
+        endpoint("reorderProductImages", ["productId"]),
     ],
 };
 
 const validDashboard = (): Dashboard => ({
-    id: "commerce",
-    source: "commerce",
-    collections: [
-        {
-            id: "orders",
-            rowKey: "id",
-            list: { endpoint: "listOrders", params: { status: "$param.status" }, itemsPath: "items" },
-            item: {
-                delete: { endpoint: "refundOrder", params: { orderId: "$row.id" } },
-            },
-        },
-    ],
+    id: "products",
+    meta: { name: "Products", icon: "package" },
+    source: "products",
     views: [
         {
             widget: "w-table",
-            collection: "orders",
-            rowActions: [
-                { widget: "w-table-row-action", label: "Refund", action: "delete" },
+            id: "productsTable",
+            source: {
+                endpoint: "listProducts",
+                params: { q: "$filter.search", status: "$filter.status" },
+                itemsPath: "items",
+                totalPath: "total",
+            },
+            rowKey: "id",
+            columns: [
+                { id: "title", label: "Title", path: "title", primary: true },
+                { id: "status", label: "Status", path: "status", format: "badge" },
+            ],
+            filters: [
+                { id: "search", label: "Search", param: "q", type: "text" },
+                {
+                    id: "status",
+                    label: "Status",
+                    param: "status",
+                    type: "select",
+                    options: [
+                        { value: "draft", label: "Draft" },
+                        { value: "active", label: "Active" },
+                    ],
+                },
+            ],
+            selection: { opens: "productDetail" },
+        },
+        {
+            widget: "w-detail",
+            id: "productDetail",
+            source: {
+                endpoint: "getProduct",
+                params: { productId: "$selection.id" },
+                itemPath: "item",
+            },
+            title: { path: "title", fallback: "Product" },
+            status: { path: "status" },
+            actions: [
+                {
+                    id: "save",
+                    label: "Save changes",
+                    placement: "primary",
+                    tone: "primary",
+                    endpoint: {
+                        endpoint: "updateProduct",
+                        params: { productId: "$resource.id" },
+                        body: { title: "$field.title", status: "$field.status" },
+                    },
+                },
+                {
+                    id: "delete",
+                    label: "Delete product",
+                    placement: "more",
+                    section: "Other actions",
+                    tone: "danger",
+                    endpoint: {
+                        endpoint: "deleteProduct",
+                        params: { productId: "$resource.id" },
+                    },
+                },
+            ],
+            main: [
+                {
+                    id: "general",
+                    title: "General",
+                    fields: [
+                        { id: "title", label: "Title", path: "title", type: "text" },
+                        { id: "description", label: "Description", path: "description", type: "textarea", rows: 4 },
+                        {
+                            id: "brand",
+                            label: "Brand",
+                            path: "brandId",
+                            type: "combobox",
+                            lookup: {
+                                endpoint: "searchBrands",
+                                params: { q: "$search" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "name",
+                                selected: {
+                                    endpoint: "getBrand",
+                                    params: { brandId: "$value" },
+                                    itemPath: "item",
+                                },
+                                create: {
+                                    mode: "modal",
+                                    endpoint: "createBrand",
+                                    body: { name: "$field.name" },
+                                    valuePath: "id",
+                                    labelPath: "name",
+                                    fields: [
+                                        { id: "name", label: "Name", path: "name", type: "text", required: true },
+                                    ],
+                                },
+                            },
+                        },
+                        {
+                            id: "tags",
+                            label: "Tags",
+                            path: "tags",
+                            type: "tokens",
+                            options: [
+                                { value: "sport", label: "Sport" },
+                                { value: "featured", label: "Featured" },
+                            ],
+                            allowCustom: true,
+                        },
+                    ],
+                },
+                {
+                    id: "media",
+                    title: "Media",
+                    fields: [
+                        {
+                            id: "images",
+                            label: "Images",
+                            path: "images",
+                            type: "media",
+                            multiple: true,
+                            item: { idPath: "id", urlPath: "url", altPath: "alt" },
+                            actions: {
+                                upload: {
+                                    endpoint: "uploadProductImage",
+                                    params: { productId: "$resource.id" },
+                                },
+                                remove: {
+                                    endpoint: "removeProductImage",
+                                    params: { productId: "$resource.id", mediaId: "$media.item.id" },
+                                },
+                                reorder: {
+                                    endpoint: "reorderProductImages",
+                                    params: { productId: "$resource.id" },
+                                    body: { mediaIds: "$media.valueIds" },
+                                },
+                            },
+                        },
+                    ],
+                },
+            ],
+            aside: [
+                {
+                    id: "status",
+                    title: "Status",
+                    fields: [
+                        {
+                            id: "status",
+                            label: "Publication",
+                            path: "status",
+                            type: "select",
+                            options: [
+                                { value: "draft", label: "Draft" },
+                                { value: "active", label: "Active" },
+                            ],
+                        },
+                    ],
+                },
             ],
         },
-        { widget: "w-stat", endpoint: "orderStats", path: "count" },
     ],
 });
 
 describe("validateDashboard", () => {
-    test("accepts a valid dashboard against its source", () => {
+    test("accepts a new widget-first dashboard against its source", () => {
         expect(validateDashboard(validDashboard(), { source })).toEqual([]);
     });
 
-    test("accepts item detail widgets backed by selection params", () => {
+    test("rejects legacy widgets", () => {
         const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
-        };
-        dashboard.views.push({ widget: "w-detail", collection: "orders", fields: ["id", "status"] });
+        dashboard.views.push({ widget: "w-create", id: "createProduct", collection: "products" } as never);
 
-        expect(validateDashboard(dashboard, { source })).toEqual([]);
+        expect(validateDashboard(dashboard, { source })).toContain("views.2.widget is not supported");
     });
 
-    test("rejects item detail widgets without an item get endpoint", () => {
+    test("rejects duplicate widget ids", () => {
         const dashboard = validDashboard();
-        dashboard.views.push({ widget: "w-detail", collection: "orders", fields: ["id"] });
+        dashboard.views[1]!.id = "productsTable";
 
-        expect(validateDashboard(dashboard, { source })).toContain(
-            'views.2.collection "orders" must declare item.get for w-detail',
-        );
+        expect(validateDashboard(dashboard, { source })).toContain('duplicate widget id "productsTable"');
     });
 
-    test("rejects item detail widgets without a selectable row binding", () => {
+    test("rejects source endpoint references that do not exist", () => {
         const dashboard = validDashboard();
-        delete dashboard.collections[0]!.rowKey;
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            get: { endpoint: "getOrder", params: { orderId: "$param.status" } },
+        const table = dashboard.views[0] as Extract<Dashboard["views"][number], { widget: "w-table" }>;
+        table.source.endpoint = "missing";
+
+        expect(validateDashboard(dashboard, { source })).toContain('views.0.source.endpoint references unknown endpoint "missing"');
+    });
+
+    test("rejects params not declared by source endpoints", () => {
+        const dashboard = validDashboard();
+        const table = dashboard.views[0] as Extract<Dashboard["views"][number], { widget: "w-table" }>;
+        table.source.params = { unknown: "$filter.search" };
+
+        expect(validateDashboard(dashboard, { source })).toContain('views.0.source.params.unknown is not declared by endpoint "urn:products:listProducts"');
+    });
+
+    test("validates lookup modal creation fields", () => {
+        const dashboard = validDashboard();
+        const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+        const brand = detail.main[0]!.fields[2] as Extract<Dashboard["views"][number], { widget: "w-detail" }>["main"][number]["fields"][number] & {
+            type: "combobox";
         };
-        dashboard.views.push({ widget: "w-detail", collection: "orders", fields: ["id"] });
+        if (brand.lookup?.create?.mode === "modal") brand.lookup.create.fields = [];
+
+        expect(validateDashboard(dashboard, { source })).toContain("views.1.main.0.fields.2.lookup.create.fields must contain at least one field");
+    });
+
+    test("validates action metadata and media endpoints", () => {
+        const dashboard = validDashboard();
+        const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+        detail.actions![1]!.section = "";
+        const media = detail.main[1]!.fields[0] as Extract<Dashboard["views"][number], { widget: "w-detail" }>["main"][number]["fields"][number] & {
+            type: "media";
+        };
+        media.actions!.upload!.endpoint = "missingUpload";
 
         expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
-            'views.2.collection "orders" must declare rowKey for w-detail',
-            'views.2.collection "orders" item.get must bind a param to $selection',
+            "views.1.actions.1.section must be non-empty when provided",
+            'views.1.main.1.fields.0.actions.upload.endpoint references unknown endpoint "missingUpload"',
         ]));
     });
 
-    test("rejects selection params outside item detail endpoints", () => {
+    test("rejects invalid binding expressions", () => {
         const dashboard = validDashboard();
-        dashboard.collections[0]!.list.params = { status: "$selection" };
+        const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
+        detail.actions![0]!.endpoint.body = { title: "$bad.title" };
 
-        expect(validateDashboard(dashboard, { source })).toContain(
-            "collections.orders.list.params.status uses $selection outside a selectable collection item endpoint",
-        );
-    });
-
-    test("accepts create widgets backed by item create endpoints", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            create: { endpoint: "createOrder", params: { userId: "$param.userId" } },
-        };
-        dashboard.views.push({
-            widget: "w-create",
-            collection: "orders",
-            fields: [
-                { field: "userId", input: "cms-user", required: true },
-                { field: "amount", input: "number", required: true },
-            ],
-        });
-
-        expect(validateDashboard(dashboard, { source })).toEqual([]);
-    });
-
-    test("rejects create widgets without an item create endpoint", () => {
-        const dashboard = validDashboard();
-        dashboard.views.push({ widget: "w-create", collection: "orders", fields: ["amount"] });
-
-        expect(validateDashboard(dashboard, { source })).toContain(
-            'views.2.collection "orders" must declare item.create for w-create',
-        );
-    });
-
-    test("accepts update widgets backed by selected item update endpoints", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
-            update: { endpoint: "updateOrder", params: { orderId: "$selection" } },
-        };
-        dashboard.views.push({
-            widget: "w-update",
-            collection: "orders",
-            label: "Edit order",
-            submitLabel: "Save order",
-            fields: [{ field: "status", required: true }],
-        });
-
-        expect(validateDashboard(dashboard, { source })).toEqual([]);
-    });
-
-    test("accepts media fields and file upload fields backed by source endpoints", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
-            update: { endpoint: "updateOrder", params: { orderId: "$selection" } },
-        };
-        dashboard.views.push(
-            {
-                widget: "w-detail",
-                collection: "orders",
-                fields: [{
-                    field: "imageFileId",
-                    label: "Image",
-                    format: "image",
-                    media: { endpoint: "getOrderImage", params: { fileId: "$field.imageFileId" } },
-                }],
-            },
-            {
-                widget: "w-update",
-                collection: "orders",
-                fields: [{
-                    field: "imageFileId",
-                    label: "Image",
-                    input: "file",
-                    accept: "image/*",
-                    upload: { endpoint: "uploadOrderImage", params: { orderId: "$selection" }, resultPath: "fileId" },
-                }],
-            },
-        );
-
-        expect(validateDashboard(dashboard, { source })).toEqual([]);
-    });
-
-    test("accepts select and lookup write fields backed by source endpoints", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            create: { endpoint: "createOrder", params: { userId: "$param.userId" } },
-        };
-        dashboard.views.push({
-            widget: "w-create",
-            collection: "orders",
-            fields: [
-                { field: "status", input: "select", options: ["created", "paid"], required: true },
-                {
-                    field: "deliveryRelayNumber",
-                    input: "lookup",
-                    required: true,
-                    lookup: {
-                        endpoint: "relayPoints",
-                        params: {
-                            country: "$field.recipientCountry",
-                            postalCode: "$field.recipientPostalCode",
-                            city: "$field.recipientCity",
-                            limit: "10",
-                        },
-                        itemsPath: "items",
-                        valuePath: "number",
-                        labelPath: "name",
-                        descriptionPaths: ["postalCode", "city"],
-                        map: {
-                            deliveryRelayCountry: "country",
-                            deliveryRelayNumber: "number",
-                        },
-                    },
-                },
-            ],
-        });
-
-        expect(validateDashboard(dashboard, { source })).toEqual([]);
-    });
-
-    test("rejects select and lookup write fields without required configuration", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            create: { endpoint: "createOrder", params: { userId: "$param.userId" } },
-        };
-        dashboard.views.push({
-            widget: "w-create",
-            collection: "orders",
-            fields: [
-                { field: "status", input: "select" },
-                { field: "deliveryRelayNumber", input: "lookup" },
-            ],
-        });
-
-        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
-            "views.2.fields.0.options must contain at least one option for select fields",
-            "views.2.fields.1.lookup is required for lookup fields",
-        ]));
-    });
-
-    test("rejects lookup fields with invalid endpoint or paths", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            create: { endpoint: "createOrder", params: { userId: "$param.userId" } },
-        };
-        dashboard.views.push({
-            widget: "w-create",
-            collection: "orders",
-            fields: [{
-                field: "deliveryRelayNumber",
-                input: "lookup",
-                lookup: {
-                    endpoint: "missingRelayPoints",
-                    itemsPath: "items",
-                    valuePath: "number }}",
-                    labelPath: "name",
-                    map: {
-                        "delivery relay": "country",
-                    },
-                },
-            }],
-        });
-
-        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
-            'views.2.fields.0.lookup.endpoint references unknown endpoint "missingRelayPoints"',
-            "views.2.fields.0.lookup.valuePath must be a dotted field path",
-            "views.2.fields.0.lookup.map.delivery relay.map target must be a dotted field path",
-        ]));
-    });
-
-    test("accepts update widgets backed by selected item patch endpoints", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
-            patch: { endpoint: "patchOrder", params: { orderId: "$selection" } },
-        };
-        dashboard.views.push({
-            widget: "w-update",
-            action: "patch",
-            collection: "orders",
-            fields: ["status"],
-        });
-
-        expect(validateDashboard(dashboard, { source })).toEqual([]);
-    });
-
-    test("accepts delete widgets backed by selected item delete endpoints", () => {
-        const dashboard = validDashboard();
-        dashboard.views.push({ widget: "w-delete", collection: "orders", label: "Delete order" });
-
-        expect(validateDashboard(dashboard, { source })).toEqual([]);
-    });
-
-    test("accepts action widgets backed by source endpoints", () => {
-        const dashboard = validDashboard();
-        dashboard.views.push({
-            widget: "w-action",
-            endpoint: "exportOrders",
-            label: "Export CSV",
-            params: { status: "$param.status" },
-            downloadName: "orders.csv",
-            refresh: false,
-        });
-
-        expect(validateDashboard(dashboard, { source })).toEqual([]);
-    });
-
-    test("rejects delete widgets without a selected item delete endpoint", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            delete: { endpoint: "refundOrder", params: { orderId: "$param.status" } },
-        };
-        dashboard.views.push({ widget: "w-delete", collection: "orders" });
-
-        expect(validateDashboard(dashboard, { source })).toContain(
-            'views.2.collection "orders" item.delete must bind a param to $selection or $row.id',
-        );
-    });
-
-    test("rejects update widgets without selected item endpoints", () => {
-        const dashboard = validDashboard();
-        dashboard.views.push({ widget: "w-update", collection: "orders", fields: ["status"] });
-
-        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
-            'views.2.collection "orders" must declare item.get for w-update',
-            'views.2.collection "orders" must declare item.update for w-update',
-        ]));
-    });
-
-    test("rejects update widgets whose write endpoint is not bound to the selected row", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            ...dashboard.collections[0]!.item,
-            get: { endpoint: "getOrder", params: { orderId: "$selection" } },
-            update: { endpoint: "updateOrder", params: { orderId: "$param.status" } },
-        };
-        dashboard.views.push({ widget: "w-update", collection: "orders", fields: ["status"] });
-
-        expect(validateDashboard(dashboard, { source })).toContain(
-            'views.2.collection "orders" item.update must bind a param to $selection',
-        );
-    });
-
-    test("rejects dangling collections and row actions", () => {
-        const dashboard = validDashboard();
-        dashboard.views = [
-            { widget: "w-table", collection: "missing", rowActions: [{ widget: "w-table-row-action", label: "Refund", action: "patch" }] },
-        ];
-
-        expect(validateDashboard(dashboard, { source })).toContain('views.0.collection references unknown collection "missing"');
-    });
-
-    test("rejects unknown endpoints and missing required params", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.item = {
-            delete: { endpoint: "refundOrder" },
-            patch: { endpoint: "missingEndpoint" },
-        };
-
-        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
-            'collections.orders.item.delete.params.orderId is required by endpoint "urn:commerce:refundOrder"',
-            'collections.orders.item.patch.endpoint references unknown endpoint "missingEndpoint"',
-        ]));
-    });
-
-    test("rejects bindings for params not declared by the endpoint", () => {
-        const dashboard = validDashboard();
-        dashboard.collections[0]!.list.params = { unexpected: "$param.status" };
-        dashboard.views.push({
-            widget: "w-action",
-            endpoint: "exportOrders",
-            label: "Export CSV",
-            params: { unexpected: "$param.status" },
-        });
-
-        expect(validateDashboard(dashboard, { source })).toEqual(expect.arrayContaining([
-            "collections.orders.list.params.unexpected does not match a declared endpoint param",
-            "views.2.params.unexpected does not match a declared endpoint param",
-        ]));
-    });
-
-    test("rejects unsafe field paths", () => {
-        const dashboard = validDashboard();
-        dashboard.views = [{ widget: "w-stat", endpoint: "orderStats", path: "count }}<script>" }];
-
-        expect(validateDashboard(dashboard, { source })).toContain(
-            "views.0.path must be a dotted field path",
-        );
+        expect(validateDashboard(dashboard, { source })).toContain("views.1.actions.0.endpoint.body.title has an invalid binding expression");
     });
 });

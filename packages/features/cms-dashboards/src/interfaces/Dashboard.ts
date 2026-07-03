@@ -4,139 +4,176 @@ export type DashboardMeta = {
     svg?: string;
 };
 
-export type ParamExpr = string;
+export type DashboardExpr = string;
 
-export type CollectionEndpointRef = {
+export type DashboardEndpointRef = {
     endpoint: string;
-    params?: Record<string, ParamExpr>;
+    params?: Record<string, DashboardExpr>;
+    body?: Record<string, DashboardExpr>;
 };
 
-export type CollectionListEndpointRef = CollectionEndpointRef & {
+export type DashboardDataRef = DashboardEndpointRef & {
     itemsPath?: string;
+    itemPath?: string;
     totalPath?: string;
 };
 
-export type CollectionItemEndpoints = {
-    get?: CollectionEndpointRef;
-    create?: CollectionEndpointRef;
-    update?: CollectionEndpointRef;
-    patch?: CollectionEndpointRef;
-    delete?: CollectionEndpointRef;
+export type DashboardBinding = {
+    path: string;
+    fallback?: string;
 };
 
-export type Collection = {
-    id: string;
-    rowKey?: string;
-    list: CollectionListEndpointRef;
-    item?: CollectionItemEndpoints;
+export type DashboardOption = {
+    value: string;
+    label: string;
+    subtitle?: string;
+    media?: string;
 };
 
-export type ColumnFormat = "date" | "money" | "badge" | "text";
-export type FieldFormat = ColumnFormat | "image" | "url";
+export type DashboardLookupCreate =
+    | (DashboardEndpointRef & {
+        mode: "inline";
+        valuePath: string;
+        labelPath: string;
+    })
+    | (DashboardEndpointRef & {
+        mode: "modal";
+        title?: string;
+        valuePath: string;
+        labelPath: string;
+        fields: DashboardField[];
+    });
 
-export type ColumnSpec =
-    | string
-    | {
-        field: string;
-        label?: string;
-        format?: ColumnFormat;
-    };
-
-export type FieldInput = "text" | "select" | "boolean" | "number" | "cms-user" | "file" | "lookup";
-
-export type FieldMediaRef = CollectionEndpointRef;
-
-export type FieldUploadRef = CollectionEndpointRef & {
-    resultPath: string;
-};
-
-export type FieldLookupRef = CollectionListEndpointRef & {
+export type DashboardLookupRef = DashboardDataRef & {
     valuePath: string;
     labelPath: string;
+    subtitlePath?: string;
+    mediaPath?: string;
     descriptionPaths?: string[];
-    map?: Record<string, string>;
+    selected?: DashboardDataRef;
+    create?: DashboardLookupCreate;
 };
 
-export type FieldSpec =
-    | string
-    | {
-        field: string;
-        label?: string;
-        format?: FieldFormat;
-        input?: FieldInput;
-        options?: string[];
-        accept?: string;
-        media?: FieldMediaRef;
-        upload?: FieldUploadRef;
-        lookup?: FieldLookupRef;
-        readonly?: boolean;
-        required?: boolean;
-    };
-
-export type FilterSpec = {
+export type DashboardVisibilityRule = {
     field: string;
+    equals?: string | number | boolean | null;
+    notEquals?: string | number | boolean | null;
+};
+
+export type DashboardFieldBase = {
+    id: string;
+    label: string;
+    path: string;
+    required?: boolean;
+    visibleWhen?: DashboardVisibilityRule;
+};
+
+export type DashboardSelectableField = {
+    options?: DashboardOption[];
+    lookup?: DashboardLookupRef;
+    allowCustom?: boolean;
+};
+
+export type DashboardField =
+    | (DashboardFieldBase & { type: "text"; placeholder?: string })
+    | (DashboardFieldBase & { type: "textarea"; rows?: number })
+    | (DashboardFieldBase & { type: "select"; options: DashboardOption[] })
+    | (DashboardFieldBase & { type: "combobox" } & DashboardSelectableField)
+    | (DashboardFieldBase & { type: "tokens" } & DashboardSelectableField)
+    | (DashboardFieldBase & {
+        type: "media";
+        multiple?: boolean;
+        item: {
+            idPath?: string;
+            urlPath: string;
+            altPath?: string;
+        };
+        actions?: Partial<Record<"upload" | "replace" | "remove" | "reorder", DashboardEndpointRef>>;
+    })
+    | (DashboardFieldBase & {
+        type: "readonly";
+        format?: "text" | "badge" | "date" | "money" | "url" | "image";
+    });
+
+export type DashboardSection = {
+    id: string;
+    title: string;
+    description?: string;
+    fields: DashboardField[];
+};
+
+export type DashboardColumn = {
+    id: string;
+    label: string;
+    path: string;
+    primary?: boolean;
+    width?: string;
+    format?: "text" | "badge" | "date" | "money";
+};
+
+export type DashboardFilter = {
+    id: string;
+    label: string;
+    path?: string;
     param?: string;
-    input?: "text" | "select";
-    label?: string;
+    type?: "text" | "select";
     placeholder?: string;
-    options?: string[];
+    options?: DashboardOption[];
 };
 
-export type RowAction = {
-    widget: "w-table-row-action";
+export type DashboardAction = {
+    id: string;
     label: string;
-    action: keyof CollectionItemEndpoints;
-    body?: Record<string, unknown>;
-    confirm?: boolean;
-    requires?: string;
-};
-
-export type WriteWidgetLabels = {
-    label?: string;
-    submitLabel?: string;
-    successMessage?: string;
-    resultFields?: FieldSpec[];
-};
-
-export type DeleteWidgetLabels = {
-    label?: string;
-    confirmLabel?: string;
-    successMessage?: string;
-    body?: Record<string, unknown>;
-};
-
-export type ActionWidgetLabels = {
-    label: string;
-    successMessage?: string;
-    downloadName?: string;
-    refresh?: boolean;
+    icon?: string;
+    tone?: "primary" | "secondary" | "danger";
+    placement?: "primary" | "secondary" | "more";
+    section?: string;
+    endpoint: DashboardEndpointRef;
+    confirm?: string;
 };
 
 export type DashboardWidget =
-    | { widget: "w-section"; title?: string; children: DashboardWidget[] }
-    | { widget: "w-tabs"; tabs: Array<{ label: string; children: DashboardWidget[] }> }
     | {
         widget: "w-table";
-        collection: string;
-        columns?: ColumnSpec[];
-        rowActions?: RowAction[];
-        filters?: FilterSpec[];
+        id: string;
+        title?: string;
+        source: DashboardDataRef;
+        rowKey: string;
+        columns: DashboardColumn[];
+        filters?: DashboardFilter[];
         pageSize?: number;
+        selection?: { opens?: string };
     }
-    | { widget: "w-detail"; collection: string; fields?: FieldSpec[] }
-    | ({ widget: "w-create"; collection: string; fields?: FieldSpec[] } & WriteWidgetLabels)
-    | ({ widget: "w-update"; collection: string; action?: "update" | "patch"; fields?: FieldSpec[] } & WriteWidgetLabels)
-    | ({ widget: "w-delete"; collection: string } & DeleteWidgetLabels)
-    | ({ widget: "w-action" } & CollectionEndpointRef & ActionWidgetLabels)
-    | { widget: "w-stat"; endpoint: string; path: string; label?: string };
+    | {
+        widget: "w-detail";
+        id: string;
+        source: DashboardDataRef;
+        title?: DashboardBinding;
+        status?: DashboardBinding;
+        actions?: DashboardAction[];
+        main: DashboardSection[];
+        aside?: DashboardSection[];
+    }
+    | {
+        widget: "w-section";
+        id: string;
+        title: string;
+        description?: string;
+        children: DashboardWidget[];
+    }
+    | {
+        widget: "w-tabs";
+        id: string;
+        tabs: Array<{ id: string; label: string; children: DashboardWidget[] }>;
+    };
 
-export type DashboardDto = {
+export type DashboardDefinition = {
     id: string;
     meta?: DashboardMeta;
     source: string;
-    collections: Collection[];
     views: DashboardWidget[];
     requires?: string;
 };
 
-export type Dashboard = DashboardDto;
+export type DashboardDto = DashboardDefinition;
+export type Dashboard = DashboardDefinition;

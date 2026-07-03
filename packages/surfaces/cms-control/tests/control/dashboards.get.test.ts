@@ -29,8 +29,13 @@ describe("GET /api/dashboards", () => {
             id: "orders",
             meta: { name: "Orders" },
             source: "commerce",
-            collections: [{ id: "orders", list: { endpoint: "listOrders" } }],
-            views: [{ widget: "w-table", collection: "orders" }],
+            views: [{
+                widget: "w-table",
+                id: "ordersTable",
+                source: { endpoint: "listOrders", itemsPath: "items" },
+                rowKey: "id",
+                columns: [{ id: "id", label: "ID", path: "id" }],
+            }],
         });
 
         const body = await (await listDashboards(list(), { sources, dashboards } as any)).json();

@@ -1,8 +1,9 @@
 import type { DashboardDto } from "@bernouy/cms-dashboards";
-import { renderWidgetList, widgetsForSelection, type DetailSelection } from "./domain";
+import { widgetsForSelection, type DetailSelection } from "./domain";
 import { renderIcon } from "./icons";
 import type { DashboardSourceGroup } from "./types";
 import { mountDashboardWidgetExample } from "./widgets/example";
+import { mountDashboardWidgets } from "./runtime/mount";
 
 export function renderDashboardShell(
     root: ShadowRoot,
@@ -10,6 +11,7 @@ export function renderDashboardShell(
     dashboard: DashboardDto | null | undefined,
     detail: DetailSelection | null,
     tabState: Map<string, number>,
+    drafts: ReadonlyMap<string, Record<string, unknown>>,
 ): void {
     query(root, "[data-empty]").hidden = Boolean(group);
     query(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
@@ -22,7 +24,7 @@ export function renderDashboardShell(
     const selectedRows = new Map<string, string>();
     if (detail) selectedRows.set(detail.collection, detail.row);
     const widgets = widgetsForSelection(dashboard, detail);
-    query(root, "[data-widgets]").innerHTML = renderWidgetList(widgets, { group, dashboard, selectedRows }, "root", tabState);
+    mountDashboardWidgets(query(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
 }
 
 export function renderExampleShell(root: ShadowRoot, selectedRow: string | null): void {

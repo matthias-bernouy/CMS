@@ -108,33 +108,28 @@ export const BAN_DEFINITION: IntegrationDefinition = {
                 id: "ban-addresses",
                 meta: { name: "Address search", icon: "map-pin" },
                 source: "ban",
-                collections: [
-                    {
-                        id: "addresses",
-                        rowKey: "properties.label",
-                        list: {
-                            endpoint: "search",
-                            params: { q: "$param.q" },
-                            itemsPath: "features",
-                        },
-                    },
-                ],
                 views: [
                     {
                         widget: "w-table",
-                        collection: "addresses",
+                        id: "addressesTable",
+                        source: {
+                            endpoint: "search",
+                            params: { q: "$filter.q" },
+                            itemsPath: "features",
+                        },
+                        rowKey: "properties.label",
                         filters: [{
-                            field: "q",
+                            id: "q",
                             param: "q",
-                            input: "text",
+                            type: "text",
                             label: "Search",
                             placeholder: "Search addresses",
                         }],
                         columns: [
-                            { field: "properties.label", label: "Address" },
-                            { field: "properties.city", label: "City" },
-                            { field: "properties.postcode", label: "Postcode" },
-                            { field: "properties.score", label: "Score" },
+                            { id: "address", path: "properties.label", label: "Address", primary: true },
+                            { id: "city", path: "properties.city", label: "City" },
+                            { id: "postcode", path: "properties.postcode", label: "Postcode" },
+                            { id: "score", path: "properties.score", label: "Score" },
                         ],
                     },
                 ],

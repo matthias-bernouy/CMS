@@ -91,7 +91,7 @@ export class DashboardWDetail extends Component {
 
     private onChange = (event: Event): void => {
         const control = (event.target as Element | null)?.closest<HTMLElement>("[data-field-control]");
-        if (control) this.emitFieldChange(control);
+        if (control) this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));
     };
 
     private onMediaAction = (event: CustomEvent<DashboardMediaActionDetail>): void => {
@@ -112,13 +112,14 @@ export class DashboardWDetail extends Component {
         if (control) this.emitFieldChange(control);
     }
 
-    private emitFieldChange(control: HTMLElement): void {
+    private emitFieldChange(control: HTMLElement, created = false): void {
         const field = this.findField(control.dataset.fieldControl ?? "");
         if (!field) return;
         emitWidgetEvent(this, WIDGET_FIELD_CHANGE_EVENT, {
             rowKey: this.value.rowKey,
             field: field.id,
             value: readFieldControlValue(field, control),
+            ...(created ? { created } : {}),
         });
     }
 

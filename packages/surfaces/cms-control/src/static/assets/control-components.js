@@ -13230,54 +13230,12 @@ p {
 </main>
 `;
 
-  // src/components/admin/Resources/Dashboards/mode.ts
-  function isDashboardExampleMode(host) {
-    return host.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
-  }
-
   // src/components/admin/Resources/Dashboards/domain.ts
-  function renderWidgetList(widgets, context, key, tabState) {
-    return widgets.map((widget, index) => renderWidget(widget, context, `${key}.${index}`, tabState)).filter(Boolean).join("");
-  }
   function widgetsForSelection(dashboard, detail) {
     return detail ? detailWidgetsFor(dashboard.views, detail.collection) : mainWidgetsFor(dashboard.views);
   }
-  function renderWidget(widget, context, key, tabState) {
-    if (widget.widget === "w-section")
-      return renderSection(widget, context, key, tabState);
-    if (widget.widget === "w-tabs")
-      return renderTabs(widget, context, key, tabState);
-    return renderMigrationPlaceholder(widget);
-  }
-  function renderSection(widget, context, key, tabState) {
-    return `
-        <cms-dashboard-w-section heading="${escapeAttr2(widget.title ?? "Section")}">
-            <div class="widget-stack">${renderWidgetList(widget.children, context, key, tabState)}</div>
-        </cms-dashboard-w-section>
-    `;
-  }
-  function renderTabs(widget, context, key, tabState) {
-    const activeIndex = Math.min(tabState.get(key) ?? 0, Math.max(widget.tabs.length - 1, 0));
-    const active = widget.tabs[activeIndex];
-    return `
-        <section class="tabs-panel">
-            <div class="tabs" role="tablist">
-                ${widget.tabs.map((tab, index) => `
-                    <button class="tab ${index === activeIndex ? "active" : ""}" type="button" data-tab-key="${escapeAttr2(key)}" data-tab-index="${index}">
-                        ${escapeHtml2(tab.label)}
-                    </button>
-                `).join("")}
-            </div>
-            <div class="tab-body">${active ? renderWidgetList(active.children, context, `${key}.${activeIndex}`, tabState) : ""}</div>
-        </section>
-    `;
-  }
-  function renderMigrationPlaceholder(widget) {
-    return `
-        <cms-dashboard-w-section heading="${escapeAttr2(widgetTitle(widget))}">
-            <p class="migration-placeholder">This dashboard widget is waiting for the new source-owned widget runtime.</p>
-        </cms-dashboard-w-section>
-    `;
+  function detailKey(collection, row) {
+    return `${collection}:${row}`;
   }
   function mainWidgetsFor(widgets) {
     return widgets.flatMap((widget) => {
@@ -13290,62 +13248,546 @@ p {
       return [widget];
     });
   }
-  function detailWidgetsFor(widgets, collection) {
+  function detailWidgetsFor(widgets, detailWidgetId) {
     return widgets.flatMap((widget) => {
       if (widget.widget === "w-section")
-        return sectionWithChildren(widget, detailWidgetsFor(widget.children, collection));
+        return detailWidgetsFor(widget.children, detailWidgetId);
       if (widget.widget === "w-tabs")
-        return tabsWithChildren(widget, (tab) => detailWidgetsFor(tab.children, collection));
-      return widgetHasCollection(widget, collection) && !isMainOnlyWidget(widget) ? [widget] : [];
+        return widget.tabs.flatMap((tab) => detailWidgetsFor(tab.children, detailWidgetId));
+      return isDetailWidget(widget) && widget.id === detailWidgetId ? [widget] : [];
     });
   }
   function sectionWithChildren(widget, children) {
     return children.length ? [{ ...widget, children }] : [];
   }
   function tabsWithChildren(widget, map) {
-    const tabs = widget.tabs.map((tab) => ({ label: tab.label, children: map(tab) })).filter((tab) => tab.children.length);
+    const tabs = widget.tabs.map((tab) => ({ id: tab.id, label: tab.label, children: map(tab) })).filter((tab) => tab.children.length);
     return tabs.length ? [{ ...widget, tabs }] : [];
   }
   function isDetailWidget(widget) {
-    return widget.widget === "w-detail" || widget.widget === "w-resource-page" || widget.widget === "w-update" || widget.widget === "w-delete";
+    return widget.widget === "w-detail";
   }
-  function isMainOnlyWidget(widget) {
-    return widget.widget === "w-create" || widget.widget === "w-action" || widget.widget === "w-stat";
+
+  // src/components/admin/Resources/Dashboards/runtime/expressions.ts
+  function valueAt(value, path) {
+    if (!path)
+      return value;
+    return path.split(".").filter(Boolean).reduce((current, part) => {
+      if (current === null || current === undefined)
+        return;
+      if (Array.isArray(current) && /^\d+$/.test(part))
+        return current[Number(part)];
+      if (typeof current !== "object")
+        return;
+      return current[part];
+    }, value);
   }
-  function widgetHasCollection(widget, collection) {
-    return "collection" in widget && widget.collection === collection;
+  function textAt(value, path, fallback = "") {
+    const found = valueAt(value, path);
+    if (found === null || found === undefined)
+      return fallback;
+    if (typeof found === "string")
+      return found;
+    if (typeof found === "number" || typeof found === "boolean")
+      return String(found);
+    return fallback;
   }
-  function widgetTitle(widget) {
-    if ("label" in widget && widget.label)
-      return widget.label;
-    if ("collection" in widget)
-      return sentenceCase(labelFromPath(widget.collection));
-    if (widget.widget === "w-section")
-      return widget.title ?? "Section";
-    if (widget.widget === "w-stat")
-      return widget.label ?? widget.endpoint;
-    return widget.widget;
+  function arrayAt(value, path) {
+    const found = valueAt(value, path);
+    return Array.isArray(found) ? found : [];
   }
-  function labelFromPath(path) {
-    const leaf = path.split(".").filter(Boolean).at(-1) ?? path;
-    return leaf.replace(/[_-]+/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+  function resolveExpression(expression, vars) {
+    if (expression === "$search")
+      return;
+    if (expression.startsWith("$selection."))
+      return valueAt(vars.selection, expression.slice("$selection.".length));
+    if (expression.startsWith("$resource."))
+      return valueAt(vars.resource, expression.slice("$resource.".length));
+    if (expression.startsWith("$field."))
+      return valueAt(vars.fields, expression.slice("$field.".length));
+    if (expression.startsWith("$filter."))
+      return valueAt(vars.filters, expression.slice("$filter.".length));
+    if (expression.startsWith("$media."))
+      return valueAt(vars.media, expression.slice("$media.".length));
+    if (expression === "$value")
+      return vars.value;
+    if (expression.startsWith("$value."))
+      return valueAt(vars.value, expression.slice("$value.".length));
+    return expression;
   }
-  function sentenceCase(value) {
-    return value ? `${value.charAt(0).toUpperCase()}${value.slice(1)}` : value;
+  function resolveParams(params, vars) {
+    const out = {};
+    for (const [key, expression] of Object.entries(params ?? {})) {
+      const value = resolveExpression(expression, vars);
+      if (value === undefined || value === null || value === "")
+        continue;
+      out[key] = String(value);
+    }
+    return out;
   }
-  function escapeHtml2(value) {
-    return value.replace(/[&<>"']/g, (char) => HTML_ESCAPE[char] ?? char);
+  function resolveBody(body, vars) {
+    if (!body)
+      return;
+    const out = {};
+    for (const [key, expression] of Object.entries(body)) {
+      const value = resolveExpression(expression, vars);
+      if (value === undefined)
+        continue;
+      out[key] = value;
+    }
+    return out;
   }
-  function escapeAttr2(value) {
-    return escapeHtml2(value);
+  function pathLabel(path) {
+    return path.split(".").filter(Boolean).at(-1)?.replace(/[_-]+/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2") ?? path;
   }
-  var HTML_ESCAPE = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  };
+
+  // src/components/admin/Resources/Dashboards/runtime/source.ts
+  async function fetchSourceJson(sourceId, ref, vars) {
+    const response = await fetch(sourceUrl(sourceId, ref, vars), { headers: { Accept: "application/json" } });
+    return responseJson(response);
+  }
+  async function sendSourceJson(sourceId, ref, method, vars) {
+    const body = resolveBody(ref.body, vars);
+    const response = await fetch(sourceUrl(sourceId, ref, vars), {
+      method,
+      headers: body === undefined ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
+      ...body === undefined ? {} : { body: JSON.stringify(body) }
+    });
+    return responseJson(response);
+  }
+  async function sendSourceForm(sourceId, ref, method, vars, body) {
+    const response = await fetch(sourceUrl(sourceId, ref, vars), {
+      method,
+      headers: { Accept: "application/json" },
+      body
+    });
+    return responseJson(response);
+  }
+  function sourceUrl(sourceId, ref, vars) {
+    const url = new URL(route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    for (const [key, value] of Object.entries(resolveParams(ref.params, vars)))
+      url.searchParams.set(key, value);
+    return url;
+  }
+  async function responseJson(response) {
+    if (!response.ok)
+      throw new Error(await response.text() || `Source request failed (${response.status})`);
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("json"))
+      return response.text();
+    return response.json();
+  }
+  function itemsFrom(data, ref) {
+    if (!ref.itemsPath)
+      return Array.isArray(data) ? data : [];
+    return arrayAt(data, ref.itemsPath);
+  }
+  function itemFrom(data, ref) {
+    return ref.itemPath ? valueAt(data, ref.itemPath) : data;
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/media.ts
+  function mediaValue(value, field, sourceId) {
+    return (Array.isArray(value) ? value : arrayAt({ value }, "value")).map((item) => ({
+      id: textAt(item, field.item.idPath, textAt(item, field.item.urlPath)),
+      url: mediaUrl(item, field, sourceId),
+      alt: field.item.altPath ? textAt(item, field.item.altPath) : undefined
+    })).filter((item) => item.id && item.url);
+  }
+  function mediaUrl(item, field, sourceId) {
+    const raw = textAt(item, field.item.urlPath);
+    if (isRenderableUrl(raw))
+      return raw;
+    const id2 = textAt(item, field.item.idPath);
+    const endpoint = mediaFileEndpoint(field);
+    if (!sourceId || !endpoint || !id2)
+      return raw;
+    return route(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(endpoint)}?id=${encodeURIComponent(id2)}`);
+  }
+  function mediaFileEndpoint(field) {
+    const upload = field.actions?.upload?.endpoint ?? "";
+    if (!upload.startsWith("upload") || upload.length <= "upload".length)
+      return "";
+    const rest = upload.slice("upload".length);
+    return `${rest.charAt(0).toLowerCase()}${rest.slice(1)}`;
+  }
+  function isRenderableUrl(value) {
+    return /^(https?:|blob:|data:|\/)/.test(value);
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/mapping.ts
+  function tableData(widget, items) {
+    return {
+      title: widget.title ?? pathLabel(widget.source.endpoint),
+      columns: widget.columns.map((column) => ({
+        key: column.id,
+        label: column.label,
+        ...column.width ? { width: column.width } : {},
+        ...column.primary ? { primary: true } : {}
+      })),
+      rows: items.map((item) => tableRow(widget, item)),
+      statusOptions: filterOptions(widget),
+      sortOptions: sortOptions(widget)
+    };
+  }
+  function detailData(widget, resource, rowKey, draft = {}, options = {}, sourceId = "") {
+    const fields = { ...fieldValues(widget, resource), ...draft };
+    return {
+      rowKey,
+      eyebrow: widget.id,
+      title: textAt({ ...record(resource), ...fields }, widget.title?.path, widget.title?.fallback ?? widget.id),
+      status: widget.status ? textAt({ ...record(resource), ...fields }, widget.status.path, widget.status.fallback) : undefined,
+      actions: (widget.actions ?? []).map(actionData),
+      main: sections(widget.main, resource, fields, options, sourceId),
+      aside: sections(widget.aside ?? [], resource, fields, options, sourceId)
+    };
+  }
+  function tableRow(widget, item) {
+    const id2 = textAt(item, widget.rowKey);
+    return {
+      id: id2,
+      collection: widget.selection?.opens ?? widget.id,
+      cells: Object.fromEntries(widget.columns.map((column) => [column.id, tableCell(item, column)]))
+    };
+  }
+  function tableCell(item, column) {
+    const value = textAt(item, column.path);
+    if (column.format === "badge")
+      return { title: value, tone: "badge" };
+    if (column.primary)
+      return { title: value, meta: textAt(item, "id") };
+    return value;
+  }
+  function filterOptions(widget) {
+    const filter = widget.filters?.find((item) => item.type === "select" && item.options?.length);
+    return [{ label: "All statuses", value: "" }, ...(filter?.options ?? []).map(optionData)];
+  }
+  function sortOptions(widget) {
+    return widget.columns.map((column) => ({ label: column.label, value: `${column.id}-asc` }));
+  }
+  function sections(sections2, resource, fields, options, sourceId) {
+    return sections2.map((section) => ({
+      title: section.title,
+      ...section.description ? { description: section.description } : {},
+      fields: section.fields.filter((field) => isVisible(field, fields)).map((field) => detailField(field, { ...record(resource), ...fields }, options[field.id] ?? [], sourceId))
+    }));
+  }
+  function detailField(field, resource, dynamicOptions, sourceId) {
+    const value = valueAt(resource, field.path);
+    const base = { id: field.id, label: field.label };
+    if (field.type === "textarea")
+      return { ...base, input: "textarea", value: textValue(value) };
+    if (field.type === "select")
+      return { ...base, input: "select", value: textValue(value), options: field.options.map(optionData) };
+    if (field.type === "combobox")
+      return { ...base, input: "combobox", value: textValue(value), options: optionList(field.options, dynamicOptions), creatable: isCreatable(field) };
+    if (field.type === "tokens")
+      return { ...base, input: "tokens", value: tokenValue(value), options: optionList(field.options, dynamicOptions), creatable: isCreatable(field) };
+    if (field.type === "media")
+      return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
+    if (field.type === "readonly")
+      return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: textValue(value) };
+    return { ...base, input: "text", value: textValue(value) };
+  }
+  function fieldValues(widget, resource) {
+    const all = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+    return Object.fromEntries(all.map((field) => [field.id, valueAt(resource, field.path)]));
+  }
+  function isVisible(field, fields) {
+    if (!field.visibleWhen)
+      return true;
+    const value = fields[field.visibleWhen.field];
+    if ("equals" in field.visibleWhen)
+      return value === field.visibleWhen.equals;
+    if ("notEquals" in field.visibleWhen)
+      return value !== field.visibleWhen.notEquals;
+    return true;
+  }
+  function actionData(action) {
+    return {
+      label: action.label,
+      action: action.id,
+      tone: action.tone,
+      placement: action.placement,
+      section: action.section,
+      icon: isActionIcon(action.icon) ? action.icon : undefined
+    };
+  }
+  function optionData(option) {
+    return { label: option.label, value: option.value };
+  }
+  function optionList(staticOptions, dynamicOptions) {
+    const seen = new Set;
+    return [...staticOptions ?? [], ...dynamicOptions].filter((option) => {
+      if (seen.has(option.value))
+        return false;
+      seen.add(option.value);
+      return true;
+    }).map(optionData);
+  }
+  function textValue(value) {
+    return value === null || value === undefined ? "" : String(value);
+  }
+  function tokenValue(value) {
+    return Array.isArray(value) ? value.map(textValue).filter(Boolean) : textValue(value).split(",").map((item) => item.trim()).filter(Boolean);
+  }
+  function isActionIcon(value) {
+    return value === "archive" || value === "download" || value === "link" || value === "trash";
+  }
+  function isCreatable(field) {
+    return Boolean(field.allowCustom || field.lookup?.create?.mode === "inline");
+  }
+  function record(value) {
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/actions.ts
+  async function executeDashboardAction(group, dashboard, detail, actionId, draft) {
+    const widget = findDetailWidget(dashboard.views, detail.collection);
+    if (!widget)
+      throw new Error(`Dashboard action target "${detail.collection}" was not found`);
+    const action = widget.actions?.find((item) => item.id === actionId);
+    if (!action)
+      throw new Error(`Dashboard action "${actionId}" was not found`);
+    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
+    const resource = itemFrom(data, widget.source);
+    const fields = { ...fieldValues(widget, resource), ...draft };
+    return sendSourceJson(group.source.id, action.endpoint, endpointMethod(group, action.endpoint.endpoint), {
+      selection: { id: detail.row },
+      resource,
+      fields
+    });
+  }
+  async function executeDashboardMediaAction(group, dashboard, detail, media, draft) {
+    const widget = findDetailWidget(dashboard.views, detail.collection);
+    if (!widget)
+      throw new Error(`Dashboard media target "${detail.collection}" was not found`);
+    const field = findMediaField(widget, media.field);
+    const ref = field?.actions?.[media.action];
+    if (!field || !ref)
+      return [];
+    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
+    const resource = itemFrom(data, widget.source);
+    const fields = { ...fieldValues(widget, resource), ...draft };
+    const mediaVars = mediaActionVars(media);
+    const files = media.files ?? (media.file ? [media.file] : []);
+    if (!files.length)
+      return [await sendSourceJson(group.source.id, ref, endpointMethod(group, ref.endpoint), { resource, fields, media: mediaVars })];
+    return Promise.all(files.map((file) => {
+      const body = new FormData;
+      body.set("file", file);
+      return sendSourceForm(group.source.id, ref, endpointMethod(group, ref.endpoint), { resource, fields, media: mediaVars }, body);
+    }));
+  }
+  function findDetailWidget(widgets, id2) {
+    for (const widget of widgets) {
+      if (widget.widget === "w-detail" && widget.id === id2)
+        return widget;
+      if (widget.widget === "w-section") {
+        const found = findDetailWidget(widget.children, id2);
+        if (found)
+          return found;
+      }
+      if (widget.widget === "w-tabs") {
+        for (const tab of widget.tabs) {
+          const found = findDetailWidget(tab.children, id2);
+          if (found)
+            return found;
+        }
+      }
+    }
+    return null;
+  }
+  function endpointMethod(group, endpointId) {
+    return group.endpoints.find((endpoint) => endpoint.endpointId === endpointId)?.method ?? "GET";
+  }
+  function findMediaField(widget, fieldId) {
+    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+    return fields.find((field) => field.id === fieldId && field.type === "media") ?? null;
+  }
+  function mediaActionVars(media) {
+    return {
+      action: media.action,
+      index: media.index,
+      from: media.from,
+      to: media.to,
+      item: media.item,
+      previousItem: media.previousItem,
+      value: media.value,
+      valueIds: media.value.map(mediaId).filter(Boolean)
+    };
+  }
+  function mediaId(item) {
+    return item.id;
+  }
+
+  // src/components/admin/Resources/Dashboards/DashboardViewActions.ts
+  async function runDashboardWidgetAction(context, action) {
+    const { group, dashboard, detail } = context;
+    if (!group || !dashboard || !detail)
+      return;
+    const key = detailKey(detail.collection, detail.row);
+    try {
+      await executeDashboardAction(group, dashboard, detail, action, context.drafts.get(key) ?? {});
+      context.drafts.delete(key);
+      au(`${action} completed`, { type: "success" });
+      context.render();
+    } catch (error) {
+      au(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
+    }
+  }
+  async function runDashboardMediaAction(context, media) {
+    const { group, dashboard, detail } = context;
+    if (!group || !dashboard || !detail)
+      return;
+    const key = detailKey(detail.collection, detail.row);
+    try {
+      await executeDashboardMediaAction(group, dashboard, detail, media, context.drafts.get(key) ?? {});
+      removeDraftField(context.drafts, key, media.field);
+      au(`Media ${media.action} completed`, { type: "success" });
+      context.render();
+    } catch (error) {
+      au(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
+    }
+  }
+  function removeDraftField(drafts, key, field) {
+    const draft = { ...drafts.get(key) ?? {} };
+    delete draft[field];
+    Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
+  }
+
+  // src/components/admin/Resources/Dashboards/DashboardViewFields.ts
+  function fieldChangeNeedsRender(dashboard, detail, fieldId) {
+    if (!dashboard || !detail)
+      return false;
+    const widget = findDetailWidget2(dashboard.views, detail.collection);
+    if (!widget)
+      return false;
+    return detailFields(widget).some((field) => dependsOnField(field, fieldId));
+  }
+  function findDetailWidget2(widgets, id2) {
+    for (const widget of widgets) {
+      if (widget.widget === "w-detail" && widget.id === id2)
+        return widget;
+      if (widget.widget === "w-section") {
+        const found = findDetailWidget2(widget.children, id2);
+        if (found)
+          return found;
+      }
+      if (widget.widget === "w-tabs") {
+        for (const tab of widget.tabs) {
+          const found = findDetailWidget2(tab.children, id2);
+          if (found)
+            return found;
+        }
+      }
+    }
+    return null;
+  }
+  function detailFields(widget) {
+    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+  }
+  function dependsOnField(field, fieldId) {
+    if (field.visibleWhen?.field === fieldId)
+      return true;
+    if (field.type !== "combobox" && field.type !== "tokens" || !field.lookup)
+      return false;
+    return Object.values(field.lookup.params ?? {}).some((expression) => expressionUsesField(expression, fieldId));
+  }
+  function expressionUsesField(expression, fieldId) {
+    return expression === `$field.${fieldId}` || expression.startsWith(`$field.${fieldId}.`);
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/lookupCreate.ts
+  async function executeLookupCreate(group, dashboard, detail, fieldId, previousDraft, nextDraft) {
+    const widget = findDetailWidget3(dashboard.views, detail.collection);
+    const field = widget ? lookupField(widget, fieldId) : null;
+    const create = field?.lookup?.create;
+    if (!widget || !field || !create || create.mode !== "inline")
+      return;
+    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
+    const resource = itemFrom(data, widget.source);
+    const baseFields = fieldValues(widget, resource);
+    const previousValue = previousDraft[fieldId] ?? baseFields[fieldId];
+    const nextValue = nextDraft[fieldId];
+    const createdValue = createdInput(previousValue, nextValue);
+    if (!createdValue)
+      return;
+    const created = await sendSourceJson(group.source.id, create, endpointMethod2(group, create.endpoint), {
+      resource,
+      fields: { ...baseFields, ...previousDraft, [fieldId]: createdValue },
+      value: createdValue
+    });
+    const createdId = valueAt(created, create.valuePath);
+    return createdId === undefined || createdId === null || createdId === "" ? undefined : replaceCreatedValue(nextValue, createdValue, String(createdId));
+  }
+  function createdInput(previous, next) {
+    if (Array.isArray(next)) {
+      const previousValues = new Set(arrayValue(previous));
+      return arrayValue(next).find((value) => !previousValues.has(value)) ?? "";
+    }
+    return typeof next === "string" ? next.trim() : "";
+  }
+  function replaceCreatedValue(next, created, id2) {
+    if (Array.isArray(next))
+      return arrayValue(next).map((value) => value === created ? id2 : value);
+    return id2;
+  }
+  function arrayValue(value) {
+    if (Array.isArray(value))
+      return value.map((item) => String(item)).filter(Boolean);
+    return typeof value === "string" ? value.split(",").map((item) => item.trim()).filter(Boolean) : [];
+  }
+  function lookupField(widget, fieldId) {
+    const fields = [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+    return fields.find((field) => (field.type === "combobox" || field.type === "tokens") && field.id === fieldId) ?? null;
+  }
+  function endpointMethod2(group, endpointId) {
+    return group.endpoints.find((endpoint) => endpoint.endpointId === endpointId)?.method ?? "POST";
+  }
+  function findDetailWidget3(widgets, id2) {
+    for (const widget of widgets) {
+      if (widget.widget === "w-detail" && widget.id === id2)
+        return widget;
+      if (widget.widget === "w-section") {
+        const found = findDetailWidget3(widget.children, id2);
+        if (found)
+          return found;
+      }
+      if (widget.widget === "w-tabs") {
+        for (const tab of widget.tabs) {
+          const found = findDetailWidget3(tab.children, id2);
+          if (found)
+            return found;
+        }
+      }
+    }
+    return null;
+  }
+
+  // src/components/admin/Resources/Dashboards/DashboardViewLookups.ts
+  async function runDashboardLookupCreate(context, change, previousDraft) {
+    const { group, dashboard, detail } = context;
+    if (!change.created || !group || !dashboard || !detail)
+      return;
+    const key = detailKey(detail.collection, change.rowKey);
+    const nextDraft = context.drafts.get(key) ?? {};
+    try {
+      const value = await executeLookupCreate(group, dashboard, detail, change.field, previousDraft, nextDraft);
+      if (value === undefined)
+        return;
+      context.drafts.set(key, { ...nextDraft, [change.field]: value });
+      au("Item created", { type: "success" });
+      context.render();
+    } catch (error) {
+      au(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
+    }
+  }
+
+  // src/components/admin/Resources/Dashboards/mode.ts
+  function isDashboardExampleMode(host) {
+    return host.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
+  }
 
   // src/components/admin/Resources/Dashboards/widgets/shared.ts
   var WIDGET_ROW_SELECT_EVENT = "cms-dashboard-widget:row-select";
@@ -13871,9 +14313,11 @@ p {
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/actions.ts
   function renderDetailActions(actions) {
-    const result = actions.slice(0, 3).map(renderButton);
-    if (actions.length > 3)
-      result.push(renderOverflowMenu(actions.slice(3)));
+    const visible = actions.filter((action) => action.placement !== "more");
+    const overflow = [...visible.slice(3), ...actions.filter((action) => action.placement === "more")];
+    const result = visible.slice(0, 3).map(renderButton);
+    if (overflow.length)
+      result.push(renderOverflowMenu(overflow));
     return result;
   }
   function renderButton(action) {
@@ -13914,12 +14358,12 @@ p {
     return item;
   }
   function groupedSections(actions) {
-    const sections = new Map;
+    const sections2 = new Map;
     for (const action of actions) {
       const label = action.section ?? "Other actions";
-      sections.set(label, [...sections.get(label) ?? [], action]);
+      sections2.set(label, [...sections2.get(label) ?? [], action]);
     }
-    return Array.from(sections);
+    return Array.from(sections2);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/style.css
@@ -14314,14 +14758,14 @@ button {
     const input = document.createElement("cms-dashboard-w-media-field");
     input.setAttribute("label", field.label);
     input.setAttribute("accept", field.accept ?? "image/*");
-    input.items = mediaValue(field.value);
+    input.items = mediaValue2(field.value);
     input.dataset.fieldControl = field.id;
     return input;
   }
   function isMediaControl(control) {
     return "items" in control && Array.isArray(control.items);
   }
-  function mediaValue(value) {
+  function mediaValue2(value) {
     if (!Array.isArray(value))
       return [];
     return value.filter((item) => Boolean(item) && typeof item === "object" && ("url" in item));
@@ -14403,7 +14847,7 @@ button {
   function tokenInput(field) {
     const input = document.createElement("p9r-token-input");
     input.setAttribute("label", field.label);
-    input.setAttribute("value", arrayValue(field).join(","));
+    input.setAttribute("value", arrayValue2(field).join(","));
     input.setAttribute("placeholder", field.placeholder ?? "");
     if (field.creatable)
       input.setAttribute("creatable", "");
@@ -14412,7 +14856,7 @@ button {
     return input;
   }
   function chips(field) {
-    const selected = new Set(arrayValue(field));
+    const selected = new Set(arrayValue2(field));
     const group = document.createElement("div");
     group.className = "chip-group";
     bindFieldControl(group, field);
@@ -14443,7 +14887,7 @@ button {
   function isTokenControl(control) {
     return isValueControl(control) && "values" in control && Array.isArray(control.values);
   }
-  function arrayValue(field) {
+  function arrayValue2(field) {
     if (!Array.isArray(field.value))
       return String(field.value).split(",").map((item) => item.trim()).filter(Boolean);
     return field.value.filter((item) => typeof item === "string");
@@ -14744,9 +15188,9 @@ p9r-textarea {
       const root = this.query("[data-actions]");
       root.replaceChildren(...renderDetailActions(this.value.actions));
     }
-    renderSections(root, sections, density) {
-      root.replaceChildren(...sections.map((section) => this.renderSection(section, density)));
-      root.hidden = sections.length === 0;
+    renderSections(root, sections2, density) {
+      root.replaceChildren(...sections2.map((section) => this.renderSection(section, density)));
+      root.hidden = sections2.length === 0;
     }
     renderSection(section, density) {
       const node = this.template("section");
@@ -14779,7 +15223,7 @@ p9r-textarea {
     onChange = (event) => {
       const control = event.target?.closest("[data-field-control]");
       if (control)
-        this.emitFieldChange(control);
+        this.emitFieldChange(control, Boolean(event.detail?.created));
     };
     onMediaAction = (event) => {
       event.stopPropagation();
@@ -14799,14 +15243,15 @@ p9r-textarea {
       if (control)
         this.emitFieldChange(control);
     }
-    emitFieldChange(control) {
+    emitFieldChange(control, created = false) {
       const field = this.findField(control.dataset.fieldControl ?? "");
       if (!field)
         return;
       emitWidgetEvent(this, WIDGET_FIELD_CHANGE_EVENT, {
         rowKey: this.value.rowKey,
         field: field.id,
-        value: readFieldControlValue(field, control)
+        value: readFieldControlValue(field, control),
+        ...created ? { created } : {}
       });
     }
     findField(id2) {
@@ -14861,15 +15306,15 @@ p9r-textarea {
   }
   function tableElement() {
     const element = document.createElement("cms-dashboard-w-table");
-    element.data = tableData();
+    element.data = tableData2();
     return element;
   }
   function detailElement(product) {
     const element = document.createElement("cms-dashboard-w-detail");
-    element.data = detailData(product);
+    element.data = detailData2(product);
     return element;
   }
-  function tableData() {
+  function tableData2() {
     return {
       title: "Products",
       subtitle: "Widget sandbox: filters, selection and bulk checkboxes only.",
@@ -14882,10 +15327,10 @@ p9r-textarea {
         { key: "category", label: "Category", width: "180px" },
         { key: "updated", label: "Updated", width: "140px" }
       ],
-      rows: PRODUCTS.map(tableRow)
+      rows: PRODUCTS.map(tableRow2)
     };
   }
-  function tableRow(product) {
+  function tableRow2(product) {
     return {
       id: product.id,
       collection: "example-products",
@@ -14898,7 +15343,7 @@ p9r-textarea {
       }
     };
   }
-  function detailData(product) {
+  function detailData2(product) {
     return {
       rowKey: product.id,
       eyebrow: "Product",
@@ -14959,8 +15404,162 @@ p9r-textarea {
     return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null && ("url" in item));
   }
 
+  // src/components/admin/Resources/Dashboards/runtime/lookups.ts
+  async function detailLookupOptions(sourceId, widget, resource, fields) {
+    const entries = await Promise.all(detailFields2(widget).filter(isLookupField).map(async (field) => [field.id, await lookupOptions(sourceId, field, resource, fields)]));
+    return Object.fromEntries(entries);
+  }
+  function detailFields2(widget) {
+    return [...widget.main, ...widget.aside ?? []].flatMap((section) => section.fields);
+  }
+  function isLookupField(field) {
+    return (field.type === "combobox" || field.type === "tokens") && Boolean(field.lookup);
+  }
+  async function lookupOptions(sourceId, field, resource, fields) {
+    const lookup = field.lookup;
+    if (!lookup)
+      return [];
+    const data = await fetchSourceJson(sourceId, lookup, { resource, fields });
+    const items = itemsFrom(data, lookup);
+    const selected = [...selectedItems(field, resource, fields), ...await selectedLookupItems(sourceId, field, resource, fields)];
+    return dedupeOptions([...items, ...selected].map((item) => ({
+      value: textAt(item, lookup.valuePath),
+      label: textAt(item, lookup.labelPath, textAt(item, lookup.valuePath)),
+      subtitle: lookup.subtitlePath ? textAt(item, lookup.subtitlePath) : undefined,
+      media: lookup.mediaPath ? textAt(item, lookup.mediaPath) : undefined
+    })).filter((option) => option.value && option.label));
+  }
+  function selectedItems(field, resource, fields) {
+    const value = fields[field.id];
+    if (Array.isArray(value))
+      return value;
+    const pathValue = arrayAt(resource, field.path);
+    return pathValue.length ? pathValue : [];
+  }
+  async function selectedLookupItems(sourceId, field, resource, fields) {
+    const lookup = field.lookup;
+    if (!lookup?.selected)
+      return [];
+    const values = selectedValues(fields[field.id]);
+    const items = await Promise.all(values.map(async (value) => itemFromSelectedLookup(sourceId, lookup.selected, resource, fields, value)));
+    return items.filter((item) => item !== undefined && item !== null);
+  }
+  async function itemFromSelectedLookup(sourceId, selected, resource, fields, value) {
+    try {
+      return await fetchSourceJson(sourceId, selected, { resource, fields, value });
+    } catch {
+      return null;
+    }
+  }
+  function selectedValues(value) {
+    if (Array.isArray(value))
+      return value.map((item) => String(item)).filter(Boolean);
+    if (value === null || value === undefined || value === "")
+      return [];
+    return [String(value)];
+  }
+  function dedupeOptions(options2) {
+    const seen = new Set;
+    return options2.filter((option) => {
+      if (seen.has(option.value))
+        return false;
+      seen.add(option.value);
+      return true;
+    });
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/mount.ts
+  var detailOptionsCache = new Map;
+  function mountDashboardWidgets(root, widgets, context, key, tabState, detail) {
+    root.replaceChildren(...widgets.map((widget, index) => widgetElement(widget, context, `${key}.${index}`, tabState, detail)));
+  }
+  function widgetElement(widget, context, key, tabState, detail) {
+    if (widget.widget === "w-section")
+      return sectionElement(widget, context, key, tabState, detail);
+    if (widget.widget === "w-tabs")
+      return tabsElement(widget, context, key, tabState, detail);
+    if (widget.widget === "w-table")
+      return tableElement2(widget, context);
+    if (widget.widget === "w-detail")
+      return detailElement2(widget, context, detail);
+    return document.createElement("span");
+  }
+  function sectionElement(widget, context, key, tabState, detail) {
+    const element = document.createElement("cms-dashboard-w-section");
+    element.setAttribute("heading", widget.title);
+    if (widget.description)
+      element.setAttribute("description", widget.description);
+    const stack = document.createElement("div");
+    stack.className = "widget-stack";
+    stack.append(...widget.children.map((child, index) => widgetElement(child, context, `${key}.${index}`, tabState, detail)));
+    element.append(stack);
+    return element;
+  }
+  function tabsElement(widget, context, key, tabState, detail) {
+    const panel = document.createElement("section");
+    panel.className = "tabs-panel";
+    const tabs = document.createElement("div");
+    tabs.className = "tabs";
+    tabs.setAttribute("role", "tablist");
+    const body = document.createElement("div");
+    body.className = "tab-body";
+    const activeIndex = Math.min(tabState.get(key) ?? 0, Math.max(widget.tabs.length - 1, 0));
+    const active = widget.tabs[activeIndex];
+    for (const [index, tab] of widget.tabs.entries()) {
+      const button = document.createElement("button");
+      button.className = `tab ${index === activeIndex ? "active" : ""}`.trim();
+      button.type = "button";
+      button.dataset.tabKey = key;
+      button.dataset.tabIndex = String(index);
+      button.textContent = tab.label;
+      tabs.append(button);
+    }
+    if (active)
+      body.append(...active.children.map((child, index) => widgetElement(child, context, `${key}.${activeIndex}.${index}`, tabState, detail)));
+    panel.append(tabs, body);
+    return panel;
+  }
+  function tableElement2(widget, context) {
+    const element = document.createElement("cms-dashboard-w-table");
+    element.data = tableData(widget, []);
+    element.selected = context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "";
+    fetchSourceJson(context.dashboard.source, widget.source, {}).then((data) => {
+      element.data = tableData(widget, itemsFrom(data, widget.source));
+    }).catch((error) => {
+      element.data = { ...tableData(widget, []), subtitle: error instanceof Error ? error.message : "Source request failed" };
+    });
+    return element;
+  }
+  function detailElement2(widget, context, detail) {
+    const element = document.createElement("cms-dashboard-w-detail");
+    const rowKey = detail?.row ?? "";
+    const optionsKey = detailOptionKey(context, widget.id, rowKey);
+    const cachedOptions = detailOptionsCache.get(optionsKey) ?? {};
+    const draft = context.drafts.get(detailKey(widget.id, rowKey)) ?? {};
+    element.data = detailData(widget, {}, rowKey, draft, cachedOptions, context.dashboard.source);
+    fetchSourceJson(context.dashboard.source, widget.source, { selection: { id: rowKey } }).then(async (data) => {
+      const resource = itemFrom(data, widget.source);
+      const fields = { ...fieldValues(widget, resource), ...draft };
+      element.data = detailData(widget, resource, rowKey, draft, cachedOptions, context.dashboard.source);
+      const options2 = await detailLookupOptions(context.dashboard.source, widget, resource, fields);
+      const mergedOptions = storeDetailOptions(optionsKey, options2);
+      element.data = detailData(widget, resource, rowKey, draft, mergedOptions, context.dashboard.source);
+    }).catch((error) => {
+      element.data = detailData({ ...widget, title: { fallback: error instanceof Error ? error.message : "Source request failed", path: "" } }, {}, rowKey, draft, cachedOptions, context.dashboard.source);
+    });
+    return element;
+  }
+  function detailOptionKey(context, widgetId, rowKey) {
+    return `${context.dashboard.source}:${context.dashboard.id}:${widgetId}:${rowKey}`;
+  }
+  function storeDetailOptions(key, options2) {
+    const merged = { ...detailOptionsCache.get(key) ?? {}, ...options2 };
+    detailOptionsCache.set(key, merged);
+    return merged;
+  }
+
   // src/components/admin/Resources/Dashboards/rendering.ts
-  function renderDashboardShell(root, group, dashboard, detail, tabState) {
+  function renderDashboardShell(root, group, dashboard, detail, tabState, drafts) {
     query(root, "[data-empty]").hidden = Boolean(group);
     query(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
     query(root, "[data-dashboard-head]").hidden = !dashboard;
@@ -14974,7 +15573,7 @@ p9r-textarea {
     if (detail)
       selectedRows.set(detail.collection, detail.row);
     const widgets = widgetsForSelection(dashboard, detail);
-    query(root, "[data-widgets]").innerHTML = renderWidgetList(widgets, { group, dashboard, selectedRows }, "root", tabState);
+    mountDashboardWidgets(query(root, "[data-widgets]"), widgets, { group, dashboard, selectedRows, drafts }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {
     query(root, "[data-empty]").hidden = true;
@@ -14997,6 +15596,7 @@ p9r-textarea {
     selectedDashboard = "";
     detailSelection = null;
     tabState = new Map;
+    drafts = new Map;
     constructor() {
       super({ css: style_default3, template: template_default4 });
     }
@@ -15048,7 +15648,7 @@ p9r-textarea {
       }
     }
     render() {
-      this.isExampleMode() ? renderExampleShell(this.shadowRoot, this.detailSelection?.row ?? null) : renderDashboardShell(this.shadowRoot, this.activeGroup(), this.activeDashboard(), this.detailSelection, this.tabState);
+      this.isExampleMode() ? renderExampleShell(this.shadowRoot, this.detailSelection?.row ?? null) : renderDashboardShell(this.shadowRoot, this.activeGroup(), this.activeDashboard(), this.detailSelection, this.tabState, this.drafts);
     }
     activeGroup() {
       return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
@@ -15074,16 +15674,8 @@ p9r-textarea {
       this.tabState.set(tabButton.dataset.tabKey, Number(tabButton.dataset.tabIndex));
       this.render();
     };
-    onSelection = (event) => {
-      this.syncFromSelection(event.detail);
-      this.ensureDashboardSelection();
-      this.render();
-    };
-    onPopState = () => {
-      this.syncFromSelection(currentSelection());
-      this.ensureDashboardSelection();
-      this.render();
-    };
+    onSelection = (event) => this.syncSelectionAndRender(event.detail);
+    onPopState = () => this.syncSelectionAndRender(currentSelection());
     onWidgetRowSelect = (event) => {
       this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
       if (!this.isExampleMode())
@@ -15097,16 +15689,43 @@ p9r-textarea {
       this.render();
     };
     onWidgetAction = (event) => {
-      au(`${event.detail.action} clicked`, { type: "success" });
+      if (this.isExampleMode()) {
+        au(`${event.detail.action} clicked`, { type: "success" });
+        return;
+      }
+      runDashboardWidgetAction(this.actionContext(), event.detail.action);
     };
     onWidgetMediaAction = (event) => {
-      au(`Media ${event.detail.action} event captured`, { type: "success" });
+      if (this.isExampleMode()) {
+        au(`Media ${event.detail.action} event captured`, { type: "success" });
+        return;
+      }
+      runDashboardMediaAction(this.actionContext(), event.detail);
     };
     onWidgetFieldChange = (event) => {
-      if (this.isExampleMode())
+      if (this.isExampleMode()) {
         updateDashboardWidgetExampleField(event.detail.rowKey, event.detail.field, event.detail.value);
-      this.render();
+        this.render();
+        return;
+      }
+      if (!this.detailSelection)
+        return;
+      const key = detailKey(this.detailSelection.collection, event.detail.rowKey);
+      const previousDraft = this.drafts.get(key) ?? {};
+      this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
+      if (event.detail.created)
+        runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft);
+      if (fieldChangeNeedsRender(this.activeDashboard(), this.detailSelection, event.detail.field))
+        this.render();
     };
+    syncSelectionAndRender(selection) {
+      this.syncFromSelection(selection);
+      this.ensureDashboardSelection();
+      this.render();
+    }
+    actionContext() {
+      return { group: this.activeGroup(), dashboard: this.activeDashboard(), detail: this.detailSelection, drafts: this.drafts, render: () => this.render() };
+    }
   }
   if (!customElements.get("cms-dashboards-admin"))
     customElements.define("cms-dashboards-admin", DashboardView);
@@ -16356,25 +16975,25 @@ button:hover {
     return params;
   }
   function paramValue(value) {
-    const queryParam = tokenValue(value, "#");
+    const queryParam = tokenValue2(value, "#");
     if (queryParam)
       return { from: "queryParam", name: queryParam };
-    const state = tokenValue(value, "@");
+    const state = tokenValue2(value, "@");
     if (state)
       return { from: "state", name: state };
     return { from: "raw", value };
   }
-  function tokenValue(value, prefix) {
+  function tokenValue2(value, prefix) {
     const match = new RegExp(`^\\${prefix}\\{([^}]+)\\}$`).exec(value);
     return match?.[1]?.trim() || null;
   }
-  function bindingQuery(sourceUrl, bindingUrl) {
-    if (bindingUrl === sourceUrl)
+  function bindingQuery(sourceUrl2, bindingUrl) {
+    if (bindingUrl === sourceUrl2)
       return "";
-    if (bindingUrl.startsWith(`${sourceUrl}?`))
-      return bindingUrl.slice(sourceUrl.length + 1);
-    if (sourceUrl.includes("?") && bindingUrl.startsWith(`${sourceUrl}&`)) {
-      return bindingUrl.slice(sourceUrl.length + 1);
+    if (bindingUrl.startsWith(`${sourceUrl2}?`))
+      return bindingUrl.slice(sourceUrl2.length + 1);
+    if (sourceUrl2.includes("?") && bindingUrl.startsWith(`${sourceUrl2}&`)) {
+      return bindingUrl.slice(sourceUrl2.length + 1);
     }
     return null;
   }
@@ -16476,7 +17095,7 @@ button:hover {
       button.className = "provider";
       button.type = "button";
       button.ariaPressed = String(group.key === activeProvider);
-      button.innerHTML = `<span>${escapeHtml3(group.label)}</span><span class="count">${group.count}</span>`;
+      button.innerHTML = `<span>${escapeHtml2(group.label)}</span><span class="count">${group.count}</span>`;
       button.addEventListener("click", () => onSelect(group.key));
       container.append(button);
     }
@@ -16519,7 +17138,7 @@ button:hover {
     element.textContent = message;
     return element;
   }
-  function escapeHtml3(value) {
+  function escapeHtml2(value) {
     return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
   }
 
@@ -19654,8 +20273,8 @@ dd {
       return dataSource?.label ?? binding.alias ?? binding.url;
     }
   }
-  function sourceUrlMatchesBinding(sourceUrl, bindingUrl) {
-    return bindingUrl === sourceUrl || bindingUrl.startsWith(`${sourceUrl}?`) || sourceUrl.includes("?") && bindingUrl.startsWith(`${sourceUrl}&`);
+  function sourceUrlMatchesBinding(sourceUrl2, bindingUrl) {
+    return bindingUrl === sourceUrl2 || bindingUrl.startsWith(`${sourceUrl2}?`) || sourceUrl2.includes("?") && bindingUrl.startsWith(`${sourceUrl2}&`);
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/State/Controllers/structureTreeRefs.ts
@@ -24063,23 +24682,23 @@ cms-editor-v2-segmented-control button svg:only-child {
       super();
       this.attachShadow({ mode: "open" }).append(template17.content.cloneNode(true));
     }
-    setSettings(sections, textCapability = null, textValue = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
+    setSettings(sections2, textCapability = null, textValue2 = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
       this._dataSources = dataSources;
       this._dataScopes = dataScopes;
       const view = this.shadowRoot.querySelector(".settings-view");
       view.replaceChildren();
-      const visibleSections = sections.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
+      const visibleSections = sections2.filter((section) => mode === "settings" ? section.kind === "self" : section.kind === "surcharge");
       const shouldRenderText = mode === "settings" && textCapability;
       const shouldRenderStates = mode === "settings" && states.length > 0;
       if (visibleSections.length === 0 && !shouldRenderText && !shouldRenderStates) {
         const empty2 = document.createElement("div");
         empty2.className = "empty";
-        empty2.textContent = sections.length === 0 && !textCapability ? "Select an editable element" : mode === "settings" ? "No settings" : "No overrides";
+        empty2.textContent = sections2.length === 0 && !textCapability ? "Select an editable element" : mode === "settings" ? "No settings" : "No overrides";
         view.append(empty2);
         return;
       }
       if (shouldRenderText) {
-        view.append(this._renderTextCapability(textCapability, textValue, dataScopes));
+        view.append(this._renderTextCapability(textCapability, textValue2, dataScopes));
       }
       if (shouldRenderStates) {
         view.append(this._renderStates(states));
@@ -25163,11 +25782,11 @@ label {
       heading4.textContent = "Binding";
       const path = document.createElement("div");
       path.className = "repeat-path";
-      const pathLabel = document.createElement("span");
-      pathLabel.textContent = "Array";
+      const pathLabel2 = document.createElement("span");
+      pathLabel2.textContent = "Array";
       const pathValue = document.createElement("strong");
       pathValue.textContent = option2.path;
-      path.append(pathLabel, pathValue);
+      path.append(pathLabel2, pathValue);
       const config = document.createElement("section");
       config.className = "binding-config";
       const label = document.createElement("label");
@@ -26471,9 +27090,9 @@ label {
     }
     return true;
   }
-  function settingsWithParamSync(editor, sections) {
+  function settingsWithParamSync(editor, sections2) {
     const section = paramSyncSettings(editor);
-    return section ? [...sections, section] : sections;
+    return section ? [...sections2, section] : sections2;
   }
   function paramSyncSettings(editor) {
     const target = editor.target;
@@ -26557,9 +27176,9 @@ label {
     }
     return true;
   }
-  function settingsWithPageState(editor, sections) {
+  function settingsWithPageState(editor, sections2) {
     const section = pageStateSettings(editor);
-    return section ? [...sections, section] : sections;
+    return section ? [...sections2, section] : sections2;
   }
   function pageStateSettings(editor) {
     const target = editor.target;
@@ -26602,8 +27221,8 @@ label {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingsValues.ts
-  function resolveSettingsValues(editor, sections) {
-    return sections.map((section) => ({
+  function resolveSettingsValues(editor, sections2) {
+    return sections2.map((section) => ({
       ...section,
       settings: section.settings.map((setting) => resolveSetting(editor, setting))
     }));
@@ -26829,14 +27448,14 @@ label {
     pageField("path").disabled = !isPage;
     pageField("published").closest("label").hidden = !isPage;
   }
-  function chromeDefaults(backLabel, backHref, settingsTitle, settingsDescription, pathLabel, tagsLabel, statusLabel, descriptionLabel) {
+  function chromeDefaults(backLabel, backHref, settingsTitle, settingsDescription, pathLabel2, tagsLabel, statusLabel, descriptionLabel) {
     return {
       backHref,
       backLabel,
       settingsLabel: settingsTitle,
       settingsTitle,
       settingsDescription,
-      pathLabel,
+      pathLabel: pathLabel2,
       tagsLabel,
       statusLabel,
       descriptionLabel
@@ -30456,7 +31075,7 @@ label {
     const isImage = item.type === "image" || item.mimetype === "image/svg+xml";
     const size = item.size ? formatSize(item.size) : "";
     const dims = item.width && item.height ? `${item.width}×${item.height}` : "";
-    const mediaUrl = item.absoluteURL ?? "";
+    const mediaUrl2 = item.absoluteURL ?? "";
     const el = document.createElement("div");
     el.slot = "fields";
     el.innerHTML = `
@@ -30487,14 +31106,14 @@ label {
         <div class="detail-field">
             <label>URL</label>
             <div class="url-row">
-                <span class="detail-value mono">${escapeHtml(mediaUrl)}</span>
+                <span class="detail-value mono">${escapeHtml(mediaUrl2)}</span>
                 <button class="btn-copy" id="btn-copy" title="Copy URL">${ICON_COPY}</button>
             </div>
         </div>
     `;
     const copyBtn = el.querySelector("#btn-copy");
     copyBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(mediaUrl);
+      navigator.clipboard.writeText(mediaUrl2);
       copyBtn.innerHTML = ICON_CHECK;
       setTimeout(() => {
         copyBtn.innerHTML = ICON_COPY;

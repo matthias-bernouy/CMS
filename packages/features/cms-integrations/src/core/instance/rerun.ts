@@ -10,7 +10,7 @@ import { isSensitiveInput } from "../shared/inputSensitivity";
 import { hasAnswer } from "./ids";
 import { appendRun, failedRun, successRun } from "./runs";
 import { assertSecretKeysAvailable, deleteObsoleteSecretRefs } from "./secretRefs";
-import { sanitizeAnswers, updateSecretRefs } from "./snapshots";
+import { sanitizeAnswers, sanitizeDefinitionSnapshot, updateSecretRefs } from "./snapshots";
 import type { IntegrationDefinition } from "../../interfaces/Integration";
 import type { IntegrationImportDeps, IntegrationImportDto, IntegrationImportResult } from "../../interfaces/IntegrationImport";
 import type { IntegrationInstance, IntegrationRun } from "../../interfaces/IntegrationInstance";
@@ -21,8 +21,8 @@ export async function runRerun(request: RunIntegrationInstanceRerunRequest): Pro
     if (!instance) throw new MissingIntegrationInstanceError(request.instanceId);
 
     const siteIntegrations = [
-        ...(instance.definitionSnapshot ? [instance.definitionSnapshot] : []),
         ...(request.siteIntegrations ?? []),
+        ...(instance.definitionSnapshot ? [instance.definitionSnapshot] : []),
     ];
     const definition = findIntegration(instance.kind, siteIntegrations);
     if (!definition) throw new IntegrationInputError("kind", `unknown integration "${instance.kind}"`);
@@ -80,6 +80,7 @@ async function commitSuccessfulRerun(
         secretRefs: nextSecretRefs,
         secretInputs,
         definitionVersion: definition.version ?? instance.definitionVersion,
+        definitionSnapshot: sanitizeDefinitionSnapshot(definition),
     });
     const saved = await request.instances.replace(next);
     await deleteObsoleteSecretRefs(request.deps.secrets, instance.secretRefs, saved.secretRefs);

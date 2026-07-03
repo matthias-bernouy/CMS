@@ -1,15 +1,16 @@
 import type {
-    Collection,
-    CollectionEndpointRef,
-    ColumnFormat,
-    ColumnSpec,
+    DashboardAction,
+    DashboardColumn,
+    DashboardDataRef,
     DashboardDto,
+    DashboardEndpointRef,
+    DashboardField,
+    DashboardFilter,
+    DashboardLookupCreate,
+    DashboardLookupRef,
+    DashboardOption,
+    DashboardSection,
     DashboardWidget,
-    FieldFormat,
-    FieldInput,
-    FieldSpec,
-    FilterSpec,
-    RowAction,
 } from "@bernouy/cms-dashboards";
 import type {
     ComputedParamRef,
@@ -182,13 +183,11 @@ function parseDashboardTemplate(value: Record<string, unknown>, name: string): D
     if (!id) throw new MissingIntegrationParam(`${name}.id`);
     const source = text(value.source);
     if (!source) throw new MissingIntegrationParam(`${name}.source`);
-    if (!Array.isArray(value.collections)) throw new IntegrationInputError(`${name}.collections`, "must be an array");
     if (!Array.isArray(value.views)) throw new IntegrationInputError(`${name}.views`, "must be an array");
     return {
         id,
         ...(isRecord(value.meta) ? { meta: parseDashboardMeta(value.meta, `${name}.meta`) } : {}),
         source,
-        collections: value.collections.map((collection, index) => parseCollection(collection, `${name}.collections.${index}`)),
         views: value.views.map((widget, index) => parseWidget(widget, `${name}.views.${index}`)),
         ...(text(value.requires) ? { requires: text(value.requires)! } : {}),
     };
@@ -204,58 +203,6 @@ function parseDashboardMeta(value: Record<string, unknown>, name: string): Dashb
     };
 }
 
-function parseCollection(value: unknown, name: string): Collection {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    const id = text(value.id);
-    if (!id) throw new MissingIntegrationParam(`${name}.id`);
-    if (!isRecord(value.list)) throw new IntegrationInputError(`${name}.list`, "must be an object");
-    const item = isRecord(value.item) ? parseCollectionItem(value.item, `${name}.item`) : undefined;
-    return {
-        id,
-        ...(text(value.rowKey) ? { rowKey: text(value.rowKey)! } : {}),
-        list: parseListEndpointRef(value.list, `${name}.list`),
-        ...(item ? { item } : {}),
-    };
-}
-
-function parseCollectionItem(value: Record<string, unknown>, name: string): NonNullable<Collection["item"]> {
-    const item: NonNullable<Collection["item"]> = {};
-    for (const action of ["get", "create", "update", "patch", "delete"] as const) {
-        if (value[action] !== undefined) {
-            if (!isRecord(value[action])) throw new IntegrationInputError(`${name}.${action}`, "must be an object");
-            item[action] = parseEndpointRef(value[action], `${name}.${action}`);
-        }
-    }
-    return item;
-}
-
-function parseListEndpointRef(value: Record<string, unknown>, name: string): Collection["list"] {
-    return {
-        ...parseEndpointRef(value, name),
-        ...(text(value.itemsPath) ? { itemsPath: text(value.itemsPath)! } : {}),
-        ...(text(value.totalPath) ? { totalPath: text(value.totalPath)! } : {}),
-    };
-}
-
-function parseEndpointRef(value: Record<string, unknown>, name: string): CollectionEndpointRef {
-    const endpoint = text(value.endpoint);
-    if (!endpoint) throw new MissingIntegrationParam(`${name}.endpoint`);
-    return {
-        endpoint,
-        ...(value.params !== undefined ? { params: parseParamMap(value.params, `${name}.params`) } : {}),
-    };
-}
-
-function parseParamMap(value: unknown, name: string): Record<string, string> {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    const out: Record<string, string> = {};
-    for (const [key, entry] of Object.entries(value)) {
-        if (typeof entry !== "string") throw new IntegrationInputError(`${name}.${key}`, "must be a string");
-        out[key] = entry;
-    }
-    return out;
-}
-
 function parseWidget(value: unknown, name: string): DashboardWidget {
     if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
     const widget = text(value.widget);
@@ -263,90 +210,46 @@ function parseWidget(value: unknown, name: string): DashboardWidget {
         case "w-section":
             return {
                 widget,
-                ...(text(value.title) ? { title: text(value.title)! } : {}),
+                id: requiredText(value.id, `${name}.id`),
+                title: requiredText(value.title, `${name}.title`),
+                ...(text(value.description) ? { description: text(value.description)! } : {}),
                 children: parseWidgetArray(value.children, `${name}.children`),
             };
         case "w-tabs":
             if (!Array.isArray(value.tabs)) throw new IntegrationInputError(`${name}.tabs`, "must be an array");
             return {
                 widget,
+                id: requiredText(value.id, `${name}.id`),
                 tabs: value.tabs.map((tab, index) => parseTab(tab, `${name}.tabs.${index}`)),
             };
         case "w-table":
+            if (!isRecord(value.source)) throw new IntegrationInputError(`${name}.source`, "must be an object");
             return {
                 widget,
-                collection: requiredText(value.collection, `${name}.collection`),
-                ...(value.columns !== undefined ? { columns: parseColumns(value.columns, `${name}.columns`) } : {}),
-                ...(value.rowActions !== undefined ? { rowActions: parseRowActions(value.rowActions, `${name}.rowActions`) } : {}),
+                id: requiredText(value.id, `${name}.id`),
+                ...(text(value.title) ? { title: text(value.title)! } : {}),
+                source: parseDataRef(value.source, `${name}.source`),
+                rowKey: requiredText(value.rowKey, `${name}.rowKey`),
+                columns: parseColumns(value.columns, `${name}.columns`),
                 ...(value.filters !== undefined ? { filters: parseFilters(value.filters, `${name}.filters`) } : {}),
                 ...(typeof value.pageSize === "number" ? { pageSize: value.pageSize } : {}),
+                ...(isRecord(value.selection) ? { selection: parseSelection(value.selection, `${name}.selection`) } : {}),
             };
         case "w-detail":
+            if (!isRecord(value.source)) throw new IntegrationInputError(`${name}.source`, "must be an object");
             return {
                 widget,
-                collection: requiredText(value.collection, `${name}.collection`),
-                ...(value.fields !== undefined ? { fields: parseFields(value.fields, `${name}.fields`) } : {}),
-            };
-        case "w-create":
-            return {
-                widget,
-                collection: requiredText(value.collection, `${name}.collection`),
-                ...(text(value.label) ? { label: text(value.label)! } : {}),
-                ...(text(value.submitLabel) ? { submitLabel: text(value.submitLabel)! } : {}),
-                ...(text(value.successMessage) ? { successMessage: text(value.successMessage)! } : {}),
-                ...(value.fields !== undefined ? { fields: parseFields(value.fields, `${name}.fields`) } : {}),
-                ...(value.resultFields !== undefined ? { resultFields: parseFields(value.resultFields, `${name}.resultFields`) } : {}),
-            };
-        case "w-update": {
-            const action = parseUpdateAction(value.action, `${name}.action`);
-            return {
-                widget,
-                collection: requiredText(value.collection, `${name}.collection`),
-                ...(action ? { action } : {}),
-                ...(text(value.label) ? { label: text(value.label)! } : {}),
-                ...(text(value.submitLabel) ? { submitLabel: text(value.submitLabel)! } : {}),
-                ...(text(value.successMessage) ? { successMessage: text(value.successMessage)! } : {}),
-                ...(value.fields !== undefined ? { fields: parseFields(value.fields, `${name}.fields`) } : {}),
-                ...(value.resultFields !== undefined ? { resultFields: parseFields(value.resultFields, `${name}.resultFields`) } : {}),
-            };
-        }
-        case "w-delete":
-            if (value.body !== undefined && !isRecord(value.body)) {
-                throw new IntegrationInputError(`${name}.body`, "must be an object");
-            }
-            return {
-                widget,
-                collection: requiredText(value.collection, `${name}.collection`),
-                ...(text(value.label) ? { label: text(value.label)! } : {}),
-                ...(text(value.confirmLabel) ? { confirmLabel: text(value.confirmLabel)! } : {}),
-                ...(text(value.successMessage) ? { successMessage: text(value.successMessage)! } : {}),
-                ...(isRecord(value.body) ? { body: value.body } : {}),
-            };
-        case "w-action":
-            return {
-                widget,
-                ...parseEndpointRef(value, name),
-                label: requiredText(value.label, `${name}.label`),
-                ...(text(value.successMessage) ? { successMessage: text(value.successMessage)! } : {}),
-                ...(text(value.downloadName) ? { downloadName: text(value.downloadName)! } : {}),
-                ...(typeof value.refresh === "boolean" ? { refresh: value.refresh } : {}),
-            };
-        case "w-stat":
-            return {
-                widget,
-                endpoint: requiredText(value.endpoint, `${name}.endpoint`),
-                path: requiredText(value.path, `${name}.path`),
-                ...(text(value.label) ? { label: text(value.label)! } : {}),
+                id: requiredText(value.id, `${name}.id`),
+                source: parseDataRef(value.source, `${name}.source`),
+                ...(isRecord(value.title) ? { title: parseBinding(value.title, `${name}.title`) } : {}),
+                ...(isRecord(value.status) ? { status: parseBinding(value.status, `${name}.status`) } : {}),
+                ...(value.actions !== undefined ? { actions: parseActions(value.actions, `${name}.actions`) } : {}),
+                main: parseSections(value.main, `${name}.main`),
+                ...(value.aside !== undefined ? { aside: parseSections(value.aside, `${name}.aside`) } : {}),
             };
         default:
             throw new IntegrationInputError(`${name}.widget`, "must be a supported dashboard widget");
     }
-}
-
-function parseUpdateAction(value: unknown, name: string): "update" | "patch" | undefined {
-    if (value === undefined) return undefined;
-    if (value === "update" || value === "patch") return value;
-    throw new IntegrationInputError(name, "must be update or patch");
 }
 
 function parseWidgetArray(value: unknown, name: string): DashboardWidget[] {
@@ -354,83 +257,225 @@ function parseWidgetArray(value: unknown, name: string): DashboardWidget[] {
     return value.map((entry, index) => parseWidget(entry, `${name}.${index}`));
 }
 
-function parseTab(value: unknown, name: string): { label: string; children: DashboardWidget[] } {
+function parseTab(value: unknown, name: string): { id: string; label: string; children: DashboardWidget[] } {
     if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
     return {
+        id: requiredText(value.id, `${name}.id`),
         label: requiredText(value.label, `${name}.label`),
         children: parseWidgetArray(value.children, `${name}.children`),
     };
 }
 
-function parseColumns(value: unknown, name: string): ColumnSpec[] {
+function parseSelection(value: Record<string, unknown>, name: string): { opens?: string } {
+    return {
+        ...(text(value.opens) ? { opens: text(value.opens)! } : {}),
+    };
+}
+
+function parseDataRef(value: Record<string, unknown>, name: string): DashboardDataRef {
+    return {
+        ...parseEndpointRef(value, name),
+        ...(text(value.itemsPath) ? { itemsPath: text(value.itemsPath)! } : {}),
+        ...(text(value.itemPath) ? { itemPath: text(value.itemPath)! } : {}),
+        ...(text(value.totalPath) ? { totalPath: text(value.totalPath)! } : {}),
+    };
+}
+
+function parseEndpointRef(value: Record<string, unknown>, name: string): DashboardEndpointRef {
+    const endpoint = text(value.endpoint);
+    if (!endpoint) throw new MissingIntegrationParam(`${name}.endpoint`);
+    return {
+        endpoint,
+        ...(value.params !== undefined ? { params: parseStringMap(value.params, `${name}.params`) } : {}),
+        ...(value.body !== undefined ? { body: parseStringMap(value.body, `${name}.body`) } : {}),
+    };
+}
+
+function parseColumns(value: unknown, name: string): DashboardColumn[] {
     if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
     return value.map((entry, index) => parseColumn(entry, `${name}.${index}`));
 }
 
-function parseColumn(value: unknown, name: string): ColumnSpec {
-    if (typeof value === "string") return value;
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be a string or object");
+function parseColumn(value: unknown, name: string): DashboardColumn {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
     return {
-        field: requiredText(value.field, `${name}.field`),
-        ...(text(value.label) ? { label: text(value.label)! } : {}),
+        id: requiredText(value.id, `${name}.id`),
+        label: requiredText(value.label, `${name}.label`),
+        path: requiredText(value.path, `${name}.path`),
+        ...(value.primary === true ? { primary: true } : {}),
+        ...(text(value.width) ? { width: text(value.width)! } : {}),
         ...(parseColumnFormat(value.format, `${name}.format`) ? { format: parseColumnFormat(value.format, `${name}.format`)! } : {}),
     };
 }
 
-function parseColumnFormat(value: unknown, name: string): ColumnFormat | undefined {
+function parseColumnFormat(value: unknown, name: string): DashboardColumn["format"] | undefined {
     if (value === undefined) return undefined;
     if (value === "date" || value === "money" || value === "badge" || value === "text") return value;
     throw new IntegrationInputError(name, "must be date, money, badge, or text");
 }
 
-function parseFields(value: unknown, name: string): FieldSpec[] {
+function parseFilters(value: unknown, name: string): DashboardFilter[] {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return value.map((entry, index) => parseFilter(entry, `${name}.${index}`));
+}
+
+function parseFilter(value: unknown, name: string): DashboardFilter {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    return {
+        id: requiredText(value.id, `${name}.id`),
+        label: requiredText(value.label, `${name}.label`),
+        ...(text(value.path) ? { path: text(value.path)! } : {}),
+        ...(text(value.param) ? { param: text(value.param)! } : {}),
+        ...(value.type === "select" ? { type: "select" } : value.type === "text" ? { type: "text" } : {}),
+        ...(text(value.placeholder) ? { placeholder: text(value.placeholder)! } : {}),
+        ...(value.options !== undefined ? { options: parseOptions(value.options, `${name}.options`) } : {}),
+    };
+}
+
+function parseSections(value: unknown, name: string): DashboardSection[] {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return value.map((entry, index) => parseSection(entry, `${name}.${index}`));
+}
+
+function parseSection(value: unknown, name: string): DashboardSection {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    return {
+        id: requiredText(value.id, `${name}.id`),
+        title: requiredText(value.title, `${name}.title`),
+        ...(text(value.description) ? { description: text(value.description)! } : {}),
+        fields: parseFields(value.fields, `${name}.fields`),
+    };
+}
+
+function parseFields(value: unknown, name: string): DashboardField[] {
     if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
     return value.map((entry, index) => parseField(entry, `${name}.${index}`));
 }
 
-function parseField(value: unknown, name: string): FieldSpec {
-    if (typeof value === "string") return value;
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be a string or object");
-    return {
-        field: requiredText(value.field, `${name}.field`),
-        ...(text(value.label) ? { label: text(value.label)! } : {}),
-        ...(parseFieldFormat(value.format, `${name}.format`) ? { format: parseFieldFormat(value.format, `${name}.format`)! } : {}),
-        ...(parseFieldInput(value.input, `${name}.input`) ? { input: parseFieldInput(value.input, `${name}.input`)! } : {}),
-        ...(value.options !== undefined ? { options: parseStringList(value.options, `${name}.options`) } : {}),
-        ...(text(value.accept) ? { accept: text(value.accept)! } : {}),
-        ...(value.media !== undefined ? { media: parseFieldMedia(value.media, `${name}.media`) } : {}),
-        ...(value.upload !== undefined ? { upload: parseFieldUpload(value.upload, `${name}.upload`) } : {}),
-        ...(value.lookup !== undefined ? { lookup: parseFieldLookup(value.lookup, `${name}.lookup`) } : {}),
-        ...(value.readonly === true ? { readonly: true } : {}),
+function parseField(value: unknown, name: string): DashboardField {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const base = {
+        id: requiredText(value.id, `${name}.id`),
+        label: requiredText(value.label, `${name}.label`),
+        path: requiredText(value.path, `${name}.path`),
+        ...(value.visibleWhen !== undefined ? { visibleWhen: parseFieldVisibility(value.visibleWhen, `${name}.visibleWhen`) } : {}),
         ...(value.required === true ? { required: true } : {}),
     };
+    const type = requiredText(value.type, `${name}.type`);
+    switch (type) {
+        case "text":
+            return { ...base, type, ...(text(value.placeholder) ? { placeholder: text(value.placeholder)! } : {}) };
+        case "textarea":
+            return { ...base, type, ...(typeof value.rows === "number" ? { rows: value.rows } : {}) };
+        case "select":
+            return { ...base, type, options: parseOptions(value.options, `${name}.options`) };
+        case "combobox":
+        case "tokens":
+            return {
+                ...base,
+                type,
+                ...(value.options !== undefined ? { options: parseOptions(value.options, `${name}.options`) } : {}),
+                ...(value.lookup !== undefined ? { lookup: parseLookup(value.lookup, `${name}.lookup`) } : {}),
+                ...(value.allowCustom === true ? { allowCustom: true } : {}),
+            };
+        case "media":
+            return {
+                ...base,
+                type,
+                ...(value.multiple === true ? { multiple: true } : {}),
+                item: parseMediaItem(value.item, `${name}.item`),
+                ...(value.actions !== undefined ? { actions: parseMediaActions(value.actions, `${name}.actions`) } : {}),
+            };
+        case "readonly":
+            return {
+                ...base,
+                type,
+                ...(parseReadonlyFormat(value.format, `${name}.format`) ? { format: parseReadonlyFormat(value.format, `${name}.format`)! } : {}),
+            };
+        default:
+            throw new IntegrationInputError(`${name}.type`, "must be text, textarea, select, combobox, tokens, media, or readonly");
+    }
 }
 
-function parseFieldMedia(value: unknown, name: string): NonNullable<Extract<FieldSpec, { field: string }>["media"]> {
+function parseFieldVisibility(value: unknown, name: string): NonNullable<DashboardField["visibleWhen"]> {
     if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    return parseEndpointRef(value, name);
-}
-
-function parseFieldUpload(value: unknown, name: string): NonNullable<Extract<FieldSpec, { field: string }>["upload"]> {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    return {
-        ...parseEndpointRef(value, name),
-        resultPath: requiredText(value.resultPath, `${name}.resultPath`),
+    const rule: NonNullable<DashboardField["visibleWhen"]> = {
+        field: requiredText(value.field, `${name}.field`),
     };
+    if (value.equals !== undefined) rule.equals = parseVisibilityValue(value.equals, `${name}.equals`);
+    if (value.notEquals !== undefined) rule.notEquals = parseVisibilityValue(value.notEquals, `${name}.notEquals`);
+    if (rule.equals === undefined && rule.notEquals === undefined) {
+        throw new IntegrationInputError(name, "must declare equals or notEquals");
+    }
+    return rule;
 }
 
-function parseFieldLookup(value: unknown, name: string): NonNullable<Extract<FieldSpec, { field: string }>["lookup"]> {
+function parseVisibilityValue(value: unknown, name: string): string | number | boolean | null {
+    if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+    throw new IntegrationInputError(name, "must be a string, number, boolean, or null");
+}
+
+function parseLookup(value: unknown, name: string): DashboardLookupRef {
     if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
     return {
-        ...parseListEndpointRef(value, name),
+        ...parseDataRef(value, name),
         valuePath: requiredText(value.valuePath, `${name}.valuePath`),
         labelPath: requiredText(value.labelPath, `${name}.labelPath`),
+        ...(text(value.subtitlePath) ? { subtitlePath: text(value.subtitlePath)! } : {}),
+        ...(text(value.mediaPath) ? { mediaPath: text(value.mediaPath)! } : {}),
         ...(value.descriptionPaths !== undefined ? { descriptionPaths: parseStringList(value.descriptionPaths, `${name}.descriptionPaths`) } : {}),
-        ...(value.map !== undefined ? { map: parseStringMap(value.map, `${name}.map`) } : {}),
+        ...(value.selected !== undefined ? { selected: parseLookupSelected(value.selected, `${name}.selected`) } : {}),
+        ...(value.create !== undefined ? { create: parseLookupCreate(value.create, `${name}.create`) } : {}),
     };
 }
 
-function parseFieldFormat(value: unknown, name: string): FieldFormat | undefined {
+function parseLookupSelected(value: unknown, name: string): DashboardDataRef {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    return parseDataRef(value, name);
+}
+
+function parseLookupCreate(value: unknown, name: string): DashboardLookupCreate {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const mode = requiredText(value.mode, `${name}.mode`);
+    const base = {
+        ...parseEndpointRef(value, name),
+        valuePath: requiredText(value.valuePath, `${name}.valuePath`),
+        labelPath: requiredText(value.labelPath, `${name}.labelPath`),
+    };
+    if (mode === "inline") return { ...base, mode };
+    if (mode === "modal") {
+        return {
+            ...base,
+            mode,
+            ...(text(value.title) ? { title: text(value.title)! } : {}),
+            fields: parseFields(value.fields, `${name}.fields`),
+        };
+    }
+    throw new IntegrationInputError(`${name}.mode`, "must be inline or modal");
+}
+
+function parseMediaItem(value: unknown, name: string): Extract<DashboardField, { type: "media" }>["item"] {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    return {
+        ...(text(value.idPath) ? { idPath: text(value.idPath)! } : {}),
+        urlPath: requiredText(value.urlPath, `${name}.urlPath`),
+        ...(text(value.altPath) ? { altPath: text(value.altPath)! } : {}),
+    };
+}
+
+function parseMediaActions(value: unknown, name: string): Extract<DashboardField, { type: "media" }>["actions"] {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const actions: Extract<DashboardField, { type: "media" }>["actions"] = {};
+    for (const action of ["upload", "replace", "remove", "reorder"] as const) {
+        if (value[action] !== undefined) {
+            if (!isRecord(value[action])) throw new IntegrationInputError(`${name}.${action}`, "must be an object");
+            actions[action] = parseEndpointRef(value[action], `${name}.${action}`);
+        }
+    }
+    return actions;
+}
+
+function parseReadonlyFormat(value: unknown, name: string): Extract<DashboardField, { type: "readonly" }>["format"] | undefined {
     if (value === undefined) return undefined;
     if (value === "date" || value === "money" || value === "badge" || value === "text" || value === "image" || value === "url") {
         return value;
@@ -438,34 +483,59 @@ function parseFieldFormat(value: unknown, name: string): FieldFormat | undefined
     throw new IntegrationInputError(name, "must be date, money, badge, text, image, or url");
 }
 
-function parseFieldInput(value: unknown, name: string): FieldInput | undefined {
-    if (value === undefined) return undefined;
-    if (value === "text" || value === "select" || value === "boolean" || value === "number" || value === "cms-user" || value === "file" || value === "lookup") return value;
-    throw new IntegrationInputError(name, "must be text, select, boolean, number, cms-user, file, or lookup");
-}
-
-function parseFilters(value: unknown, name: string): FilterSpec[] {
+function parseActions(value: unknown, name: string): DashboardAction[] {
     if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
-    return value.map((entry, index) => parseFilter(entry, `${name}.${index}`));
+    return value.map((entry, index) => parseAction(entry, `${name}.${index}`));
 }
 
-function parseFilter(value: unknown, name: string): FilterSpec {
+function parseAction(value: unknown, name: string): DashboardAction {
     if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    const filter: FilterSpec = {
-        field: requiredText(value.field, `${name}.field`),
-        ...(text(value.param) ? { param: text(value.param)! } : {}),
-        ...(value.input === "select" ? { input: "select" } : value.input === "text" ? { input: "text" } : {}),
-        ...(text(value.label) ? { label: text(value.label)! } : {}),
-        ...(text(value.placeholder) ? { placeholder: text(value.placeholder)! } : {}),
+    if (!isRecord(value.endpoint)) throw new IntegrationInputError(`${name}.endpoint`, "must be an object");
+    return {
+        id: requiredText(value.id, `${name}.id`),
+        label: requiredText(value.label, `${name}.label`),
+        ...(text(value.icon) ? { icon: text(value.icon)! } : {}),
+        ...(parseActionTone(value.tone, `${name}.tone`) ? { tone: parseActionTone(value.tone, `${name}.tone`)! } : {}),
+        ...(parseActionPlacement(value.placement, `${name}.placement`) ? { placement: parseActionPlacement(value.placement, `${name}.placement`)! } : {}),
+        ...(text(value.section) ? { section: text(value.section)! } : {}),
+        endpoint: parseEndpointRef(value.endpoint, `${name}.endpoint`),
+        ...(text(value.confirm) ? { confirm: text(value.confirm)! } : {}),
     };
-    if (value.input !== undefined && value.input !== "select" && value.input !== "text") {
-        throw new IntegrationInputError(`${name}.input`, "must be text or select");
-    }
-    if (value.options !== undefined) {
-        if (!Array.isArray(value.options)) throw new IntegrationInputError(`${name}.options`, "must be an array");
-        filter.options = value.options.map((option, index) => requiredText(option, `${name}.options.${index}`));
-    }
-    return filter;
+}
+
+function parseActionTone(value: unknown, name: string): DashboardAction["tone"] | undefined {
+    if (value === undefined) return undefined;
+    if (value === "primary" || value === "secondary" || value === "danger") return value;
+    throw new IntegrationInputError(name, "must be primary, secondary, or danger");
+}
+
+function parseActionPlacement(value: unknown, name: string): DashboardAction["placement"] | undefined {
+    if (value === undefined) return undefined;
+    if (value === "primary" || value === "secondary" || value === "more") return value;
+    throw new IntegrationInputError(name, "must be primary, secondary, or more");
+}
+
+function parseBinding(value: Record<string, unknown>, name: string) {
+    return {
+        path: requiredText(value.path, `${name}.path`),
+        ...(text(value.fallback) ? { fallback: text(value.fallback)! } : {}),
+    };
+}
+
+function parseOptions(value: unknown, name: string): DashboardOption[] {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return value.map((entry, index) => parseOption(entry, `${name}.${index}`));
+}
+
+function parseOption(value: unknown, name: string): DashboardOption {
+    if (typeof value === "string") return { value, label: value };
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be a string or object");
+    return {
+        value: requiredText(value.value, `${name}.value`),
+        label: requiredText(value.label, `${name}.label`),
+        ...(text(value.subtitle) ? { subtitle: text(value.subtitle)! } : {}),
+        ...(text(value.media) ? { media: text(value.media)! } : {}),
+    };
 }
 
 function parseStringList(value: unknown, name: string): string[] {
@@ -480,30 +550,6 @@ function parseStringMap(value: unknown, name: string): Record<string, string> {
         out[key] = requiredText(entry, `${name}.${key}`);
     }
     return out;
-}
-
-function parseRowActions(value: unknown, name: string): RowAction[] {
-    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
-    return value.map((entry, index) => parseRowAction(entry, `${name}.${index}`));
-}
-
-function parseRowAction(value: unknown, name: string): RowAction {
-    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    const action = text(value.action);
-    if (action !== "get" && action !== "create" && action !== "update" && action !== "patch" && action !== "delete") {
-        throw new IntegrationInputError(`${name}.action`, "must be get, create, update, patch, or delete");
-    }
-    if (value.body !== undefined && !isRecord(value.body)) {
-        throw new IntegrationInputError(`${name}.body`, "must be an object");
-    }
-    return {
-        widget: "w-table-row-action",
-        label: requiredText(value.label, `${name}.label`),
-        action,
-        ...(isRecord(value.body) ? { body: value.body } : {}),
-        ...(value.confirm === true ? { confirm: true } : {}),
-        ...(text(value.requires) ? { requires: text(value.requires)! } : {}),
-    };
 }
 
 function requiredText(value: unknown, name: string): string {

@@ -11,6 +11,7 @@ export type WidgetFieldValue = string | string[] | DashboardMediaItem[];
 export type WidgetAction = {
     label: string;
     tone?: "primary" | "secondary" | "danger";
+    placement?: "primary" | "secondary" | "more";
     action?: string;
     section?: string;
     icon?: "archive" | "download" | "link" | "trash";
@@ -29,6 +30,7 @@ export type WidgetFieldChangeDetail = {
     rowKey: string;
     field: string;
     value: WidgetFieldValue;
+    created?: boolean;
 };
 
 export type WidgetMediaActionDetail = DashboardMediaActionDetail & {

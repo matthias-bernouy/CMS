@@ -77,6 +77,5 @@ function isDashboard(value: unknown): value is Dashboard {
         && !Array.isArray(value)
         && typeof (value as { id?: unknown }).id === "string"
         && typeof (value as { source?: unknown }).source === "string"
-        && Array.isArray((value as { collections?: unknown }).collections)
         && Array.isArray((value as { views?: unknown }).views);
 }
