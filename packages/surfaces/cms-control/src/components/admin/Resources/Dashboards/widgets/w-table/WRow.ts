@@ -14,6 +14,7 @@ template.innerHTML = `
             min-height: 54px;
             border-top: 1px solid #e8ecea;
             cursor: pointer;
+            min-width: 0;
         }
 
         .row:hover,
@@ -38,7 +39,7 @@ template.innerHTML = `
 
         ::slotted(cms-dashboard-w-cell) {
             min-width: 0;
-            padding: 13px 16px;
+            padding: 12px 16px;
         }
     </style>
     <div class="row" role="row" tabindex="0">

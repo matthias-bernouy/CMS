@@ -2385,6 +2385,11 @@ input:disabled {
     padding: 0;
 }
 
+.clear[hidden],
+.chevron[hidden] {
+    display: none;
+}
+
 .clear:hover {
     background: var(--bg-hover, #f1f4f3);
     color: var(--text-main, #1e293b);
@@ -13870,6 +13875,7 @@ p {
             min-height: 54px;
             border-top: 1px solid #e8ecea;
             cursor: pointer;
+            min-width: 0;
         }
 
         .row:hover,
@@ -13894,7 +13900,7 @@ p {
 
         ::slotted(cms-dashboard-w-cell) {
             min-width: 0;
-            padding: 13px 16px;
+            padding: 12px 16px;
         }
     </style>
     <div class="row" role="row" tabindex="0">
@@ -13958,11 +13964,11 @@ p {
 }
 
 .w-table-shell {
-    overflow: hidden;
-    border: 1px solid #d9dfdc;
-    border-radius: 8px;
+    min-width: 0;
+    overflow: clip;
+    border: 1px solid #e3e8e5;
+    border-radius: 7px;
     background: #fff;
-    box-shadow: 0 1px 2px rgb(15 31 26 / 6%);
 }
 
 .w-table-header {
@@ -13970,11 +13976,12 @@ p {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e8ecea;
 }
 
-.w-table-header {
-    border-bottom: 1px solid #e8ecea;
+.w-table-header[hidden] {
+    display: none;
 }
 
 .w-table-header h3,
@@ -13988,16 +13995,19 @@ small,
     color: #66736f;
 }
 
-.w-table-frame,
-.w-table-grid {
+.w-table-frame {
+    min-width: 0;
     overflow: auto;
+}
+
+.w-table-grid {
+    min-width: 0;
 }
 
 .w-table-head {
     display: grid;
     grid-template-columns: var(--dashboard-table-columns);
     align-items: center;
-    min-width: max-content;
     background: #f7f8f7;
 }
 
@@ -14005,7 +14015,7 @@ small,
     color: #3d4a46;
     font-size: 12px;
     font-weight: 750;
-    padding: 13px 16px;
+    padding: 12px 16px;
     text-align: left;
 }
 
@@ -14016,7 +14026,7 @@ small,
 }
 
 .w-table-body {
-    min-width: max-content;
+    min-width: 0;
 }
 
 slot {
@@ -14032,7 +14042,7 @@ slot {
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
   var template_default5 = `<section class="w-table-shell">
-    <header class="w-table-header">
+    <header class="w-table-header" data-header>
         <div>
             <h3 data-title></h3>
             <p data-subtitle></p>
@@ -14095,6 +14105,7 @@ slot {
     render() {
       setText(this.shadowRoot, "[data-title]", this.value.title);
       setText(this.shadowRoot, "[data-subtitle]", this.value.subtitle ?? "");
+      this.query("[data-header]").hidden = !this.value.subtitle;
       this.renderColumns();
       this.syncRows();
     }
@@ -14170,7 +14181,7 @@ slot {
   if (!customElements.get("cms-dashboard-w-table"))
     customElements.define("cms-dashboard-w-table", DashboardWTable);
   function tableColumns(columns) {
-    return ["46px", ...columns.map((column) => column.width ?? "minmax(0, 1fr)")].join(" ");
+    return ["46px", ...columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" ");
   }
   function parseJson(value) {
     if (!value)

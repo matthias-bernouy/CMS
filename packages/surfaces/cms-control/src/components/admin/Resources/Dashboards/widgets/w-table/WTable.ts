@@ -54,6 +54,7 @@ export class DashboardWTable extends Component {
     private render(): void {
         setText(this.shadowRoot!, "[data-title]", this.value.title);
         setText(this.shadowRoot!, "[data-subtitle]", this.value.subtitle ?? "");
+        this.query<HTMLElement>("[data-header]").hidden = !this.value.subtitle;
         this.renderColumns();
         this.syncRows();
     }
@@ -136,7 +137,7 @@ export type { WTableColumn, WTableData, WTableRow };
 type TableWidget = Extract<DashboardWidget, { widget: "w-table" }>;
 
 function tableColumns(columns: WTableColumn[]): string {
-    return ["46px", ...columns.map(column => column.width ?? "minmax(0, 1fr)")].join(" ");
+    return ["46px", ...columns.map(column => column.width ?? "minmax(7rem, 1fr)")].join(" ");
 }
 
 function parseJson<T>(value: string): T | null {

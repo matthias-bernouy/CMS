@@ -100,6 +100,11 @@ input:disabled {
     padding: 0;
 }
 
+.clear[hidden],
+.chevron[hidden] {
+    display: none;
+}
+
 .clear:hover {
     background: var(--bg-hover, #f1f4f3);
     color: var(--text-main, #1e293b);
