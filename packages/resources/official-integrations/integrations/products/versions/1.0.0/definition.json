@@ -116,6 +116,16 @@
     ],
     "artifacts": [
         {
+            "type": "bloc",
+            "bloc": {
+                "tag": "product-search",
+                "name": "Product search",
+                "group": "Products",
+                "description": "Form-associated product picker that searches the Products source and submits the selected product id.",
+                "path": "blocs/product-search"
+            }
+        },
+        {
             "type": "source",
             "source": {
                 "id": "{{answers.id}}",
@@ -329,6 +339,12 @@
                                         "type": "string"
                                     }
                                 },
+                                "variantAxes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                },
                                 "status": {
                                     "type": "string"
                                 },
@@ -360,6 +376,36 @@
                                 }
                             }
                         }
+                    },
+                    {
+                        "endpointId": "deleteProduct",
+                        "method": "DELETE",
+                        "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-products/product",
+                        "params": [
+                            {
+                                "name": "id",
+                                "in": "query",
+                                "type": "string",
+                                "required": true
+                            }
+                        ],
+                        "headers": [
+                            {
+                                "name": "authorization",
+                                "source": {
+                                    "from": "secret",
+                                    "ref": "{{secrets.cmsApiKey}}",
+                                    "prefix": "Bearer "
+                                }
+                            },
+                            {
+                                "name": "x-cms-user-id",
+                                "source": {
+                                    "from": "computed",
+                                    "ref": "userID"
+                                }
+                            }
+                        ]
                     },
                     {
                         "endpointId": "productImage",
@@ -2077,6 +2123,17 @@
                                             "itemsPath": "items"
                                         },
                                         "rowKey": "id",
+                                        "actions": [
+                                            {
+                                                "id": "createProduct",
+                                                "label": "Create product",
+                                                "placement": "primary",
+                                                "tone": "primary",
+                                                "selection": {
+                                                    "opens": "productDetail"
+                                                }
+                                            }
+                                        ],
                                         "filters": [
                                             {
                                                 "id": "q",
@@ -2190,6 +2247,7 @@
                                                         "description": "$field.description",
                                                         "brandId": "$field.brandId",
                                                         "categoryIds": "$field.categoryIds",
+                                                        "variantAxes": "$field.variantAxes",
                                                         "status": "$field.status",
                                                         "visibility": "$field.visibility"
                                                     }
@@ -2208,6 +2266,20 @@
                                                     },
                                                     "body": {
                                                         "status": "archived"
+                                                    }
+                                                },
+                                                "section": "Other actions"
+                                            },
+                                            {
+                                                "id": "deleteProduct",
+                                                "label": "Delete product",
+                                                "placement": "more",
+                                                "tone": "danger",
+                                                "icon": "trash",
+                                                "endpoint": {
+                                                    "endpoint": "deleteProduct",
+                                                    "params": {
+                                                        "id": "$resource.id"
                                                     }
                                                 },
                                                 "section": "Other actions"
@@ -2295,56 +2367,60 @@
                                                 "title": "Variants",
                                                 "fields": [
                                                     {
-                                                        "id": "variantOptionsSummary",
-                                                        "label": "Selected options",
-                                                        "path": "variantOptionsSummary",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "variantsSummary",
-                                                        "label": "Generated variants",
-                                                        "path": "variantsSummary",
-                                                        "type": "readonly"
-                                                    },
-                                                    {
-                                                        "id": "variantAxisAttributeId",
-                                                        "label": "Option group attribute",
-                                                        "path": "variantAxisAttributeId",
-                                                        "type": "combobox",
-                                                        "lookup": {
-                                                            "endpoint": "attributes",
-                                                            "params": {
-                                                                "q": "$search",
-                                                                "limit": "10"
+                                                        "id": "variantAxes",
+                                                        "label": "Axes",
+                                                        "path": "variantAxes",
+                                                        "type": "table",
+                                                        "editable": true,
+                                                        "columns": [
+                                                            {
+                                                                "id": "label",
+                                                                "label": "Label",
+                                                                "path": "label",
+                                                                "width": "minmax(10rem, 0.8fr)",
+                                                                "editable": true
                                                             },
-                                                            "itemsPath": "items",
-                                                            "valuePath": "id",
-                                                            "labelPath": "name",
-                                                            "subtitlePath": "code",
-                                                            "selected": {
-                                                                "endpoint": "attribute",
-                                                                "params": {
-                                                                    "id": "$value"
-                                                                }
+                                                            {
+                                                                "id": "values",
+                                                                "label": "Values",
+                                                                "path": "values",
+                                                                "width": "minmax(14rem, 1.2fr)",
+                                                                "editable": true,
+                                                                "value": "list"
                                                             }
-                                                        }
+                                                        ]
                                                     },
                                                     {
-                                                        "id": "variantAxisOptionIds",
-                                                        "label": "Product options",
-                                                        "path": "variantAxisOptionIds",
-                                                        "type": "tokens",
-                                                        "lookup": {
-                                                            "endpoint": "attributeOptions",
-                                                            "params": {
-                                                                "attributeId": "$field.variantAxisAttributeId",
-                                                                "limit": "100"
-                                                            },
-                                                            "itemsPath": "items",
-                                                            "valuePath": "id",
+                                                        "id": "variantMatrix",
+                                                        "label": "Matrix",
+                                                        "path": "variantMatrix",
+                                                        "type": "table",
+                                                        "derive": {
+                                                            "type": "cartesian",
+                                                            "sourceField": "variantAxes",
                                                             "labelPath": "label",
-                                                            "subtitlePath": "value"
-                                                        }
+                                                            "valuesPath": "values"
+                                                        },
+                                                        "columns": [
+                                                            {
+                                                                "id": "options",
+                                                                "label": "Options",
+                                                                "path": "options",
+                                                                "width": "minmax(12rem, 1fr)"
+                                                            },
+                                                            {
+                                                                "id": "title",
+                                                                "label": "Variant",
+                                                                "path": "title",
+                                                                "width": "minmax(14rem, 1.2fr)"
+                                                            },
+                                                            {
+                                                                "id": "status",
+                                                                "label": "Status",
+                                                                "path": "status",
+                                                                "width": "7rem"
+                                                            }
+                                                        ]
                                                     }
                                                 ]
                                             }

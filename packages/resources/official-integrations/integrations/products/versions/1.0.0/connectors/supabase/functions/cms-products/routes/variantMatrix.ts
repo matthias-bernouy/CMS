@@ -3,9 +3,10 @@ import { HttpError } from "../core/errors.ts";
 import { json, withMethod } from "../core/http.ts";
 import { listQuery, listResponse, queryText, requiredPositiveInteger } from "../core/query.ts";
 import { camelizeRecord } from "../core/records.ts";
-import { restJson } from "../core/rest.ts";
+import { getOne, restJson } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
 import { insertRow } from "../writes/rows.ts";
+import { localVariantAxesFromProduct, syncProductVariants } from "./localVariantAxes.ts";
 
 const axisSelect = "id,product_id,attribute_id,position,attributes(id,code,name,data_type)";
 const axisOptionSelect = [
@@ -54,6 +55,9 @@ export async function generateProductVariants(request: Request): Promise<Respons
     requireCmsWriteRequest(request);
     return await withMethod(request, "POST", async () => {
         const productId = requiredPositiveInteger(new URL(request.url).searchParams.get("productId"), "productId");
+        const product = await getOne("products", { id: productId }, "id,metadata");
+        const localAxes = product ? localVariantAxesFromProduct(product) : [];
+        if (localAxes.length) return json(await syncProductVariants(productId, localAxes));
         const groups = await variantGroups(productId);
         const combinations = cartesian(groups);
         const existing = await existingCombinationKeys(productId, groups.map(group => group[0]!.attributeId));

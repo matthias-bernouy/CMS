@@ -1,14 +1,35 @@
 import type { WidgetAction } from "../shared";
 import type { DashboardMediaItem } from "../w-media-field/types";
 
-export type WDetailFieldValue = string | string[] | DashboardMediaItem[];
+export type WDetailTableColumn = {
+    key: string;
+    label: string;
+    path: string;
+    width?: string;
+    editable?: boolean;
+    value?: "text" | "list";
+};
+
+export type WDetailTableDerive = {
+    type: "cartesian";
+    sourceField: string;
+    labelPath: string;
+    valuesPath: string;
+};
+
+export type WDetailTableRow = Record<string, unknown>;
+
+export type WDetailFieldValue = string | string[] | DashboardMediaItem[] | WDetailTableRow[];
 
 export type WDetailField = {
     id: string;
     label: string;
     value: WDetailFieldValue;
-    input: "text" | "textarea" | "select" | "combobox" | "tokens" | "chips" | "media-list" | "readonly" | "badge";
+    input: "text" | "textarea" | "select" | "combobox" | "tokens" | "chips" | "media-list" | "table" | "readonly" | "badge";
     options?: Array<{ label: string; value: string }>;
+    columns?: WDetailTableColumn[];
+    derive?: WDetailTableDerive;
+    editable?: boolean;
     placeholder?: string;
     creatable?: boolean;
     accept?: string;

@@ -19,6 +19,8 @@ export type {
     DashboardMeta,
     DashboardOption,
     DashboardSection,
+    DashboardTableColumn,
+    DashboardTableDerive,
     DashboardVisibilityRule,
     DashboardWidget,
 } from "../interfaces/Dashboard";

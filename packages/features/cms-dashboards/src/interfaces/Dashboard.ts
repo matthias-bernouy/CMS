@@ -81,6 +81,12 @@ export type DashboardField =
     | (DashboardFieldBase & { type: "combobox" } & DashboardSelectableField)
     | (DashboardFieldBase & { type: "tokens" } & DashboardSelectableField)
     | (DashboardFieldBase & {
+        type: "table";
+        columns: DashboardTableColumn[];
+        editable?: boolean;
+        derive?: DashboardTableDerive;
+    })
+    | (DashboardFieldBase & {
         type: "media";
         multiple?: boolean;
         item: {
@@ -111,6 +117,18 @@ export type DashboardColumn = {
     format?: "text" | "badge" | "date" | "money";
 };
 
+export type DashboardTableColumn = DashboardColumn & {
+    editable?: boolean;
+    value?: "text" | "list";
+};
+
+export type DashboardTableDerive = {
+    type: "cartesian";
+    sourceField: string;
+    labelPath: string;
+    valuesPath: string;
+};
+
 export type DashboardFilter = {
     id: string;
     label: string;
@@ -128,7 +146,8 @@ export type DashboardAction = {
     tone?: "primary" | "secondary" | "danger";
     placement?: "primary" | "secondary" | "more";
     section?: string;
-    endpoint: DashboardEndpointRef;
+    endpoint?: DashboardEndpointRef;
+    selection?: { opens?: string };
     confirm?: string;
 };
 
@@ -143,6 +162,7 @@ export type DashboardWidget =
         filters?: DashboardFilter[];
         pageSize?: number;
         selection?: { opens?: string };
+        actions?: DashboardAction[];
     }
     | {
         widget: "w-detail";

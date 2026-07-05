@@ -125,6 +125,12 @@ export class DashboardView extends Component {
             showToast(`${event.detail.action} clicked`, { type: "success" });
             return;
         }
+        if (event.detail.target) {
+            this.detailSelection = { collection: event.detail.target, row: "__new__" };
+            if (!this.isExampleMode()) pushSelectionUrl(this.selection());
+            this.render();
+            return;
+        }
         void runDashboardWidgetAction(this.actionContext(), event.detail);
     };
 
@@ -163,7 +169,21 @@ export class DashboardView extends Component {
             drafts: this.drafts,
             render: () => this.render(),
             reload: (collection: string, row: string) => this.reloadDetail(collection, row),
+            clearDetail: () => this.clearDetail(),
+            openDetail: (collection: string, row: string) => this.openDetail(collection, row),
         };
+    }
+
+    private openDetail(collection: string, row: string): void {
+        this.detailSelection = { collection, row };
+        if (!this.isExampleMode()) replaceSelectionUrl(this.selection());
+        this.render();
+    }
+
+    private clearDetail(): void {
+        this.detailSelection = null;
+        if (!this.isExampleMode()) replaceSelectionUrl(this.selection());
+        this.render();
     }
 
     private reloadDetail(collection: string, row: string): void {

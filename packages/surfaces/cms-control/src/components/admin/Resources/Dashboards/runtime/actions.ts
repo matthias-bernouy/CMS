@@ -21,6 +21,7 @@ export async function executeDashboardAction(
     if (!widget) throw new Error(`Dashboard action target "${detail.collection}" was not found`);
     const action = widget.actions?.find(item => item.id === actionId);
     if (!action) throw new Error(`Dashboard action "${actionId}" was not found`);
+    if (!action.endpoint) throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
     const fields = { ...fieldValues(widget, resource), ...draft };
     return sendSourceJson(group.source.id, action.endpoint, endpointMethod(group, action.endpoint.endpoint), {

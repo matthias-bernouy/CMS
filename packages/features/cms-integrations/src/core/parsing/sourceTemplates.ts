@@ -10,6 +10,8 @@ import type {
     DashboardLookupRef,
     DashboardOption,
     DashboardSection,
+    DashboardTableColumn,
+    DashboardTableDerive,
     DashboardWidget,
 } from "@bernouy/cms-dashboards";
 import type {
@@ -234,6 +236,7 @@ function parseWidget(value: unknown, name: string): DashboardWidget {
                 ...(value.filters !== undefined ? { filters: parseFilters(value.filters, `${name}.filters`) } : {}),
                 ...(typeof value.pageSize === "number" ? { pageSize: value.pageSize } : {}),
                 ...(isRecord(value.selection) ? { selection: parseSelection(value.selection, `${name}.selection`) } : {}),
+                ...(value.actions !== undefined ? { actions: parseActions(value.actions, `${name}.actions`) } : {}),
             };
         case "w-detail":
             if (!isRecord(value.source)) throw new IntegrationInputError(`${name}.source`, "must be an object");
@@ -378,6 +381,14 @@ function parseField(value: unknown, name: string): DashboardField {
                 ...(value.lookup !== undefined ? { lookup: parseLookup(value.lookup, `${name}.lookup`) } : {}),
                 ...(value.allowCustom === true ? { allowCustom: true } : {}),
             };
+        case "table":
+            return {
+                ...base,
+                type,
+                columns: parseTableColumns(value.columns, `${name}.columns`),
+                ...(value.editable === true ? { editable: true } : {}),
+                ...(value.derive !== undefined ? { derive: parseTableDerive(value.derive, `${name}.derive`) } : {}),
+            };
         case "media":
             return {
                 ...base,
@@ -393,8 +404,36 @@ function parseField(value: unknown, name: string): DashboardField {
                 ...(parseReadonlyFormat(value.format, `${name}.format`) ? { format: parseReadonlyFormat(value.format, `${name}.format`)! } : {}),
             };
         default:
-            throw new IntegrationInputError(`${name}.type`, "must be text, textarea, select, combobox, tokens, media, or readonly");
+            throw new IntegrationInputError(`${name}.type`, "must be text, textarea, select, combobox, tokens, table, media, or readonly");
     }
+}
+
+function parseTableColumns(value: unknown, name: string): DashboardTableColumn[] {
+    if (!Array.isArray(value)) throw new IntegrationInputError(name, "must be an array");
+    return value.map((entry, index) => parseTableColumn(entry, `${name}.${index}`));
+}
+
+function parseTableColumn(value: unknown, name: string): DashboardTableColumn {
+    const column = parseColumn(value, name) as DashboardTableColumn;
+    if (!isRecord(value)) return column;
+    if (value.editable === true) column.editable = true;
+    if (value.value !== undefined) {
+        if (value.value !== "text" && value.value !== "list") throw new IntegrationInputError(`${name}.value`, "must be text or list");
+        column.value = value.value;
+    }
+    return column;
+}
+
+function parseTableDerive(value: unknown, name: string): DashboardTableDerive {
+    if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
+    const type = requiredText(value.type, `${name}.type`);
+    if (type !== "cartesian") throw new IntegrationInputError(`${name}.type`, "must be cartesian");
+    return {
+        type,
+        sourceField: requiredText(value.sourceField, `${name}.sourceField`),
+        labelPath: requiredText(value.labelPath, `${name}.labelPath`),
+        valuesPath: requiredText(value.valuesPath, `${name}.valuesPath`),
+    };
 }
 
 function parseFieldVisibility(value: unknown, name: string): NonNullable<DashboardField["visibleWhen"]> {
@@ -490,7 +529,7 @@ function parseActions(value: unknown, name: string): DashboardAction[] {
 
 function parseAction(value: unknown, name: string): DashboardAction {
     if (!isRecord(value)) throw new IntegrationInputError(name, "must be an object");
-    if (!isRecord(value.endpoint)) throw new IntegrationInputError(`${name}.endpoint`, "must be an object");
+    if (value.endpoint !== undefined && !isRecord(value.endpoint)) throw new IntegrationInputError(`${name}.endpoint`, "must be an object");
     return {
         id: requiredText(value.id, `${name}.id`),
         label: requiredText(value.label, `${name}.label`),
@@ -498,7 +537,8 @@ function parseAction(value: unknown, name: string): DashboardAction {
         ...(parseActionTone(value.tone, `${name}.tone`) ? { tone: parseActionTone(value.tone, `${name}.tone`)! } : {}),
         ...(parseActionPlacement(value.placement, `${name}.placement`) ? { placement: parseActionPlacement(value.placement, `${name}.placement`)! } : {}),
         ...(text(value.section) ? { section: text(value.section)! } : {}),
-        endpoint: parseEndpointRef(value.endpoint, `${name}.endpoint`),
+        ...(value.endpoint !== undefined ? { endpoint: parseEndpointRef(value.endpoint, `${name}.endpoint`) } : {}),
+        ...(isRecord(value.selection) ? { selection: parseSelection(value.selection, `${name}.selection`) } : {}),
         ...(text(value.confirm) ? { confirm: text(value.confirm)! } : {}),
     };
 }

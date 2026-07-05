@@ -2,6 +2,12 @@ import { camelizeRecord, camelizeValue } from "../core/records.ts";
 import { getOne, restJson } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
 import { enrichVariants, mainMediaId, variantSelect } from "./variantDetails.ts";
+import {
+    localVariantAxesFromProduct,
+    variantMatrixRows,
+    variantOptionGroupsFromAxes,
+    variantOptionsSummaryFromAxes,
+} from "./localVariantAxes.ts";
 
 const productMediaSelect = [
     "id",
@@ -22,7 +28,10 @@ export async function productDetail(row: JsonRecord): Promise<JsonRecord> {
         related("product_variant_axis_options", productId, "id,product_id,attribute_id,option_id,position,attribute_options(id,attribute_id,value,label,position)", "position.asc"),
         related("product_attribute_values", productId, "id,product_id,attribute_id,option_id,value_text,attributes(id,code,name,data_type),attribute_options(id,value,label)"),
     ]);
-    const variantOptionGroups = buildVariantOptionGroups(variantAxes, variantAxisOptions);
+    const localAxes = localVariantAxesFromProduct(row);
+    const variantOptionGroups = localAxes.length
+        ? variantOptionGroupsFromAxes(localAxes)
+        : buildVariantOptionGroups(variantAxes, variantAxisOptions);
     const enrichedVariants = await enrichVariants(variants);
 
     return {
@@ -35,9 +44,12 @@ export async function productDetail(row: JsonRecord): Promise<JsonRecord> {
         variantsSummary: variantsSummary(enrichedVariants),
         categories: categories.map(camelizeValue),
         media: media.map(camelizeValue),
-        variantAxes: variantAxes.map(axis => camelizeValue(withAxisOptionsSummary(axis, variantAxisOptions))),
+        variantAxes: localAxes.length
+            ? localAxes.map(axis => ({ label: axis.label, values: axis.values, position: axis.position }))
+            : variantAxes.map(axis => camelizeValue(withAxisOptionsSummary(axis, variantAxisOptions))),
+        variantMatrix: variantMatrixRows(localAxes, variants),
         variantOptionGroups,
-        variantOptionsSummary: variantOptionsSummary(variantOptionGroups),
+        variantOptionsSummary: localAxes.length ? variantOptionsSummaryFromAxes(localAxes) : variantOptionsSummary(variantOptionGroups),
         attributeValues: attributeValues.map(camelizeValue),
     };
 }

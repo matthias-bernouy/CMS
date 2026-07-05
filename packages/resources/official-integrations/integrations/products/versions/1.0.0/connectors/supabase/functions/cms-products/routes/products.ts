@@ -5,6 +5,7 @@ import { appendEqualQuery, appendTextSearch, limitParam, listQuery, listResponse
 import { productDetail } from "./productDetail.ts";
 import { getOne, restJson, rowByIdOrSlug } from "../core/rest.ts";
 import type { JsonRecord } from "../core/types.ts";
+import { productDefaultsData } from "./defaults.ts";
 
 const productSelect = "id,slug,title,description,brand_id,status,visibility,metadata,created_at,updated_at";
 
@@ -35,7 +36,9 @@ export async function products(request: Request): Promise<Response> {
 
 export async function product(request: Request): Promise<Response> {
     requireCmsRequest(request);
-    const row = await rowByIdOrSlug("products", new URL(request.url), productSelect);
+    const url = new URL(request.url);
+    if (url.searchParams.get("id") === "__new__") return json(productDefaultsData());
+    const row = await rowByIdOrSlug("products", url, productSelect);
     if (!row) throw new HttpError(404, "product not found");
     return json(await productDetail(row));
 }

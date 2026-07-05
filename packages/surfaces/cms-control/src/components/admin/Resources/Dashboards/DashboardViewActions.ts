@@ -12,6 +12,8 @@ export type DashboardViewActionContext = {
     drafts: Map<string, Record<string, unknown>>;
     render: () => void;
     reload: (collection: string, row: string) => void;
+    clearDetail: () => void;
+    openDetail: (collection: string, row: string) => void;
 };
 
 export async function runDashboardWidgetAction(context: DashboardViewActionContext, action: WidgetActionDetail): Promise<void> {
@@ -19,16 +21,26 @@ export async function runDashboardWidgetAction(context: DashboardViewActionConte
     if (!group || !dashboard || !detail) return;
     const key = detailKey(detail.collection, detail.row);
     try {
-        await executeDashboardAction(group, dashboard, detail, action.action, {
+        const result = await executeDashboardAction(group, dashboard, detail, action.action, {
             ...(context.drafts.get(key) ?? {}),
             ...(action.fields ?? {}),
         }, action.resource);
         context.drafts.delete(key);
         showToast(`${action.action} completed`, { type: "success" });
-        context.reload(detail.collection, detail.row);
+        if (action.action.startsWith("delete")) context.clearDetail();
+        else if (detail.row === "__new__" && createdId(result)) context.openDetail(detail.collection, createdId(result)!);
+        else context.reload(detail.collection, detail.row);
     } catch (error) {
         showToast(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
+}
+
+function createdId(value: unknown): string | null {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+    const id = (value as Record<string, unknown>).id;
+    if (typeof id === "string" && id.trim()) return id;
+    if (typeof id === "number" && Number.isFinite(id)) return String(id);
+    return null;
 }
 
 export async function runDashboardMediaAction(context: DashboardViewActionContext, media: WidgetMediaActionDetail): Promise<void> {

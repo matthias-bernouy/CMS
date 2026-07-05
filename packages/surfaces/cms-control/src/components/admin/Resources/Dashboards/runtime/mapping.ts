@@ -11,6 +11,12 @@ export type DetailOptions = Record<string, DashboardOption[]>;
 export function tableData(widget: TableWidget, items: unknown[]): WTableData {
     return {
         title: widget.title ?? pathLabel(widget.source.endpoint),
+        actions: (widget.actions ?? []).map(action => ({
+            label: action.label,
+            action: action.id,
+            ...(action.selection?.opens ? { target: action.selection.opens } : {}),
+            tone: action.tone,
+        })),
         columns: widget.columns.map(column => ({
             key: column.id,
             label: column.label,
@@ -67,6 +73,21 @@ function detailField(field: DashboardField, resource: unknown, dynamicOptions: D
     if (field.type === "select") return { ...base, input: "select", value: textValue(value), options: field.options.map(optionData) };
     if (field.type === "combobox") return { ...base, input: "combobox", value: textValue(value), options: optionList(field.options, dynamicOptions), creatable: isCreatable(field) };
     if (field.type === "tokens") return { ...base, input: "tokens", value: tokenValue(value), options: optionList(field.options, dynamicOptions), creatable: isCreatable(field) };
+    if (field.type === "table") return {
+        ...base,
+        input: "table",
+        value: tableValue(value),
+        columns: field.columns.map(column => ({
+            key: column.id,
+            label: column.label,
+            path: column.path,
+            ...(column.width ? { width: column.width } : {}),
+            ...(column.editable === true ? { editable: true } : {}),
+            ...(column.value ? { value: column.value } : {}),
+        })),
+        ...(field.derive ? { derive: field.derive } : {}),
+        ...(field.editable === true ? { editable: true } : {}),
+    };
     if (field.type === "media") return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
     if (field.type === "readonly") return { ...base, input: field.format === "badge" ? "badge" : "readonly", value: textValue(value) };
     return { ...base, input: "text", value: textValue(value) };
@@ -117,6 +138,12 @@ function textValue(value: unknown): string {
 
 function tokenValue(value: unknown): string[] {
     return Array.isArray(value) ? value.map(textValue).filter(Boolean) : textValue(value).split(",").map(item => item.trim()).filter(Boolean);
+}
+
+function tableValue(value: unknown): Record<string, unknown>[] {
+    return Array.isArray(value)
+        ? value.filter((item): item is Record<string, unknown> => item !== null && typeof item === "object" && !Array.isArray(item))
+        : [];
 }
 
 function isActionIcon(value: string | undefined): value is "archive" | "download" | "link" | "trash" {

@@ -1,6 +1,6 @@
 import { Component } from "@bernouy/components/base";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import { setText } from "../shared";
+import { emitWidgetEvent, setText, WIDGET_ACTION_EVENT } from "../shared";
 import "./WCell";
 import { type DashboardWRow } from "./WRow";
 import "./WRow";
@@ -9,7 +9,7 @@ import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
 export class DashboardWTable extends Component {
-    private value: WTableData = { title: "", columns: [], rows: [] };
+    private value: WTableData = { title: "", actions: [], columns: [], rows: [] };
     private selectedRow = "";
 
     constructor() {
@@ -42,6 +42,7 @@ export class DashboardWTable extends Component {
     override connectedCallback(): void {
         this.shadowRoot!.querySelector<HTMLSlotElement>("slot")?.addEventListener("slotchange", this.onSlotChange);
         this.shadowRoot!.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
+        this.shadowRoot!.querySelector("[data-actions]")?.addEventListener("click", this.onActionClick);
         this.syncConfig();
         this.render();
     }
@@ -49,14 +50,28 @@ export class DashboardWTable extends Component {
     disconnectedCallback(): void {
         this.shadowRoot?.querySelector<HTMLSlotElement>("slot")?.removeEventListener("slotchange", this.onSlotChange);
         this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
+        this.shadowRoot?.querySelector("[data-actions]")?.removeEventListener("click", this.onActionClick);
     }
 
     private render(): void {
         setText(this.shadowRoot!, "[data-title]", this.value.title);
         setText(this.shadowRoot!, "[data-subtitle]", this.value.subtitle ?? "");
-        this.query<HTMLElement>("[data-header]").hidden = !this.value.subtitle;
+        this.query<HTMLElement>("[data-header]").hidden = !this.value.subtitle && !(this.value.actions?.length);
+        this.renderActions();
         this.renderColumns();
         this.syncRows();
+    }
+
+    private renderActions(): void {
+        const root = this.query<HTMLElement>("[data-actions]");
+        root.replaceChildren(...(this.value.actions ?? []).map(action => {
+            const button = document.createElement("p9r-button");
+            button.dataset.action = action.action;
+            if (action.target) button.dataset.target = action.target;
+            button.setAttribute("tone", action.tone ?? "primary");
+            button.textContent = action.label;
+            return button;
+        }));
     }
 
     private renderColumns(): void {
@@ -78,6 +93,12 @@ export class DashboardWTable extends Component {
         if (!widget || widget.widget !== "w-table") return;
         this.value = {
             title: widget.title ?? widget.source.endpoint,
+            actions: (widget.actions ?? []).map(action => ({
+                label: action.label,
+                action: action.id,
+                ...(action.selection?.opens ? { target: action.selection.opens } : {}),
+                tone: action.tone,
+            })),
             columns: widget.columns.map(column => ({
                 key: column.id,
                 label: column.label,
@@ -119,6 +140,14 @@ export class DashboardWTable extends Component {
     }
 
     private onSlotChange = (): void => this.syncRows();
+
+    private onActionClick = (event: Event): void => {
+        const action = (event.target as Element | null)?.closest<HTMLElement>("[data-action]");
+        if (action?.dataset.action) emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
+            action: action.dataset.action,
+            target: action.dataset.target,
+        });
+    };
 
     private onSelectAll = (event: Event): void => {
         const checked = Boolean((event.target as HTMLInputElement | null)?.checked);

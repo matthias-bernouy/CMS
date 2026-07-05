@@ -154,8 +154,63 @@ dd {
 
 p9r-input,
 p9r-select,
-p9r-textarea {
+p9r-textarea,
+p9r-combobox,
+p9r-token-input {
     width: 100%;
+}
+
+.detail-table {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+}
+
+.detail-table-row {
+    display: grid;
+    grid-template-columns: var(--detail-table-columns);
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+    min-height: 34px;
+}
+
+.detail-table-head {
+    color: #66736f;
+    font-size: 11px;
+    font-weight: 750;
+    text-transform: uppercase;
+}
+
+.detail-table-row > span {
+    min-width: 0;
+}
+
+.detail-table[data-table-editable="false"] .detail-table-row:not(.detail-table-head) {
+    color: #16231f;
+    font-size: 13px;
+}
+
+.detail-table p9r-input {
+    --_field-min-height: 34px;
+    --_field-padding-y: 5px;
+    --_field-padding-x: 9px;
+    --_field-font-size: 13px;
+}
+
+.detail-table-add,
+.detail-table-remove {
+    min-height: 30px;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.detail-table-add {
+    width: fit-content;
+}
+
+.detail-table-remove {
+    color: #8a1f12;
 }
 
 .badge,

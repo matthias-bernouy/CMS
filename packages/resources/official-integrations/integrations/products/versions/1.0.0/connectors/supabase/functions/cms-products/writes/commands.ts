@@ -42,9 +42,15 @@ export async function writeCommand(
 async function normalizeWriteRow(body: JsonRecord, spec: WriteSpec, omitPayloadKeys: string[]): Promise<JsonRecord> {
     const row = toDbRow(writePayload(body));
     omitKeys(row, omitPayloadKeys);
+    if (spec.table === "products") normalizeProductRow(row);
     const externalId = await resolveExternalReference(body, spec.entityType);
     if (externalId && !row.id) row.id = externalId;
     return row;
+}
+
+function normalizeProductRow(row: JsonRecord): void {
+    if (row.brand_id === "") row.brand_id = null;
+    if (row.description === "") row.description = null;
 }
 
 function omitKeys(row: JsonRecord, keys: string[]): void {

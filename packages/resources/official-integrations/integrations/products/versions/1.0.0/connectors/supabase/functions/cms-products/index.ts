@@ -9,6 +9,7 @@ import { generateProductVariants, productVariantAxes, productVariantAxisOptions 
 import { attribute, attributeOptions, attributes } from "./routes/attributes.ts";
 import { mediaFile, mediaRemove, mediaReorder, mediaReplace, mediaUpload } from "./routes/media.ts";
 import { deleteById, deleteProductVariantAxis } from "./routes/deletes.ts";
+import { syncProductLocalVariantAxes } from "./routes/localVariantAxes.ts";
 import { writeAttributeCommand } from "./writes/attributes.ts";
 import { writeProductVariantAxisCommand } from "./writes/variantAxes.ts";
 import { syncVariantOptionValues } from "./writes/variantOptions.ts";
@@ -56,13 +57,14 @@ Deno.serve(async (request) => {
         if (route === "/product/defaults") return await withMethod(request, "GET", () => productDefaults(request));
         if (route === "/product") {
             if (request.method === "GET") return await product(request);
+            if (request.method === "DELETE") return await deleteById(request, "products");
             if (request.method === "POST") {
                 return await writeCommand(
                     request,
                     productSpec,
                     { table: "product_media", ownerKey: "product_id" },
                     [],
-                    { omitPayloadKeys: ["categoryIds"], afterWrite: syncProductCategories },
+                    { omitPayloadKeys: ["categoryIds", "variantAxes", "variantMatrix"], afterWrite: syncProductAfterWrite },
                 );
             }
         }
@@ -121,6 +123,11 @@ Deno.serve(async (request) => {
         return handleError(error);
     }
 });
+
+async function syncProductAfterWrite(id: string | number, body: Record<string, unknown>): Promise<void> {
+    await syncProductCategories(id, body);
+    await syncProductLocalVariantAxes(id, body);
+}
 
 function routePath(request: Request): string {
     const pathname = new URL(request.url).pathname.replace(/\/+$/, "");

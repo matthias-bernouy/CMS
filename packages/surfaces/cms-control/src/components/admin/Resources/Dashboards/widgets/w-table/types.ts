@@ -20,6 +20,12 @@ export type WTableRow = {
 export type WTableData = {
     title: string;
     subtitle?: string;
+    actions?: Array<{
+        label: string;
+        action: string;
+        target?: string;
+        tone?: "primary" | "secondary" | "danger";
+    }>;
     columns: WTableColumn[];
     rows: WTableRow[];
 };

@@ -115,6 +115,7 @@ function validateTableWidget(
     if (widget.selection?.opens && !widgetIds.has(widget.selection.opens)) {
         errors.push(`${path}.selection.opens references unknown widget "${widget.selection.opens}"`);
     }
+    widget.actions?.forEach((action, index) => validateAction(action, `${path}.actions.${index}`, dashboard, source, errors));
 }
 
 function validateDetailWidget(
@@ -251,11 +252,40 @@ function validateField(
         case "tokens":
             validateSelectableField(field, path, dashboard, source, errors);
             break;
+        case "table":
+            validateTableField(field, path, errors);
+            break;
         case "media":
             validateMediaField(field, path, dashboard, source, errors);
             break;
         default:
             errors.push(`${path}.type is not supported`);
+    }
+}
+
+function validateTableField(
+    field: Extract<DashboardField, { type: "table" }>,
+    path: string,
+    errors: string[],
+): void {
+    if (!Array.isArray(field.columns) || field.columns.length === 0) {
+        errors.push(`${path}.columns must be a non-empty array`);
+        return;
+    }
+    field.columns.forEach((column, index) => {
+        const columnPath = `${path}.columns.${index}`;
+        validateRequiredId(`${columnPath}.id`, column.id, errors);
+        if (!column.label) errors.push(`${columnPath}.label is required`);
+        validateRequiredPath("path", column.path, columnPath, errors);
+        if (column.value !== undefined && !["text", "list"].includes(column.value)) {
+            errors.push(`${columnPath}.value is not supported`);
+        }
+    });
+    if (field.derive) {
+        if (field.derive.type !== "cartesian") errors.push(`${path}.derive.type is not supported`);
+        if (!field.derive.sourceField) errors.push(`${path}.derive.sourceField is required`);
+        validateRequiredPath("derive.labelPath", field.derive.labelPath, path, errors);
+        validateRequiredPath("derive.valuesPath", field.derive.valuesPath, path, errors);
     }
 }
 
@@ -307,7 +337,28 @@ function validateAction(
         errors.push(`${path}.tone is not supported`);
     }
     if (action.section !== undefined && !action.section.trim()) errors.push(`${path}.section must be non-empty when provided`);
-    validateEndpointRef(dashboard, action.endpoint, `${path}.endpoint`, source, errors);
+    if (!action.endpoint && !action.selection) errors.push(`${path} must declare endpoint or selection`);
+    if (action.endpoint) validateEndpointRef(dashboard, action.endpoint, `${path}.endpoint`, source, errors);
+    if (action.selection?.opens && !findWidget(dashboard.views, action.selection.opens)) {
+        errors.push(`${path}.selection.opens references unknown widget "${action.selection.opens}"`);
+    }
+}
+
+function findWidget(widgets: DashboardWidget[], id: string): DashboardWidget | null {
+    for (const widget of widgets) {
+        if (widget.id === id) return widget;
+        if (widget.widget === "w-section") {
+            const found = findWidget(widget.children, id);
+            if (found) return found;
+        }
+        if (widget.widget === "w-tabs") {
+            for (const tab of widget.tabs) {
+                const found = findWidget(tab.children, id);
+                if (found) return found;
+            }
+        }
+    }
+    return null;
 }
 
 function validateLookup(

@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
+import { Buffer, File } from "node:buffer";
 import { afterAll, describe, expect, test } from "bun:test";
+import { prepare_bloc } from "@bernouy/cms-bloc-compile";
 import {
     importIntegration,
+    type IntegrationBlocArtifact,
     type IntegrationConnectorDeployer,
     type IntegrationConnectorDeployment,
     type IntegrationDefinition,
@@ -73,6 +76,7 @@ describe("products 1.0.0 source", () => {
         expect(validateSource(source!)).toEqual([]);
         expect(endpointUrns).toContain("urn:products:products");
         expect(endpointUrns).toContain("urn:products:upsertProduct");
+        expect(endpointUrns).toContain("urn:products:deleteProduct");
         expect(endpointUrns).toContain("urn:products:variants");
         expect(endpointUrns).toContain("urn:products:upsertProductVariant");
         expect(endpointUrns).toContain("urn:products:categories");
@@ -107,11 +111,12 @@ describe("products 1.0.0 source", () => {
         expect(dashboardJson).toContain("\"type\":\"tokens\"");
         expect(dashboardJson).toContain("\"type\":\"media\"");
         expect(dashboardJson).toContain("\"visibleWhen\":{\"field\":\"dataType\",\"equals\":\"option\"}");
-        expect(dashboardJson).toContain("\"path\":\"variantOptionsSummary\"");
+        expect(dashboardJson).toContain("\"path\":\"variantAxes\"");
+        expect(dashboardJson).toContain("\"path\":\"variantMatrix\"");
         expect(dashboardJson).toContain("\"productId\":\"$resource.id\"");
         expect(dashboardJson).toContain("\"categoryIds\":\"$field.categoryIds\"");
         expect(dashboardJson).not.toContain("Add option group");
-        expect(dashboardJson).toContain("\"create\":{\"mode\":\"inline\"");
+        expect(dashboardJson).toContain("\"mode\":\"inline\"");
         expect(dashboardJson).not.toContain("Generate variants");
         expect(dashboardJson).toContain("Archive product");
         expect(dashboardJson).toContain("uploadProductImage");
@@ -143,11 +148,11 @@ describe("products 1.0.0 source", () => {
         expect(dashboardJson).not.toContain("stockQuantity");
         const rootTabs = rootDashboardTabs(dashboard as unknown as JsonRecord);
         expect(rootTabs.map(tab => tab.label)).toEqual(["Products", "Attributes"]);
-        const productCreate = widgetById(rootTabs, "productCreate");
         const productsTable = widgetById(rootTabs, "productsTable");
         const productDetail = widgetById(rootTabs, "productDetail");
-        expect(productCreate?.source).toEqual({ endpoint: "productDefaults" });
         expect(productsTable?.selection).toEqual({ opens: "productDetail" });
+        expect(actionLabels(productsTable)).toEqual(["Create product"]);
+        expect((productsTable?.actions as JsonRecord[] | undefined)?.[0]?.selection).toEqual({ opens: "productDetail" });
         expect(productDetail?.title).toEqual({ path: "title", fallback: "Product" });
         expect(productDetail?.status).toEqual({ path: "status" });
         expect(sectionTitles(productDetail, "main")).toEqual(["Details", "Media", "Variants"]);
@@ -155,12 +160,10 @@ describe("products 1.0.0 source", () => {
         expect(sectionFieldIds(productDetail, "Details")).toEqual(["slug", "title", "description"]);
         expect(sectionFieldIds(productDetail, "Organization", "aside")).toEqual(["brandId", "categoryIds"]);
         expect(sectionFieldIds(productDetail, "Variants")).toEqual([
-            "variantOptionsSummary",
-            "variantsSummary",
-            "variantAxisAttributeId",
-            "variantAxisOptionIds",
+            "variantAxes",
+            "variantMatrix",
         ]);
-        expect(actionLabels(productDetail)).toEqual(["Save product", "Archive product"]);
+        expect(actionLabels(productDetail)).toEqual(["Save product", "Archive product", "Delete product"]);
         expect(widgetById(rootTabs, "categoryCreate")).toBeUndefined();
         expect(widgetById(rootTabs, "categoriesTable")).toBeUndefined();
         expect(widgetById(rootTabs, "categoryDetail")).toBeUndefined();
@@ -179,6 +182,32 @@ describe("products 1.0.0 source", () => {
                 defaultValue: "products",
             },
         ]);
+    });
+
+    test("hydrates and builds the product search bloc", async () => {
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("products");
+        const artifact = definition?.artifacts?.find(artifact => artifact.type === "bloc" && artifact.bloc.tag === "product-search");
+        expect(artifact?.type).toBe("bloc");
+        if (artifact?.type !== "bloc") throw new Error("expected product-search bloc artifact");
+
+        expect(artifact.bloc.viewJS).toContain("BE5_TAG_TO_BE_REPLACED");
+        expect(artifact.bloc.source?.["manifest.json"]).toBeTruthy();
+        expect(artifact.bloc.source?.["default.html"]).toBeTruthy();
+        expect(artifact.bloc.source?.["Bloc.ts"]).toBeTruthy();
+
+        const built = await prepare_bloc(
+            new File([artifact.bloc.viewJS ?? ""], "Bloc.js", { type: "application/javascript" }),
+            null,
+            artifact.bloc.name,
+            artifact.bloc.group ?? "",
+            artifact.bloc.description ?? "",
+            artifact.bloc.tag,
+            artifact.bloc.source,
+            decodeDefaultContent(artifact.bloc.source),
+        );
+
+        expect(built.id).toBe("product-search");
+        expect(built.viewJS).toContain("product-search");
     });
 
     test("writes and reads catalogue data through the installed CMS source", async () => {
@@ -662,6 +691,100 @@ describe("products 1.0.0 source", () => {
         expect(harness.rest.rows("product_variant_axis_options").filter(row => same(row.attribute_id, grip.id))).toHaveLength(0);
     });
 
+    test("syncs product-local variant axes through product save", async () => {
+        const harness = await createHarness();
+        const product = await okJson(await sourceJson(harness, "upsertProduct", {
+            slug: "local-racket",
+            title: "Local racket",
+            status: "active",
+            visibility: "public",
+        }));
+
+        await okJson(await sourceJson(harness, "upsertProduct", {
+            title: "Local racket",
+            status: "active",
+            visibility: "public",
+            variantAxes: [
+                { label: "Grip size", values: ["L1", "L2"] },
+                { label: "Weight", values: ["285", "300"] },
+            ],
+        }, { id: String(product.id) }));
+
+        const detail = await okJson(await sourceRequest(harness, "product", { id: String(product.id) }));
+        const variants = await okJson(await sourceRequest(harness, "variants", { productId: String(product.id), limit: "20" }));
+
+        expect(detail.variantAxes).toEqual([
+            expect.objectContaining({ label: "Grip size", values: ["L1", "L2"] }),
+            expect.objectContaining({ label: "Weight", values: ["285", "300"] }),
+        ]);
+        expect(detail.variantOptionsSummary).toBe("Grip size: L1, L2 | Weight: 285, 300");
+        expect(detail.variantMatrix).toHaveLength(4);
+        expect(detail.variantMatrix).toEqual(expect.arrayContaining([
+            expect.objectContaining({ options: "L1 / 285", title: "Grip size: L1 / Weight: 285", status: "inactive" }),
+            expect.objectContaining({ options: "L2 / 300", title: "Grip size: L2 / Weight: 300", status: "inactive" }),
+        ]));
+        expect(variants.items).toHaveLength(4);
+        expect(variants.items).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                title: "Grip size: L1 / Weight: 285",
+                optionsSummary: "L1 / 285",
+                optionValues: [
+                    expect.objectContaining({ attributeName: "Grip size", label: "L1" }),
+                    expect.objectContaining({ attributeName: "Weight", label: "285" }),
+                ],
+            }),
+        ]));
+        expect(harness.rest.rows("variant_attribute_values")).toHaveLength(0);
+    });
+
+    test("uses product detail defaults for new products and keeps optional fields optional", async () => {
+        const harness = await createHarness();
+        const defaults = await okJson(await sourceRequest(harness, "product", { id: "__new__" }));
+
+        const product = await okJson(await sourceJson(harness, "upsertProduct", {
+            slug: "optional-product",
+            title: "Optional product",
+            description: "",
+            brandId: "",
+            categoryIds: [],
+            status: "draft",
+            visibility: "public",
+        }));
+
+        expect(defaults).toMatchObject({
+            slug: "",
+            title: "",
+            description: "",
+            brandId: null,
+            categoryIds: [],
+            variantAxes: [],
+            variantMatrix: [],
+        });
+        expect(harness.rest.rows("products")).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: Number(product.id),
+                description: null,
+                brand_id: null,
+            }),
+        ]));
+        expect(harness.rest.rows("product_categories").filter(row => same(row.product_id, product.id))).toEqual([]);
+    });
+
+    test("deletes products through the product delete endpoint", async () => {
+        const harness = await createHarness();
+        const product = await okJson(await sourceJson(harness, "upsertProduct", {
+            slug: "delete-me",
+            title: "Delete me",
+            status: "active",
+            visibility: "public",
+        }));
+
+        const result = await okJson(await sourceDelete(harness, "deleteProduct", { id: String(product.id) }));
+
+        expect(result).toEqual({ ok: true, id: String(product.id) });
+        expect(harness.rest.rows("products").some(row => same(row.id, product.id))).toBe(false);
+    });
+
     test("rejects product variants without an idempotency key", async () => {
         const harness = await createHarness();
         const response = await sourceJson(harness, "upsertProductVariant", {
@@ -680,6 +803,7 @@ async function createHarness() {
     const secrets = new InMemorySecretStore();
     const dashboards = new InMemoryDashboardRepository();
     let deployment: IntegrationConnectorDeployment | undefined;
+    const importedBlocs: IntegrationBlocArtifact[] = [];
     const deployer: IntegrationConnectorDeployer = {
         provider: "supabase",
         async deploy(next) {
@@ -695,10 +819,23 @@ async function createHarness() {
         },
     };
 
+    const hydratedDefinition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("products");
+    if (!hydratedDefinition) throw new Error("products definition not found");
     const result = await importIntegration(
-        { sources, secrets, dashboards, connectorDeployers: [deployer] },
+        {
+            sources,
+            secrets,
+            dashboards,
+            connectorDeployers: [deployer],
+            blocs: {
+                async importBloc(artifact) {
+                    importedBlocs.push(artifact);
+                    return { id: artifact.tag, action: "created" };
+                },
+            },
+        },
         { kind: "products", answers: { id: "products" }, options: {} },
-        [definition()],
+        [hydratedDefinition],
     );
     const functionSecrets = deployment?.functions[0]?.secrets ?? {};
     activeEnv = {
@@ -717,6 +854,7 @@ async function createHarness() {
         sources,
         secrets,
         dashboards,
+        importedBlocs,
         deployment,
         rest,
         async sourceFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -1104,6 +1242,17 @@ async function loadEdgeHandler(): Promise<EdgeHandler> {
 
 function definition(): IntegrationDefinition {
     return JSON.parse(readFileSync(definitionUrl, "utf8")) as IntegrationDefinition;
+}
+
+function decodeDefaultContent(source: Record<string, string> | undefined): string | undefined {
+    if (!source) return undefined;
+    const manifestRaw = source["manifest.json"];
+    if (!manifestRaw) return undefined;
+    const manifest = JSON.parse(Buffer.from(manifestRaw, "base64").toString("utf-8")) as { defaultContent?: string };
+    if (!manifest.defaultContent) return undefined;
+    const path = manifest.defaultContent.replace(/^\.\//, "");
+    const encoded = source[path];
+    return encoded ? Buffer.from(encoded, "base64").toString("utf-8") : undefined;
 }
 
 function rootDashboardTabs(dashboard: JsonRecord): Array<{ label: string; children: JsonRecord[] }> {

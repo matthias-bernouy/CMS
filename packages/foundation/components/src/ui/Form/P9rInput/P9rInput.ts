@@ -85,5 +85,5 @@ export class P9rInput extends Component {
     override focus() { this._input?.focus(); }
 
     private _onInput = () => handleInput(this, this._input, this._internals, this._counterEl, this._countEl);
-    private _onChange = () => handleChange(this._input, this._internals);
+    private _onChange = () => handleChange(this, this._input, this._internals);
 }

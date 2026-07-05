@@ -3,17 +3,24 @@ import { json } from "../core/http.ts";
 
 export function productDefaults(request: Request): Response {
     requireCmsRequest(request);
-    return json({
+    return json(productDefaultsData());
+}
+
+export function productDefaultsData(): Record<string, unknown> {
+    return {
         slug: "",
         title: "",
         description: "",
         brandId: null,
+        categoryIds: [],
         status: "draft",
         visibility: "public",
         media: [],
         variants: [],
+        variantAxes: [],
+        variantMatrix: [],
         variantOptionGroups: [],
-    });
+    };
 }
 
 export function categoryDefaults(request: Request): Response {

@@ -41,7 +41,7 @@ function variantDetail(variant: JsonRecord, allMedia: JsonRecord[], allValues: J
     const id = String(variant.id ?? "");
     const media = allMedia.filter(row => String(row.variant_id ?? "") === id);
     const values = allValues.filter(row => String(row.variant_id ?? "") === id);
-    const optionValues = values.map(optionValue);
+    const optionValues = values.length ? values.map(optionValue) : metadataOptionValues(variant);
     return {
         ...camelizeRecord(variant),
         mainImageMediaId: mainMediaId(media),
@@ -50,6 +50,25 @@ function variantDetail(variant: JsonRecord, allMedia: JsonRecord[], allValues: J
         optionValues,
         optionsSummary: optionValues.map(value => value.label).filter(Boolean).join(" / "),
     };
+}
+
+function metadataOptionValues(variant: JsonRecord): JsonRecord[] {
+    const values = record(variant.metadata).optionValues;
+    if (!Array.isArray(values)) return [];
+    return values.flatMap(value => {
+        const row = record(value);
+        const label = String(row.value ?? "");
+        if (!label) return [];
+        return [{
+            attributeId: null,
+            attributeCode: String(row.axisKey ?? ""),
+            attributeName: String(row.axisLabel ?? ""),
+            optionId: null,
+            value: label,
+            label,
+            valueText: label,
+        }];
+    });
 }
 
 function optionValue(row: JsonRecord): JsonRecord {

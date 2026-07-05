@@ -35,6 +35,19 @@ small,
     color: #66736f;
 }
 
+.w-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.w-table-actions p9r-button {
+    --_btn-padding-y: 0.48rem;
+    --_btn-padding-x: 0.82rem;
+    --_btn-font-size: 12px;
+    --_btn-radius: 6px;
+}
+
 .w-table-frame {
     min-width: 0;
     overflow: auto;

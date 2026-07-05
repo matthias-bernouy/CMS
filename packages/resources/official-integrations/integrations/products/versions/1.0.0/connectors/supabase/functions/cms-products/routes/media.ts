@@ -82,9 +82,18 @@ async function linkUploadedMedia(owner: MediaOwnerLink, url: URL, mediaId: unkno
     await insertRow(owner.table, {
         [owner.ownerKey]: ownerId,
         media_id: mediaId,
-        sort_order: Date.now(),
+        sort_order: await nextMediaSortOrder(owner, ownerId),
         is_main: !currentMain,
     });
+}
+
+async function nextMediaSortOrder(owner: MediaOwnerLink, ownerId: string): Promise<number> {
+    const rows = await restJson<Record<string, unknown>[]>(
+        `${owner.table}?${owner.ownerKey}=eq.${encodeURIComponent(ownerId)}&select=sort_order&order=sort_order.desc&limit=1`,
+        { method: "GET" },
+    );
+    const current = Number(rows[0]?.sort_order ?? -1);
+    return Number.isInteger(current) && current >= 0 ? current + 1 : 0;
 }
 
 export async function mediaFile(request: Request): Promise<Response> {

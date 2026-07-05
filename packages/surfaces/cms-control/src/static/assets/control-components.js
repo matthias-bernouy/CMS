@@ -3036,12 +3036,12 @@ input:disabled {
   var fi = (t, e, r, i, o) => {
     if (!e)
       return;
-    r.setFormValue(e.value), D(t, e, i, o);
+    r.setFormValue(e.value), D(t, e, i, o), t.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   };
-  var xi = (t, e) => {
-    if (!t)
+  var xi = (t, e, r) => {
+    if (!e)
       return;
-    e.setFormValue(t.value);
+    r.setFormValue(e.value), t.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
   };
   var ld = mi + bi + gi;
 
@@ -3124,7 +3124,7 @@ input:disabled {
       this._input?.focus();
     }
     _onInput = () => fi(this, this._input, this._internals, this._counterEl, this._countEl);
-    _onChange = () => xi(this._input, this._internals);
+    _onChange = () => xi(this, this._input, this._internals);
   }
   var wi = `:host {
     display: block;
@@ -13499,6 +13499,22 @@ p {
       return { ...base, input: "combobox", value: textValue(value), options: optionList(field.options, dynamicOptions), creatable: isCreatable(field) };
     if (field.type === "tokens")
       return { ...base, input: "tokens", value: tokenValue(value), options: optionList(field.options, dynamicOptions), creatable: isCreatable(field) };
+    if (field.type === "table")
+      return {
+        ...base,
+        input: "table",
+        value: tableValue(value),
+        columns: field.columns.map((column) => ({
+          key: column.id,
+          label: column.label,
+          path: column.path,
+          ...column.width ? { width: column.width } : {},
+          ...column.editable === true ? { editable: true } : {},
+          ...column.value ? { value: column.value } : {}
+        })),
+        ...field.derive ? { derive: field.derive } : {},
+        ...field.editable === true ? { editable: true } : {}
+      };
     if (field.type === "media")
       return { ...base, input: "media-list", value: mediaValue(value, field, sourceId), accept: "image/*" };
     if (field.type === "readonly")
@@ -13547,6 +13563,9 @@ p {
   function tokenValue(value) {
     return Array.isArray(value) ? value.map(textValue).filter(Boolean) : textValue(value).split(",").map((item) => item.trim()).filter(Boolean);
   }
+  function tableValue(value) {
+    return Array.isArray(value) ? value.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item)) : [];
+  }
   function isActionIcon(value) {
     return value === "archive" || value === "download" || value === "link" || value === "trash";
   }
@@ -13565,6 +13584,8 @@ p {
     const action = widget.actions?.find((item) => item.id === actionId);
     if (!action)
       throw new Error(`Dashboard action "${actionId}" was not found`);
+    if (!action.endpoint)
+      throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
     const fields = { ...fieldValues(widget, resource), ...draft };
     return sendSourceJson(group.source.id, action.endpoint, endpointMethod(group, action.endpoint.endpoint), {
@@ -13647,16 +13668,31 @@ p {
       return;
     const key = detailKey(detail.collection, detail.row);
     try {
-      await executeDashboardAction(group, dashboard, detail, action.action, {
+      const result = await executeDashboardAction(group, dashboard, detail, action.action, {
         ...context.drafts.get(key) ?? {},
         ...action.fields ?? {}
       }, action.resource);
       context.drafts.delete(key);
       au(`${action.action} completed`, { type: "success" });
-      context.reload(detail.collection, detail.row);
+      if (action.action.startsWith("delete"))
+        context.clearDetail();
+      else if (detail.row === "__new__" && createdId(result))
+        context.openDetail(detail.collection, createdId(result));
+      else
+        context.reload(detail.collection, detail.row);
     } catch (error) {
       au(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
+  }
+  function createdId(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      return null;
+    const id2 = value.id;
+    if (typeof id2 === "string" && id2.trim())
+      return id2;
+    if (typeof id2 === "number" && Number.isFinite(id2))
+      return String(id2);
+    return null;
   }
   async function runDashboardMediaAction(context, media) {
     const { group, dashboard, detail } = context;
@@ -13698,10 +13734,10 @@ p {
       fields: { ...baseFields, ...previousDraft, [fieldId]: createdValue },
       value: createdValue
     });
-    const createdId = valueAt(created, create.valuePath);
-    if (createdId === undefined || createdId === null || createdId === "")
+    const createdId2 = valueAt(created, create.valuePath);
+    if (createdId2 === undefined || createdId2 === null || createdId2 === "")
       return;
-    const id2 = String(createdId);
+    const id2 = String(createdId2);
     return {
       value: replaceCreatedValue(nextValue, createdValue, id2),
       option: {
@@ -14019,6 +14055,19 @@ small,
     color: #66736f;
 }
 
+.w-table-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.w-table-actions p9r-button {
+    --_btn-padding-y: 0.48rem;
+    --_btn-padding-x: 0.82rem;
+    --_btn-font-size: 12px;
+    --_btn-radius: 6px;
+}
+
 .w-table-frame {
     min-width: 0;
     overflow: auto;
@@ -14071,6 +14120,7 @@ slot {
             <h3 data-title></h3>
             <p data-subtitle></p>
         </div>
+        <div class="w-table-actions" data-actions></div>
     </header>
 
     <div class="w-table-frame">
@@ -14091,7 +14141,7 @@ slot {
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/WTable.ts
   class DashboardWTable extends A {
-    value = { title: "", columns: [], rows: [] };
+    value = { title: "", actions: [], columns: [], rows: [] };
     selectedRow = "";
     constructor() {
       super({ css: style_default4, template: template_default5 });
@@ -14119,19 +14169,34 @@ slot {
     connectedCallback() {
       this.shadowRoot.querySelector("slot")?.addEventListener("slotchange", this.onSlotChange);
       this.shadowRoot.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
+      this.shadowRoot.querySelector("[data-actions]")?.addEventListener("click", this.onActionClick);
       this.syncConfig();
       this.render();
     }
     disconnectedCallback() {
       this.shadowRoot?.querySelector("slot")?.removeEventListener("slotchange", this.onSlotChange);
       this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
+      this.shadowRoot?.querySelector("[data-actions]")?.removeEventListener("click", this.onActionClick);
     }
     render() {
       setText(this.shadowRoot, "[data-title]", this.value.title);
       setText(this.shadowRoot, "[data-subtitle]", this.value.subtitle ?? "");
-      this.query("[data-header]").hidden = !this.value.subtitle;
+      this.query("[data-header]").hidden = !this.value.subtitle && !this.value.actions?.length;
+      this.renderActions();
       this.renderColumns();
       this.syncRows();
+    }
+    renderActions() {
+      const root = this.query("[data-actions]");
+      root.replaceChildren(...(this.value.actions ?? []).map((action) => {
+        const button = document.createElement("p9r-button");
+        button.dataset.action = action.action;
+        if (action.target)
+          button.dataset.target = action.target;
+        button.setAttribute("tone", action.tone ?? "primary");
+        button.textContent = action.label;
+        return button;
+      }));
     }
     renderColumns() {
       const head = this.query("[data-head-row]");
@@ -14152,6 +14217,12 @@ slot {
         return;
       this.value = {
         title: widget.title ?? widget.source.endpoint,
+        actions: (widget.actions ?? []).map((action) => ({
+          label: action.label,
+          action: action.id,
+          ...action.selection?.opens ? { target: action.selection.opens } : {},
+          tone: action.tone
+        })),
         columns: widget.columns.map((column) => ({
           key: column.id,
           label: column.label,
@@ -14193,6 +14264,14 @@ slot {
       return element;
     }
     onSlotChange = () => this.syncRows();
+    onActionClick = (event) => {
+      const action = event.target?.closest("[data-action]");
+      if (action?.dataset.action)
+        emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
+          action: action.dataset.action,
+          target: action.dataset.target
+        });
+    };
     onSelectAll = (event) => {
       const checked = Boolean(event.target?.checked);
       for (const row of this.rows())
@@ -14912,6 +14991,8 @@ button {
       return tokenInput(field);
     if (field.input === "media-list")
       return mediaList(field);
+    if (field.input === "table")
+      return table(field);
     if (field.input === "chips")
       return chips(field);
     if (field.input === "badge")
@@ -14931,9 +15012,67 @@ button {
       return control.values;
     if (field.input === "media-list" && isMediaControl(control))
       return control.items;
+    if (field.input === "table")
+      return readTableValue(field, control);
     if (isValueControl(control))
       return control.value;
     return Array.isArray(field.value) ? field.value : String(field.value);
+  }
+  function table(field) {
+    const root = document.createElement("div");
+    root.className = "detail-table";
+    bindFieldControl(root, field);
+    root.dataset.tableEditable = String(field.editable === true);
+    const columns = field.columns ?? [];
+    root.style.setProperty("--detail-table-columns", tableColumns2(columns, field.editable === true));
+    const header = document.createElement("div");
+    header.className = "detail-table-row detail-table-head";
+    for (const column of columns) {
+      const cell = document.createElement("span");
+      cell.textContent = column.label;
+      header.append(cell);
+    }
+    if (field.editable)
+      header.append(document.createElement("span"));
+    root.append(header);
+    for (const row of tableRows(field.value))
+      root.append(tableRow(field, row));
+    if (field.editable) {
+      const add = document.createElement("button");
+      add.type = "button";
+      add.className = "detail-table-add";
+      add.dataset.tableAdd = "true";
+      add.textContent = "Add row";
+      root.append(add);
+    }
+    return root;
+  }
+  function tableRow(field, row) {
+    const element = document.createElement("div");
+    element.className = "detail-table-row";
+    element.dataset.tableRow = "true";
+    for (const column of field.columns ?? []) {
+      const cell = document.createElement("span");
+      if (field.editable && column.editable) {
+        const input = document.createElement("p9r-input");
+        input.setAttribute("value", tableCellInputValue(valueAt(row, column.path), column.value));
+        input.value = tableCellInputValue(valueAt(row, column.path), column.value);
+        input.dataset.tableColumn = column.key;
+        cell.append(input);
+      } else {
+        cell.textContent = tableCellDisplayValue(valueAt(row, column.path));
+      }
+      element.append(cell);
+    }
+    if (field.editable) {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "detail-table-remove";
+      remove.dataset.tableRemove = "true";
+      remove.textContent = "Remove";
+      element.append(remove);
+    }
+    return element;
   }
   function textInput(field) {
     const input = document.createElement("p9r-input");
@@ -15030,8 +15169,44 @@ button {
   function readonly(value) {
     const element = document.createElement("span");
     element.className = "readonly";
-    element.textContent = Array.isArray(value) ? value.map((item) => typeof item === "string" ? item : item.id).join(", ") : value;
+    element.textContent = Array.isArray(value) ? value.map((item) => typeof item === "string" ? item : String(item.id ?? "")).join(", ") : value;
     return element;
+  }
+  function tableRows(value) {
+    if (!Array.isArray(value))
+      return [];
+    return value.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item));
+  }
+  function readTableValue(field, control) {
+    return Array.from(control.querySelectorAll("[data-table-row]")).map((row) => {
+      const value = {};
+      for (const column of field.columns ?? []) {
+        const input = row.querySelector(`[data-table-column="${cssEscape(column.key)}"]`);
+        if (!input)
+          continue;
+        value[column.path] = column.value === "list" ? listValue(input.value) : input.value;
+      }
+      return value;
+    }).filter((row) => Object.values(row).some((value) => Array.isArray(value) ? value.length > 0 : String(value ?? "").trim()));
+  }
+  function tableCellInputValue(value, kind) {
+    if (kind === "list" && Array.isArray(value))
+      return value.map((item) => String(item)).join(", ");
+    return value === null || value === undefined ? "" : String(value);
+  }
+  function tableCellDisplayValue(value) {
+    if (Array.isArray(value))
+      return value.map((item) => String(item)).join(", ");
+    return value === null || value === undefined ? "" : String(value);
+  }
+  function listValue(value) {
+    return value.split(",").map((item) => item.trim()).filter(Boolean);
+  }
+  function tableColumns2(columns, editable) {
+    return [...(columns ?? []).map((column) => column.width ?? "minmax(8rem, 1fr)"), ...editable ? ["72px"] : []].join(" ");
+  }
+  function cssEscape(value) {
+    return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value) : value.replace(/"/g, "\\\"");
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/style.css
@@ -15191,8 +15366,63 @@ dd {
 
 p9r-input,
 p9r-select,
-p9r-textarea {
+p9r-textarea,
+p9r-combobox,
+p9r-token-input {
     width: 100%;
+}
+
+.detail-table {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+}
+
+.detail-table-row {
+    display: grid;
+    grid-template-columns: var(--detail-table-columns);
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+    min-height: 34px;
+}
+
+.detail-table-head {
+    color: #66736f;
+    font-size: 11px;
+    font-weight: 750;
+    text-transform: uppercase;
+}
+
+.detail-table-row > span {
+    min-width: 0;
+}
+
+.detail-table[data-table-editable="false"] .detail-table-row:not(.detail-table-head) {
+    color: #16231f;
+    font-size: 13px;
+}
+
+.detail-table p9r-input {
+    --_field-min-height: 34px;
+    --_field-padding-y: 5px;
+    --_field-padding-x: 9px;
+    --_field-font-size: 13px;
+}
+
+.detail-table-add,
+.detail-table-remove {
+    min-height: 30px;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.detail-table-add {
+    width: fit-content;
+}
+
+.detail-table-remove {
+    color: #8a1f12;
 }
 
 .badge,
@@ -15316,6 +15546,7 @@ p9r-textarea {
     connectedCallback() {
       if (!this.bound) {
         this.shadowRoot.addEventListener("click", this.onClick);
+        this.shadowRoot.addEventListener("input", this.onInput);
         this.shadowRoot.addEventListener("change", this.onChange);
         this.shadowRoot.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
         this.bound = true;
@@ -15325,6 +15556,7 @@ p9r-textarea {
     }
     disconnectedCallback() {
       this.shadowRoot?.removeEventListener("click", this.onClick);
+      this.shadowRoot?.removeEventListener("input", this.onInput);
       this.shadowRoot?.removeEventListener("change", this.onChange);
       this.shadowRoot?.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
       this.bound = false;
@@ -15374,11 +15606,25 @@ p9r-textarea {
       const chip = target?.closest(".chip");
       if (chip)
         this.toggleChip(chip);
+      const tableAdd = target?.closest("[data-table-add]");
+      if (tableAdd)
+        this.addTableRow(tableAdd);
+      const tableRemove = target?.closest("[data-table-remove]");
+      if (tableRemove)
+        this.removeTableRow(tableRemove);
+    };
+    onInput = (event) => {
+      const control = event.target?.closest("[data-field-control]");
+      const field = control ? this.findField(control.dataset.fieldControl ?? "") : undefined;
+      if (control && field?.input === "table")
+        this.updateDerivedTables(field.id);
     };
     onChange = (event) => {
       const control = event.target?.closest("[data-field-control]");
-      if (control)
+      if (control) {
         this.emitFieldChange(control, Boolean(event.detail?.created));
+        this.updateDerivedTables(control.dataset.fieldControl ?? "");
+      }
     };
     onMediaAction = (event) => {
       event.stopPropagation();
@@ -15397,6 +15643,41 @@ p9r-textarea {
       const control = chip.closest("[data-field-control]");
       if (control)
         this.emitFieldChange(control);
+    }
+    addTableRow(button) {
+      const control = button.closest("[data-field-control]");
+      const field = control ? this.findField(control.dataset.fieldControl ?? "") : undefined;
+      if (!control || !field || field.input !== "table")
+        return;
+      control.insertBefore(tableRow(field, {}), button);
+      this.emitFieldChange(control);
+      this.updateDerivedTables(field.id);
+    }
+    removeTableRow(button) {
+      const control = button.closest("[data-field-control]");
+      const row = button.closest("[data-table-row]");
+      if (!control || !row)
+        return;
+      row.remove();
+      this.emitFieldChange(control);
+      this.updateDerivedTables(control.dataset.fieldControl ?? "");
+    }
+    updateDerivedTables(sourceFieldId) {
+      const sourceControl = this.fieldControl(sourceFieldId);
+      const sourceField = sourceControl ? this.findField(sourceFieldId) : undefined;
+      if (!sourceControl || !sourceField)
+        return;
+      const sourceValue = readFieldControlValue(sourceField, sourceControl);
+      for (const field of this.fields()) {
+        if (field.input !== "table" || field.derive?.sourceField !== sourceFieldId)
+          continue;
+        const control = this.fieldControl(field.id);
+        if (!control)
+          continue;
+        const rows = deriveTableRows(field, sourceValue);
+        field.value = rows;
+        replaceTableRows(control, field, rows);
+      }
     }
     emitFieldChange(control, created = false) {
       const field = this.findField(control.dataset.fieldControl ?? "");
@@ -15447,7 +15728,10 @@ p9r-textarea {
       }
     }
     findField(id2) {
-      return [...this.value.main, ...this.value.aside].flatMap((section) => section.fields).find((field) => field.id === id2);
+      return this.fields().find((field) => field.id === id2);
+    }
+    fields() {
+      return [...this.value.main, ...this.value.aside].flatMap((section) => section.fields);
     }
     currentResource() {
       const widget = parseJson2(this.dataset.configJson ?? "");
@@ -15488,6 +15772,43 @@ p9r-textarea {
     } catch {
       return null;
     }
+  }
+  function replaceTableRows(control, field, rows) {
+    control.querySelectorAll("[data-table-row]").forEach((row) => row.remove());
+    const anchor = control.querySelector("[data-table-add]");
+    for (const row of rows)
+      control.insertBefore(tableRow(field, row), anchor);
+  }
+  function deriveTableRows(field, sourceValue) {
+    if (field.derive?.type !== "cartesian")
+      return [];
+    const axes = Array.isArray(sourceValue) ? sourceValue.filter((row) => row !== null && typeof row === "object" && !Array.isArray(row)).map((row, index) => ({
+      label: textValue3(valueAt(row, field.derive.labelPath)),
+      values: listValue2(valueAt(row, field.derive.valuesPath)),
+      position: index
+    })).filter((axis) => axis.label && axis.values.length) : [];
+    if (!axes.length)
+      return [];
+    return axes.reduce((sets, axis) => sets.flatMap((set) => axis.values.map((value) => [...set, { label: axis.label, value }])), [[]]).map((choices, index) => ({
+      key: choices.map((choice) => `${slug(choice.label)}:${slug(choice.value)}`).join("|"),
+      options: choices.map((choice) => choice.value).join(" / "),
+      title: choices.map((choice) => `${choice.label}: ${choice.value}`).join(" / "),
+      status: "inactive",
+      position: index
+    }));
+  }
+  function listValue2(value) {
+    if (Array.isArray(value))
+      return value.map((item) => String(item).trim()).filter(Boolean);
+    if (typeof value === "string")
+      return value.split(",").map((item) => item.trim()).filter(Boolean);
+    return [];
+  }
+  function textValue3(value) {
+    return value === null || value === undefined ? "" : String(value).trim();
+  }
+  function slug(value) {
+    return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
   function findActionTarget(event) {
     return event.composedPath().find((target) => target instanceof HTMLElement && Boolean(target.dataset.action));
@@ -15558,10 +15879,10 @@ p9r-textarea {
         { key: "category", label: "Category", width: "180px" },
         { key: "updated", label: "Updated", width: "140px" }
       ],
-      rows: PRODUCTS.map(tableRow)
+      rows: PRODUCTS.map(tableRow2)
     };
   }
-  function tableRow(product) {
+  function tableRow2(product) {
     return {
       id: product.id,
       collection: "example-products",
@@ -15904,6 +16225,13 @@ p9r-textarea {
         au(`${event.detail.action} clicked`, { type: "success" });
         return;
       }
+      if (event.detail.target) {
+        this.detailSelection = { collection: event.detail.target, row: "__new__" };
+        if (!this.isExampleMode())
+          pushSelectionUrl(this.selection());
+        this.render();
+        return;
+      }
       runDashboardWidgetAction(this.actionContext(), event.detail);
     };
     onWidgetMediaAction = (event) => {
@@ -15939,8 +16267,22 @@ p9r-textarea {
         detail: this.detailSelection,
         drafts: this.drafts,
         render: () => this.render(),
-        reload: (collection, row) => this.reloadDetail(collection, row)
+        reload: (collection, row) => this.reloadDetail(collection, row),
+        clearDetail: () => this.clearDetail(),
+        openDetail: (collection, row) => this.openDetail(collection, row)
       };
+    }
+    openDetail(collection, row) {
+      this.detailSelection = { collection, row };
+      if (!this.isExampleMode())
+        replaceSelectionUrl(this.selection());
+      this.render();
+    }
+    clearDetail() {
+      this.detailSelection = null;
+      if (!this.isExampleMode())
+        replaceSelectionUrl(this.selection());
+      this.render();
     }
     reloadDetail(collection, row) {
       const dashboard = this.activeDashboard();
@@ -24914,7 +25256,7 @@ cms-editor-v2-segmented-control button svg:only-child {
       super();
       this.attachShadow({ mode: "open" }).append(template19.content.cloneNode(true));
     }
-    setSettings(sections2, textCapability = null, textValue3 = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
+    setSettings(sections2, textCapability = null, textValue4 = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
       this._dataSources = dataSources;
       this._dataScopes = dataScopes;
       const view = this.shadowRoot.querySelector(".settings-view");
@@ -24930,7 +25272,7 @@ cms-editor-v2-segmented-control button svg:only-child {
         return;
       }
       if (shouldRenderText) {
-        view.append(this._renderTextCapability(textCapability, textValue3, dataScopes));
+        view.append(this._renderTextCapability(textCapability, textValue4, dataScopes));
       }
       if (shouldRenderStates) {
         view.append(this._renderStates(states));
