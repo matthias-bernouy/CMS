@@ -13699,7 +13699,21 @@ p {
       value: createdValue
     });
     const createdId = valueAt(created, create.valuePath);
-    return createdId === undefined || createdId === null || createdId === "" ? undefined : replaceCreatedValue(nextValue, createdValue, String(createdId));
+    if (createdId === undefined || createdId === null || createdId === "")
+      return;
+    const id2 = String(createdId);
+    return {
+      value: replaceCreatedValue(nextValue, createdValue, id2),
+      option: {
+        value: id2,
+        label: textValue2(valueAt(created, create.labelPath)) || createdValue
+      }
+    };
+  }
+  function textValue2(value) {
+    if (typeof value === "number" && Number.isFinite(value))
+      return String(value);
+    return typeof value === "string" ? value.trim() : "";
   }
   function createdInput(previous, next) {
     if (Array.isArray(next)) {
@@ -13746,22 +13760,26 @@ p {
   }
 
   // src/components/admin/Resources/Dashboards/DashboardViewLookups.ts
-  async function runDashboardLookupCreate(context, change, previousDraft) {
+  async function runDashboardLookupCreate(context, change, previousDraft, target) {
     const { group, dashboard, detail } = context;
     if (!change.created || !group || !dashboard || !detail)
       return;
     const key = detailKey(detail.collection, change.rowKey);
     const nextDraft = context.drafts.get(key) ?? {};
     try {
-      const value = await executeLookupCreate(group, dashboard, detail, change.field, previousDraft, nextDraft);
-      if (value === undefined)
+      const result = await executeLookupCreate(group, dashboard, detail, change.field, previousDraft, nextDraft);
+      if (result === undefined)
         return;
-      context.drafts.set(key, { ...nextDraft, [change.field]: value });
+      context.drafts.set(key, { ...nextDraft, [change.field]: result.value });
+      applyLookupCreate(target, change.field, result.value, result.option);
       au("Item created", { type: "success" });
-      context.render();
     } catch (error) {
       au(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
     }
+  }
+  function applyLookupCreate(target, field, value, option) {
+    const detail = target;
+    detail?.applyLookupCreate?.(field, value, option);
   }
 
   // src/components/admin/Resources/Dashboards/mode.ts
@@ -15277,6 +15295,18 @@ p9r-textarea {
       if (this.isConnected)
         this.render();
     }
+    applyLookupCreate(fieldId, value, option) {
+      const control = this.fieldControl(fieldId);
+      const field = control ? this.findField(fieldId) : undefined;
+      if (!control || !field)
+        return;
+      appendOption(control, option);
+      const nextValue = Array.isArray(value) ? value.map(String).join(",") : String(value ?? "");
+      control.setAttribute("value", nextValue);
+      if ("value" in control && typeof control.value === "string") {
+        control.value = nextValue;
+      }
+    }
     static get observedAttributes() {
       return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
     }
@@ -15437,6 +15467,9 @@ p9r-textarea {
       }
       return fields;
     }
+    fieldControl(fieldId) {
+      return Array.from(this.shadowRoot.querySelectorAll("[data-field-control]")).find((control) => control.dataset.fieldControl === fieldId) ?? null;
+    }
     template(kind) {
       const selector = kind === "section" ? "[data-section-template]" : "[data-field-template]";
       return this.query(selector).content.firstElementChild.cloneNode(true);
@@ -15458,6 +15491,17 @@ p9r-textarea {
   }
   function findActionTarget(event) {
     return event.composedPath().find((target) => target instanceof HTMLElement && Boolean(target.dataset.action));
+  }
+  function appendOption(control, option) {
+    const existing = Array.from(control.querySelectorAll("option")).find((item) => item.value === option.value);
+    if (existing) {
+      existing.textContent = option.label;
+      return;
+    }
+    const element = document.createElement("option");
+    element.value = option.value;
+    element.textContent = option.label;
+    control.append(element);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/example.ts
@@ -15881,7 +15925,7 @@ p9r-textarea {
       const previousDraft = this.drafts.get(key) ?? {};
       this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
       if (event.detail.created)
-        runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft);
+        runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft, event.target);
     };
     syncSelectionAndRender(selection) {
       this.syncFromSelection(selection);
@@ -24870,7 +24914,7 @@ cms-editor-v2-segmented-control button svg:only-child {
       super();
       this.attachShadow({ mode: "open" }).append(template19.content.cloneNode(true));
     }
-    setSettings(sections2, textCapability = null, textValue2 = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
+    setSettings(sections2, textCapability = null, textValue3 = "", mode = "settings", states = [], dataScopes = [], dataSources = []) {
       this._dataSources = dataSources;
       this._dataScopes = dataScopes;
       const view = this.shadowRoot.querySelector(".settings-view");
@@ -24886,7 +24930,7 @@ cms-editor-v2-segmented-control button svg:only-child {
         return;
       }
       if (shouldRenderText) {
-        view.append(this._renderTextCapability(textCapability, textValue2, dataScopes));
+        view.append(this._renderTextCapability(textCapability, textValue3, dataScopes));
       }
       if (shouldRenderStates) {
         view.append(this._renderStates(states));

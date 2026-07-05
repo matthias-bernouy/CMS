@@ -35,6 +35,18 @@ export class DashboardWDetail extends Component {
         if (this.isConnected) this.render();
     }
 
+    applyLookupCreate(fieldId: string, value: unknown, option: { value: string; label: string }): void {
+        const control = this.fieldControl(fieldId);
+        const field = control ? this.findField(fieldId) : undefined;
+        if (!control || !field) return;
+        appendOption(control, option);
+        const nextValue = Array.isArray(value) ? value.map(String).join(",") : String(value ?? "");
+        control.setAttribute("value", nextValue);
+        if ("value" in control && typeof (control as { value: unknown }).value === "string") {
+            (control as { value: string }).value = nextValue;
+        }
+    }
+
     static get observedAttributes(): string[] {
         return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
     }
@@ -197,6 +209,11 @@ export class DashboardWDetail extends Component {
         return fields;
     }
 
+    private fieldControl(fieldId: string): HTMLElement | null {
+        return Array.from(this.shadowRoot!.querySelectorAll<HTMLElement>("[data-field-control]"))
+            .find(control => control.dataset.fieldControl === fieldId) ?? null;
+    }
+
     private template(kind: "section" | "field"): HTMLElement {
         const selector = kind === "section" ? "[data-section-template]" : "[data-field-template]";
         return this.query<HTMLTemplateElement>(selector).content.firstElementChild!.cloneNode(true) as HTMLElement;
@@ -226,4 +243,17 @@ function findActionTarget(event: Event): HTMLElement | undefined {
     return event.composedPath().find((target): target is HTMLElement =>
         target instanceof HTMLElement && Boolean(target.dataset.action),
     );
+}
+
+function appendOption(control: HTMLElement, option: { value: string; label: string }): void {
+    const existing = Array.from(control.querySelectorAll<HTMLOptionElement>("option"))
+        .find(item => item.value === option.value);
+    if (existing) {
+        existing.textContent = option.label;
+        return;
+    }
+    const element = document.createElement("option");
+    element.value = option.value;
+    element.textContent = option.label;
+    control.append(element);
 }

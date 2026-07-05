@@ -146,7 +146,7 @@ export class DashboardView extends Component {
         const key = detailKey(this.detailSelection.collection, event.detail.rowKey);
         const previousDraft = this.drafts.get(key) ?? {};
         this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
-        if (event.detail.created) void runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft);
+        if (event.detail.created) void runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft, event.target);
     };
 
     private syncSelectionAndRender(selection: DashboardSelection): void {

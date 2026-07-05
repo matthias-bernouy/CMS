@@ -1,4 +1,4 @@
-import type { DashboardDto, DashboardField, DashboardWidget } from "@bernouy/cms-dashboards";
+import type { DashboardDto, DashboardField, DashboardOption, DashboardWidget } from "@bernouy/cms-dashboards";
 import type { DashboardSourceGroup } from "../types";
 import type { DetailSelection } from "../domain";
 import { valueAt } from "./expressions";
@@ -7,6 +7,10 @@ import { fieldValues } from "./mapping";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 type LookupField = Extract<DashboardField, { type: "combobox" | "tokens" }>;
+export type LookupCreateResult = {
+    value: unknown;
+    option: DashboardOption;
+};
 
 export async function executeLookupCreate(
     group: DashboardSourceGroup,
@@ -15,7 +19,7 @@ export async function executeLookupCreate(
     fieldId: string,
     previousDraft: Record<string, unknown>,
     nextDraft: Record<string, unknown>,
-): Promise<unknown | undefined> {
+): Promise<LookupCreateResult | undefined> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     const field = widget ? lookupField(widget, fieldId) : null;
     const create = field?.lookup?.create;
@@ -35,9 +39,20 @@ export async function executeLookupCreate(
         value: createdValue,
     });
     const createdId = valueAt(created, create.valuePath);
-    return createdId === undefined || createdId === null || createdId === ""
-        ? undefined
-        : replaceCreatedValue(nextValue, createdValue, String(createdId));
+    if (createdId === undefined || createdId === null || createdId === "") return undefined;
+    const id = String(createdId);
+    return {
+        value: replaceCreatedValue(nextValue, createdValue, id),
+        option: {
+            value: id,
+            label: textValue(valueAt(created, create.labelPath)) || createdValue,
+        },
+    };
+}
+
+function textValue(value: unknown): string {
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+    return typeof value === "string" ? value.trim() : "";
 }
 
 function createdInput(previous: unknown, next: unknown): string {
